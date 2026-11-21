@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { Participant } from '@/lib/identity';
@@ -8,6 +8,7 @@ import type { OfficeCatalogue } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
 import type { OfficeChrome } from './office-chrome';
+import type { OfficeSaveStatus } from './office-save-status';
 import { OfficeTitleRow } from './OfficeTitleRow';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -218,6 +219,11 @@ describe('OfficeTitleRow, the document parts', () => {
 });
 
 describe('OfficeTitleRow, the save status', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  const fixed = (status: OfficeSaveStatus) => ({ get: () => status, subscribe: () => () => {} });
+
   it('shows the status the kind reports, and none when it reports none', () => {
     const root = { current: null };
     const props = {
@@ -231,9 +237,56 @@ describe('OfficeTitleRow, the save status', () => {
       shortcuts: TEXT_DOCUMENT_SHORTCUTS,
       keyScope: root,
     };
-    const { rerender } = render(<OfficeTitleRow {...props} saveStatus="saving" />);
+    const { rerender } = render(<OfficeTitleRow {...props} saveStatus={fixed('saving')} />);
     expect(screen.getByRole('button', { name: 'Saving…' })).toBeTruthy();
     rerender(<OfficeTitleRow {...props} saveStatus={null} />);
+    expect(document.querySelector('[data-save-status]')).toBeNull();
+  });
+
+  it('follows its source where it is drawn, after the frame the change happens in', () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
+    const root = { current: null };
+    let status: OfficeSaveStatus | null = 'saved';
+    const listeners = new Set<() => void>();
+    const source = {
+      get: () => status,
+      subscribe: (listener: () => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+    render(
+      <OfficeTitleRow
+        name="Minutes"
+        format=".ODT"
+        formatTitle="OpenDocument format"
+        problem={null}
+        catalogue={CATALOGUE}
+        level="edit"
+        actions={{}}
+        shortcuts={TEXT_DOCUMENT_SHORTCUTS}
+        keyScope={root}
+        saveStatus={source}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'All changes saved' })).toBeTruthy();
+    act(() => {
+      status = 'saving';
+      for (const listener of listeners) listener();
+      vi.advanceTimersToNextFrame();
+    });
+    expect(screen.getByRole('button', { name: 'All changes saved' })).toBeTruthy();
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeTruthy();
+    act(() => {
+      status = null;
+      for (const listener of listeners) listener();
+      vi.runAllTimers();
+    });
     expect(document.querySelector('[data-save-status]')).toBeNull();
   });
 });

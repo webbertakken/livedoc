@@ -136,4 +136,41 @@ describe('listMarkersPlugin', () => {
     notify();
     expect(markers(v)).toEqual(['1.']);
   });
+
+  // performance.md "A keystroke's frame": an edit of text outside the items keeps them drawn, mapped.
+  it('keeps the items through an edit of text outside them, and draws them again for one inside', () => {
+    let reads = 0;
+    const lists = { L1: ListDefinition.of('number') };
+    view = new EditorView(document.body.appendChild(document.createElement('div')), {
+      state: EditorState.create({
+        doc: schema.node('doc', null, [p('Intro', null), p('a', { id: 'L1', level: 0 })]),
+        plugins: [
+          listMarkersPlugin(
+            () => {
+              reads += 1;
+              return lists;
+            },
+            () => () => {},
+          ),
+        ],
+      }),
+    });
+    const v = view;
+    v.dispatch(v.state.tr.insertText('xy', 1));
+    expect(reads).toBe(1);
+    expect(markers(v)).toEqual(['1.']);
+    v.dispatch(v.state.tr.insertText('b', v.state.doc.content.size - 1));
+    expect(reads).toBe(2);
+  });
+
+  it('ticks the item its box is in after an edit of text before it', () => {
+    const { view: v } = mount([p('Intro', null), p('Milk', { id: 'C', level: 0 })], {
+      C: ListDefinition.of('check'),
+    });
+    v.dispatch(v.state.tr.insertText('Some more ', 1));
+    v.dom
+      .querySelector('[role="checkbox"]')!
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    expect((v.state.doc.child(1).attrs as { list: ListPlace }).list.checked).toBe(true);
+  });
 });

@@ -466,6 +466,38 @@ taken away again, fifty times each.
   about 5% and 4% of the task; timed on their own they are about 1% each. The sampler's cost lands on
   short calls. Time a suspect on its own before rebuilding it.
 
+## The nightly of 2026-11-21, and a release's layout
+
+Measured 2026-11-21: the probe on the hosted runner, and locally at 3.5x, interleaved against main at
+`3f2368b06`, both builds served at once.
+
+- **The open row did not regress.** The nightly at `9cbc887b1` read 3,611 ms (whiteboard) at 1.85x
+  against 2,231 ms at `e663a2640` the night before at 1.94x. Run again the same day, on fresh runners,
+  `e663a2640` read 2,701 ms (1.30x) and main 2,806 ms (2.71x). Between them the canvas tab's first
+  load fetches the same requests and about 5 KB more script, and its opening train (a mount, then
+  frames of 50-150 ms every 100-250 ms) has the same shape on both builds. The row's known swing
+  (about 1.2 to 3.6 s) is the lull between the mount and the train.
+- **The runner sets more of the gesture rows than the commit does.** Over 27 runs, the faster the
+  runner's benchmark (and so the harder it is throttled), the more rows tend to miss: 0-4 misses at
+  1.3-1.4x, 2-11 at 2.0-2.7x. Main itself missed 9 rows at 2.71x where `e663a2640` missed none at
+  1.30x the same hour. Inferred, not measured: the benchmark runs in a blank page, and a board's
+  work (a 500 KB stylesheet over thousands of nodes, paint) does not speed up with it, so a fast
+  runner is slowed past the reference.
+- **A release's own task lays the page out.** After `pointerup` the browser sends `mouseup` and
+  `click` and then brings style and layout up to date, inside the release's task, whenever the
+  release changed the page (a bare page with 3,000 boxes resized on `pointerup` shows it, with or
+  without `preventDefault` and `user-select`). A whiteboard stroke's release at 100%: 61-102 ms, of
+  which React's render 45-72 ms and that layout 12-26 ms. Landing the stroke in the next task
+  (`afterRelease`) leaves the release a few ms; the landing's render runs as a task of 38-53 ms and
+  its layout in the frame that shows it, with no script of its own. Over interleaved rounds of
+  five strokes, main's stroke ran a task over 50 ms in 5 of the 10 runs read (50-61 ms), the change's
+  in none of 15 A round taken under another session's load (load average 12-20) read 52-106
+  ms on main and 52-75 ms with the change, the change's longest then the landing's render.
+- **A marquee's release keeps its layout.** Handed to the next task the same way, its render (32-49
+  ms) ran alone, but the frame after it ran the selection toolbar's and the Quick Style panel's
+  placement (`requestAnimationFrame`) with the layout of everything the selection mounted: 49-70 ms
+  of one task with script in it. The work only moved.
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.

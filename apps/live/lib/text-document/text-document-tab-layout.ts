@@ -111,19 +111,30 @@ function tabDecorationsAfter(
 
 /** The paragraphs a transaction touched, by their position in its new document. */
 export function touchedParagraphs(tr: Transaction): number[] {
-  const out = new Set<number>();
+  return [...firstChanges(tr).keys()];
+}
+
+/**
+ * The paragraphs a transaction touched, by their position in its new document, each with the first place in it that
+ * changed (its start when the change began before it).
+ */
+export function firstChanges(tr: Transaction): Map<number, number> {
+  const out = new Map<number, number>();
   tr.mapping.maps.forEach((map, i) => {
     map.forEach((_from, _to, start, end) => {
       const rest = tr.mapping.slice(i + 1);
       const from = rest.map(start, -1);
       const to = Math.min(rest.map(end, 1), tr.doc.content.size);
       tr.doc.nodesBetween(from, to, (node, pos) => {
-        if (node.type.name === 'paragraph') out.add(pos);
+        if (node.type.name === 'paragraph') {
+          const first = Math.max(from, pos);
+          out.set(pos, Math.min(out.get(pos) ?? first, first));
+        }
         return node.type.name !== 'paragraph';
       });
     });
   });
-  return [...out];
+  return out;
 }
 
 type TabState = { decorations: DecorationSet; dirty: number[] | 'all' };

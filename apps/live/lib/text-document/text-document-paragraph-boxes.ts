@@ -8,6 +8,7 @@ import { Decoration, DecorationSet } from 'prosemirror-view';
 import { canonical, Styles, type ParagraphProps } from '@livedoc/text-documents';
 import type { TextFormatting } from './text-document-formatting';
 import { borderCss } from './text-document-style-sheet';
+import { changesTextOnly } from './text-document-text-edits';
 
 type Box = { key: string; props: ParagraphProps };
 
@@ -66,7 +67,13 @@ export function paragraphBoxesPlugin(readFormatting: () => TextFormatting): Plug
     key,
     state: {
       init: (_config, state) => paragraphBoxJoins(state.doc, readFormatting()),
-      apply: (tr, joins) => (tr.docChanged ? paragraphBoxJoins(tr.doc, readFormatting()) : joins),
+      // An edit of text keeps every paragraph's box (performance.md "A keystroke's frame").
+      apply: (tr, joins) =>
+        !tr.docChanged
+          ? joins
+          : changesTextOnly(tr)
+            ? joins.map(tr.mapping, tr.doc)
+            : paragraphBoxJoins(tr.doc, readFormatting()),
     },
     props: { decorations: (state) => key.getState(state) },
   });

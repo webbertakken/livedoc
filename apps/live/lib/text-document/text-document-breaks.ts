@@ -31,6 +31,7 @@ import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import type { TextFormatting } from './text-document-formatting';
 import { startUndoStep } from './text-document-undo';
+import { changesTextOnly } from './text-document-text-edits';
 
 /** The class of a paragraph that starts a page by its page break before, labelled where breaks are shown. */
 export const BREAK_BEFORE_CLASS = 'text-document-break-before';
@@ -198,7 +199,13 @@ export function breaksPlugin(readFormatting: () => TextFormatting): Plugin<Decor
     key,
     state: {
       init: (_config, state) => breakLabels(state.doc, readFormatting()),
-      apply: (tr, set) => (tr.docChanged ? breakLabels(tr.doc, readFormatting()) : set),
+      // An edit of text keeps every paragraph's break (performance.md "A keystroke's frame").
+      apply: (tr, set) =>
+        !tr.docChanged
+          ? set
+          : changesTextOnly(tr)
+            ? set.map(tr.mapping, tr.doc)
+            : breakLabels(tr.doc, readFormatting()),
     },
     props: {
       decorations: (state) => key.getState(state),

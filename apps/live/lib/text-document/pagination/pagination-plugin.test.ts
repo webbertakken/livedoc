@@ -5,7 +5,7 @@
 // paragraph ten characters a line, lines 20 px high, one under another.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import { EditorView, type DecorationSet } from 'prosemirror-view';
 import {
   Styles,
   type LiveHeaders,
@@ -266,6 +266,54 @@ describe('paginationPlugin', () => {
     // Away from a page edge the keys are the editor's own.
     view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, at - 5)));
     expect(press('Backspace')).toBeFalsy();
+    view.destroy();
+  });
+});
+
+// page-layout.md "Laying out", performance.md "A keystroke's frame": an edit draws again only what it moved.
+describe('paginationPlugin, drawing again', () => {
+  it("keeps every spacer the edit did not move, and draws the edited paragraph's own again", async () => {
+    const { view } = await mount([
+      p('a'.repeat(20)),
+      p('b'.repeat(39), { widowControl: true }),
+      p('c'.repeat(40), { widowControl: true }),
+      p('d'.repeat(40), { widowControl: true }),
+    ]);
+    const drawn = () => view.state.plugins[0]!.getState(view.state) as DecorationSet;
+    const count = drawn().find().length;
+    const edited = view.state.doc.child(0).nodeSize;
+    // Typed before its page edge: the edited paragraph's own spacer goes until it is laid out again.
+    view.dispatch(view.state.tr.insertText('b', edited + 1));
+    const end = edited + view.state.doc.child(1).nodeSize;
+    const others = drawn().find();
+    expect(others.length).toBeGreaterThan(0);
+    expect(others.every((d) => d.from < edited || d.from >= end)).toBe(true);
+    expect(others.length).toBeLessThan(count);
+    await Promise.resolve();
+    const after = drawn().find();
+    expect(after).toHaveLength(count);
+    // Kept, not made again: each one's own spec (a nested decoration is read out as a copy of it).
+    for (const decoration of others)
+      expect(after.map((d): unknown => d.spec)).toContain(decoration.spec as unknown);
+    view.destroy();
+  });
+
+  it('keeps the spacer of a paragraph typed in after its page edge, drawing nothing again', async () => {
+    const { view } = await mount([
+      p('a'.repeat(20)),
+      p('b'.repeat(39), { widowControl: true }),
+      p('c'.repeat(40), { widowControl: true }),
+    ]);
+    const drawn = () => view.state.plugins[0]!.getState(view.state) as DecorationSet;
+    const specsOf = (set: DecorationSet): unknown[] => set.find().map((d): unknown => d.spec);
+    const specs = specsOf(drawn());
+    const dispatch = vi.spyOn(view, 'dispatch');
+    // The page edge is after its thirtieth character: typed at its end, the lines before the edge stay as they were.
+    view.dispatch(view.state.tr.insertText('b', view.state.doc.child(0).nodeSize + 1 + 39));
+    expect(specsOf(drawn())).toEqual(specs);
+    await Promise.resolve();
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(specsOf(drawn())).toEqual(specs);
     view.destroy();
   });
 });

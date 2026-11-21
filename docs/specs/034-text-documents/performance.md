@@ -23,6 +23,44 @@ The throttled open above was measured while a text document still loaded the can
 first load 1,368 to 1,020 KiB); its open must now fall well below a canvas document's, measured again with Phase 18's
 300-page document.
 
+## A 300-page document
+
+The budgets of [Page layout](page-layout.md#performance) for a long document: 8,000 paragraphs (each two lines and an
+empty one), 320 pages, 870,000 characters, typed into on page 158 and pasted into there.
+
+| Measure                                        | Budget                                                              | Measured (quiet workstation)                                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Keystroke to paint, here (Event Timing)        | Three in four within one frame (16 ms); none past 50 ms `(default)` | 16 ms at the 75th percentile in 5 of 6 runs (24 in one); the slowest is the keystroke that adds a line, below |
+| Pages laid out again after a keystroke         | Within the keystroke's frame                                        | 1 to 3 ms; 16 to 33 ms when the paragraph gains a line, and 150 to 180 ms at times                            |
+| Pages laid out again after a paste of 10 pages | 100 ms                                                              | 13 to 26 ms; 144 ms in the two runs with the slow keystroke                                                   |
+| Opening the file (File > Open), laid out       | (none yet; Phase 18 sets it)                                        | 1.1 to 1.6 s                                                                                                  |
+
+- Before the work of plan 0019 Phase 9 (box 5) every keystroke there took 16 ms or more, three in four 32 to 40 ms
+  and the slowest 48 to 192 ms.
+- A keystroke that gives its paragraph another line moves every later page start, so every later page's spacer is
+  drawn again (159 of them): 16 to 33 ms, the one keystroke past a frame in most runs.
+- At times the same keystroke takes 150 to 180 ms, nearly all of it in drawing the moved spacers (5 of 6 runs in one
+  quiet hour, 1 of 20 runs after it), and a paste in the same run 144 ms: the budget of none past 50 ms is not yet met,
+  and the cause is not yet found.
+- Measured with `apps/live/e2e/perf/text-document.perf.ts` (`E2E_PERF=1`, the `perf` project) on the e2e stack
+  while the workstation was otherwise quiet (load under 6 of 28 cores); under load the same build measures three in
+  four at 24 to 32 ms. The probe is not run on CI runners.
+
+## A keystroke's frame
+
+- The frame that paints a keystroke holds the writing's own work alone: the edit, its live state, and the pages laid
+  out again from the paragraph it touched.
+- What reads the writing is drawn after that frame is painted, once however many changes came in it: the toolbar's
+  pressed states and font size, the ruler, the outline, the footnotes under the writing, the save status, and the
+  caret as collaborators are told of it.
+- Every React commit while the writing has the focus reads the caret's place in the whole body, so the surface draws
+  nothing again for a keystroke that only these parts need.
+- What is drawn from the blocks alone (breaks, paragraph boxes, sections, list items) is mapped through an edit of
+  text, never worked out again; a list item's own text edited draws the list items again.
+- A local edit works out no selection in the live state: y-prosemirror walks the body up to the caret for each one,
+  read only when a peer's edit arrives, so `patches/y-prosemirror@1.3.7.patch` leaves it unread; an upgrade of
+  y-prosemirror carries the patch or drops it once upstream does the same.
+
 ## How it is measured
 
 - The production build on the e2e stack (`scripts/e2e-stack.mjs`), Chromium, dark, 1280 by 860.

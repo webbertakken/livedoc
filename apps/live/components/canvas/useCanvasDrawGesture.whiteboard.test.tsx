@@ -2,6 +2,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { landReleases } from '@/lib/release-task';
 import type { PendingDraw } from '@/lib/draw-mode';
 import { useCanvasDrawGesture } from './useCanvasDrawGesture';
 
@@ -35,6 +36,7 @@ function setup(pendingDraw: PendingDraw) {
       if (pinchMidway) isPinchingRef.current = true;
       move(20, 20);
       window.dispatchEvent(new MouseEvent('pointerup'));
+      landReleases();
     });
   };
   return { stroke, onCommitFreehand };

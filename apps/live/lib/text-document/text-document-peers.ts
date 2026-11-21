@@ -11,6 +11,7 @@ import {
   ySyncPluginKey,
 } from 'y-prosemirror';
 import * as Y from 'yjs';
+import { afterNextPaint } from '@/lib/after-next-paint';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
 import type { TextDocumentPeer, TextDocumentSelection } from './text-document-carets-store';
 
@@ -111,6 +112,19 @@ export function textDocumentPeersPlugin(deps: {
 }): Plugin<readonly TextDocumentPeer[]> {
   const publishFrom = (view: EditorView) =>
     deps.publish(view.hasFocus() && deps.canEdit() ? selectionOf(view.state) : null);
+  // Told after the frame that paints the change, once however many came in it (performance.md "A keystroke's
+  // frame"): a relative position walks the live state up to the caret.
+  let waiting: (() => void) | null = null;
+  const publishSoon = (view: EditorView) => {
+    waiting ??= afterNextPaint(() => {
+      waiting = null;
+      if (!view.isDestroyed) publishFrom(view);
+    });
+  };
+  const cancel = () => {
+    waiting?.();
+    waiting = null;
+  };
   return new Plugin<readonly TextDocumentPeer[]>({
     key: textDocumentPeersKey,
     state: {
@@ -126,6 +140,7 @@ export function textDocumentPeersPlugin(deps: {
           return false;
         },
         blur: () => {
+          cancel();
           deps.publish(null);
           return false;
         },
@@ -133,8 +148,8 @@ export function textDocumentPeersPlugin(deps: {
     },
     view: () => ({
       update: (view, previous) => {
-        const edited = !previous.doc.eq(view.state.doc);
-        if (edited || !previous.selection.eq(view.state.selection)) publishFrom(view);
+        const edited = previous.doc !== view.state.doc;
+        if (edited || !previous.selection.eq(view.state.selection)) publishSoon(view);
         // An edit reaches the live state after this state was drawn: place the carets again once it has.
         const peers = textDocumentPeersKey.getState(view.state) ?? [];
         if (edited && peers.length > 0)
@@ -143,7 +158,10 @@ export function textDocumentPeersPlugin(deps: {
               setTextDocumentPeers(view, textDocumentPeersKey.getState(view.state) ?? []);
           });
       },
-      destroy: () => deps.publish(null),
+      destroy: () => {
+        cancel();
+        deps.publish(null);
+      },
     }),
   });
 }

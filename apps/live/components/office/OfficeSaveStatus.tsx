@@ -3,10 +3,16 @@
 // The save status in the office title row (docs/specs/034-text-documents/editing-surface.md "The title row"): its
 // glyph, its words while something is not yet safe, and a press for what it means. Offline and Failed are announced
 // as they begin; the rest change too often to be worth a word.
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { HoverCard, useClickOutside, useEscape } from '@livedoc/ui';
+import { afterNextPaint } from '@/lib/after-next-paint';
 import { OfficeSaveIcons } from './office-icons';
-import { isUnsettled, OFFICE_SAVE_STATUS, type OfficeSaveStatus } from './office-save-status';
+import {
+  isUnsettled,
+  OFFICE_SAVE_STATUS,
+  type OfficeSaveStatus,
+  type OfficeSaveStatusSource,
+} from './office-save-status';
 
 const ANNOUNCED: readonly OfficeSaveStatus[] = ['offline', 'failed'];
 
@@ -49,4 +55,31 @@ export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus })
       ) : null}
     </div>
   );
+}
+
+const NONE = () => null;
+
+/**
+ * The kind's save status, watched here so that a change draws the status alone (none: nothing), after the frame it
+ * happens in: a keystroke's Saving never holds up the keystroke's paint (editing-surface.md "The title row").
+ */
+export function OfficeSaveStatusShown({ source }: { source: OfficeSaveStatusSource }) {
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      let waiting: (() => void) | null = null;
+      const stop = source.subscribe(() => {
+        waiting ??= afterNextPaint(() => {
+          waiting = null;
+          listener();
+        });
+      });
+      return () => {
+        stop();
+        waiting?.();
+      };
+    },
+    [source],
+  );
+  const status = useSyncExternalStore(subscribe, source.get, NONE);
+  return status ? <OfficeSaveStatusButton status={status} /> : null;
 }

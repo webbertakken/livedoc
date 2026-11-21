@@ -35,8 +35,8 @@ import {
   visibleToolbar,
   type OfficeToolbar as OfficeToolbarData,
 } from '@/lib/office/office-toolbar';
-import type { OfficeSaveStatus } from './office-save-status';
-import { OfficeSaveStatusButton } from './OfficeSaveStatus';
+import type { OfficeSaveStatusSource } from './office-save-status';
+import { OfficeSaveStatusShown } from './OfficeSaveStatus';
 import { OfficeIconButton, OfficeTitleActions } from './OfficeTitleActions';
 import { OfficeContextMenu, type OfficeContextMenuSource } from './OfficeContextMenu';
 import { OfficeShortcutsDialog } from './OfficeShortcutsDialog';
@@ -107,7 +107,7 @@ export function OfficeTitleRow({
   tabId?: string;
   onFollow?: (personId: string) => boolean;
   // The kind's save status; none for a session that saves nothing.
-  saveStatus?: OfficeSaveStatus | null;
+  saveStatus?: OfficeSaveStatusSource | null;
   // The kind's toolbar, and the zoom its zoom field works (null: no zoom field).
   toolbar?: OfficeToolbarData;
   zoom?: OfficeZoom | null;
@@ -292,7 +292,7 @@ export function OfficeTitleRow({
                 <OfficeMoveIcon />
               </OfficeIconButton>
             ) : null}
-            {saveStatus ? <OfficeSaveStatusButton status={saveStatus} /> : null}
+            {saveStatus ? <OfficeSaveStatusShown source={saveStatus} /> : null}
             {notice ? (
               <p role="status" className="truncate text-sm text-slate-600 dark:text-slate-300">
                 {notice}

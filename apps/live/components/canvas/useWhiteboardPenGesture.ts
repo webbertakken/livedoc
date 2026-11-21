@@ -6,8 +6,11 @@ import { isWhiteboardPenIntent } from '@/lib/draw-mode';
 import { createLiveStroke, type LiveStroke } from '@/lib/live-stroke';
 import { flipStrokeRecognition } from '@/lib/recognition-flip';
 import { debugLog } from '@/lib/debug-log';
+import { afterRelease } from '@/lib/release-task';
 
 type Point = { x: number; y: number };
+
+const landedStrokes = new WeakSet<LiveStroke>();
 
 type WhiteboardPenGestureDeps = Pick<
   CanvasProps,
@@ -67,6 +70,10 @@ export function useWhiteboardPenGesture({
   });
   const pinchingNow = useEffectEvent(() => isPinchingRef?.current === true);
   const commitStroke = useEffectEvent((stroke: LiveStroke) => {
+    // A stroke lands once: a lift hands its landing to the next task, and the tab leaving Draw mode in between
+    // finishes the same stroke.
+    if (landedStrokes.has(stroke)) return;
+    landedStrokes.add(stroke);
     // A tap is one point, and lands as a dot (docs/specs/023-draw-mode/draw-mode.md "Pens").
     if (stroke.points.length === 0) return;
     debugLog(
@@ -118,12 +125,14 @@ export function useWhiteboardPenGesture({
     const stroke = penStroke;
     // A second finger took over mid-stroke: the stroke is discarded on release.
     let pinched = false;
+    // Set by the lift: the listeners stay attached until the landed stroke commits.
+    let lifted = false;
     const mine = (e: PointerEvent) =>
       stroke.pointerId === undefined ||
       e.pointerId === undefined ||
       e.pointerId === stroke.pointerId;
     const onMove = (e: PointerEvent) => {
-      if (!mine(e)) return;
+      if (!mine(e) || lifted) return;
       if (pinchingNow()) pinched = true;
       if (pinched) return;
       // Shift reshapes a locked shape perfect, from this move on (draw-mode.md "Shape
@@ -134,10 +143,11 @@ export function useWhiteboardPenGesture({
       if (pushed || shiftChanged) stroke.notify();
     };
     const onUp = (e: PointerEvent) => {
-      if (!mine(e)) return;
+      if (!mine(e) || lifted) return;
+      lifted = true;
       if (pinchingNow()) pinched = true;
-      setPenStroke(null);
       if (pinched) {
+        setPenStroke(null);
         debugLog('[whiteboard] stroke discarded: pinch');
         return;
       }
@@ -146,10 +156,15 @@ export function useWhiteboardPenGesture({
       // shape lands as it showed.
       const p = canvasPoint(e);
       if (p) stroke.push(p.x, p.y);
-      commitStroke(stroke);
+      // The live stroke shows until the landed one replaces it, in one commit, in a task after the
+      // release's; the next press lands it first (canvas-performance.md "A release lands in a task of its own").
+      afterRelease(() => {
+        setPenStroke(null);
+        commitStroke(stroke);
+      });
     };
     const onCancel = (e: PointerEvent) => {
-      if (!mine(e)) return;
+      if (!mine(e) || lifted) return;
       debugLog('[whiteboard] stroke discarded: cancel');
       setPenStroke(null);
     };
@@ -157,7 +172,7 @@ export function useWhiteboardPenGesture({
     // while it is held, holding still does not snap the stroke again, and releasing it changes
     // nothing else.
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Alt') return;
+      if (e.key !== 'Alt' || lifted) return;
       e.preventDefault();
       swallowAltUp.current = true;
       if (e.repeat || pinched) return;
