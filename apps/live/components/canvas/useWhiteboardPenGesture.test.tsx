@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { PendingDraw } from '@/lib/draw-mode';
 import { track } from '@/lib/telemetry';
+import { landReleases } from '@/lib/release-task';
 import { useWhiteboardPenGesture } from './useWhiteboardPenGesture';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -62,11 +63,18 @@ function setup(zoom = 1) {
         { x: (x - 10) / zoom, y: (y - 20) / zoom },
       );
     });
+  // An event, and the task after it: where a lift lands its stroke (lib/release-task.ts).
   const send = (e: Event) =>
     act(() => {
       window.dispatchEvent(e);
+      landReleases();
     });
-  return { hook, press, send, isPinchingRef, onCommitFreehand, renders: () => renders };
+  // An event alone, its release's work still pending.
+  const sendOnly = (e: Event) =>
+    act(() => {
+      window.dispatchEvent(e);
+    });
+  return { hook, press, send, sendOnly, isPinchingRef, onCommitFreehand, renders: () => renders };
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -121,6 +129,58 @@ describe('useWhiteboardPenGesture', () => {
     s.send(pointer('pointermove', { x: 30, y: 20 }));
     s.send(pointer('pointerup', { x: 30, y: 20 }));
     expect(s.onCommitFreehand.mock.calls[0]![0]).toHaveLength(2);
+  });
+
+  // docs/specs/008-canvas/canvas-performance.md "A release lands in a task of its own".
+  describe('the lift lands its stroke in a task of its own', () => {
+    it('shows the live stroke until the task after the lift lands it', () => {
+      vi.spyOn(console, 'info').mockImplementation(() => {});
+      const s = setup();
+      s.press(10, 20);
+      s.send(pointer('pointermove', { x: 30, y: 20 }));
+      s.sendOnly(pointer('pointerup', { x: 40, y: 20 }));
+      expect(s.onCommitFreehand).not.toHaveBeenCalled();
+      expect(s.hook.result.current.penStroke).not.toBeNull();
+      act(() => landReleases());
+      expect(s.onCommitFreehand).toHaveBeenCalledTimes(1);
+      expect(s.hook.result.current.penStroke).toBeNull();
+    });
+
+    it('lands the lifted stroke before the next press reaches anyone', () => {
+      vi.spyOn(console, 'info').mockImplementation(() => {});
+      const s = setup();
+      s.press(10, 20);
+      s.send(pointer('pointermove', { x: 30, y: 20 }));
+      s.sendOnly(pointer('pointerup', { x: 40, y: 20 }));
+      s.sendOnly(pointer('pointerdown', { x: 80, y: 20 }));
+      expect(s.onCommitFreehand).toHaveBeenCalledTimes(1);
+    });
+
+    it('adds no move made after the lift to the stroke', () => {
+      vi.spyOn(console, 'info').mockImplementation(() => {});
+      const s = setup();
+      s.press(10, 20);
+      s.send(pointer('pointermove', { x: 30, y: 20 }));
+      s.sendOnly(pointer('pointerup', { x: 40, y: 20 }));
+      s.sendOnly(pointer('pointermove', { x: 90, y: 90 }));
+      act(() => landReleases());
+      expect(s.onCommitFreehand.mock.calls[0]![0]).toEqual([
+        { x: 0, y: 0 },
+        { x: 20, y: 0 },
+        { x: 30, y: 0 },
+      ]);
+    });
+
+    it('lands a stroke once when the tab leaves Draw mode before its landing', () => {
+      vi.spyOn(console, 'info').mockImplementation(() => {});
+      const s = setup();
+      s.press(10, 20);
+      s.send(pointer('pointermove', { x: 30, y: 20 }));
+      s.sendOnly(pointer('pointerup', { x: 40, y: 20 }));
+      s.hook.rerender({ pendingDraw: PEN, whiteboard: false });
+      act(() => landReleases());
+      expect(s.onCommitFreehand).toHaveBeenCalledTimes(1);
+    });
   });
 
   // docs/specs/023-draw-mode/draw-mode.md "Pens": a tap with a pen leaves a dot.
