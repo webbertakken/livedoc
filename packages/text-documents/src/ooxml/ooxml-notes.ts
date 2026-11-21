@@ -149,7 +149,8 @@ export function footnotesPartXml(
 ): string {
   const outer = host.partRels;
   host.partRels = rels;
-  const out: string[] = kept?.kept.length ? kept.kept.map((k) => host.kept(k.xml)) : SEPARATORS;
+  // A file's part keeps what it had (Google Docs writes no separators); a new document gets Word's separators.
+  const out: string[] = kept ? kept.kept.map((k) => host.kept(k.xml)) : SEPARATORS;
   for (const [note, id] of ids) {
     const led = note.blocks[0]?.type === 'paragraph';
     const blocks = note.blocks.map((b, i) =>

@@ -39,7 +39,13 @@ export {
   type OdfPackage,
   type OdfPackageRead,
 } from './odf/odf-package';
-export { keptXmlOf, keptXmlWithin, serializeXml, type KeptXml } from './xml/kept-xml';
+export {
+  keptXmlOf,
+  keptXmlWithin,
+  serializeXml,
+  startTagBindings,
+  type KeptXml,
+} from './xml/kept-xml';
 export { isElementNamed, textContent, type XmlBindings, type XmlParsed } from './xml/xml-tree';
 export { readPackageEntries, startsWithZip } from './zip/package-entries';
 export {

@@ -9,6 +9,7 @@ import {
   keptXmlWithin,
   odfColour,
   odfLengthToPt,
+  startTagBindings,
   ptToOdf,
   type KeptXml,
   type XmlElement,
@@ -72,9 +73,10 @@ function tagOf(e: XmlElement): KeptXml | undefined {
   );
   if (own.length === 0) return undefined;
   const qualified = (prefix: string, local: string) => (prefix ? `${prefix}:${local}` : local);
-  const ns: Record<string, string> = {};
+  // The tag is written without the element's own declarations: those it uses come with it.
+  const ns: Record<string, string> = { ...startTagBindings(e) };
   for (const prefix of [e.prefix, ...own.map((a) => a.prefix)])
-    if (prefix && prefix !== 'xml' && e.scope[prefix]) ns[prefix] = e.scope[prefix]!;
+    if (prefix in e.declared) ns[prefix] = e.declared[prefix]!;
   const attributes = own
     .map((a) => ` ${qualified(a.prefix, a.local)}="${escapeXmlAttribute(a.value)}"`)
     .join('');

@@ -9,7 +9,7 @@ import { wholeOf } from './testing/compare';
 
 const CORPUS = join(import.meta.dirname, '..', 'corpus');
 
-const files = ['libreoffice', 'word'].flatMap((maker) =>
+const files = ['libreoffice', 'word', 'google'].flatMap((maker) =>
   readdirSync(join(CORPUS, maker))
     .filter(
       (f) =>

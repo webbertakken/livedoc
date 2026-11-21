@@ -1,4 +1,6 @@
+import { readOoxmlPackage, RELATIONSHIP_TYPES } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
+import { docx } from './testing/packages';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import { TextDocument, type TextDocumentFormat } from './model/text-document';
 import { CONSTRUCTS } from './testing/constructs';
@@ -69,5 +71,26 @@ describe('writing', () => {
     expect(blank.section.setup.width).toBe(595.276);
     expect(TextDocument.fromTexts([]).body).toHaveLength(1);
     expect(TextDocument.characters(TextDocument.fromTexts(['ab', 'c']))).toBe(3);
+  });
+});
+
+// standard-mapping.md "Documented losses" (Google Docs `.docx`): a package with no core or app properties leaves with
+// both, each relationship under an id of its own.
+describe('a package written from one lacking its properties', () => {
+  it('gives the core and app properties ids no other relationship holds', async () => {
+    const read = await readTextDocumentFile(docx('<w:p/>'));
+    if (!read.ok) throw new Error(read.rejection);
+    const written = writeTextDocumentFile(read.document, 'docx');
+    if (!written.ok) throw new Error(written.rejection);
+    const pkg = await readOoxmlPackage(new Uint8Array(written.bytes));
+    if (!pkg.ok) throw new Error(pkg.rejection);
+    const root = pkg.package.relationships.get('') ?? [];
+    expect(new Set(root.map((r) => r.id)).size).toBe(root.length);
+    expect(root.map((r) => r.type)).toEqual(
+      expect.arrayContaining([
+        RELATIONSHIP_TYPES.coreProperties,
+        RELATIONSHIP_TYPES.extendedProperties,
+      ]),
+    );
   });
 });

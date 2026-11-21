@@ -546,15 +546,9 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     if (!written.has(part.name) && !isStory(part.mediaType))
       parts.push({ name: part.name, contentType: part.mediaType, data: part.data });
   const output = new Set(parts.map((p) => p.name));
-  const generated = new Set<string>([
-    RELATIONSHIP_TYPES.officeDocument,
-    RELATIONSHIP_TYPES.coreProperties,
-    RELATIONSHIP_TYPES.extendedProperties,
-  ]);
-  const pkg = new RelationshipList(
-    (source?.relationships.get('') ?? []).filter((r) => !generated.has(r.type)),
-  );
   const packageOriginal = source?.relationships.get('') ?? [];
+  // Every id the package had is taken, so a relationship it lacked (Google Docs writes no core properties) gets a new one.
+  const pkg = new RelationshipList(packageOriginal);
   const idFor = (type: string) => packageOriginal.find((r) => r.type === type)?.id;
   const ordered: Relationship[] = [
     {
