@@ -1,0 +1,86 @@
+{
+  "source": "libreoffice",
+  "category": "Web",
+  "by": "LibreOffice 26.8.3.1",
+  "made": "2026-11-21",
+  "answers": {
+    "ENCODEURL.1": [["hello%2C%20world%21"]],
+    "ENCODEURL.2": [["hello%20world"]],
+    "ENCODEURL.3": [["a-b_c%2Ed%7Ee"]],
+    "ENCODEURL.4": [["%E6%97%A5%E6%9C%AC%20%C3%A9"]],
+    "ENCODEURL.5": [["1%2E5"]],
+    "ENCODEURL.6": [["1"]],
+    "ENCODEURL.7": [["https%3A%2F%2Fdocs%2Enu%2Fa%20b"]],
+    "ENCODEURL.8": [["x%20y"]],
+    "ENCODEURL.9": [["%3F%26%3D%2F%23%2B%25"]],
+    "ISURL.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISURL.9": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "HYPERLINK.1": [["Google"]],
+    "HYPERLINK.2": [["http://www.google.com/"]],
+    "HYPERLINK.3": [[null]],
+    "HYPERLINK.4": [[0]],
+    "HYPERLINK.5": [[5]],
+    "HYPERLINK.6": [["https://docs.nu/a b"]]
+  }
+}

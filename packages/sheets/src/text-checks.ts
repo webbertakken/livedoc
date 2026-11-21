@@ -1,7 +1,9 @@
 // Whether text is an email address or a web address: data validation's Text rules
-// (docs/specs/029-sheets/data-validation.md) and ISEMAIL (formulas.md "Functions": Information) read them alike.
+// (docs/specs/029-sheets/data-validation.md), ISEMAIL and ISURL (formulas.md "Functions") read them alike.
 
-const URL_RE = /^(https?:\/\/[^\s]+|[a-z0-9-]+(\.[a-z0-9-]+)+(\/[^\s]*)?)$/i;
+// Google's link schemes (its HYPERLINK and ISURL help pages), or a domain with a dot and an optional path.
+const URL_RE =
+  /^((https?|ftp|gopher|telnet|news):\/\/[^\s]+|(mailto|aim):[^\s]+|[a-z0-9-]+(\.[a-z0-9-]+)+(\/[^\s]*)?)$/i;
 
 // Something, one @, then a domain with a dot that is neither its first nor its last character; no spaces. Checked
 // without a regular expression: the pattern's dotted domain backtracked quadratically on a long run of dots (a cell is

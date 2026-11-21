@@ -996,6 +996,8 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'Replaces what matches a regular expression',
     '=REGEXREPLACE(A2, "\\s+", " ")',
   ),
+  ENCODEURL: D('text', 'Text written so it can go in a web address’s query', '=ENCODEURL(A2)'),
+  ISURL: D('value', 'Whether a value is a web address', '=ISURL(A2)'),
   HYPERLINK: D(
     'url, [label]',
     'A link to a web page or email address; Ctrl/⌘-click opens it',

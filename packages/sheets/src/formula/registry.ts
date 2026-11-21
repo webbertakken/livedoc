@@ -15,6 +15,7 @@ import { OPERATOR_FUNCTIONS } from './functions/operator';
 import { PARSER_FUNCTIONS } from './functions/parser';
 import { STATS_FUNCTIONS } from './functions/stats';
 import { TEXT_FUNCTIONS } from './functions/text';
+import { WEB_FUNCTIONS } from './functions/web';
 
 export type FunctionFamily =
   | 'Maths'
@@ -30,6 +31,7 @@ export type FunctionFamily =
   | 'Finance'
   | 'Engineering'
   | 'Parser'
+  | 'Web'
   | 'Plan cards';
 
 export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>][] = [
@@ -46,6 +48,7 @@ export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>]
   ['Finance', FINANCE_FUNCTIONS],
   ['Engineering', ENGINEERING_FUNCTIONS],
   ['Parser', PARSER_FUNCTIONS],
+  ['Web', WEB_FUNCTIONS],
   ['Plan cards', CARD_FUNCTIONS],
 ];
 

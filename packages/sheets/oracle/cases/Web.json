@@ -1,0 +1,163 @@
+{
+  "category": "Web",
+  "data": [
+    ["https://docs.nu/a b", null, null],
+    ["x y", null, null]
+  ],
+  "cases": [
+    {
+      "id": "ENCODEURL.1",
+      "f": "=ENCODEURL(\"hello, world!\")",
+      "expect": [["hello%2C%20world%21"]],
+      "cite": "https://support.google.com/docs/answer/9199778 (example: ENCODEURL(\"hello, world!\") is hello%2C%20world%21)"
+    },
+    {
+      "id": "ENCODEURL.2",
+      "f": "=ENCODEURL(\"hello world\")"
+    },
+    {
+      "id": "ENCODEURL.3",
+      "f": "=ENCODEURL(\"a-b_c.d~e\")"
+    },
+    {
+      "id": "ENCODEURL.4",
+      "f": "=ENCODEURL(\"日本 é\")"
+    },
+    {
+      "id": "ENCODEURL.5",
+      "f": "=ENCODEURL(1.5)"
+    },
+    {
+      "id": "ENCODEURL.6",
+      "f": "=ENCODEURL(TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice reads TRUE as 1 where text goes"
+      },
+      "note": "Awaits Google's answer: LiveDoc writes TRUE as text, as Google's text functions do (formulas.md \"Candidates\")"
+    },
+    {
+      "id": "ENCODEURL.7",
+      "f": "=ENCODEURL(Data!A1)"
+    },
+    {
+      "id": "ENCODEURL.8",
+      "f": "=ENCODEURL(Data!A2)"
+    },
+    {
+      "id": "ENCODEURL.9",
+      "f": "=ENCODEURL(\"?&=/#+%\")"
+    },
+    {
+      "id": "ISURL.1",
+      "f": "=ISURL(\"http://www.google.com\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256501 (sample usage; \"a fully qualified URL is not required\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.2",
+      "f": "=ISURL(\"www.google.com\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256501 (sample usage; \"a fully qualified URL is not required\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.3",
+      "f": "=ISURL(\"google.com\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256501 (sample usage; \"a fully qualified URL is not required\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.4",
+      "f": "=ISURL(\"www.abc.xyz\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256501 (sample usage; \"a fully qualified URL is not required\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.5",
+      "f": "=ISURL(\"ftp://example.com/x\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256501 (\"valid protocols include ftp, http, https, gopher, mailto, news, telnet, and aim\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.6",
+      "f": "=ISURL(\"mailto:a@b.c\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256501 (\"valid protocols include ftp, http, https, gopher, mailto, news, telnet, and aim\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.7",
+      "f": "=ISURL(\"not a url\")",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3256501 (\"checks whether a value is a valid URL\": spaces, no domain)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.8",
+      "f": "=ISURL(5)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3256501 (\"checks whether a value is a valid URL\": a number is none)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISURL.9",
+      "f": "=ISURL(Data!A1)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3256501 (\"checks whether a value is a valid URL\": a number is none)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
+      }
+    },
+    {
+      "id": "HYPERLINK.1",
+      "f": "=HYPERLINK(\"http://www.google.com/\", \"Google\")"
+    },
+    {
+      "id": "HYPERLINK.2",
+      "f": "=HYPERLINK(\"http://www.google.com/\")"
+    },
+    {
+      "id": "HYPERLINK.3",
+      "f": "=HYPERLINK(\"http://www.google.com/\", \"\")",
+      "expect": [[""]],
+      "cite": "https://support.google.com/docs/answer/3093313 (\"If link_label is the empty string literal (\"\"), the cell will appear empty\")"
+    },
+    {
+      "id": "HYPERLINK.4",
+      "f": "=HYPERLINK(\"http://www.google.com/\", Data!C1)",
+      "expect": [["http://www.google.com/"]],
+      "cite": "https://support.google.com/docs/answer/3093313 (\"If link_label is a reference to an empty cell, url will be displayed\")",
+      "differs": {
+        "libreoffice": "LibreOffice shows an empty label cell as 0"
+      }
+    },
+    {
+      "id": "HYPERLINK.5",
+      "f": "=HYPERLINK(\"http://x.test\", 5)"
+    },
+    {
+      "id": "HYPERLINK.6",
+      "f": "=HYPERLINK(\"http://x.test\", Data!A1)"
+    }
+  ]
+}

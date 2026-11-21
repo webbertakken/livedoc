@@ -339,7 +339,7 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 
 **Text**: `CONCATENATE`, `TEXTJOIN`, `LEFT`, `RIGHT`, `MID`, `LEN`, `UPPER`, `LOWER`, `PROPER`, `TRIM`, `CLEAN`,
 `SUBSTITUTE`, `REPLACE`, `FIND`, `SEARCH`, `REPT`, `EXACT`, `TEXT`, `VALUE`, `CHAR`, `CODE`, `SPLIT`, `JOIN`,
-`REGEXMATCH`, `REGEXEXTRACT`, `REGEXREPLACE`, `HYPERLINK`, `T`, `UNICHAR`, `UNICODE`, `ASC`, `LENB`, `LEFTB`, `RIGHTB`,
+`REGEXMATCH`, `REGEXEXTRACT`, `REGEXREPLACE`, `T`, `UNICHAR`, `UNICODE`, `ASC`, `LENB`, `LEFTB`, `RIGHTB`,
 `MIDB`, `REPLACEB`, `FINDB`, `SEARCHB`, `DOLLAR`, `FIXED`, `ROMAN`, `ARABIC`, `JIS`, `NUMBERVALUE`.
 
 - `JIS` writes half-width ASCII and katakana full-width, the reverse of `ASC`. `NUMBERVALUE(text, [decimal],
@@ -441,6 +441,13 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   an odd last period as one span (default, D59). Rate, price and redemption are positive and yield not negative, the
   dates in order (maturity, first coupon, settlement, issue; maturity, settlement, last interest), else `#NUM!`.
 
+**Web**: `HYPERLINK` (above), `ENCODEURL`, `ISURL`.
+
+- `ENCODEURL(text)` writes each byte of the text's UTF-8 as `%XX` but letters, digits, `-` and `_`, as LibreOffice
+  and Excel keep them (`"hello, world!"` is `hello%2C%20world%21`, Google's example).
+- `ISURL(value)` reads an address as a Text Is Valid URL rule does ([Data validation](data-validation.md)); a number
+  is none.
+
 **Engineering**: `BIN2OCT`, `BIN2HEX`, `BIN2DEC`, `OCT2BIN`, `OCT2HEX`, `OCT2DEC`, `HEX2BIN`, `HEX2OCT`, `HEX2DEC`,
 `DEC2BIN`, `DEC2OCT`, `DEC2HEX`, `BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT`, `BITRSHIFT`, `DELTA`, `GESTEP`, `ERF`,
 `ERF.PRECISE`, `COMPLEX`, `IMREAL`, `IMAGINARY`, `IMABS`, `IMARGUMENT`, `IMCONJUGATE`, `IMSUM`, `IMSUB`, `IMPRODUCT`,
@@ -490,7 +497,8 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   `"mmm yyyy"`, `"hh:mm"`, `"[h]:mm"`, `"£#,##0.00"`, `"@"`).
 - `HYPERLINK(url, [label])` shows the label as a link; Ctrl/⌘ and a click opens it in a new tab (http, https and
   mailto only).
-  - The cell's **value is the label** (or the url when there is none), so sorting, CSV, charts, `read_sheet` and
+  - The cell's **value is the label** (the url when there is none or it reads an empty cell; an empty text shows
+    nothing, as Google's help has it; a number stays a number), so sorting, CSV, charts, `read_sheet` and
     every formula that reads the cell see text, as in other spreadsheets. Where it goes is read from the formula
     (`Workbook.hyperlinkOf`): only a formula that **is** a `HYPERLINK` call at its top links; one nested inside
     another function (`=UPPER(HYPERLINK(…))`) shows its value as plain text.
@@ -561,68 +569,70 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   | `PERCENTRANK(data, 8, 0)`                          | 0.286: 0 digits read as 3         | Err:502                              | Statistical PERCENTRANK.8      |
   | `PERMUTATIONA(0, 2)`, `PERMUTATIONA(3, 4)`         | `#NUM!`                           | 0, 81                                | Statistical PERMUTATIONA.3, .4 |
   | `F.DIST(15.35, 7, 6)`, cumulative left out         | the density: FALSE by default     | the cumulative: ODF FDIST's TRUE     | Statistical F.DIST.6           |
+  | `HYPERLINK(url, A1)`, A1 empty                     | the url                           | 0                                    | Web HYPERLINK.4                |
 
 - **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
   (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
 
-  | Formula                                                               | LiveDoc today                          | LibreOffice                         | Case                                            |
-  | --------------------------------------------------------------------- | -------------------------------------- | ----------------------------------- | ----------------------------------------------- |
-  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`                      | 1, never negative                      | -2                                  | Date DATEDIF.9                                  |
-  | `NETWORKDAYS.INTL(a, b, "1111111")`                                   | `#VALUE!`                              | 0                                   | Date NETWORKDAYS.INTL.4                         |
-  | `FILTER(range, numbers)`                                              | any number but 0 passes                | only positive numbers pass          | Filter FILTER.8                                 |
-  | `UNIQUE({"a"; "A"})`                                                  | two values, case kept                  | one, case ignored                   | Filter UNIQUE.4                                 |
-  | `CELL("address", Data!B3)`                                            | `Data!$B$3`                            | `$Data.$B$3`                        | Info CELL.2                                     |
-  | `CELL("width", A1)`                                                   | ECMA-376 characters (D40)              | LibreOffice's own measure           | Info CELL.14                                    |
-  | `AND("TRUE", 1)`                                                      | TRUE, text read as a truth             | `#VALUE!`                           | Logical AND.8                                   |
-  | `IFNA(A4, 1)` over an empty cell                                      | empty                                  | 0                                   | Logical IFNA.4                                  |
-  | `ADDRESS(1, 1, 5)`                                                    | `#VALUE!`                              | `$A$1`                              | Lookup ADDRESS.9                                |
-  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`                       | `1TRUE`, `true`: TRUE as text          | `11`, `1`: TRUE as 1                | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
-  | `"z" < TRUE`                                                          | TRUE: booleans after text              | FALSE                               | Syntax compare.4                                |
-  | `SUM(1:2)` over booleans                                              | booleans skipped                       | booleans counted                    | Syntax range.3                                  |
-  | `0^-1`, `(-8)^(1/3)`                                                  | `#DIV/0!`, `#NUM!`                     | `#NUM!`, -2                         | Syntax errors.4, .8                             |
-  | `CHAR(0)`, `CODE("")`                                                 | `#VALUE!`                              | empty text, 0                       | Text CHAR.2, CODE.2                             |
-  | `FIND("", "abc")`, `SEARCH("", "abc")`                                | 1, as Excel                            | `#VALUE!`                           | Text FIND.5, SEARCH.7                           |
-  | `PROPER("it's 2nd")`                                                  | `It's 2nd`                             | `It'S 2Nd`                          | Text PROPER.3                                   |
-  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`                               | `熊`, `本`: a cut character kept       | a space                             | Text LEFTB.6, RIGHTB.5                          |
-  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`                                | -3, -2: Excel's                        | -2, -3: OpenFormula's               | Math CEILING.4, FLOOR.4                         |
-  | `MROUND(10, -3)`                                                      | `#NUM!`, as Excel                      | 9                                   | Math MROUND.3                                   |
-  | `ISEVEN(A1)` over an empty cell                                       | TRUE, as Excel                         | `#VALUE!`                           | Math ISEVEN.6                                   |
-  | `SUM(1, "2", TRUE)`                                                   | 4, as Excel                            | `#VALUE!`                           | Math SUM.2                                      |
-  | `IMPOWER("2i", 2)`                                                    | `-4`, multiplied out                   | `-4+4.89858719658941e-16i`          | Math IMPOWER.4                                  |
-  | `LENB("ｶﾀｶﾅ")`                                                        | 4: half-width kana 1 byte (D43)        | 8                                   | Text LENB.6                                     |
-  | `DSUM(A1:D7, "Qty", {"Qty"; 10})`                                     | the records of 10                      | every record                        | Database DSUM.12                                |
-  | `DGET(A1:D7, "Qty", {"Name"; "Banana"})`, its Qty empty               | empty                                  | `#VALUE!`                           | Database DGET.4                                 |
-  | `DSTDEV` of one value, `DVARP` of none                                | `#DIV/0!`, as `STDEV`, `VAR.P`         | `#NUM!`                             | Database DSTDEV.2, DVARP.2                      |
-  | `BITLSHIFT(1, 54)`                                                    | `#NUM!`: Google's -53 to 53            | 18014398509482000                   | Engineering BITLSHIFT.6                         |
-  | `IMSUM("4+3i", "1+2j")`, `IMSUB`, `IMPRODUCT`                         | `#VALUE!`: Google's "you can't"        | `5+5i`                              | Engineering IMSUM.4                             |
-  | `CONVERT(1, "lbm", "kg")` and 13 more units                           | 0.45359237: the exact definition (D50) | 0.453592309748811: a rounded factor | Parser CONVERT.4                                |
-  | `CONVERT(1, "MTON", "l")`, `"admkn"`, `"flb"`                         | 1132.67386368: 40 cubic feet           | 0.7079211648                        | Parser CONVERT.59, .61, .31                     |
-  | `TRANSPOSE(A1:A3)` over an empty cell                                 | empty                                  | 0                                   | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
-  | `HSTACK(1, "a", TRUE)`                                                | `TRUE`                                 | 1                                   | Array HSTACK.2                                  |
-  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans                   | booleans skipped                       | booleans counted                    | Array SUMPRODUCT.6, FREQUENCY.2                 |
-  | `SUMXMY2(a, b)`, a pair with text                                     | the pair left out                      | `#VALUE!`                           | Array SUMXMY2.4                                 |
-  | `CHOOSECOLS(A1:D3, "4")`                                              | the fourth column                      | `#VALUE!`                           | Array CHOOSECOLS.7                              |
-  | `CUMPRINC(r, n, pv, 2.1, 4.9, 0)`                                     | periods 3 and 4, as CUMIPMT (D52)      | periods 2 to 4                      | Financial CUMPRINC.4                            |
-  | `TBILLPRICE(s, m, 9%)`, maturity past a year                          | `#NUM!`                                | 89.45                               | Financial TBILLPRICE.4                          |
-  | `XNPV(9%, amounts, dates)`, a date that is text                       | `#VALUE!` (D55)                        | a number                            | Financial XNPV.5                                |
-  | `DOLLARDE(1.1, 10)`                                                   | 2: tenths in two places (D51)          | 1.1                                 | Financial DOLLARDE.4                            |
-  | `TOCOL(5)`                                                            | 5, a column of one, as Excel           | `#VALUE!`                           | Array TOCOL.8                                   |
-  | `FREQUENCY(data, classes)`, no class a number                         | every value counted (D46)              | `#VALUE!`                           | Array FREQUENCY.5                               |
-  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`                              | `#VALUE!`                              | 2                                   | Array MMULT.4                                   |
-  | `AVERAGE(1, "2", TRUE)`, `MAX(1, "3")`, `STDEV`, `VAR` alike          | numbers typed as text read, as Excel   | `#VALUE!`                           | Statistical AVERAGE.3, MAX.4                    |
-  | `AVERAGEA(1, TRUE, "3")`, `STDEVA`, `VARA` alike                      | "3" is 3                               | "3" is 0                            | Statistical AVERAGEA.2                          |
-  | `LARGE(data, 9)`, `SMALL(data, 0)`, outside the data                  | `#NUM!`, as Excel                      | `#VALUE!`                           | Statistical LARGE.2, SMALL.3                    |
-  | `MEDIAN`, `PERCENTILE`, `TRIMMEAN` of no numbers                      | `#NUM!`, as Excel                      | `#VALUE!`                           | Statistical MEDIAN.3, TRIMMEAN.7                |
-  | `MODE(1, 2, 3)`, `MODE.SNGL`, `MODE.MULT`                             | `#N/A`, as Excel                       | `#VALUE!`                           | Statistical MODE.2, MODE.MULT.3                 |
-  | `PERCENTRANK.INC(data, 30)`, `.EXC`                                   | `#N/A`, as PERCENTRANK (D57)           | `#VALUE!`                           | Statistical PERCENTRANK.INC.5                   |
-  | `PERCENTRANK.INC(data, 8, 0)`, `.EXC`                                 | 3 digits, as PERCENTRANK (D57)         | Err:502                             | Statistical PERCENTRANK.INC.8                   |
-  | `CHIINV(1, 2)`, `CHISQ.INV(0, 2)`, `F.INV.RT(1, …)`, `TINV(1, 1)`     | `#NUM!`: p strictly between 0 and 1    | 0, or a number                      | Statistical CHIINV.5, TINV.4                    |
-  | `NORMINV(0, 0, 1)`, `NORM.INV(1, 0, 1)`                               | `#NUM!`, as NORMSINV's help            | `#VALUE!`                           | Statistical NORMINV.4                           |
-  | `CHIDIST(-1, 2)`, `GAMMADIST(-1, 2, 2, TRUE)`                         | `#NUM!`: x must be positive            | 1, 0                                | Statistical CHIDIST.4, GAMMADIST.5              |
-  | `GAMMA(-1.5)`                                                         | `#NUM!`: the number must be positive   | 2.363                               | Statistical GAMMA.4                             |
-  | `GAMMA.DIST(0, 1, 2, FALSE)`, `CHISQ.DIST(0, 2, FALSE)`               | `#NUM!`: no density at 0 for shape ≤ 1 | 0.5, 0                              | Statistical GAMMA.DIST.3, CHISQ.DIST.6          |
-  | `HYPGEOM.DIST`, `LOGNORM.DIST`, `NEGBINOM.DIST`, `POISSON.DIST` short | Google's shorter form read             | Err:511                             | Statistical HYPGEOM.DIST.1                      |
-  | `LINEST(y, x)`, collinear x                                           | `#NUM!` (D47)                          | coefficients past 1e13              | Array LINEST.12                                 |
+  | Formula                                                               | LiveDoc today                               | LibreOffice                         | Case                                            |
+  | --------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------- | ----------------------------------------------- |
+  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`                      | 1, never negative                           | -2                                  | Date DATEDIF.9                                  |
+  | `NETWORKDAYS.INTL(a, b, "1111111")`                                   | `#VALUE!`                                   | 0                                   | Date NETWORKDAYS.INTL.4                         |
+  | `FILTER(range, numbers)`                                              | any number but 0 passes                     | only positive numbers pass          | Filter FILTER.8                                 |
+  | `UNIQUE({"a"; "A"})`                                                  | two values, case kept                       | one, case ignored                   | Filter UNIQUE.4                                 |
+  | `CELL("address", Data!B3)`                                            | `Data!$B$3`                                 | `$Data.$B$3`                        | Info CELL.2                                     |
+  | `CELL("width", A1)`                                                   | ECMA-376 characters (D40)                   | LibreOffice's own measure           | Info CELL.14                                    |
+  | `AND("TRUE", 1)`                                                      | TRUE, text read as a truth                  | `#VALUE!`                           | Logical AND.8                                   |
+  | `IFNA(A4, 1)` over an empty cell                                      | empty                                       | 0                                   | Logical IFNA.4                                  |
+  | `ADDRESS(1, 1, 5)`                                                    | `#VALUE!`                                   | `$A$1`                              | Lookup ADDRESS.9                                |
+  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`                       | `1TRUE`, `true`: TRUE as text               | `11`, `1`: TRUE as 1                | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
+  | `"z" < TRUE`                                                          | TRUE: booleans after text                   | FALSE                               | Syntax compare.4                                |
+  | `SUM(1:2)` over booleans                                              | booleans skipped                            | booleans counted                    | Syntax range.3                                  |
+  | `0^-1`, `(-8)^(1/3)`                                                  | `#DIV/0!`, `#NUM!`                          | `#NUM!`, -2                         | Syntax errors.4, .8                             |
+  | `CHAR(0)`, `CODE("")`                                                 | `#VALUE!`                                   | empty text, 0                       | Text CHAR.2, CODE.2                             |
+  | `FIND("", "abc")`, `SEARCH("", "abc")`                                | 1, as Excel                                 | `#VALUE!`                           | Text FIND.5, SEARCH.7                           |
+  | `PROPER("it's 2nd")`                                                  | `It's 2nd`                                  | `It'S 2Nd`                          | Text PROPER.3                                   |
+  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`                               | `熊`, `本`: a cut character kept            | a space                             | Text LEFTB.6, RIGHTB.5                          |
+  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`                                | -3, -2: Excel's                             | -2, -3: OpenFormula's               | Math CEILING.4, FLOOR.4                         |
+  | `MROUND(10, -3)`                                                      | `#NUM!`, as Excel                           | 9                                   | Math MROUND.3                                   |
+  | `ISEVEN(A1)` over an empty cell                                       | TRUE, as Excel                              | `#VALUE!`                           | Math ISEVEN.6                                   |
+  | `SUM(1, "2", TRUE)`                                                   | 4, as Excel                                 | `#VALUE!`                           | Math SUM.2                                      |
+  | `IMPOWER("2i", 2)`                                                    | `-4`, multiplied out                        | `-4+4.89858719658941e-16i`          | Math IMPOWER.4                                  |
+  | `LENB("ｶﾀｶﾅ")`                                                        | 4: half-width kana 1 byte (D43)             | 8                                   | Text LENB.6                                     |
+  | `DSUM(A1:D7, "Qty", {"Qty"; 10})`                                     | the records of 10                           | every record                        | Database DSUM.12                                |
+  | `DGET(A1:D7, "Qty", {"Name"; "Banana"})`, its Qty empty               | empty                                       | `#VALUE!`                           | Database DGET.4                                 |
+  | `DSTDEV` of one value, `DVARP` of none                                | `#DIV/0!`, as `STDEV`, `VAR.P`              | `#NUM!`                             | Database DSTDEV.2, DVARP.2                      |
+  | `BITLSHIFT(1, 54)`                                                    | `#NUM!`: Google's -53 to 53                 | 18014398509482000                   | Engineering BITLSHIFT.6                         |
+  | `IMSUM("4+3i", "1+2j")`, `IMSUB`, `IMPRODUCT`                         | `#VALUE!`: Google's "you can't"             | `5+5i`                              | Engineering IMSUM.4                             |
+  | `CONVERT(1, "lbm", "kg")` and 13 more units                           | 0.45359237: the exact definition (D50)      | 0.453592309748811: a rounded factor | Parser CONVERT.4                                |
+  | `CONVERT(1, "MTON", "l")`, `"admkn"`, `"flb"`                         | 1132.67386368: 40 cubic feet                | 0.7079211648                        | Parser CONVERT.59, .61, .31                     |
+  | `TRANSPOSE(A1:A3)` over an empty cell                                 | empty                                       | 0                                   | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
+  | `HSTACK(1, "a", TRUE)`                                                | `TRUE`                                      | 1                                   | Array HSTACK.2                                  |
+  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans                   | booleans skipped                            | booleans counted                    | Array SUMPRODUCT.6, FREQUENCY.2                 |
+  | `SUMXMY2(a, b)`, a pair with text                                     | the pair left out                           | `#VALUE!`                           | Array SUMXMY2.4                                 |
+  | `CHOOSECOLS(A1:D3, "4")`                                              | the fourth column                           | `#VALUE!`                           | Array CHOOSECOLS.7                              |
+  | `CUMPRINC(r, n, pv, 2.1, 4.9, 0)`                                     | periods 3 and 4, as CUMIPMT (D52)           | periods 2 to 4                      | Financial CUMPRINC.4                            |
+  | `TBILLPRICE(s, m, 9%)`, maturity past a year                          | `#NUM!`                                     | 89.45                               | Financial TBILLPRICE.4                          |
+  | `XNPV(9%, amounts, dates)`, a date that is text                       | `#VALUE!` (D55)                             | a number                            | Financial XNPV.5                                |
+  | `DOLLARDE(1.1, 10)`                                                   | 2: tenths in two places (D51)               | 1.1                                 | Financial DOLLARDE.4                            |
+  | `TOCOL(5)`                                                            | 5, a column of one, as Excel                | `#VALUE!`                           | Array TOCOL.8                                   |
+  | `FREQUENCY(data, classes)`, no class a number                         | every value counted (D46)                   | `#VALUE!`                           | Array FREQUENCY.5                               |
+  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`                              | `#VALUE!`                                   | 2                                   | Array MMULT.4                                   |
+  | `AVERAGE(1, "2", TRUE)`, `MAX(1, "3")`, `STDEV`, `VAR` alike          | numbers typed as text read, as Excel        | `#VALUE!`                           | Statistical AVERAGE.3, MAX.4                    |
+  | `AVERAGEA(1, TRUE, "3")`, `STDEVA`, `VARA` alike                      | "3" is 3                                    | "3" is 0                            | Statistical AVERAGEA.2                          |
+  | `LARGE(data, 9)`, `SMALL(data, 0)`, outside the data                  | `#NUM!`, as Excel                           | `#VALUE!`                           | Statistical LARGE.2, SMALL.3                    |
+  | `MEDIAN`, `PERCENTILE`, `TRIMMEAN` of no numbers                      | `#NUM!`, as Excel                           | `#VALUE!`                           | Statistical MEDIAN.3, TRIMMEAN.7                |
+  | `MODE(1, 2, 3)`, `MODE.SNGL`, `MODE.MULT`                             | `#N/A`, as Excel                            | `#VALUE!`                           | Statistical MODE.2, MODE.MULT.3                 |
+  | `PERCENTRANK.INC(data, 30)`, `.EXC`                                   | `#N/A`, as PERCENTRANK (D57)                | `#VALUE!`                           | Statistical PERCENTRANK.INC.5                   |
+  | `PERCENTRANK.INC(data, 8, 0)`, `.EXC`                                 | 3 digits, as PERCENTRANK (D57)              | Err:502                             | Statistical PERCENTRANK.INC.8                   |
+  | `CHIINV(1, 2)`, `CHISQ.INV(0, 2)`, `F.INV.RT(1, …)`, `TINV(1, 1)`     | `#NUM!`: p strictly between 0 and 1         | 0, or a number                      | Statistical CHIINV.5, TINV.4                    |
+  | `NORMINV(0, 0, 1)`, `NORM.INV(1, 0, 1)`                               | `#NUM!`, as NORMSINV's help                 | `#VALUE!`                           | Statistical NORMINV.4                           |
+  | `CHIDIST(-1, 2)`, `GAMMADIST(-1, 2, 2, TRUE)`                         | `#NUM!`: x must be positive                 | 1, 0                                | Statistical CHIDIST.4, GAMMADIST.5              |
+  | `GAMMA(-1.5)`                                                         | `#NUM!`: the number must be positive        | 2.363                               | Statistical GAMMA.4                             |
+  | `GAMMA.DIST(0, 1, 2, FALSE)`, `CHISQ.DIST(0, 2, FALSE)`               | `#NUM!`: no density at 0 for shape ≤ 1      | 0.5, 0                              | Statistical GAMMA.DIST.3, CHISQ.DIST.6          |
+  | `HYPGEOM.DIST`, `LOGNORM.DIST`, `NEGBINOM.DIST`, `POISSON.DIST` short | Google's shorter form read                  | Err:511                             | Statistical HYPGEOM.DIST.1                      |
+  | `LINEST(y, x)`, collinear x                                           | `#NUM!` (D47)                               | coefficients past 1e13              | Array LINEST.12                                 |
+  | `ENCODEURL(TRUE)`                                                     | `TRUE`, as Google's text functions write it | `1`                                 | Web ENCODEURL.6                                 |
 
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
@@ -782,7 +792,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `EASTERSUNDAY`        | OpenFormula |                                                                                                                | OpenFormula | `EASTERSUNDAY`                   | built                                                         |
 | `EDATE`               | Date        | `EDATE(start_date, months)`                                                                                    | Google      | `EDATE`                          | built                                                         |
 | `EFFECT`              | Financial   | `EFFECT(nominal_rate, periods_per_year)`                                                                       | Google      | `EFFECT`                         | built                                                         |
-| `ENCODEURL`           | Web         | `ENCODEURL(text)`                                                                                              | Google      | `COM.MICROSOFT.ENCODEURL`        | planned                                                       |
+| `ENCODEURL`           | Web         | `ENCODEURL(text)`                                                                                              | Google      | `COM.MICROSOFT.ENCODEURL`        | built                                                         |
 | `EOMONTH`             | Date        | `EOMONTH(start_date, months)`                                                                                  | Google      | `EOMONTH`                        | built                                                         |
 | `EPOCHTODATE`         | Date        | `EPOCHTODATE(timestamp, [unit])`                                                                               | Google      | S5                               | built                                                         |
 | `EQ`                  | Operator    | `EQ(value1, value2)`                                                                                           | Google      | S5                               | built                                                         |
@@ -915,7 +925,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `ISPMT`               | Financial   | `ISPMT(rate, period, number_of_periods, present_value)`                                                        | Google      | `ISPMT`                          | built                                                         |
 | `ISREF`               | Info        | `ISREF(value)`                                                                                                 | Google      | `ISREF`                          | built                                                         |
 | `ISTEXT`              | Info        | `ISTEXT(value)`                                                                                                | Google      | `ISTEXT`                         | built                                                         |
-| `ISURL`               | Web         | `ISURL(value)`                                                                                                 | Google      | S5                               | planned                                                       |
+| `ISURL`               | Web         | `ISURL(value)`                                                                                                 | Google      | S5                               | built                                                         |
 | `JIS`                 | OpenFormula |                                                                                                                | OpenFormula | `JIS`                            | built                                                         |
 | `JOIN`                | Text        | `JOIN(delimiter, value_or_array1, [value_or_array2, ...])`                                                     | Google      | S5                               | built                                                         |
 | `KURT`                | Statistical | `KURT(value1, value2)`                                                                                         | Google      | `KURT`                           | built                                                         |
