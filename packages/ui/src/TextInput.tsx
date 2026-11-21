@@ -13,15 +13,14 @@ import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes } fro
 // ref, …) pass through, so each is a drop-in for the raw element.
 // `invalid` swaps the border for the problem treatment (a rose border
 // and ring) rather than stacking a second border colour on top.
-// `compact` is the denser form rhythm (Plan's card and type editors): smaller
-// padding and 13px type, the same border, focus ring and colours.
 // A disabled field reads as one (a quieter fill and text, the not-allowed cursor): a Participant or Viewer meets
 // them in panels they may read but not change (Sheet Settings' Title), where a white field looked editable.
 
 const SHAPE =
-  'w-full rounded-md border bg-white text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800/60 dark:disabled:text-slate-400';
-const PAD = 'px-3 py-2 text-sm';
-const PAD_COMPACT = 'px-2 py-1.5 text-[13px]';
+  'w-full rounded-control border bg-white text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800/60 dark:disabled:text-slate-400';
+// The sizing scale's field (docs/specs/004-interface-design/sizing.md): one line is 32 px; a text area grows from
+// its rows with the same side padding.
+const PAD = { line: 'h-field px-3 text-body', area: 'px-3 py-1.5 text-body' } as const;
 const BORDER = 'border-slate-200 dark:border-slate-700';
 
 // A field with a problem: easy to spot. Exported for composite fields (a chip input's box).
@@ -29,30 +28,29 @@ export const FIELD_INVALID =
   'border-rose-400 ring-2 ring-rose-100 dark:border-rose-400/70 dark:ring-rose-500/20';
 
 const fieldClass = (
+  kind: keyof typeof PAD,
   invalid: boolean | undefined,
-  compact: boolean | undefined,
   className: string | undefined,
-) =>
-  `${SHAPE} ${compact ? PAD_COMPACT : PAD} ${invalid ? FIELD_INVALID : BORDER}${className ? ` ${className}` : ''}`;
+) => `${SHAPE} ${PAD[kind]} ${invalid ? FIELD_INVALID : BORDER}${className ? ` ${className}` : ''}`;
 
-type FieldOptions = { invalid?: boolean; compact?: boolean };
+type FieldOptions = { invalid?: boolean };
 
 export type TextInputProps = InputHTMLAttributes<HTMLInputElement> & FieldOptions;
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function TextInput(
-  { className, invalid, compact, type = 'text', ...rest },
+  { className, invalid, type = 'text', ...rest },
   ref,
 ) {
   return (
-    <input ref={ref} type={type} className={fieldClass(invalid, compact, className)} {...rest} />
+    <input ref={ref} type={type} className={fieldClass('line', invalid, className)} {...rest} />
   );
 });
 
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & FieldOptions;
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
-  { className, invalid, compact, ...rest },
+  { className, invalid, ...rest },
   ref,
 ) {
-  return <textarea ref={ref} className={fieldClass(invalid, compact, className)} {...rest} />;
+  return <textarea ref={ref} className={fieldClass('area', invalid, className)} {...rest} />;
 });

@@ -37,7 +37,6 @@ function NumberField({
   return (
     <SettingsField label={label}>
       <TextInput
-        compact
         type="number"
         inputMode={whole ? 'numeric' : 'decimal'}
         step={whole ? 1 : 'any'}

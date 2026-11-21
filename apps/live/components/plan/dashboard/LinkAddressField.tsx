@@ -97,7 +97,6 @@ export function LinkAddressField({
     <>
       <TextInput
         ref={inputRef}
-        compact
         role="combobox"
         aria-label="Address"
         aria-autocomplete="list"

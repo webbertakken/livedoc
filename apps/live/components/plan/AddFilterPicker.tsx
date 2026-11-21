@@ -100,7 +100,6 @@ export function AddFilterPicker({
                   <SearchIcon size={13} />
                 </span>
                 <TextInput
-                  compact
                   aria-label={field ? `Find ${withArticle(field.label)}` : 'Find a field'}
                   placeholder={
                     field ? `Find ${withArticle(field.label.toLowerCase())}` : 'Find a field'

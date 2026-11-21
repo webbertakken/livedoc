@@ -56,7 +56,6 @@ export function AddLinkForm({
     >
       <div className="flex flex-col gap-2 @md:flex-row">
         <TextInput
-          compact
           aria-label="Label"
           autoFocus
           value={label}

@@ -72,7 +72,7 @@ export type DateInputProps = Omit<
 };
 
 export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function DateInput(
-  { value, onCommit, onBlur, onKeyDown, unstyled = false, compact, invalid, ...rest },
+  { value, onCommit, onBlur, onKeyDown, unstyled = false, invalid, ...rest },
   ref,
 ) {
   const inner = useRef<HTMLInputElement>(null);
@@ -134,6 +134,6 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
   return unstyled ? (
     <input key={resets} ref={inner} {...props} />
   ) : (
-    <TextInput key={resets} ref={inner} {...props} compact={compact} invalid={invalid} />
+    <TextInput key={resets} ref={inner} {...props} invalid={invalid} />
   );
 });

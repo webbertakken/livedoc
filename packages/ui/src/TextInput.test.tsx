@@ -26,12 +26,20 @@ describe('the shared text fields', () => {
     expect(note.className).toContain(FIELD_INVALID);
   });
 
-  it('take the denser form rhythm when compact, keeping the border and focus ring', () => {
-    render(<TextInput aria-label="compact" compact />);
-    const field = screen.getByLabelText('compact');
-    expect(field.className).toContain('py-1.5');
-    expect(field.className).not.toContain('py-2');
-    expect(field.className).toContain('focus:ring-2');
+  it('draw a single-line field at the field step and a text area from its rows', () => {
+    render(
+      <>
+        <TextInput aria-label="name" />
+        <TextArea aria-label="note" />
+      </>,
+    );
+    const field = screen.getByLabelText('name').className;
+    const note = screen.getByLabelText('note').className;
+    expect(field).toContain('h-field');
+    expect(field).toContain('text-body');
+    expect(field).toContain('focus:ring-2');
+    expect(note).not.toContain('h-field');
+    expect(note).toContain('text-body');
   });
 
   it('read as disabled when disabled, so a field nobody may change never looks editable', () => {

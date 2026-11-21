@@ -12,8 +12,8 @@ import { ChevronDownIcon } from './icons';
 //
 // `variant`: 'outline' is the bordered field look (TextInput's palette);
 // 'ghost' is borderless-until-hover for controls embedded in list rows
-// (the team pane's role picker). `size` follows Button's compact dialog
-// rhythm. Layout classes (flex-1, min-w-0, shrink-0, …) go on
+// (the team pane's role picker). `size` is a step on the sizing scale
+// (sm a row, md a field). Layout classes (flex-1, min-w-0, shrink-0, …) go on
 // `className`, which lands on the wrapper so the chevron stays glued to
 // the field. Options are passed as children, exactly like a raw select.
 
@@ -21,19 +21,20 @@ export type SelectVariant = 'outline' | 'ghost';
 export type SelectSize = 'sm' | 'md';
 
 const BASE =
-  'w-full min-w-0 cursor-pointer appearance-none rounded-md outline-none transition dark:[&>option]:bg-slate-800';
+  'w-full min-w-0 cursor-pointer appearance-none rounded-control outline-none transition dark:[&>option]:bg-slate-800';
 
 const VARIANTS: Record<SelectVariant, string> = {
   outline:
     'border border-slate-200 bg-white text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200',
   ghost:
-    'border border-transparent bg-transparent font-medium text-slate-600 hover:border-slate-200 hover:bg-white focus:border-brand-400 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700',
+    'border border-transparent bg-transparent text-slate-600 hover:border-slate-200 hover:bg-white focus:border-brand-400 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700',
 };
 
-// Right padding reserves room for the chevron.
+// The sizing scale (docs/specs/004-interface-design/sizing.md): sm sits in a row or toolbar at 28 px, md is a field
+// at 32. Right padding reserves room for the chevron.
 const SIZES: Record<SelectSize, string> = {
-  sm: 'py-1 pl-1.5 pr-5 text-[11px]',
-  md: 'py-1.5 pl-2 pr-6 text-xs',
+  sm: 'h-row pl-2 pr-6 text-body',
+  md: 'h-field pl-2 pr-6 text-body',
 };
 
 export type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> & {

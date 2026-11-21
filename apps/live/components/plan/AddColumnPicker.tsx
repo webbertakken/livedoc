@@ -76,7 +76,6 @@ export function AddColumnPicker({
         </label>
         <div className="flex w-full gap-2">
           <TextInput
-            compact
             id={`${id}-name`}
             aria-label="New column name"
             placeholder={combo ? 'Find or name a status' : 'In Review'}
