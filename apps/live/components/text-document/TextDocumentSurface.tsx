@@ -116,6 +116,7 @@ import {
 import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
 // The served document fonts' faces, loaded with the surface, never on other pages (fonts.md "Served from LiveDoc").
 import '@/app/document-fonts.css';
+import { FIELD_NODE_VIEWS } from '@/lib/text-document/text-document-fields';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -341,6 +342,7 @@ export function TextDocumentSurface({
                     pages: false,
                   }),
                   headers: liveFirstHeaders(doc),
+                  numberStart: TextDocumentState.section(doc, live.current.format).numberStart,
                 }),
                 heights: () => storyHeights.current,
                 onPages: setPageList,
@@ -361,6 +363,8 @@ export function TextDocumentSurface({
             ],
           }),
           editable: () => live.current.writes,
+          // Page numbers and page counts drawn as their page's (page-layout.md "Page numbers").
+          nodeViews: FIELD_NODE_VIEWS,
           // Read only in Viewing (or for a Viewer), yet still focusable: the keyboard reads it, and its shortcuts work.
           attributes: () => ({
             role: 'textbox',

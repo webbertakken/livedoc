@@ -28,6 +28,9 @@ export type PageGeometry = {
   /** Its top and bottom margins as drawn, pushed by a tall header or footer (none on a blank page). */
   readonly top?: number;
   readonly bottom?: number;
+  /** The number it shows, and the page count (page-layout.md "Page numbers"); none on a blank page. */
+  readonly number?: number;
+  readonly count?: number;
   readonly rules?: readonly {
     readonly top: number;
     readonly bottom: number;
@@ -149,10 +152,13 @@ export function pageGeometries(
     readonly frameOf: (block: number) => PageFrame;
     readonly page?: Pick<PageLayout, 'frameOf' | 'storiesOf'>;
     readonly lineBetween?: (block: number) => boolean;
+    /** Each page's number as shown, by its start; its physical number when none is given. */
+    readonly shown?: readonly number[];
   },
 ): PageGeometry[] {
   const { frameOf, page, lineBetween = () => false } = input;
   const numbers = pageNumbers(pagination);
+  const count = numbers.at(-1) ?? 0;
   const pages: PageGeometry[] = [];
   for (const [q, start] of pagination.starts.entries()) {
     const number = numbers[q]!;
@@ -172,6 +178,8 @@ export function pageGeometries(
     });
     pages.push({
       ...size,
+      number: input.shown?.[q] ?? number,
+      count,
       top: round(frame.top),
       bottom: round(frame.bottom),
       ...(stories
@@ -199,6 +207,6 @@ export const pagesSaid = (pages: readonly PageGeometry[]): string =>
     .map(
       (p) =>
         `${p.width}x${p.height}${(p.rules ?? []).map((r) => `|${r.top}-${r.bottom}@${r.xs.join(',')}`).join('')}` +
-        `|h${storySaid(p.header)}|f${storySaid(p.footer)}|${p.section}:${p.slot}:${p.top}:${p.bottom}`,
+        `|h${storySaid(p.header)}|f${storySaid(p.footer)}|${p.section}:${p.slot}:${p.top}:${p.bottom}#${p.number}`,
     )
     .join(',');

@@ -18,6 +18,8 @@ export type BodySections = {
   readonly sectionOf: readonly number[];
   /** Each section's own headers and footers, as the live state names them (page-layout.md "Headers and footers"). */
   readonly headers: readonly (LiveHeaders | undefined)[];
+  /** The number each section's first page has, if it starts at one (page-layout.md "Page numbers"). */
+  readonly starts: readonly (number | undefined)[];
 };
 
 /** The body's sections and the section of each of its blocks; the first section's headers are the document's. */
@@ -25,18 +27,25 @@ export function bodySections(
   doc: PmNode,
   first: PageSetup,
   firstHeaders?: LiveHeaders,
+  firstStart?: number,
 ): BodySections {
   const setups: PageSetup[] = [first];
   const headers: (LiveHeaders | undefined)[] = [firstHeaders];
+  const starts: (number | undefined)[] = [firstStart];
   const sectionOf: number[] = [];
   doc.forEach((node) => {
     sectionOf.push(setups.length - 1);
     if (node.type.name !== SECTION_BREAK) return;
-    const attrs = node.attrs as { setup: PageSetup | null; headers?: LiveHeaders | null };
+    const attrs = node.attrs as {
+      setup: PageSetup | null;
+      headers?: LiveHeaders | null;
+      numberStart?: number | null;
+    };
     setups.push(attrs.setup ?? setups[setups.length - 1]!);
     headers.push(attrs.headers ?? undefined);
+    starts.push(typeof attrs.numberStart === 'number' ? attrs.numberStart : undefined);
   });
-  return { setups, sectionOf, headers };
+  return { setups, sectionOf, headers, starts };
 }
 
 /** The section a place in the body is in. */

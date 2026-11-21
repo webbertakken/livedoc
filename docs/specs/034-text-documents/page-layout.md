@@ -308,7 +308,10 @@ LibreOffice's.
   document has. Each takes the formatting at the caret where it is put, and is one character to the caret: deleted,
   copied, pasted and undone whole; copied into another app it is its text (default).
 - **Where**: a page number belongs in a header or footer, where every page draws its own; one in the body shows the
-  number of the page its line is laid on (default). A page count may stand anywhere.
+  number of the page its paragraph starts on (default). A page count may stand anywhere.
+- **Drawn** as the page's number or count in the writing's own characters, read as them; a header being
+  edited shows its page's (default). The text a field keeps for the file is the one it held when it arrived or was
+  put (default); the other suites work it out again on opening.
 - **Numbering**: pages count from the document's first, blank ones too ([Headers and footers](#headers-and-footers)),
   unless a section **starts at** a number: its first page then has that number and the pages after it count on.
 - **Pageless**, on a phone and with print layout off, where no pages are laid out, a page number in the body shows 1
