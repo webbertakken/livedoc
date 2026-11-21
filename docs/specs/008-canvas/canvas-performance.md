@@ -145,7 +145,19 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   task (on the reference board it was most of a 60-75 ms release). The live stroke shows until the
   landed one replaces it, in the same commit, and the pointer's moves and lifts after the first lift
   reach no stroke. A whiteboard pen stays in hand for the next stroke, and handwriting presses again
-  within the time a transition takes, so its strokes land at once.
+  within the time a transition takes, so its strokes land without one, in the task after the lift.
+- **A release lands in a task of its own.** The browser ends a pointer's release (the `mouseup` and
+  `click` it sends after `pointerup`) by bringing the page's style and layout up to date inside the
+  release's own task whenever the release changed the page, so a release that renders the editor
+  there pays for its render and for laying out what it changed in one task (about a fifth of a
+  whiteboard stroke's release on the reference board). A whiteboard pen's lift hands the stroke's
+  landing to the next task (`afterRelease`): the release's task stays short, the landing renders in a
+  task of its own, and its layout runs in the frame that shows it. The live stroke shows until the
+  landed one replaces it, in one commit. A press, a move, a key or a wheel lands whatever is pending
+  before anything else hears of it, so the next stroke always starts after the last one landed, and
+  a stroke lands once even when the tab leaves Draw mode in between. A release whose landing mounts
+  chrome that measures itself in the next frame (a marquee's selection: the toolbar and the Quick
+  Style panel) keeps its landing: the frame would then lay out and run that script together.
 - **A break stays local.** An arrow broken where it runs behind a box is masked over its own extent (its path's
   points, control points included, grown for its heads), never a vast region: a mask's region is what the browser
   repaints when its holes change, and a vast one repainted the whole screen for every arrow a dragged box crossed.
