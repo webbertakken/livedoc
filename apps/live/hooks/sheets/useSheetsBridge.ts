@@ -39,6 +39,8 @@ export type SheetsBridge = {
   // Whether a spreadsheet's imports may fetch (imports.md "Allow access", "A spreadsheet in This Browser"); absent
   // for a Plan document.
   importAccess?: ImportAccess;
+  // The spreadsheets its IMPORTRANGEs may read (formulas.md "Connecting two spreadsheets"); absent, none.
+  rangeSources?: readonly string[];
   // The tab open now: where a placed Sheet's sheet is made.
   activeTabId: string;
   self: SheetPerson | null;
@@ -87,6 +89,7 @@ export function useSheetsBridge(opts: {
   iteration?: Iteration;
   recalc?: WorkbookRecalc;
   importAccess?: ImportAccess;
+  rangeSources?: readonly string[];
   self: SheetPerson | null;
   canEdit: boolean;
   // Absent: as canEdit.
@@ -128,6 +131,7 @@ export function useSheetsBridge(opts: {
     iteration,
     recalc,
     importAccess,
+    rangeSources,
     self,
     canEdit,
     peers,
@@ -141,6 +145,7 @@ export function useSheetsBridge(opts: {
       ...(iteration ? { iteration } : {}),
       ...(recalc ? { recalc } : {}),
       ...(importAccess !== undefined ? { importAccess } : {}),
+      ...(rangeSources ? { rangeSources } : {}),
       activeTabId,
       self,
       canEdit,
@@ -167,6 +172,7 @@ export function useSheetsBridge(opts: {
       iteration,
       recalc,
       importAccess,
+      rangeSources,
       activeTabId,
       self,
       canEdit,

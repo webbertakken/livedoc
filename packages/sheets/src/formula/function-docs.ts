@@ -1023,6 +1023,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'A table or list of a web page, counted from 1',
     '=IMPORTHTML("https://example.com", "table", 1)',
   ),
+  IMPORTRANGE: D(
+    'spreadsheet_url, range_string',
+    'A range of another LiveDoc spreadsheet, by its address and "[sheet!]range"',
+    '=IMPORTRANGE("https://docs.nu/document/abc123", "Sheet1!A1:C10")',
+  ),
   IMPORTXML: D(
     'url, xpath_query, [locale]',
     'What an XPath query picks out of a web page or XML file',

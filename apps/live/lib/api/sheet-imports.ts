@@ -1,8 +1,14 @@
 // A spreadsheet's imports through the api (docs/specs/029-sheets/imports.md): one import fetched, read as the answer
-// its cells show, a picture IMAGE shows, and Allow Access. Called from the sheet chunk only (the store and the
-// spreadsheet surface).
-import type { WorkbookSettingsResponse } from '@livedoc/api-schema';
-import { importParams, IMPORT_WORDS, type ImportAnswer, type ImportAsk } from '@livedoc/sheets';
+// its cells show, a picture IMAGE shows, Allow Access, and connecting the spreadsheets IMPORTRANGE reads
+// (formulas.md "Connecting two spreadsheets"). Called from the sheet chunk only (the store and the spreadsheet surface).
+import type { WorkbookConnectRequest, WorkbookSettingsResponse } from '@livedoc/api-schema';
+import {
+  importParams,
+  IMPORT_WORDS,
+  RANGE_WORDS,
+  type ImportAnswer,
+  type ImportAsk,
+} from '@livedoc/sheets';
 import { API_BASE, apiFetch, apiHeaders, expectOk } from './core';
 import type { SheetsScope } from './sheets';
 import { debugLog } from '@/lib/debug-log';
@@ -18,7 +24,11 @@ export async function fetchSheetImport(
   scope: SheetsScope,
   ask: ImportAsk,
 ): Promise<ImportAnswer | 'later'> {
-  const notFetched: ImportAnswer = { error: '#N/A', why: IMPORT_WORDS.notFetched(ask.request.url) };
+  const r = ask.request;
+  const notFetched: ImportAnswer = {
+    error: '#N/A',
+    why: r.kind === 'range' ? RANGE_WORDS.unreadable : IMPORT_WORDS.notFetched(r.url),
+  };
   let res: Response;
   try {
     res = await apiFetch(workbookUrl(scope, 'imports', importParams(ask.request, ask.fresh)), {
@@ -60,4 +70,18 @@ export async function allowSheetImports(scope: SheetsScope): Promise<WorkbookSet
     headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
   });
   return expectOk<WorkbookSettingsResponse>(res, 'allow imports');
+}
+
+/** An Editor connects the spreadsheets IMPORTRANGEs read, those they may open; the room sends the workbook to everyone. */
+export async function connectSheetSources(
+  scope: SheetsScope,
+  sources: readonly string[],
+): Promise<WorkbookSettingsResponse> {
+  const body: WorkbookConnectRequest = { sources: [...sources] };
+  const res = await apiFetch(workbookUrl(scope, 'imports'), {
+    method: 'POST',
+    headers: await apiHeaders(scope.ownerId, { share: scope.shareCode, body: true }),
+    body: JSON.stringify(body),
+  });
+  return expectOk<WorkbookSettingsResponse>(res, 'connect spreadsheets');
 }

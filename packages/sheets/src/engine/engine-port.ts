@@ -6,6 +6,7 @@ import { cellToJson, sheetToJson } from '../sheet-json';
 import { SheetLimits } from '../sheet-limits';
 import type { ImportAccess, ImportAnswer, ImportAsk } from '../imports/import-request';
 import type { EngineIn, EngineOut } from './engine-protocol';
+import type { ImportFamily } from './import-book';
 import { ITERATION_OFF, type Iteration } from './loops';
 import { WorkbookCopy } from './workbook-copy';
 
@@ -72,9 +73,9 @@ export class EnginePort {
     this.send({ t: 'imports-online', rev: ++this.rev, allowed });
   }
 
-  /** The hour is up: the Worker asks again for every import still read. */
-  refreshImports(): void {
-    this.send({ t: 'imports-refresh', rev: ++this.rev });
+  /** A family's time is up (the web's hour, IMPORTRANGE's minute): the Worker asks again for its imports still read. */
+  refreshImports(family: ImportFamily): void {
+    this.send({ t: 'imports-refresh', rev: ++this.rev, family });
   }
 
   /** A sheet changed: its cells (\`keys\`), or anything else about it when \`keys\` is undefined. */

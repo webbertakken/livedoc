@@ -4,10 +4,10 @@
 // with every value the engine works out cached beside its formula. A read, gated as the sheets are; a tab-scoped link
 // is never offered on a sheet tab (spreadsheet.md "The workbook shape"), so one reaches no file. Answered inside the
 // document's room.
-import { sheetFromJson, WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
+import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
 import { writeWorkbook, type WrittenWorkbookFormat } from '@livedoc/sheets/files';
-import { getDocumentMeta, listSheets } from '../db';
-import { documentTabOrder, readWorkbook } from '../db/workbook';
+import { getDocumentMeta } from '../db';
+import { readWorkbook } from '../db/workbook';
 import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, forbidden, methodNotAllowed } from '../responses';
 import type { DocumentRouteContext } from './context';
@@ -16,6 +16,7 @@ import { sheetCaller, workbookRefused } from './sheet-route-kit';
 import { saveSettings } from './workbook-settings-route';
 import { allowImports, fetchImport } from './sheet-imports-route';
 import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
+import { loadSpreadsheetSheets } from './workbook-sheets-load';
 
 const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
@@ -47,16 +48,10 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   if (!WorkbookRecord.isFormat(asked)) return workbookRefused('file_type_unknown', 400);
   // Conversion is a person's choice (files-and-print.md "Converting"), and the XLSX mapping is still ahead.
   if (!isOdf(asked) || !isOdf(record.format)) return workbookRefused('format_not_native', 409);
-  const [meta, order, stored] = await Promise.all([
+  const [meta, sheets] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
-    documentTabOrder(ctx.env, documentId),
-    listSheets(ctx.env, documentId),
+    loadSpreadsheetSheets(ctx.env, documentId),
   ]);
-  const at = new Map(order.map((id, i) => [id, i]));
-  const sheets = stored
-    .filter((s) => at.has(s.tabId))
-    .sort((a, b) => at.get(a.tabId)! - at.get(b.tabId)!)
-    .map(sheetFromJson);
   const name = meta?.name ?? '';
   const written = writeWorkbook(sheets, record, name, asked);
   const body = written.data;

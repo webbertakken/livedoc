@@ -463,6 +463,12 @@ const WORKBOOK_IMPORTS_STEP = `
 ALTER TABLE workbook ADD COLUMN imports_allowed INTEGER NOT NULL DEFAULT 0;
 `;
 
+// The spreadsheets a spreadsheet's IMPORTRANGEs may read (docs/specs/029-sheets/formulas.md "Connecting two
+// spreadsheets"): a JSON array of document ids, added to by Editors, never taken back; a copy's row starts without.
+const WORKBOOK_RANGE_SOURCES_STEP = `
+ALTER TABLE workbook ADD COLUMN range_sources TEXT;
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -473,6 +479,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   TEXT_DOCUMENT_DIGEST_STEP,
   TAB_KIND_STEP,
   WORKBOOK_IMPORTS_STEP,
+  WORKBOOK_RANGE_SOURCES_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

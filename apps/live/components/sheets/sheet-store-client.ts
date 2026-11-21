@@ -49,7 +49,7 @@ import {
 import { engineLink, type EngineLink } from './sheet-engine-link';
 import type { CardData } from './sheet-engine-hosts';
 import { VolatileTicker, volatileTickMs } from './volatile-ticker';
-import { IMPORT_REFRESH_MS, SheetImports } from './sheet-imports';
+import { StoreImports } from './sheet-store-imports';
 import { fetchSheetImport } from '@/lib/api/sheet-imports';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
@@ -115,6 +115,8 @@ type SheetStoreDeps = {
   // A spreadsheet's imports (docs/specs/029-sheets/imports.md): whether they may fetch (allowed, not yet, or not while
   // the document is in This Browser); absent, they read their refusal (a Plan document). Fetching is injected in tests.
   importAccess?: ImportAccess;
+  // The spreadsheets its IMPORTRANGEs may read (formulas.md "Connecting two spreadsheets").
+  rangeSources?: readonly string[];
   fetchImport?: typeof fetchSheetImport;
 };
 
@@ -206,17 +208,13 @@ export class SheetStore {
     () => this.tick(),
     typeof document === 'undefined' ? null : document,
   );
-  // The imports the engines ask for, fetched through the api; asked again hourly while anyone reads the store.
-  private readonly imports = new SheetImports({
+  // The imports the engines ask for, fetched through the api and asked again while anyone reads the store.
+  private readonly imports = new StoreImports({
     fetch: (ask) => (this.deps.fetchImport ?? fetchSheetImport)(this.deps.scope, ask),
-    land: (scope, key, answer) => this.ports.get(scope)?.landImport(key, answer),
+    ports: () => this.ports,
+    waiting: () => this.notify(),
+    page: typeof document === 'undefined' ? null : document,
   });
-  private readonly importTicker = new VolatileTicker(
-    () => {
-      for (const port of this.ports.values()) port.refreshImports();
-    },
-    typeof document === 'undefined' ? null : document,
-  );
   private readonly refetchTimers = new Map<string, ReturnType<typeof setTimeout>>();
   // Sheets this person deleted with their elements, as they were: Undo puts the element back and its sheet with it
   // (sheet-store.md "Deleting a sheet"). Kept for the session, as undo is.
@@ -230,6 +228,7 @@ export class SheetStore {
 
   constructor(deps: SheetStoreDeps) {
     this.deps = deps;
+    this.imports.update(this.importAccessHere(), deps.rangeSources ?? []);
     this.api = deps.api ?? {
       fetchSheets,
       fetchWorkbook,
@@ -268,16 +267,8 @@ export class SheetStore {
     const rescoped = (deps.oneWorkbook ?? false) !== (this.deps.oneWorkbook ?? false);
     const iteration = deps.iteration ?? ITERATION_OFF;
     const reiterated = !sameIteration(iteration, this.deps.iteration ?? ITERATION_OFF);
-    // The document was synced to LiveDoc: its imports wait for Allow Access (imports.md "A spreadsheet in This
-    // Browser"), or fetch when it was allowed before it was taken offline.
-    const before = this.deps.importAccess;
-    const after = deps.importAccess;
-    if (before === 'offline' && (after === 'allowed' || after === 'blocked'))
-      for (const port of this.ports.values()) port.onlineImports(after === 'allowed');
-    // An Editor allowed the imports (theirs or a peer's Allow Access): every engine fetches them now.
-    if (before === 'blocked' && after === 'allowed')
-      for (const port of this.ports.values()) port.allowImports();
     this.deps = { ...deps, api: this.api, wait: this.wait };
+    this.imports.update(this.importAccessHere(), deps.rangeSources ?? []);
     // Saved settings arrived (any peer's Save Settings): every engine works its values out afresh.
     if (reiterated && !rescoped) {
       for (const port of this.ports.values()) port.setIteration(iteration);
@@ -292,17 +283,8 @@ export class SheetStore {
     }
     if (this.listeners.size > 0) {
       this.ticker.every(this.tickMs());
-      this.importTicker.every(this.importRefreshMs());
+      this.imports.run(true);
     }
-  }
-
-  // A spreadsheet's imports are asked again hourly; a Plan document has none.
-  private importRefreshMs(): number | null {
-    return this.importsOn() ? IMPORT_REFRESH_MS : null;
-  }
-
-  private importsOn(): boolean {
-    return this.importAccessHere() !== null;
   }
 
   // Whether the imports may fetch, where the store fetches them (a spreadsheet); null for a Plan document.
@@ -324,12 +306,12 @@ export class SheetStore {
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
     this.ticker.every(this.tickMs());
-    this.importTicker.every(this.importRefreshMs());
+    this.imports.run(true);
     return () => {
       this.listeners.delete(listener);
       if (this.listeners.size > 0) return;
       this.ticker.stop();
-      this.importTicker.stop();
+      this.imports.run(false);
     };
   };
 
@@ -428,6 +410,17 @@ export class SheetStore {
 
   usesCards(): boolean {
     for (const port of this.ports.values()) if (port.copy.usesCards()) return true;
+    return false;
+  }
+
+  // The spreadsheets IMPORTRANGEs wait on, for the bar's Allow Access (formulas.md "Connecting two spreadsheets").
+  rangeSourcesWaiting(): string[] {
+    return this.imports.waitingSources();
+  }
+
+  // Whether a formula reads another spreadsheet (formulas.md "Other workbooks"): Sync Document first in This Browser.
+  usesRangeImports(): boolean {
+    for (const port of this.ports.values()) if (port.copy.usesRangeImports()) return true;
     return false;
   }
 
@@ -942,6 +935,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
     ...(bridge.iteration ? { iteration: bridge.iteration } : {}),
     ...(bridge.recalc ? { recalc: bridge.recalc } : {}),
     ...(bridge.importAccess !== undefined ? { importAccess: bridge.importAccess } : {}),
+    ...(bridge.rangeSources ? { rangeSources: bridge.rangeSources } : {}),
     self: () => bridge.self,
     locale: bridge.locale,
     pushUndo: bridge.pushUndo,

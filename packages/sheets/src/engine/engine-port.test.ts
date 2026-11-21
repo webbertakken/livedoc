@@ -255,7 +255,7 @@ describe('imports in the Worker', () => {
     port.landImport(asked[0]!.key, { rows: [['a', 'b']] });
     deliver();
     expect([v(0, 0), v(0, 1)]).toEqual(['a', 'b']);
-    port.refreshImports();
+    port.refreshImports('web');
     deliver();
     expect(asked).toHaveLength(2);
     expect(v(0, 0)).toBe('a');

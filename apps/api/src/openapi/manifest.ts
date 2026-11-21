@@ -961,19 +961,34 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'WorkbookSettingsResponse',
     statuses: [200, 400, 401, 403, 404, 410],
   },
-  // A spreadsheet's imports from the web (docs/specs/029-sheets/imports.md).
+  // A spreadsheet's imports from the web (docs/specs/029-sheets/imports.md), and IMPORTRANGE's reads of other
+  // spreadsheets (formulas.md "Other workbooks").
   {
     method: 'GET',
     path: '/documents/{id}/workbook/imports',
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      'Fetch one IMPORTDATA, IMPORTFEED, IMPORTHTML or IMPORTXML for a spreadsheet: its rows of text, or the error the cell shows; kind=image answers the bytes of a picture IMAGE shows (PNG, JPEG, GIF, WebP, AVIF, BMP or an icon, by its first bytes), else 422 image_refused. Kept an hour for everyone; fresh=1 skips that. 400 import_invalid; 403 imports_not_allowed until an Editor allows access; 404 workbook_not_found; 429 past 60 fetches a minute per spreadsheet. Off unless the deployment sets SHEET_IMPORTS=on. Read access.',
+      'Fetch one IMPORTDATA, IMPORTFEED, IMPORTHTML or IMPORTXML for a spreadsheet: its rows of text, or the error the cell shows; kind=image answers the bytes of a picture IMAGE shows (PNG, JPEG, GIF, WebP, AVIF, BMP or an icon, by its first bytes), else 422 image_refused. Kept an hour for everyone; fresh=1 skips that. 400 import_invalid; 403 imports_not_allowed until an Editor allows access; 404 workbook_not_found; 429 past 60 fetches a minute per spreadsheet. Off unless the deployment sets SHEET_IMPORTS=on. kind=range reads an IMPORTRANGE range of another LiveDoc spreadsheet with the caller’s own access, as values, whatever SHEET_IMPORTS: until an Editor connects the source it answers "You need to connect these sheets." with connect true. Read access.',
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [
-      { name: 'kind', required: true, description: 'data, feed, html, xml or image.' },
-      { name: 'url', required: true, description: 'The address to fetch, http or https.' },
+      { name: 'kind', required: true, description: 'data, feed, html, xml, image or range.' },
+      {
+        name: 'url',
+        required: false,
+        description: 'The address to fetch, http or https (all but range).',
+      },
+      {
+        name: 'source',
+        required: false,
+        description: "range: the source spreadsheet's document id.",
+      },
+      {
+        name: 'range',
+        required: false,
+        description: 'range: [sheet_name!]range, or a named range.',
+      },
       {
         name: 'query',
         required: false,
@@ -993,8 +1008,15 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
       type: 'object',
       properties: {
         rows: { type: 'array', items: { type: 'array', items: { type: 'string' } } },
-        error: { type: 'string', enum: ['#N/A', '#REF!', '#VALUE!'] },
+        values: {
+          type: 'array',
+          description:
+            "range: the source's cells: numbers, text, booleans, null, or { e } for an error.",
+          items: { type: 'array', items: {} },
+        },
+        error: { type: 'string', enum: ['#N/A', '#REF!', '#VALUE!', '#ERROR!'] },
         why: { type: 'string' },
+        connect: { type: 'boolean', description: 'range: the source is not yet connected.' },
       },
     },
     statuses: [200, 400, 401, 403, 404, 410, 422, 429],
@@ -1005,11 +1027,12 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      "Allow a spreadsheet's imports to fetch from the web, for good, as Google's Allow access. Sent live to everyone on it. 404 workbook_not_found. Edit access; never on a tab-scoped link.",
+      "Without a body, allow a spreadsheet's imports to fetch from the web, for good, as Google's Allow access. With { sources }, connect the spreadsheets its IMPORTRANGEs read, those the caller may open (403 when none), for good; 400 range_sources_invalid, 409 range_sources_full past 100. Sent live to everyone on it. 404 workbook_not_found. Edit access; never on a tab-scoped link.",
     auth: 'guest-or-session',
     tokenUsable: true,
+    requestSchema: 'WorkbookConnectRequest',
     responseSchema: 'WorkbookSettingsResponse',
-    statuses: [200, 401, 403, 404, 410],
+    statuses: [200, 400, 401, 403, 404, 409, 410],
   },
   {
     method: 'POST',

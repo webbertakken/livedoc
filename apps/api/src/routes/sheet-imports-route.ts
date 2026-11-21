@@ -1,15 +1,16 @@
 // A spreadsheet's imports from the web (docs/specs/029-sheets/imports.md): GET /api/documents/<id>/workbook/imports
 // fetches one import for anyone who may read the spreadsheet, once an Editor allowed it, with the guards of
 // public-fetch.ts, the hour's cache and a per-spreadsheet rate; POST .../workbook/imports is that allowing. A picture
-// IMAGE shows (kind=image) passes the same gates and is answered as its bytes (sheet-image-route.ts).
+// IMAGE shows (kind=image) passes the same gates and is answered as its bytes (sheet-image-route.ts). IMPORTRANGE
+// (kind=range, and a POST with a body) reads LiveDoc, not the web: sheet-range-import.ts, before any web gate.
 import type { WorkbookRoomOp, WorkbookSettingsResponse } from '@livedoc/api-schema';
 import {
   extractImport,
   importKey,
   readImportParams,
   IMPORT_WORDS,
-  type ImportAnswer,
-  type ImportRequest,
+  type WebImportAnswer,
+  type WebImportRequest,
 } from '@livedoc/sheets';
 import { allowWorkbookImports, readWorkbook } from '../db/workbook';
 import { fetchPublicPage } from '../public-fetch';
@@ -25,6 +26,7 @@ import { forbidden, json, rateLimited } from '../responses';
 import { relayWorkbook } from '../room-client';
 import type { DocumentRouteContext } from './context';
 import { sheetCaller, workbookRefused } from './sheet-route-kit';
+import { connectRangeSources, fetchRangeImport } from './sheet-range-import';
 
 const ACCEPT = 'text/html,application/xhtml+xml,application/xml,text/xml,text/csv,*/*;q=0.8';
 // The cache's own address space: never fetched, only a key.
@@ -34,7 +36,7 @@ function cacheStore(): Cache | null {
   return typeof caches === 'undefined' ? null : (caches as unknown as { default: Cache }).default;
 }
 
-async function cacheKey(request: ImportRequest): Promise<Request> {
+async function cacheKey(request: WebImportRequest): Promise<Request> {
   const digest = await crypto.subtle.digest(
     'SHA-256',
     new TextEncoder().encode(importKey(request)),
@@ -48,8 +50,8 @@ function hostOf(url: string): string {
 }
 
 async function fetchAndRead(
-  request: ImportRequest,
-): Promise<{ answer: ImportAnswer; reason: string | null }> {
+  request: WebImportRequest,
+): Promise<{ answer: WebImportAnswer; reason: string | null }> {
   const page = await fetchPublicPage(request.url, {
     timeoutMs: IMPORT_FETCH_MS,
     maxBytes: IMPORT_BYTES_MAX,
@@ -71,16 +73,17 @@ export async function fetchImport(
 ): Promise<Response> {
   const caller = await sheetCaller(ctx, documentId, 'read');
   if (caller instanceof Response) return caller;
+  if (ctx.url.searchParams.get('kind') === 'range') return fetchRangeImport(ctx, documentId);
   if (ctx.env.SHEET_IMPORTS !== 'on') {
     console.info('[imports] refused', { documentId, reason: 'server_off' });
-    return json({ error: '#N/A', why: IMPORT_WORDS.serverOff } satisfies ImportAnswer);
+    return json({ error: '#N/A', why: IMPORT_WORDS.serverOff } satisfies WebImportAnswer);
   }
   const record = await readWorkbook(ctx.env, documentId);
   if (!record) return workbookRefused('workbook_not_found', 404);
   if (!record.importsAllowed) return workbookRefused('imports_not_allowed', 403);
   if (ctx.url.searchParams.get('kind') === 'image') return fetchSheetImage(ctx, documentId);
   const request = readImportParams(ctx.url.searchParams);
-  if (!request) return workbookRefused('import_invalid', 400);
+  if (!request || request.kind === 'range') return workbookRefused('import_invalid', 400);
   const host = hostOf(request.url);
   const cache = cacheStore();
   const key = cache ? await cacheKey(request) : null;
@@ -123,6 +126,15 @@ export async function fetchImport(
   return json(answer);
 }
 
+// A body as JSON, or null when it is none (refused as no sources).
+function jsonOf(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export async function allowImports(
   ctx: DocumentRouteContext,
   documentId: string,
@@ -130,6 +142,9 @@ export async function allowImports(
   const caller = await sheetCaller(ctx, documentId, 'edit');
   if (caller instanceof Response) return caller;
   if (caller.scopeTab) return forbidden();
+  // A body names the spreadsheets to connect (IMPORTRANGE); none allows the web (imports.md "Allow access").
+  const text = await ctx.request.text();
+  if (text.trim() !== '') return connectRangeSources(ctx, documentId, jsonOf(text));
   const allowed = await allowWorkbookImports(ctx.env, documentId, Date.now());
   if (!allowed) return workbookRefused('workbook_not_found', 404);
   const op: WorkbookRoomOp = { kind: 'workbook', ...allowed };

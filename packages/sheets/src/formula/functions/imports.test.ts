@@ -163,7 +163,7 @@ describe('Allow Access', () => {
     );
     expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });
     expect(b.wb.takeImportAsks()).toEqual([]);
-    b.wb.refreshImports();
+    b.wb.refreshImports('web');
     b.set('A1', '=IMPORTDATA("https://example.com/a.csv")');
     expect(b.wb.takeImportAsks()).toEqual([]);
     b.wb.allowImports();
@@ -181,7 +181,7 @@ describe('refreshing', () => {
     b.wb.takeImportAsks();
     b.wb.landImport(importKey(DATA), { rows: [['old']] });
     expect(b.v('A1')).toBe('old');
-    b.wb.refreshImports();
+    b.wb.refreshImports('web');
     expect(b.wb.takeImportAsks()).toEqual([{ key: importKey(DATA), request: DATA, fresh: false }]);
     expect(b.v('A1')).toBe('old');
     b.wb.landImport(importKey(DATA), { rows: [['new']] });
@@ -195,7 +195,7 @@ describe('refreshing', () => {
     b.wb.landImport(importKey(DATA), { rows: [['x']] });
     b.set('A1', '1');
     b.v('A1');
-    b.wb.refreshImports();
+    b.wb.refreshImports('web');
     expect(b.wb.takeImportAsks()).toEqual([]);
     b.set('A1', '=IMPORTDATA("https://example.com/a.csv")');
     expect(b.v('A1')).toMatchObject({ why: 'pending' });
@@ -223,7 +223,7 @@ describe('refreshing', () => {
     b.wb.takeImportAsks();
     b.wb.landImport(importKey(DATA), { rows: [['x']] });
     b.wb.updateSheet({ ...b.sheets[0]!, title: 'Renamed' });
-    b.wb.refreshImports();
+    b.wb.refreshImports('web');
     expect(b.wb.takeImportAsks()).toEqual([]);
     expect(b.v('A1')).toMatchObject({ why: 'pending' });
     b.wb.landImport(importKey(DATA), { rows: [['x']] });
@@ -285,7 +285,7 @@ describe('where no editor fetches', () => {
     const version = b.wb.version;
     b.wb.landImport(importKey(DATA), { rows: [['x']] });
     b.wb.allowImports();
-    b.wb.refreshImports();
+    b.wb.refreshImports('web');
     expect(b.wb.takeImportAsks()).toEqual([]);
     expect(b.wb.version).toBe(version);
   });

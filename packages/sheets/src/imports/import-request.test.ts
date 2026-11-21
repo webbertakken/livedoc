@@ -9,7 +9,7 @@ import {
   importUrl,
   readImportParams,
   IMPORT_WORDS,
-  type ImportRequest,
+  type WebImportRequest,
 } from './import-request';
 import { parseMarkup, shownTextOf } from './markup';
 
@@ -47,7 +47,7 @@ describe('feedQuery', () => {
 });
 
 describe('the wire', () => {
-  const REQUESTS: ImportRequest[] = [
+  const REQUESTS: WebImportRequest[] = [
     { kind: 'data', url: 'https://example.com/a.csv' },
     { kind: 'html', url: 'https://example.com/', query: 'list', index: 3 },
     { kind: 'xml', url: 'https://example.com/', xpath: '//a[@x="1&2"]' },

@@ -5,7 +5,7 @@
 
 import { remapTabLinks, type Element } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
-import { workbookFromRow, type WorkbookRow } from '../db/workbook';
+import { workbookFromRow, WORKBOOK_COLUMNS, type WorkbookRow } from '../db/workbook';
 import { cellFormatSql, styleCellsStatements } from '../db/sheet-styles';
 import { itemIdsShownOnTab, type TabItemElement } from '@livedoc/items';
 import { redactTabDataAuthors } from '../comments';
@@ -47,9 +47,9 @@ export async function readDocumentOutline(
     env.DOCUMENT_DB.prepare(
       'SELECT presentation, item_types, item_types_rev, saved_at FROM document WHERE id = ?',
     ).bind(documentId),
-    env.DOCUMENT_DB.prepare(
-      'SELECT format, settings, imports_allowed FROM workbook WHERE document_id = ?',
-    ).bind(documentId),
+    env.DOCUMENT_DB.prepare(`SELECT ${WORKBOOK_COLUMNS} FROM workbook WHERE document_id = ?`).bind(
+      documentId,
+    ),
   ]);
   const row = doc?.results?.[0] as
     | {

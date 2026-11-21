@@ -1,6 +1,7 @@
 // The Web functions that fetch (docs/specs/029-sheets/imports.md): IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML
 // make a request from their arguments and read its answer through the frame, which the editor's engine fills from the
-// api. Arguments reading NOW or RAND are refused before anything is asked, as Google refuses them.
+// api. Arguments reading NOW or RAND are refused before anything is asked, as Google refuses them. IMPORTRANGE
+// (import-range.ts) is made the same way, its answer values rather than text.
 import type { EvalValue, Frame } from '../../engine/frame';
 import { parseLocaleNumber } from '../../input';
 import {
@@ -14,7 +15,7 @@ import { boolArg, intArg, lazyFn, opt, textArg, valueArg, type FnDef, type Thunk
 import { PENDING, err, isError, type SheetError, type Value } from '../values';
 
 // The request an import's arguments make, or the error they are.
-type Build = (args: EvalValue[], f: Frame) => ImportRequest | SheetError;
+export type Build = (args: EvalValue[], f: Frame) => ImportRequest | SheetError;
 
 function urlOf(args: EvalValue[], f: Frame): string | SheetError {
   const text = textArg(args[0]!, f);
@@ -31,7 +32,7 @@ export function importedValue(text: string, locale: string): Value {
   return parseLocaleNumber(t, locale) ?? text;
 }
 
-function importFn(min: number, max: number, build: Build, localeAt?: number): FnDef {
+export function importFn(min: number, max: number, build: Build, localeAt?: number): FnDef {
   return lazyFn(min, max, (thunks: Thunk[], f) => {
     // Read whole inside the watch, so a cell the arguments name is read (and its NOW seen) there.
     const [args, readsNow] = f.watchNow(() =>
@@ -56,6 +57,7 @@ function importFn(min: number, max: number, build: Build, localeAt?: number): Fn
     if (read === 'blocked' || read === 'offline') return err('#REF!', IMPORT_WORDS[read]);
     if (read === 'pending') return PENDING;
     if ('error' in read) return err(read.error, read.why);
+    if ('values' in read) return { rows: read.values };
     return { rows: read.rows.map((row) => row.map((t) => importedValue(t, locale))) };
   });
 }

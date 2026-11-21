@@ -5,6 +5,7 @@ import { emptyLayout, WorkbookRecord } from '@livedoc/sheets';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
+import { documentRpc, type DocumentRoomRpc } from '../document-room/document-rpc';
 
 export type WorkbookKit = {
   sql: SqliteD1;
@@ -45,6 +46,9 @@ export function workbookKit(): WorkbookKit {
           relayed.push((JSON.parse(init.body) as { op?: unknown }).op);
         return new Response(null, { status: 204 });
       },
+      // Another document's room, as the room's own RPC answers it (one SQLite holds every document here).
+      readRange: (...args: Parameters<DocumentRoomRpc['readRange']>) =>
+        documentRpc(sql.env, undefined).readRange(...args),
     }),
   };
   sql.sql.exec(

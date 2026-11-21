@@ -3,7 +3,29 @@
 import { WorkbookRecord, type WorkbookSettings } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 
-export type WorkbookRow = { format: string; settings: string; imports_allowed?: number };
+export type WorkbookRow = {
+  format: string;
+  settings: string;
+  imports_allowed?: number;
+  // The connected IMPORTRANGE sources as a JSON array, or null for none (formulas.md "Connecting two spreadsheets").
+  range_sources?: string | null;
+};
+
+/** The row's columns a record is read from. */
+export const WORKBOOK_COLUMNS = 'format, settings, imports_allowed, range_sources';
+
+function rangeSourcesOf(documentId: string, text: string | null | undefined): string[] | undefined {
+  if (!text) return undefined;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    raw = null;
+  }
+  const sources = WorkbookRecord.readRangeSources(raw);
+  if (!sources) console.warn('[workbook] unreadable range sources', { documentId });
+  return sources ?? undefined;
+}
 
 /** A workbook row as its record, or null when it cannot be read (logged). */
 export function workbookFromRow(
@@ -17,10 +39,12 @@ export function workbookFromRow(
   } catch {
     settings = null;
   }
+  const rangeSources = rangeSourcesOf(documentId, row.range_sources);
   const record = WorkbookRecord.read({
     format: row.format,
     settings,
     importsAllowed: row.imports_allowed === 1,
+    ...(rangeSources ? { rangeSources } : {}),
   });
   if (!record) console.warn('[workbook] unreadable row', { documentId });
   return record;
@@ -32,7 +56,7 @@ export async function readWorkbook(
   documentId: string,
 ): Promise<WorkbookRecord | null> {
   const row = await env.DOCUMENT_DB.prepare(
-    'SELECT format, settings, imports_allowed FROM workbook WHERE document_id = ?',
+    `SELECT ${WORKBOOK_COLUMNS} FROM workbook WHERE document_id = ?`,
   )
     .bind(documentId)
     .first<WorkbookRow>();
@@ -95,7 +119,7 @@ export async function allowWorkbookImports(
 ): Promise<{ workbook: WorkbookRecord; rev: number } | null> {
   const row = await env.DOCUMENT_DB.prepare(
     `UPDATE workbook SET imports_allowed = 1, rev = rev + 1, updated_at = ? WHERE document_id = ?
-     RETURNING format, settings, imports_allowed, rev`,
+     RETURNING ${WORKBOOK_COLUMNS}, rev`,
   )
     .bind(now, documentId)
     .first<WorkbookRow & { rev: number }>();
@@ -126,4 +150,33 @@ export async function tabPlaceAfter(
     .bind(documentId, after)
     .first<{ at: number }>();
   return row ? row.at + 1 : null;
+}
+
+/**
+ * Sources a spreadsheet's IMPORTRANGEs may read, added to those it had, for good (formulas.md "Connecting two
+ * spreadsheets"): its record as it now stands and the row's new rev, or null when the document is no spreadsheet.
+ * The union is worked out in the statement, so two Editors connecting at once both land.
+ */
+export async function connectWorkbookRangeSources(
+  env: DocumentEnv,
+  documentId: string,
+  sources: readonly string[],
+  now: number,
+): Promise<{ workbook: WorkbookRecord; rev: number } | null> {
+  const row = await env.DOCUMENT_DB.prepare(
+    `UPDATE workbook
+        SET range_sources = (
+              SELECT json_group_array(value) FROM (
+                SELECT value FROM json_each(COALESCE(range_sources, '[]'))
+                UNION SELECT value FROM json_each(?)
+              )
+            ),
+            rev = rev + 1, updated_at = ?
+      WHERE document_id = ?
+      RETURNING ${WORKBOOK_COLUMNS}, rev`,
+  )
+    .bind(JSON.stringify(sources), now, documentId)
+    .first<WorkbookRow & { rev: number }>();
+  const workbook = workbookFromRow(documentId, row ?? undefined);
+  return row && workbook ? { workbook, rev: row.rev } : null;
 }

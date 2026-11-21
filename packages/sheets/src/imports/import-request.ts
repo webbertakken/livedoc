@@ -1,10 +1,15 @@
 // What an import asks of the web and what it gets back (docs/specs/029-sheets/imports.md): the engine makes the
 // request from a formula's arguments, the page carries it to the api as a query string, and the api answers rows of
-// text or a failure. One shape on every side, so the cache key, the wire and the checks agree.
+// text or a failure. One shape on every side, so the cache key, the wire and the checks agree. IMPORTRANGE's request
+// rides the same path (formulas.md "Other workbooks"): a LiveDoc spreadsheet and a range of it, answered as values.
 import { ARRAY_CELLS_MAX, TEXT_RESULT_MAX } from '../limits';
+import type { ErrorCode } from '../formula/values';
+import { rangeSource, rangeStringOk } from './range-import';
 
 export const IMPORT_KINDS = ['data', 'feed', 'html', 'xml'] as const;
 export type ImportKind = (typeof IMPORT_KINDS)[number];
+/** The web's kinds and IMPORTRANGE's, which reads LiveDoc rather than the web. */
+export type ImportRequestKind = ImportKind | 'range';
 
 /** The formula functions that fetch, by the kind each asks for. */
 export const IMPORT_FUNCTIONS: Readonly<Record<string, ImportKind>> = {
@@ -31,11 +36,26 @@ export type ImportRequest =
   | { kind: 'html'; url: string; query: 'table' | 'list'; index: number }
   | { kind: 'xml'; url: string; xpath: string }
   // `query`: `items`, `items <type>`, `feed` or `feed <type>`, lower case; `items`: how many, null for all.
-  | { kind: 'feed'; url: string; query: string; headers: boolean; items: number | null };
+  | { kind: 'feed'; url: string; query: string; headers: boolean; items: number | null }
+  // IMPORTRANGE: the source spreadsheet's document id and the range string as typed, trimmed.
+  | { kind: 'range'; source: string; range: string };
+
+/** An import that fetches from the web (every kind but IMPORTRANGE's). */
+export type WebImportRequest = Exclude<ImportRequest, { kind: 'range' }>;
+
+/** One cell of a source spreadsheet as IMPORTRANGE receives it: its value, an error by its code. */
+export type ImportedCell = number | string | boolean | null | { e: ErrorCode };
 
 // The errors an import's answer may be: Google's for a failed fetch, a blocked or refused one, a bad query.
-export type ImportErrorCode = '#N/A' | '#REF!' | '#VALUE!';
-export type ImportAnswer = { rows: string[][] } | { error: ImportErrorCode; why: string };
+export type ImportErrorCode = '#N/A' | '#REF!' | '#VALUE!' | '#ERROR!';
+// `rows` of text from the web; `values` from a LiveDoc spreadsheet; a failure, `connect` when the two spreadsheets
+// are not yet connected (formulas.md "Connecting two spreadsheets").
+export type ImportAnswer =
+  | { rows: string[][] }
+  | { values: ImportedCell[][] }
+  | { error: ImportErrorCode; why: string; connect?: true };
+/** What a web import answers: rows of text, or a failure. */
+export type WebImportAnswer = Exclude<ImportAnswer, { values: ImportedCell[][] }>;
 
 /** Whether a spreadsheet's imports may fetch: allowed, not yet allowed, or not possible while it is saved only in this
  * browser (imports.md "A spreadsheet in This Browser"). */
@@ -94,7 +114,10 @@ export function importKey(r: ImportRequest): string {
 
 /** The request as the api's query string. */
 export function importParams(r: ImportRequest, fresh = false): URLSearchParams {
-  const p = new URLSearchParams({ kind: r.kind, url: r.url });
+  const p =
+    r.kind === 'range'
+      ? new URLSearchParams({ kind: r.kind, source: r.source, range: r.range })
+      : new URLSearchParams({ kind: r.kind, url: r.url });
   if (r.kind === 'html') {
     p.set('query', r.query);
     p.set('index', String(r.index));
@@ -116,6 +139,11 @@ function positiveInt(text: string | null): number | null {
 /** A request read back from the api's query string, every part checked; null when any is not one. */
 export function readImportParams(p: URLSearchParams): ImportRequest | null {
   const kind = p.get('kind');
+  if (kind === 'range') {
+    const source = rangeSource(p.get('source') ?? '');
+    const range = (p.get('range') ?? '').trim();
+    return source && rangeStringOk(range) ? { kind, source, range } : null;
+  }
   const url = importUrl(p.get('url') ?? '');
   if (!url) return null;
   if (kind === 'data') return { kind, url };
@@ -142,7 +170,7 @@ export function readImportParams(p: URLSearchParams): ImportRequest | null {
 }
 
 /** Rows made even and held to the import's bounds: a failure past IMPORT_VALUES_MAX, each text cut to its longest. */
-export function boundedRows(rows: string[][]): ImportAnswer {
+export function boundedRows(rows: string[][]): WebImportAnswer {
   if (rows.length > IMPORT_VALUES_MAX) return { error: '#N/A', why: IMPORT_WORDS.tooLarge };
   const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
   if (width === 0) return { error: '#N/A', why: IMPORT_WORDS.empty };

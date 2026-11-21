@@ -17,7 +17,7 @@ import {
   type ImportAnswer,
   type ImportAsk,
 } from '../imports/import-request';
-import { ImportBook } from './import-book';
+import { ImportBook, type ImportFamily } from './import-book';
 import { callsOf, type Node } from '../formula/ast';
 import { safeHyperlink } from '../hyperlink';
 import type { Sparkline } from '../sparkline/sparkline-read';
@@ -41,7 +41,14 @@ import { Dependencies } from './dependencies';
 import { evaluate } from './evaluate';
 import { deref } from '../formula/fn';
 import { cellFrame, type FrameSource } from './cell-frame';
-import type { CellAt, DrawHooks } from './frame';
+import {
+  isRef,
+  type CellAt,
+  type DrawHooks,
+  type EvalValue,
+  type RangeRef,
+  type RefValue,
+} from './frame';
 import { formulaPrecedents } from './precedents';
 import { sheetsCtxOf } from './sheets-ctx';
 import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
@@ -65,7 +72,7 @@ export type WorkbookOptions = {
   // Note each formula value forgotten, for takeForgotten (the Worker's engine, sending what changed).
   trackForgotten?: boolean;
   // An editor's engine fetches imports (imports.md), access allowed or not; absent, imports read their refusal.
-  imports?: { access: ImportAccess };
+  imports?: { access: ImportAccess; web?: false };
 };
 
 export type { CellAt };
@@ -91,6 +98,8 @@ class Deep extends Error {
 function localNow(): number {
   return serialFromMs(localMs(Date.now()));
 }
+
+const RANGE_IMPORT_NAMES: ReadonlySet<string> = new Set(['IMPORTRANGE']);
 
 export class Workbook {
   readonly locale: string;
@@ -147,7 +156,9 @@ export class Workbook {
     this.limits = opts.limits ?? SheetLimits.plan;
     this.arrays = opts.arrays ?? (this.limits === SheetLimits.spreadsheet ? 'google' : 'dynamic');
     this.cards = opts.cards ?? null;
-    this.importBook = opts.imports ? new ImportBook(opts.imports.access) : null;
+    this.importBook = opts.imports
+      ? new ImportBook(opts.imports.access, opts.imports.web ?? true)
+      : null;
     this.nowFn = opts.now ?? localNow;
     this.randFn = opts.rand ?? Math.random;
     this.iteration = opts.iteration ?? ITERATION_OFF;
@@ -286,9 +297,9 @@ export class Workbook {
     this.forgetImportReaders(this.importBook?.online(allowed) ?? []);
   }
 
-  /** The hour is up: every import still read is asked of the page again. */
-  refreshImports(): void {
-    this.importBook?.refresh();
+  /** A family's time is up (the web's hour, IMPORTRANGE's minute): its imports still read are asked again. */
+  refreshImports(family: ImportFamily): void {
+    this.importBook?.refresh(family);
   }
 
   /** The imports to ask of the page since the last call. */
@@ -383,6 +394,16 @@ export class Workbook {
     const ast = storedAst(stored);
     if (!ast) return err('#ERROR!');
     return this.evaluateNodeAt(sheetId, r, c, ast, stored.r);
+  }
+
+  // The cells a reference formula names, worked out as if it sat at the sheet's top left, keeping nothing: the
+  // range IMPORTRANGE reads of a source (docs/specs/029-sheets/formulas.md "Other workbooks"). Null when it names none.
+  rangeOf(sheetId: string, stored: StoredFormula): RangeRef | null {
+    const ast = storedAst(stored);
+    if (!ast) return null;
+    let raw: EvalValue | null = null;
+    this.evaluateNodeAt(sheetId, 0, 0, ast, stored.r, { answer: (v) => (raw = v) });
+    return raw !== null && isRef(raw) ? (raw as RefValue).ref : null;
   }
 
   // Where a cell's HYPERLINK goes (docs/specs/029-sheets/formulas.md "Text"): the url argument of a formula that is a
@@ -533,6 +554,11 @@ export class Workbook {
   // Whether any formula imports from the web (so the editor shows the Allow Access bar until it is allowed).
   usesImports(): boolean {
     return this.calls(FETCHING_FUNCTION_NAMES);
+  }
+
+  // Whether any formula reads another spreadsheet (so a spreadsheet in This Browser is offered Sync Document).
+  usesRangeImports(): boolean {
+    return this.calls(RANGE_IMPORT_NAMES);
   }
 
   private calls(names: ReadonlySet<string>): boolean {

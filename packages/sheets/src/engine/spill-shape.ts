@@ -132,6 +132,7 @@ const ARRAY_RESULT = new Set([
   'IMPORTFEED',
   'IMPORTHTML',
   'IMPORTXML',
+  'IMPORTRANGE',
   'MODE.MULT',
   'FILTER',
   'SORT',

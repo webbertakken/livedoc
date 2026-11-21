@@ -1,6 +1,7 @@
 // A spreadsheet's imports in the sheet store (docs/specs/029-sheets/imports.md "Allow access", "Fetching"): what
 // the engine asks is fetched and lands in the cells; #REF! until an Editor allows; asked again hourly while read; a
-// Plan document fetches nothing.
+// Plan document fetches nothing. IMPORTRANGE (formulas.md "Other workbooks"): asked whatever the web's access, waiting
+// on its source until connected, asked again then and every minute.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CellMap,
@@ -8,42 +9,52 @@ import {
   emptyLayout,
   sheetToJson,
   IMPORT_WORDS,
+  RANGE_WORDS,
   type ImportAccess,
+  type ImportAnswer,
   type ImportAsk,
   type SheetJson,
   type SheetWrite,
 } from '@livedoc/sheets';
 import { SheetStore } from './sheet-store-client';
 import { inPlaceLink } from './sheet-engine-link';
-import { IMPORT_REFRESH_MS } from './sheet-imports';
+import { IMPORT_REFRESH_MS, RANGE_REFRESH_MS } from './sheet-imports';
 
 let n = 3;
 const rand = () => (n = (n * 16807 + 11) % 2147483647) / 2147483647;
 const by = { id: 'o', name: 'O', color: '#000000' };
 const layout = emptyLayout(rand, 3, 3);
-const SHEET: SheetJson = sheetToJson({
-  id: 'sheetOne',
-  tabId: 'tabA',
-  title: 'Sheet1',
-  layout,
-  cells: CellMap.from([
-    [
-      cellKey(layout.rows[0]!, layout.cols[0]!),
-      { input: { f: { t: 'IMPORTDATA("https://a.example/x.csv")', r: [] } } },
-    ],
-  ]),
-  rev: 1,
-  createdAt: 0,
-  updatedAt: 0,
-  updatedBy: by,
-});
+// The spreadsheet's one sheet, its A1 the formula given.
+function sheetWith(formula: string): SheetJson {
+  return sheetToJson({
+    id: 'sheetOne',
+    tabId: 'tabA',
+    title: 'Sheet1',
+    layout,
+    cells: CellMap.from([
+      [cellKey(layout.rows[0]!, layout.cols[0]!), { input: { f: { t: formula, r: [] } } }],
+    ]),
+    rev: 1,
+    createdAt: 0,
+    updatedAt: 0,
+    updatedBy: by,
+  });
+}
+const SHEET = sheetWith('IMPORTDATA("https://a.example/x.csv")');
 
-function make(opts: { oneWorkbook: boolean; importAccess?: ImportAccess; viaApi?: boolean }) {
+function make(opts: {
+  oneWorkbook: boolean;
+  importAccess?: ImportAccess;
+  viaApi?: boolean;
+  sheet?: SheetJson;
+  answer?: (ask: ImportAsk) => ImportAnswer;
+}) {
   const asked: ImportAsk[] = [];
   const fetchImport = vi.fn(async (_scope: unknown, ask: ImportAsk) => {
     asked.push(ask);
-    return { rows: [['a', '2']] };
+    return opts.answer ? opts.answer(ask) : { rows: [['a', '2']] };
   });
+  const sheet = opts.sheet ?? SHEET;
   const deps = {
     scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
     oneWorkbook: opts.oneWorkbook,
@@ -55,8 +66,8 @@ function make(opts: { oneWorkbook: boolean; importAccess?: ImportAccess; viaApi?
     pushUndo: vi.fn(),
     toast: vi.fn(),
     api: {
-      fetchSheets: vi.fn(async () => [SHEET]),
-      fetchWorkbook: vi.fn(async () => [{ ...SHEET, cellCount: 1, rowsLoaded: 3 }]),
+      fetchSheets: vi.fn(async () => [sheet]),
+      fetchWorkbook: vi.fn(async () => [{ ...sheet, cellCount: 1, rowsLoaded: 3 }]),
       fetchSheetCells: vi.fn(),
       createSheet: vi.fn(),
       writeSheet: vi.fn(async (_s: unknown, _id: string, req: { write: SheetWrite }) => ({
@@ -174,5 +185,75 @@ describe('a spreadsheet’s imports in the store', () => {
     });
     expect(store.usesImports()).toBe(true);
     stop();
+  });
+});
+
+describe('IMPORTRANGE in the store', () => {
+  const RANGE = sheetWith('IMPORTRANGE("src1", "A1")');
+  let connected = false;
+  const answer = (): ImportAnswer =>
+    connected ? { values: [[42]] } : { error: '#REF!', why: RANGE_WORDS.connect, connect: true };
+
+  it('asks whatever the web’s access, waits on its source, and reads it once connected', async () => {
+    connected = false;
+    const notified = vi.fn();
+    const { store, deps, asked } = make({
+      oneWorkbook: true,
+      importAccess: 'blocked',
+      sheet: RANGE,
+      answer,
+    });
+    store.subscribe(notified);
+    await store.loadTab('tabA');
+    store.workbook('tabA');
+    await settle();
+    expect(asked.map((a) => a.request)).toEqual([{ kind: 'range', source: 'src1', range: 'A1' }]);
+    expect(a1(store)).toEqual({ e: '#REF!', why: RANGE_WORDS.connect });
+    expect(store.rangeSourcesWaiting()).toEqual(['src1']);
+    expect(store.usesRangeImports()).toBe(true);
+    expect(store.usesImports()).toBe(false);
+    connected = true;
+    store.update({ ...deps, rangeSources: ['src1'] });
+    await settle();
+    expect(asked).toHaveLength(2);
+    expect(a1(store)).toBe(42);
+    expect(store.rangeSourcesWaiting()).toEqual([]);
+    store.update({ ...deps, rangeSources: ['src1'] });
+    await settle();
+    expect(asked).toHaveLength(2);
+  });
+
+  it('asks again every minute while anyone reads the store', async () => {
+    connected = true;
+    const { store, asked } = make({
+      oneWorkbook: true,
+      importAccess: 'blocked',
+      sheet: RANGE,
+      answer,
+    });
+    await store.loadTab('tabA');
+    store.workbook('tabA');
+    await settle();
+    vi.useFakeTimers();
+    const stop = store.subscribe(() => undefined);
+    vi.advanceTimersByTime(RANGE_REFRESH_MS);
+    vi.useRealTimers();
+    await settle();
+    expect(asked).toHaveLength(2);
+    stop();
+  });
+
+  it('waits for Sync Document in This Browser', async () => {
+    const { store, asked } = make({
+      oneWorkbook: true,
+      importAccess: 'offline',
+      sheet: RANGE,
+      answer,
+    });
+    await store.loadTab('tabA');
+    store.workbook('tabA');
+    await settle();
+    expect(asked).toEqual([]);
+    expect(store.usesRangeImports()).toBe(true);
   });
 });
