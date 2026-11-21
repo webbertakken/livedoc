@@ -371,6 +371,162 @@
     {
       "id": "NUMBERVALUE.11",
       "f": "=NUMBERVALUE(\"1 234,5\", \",\")"
+    },
+    {
+      "id": "ODDFPRICE.1",
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2, 1)",
+      "expect": [[113.597717474079]],
+      "cite": "https://learn.microsoft.com/en-us/dax/oddfprice-function-dax: the example, ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100.00, 2, 1), is 113.597717474079",
+      "differs": {
+        "libreoffice": "LibreOffice's analysis add-in leaves ODDFPRICE and ODDFYIELD unbuilt: any arguments it accepts answer #VALUE!"
+      }
+    },
+    {
+      "id": "ODDFPRICE.2",
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,12,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2)"
+    },
+    {
+      "id": "ODDFPRICE.3",
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0, 0.0625, 100, 2)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "OpenFormula 1.4 Part 4, ODDFPRICE: Rate, Yield, and Redemption should be greater than 0 (Excel: a redemption of 0 or less is #NUM!)",
+      "differs": {
+        "libreoffice": "LibreOffice's analysis add-in leaves ODDFPRICE and ODDFYIELD unbuilt: any arguments it accepts answer #VALUE!"
+      }
+    },
+    {
+      "id": "ODDFPRICE.4",
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, -0.01, 100, 2)"
+    },
+    {
+      "id": "ODDFPRICE.5",
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 0, 2)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "OpenFormula 1.4 Part 4, ODDFPRICE: Rate, Yield, and Redemption should be greater than 0 (Excel: a redemption of 0 or less is #NUM!)",
+      "differs": {
+        "libreoffice": "LibreOffice's analysis add-in leaves ODDFPRICE and ODDFYIELD unbuilt: any arguments it accepts answer #VALUE!"
+      }
+    },
+    {
+      "id": "ODDFPRICE.6",
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 3)"
+    },
+    {
+      "id": "ODDFPRICE.7",
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2, 5)"
+    },
+    {
+      "id": "ODDFPRICE.8",
+      "f": "=ODDFPRICE(\"x\", DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2)"
+    },
+    {
+      "id": "ODDFYIELD.1",
+      "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2, 0)",
+      "expect": [[0.0772455415972989]],
+      "cite": "https://learn.microsoft.com/en-us/dax/oddfyield-function-dax: the example, ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.50, 100, 2, 0), is 0.0772455415972989",
+      "differs": {
+        "libreoffice": "LibreOffice's analysis add-in leaves ODDFPRICE and ODDFYIELD unbuilt: any arguments it accepts answer #VALUE!"
+      }
+    },
+    {
+      "id": "ODDFYIELD.2",
+      "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 0, 100, 2)"
+    },
+    {
+      "id": "ODDFYIELD.3",
+      "f": "=ODDFYIELD(DATE(2009,3,1), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2)"
+    },
+    {
+      "id": "ODDFYIELD.4",
+      "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2, -1)"
+    },
+    {
+      "id": "ODDLPRICE.1",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2, 0)"
+    },
+    {
+      "id": "ODDLPRICE.2",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)"
+    },
+    {
+      "id": "ODDLPRICE.3",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2, 4)"
+    },
+    {
+      "id": "ODDLPRICE.4",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0, 100, 2)"
+    },
+    {
+      "id": "ODDLPRICE.5",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 4)"
+    },
+    {
+      "id": "ODDLPRICE.6",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 1)"
+    },
+    {
+      "id": "ODDLPRICE.7",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2009,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)"
+    },
+    {
+      "id": "ODDLPRICE.8",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0, 0.0405, 100, 2)"
+    },
+    {
+      "id": "ODDLPRICE.9",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, -0.01, 100, 2)"
+    },
+    {
+      "id": "ODDLPRICE.10",
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 0, 2)"
+    },
+    {
+      "id": "ODDLPRICE.11",
+      "f": "=ODDLPRICE(DATE(2007,10,15), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)"
+    },
+    {
+      "id": "ODDLPRICE.12",
+      "f": "=ODDLPRICE(\"2/7/2008\", \"6/15/2008\", \"10/15/2007\", 0.0375, 0.0405, 100, 2.9, 0.9)"
+    },
+    {
+      "id": "ODDLYIELD.1",
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2, 0)"
+    },
+    {
+      "id": "ODDLYIELD.2",
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2)"
+    },
+    {
+      "id": "ODDLYIELD.3",
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2, 4)"
+    },
+    {
+      "id": "ODDLYIELD.4",
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 4)"
+    },
+    {
+      "id": "ODDLYIELD.5",
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 0, 100, 2)"
+    },
+    {
+      "id": "ODDLYIELD.6",
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 5)"
+    },
+    {
+      "id": "ODDLYIELD.7",
+      "f": "=ODDLYIELD(DATE(2008,6,15), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2)"
     }
   ]
 }

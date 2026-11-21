@@ -7,6 +7,7 @@ import { CASH_FLOW_FUNCTIONS } from './cash-flows';
 import { COUPON_FUNCTIONS } from './coupons';
 import { DEPRECIATION_FUNCTIONS } from './depreciation';
 import { DISCOUNT_SECURITY_FUNCTIONS } from './discount-securities';
+import { ODD_COUPON_FUNCTIONS } from './odd-coupons';
 import { SECURITY_FUNCTIONS } from './securities';
 import { solve } from './solve';
 
@@ -152,4 +153,5 @@ export const FINANCE_FUNCTIONS: Record<string, FnDef> = {
   ...COUPON_FUNCTIONS,
   ...SECURITY_FUNCTIONS,
   ...DISCOUNT_SECURITY_FUNCTIONS,
+  ...ODD_COUPON_FUNCTIONS,
 };

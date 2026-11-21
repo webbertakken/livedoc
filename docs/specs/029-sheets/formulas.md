@@ -411,7 +411,7 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 `PDURATION`, `RRI`, `EFFECT`, `NOMINAL`, `DOLLARDE`, `DOLLARFR`, `MIRR`, `XNPV`, `XIRR`, `FVSCHEDULE`, `SLN`, `SYD`,
 `DB`, `DDB`, `VDB`, `AMORLINC`, `COUPDAYBS`, `COUPDAYS`, `COUPDAYSNC`, `COUPNCD`, `COUPNUM`, `COUPPCD`, `PRICE`,
 `YIELD`, `DURATION`, `MDURATION`, `ACCRINT`, `ACCRINTM`, `PRICEMAT`, `YIELDMAT`, `DISC`, `PRICEDISC`, `YIELDDISC`,
-`INTRATE`, `RECEIVED`, `TBILLPRICE`, `TBILLYIELD`, `TBILLEQ`.
+`INTRATE`, `RECEIVED`, `TBILLPRICE`, `TBILLYIELD`, `TBILLEQ`, `ODDFPRICE`, `ODDFYIELD`, `ODDLPRICE`, `ODDLYIELD`.
 
 - Money paid out is negative. Dates are whole days; text that reads as a date is one ("7/20/1969").
 - The day count convention is 0 US (NASD) 30/360, 1 Actual/Actual, 2 Actual/360, 3 Actual/365 or 4 European 30/360,
@@ -430,6 +430,10 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   eighths as 100 1/8; in wholes (unit 1) it is the decimal itself (default, D51).
 - `MIRR`, `IRR` and `FVSCHEDULE` skip text and empty cells; `XNPV` and `XIRR` take as many amounts as dates,
   at least two, every one a number, else `#NUM!` or `#VALUE!` (default, D55).
+- `ODDFPRICE`, `ODDFYIELD`, `ODDLPRICE` and `ODDLYIELD` (OpenFormula's, which leaves their sums open) sum an odd
+  period over its quasi-coupon periods as ECMA-376 and Excel do; LibreOffice leaves the first two unbuilt and counts
+  an odd last period as one span (default, D59). Rate, price and redemption are positive and yield not negative, the
+  dates in order (maturity, first coupon, settlement, issue; maturity, settlement, last interest), else `#NUM!`.
 
 **Engineering**: `BIN2OCT`, `BIN2HEX`, `BIN2DEC`, `OCT2BIN`, `OCT2HEX`, `OCT2DEC`, `HEX2BIN`, `HEX2OCT`, `HEX2DEC`,
 `DEC2BIN`, `DEC2OCT`, `DEC2HEX`, `BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT`, `BITRSHIFT`, `DELTA`, `GESTEP`, `ERF`,
@@ -985,10 +989,10 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `OCT2DEC`             | Engineering | `OCT2DEC(signed_octal_number)`                                                                                 | Google      | `OCT2DEC`                        | built                                                         |
 | `OCT2HEX`             | Engineering | `OCT2HEX(signed_octal_number, [significant_digits])`                                                           | Google      | `OCT2HEX`                        | built                                                         |
 | `ODD`                 | Math        | `ODD(value)`                                                                                                   | Google      | `ODD`                            | built                                                         |
-| `ODDFPRICE`           | OpenFormula |                                                                                                                | OpenFormula | `ODDFPRICE`                      | planned                                                       |
-| `ODDFYIELD`           | OpenFormula |                                                                                                                | OpenFormula | `ODDFYIELD`                      | planned                                                       |
-| `ODDLPRICE`           | OpenFormula |                                                                                                                | OpenFormula | `ODDLPRICE`                      | planned                                                       |
-| `ODDLYIELD`           | OpenFormula |                                                                                                                | OpenFormula | `ODDLYIELD`                      | planned                                                       |
+| `ODDFPRICE`           | OpenFormula |                                                                                                                | OpenFormula | `ODDFPRICE`                      | built                                                         |
+| `ODDFYIELD`           | OpenFormula |                                                                                                                | OpenFormula | `ODDFYIELD`                      | built                                                         |
+| `ODDLPRICE`           | OpenFormula |                                                                                                                | OpenFormula | `ODDLPRICE`                      | built                                                         |
+| `ODDLYIELD`           | OpenFormula |                                                                                                                | OpenFormula | `ODDLYIELD`                      | built                                                         |
 | `OFFSET`              | Lookup      | `OFFSET(cell_reference, offset_rows, offset_columns, [height], [width])`                                       | Google      | `OFFSET`                         | built                                                         |
 | `OR`                  | Logical     | `OR(logical_expression1, [logical_expression2, ...])`                                                          | Google      | `OR`                             | built                                                         |
 | `PDURATION`           | Financial   | `PDURATION(rate, present_value, future_value)`                                                                 | Google      | `PDURATION`                      | built                                                         |
@@ -1261,3 +1265,4 @@ The code cites each by its id.
 - **D56** AVERAGE.WEIGHTED's errors: Ranges of two sizes `#VALUE!`, a negative weight `#NUM!` (default).
 - **D57** PERCENTRANK.INC and .EXC: As PERCENTRANK's help: outside the data `#N/A`; fewer than 1 digit is 3 (default).
 - **D58** INFO's answers: One document, recalculation Automatic, `LiveDoc` as system and release; else `#N/A` (default).
+- **D59** The odd-period bonds' sums: Excel's over quasi-coupon periods (ECMA-376), not LibreOffice's (default).
