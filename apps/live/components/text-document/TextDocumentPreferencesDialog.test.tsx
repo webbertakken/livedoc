@@ -37,11 +37,41 @@ describe('TextDocumentPreferencesDialog', () => {
   it('switches the typing aids on General, kept with OK', () => {
     const { onSave } = open();
     expect(selected('General')).toBe(true);
-    expect(box('Automatically detect Markdown').checked).toBe(false);
+    expect(box('Enable Markdown').checked).toBe(false);
     fireEvent.click(box('Use smart quotes'));
-    fireEvent.click(box('Automatically detect Markdown'));
+    fireEvent.click(box('Enable Markdown'));
     ok();
     expect(onSave.mock.calls[0]![0]).toMatchObject({ smartQuotes: false, markdown: true });
+  });
+
+  // tools.md "Preferences": Google's General options in Google's order; Smart Reply left out (C3); an option whose
+  // feature is not built yet dimmed, "Coming soon" under it.
+  it("lists Google's General options in its order, those not built yet dimmed", () => {
+    open();
+    expect(
+      screen
+        .getAllByRole('checkbox')
+        .map((b) => b.getAttribute('aria-label') ?? b.closest('label')?.textContent),
+    ).toEqual([
+      'Automatically capitalise words',
+      'Use smart quotes',
+      'Automatically detect links',
+      'Automatically detect lists',
+      'Enable Markdown',
+      'Automatically correct spelling',
+      'Show link details',
+      'Insert emoji using the colon character',
+    ]);
+    for (const name of [
+      'Automatically correct spelling',
+      'Show link details',
+      'Insert emoji using the colon character',
+    ]) {
+      const soon = screen.getByRole<HTMLInputElement>('checkbox', { name: new RegExp(`^${name}`) });
+      expect(soon.disabled).toBe(true);
+      expect(soon.getAttribute('aria-describedby')).not.toBeNull();
+    }
+    expect(screen.queryByText(/Smart Reply/)).toBeNull();
   });
 
   it('moves between the tabs with the arrow keys', () => {

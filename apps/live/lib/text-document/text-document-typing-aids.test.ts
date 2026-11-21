@@ -30,6 +30,14 @@ vi.mock('./text-document-undo', () => ({
 }));
 
 describe('TypingAids', () => {
+  // text-and-paragraphs.md "Typing aids", Substitutions: Google's list in Google's order, as Webber captured it.
+  it("holds Google's substitutions in Google's order", () => {
+    expect(DEFAULT_SUBSTITUTIONS.map(([replace, by]) => `${replace} ${by}`).join(', ')).toBe(
+      '(c) ©, (r) ®, tm ™, c/o ℅, ... …, 1/2 ½, 1/3 ⅓, 1/4 ¼, 1/5 ⅕, 1/6 ⅙, 1/8 ⅛, 2/3 ⅔, 3/4 ¾, ' +
+        '2/5 ⅖, 3/5 ⅗, 4/5 ⅘, 5/6 ⅚, 3/8 ⅜, 5/8 ⅝, 7/8 ⅞, <-- ←, <== ⇐, <=> ⇔, ==> ⇒, --> →, -- –, --- —',
+    );
+  });
+
   it("is Google's by default: every aid on but Markdown, every substitution on", () => {
     const aids = TypingAids.defaults();
     expect(aids).toMatchObject({

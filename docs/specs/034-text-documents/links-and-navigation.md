@@ -13,7 +13,8 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
 - Addresses kept: `http`, `https`, `mailto`, LiveDoc document addresses, and in-document targets (a heading, a
   bookmark); a bare domain becomes `https://`. Others are refused: "Use a web, email or LiveDoc address".
 - **Automatically detect links** (Preferences) turns a typed address into a link.
-- **Link details**: the caret on a link shows a card with its title (a LiveDoc document's name; a web page's address)
+- **Link details** (while Preferences > **Show link details** is on, as it is by default): the caret on a link shows
+  a card with its title (a LiveDoc document's name; a web page's address)
   and **Copy link**, **Edit link**, **Remove link**; Alt+Enter (⌥Enter) opens it.
 - A LiveDoc document link opens in a new browser tab; a heading or bookmark link scrolls to its target.
 

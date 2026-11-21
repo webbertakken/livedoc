@@ -136,7 +136,7 @@ const MARKDOWN_SPANS: readonly [RegExp, 'bold' | 'italic' | 'strike'][] = [
 ];
 
 /**
- * Automatically detect Markdown: the span the text now ends by closing (`**bold**`, `*italic*`, `_italic_`,
+ * Enable Markdown: the span the text now ends by closing (`**bold**`, `*italic*`, `_italic_`,
  * `~~strikethrough~~`, `[text](address)`), with where its inner text lies; none otherwise.
  */
 export function markdownSpanFor(text: string): MarkdownSpan | undefined {
@@ -162,6 +162,6 @@ export function markdownSpanFor(text: string): MarkdownSpan | undefined {
   return undefined;
 }
 
-/** Automatically detect Markdown: the heading level a paragraph's `#` to `######` marker stands for. */
+/** Enable Markdown: the heading level a paragraph's `#` to `######` marker stands for. */
 export const markdownHeadingFor = (text: string): number | undefined =>
   /^#{1,6}$/.test(text) ? text.length : undefined;

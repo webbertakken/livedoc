@@ -68,9 +68,9 @@ Every rule maps to a format construct in [Standard mapping](standard-mapping.md#
      capitalisation, alignment, indents and spacing are read from tags and inline CSS; a page's white behind its
      text is no highlight (default). Its whitespace is collapsed as a browser draws it, except where the source
      keeps it (`pre`, `white-space: pre*`); `br` is a line break.
-     A table's cells arrive as paragraphs in reading order until [tables](tables.md) are built; pictures wait for
-     [Objects](objects.md#pictures), left out and logged.
-  4. **Markdown text**, read as Markdown when Preferences > Automatically detect Markdown is on, as Google does.
+     A table arrives as a table, its rows, cells, spans and header cells kept ([Tables](tables.md#in-the-editor));
+     pictures wait for [Objects](objects.md#pictures), left out and logged.
+  4. **Markdown text**, read as Markdown when Preferences > Enable Markdown is on, as Google does.
   5. **Plain text**: a paragraph per line, empty lines kept, each in the paragraph formatting and the text formatting
      at the caret.
 - Pasted into an empty paragraph, or over a paragraph's whole text, the first paragraph pasted keeps its own style;
@@ -345,14 +345,15 @@ default as Google has them but Markdown:
 - **Automatically detect lists**: `1.`, `1)`, `a.`, `A.`, `i.`, `I.` (any number or letter of their kind) and `-` or
   `*` typed at the start of a paragraph outside a list, then a space, make it a numbered list in that format starting
   at that number, or a bulleted list; the typed marker goes.
-- **Automatically detect Markdown** (off by default): `#` to `######` and a space at a paragraph's start make a
+- **Enable Markdown** (off by default): `#` to `######` and a space at a paragraph's start make a
   heading; `**bold**`, `*italic*` or `_italic_`, `~~strikethrough~~` and `[text](address)` become formatted as
   they close; Markdown text pasted is read as Markdown ([Clipboard](#clipboard)).
 - **Substitutions**: **Automatic substitution** on or off, and a list of Replace → With pairs, each on or off,
   editable, removable, new pairs added at the top. A word that ends exactly as a pair's Replace (from the paragraph's
-  start or a space) becomes its With. Google's list (default, until a capture confirms it): `(c)` ©, `(r)` ®, `(tm)`
-  ™, `--` –, `---` —, `-->` →, `<--` ←, `<->` ↔, `=>` ⇒, `<=` ≤, `>=` ≥, `!=` ≠, `1/2` ½, `1/3` ⅓, `2/3` ⅔,
-  `1/4` ¼, `3/4` ¾, `1/5` ⅕, `2/5` ⅖, `3/5` ⅗, `4/5` ⅘, `1/6` ⅙, `5/6` ⅚, `1/8` ⅛, `3/8` ⅜, `5/8` ⅝, `7/8` ⅞.
+  start or a space) becomes its With. Google's list, in Google's order, each on (Webber's captures of Google's dialog,
+  2026-11-21): `(c)` ©, `(r)` ®, `tm` ™, `c/o` ℅, `...` …, `1/2` ½, `1/3` ⅓, `1/4` ¼, `1/5` ⅕, `1/6` ⅙, `1/8` ⅛,
+  `2/3` ⅔, `3/4` ¾, `2/5` ⅖, `3/5` ⅗, `4/5` ⅘, `5/6` ⅚, `3/8` ⅜, `5/8` ⅝, `7/8` ⅞, `<--` ←, `<==` ⇐, `<=>` ⇔,
+  `==>` ⇒, `-->` →, `--` –, `---` —. The captures end at `---`; a rule Google lists after it is not yet known.
 - **A word ends** when a space or Enter is typed after it (default: a mark such as `.` or `:` may still be inside an
   address); the aids act in the order substitution, link, capital, each on the word before it.
 - **An aid's change is its own undo step** after what was typed: the next ⌘Z takes the aid back, leaving the typing.

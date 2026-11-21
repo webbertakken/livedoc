@@ -37,6 +37,8 @@ language and activity in a [text document](text-document.md), and what fork C3 (
   browser for a guest), shared by the person's documents.
 - **Grammar** needs a server: shown only where the host configures one (fork D5, ruled: none on docs.nu; a self-hoster may configure one).
 - Show spelling suggestions, show grammar suggestions: per person.
+- **Automatically correct spelling** (Preferences): a misspelt word with one suggestion the checker is sure of is
+  corrected as the word ends, its own undo step, as a typing aid is.
 
 ## Dictionary
 
@@ -58,10 +60,14 @@ File > Language: the document's language, used for spelling, hyphenation and sma
 Tools > Preferences: an office dialog titled **Preferences** with two tabs, **General** and **Substitutions**, and
 Cancel and OK; nothing changes until OK. Per person, kept with their account, else this browser.
 
-- **General**: Automatically capitalise words, Use smart quotes, Automatically detect links, Automatically detect lists,
-  Automatically detect Markdown: checkboxes, as [Text and paragraphs](text-and-paragraphs.md#typing-aids) defines them.
-  Show link details joins them with link details ([Links](links-and-navigation.md#links)), and ruler units with the
-  ruler's units (default: the ruler follows the browser's language until then).
+- **General** (as Webber's capture of Google's dialog has it, 2026-11-21), checkboxes in this order:
+  **Automatically capitalise words**, **Use smart quotes**, **Automatically detect links**, **Automatically detect
+  lists**, **Enable Markdown** ([Text and paragraphs](text-and-paragraphs.md#typing-aids)); **Automatically correct
+  spelling** ([Spelling and grammar](#spelling-and-grammar)); **Show link details**
+  ([Links](links-and-navigation.md#links)); **Insert emoji using the colon character** ([Objects](objects.md#emoji)).
+  Google's **Show Smart Reply suggestions** is an assistant's, left out (C3). An option whose feature is not built yet
+  shows dimmed, "Coming soon" under it, as a menu item does ([Office shell](../004-interface-design/office-shell.md)).
+  Google's General tab holds no ruler units: the ruler follows the browser's language.
 - **Substitutions**: Automatic substitution (a checkbox over the list); a Replace and a With field to add a pair
   (Enter or leaving the With field adds it); then every pair as a checkbox, its Replace and With fields, and a remove
   button ("Remove substitution (c)"). A pair with an empty Replace or With is not kept.

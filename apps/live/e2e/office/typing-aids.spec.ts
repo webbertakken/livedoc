@@ -36,7 +36,7 @@ test('typing aids act as a person types, undo alone, and switch off in Preferenc
   await (await officeMenuItem(page, ['Tools', 'Preferences'])).click();
   const dialog = page.getByRole('dialog', { name: 'Preferences' });
   await dialog.getByRole('checkbox', { name: 'Use smart quotes' }).uncheck();
-  await dialog.getByRole('checkbox', { name: 'Automatically detect Markdown' }).check();
+  await dialog.getByRole('checkbox', { name: 'Enable Markdown' }).check();
   await dialog.getByRole('tab', { name: 'Substitutions' }).click();
   await page.screenshot({ path: test.info().outputPath('preferences.png') });
   await dialog.getByRole('button', { name: 'OK' }).click();

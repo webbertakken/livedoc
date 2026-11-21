@@ -122,7 +122,7 @@ function asOwnStep(view: EditorView, tr: Transaction | null): void {
   startUndoStep(view);
 }
 
-/** Automatically detect Markdown: `#` to `######` and a space make the paragraph that heading, the marker gone. */
+/** Enable Markdown: `#` to `######` and a space make the paragraph that heading, the marker gone. */
 function headingAid(state: EditorState, pos: number, level: number, styles: readonly Style[]) {
   const id = Styles.idOfRole(styles, `heading${level}` as StyleRole);
   if (!id) return null;
@@ -133,7 +133,7 @@ function headingAid(state: EditorState, pos: number, level: number, styles: read
     .setNodeMarkup($pos.before(), undefined, { ...$pos.parent.attrs, style: id });
 }
 
-/** Automatically detect Markdown: a span the typing just closed, formatted, its delimiters gone. */
+/** Enable Markdown: a span the typing just closed, formatted, its delimiters gone. */
 function spanAid(state: EditorState, pos: number): Transaction | null {
   const read = textBefore(state, pos);
   const span = read ? markdownSpanFor(read.before) : undefined;
