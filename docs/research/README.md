@@ -10,6 +10,12 @@ How boards from Google Drive, Miro and Microsoft Whiteboard can come into LiveDo
 
 - ./migration-readiness.md - when designing the Google Drive mirror or a Miro or Whiteboard import: sourced findings, cost model, Drive sync cadences
 
+## PDF documents
+
+Making a PDF a document in LiveDoc: the standard, the engine chosen from spikes on one corpus, saving, storage and each design decision compared.
+
+- ./pdf-documents/README.md - when working on PDF documents: the research index and its recommendations
+
 ## Sheets on an open standard
 
 Making the spreadsheet a document type of its own on ODF, looking and working as Google Sheets does: the standard, Google's inventory, the function catalogue, and each design decision compared. The resulting specs live in docs/specs/029-sheets/.
