@@ -27,7 +27,7 @@ The shell draws every colour, size and radius from one set of **look tokens**, C
 `--office-*` on the shell's root, in light and dark. Nothing in a part names a colour of its own, so how literal the
 look is (fork D2 of plan 0019) changes the tokens and nothing else.
 
-Four looks were drawn for D2, each in light and dark, desktop and phone:
+Four looks were drawn for D2, each in light and dark, desktop and phone; Webber chose **C** (2026-11-21):
 
 | Look                                           | Metrics                                                      | Colours and type                                                                                                |
 | ---------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
@@ -36,9 +36,11 @@ Four looks were drawn for D2, each in light and dark, desktop and phone:
 | **C. Google's metrics, LiveDoc's colours**     | Google's                                                     | LiveDoc's slate and sky in both schemes; Inter                                                                  |
 | **D. LiveDoc's own chrome, in Google's order** | LiveDoc's toolbar group: 46 px bordered group, 36 px buttons | LiveDoc's slate and sky; Inter                                                                                  |
 
-- Until D2 is ruled, the tokens hold look A's colours and metrics, in the app's own sans `(default)`.
-- The page is paper in every look and scheme: white unless the document sets a page colour, as Google and Word draw
-  it `(default)`.
+- **Look C** is the shell's: Google's sizes, LiveDoc's colours, slate and the brand's sky blue in both schemes, in the
+  app's own sans. Its tokens are in `apps/live/app/office-shell.css`; no Google font or artwork ships in the shell.
+- The page is paper in every scheme: white in the light one, dark in the dark one (Webber: "in dark mode the paper
+  should be dark as well"), unless the document sets a page colour
+  ([The page in the dark scheme](../034-text-documents/editing-surface.md#the-page-in-the-dark-scheme)).
 - Every token pair meets WCAG 2.2 AA in both schemes: 4.5:1 for text, 3:1 for a control's outline and focus ring.
 
 ## Menus as data

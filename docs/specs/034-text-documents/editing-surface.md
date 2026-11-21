@@ -26,7 +26,8 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 
 ## The page in the dark scheme
 
-- In the app's dark scheme the pages are **dark paper**: `#1e1f20` on the `#131314` ground, the writing in `#e3e3e3`
+- In the app's dark scheme the pages are **dark paper** (Webber, ruling D2: "in dark mode the paper should be dark as
+  well"): `#1e1f20` on the shell's `#020617` ground, the writing in `#e3e3e3`
   where it has no colour of its own; in the light scheme, white paper and black ink, as Google draws them.
 - **Colours are drawn for the paper they are on**, never stored for it: the file keeps the colours as written, so a
   document reads alike in either scheme, in another suite and in print.
@@ -85,8 +86,8 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 - **Presence**: everyone else in the document, up to four avatars, then "+n"; each avatar's name is its tooltip and
   accessible name. A press on one in this text document brings their caret into view (the page scrolls, nobody's
   selection moves); a press on one elsewhere in the document opens the tab they are on.
-- **Settings** (a gear glyph, "Settings"): LiveDoc's own settings (appearance, preferences), for every role
-  `(default)`. Google's Tools > Preferences is the document's, a different dialog.
+- **Settings** (a gear glyph, "Settings"), before Share: LiveDoc's own settings (appearance, preferences), for every
+  role (Webber, 2026-11-21). Google's Tools > Preferences is the document's, a different dialog.
 - **Account**: LiveDoc's account control at the far right, as Google's account picture: "Sign in" for a guest where
   sign-in is offered, the account picture with its menu once signed in, nothing on a host without sign-in.
 - Over a text document the editor's bottom line keeps the tabs and Add tab but not the people: presence is here
