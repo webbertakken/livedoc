@@ -2,8 +2,9 @@
 // the drawn writing from where it stands to where the layout places the next block (back up too, to a column's top),
 // the column each block of a region is in, a paragraph drawn as a box of columns across them, and each page's size
 // with its lines between columns, its header and its footer. Spacers are never text and never read.
+import type { HeaderFooterSlot } from '@livedoc/text-documents';
 import type { Cross, PageFrame, Pagination } from './pagination';
-import type { PageLayout, PageStory } from './pagination-headers';
+import type { PageLayout, PageStory, StoryPlace } from './pagination-headers';
 import { PAGE_GAP_CLASS } from './pagination-measure';
 
 /** What a box of columns draws inside its paragraph: the room before its first line, and each column's start. */
@@ -17,6 +18,14 @@ export type PageGeometry = {
   readonly height: number;
   readonly header?: PageStory;
   readonly footer?: PageStory;
+  /** Its section and the header slot it shows (none on a blank page, or without headers laid out). */
+  readonly section?: number;
+  readonly slot?: HeaderFooterSlot;
+  /** Where its header and footer stand, shown or not (none on a blank page). */
+  readonly place?: StoryPlace;
+  /** Its top and bottom margins as drawn, pushed by a tall header or footer (none on a blank page). */
+  readonly top?: number;
+  readonly bottom?: number;
   readonly rules?: readonly {
     readonly top: number;
     readonly bottom: number;
@@ -148,7 +157,7 @@ export function pageGeometries(
     const frame = page ? page.frameOf(start.block, start.line, number) : frameOf(start.block);
     const size = { width: round(frame.width), height: round(frame.height) };
     for (let blank = 0; blank < start.blank; blank++) pages.push(size);
-    const stories = page ? page.storiesOf(start.block, start.line, number) : {};
+    const stories = page ? page.storiesOf(start.block, start.line, number) : null;
     const rules = (start.rules ?? []).flatMap((rule) => {
       const own = frameOf(rule.block);
       const columns = own.columns;
@@ -161,8 +170,17 @@ export function pageGeometries(
     });
     pages.push({
       ...size,
-      ...(stories.header ? { header: stories.header } : {}),
-      ...(stories.footer ? { footer: stories.footer } : {}),
+      top: round(frame.top),
+      bottom: round(frame.bottom),
+      ...(stories
+        ? {
+            section: stories.section,
+            slot: stories.slot,
+            place: stories.place,
+            ...(stories.header ? { header: stories.header } : {}),
+            ...(stories.footer ? { footer: stories.footer } : {}),
+          }
+        : {}),
       ...(rules.length > 0 ? { rules } : {}),
     });
   }
@@ -178,6 +196,6 @@ export const pagesSaid = (pages: readonly PageGeometry[]): string =>
     .map(
       (p) =>
         `${p.width}x${p.height}${(p.rules ?? []).map((r) => `|${r.top}-${r.bottom}@${r.xs.join(',')}`).join('')}` +
-        `|h${storySaid(p.header)}|f${storySaid(p.footer)}`,
+        `|h${storySaid(p.header)}|f${storySaid(p.footer)}|${p.section}:${p.slot}:${p.top}:${p.bottom}`,
     )
     .join(',');

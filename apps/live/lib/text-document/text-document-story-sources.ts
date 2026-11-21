@@ -1,8 +1,9 @@
 // A header's or footer's writing laid out once for every page that draws it (docs/specs/034-text-documents/
 // page-layout.md "Headers and footers"): a read-only editor bound to the story's fragment in the live state, in a
 // hidden place at the width it is drawn at, so its paragraph styles, lists and tab stops lay out as the body's. Each
-// page draws a copy of it, painted again when it changes; its height tells the layout how far it pushes the body.
-import { EditorState, Plugin } from 'prosemirror-state';
+// page draws a copy of it, painted again when it changes; its height tells the layout how far it pushes the body. To
+// edit it ("Editing headers and footers") the source itself moves into the page's editing box and takes edits there.
+import { EditorState, Plugin, Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
 import type * as Y from 'yjs';
@@ -35,6 +36,10 @@ export type StorySourceInput = {
   readonly stylesScope: string | null;
   /** Its height or emptiness changed. */
   readonly onLaid: (source: StorySource) => void;
+  /** What it takes edits with, while it is edited: keys, undo, the caret's changes. */
+  readonly plugins?: readonly Plugin[];
+  /** What a screen reader calls it while it is edited: "Header" or "Footer". */
+  readonly label: string;
 };
 
 /** Draws nothing: one paragraph with no content, or none. */
@@ -56,6 +61,7 @@ export class StorySource {
   readonly #input: StorySourceInput;
   readonly #resize: ResizeObserver | null;
   #scheduled = false;
+  #editing = false;
 
   constructor(input: StorySourceInput) {
     this.#input = input;
@@ -77,12 +83,16 @@ export class StorySource {
             () => TextDocumentState.lists(doc),
             (listener) => subscribeLists(doc, listener),
           ),
+          ...(input.plugins ?? []),
           changed,
         ],
       }),
-      editable: () => false,
+      editable: () => this.#editing,
       attributes: () => ({
-        class: `${STORY_CLASS} whitespace-pre-wrap break-words`,
+        class: `${STORY_CLASS} whitespace-pre-wrap break-words outline-none`,
+        ...(this.#editing
+          ? { role: 'textbox', 'aria-multiline': 'true', 'aria-label': input.label }
+          : {}),
         style: documentTextStyle(TextDocumentState.defaults(doc, format).text),
         ...(input.stylesScope ? { 'data-text-document-styles': input.stylesScope } : {}),
       }),
@@ -101,6 +111,31 @@ export class StorySource {
     copy.removeAttribute('translate');
     copy.removeAttribute('tabindex');
     return copy;
+  }
+
+  /** Whether it is being edited, in a page's editing box. */
+  get editing(): boolean {
+    return this.#editing;
+  }
+
+  /** Moves into `box` and takes edits there, the caret at its end; already edited, it only moves. */
+  edit(box: HTMLElement): void {
+    if (box.firstChild !== this.#host) box.replaceChildren(this.#host);
+    if (this.#editing) return;
+    this.#editing = true;
+    this.view.setProps({});
+    this.view.dispatch(this.view.state.tr.setSelection(Selection.atEnd(this.view.state.doc)));
+    this.view.focus();
+    // Into sight below what stands over the pages (the ruler: the pages' scroll padding).
+    this.#host.scrollIntoView?.({ block: 'nearest' });
+  }
+
+  /** Back to its hidden place, read only. */
+  stopEditing(): void {
+    if (!this.#editing) return;
+    this.#editing = false;
+    this.#input.container.append(this.#host);
+    this.view.setProps({});
   }
 
   /** Calls `paint` after each change of its writing; gives back the call that stops it. */

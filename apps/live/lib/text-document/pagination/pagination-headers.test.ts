@@ -5,7 +5,7 @@ import type { LiveHeaders, PageSetup } from '@livedoc/text-documents';
 import { pageFrame, type BlockMetrics } from './pagination';
 import { pageGeometries, pageNumbers, pagesSaid } from './pagination-draw';
 import { paginate } from './pagination-engine';
-import { pageLayout, pageStories, pushedFrame, storyKey } from './pagination-headers';
+import { pageAtPoint, pageLayout, pageStories, pushedFrame, storyKey } from './pagination-headers';
 
 const PX = 4 / 3;
 // A page 300 pt high, its margins 36 pt (48 px), header and footer margins 18 pt (24 px): 24 px of room each.
@@ -87,7 +87,15 @@ describe('pageLayout', () => {
     expect(layout().storiesOf(1, 0, 2)).toEqual({
       header: { story: 'h', key: storyKey('h', width), left: 30 * PX, width, margin: 18 * PX },
       footer: { story: 'f', key: storyKey('f', width), left: 30 * PX, width, margin: 18 * PX },
+      section: 0,
+      slot: 'default',
+      place: { left: 30 * PX, width, header: 18 * PX, footer: 18 * PX },
     });
+  });
+
+  it('says the section and slot a page’s header is in, to make one where it shows none', () => {
+    expect(layout().storiesOf(0, 0, 1)).toMatchObject({ section: 0, slot: 'first' });
+    expect(layout().storiesOf(2, 0, 3)).toMatchObject({ section: 1, slot: 'default' });
   });
 
   it('shows no footer on a first page whose first page footer is empty', () => {
@@ -181,11 +189,20 @@ describe('paginate with headers', () => {
 describe('pageGeometries', () => {
   const frame = pageFrame(setup);
   const story = (id: string) => ({ story: id, key: `${id}@1`, left: 40, width: 320, margin: 24 });
+  const place = { left: 40, width: 320, header: 24, footer: 24 };
   const layout = {
     frameOf: (_b: number, _l: number, n: number) =>
       n === 1 ? { ...frame, top: frame.top + 10 } : frame,
     storiesOf: (_b: number, _l: number, n: number) =>
-      n === 1 ? { header: story('first') } : { header: story(`page ${n}`), footer: story('f') },
+      n === 1
+        ? { header: story('first'), section: 0, slot: 'first' as const, place }
+        : {
+            header: story(`page ${n}`),
+            footer: story('f'),
+            section: 0,
+            slot: 'default' as const,
+            place,
+          },
   };
   const pagination = {
     starts: [
@@ -233,5 +250,27 @@ describe('pageGeometries', () => {
       lineBetween: () => true,
     });
     expect(page!.rules).toEqual([{ top: 75, bottom: 120, xs: [columns.left + 110] }]);
+  });
+});
+
+describe('pageAtPoint', () => {
+  // Two pages 100 px high, 12 px apart, margins 20 px; the second blank.
+  const pages = [
+    { height: 100, top: 20, bottom: 20, section: 0 },
+    { height: 100 },
+    { height: 100, top: 30, bottom: 20, section: 1 },
+  ];
+
+  it('finds the header or footer margin of the page at a point ("Editing headers and footers")', () => {
+    expect(pageAtPoint(pages, 10)).toEqual({ index: 0, kind: 'header' });
+    expect(pageAtPoint(pages, 50)).toEqual({ index: 0, kind: null });
+    expect(pageAtPoint(pages, 90)).toEqual({ index: 0, kind: 'footer' });
+    expect(pageAtPoint(pages, 224 + 25)).toEqual({ index: 2, kind: 'header' });
+  });
+
+  it('finds no margin on a blank page, and no page in the ground between pages', () => {
+    expect(pageAtPoint(pages, 112 + 5)).toEqual({ index: 1, kind: null });
+    expect(pageAtPoint(pages, 105)).toBeNull();
+    expect(pageAtPoint(pages, 1000)).toBeNull();
   });
 });

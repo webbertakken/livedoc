@@ -4,12 +4,14 @@
 // with a header or footer taller than its room pushing the body. Pure: heights come measured from the drawn stories.
 import {
   HeadersAndFooters,
+  type HeaderFooterKind,
+  type HeaderFooterSlot,
   type LiveHeaders,
   type LiveStory,
   type PageSetup,
   type ResolvedHeadersOf,
 } from '@livedoc/text-documents';
-import { pageFrame, type PageFrame } from './pagination';
+import { PAGE_GAP_PX, pageFrame, type PageFrame } from './pagination';
 
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;
@@ -72,14 +74,27 @@ export function pushedFrame(
   };
 }
 
+/** Where a page's header and footer stand, shown or not: the section's left margin and text width, their margins. */
+export type StoryPlace = {
+  readonly left: number;
+  readonly width: number;
+  readonly header: number;
+  readonly footer: number;
+};
+
+/** A page's header and footer, if it shows them, and the section and slot they are (or would be made) in. */
+export type PageStories = {
+  readonly header?: PageStory;
+  readonly footer?: PageStory;
+  readonly section: number;
+  readonly slot: HeaderFooterSlot;
+  readonly place: StoryPlace;
+};
+
 /** A page's frame and stories, by the block and line it starts with and its number. */
 export type PageLayout = {
   readonly frameOf: (block: number, line: number, number: number) => PageFrame;
-  readonly storiesOf: (
-    block: number,
-    line: number,
-    number: number,
-  ) => { header?: PageStory; footer?: PageStory };
+  readonly storiesOf: (block: number, line: number, number: number) => PageStories;
   /** A section shows different odd and even pages: a page's number matters to its frame. */
   readonly oddEven: boolean;
 };
@@ -96,7 +111,7 @@ export function pageLayout(input: {
   const frames = setups.map(pageFrame);
   const sectionAt = (block: number) => sectionOf[block] ?? 0;
 
-  const storiesOf = (block: number, line: number, number: number) => {
+  const storiesOf = (block: number, line: number, number: number): PageStories => {
     const s = sectionAt(block);
     const setup = setups[s]!;
     // The section's first page starts with its first line.
@@ -114,6 +129,14 @@ export function pageLayout(input: {
     return {
       ...(ids.header ? { header: place(ids.header, 'header') } : {}),
       ...(ids.footer ? { footer: place(ids.footer, 'footer') } : {}),
+      section: s,
+      slot: HeadersAndFooters.slotOf(resolved[s], first, number),
+      place: {
+        left,
+        width,
+        header: HeadersAndFooters.margin(setup, 'header') * PX_PER_PT,
+        footer: HeadersAndFooters.margin(setup, 'footer') * PX_PER_PT,
+      },
     };
   };
 
@@ -127,4 +150,29 @@ export function pageLayout(input: {
     },
     oddEven: resolved.some((r) => r.differentOddEven),
   };
+}
+
+/** A place on the pages: the page at `y` (CSS pixels down the pages), and its header or footer margin if there. */
+export function pageAtPoint(
+  pages: readonly {
+    readonly height: number;
+    readonly top?: number;
+    readonly bottom?: number;
+    readonly section?: number;
+  }[],
+  y: number,
+): { index: number; kind: HeaderFooterKind | null } | null {
+  let at = 0;
+  for (const [index, page] of pages.entries()) {
+    if (y >= at && y <= at + page.height) {
+      const local = y - at;
+      // A blank page shows no header or footer.
+      if (page.section === undefined) return { index, kind: null };
+      if (local < (page.top ?? 0)) return { index, kind: 'header' };
+      if (local > page.height - (page.bottom ?? 0)) return { index, kind: 'footer' };
+      return { index, kind: null };
+    }
+    at += page.height + PAGE_GAP_PX;
+  }
+  return null;
 }

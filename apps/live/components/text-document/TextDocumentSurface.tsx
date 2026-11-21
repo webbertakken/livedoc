@@ -92,7 +92,7 @@ import {
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
 import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
-import { useTextDocumentStories } from './useTextDocumentStories';
+import { useTextDocumentHeadersAndFooters } from './useTextDocumentHeadersAndFooters';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin } from '@/lib/text-document/text-document-breaks';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
@@ -410,38 +410,6 @@ export function TextDocumentSurface({
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
   }, [peers, state]);
 
-  // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
-  const clipboard = useTextDocumentClipboard(editorView, writes);
-  // Tools > Preferences (tools.md "Preferences"); the writing reads the aids it keeps.
-  const preferences = useTextDocumentPreferences(editorView, ownerId);
-  useLayoutEffect(() => {
-    typingAids.current = preferences.read;
-  });
-  useLayoutEffect(() => {
-    clipboardLeftOut.current = clipboard.onLeftOut;
-  });
-  // Format > Text and the toolbar's text controls (text-and-paragraphs.md "Text formatting").
-  const formatting = useTextDocumentFormatting(editorView, liveDoc, format, writes);
-  // A family from Google Fonts that the text names loads from there (fonts.md "Substitution").
-  useGoogleDocumentFonts(editorView, liveDoc, format, changes.subscribe);
-  // Format > Paragraph styles and the Styles control, the paragraphs drawn in their styles.
-  const paragraphStyles = useTextDocumentParagraphStyles(
-    editorView,
-    liveDoc,
-    format,
-    writes,
-    ownerId,
-  );
-  // Format > Align & indent, the toolbar's Align and indent controls, and Indentation options.
-  // Format > Bullets & numbering and the toolbar's list buttons (lists.md).
-  const lists = useTextDocumentLists(editorView, liveDoc, writes);
-  const paragraphs = useTextDocumentParagraphs(
-    editorView,
-    liveDoc,
-    format,
-    writes,
-    lists.stepLevel,
-  );
   // The page drawn at its setup, and the ruler that sets its margins, indents and tab stops (editing-surface.md
   // "The ruler", page-layout.md "Page setup").
   const page = useTextDocumentPageSetup({
@@ -453,30 +421,68 @@ export function TextDocumentSurface({
     ownerId,
     subscribeCaret: changes.subscribeCaret,
   });
-  // Format > Columns (page-layout.md "Columns").
-  const columns = useTextDocumentColumns({
-    view: editorView,
-    liveDoc,
-    format,
-    writes,
-    pageless: page.pageless,
-    caretSetup: page.caret.section.setup,
-  });
   // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
   const column = usePagelessColumn(scroller, scale, page.pageless);
   const drawn = page.pageless ? pagelessSetup(page.section.setup, column) : page.section.setup;
   // Pages are laid out unless pageless or on a phone, where the writing flows to the window.
   const wide = useMediaQuery('(min-width: 640px)');
   const paginated = !page.pageless && wide;
-  // The frame the pages need, each page at its section's size (page-layout.md "Laying out").
-  const sheets = paginated && state === 'ready' ? sheetsFrame(pageList) : null;
-  const storyHost = useTextDocumentStories({
+  // Headers and footers drawn on the pages, and one edited in place (page-layout.md "Headers and footers"); while one
+  // is edited, the toolbar, the Format menu and Edit act on it.
+  const headers = useTextDocumentHeadersAndFooters({
     view: editorView,
     liveDoc,
     format,
     pages: paginated && state === 'ready' ? pageList : null,
+    writes,
     heights: storyHeights,
+    caret: changes.plugin,
   });
+  const { activeView } = headers;
+  // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
+  const clipboard = useTextDocumentClipboard(activeView, writes);
+  // Tools > Preferences (tools.md "Preferences"); the writing reads the aids it keeps.
+  const preferences = useTextDocumentPreferences(editorView, ownerId);
+  useLayoutEffect(() => {
+    typingAids.current = preferences.read;
+  });
+  useLayoutEffect(() => {
+    clipboardLeftOut.current = clipboard.onLeftOut;
+  });
+  // Format > Text and the toolbar's text controls (text-and-paragraphs.md "Text formatting").
+  const formatting = useTextDocumentFormatting(activeView, liveDoc, format, writes);
+  // A family from Google Fonts that the text names loads from there (fonts.md "Substitution").
+  useGoogleDocumentFonts(editorView, liveDoc, format, changes.subscribe);
+  // Format > Paragraph styles and the Styles control, the paragraphs drawn in their styles.
+  const paragraphStyles = useTextDocumentParagraphStyles(
+    activeView,
+    liveDoc,
+    format,
+    writes,
+    ownerId,
+  );
+  // Format > Align & indent, the toolbar's Align and indent controls, and Indentation options.
+  // Format > Bullets & numbering and the toolbar's list buttons (lists.md).
+  const lists = useTextDocumentLists(activeView, liveDoc, writes);
+  const paragraphs = useTextDocumentParagraphs(
+    activeView,
+    liveDoc,
+    format,
+    writes,
+    lists.stepLevel,
+  );
+  // Format > Columns (page-layout.md "Columns").
+  const columns = useTextDocumentColumns({
+    view: editorView,
+    liveDoc,
+    format,
+    writes,
+    // Dimmed while a header or footer is edited, as breaks are.
+    pageless: page.pageless || headers.editing !== null,
+    caretSetup: page.caret.section.setup,
+  });
+  // The frame the pages need, each page at its section's size (page-layout.md "Laying out").
+  const sheets = paginated && state === 'ready' ? sheetsFrame(pageList) : null;
   // The ruler shows the section the caret is in, and its margins set that section's.
   const rulerSetup = page.pageless ? drawn : page.caret.section.setup;
   useLayoutEffect(() => {
@@ -508,13 +514,14 @@ export function TextDocumentSurface({
     editorView,
     liveDoc,
     format,
-    writes,
+    // None while a header or footer is edited (page-layout.md "Editing headers and footers").
+    writes && headers.editing === null,
     page.pageless ? 1 : Columns.of(page.caret.section.setup).count,
   );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
-      ...textDocumentEditorActions(editorView, { canEdit: writes }),
+      ...textDocumentEditorActions(activeView, { canEdit: writes }),
       ...clipboard.actions,
       ...preferences.actions,
       ...formatting.actions,
@@ -528,14 +535,16 @@ export function TextDocumentSurface({
       ...page.actions,
       ...columns.actions,
       ...breakActions,
+      ...headers.actions,
     }),
     [
       breakActions,
       columns.actions,
+      headers.actions,
       page.actions,
       ruler.actions,
       marks.actions,
-      editorView,
+      activeView,
       writes,
       formatting.actions,
       paragraphStyles.actions,
@@ -643,9 +652,10 @@ export function TextDocumentSurface({
         <div
           ref={scroller}
           data-region="document"
-          // Pageless, the page's colour fills the document's whole area (page-layout.md "Pageless").
+          // Pageless, the page's colour fills the document's whole area (page-layout.md "Pageless"). Its scroll padding
+          // keeps what is scrolled into sight below the ruler standing over it.
           style={page.pageless ? pageBox(page.section.setup) : undefined}
-          className={`min-h-0 flex-1 overflow-y-auto ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
+          className={`min-h-0 flex-1 overflow-y-auto scroll-pt-8 ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
         >
           {ruler.shown && state === 'ready' ? (
             <TextDocumentRuler
@@ -689,6 +699,8 @@ export function TextDocumentSurface({
                 : { '--pages-width': 'var(--page-width)' }),
             }}
             data-page-format={page.pageless ? 'pageless' : 'pages'}
+            data-editing-story={headers.editing?.kind}
+            onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
             data-pages={paginated ? pageList.length : undefined}
             data-laid-out={paginated ? 'pages' : 'flow'}
             className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-[calc((var(--pages-width)-var(--page-width))/2+var(--page-right))] sm:pb-(--page-bottom) sm:pl-[calc((var(--pages-width)-var(--page-width))/2+var(--page-left))] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
@@ -696,7 +708,9 @@ export function TextDocumentSurface({
             <TextDocumentSheets
               pages={paginated && state === 'ready' ? pageList : null}
               shadow={!page.pageless}
-              storyHost={storyHost}
+              storyHost={headers.storyHost}
+              editing={headers.editing}
+              editingBox={headers.box}
             />
             {state === 'loading' ? (
               <p className="text-(--office-muted)" aria-live="polite">

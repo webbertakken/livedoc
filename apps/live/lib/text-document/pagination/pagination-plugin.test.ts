@@ -15,7 +15,7 @@ import {
 import { textDocumentSchema as schema } from '../text-document-schema';
 import { PAGE_GAP_CLASS, measureBlock, rulesOf } from './pagination-measure';
 import { storyKey } from './pagination-headers';
-import { paginationPlugin, refreshPages, relayoutPages } from './pagination-plugin';
+import { pageIndexAt, paginationPlugin, refreshPages, relayoutPages } from './pagination-plugin';
 
 const LINE = 20;
 const PER_LINE = 10;
@@ -152,11 +152,23 @@ describe('paginationPlugin', () => {
     expect((gap as HTMLElement).style.height).toBe('32px');
     expect(gap?.getAttribute('aria-hidden')).toBe('true');
     // Two pages of the setup, in CSS pixels.
+    const place = { left: 0, width: 600, header: 48, footer: 48 };
+    const plain = { top: 0, bottom: 0, section: 0, slot: 'default', place };
     expect(onPages).toHaveBeenLastCalledWith([
-      { width: 600, height: 100 },
-      { width: 600, height: 100 },
+      { width: 600, height: 100, ...plain },
+      { width: 600, height: 100, ...plain },
     ]);
     view.destroy();
+  });
+
+  it('finds the page a place is on, as the pages are drawn ("Editing headers and footers")', async () => {
+    const { view } = await mount([p('a'.repeat(40)), p('b'.repeat(20)), p('c')]);
+    expect(pageIndexAt(view, 1)).toBe(0);
+    expect(pageIndexAt(view, view.state.doc.content.size - 1)).toBe(1);
+    view.destroy();
+    const unlaid = await mount([p('a')], false);
+    expect(pageIndexAt(unlaid.view, 1)).toBe(0);
+    unlaid.view.destroy();
   });
 
   it('moves a whole paragraph on with a spacer before it', async () => {
@@ -179,8 +191,24 @@ describe('paginationPlugin', () => {
       p('b'.repeat(10)),
     ]);
     expect(onPages).toHaveBeenLastCalledWith([
-      { width: 600, height: 100 },
-      { width: 800, height: 80 },
+      {
+        width: 600,
+        height: 100,
+        top: 0,
+        bottom: 0,
+        section: 0,
+        slot: 'default',
+        place: expect.anything(),
+      },
+      {
+        width: 800,
+        height: 80,
+        top: 0,
+        bottom: 0,
+        section: 1,
+        slot: 'default',
+        place: expect.anything(),
+      },
     ]);
     view.destroy();
   });

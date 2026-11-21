@@ -12,13 +12,14 @@ import {
   readLiveStyles,
 } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
-import { storyFragment } from './live/live-stories';
+import { storyFragment, type LiveHeaders } from './live/live-stories';
 import { DOCUMENT_MAP, LISTS_MAP, STYLES_MAP } from './live/live-names';
 import type { Section } from './model/sections';
 import type { ListDefinition } from './model/lists';
 import {
   addLiveStyle,
   setLiveList,
+  setLiveFirstHeaders,
   setLiveSection,
   setLiveStyles,
   writeLiveDocument,
@@ -170,6 +171,13 @@ export const TextDocumentState = {
   /** Sets the first section, as one transaction with `origin`. */
   setSection: (doc: Y.Doc, section: Section, origin?: unknown): void =>
     setLiveSection(doc, section, origin),
+  /** Sets the first section's own headers and footers by story id, as one transaction with `origin`. */
+  setFirstHeaders: (
+    doc: Y.Doc,
+    format: TextDocumentFormat,
+    headers: LiveHeaders | undefined,
+    origin?: unknown,
+  ): void => setLiveFirstHeaders(doc, format, headers, origin),
   /** Whether the document is pageless (page-layout.md "Pageless"). */
   pageless: (doc: Y.Doc): boolean => doc.getMap<unknown>(DOCUMENT_MAP).get('pageless') === true,
   /** Turns pageless on or off, as one transaction with `origin`. */

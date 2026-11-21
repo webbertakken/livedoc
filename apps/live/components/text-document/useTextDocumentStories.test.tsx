@@ -69,8 +69,8 @@ function Harness({
 }) {
   const liveDoc = useRef<Y.Doc | null>(doc);
   const held = useRef(heights);
-  const storyHost = useTextDocumentStories({ view, liveDoc, format: 'odf', pages, heights: held });
-  return <TextDocumentSheets pages={pages} shadow storyHost={storyHost} />;
+  const stories = useTextDocumentStories({ view, liveDoc, format: 'odf', pages, heights: held });
+  return <TextDocumentSheets pages={pages} shadow storyHost={stories.host} />;
 }
 
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));

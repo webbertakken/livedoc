@@ -1190,6 +1190,16 @@ export const TEXT_DOCUMENT_COLUMNS = chart(
   { types: ['TextDocumentColumns'] },
 );
 
+// A text document's header or footer made or taken away (docs/specs/034-text-documents/page-layout.md "Headers and
+// footers"): made by entering a page that shows none, removed by leaving one empty.
+export const TEXT_DOCUMENT_HEADER_FOOTER = chart(
+  'Tab',
+  'Changed',
+  'Text Document Header Footer',
+  'A text document header or footer made from Insert > Headers & footers or a double-click in a margin, or removed.',
+  { types: ['TextDocumentHeaderFooter'] },
+);
+
 // A page, column or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
 export const TEXT_DOCUMENT_BREAKS = chart(
   'Element',

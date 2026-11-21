@@ -251,6 +251,23 @@ describe('the live layout', () => {
       expect(texts).toEqual(['Header', 'First page header', 'Even page header', 'Footer']);
     });
 
+    it('sets the first section’s own headers by id, keeping its setup, or a new one’s', () => {
+      const doc = TextDocumentState.load([TextDocumentState.fromDocument(headed())]);
+      const setup = TextDocumentState.section(doc, 'ooxml').setup;
+      TextDocumentState.setFirstHeaders(doc, 'ooxml', { footer: { default: { story: 'z' } } });
+      expect(doc.getMap<unknown>(DOCUMENT_MAP).get('section')).toMatchObject({
+        setup,
+        headers: { footer: { default: { story: 'z' } } },
+      });
+      TextDocumentState.setFirstHeaders(doc, 'ooxml', undefined);
+      expect(doc.getMap<unknown>(DOCUMENT_MAP).get('section')).not.toHaveProperty('headers');
+      const fresh = TextDocumentState.load();
+      TextDocumentState.setFirstHeaders(fresh, 'odf', { header: { default: { story: 'n' } } });
+      expect(TextDocumentState.section(fresh, 'odf').setup).toEqual(
+        TextDocument.blank({ format: 'odf' }).section.setup,
+      );
+    });
+
     it('names none in a document without headers', () => {
       expect(liveStoryIds(TextDocumentState.load())).toEqual([]);
     });
