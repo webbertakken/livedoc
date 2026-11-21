@@ -188,7 +188,8 @@ describe('sheetsFromFile', () => {
     ).toBe(false);
   });
 
-  it('names a renamed sheet, a cut sheet and skips cells past the grid', () => {
+  // files-and-print.md "A file sent in parts": each sheet within the room the earlier ones left in the workbook.
+  it('names a renamed sheet, a cut sheet, the sheets past the workbook and skips cells past the grid', () => {
     const made = sheetsFromFile(
       {
         sheets: [
@@ -196,20 +197,27 @@ describe('sheetsFromFile', () => {
           {
             name: 'a',
             rows: 20_000,
-            cols: 300,
+            cols: 20_000,
             cells: [{ r: 15_000, c: 0, value: { k: 'n', v: 1 } }],
           },
           { name: '', rows: 1, cols: 1, cells: [] },
+          { name: 'Gone', rows: 1, cols: 1, cells: [] },
         ],
       },
       seeded(),
     );
     expect(made.sheets.map((s) => s.title)).toEqual(['A', 'a 2', 'Sheet1']);
+    expect(made.sheets.map((s) => [s.layout.rows.length, s.layout.cols.length])).toEqual([
+      [1000, 26],
+      [1092, 18_278],
+      [554, 26],
+    ]);
     expect(made.sheets[1]!.cells).toEqual([]);
     expect(made.losses).toEqual([
       { k: 'sheet_renamed', from: 'a', to: 'a 2' },
-      { k: 'sheet_cut', sheet: 'a 2', rows: 10_000, cols: 200 },
+      { k: 'sheet_cut', sheet: 'a 2', rows: 1092, cols: 18_278 },
       { k: 'sheet_renamed', from: '', to: 'Sheet1' },
+      { k: 'sheets_cut', kept: 3, had: 4 },
     ]);
   });
 

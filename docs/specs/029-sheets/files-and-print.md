@@ -28,6 +28,18 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 - Every guard of [Security](../../research/sheets-open-standard/security.md) applies, each with its named rejection.
 - Telemetry: `Spreadsheet · Imported · <Format>` with the location.
 
+### A file sent in parts
+
+- A file is read up to the workbook's limits ([Spreadsheet](spreadsheet.md#limits)): a sheet's rows and columns, the
+  rows over every sheet, the grid's cells and 200 sheets; past them it is cut, each cut named in the read's losses
+  (shown to the person with the import report, a later step of plan 0020 Phase 7).
+- The new spreadsheet is made with each sheet's first 1,000 rows and 26 columns and as many of its cells as one
+  request of 4 MB carries; the rest follows in writes, in order: each sheet's other rows, its other columns, then its
+  cells, each write within a write's own limits (default, D86).
+- While it is sent, the title row shows **Opening “<name>”… <n>%**, the share of rows, columns and cells sent.
+- A part refused moves the half-made spreadsheet to the Bin and says the file could not be opened; nothing half-made is
+  left in the Explorer.
+
 ## Download
 
 **File › Download**: Microsoft Excel (.xlsx), OpenDocument (.ods), Flat OpenDocument (.fods), PDF (.pdf), Web Page
@@ -78,3 +90,11 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 ## Limits
 
 A file up to 100 MB; the workbook's limits ([Spreadsheet](spreadsheet.md#limits)); a print up to 1,000 pages.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D86** How a file's sheets are sent: Made at a new sheet's grid with what fits one 4 MB request, the rest in writes
+  (default).

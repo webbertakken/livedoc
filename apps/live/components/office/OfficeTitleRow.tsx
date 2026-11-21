@@ -61,6 +61,7 @@ export function OfficeTitleRow({
   format,
   formatTitle,
   problem,
+  notice = null,
   catalogue,
   level,
   actions,
@@ -87,6 +88,8 @@ export function OfficeTitleRow({
   format: string;
   formatTitle: string;
   problem: string | null;
+  // What is under way (a file being opened), said politely beside the name.
+  notice?: string | null;
   catalogue: OfficeCatalogue;
   level: AccessLevel;
   actions: OfficeActions;
@@ -290,6 +293,11 @@ export function OfficeTitleRow({
               </OfficeIconButton>
             ) : null}
             {saveStatus ? <OfficeSaveStatusButton status={saveStatus} /> : null}
+            {notice ? (
+              <p role="status" className="truncate text-sm text-slate-600 dark:text-slate-300">
+                {notice}
+              </p>
+            ) : null}
             {problem ? (
               <p role="alert" className="truncate text-sm text-red-700 dark:text-red-300">
                 {problem}

@@ -31,7 +31,11 @@ import type { WorkbookScope } from '@/lib/api/workbook';
 import { apiDownloadWorkbook } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
-import { openSpreadsheetFile } from '@/lib/spreadsheet/open-spreadsheet-file';
+import {
+  nameFromFile,
+  openingNotice,
+  openSpreadsheetFile,
+} from '@/lib/spreadsheet/open-spreadsheet-file';
 import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { track } from '@/lib/telemetry';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
@@ -107,6 +111,7 @@ export function SpreadsheetSurface({
   // The document's own parts in the shell's title row (office-shell.md "Title row").
   const office = useEditorLines()?.office ?? null;
   const [problem, setProblem] = useState<string | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
   const format = workbook.format;
   const root = useRef<HTMLElement | null>(null);
   const catalogue = useMemo(() => spreadsheetMenus(format), [format]);
@@ -123,7 +128,12 @@ export function SpreadsheetSurface({
   };
   const open = async (file: File) => {
     setProblem(null);
-    const opened = await openSpreadsheetFile(scope.ownerId, file);
+    const name = nameFromFile(file.name);
+    setOpening(openingNotice(name, 0));
+    const opened = await openSpreadsheetFile(scope.ownerId, file, (share) =>
+      setOpening(openingNotice(name, share)),
+    );
+    setOpening(null);
     if (!opened.ok) return setProblem(opened.message);
     track('Spreadsheet', 'Created', 'Import');
     track('Spreadsheet', 'Imported', TELEMETRY_FORMAT[opened.format]);
@@ -140,6 +150,7 @@ export function SpreadsheetSurface({
         format={FORMAT_PILL[format]}
         formatTitle={FORMAT_TITLE[format]}
         problem={problem}
+        notice={opening}
         catalogue={catalogue}
         level="view"
         actions={{ download: { run: () => void download() } }}

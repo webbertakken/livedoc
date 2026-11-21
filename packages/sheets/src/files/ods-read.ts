@@ -16,10 +16,18 @@ import {
   type XmlNode,
 } from '@livedoc/office-packages';
 import { serialFromParts } from '../dates';
-import { DOCUMENT_CELLS_MAX, DOCUMENT_SHEETS_MAX, SHEET_COLS_MAX, SHEET_ROWS_MAX } from '../limits';
+import { SheetLimits } from '../sheet-limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
+
+// A file is read up to a workbook's limits (files-and-print.md "A file sent in parts"): past them it is cut, and said.
+const {
+  rows: ROWS_MAX,
+  cols: COLS_MAX,
+  gridCells: CELLS_MAX,
+  sheets: SHEETS_MAX,
+} = SheetLimits.spreadsheet;
 
 const { office: OFFICE, table: TABLE, text: TEXT, calcext: CALCEXT } = ODF_NS;
 const ERRORS: readonly string[] = ERROR_CODES;
@@ -151,7 +159,7 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
         const formula = formulaText === undefined ? undefined : fromOpenFormula(formulaText);
         const spans = formula ? matrixSpans(cell) : undefined;
         for (let k = 0; k < colRepeat; k++) {
-          if (c + k >= SHEET_COLS_MAX) {
+          if (c + k >= COLS_MAX) {
             cut = true;
             break;
           }
@@ -168,7 +176,7 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
     }
     if (rowCells.length > 0) {
       for (let k = 0; k < rowRepeat; k++) {
-        if (r + k >= SHEET_ROWS_MAX || budget.cells + rowCells.length > DOCUMENT_CELLS_MAX) {
+        if (r + k >= ROWS_MAX || budget.cells + rowCells.length > CELLS_MAX) {
           cut = true;
           break;
         }
@@ -181,7 +189,7 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
   // The sheet is as big as what it holds: ODF repeats empty rows and columns to its grid's end.
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), 0);
-  if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: SHEET_ROWS_MAX, cols: SHEET_COLS_MAX });
+  if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
   return { name, rows, cols, cells };
 }
 
@@ -195,9 +203,9 @@ function readBody(root: XmlElement): FileRead {
   const tables = childElements(spreadsheet).filter((e) => is(e, TABLE, 'table'));
   const losses: FileLoss[] = [];
   const budget: Budget = { cells: 0 };
-  const sheets = tables.slice(0, DOCUMENT_SHEETS_MAX).map((t) => readTable(t, losses, budget));
-  if (tables.length > DOCUMENT_SHEETS_MAX)
-    losses.push({ k: 'sheets_cut', kept: DOCUMENT_SHEETS_MAX, had: tables.length });
+  const sheets = tables.slice(0, SHEETS_MAX).map((t) => readTable(t, losses, budget));
+  if (tables.length > SHEETS_MAX)
+    losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   return { ok: true, file: { sheets }, losses };
 }
 

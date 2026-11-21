@@ -253,17 +253,21 @@ describe('readOds', () => {
   });
 
   // spreadsheet.md "Limits": an import past a limit is cut and says so.
-  it('cuts a sheet past the grid ceiling and says so', async () => {
+  // files-and-print.md "A file sent in parts": a file is read up to a workbook's limits, and the cut named.
+  it('cuts a sheet past the workbook limits and says so', async () => {
     const read = await sheetsOf(
       flat(
-        '<table:table><table:table-row table:number-rows-repeated="10001">' +
-          '<table:table-cell table:number-columns-repeated="201" office:value-type="float" office:value="1"/>' +
-          '</table:table-row></table:table>',
+        '<table:table><table:table-row>' +
+          '<table:table-cell table:number-columns-repeated="18279" office:value-type="float" office:value="1"/>' +
+          '</table:table-row><table:table-row table:number-rows-repeated="999999"><table:table-cell/></table:table-row>' +
+          '<table:table-row><table:table-cell office:value-type="float" office:value="2"/></table:table-row>' +
+          '</table:table>',
       ),
     );
     expect(read.file.sheets[0]!.name).toBe('');
-    expect(read.losses).toEqual([{ k: 'sheet_cut', sheet: '', rows: 10_000, cols: 200 }]);
-    expect(read.file.sheets[0]!.rows).toBe(1000);
+    expect(read.losses).toEqual([{ k: 'sheet_cut', sheet: '', rows: 1_000_000, cols: 18_278 }]);
+    expect(read.file.sheets[0]!.rows).toBe(1);
+    expect(read.file.sheets[0]!.cols).toBe(18_278);
   });
 
   it('keeps the first 200 sheets of a file that holds more, and says so', async () => {

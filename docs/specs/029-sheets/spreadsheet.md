@@ -148,8 +148,8 @@ its text and shows its cached value.
   row past it is refused (`workbook_full`).
 - Built: every sheet of a spreadsheet takes these limits, in the editor (the rows Add Rows, Insert and a paste may add
   are what the workbook has room for) and in the api (a write or a new sheet past them is refused by name, counted
-  from the stored orders without reading them); a Plan Sheet keeps its own. Opening a file still reads up to a Plan
-  Sheet's grid, and says what it cut, until a file's cells are sent in parts.
+  from the stored orders without reading them); a Plan Sheet keeps its own. Opening a file reads up to them too, and says what it cut
+  ([Files and print](files-and-print.md#a-file-sent-in-parts)).
 - A workbook stores up to 1 GiB of cells (default; `workbook_full`).
 - A sheet's name breaking its rules is refused (`sheet_name_invalid`), one another sheet has (case aside) too
   (`sheet_name_taken`).
