@@ -1,7 +1,7 @@
 # Tables
 
-**Status: in the model and the files.** Tables are read, written and converted in both formats; the editor draws a
-table as a kept block, its values held whole in the live state, until it draws tables itself.
+**Status: in the model, the files and the editor.** Tables are read, written, converted, drawn and typed in; inserting,
+reshaping, properties and breaking across pages are ahead.
 
 Tables in a [text document](text-document.md), as Google Docs has them, built on `prosemirror-tables`
 ([Adopt or build](../../research/docs-open-standard/adopt-or-build.md)).
@@ -94,13 +94,18 @@ note ([Standard mapping](standard-mapping.md#the-model)).
 
 ## In the editor
 
-- Drawn with `prosemirror-tables`: node types `table`, `table_row` and `table_cell`, each carrying the model's
-  values as attributes (a cell its `colspan`, `rowspan`, its columns' widths in `colwidth`, its formatting and kept
-  properties; a row its height, height rule, whether it may break, kept properties; a table its header rows,
-  alignment, indent and kept properties). The live state holds the same elements, as it does paragraphs
-  ([Live editing and storage](live-editing-and-storage.md)).
+- Drawn with `prosemirror-tables`: node types `table`, `table_row`, `table_cell` and `table_header` (a header row's
+  cells), each carrying the model's values as attributes (a cell its `colspan`, `rowspan`, its columns' widths in points
+  in `colwidth`, its formatting and kept properties; a row its height, height rule, whether it may break, kept
+  properties; a table its alignment, indent and kept properties). Its header rows are the leading rows of header
+  cells, and its column widths those of its first row's cells. The live state holds the same elements, as it does
+  paragraphs ([Live editing and storage](live-editing-and-storage.md)).
 - A cell holds blocks as the body does: paragraphs, lists, breaks inside a paragraph, tables.
-- Header rows are drawn as `th` cells in a `thead` `(default)`, read by a screen reader as column headers.
+- Header rows are drawn as `th scope="col"` cells `(default)`, read by a screen reader as column headers.
+- A cell side with no line shows a faint dashed guide on screen, never printed `(default)`, so a table without lines
+  can be worked in, as Word's gridlines are.
+- Until tables break across pages, a table moves to the next page whole, as kept content does; one taller than a page
+  runs past its foot.
 
 ## Laying out across pages
 

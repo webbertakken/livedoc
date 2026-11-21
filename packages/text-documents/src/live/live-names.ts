@@ -6,7 +6,14 @@ import type { TextProps } from '../model/props';
 export const PARAGRAPH = 'paragraph';
 export const SECTION_BREAK = 'section_break';
 export const KEPT_BLOCK = 'kept_block';
-export const BODY_BLOCKS = [PARAGRAPH, SECTION_BREAK, KEPT_BLOCK] as const;
+/** A table (tables.md "In the editor"): rows of cells, a header row's cells header cells, each cell holding blocks. */
+export const TABLE = 'table';
+export const TABLE_ROW = 'table_row';
+export const TABLE_CELL = 'table_cell';
+export const TABLE_HEADER = 'table_header';
+export const BODY_BLOCKS = [PARAGRAPH, SECTION_BREAK, KEPT_BLOCK, TABLE] as const;
+/** The elements inside a table. */
+export const TABLE_PARTS = [TABLE_ROW, TABLE_CELL, TABLE_HEADER] as const;
 
 /** A kept inline: an atom inside its paragraph. */
 export const KEPT_INLINE = 'kept_inline';
@@ -27,10 +34,21 @@ export const SECTION_BREAK_ATTRIBUTES = [
   'region',
 ] as const;
 /**
- * A kept block's name and XML; or, named `table`, a table held whole as the model's value (`table`), drawn as a kept
- * block until the editor draws tables (tables.md "Status").
+ * A kept block's name and XML. `table`: a table held whole as the model's value, as documents imported before the
+ * editor drew tables hold one; read as that table, never written.
  */
 export const KEPT_BLOCK_ATTRIBUTES = ['name', 'xml', 'table'] as const;
+export const TABLE_ATTRIBUTES = ['align', 'indent', 'kept', 'tag'] as const;
+export const TABLE_ROW_ATTRIBUTES = ['height', 'heightRule', 'breaks', 'kept', 'tag'] as const;
+/** A cell's spans, its spanned columns' widths in points, its formatting and what its file kept. */
+export const TABLE_CELL_ATTRIBUTES = [
+  'colspan',
+  'rowspan',
+  'colwidth',
+  'props',
+  'kept',
+  'tag',
+] as const;
 export const KEPT_INLINE_ATTRIBUTES = ['name', 'xml', 'props', 'style', 'link', 'kept'] as const;
 export const FIELD_ATTRIBUTES = ['field', 'text', 'props', 'style', 'link', 'kept'] as const;
 export const FOOTNOTE_ATTRIBUTES = ['story', 'props', 'style', 'link', 'kept'] as const;

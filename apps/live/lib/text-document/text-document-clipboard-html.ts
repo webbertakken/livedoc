@@ -12,6 +12,7 @@ import {
   isSafeLink,
   Styles,
   TEXT_PROPERTY_MARK_OF,
+  type CellProps,
   type ListLevel,
   type ListPlace,
   type ParagraphProps,
@@ -22,6 +23,7 @@ import {
 import type { Lists } from './text-document-lists';
 import { borderCss, cssText, pt, textDeclarations, WHITE_PAPER } from './text-document-style-sheet';
 import { textDocumentSchema } from './text-document-schema';
+import { columnWidths } from './text-document-table-dom';
 
 /** What the serializer reads the copied writing through: its document's styles, defaults and lists. */
 export type ClipboardHtmlContext = {
@@ -75,6 +77,24 @@ export function exportParagraphCss(p: ParagraphProps, inList = false): string {
   ]);
 }
 
+/** A table cell's formatting as CSS other editors read, colours as they are (tables.md "In the editor"). */
+export function exportCellCss(props: CellProps | null): string {
+  const p = props ?? {};
+  return cssText([
+    ...SIDES.map((side) => `border-${side}: ${borderCss(p.borders?.[side], WHITE_PAPER.ink)}`),
+    ...SIDES.map((side) => {
+      const padding = pt(p.padding?.[side], 144);
+      return padding ? `padding-${side}: ${padding}` : undefined;
+    }),
+    p.background && /^#[0-9a-f]{6}$/i.test(p.background)
+      ? `background-color: ${p.background}`
+      : undefined,
+    p.verticalAlign === 'middle' || p.verticalAlign === 'bottom'
+      ? `vertical-align: ${p.verticalAlign}`
+      : 'vertical-align: top',
+  ]);
+}
+
 /** Text formatting as CSS other editors read, colours as they are. */
 export const exportTextCss = (t: TextProps): string => cssText(textDeclarations(t, WHITE_PAPER));
 
@@ -83,6 +103,25 @@ const PROPERTY_OF = Object.fromEntries(
 ) as Record<string, keyof TextProps>;
 
 const omitted = (tag: string): DOMOutputSpec => [tag, { [OMIT]: '' }];
+
+const cellHtml =
+  (tag: 'td' | 'th') =>
+  (node: PmNode): DOMOutputSpec => {
+    const { colspan, rowspan, props } = node.attrs as {
+      colspan: number;
+      rowspan: number;
+      props: CellProps | null;
+    };
+    return [
+      tag,
+      {
+        ...(colspan > 1 ? { colspan: String(colspan) } : {}),
+        ...(rowspan > 1 ? { rowspan: String(rowspan) } : {}),
+        style: exportCellCss(props),
+      },
+      0,
+    ];
+  };
 
 /** Bullets as the list-style-type nearest their character; numbers as their format. */
 function listStyleOf(level: ListLevel | undefined): string {
@@ -210,6 +249,29 @@ export function clipboardSerializer(read: () => ClipboardHtmlContext): DOMSerial
     section_break: () => omitted('div'),
     kept_block: () => omitted('div'),
     kept_inline: () => omitted('span'),
+    // A table as other editors read one: its columns' widths, its cells' spans and formatting.
+    table: (node) => [
+      'table',
+      {
+        style: `border-collapse: collapse; width: ${
+          pt(
+            columnWidths(node).reduce((a, b) => a + b, 0),
+            22 * 72,
+          ) ?? 'auto'
+        }`,
+      },
+      [
+        'colgroup',
+        ...columnWidths(node).map((w): DOMOutputSpec => [
+          'col',
+          { style: `width: ${pt(w, 22 * 72)}` },
+        ]),
+      ],
+      ['tbody', 0],
+    ],
+    table_row: () => ['tr', 0],
+    table_cell: cellHtml('td'),
+    table_header: cellHtml('th'),
     // A field pastes elsewhere as the text it shows (page-layout.md "Page numbers").
     field: (node) => ['span', typeof node.attrs.text === 'string' ? node.attrs.text : ''],
     // A footnote's mark: its number in superscript (page-layout.md "Footnotes").

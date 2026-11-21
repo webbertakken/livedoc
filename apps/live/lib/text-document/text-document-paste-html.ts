@@ -450,7 +450,17 @@ export function pastedHtmlRules(): (TagParseRule | StyleParseRule)[] {
     getAttrs: (e) => paragraphAttrs(e, `${PASTE_HEADING_PREFIX}${n}`),
   }));
   const weightOf = (e: HTMLElement) => e.style.fontWeight;
+  // A table's structure (tables.md "In the editor"): rows of cells with their spans; a header row's cells as such.
+  const span = (e: HTMLElement, name: string) => {
+    const n = Number(e.getAttribute(name));
+    return Number.isInteger(n) && n > 1 && n <= 1000 ? n : 1;
+  };
+  const cell = (e: HTMLElement) => ({ colspan: span(e, 'colspan'), rowspan: span(e, 'rowspan') });
   return [
+    { tag: 'table', node: 'table' },
+    { tag: 'tr', node: 'table_row' },
+    { tag: 'td', node: 'table_cell', getAttrs: cell },
+    { tag: 'th', node: 'table_header', getAttrs: cell },
     ...headings,
     { tag: 'li', node: 'paragraph', getAttrs: (e) => paragraphAttrs(e, null) },
     { tag: 'p', node: 'paragraph', getAttrs: (e) => paragraphAttrs(e, null) },
