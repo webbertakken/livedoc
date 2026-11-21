@@ -1206,7 +1206,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, S',
     'Ctrl+⌘+Shift+T, S',
     'Ctrl+Alt+Shift+T, S',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-end-of-the-table',
@@ -1215,7 +1215,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, D',
     'Ctrl+⌘+Shift+T, D',
     'Ctrl+Alt+Shift+T, D',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-start-of-the-table-column',
@@ -1224,7 +1224,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, I',
     'Ctrl+⌘+Shift+T, I',
     'Ctrl+Alt+Shift+T, I',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-end-of-the-table-column',
@@ -1233,7 +1233,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, K',
     'Ctrl+⌘+Shift+T, K',
     'Ctrl+Alt+Shift+T, K',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-next-table-column',
@@ -1242,7 +1242,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, B',
     'Ctrl+⌘+Shift+T, B',
     'Ctrl+Alt+Shift+T, B',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-previous-table-column',
@@ -1251,7 +1251,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, V',
     'Ctrl+⌘+Shift+T, V',
     'Ctrl+Alt+Shift+T, V',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-start-of-the-table-row',
@@ -1260,7 +1260,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, J',
     'Ctrl+⌘+Shift+T, J',
     'Ctrl+Alt+Shift+T, J',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-end-of-the-table-row',
@@ -1269,7 +1269,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, L',
     'Ctrl+⌘+Shift+T, L',
     'Ctrl+Alt+Shift+T, L',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-next-table-row',
@@ -1278,7 +1278,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, M',
     'Ctrl+⌘+Shift+T, M',
     'Ctrl+Alt+Shift+T, M',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-previous-table-row',
@@ -1287,7 +1287,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, G',
     'Ctrl+⌘+Shift+T, G',
     'Ctrl+Alt+Shift+T, G',
-    'specified',
+    'built',
   ),
   row(
     'exit-table',
@@ -1296,7 +1296,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, E',
     'Ctrl+⌘+Shift+T, E',
     'Ctrl+Alt+Shift+T, E',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-next-table',
@@ -1305,7 +1305,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+N, T',
     'Ctrl+⌘+Shift+N, T',
     'Ctrl+Alt+Shift+N, T',
-    'specified',
+    'built',
   ),
   row(
     'move-to-the-previous-table',
@@ -1314,7 +1314,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+P, T',
     'Ctrl+⌘+Shift+P, T',
     'Ctrl+Alt+Shift+P, T',
-    'specified',
+    'built',
   ),
   // Other tools and navigation
   row(

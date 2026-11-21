@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { textDocumentTableActions } from './text-document-tables';
+import { textDocumentTableNavigation } from './text-document-table-navigation';
 
 export function useTextDocumentTables(
   view: EditorView | null,
@@ -11,7 +12,11 @@ export function useTextDocumentTables(
   sectionWidth: number,
 ): OfficeActions {
   return useMemo(
-    () => textDocumentTableActions(view, { canEdit, sectionWidth }),
+    () => ({
+      ...textDocumentTableActions(view, { canEdit, sectionWidth }),
+      // Moving through tables is anyone's who reads the document (tables.md "Working in a table").
+      ...textDocumentTableNavigation(view),
+    }),
     [view, canEdit, sectionWidth],
   );
 }

@@ -29,6 +29,11 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
     cell stays. In a cell, Tab never types a tab nor indents a list `(default)`.
   - The row Tab adds copies the last row's cells (spans, lines, shading), empty; one undo step. A Viewer's Tab moves
     nothing in the writing.
+- **Table navigation** (keyboard-shortcuts.md "Table navigation"): Google's Ctrl+Alt+Shift+T sequences put the caret at
+  the start of a cell: the table's first or last, its column's first or last, its row's first or last, or the next or
+  previous one across or down; Exit table puts it after the table (before it when nothing follows), and Ctrl+Alt+Shift+N
+  or P, T in the next or previous table's first cell. A move with nowhere to go leaves the caret where it is. Anyone
+  who reads the document may move; moving changes nothing.
 - Insert a row above or below, a column left or right; delete a row, column or the table; **Distribute rows**,
   **Distribute columns**.
 - **Merge cells** and **Unmerge cells** over a cell selection.
