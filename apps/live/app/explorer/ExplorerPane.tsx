@@ -20,6 +20,7 @@ import { DocumentHistoryDialog } from '@/components/panels/DocumentHistoryDialog
 import { isOfflineIdSync } from '@/lib/offline/offline-store';
 import { useTimelineFeed } from './useTimelineFeed';
 import { useExplorerImport } from './useExplorerImport';
+import { useExplorerPdfDrop } from './useExplorerPdfDrop';
 import { explorerPathFor } from './routes';
 import { rowLocation } from './row-location';
 import { paneHeaderActions } from './pane-header-actions';
@@ -218,6 +219,16 @@ export function ExplorerPane() {
   const imports = useExplorerImport({
     ownerId,
     folderId: selected.kind === 'folder' ? selected.id : null,
+    onDocumentsCreated: () => {
+      if (ownerId) void refreshPersonal(ownerId);
+    },
+  });
+
+  // A PDF dropped on the Explorer opens as a PDF document where new documents go here
+  // (docs/specs/035-pdf-documents/files-print-and-sync.md "Opening").
+  useExplorerPdfDrop({
+    ownerId,
+    place: newDocumentPlace,
     onDocumentsCreated: () => {
       if (ownerId) void refreshPersonal(ownerId);
     },

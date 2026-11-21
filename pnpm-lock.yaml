@@ -584,6 +584,9 @@ importers:
       '@livedoc/office-packages':
         specifier: workspace:*
         version: link:../../packages/office-packages
+      '@livedoc/pdf-documents':
+        specifier: workspace:*
+        version: link:../../packages/pdf-documents
       '@livedoc/plan-art':
         specifier: workspace:*
         version: link:../../packages/plan-art

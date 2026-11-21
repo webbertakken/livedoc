@@ -1096,6 +1096,16 @@ export const TEXT_DOCUMENT_MODE = chart(
   { types: ['TextDocumentMode'], rising: 'neutral' },
 );
 
+// A person changed their editing mode on a PDF document (docs/specs/035-pdf-documents/editing-modes.md "Telemetry and
+// observability").
+export const PDF_DOCUMENT_MODE = chart(
+  'UI',
+  'Changed',
+  'PDF Document Mode',
+  'Someone switched a PDF document between Reviewing and Viewing.',
+  { types: ['PdfDocumentMode'], rising: 'neutral' },
+);
+
 // A person here followed from a text document's title row: their caret brought into view, or their tab opened.
 export const TEXT_DOCUMENT_FOLLOWED = chart(
   'UI',
@@ -1384,6 +1394,7 @@ export const EDITOR_CHROME: MetricStack = {
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
     TEXT_DOCUMENT_MODE,
+    PDF_DOCUMENT_MODE,
     TEXT_DOCUMENT_MY_FONTS,
     TEXT_DOCUMENT_DEFAULT_STYLES,
     TEXT_DOCUMENT_PREFERENCES,

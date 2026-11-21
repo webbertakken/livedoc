@@ -8,7 +8,9 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./engine": "./src/engine/index.ts"
+    "./engine": "./src/engine/index.ts",
+    "./engine/browser": "./src/engine/browser.ts",
+    "./testing": "./src/testing/fixtures.ts"
   },
   "scripts": {
     "lint": "oxlint",

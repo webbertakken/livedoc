@@ -9,6 +9,9 @@ export const PDF_MAX_MARKS = 20_000;
 export const PDF_MAX_PAGES = 100_000;
 /** (default) One draw of one page; a decompression bomb draws at most this. Safe range: 2^24 to 2^28. */
 export const PDF_MAX_PAGE_PIXELS = 268_435_456;
+/** (default) The whole-page picture a page is first drawn as (reading-surface.md "Limits"): sharper detail is the tiles'.
+ *  Safe range: 2^21 to 2^25. */
+export const PDF_PAGE_PICTURE_MAX_PIXELS = 8_388_608;
 /** The most a PDF page measures on a side, in points: the standard's own 200 inches. */
 export const PDF_MAX_PAGE_POINTS = 14_400;
 /** (default) A Text mark's or a note's words, and the text a text mark covered; longer belongs in a document. */
