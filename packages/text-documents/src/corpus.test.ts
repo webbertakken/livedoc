@@ -31,7 +31,9 @@ function structure(document: TextDocument) {
                 i.type === 'kept'
                   ? [i.name]
                   : i.type === 'note'
-                    ? [`note: ${TextDocument.paragraphTexts({ ...document, body: i.blocks }).join(' / ')}`]
+                    ? [
+                        `note: ${TextDocument.paragraphTexts({ ...document, body: i.blocks }).join(' / ')}`,
+                      ]
                     : [],
               )
               .join(','),

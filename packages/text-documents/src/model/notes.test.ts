@@ -17,7 +17,10 @@ describe('Notes', () => {
     const b = note('b');
     const c = note('c');
     const body: Block[] = [
-      { ...Paragraph.of('One', 'Standard'), inlines: [{ type: 'run', text: 'x', props: {} }, a, b] },
+      {
+        ...Paragraph.of('One', 'Standard'),
+        inlines: [{ type: 'run', text: 'x', props: {} }, a, b],
+      },
       { type: 'kept', name: 'table', xml: { xml: '<t/>', ns: {} } },
       { ...Paragraph.of('', 'Standard'), inlines: [c] },
     ];
