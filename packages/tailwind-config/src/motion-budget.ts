@@ -4,8 +4,9 @@
 // every duration and delay it finds. Anything it cannot bound is reported rather
 // than assumed small, so the guard can only ever err towards failing.
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, relative, sep } from 'node:path';
+import { isTestOrDeclaration, listSourceFiles } from './source-files';
 import {
   MOTION_CASCADE_CAP_MS,
   MOTION_CASCADE_STEP_MS,
@@ -37,17 +38,6 @@ export const MOTION_TOKENS: TokenMap = new Map([
 const TIME = /^(\d*\.?\d+)(ms|s)$/;
 const TEMPLATE_TOKEN = /^\$\{MOTION_MS\.(micro|short|long)\}ms$/;
 const NON_TIME_FUNCTIONS = /^(cubic-bezier|steps|linear)\(/;
-const SKIP_DIRS = new Set([
-  'node_modules',
-  '.next',
-  '.next-dev',
-  '.next-analyze',
-  'out',
-  'coverage',
-  'e2e',
-  '.turbo',
-  'dist',
-]);
 
 // ---------------------------------------------------------------- values
 
@@ -421,14 +411,9 @@ export function scanSource(text: string, file: string, tokens: TokenMap): Motion
 
 // ------------------------------------------------------------- workspace
 
-function walkFiles(dir: string, out: string[]): void {
-  for (const name of readdirSync(dir)) {
-    if (SKIP_DIRS.has(name)) continue;
-    const full = join(dir, name);
-    if (statSync(full).isDirectory()) walkFiles(full, out);
-    else if (/\.(css|tsx?)$/.test(name) && !/\.(test|spec)\.|\.d\.ts$/.test(name)) out.push(full);
-  }
-}
+/** A stylesheet or a TypeScript source that is neither a test nor a declaration. */
+const isMotionSource = (path: string): boolean =>
+  /\.(css|tsx?)$/.test(path) && !isTestOrDeclaration(basename(path));
 
 /** Every motion violation under `root`, sorted by file then line. */
 export function checkMotionBudget(options: {
@@ -436,8 +421,7 @@ export function checkMotionBudget(options: {
   canvasStylesheets?: string[];
 }): MotionViolation[] {
   const canvas = new Set(options.canvasStylesheets ?? []);
-  const files: string[] = [];
-  walkFiles(options.root, files);
+  const files = listSourceFiles(options.root, isMotionSource);
   const rel = (f: string) => relative(options.root, f).split(sep).join('/');
   const present = new Set(files.map(rel));
 

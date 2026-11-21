@@ -4,9 +4,10 @@
 // fixed-height, fully rounded, centring element may not hold text directly: the text goes through
 // the `text-optical-centre` utility, or the shape is one of the shared primitives.
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, relative, sep } from 'node:path';
 import { parseSourceFiles } from '@livedoc/source-ast';
+import { isTestOrDeclaration, listSourceFiles } from './source-files';
 import {
   isBinaryExpression,
   isConditionalExpression,
@@ -38,16 +39,6 @@ type OpticalViolation = { file: string; line: number; snippet: string };
 const PRIMITIVES = new Set(['GlyphDisc', 'Chip', 'IconSlot']);
 // ...and so is their own implementation (packages/ui/src/optical).
 const PRIMITIVES_DIR = `${sep}optical${sep}`;
-const SKIP_DIRS = new Set([
-  'node_modules',
-  '.next',
-  '.next-dev',
-  'out',
-  'coverage',
-  'e2e',
-  '.turbo',
-  'dist',
-]);
 const ROUND = /(^|\s)rounded-full(\s|$)/;
 const CENTRING =
   /(^|\s)(items-center|justify-center|place-items-center|place-content-center)(\s|$)/;
@@ -55,23 +46,9 @@ const FIXED_HEIGHT = /(^|\s)(h|size)-(\d|\[)/;
 // An identifier that names an icon is taken at its word; anything else may be text.
 const ICON_NAME = /(icon|glyph|svg)/i;
 
-function sources(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const path = join(dir, name);
-    // A file can vanish between the listing and the stat while other tasks run (a bundler's timestamped
-    // config, a dev server's output); it was never source, so skip it rather than fail the walk.
-    let isDir: boolean;
-    try {
-      isDir = statSync(path).isDirectory();
-    } catch {
-      return [];
-    }
-    if (isDir) return SKIP_DIRS.has(name) ? [] : sources(path);
-    if (!name.endsWith('.tsx') || /\.test\.tsx$/.test(name) || path.includes(PRIMITIVES_DIR))
-      return [];
-    return [path];
-  });
-}
+/** A component file outside the optical primitives' own implementation. */
+const isComponentSource = (path: string): boolean =>
+  path.endsWith('.tsx') && !isTestOrDeclaration(basename(path)) && !path.includes(PRIMITIVES_DIR);
 
 /** Every static class chunk in a className attribute: literals, template heads and spans. */
 function classText(attr: JsxAttribute): string {
@@ -149,7 +126,7 @@ export function checkOpticalAlignment({ root }: { root: string }): OpticalViolat
   const violations: OpticalViolation[] = [];
   // A violation needs ROUND in one of a file's class literals: a file without the token has none,
   // and skipping its parse keeps the guard fast enough for a busy CI runner.
-  const candidates = sources(root).filter((path) =>
+  const candidates = listSourceFiles(root, isComponentSource).filter((path) =>
     readFileSync(path, 'utf8').includes('rounded-full'),
   );
   for (const sf of parseSourceFiles(candidates)) {
