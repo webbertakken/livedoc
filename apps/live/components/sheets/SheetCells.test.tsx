@@ -215,6 +215,11 @@ describe('the cells', () => {
     expect(broken!.textContent).toBe('one\ntwo');
     expect(broken!.style.height).toBe(`${2 * 17 + 8}px`);
     expect(plain!.style.height).toBe('28px');
+    // Measured lines are placed by the font's own widths, never snapped to whole px: a browser that snaps draws
+    // them wider than they were measured.
+    expect(wrapped!.style.textRendering).toBe('geometricprecision');
+    expect(broken!.style.textRendering).toBe('geometricprecision');
+    expect(plain!.style.textRendering).toBe('');
   });
 
   it('keeps bottom-aligned text 3 px up only where its row has that to spare', () => {

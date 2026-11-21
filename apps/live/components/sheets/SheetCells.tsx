@@ -307,6 +307,9 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             zIndex: 1,
             ...(padEnd ? { paddingRight: padEnd } : {}),
             lineHeight: `${lineH}px`,
+            // Measured lines are placed by the font's own widths, as they were measured: a browser that snaps each
+            // character to whole px (Chromium on Linux) draws a line wider than its room otherwise.
+            ...(lines ? { textRendering: 'geometricPrecision' } : {}),
             // The cell's own font; unset (or one no longer offered), the sheet's.
             ...textStyle,
             // A value still waiting on the cards reads quietly, never as an error.

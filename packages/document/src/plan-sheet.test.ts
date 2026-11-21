@@ -139,6 +139,22 @@ describe('the static render', () => {
     expect(svgPlanSheet(sheet, MODEL, 'light')).not.toContain('<tspan');
   });
 
+  // A browser that snaps each character to whole px draws a line wider than it was measured (sheet.md "Row height").
+  it("places measured text by its font's own widths: several lines, and a cell that wraps", () => {
+    const textOf = (cell: Partial<SheetRenderModel['cells'][number]> & { text: string }) => {
+      const svg = svgPlanSheet(
+        sheet,
+        { ...MODEL, cells: [{ r: 0, c: 0, align: 'l', valign: 'm', ...cell }] },
+        'light',
+      );
+      return new RegExp(`<text[^>]*>(?:<tspan[^>]*>)?${cell.text.split(' ')[0]}`).exec(svg)![0];
+    };
+    const precise = 'text-rendering="geometricPrecision"';
+    expect(textOf({ text: 'one two', lines: ['one', 'two'] })).toContain(precise);
+    expect(textOf({ text: 'fits', wrap: 'w' })).toContain(precise);
+    expect(textOf({ text: 'plain' })).not.toContain(precise);
+  });
+
   it('leaves out the gridlines and the headers when the sheet hides them', () => {
     const shown = svgPlanSheet(sheet, MODEL, 'light');
     const hidden = svgPlanSheet(sheet, { ...MODEL, hideGrid: true, hideHeaders: true }, 'light');

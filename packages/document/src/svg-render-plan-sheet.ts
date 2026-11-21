@@ -229,9 +229,12 @@ export function svgPlanSheet(
             )
             .join('')
         : xmlEscape(cell.text.split('\n')[0]!);
+      // Measured text is placed by its font's own widths: a browser that snaps each character to whole px draws a
+      // line wider than the room it was broken for.
+      const precise = lines || cell.wrap === 'w' ? ' text-rendering="geometricPrecision"' : '';
       const text = `<text clip-path="url(#${clip})" x="${r2(tx)}" y="${r2(ty)}" font-size="${size}"${face}${cell.bold ? ' font-weight="700"' : ''}${
         cell.italic ? ' font-style="italic"' : ''
-      }${deco ? ` text-decoration="${deco}"` : ''} fill="${ink}"${anchor}>${body}</text>`;
+      }${deco ? ` text-decoration="${deco}"` : ''} fill="${ink}"${anchor}${precise}>${body}</text>`;
       // A link stays one in an SVG export: its target was allow-listed (safeHyperlink), and is escaped like all text.
       out += cell.link
         ? `<a href="${xmlEscape(cell.link)}" target="_blank" rel="noopener noreferrer">${text}</a>`
