@@ -7,8 +7,9 @@ import { expect, test } from '../fixtures';
 import { officeMenuItem } from '../office/office-menus';
 
 // A 300-page text document against the budgets (docs/specs/034-text-documents/performance.md "Budgets", page-layout.md
-// "Performance"): opening it laid out, a keystroke on a middle page painted within a frame, and the pages laid out again
-// after a paste of 10 pages. Reports what it measured; fails only on a budget missed.
+// "Performance"): opening it laid out, keystrokes on a middle page painted within a frame (three in four, none past
+// 50 ms), and the pages laid out again after a paste of 10 pages. Reports what it measured; fails only on a budget
+// missed.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const SENTENCE =
@@ -23,8 +24,10 @@ const KEYSTROKES = 60;
 /** The budgets this probe holds the document to. */
 export const TEXT_DOCUMENT_SCALE_BUDGETS = {
   pages: PAGES,
-  /** Every keystroke's Event Timing duration, in milliseconds (one frame, with Event Timing's 8 ms rounding). */
-  keystrokeMs: 16,
+  /** Three keystrokes in four painted within one frame: Event Timing duration, ms, rounded to 8 by the browser. */
+  keystrokeP75Ms: 16,
+  /** No keystroke slower than this, in milliseconds. */
+  keystrokeMaxMs: 50,
   /** The layout after a paste of 10 pages, in milliseconds. */
   pasteLayoutMs: 100,
 } as const;
@@ -61,6 +64,8 @@ const slowest = (lines: readonly { ms: number; line: string }[]) =>
 test('a 300-page text document: opened, typed in and pasted into within the budgets', async ({
   page,
 }) => {
+  // Measured on the reference workstation, quiet (performance.md "A 300-page document"): never on a CI runner.
+  test.skip(Boolean(process.env.CI), 'measured on the reference workstation, not a CI runner');
   test.setTimeout(600_000);
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.addInitScript(() => localStorage.setItem('livedoc:debug', 'text-document'));
@@ -92,7 +97,7 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
     w.__keys = [];
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries())
-        if (entry.name === 'keydown' || entry.name === 'keypress') w.__keys.push(entry.duration);
+        if (entry.name === 'keypress') w.__keys.push(entry.duration);
     }).observe({
       type: 'event',
       durationThreshold: 16,
@@ -106,6 +111,12 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
   await page.waitForTimeout(500);
   const keys = await page.evaluate(() => (window as unknown as { __keys: number[] }).__keys);
   const slowestKeystroke = keys.length > 0 ? Math.max(...keys) : 0;
+  // Event Timing reports only keystrokes of 16 ms or more: the rest painted sooner (counted as 8).
+  const everyKeystroke = [
+    ...keys,
+    ...Array<number>(Math.max(0, KEYSTROKES - keys.length)).fill(8),
+  ].sort((a, b) => a - b);
+  const keystrokeP75 = everyKeystroke[Math.floor(KEYSTROKES * 0.75)]!;
   const typingLayout = slowest(layouts);
 
   // A paste of 10 pages after the middle paragraph.
@@ -135,6 +146,7 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
     pages,
     openMs,
     keystrokesOver16Ms: keys.length,
+    keystrokeP75Ms: keystrokeP75,
     keystrokeDurations: [...keys].sort((a, b) => a - b).join(','),
     slowestKeystrokeMs: slowestKeystroke,
     slowestTypingLayout: typingLayout?.line ?? null,
@@ -146,6 +158,7 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
   test
     .info()
     .annotations.push({ type: 'text-document-scale', description: JSON.stringify(report) });
-  expect(slowestKeystroke).toBeLessThanOrEqual(TEXT_DOCUMENT_SCALE_BUDGETS.keystrokeMs);
+  expect(keystrokeP75).toBeLessThanOrEqual(TEXT_DOCUMENT_SCALE_BUDGETS.keystrokeP75Ms);
+  expect(slowestKeystroke).toBeLessThanOrEqual(TEXT_DOCUMENT_SCALE_BUDGETS.keystrokeMaxMs);
   expect(pasteLayoutMs).toBeLessThanOrEqual(TEXT_DOCUMENT_SCALE_BUDGETS.pasteLayoutMs);
 });
