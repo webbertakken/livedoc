@@ -34,7 +34,7 @@ The editor is real:
   timeline with the canvas, ten Plan templates (boards set up for their use, opening on example cards), and item verbs for the CLI and MCP
   ([Items](../026-plan/items.md), [Plan board](../026-plan/plan-board.md)).
 - **Sheets** ([Sheet](../029-sheets/sheet.md)): a Plan-mode spreadsheet tab on the canvas, kept in its own D1 store:
-  cells, 157 functions (reading other sheets on the tab and Plan cards), number formats, borders, merges,
+  cells, 533 functions (reading other sheets on the tab and Plan cards), number formats, borders, merges,
   freeze, sort, filter, find and replace, copy and paste with Google Sheets and Excel, CSV in and out, live for
   everyone with one undo timeline, maximised like a board, and sheet tools for the CLI and MCP.
 - **Forms** ([Forms](../030-forms/forms.md)): a Plan-mode Form tab built in place from seven starters, ten question
@@ -118,7 +118,7 @@ The editor is real:
 - **Agents as collaborators** ([Agents](../024-agents/README.md)): with changesets, views, edit operations, the [lint](../024-agents/diagram-lint.md), presence and the [CLI](../015-api/cli.md) built and published, the CLI's update check next.
 - **Repository sync** ([Repository link](../027-repositories/repository-link.md), [Diagram sources](../027-repositories/diagram-sources.md)): merging offline edits back, the git hooks and merge driver, adopting existing Mermaid, PlantUML, DOT, draw.io and Excalidraw diagrams, and strict and relaxed compatibility.
 - **Access levels, the rest** ([Share roles](../013-workspace/share-roles.md#later)): Participant links are built; token levels, ownership as separate powers, server-derived collaboration keys and a look-only Viewer are next.
-- **Spreadsheets** ([Spreadsheet](../029-sheets/spreadsheet.md), [Parity matrix](../029-sheets/parity-matrix.md)): a document type of its own on ODF and XLSX, as Google Sheets works, retiring the Plan Sheet; the model, the store and a bare surface are built (plan 0020 Phases 4 and 5), the full surface, formulas and files ahead.
+- **Spreadsheets** ([Spreadsheet](../029-sheets/spreadsheet.md), [Parity matrix](../029-sheets/parity-matrix.md)): a document type of its own on ODF and XLSX, as Google Sheets works, retiring the Plan Sheet; the model, the store, a bare surface and the formula language are built (plan 0020 Phases 4 to 6: 533 functions measured against the oracle, other spreadsheets read with `IMPORTRANGE`, the spreadsheet's locale and time zone), the full surface and files ahead.
 
 ## Later
 
