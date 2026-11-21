@@ -28,6 +28,8 @@ import { withPageless } from './odf-settings';
 import { ABSOLUTE_TABS_SETTINGS, stopsWritten, type TabContext } from './odf-tabs';
 import { TabStops } from '../model/tab-stops';
 import { columnsXml, pageLayoutPropsXml, paragraphPropsXml, textPropsXml } from './odf-props';
+import { headerLayout, masterStoriesXml, shownKinds, withStories } from './odf-headers';
+import { HeadersAndFooters, type ResolvedHeaders } from '../model/headers';
 import { paragraphContentXml, type Segment } from './odf-text-content';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
@@ -65,9 +67,17 @@ class OdfWriter {
   readonly source: OdfSource | undefined;
   readonly faces = new Set<string>();
   readonly fontFaces: string[] = [];
-  readonly automatic = new Named();
+  /** The body's automatic styles (content.xml). */
+  readonly contentAutomatic = new Named();
+  /** Where automatic styles go: the body's, or styles.xml's while a header's paragraphs are written. */
+  automatic: Named = this.contentAutomatic;
   readonly pageStyles = new Named();
-  readonly masters: string[] = [];
+  readonly masters = new Named();
+  /** Every section's headers and footers with linking followed, by section. */
+  readonly resolved = new Map<Section, ResolvedHeaders>();
+  /** Writes a header's or footer's blocks (set by the body's writer). */
+  storyXml: (blocks: readonly Block[]) => string = () => '';
+  readonly #masterClaims = new Map<string, string>();
   readonly listNames = new Map<string, string>();
   #sections = 0;
   readonly #layoutClaims = new Map<string, string>();
@@ -95,7 +105,16 @@ class OdfWriter {
     }
     for (const s of source?.automaticStyles ?? []) this.automatic.add(s.name, this.kept(s.xml));
     for (const s of source?.pageStyles ?? []) this.pageStyles.add(s.name, this.kept(s.xml));
-    for (const m of source?.masterStyles ?? []) this.masters.push(this.kept(m));
+    for (const m of source?.masterStyles ?? []) {
+      const xml = this.kept(m);
+      this.masters.add(nameAttribute(xml) ?? '', xml);
+    }
+    const sections = [
+      document.section,
+      ...document.body.filter((b): b is SectionBreak => b.type === 'section'),
+    ];
+    const resolved = HeadersAndFooters.resolve(sections.map((s) => s.headers));
+    sections.forEach((section, i) => this.resolved.set(section, resolved[i]!));
   }
 
   kept(xml: KeptXml): string {
@@ -182,42 +201,79 @@ class OdfWriter {
     return name;
   }
 
-  /** The master page a section is written under: its own, kept, with its layout rebuilt when its setup changed. */
+  /**
+   * The master page a section is written under: its own, kept, with its layout rebuilt when its setup or the headers it
+   * shows changed, and its headers and footers written from the model; a master page another section claimed with other
+   * headers or setup gets a copy of its own.
+   */
   master(section: Section): string {
     const kept = section.kept;
+    const resolved = this.resolved.get(section);
+    const shown = shownKinds(resolved);
+    const stories = masterStoriesXml(resolved, (story) => this.storyXml(story.blocks));
     const setup = canonical(section.setup);
-    // Sections may share a master page; one edited apart from the others gets a master page of its own.
-    const claimed = kept?.layout === undefined ? undefined : this.#layoutClaims.get(kept.layout);
-    if (kept?.name && kept.layout && this.source && (claimed === undefined || claimed === setup)) {
-      this.#layoutClaims.set(kept.layout, setup);
-      if (!keptStillHolds(kept, section.setup))
+    const claim = `${setup} ${stories}`;
+    const claimed = kept?.name === undefined ? undefined : this.#masterClaims.get(kept.name);
+    const layoutClaimed =
+      kept?.layout === undefined ? undefined : this.#layoutClaims.get(kept.layout);
+    const layoutClaim = `${setup} ${shown.header} ${shown.footer}`;
+    if (
+      kept?.name &&
+      kept.layout &&
+      this.source &&
+      (claimed === undefined || claimed === claim) &&
+      (layoutClaimed === undefined || layoutClaimed === layoutClaim)
+    ) {
+      this.#masterClaims.set(kept.name, claim);
+      this.#layoutClaims.set(kept.layout, layoutClaim);
+      if (!keptStillHolds(kept, { setup: section.setup, shown }))
         this.pageStyles.replace(
           kept.layout,
-          this.pageLayoutXml(kept.layout, section.setup, kept.residue),
+          this.pageLayoutXml(kept.layout, section.setup, kept.residue, shown),
         );
+      const held = this.masters.byName.get(kept.name);
+      if (held) this.masters.replace(kept.name, withStories(held, stories));
       return kept.name;
     }
     this.#sections += 1;
     const first = this.#sections === 1 && !this.source;
-    const layout = first ? 'pm1' : `LDpl${shortHash(canonical(section.setup))}`;
-    const master = first ? 'Standard' : `LDmp${shortHash(canonical(section.setup))}`;
-    if (this.pageStyles.add(layout, this.pageLayoutXml(layout, section.setup, [])))
-      this.masters.push(
-        `<style:master-page${attr('style:name', master)}${attr('style:page-layout-name', layout)}/>`,
-      );
+    const layout = first ? 'pm1' : `LDpl${shortHash(layoutClaim)}`;
+    const master = first ? 'Standard' : `LDmp${shortHash(claim)}`;
+    this.pageStyles.add(layout, this.pageLayoutXml(layout, section.setup, [], shown));
+    const open = `<style:master-page${attr('style:name', master)}${attr('style:page-layout-name', layout)}`;
+    this.masters.add(master, stories ? `${open}>${stories}</style:master-page>` : `${open}/>`);
     return master;
   }
 
-  pageLayoutXml(name: string, setup: PageSetup, residue: readonly KeptXml[]): string {
+  /** A page layout for a setup: with a header or footer shown, its margins and their styles as `headerLayout` gives. */
+  pageLayoutXml(
+    name: string,
+    setup: PageSetup,
+    residue: readonly KeptXml[],
+    shown: { header: boolean; footer: boolean },
+  ): string {
+    const isStyle = (kind: string) => (r: KeptXml) =>
+      new RegExp(`^<[^>]*${kind}-style`).test(r.xml);
     const inner = residue
-      .filter((r) => !/^<[^>]*(header|footer)-style/.test(r.xml))
+      .filter((r) => !isStyle('header')(r) && !isStyle('footer')(r))
       .map((r) => this.kept(r))
       .join('');
-    const after = residue
-      .filter((r) => /^<[^>]*(header|footer)-style/.test(r.xml))
-      .map((r) => this.kept(r))
-      .join('');
-    return `<style:page-layout${attr('style:name', name)}>${pageLayoutPropsXml(setup, inner)}${after}</style:page-layout>`;
+    const laid = headerLayout(setup, shown);
+    const keptStyle = (kind: 'header' | 'footer') =>
+      shown[kind]
+        ? ''
+        : residue
+            .filter(isStyle(kind))
+            .map((r) => this.kept(r))
+            .join('');
+    const ownStyles = laid.styles;
+    const header = shown.header
+      ? ownStyles.match(/<style:header-style>[\s\S]*?<\/style:header-style>/)![0]
+      : keptStyle('header');
+    const footer = shown.footer
+      ? ownStyles.match(/<style:footer-style>[\s\S]*?<\/style:footer-style>/)![0]
+      : keptStyle('footer');
+    return `<style:page-layout${attr('style:name', name)}>${pageLayoutPropsXml(laid.setup, inner)}${header}${footer}</style:page-layout>`;
   }
 
   namedStyleXml(style: Style): string {
@@ -251,11 +307,25 @@ class OdfWriter {
 
 /** The body as `office:text`'s content. */
 function bodyXml(w: OdfWriter): string {
+  return contentXml(w, w.document.body, false);
+}
+
+/** A header's or footer's blocks as a master page's element's content, their automatic styles in styles.xml. */
+function storyContentXml(w: OdfWriter, blocks: readonly Block[]): string {
+  const outer = w.automatic;
+  w.automatic = w.pageStyles;
+  const xml = contentXml(w, blocks, true);
+  w.automatic = outer;
+  return xml;
+}
+
+/** Blocks as `office:text`'s content, or, for a header (`story`), without master pages. */
+function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): string {
   const doc = w.document;
   const out: string[] = [];
-  const firstMaster = w.master(doc.section);
+  const firstMaster = story ? undefined : w.master(doc.section);
   let pendingMaster: string | undefined = firstMaster === 'Standard' ? undefined : firstMaster;
-  let isFirstParagraph = true;
+  let isFirstParagraph = !story;
   let regionOpen: string | undefined;
   const lists = new ListWriter(w, out);
   const listsSeen = new Set<string>();
@@ -278,7 +348,6 @@ function bodyXml(w: OdfWriter): string {
     return `<${tag}${attr('text:style-name', style)}${level}>${paragraphContentXml(segments)}</${tag}>`;
   };
 
-  const blocks: readonly Block[] = doc.body;
   for (let i = 0; i < blocks.length; i += 1) {
     const block = blocks[i]!;
     if (block.type === 'paragraph' && block.list) {
@@ -456,6 +525,7 @@ export type OdfWritten = {
 
 function writeParts(document: TextDocument, generator: string): OdfWritten {
   const w = new OdfWriter(document);
+  w.storyXml = (blocks) => storyContentXml(w, blocks);
   const text = bodyXml(w);
   const named = [
     w.defaultStyleXml(),
@@ -475,15 +545,16 @@ function writeParts(document: TextDocument, generator: string): OdfWritten {
     w.source ? (w.source.settings ? w.kept(w.source.settings) : '') : ABSOLUTE_TABS_SETTINGS,
     document.pageless,
   );
-  const masters = `<office:master-styles>${w.masters.join('')}</office:master-styles>`;
+  const masters = `<office:master-styles>${w.masters.xml()}</office:master-styles>`;
   const body = `<office:body><office:text>\n${text}\n</office:text></office:body>`;
-  const content = `${XML_DECLARATION}\n<office:document-content${root}>${faces}<office:automatic-styles>${w.automatic.xml()}</office:automatic-styles>${body}</office:document-content>\n`;
+  const content = `${XML_DECLARATION}\n<office:document-content${root}>${faces}<office:automatic-styles>${w.contentAutomatic.xml()}</office:automatic-styles>${body}</office:document-content>\n`;
   const styles = `${XML_DECLARATION}\n<office:document-styles${root}>${faces}<office:styles>${named}</office:styles><office:automatic-styles>${w.pageStyles.xml()}</office:automatic-styles>${masters}</office:document-styles>\n`;
   const metaXml = `${XML_DECLARATION}\n<office:document-meta${root}><office:meta>${meta}</office:meta></office:document-meta>\n`;
   const settingsXml = `${XML_DECLARATION}\n<office:document-settings${root}${settings ? `>${settings}</office:document-settings>` : '/>'}\n`;
   const allAutomatic = new Named();
   for (const name of w.pageStyles.order) allAutomatic.add(name, w.pageStyles.byName.get(name)!);
-  for (const name of w.automatic.order) allAutomatic.add(name, w.automatic.byName.get(name)!);
+  for (const name of w.contentAutomatic.order)
+    allAutomatic.add(name, w.contentAutomatic.byName.get(name)!);
   const flat = `${XML_DECLARATION}\n<office:document${root}${attr('office:mimetype', ODF_MEDIA_TYPES.text)}><office:meta>${meta}</office:meta>${settings}${faces}<office:styles>${named}</office:styles><office:automatic-styles>${allAutomatic.xml()}</office:automatic-styles>${masters}${body}</office:document>\n`;
   return { content, styles, meta: metaXml, settings: settingsXml, flat };
 }

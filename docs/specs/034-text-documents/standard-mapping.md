@@ -187,7 +187,7 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | ODF files                | Soft page breaks (`text:soft-page-break`): layout hints every suite recomputes                                   |
 | ODF files                | Nested sections are written back one after another, each with its own columns                                    |
 | Either format            | Columns of unequal widths read as equal, as Google has them; reported as `column-width`                          |
-| OOXML to ODF             | Headers and footers, each a `header-footer` loss, until OpenDocument files are written with them                 |
+| OOXML to ODF             | A continuous section's own headers and footers (no master page of its own), each a `header-footer` loss          |
 | Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`      |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                         |
 

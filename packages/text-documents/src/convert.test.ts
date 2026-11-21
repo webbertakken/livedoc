@@ -116,10 +116,17 @@ describe('conversion', () => {
   });
 
   // page-layout.md "Headers and footers": converted as the body is; an OpenDocument file does not hold them yet.
-  it('converts headers and footers as the body, listing each as a loss going to ODF', () => {
+  it("converts headers and footers as the body, a continuous section's own a loss going to ODF", () => {
     const word = CONSTRUCTS.headers!('ooxml');
-    expect(conversionLosses(word, 'odf')).toEqual([
-      { kind: 'header-footer', name: 'header-footer', count: 5 },
+    expect(conversionLosses(word, 'odf')).toEqual([]);
+    const continuous: TextDocument = {
+      ...word,
+      body: word.body.map((b) =>
+        b.type === 'section' ? { ...b, start: 'continuous' as const } : b,
+      ),
+    };
+    expect(conversionLosses(continuous, 'odf')).toEqual([
+      { kind: 'header-footer', name: 'header-footer', count: 1 },
     ]);
     const odf = CONSTRUCTS.headers!('odf');
     const { document } = convertTextDocument(odf, 'ooxml');

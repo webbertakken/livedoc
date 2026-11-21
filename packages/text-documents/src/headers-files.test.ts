@@ -9,6 +9,7 @@ import { Paragraph, type Block, type SectionBreak } from './model/blocks';
 import type { HeaderFooter, SectionHeaders } from './model/headers';
 import { TextDocument } from './model/text-document';
 import { docx } from './testing/packages';
+import { CONSTRUCTS } from './testing/constructs';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -234,4 +235,52 @@ describe('headers and footers in Word files', () => {
       count: 1,
     });
   });
+});
+
+// "In the file" (ODF): a master page's header, header-first and header-left, linked when the previous section's.
+describe('headers and footers in OpenDocument files', () => {
+  it("reads LibreOffice's header, its field kept, and the body's top under it", async () => {
+    const fs = await import('node:fs');
+    const bytes = new Uint8Array(
+      fs.readFileSync(new URL('../corpus/libreoffice/features.fodt', import.meta.url)),
+    );
+    const { document } = await read(bytes);
+    const header = document.section.headers!.header!.default!;
+    expect(textOf(header)).toBe('Header text ');
+    const p = header.blocks[0] as Paragraph;
+    expect(p.inlines.some((i) => i.type === 'kept' && i.name === 'page-number')).toBe(true);
+    expect(document.section.setup.margins.header).toBe(72);
+    expect(document.section.setup.margins.top).toBeCloseTo(86.148, 2);
+    // The landscape section's master page has no header: it shows none of its own, as LibreOffice draws it.
+    const landscape = sections(document).find((s) => s.setup.orientation === 'landscape')!;
+    expect(landscape.headers?.header?.default).toEqual({ blocks: [] });
+  });
+
+  it('reads a kind without an even element as showing its default on even pages, as ODF does', async () => {
+    const odf = CONSTRUCTS.headers!('odf');
+    const written = writeTextDocumentFile(odf, 'fodt');
+    if (!written.ok) throw new Error(written.rejection);
+    // As LibreOffice writes it: no footer-left, so even pages show the footer.
+    const text = new TextDecoder()
+      .decode(written.bytes)
+      .replace('<style:footer-left><text:p/></style:footer-left>', '');
+    const { document } = await read(new TextEncoder().encode(text));
+    const footer = document.section.headers!.footer!;
+    expect(footer.even).toBe(footer.default);
+  });
+
+  it.each(['odt', 'fodt'] as const)(
+    'writes a section linking its header into its own master page, read back as linked (%s)',
+    async (type) => {
+      const document = CONSTRUCTS.headers!('odf');
+      const written = writeTextDocumentFile(document, type);
+      if (!written.ok) throw new Error(written.rejection);
+      const back = (await read(written.bytes)).document;
+      const later = sections(back)[0]!.headers!;
+      expect(textOf(later.header?.default)).toBe('Second section header');
+      expect(later.header?.even).toBeUndefined();
+      expect(later.footer).toBeUndefined();
+      expect(back.section.setup.margins).toMatchObject({ header: 24, footer: 30 });
+    },
+  );
 });

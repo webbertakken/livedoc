@@ -52,8 +52,11 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
   const kept = new Map<string, number>();
   const other = new Map<string, number>();
   const stories = sectionsOf(document).flatMap((s) => storiesOf(s.headers));
-  // An OpenDocument file is not written with headers and footers yet: each one a section holds is a loss.
-  if (to === 'odf') for (let i = 0; i < stories.length; i += 1) count(other, 'header-footer');
+  // A continuous section has no master page in an OpenDocument file: its own headers and footers are a loss.
+  if (to === 'odf')
+    for (const block of document.body)
+      if (block.type === 'section' && block.start === 'continuous')
+        for (let i = 0; i < storiesOf(block.headers).length; i += 1) count(other, 'header-footer');
   for (const block of [...document.body, ...stories.flat()]) {
     if (block.type === 'kept') count(kept, block.name);
     if (block.type === 'section' && block.region) count(other, 'section-name');
