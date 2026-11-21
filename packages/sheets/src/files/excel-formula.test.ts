@@ -7,7 +7,7 @@ import {
   toExcelFormula,
   unwrapDummyFunction,
 } from './excel-formula';
-import { shiftFormulaText } from './formula-text-shift';
+import { reopenRanges, shiftFormulaText } from './formula-text-shift';
 import {
   googleNameOfXlsx,
   XLSX_FUTURE_FUNCTIONS,
@@ -99,7 +99,13 @@ describe('fromExcelFormula', () => {
   });
 
   it('round-trips what it writes', () => {
-    for (const google of ['=SUM(A1:B2)', '=COUNT(B1#)', '=LET(a, 1, a+1)', '=XLOOKUP(1, A:A, B:B)'])
+    for (const google of [
+      '=SUM(A1:B2)',
+      '=COUNT(B1#)',
+      '=LET(a, 1, a+1)',
+      '=XLOOKUP(1, A:A, B:B)',
+      '=SUM(A2:A) + SUM(B2:2)',
+    ])
       expect(fromExcelFormula(toExcelFormula(google)!)).toBe(google);
   });
 });
@@ -137,6 +143,22 @@ describe('a1Text', () => {
     const ref = { r1: 1, c1: 0, c2: 0, a: 0, open: 'r' as const };
     expect(a1Text(ref, false)).toBe('A2:A');
     expect(a1Text(ref, true)).toBe('A2:A1048576');
+  });
+});
+
+describe('reopenRanges', () => {
+  // standard-mapping.md "Formulas in the file's own syntax": a range to the standards' last row or column is open.
+  it.each([
+    ['=SUM(A2:A1048576)', '=SUM(A2:A)'],
+    ['=SUM(Data!$A$1:$B$1048576)', '=SUM(Data!$A:$B)'],
+    ['=SUM(B2:XFD3)', '=SUM(B2:3)'],
+    ['=SUM(A2:XFD2)', '=SUM(2:2)'],
+    ['=SUM(A1:XFD1)', '=SUM(1:1)'],
+    ['=SUM(A1:XFD1048576)', '=SUM(A1:XFD1048576)'],
+    ['=SUM(A2:A1000) + A1048576', '=SUM(A2:A1000) + A1048576'],
+    ['=SUM(', '=SUM('],
+  ])('reads %s as %s', (file, google) => {
+    expect(reopenRanges(file)).toBe(google);
   });
 });
 

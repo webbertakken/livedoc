@@ -6,6 +6,7 @@ import { callsOf, childrenOf, refsOf, type Node } from '../formula/ast';
 import { parseFormula } from '../formula/parse';
 import { tokenize, type Token } from '../formula/tokens';
 import { a1Text } from './a1-text';
+import { reopenRanges } from './formula-text-shift';
 import {
   googleNameOfXlsx,
   XLSX_FUTURE_PREFIX,
@@ -148,5 +149,5 @@ export function fromExcelFormula(text: string): string | null {
     else if (word && nextSolid(tokens, i + 1)?.k === 'lparen') out += googleNameOfXlsx(word);
     else out += text.slice(tok.start, tok.end);
   }
-  return out;
+  return reopenRanges(out);
 }

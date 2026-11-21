@@ -61,7 +61,8 @@ The table is the contract the readers and writers are tested against, one test p
 - A formula read from a file that LiveDoc cannot evaluate keeps its text and shows its cached value, with a marker
   saying so; it is written back as it came.
 - An open-ended range (`A2:A`) has no form in either standard: it is written to the standards' last row or column
-  (1,048,576 and 16,384, `XFD`), and read back as that range.
+  (1,048,576 and 16,384, `XFD`), and any range reaching them is read back open (`A2:A`; from the first row, `A:A`),
+  since the grid is smaller than the standards' and a range past it is `#REF!`.
 
 ### Excel's grammar in detail
 

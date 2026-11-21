@@ -4,7 +4,13 @@
 import { columnLetters } from '../address';
 import type { A1Ref } from '../formula/ast';
 import { quoteSheet } from '../formula/stored';
-import { OPEN_FORMULA_LAST_COL, OPEN_FORMULA_LAST_ROW } from './open-formula';
+
+/**
+ * The standards' last row and column (OpenFormula as LibreOffice's grid, Excel's `XFD1048576`): an open-ended range
+ * (`A2:A`), which neither standard can say, is written to them, and read back open.
+ */
+export const FILE_LAST_ROW = 1_048_576;
+export const FILE_LAST_COL = 16_384;
 
 /** The parts a reference is written from: as parsed, with the sheet name as it is to be written. */
 export type A1Parts = Pick<A1Ref, 'r1' | 'c1' | 'r2' | 'c2' | 'a' | 'open'> & { sheet?: string };
@@ -33,7 +39,7 @@ export function a1Text(ref: A1Parts, closed: boolean): string {
   const first = part(ref.r1, ref.c1, !!(ref.a & 1), !!(ref.a & 2));
   const twoParts = ref.r2 !== undefined || ref.c2 !== undefined || ref.open !== undefined;
   if (!twoParts) return `${prefix}${first}`;
-  const r2 = closed && ref.open === 'r' ? OPEN_FORMULA_LAST_ROW - 1 : ref.r2;
-  const c2 = closed && ref.open === 'c' ? OPEN_FORMULA_LAST_COL - 1 : ref.c2;
+  const r2 = closed && ref.open === 'r' ? FILE_LAST_ROW - 1 : ref.r2;
+  const c2 = closed && ref.open === 'c' ? FILE_LAST_COL - 1 : ref.c2;
   return `${prefix}${first}:${part(r2, c2, !!(ref.a & 4), !!(ref.a & 8))}`;
 }

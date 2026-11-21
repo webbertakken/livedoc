@@ -7,14 +7,12 @@ import { childrenOf, refsOf, type A1Ref, type Node } from '../formula/ast';
 import { parseFormula } from '../formula/parse';
 import { quoteSheet } from '../formula/stored';
 import { tokenize, type Token } from '../formula/tokens';
+import { FILE_LAST_COL, FILE_LAST_ROW } from './a1-text';
+import { reopenRanges } from './formula-text-shift';
 import { googleFunctionName, odfFunctionName } from './odf-function-names';
 
 /** The namespace prefix OpenFormula's formulas carry in `table:formula`. */
 export const OPEN_FORMULA_PREFIX = 'of:';
-
-// An open-ended range (`A2:A`) has no OpenFormula form: it reaches the last row or column LibreOffice's grid has.
-export const OPEN_FORMULA_LAST_ROW = 1_048_576;
-export const OPEN_FORMULA_LAST_COL = 16_384;
 
 const LITERAL_BOOLEANS = new Set(['TRUE', 'FALSE']);
 
@@ -39,8 +37,8 @@ function ofReference(ref: A1Ref): string {
   const twoParts = ref.r2 !== undefined || ref.c2 !== undefined || ref.open !== undefined;
   if (!twoParts) return `[${sheet}${first}]`;
   // `A2:A` runs to the last row; `A2:2` to the last column.
-  const r2 = ref.open === 'r' ? OPEN_FORMULA_LAST_ROW - 1 : ref.r2;
-  const c2 = ref.open === 'c' ? OPEN_FORMULA_LAST_COL - 1 : ref.c2;
+  const r2 = ref.open === 'r' ? FILE_LAST_ROW - 1 : ref.r2;
+  const c2 = ref.open === 'c' ? FILE_LAST_COL - 1 : ref.c2;
   return `[${sheet}${first}:.${ofPart(r2, c2, !!(ref.a & 4), !!(ref.a & 8))}]`;
 }
 
@@ -207,5 +205,5 @@ export function fromOpenFormula(formula: string): string | null {
       }
     } else out += ch;
   }
-  return out;
+  return reopenRanges(out);
 }
