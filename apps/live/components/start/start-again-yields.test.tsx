@@ -49,6 +49,7 @@ describe('Show Templates and a mode message', () => {
     expect(document.querySelector('[data-mode-message]')?.textContent).toMatch(
       /Click to place text/,
     );
+    expect(document.body.hasAttribute('data-mode-message-shown')).toBe(true);
   });
 
   it('under the strip, the start-again tray yields and the mode tray marks itself', () => {
@@ -63,12 +64,22 @@ describe('Show Templates and a mode message', () => {
     const modes = [...document.querySelectorAll('[data-mode-message]')];
     expect(yields.map((n) => n.textContent)).toEqual([expect.stringMatching(/Tab 2 is empty/)]);
     expect(modes.map((n) => n.textContent)).toEqual([expect.stringMatching(/Click to place text/)]);
+    expect(document.body.hasAttribute('data-mode-message-shown')).toBe(true);
+  });
+
+  it('a standing message alone leaves the page unmarked', () => {
+    mountStrip();
+    render(<StartAgainTray mode="diagram" tabId="t" tabName="Tab 2" />);
+    expect(document.querySelectorAll('[data-yields-to-mode]')).toHaveLength(1);
+    expect(document.body.hasAttribute('data-mode-message-shown')).toBe(false);
   });
 
   it('globals.css hides the yielding message while a mode message is on the page', () => {
     const css = readFileSync(join(__dirname, '../../app/globals.css'), 'utf8');
     expect(css).toMatch(
-      /body:has\(\[data-mode-message\]\) \[data-yields-to-mode\] \{\s*display: none;\s*\}/,
+      /body\[data-mode-message-shown\] \[data-yields-to-mode\] \{\s*display: none;\s*\}/,
     );
+    // canvas-performance.md "A rule across the page keys on a mark".
+    expect(css).not.toMatch(/(:root|body|html):has\(/);
   });
 });

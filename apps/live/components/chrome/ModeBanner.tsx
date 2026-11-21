@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { TopCenterBanner } from '@/components/chrome/TopCenter';
+import { MODE_MESSAGE_SHOWN, useBodyMark } from '@/hooks/ui/useBodyMark';
 import { PaletteTray, PaletteTrayAction, type StripBox } from '@/components/chrome/PaletteTray';
 
 type ModeBannerProps = {
@@ -29,6 +30,8 @@ export function ModeBanner({
   extras,
   tray,
 }: ModeBannerProps) {
+  // The tray marks the page itself; a banner off the strip marks it here.
+  useBodyMark(MODE_MESSAGE_SHOWN, !tray);
   if (tray) {
     return (
       <PaletteTray

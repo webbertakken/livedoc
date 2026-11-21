@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic';
+import { ISO_SCENE_SHOWN, useBodyMark } from '@/hooks/ui/useBodyMark';
 import type { View } from '@/lib/viewport-store';
 import { CanvasMenu } from './canvas-menu-context';
 import { CanvasFinishProvider } from './CanvasFinishContext';
@@ -160,6 +161,8 @@ function CanvasView(props: CanvasProps) {
   // first click (copy cursor, handles/label-drag/dblclick suppressed on boxed
   // elements AND arrows), not only once a source is armed.
   const isPaintMode = canvasTool === 'format';
+  // The floating chrome's own layer while the isometric scene is up (globals.css).
+  useBodyMark(ISO_SCENE_SHOWN, canvasTool === 'isometric');
   // Nudge above the Fit button when everything on the canvas has scrolled out of view.
   // Long tasks, with the gesture they fell in, while the canvas-perf debug scope is on
   // (docs/specs/008-canvas/canvas-performance.md "Observability").

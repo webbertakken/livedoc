@@ -50,6 +50,12 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   arrow's SVG was laid out again, paths and all, whenever the board was: at a press, a release and
   in a resize's frames, on the reference board 301 SVGs each time. It looks, paints and takes the
   pointer exactly as before.
+- **A rule across the page keys on a mark.** A style rule that depends on something elsewhere on
+  the page (a mode's message showing, the isometric scene being up) keys on a `data-` mark the
+  body carries while it holds (`useBodyMark`), never on `:root:has(…)` or `body:has(…)`. A
+  `:has()` over the whole page makes the browser search the page again after every change
+  anywhere in it: each frame of a whiteboard drag at fit restyled 9-23 nodes in 4-9 ms that way. A
+  `:has()` scoped to an element's own children stays.
 - **A pan or zoom repaints no filter.** A look every element of a kind wears by default (a soft
   shadow) is drawn as a picture made once, never as a live CSS or SVG filter: Safari runs every
   filter on screen again on every frame of a pan, a zoom or a page glide, and fifty sticky notes'

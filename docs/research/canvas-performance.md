@@ -539,6 +539,22 @@ h-full w-full` in the element plane, so each layout of the plane (a press, a rel
   5-8 ms because the listener also tells every element view the selection changed. An element grid
   would not move the row.
 
+## A drag's frames, restyled through `:has()`
+
+Measured 2026-11-21 on the reference board, a whiteboard drag at fit (a resize), locally at 3.5x,
+with style invalidation tracking.
+
+- **Each frame restyled a handful of nodes slowly.** A frame's style pass touched 9-23 nodes and took
+  4-9 ms. Every DOM change scheduled an invalidation on the root for `:root:has([data-iso])` and
+  `body:has([data-mode-message])` (globals.css), whose invalidation sets (`data-floating-panel`,
+  `data-yields-to-mode`) send the browser through the whole page.
+- **With the two rules removed** (dropped from the page's stylesheets in the same build), style over
+  the gesture went from 497-581 ms to 176-236 ms, a pass's median from 6.8-8.8 ms to 2.2-3.0 ms.
+  Both rules now key on a mark on the body (`useBodyMark`); against main in the same hour, built:
+  403-551 ms to 66-118 ms over the gesture, a pass's median 6.2-7.7 ms to 1.3-1.5 ms. (In a
+  stroke's release the same rewrite of the isometric rule had saved only 3-4 ms, which is why it
+  stayed; a drag pays it every frame.)
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.

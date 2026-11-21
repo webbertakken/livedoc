@@ -8,6 +8,7 @@
 // instead.
 import { useLayoutEffect, useState, type ReactNode } from 'react';
 import { settleNow } from '@/lib/settle-now';
+import { MODE_MESSAGE_SHOWN, useBodyMark } from '@/hooks/ui/useBodyMark';
 import { createPortal } from 'react-dom';
 import { EDITOR_VIEWPORT_ATTR } from '@/lib/editor-viewport';
 
@@ -150,9 +151,10 @@ export function PaletteTray({
   // Toggles and actions at the end of the row.
   end?: ReactNode;
   // A standing message (an empty tab's Show Templates) rather than a mode's: it steps aside while a mode message
-  // is on screen, as the two share the tray's slot (`[data-mode-message]` in globals.css).
+  // is on screen, as the two share the tray's slot (`[data-mode-message-shown]` in globals.css).
   standing?: boolean;
 }) {
+  useBodyMark(MODE_MESSAGE_SHOWN, !standing);
   if (typeof document === 'undefined') return null;
   const host = trayHost();
   return createPortal(

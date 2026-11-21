@@ -7,6 +7,7 @@ import type { DragState } from '@/lib/canvas';
 import { useSelectionOf } from '@/hooks/canvas/useSelectionStore';
 import type { Selection } from '@/lib/selection-store';
 import { TopCenterBanner } from '@/components/chrome/TopCenter';
+import { MODE_MESSAGE_SHOWN, useBodyMark } from '@/hooks/ui/useBodyMark';
 import { PaletteTray, usePaletteStripBox } from '@/components/chrome/PaletteTray';
 import { useShiftHeld } from '@/hooks/ui/useShiftHeld';
 import { useInsertionDragInHand } from '@/lib/insertion-preview';
@@ -99,6 +100,8 @@ const KEY_CHIP =
 // elsewhere it is a top-centre pill.
 function Hint({ modifier, children }: { modifier: string; children: React.ReactNode }) {
   const strip = usePaletteStripBox();
+  // The tray marks the page itself; a banner off the strip marks it here.
+  useBodyMark(MODE_MESSAGE_SHOWN, !strip);
   if (strip) {
     return (
       <PaletteTray box={strip} lead={<kbd className={KEY_CHIP}>{modifier}</kbd>}>
