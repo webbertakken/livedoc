@@ -6,7 +6,13 @@
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Columns, SECTION_BREAK, type LiveHeaders, type PageSetup } from '@livedoc/text-documents';
+import {
+  Columns,
+  SECTION_BREAK,
+  type LineNumbers,
+  type LiveHeaders,
+  type PageSetup,
+} from '@livedoc/text-documents';
 
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;
@@ -20,6 +26,8 @@ export type BodySections = {
   readonly headers: readonly (LiveHeaders | undefined)[];
   /** The number each section's first page has, if it starts at one (page-layout.md "Page numbers"). */
   readonly starts: readonly (number | undefined)[];
+  /** Each section's line numbers (page-layout.md "Line numbers"); none where it has none. */
+  readonly lineNumbers: readonly (LineNumbers | undefined)[];
 };
 
 /** The body's sections and the section of each of its blocks; the first section's headers are the document's. */
@@ -28,10 +36,12 @@ export function bodySections(
   first: PageSetup,
   firstHeaders?: LiveHeaders,
   firstStart?: number,
+  firstLineNumbers?: LineNumbers,
 ): BodySections {
   const setups: PageSetup[] = [first];
   const headers: (LiveHeaders | undefined)[] = [firstHeaders];
   const starts: (number | undefined)[] = [firstStart];
+  const lineNumbers: (LineNumbers | undefined)[] = [firstLineNumbers];
   const sectionOf: number[] = [];
   doc.forEach((node) => {
     sectionOf.push(setups.length - 1);
@@ -40,12 +50,14 @@ export function bodySections(
       setup: PageSetup | null;
       headers?: LiveHeaders | null;
       numberStart?: number | null;
+      lineNumbers?: LineNumbers | null;
     };
     setups.push(attrs.setup ?? setups[setups.length - 1]!);
     headers.push(attrs.headers ?? undefined);
     starts.push(typeof attrs.numberStart === 'number' ? attrs.numberStart : undefined);
+    lineNumbers.push(attrs.lineNumbers ?? undefined);
   });
-  return { setups, sectionOf, headers, starts };
+  return { setups, sectionOf, headers, starts, lineNumbers };
 }
 
 /** The section a place in the body is in. */

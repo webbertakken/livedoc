@@ -4,7 +4,8 @@
 // one sheet fills the whole frame. A section's line between columns (page-layout.md "Columns") is drawn on its sheet,
 // a thin line in the writing's ink. Each page's header and footer (page-layout.md "Headers and footers") is drawn in
 // its margins, an empty one not at all; their sources lie hidden behind the first sheet, footnotes' too (drawn over the
-// writing by TextDocumentPageNotes). Drawn only: never read, never focused.
+// writing by TextDocumentPageNotes). Each numbered line's number (page-layout.md "Line numbers") stands in its
+// page's left margin. Drawn only: never read, never focused.
 import type { ReactNode } from 'react';
 import { PAGE_GAP_PX } from '@/lib/text-document/pagination/pagination';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
@@ -110,6 +111,16 @@ export function TextDocumentSheets({
                     />
                   )),
                 )}
+                {(page.lines ?? []).map((line, n) => (
+                  <div
+                    key={n}
+                    data-line-number={line.number}
+                    className="text-document-line-number absolute flex items-center justify-end"
+                    style={{ top: line.top, height: line.height, right: page.width - line.right }}
+                  >
+                    {line.number}
+                  </div>
+                ))}
                 {story('header', page.header, index)}
                 {story('footer', page.footer, index)}
               </div>

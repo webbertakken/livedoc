@@ -1190,6 +1190,16 @@ export const TEXT_DOCUMENT_COLUMNS = chart(
   { types: ['TextDocumentColumns'] },
 );
 
+// A text document's line numbers changed (docs/specs/034-text-documents/page-layout.md "Line numbers"): shown, hidden or
+// restarting otherwise, from the Line numbers panel.
+export const TEXT_DOCUMENT_LINE_NUMBERS = chart(
+  'Tab',
+  'Changed',
+  'Text Document Line Numbers',
+  "A text document's line numbers shown, hidden or restarting otherwise from Tools > Line numbers.",
+  { types: ['TextDocumentLineNumbers'] },
+);
+
 // A text document's header or footer made or taken away (docs/specs/034-text-documents/page-layout.md "Headers and
 // footers"): made by entering a page that shows none, removed by leaving one empty.
 export const TEXT_DOCUMENT_HEADER_FOOTER = chart(
@@ -1524,10 +1534,10 @@ export const TEXT_DOCUMENT_MENUS_OPENED = opened(
   (t) => (t ?? '').startsWith('TextDocumentMenu'),
 );
 
-// A text document's side panel opened (docs/specs/004-interface-design/office-shell.md "Side panels"): the outline.
+// A text document's side panel opened (docs/specs/004-interface-design/office-shell.md "Side panels"): the outline and line numbers.
 export const TEXT_DOCUMENT_PANELS_OPENED = opened(
   'Text Document Panels',
-  'A side panel of a text document opened from its menu or shortcut: the outline.',
+  'A side panel of a text document opened from its menu or shortcut: the outline or line numbers.',
   (t) => (t ?? '').startsWith('TextDocumentPanel'),
 );
 

@@ -81,9 +81,15 @@ import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
 import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
+import { TextDocumentLineNumbersPanel } from './TextDocumentLineNumbersPanel';
+import { useTextDocumentLineNumbers } from './useTextDocumentLineNumbers';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
-import { TEXT_DOCUMENT_PANELS } from '@/lib/text-document/text-document-panels';
+import {
+  LINE_NUMBERS_PANEL,
+  OUTLINE_PANEL,
+  TEXT_DOCUMENT_PANELS,
+} from '@/lib/text-document/text-document-panels';
 import { TextDocumentOutline } from './TextDocumentOutline';
 import { useTextDocumentParagraphs } from './useTextDocumentParagraphs';
 import {
@@ -185,12 +191,6 @@ export function TextDocumentSurface({
   const typingAids = useRef<() => TypingAids>(TypingAids.defaults);
   // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
   const [changes] = useState(createTextDocumentChanges);
-  // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back.
-  const panels = useOfficePanels({
-    kind: 'TextDocument',
-    panels: TEXT_DOCUMENT_PANELS,
-    onFocusDocument: () => editor.current?.focus(),
-  });
   // What the title row's save status reads (editing-surface.md "The title row"), once the writing is bound.
   const [saveFacts, setSaveFacts] = useState<SaveFactsSource | null>(null);
   const saveStatus = useTextDocumentSaveStatus(saveFacts, local);
@@ -205,6 +205,14 @@ export function TextDocumentSurface({
     actions: modeActions,
   } = useOfficeMode(level, 'TextDocumentMode');
   const writes = canEdit && mode === 'editing';
+  // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back. Line numbers is
+  // an Editor's (page-layout.md "Line numbers").
+  const panels = useOfficePanels({
+    kind: 'TextDocument',
+    panels: TEXT_DOCUMENT_PANELS,
+    onFocusDocument: () => editor.current?.focus(),
+    writes,
+  });
   const live = useRef({ sequence, canEdit, writes, format });
   useLayoutEffect(() => {
     live.current = { sequence, canEdit, writes, format };
@@ -351,14 +359,15 @@ export function TextDocumentSurface({
               // The writing laid onto pages (page-layout.md "Laying out").
               paginationPlugin({
                 readFormatting,
-                read: () => ({
-                  ...(layout.current ?? {
-                    setup: TextDocumentState.section(doc, live.current.format).setup,
-                    pages: false,
-                  }),
-                  headers: liveFirstHeaders(doc),
-                  numberStart: TextDocumentState.section(doc, live.current.format).numberStart,
-                }),
+                read: () => {
+                  const first = TextDocumentState.section(doc, live.current.format);
+                  return {
+                    ...(layout.current ?? { setup: first.setup, pages: false }),
+                    headers: liveFirstHeaders(doc),
+                    numberStart: first.numberStart,
+                    lineNumbers: first.lineNumbers,
+                  };
+                },
                 heights: () => storyHeights.current,
                 onPages: setPageList,
               }),
@@ -439,6 +448,15 @@ export function TextDocumentSurface({
     writes,
     ownerId,
     subscribeCaret: changes.subscribeCaret,
+  });
+  // Tools > Line numbers' panel (page-layout.md "Line numbers").
+  const lineNumbers = useTextDocumentLineNumbers({
+    view: editorView,
+    liveDoc,
+    format,
+    writes,
+    first: page.section,
+    subscribe: changes.subscribeCaret,
   });
   // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
   // View > Text width, a person's own (page-layout.md "Pageless").
@@ -680,7 +698,7 @@ export function TextDocumentSurface({
         left={
           panels.open.left === 'outline' ? (
             <OfficePanel
-              spec={TEXT_DOCUMENT_PANELS[0]!}
+              spec={OUTLINE_PANEL}
               onClose={() => panels.close('left')}
               focusNonce={panels.focusNonce}
             >
@@ -688,7 +706,23 @@ export function TextDocumentSurface({
             </OfficePanel>
           ) : null
         }
-        right={null}
+        right={
+          panels.open.right === LINE_NUMBERS_PANEL.id ? (
+            <OfficePanel
+              spec={LINE_NUMBERS_PANEL}
+              width={panels.width}
+              onWidth={panels.setWidth}
+              onWidthDone={panels.saveWidth}
+              onClose={() => panels.close('right')}
+              focusNonce={panels.focusNonce}
+            >
+              <TextDocumentLineNumbersPanel
+                state={lineNumbers.state}
+                onChoose={lineNumbers.choose}
+              />
+            </OfficePanel>
+          ) : null
+        }
       >
         <div
           ref={scroller}

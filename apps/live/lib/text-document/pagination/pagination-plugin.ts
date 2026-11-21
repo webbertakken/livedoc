@@ -8,7 +8,12 @@
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey, TextSelection, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
-import type { LiveHeaders, PageSetup } from '@livedoc/text-documents';
+import {
+  Columns,
+  type LineNumbers,
+  type LiveHeaders,
+  type PageSetup,
+} from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { TextFormatting } from '../text-document-formatting';
 import { touchedParagraphs } from '../text-document-tab-layout';
@@ -34,7 +39,14 @@ import { paginate } from './pagination-engine';
 import { pageLayout, storyKey, type StoryHeights } from './pagination-headers';
 import { notePlace, pageNotes, type NoteMark } from './pagination-notes';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
-import { bodySections, SECTIONS_CHANGED } from './pagination-sections';
+import { lineNumberMarks, pageTopsInBody } from './pagination-line-numbers';
+import { readDrawnLines, type CrossColumns } from './pagination-line-reading';
+import {
+  bodySections,
+  sectionInset,
+  SECTIONS_CHANGED,
+  type BodySections,
+} from './pagination-sections';
 import {
   fieldDecorations,
   pageCountOf,
@@ -57,6 +69,8 @@ export type PaginationOptions = {
     readonly headers?: LiveHeaders;
     /** The number the first page has, if the document starts at one (page-layout.md "Page numbers"). */
     readonly numberStart?: number;
+    /** The first section's line numbers (page-layout.md "Line numbers"). */
+    readonly lineNumbers?: LineNumbers;
   };
   /** Each drawn header's and footer's height, by its story at its width; none known lays the pages unpushed. */
   readonly heights?: () => StoryHeights;
@@ -183,8 +197,8 @@ class Pager {
   /** The text width of the section `pos` is in, which its note is drawn at. */
   noteWidthAt(pos: number): number {
     const { doc } = this.view.state;
-    const { setup, headers, numberStart } = this.options.read();
-    const sections = bodySections(doc, setup, headers, numberStart);
+    const { setup, headers, numberStart, lineNumbers } = this.options.read();
+    const sections = bodySections(doc, setup, headers, numberStart, lineNumbers);
     const block = doc.resolve(Math.min(pos, doc.content.size)).index(0);
     return notePlace(sections.setups[sections.sectionOf[block] ?? 0]!).width;
   }
@@ -240,7 +254,7 @@ class Pager {
 
   private layOut(): void {
     const { view } = this;
-    const { setup, pages, headers, numberStart } = this.options.read();
+    const { setup, pages, headers, numberStart, lineNumbers } = this.options.read();
     if (!pages) {
       this.previous = null;
       this.nodes = [];
@@ -255,7 +269,7 @@ class Pager {
     if (!(width > 0) || box.width === 0) return;
     const ratio = box.width / width;
     const started = performance.now();
-    const sections = bodySections(view.state.doc, setup, headers, numberStart);
+    const sections = bodySections(view.state.doc, setup, headers, numberStart, lineNumbers);
     const layoutKey = [
       width,
       sections.setups
@@ -448,15 +462,27 @@ class Pager {
       ...fieldDecorations(nodes, positions, (block) => shown[startOf[block]!]!, pagesLaid),
     );
     this.apply(DecorationSet.create(doc, decorations));
+    const geometries = pageGeometries(pagination, {
+      frameOf,
+      page,
+      shown,
+      notes: pageNotes(pagination, marks, noteIn),
+      lineBetween: (block) =>
+        Boolean(sections.setups[sections.sectionOf[block] ?? 0]?.columns?.separator),
+    });
     this.tellPages(
-      pageGeometries(pagination, {
-        frameOf,
-        page,
-        shown,
-        notes: pageNotes(pagination, marks, noteIn),
-        lineBetween: (block) =>
-          Boolean(sections.setups[sections.sectionOf[block] ?? 0]?.columns?.separator),
-      }),
+      sections.lineNumbers.some(Boolean)
+        ? withLineNumbers(geometries, {
+            view,
+            nodes,
+            metrics,
+            pagination,
+            sections,
+            ratio,
+            // Read again: a block drawn anew for its column or its box has a new element.
+            element: blockElements(view, nodes, positions),
+          })
+        : geometries,
     );
     if (count > 0 || !unchanged)
       debugLog('[text-document] layout', {
@@ -495,6 +521,75 @@ class Pager {
     lines.set(line, at);
     return at;
   }
+}
+
+/**
+ * The pages with each numbered line's number (page-layout.md "Line numbers"): the lines read as drawn, once the
+ * layout's spacers and columns are, and counted onto the pages they fall on.
+ */
+function withLineNumbers(
+  pages: readonly PageGeometry[],
+  laid: {
+    readonly view: EditorView;
+    readonly nodes: readonly PmNode[];
+    readonly metrics: readonly BlockMetrics[];
+    readonly pagination: Pagination;
+    readonly sections: BodySections;
+    readonly ratio: number;
+    readonly element: (block: number) => HTMLElement;
+  },
+): PageGeometry[] {
+  const { nodes, pagination, sections } = laid;
+  const first = sections.setups[0]!;
+  const gapsInside = new Map<number, { line: number; gap: number }[]>();
+  const crosses = new Map<number, CrossColumns>();
+  pagination.starts.forEach((start, q) => {
+    if (q > 0 && !start.carried && start.line > 0)
+      gapsInside.set(start.block, [
+        ...(gapsInside.get(start.block) ?? []),
+        { line: start.line, gap: round(start.gap) },
+      ]);
+    for (const cross of start.crosses ?? []) {
+      const inset = sectionInset(
+        first,
+        sections.setups[sections.sectionOf[cross.block] ?? 0]!,
+        true,
+      );
+      crosses.set(cross.block, {
+        shift: inset?.shift ?? 0,
+        step: inset?.columns?.step ?? 1,
+        count: cross.count,
+      });
+    }
+  });
+  const pageTops = pageTopsInBody(pages, first.margins.top * PX_PER_PT);
+  const lines = readDrawnLines({
+    body: laid.view.dom,
+    ratio: laid.ratio,
+    metrics: laid.metrics,
+    element: laid.element,
+    numbered: (block) =>
+      nodes[block]!.type.name === 'paragraph' &&
+      sections.lineNumbers[sections.sectionOf[block] ?? 0] !== undefined,
+    gapsInside,
+    columnOf: columnPlaces(pagination, sections.sectionOf, nodes.length),
+    crosses,
+    pageTops,
+  });
+  const marks = lineNumberMarks({
+    lines,
+    sectionOf: sections.sectionOf,
+    numbering: sections.lineNumbers,
+    pageTops,
+    leftOf: (section, column) => {
+      const setup = sections.setups[section]!;
+      const { gap } = Columns.of(setup);
+      return (setup.margins.left + column * (Columns.width(setup) + gap)) * PX_PER_PT;
+    },
+  });
+  return pages.map((page, index) =>
+    marks[index]?.length ? { ...page, lines: marks[index] } : page,
+  );
 }
 
 // Backspace and Delete beside a spacer inside a paragraph delete the character across it, as across a line's end.

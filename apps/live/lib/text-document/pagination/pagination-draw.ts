@@ -6,6 +6,7 @@ import type { HeaderFooterSlot } from '@livedoc/text-documents';
 import type { Cross, PageFrame, Pagination } from './pagination';
 import type { PageLayout, PageStory, StoryPlace } from './pagination-headers';
 import type { PageNote } from './pagination-notes';
+import type { LineNumberMark } from './pagination-line-numbers';
 import { PAGE_GAP_CLASS } from './pagination-measure';
 
 /** What a box of columns draws inside its paragraph: the room before its first line, and each column's start. */
@@ -34,6 +35,8 @@ export type PageGeometry = {
   readonly count?: number;
   /** The notes its marks bring, drawn at its foot (page-layout.md "Footnotes"); none on a blank page. */
   readonly notes?: readonly PageNote[];
+  /** Its lines' numbers, in its left margin (page-layout.md "Line numbers"); none on a blank page. */
+  readonly lines?: readonly LineNumberMark[];
   readonly rules?: readonly {
     readonly top: number;
     readonly bottom: number;
@@ -214,6 +217,9 @@ export const pagesSaid = (pages: readonly PageGeometry[]): string =>
       (p) =>
         `${p.width}x${p.height}${(p.rules ?? []).map((r) => `|${r.top}-${r.bottom}@${r.xs.join(',')}`).join('')}` +
         `|h${storySaid(p.header)}|f${storySaid(p.footer)}|${p.section}:${p.slot}:${p.top}:${p.bottom}#${p.number}` +
-        (p.notes ?? []).map((n) => `|n${n.number}:${n.key}:${round(n.left)}`).join(''),
+        (p.notes ?? []).map((n) => `|n${n.number}:${n.key}:${round(n.left)}`).join('') +
+        (p.lines ?? [])
+          .map((l) => `|l${l.number}:${round(l.top)}+${round(l.height)}:${round(l.right)}`)
+          .join(''),
     )
     .join(',');

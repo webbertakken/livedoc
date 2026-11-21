@@ -333,7 +333,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         shortcut: 'review-suggested-edits',
       }),
       item('compare-documents', 'Compare documents', 'edit'),
-      item('line-numbers', 'Line numbers', 'edit'),
+      item('line-numbers', 'Line numbers', 'edit', { checkable: 'checkbox', status: 'built' }),
       SEPARATOR,
       item('notification-settings', 'Notification settings', 'participate'),
       item('preferences', 'Preferences', 'edit', {

@@ -415,9 +415,22 @@ for referring to a line.
 - **Show line numbers** (a checkbox); **Continue throughout the document**, **Restart on each page** or **Restart on
   each section**; **Apply to**, **Entire document** or **This section** (dimmed with one section). Each section has its
   own: shown or not, and how it restarts.
+- **The panel** shows the section the caret is in, read again as the caret moves; Apply to starts at Entire document
+  (default). A choice takes effect at once, over the scope Apply to names, one step of the body's undo; there is no
+  Apply button (Google's). The three restarts are dimmed while Show line numbers is off; turned on, a section takes
+  the restart chosen, Continue throughout the document at first (default). Choosing Apply to changes nothing until
+  the next choice (default).
 - **Drawn** in the left margin beside every line of the body, headings and empty paragraphs included, in the muted
-  ink of the ruler's numbers, right-aligned 0.25 in before the text (default); never in headers, footers or notes.
-  Pageless, on a phone and with print layout off none is drawn (Google's).
+  ink of the ruler's numbers at 9 pt, right-aligned 0.25 in before the text area's left edge and centred on the line
+  (default); never in headers, footers or notes. In a section of columns each line's number stands 0.25 in before
+  its own column, a paragraph drawn across columns included (Word's, default). A section break's line and content
+  kept from a file are not numbered and do not count (default).
+- **Counted** over the numbered lines only: Continue throughout the document counts on from the last numbered line
+  before it, Restart on each page from 1 at each page's first numbered line, Restart on each section from 1 at the
+  section's first line (default).
+- Pageless, on a phone and with print layout off none is drawn (Google's).
+- The panel is an Editor's: for a Participant and a Viewer Tools > Line numbers is not there, and the numbers are
+  drawn for everyone.
 - In the file:
   - OOXML: `w:lnNumType` in a section's `w:sectPr` (`w:countBy="1"`, `w:restart` `newPage`, `newSection` or
     `continuous`); one without a `w:countBy` of 1 or more numbers nothing, as Word reads it, and one without
@@ -430,7 +443,8 @@ for referring to a line.
     one section's choice of it, where others differ, is a conversion loss (default). Read back, a section's first
     paragraph says whether it is numbered and restarts.
   - Another count-by than 1 is kept and drawn as every line (default).
-- Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentLineNumbers`.
+- Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentLineNumbers` on a
+  choice that changes a section; logs `[text-document] line numbers` with the scope, shown and restart.
 
 ## Watermark
 

@@ -531,3 +531,15 @@ div.text-document-kept {
 .text-document-footnote::after {
   content: attr(data-number);
 }
+/*
+ * Line numbers (docs/specs/034-text-documents/page-layout.md "Line numbers"): in the ruler's muted ink at 9 pt, each
+ * centred on its line and ending 0.25 in before the text: #5f6368 on white (6.0:1), #9aa0a6 on #1e1f20 (6.3:1).
+ */
+.text-document-line-number {
+  color: light-dark(#5f6368, #9aa0a6);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9pt;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
