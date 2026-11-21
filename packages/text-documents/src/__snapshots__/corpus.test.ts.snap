@@ -1,5 +1,343 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`the corpus > reads google/features-gdocs.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 1,
+        "name": "column-width",
+        "reason": "column-width",
+      },
+      {
+        "count": 1,
+        "name": "link",
+        "reason": "link",
+      },
+    ],
+    "kept": [
+      {
+        "count": 3,
+        "name": "bookmarkStart",
+      },
+      {
+        "count": 3,
+        "name": "bookmarkEnd",
+      },
+      {
+        "count": 2,
+        "name": "br",
+      },
+      {
+        "count": 1,
+        "name": "commentRangeStart",
+      },
+      {
+        "count": 1,
+        "name": "commentRangeEnd",
+      },
+      {
+        "count": 1,
+        "name": "commentReference",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 2,
+    "paragraphs": [
+      [
+        "Title",
+        "",
+        "Features corpus",
+        "bookmarkStart,bookmarkEnd,br",
+      ],
+      [
+        "Normal",
+        "",
+        "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
+        "bookmarkStart,bookmarkEnd",
+      ],
+      [
+        "Heading1",
+        "0",
+        "Heading one",
+        "bookmarkStart,bookmarkEnd",
+      ],
+      [
+        "Normal",
+        "",
+        "A footnote and a comment here.",
+        "note: The note.,commentRangeStart,commentRangeEnd,commentReference",
+      ],
+      [
+        "Normal",
+        "0",
+        "Step one",
+        "",
+      ],
+      [
+        "Normal",
+        "1",
+        "Step one point one",
+        "",
+      ],
+      [
+        "Normal",
+        "0",
+        "Step two",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "Step two, second paragraph",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "Between lists, a link to the bookmark and a bad link.",
+        "",
+      ],
+      [
+        "Normal",
+        "0",
+        "Step three, continued",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "Normal",
+        "",
+        "Two columns of text in a section.",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "Normal",
+        "",
+        "",
+        "",
+      ],
+      [
+        "table",
+        "1x2, 0 header",
+        "A1",
+        "B1",
+      ],
+      [
+        "Normal",
+        "",
+        "After a page break, in blue.
+Second line after a tab.",
+        "br",
+      ],
+      [
+        "section",
+        "next-page",
+        "landscape",
+      ],
+      [
+        "Normal",
+        "",
+        "A landscape section.",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+      "heading1=Heading1",
+      "heading2=Heading2",
+      "heading3=Heading3",
+      "heading4=Heading4",
+      "heading5=Heading5",
+      "heading6=Heading6",
+      "title=Title",
+      "subtitle=Subtitle",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads google/features-gdocs.odt and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 1,
+        "name": "Thumbnails/thumbnail.png",
+        "reason": "thumbnail",
+      },
+      {
+        "count": 1,
+        "name": "link",
+        "reason": "link",
+      },
+    ],
+    "kept": [
+      {
+        "count": 1,
+        "name": "sequence-decls",
+      },
+      {
+        "count": 3,
+        "name": "bookmark",
+      },
+      {
+        "count": 1,
+        "name": "annotation",
+      },
+      {
+        "count": 1,
+        "name": "annotation-end",
+      },
+    ],
+  },
+  "structure": {
+    "format": "odf",
+    "lists": 2,
+    "paragraphs": [
+      [
+        "kept",
+        "sequence-decls",
+      ],
+      [
+        "Title",
+        "",
+        "Features corpus",
+        "bookmark",
+      ],
+      [
+        "Standard",
+        "",
+        "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
+        "bookmark",
+      ],
+      [
+        "Heading_20_1",
+        "0",
+        "Heading one",
+        "bookmark",
+      ],
+      [
+        "Standard",
+        "",
+        "A footnote and a comment here.",
+        "note: The note.,annotation,annotation-end",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step one",
+        "",
+      ],
+      [
+        "Standard",
+        "1",
+        "Step one point one",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step two",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "Step two, second paragraph",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "Between lists, a link to the bookmark and a bad link.",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step three, continued",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "Standard",
+        "",
+        "Two columns of text in a section.",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "Standard",
+        "",
+        "",
+        "",
+      ],
+      [
+        "table",
+        "1x2, 0 header",
+        "A1",
+        "B1",
+      ],
+      [
+        "Standard",
+        "",
+        "After a page break, in blue.
+Second line after a tab.",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "landscape",
+      ],
+      [
+        "Standard",
+        "",
+        "A landscape section.",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+      "normal=normal",
+      "heading1=Heading_20_1",
+      "heading2=Heading_20_2",
+      "heading3=Heading_20_3",
+      "heading4=Heading_20_4",
+      "heading5=Heading_20_5",
+      "heading6=Heading_20_6",
+      "title=Title",
+      "subtitle=Subtitle",
+    ],
+  },
+}
+`;
+
 exports[`the corpus > reads libreoffice/features.docx and writes it back the same 1`] = `
 {
   "report": {

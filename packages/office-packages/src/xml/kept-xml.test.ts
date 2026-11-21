@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { keptXmlOf, keptXmlWithin, serializeXml } from './kept-xml';
+import { keptXmlOf, keptXmlWithin, serializeXml, startTagBindings } from './kept-xml';
 import { childElements, parseXml, type XmlElement } from './xml-tree';
 
 const parse = (xml: string) => {
@@ -59,5 +59,17 @@ describe('serializeXml', () => {
     expect(serializeXml(parsed.root, (e) => e.local === 'drop')).toBe(
       '<a:r xmlns:a="urn:a" k="&quot;"><a:x/>1 &lt; 2</a:r>',
     );
+  });
+});
+
+// standard-mapping.md "Kept content": a start tag kept alone (a region's) needs only the bindings it names itself.
+describe('startTagBindings', () => {
+  it("carries its name's and attributes' prefixes declared above it, none of its children's or its own", () => {
+    const parsed = parse(
+      '<r xmlns="urn:d" xmlns:a="urn:a" xmlns:b="urn:b" xmlns:c="urn:c"><a:x b:k="1" n="2" xml:id="i"><c:z/></a:x><y xmlns:e="urn:e" e:k="1"/></r>',
+    );
+    const [x, y] = childElements(parsed.root) as [XmlElement, XmlElement];
+    expect(startTagBindings(x)).toEqual({ a: 'urn:a', b: 'urn:b' });
+    expect(startTagBindings(y)).toEqual({ '': 'urn:d' });
   });
 });

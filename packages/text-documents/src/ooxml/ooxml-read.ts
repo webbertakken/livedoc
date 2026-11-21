@@ -520,7 +520,16 @@ class OoxmlReader {
           data,
           mediaType: this.pkg.contentTypes.get(name) ?? 'application/octet-stream',
         })),
-      relationships: new Map([...this.pkg.relationships].map(([from, rels]) => [from, byId(rels)])),
+      // By source part, so a package read again (whatever order it lists its parts in) holds them alike.
+      relationships: new Map(
+        [...this.pkg.relationships]
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          // The package's own relationships LiveDoc writes itself (the main part, core and app properties) are not kept.
+          .map(([from, rels]) => [
+            from,
+            byId(from === '' ? rels.filter((r) => !PACKAGE_WRITTEN.has(r.type)) : rels),
+          ]),
+      ),
       // Every written package defaults `rels` and `xml`; the rest by extension, sorted.
       defaults: new Map(
         [...this.pkg.defaults]
@@ -658,13 +667,22 @@ export const byId = (rels: readonly Relationship[]): Relationship[] =>
     (a, b) => idNumber(a.id) - idNumber(b.id) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
   );
 
+/** The package relationships every written file has, written by LiveDoc, never kept. */
+const PACKAGE_WRITTEN: ReadonlySet<string> = new Set([
+  RELATIONSHIP_TYPES.officeDocument,
+  RELATIONSHIP_TYPES.coreProperties,
+  RELATIONSHIP_TYPES.extendedProperties,
+]);
+
 const idNumber = (id: string) => Number(id.match(/(\d+)$/)?.[1] ?? Number.MAX_SAFE_INTEGER);
 
 function withoutWritten(scope: Readonly<Record<string, string>>): Record<string, string> {
-  // Every written part declares LiveDoc's own bindings, so a file's other prefix for one of them is not kept.
+  // Every written part declares LiveDoc's own bindings, so a file's other prefix for one of them is not kept; nor is a
+  // default namespace (Google Docs declares one): every element LiveDoc writes is prefixed, and kept XML carries the
+  // bindings it uses.
   const written = new Set(Object.values(WRITTEN_W_NS));
   return sortedBindings(
-    Object.fromEntries(Object.entries(scope).filter(([, uri]) => !written.has(uri))),
+    Object.fromEntries(Object.entries(scope).filter(([p, uri]) => p !== '' && !written.has(uri))),
   );
 }
 
@@ -701,21 +719,38 @@ class RunReader {
     collect(this.p);
     const stack: { runs: XmlElement[]; instr: string; result: boolean; results: XmlElement[] }[] =
       [];
+    // A field's marks in the order written: one a run as Word writes them, or all in one run as Google Docs does.
+    const marksOf = (run: XmlElement) =>
+      childElements(run).flatMap((c) =>
+        isW(c, 'fldChar')
+          ? [{ char: wVal(c, 'fldCharType'), instr: undefined as XmlElement | undefined }]
+          : isW(c, 'instrText')
+            ? [{ char: undefined, instr: c }]
+            : [],
+      );
+    const add = (runs: XmlElement[], run: XmlElement) => {
+      if (runs.at(-1) !== run) runs.push(run);
+    };
     for (const run of runs) {
-      const char = wVal(childElement(run, W_NS, 'fldChar'), 'fldCharType');
-      const instr = childElement(run, W_NS, 'instrText');
-      for (const open of stack) if (open.result && char !== 'end') open.results.push(run);
-      if (char === 'begin') stack.push({ runs: [run], instr: '', result: false, results: [] });
-      else if (stack.length > 0) {
-        const top = stack.at(-1)!;
+      const marks = marksOf(run);
+      if (!marks.some((m) => m.char === 'end'))
+        for (const open of stack) if (open.result) add(open.results, run);
+      for (const { char, instr } of marks) {
+        if (char === 'begin') {
+          stack.push({ runs: [run], instr: '', result: false, results: [] });
+          continue;
+        }
+        const top = stack.at(-1);
+        if (!top) continue;
         if (instr && !top.result) {
           top.instr += textContent(instr);
-          top.runs.push(run);
+          add(top.runs, run);
         } else if (char === 'separate') {
           top.result = true;
-          top.runs.push(run);
+          add(top.runs, run);
         } else if (char === 'end') {
-          top.runs.push(run);
+          add(top.runs, run);
+          top.results = top.results.filter((r) => !top.runs.includes(r));
           stack.pop();
           const kind = ooxmlFieldKind(top.instr);
           if (UNSAFE_FIELD.test(top.instr)) {

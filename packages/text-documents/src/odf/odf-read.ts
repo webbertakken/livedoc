@@ -7,6 +7,7 @@ import {
   keptXmlOf,
   readOdfMeta,
   serializeXml,
+  startTagBindings,
   type KeptXml,
   type XmlElement,
   type XmlNode,
@@ -609,7 +610,7 @@ class BodyReader {
       type: 'section',
       start: 'continuous',
       setup: compact({ ...setup, columns }),
-      region: { xml: open, ns: keptXmlOf(parsed, e).ns },
+      region: { xml: open, ns: startTagBindings(e) },
     });
     this.container(e);
     this.blocks.push({ type: 'section', start: 'continuous', setup });

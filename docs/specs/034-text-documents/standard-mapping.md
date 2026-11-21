@@ -198,6 +198,10 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`             |
 | Either format, converted | A table's kept table style (`table:template-name`, `w:tblStyle`, `w:tblLook`), each a `table-style` loss                |
 | Either format            | A malformed table repaired on read (short and long rows, spans past an edge), reported `table-repaired`                 |
+| Google Docs files        | A heading gains a bookmark (its link id) and is numbered as an outline list item, level 0                               |
+| Google Docs files        | Empty paragraphs beside a section break move or go, as Google lays sections out                                         |
+| Google Docs `.odt`       | Its fonts embedded (Liberation, `Fonts/`), a layout cache and `manifest.rdf`, kept as entries                           |
+| Google Docs `.docx`      | A field's marks in one run and no result text; no core or app properties, no footnote separators                        |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                                |
 
 ## Limits

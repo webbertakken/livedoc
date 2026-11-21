@@ -76,6 +76,21 @@ describe('page numbers in OpenDocument files', () => {
 });
 
 describe('page numbers in Word files', () => {
+  // Google Docs' export writes a complex field's marks all in one run, with no result.
+  it('reads a complex field written in one run, as Google Docs writes one', async () => {
+    const { document, report } = await read(
+      docx(
+        W_P(
+          `${W_R('Page ')}<w:r><w:fldChar w:fldCharType="begin"/><w:instrText xml:space="preserve">PAGE</w:instrText><w:fldChar w:fldCharType="separate"/><w:fldChar w:fldCharType="end"/></w:r>${W_R(' after')}`,
+        ),
+      ),
+    );
+    const [p] = paragraphs(document);
+    expect(p!.inlines.map((i) => i.type)).toEqual(['run', 'field', 'run']);
+    expect(fieldsOf(p!)).toMatchObject([{ field: 'page-number', text: '' }]);
+    expect(report.kept).toEqual([]);
+  });
+
   it('reads a simple field and a complex one, keeping the result’s formatting', async () => {
     const { document } = await read(
       docx(

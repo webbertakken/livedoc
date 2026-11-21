@@ -74,7 +74,9 @@ export async function readOdfFile(
   ]);
   const kept = [...entries]
     .filter(([name]) => !written.has(name))
-    .map(([name, data]) => ({ name, data, mediaType: mediaTypes.get(name) ?? '' }));
+    .map(([name, data]) => ({ name, data, mediaType: mediaTypes.get(name) ?? '' }))
+    // By name, as they are written back: a package read again holds them in the same order.
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   const document = readOdfParts(
     {
       content: c!,

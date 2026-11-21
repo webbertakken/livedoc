@@ -33,6 +33,23 @@ export function keptXmlOf(parsed: XmlParsed, element: XmlElement): KeptXml {
   return { xml: parsed.source.slice(element.start, element.end), ns };
 }
 
+/**
+ * The bindings declared above an element that its own start tag uses (its name's and its attributes' prefixes), none of
+ * its children's: what its start tag, kept alone as the file wrote it, needs around it.
+ */
+export function startTagBindings(element: XmlElement): XmlBindings {
+  const ns: Record<string, string> = {};
+  const prefixes = [
+    element.prefix,
+    ...element.attributes.flatMap((a) => (a.prefix ? [a.prefix] : [])),
+  ];
+  for (const prefix of prefixes) {
+    const uri = element.scope[prefix];
+    if (prefix !== 'xml' && uri && !(prefix in element.declared)) ns[prefix] = uri;
+  }
+  return ns;
+}
+
 const declaration = (prefix: string, uri: string) =>
   `${prefix ? `xmlns:${prefix}` : 'xmlns'}="${escapeXmlAttribute(uri)}"`;
 

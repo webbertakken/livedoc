@@ -28,7 +28,7 @@ import { liveNoteIds, liveStoryIds, storyFragment } from './live-stories';
 import { CONSTRUCTS } from '../testing/constructs';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
-const corpus = ['libreoffice', 'word'].flatMap((maker) =>
+const corpus = ['libreoffice', 'word', 'google'].flatMap((maker) =>
   readdirSync(join(CORPUS, maker))
     .filter(
       (f) =>
