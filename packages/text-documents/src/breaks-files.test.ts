@@ -7,6 +7,8 @@ import { Paragraph, type Block } from './model/blocks';
 import { PageSetup } from './model/sections';
 import { TextDocument } from './model/text-document';
 import { odfSectionRegion } from './odf/odf-region';
+import { fodt } from './testing/packages';
+import { modelOf } from './testing/compare';
 
 const roundTrip = async (document: TextDocument, type: TextDocumentFileType) => {
   const written = writeTextDocumentFile(document, type);
@@ -43,4 +45,24 @@ describe('breaks in files', () => {
       expect(sections[1]!.setup.orientation).toBe('landscape');
     },
   );
+});
+
+// page-layout.md "Breaks": a region's start tag is kept with the bindings it names itself, not those of what it holds,
+// so a region holding a table (whose cells a suite writes with `office:` values) reads back the same once written.
+describe('a region holding a table', () => {
+  it('keeps only its own start tag’s bindings, and reads back the same', async () => {
+    const read = await readTextDocumentFile(
+      fodt(
+        '<text:section text:name="S1"><table:table><table:table-column/><table:table-row><table:table-cell office:value-type="string"><text:p>cell</text:p></table:table-cell></table:table-row></table:table></text:section><text:p>after</text:p>',
+      ),
+    );
+    if (!read.ok) throw new Error(read.rejection);
+    const region = read.document.body.find((b) => b.type === 'section' && b.region);
+    expect(region?.type === 'section' && region.region?.ns).toEqual({
+      text: 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+    });
+    const written = writeTextDocumentFile(read.document, 'fodt');
+    const again = written.ok ? await readTextDocumentFile(written.bytes) : undefined;
+    expect(again?.ok && modelOf(again.document)).toEqual(modelOf(read.document));
+  });
 });

@@ -91,7 +91,7 @@ export function OfficeSplitToggle({
             data-office-control={splitChevronId(id)}
             tabIndex={-1}
             onClick={() => (open !== undefined ? setOpen(undefined) : openGrid())}
-            className={`${chevronClassName} w-3.5`}
+            className={`${chevronClassName} w-6`}
           >
             <ChevronDownIcon size={12} />
           </button>

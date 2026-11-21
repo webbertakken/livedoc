@@ -26,6 +26,7 @@ import {
 import { writeSource } from './live-source';
 import { StoryWriter, type LiveHeaders } from './live-stories';
 import { BODY_FRAGMENT } from './live-root';
+import { tableElement } from './live-tables';
 
 /** A value as the state holds it: plain JSON, undefined fields left out. */
 const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -115,6 +116,8 @@ function blockNode(block: Block, stories: StoryWriter): Y.XmlElement {
       setAttributes(element, { name: block.name, xml: block.xml });
       return element;
     }
+    case 'table':
+      return tableElement(block, (b) => blockNode(b, stories), setAttributes);
   }
 }
 

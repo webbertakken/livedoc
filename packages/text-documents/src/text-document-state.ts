@@ -17,6 +17,7 @@ import { DOCUMENT_MAP, LISTS_MAP, STYLES_MAP } from './live/live-names';
 import type { Section } from './model/sections';
 import type { Watermark } from './model/watermark';
 import type { ListDefinition } from './model/lists';
+import { paragraphElementsOf } from './live/live-tables';
 import {
   addLiveStyle,
   setLiveList,
@@ -62,12 +63,9 @@ const SEED = Uint8Array.of(
 
 const PARAGRAPH = 'paragraph';
 
+// Every paragraph in reading order, those in tables' cells included (tables.md "In the editor").
 const paragraphsOf = (fragment: Y.XmlFragment): Body =>
-  fragment
-    .toArray()
-    .flatMap((node) =>
-      node instanceof Y.XmlElement && node.nodeName === PARAGRAPH ? [{ text: textOf(node) }] : [],
-    );
+  paragraphElementsOf(fragment).map((node) => ({ text: textOf(node) }));
 
 function textOf(element: Y.XmlElement): string {
   return element

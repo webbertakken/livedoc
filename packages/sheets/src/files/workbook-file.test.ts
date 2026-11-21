@@ -30,7 +30,7 @@ describe('workbookFileOf', () => {
       { rows: 5, cols: 7 },
     );
     const engine = new Workbook({ sheets, locale: 'en-GB' });
-    const cells = workbookFileOf(engine, sheets).sheets[0]!.cells;
+    const cells = workbookFileOf(engine, sheets, 'en-GB').sheets[0]!.cells;
     expect(cells.filter((c) => c.r < 2 && c.c < 2)).toEqual([
       {
         r: 0,
@@ -60,7 +60,7 @@ describe('workbookFileOf', () => {
       { rows: 5, cols: 6 },
     );
     const engine = new Workbook({ sheets, locale: 'en-GB' });
-    expect(workbookFileOf(engine, sheets)).toEqual({
+    expect(workbookFileOf(engine, sheets, 'en-GB')).toEqual({
       sheets: [
         {
           name: 'Budget',
@@ -82,7 +82,7 @@ describe('workbookFileOf', () => {
 
   it('holds a spilled array whole, and no value for a formula or a spilled cell that shows empty', () => {
     const sheets = makeSheets({ S: { A1: '={1,2,C9}', B2: '=C9' } }, { rows: 10, cols: 4 });
-    const file = workbookFileOf(new Workbook({ sheets, locale: 'en-GB' }), sheets);
+    const file = workbookFileOf(new Workbook({ sheets, locale: 'en-GB' }), sheets, 'en-GB');
     expect(file.sheets[0]!.cells).toEqual([
       { r: 0, c: 0, formula: '={1,2,C9}', spans: { rows: 1, cols: 3 }, value: { k: 'n', v: 1 } },
       { r: 0, c: 1, value: { k: 'n', v: 2 } },
@@ -94,7 +94,11 @@ describe('workbookFileOf', () => {
     const [sheet] = makeSheets({ S: { A1: '1' } }, { rows: 2, cols: 2 }) as [Sheet];
     sheet.cells.set(cellKey(sheet.layout.rows[1]!, sheet.layout.cols[0]!), { format: { b: true } });
     sheet.cells.set(cellKey('gone', sheet.layout.cols[0]!), { input: { n: 3 } });
-    const file = workbookFileOf(new Workbook({ sheets: [sheet], locale: 'en-GB' }), [sheet]);
+    const file = workbookFileOf(
+      new Workbook({ sheets: [sheet], locale: 'en-GB' }),
+      [sheet],
+      'en-GB',
+    );
     expect(file.sheets[0]!.cells).toEqual([{ r: 0, c: 0, value: { k: 'n', v: 1 } }]);
   });
 });
@@ -118,6 +122,7 @@ describe('sheetsFromFile', () => {
           },
         ],
       },
+      'en-GB',
       seeded(),
     );
     expect(made.sheets[0]!.cells.map((c) => c.i)).toEqual([
@@ -147,7 +152,7 @@ describe('sheetsFromFile', () => {
 
   // spreadsheet.md "Making a spreadsheet": a sheet opened from a file is at least a new sheet's 1,000 by 26.
   it('makes each sheet at least a new sheet grid, its cells by id and its formulas compiled', () => {
-    const made = sheetsFromFile(file, seeded());
+    const made = sheetsFromFile(file, 'en-GB', seeded());
     const [budget, costs] = made.sheets;
     expect(budget!.title).toBe('Budget');
     expect(budget!.layout.rows).toHaveLength(1000);
@@ -172,7 +177,7 @@ describe('sheetsFromFile', () => {
 
   // standard-mapping.md "Formulas in the file's own syntax": an unreadable formula keeps its value, and says so.
   it('keeps the value of a formula it cannot read and names the loss', () => {
-    const made = sheetsFromFile(file, seeded());
+    const made = sheetsFromFile(file, 'en-GB', seeded());
     const budget = made.sheets[0]!;
     const cell = budget.cells.find(
       (x) => x.r === budget.layout.rows[2] && x.c === budget.layout.cols[0],
@@ -182,7 +187,7 @@ describe('sheetsFromFile', () => {
   });
 
   it('drops a lone error value, which no input holds', () => {
-    const budget = sheetsFromFile(file, seeded()).sheets[0]!;
+    const budget = sheetsFromFile(file, 'en-GB', seeded()).sheets[0]!;
     expect(
       budget.cells.some((x) => x.r === budget.layout.rows[2] && x.c === budget.layout.cols[1]),
     ).toBe(false);
@@ -204,6 +209,7 @@ describe('sheetsFromFile', () => {
           { name: 'Gone', rows: 1, cols: 1, cells: [] },
         ],
       },
+      'en-GB',
       seeded(),
     );
     expect(made.sheets.map((s) => s.title)).toEqual(['A', 'a 2', 'Sheet1']);
@@ -223,7 +229,7 @@ describe('sheetsFromFile', () => {
 
   it('uses Math.random when no source is given', () => {
     expect(
-      sheetsFromFile({ sheets: [{ name: 'S', rows: 1, cols: 1, cells: [] }] }).sheets,
+      sheetsFromFile({ sheets: [{ name: 'S', rows: 1, cols: 1, cells: [] }] }, 'en-GB').sheets,
     ).toHaveLength(1);
   });
 });

@@ -13,6 +13,10 @@ uploads, `fields` and `q`) and the OAuth token and revoke endpoints
   restore, delete forever, create a folder LiveDoc cannot see, edit
   contents); `fail` injects 401 / 403 / 404 / 429 / 5xx.
 - `@livedoc/fake-google/server` serves it over HTTP for the e2e stack.
+- Uploads keep their bytes. An upload whose metadata names a Google type (a Google
+  Sheet) is converted: `files.export` turns it into another format through the
+  `convert` option the test gives, with the locale and time zone the Sheets API's
+  `updateSpreadsheetProperties` set (the sheets oracle, `packages/sheets/oracle/`).
 
 It models `drive.file`: the app sees only files it created or was given
 (Open with, the Picker). Where Google's behaviour is not yet verified

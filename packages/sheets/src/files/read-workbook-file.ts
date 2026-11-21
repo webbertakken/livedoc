@@ -10,10 +10,16 @@ import { readXlsx } from './xlsx-read';
 export type WorkbookFileRead =
   (FileRead & { ok: true; format: WorkbookFormat }) | Exclude<FileRead, { ok: true }>;
 
-/** A `.ods`, `.fods`, `.xlsx` or `.xlsm` file's sheets with the format it is in, or the package's named rejection. */
-export async function readWorkbookFile(bytes: Uint8Array<ArrayBuffer>): Promise<WorkbookFileRead> {
+/**
+ * A `.ods`, `.fods`, `.xlsx` or `.xlsm` file's sheets with the format it is in, or the package's named rejection;
+ * `locale` the workbook's it opens into, for the formats a file leaves to the reader's locale.
+ */
+export async function readWorkbookFile(
+  bytes: Uint8Array<ArrayBuffer>,
+  locale?: string,
+): Promise<WorkbookFileRead> {
   const kind = packageKind(bytes);
-  const read = kind === 'ooxml' ? await readXlsx(bytes) : await readOds(bytes);
+  const read = kind === 'ooxml' ? await readXlsx(bytes, locale) : await readOds(bytes);
   if (!read.ok) return read;
   const format: WorkbookFormat = kind === 'ooxml' ? 'xlsx' : kind === 'flat' ? 'fods' : 'ods';
   return { ...read, format };

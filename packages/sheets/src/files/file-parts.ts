@@ -80,7 +80,7 @@ export function fileParts(sheets: readonly SheetFromFile[]): FileParts {
       if (inGrid && bytes + size <= FILE_CREATE_BYTES_MAX) {
         seeded.push(cell);
         bytes += size;
-      } else rest.push({ r: cell.r, c: cell.c, i: cell.i });
+      } else rest.push(cell);
     }
     seeds.push({ id: sheet.id, title: sheet.title, layout, cells: seeded });
     seededUnits += seedRows.length + seedCols.length + seeded.length;

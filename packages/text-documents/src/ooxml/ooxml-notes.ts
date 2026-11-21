@@ -18,6 +18,7 @@ import {
 } from '@livedoc/office-packages';
 import type { Block, Note, Paragraph } from '../model/blocks';
 import type { TextProps } from '../model/props';
+import type { Table } from '../model/tables';
 import type { OoxmlFootnotesSource } from '../model/text-document';
 import type { ReportBuilder } from '../report';
 import type { RelationshipList } from './ooxml-relationships';
@@ -53,6 +54,8 @@ export type FootnotesSource = {
   readingNote: boolean;
   paragraph(p: XmlElement, endsWith: undefined): Paragraph;
   kept(parsed: XmlParsed, e: XmlElement): KeptXml;
+  /** The blocks an element holds (paragraphs, tables, kept elements), read in the current part. */
+  blocksOf(parent: XmlElement): Block[];
 };
 
 /** The footnotes part, read once, each footnote a reference names read as a note. */
@@ -74,15 +77,7 @@ export class FootnotesReader {
     const outer = source.part;
     source.part = { parsed: part.parsed, rels: source.pkg.relationships.get(part.name) ?? [] };
     source.readingNote = true;
-    const blocks: Block[] = [];
-    for (const e of childElements(footnote)) {
-      if (isW(e, 'p')) blocks.push(source.paragraph(e, undefined));
-      else if (isW(e, 'proofErr')) source.report.drop('layout-hint', e.local);
-      else {
-        blocks.push({ type: 'kept', name: e.local, xml: source.kept(part.parsed, e) });
-        source.report.keep(e.local);
-      }
-    }
+    const blocks = source.blocksOf(footnote);
     source.readingNote = false;
     source.part = outer;
     this.#read.add(id);
@@ -127,6 +122,7 @@ export type FootnotesHost = {
   partRels: RelationshipList;
   paragraphXml(p: Paragraph, ends: undefined, lead?: string): string;
   kept(xml: KeptXml): string;
+  tableXml(table: Table): string;
 };
 
 const declarations = (ns: Readonly<Record<string, string>>) =>
@@ -153,7 +149,8 @@ export function footnotesPartXml(
 ): string {
   const outer = host.partRels;
   host.partRels = rels;
-  const out: string[] = kept?.kept.length ? kept.kept.map((k) => host.kept(k.xml)) : SEPARATORS;
+  // A file's part keeps what it had (Google Docs writes no separators); a new document gets Word's separators.
+  const out: string[] = kept ? kept.kept.map((k) => host.kept(k.xml)) : SEPARATORS;
   for (const [note, id] of ids) {
     const led = note.blocks[0]?.type === 'paragraph';
     const blocks = note.blocks.map((b, i) =>
@@ -161,7 +158,9 @@ export function footnotesPartXml(
         ? host.paragraphXml(b, undefined, i === 0 ? FOOTNOTE_REF_RUN : undefined)
         : b.type === 'kept'
           ? host.kept(b.xml)
-          : '',
+          : b.type === 'table'
+            ? host.tableXml(b)
+            : '',
     );
     const content = led ? blocks.join('') : `<w:p>${FOOTNOTE_REF_RUN}</w:p>${blocks.join('')}`;
     out.push(`<w:footnote w:id="${id}">${content}</w:footnote>`);

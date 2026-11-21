@@ -1,9 +1,10 @@
 // The body's blocks (docs/specs/034-text-documents/standard-mapping.md "The model"): paragraphs of runs and kept
-// inlines, section breaks, and kept blocks.
+// inlines, tables, section breaks, and kept blocks.
 import type { KeptXml } from '@livedoc/office-packages';
 import type { ListPlace } from './lists';
 import type { KeptProperties, ParagraphProps, TextProps } from './props';
 import type { Section } from './sections';
+import type { Table } from './tables';
 
 /** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
 export type Run = {
@@ -80,10 +81,10 @@ export type SectionBreak = {
   readonly region?: KeptXml;
 } & Section;
 
-/** A body-level element the model does not map (a table until tables are built, a table of contents). */
+/** A body-level element the model does not map (a table of contents, a table past the limits). */
 export type KeptBlock = { readonly type: 'kept'; readonly name: string; readonly xml: KeptXml };
 
-export type Block = Paragraph | SectionBreak | KeptBlock;
+export type Block = Paragraph | Table | SectionBreak | KeptBlock;
 
 export const Paragraph = {
   of: (text: string, style: string): Paragraph => ({

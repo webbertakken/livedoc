@@ -68,7 +68,8 @@ function dashOf(style: string): BorderDash | null {
   return style.includes('dash') ? 'dashed' : 'solid';
 }
 
-function borderLine(
+/** One `fo:border` value (`<width> <style> <colour>` in any order) as a line, its padding from `padding`. */
+export function borderLine(
   value: string | undefined,
   padding: string | undefined,
 ): BorderLine | undefined {
@@ -261,13 +262,17 @@ const ALIGN_OUT: Record<NonNullable<ParagraphProps['align']>, string> = {
 
 const ODF_DASH: Record<BorderDash, string> = { solid: 'solid', dotted: 'dotted', dashed: 'dashed' };
 
+/** A line as one `fo:border` value. */
+export const borderValue = (line: BorderLine): string =>
+  `${ptToOdf(line.width)} ${ODF_DASH[line.dash]} ${line.color}`;
+
 // Every side once any is set, `none` where absent, so a paragraph's borders replace its style's whole.
 function bordersXml(borders: ParagraphBorders | undefined): string {
   if (!borders) return '';
   return ODF_SIDES.map((side) => {
     const line = borders[side];
     return line
-      ? attr(`fo:border-${side}`, `${ptToOdf(line.width)} ${ODF_DASH[line.dash]} ${line.color}`) +
+      ? attr(`fo:border-${side}`, borderValue(line)) +
           attr(`fo:padding-${side}`, ptToOdf(line.space))
       : attr(`fo:border-${side}`, 'none');
   }).join('');

@@ -17,7 +17,8 @@ The corpus lives in `packages/sheets/oracle/` ([its README](../../packages/sheet
    answer as `expect` with `cite` (the help page's address and what it says); never type an answer without a cite.
 9. A Google-only function (ODF name S5, written `ORG.LIVEDOC.`) is `#NAME?` in LibreOffice: give each of its cases
    `expect` and `cite` from its help page, and `differs.libreoffice` saying so.
-10. Where Google's answers exist (`oracle/answers/google/`), they win; run `oracle:google` when its downloads are new.
+10. Run `pnpm --filter @livedoc/sheets oracle:google` (same `ORACLE_CATEGORY`); Google's answers, where they exist, win.
+    It needs the token `oracle:google:consent` saves once; a case its two exports answer differently is named, not kept.
 11. Run `pnpm --filter @livedoc/sheets exec vitest run src/oracle --silent=false` and read `[sheets oracle]` lines.
 12. Fix the engine until the category passes; never loosen a case's `tol` past one in a million, and say why in `note`.
 13. Mark the function **built** in `formulas.md`'s catalogue only once its cases pass.

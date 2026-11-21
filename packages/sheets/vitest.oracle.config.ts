@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// Making the oracle corpus' answers (oracle/make-answers.oracle.ts): it needs LibreOffice, or Google's downloads, so
+// Making the oracle corpus' answers (oracle/make-answers.oracle.ts): it needs LibreOffice, or the oracle's Drive token, so
 // it runs by hand, never in the unit run (docs/specs/029-sheets/formulas.md "The oracle").
 export default defineConfig({
   test: {

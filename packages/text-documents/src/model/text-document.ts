@@ -7,6 +7,7 @@ import type {
   XmlBindings,
 } from '@livedoc/office-packages';
 import { Paragraph, type Block } from './blocks';
+import { Blocks } from './tables';
 import type { ListDefinition } from './lists';
 import { PageSetup, type PaperName, type Section } from './sections';
 import { Styles, type Style, type StyleDefaults } from './styles';
@@ -116,8 +117,8 @@ export const TextDocument = {
       body: (texts.length > 0 ? texts : ['']).map((t) => Paragraph.of(t, normal)),
     };
   },
-  paragraphs: (document: TextDocument) =>
-    document.body.filter((b): b is Paragraph => b.type === 'paragraph'),
+  /** Every paragraph of the body in reading order, those in table cells included. */
+  paragraphs: (document: TextDocument): Paragraph[] => Blocks.paragraphs(document.body),
   /** Each paragraph's characters, in order. */
   paragraphTexts: (document: TextDocument): string[] =>
     TextDocument.paragraphs(document).map(Paragraph.text),

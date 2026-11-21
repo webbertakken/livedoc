@@ -39,3 +39,31 @@ describe.each([
       expect(contrastRatio(t.focus!, t[ground]!), `focus on ${ground}`).toBeGreaterThanOrEqual(3);
   });
 });
+
+const TEXT_DOCUMENT_CSS = readFileSync(
+  fileURLToPath(new URL('./text-document.css', import.meta.url)),
+  'utf8',
+);
+
+// Webber's ruling on D2 (office-shell.md "The look"): look C, and "in dark mode the paper should be dark as well".
+describe('look C around the page', () => {
+  const paper = TEXT_DOCUMENT_CSS.match(
+    /\.text-document-sheet,[\s\S]*?background: var\(--page-colour, light-dark\((#[0-9a-f]{6}), (#[0-9a-f]{6})\)\)/,
+  );
+  const dark = tokens('.dark .office-shell');
+
+  it('keeps the paper dark in the dark scheme, its ink readable and the paper apart from the ground', () => {
+    const [, light, darkPaper] = paper!;
+    expect(light).toBe('#ffffff');
+    expect(contrastRatio(darkPaper!, '#000000')).toBeLessThan(1.5);
+    expect(contrastRatio('#e3e3e3', darkPaper!)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(darkPaper!, dark.ground!)).toBeGreaterThan(1.1);
+  });
+
+  it('ships no Google font or artwork in the shell', () => {
+    for (const css of [CSS, TEXT_DOCUMENT_CSS])
+      expect(css).not.toMatch(
+        /Google Sans|Product Sans|gstatic|googleusercontent|fonts\.googleapis/,
+      );
+  });
+});

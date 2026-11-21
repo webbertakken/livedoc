@@ -52,7 +52,9 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 
 - **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, its watermark
   ([Watermark](page-layout.md#watermark)) and its kept parts.
-- **Body**: blocks in order, each a **paragraph**, a **section break** or a **kept block**.
+- **Body**: blocks in order, each a **paragraph**, a **table**, a **section break** or a **kept block**.
+- **`Table`**: column widths, rows of cells with their spans, header rows, alignment and indent; each cell holds blocks
+  as the body does ([Tables](tables.md#the-model)).
 - **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
   and inlines: **runs** (characters with direct text formatting and an optional link), **fields** (a page number or
   the page count, with the formatting of a run and the text last drawn), **notes** (a footnote's mark with its
@@ -194,6 +196,12 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | OOXML to ODF             | A continuous section's start at (no page of its own to number), a `page-number-start` loss                              |
 | Either format to ODF     | Restart on each page is the whole document's: a section differing from the first numbered, a `line-number-restart` loss |
 | Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`             |
+| Either format, converted | A table's kept table style (`table:template-name`, `w:tblStyle`, `w:tblLook`), each a `table-style` loss                |
+| Either format            | A malformed table repaired on read (short and long rows, spans past an edge), reported `table-repaired`                 |
+| Google Docs files        | A heading gains a bookmark (its link id) and is numbered as an outline list item, level 0                               |
+| Google Docs files        | Empty paragraphs beside a section break move or go, as Google lays sections out                                         |
+| Google Docs `.odt`       | Its fonts embedded (Liberation, `Fonts/`), a layout cache and `manifest.rdf`, kept as entries                           |
+| Google Docs `.docx`      | A field's marks in one run and no result text; no core or app properties, no footnote separators                        |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                                |
 
 ## Limits

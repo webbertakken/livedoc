@@ -15,14 +15,20 @@ import {
   DOCUMENT_MAP,
   FIELD,
   FOOTNOTE,
+  KEPT_BLOCK,
   KEPT_INLINE,
+  TABLE,
+  TABLE_CELL,
+  TABLE_HEADER,
+  TABLE_PARTS,
+  TABLE_ROW,
   TEXT_PROPERTY_MARKS,
 } from './live-names';
 import { liveNoteIds, liveStoryIds, storyFragment } from './live-stories';
 import { CONSTRUCTS } from '../testing/constructs';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
-const corpus = ['libreoffice', 'word'].flatMap((maker) =>
+const corpus = ['libreoffice', 'word', 'google'].flatMap((maker) =>
   readdirSync(join(CORPUS, maker))
     .filter(
       (f) =>
@@ -183,7 +189,8 @@ describe('the live layout', () => {
       for (const child of node.toArray()) walk(child as Y.XmlElement);
     };
     walk(TextDocumentState.body(doc));
-    for (const name of names) expect([...BODY_BLOCKS, KEPT_INLINE, FOOTNOTE]).toContain(name);
+    for (const name of names)
+      expect([...BODY_BLOCKS, ...TABLE_PARTS, KEPT_INLINE, FOOTNOTE]).toContain(name);
     expect(names).toContain('paragraph');
     expect([...marks].some((m) => (TEXT_PROPERTY_MARKS as readonly string[]).includes(m))).toBe(
       true,
@@ -220,6 +227,67 @@ describe('the live layout', () => {
     );
     expect(texts).toEqual([['The source.'], ['Bold, and a link', 'A second paragraph.']]);
     expect(textDocumentDigest(doc).searchText).toContain('A second paragraph.');
+  });
+
+  // tables.md "In the editor": a table's rows of cells as elements, header rows' cells as header cells, each cell's
+  // blocks as the body's; its notes' marks counted in reading order, its text searched.
+  it.each(['odf', 'ooxml'] as const)('lays a table out as rows of cells (%s)', (format) => {
+    const document = CONSTRUCTS.tables!(format);
+    expect(wholeOf(live(document))).toBe(wholeOf(document));
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+    const table = TextDocumentState.body(doc).get(1) as Y.XmlElement;
+    expect(table.nodeName).toBe(TABLE);
+    const rows = table.toArray() as Y.XmlElement[];
+    expect(rows.map((r) => r.nodeName)).toEqual([TABLE_ROW, TABLE_ROW, TABLE_ROW]);
+    const cells = rows.map((r) => (r.toArray() as Y.XmlElement[]).map((c) => c.nodeName));
+    expect(cells).toEqual([
+      [TABLE_HEADER, TABLE_HEADER, TABLE_HEADER],
+      [TABLE_CELL, TABLE_CELL],
+      [TABLE_CELL, TABLE_CELL],
+    ]);
+    const across = (rows[1]!.toArray() as Y.XmlElement[])[0]!;
+    expect([across.getAttribute('colspan'), across.getAttribute('colwidth')]).toEqual([
+      2,
+      [144, 108],
+    ]);
+    expect(liveNoteIds(doc)).toHaveLength(1);
+    const digest = textDocumentDigest(doc);
+    expect(digest.searchText).toContain('Across two');
+    expect(digest.searchText).toContain('n4');
+    expect(digest.searchText).toContain('In a cell.');
+  });
+
+  it('makes a table merged edits left uneven whole, drops one with no rows, and gives a column without a width one', () => {
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(CONSTRUCTS.tables!('odf'))]);
+    const body = TextDocumentState.body(doc);
+    const table = body.get(1) as Y.XmlElement;
+    const rows = table.toArray() as Y.XmlElement[];
+    doc.transact(() => {
+      (rows[0]!.get(0) as Y.XmlElement).removeAttribute('colwidth');
+      rows[0]!.delete(2, 1);
+      body.insert(2, [new Y.XmlElement(TABLE)]);
+    });
+    const read = TextDocumentState.document(doc, 'odf');
+    const held = read.body.filter((b) => b.type === 'table');
+    expect(held).toHaveLength(1);
+    const only = held[0]!;
+    // The first row's widths stand; a column it lost is widened back by the average (tables.md "In the formats").
+    expect(only.type === 'table' && only.columns).toEqual([72, 108, 90]);
+    expect(only.type === 'table' && only.rows[0]!.cells).toHaveLength(3);
+  });
+
+  it('reads a table held whole in a kept block, as documents imported while tables were not drawn hold one', () => {
+    const document = CONSTRUCTS.tables!('odf');
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+    const body = TextDocumentState.body(doc);
+    const held = new Y.XmlElement(KEPT_BLOCK);
+    held.setAttribute('name', 'table');
+    held.setAttribute('table', JSON.parse(JSON.stringify(document.body[1])) as string);
+    doc.transact(() => {
+      body.delete(1, 1);
+      body.insert(1, [held]);
+    });
+    expect(wholeOf(TextDocumentState.document(doc, 'odf'))).toBe(wholeOf(document));
   });
 
   // page-layout.md "Line numbers": each section's, the first's in the document map, the others' on their breaks.

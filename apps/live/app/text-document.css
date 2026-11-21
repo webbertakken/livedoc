@@ -92,7 +92,7 @@ div.text-document-kept {
 }
 .ProseMirror-selectednode.text-document-kept,
 .ProseMirror-selectednode.text-document-section-break {
-  outline: 2px solid light-dark(#1a73e8, #a8c7fa);
+  outline: 2px solid light-dark(#0284c7, #38bdf8);
 }
 .text-document-kept-hidden {
   display: none;
@@ -206,15 +206,15 @@ div.text-document-kept {
 }
 /*
  * The ruler (docs/specs/034-text-documents/editing-surface.md "The ruler"): the paper's colour between the margins,
- * grey ends, marks in the muted ink (#5f6368 on white 6.3:1, #9aa0a6 on #1e1f20 6.4:1), and Google's blue markers
- * (#1a73e8 on white 4.5:1, #a8c7fa on #1e1f20 9.6:1), each a 24 px target with a focus ring.
+ * slate ends, marks in slate ink (#475569 on white 7.6:1, #cbd5e1 on #1e1f20 11.1:1), and the brand's sky markers
+ * (#0284c7 on white 4.1:1, #38bdf8 on #1e1f20 7.7:1; 3:1 is a marker's), each a 24 px target with a focus ring.
  */
 .text-document-ruler {
   color-scheme: light;
   --ruler-paper: light-dark(#ffffff, #1e1f20);
-  --ruler-margin: light-dark(#e8eaed, #2d2f31);
-  --ruler-ink: light-dark(#5f6368, #9aa0a6);
-  --ruler-marker: light-dark(#1a73e8, #a8c7fa);
+  --ruler-margin: light-dark(#e2e8f0, #334155);
+  --ruler-ink: light-dark(#475569, #cbd5e1);
+  --ruler-marker: light-dark(#0284c7, #38bdf8);
 }
 .dark .text-document-ruler {
   color-scheme: dark;
@@ -336,8 +336,8 @@ div.text-document-kept {
   white-space: nowrap;
   padding: 3px 6px;
   border-radius: 4px;
-  background: light-dark(#3c4043, #e3e3e3);
-  color: light-dark(#ffffff, #202124);
+  background: light-dark(#334155, #e2e8f0);
+  color: light-dark(#ffffff, #0f172a);
   font:
     12px/1.3 system-ui,
     sans-serif;
@@ -402,7 +402,7 @@ div.text-document-kept {
   caret-color: transparent;
 }
 .text-document-stretch {
-  background: light-dark(#c3d7f7, #3b5b8c);
+  background: light-dark(#bae6fd, #0c4a6e);
 }
 .text-document-stretch-caret {
   display: inline-block;
@@ -542,4 +542,47 @@ div.text-document-kept {
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+/*
+ * Tables (docs/specs/034-text-documents/tables.md "In the editor"): at their columns' widths, cells' lines collapsed
+ * into one; a side with no line shows a faint dashed guide on screen (#c4c7c5 / #5f6368), never printed; a cell's
+ * writing starts at its top unless it says otherwise. Selected cells are tinted as selected text is.
+ */
+.text-document-table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-block: 0;
+}
+.text-document-table td,
+.text-document-table th {
+  vertical-align: top;
+  font-weight: inherit;
+  text-align: inherit;
+  padding: 0;
+  overflow-wrap: anywhere;
+  --text-document-table-guide: 1px dashed light-dark(#c4c7c5, #5f6368);
+}
+.text-document-table [data-guides*='t'] {
+  border-top: var(--text-document-table-guide);
+}
+.text-document-table [data-guides*='b'] {
+  border-bottom: var(--text-document-table-guide);
+}
+.text-document-table [data-guides*='l'] {
+  border-left: var(--text-document-table-guide);
+}
+.text-document-table [data-guides*='r'] {
+  border-right: var(--text-document-table-guide);
+}
+@media print {
+  .text-document-table td,
+  .text-document-table th {
+    --text-document-table-guide: none;
+  }
+}
+.text-document-table .selectedCell {
+  background-image: linear-gradient(
+    light-dark(rgb(26 115 232 / 0.18), rgb(138 180 248 / 0.24)),
+    light-dark(rgb(26 115 232 / 0.18), rgb(138 180 248 / 0.24))
+  );
 }

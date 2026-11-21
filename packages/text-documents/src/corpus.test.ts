@@ -3,11 +3,13 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import { TextDocument } from './model/text-document';
+import { Blocks } from './model/tables';
+import { Paragraph } from './model/blocks';
 import { wholeOf } from './testing/compare';
 
 const CORPUS = join(import.meta.dirname, '..', 'corpus');
 
-const files = ['libreoffice', 'word'].flatMap((maker) =>
+const files = ['libreoffice', 'word', 'google'].flatMap((maker) =>
   readdirSync(join(CORPUS, maker))
     .filter(
       (f) =>
@@ -38,9 +40,15 @@ function structure(document: TextDocument) {
               )
               .join(','),
           ]
-        : b.type === 'kept'
-          ? ['kept', b.name]
-          : ['section', b.start, b.setup.orientation],
+        : b.type === 'table'
+          ? [
+              'table',
+              `${b.rows.length}x${b.columns.length}, ${b.headerRows} header`,
+              ...Blocks.paragraphs([b]).map(Paragraph.text),
+            ]
+          : b.type === 'kept'
+            ? ['kept', b.name]
+            : ['section', b.start, b.setup.orientation],
     ),
     roles: document.styles.filter((s) => s.role).map((s) => `${s.role}=${s.id}`),
     lists: Object.keys(document.lists).length,

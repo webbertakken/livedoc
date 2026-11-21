@@ -28,7 +28,7 @@ export function OfficeZoomField({ zoom, tabIndex }: { zoom: OfficeZoom; tabIndex
         if (next !== zoom.value) zoom.onChange(next);
       }}
       tabIndex={tabIndex}
-      inputClass="w-12 pl-2"
+      inputClass="h-7 w-12 pl-2"
     />
   );
 }

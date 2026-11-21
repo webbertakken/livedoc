@@ -26,6 +26,7 @@ import {
 import { DocumentFonts } from '@livedoc/document';
 import { cssText, paragraphDeclarations, textDeclarations } from './text-document-style-sheet';
 import { paperFill, paperInk } from './text-document-paper';
+import { tableNodeSpecs } from './text-document-table-dom';
 
 const fieldText = (text: unknown): string => (typeof text === 'string' ? text : '');
 
@@ -174,6 +175,8 @@ const nodes: Record<string, NodeSpec> = {
     attrs: nullAttributes(KEPT_BLOCK_ATTRIBUTES),
     toDOM: (node) => keptPlaceholder('div', (node.attrs as { name: unknown }).name),
   },
+  // A table (tables.md "In the editor"), its rows and cells.
+  ...tableNodeSpecs(),
   [KEPT_INLINE]: {
     group: 'inline',
     inline: true,

@@ -1,8 +1,8 @@
 # Standard mapping
 
 **Status: partly built.** Both formats read and write sheets, cells, formulas and arrays (`@livedoc/sheets/files`),
-within Excel's bounds, and a workbook converts between them; styles, number formats, unknown content and the other
-rows of the table below are ahead.
+within Excel's bounds, and a workbook converts between them; both carry number formats; other styles, unknown
+content and the other rows of the table below are ahead.
 
 How a [spreadsheet](spreadsheet.md)'s workbook maps onto its two native file formats (C1, ruled 2026-11-18: both
 native; a file keeps the format it arrived in). Research: [The standard](../../research/sheets-open-standard/standard.md).
@@ -107,6 +107,51 @@ The table is the contract the readers and writers are tested against, one test p
   cells past column `XFD` (16,384) are left out (`sheet_cut`), and a block spilling past it is written to `XFD`;
   a formula naming a column past `XFD` is written by S5's convention.
 
+## Number formats in the file
+
+- A cell's number format travels as a **format code**, the grammar Google Sheets, Excel and `TEXT` share
+  ([Sheet](sheet.md#formatting)); each format's mapping turns the code into its own form and back.
+- Each number format of the model is written as the code below and read back as that format when a file carries
+  exactly that code; any other code is read as Custom with the code as it came (default, D90):
+
+| Format     | Code written (2 decimals; `n` decimals put `n` zeros after the point, none and no point for 0)        |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| Automatic  | none (XLSX General, ODF no data style); with decimals set, `0.00`                                     |
+| Number     | `#,##0.00`                                                                                            |
+| Percent    | `0.00%`                                                                                               |
+| Scientific | `0.00E+00`                                                                                            |
+| Currency   | `"£"#,##0.00`, its symbol quoted                                                                      |
+| Accounting | `_("£"* #,##0.00_);_("£"* \(#,##0.00\);_("£"* "-"??_);_(@_)`                                          |
+| Date       | The workbook's locale's short date as the grid draws it: `dd/mm/yyyy` in en-GB, `mm/dd/yyyy` in en-US |
+| Time       | `hh:mm:ss`                                                                                            |
+| Date Time  | The short date, a space, `hh:mm`                                                                      |
+| Duration   | `[h]:mm:ss`                                                                                           |
+| Plain Text | `@`                                                                                                   |
+| Custom     | Its code                                                                                              |
+
+- Reading also takes a currency written the other ways Excel and LibreOffice write one: `£#,##0.00` and
+  `[$£-809]#,##0.00` are Currency with `£` (default, D91); a code of more sections than the table's is Custom.
+- A code past `FORMAT_CODE_MAX` characters, or one `TEXT` cannot read, keeps its cell's value under Automatic and the
+  loss is named (`format_unread`).
+- **XLSX**: a code is a `numFmt` of `xl/styles.xml`, a cell's `s` naming the `cellXfs` entry that applies it. A code
+  equal to one of ECMA-376's built-in formats (§18.8.30: 1 `0`, 2 `0.00`, 3 `#,##0`, 4 `#,##0.00`, 9 `0%`, 10
+  `0.00%`, 11 `0.00E+00`, 46 `[h]:mm:ss`, 49 `@`) is written by that id, any other from id 164 in the order of first
+  use; reading, built-in 14 (Excel's short date in the reader's locale) is Date, 21 `h:mm:ss` and 22 `m/d/yyyy h:mm`
+  their codes, and every other built-in its code from the standard's table (default, D92).
+- **ODF**: a code is a data style (`number:number-style`, `number:percentage-style`, `number:currency-style`,
+  `number:date-style`, `number:time-style`, `number:text-style`), its sections as `style:map` conditions and its
+  colours as text properties, applied by an automatic cell style (`table-cell`) a cell names; data styles `N1`,
+  `N2`, ... and cell styles `ce1`, `ce2`, ... in the order of first use (default, D93); the code rides as the main data
+  style's `number:title`, and reading takes it where it writes the very structure the file holds, so a file LiveDoc
+  wrote comes back to its own code. Other makers' data styles are read from their structure; what a code cannot say
+  (an era, a quarter, text inside the digits, a colour of no name) is read as near as a code says it and named
+  (`format_approximated`); a code ODF cannot say here (a fraction, a scaling comma) is written without its format and
+  named (`format_unwritten`).
+- A cell's format is its own cell style's, else its row's default cell style's, else its column's. An empty cell keeps
+  its own style's format where the file repeats it over at most 1,000 cells; a format over more, or a row's or
+  column's default over empty cells, is a whole line's, which the grid does not hold yet, and is named (`formats_cut`)
+  (default, D94).
+
 ## Unknown content
 
 - Whatever a file holds that the model does not (a macro library, an embedded object, a format's own setting, a
@@ -154,3 +199,11 @@ The code cites each by its id.
   (default).
 - **D89** Excel's bounds in an XLSX written: Text cut at 32,767 characters, a formula past 8,192 written as its value,
   cells past `XFD` left out, a formula naming a column past `XFD` wrapped by S5 (default).
+- **D90** How the model's number formats are written: Each as the code Google Sheets uses for it, the date in the
+  workbook's locale as drawn; read back by exact code, any other code Custom (default).
+- **D91** A currency in other spellings: `£#,##0.00` and `[$£-809]#,##0.00` read as Currency (default).
+- **D92** XLSX number format ids: Built-ins by ECMA-376's table, the rest from 164 in order of first use (default).
+- **D93** ODF style names: Data styles `N1`... and cell styles `ce1`... in order of first use, as LibreOffice names them
+  (default).
+- **D94** A format over empty cells in ODF: Kept for a cell repeated over at most 1,000 cells; a line's left out and
+  named (default).

@@ -12,13 +12,14 @@ import {
 import { describe, expect, it } from 'vitest';
 import { readWorkbookFile } from './read-workbook-file';
 import type { FileCell, WorkbookFile } from './workbook-file';
-import { dateStyles, isDateFormatCode } from './xlsx-dates';
+import { dateStyles, isDateFormatCode, readCellStyles } from './xlsx-styles';
 import { fromXstring, readBlock, readCellAddress, SPREADSHEETML_NS, toXstring } from './xlsx-parts';
 import { readXlsx } from './xlsx-read';
 import { writeXlsx } from './xlsx-write';
 import { writeFlatOds, writeOds } from './ods-write';
 
 const decode = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
+const dates = (xml: string | undefined) => dateStyles(readCellStyles(xml, 'en-US'));
 
 async function partsOf(bytes: Uint8Array<ArrayBuffer>): Promise<Map<string, string>> {
   const read = await readOoxmlPackage(bytes);
@@ -318,6 +319,29 @@ describe('readXlsx from other makers', () => {
     ]);
   });
 
+  // standard-mapping.md "Number formats in the file" (D92): each cell's style read as its code; a format no reader
+  // defines is a named loss, its value kept; a style past the list is none.
+  it('reads each cell’s number format, names one no reader defines, and keeps a styled empty cell', async () => {
+    const styles = `<styleSheet xmlns="${SPREADSHEETML_NS}"><cellXfs><xf/><xf numFmtId="10"/><xf numFmtId="7"/></cellXfs></styleSheet>`;
+    const read = await cellsOf(
+      xlsx(
+        [
+          '<row r="1"><c r="A1" s="1"><v>0.5</v></c><c r="B1" s="2"><v>3</v></c><c r="C1" s="1"/><c r="D1" s="9"><v>1</v></c></row>',
+        ],
+        {
+          styles,
+        },
+      ),
+    );
+    expect(read.file.sheets[0]!.cells).toEqual([
+      { r: 0, c: 0, format: '0.00%', value: { k: 'n', v: 0.5 } },
+      { r: 0, c: 1, value: { k: 'n', v: 3 } },
+      { r: 0, c: 2, format: '0.00%' },
+      { r: 0, c: 3, value: { k: 'n', v: 1 } },
+    ]);
+    expect(read.losses).toEqual([{ k: 'format_unread', sheet: 'S1', r: 0, c: 1 }]);
+  });
+
   it('unfolds shared formulas, keeps array blocks, and unwraps S5 with its block', async () => {
     const read = await cellsOf(
       xlsx([
@@ -514,15 +538,15 @@ describe('the parts XLSX shares', () => {
     expect(isDateFormatCode('0.00\\d')).toBe(false);
     expect(isDateFormatCode('General')).toBe(false);
     expect(
-      dateStyles(
+      dates(
         `<styleSheet xmlns="${SPREADSHEETML_NS}"><numFmts><numFmt numFmtId="164"/></numFmts><cellXfs><xf numFmtId="164"/></cellXfs></styleSheet>`,
       ),
     ).toEqual(new Set());
-    expect(dateStyles(undefined)).toEqual(new Set());
-    expect(dateStyles('<styleSheet')).toEqual(new Set());
-    expect(dateStyles(`<styleSheet xmlns="${SPREADSHEETML_NS}"/>`)).toEqual(new Set());
+    expect(dates(undefined)).toEqual(new Set());
+    expect(dates('<styleSheet')).toEqual(new Set());
+    expect(dates(`<styleSheet xmlns="${SPREADSHEETML_NS}"/>`)).toEqual(new Set());
     expect(
-      dateStyles(
+      dates(
         '<styleSheet xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main"><cellXfs><xf/><xf numFmtId="22"/></cellXfs></styleSheet>',
       ),
     ).toEqual(new Set([1]));

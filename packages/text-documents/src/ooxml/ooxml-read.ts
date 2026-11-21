@@ -46,6 +46,7 @@ import { LIVEDOC_NS } from '../odf/odf-names';
 import { MC_NS, R_NS, W_NS, W_STRICT_NS, WRITTEN_W_NS } from './ooxml-names';
 import { ooxmlFieldKind } from './ooxml-fields';
 import { FootnotesReader, markProps } from './ooxml-notes';
+import { overLines, readOoxmlTable, tableLinesOf, type TableLines } from './ooxml-tables';
 import {
   MAPPED_PPR,
   MAPPED_RPR,
@@ -78,6 +79,9 @@ const isW = (e: XmlNode, local: string): boolean =>
   typeof e !== 'string' && e.uri === W_NS && e.local === local;
 const wVal = (e: XmlElement | undefined, local = 'val') =>
   e ? attributeOf(e, W_NS, local) : undefined;
+/** An on/off attribute that is there and not off (`0`, `false`, `off`). */
+const isOnAttribute = (value: string | undefined) =>
+  value !== undefined && !['0', 'false', 'off'].includes(value);
 
 // Field instructions that run things or fetch from elsewhere (files-and-print.md "Import security").
 const UNSAFE_FIELD = /^\s*(DDE|DDEAUTO|INCLUDETEXT|INCLUDEPICTURE|LINK|IMPORT)\b/i;
@@ -215,6 +219,10 @@ class OoxmlReader {
     defaults: { paragraph: {}, text: {} },
   };
 
+  /** The table styles of `styles.xml` by id, and the default one's id (tables.md "In the formats"). */
+  readonly tableStyles = new Map<string, XmlElement>();
+  defaultTableStyle: string | undefined;
+
   /** Tab stops a read left out or read as less (bar and list stops, heavy leaders), reported. */
   readonly dropTabs = (name: string): void => this.report.drop('tab-stop', name);
 
@@ -280,6 +288,11 @@ class OoxmlReader {
           kept: { xml: keptXmlOf(parsed!, e), read: canonical(values), residue: [] },
         };
         continue;
+      }
+      if (isW(e, 'style') && wVal(e, 'type') === 'table') {
+        const id = wVal(e, 'styleId') ?? '';
+        this.tableStyles.set(id, e);
+        if (isOnAttribute(wVal(e, 'default'))) this.defaultTableStyle = id;
       }
       const type = wVal(e, 'type');
       if (!isW(e, 'style') || (type !== 'paragraph' && type !== 'character')) {
@@ -457,7 +470,10 @@ class OoxmlReader {
           if (next) blocks.push({ type: 'section', ...next });
         }
       } else if (isW(e, 'sectPr')) continue;
-      else if (isW(e, 'proofErr')) this.report.drop('layout-hint', e.local);
+      else if (isW(e, 'tbl')) {
+        const table = this.table(e);
+        if (table) blocks.push(table);
+      } else if (isW(e, 'proofErr')) this.report.drop('layout-hint', e.local);
       else {
         blocks.push({ type: 'kept', name: e.local, xml: this.kept(doc, e) });
         this.report.keep(e.local);
@@ -504,7 +520,16 @@ class OoxmlReader {
           data,
           mediaType: this.pkg.contentTypes.get(name) ?? 'application/octet-stream',
         })),
-      relationships: new Map([...this.pkg.relationships].map(([from, rels]) => [from, byId(rels)])),
+      // By source part, so a package read again (whatever order it lists its parts in) holds them alike.
+      relationships: new Map(
+        [...this.pkg.relationships]
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          // The package's own relationships LiveDoc writes itself (the main part, core and app properties) are not kept.
+          .map(([from, rels]) => [
+            from,
+            byId(from === '' ? rels.filter((r) => !PACKAGE_WRITTEN.has(r.type)) : rels),
+          ]),
+      ),
       // Every written package defaults `rels` and `xml`; the rest by extension, sorted.
       defaults: new Map(
         [...this.pkg.defaults]
@@ -577,6 +602,47 @@ class OoxmlReader {
     };
   }
 
+  /** A table style's lines and margins, down its `w:basedOn`; the default table style's for none. */
+  styleLines(id: string | undefined, seen = new Set<string>()): TableLines {
+    const empty: TableLines = { borders: {}, margins: {} };
+    const style = this.tableStyles.get(id ?? this.defaultTableStyle ?? '');
+    if (!style || seen.has(id ?? '')) return empty;
+    seen.add(id ?? '');
+    const parent = wVal(childElement(style, W_NS, 'basedOn'));
+    const under = parent === undefined ? empty : this.styleLines(parent, seen);
+    return overLines(under, tableLinesOf(childElement(style, W_NS, 'tblPr')));
+  }
+
+  /** A `w:tbl` as a table, a kept block past the limits, or nothing for one with no rows. */
+  table(tbl: XmlElement): Block | null {
+    return readOoxmlTable(tbl, {
+      cellBlocks: (tc) => this.blocksOf(tc),
+      kept: (e) => this.kept(this.part.parsed, e),
+      propsKept: (e, values, mapped) => this.propsKept(this.part.parsed, e, values, mapped),
+      styleLines: (id) => this.styleLines(id),
+      report: this.report,
+      normal: this.normalId(),
+    });
+  }
+
+  /** The blocks a cell, header, footer or note holds: paragraphs, tables and kept elements. */
+  blocksOf(parent: XmlElement): Block[] {
+    const blocks: Block[] = [];
+    for (const e of childElements(parent)) {
+      if (isW(e, 'p')) blocks.push(this.paragraph(e, undefined));
+      else if (isW(e, 'tbl')) {
+        const table = this.table(e);
+        if (table) blocks.push(table);
+      } else if (isW(e, 'tcPr')) continue;
+      else if (isW(e, 'proofErr')) this.report.drop('layout-hint', e.local);
+      else {
+        blocks.push({ type: 'kept', name: e.local, xml: this.kept(this.part.parsed, e) });
+        this.report.keep(e.local);
+      }
+    }
+    return blocks;
+  }
+
   normalId(): string {
     const styles = this.parts.styles;
     const normal =
@@ -601,13 +667,22 @@ export const byId = (rels: readonly Relationship[]): Relationship[] =>
     (a, b) => idNumber(a.id) - idNumber(b.id) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
   );
 
+/** The package relationships every written file has, written by LiveDoc, never kept. */
+const PACKAGE_WRITTEN: ReadonlySet<string> = new Set([
+  RELATIONSHIP_TYPES.officeDocument,
+  RELATIONSHIP_TYPES.coreProperties,
+  RELATIONSHIP_TYPES.extendedProperties,
+]);
+
 const idNumber = (id: string) => Number(id.match(/(\d+)$/)?.[1] ?? Number.MAX_SAFE_INTEGER);
 
 function withoutWritten(scope: Readonly<Record<string, string>>): Record<string, string> {
-  // Every written part declares LiveDoc's own bindings, so a file's other prefix for one of them is not kept.
+  // Every written part declares LiveDoc's own bindings, so a file's other prefix for one of them is not kept; nor is a
+  // default namespace (Google Docs declares one): every element LiveDoc writes is prefixed, and kept XML carries the
+  // bindings it uses.
   const written = new Set(Object.values(WRITTEN_W_NS));
   return sortedBindings(
-    Object.fromEntries(Object.entries(scope).filter(([, uri]) => !written.has(uri))),
+    Object.fromEntries(Object.entries(scope).filter(([p, uri]) => p !== '' && !written.has(uri))),
   );
 }
 
@@ -644,21 +719,38 @@ class RunReader {
     collect(this.p);
     const stack: { runs: XmlElement[]; instr: string; result: boolean; results: XmlElement[] }[] =
       [];
+    // A field's marks in the order written: one a run as Word writes them, or all in one run as Google Docs does.
+    const marksOf = (run: XmlElement) =>
+      childElements(run).flatMap((c) =>
+        isW(c, 'fldChar')
+          ? [{ char: wVal(c, 'fldCharType'), instr: undefined as XmlElement | undefined }]
+          : isW(c, 'instrText')
+            ? [{ char: undefined, instr: c }]
+            : [],
+      );
+    const add = (runs: XmlElement[], run: XmlElement) => {
+      if (runs.at(-1) !== run) runs.push(run);
+    };
     for (const run of runs) {
-      const char = wVal(childElement(run, W_NS, 'fldChar'), 'fldCharType');
-      const instr = childElement(run, W_NS, 'instrText');
-      for (const open of stack) if (open.result && char !== 'end') open.results.push(run);
-      if (char === 'begin') stack.push({ runs: [run], instr: '', result: false, results: [] });
-      else if (stack.length > 0) {
-        const top = stack.at(-1)!;
+      const marks = marksOf(run);
+      if (!marks.some((m) => m.char === 'end'))
+        for (const open of stack) if (open.result) add(open.results, run);
+      for (const { char, instr } of marks) {
+        if (char === 'begin') {
+          stack.push({ runs: [run], instr: '', result: false, results: [] });
+          continue;
+        }
+        const top = stack.at(-1);
+        if (!top) continue;
         if (instr && !top.result) {
           top.instr += textContent(instr);
-          top.runs.push(run);
+          add(top.runs, run);
         } else if (char === 'separate') {
           top.result = true;
-          top.runs.push(run);
+          add(top.runs, run);
         } else if (char === 'end') {
-          top.runs.push(run);
+          add(top.runs, run);
+          top.results = top.results.filter((r) => !top.runs.includes(r));
           stack.pop();
           const kind = ooxmlFieldKind(top.instr);
           if (UNSAFE_FIELD.test(top.instr)) {

@@ -80,17 +80,6 @@ export function fromXstring(text: string): string {
   );
 }
 
-/** The one cell style every file starts from: Google Sheets' default font, no fill, no border. */
-export const STYLES_XML =
-  `<styleSheet xmlns="${SPREADSHEETML_NS}">` +
-  '<fonts count="1"><font><sz val="10"/><name val="Arial"/></font></fonts>' +
-  '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
-  '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
-  '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-  '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>' +
-  '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
-  '</styleSheet>';
-
 /** The cell metadata that marks a formula a dynamic array, so Excel spills it (`c@cm="1"`), as Excel writes it. */
 export const DYNAMIC_ARRAY_METADATA_XML =
   `<metadata xmlns="${SPREADSHEETML_NS}" xmlns:xda="http://schemas.microsoft.com/office/spreadsheetml/2017/dynamicarray">` +
