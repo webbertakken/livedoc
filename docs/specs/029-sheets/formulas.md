@@ -1,5 +1,10 @@
 # Formulas
 
+**Status: built** (plan 0020 Phase 6): the language, the recalculation engine (in a Web Worker in the browser), the
+catalogue's functions marked **built** below, each held by [the oracle](#the-oracle), [other workbooks](#other-workbooks)
+and the [locale](#locale). The engine is the pure `@livedoc/sheets` package, shared by every kind that holds a table
+of formulas.
+
 A [sheet](sheet.md)'s cells hold **inputs**; what they show are **values**. A formula is an input that starts with
 `=` and works its value out from other cells, other sheets on the tab and the document's Plan cards. The language
 is the one people already write in Google Sheets and Excel: the same operators, references and function names, so
