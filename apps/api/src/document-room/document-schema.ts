@@ -462,6 +462,12 @@ const WORKBOOK_RANGE_SOURCES_STEP = `
 ALTER TABLE workbook ADD COLUMN range_sources TEXT;
 `;
 
+// A spreadsheet's meaning (docs/specs/029-sheets/formulas.md, the file's meaning): 'ooxml' or 'openformula' for one
+// opened from a file, kept by its copies; null for Google's, as every spreadsheet before it (D101).
+const WORKBOOK_MEANING_STEP = `
+ALTER TABLE workbook ADD COLUMN meaning TEXT;
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -473,6 +479,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   TAB_KIND_STEP,
   WORKBOOK_IMPORTS_STEP,
   WORKBOOK_RANGE_SOURCES_STEP,
+  WORKBOOK_MEANING_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

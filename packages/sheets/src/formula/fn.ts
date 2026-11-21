@@ -225,7 +225,7 @@ export function scalarFn(min: number, max: number, each: (xs: Scalar[], f: Frame
 }
 
 // A number function: each argument read as a number (an error is returned as it is).
-export function numFn(min: number, max: number, each: (ns: number[]) => Value): FnDef {
+export function numFn(min: number, max: number, each: (ns: number[], f: Frame) => Value): FnDef {
   return scalarFn(min, max, (xs, f) => {
     const ns: number[] = [];
     for (const x of xs) {
@@ -233,7 +233,7 @@ export function numFn(min: number, max: number, each: (ns: number[]) => Value): 
       if (typeof n !== 'number') return n;
       ns.push(n);
     }
-    return finite(each(ns));
+    return finite(each(ns, f));
   });
 }
 

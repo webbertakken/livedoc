@@ -135,7 +135,12 @@
       "differs": {
         "libreoffice": "LibreOffice reads -1 as OOXML's descending order; Google's is_ascending is TRUE or FALSE, and -1 coerces to TRUE"
       },
-      "note": "Awaits Google's answer: a formula both accept that answers differently (formulas.md \"Where Google and the standards differ\")."
+      "note": "Awaits Google's answer: a formula both accept that answers differently (formulas.md \"Where Google and the standards differ\").",
+      "meaning": {
+        "ooxml": [[100], [100], [80], [80], [75]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, SORT function (support.microsoft.com): sort_order 1 is ascending, -1 descending"
+      }
     },
     {
       "id": "UNIQUE.1",

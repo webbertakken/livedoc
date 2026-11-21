@@ -68,7 +68,7 @@ describe('offlineWorkbookFile', () => {
     const [c0] = layout.cols;
     await offlinePutRecord(
       testRecord({
-        workbook: WorkbookRecord.withFormat(workbook, 'xlsx'),
+        workbook: WorkbookRecord.converted(workbook, 'xlsx'),
         sheets: [sheet('sheetOne1', 't1', 'S', [{ r: r0!, c: c0!, i: { s: 'rent' } }])],
       }),
     );

@@ -647,6 +647,10 @@
       "cite": "https://support.google.com/docs/answer/3093211 (\"If first_period is 2.8 and last_period is 4.1, the function calculates interest for periods 3 and 4\"; CUMIPMT.10 is periods 3 to 4)",
       "differs": {
         "libreoffice": "LibreOffice drops both fractions, so 2.1 to 4.9 is periods 2 to 4 (CUMIPMT.11)"
+      },
+      "meaning": {
+        "ooxml": [[-2809.41208638094]],
+        "cite": "Microsoft's help, CUMIPMT function (support.microsoft.com): start_period and end_period are truncated to integers"
       }
     },
     {
@@ -695,7 +699,11 @@
       "differs": {
         "libreoffice": "LibreOffice drops both fractions (periods 2 to 4); LiveDoc moves each inward as Google documents for CUMIPMT (periods 3 and 4)"
       },
-      "note": "Awaits Google's answer: CUMPRINC's help does not say how a fractional period is read."
+      "note": "Awaits Google's answer: CUMPRINC's help does not say how a fractional period is read.",
+      "meaning": {
+        "ooxml": [[-207.922727161991]],
+        "cite": "Microsoft's help, CUMPRINC function (support.microsoft.com): start_period and end_period are truncated to integers"
+      }
     },
     {
       "id": "CUMPRINC.5",
@@ -828,6 +836,9 @@
       "cite": "https://support.google.com/docs/answer/3093167 (\"DOLLARDE(100.01,8) results in 100.125\")",
       "differs": {
         "libreoffice": "LibreOffice reads the fraction in as many decimal places as the unit has digits: 100.01 in eighths is 100 1/80 (100.0125)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
       }
     },
     {
@@ -875,6 +886,9 @@
       "cite": "https://support.google.com/docs/answer/3093217 (\"DOLLARFR(100.125,8) results in 100.01\")",
       "differs": {
         "libreoffice": "LibreOffice writes eighths in one decimal place: 100 1/8 is 100.1"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
       }
     },
     {

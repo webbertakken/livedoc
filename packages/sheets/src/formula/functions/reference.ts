@@ -32,7 +32,10 @@ export const REFERENCE_FUNCTIONS: Record<string, FnDef> = {
     const at = a1
       ? formatA1(row - 1, col - 1, abs)
       : `R${abs.row ? row : `[${row}]`}C${abs.col ? col : `[${col}]`}`;
-    return sheet === '' ? at : `${quoteSheet(sheet)}!${at}`;
+    if (sheet === '') return at;
+    // OpenFormula joins an A1 address to its sheet with a dot (Part 4 §6.14.2), Google with "!" (the file's meaning).
+    const joiner = a1 && f.meaning === 'openformula' ? '.' : '!';
+    return `${quoteSheet(sheet)}${joiner}${at}`;
   }),
   // A sheet's place among the workbook's sheets from 1: a reference's sheet, a sheet named by text, or its own.
   SHEET: fn(0, 1, ([x], f) => {

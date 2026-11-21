@@ -87,6 +87,9 @@ describe('useSheetsBridge', () => {
     expect(result.current.bridge.timeZone).toBe('Asia/Tokyo');
     const plain = renderHook(() => useSheetsBridge(opts())).result.current.bridge;
     expect(plain.timeZone).toBeUndefined();
+    expect(plain.meaning).toBeUndefined();
+    const opened = renderHook(() => useSheetsBridge(opts({ meaning: 'ooxml' }))).result.current;
+    expect(opened.bridge.meaning).toBe('ooxml');
   });
 
   it('keeps its identity across renders with new callbacks, and calls the latest ones', () => {

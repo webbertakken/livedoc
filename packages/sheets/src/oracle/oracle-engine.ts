@@ -2,6 +2,7 @@
 // source answers, its formulas typed as a person types them, worked out once, block by block.
 import { CellMap } from '../cells/cell-map';
 import { Workbook } from '../engine/workbook';
+import type { FormulaMeaning } from '../formula/meaning';
 import { dims, isError, type Scalar } from '../formula/values';
 import { cellKey, type CellInput, type Sheet } from '../sheet';
 import { SheetLimits } from '../sheet-limits';
@@ -51,8 +52,11 @@ export function oracleValueOf(v: Scalar): OracleValue {
   return v;
 }
 
-/** Every case of a category worked out by the engine, by id. */
-export function engineAnswers(category: OracleCategory): Map<string, EngineAnswer> {
+/** Every case of a category worked out by the engine in a meaning (Google's by default), by id. */
+export function engineAnswers(
+  category: OracleCategory,
+  meaning: FormulaMeaning = 'google',
+): Map<string, EngineAnswer> {
   const dataRows = Math.max(ORACLE_DATA_ROWS_MIN, category.data.length);
   const dataCols = Math.max(ORACLE_DATA_COLS_MIN, ...category.data.map((row) => row.length));
   const size = OracleLayout.size(category);
@@ -90,6 +94,7 @@ export function engineAnswers(category: OracleCategory): Map<string, EngineAnswe
     now: () => ORACLE_NOW,
     rand: () => 0.5,
     limits: SheetLimits.spreadsheet,
+    meaning,
   });
   for (const b of blocks) {
     if (out.has(b.id)) continue;

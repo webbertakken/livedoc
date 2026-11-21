@@ -1,7 +1,9 @@
 // docs/specs/029-sheets/files-and-print.md "Converting" (D87, D88): what the new format's file cannot hold that the
 // old one could, one line a kind; standard-mapping.md "Values in XLSX" (D89) for Excel's bounds.
 import { describe, expect, it } from 'vitest';
-import { emptyLayout, emptySheet } from '../sheet';
+import { CellMap } from '../cells/cell-map';
+import { compileFormula } from '../formula/stored';
+import { cellKey, emptyLayout, emptySheet } from '../sheet';
 import { WorkbookRecord } from '../workbook-record';
 import {
   conversionLosses,
@@ -125,6 +127,22 @@ describe('conversionLosses', () => {
   it('lists nothing for a workbook both formats hold alike', () => {
     expect(conversionLosses(file(sheet('Sheet1', [formula('=1+1')])), 'ods', 'xlsx')).toEqual([]);
   });
+
+  // formulas.md, the file's meaning (D100): formulas the spreadsheet's meaning and the new format's answer otherwise.
+  it('lists the formulas that may answer differently in the new format’s meaning', () => {
+    const both = file(
+      sheet('Sheet1', [formula('=SORT(A1:A3, 1, -1)'), formula('=CEILING(-2.5, -1)', 1)]),
+    );
+    expect(conversionLosses(both, 'ods', 'xlsx', 'openformula')).toEqual([
+      { k: 'answers_differ', count: 1, functions: ['CEILING'] },
+    ]);
+    expect(conversionLosses(both, 'ods', 'xlsx')).toEqual([
+      { k: 'answers_differ', count: 1, functions: ['SORT'] },
+    ]);
+    expect(conversionLosses(both, 'xlsx', 'ods', 'ooxml')).toEqual([
+      { k: 'answers_differ', count: 1, functions: ['CEILING'] },
+    ]);
+  });
 });
 
 describe('workbookConversion', () => {
@@ -141,6 +159,31 @@ describe('workbookConversion', () => {
     expect(converted.from).toBe('ods');
     expect(converted.to).toBe('xlsx');
     expect(converted.losses.map((loss) => loss.k)).toEqual(['sheet_renamed']);
+  });
+
+  it('lists formulas by the spreadsheet’s own meaning', () => {
+    const { layout } = sheets[0]!;
+    const compiled = compileFormula('=CEILING(-2.5, -1)', {
+      own: { id: 'sheetOne1', title: longName, layout },
+      byTitle: () => undefined,
+      byId: () => undefined,
+    });
+    if (!compiled.ok) throw new Error('formula');
+    const withFormula = [
+      {
+        ...sheets[0]!,
+        cells: CellMap.from([
+          [cellKey(layout.rows[0]!, layout.cols[0]!), { input: { f: compiled.formula } }],
+        ]),
+      },
+    ];
+    const kinds = (r: WorkbookRecord) =>
+      workbookConversion(withFormula, r, 'xlsx').losses.map((l) => l.k);
+    expect(kinds(record)).toEqual(['sheet_renamed']);
+    expect(kinds(WorkbookRecord.opened(record, 'ods'))).toEqual([
+      'sheet_renamed',
+      'answers_differ',
+    ]);
   });
 
   it('works nothing out within one standard', () => {

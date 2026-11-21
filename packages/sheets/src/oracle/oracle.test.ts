@@ -8,6 +8,7 @@ import { heldAnswer, sameBlock, showBlock, unnamedDifferences } from './compare'
 import { OracleCorpus, type OracleAnswers, type OracleCategory } from './corpus';
 import { engineAnswers } from './oracle-engine';
 import { FUNCTIONS } from '../formula/registry';
+import { FILE_MEANINGS, MEANING_FUNCTIONS } from '../formula/meaning';
 
 const ROOT = join(import.meta.dirname, '../../oracle');
 
@@ -88,6 +89,32 @@ describe('the oracle corpus', () => {
     expect(failed).toEqual([]);
   });
 
+  // formulas.md, the file's meaning: a case answered otherwise in a file's meaning holds to that answer there.
+  it.each(corpus.map((c) => [c.category, c] as const))(
+    "%s: the engine agrees in each file's meaning",
+    (_, category) => {
+      const libre = answers('libreoffice', category.category);
+      const failed: string[] = [];
+      for (const meaning of FILE_MEANINGS) {
+        const asked = category.cases.filter((x) => x.meaning?.[meaning] !== undefined);
+        if (asked.length === 0) continue;
+        const engine = engineAnswers(category, meaning);
+        for (const x of asked) {
+          const given = x.meaning![meaning]!;
+          const want = given === 'libreoffice' ? libre?.answers[x.id] : given;
+          const mine = engine.get(x.id)!;
+          if (!want) failed.push(`${x.id} ${meaning}: LibreOffice has not answered`);
+          else if (!mine.ok) failed.push(`${x.id} ${meaning}: ${mine.why}`);
+          else if (!sameBlock(mine.answer, want, x.tol))
+            failed.push(
+              `${x.id} ${meaning}: engine=${showBlock(mine.answer)} want=${showBlock(want)}`,
+            );
+        }
+      }
+      expect(failed).toEqual([]);
+    },
+  );
+
   it.each(corpus.map((c) => [c.category, c] as const))(
     '%s: the sources agree or name why not',
     (_, category) => {
@@ -147,6 +174,15 @@ function builtRows(): { name: string; category: string }[] {
 }
 
 describe('the catalogue against the corpus', () => {
+  it("measures each function answered otherwise in a file's meaning there", () => {
+    const meant = new Set(
+      corpus.flatMap((c) =>
+        c.cases.filter((x) => x.meaning).map((x) => x.id.replace(/\.\d+$/, '')),
+      ),
+    );
+    expect(Object.keys(MEANING_FUNCTIONS).filter((name) => !meant.has(name))).toEqual([]);
+  });
+
   it('measures every function built in a measured category', () => {
     const measured = new Set(
       corpus.flatMap((c) => c.cases.map((x) => x.id.split('.').slice(0, -1).join('.'))),

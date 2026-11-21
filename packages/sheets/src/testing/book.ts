@@ -5,6 +5,7 @@ import type { CardSource } from '../cards';
 import { CellMap } from '../cells/cell-map';
 import { Workbook, type ArrayDialect } from '../engine/workbook';
 import type { Iteration } from '../engine/loops';
+import type { FormulaMeaning } from '../formula/meaning';
 import { cellKey, type Sheet, type SheetLayout } from '../sheet';
 import { readTypedInput } from '../typed-input';
 
@@ -70,6 +71,7 @@ export function book(
     arrays?: ArrayDialect;
     iteration?: Iteration;
     locale?: string;
+    meaning?: FormulaMeaning;
     imports?: { access: ImportAccess };
   } = {},
 ) {
@@ -83,6 +85,7 @@ export function book(
     now: () => opts.now ?? 46303.5,
     rand: opts.rand ?? (() => 0.5),
     cards: opts.cards ?? null,
+    ...(opts.meaning ? { meaning: opts.meaning } : {}),
     ...(opts.arrays ? { arrays: opts.arrays } : {}),
     ...(opts.iteration ? { iteration: opts.iteration } : {}),
     ...(opts.imports ? { imports: opts.imports } : {}),

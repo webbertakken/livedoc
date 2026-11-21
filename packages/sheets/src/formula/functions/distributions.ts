@@ -254,11 +254,13 @@ const chiInvRight = numFn(2, 2, ([p, v]) =>
   checked([openProbability(p!), degrees(v!)], ([q, n]) => chiInverse(q!, n!, true)),
 );
 // Google's help: F.DIST's cumulative is FALSE when left out.
-const fDist = numFn(3, 4, ([x, a, b, c = 0]) =>
-  checked([x! < 0 ? NEGATIVE_X : x!, degrees(a!), degrees(b!)], ([, d1, d2]) =>
-    c ? fLower(x!, d1!, d2!) : fDensity(x!, d1!, d2!),
-  ),
-);
+// Cumulative left out is Google's FALSE, the density; OpenFormula's FDIST is cumulative by default (the file's meaning).
+const fDist = numFn(3, 4, ([x, a, b, c], f) => {
+  const cumulative = c === undefined ? f.meaning === 'openformula' : c !== 0;
+  return checked([x! < 0 ? NEGATIVE_X : x!, degrees(a!), degrees(b!)], ([, d1, d2]) =>
+    cumulative ? fLower(x!, d1!, d2!) : fDensity(x!, d1!, d2!),
+  );
+});
 const fDistRight = numFn(3, 3, ([x, a, b]) =>
   checked([x! < 0 ? NEGATIVE_X : x!, degrees(a!), degrees(b!)], ([, d1, d2]) =>
     fUpper(x!, d1!, d2!),

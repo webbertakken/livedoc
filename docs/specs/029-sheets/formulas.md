@@ -673,40 +673,60 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   refuses but OpenFormula or OOXML defines (more arguments, a range where Google takes one value) follows that
   standard, in every document. So a file's formula keeps its meaning (C1) and nothing Google accepts changes. `CONCAT`
   is the first: Google's joins two values, the standards' any number, ranges whole; LiveDoc's is the standards'.
-  Formulas both accept but answer differently wait on Webber's ruling (they touch C1); until then they follow Google
-  (S6), and each is listed below as the categories meet it, so the ruling applies in one pass.
-- **Both accept, answered differently**: Google's answer is documented; a file from LibreOffice (measured) shows
-  Google's answer in LiveDoc today, not the one it was written with. The case is the oracle's (`oracle/cases/`).
+- **The file's meaning** (Webber, 2026-11-21): a formula Google and the file's own standard both accept but answer
+  differently keeps the meaning of the standard of the format the spreadsheet arrived in: OOXML's for one opened from
+  `.xlsx`, OpenFormula's for one opened from `.ods` or `.fods`. A spreadsheet made in LiveDoc follows Google's (S6).
+  Nothing changes a value silently.
+- An ODF file names Excel's later functions under `COM.MICROSOFT.` (`SORT`, `STDEV.P`): theirs is OOXML's meaning, in
+  either format.
+- Where the standard leaves the answer to the application (OpenFormula's "evaluators may", an implementation-defined
+  character set, a conversion to integer it does not name) or refuses the formula, Google's answer stands.
+- The meaning is the spreadsheet's, set once when it opens from a file, and kept by its copies; a spreadsheet opened
+  from a file before this rule keeps Google's, the answers it has always shown (default, D101).
+- A formula pasted or moved from another spreadsheet takes the meaning of the one it lands in, as its text does.
+- Converting (C1) a spreadsheet that has a file's meaning gives it the new format's; one with Google's keeps it. Each
+  formula calling a function the table below answers differently in the spreadsheet's meaning and the new format's
+  standard is listed among the conversion's losses before it runs, and is never rewritten, as few rewrites keep the
+  value in every case (default, D100). Writing a spreadsheet to a file lists those its format's standard answers
+  differently from its meaning in the same way, among the file's losses (`answers_differ`).
+- **Both accept, answered differently**: the answer in each meaning, each case the oracle's (`oracle/cases/`). "Google's"
+  is Google's answer; LibreOffice's answers OpenFormula's where the standard and it agree (measured).
 
-  | Formula                                            | Google (LiveDoc today)            | LibreOffice / the standard           | Case                           |
-  | -------------------------------------------------- | --------------------------------- | ------------------------------------ | ------------------------------ |
-  | `CELL("sheet", A1)`                                | the sheet's name                  | its number (OpenFormula)             | Info CELL.9                    |
-  | `SORT(range, 1, -1)`                               | -1 is TRUE: ascending             | descending (OOXML sort_order)        | Filter SORT.8                  |
-  | `TIME(1.9, 0, 0)`                                  | 1:00, the hour truncated          | 1:54, the fraction kept              | Date TIME.4                    |
-  | `ADDRESS(2, 3, 1, TRUE, "Data")`                   | `Data!$C$2`                       | `Data.$C$2` (LibreOffice's syntax)   | Lookup ADDRESS.7               |
-  | `FORMULATEXT(B1)`                                  | the formula as Google writes      | in LibreOffice's syntax (`$Data.A1`) | Lookup FORMULATEXT.1           |
-  | `CODE("熊")`                                       | Unicode: 29066                    | an 8-bit code page: 231              | Text CODE.3                    |
-  | `MIDB("熊本=熊本", 2, 4)`                          | `本=熊`: start in characters      | ` 本=`: start in bytes, half a space | Text MIDB.2                    |
-  | `REPLACEB("熊本=熊本", 2, 3, "new")`               | `熊new熊本`                       | ` new=熊本`                          | Text REPLACEB.2                |
-  | `IMLN("4+2j")`                                     | `…+0.463647609000806i`: i always  | `…j`: the input's unit               | Math IMLN.2                    |
-  | `IMPOWER("5+2i", 3)`                               | `65+142i`, multiplied out         | `64.9999999999999+142i`, polar       | Math IMPOWER.1                 |
-  | `UNICHAR(0)`, `UNICHAR(55296)`                     | `#VALUE!`                         | empty text                           | Text UNICHAR.3, .4             |
-  | `DOLLARDE(100.01, 8)`                              | 100.125: 100 1/8                  | 100.0125: 100 1/80                   | Financial DOLLARDE.1           |
-  | `DOLLARFR(100.125, 8)`                             | 100.01                            | 100.1                                | Financial DOLLARFR.1           |
-  | `CUMIPMT(r, n, pv, 2.1, 4.9, 0)`                   | periods 3 and 4                   | periods 2 to 4                       | Financial CUMIPMT.4            |
-  | `AMORLINC(…, 0.5, …)`                              | period 0.5 is period 1            | period 0, the first part period      | Financial AMORLINC.8           |
-  | `TBILLYIELD(DATE(2008,1,1), …, 99)`                | 0.0404: Actual/360 days           | 0.03996: 30/360 days plus one        | Financial TBILLYIELD.2         |
-  | `STDEVP(5)`, `VARP`, `STDEV.P`, `VAR.P`, `STDEVPA` | `#DIV/0!`: fewer than two numbers | 0                                    | Statistical STDEVP.3           |
-  | `VARPA(5)`                                         | `#NUM!`                           | 0                                    | Statistical VARPA.3            |
-  | `DEVSQ(A1:A2)` over text                           | 0                                 | `#DIV/0!`                            | Statistical DEVSQ.4            |
-  | `MAXA(1, "x")`                                     | `#VALUE!`                         | 1: the text as 0                     | Statistical MAXA.4             |
-  | `PERCENTRANK(data, 30)`, 30 past the data          | `#N/A`                            | `#VALUE!`                            | Statistical PERCENTRANK.5      |
-  | `PERCENTRANK(data, 8, 0)`                          | 0.286: 0 digits read as 3         | Err:502                              | Statistical PERCENTRANK.8      |
-  | `PERMUTATIONA(0, 2)`, `PERMUTATIONA(3, 4)`         | `#NUM!`                           | 0, 81                                | Statistical PERMUTATIONA.3, .4 |
-  | `F.DIST(15.35, 7, 6)`, cumulative left out         | the density: FALSE by default     | the cumulative: ODF FDIST's TRUE     | Statistical F.DIST.6           |
-  | `HYPERLINK(url, A1)`, A1 empty                     | the url                           | 0                                    | Web HYPERLINK.4                |
-  | `LET(x, 1, y, LET(z, 2, x+z), x+y)`                | 4: inner names see outer ones     | `#NAME?`                             | Logical LET.1                  |
-  | `LET(x, 2, X*3)`                                   | 6: names ignore case              | `#NAME?`                             | Logical LET.4                  |
+  | Formula                                            | Google                            | `.xlsx` (OOXML)                 | `.ods` (OpenFormula)                  | Case                            |
+  | -------------------------------------------------- | --------------------------------- | ------------------------------- | ------------------------------------- | ------------------------------- |
+  | `CELL("sheet", A1)`                                | the sheet's name                  | Google's (Excel has no "sheet") | its number (§6.13.3)                  | Info CELL.9                     |
+  | `SORT(range, 1, -1)`                               | -1 is TRUE: ascending             | descending (sort_order)         | descending (`COM.MICROSOFT.SORT`)     | Filter SORT.8                   |
+  | `ADDRESS(2, 3, 1, TRUE, "Data")`                   | `Data!$C$2`                       | Google's                        | `Data.$C$2` (§6.14.2)                 | Lookup ADDRESS.7                |
+  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`             | -3, -2: away from and toward zero | Google's                        | -2, -3: toward +∞ and −∞ (§6.17.1)    | Math CEILING.4, FLOOR.4         |
+  | `DOLLARDE(100.01, 8)`                              | 100.125: 100 1/8                  | Google's                        | 100.0125: 100 1/80 (§6.12.16)         | Financial DOLLARDE.1            |
+  | `DOLLARFR(100.125, 8)`                             | 100.01                            | Google's                        | 100.1 (§6.12.17)                      | Financial DOLLARFR.1            |
+  | `CUMIPMT(r, n, pv, 2.1, 4.9, 0)`, `CUMPRINC`       | periods 3 and 4                   | periods 2 to 4: truncated       | Google's (no rounding named)          | Financial CUMIPMT.4, CUMPRINC.4 |
+  | `STDEVP(5)`, `VARP`, `STDEV.P`, `VAR.P`, `STDEVPA` | `#DIV/0!`: fewer than two numbers | 0                               | 0 (§6.18.74: COUNT ≥ 1)               | Statistical STDEVP.3            |
+  | `VARPA(5)`                                         | `#NUM!`                           | 0                               | 0 (§6.18.85)                          | Statistical VARPA.3             |
+  | `DEVSQ(A1:A2)` over text                           | 0                                 | Google's                        | `#DIV/0!`: AVERAGE of none (§6.18.20) | Statistical DEVSQ.4             |
+  | `MAXA(1, "x")`                                     | `#VALUE!`                         | Google's                        | 1: the text as 0 (§6.18.46)           | Statistical MAXA.4              |
+  | `PERCENTRANK(data, 8, 0)`                          | 0.286: 0 digits read as 3         | `#NUM!`: significance < 1       | `#NUM!` (§6.18.58)                    | Statistical PERCENTRANK.8       |
+  | `PERMUTATIONA(0, 2)`, `PERMUTATIONA(3, 4)`         | `#NUM!`                           | 0, 81                           | 0, 81 (§6.18.60)                      | Statistical PERMUTATIONA.3, .4  |
+  | `F.DIST(15.35, 7, 6)`, cumulative left out         | the density: FALSE by default     | Google's (Excel needs it)       | the cumulative: `FDIST`'s TRUE        | Statistical F.DIST.6            |
+
+  OpenFormula's sections are Part 4 of ODF 1.3; Excel's answers are Microsoft's help pages, each cited in its case.
+
+- **Google's in every meaning**: where LibreOffice answers otherwise but neither standard says so, Google's stands.
+
+  | Formula                               | Google                       | LibreOffice                          | Why Google's stands                      | Case                      |
+  | ------------------------------------- | ---------------------------- | ------------------------------------ | ---------------------------------------- | ------------------------- |
+  | `TIME(1.9, 0, 0)`                     | 1:00, the hour truncated     | 1:54, the fraction kept              | "Evaluators may first perform INT()"     | Date TIME.4               |
+  | `FORMULATEXT(B1)`                     | the formula as Google writes | in LibreOffice's syntax (`$Data.A1`) | the text's syntax is the application's   | Lookup FORMULATEXT.1      |
+  | `CODE("熊")`                          | Unicode: 29066               | an 8-bit code page: 231              | past 127 implementation-defined          | Text CODE.3               |
+  | `MIDB("熊本=熊本", 2, 4)`, `REPLACEB` | start in characters          | start in bytes, half a space         | the bytes' character set is not named    | Text MIDB.2, REPLACEB.2   |
+  | `IMLN("4+2j")`                        | `…i`: i always               | `…j`: the input's unit               | COMPLEX's default unit, i                | Math IMLN.2               |
+  | `IMPOWER("5+2i", 3)`                  | `65+142i`                    | `64.9999999999999+142i`              | rounding, not meaning                    | Math IMPOWER.1            |
+  | `UNICHAR(0)`, `UNICHAR(55296)`        | `#VALUE!`                    | empty text                           | no text holds U+0000 or a lone surrogate | Text UNICHAR.3, .4        |
+  | `AMORLINC(…, 0.5, …)`                 | period 0.5 is period 1       | period 0                             | no rounding named                        | Financial AMORLINC.8      |
+  | `TBILLYIELD(DATE(2008,1,1), …, 99)`   | 0.0404: Actual/360           | 0.03996: 30/360 plus one             | OpenFormula gives no formula             | Financial TBILLYIELD.2    |
+  | `PERCENTRANK(data, 30)`, past data    | `#N/A`                       | `#VALUE!`                            | an error in both; its code not named     | Statistical PERCENTRANK.5 |
+  | `HYPERLINK(url, A1)`, A1 empty        | the url                      | 0                                    | an empty value's type is not named       | Web HYPERLINK.4           |
+  | `LET(x, 1, y, LET(z, 2, x+z), x+y)`   | 4                            | `#NAME?`                             | LibreOffice's own limit                  | Logical LET.1, LET.4      |
 
 - **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
   (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
@@ -1530,4 +1550,7 @@ The code cites each by its id.
   (default).
 - **D96** The oracle's Drive retries: 429 and 5xx three more times, 1, 4 and 16 seconds apart; any other stops the
   category (default).
+- **D100** Converting between meanings: The formulas that may answer differently are listed among the losses, never
+  rewritten (default).
+- **D101** A spreadsheet opened from a file before the file's meaning: Keeps Google's meaning (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

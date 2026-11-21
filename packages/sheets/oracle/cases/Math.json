@@ -43,7 +43,10 @@
       "differs": {
         "libreoffice": "LibreOffice reads CEILING as OpenFormula does, toward +∞ whatever the factor's sign (-2); LiveDoc as Excel, a negative factor rounding a negative value away from zero (-3)"
       },
-      "note": "Awaits Google's answer: its help says the factor's sign \"determine[s] which direction to round\" and shows no negative example."
+      "note": "Awaits Google's answer: its help says the factor's sign \"determine[s] which direction to round\" and shows no negative example.",
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "CEILING.5",
@@ -152,7 +155,10 @@
       "differs": {
         "libreoffice": "LibreOffice reads FLOOR as OpenFormula does, toward −∞ (-3); LiveDoc as Excel, a negative factor rounding a negative value toward zero (-2)"
       },
-      "note": "Awaits Google's answer: its help shows no negative example."
+      "note": "Awaits Google's answer: its help shows no negative example.",
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "FLOOR.5",

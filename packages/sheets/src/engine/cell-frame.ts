@@ -1,6 +1,7 @@
 // The frame a formula is worked out in: what it reads of its workbook, each read noted against the formula reading
 // (its `reader`; NO_CELL keeps nothing). The workbook gives its parts once, as a FrameSource.
 import type { CardSource } from '../cards';
+import type { FormulaMeaning } from '../formula/meaning';
 import type { ImportAccess, ImportRequest } from '../imports/import-request';
 import type { ImportRead } from './import-book';
 import { childrenOf, type Node } from '../formula/ast';
@@ -17,6 +18,7 @@ import { workOutWith } from './what-if';
 /** What a frame reads of its workbook. */
 export type FrameSource = {
   readonly locale: string;
+  readonly meaning: FormulaMeaning;
   // Every formula an array context (a Plan Sheet's dynamic arrays), not only ARRAYFORMULA's.
   readonly arraysWhole: boolean;
   readonly now: () => number;
@@ -79,6 +81,7 @@ export function cellFrame(
     col,
     ctx: src.ctx(sheetId),
     locale: src.locale,
+    meaning: src.meaning,
     arrays: src.arraysWhole,
     cell: (s, r, c, inRange) => src.cell(s, r, c, inRange ? null : reader),
     extent: (s) => src.extent(s),

@@ -87,7 +87,7 @@ describe('apiWorkbookConversion', () => {
 
 describe('apiConvertWorkbook', () => {
   it('posts the format to the conversion door and reads the record', async () => {
-    const answer = { workbook: WorkbookRecord.withFormat(record, 'xlsx'), rev: 2 };
+    const answer = { workbook: WorkbookRecord.converted(record, 'xlsx'), rev: 2 };
     const f = reply(answer);
     vi.stubGlobal('fetch', f);
     expect(await apiConvertWorkbook(scope, 'xlsx')).toEqual(answer);

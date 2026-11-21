@@ -231,6 +231,32 @@ describe('the Worker’s engine at its edges', () => {
     expect(values && values.t === 'values' && typeof values.cells[0]![2]).toBe('number');
   });
 
+  // formulas.md, the file's meaning: a spreadsheet opened from a file is worked out in its standard's meaning.
+  it('sends the spreadsheet’s meaning, and the Worker answers in it', () => {
+    const answer = (meaning?: 'openformula') => {
+      const sent: EngineIn[] = [];
+      const port = new EnginePort({
+        sheets: makeSheets({ S: { A1: '=PERMUTATIONA(3, 4)' } }),
+        locale: 'en-GB',
+        ...(meaning ? { meaning } : {}),
+        send: (m) => sent.push(m),
+      });
+      port.start();
+      const out: EngineOut[] = [];
+      const host = new EngineHost((m) => out.push(m));
+      host.receive(sent[0]!);
+      host.work(Infinity);
+      const values = out.find((m) => m.t === 'values');
+      return { load: sent[0], value: values?.t === 'values' ? values.cells[0]![2] : undefined };
+    };
+    const opened = answer('openformula');
+    expect(opened.load).toMatchObject({ t: 'load', meaning: 'openformula' });
+    expect(opened.value).toBe(81);
+    const made = answer();
+    expect(made.load).not.toHaveProperty('meaning');
+    expect(made.value).toMatchObject({ e: '#NUM!' });
+  });
+
   it('says only a tracking engine can tell what it forgot', () => {
     const wb = new Workbook({ sheets: makeSheets({ S: { A1: '1' } }), locale: 'en-GB' });
     expect(() => wb.takeForgotten()).toThrow('trackForgotten');

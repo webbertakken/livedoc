@@ -30,6 +30,7 @@ export class EngineHost {
         sheets: msg.sheets.map(sheetFromJson),
         locale: msg.locale,
         ...(msg.timeZone ? { timeZone: msg.timeZone } : {}),
+        ...(msg.meaning ? { meaning: msg.meaning } : {}),
         limits: msg.limits === 'spreadsheet' ? SheetLimits.spreadsheet : SheetLimits.plan,
         iteration: msg.iteration,
         trackForgotten: true,

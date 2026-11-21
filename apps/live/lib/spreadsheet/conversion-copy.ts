@@ -69,5 +69,9 @@ export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string
       return `${one ? '1 cell’s' : `${loss.count} cells’`} text is cut to Excel’s 32,767 characters`;
     case 'columns_cut':
       return `Columns past XFD are left out of ${one ? '1 sheet' : `${loss.count} sheets`}: ${named(loss.sheets, 'and')}`;
+    case 'answers_differ': {
+      const what = one ? '1 formula may answer' : `${loss.count} formulas may answer`;
+      return `${what} differently in ${FORMAT_NAME[to]}: ${named(loss.functions, 'and')}`;
+    }
   }
 }

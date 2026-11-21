@@ -3232,6 +3232,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "sheets"
         ],
         "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "functions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "k": {
+            "const": "answers_differ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "functions"
+        ],
+        "type": "object"
       }
     ],
     "description": "A loss of converting, one a kind, counted (D88)."
@@ -6774,6 +6798,14 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "key"
     ],
     "type": "object"
+  },
+  "FileMeaning": {
+    "description": "A file's meaning: a standard's, never Google's.",
+    "enum": [
+      "ooxml",
+      "openformula"
+    ],
+    "type": "string"
   },
   "FilterCondition": {
     "additionalProperties": false,
@@ -18326,6 +18358,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "importsAllowed": {
         "const": true,
         "type": "boolean"
+      },
+      "meaning": {
+        "$ref": "#/components/schemas/FileMeaning"
       },
       "rangeSources": {
         "items": {

@@ -39,7 +39,7 @@ beforeEach(() => {
   };
   vi.mocked(apiWorkbookConversion).mockResolvedValue({ from: 'ods', to: 'xlsx', losses });
   vi.mocked(apiConvertWorkbook).mockImplementation(async (_, format) => ({
-    workbook: WorkbookRecord.withFormat(record, format),
+    workbook: WorkbookRecord.converted(record, format),
     rev: 1,
   }));
 });
@@ -59,7 +59,7 @@ describe('useWorkbookConversion', () => {
     expect(result.current.state.k).toBe('running');
     await waitFor(() => expect(result.current.state.k).toBe('closed'));
     expect(apiConvertWorkbook).toHaveBeenCalledWith(scope, 'xlsx');
-    expect(deps.onWorkbook).toHaveBeenCalledWith(WorkbookRecord.withFormat(record, 'xlsx'));
+    expect(deps.onWorkbook).toHaveBeenCalledWith(WorkbookRecord.converted(record, 'xlsx'));
     expect(track).toHaveBeenCalledWith('Spreadsheet', 'Converted', 'Xlsx');
     expect(steps).toHaveLength(1);
     steps[0]!.undo();

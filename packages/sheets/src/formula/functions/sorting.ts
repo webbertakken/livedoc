@@ -2,7 +2,7 @@
 // reads them, a column of the range by its number or a column beside it of the range's height, and a stable order.
 import type { EvalValue, Frame } from '../../engine/frame';
 import { sortKeyCompare } from '../../sort';
-import { arrayArg, boolArg, intArg } from '../fn';
+import { arrayArg, boolArg, intArg, numArg } from '../fn';
 import { dims, err, isError, scalarOf, type Scalar, type SheetError, type Value } from '../values';
 
 /** One sort key: each row's value to sort by, and the way. */
@@ -28,18 +28,30 @@ export function keyColumn(
   return given.rows.map((r) => scalarOf(r[0]!));
 }
 
+// How an is_ascending reads: Google's as a truth (-1 is TRUE), or as OOXML's sort_order where -1 is descending and
+// any other number a truth (SORT in a file's meaning, formulas.md).
+type AscendingReading = 'truth' | 'minus-one-descends';
+
+function ascendingOf(v: EvalValue, f: Frame, reading: AscendingReading): boolean | SheetError {
+  if (reading === 'truth') return boolArg(v, f);
+  const n = numArg(v, f);
+  if (isError(n)) return n;
+  return n !== -1 && n !== 0;
+}
+
 /** Google's pairs of sort column and is_ascending from `args[from]` on; an is_ascending left off is TRUE. */
 export function rowKeys(
   args: EvalValue[],
   from: number,
   rows: readonly Value[][],
   f: Frame,
+  reading: AscendingReading = 'truth',
 ): RowKey[] | SheetError {
   const keys: RowKey[] = [];
   for (let i = from; i < args.length; i += 2) {
     const values = keyColumn(args[i]!, rows, f);
     if (isError(values)) return values;
-    const asc = args[i + 1] === undefined ? true : boolArg(args[i + 1]!, f);
+    const asc = args[i + 1] === undefined ? true : ascendingOf(args[i + 1]!, f, reading);
     if (isError(asc)) return asc;
     keys.push({ values, asc });
   }
