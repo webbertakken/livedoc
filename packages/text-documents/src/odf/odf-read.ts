@@ -35,6 +35,14 @@ import {
   unquote,
 } from './odf-props';
 import { keptSettings, pagelessIn } from './odf-settings';
+import { masterStoryElements, unlinked, withHeaderMargins, withoutStories } from './odf-headers';
+import {
+  HeadersAndFooters,
+  type HeaderFooter,
+  type HeaderFooterKind,
+  type HeaderFooterSlot,
+  type SectionHeaders,
+} from '../model/headers';
 import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
 
 export type OdfParts = {
@@ -80,6 +88,18 @@ class OdfReader {
   readonly lastListOfStyle = new Map<string, string>();
   readonly pageLayouts = new Map<string, { element: XmlElement; parsed: XmlParsed }>();
   readonly masters = new Map<string, string>();
+  /** Each master page's element, for its headers and footers. */
+  readonly masterElements = new Map<string, { element: XmlElement; parsed: XmlParsed }>();
+  /** styles.xml's automatic paragraph and text styles: a header's paragraphs name them. */
+  readonly stylesAuto = new Map<string, AutoStyle>();
+  /** The part being read and the automatic styles its paragraphs name: the body's, or a header's. */
+  part!: { parsed: XmlParsed; auto: Map<string, AutoStyle> };
+  /** Reads a header's or footer's element as blocks (set once the styles are read). */
+  readStory: (element: XmlElement) => Block[] = () => [];
+  /** Each master page's headers and footers, read once, so sections sharing one share them. */
+  readonly #masterHeaders = new Map<string, SectionHeaders | undefined>();
+  /** Each header's XML as its master page holds it, to find a section's linked ones. */
+  readonly storyXml = new WeakMap<HeaderFooter, string>();
   #listCount = 0;
 
   readonly parts: OdfParts;
@@ -90,6 +110,7 @@ class OdfReader {
   constructor(parts: OdfParts, report: ReportBuilder) {
     this.parts = parts;
     this.report = report;
+    this.part = { parsed: parts.content, auto: this.auto };
     this.tabsFromIndent = tabsFromIndentIn(
       parts.settings && childElement(parts.settings.root, NS.office, 'settings'),
     );
@@ -133,9 +154,9 @@ class OdfReader {
         this.pageLayouts.set(name, { element: style, parsed });
       if (is(style, NS.text, 'list-style'))
         this.autoLists.set(name, Object.assign(style, { parsed }));
-      if (forBody && is(style, NS.style, 'style')) {
+      if (is(style, NS.style, 'style')) {
         const master = attributeOf(style, NS.style, 'master-page-name');
-        this.auto.set(name, {
+        (forBody ? this.auto : this.stylesAuto).set(name, {
           family: attributeOf(style, NS.style, 'family') ?? '',
           ...compact({
             parent: attributeOf(style, NS.style, 'parent-style-name'),
@@ -219,12 +240,14 @@ class OdfReader {
   readMasters(styles: XmlParsed | undefined, kept: KeptXml[]): void {
     const master = styles && childElement(styles.root, NS.office, 'master-styles');
     for (const page of master ? childElements(master) : []) {
-      kept.push(keptXmlOf(styles!, page));
-      if (is(page, NS.style, 'master-page'))
-        this.masters.set(
-          attributeOf(page, NS.style, 'name') ?? '',
-          attributeOf(page, NS.style, 'page-layout-name') ?? '',
-        );
+      const xml = keptXmlOf(styles!, page);
+      // A master page's headers and footers are the model's: what is kept is the rest of it.
+      kept.push(is(page, NS.style, 'master-page') ? { ...xml, xml: withoutStories(xml.xml) } : xml);
+      if (is(page, NS.style, 'master-page')) {
+        const name = attributeOf(page, NS.style, 'name') ?? '';
+        this.masters.set(name, attributeOf(page, NS.style, 'page-layout-name') ?? '');
+        this.masterElements.set(name, { element: page, parsed: styles! });
+      }
     }
   }
 
@@ -232,8 +255,13 @@ class OdfReader {
   sectionOf(master: string | undefined, start: Section['start']): Section | undefined {
     const layoutName = master === undefined ? undefined : this.masters.get(master);
     const layout = layoutName === undefined ? undefined : this.pageLayouts.get(layoutName);
-    const setup = layout && readPageSetup(layout.element, this.unequalColumns);
-    if (!layout || !setup) return undefined;
+    const read = layout && readPageSetup(layout.element, this.unequalColumns);
+    if (!layout || !read) return undefined;
+    const headers = master === undefined ? undefined : this.headersOfMaster(master);
+    const setup = withHeaderMargins(read, layout.element, {
+      header: !!headers?.header,
+      footer: !!headers?.footer,
+    });
     const props = childElement(layout.element, NS.style, 'page-layout-properties');
     const residue = [
       ...(props ? childElements(props).filter((c) => !is(c, NS.style, 'columns')) : []),
@@ -242,14 +270,67 @@ class OdfReader {
     return {
       start,
       setup,
+      ...compact({ headers }),
       kept: {
         xml: keptXmlOf(layout.parsed, layout.element),
-        read: canonical(setup),
+        // What its layout was read with: the setup, and whether its master page shows a header and a footer.
+        read: canonical({ setup, shown: { header: !!headers?.header, footer: !!headers?.footer } }),
         residue,
         name: master,
         layout: layoutName,
       },
     };
+  }
+
+  /** A master page's headers and footers as it holds them, each read once. */
+  headersOfMaster(master: string): SectionHeaders | undefined {
+    if (this.#masterHeaders.has(master)) return this.#masterHeaders.get(master);
+    const page = this.masterElements.get(master);
+    let headers: SectionHeaders | undefined;
+    if (page) {
+      const elements = masterStoryElements(page.element);
+      const outer = this.part;
+      // A flat file's automatic styles are one set, read as the body's.
+      const auto = this.parts.styles === this.parts.content ? this.auto : this.stylesAuto;
+      this.part = { parsed: page.parsed, auto };
+      const kind = (k: HeaderFooterKind) => {
+        const found = elements[k];
+        if (!found) return undefined;
+        const set: Partial<Record<HeaderFooterSlot, HeaderFooter>> = {};
+        for (const [slot, e] of Object.entries(found) as [HeaderFooterSlot, XmlElement][]) {
+          const blocks = this.readStory(e);
+          // Nothing but an empty paragraph is an empty one, as an empty slot is written.
+          const story: HeaderFooter = {
+            blocks: HeadersAndFooters.isEmpty({ blocks }) ? [] : blocks,
+          };
+          this.storyXml.set(story, keptXmlOf(page.parsed, e).xml);
+          set[slot] = story;
+        }
+        return set;
+      };
+      const read = { header: kind('header'), footer: kind('footer') };
+      this.part = outer;
+      const differentFirst = !!(elements.header?.first ?? elements.footer?.first);
+      const differentOddEven = !!(elements.header?.even ?? elements.footer?.even);
+      // A page with no first or even element of a kind shows that kind's default (ODF).
+      const filled = (set: Partial<Record<HeaderFooterSlot, HeaderFooter>> | undefined) =>
+        set && {
+          ...set,
+          ...(differentFirst && !set.first && set.default ? { first: set.default } : {}),
+          ...(differentOddEven && !set.even && set.default ? { even: set.default } : {}),
+        };
+      const header = filled(read.header);
+      const footer = filled(read.footer);
+      const own: SectionHeaders = {
+        ...(header ? { header } : {}),
+        ...(footer ? { footer } : {}),
+        ...(differentFirst ? { differentFirst: true as const } : {}),
+        ...(differentOddEven ? { differentOddEven: true as const } : {}),
+      };
+      headers = Object.keys(own).length > 0 ? own : undefined;
+    }
+    this.#masterHeaders.set(master, headers);
+    return headers;
   }
 
   listDefinition(styleName: string | undefined): ListDefinition {
@@ -293,6 +374,11 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
   reader.readAutomatic(parts.content, automaticStyles, true);
   const masterStyles: KeptXml[] = [];
   reader.readMasters(parts.styles, masterStyles);
+  reader.readStory = (element) => {
+    const story = new BodyReader(reader, styles, defaults);
+    story.container(element);
+    return story.blocks;
+  };
   const body = new BodyReader(reader, styles, defaults).read();
   const settingsRoot = parts.settings && childElement(parts.settings.root, NS.office, 'settings');
   const source: OdfSource = {
@@ -361,13 +447,32 @@ class BodyReader {
     const normal = Styles.idOfRole(this.styles, 'normal') ?? 'Standard';
     if (!this.blocks.some((b) => b.type === 'paragraph'))
       this.blocks.push({ type: 'paragraph', style: normal, props: {}, inlines: [] });
-    const section = this.section ??
+    const first = this.section ??
       this.r.sectionOf('Standard', 'next-page') ??
       this.r.sectionOf([...this.r.masters.keys()][0], 'next-page') ?? {
         start: 'next-page',
         setup: this.#setup,
       };
-    return { blocks: this.blocks, section };
+    return this.linked(first);
+  }
+
+  /** The sections' headers as their own, those the previous section has the same of linked (page-layout.md). */
+  linked(first: Section): { blocks: Block[]; section: Section } {
+    const breaks = this.blocks.flatMap((b, i) =>
+      b.type === 'section' && b.start !== 'continuous' ? [i] : [],
+    );
+    const own = unlinked(
+      [first.headers, ...breaks.map((i) => (this.blocks[i] as SectionBreak).headers)],
+      (story) => this.r.storyXml.get(story) ?? '',
+    );
+    const withHeaders = <T extends Section>(section: T, headers: SectionHeaders | undefined): T => {
+      const { headers: _, ...rest } = section;
+      return (headers ? { ...rest, headers } : rest) as T;
+    };
+    breaks.forEach((at, n) => {
+      this.blocks[at] = withHeaders(this.blocks[at] as SectionBreak, own[n + 1]);
+    });
+    return { blocks: this.blocks, section: withHeaders(first, own[0]) };
   }
 
   container(parent: XmlElement): void {
@@ -381,7 +486,7 @@ class BodyReader {
         this.blocks.push({
           type: 'kept',
           name: e.local,
-          xml: this.r.kept(this.r.parts.content, e),
+          xml: this.r.kept(this.r.part.parsed, e),
         });
         this.r.report.keep(e.local);
       }
@@ -389,11 +494,11 @@ class BodyReader {
   }
 
   region(e: XmlElement): void {
-    const parsed = this.r.parts.content;
+    const parsed = this.r.part.parsed;
     const open = parsed.source
       .slice(e.start, parsed.source.indexOf('>', e.start) + 1)
       .replace(/\/>$/, '>');
-    const columnsStyle = this.r.auto.get(attributeOf(e, NS.text, 'style-name') ?? '');
+    const columnsStyle = this.r.part.auto.get(attributeOf(e, NS.text, 'style-name') ?? '');
     const columns =
       columnsStyle &&
       readColumns(
@@ -460,7 +565,7 @@ class BodyReader {
 
   paragraph(e: XmlElement, list: ListPlace | undefined): void {
     const styleName = attributeOf(e, NS.text, 'style-name') ?? 'Standard';
-    const auto = this.r.auto.get(styleName);
+    const auto = this.r.part.auto.get(styleName);
     const style = auto ? (auto.parent ?? 'Standard') : styleName;
     const heading = is(e, NS.text, 'h')
       ? Number(attributeOf(e, NS.text, 'outline-level') ?? '1') || 1
@@ -589,7 +694,7 @@ class InlineReader {
     const kept: KeptInline = {
       type: 'kept',
       name: node.local,
-      xml: this.r.kept(this.r.parts.content, node),
+      xml: this.r.kept(this.r.part.parsed, node),
       props: ctx.props,
       ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
     };
@@ -599,7 +704,7 @@ class InlineReader {
 
   span(node: XmlElement, ctx: Context): void {
     const name = attributeOf(node, NS.text, 'style-name');
-    const auto = name === undefined ? undefined : this.r.auto.get(name);
+    const auto = name === undefined ? undefined : this.r.part.auto.get(name);
     let inner: Context;
     if (auto) {
       const props = { ...ctx.props, ...auto.text };

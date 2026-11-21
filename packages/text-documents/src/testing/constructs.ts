@@ -35,11 +35,6 @@ const base = (
   ...extra,
 });
 
-/** Constructs a format does not write yet, each with the formats that write it. */
-export const CONSTRUCT_FORMATS: Readonly<Record<string, readonly TextDocumentFormat[]>> = {
-  headers: ['ooxml'],
-};
-
 export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocument> = {
   blank: (format) => TextDocument.blank({ format }),
   text: (format) =>

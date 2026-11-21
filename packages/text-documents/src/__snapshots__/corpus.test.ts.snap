@@ -194,6 +194,10 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
       },
       {
         "count": 1,
+        "name": "page-number",
+      },
+      {
+        "count": 1,
         "name": "bookmark",
       },
       {
@@ -354,6 +358,10 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
       {
         "count": 1,
         "name": "sequence-decls",
+      },
+      {
+        "count": 1,
+        "name": "page-number",
       },
       {
         "count": 1,
