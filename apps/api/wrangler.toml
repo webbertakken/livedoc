@@ -230,6 +230,15 @@ type = "ratelimit"
 namespace_id = "7005"
 simple = { limit = 60, period = 60 }
 
+# Per-spreadsheet throttle for GET /api/documents/:id/workbook/imports (docs/specs/029-sheets/imports.md "The api's
+# guards"): the imports' outbound fetches, 60 a minute per spreadsheet (D66); answers from the hour's cache are not
+# counted. Absent binding → check skipped (self-host, where SHEET_IMPORTS is off unless turned on).
+[[unsafe.bindings]]
+name = "SHEET_IMPORT_RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "7019"
+simple = { limit = 60, period = 60 }
+
 # Per-token read throttle for token-authed GETs (docs/specs/015-api/public-api-and-tokens.md §3.5): an external
 # integration's reads, keyed on the token id, so one runaway script can't hammer
 # reads independently of the owner's app use. Token WRITES ride

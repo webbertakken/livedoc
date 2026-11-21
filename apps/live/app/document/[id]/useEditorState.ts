@@ -1309,6 +1309,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
       ? {
           iteration: persistence.documentWorkbook.settings.iterate,
           recalc: persistence.documentWorkbook.settings.recalc,
+          importsAllowed: persistence.documentWorkbook.importsAllowed === true,
         }
       : {}),
     self: planItems.self,

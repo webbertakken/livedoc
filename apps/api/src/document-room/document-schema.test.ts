@@ -108,7 +108,7 @@ describe('the room schema', () => {
   // bodies an upgraded room holds (db/tabs.test.ts proves each writer writes it).
   it('backfills each tab row’s kind from its body', () => {
     const { db, run } = room();
-    const before = DOCUMENT_SCHEMA_STEPS.length - 1;
+    const before = DOCUMENT_SCHEMA_STEPS.findIndex((step) => step.includes('ADD COLUMN kind'));
     for (const step of DOCUMENT_SCHEMA_STEPS.slice(0, before)) db.exec(step);
     db.exec(
       `CREATE TABLE _document_schema (version INTEGER NOT NULL); INSERT INTO _document_schema VALUES (${before})`,
@@ -126,6 +126,21 @@ describe('the room schema', () => {
       { id: 'b', kind: null },
       { id: 'x', kind: null },
     ]);
+  });
+
+  it('starts every spreadsheet stored before it with its imports not allowed', () => {
+    const { db, run } = room();
+    const before = DOCUMENT_SCHEMA_STEPS.findIndex((step) => step.includes('imports_allowed'));
+    for (const step of DOCUMENT_SCHEMA_STEPS.slice(0, before)) db.exec(step);
+    db.exec(
+      `CREATE TABLE _document_schema (version INTEGER NOT NULL); INSERT INTO _document_schema VALUES (${before})`,
+    );
+    db.exec(`INSERT INTO document (id, saved_at, created_at) VALUES ('d', 0, 0);
+      INSERT INTO workbook (document_id, format, settings, created_at, updated_at) VALUES ('d', 'ods', '{}', 0, 0);`);
+    migrateDocumentSchema(run);
+    expect({ ...(db.prepare('SELECT imports_allowed FROM workbook').get() as object) }).toEqual({
+      imports_allowed: 0,
+    });
   });
 
   it('is idempotent', () => {

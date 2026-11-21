@@ -3,7 +3,7 @@
 import { WorkbookRecord, type WorkbookSettings } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 
-export type WorkbookRow = { format: string; settings: string };
+export type WorkbookRow = { format: string; settings: string; imports_allowed?: number };
 
 /** A workbook row as its record, or null when it cannot be read (logged). */
 export function workbookFromRow(
@@ -17,7 +17,11 @@ export function workbookFromRow(
   } catch {
     settings = null;
   }
-  const record = WorkbookRecord.read({ format: row.format, settings });
+  const record = WorkbookRecord.read({
+    format: row.format,
+    settings,
+    importsAllowed: row.imports_allowed === 1,
+  });
   if (!record) console.warn('[workbook] unreadable row', { documentId });
   return record;
 }
@@ -28,7 +32,7 @@ export async function readWorkbook(
   documentId: string,
 ): Promise<WorkbookRecord | null> {
   const row = await env.DOCUMENT_DB.prepare(
-    'SELECT format, settings FROM workbook WHERE document_id = ?',
+    'SELECT format, settings, imports_allowed FROM workbook WHERE document_id = ?',
   )
     .bind(documentId)
     .first<WorkbookRow>();
@@ -78,6 +82,25 @@ export async function saveWorkbookSettings(
     .bind(JSON.stringify(settings), now, documentId)
     .first<{ rev: number }>();
   return row?.rev ?? null;
+}
+
+/**
+ * A spreadsheet's imports allowed, for good (imports.md "Allow access"): its record as it now stands and the row's new
+ * rev, or null when the document is no spreadsheet.
+ */
+export async function allowWorkbookImports(
+  env: DocumentEnv,
+  documentId: string,
+  now: number,
+): Promise<{ workbook: WorkbookRecord; rev: number } | null> {
+  const row = await env.DOCUMENT_DB.prepare(
+    `UPDATE workbook SET imports_allowed = 1, rev = rev + 1, updated_at = ? WHERE document_id = ?
+     RETURNING format, settings, imports_allowed, rev`,
+  )
+    .bind(now, documentId)
+    .first<WorkbookRow & { rev: number }>();
+  const workbook = workbookFromRow(documentId, row ?? undefined);
+  return row && workbook ? { workbook, rev: row.rev } : null;
 }
 
 /**

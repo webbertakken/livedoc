@@ -457,6 +457,12 @@ ALTER TABLE tabs ADD COLUMN kind TEXT;
 UPDATE tabs SET kind = json_extract(data, '$.kind') WHERE json_valid(data);
 `;
 
+// Whether a spreadsheet's imports may fetch from the web (docs/specs/029-sheets/imports.md "Allow access"): an
+// Editor's one-way choice; a copy's row is written without it, so a copy starts without it.
+const WORKBOOK_IMPORTS_STEP = `
+ALTER TABLE workbook ADD COLUMN imports_allowed INTEGER NOT NULL DEFAULT 0;
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -466,6 +472,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   SHEET_AXES_STEP,
   TEXT_DOCUMENT_DIGEST_STEP,
   TAB_KIND_STEP,
+  WORKBOOK_IMPORTS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

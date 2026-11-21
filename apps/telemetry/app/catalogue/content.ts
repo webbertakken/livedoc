@@ -1231,11 +1231,21 @@ export const SPREADSHEETS_EXPORTED = chart(
   { types: ['Ods', 'Fods', 'Xlsx', 'Csv', 'Tsv', 'Pdf', 'Html'] },
 );
 
+// docs/specs/029-sheets/imports.md "Telemetry": an Editor's Allow Access, once per spreadsheet.
+export const SPREADSHEETS_IMPORTS_ALLOWED = chart(
+  'Spreadsheet',
+  'Unlocked',
+  'Spreadsheet Imports Allowed',
+  'An editor allowed a spreadsheet’s imports to fetch from the web, once for good.',
+  { types: ['ImportAccess'] },
+);
+
 export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
-  blurb: 'Spreadsheet documents on the open standards: made, opened from files and downloaded.',
-  members: [SPREADSHEETS_CREATED, SPREADSHEETS_EXPORTED],
+  blurb:
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, imports allowed.',
+  members: [SPREADSHEETS_CREATED, SPREADSHEETS_EXPORTED, SPREADSHEETS_IMPORTS_ALLOWED],
 };
 
 // Forms (docs/specs/030-forms/forms.md "Telemetry"): forms started and built, published, opened and closed, and the

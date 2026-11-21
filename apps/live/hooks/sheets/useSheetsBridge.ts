@@ -36,6 +36,8 @@ export type SheetsBridge = {
   iteration?: Iteration;
   // A spreadsheet's Recalculation (settings.md "Calculation"); absent, on change.
   recalc?: WorkbookRecalc;
+  // A spreadsheet's imports allowed by an Editor (imports.md "Allow access"); absent for a Plan document.
+  importsAllowed?: boolean;
   // The tab open now: where a placed Sheet's sheet is made.
   activeTabId: string;
   self: SheetPerson | null;
@@ -83,6 +85,7 @@ export function useSheetsBridge(opts: {
   oneWorkbook: boolean;
   iteration?: Iteration;
   recalc?: WorkbookRecalc;
+  importsAllowed?: boolean;
   self: SheetPerson | null;
   canEdit: boolean;
   // Absent: as canEdit.
@@ -123,6 +126,7 @@ export function useSheetsBridge(opts: {
     oneWorkbook,
     iteration,
     recalc,
+    importsAllowed,
     self,
     canEdit,
     peers,
@@ -135,6 +139,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       ...(iteration ? { iteration } : {}),
       ...(recalc ? { recalc } : {}),
+      ...(importsAllowed !== undefined ? { importsAllowed } : {}),
       activeTabId,
       self,
       canEdit,
@@ -160,6 +165,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       iteration,
       recalc,
+      importsAllowed,
       activeTabId,
       self,
       canEdit,

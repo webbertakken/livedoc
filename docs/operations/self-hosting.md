@@ -308,6 +308,8 @@ A workbench is a developer tool that frames the editor signed in, beside an agen
 
 Plan-mode Sheets ([Sheet store](../specs/029-sheets/sheet-store.md)) need no setup: a sheet's cells live in its document's room, and each room's own upkeep removes sheets that no Sheet element has shown for 30 days.
 
+A spreadsheet's `IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML` and `IMPORTXML` fetch pages of the web through the api worker, and are off unless you set `SHEET_IMPORTS = "on"` under `[vars]` in `apps/api/wrangler.toml`; until then each reads "This server does not fetch from the web". Turn it on only where the worker cannot reach a private network you care about: the worker refuses private, loopback and metadata addresses and resolves every host first ([Imports from the web](../specs/029-sheets/imports.md#the-apis-guards)), but a workerd on your own network is the case those guards exist for. The `SHEET_IMPORT_RATE_LIMITER` binding is optional.
+
 ## Google Drive mirror (optional, needs sign-in)
 
 Signed-in users can mirror My Documents to their own Google Drive ([Google Drive mirror](../specs/022-drive-mirror/drive-mirror.md)). It is **off until you set a Google OAuth client id**; with none, Settings has no Cloud Sync section and every `/api/drive` route answers `503 drive_not_configured`. The Drive traffic goes from each user's browser straight to Google; your worker only brokers tokens and stores a few small rows in D1.

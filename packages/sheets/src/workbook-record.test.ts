@@ -26,6 +26,15 @@ describe('WorkbookRecord', () => {
     expect(WorkbookRecord.read(JSON.parse(JSON.stringify(made)))).toEqual(made);
   });
 
+  it('keeps imports allowed only when they are (imports.md "Allow access")', () => {
+    expect(WorkbookRecord.read({ ...made, importsAllowed: true })).toEqual({
+      ...made,
+      importsAllowed: true,
+    });
+    expect(WorkbookRecord.read({ ...made, importsAllowed: false })).toEqual(made);
+    expect(WorkbookRecord.read({ ...made, importsAllowed: 1 })).toEqual(made);
+  });
+
   it.each([
     ['nothing', null],
     ['a string', 'ods'],

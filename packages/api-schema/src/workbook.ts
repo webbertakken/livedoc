@@ -47,6 +47,10 @@ export const WORKBOOK_ERRORS = [
   // A file asked in a format that is none, or in another standard than the workbook's (files-and-print.md).
   'file_type_unknown',
   'format_not_native',
+  // An import fetched for a spreadsheet an Editor has not allowed (imports.md "Allow access").
+  'imports_not_allowed',
+  // An import's query string that is no import.
+  'import_invalid',
 ] as const;
 export type WorkbookError = (typeof WORKBOOK_ERRORS)[number];
 
