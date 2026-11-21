@@ -31,6 +31,11 @@ first load 1,368 to 1,020 KiB); its open must now fall well below a canvas docum
   pressed states and font size, the ruler, the outline, the footnotes under the writing, the save status.
 - Every React commit while the writing has the focus reads the caret's place in the whole body, so the surface draws
   nothing again for a keystroke that only these parts need.
+- What is drawn from the blocks alone (breaks, paragraph boxes, sections, list items) is mapped through an edit of
+  text, never worked out again; a list item's own text edited draws the list items again.
+- A local edit works out no selection in the live state: y-prosemirror walks the body up to the caret for each one,
+  read only when a peer's edit arrives, so `patches/y-prosemirror@1.3.7.patch` leaves it unread; an upgrade of
+  y-prosemirror carries the patch or drops it once upstream does the same.
 
 ## How it is measured
 

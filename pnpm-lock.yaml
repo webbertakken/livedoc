@@ -193,6 +193,9 @@ overrides:
   '@tensorflow/tfjs>argparse': ^3.0.0
   glob@9 || 10 || 11 || 12 || 13 || 14: ^14.0.4
 
+patchedDependencies:
+  y-prosemirror@1.3.7: 8be51a288560e4a9b4a72cb623a6afda197b9ef563e3930f6b454b1e1fa565a5
+
 importers:
 
   .:
@@ -664,7 +667,7 @@ importers:
         version: 19.3.1(react@19.3.1)
       y-prosemirror:
         specifier: ^1.3.7
-        version: 1.3.7(prosemirror-model@1.25.13)(prosemirror-state@1.4.4)(prosemirror-view@1.42.9)(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)
+        version: 1.3.7(patch_hash=8be51a288560e4a9b4a72cb623a6afda197b9ef563e3930f6b454b1e1fa565a5)(prosemirror-model@1.25.13)(prosemirror-state@1.4.4)(prosemirror-view@1.42.9)(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)
       y-protocols:
         specifier: ^1.0.7
         version: 1.0.7(yjs@13.6.33)
@@ -8349,7 +8352,7 @@ snapshots:
 
   xmlchars@2.2.0: {}
 
-  y-prosemirror@1.3.7(prosemirror-model@1.25.13)(prosemirror-state@1.4.4)(prosemirror-view@1.42.9)(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33):
+  y-prosemirror@1.3.7(patch_hash=8be51a288560e4a9b4a72cb623a6afda197b9ef563e3930f6b454b1e1fa565a5)(prosemirror-model@1.25.13)(prosemirror-state@1.4.4)(prosemirror-view@1.42.9)(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33):
     dependencies:
       lib0: 0.2.120
       prosemirror-model: 1.25.13
