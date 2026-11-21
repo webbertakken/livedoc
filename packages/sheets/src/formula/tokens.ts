@@ -127,6 +127,8 @@ export function tokenize(text: string, base = 0, allowStored = false): Token[] {
       continue;
     }
     if (IDENT_START.test(ch)) {
+      // The first character is taken whatever it is: `\` starts a name but never continues one.
+      i++;
       while (i < text.length && IDENT_PART.test(text[i]!)) i++;
       const word = text.slice(start, i);
       if (text[i] === '!') {
