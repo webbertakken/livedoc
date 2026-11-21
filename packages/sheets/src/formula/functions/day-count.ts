@@ -2,6 +2,7 @@
 // conventions a security function takes, 0 US (NASD) 30/360, 1 Actual/Actual, 2 Actual/360, 3 Actual/365 and
 // 4 European 30/360, and DAYS360's two methods. Dates are whole serials.
 import { dateFromSerial, serialFromDate } from '../../dates';
+import type { FormulaMeaning } from '../meaning';
 import { err, type SheetError } from '../values';
 
 type Day = { y: number; m: number; d: number };
@@ -28,10 +29,27 @@ export function frequencyOf(n: number): number | SheetError {
     : err('#NUM!', 'The frequency is 1, 2 or 4 payments a year');
 }
 
+// Google's Actual/Actual past a year: the whole years from the start, and the days left over the length of the year
+// they fall in (1 January 2024 to 30 June 2025 is 1 + 180/365).
+function wholeYearsAndRest(s: number, e: number): number {
+  const p = dateFromSerial(s);
+  let years = 0;
+  while (serialFromDate(p.y + years + 1, p.m, p.d) <= e) years++;
+  const from = serialFromDate(p.y + years, p.m, p.d);
+  return years + (e - from) / (serialFromDate(p.y + years + 1, p.m, p.d) - from);
+}
+
 // YEARFRAC's year fraction, as Excel and Google Sheets count it. Basis 0 is US 30/360 with its February rule (the
 // last day of February counts as the 30th); basis 1 divides by 366 when a span of a year or less takes in a
-// 29 February, else by 365, and a longer span by the average length of the years it touches. Basis 4 is European.
-export function yearFrac(a: number, b: number, basis: number): number {
+// 29 February, else by 365. A longer span is Google's whole years and the rest; in OpenFormula's meaning, the days
+// over the average length of the years it touches (Part 4 §4.11.7.7, procedure E; the file's meaning). Basis 4 is
+// European.
+export function yearFrac(
+  a: number,
+  b: number,
+  basis: number,
+  meaning: FormulaMeaning = 'google',
+): number {
   const [s, e] = a <= b ? [a, b] : [b, a];
   const ps = dateFromSerial(s);
   const pe = dateFromSerial(e);
@@ -59,6 +77,7 @@ export function yearFrac(a: number, b: number, basis: number): number {
         }
         return days / (leap ? 366 : 365);
       }
+      if (meaning !== 'openformula') return wholeYearsAndRest(s, e);
       let total = 0;
       for (let y = ps.y; y <= pe.y; y++)
         total += serialFromDate(y + 1, 1, 1) - serialFromDate(y, 1, 1);

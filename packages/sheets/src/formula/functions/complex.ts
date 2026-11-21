@@ -12,7 +12,8 @@ export const COMPLEX_FUNCTIONS: Record<string, FnDef> = {
     if (isError(c)) return c;
     const out = complexLn(c);
     // Written with i whatever the input used, as Google's IMLN("4+2j") example shows.
-    return out ? writeComplex({ ...out, unit: 'i' }) : err('#NUM!', NO_RESULT);
+    // The logarithm of 0 is a division by zero, as Google gives it.
+    return out ? writeComplex({ ...out, unit: 'i' }) : err('#DIV/0!', NO_RESULT);
   }),
   IMPOWER: scalarFn(2, 2, ([x, n], f) => {
     const c = readComplex(x!);

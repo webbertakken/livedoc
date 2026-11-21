@@ -1,9 +1,11 @@
 // Maths functions (docs/specs/029-sheets/formulas.md "Functions": Maths).
+import type { Frame } from '../../engine/frame';
 import type { FnDef } from '../fn';
 import { MANY, arrayArg, arrayArgs, fn, numArg, numFn, numbersOf, volatileFn } from '../fn';
-import { err, isError, scalarOf } from '../values';
+import { err, isError, scalarOf, toNumber, type Scalar } from '../values';
 import { criteriaMask, ifsNumbers, maskedNumbers, sameSizeAs } from './conditional';
 import { dims } from '../values';
+import { power } from '../operators';
 import { BASE_FUNCTIONS } from './bases';
 import { COMBINATORICS_FUNCTIONS } from './combinatorics';
 import { COMPLEX_FUNCTIONS } from './complex';
@@ -15,6 +17,15 @@ import { TRIG_FUNCTIONS } from './trig';
 // rather than divide by an inexact fraction (987654321 to -4 digits is 987650000, not 987650000.0000001).
 function unscale(steps: number, digits: number): number {
   return digits >= 0 ? steps / 10 ** digits : steps * 10 ** -digits;
+}
+
+// A value SUMPRODUCT multiplies. Google reads TRUE as 1 and a number typed as text as that number; OOXML's
+// meaning reads every value but a number as 0, as Microsoft's help says (formulas.md, the file's meaning).
+function productTerm(x: Scalar, f: Frame): number {
+  if (typeof x === 'number') return x;
+  if (f.meaning === 'ooxml' || x === null) return 0;
+  const n = toNumber(x, f.locale);
+  return isError(n) ? 0 : n;
 }
 
 // Round half away from zero, as spreadsheets do, without float drift (2.675 → 2.68).
@@ -79,7 +90,7 @@ export const MATH_FUNCTIONS: Record<string, FnDef> = {
         for (const a of arrays) {
           const x = scalarOf(a.rows[i]![j]!);
           if (isError(x)) return x;
-          p *= typeof x === 'number' ? x : 0;
+          p *= productTerm(x, f);
         }
         total += p;
       }
@@ -97,16 +108,19 @@ export const MATH_FUNCTIONS: Record<string, FnDef> = {
     return Number(r.toPrecision(15));
   }),
   POWER: numFn(2, 2, ([a, b]) => {
-    if (a === 0 && b! < 0) return err('#DIV/0!');
-    const r = a! ** b!;
-    return Number.isNaN(r) ? err('#NUM!') : r;
+    const r = power(a!, b!);
+    return isError(r) || Number.isFinite(r) ? r : err('#NUM!');
   }),
   SQRT: numFn(1, 1, ([x]) => (x! < 0 ? err('#NUM!', 'SQRT of a negative number') : Math.sqrt(x!))),
   EXP: numFn(1, 1, ([x]) => Math.exp(x!)),
   LN: numFn(1, 1, ([x]) => (x! <= 0 ? err('#NUM!') : Math.log(x!))),
-  LOG: numFn(1, 2, ([x, base = 10]) =>
-    x! <= 0 || base <= 0 || base === 1 ? err('#NUM!') : Math.log(x!) / Math.log(base),
-  ),
+  // A base of 1 divides by its logarithm, 0: #DIV/0!, as Google gives it.
+  LOG: numFn(1, 2, ([x, base = 10]) => {
+    if (x! <= 0 || base <= 0) return err('#NUM!');
+    return base === 1
+      ? err('#DIV/0!', 'The base 1 has a logarithm of 0')
+      : Math.log(x!) / Math.log(base);
+  }),
   LOG10: numFn(1, 1, ([x]) => (x! <= 0 ? err('#NUM!') : Math.log10(x!))),
   PI: fn(0, 0, () => Math.PI),
   SIGN: numFn(1, 1, ([x]) => Math.sign(x!)),

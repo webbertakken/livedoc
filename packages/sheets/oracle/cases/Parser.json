@@ -19,8 +19,7 @@
       "f": "=CONVERT(1, \"lbm\", \"kg\")",
       "differs": {
         "libreoffice": "LibreOffice sizes lbm by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of lbm."
+      }
     },
     {
       "id": "CONVERT.5",
@@ -103,32 +102,28 @@
       "f": "=CONVERT(1, \"atm\", \"Pa\")",
       "differs": {
         "libreoffice": "LibreOffice sizes atm by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of atm."
+      }
     },
     {
       "id": "CONVERT.25",
       "f": "=CONVERT(1, \"lbf\", \"N\")",
       "differs": {
         "libreoffice": "LibreOffice sizes lbf by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of lbf."
+      }
     },
     {
       "id": "CONVERT.26",
       "f": "=CONVERT(1, \"BTU\", \"J\")",
       "differs": {
         "libreoffice": "LibreOffice sizes BTU by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of BTU."
+      }
     },
     {
       "id": "CONVERT.27",
       "f": "=CONVERT(1, \"HP\", \"W\")",
       "differs": {
         "libreoffice": "LibreOffice sizes HP by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of HP."
+      }
     },
     {
       "id": "CONVERT.28",
@@ -147,16 +142,14 @@
       "f": "=CONVERT(1, \"flb\", \"J\")",
       "differs": {
         "libreoffice": "LibreOffice sizes the foot-poundal as 0.04214000 J; its definition (0.3048 m × 0.138254954376 N) is 0.0421401100938048 J"
-      },
-      "note": "Awaits Google's answer: this unit's size."
+      }
     },
     {
       "id": "CONVERT.32",
       "f": "=CONVERT(1, \"cal\", \"J\")",
       "differs": {
         "libreoffice": "LibreOffice sizes cal by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of cal."
+      }
     },
     {
       "id": "CONVERT.33",
@@ -167,8 +160,7 @@
       "f": "=CONVERT(1, \"ly\", \"m\")",
       "differs": {
         "libreoffice": "LibreOffice sizes ly by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of ly."
+      }
     },
     {
       "id": "CONVERT.35",
@@ -199,8 +191,7 @@
       "f": "=CONVERT(1, \"stone\", \"lbm\")",
       "differs": {
         "libreoffice": "LibreOffice sizes stone by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of stone."
+      }
     },
     {
       "id": "CONVERT.42",
@@ -211,8 +202,7 @@
       "f": "=CONVERT(1, \"sg\", \"lbm\")",
       "differs": {
         "libreoffice": "LibreOffice sizes sg by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of sg."
+      }
     },
     {
       "id": "CONVERT.44",
@@ -247,8 +237,7 @@
       "f": "=CONVERT(1, \"ozm\", \"g\")",
       "differs": {
         "libreoffice": "LibreOffice sizes ozm by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of ozm."
+      }
     },
     {
       "id": "CONVERT.52",
@@ -259,8 +248,7 @@
       "f": "=CONVERT(1, \"PS\", \"W\")",
       "differs": {
         "libreoffice": "LibreOffice sizes PS by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of PS."
+      }
     },
     {
       "id": "CONVERT.54",
@@ -279,40 +267,35 @@
       "f": "=CONVERT(1, \"kcal\", \"J\")",
       "differs": {
         "libreoffice": "LibreOffice sizes cal by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of cal."
+      }
     },
     {
       "id": "CONVERT.58",
       "f": "=CONVERT(1, \"c\", \"J\")",
       "differs": {
         "libreoffice": "LibreOffice sizes c by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of c."
+      }
     },
     {
       "id": "CONVERT.59",
       "f": "=CONVERT(1, \"MTON\", \"l\")",
       "differs": {
         "libreoffice": "LibreOffice sizes a measurement ton as 0.708 l; it is 40 cubic feet, 1132.67386368 l"
-      },
-      "note": "Awaits Google's answer: this unit's size."
+      }
     },
     {
       "id": "CONVERT.60",
       "f": "=CONVERT(1, \"GRT\", \"ft3\")",
       "differs": {
         "libreoffice": "LibreOffice sizes GRT by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
-      },
-      "note": "Awaits Google's answer: the size of GRT."
+      }
     },
     {
       "id": "CONVERT.61",
       "f": "=CONVERT(1, \"admkn\", \"kn\")",
       "differs": {
         "libreoffice": "LibreOffice sizes an admiralty knot as a knot; it is 6080 feet an hour, 1.00064 knots"
-      },
-      "note": "Awaits Google's answer: this unit's size."
+      }
     },
     {
       "id": "CONVERT.62",

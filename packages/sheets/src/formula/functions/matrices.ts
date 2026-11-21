@@ -39,7 +39,7 @@ function pairsFn(each: (x: number, y: number) => number): FnDef {
   return fn(2, 2, (args, f) => {
     const xs = flatValues(arrayArg(args[0]!, f));
     const ys = flatValues(arrayArg(args[1]!, f));
-    if (xs.length !== ys.length) return err('#VALUE!', 'The arrays must have as many values');
+    if (xs.length !== ys.length) return err('#N/A', 'The arrays must have as many values');
     let sum = 0;
     for (let i = 0; i < xs.length; i++) {
       const x = xs[i]!;
@@ -52,11 +52,13 @@ function pairsFn(each: (x: number, y: number) => number): FnDef {
   });
 }
 
-function numbersIn(values: Scalar[]): number[] | SheetError {
+// The numbers among values, TRUE and FALSE as 1 and 0 when `truths` count, as Google counts FREQUENCY's data.
+function numbersIn(values: Scalar[], truths = false): number[] | SheetError {
   const out: number[] = [];
   for (const v of values) {
     if (isError(v)) return v;
     if (typeof v === 'number') out.push(v);
+    else if (truths && typeof v === 'boolean') out.push(v ? 1 : 0);
   }
   return out;
 }
@@ -100,7 +102,7 @@ export const MATRIX_FUNCTIONS: Record<string, FnDef> = {
   SUMX2PY2: pairsFn((x, y) => x * x + y * y),
   SUMXMY2: pairsFn((x, y) => (x - y) ** 2),
   FREQUENCY: fn(2, 2, (args, f) => {
-    const data = numbersIn(flatScalars([args[0]!], f));
+    const data = numbersIn(flatScalars([args[0]!], f), true);
     const classes = numbersIn(flatScalars([args[1]!], f));
     if (isError(data)) return data;
     if (isError(classes)) return classes;

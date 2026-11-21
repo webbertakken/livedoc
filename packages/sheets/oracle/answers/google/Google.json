@@ -1,0 +1,584 @@
+{
+  "source": "google",
+  "category": "Google",
+  "by": "Google Sheets",
+  "made": "2026-11-21",
+  "answers": {
+    "ARRAYFORMULA.1": [
+      [
+        40
+      ]
+    ],
+    "ARRAYFORMULA.2": [
+      [
+        3,
+        30,
+        300
+      ]
+    ],
+    "ARRAYFORMULA.3": [
+      [
+        2
+      ],
+      [
+        4
+      ],
+      [
+        6
+      ]
+    ],
+    "ARRAYFORMULA.4": [
+      [
+        "1x"
+      ],
+      [
+        "2x"
+      ],
+      [
+        "3x"
+      ]
+    ],
+    "ARRAYFORMULA.5": [
+      [
+        "APPLE"
+      ],
+      [
+        "PEAR"
+      ],
+      [
+        "FIG"
+      ]
+    ],
+    "ARRAYFORMULA.6": [
+      [
+        7
+      ]
+    ],
+    "ARRAYFORMULA.7": [
+      [
+        1,
+        10
+      ],
+      [
+        2,
+        20
+      ]
+    ],
+    "ARRAYFORMULA.8": [
+      [
+        "small"
+      ],
+      [
+        "small"
+      ],
+      [
+        "big"
+      ]
+    ],
+    "ARRAYFORMULA.9": [
+      [
+        1
+      ],
+      [
+        2
+      ],
+      [
+        3
+      ]
+    ],
+    "ARRAYFORMULA.10": [
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        6
+      ]
+    ],
+    "ARRAYFORMULA.11": [
+      [
+        true
+      ],
+      [
+        true
+      ]
+    ],
+    "ARRAYFORMULA.12": [
+      [
+        54
+      ],
+      [
+        52
+      ]
+    ],
+    "ARRAYFORMULA.13": [
+      [
+        20
+      ],
+      [
+        30
+      ]
+    ],
+    "ARRAYFORMULA.14": [
+      [
+        "1.0"
+      ],
+      [
+        "2.0"
+      ]
+    ],
+    "ARRAYFORMULA.15": [
+      [
+        "none"
+      ],
+      [
+        1
+      ],
+      [
+        0.5
+      ]
+    ],
+    "ARRAYFORMULA.16": [
+      [
+        1
+      ],
+      [
+        4
+      ],
+      [
+        9
+      ]
+    ],
+    "ARRAYFORMULA.17": [
+      [
+        -1
+      ]
+    ],
+    "ARRAYFORMULA.18": [
+      [
+        5
+      ],
+      [
+        4
+      ],
+      [
+        3
+      ]
+    ],
+    "ARRAYFORMULA.19": [
+      [
+        100
+      ],
+      [
+        200
+      ],
+      [
+        0
+      ],
+      [
+        400
+      ]
+    ],
+    "ARRAYFORMULA.20": [
+      [
+        140
+      ]
+    ],
+    "ARRAYFORMULA.21": [
+      [
+        300
+      ]
+    ],
+    "ARRAYFORMULA.22": [
+      [
+        10,
+        20,
+        30
+      ]
+    ],
+    "ARRAYFORMULA.23": [
+      [
+        9
+      ],
+      [
+        8
+      ],
+      [
+        7
+      ]
+    ],
+    "ARRAYFORMULA.24": [
+      [
+        1.5
+      ],
+      [
+        null
+      ]
+    ],
+    "ARRAYFORMULA.25": [
+      [
+        "one"
+      ],
+      [
+        "two"
+      ]
+    ],
+    "ARRAYFORMULA.26": [
+      [
+        2
+      ],
+      [
+        3
+      ]
+    ],
+    "ARRAYFORMULA.27": [
+      [
+        10,
+        9,
+        8
+      ]
+    ],
+    "ARRAYFORMULA.28": [
+      [
+        10
+      ],
+      [
+        20
+      ]
+    ],
+    "ARRAYFORMULA.29": [
+      [
+        10
+      ],
+      [
+        20
+      ],
+      [
+        30
+      ]
+    ],
+    "ARRAYFORMULA.30": [
+      [
+        0
+      ],
+      [
+        null
+      ],
+      [
+        null
+      ]
+    ],
+    "ARRAYFORMULA.31": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "QUERY.1": [
+      [
+        "name"
+      ],
+      [
+        "John"
+      ],
+      [
+        "Mike"
+      ]
+    ],
+    "QUERY.2": [
+      [
+        "lunchTime",
+        "avg salary",
+        "count age"
+      ],
+      [
+        0.5,
+        425,
+        2
+      ],
+      [
+        0.5416666667,
+        600,
+        1
+      ],
+      [
+        0.5,
+        700,
+        2
+      ],
+      [
+        0.5416666667,
+        800,
+        1
+      ]
+    ],
+    "QUERY.3": [
+      [
+        "Eng",
+        "Marketing",
+        "Sales"
+      ],
+      [
+        2100,
+        800,
+        750
+      ]
+    ],
+    "QUERY.4": [
+      [
+        "isSenior",
+        "Eng",
+        "Marketing",
+        "Sales"
+      ],
+      [
+        false,
+        1100,
+        null,
+        350
+      ],
+      [
+        true,
+        1000,
+        800,
+        400
+      ]
+    ],
+    "QUERY.5": [
+      [
+        "Eng sum salary",
+        "Marketing sum salary",
+        "Sales sum salary",
+        "Eng max salary",
+        "Marketing max salary",
+        "Sales max salary"
+      ],
+      [
+        2100,
+        800,
+        750,
+        1000,
+        800,
+        400
+      ]
+    ],
+    "QUERY.6": [
+      [
+        "name",
+        "salary"
+      ],
+      [
+        "John",
+        1000
+      ],
+      [
+        "Mike",
+        800
+      ]
+    ],
+    "QUERY.7": [
+      [
+        "name"
+      ],
+      [
+        "John"
+      ],
+      [
+        "Sally"
+      ]
+    ],
+    "QUERY.8": [
+      [
+        "name"
+      ],
+      [
+        "Dave"
+      ],
+      [
+        "Sally"
+      ],
+      [
+        "Dana"
+      ]
+    ],
+    "QUERY.9": [
+      [
+        "name"
+      ],
+      [
+        "Dave"
+      ],
+      [
+        "Dana"
+      ]
+    ],
+    "QUERY.10": [
+      [
+        "name"
+      ],
+      [
+        "Dave"
+      ],
+      [
+        "Dana"
+      ]
+    ],
+    "QUERY.11": [
+      [
+        "name"
+      ],
+      [
+        "Dave"
+      ],
+      [
+        "Mike"
+      ]
+    ],
+    "QUERY.12": [
+      [
+        "name"
+      ],
+      [
+        "John"
+      ],
+      [
+        "Ben"
+      ],
+      [
+        "Mike"
+      ]
+    ],
+    "QUERY.13": [
+      [
+        "DANA"
+      ],
+      [
+        "MIKE"
+      ]
+    ],
+    "QUERY.14": [
+      [
+        {
+          "e": "#VALUE!"
+        },
+        null
+      ]
+    ],
+    "QUERY.15": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "QUERY.16": [
+      [
+        "count name"
+      ],
+      [
+        null
+      ]
+    ],
+    "QUERY.17": [
+      [
+        "name"
+      ]
+    ],
+    "QUERY.18": [
+      [
+        "name"
+      ],
+      [
+        "John"
+      ],
+      [
+        "Mike"
+      ]
+    ],
+    "QUERY.19": [
+      [
+        "Ben"
+      ],
+      [
+        "Dana"
+      ]
+    ],
+    "QUERY.20": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "QUERY.21": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "QUERY.22": [
+      [
+        "name"
+      ],
+      [
+        "Dana"
+      ],
+      [
+        "Mike"
+      ]
+    ],
+    "QUERY.23": [
+      [
+        "name",
+        null
+      ],
+      [
+        "John",
+        1
+      ],
+      [
+        "Mike",
+        0.8
+      ]
+    ],
+    "QUERY.24": [
+      [
+        "name"
+      ],
+      [
+        "John"
+      ],
+      [
+        "Mike"
+      ]
+    ],
+    "SPARKLINE.1": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "IMAGE.1": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "IMAGE.2": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ]
+  }
+}

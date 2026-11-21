@@ -187,7 +187,8 @@ describe('dates', () => {
     ['=DATEDIF(A3, A1, "M")', 31],
     ['=DATEDIF(A3, A1, "D")', d(2026, 10, 8) - d(2024, 2, 29)],
     ['=DATEDIF(A3, A1, "MD")', 9],
-    ['=DATEDIF(DATE(2026,1,31), DATE(2026,3,1), "MD")', 1],
+    ['=DATEDIF(DATE(2026,1,31), DATE(2026,3,1), "MD")', -2],
+    ['=DATEDIF(DATE(2025,12,31), DATE(2026,1,1), "MD")', 1],
     ['=DATEDIF(A3, A1, "YM")', 7],
     ['=DATEDIF(A3, A1, "YD")', d(2026, 10, 8) - d(2026, 3, 1)],
     ['=DATEDIF(DATE(2026,11,1), DATE(2027,10,8), "YD")', d(2027, 10, 8) - d(2026, 11, 1)],
@@ -203,9 +204,6 @@ describe('dates', () => {
   ])('%s', (f, out) => {
     const v = calc(f, DATES);
     expect(v as number).toBeCloseTo(out, 9);
-  });
-  it('gives #NUM! for DATEDIF "MD" when the start moved on by its months is past the last date', () => {
-    expect(calc('=DATEDIF(2958400, 2958500, "MD")')).toMatchObject({ e: '#NUM!' });
   });
   it('works out year fractions on every basis', () => {
     const f = (b: number) => calc(`=YEARFRAC(DATE(2026,1,1), DATE(2026,7,1), ${b})`) as number;

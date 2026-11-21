@@ -1,0 +1,894 @@
+{
+  "source": "google",
+  "category": "OpenFormula",
+  "by": "Google Sheets",
+  "made": "2026-11-21",
+  "answers": {
+    "AREAS.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "AREAS.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "AREAS.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELI.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELI.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELI.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELI.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELI.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELI.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELI.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELJ.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELK.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELK.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELK.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELK.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELK.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELK.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELK.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELY.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELY.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELY.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELY.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELY.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELY.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BESSELY.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "BINOM.DIST.RANGE.1": [
+      [
+        0.08397496743
+      ]
+    ],
+    "BINOM.DIST.RANGE.2": [
+      [
+        0.5236297935
+      ]
+    ],
+    "BINOM.DIST.RANGE.3": [
+      [
+        1
+      ]
+    ],
+    "BINOM.DIST.RANGE.4": [
+      [
+        {
+          "e": "#NUM!"
+        }
+      ]
+    ],
+    "BINOM.DIST.RANGE.5": [
+      [
+        {
+          "e": "#NUM!"
+        }
+      ]
+    ],
+    "BINOM.DIST.RANGE.6": [
+      [
+        {
+          "e": "#NUM!"
+        }
+      ]
+    ],
+    "CHISQDIST.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQDIST.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQDIST.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQDIST.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQDIST.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQINV.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQINV.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQINV.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQINV.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CHISQINV.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "EUROCONVERT.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "INFO.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "INFO.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "INFO.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "INFO.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "INFO.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "INFO.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "INFO.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JIS.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JIS.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JIS.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JIS.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JIS.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.9": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.10": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "NUMBERVALUE.11": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFPRICE.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFYIELD.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFYIELD.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFYIELD.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDFYIELD.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.9": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.10": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.11": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLPRICE.12": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLYIELD.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLYIELD.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLYIELD.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLYIELD.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLYIELD.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLYIELD.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ODDLYIELD.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.1": [
+      [
+        12
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.2": [
+      [
+        25
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.9": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.10": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ]
+  }
+}

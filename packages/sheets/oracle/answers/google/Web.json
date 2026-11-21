@@ -1,0 +1,170 @@
+{
+  "source": "google",
+  "category": "Web",
+  "by": "Google Sheets",
+  "made": "2026-11-21",
+  "answers": {
+    "ENCODEURL.1": [
+      [
+        "hello%2C%20world%21"
+      ]
+    ],
+    "ENCODEURL.2": [
+      [
+        "hello%20world"
+      ]
+    ],
+    "ENCODEURL.3": [
+      [
+        "a-b_c.d%7Ee"
+      ]
+    ],
+    "ENCODEURL.4": [
+      [
+        "%E6%97%A5%E6%9C%AC%20%C3%A9"
+      ]
+    ],
+    "ENCODEURL.5": [
+      [
+        "1.5"
+      ]
+    ],
+    "ENCODEURL.6": [
+      [
+        "TRUE"
+      ]
+    ],
+    "ENCODEURL.7": [
+      [
+        "https%3A%2F%2Fdocs.nu%2Fa%20b"
+      ]
+    ],
+    "ENCODEURL.8": [
+      [
+        "x%20y"
+      ]
+    ],
+    "ENCODEURL.9": [
+      [
+        "%3F%26%3D%2F%23%2B%25"
+      ]
+    ],
+    "ISURL.1": [
+      [
+        true
+      ]
+    ],
+    "ISURL.2": [
+      [
+        true
+      ]
+    ],
+    "ISURL.3": [
+      [
+        true
+      ]
+    ],
+    "ISURL.4": [
+      [
+        true
+      ]
+    ],
+    "ISURL.5": [
+      [
+        true
+      ]
+    ],
+    "ISURL.6": [
+      [
+        false
+      ]
+    ],
+    "ISURL.7": [
+      [
+        false
+      ]
+    ],
+    "ISURL.8": [
+      [
+        false
+      ]
+    ],
+    "ISURL.9": [
+      [
+        false
+      ]
+    ],
+    "HYPERLINK.1": [
+      [
+        "Google"
+      ]
+    ],
+    "HYPERLINK.2": [
+      [
+        "http://www.google.com/"
+      ]
+    ],
+    "HYPERLINK.3": [
+      [
+        null
+      ]
+    ],
+    "HYPERLINK.4": [
+      [
+        "http://www.google.com/"
+      ]
+    ],
+    "HYPERLINK.5": [
+      [
+        5
+      ]
+    ],
+    "HYPERLINK.6": [
+      [
+        "https://docs.nu/a b"
+      ]
+    ],
+    "IMPORTDATA.1": [
+      [
+        {
+          "e": "#ERROR!"
+        }
+      ]
+    ],
+    "IMPORTFEED.1": [
+      [
+        {
+          "e": "#ERROR!"
+        }
+      ]
+    ],
+    "IMPORTHTML.1": [
+      [
+        {
+          "e": "#ERROR!"
+        }
+      ]
+    ],
+    "IMPORTXML.1": [
+      [
+        {
+          "e": "#ERROR!"
+        }
+      ]
+    ],
+    "IMPORTRANGE.1": [
+      [
+        {
+          "e": "#ERROR!"
+        }
+      ]
+    ],
+    "IMPORTRANGE.2": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ]
+  }
+}

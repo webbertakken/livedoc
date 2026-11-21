@@ -64,6 +64,8 @@ type Part =
 class Parser {
   private i = 0;
   private depth = 0;
+  // Operands written in brackets, so a power of a bracketed power is no chain: `(2^3)^2`.
+  private readonly bracketed = new WeakSet<Node>();
   private readonly toks: Token[];
   private readonly end: number;
   constructor(toks: Token[], end: number) {
@@ -119,7 +121,11 @@ class Parser {
       if (t?.k !== 'op' || !ops.includes(t.v)) return a;
       this.next();
       const b = next();
-      a = { k: 'bin', op: t.v as BinaryOp, a, b };
+      // Parsed left to right; a power of a power is marked, as Google groups it from the right (the meaning decides).
+      const chained = t.v === '^' && a.k === 'bin' && a.op === '^' && !this.bracketed.has(a);
+      a = chained
+        ? { k: 'bin', op: '^', a, b, chained: true }
+        : { k: 'bin', op: t.v as BinaryOp, a, b };
     }
   }
 
@@ -336,7 +342,10 @@ class Parser {
         const close = this.next();
         if (close?.k !== 'rparen')
           throw new Fail('missing_close_bracket', close?.start ?? this.end);
-        if (items.length === 1) return items[0]!;
+        if (items.length === 1) {
+          this.bracketed.add(items[0]!);
+          return items[0]!;
+        }
         if (!items.every(givesReference)) throw new Fail('unexpected_token', t.start);
         return { k: 'union', items };
       }

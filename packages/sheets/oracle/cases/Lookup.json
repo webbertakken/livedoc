@@ -322,8 +322,7 @@
       "f": "=ADDRESS(1, 1, 5)",
       "differs": {
         "libreoffice": "LibreOffice reads mode 5 as 1; Google's help names only 1 to 4, and LiveDoc refuses others with #VALUE!"
-      },
-      "note": "Awaits Google's answer: an absolute_relative_mode past 4."
+      }
     },
     {
       "id": "ADDRESS.10",

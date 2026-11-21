@@ -32,8 +32,7 @@
       "f": "=ENCODEURL(TRUE)",
       "differs": {
         "libreoffice": "LibreOffice reads TRUE as 1 where text goes"
-      },
-      "note": "Awaits Google's answer: LiveDoc writes TRUE as text, as Google's text functions do (formulas.md \"Candidates\")"
+      }
     },
     {
       "id": "ENCODEURL.7",

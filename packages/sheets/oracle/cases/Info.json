@@ -316,8 +316,7 @@
       "f": "=CELL(\"address\", Data!B3)",
       "differs": {
         "libreoffice": "LibreOffice writes the address in its own syntax, `$Data.$B$3`; Google writes `Data!$B$3`"
-      },
-      "note": "Awaits Google's answer: its help page does not show an address on another sheet."
+      }
     },
     {
       "id": "CELL.3",
@@ -381,8 +380,7 @@
       "f": "=CELL(\"width\", Data!A1)",
       "differs": {
         "libreoffice": "LibreOffice measures the column in its own default font and width; Google counts its zero characters at its default font size"
-      },
-      "note": "Awaits Google's answer: LiveDoc counts ECMA-376's characters (7-pixel digit, 5 pixels of padding) of a 120-pixel column (default, formulas.md \"Information\")."
+      }
     },
     {
       "id": "CELL.15",

@@ -1,5 +1,6 @@
 // Whether two answers agree (docs/specs/029-sheets/formulas.md "The oracle"): numbers to a relative tolerance, text and
-// booleans exactly, errors by their code (a LibreOffice error text by being an error), empty and "" alike.
+// booleans exactly but complex numbers written as text by their parts, errors by their code (a LibreOffice error text
+// by being an error), empty and "" alike.
 import {
   ORACLE_TOLERANCE,
   ORACLE_ZERO_FLOOR,
@@ -16,6 +17,45 @@ function sameNumber(a: number, b: number, tol: number): boolean {
 
 const blank = (v: OracleValue) => v === null || v === '';
 
+const NUMBER = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
+
+type ComplexText = { re: number; im: number; unit: string | null };
+
+// A coefficient before the unit: empty or a lone sign is 1 or -1.
+function coefficient(text: string): number | null {
+  if (text === '' || text === '+') return 1;
+  if (text === '-') return -1;
+  return NUMBER.test(text) ? Number(text) : null;
+}
+
+/** A complex number written as text (`3+4i`, `1.2E-16+2j`, `-i`, `5`): its parts and unit, or null. */
+export function complexText(text: string): ComplexText | null {
+  if (NUMBER.test(text)) return { re: Number(text), im: 0, unit: null };
+  const unit = text.at(-1);
+  if (unit !== 'i' && unit !== 'j') return null;
+  const body = text.slice(0, -1);
+  // The imaginary part starts at the last sign that is not the first character nor an exponent's.
+  let at = -1;
+  for (let k = body.length - 1; k > 0; k--)
+    if ((body[k] === '+' || body[k] === '-') && !/[eE]/.test(body[k - 1]!)) {
+      at = k;
+      break;
+    }
+  const re = at < 0 ? 0 : NUMBER.test(body.slice(0, at)) ? Number(body.slice(0, at)) : null;
+  const im = coefficient(at < 0 ? body : body.slice(at));
+  return re === null || im === null ? null : { re, im, unit };
+}
+
+// Two texts that write the same complex number, its parts to the tolerance (Google writes the 15th digit and a
+// residue of 1e-16 as its arithmetic leaves them). At least one names a unit, and two units agree.
+function sameComplex(a: string, b: string, tol: number): boolean {
+  const x = complexText(a);
+  const y = complexText(b);
+  if (!x || !y || (x.unit === null && y.unit === null)) return false;
+  if (x.unit !== null && y.unit !== null && x.unit !== y.unit) return false;
+  return sameNumber(x.re, y.re, tol) && sameNumber(x.im, y.im, tol);
+}
+
 export function sameValue(a: OracleValue, b: OracleValue, tol = ORACLE_TOLERANCE): boolean {
   if (blank(a) || blank(b)) return blank(a) && blank(b);
   if (typeof a === 'number' && typeof b === 'number') return sameNumber(a, b, tol);
@@ -23,6 +63,7 @@ export function sameValue(a: OracleValue, b: OracleValue, tol = ORACLE_TOLERANCE
     if (OracleCorpus.isLibreOfficeError(a) || OracleCorpus.isLibreOfficeError(b)) return true;
     return a.e === b.e;
   }
+  if (typeof a === 'string' && typeof b === 'string') return a === b || sameComplex(a, b, tol);
   return a === b;
 }
 

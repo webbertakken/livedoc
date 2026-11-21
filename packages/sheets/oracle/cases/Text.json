@@ -86,8 +86,7 @@
       "f": "=CHAR(0)",
       "differs": {
         "libreoffice": "LibreOffice gives empty text for 0; LiveDoc has no character 0, #VALUE!"
-      },
-      "note": "Awaits Google's answer: its help asks for a Unicode table number and says nothing of 0."
+      }
     },
     {
       "id": "CHAR.3",
@@ -127,8 +126,7 @@
       "f": "=CODE(\"\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0 for empty text; LiveDoc has no first character, #VALUE!"
-      },
-      "note": "Awaits Google's answer: its help reads \"the first character\" and says nothing of empty text."
+      }
     },
     {
       "id": "CODE.3",
@@ -161,8 +159,7 @@
       "f": "=CONCATENATE(1, TRUE)",
       "differs": {
         "libreoffice": "LibreOffice writes TRUE as 1; LiveDoc writes it TRUE, as Google writes a boolean as text"
-      },
-      "note": "Awaits Google's answer: its help shows only strings."
+      }
     },
     {
       "id": "CONCATENATE.4",
@@ -241,8 +238,7 @@
       "f": "=FIND(\"\", \"abc\")",
       "differs": {
         "libreoffice": "LibreOffice refuses empty search text; LiveDoc finds it at starting_at, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help says nothing of empty search text."
+      }
     },
     {
       "id": "FIND.6",
@@ -416,8 +412,7 @@
       "f": "=LEFTB(Data!A4, 1)",
       "differs": {
         "libreoffice": "LibreOffice writes half a double-byte character as a space; LiveDoc keeps a character the window starts, as Google's MIDB example does"
-      },
-      "note": "Awaits Google's answer: its examples never cut a character at the start of a window."
+      }
     },
     {
       "id": "LEN.1",
@@ -468,8 +463,7 @@
       "f": "=LENB(Data!A7)",
       "differs": {
         "libreoffice": "LibreOffice counts half-width katakana as two bytes (Asian script); LiveDoc as one, as the double-byte character sets do (D43)"
-      },
-      "note": "Awaits Google's answer: its help counts 熊本 as 4 and says nothing of half-width kana."
+      }
     },
     {
       "id": "LOWER.1",
@@ -484,8 +478,7 @@
       "f": "=LOWER(TRUE)",
       "differs": {
         "libreoffice": "LibreOffice writes TRUE as 1; LiveDoc as TRUE, lowered to true"
-      },
-      "note": "Awaits Google's answer: its help shows only strings."
+      }
     },
     {
       "id": "MID.1",
@@ -553,8 +546,7 @@
       "f": "=PROPER(\"it's 2nd-rate\")",
       "differs": {
         "libreoffice": "LibreOffice starts a word after any character but a letter (It'S 2Nd); LiveDoc after a space or mark, not an apostrophe or a digit"
-      },
-      "note": "Awaits Google's answer: its help says \"the first letter of each word\" and does not say what ends a word."
+      }
     },
     {
       "id": "PROPER.4",
@@ -918,8 +910,7 @@
       "f": "=RIGHTB(Data!A4, 1)",
       "differs": {
         "libreoffice": "LibreOffice writes half a double-byte character as a space; LiveDoc keeps a character the window reaches, as Google's MIDB example does"
-      },
-      "note": "Awaits Google's answer: its examples never cut a character this way."
+      }
     },
     {
       "id": "ROMAN.1",
@@ -1024,8 +1015,7 @@
       "f": "=SEARCH(\"\", \"abc\")",
       "differs": {
         "libreoffice": "LibreOffice refuses empty search text; LiveDoc finds it at starting_at, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help says nothing of empty search text."
+      }
     },
     {
       "id": "SEARCHB.1",

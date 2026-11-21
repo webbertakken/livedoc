@@ -84,8 +84,7 @@
       "rows": 2,
       "differs": {
         "libreoffice": "LibreOffice writes the booleans of a matrix formula as 1 and 0"
-      },
-      "note": "Awaits Google's answer: LiveDoc keeps TRUE, as its other array results do (formulas.md \"Candidates\")"
+      }
     },
     {
       "id": "ARRAYFORMULA.12",
@@ -184,8 +183,7 @@
       "rows": 3,
       "differs": {
         "libreoffice": "LibreOffice lifts SUMIFS over its criteria in a matrix formula; Google gives one value (D67)"
-      },
-      "note": "Awaits Google's answer (formulas.md \"Candidates\")"
+      }
     },
     {
       "id": "ARRAYFORMULA.31",

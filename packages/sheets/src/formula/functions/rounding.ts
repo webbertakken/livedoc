@@ -17,7 +17,8 @@ function steps(x: number, factor: number): number {
 // Google's CEILING and FLOOR: a negative factor turns the direction for a negative value (CEILING(-2.5, -1) is -3);
 // a positive value with a negative factor is #NUM!.
 function googleMultiple(x: number, factor: number, up: boolean): Value {
-  if (factor === 0) return 0;
+  // A factor of 0 is 0 for CEILING and a division by zero for FLOOR, as Google gives them.
+  if (factor === 0) return up ? 0 : err('#DIV/0!', 'FLOOR divides by the factor, 0');
   if (x > 0 && factor < 0) return err('#NUM!', SIGNS_DIFFER);
   const q = steps(x, factor);
   return clean((up ? Math.ceil(q) : Math.floor(q)) * factor);

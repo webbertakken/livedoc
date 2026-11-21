@@ -81,8 +81,7 @@
       "f": "=DOLLAR(1234,5)",
       "differs": {
         "libreoffice": "LibreOffice writes a plain space before the euro, Intl a no-break space"
-      },
-      "note": "Awaits Google's answer (formulas.md \"Candidates\")"
+      }
     },
     {
       "id": "Locale.17",

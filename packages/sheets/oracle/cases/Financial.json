@@ -699,7 +699,6 @@
       "differs": {
         "libreoffice": "LibreOffice drops both fractions (periods 2 to 4); LiveDoc moves each inward as Google documents for CUMIPMT (periods 3 and 4)"
       },
-      "note": "Awaits Google's answer: CUMPRINC's help does not say how a fractional period is read.",
       "meaning": {
         "ooxml": [[-207.922727161991]],
         "cite": "Microsoft's help, CUMPRINC function (support.microsoft.com): start_period and end_period are truncated to integers"
@@ -856,8 +855,7 @@
       "f": "=DOLLARDE(1.1, 10)",
       "differs": {
         "libreoffice": "LibreOffice reads tenths in one decimal place (1.1 is 1 1/10); LiveDoc in two, as Google reads eighths (1.10 is 1 10/10, 2)"
-      },
-      "note": "Awaits Google's answer: its help shows eighths and thirty-seconds read in two decimal places, no unit under 10."
+      }
     },
     {
       "id": "DOLLARDE.5",
@@ -1422,8 +1420,7 @@
       "f": "=TBILLPRICE(DATE(2008,3,31), DATE(2009,6,1), 0.09)",
       "differs": {
         "libreoffice": "LibreOffice prices a bill maturing more than a year after settlement (89.45); LiveDoc gives #NUM!"
-      },
-      "note": "Awaits Google's answer: its help says \"maturity must be one year or less from the settlement date\" but not which error."
+      }
     },
     {
       "id": "TBILLPRICE.5",
@@ -1567,8 +1564,7 @@
       "f": "=XNPV(0.09, Data!A1:A5, Data!F1:F5)",
       "differs": {
         "libreoffice": "LibreOffice reads a date that is text (\"soon\") as a number and answers; LiveDoc gives #VALUE!"
-      },
-      "note": "Awaits Google's answer: its help does not say what a date that is not a number gives."
+      }
     },
     {
       "id": "YIELD.1",

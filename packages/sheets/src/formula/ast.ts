@@ -31,7 +31,8 @@ export type Node =
   | { k: 'neg'; a: Node }
   | { k: 'pos'; a: Node }
   | { k: 'pct'; a: Node }
-  | { k: 'bin'; op: BinaryOp; a: Node; b: Node }
+  // `chained`: a `^` whose left operand is a `^` written without brackets (`2^3^2`), grouped by the meaning.
+  | { k: 'bin'; op: BinaryOp; a: Node; b: Node; chained?: true }
   | { k: 'call'; name: string; args: (Node | null)[]; start: number; end: number }
   // A function value called with values: `LAMBDA(x, x*2)(5)` (formulas.md "LAMBDA and LET").
   | { k: 'apply'; fn: Node; args: (Node | null)[] }
@@ -78,6 +79,12 @@ function collectRefs(node: Node, out: A1Ref[]): A1Ref[] {
 }
 
 // Every function name called in a tree (upper case), for telemetry and card-function detection.
+/** Whether a formula raises a power to a power without brackets (`2^3^2`), which the meanings group differently. */
+export function hasChainedPower(node: Node): boolean {
+  if (node.k === 'bin' && node.chained) return true;
+  return childrenOf(node).some(hasChainedPower);
+}
+
 export function callsOf(node: Node, out: Set<string> = new Set()): Set<string> {
   if (node.k === 'call') out.add(node.name);
   for (const child of childrenOf(node)) callsOf(child, out);

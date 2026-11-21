@@ -39,7 +39,7 @@ function weekendArg(args: EvalValue[], i: number, f: Frame): Weekend | Value {
   if (isError(x)) return x;
   if (typeof x === 'string') {
     if (!/^[01]{7}$/.test(x) || x === '1111111')
-      return err('#VALUE!', 'A weekend is seven 0s and 1s from Monday, with a working day');
+      return err('#NUM!', 'A weekend is seven 0s and 1s from Monday, with a working day');
     // Monday first in the text; Sunday first by weekday.
     return [x[6] === '1', ...[...x.slice(0, 6)].map((c) => c === '1')];
   }

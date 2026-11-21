@@ -205,7 +205,7 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
   MUNIT: fn(1, 1, (args, f) => {
     const n = intArg(args[0]!, f);
     if (isError(n)) return n;
-    if (n < 1) return err('#VALUE!', 'MUNIT needs a size of at least 1');
+    if (n < 1) return err('#NUM!', 'MUNIT needs a size of at least 1');
     if (tooBig(n, n)) return err('#NUM!', 'The result is too large');
     return {
       rows: Array.from({ length: n }, (_, i) =>

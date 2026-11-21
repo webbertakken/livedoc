@@ -2,6 +2,7 @@
 // out, reading a source's copy back, comparing, and the engine's own answers.
 import { describe, expect, it } from 'vitest';
 import {
+  complexText,
   googleLacks,
   heldAnswer,
   sameBlock,
@@ -246,6 +247,28 @@ describe('comparing', () => {
     expect(sameValue({ e: 'Err:502' }, { e: '#NUM!' })).toBe(true);
     expect(sameValue('a', 'A')).toBe(false);
     expect(sameValue(true, 1)).toBe(false);
+  });
+
+  // formulas.md "The oracle": complex numbers written as text agree by their parts.
+  it('compares complex numbers written as text by their parts', () => {
+    expect(
+      sameValue('0.303931001628426-0.621518017170428i', '0.303931001628426-0.621518017170429i'),
+    ).toBe(true);
+    expect(sameValue('-4', '-4+4.89858719658941E-16i')).toBe(true);
+    expect(sameValue('2i', '1.22464679914735E-16+2i')).toBe(true);
+    expect(sameValue('1+i', '1+j')).toBe(false);
+    expect(sameValue('1+2i', '1+3i')).toBe(false);
+    expect(sameValue('5', '5.0')).toBe(false);
+    expect(sameValue('a', 'b')).toBe(false);
+    expect(complexText('-i')).toEqual({ re: 0, im: -1, unit: 'i' });
+    expect(complexText('3+j')).toEqual({ re: 3, im: 1, unit: 'j' });
+    expect(complexText('1e-3-2.5E+2i')).toEqual({ re: 0.001, im: -250, unit: 'i' });
+    expect(complexText('x+2i')).toBeNull();
+    expect(complexText('1+xi')).toBeNull();
+    expect(complexText('abc')).toBeNull();
+  });
+
+  it('compares blocks', () => {
     expect(sameBlock([[1]], [[1], [2]])).toBe(false);
     expect(sameBlock([[1, 2]], [[1]])).toBe(false);
     expect(showBlock([[1]])).toBe('1');

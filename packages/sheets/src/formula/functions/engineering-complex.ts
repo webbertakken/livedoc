@@ -23,7 +23,9 @@ import {
 import { err, isError, toNumber, type Scalar, type SheetError, type Value } from '../values';
 
 const NO_RESULT = err('#NUM!', 'This has no complex result');
-const MIXED_UNITS = err('#VALUE!', 'Complex numbers with i and with j cannot be combined');
+const MIXED_UNITS = err('#NUM!', 'Complex numbers with i and with j cannot be combined');
+// Google's answer where some functions meet a pole or a logarithm of 0: a division by zero.
+const BY_ZERO = err('#DIV/0!', 'This divides by zero');
 
 // The unit a value names: text ending in i or j names it; a number names none.
 function namedUnit(v: Scalar): ImaginaryUnit | null {
@@ -32,7 +34,7 @@ function namedUnit(v: Scalar): ImaginaryUnit | null {
   return last === 'i' || last === 'j' ? last : null;
 }
 
-// Values read as complex numbers of one unit: the unit any of them names (i when none does), two names #VALUE!.
+// Values read as complex numbers of one unit: the unit any of them names (i when none does), two names #NUM!.
 function complexes(values: Scalar[]): Complex[] | SheetError {
   let unit: ImaginaryUnit | null = null;
   const out: Complex[] = [];
@@ -55,13 +57,12 @@ function unary(each: (c: Complex) => Value): FnDef {
   });
 }
 
-// A function of one complex number to another, none (a pole, a logarithm of 0) being #NUM!.
-function complexFn(each: (c: Complex) => Complex | null): FnDef {
+// A function of one complex number to another, none (a pole, a logarithm of 0) being #NUM! or, where Google
+// says so, #DIV/0!.
+function complexFn(each: (c: Complex) => Complex | null, none: SheetError = NO_RESULT): FnDef {
   return unary((c) => {
     const out = each(c);
-    return out && Number.isFinite(out.re) && Number.isFinite(out.im)
-      ? writeComplex(out)
-      : NO_RESULT;
+    return out && Number.isFinite(out.re) && Number.isFinite(out.im) ? writeComplex(out) : none;
   });
 }
 
@@ -86,7 +87,7 @@ function binary(each: (a: Complex, b: Complex) => Complex | null): FnDef {
     const both = complexes(xs);
     if (isError(both)) return both;
     const out = each(both[0]!, both[1]!);
-    return out ? writeComplex(out) : NO_RESULT;
+    return out ? writeComplex(out) : BY_ZERO;
   });
 }
 
@@ -115,8 +116,8 @@ export const ENGINEERING_COMPLEX_FUNCTIONS: Record<string, FnDef> = {
   IMSUB: binary((a, b) => complexPlus(a, { ...b, re: -b.re, im: -b.im })),
   IMDIV: binary(complexDivide),
   IMEXP: complexFn(complexExp),
-  IMLOG10: complexFn((c) => scaled(complexLn(c), Math.LN10)),
-  IMLOG2: complexFn((c) => scaled(complexLn(c), Math.LN2)),
+  IMLOG10: complexFn((c) => scaled(complexLn(c), Math.LN10), BY_ZERO),
+  IMLOG2: complexFn((c) => scaled(complexLn(c), Math.LN2), BY_ZERO),
   // A logarithm to any positive base but 1.
   IMLOG: scalarFn(2, 2, ([x, b], f) => {
     const c = readComplex(x!);
@@ -130,7 +131,7 @@ export const ENGINEERING_COMPLEX_FUNCTIONS: Record<string, FnDef> = {
   IMSIN: complexFn(complexSin),
   IMCOS: complexFn(complexCos),
   IMTAN: complexFn(complexTan),
-  IMCOT: complexFn(complexCot),
+  IMCOT: complexFn(complexCot, BY_ZERO),
   IMSEC: complexFn(over(ONE, complexCos)),
   IMCSC: complexFn(over(ONE, complexSin)),
   IMSINH: complexFn(complexSinh),
@@ -138,5 +139,5 @@ export const ENGINEERING_COMPLEX_FUNCTIONS: Record<string, FnDef> = {
   IMTANH: complexFn(complexTanh),
   IMCOTH: complexFn(complexCoth),
   IMSECH: complexFn(over(ONE, complexCosh)),
-  IMCSCH: complexFn(over(ONE, complexSinh)),
+  IMCSCH: complexFn(over(ONE, complexSinh), BY_ZERO),
 };

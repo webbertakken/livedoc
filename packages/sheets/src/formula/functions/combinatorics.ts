@@ -30,12 +30,12 @@ export const COMBINATORICS_FUNCTIONS: Record<string, FnDef> = {
     if (n < 0 || k < 0 || k > n) return err('#NUM!', 'COMBIN needs 0 ≤ k ≤ n');
     return finite(choose(n, k));
   }),
-  // With repetition: (n + k - 1) choose k. COMBINA(0, 0) is 0, as LibreOffice's.
+  // With repetition: (n + k - 1) choose k. COMBINA(0, 0) is 1, as Google's: one way to choose nothing.
   COMBINA: numFn(2, 2, ([a, b]) => {
     const n = Math.trunc(a!);
     const k = Math.trunc(b!);
     if (n < 0 || k < 0) return err('#NUM!', NEGATIVE);
-    if (n === 0) return 0;
+    if (n === 0) return k === 0 ? 1 : 0;
     return finite(choose(n + k - 1, k));
   }),
   FACTDOUBLE: numFn(1, 1, ([x]) => {

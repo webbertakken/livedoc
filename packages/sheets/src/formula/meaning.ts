@@ -34,9 +34,11 @@ export const MEANING_FUNCTIONS: Readonly<Record<string, readonly FileMeaning[]>>
   'STDEV.P': ['ooxml', 'openformula'],
   STDEVP: ['ooxml', 'openformula'],
   STDEVPA: ['ooxml', 'openformula'],
+  SUMPRODUCT: ['ooxml'],
   'VAR.P': ['ooxml', 'openformula'],
   VARP: ['ooxml', 'openformula'],
   VARPA: ['ooxml', 'openformula'],
+  YEARFRAC: ['openformula'],
 };
 
 const listedIn = (name: string, meaning: FormulaMeaning): boolean =>
