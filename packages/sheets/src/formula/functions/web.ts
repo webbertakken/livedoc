@@ -1,6 +1,7 @@
 // Web functions (docs/specs/029-sheets/formulas.md "Functions": Web): links and addresses, and the functions that
-// fetch through the api Worker (imports.ts, S4).
+// fetch through the api Worker (imports.ts, image.ts, S4).
 import { isUrl } from '../../text-checks';
+import { IMAGE_FUNCTIONS } from './image';
 import { IMPORT_FNS } from './imports';
 import { SPARKLINE_FUNCTIONS } from './sparkline';
 import { scalarFn, type FnDef } from '../fn';
@@ -34,4 +35,5 @@ export const WEB_FUNCTIONS: Record<string, FnDef> = {
     label === undefined || label === null ? url! : label,
   ),
   ...SPARKLINE_FUNCTIONS,
+  ...IMAGE_FUNCTIONS,
 };

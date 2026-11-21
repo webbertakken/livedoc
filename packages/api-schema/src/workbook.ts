@@ -51,6 +51,8 @@ export const WORKBOOK_ERRORS = [
   'imports_not_allowed',
   // An import's query string that is no import.
   'import_invalid',
+  // A picture IMAGE asked for that is not fetched, not a picture, or kept where Google refuses (imports.md "IMAGE").
+  'image_refused',
 ] as const;
 export type WorkbookError = (typeof WORKBOOK_ERRORS)[number];
 

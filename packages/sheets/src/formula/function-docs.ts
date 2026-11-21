@@ -1001,6 +1001,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'A small chart in the cell: line, column, winloss or bar',
     '=SPARKLINE(B2:M2, {"charttype","column"; "color","teal"})',
   ),
+  IMAGE: D(
+    'url, [mode], [height], [width]',
+    'A picture of the web in the cell: 1 fits it, 2 stretches it, 3 its own size, 4 the size given',
+    '=IMAGE("https://example.com/logo.png")',
+  ),
   ENCODEURL: D('text', 'Text written so it can go in a web address’s query', '=ENCODEURL(A2)'),
   ISURL: D('value', 'Whether a value is a web address', '=ISURL(A2)'),
   IMPORTDATA: D(

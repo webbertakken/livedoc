@@ -66,6 +66,9 @@ export function parsePublicHttpUrl(raw: string): URL | null {
 /** What fetching a public page gives: its text, type and final address, or why it was not fetched. */
 export type PublicPage =
   { ok: true; text: string; type: string; url: string } | { ok: false; reason: string };
+/** What fetching a public address gives as it came: its bytes, the type its server names, its final address. */
+export type PublicBytes =
+  { ok: true; bytes: Uint8Array; type: string; url: string } | { ok: false; reason: string };
 
 export type PublicFetchOptions = {
   // The fetch to reach the web with (tests stub it); the Worker's own by default.
@@ -141,11 +144,22 @@ function decode(bytes: Uint8Array, type: string): string {
   }
 }
 
+/** A public page fetched with the guards (fetchPublicBytes), its text decoded in the charset its type names. */
+export async function fetchPublicPage(raw: string, opts: PublicFetchOptions): Promise<PublicPage> {
+  const got = await fetchPublicBytes(raw, opts);
+  return got.ok
+    ? { ok: true, text: decode(got.bytes, got.type), type: got.type, url: got.url }
+    : got;
+}
+
 /**
- * A public page fetched with the guards: each address (the first and every redirect, followed by hand) checked and
+ * A public address fetched with the guards: each address (the first and every redirect, followed by hand) checked and
  * its host resolved to public addresses only; no cookie or credential sent; bounded in time and size.
  */
-export async function fetchPublicPage(raw: string, opts: PublicFetchOptions): Promise<PublicPage> {
+export async function fetchPublicBytes(
+  raw: string,
+  opts: PublicFetchOptions,
+): Promise<PublicBytes> {
   const fetcher = opts.fetcher ?? fetch;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
@@ -171,7 +185,7 @@ export async function fetchPublicPage(raw: string, opts: PublicFetchOptions): Pr
       const type = res.headers.get('content-type') ?? '';
       const bytes = await readCapped(res, opts.maxBytes);
       if (!bytes) return { ok: false, reason: 'too_large' };
-      return { ok: true, text: decode(bytes, type), type, url: url.href };
+      return { ok: true, bytes, type, url: url.href };
     }
   } catch (e) {
     return {

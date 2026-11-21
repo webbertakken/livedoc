@@ -18,6 +18,8 @@ import {
 import { planPalette } from '@/components/plan/plan-palette';
 import { SheetCells, fitNumber, fontPx, roughWidth } from './SheetCells';
 import { geometryOf, visibleWindow } from './sheet-geometry';
+import { SheetImageLoader } from './sheet-image-loader';
+import { SheetImagesContext } from './sheet-images-context';
 
 const palette = planPalette('light');
 const RED = 'rgb(220, 38, 38)';
@@ -330,5 +332,35 @@ describe('a value on its way from the engine', () => {
     );
     expect(textBox('30').hasAttribute('data-sheet-waiting')).toBe(false);
     expect(textBox('30').style.opacity).toBe('');
+  });
+});
+
+describe('IMAGE in the grid', () => {
+  it('draws the picture where the spreadsheet fetches pictures, and nothing elsewhere', async () => {
+    const book = sheetOf({ A1: '=IMAGE("https://a.example/a.png")' });
+    const loader = new SheetImageLoader({
+      fetch: async () => new Blob([new Uint8Array([1])], { type: 'image/png' }),
+      objectUrl: () => 'blob:a',
+      revoke: () => {},
+    });
+    const geometry = geometryOf(book.sheet.layout);
+    const scroll = { top: 0, left: 0 };
+    const cells = (
+      <SheetCells
+        sheet={book.sheet}
+        workbook={book.workbook}
+        version={0}
+        geometry={geometry}
+        window={visibleWindow(geometry, scroll, { width: 800, height: 400 })}
+        scroll={scroll}
+        palette={palette}
+        locale="en-GB"
+      />
+    );
+    const plain = render(cells);
+    expect(screen.queryByRole('img')).toBeNull();
+    plain.unmount();
+    render(<SheetImagesContext.Provider value={loader}>{cells}</SheetImagesContext.Provider>);
+    expect(await screen.findByRole('img', { name: 'Image from a.example' })).toBeTruthy();
   });
 });

@@ -490,6 +490,36 @@
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPARKLINE is #NAME? there"
       }
+    },
+    {
+      "id": "IMAGE.1",
+      "f": "=IMAGE(\"https://example.com/a.png\", 4, 10, 10, 1)",
+      "expect": [
+        [
+          {
+            "e": "#N/A"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093333 (syntax \"IMAGE(url, [mode], [height], [width])\": four arguments at most); https://support.google.com/docs/thread/29433263 (Google's arity error: \"#N/A ... Wrong number of arguments to IF\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMAGE is #NAME? there"
+      }
+    },
+    {
+      "id": "IMAGE.2",
+      "f": "=IMAGE(\"https://example.com/a.png\", 5)",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093333 (mode is 1, 2, 3 or 4); https://www.sheetsbootcamp.com/image-in-cell/ (\"#VALUE! Error\": mode must be 1, 2, 3, or 4)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMAGE is #NAME? there"
+      }
     }
   ]
 }

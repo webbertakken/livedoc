@@ -528,13 +528,14 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   dates in order (maturity, first coupon, settlement, issue; maturity, settlement, last interest), else `#NUM!`.
 
 **Web**: `HYPERLINK` (above), `ENCODEURL`, `ISURL`, `IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML`, `IMPORTXML`,
-`SPARKLINE` (its chart in [Charts](charts.md#sparklines)).
+`SPARKLINE` (its chart in [Charts](charts.md#sparklines)), `IMAGE`.
 
 - `ENCODEURL(text)` writes each byte of the text's UTF-8 as `%XX` but letters, digits, `-` and `_`, as LibreOffice
   and Excel keep them (`"hello, world!"` is `hello%2C%20world%21`, Google's example).
 - `ISURL(value)` reads an address as a Text Is Valid URL rule does ([Data validation](data-validation.md)); a number
   is none.
 - The four imports fetch through the api Worker, once an Editor allows access: [Imports from the web](imports.md).
+- `IMAGE` shows a picture of the web in its cell, fetched the same way: [Imports from the web](imports.md#image).
 
 **Engineering**: `BIN2OCT`, `BIN2HEX`, `BIN2DEC`, `OCT2BIN`, `OCT2HEX`, `OCT2DEC`, `HEX2BIN`, `HEX2OCT`, `HEX2DEC`,
 `DEC2BIN`, `DEC2OCT`, `DEC2HEX`, `BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT`, `BITRSHIFT`, `DELTA`, `GESTEP`, `ERF`,
@@ -959,7 +960,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `IFNA`                | Logical     | `IFNA(value, value_if_na)`                                                                                     | Google      | `IFNA`                           | built                                                         |
 | `IFS`                 | Logical     | `IFS(condition1, value1, [condition2, value2], …)`                                                             | Google      | `COM.MICROSOFT.IFS`              | built                                                         |
 | `IMABS`               | Engineering | `IMABS(number)`                                                                                                | Google      | `IMABS`                          | built                                                         |
-| `IMAGE`               | Google      | `IMAGE(url, [mode], [height], [width])`                                                                        | Google      | S5                               | planned (S4)                                                  |
+| `IMAGE`               | Google      | `IMAGE(url, [mode], [height], [width])`                                                                        | Google      | S5                               | built                                                         |
 | `IMAGINARY`           | Engineering | `IMAGINARY(complex_number)`                                                                                    | Google      | `IMAGINARY`                      | built                                                         |
 | `IMARGUMENT`          | Engineering | `IMARGUMENT(number)`                                                                                           | Google      | `IMARGUMENT`                     | built                                                         |
 | `IMCONJUGATE`         | Engineering | `IMCONJUGATE(number)`                                                                                          | Google      | `IMCONJUGATE`                    | built                                                         |
@@ -1386,4 +1387,4 @@ The code cites each by its id.
   replacement runs per match); a group that took no part is empty text; a trailing backslash stays (default).
 - **D71** SPARKLINE's unstated choices: empty cells and other values skipped unless set; an unknown chart type
   `#VALUE!`; column colours applied in the order the help lists them; the accent's colours (charts.md "Sparklines").
-- The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).
+- The imports' defaults, D61 to D66, D72 and D73, are kept in [Imports from the web](imports.md#defaults).

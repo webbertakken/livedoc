@@ -14,6 +14,11 @@ export const IMPORT_FUNCTIONS: Readonly<Record<string, ImportKind>> = {
   IMPORTXML: 'xml',
 };
 export const IMPORT_FUNCTION_NAMES: ReadonlySet<string> = new Set(Object.keys(IMPORT_FUNCTIONS));
+/** Every function that fetches from the web once access is allowed: the imports and IMAGE (imports.md "IMAGE"). */
+export const FETCHING_FUNCTION_NAMES: ReadonlySet<string> = new Set([
+  ...IMPORT_FUNCTION_NAMES,
+  'IMAGE',
+]);
 
 export const FEED_ITEM_FIELDS = ['title', 'author', 'url', 'created', 'summary'] as const;
 export const FEED_FIELDS = ['title', 'description', 'author', 'url'] as const;

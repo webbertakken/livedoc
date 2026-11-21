@@ -1,6 +1,7 @@
 # Imports from the web
 
-`IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML` and `IMPORTXML` read a page of the web into a spreadsheet, as Google Sheets'.
+`IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML` and `IMPORTXML` read a page of the web into a spreadsheet, as Google Sheets';
+`IMAGE` shows a picture of the web in its cell ([below](#image)).
 The api Worker fetches the page, never the viewer's browser, so no third party learns who looks (S4, ruled 2026-11-18).
 The formula language around them is [Formulas](formulas.md); the security cases are
 [security research](../../research/sheets-open-standard/security.md) ("Fetches to private addresses").
@@ -35,6 +36,40 @@ The formula language around them is [Formulas](formulas.md); the security cases 
 - Each value arriving is read as a typed input is, in the locale (`IMPORTXML`'s `locale`, else the spreadsheet's):
   a number or a boolean becomes one, anything else stays text (a date stays text; default, D63).
 
+## IMAGE
+
+`IMAGE(url, [mode], [height], [width])` shows the picture at `url` in its cell, as Google Sheets' does.
+Its fetch goes through the api, as the imports' do, behind the same Allow Access.
+
+- `url` is read as the imports read theirs (D61); `mode` is 1 (default), 2, 3 or 4 (verified: Google's help).
+- **1** fits the picture inside the cell, in proportion; **2** stretches it to fill the cell; **3** shows it at its own
+  size, cut at the cell's edges; **4** at `height` by `width` pixels, cut at the cell's edges (verified: Google's help).
+- The cell never grows to fit the picture (verified: "no mode causes the cell to be resized to fit the image").
+- The picture sits in the middle of the cell; in mode 4 a size left out follows the other in proportion, and both left
+  out are the picture's own size; `height` and `width` are read only in mode 4 (default, D72).
+- A mode other than 1 to 4, or a `height` or `width` not above 0, is `#VALUE!` (verified: third-party guides).
+- **Its value** is empty text, as `SPARKLINE`'s is ([Charts](charts.md#sparklines)): a formula reading the cell
+  reads `""`, and nothing overflows into it (default, D72).
+- The picture is drawn when the cell's formula works an `IMAGE` out and its value is that empty text, so
+  `=IF(B2, IMAGE(C2), "")` draws only where `B2` is true.
+- In an array context it is worked out for each address, and each picture is drawn in its place of the spill
+  (verified: `ARRAYFORMULA(IMAGE(… & SEQUENCE(4)))` shows four, third-party guides).
+- A formula whose answer is a reference to one cell holding a picture shows that picture (`=B2`, `INDEX`,
+  `OFFSET`, `IF` of references); so does a `VLOOKUP`, `HLOOKUP` or `XLOOKUP` whose answer is such a cell of a
+  range (verified: third-party guides look pictures up). At most 8 cells are followed (default, D72).
+- A picture not fetched, or not a picture, leaves the cell empty, with no error (verified: third-party guides).
+- SVG is not shown, nor a picture kept on `drive.google.com` (verified: Google's help); a picture is PNG, JPEG, GIF,
+  WebP, AVIF, BMP or an icon, known by its first bytes, never by the type the server names (default, D73).
+- A `url` reading `NOW`, `RAND`, `RANDARRAY` or `RANDBETWEEN` anywhere is `#ERROR!` as an import's is.
+  Google refuses them only in the address before its query; LiveDoc cannot tell the parts apart (default, D72).
+- Until an Editor allows access the cell is `#REF!` "Allow access to fetch data from the web", and the bar shows.
+- Where no editor fetches (the api, MCP and CLI reading values, a Plan Sheet, files) the value is still empty text
+  and no picture is drawn; renders made without the page (Plan art, previews) leave the cell empty (default, D72).
+- The page fetches each address once while the spreadsheet is open, 4 at once, and keeps at most 200 pictures,
+  the least recently drawn let go first; pictures are not asked again hourly, as Google's list of the hourly
+  imports leaves `IMAGE` out (default, D72).
+- A picture is shown as an image named "Image from <host>" to assistive technology (default, D72).
+
 ## Errors
 
 - A wrong argument is `#VALUE!`: `IMPORTHTML`'s query not `"table"` or `"list"`, an index below 1, an unknown feed
@@ -54,6 +89,7 @@ The formula language around them is [Formulas](formulas.md); the security cases 
 
 Google asks once per spreadsheet before its imports send and receive data from the web (verified: Google's help,
 "Learn more about Import functions", and third-party reports that the formula shows `#REF!` until allowed).
+`IMAGE` asks the same (verified: the help lists it with the four imports).
 
 - A spreadsheet holding an import that is not yet allowed shows a bar above the grid: "Some formulas are trying to send
   and receive data from external parties." with **Allow Access** for Editors; everyone else sees the bar alone.
@@ -92,6 +128,8 @@ Google asks once per spreadsheet before its imports send and receive data from t
   itself `livedoc-import/1.0 (+https://docs.nu)` (default, D66).
 - Each spreadsheet may make 60 fetches a minute (`SHEET_IMPORT_RATE_LIMITER`, keyed by document); answers from the
   hour's cache do not count (default, D66).
+- A picture (`kind=image`) is answered as its bytes, at most 10 MB, with the type its first bytes show, `nosniff`
+  and a policy that runs nothing; anything else, `not_an_image` (default, D73).
 - Every refusal and failure is logged with its reason, the document and the host, never the whole address.
 
 ## Who may do what
@@ -112,3 +150,7 @@ Google asks once per spreadsheet before its imports send and receive data from t
 - **D65** Imports where no editor fetches: `#N/A` "Imports are fetched while the spreadsheet is open" (default).
 - **D66** The fetch's ports, time, size, name and rate: 80 and 443; 10 s; 5 MB; `livedoc-import/1.0`; 60 a minute
   per spreadsheet (default).
+- **D72** IMAGE's unstated choices: Centred; mode 4's missing size in proportion; value empty text; 8 cells
+  followed; every volatile read refused; nothing drawn without the page; 200 kept, not refreshed (default).
+- **D73** The pictures IMAGE shows: PNG, JPEG, GIF, WebP, AVIF, BMP, icons, known by their first bytes; at most 10 MB
+  (default).

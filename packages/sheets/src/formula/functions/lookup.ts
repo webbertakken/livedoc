@@ -1,6 +1,6 @@
 // Lookup and reference functions (docs/specs/029-sheets/formulas.md "Functions": Lookup). INDEX and OFFSET return
 // references, so `SUM(INDEX(A:C, 0, 2))` and `SUM(OFFSET(A1, 0, 0, 3))` read ranges; INDIRECT reads A1 text.
-import type { Frame, RangeRef } from '../../engine/frame';
+import type { EvalValue, Frame, RangeRef } from '../../engine/frame';
 import { isAreas, isRef } from '../../engine/frame';
 import { a1ToPos, posToRange } from '../../engine/refs';
 import {
@@ -90,6 +90,13 @@ function row(a: ValueArray, i: number): Scalar[] {
   return (a.rows[i] ?? []).map((x) => scalarOf(x));
 }
 
+// While a cell's picture is asked for (imports.md "IMAGE"), the cell of a range a lookup's answer came from.
+function reportFound(f: Frame, table: EvalValue | undefined, i: number, j: number): void {
+  const range = refArg(table);
+  if (f.foundCell && range)
+    f.foundCell({ sheetId: range.sheetId, r: range.r1 + i, c: range.c1 + j });
+}
+
 function vhLookup(vertical: boolean): FnDef {
   return fn(3, 4, (args, f) => {
     const key = scalarArg(args[0]!, f);
@@ -105,6 +112,7 @@ function vhLookup(vertical: boolean): FnDef {
     const keys = vertical ? column(table, 0) : row(table, 0);
     const i = sortedMode ? sortedIndex(keys, key) : exactIndex(keys, key);
     if (i < 0) return err('#N/A', 'No match was found');
+    reportFound(f, args[1], vertical ? i : idx - 1, vertical ? idx - 1 : i);
     const out = vertical ? table.rows[i]![idx - 1] : table.rows[idx - 1]![i];
     return scalarOf(out ?? null);
   });
@@ -213,9 +221,11 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
     const d = dims(results);
     if (line.vertical) {
       if (d.rows !== line.list.length) return err('#VALUE!', 'The ranges must be the same length');
+      if (d.cols === 1) reportFound(f, args[2], i, 0);
       return d.cols === 1 ? scalarOf(results.rows[i]![0]!) : { rows: [results.rows[i]!] };
     }
     if (d.cols !== line.list.length) return err('#VALUE!', 'The ranges must be the same length');
+    if (d.rows === 1) reportFound(f, args[2], 0, i);
     return d.rows === 1
       ? scalarOf(results.rows[0]![i]!)
       : { rows: results.rows.map((r) => [r[i]!]) };

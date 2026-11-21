@@ -7,6 +7,7 @@ import type { ImportRead } from './import-book';
 import type { SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
 import type { CellFormat } from '../sheet';
+import type { CellImage } from '../images/cell-image';
 import type { Sparkline } from '../sparkline/sparkline-read';
 
 // A rectangle of one sheet, by positions, inclusive.
@@ -96,8 +97,19 @@ export type Frame = {
   readsCards(): void;
   // An import's answer as the formula reads it (imports.md); null where no editor fetches for the engine.
   importOf(request: ImportRequest): ImportRead | null;
+  // Whether the formula may fetch (IMAGE), the read noted; null where no editor fetches for the engine.
+  importAccess(): 'allowed' | 'blocked' | null;
   // What `run` gives, and whether it read NOW, RAND, RANDARRAY or RANDBETWEEN, directly or through cells.
   watchNow<T>(run: () => T): [T, boolean];
   // Set only while a cell's chart is asked for (Workbook.sparklineOf): each SPARKLINE worked out reports its chart.
   drawSparkline?: (chart: Sparkline) => void;
+  // Set only while a cell's picture is asked for (Workbook.imageOf): each IMAGE reports its picture and its place in
+  // its own answer (0, 0 when it gives one value), and each VLOOKUP, HLOOKUP and XLOOKUP the cell it found.
+  drawImage?: (image: CellImage, at: readonly [number, number]) => void;
+  foundCell?: (cell: CellAt) => void;
+};
+
+/** The hooks a formula is worked out again with to see what it draws, and its answer before it is read as a value. */
+export type DrawHooks = Pick<Frame, 'drawSparkline' | 'drawImage' | 'foundCell'> & {
+  answer?: (raw: EvalValue) => void;
 };

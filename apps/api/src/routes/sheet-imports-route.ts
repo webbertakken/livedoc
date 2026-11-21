@@ -1,6 +1,7 @@
 // A spreadsheet's imports from the web (docs/specs/029-sheets/imports.md): GET /api/documents/<id>/workbook/imports
 // fetches one import for anyone who may read the spreadsheet, once an Editor allowed it, with the guards of
-// public-fetch.ts, the hour's cache and a per-spreadsheet rate; POST .../workbook/imports is that allowing.
+// public-fetch.ts, the hour's cache and a per-spreadsheet rate; POST .../workbook/imports is that allowing. A picture
+// IMAGE shows (kind=image) passes the same gates and is answered as its bytes (sheet-image-route.ts).
 import type { WorkbookRoomOp, WorkbookSettingsResponse } from '@livedoc/api-schema';
 import {
   extractImport,
@@ -12,18 +13,19 @@ import {
 } from '@livedoc/sheets';
 import { allowWorkbookImports, readWorkbook } from '../db/workbook';
 import { fetchPublicPage } from '../public-fetch';
+import { fetchSheetImage } from './sheet-image-route';
+import {
+  IMPORT_BYTES_MAX,
+  IMPORT_CACHE_S,
+  IMPORT_FETCH_MS,
+  IMPORT_REDIRECTS_MAX,
+  IMPORT_USER_AGENT,
+} from './sheet-import-bounds';
 import { forbidden, json, rateLimited } from '../responses';
 import { relayWorkbook } from '../room-client';
 import type { DocumentRouteContext } from './context';
 import { sheetCaller, workbookRefused } from './sheet-route-kit';
 
-// The fetch's bounds (D66): safe ranges 5 to 20 s, 1 to 10 MB, 3 to 10 redirects.
-export const IMPORT_FETCH_MS = 10_000;
-export const IMPORT_BYTES_MAX = 5 * 1024 * 1024;
-export const IMPORT_REDIRECTS_MAX = 5;
-// How long an answer is kept for everyone: Google's hourly refresh.
-export const IMPORT_CACHE_S = 3_600;
-const USER_AGENT = 'livedoc-import/1.0 (+https://docs.nu)';
 const ACCEPT = 'text/html,application/xhtml+xml,application/xml,text/xml,text/csv,*/*;q=0.8';
 // The cache's own address space: never fetched, only a key.
 const CACHE_ORIGIN = 'https://sheet-imports.cache.invalid/';
@@ -52,7 +54,7 @@ async function fetchAndRead(
     timeoutMs: IMPORT_FETCH_MS,
     maxBytes: IMPORT_BYTES_MAX,
     maxRedirects: IMPORT_REDIRECTS_MAX,
-    userAgent: USER_AGENT,
+    userAgent: IMPORT_USER_AGENT,
     accept: ACCEPT,
   });
   if (!page.ok)
@@ -76,6 +78,7 @@ export async function fetchImport(
   const record = await readWorkbook(ctx.env, documentId);
   if (!record) return workbookRefused('workbook_not_found', 404);
   if (!record.importsAllowed) return workbookRefused('imports_not_allowed', 403);
+  if (ctx.url.searchParams.get('kind') === 'image') return fetchSheetImage(ctx, documentId);
   const request = readImportParams(ctx.url.searchParams);
   if (!request) return workbookRefused('import_invalid', 400);
   const host = hostOf(request.url);

@@ -12,7 +12,7 @@ import { RECALC_READS_MAX } from '../limits';
 import { cellKey, type Sheet } from '../sheet';
 import { CARD_FUNCTION_NAMES } from '../formula/registry';
 import {
-  IMPORT_FUNCTION_NAMES,
+  FETCHING_FUNCTION_NAMES,
   type ImportAnswer,
   type ImportAsk,
 } from '../imports/import-request';
@@ -21,6 +21,8 @@ import { callsOf, type Node } from '../formula/ast';
 import { safeHyperlink } from '../hyperlink';
 import type { Sparkline } from '../sparkline/sparkline-read';
 import { SparklineMemo } from './sparkline-memo';
+import type { CellImage } from '../images/cell-image';
+import { IMAGE_FUNCTION_NAMES, ImageFinder } from './image-of';
 import { storedAst, type SheetsCtx } from '../formula/stored';
 import type { CellInput, StoredFormula } from '../sheet';
 import {
@@ -38,7 +40,7 @@ import { Dependencies } from './dependencies';
 import { evaluate } from './evaluate';
 import { deref } from '../formula/fn';
 import { cellFrame, type FrameSource } from './cell-frame';
-import type { CellAt } from './frame';
+import type { CellAt, DrawHooks } from './frame';
 import { formulaPrecedents } from './precedents';
 import { sheetsCtxOf } from './sheets-ctx';
 import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
@@ -181,6 +183,7 @@ export class Workbook {
       },
       readsCards: (reader) => this.cardReaders.add(reader),
       importOf: (reader, request) => this.importBook?.read(request, reader) ?? null,
+      importAccess: (reader) => this.importBook?.access(reader) ?? null,
       watchNow: (run) => {
         const outer = this.nowSeen;
         this.nowSeen = false;
@@ -398,11 +401,36 @@ export class Workbook {
     if (!ast || !SparklineMemo.calls(ast)) return null;
     return this.sparklines.get(`${sheetId}!${r},${c}`, this.version, () => {
       let chart: Sparkline | null = null;
-      const value = this.evaluateNodeAt(sheetId, r, c, ast, input.f.r, (drawn) => {
-        chart = drawn;
+      const value = this.evaluateNodeAt(sheetId, r, c, ast, input.f.r, {
+        drawSparkline: (drawn) => {
+          chart = drawn;
+        },
       });
       return value === '' ? chart : null;
     });
+  }
+
+  private readonly images = new ImageFinder({
+    version: () => this.version,
+    callsImage: () => this.calls(IMAGE_FUNCTION_NAMES),
+    value: (sheetId, r, c) => this.value(sheetId, r, c),
+    spillOwnerAt: (sheetId, r, c) => this.spillOwnerAt(sheetId, r, c),
+    redraw: (sheetId, r, c, hooks) => this.redraw(sheetId, r, c, hooks),
+  });
+
+  // A cell's picture (imports.md "IMAGE"): drawn by its own formula's IMAGE, or followed from the cell it answers or
+  // a lookup found (engine/image-of.ts). Null for a cell showing anything but the empty text an IMAGE gives.
+  imageOf(sheetId: string, r: number, c: number): CellImage | null {
+    return this.images.imageOf(sheetId, r, c);
+  }
+
+  // The formula at (r, c) worked out again with drawing hooks, as sparklineOf does; false for a cell without one.
+  private redraw(sheetId: string, r: number, c: number, hooks: DrawHooks): boolean {
+    const input = this.inputAt(sheetId, r, c);
+    const ast = input && 'f' in input ? storedAst(input.f) : null;
+    if (!ast || !input || !('f' in input)) return false;
+    this.evaluateNodeAt(sheetId, r, c, ast, input.f.r, hooks);
+    return true;
   }
 
   // Worked out with NO_CELL as its reader: what it notes is forgotten as it ends.
@@ -412,7 +440,7 @@ export class Workbook {
     c: number,
     ast: Node,
     refs: StoredFormula['r'],
-    drawSparkline?: (chart: Sparkline) => void,
+    hooks: DrawHooks = {},
   ): Value {
     for (;;) {
       try {
@@ -420,8 +448,11 @@ export class Workbook {
         this.depth++;
         try {
           const frame = cellFrame(this.frameSource, NO_CELL, sheetId, r, c);
-          if (drawSparkline) frame.drawSparkline = drawSparkline;
-          return scalarCell(deref(evaluate(ast, refs, frame), frame));
+          const { answer, ...drawing } = hooks;
+          Object.assign(frame, drawing);
+          const raw = evaluate(ast, refs, frame);
+          answer?.(raw);
+          return scalarCell(deref(raw, frame));
         } finally {
           this.depth--;
           this.deps.clear(NO_CELL);
@@ -495,7 +526,7 @@ export class Workbook {
 
   // Whether any formula imports from the web (so the editor shows the Allow Access bar until it is allowed).
   usesImports(): boolean {
-    return this.calls(IMPORT_FUNCTION_NAMES);
+    return this.calls(FETCHING_FUNCTION_NAMES);
   }
 
   private calls(names: ReadonlySet<string>): boolean {
