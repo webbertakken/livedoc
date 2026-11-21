@@ -232,7 +232,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
+        run: node ../../scripts/wrangler-retry.mjs pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
 
   deploy-telemetry:
     name: Deploy telemetry
@@ -267,7 +267,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
+        run: node ../../scripts/wrangler-retry.mjs pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
 
   deploy-help:
     name: Deploy help
@@ -302,7 +302,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
+        run: node ../../scripts/wrangler-retry.mjs pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
 
   deploy-live:
     name: Deploy live
@@ -339,7 +339,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
+        run: node ../../scripts/wrangler-retry.mjs pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
 
   deploy-api:
     name: Deploy api
@@ -497,7 +497,7 @@ jobs:
             flags="$(node scripts/hosted-vars.mjs flags ${WRANGLER_ENV:+--env "$WRANGLER_ENV"})"
             mapfile -t hosted_vars <<<"$flags"
           fi
-          pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"} "${hosted_vars[@]}" --var "BUILD_ID:$BUILD_ID"
+          node ../../scripts/wrangler-retry.mjs pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"} "${hosted_vars[@]}" --var "BUILD_ID:$BUILD_ID"
 
       # Read the hosted vars back off the version now serving traffic and fail
       # the run if any is missing or different. The image caps are the R2
@@ -558,7 +558,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
+        run: node ../../scripts/wrangler-retry.mjs pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
 
   deploy-router:
     name: Deploy router
@@ -598,4 +598,4 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
+        run: node ../../scripts/wrangler-retry.mjs pnpm exec wrangler deploy ${WRANGLER_ENV:+--env "$WRANGLER_ENV"}
