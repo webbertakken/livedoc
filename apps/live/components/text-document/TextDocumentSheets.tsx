@@ -66,6 +66,9 @@ export function TextDocumentSheets({
         data-page-story={kind}
         data-story={place.story}
         {...{ [STORY_KEY_ATTRIBUTE]: place.key }}
+        // The page's number and the page count its fields show (page-layout.md "Page numbers").
+        data-page-number={pages?.[page]?.number}
+        data-page-count={pages?.[page]?.count}
         className="absolute"
         style={{
           left: place.left,

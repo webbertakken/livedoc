@@ -34,6 +34,12 @@ import { paginate } from './pagination-engine';
 import { pageLayout, type StoryHeights } from './pagination-headers';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
 import { bodySections, SECTIONS_CHANGED } from './pagination-sections';
+import {
+  fieldDecorations,
+  pageCountOf,
+  shownPageNumbers,
+  startOfBlocks,
+} from './pagination-fields';
 
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;
@@ -48,6 +54,8 @@ export type PaginationOptions = {
     readonly setup: PageSetup;
     readonly pages: boolean;
     readonly headers?: LiveHeaders;
+    /** The number the first page has, if the document starts at one (page-layout.md "Page numbers"). */
+    readonly numberStart?: number;
   };
   /** Each drawn header's and footer's height, by its story at its width; none known lays the pages unpushed. */
   readonly heights?: () => StoryHeights;
@@ -209,7 +217,7 @@ class Pager {
 
   private layOut(): void {
     const { view } = this;
-    const { setup, pages, headers } = this.options.read();
+    const { setup, pages, headers, numberStart } = this.options.read();
     if (!pages) {
       this.previous = null;
       this.nodes = [];
@@ -224,7 +232,7 @@ class Pager {
     if (!(width > 0) || box.width === 0) return;
     const ratio = box.width / width;
     const started = performance.now();
-    const sections = bodySections(view.state.doc, setup, headers);
+    const sections = bodySections(view.state.doc, setup, headers, numberStart);
     const layoutKey = [
       width,
       sections.setups
@@ -399,11 +407,19 @@ class Pager {
         ),
       );
     }
+    // Each field's page number and the page count (page-layout.md "Page numbers").
+    const shown = shownPageNumbers(pagination, sections);
+    const pagesLaid = pageCountOf(pagination);
+    const startOf = startOfBlocks(pagination, nodes.length);
+    decorations.push(
+      ...fieldDecorations(nodes, positions, (block) => shown[startOf[block]!]!, pagesLaid),
+    );
     this.apply(DecorationSet.create(doc, decorations));
     this.tellPages(
       pageGeometries(pagination, {
         frameOf,
         page,
+        shown,
         lineBetween: (block) =>
           Boolean(sections.setups[sections.sectionOf[block] ?? 0]?.columns?.separator),
       }),

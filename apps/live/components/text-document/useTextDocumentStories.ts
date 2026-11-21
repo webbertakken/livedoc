@@ -13,6 +13,7 @@ import { TextDocumentState, type HeaderFooterKind } from '@livedoc/text-document
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 import { refreshPages } from '@/lib/text-document/pagination/pagination-plugin';
 import { StorySource } from '@/lib/text-document/text-document-story-sources';
+import { fillFields, numbersOfBox } from '@/lib/text-document/text-document-fields';
 
 /** A page's header or footer box: the story at its width it draws. */
 export const STORY_KEY_ATTRIBUTE = 'data-story-key';
@@ -72,8 +73,11 @@ export function useTextDocumentStories(input: {
       `[${STORY_KEY_ATTRIBUTE}="${CSS.escape(key)}"]`,
     );
     for (const box of boxes ?? [])
-      if (source && !source.empty) box.replaceChildren(source.copy());
-      else box.replaceChildren();
+      if (source && !source.empty) {
+        const copy = source.copy();
+        fillFields(copy, numbersOfBox(box));
+        box.replaceChildren(copy);
+      } else box.replaceChildren();
   }, []);
 
   const make = useCallback(

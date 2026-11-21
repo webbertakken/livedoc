@@ -157,8 +157,8 @@ describe('paginationPlugin', () => {
     const firstPage = { ...plain, first: true };
     const later = { ...plain, first: false };
     expect(onPages).toHaveBeenLastCalledWith([
-      { width: 600, height: 100, ...firstPage },
-      { width: 600, height: 100, ...later },
+      { width: 600, height: 100, number: 1, count: 2, ...firstPage },
+      { width: 600, height: 100, number: 2, count: 2, ...later },
     ]);
     view.destroy();
   });
@@ -196,6 +196,8 @@ describe('paginationPlugin', () => {
       {
         width: 600,
         height: 100,
+        number: 1,
+        count: 2,
         top: 0,
         bottom: 0,
         section: 0,
@@ -206,6 +208,8 @@ describe('paginationPlugin', () => {
       {
         width: 800,
         height: 80,
+        number: 2,
+        count: 2,
         top: 0,
         bottom: 0,
         section: 1,

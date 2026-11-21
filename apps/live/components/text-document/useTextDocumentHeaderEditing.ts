@@ -24,6 +24,7 @@ import {
   withSwitch,
 } from '@/lib/text-document/text-document-headers-edit';
 import type { StorySource } from '@/lib/text-document/text-document-story-sources';
+import { NO_PAGES, setFieldNumbers } from '@/lib/text-document/text-document-fields';
 import type { TextDocumentStories } from './useTextDocumentStories';
 
 /** Insert > Headers and footers' items (text-document-menus.ts). */
@@ -246,6 +247,15 @@ export function useTextDocumentHeaderEditing(input: {
     if (editing && box.current) edited.edit(box.current);
     else if (!editing && edited.editing) edited.stopEditing();
   }, [editing]);
+
+  // Its fields show its page's number and the page count (page-layout.md "Page numbers").
+  const shownPage = editing ? pages?.[editing.page] : undefined;
+  const number = shownPage?.number ?? NO_PAGES.number;
+  const count = shownPage?.count ?? NO_PAGES.count;
+  useLayoutEffect(() => {
+    const edited = source.current;
+    if (editing && edited?.editing) setFieldNumbers(edited.view, { number, count });
+  }, [editing, number, count]);
 
   // A press on the body leaves it.
   useLayoutEffect(() => {
