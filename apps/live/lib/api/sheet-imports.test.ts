@@ -70,7 +70,7 @@ describe('allowSheetImports', () => {
     const f = reply(body);
     vi.stubGlobal('fetch', f);
     expect(await allowSheetImports({ ...scope, tabId: null })).toEqual(body);
-    expect(f.mock.calls[0]![0]).toMatch(/\/api\/documents\/d%201\/workbook\/imports-allowed$/);
+    expect(f.mock.calls[0]![0]).toMatch(/\/api\/documents\/d%201\/workbook\/imports$/);
     expect(f.mock.calls[0]![1]!.method).toBe('POST');
   });
 });

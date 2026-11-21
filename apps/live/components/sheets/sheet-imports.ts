@@ -2,6 +2,7 @@
 // fetched through the api, a few at once, and each answer handed back to the engine of the scope that asked. A
 // spreadsheet whose rate is spent is asked again after a wait; while it is open, every import is asked again hourly.
 import type { ImportAnswer, ImportAsk } from '@livedoc/sheets';
+import { debugLog } from '@/lib/debug-log';
 
 /** Imports fetched at once: enough for a sheet of them to fill quickly, few enough to leave the api room. 1 to 8. */
 export const IMPORTS_AT_ONCE = 4;
@@ -49,7 +50,7 @@ export class SheetImports {
   private async run(job: Job): Promise<void> {
     const answer = await this.deps.fetch(job.ask);
     if (answer === 'later') {
-      console.info('[sheet imports] rate spent; asking again', { inMs: IMPORT_RETRY_MS });
+      debugLog('[sheet imports] rate spent; asking again', { inMs: IMPORT_RETRY_MS });
       await this.wait(IMPORT_RETRY_MS);
       this.queue.push(job);
       return;

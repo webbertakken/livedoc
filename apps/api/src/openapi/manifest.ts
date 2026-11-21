@@ -1001,7 +1001,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
   },
   {
     method: 'POST',
-    path: '/documents/{id}/workbook/imports-allowed',
+    path: '/documents/{id}/workbook/imports',
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:

@@ -50,7 +50,7 @@ const ask = (
     ...(extra.code ? { code: extra.code } : {}),
   });
 const allow = (extra: { owner?: string; code?: string } = {}) =>
-  kit.call({ method: 'POST', path: '/book1/workbook/imports-allowed', ...extra });
+  kit.call({ method: 'POST', path: '/book1/workbook/imports', ...extra });
 
 beforeEach(async () => {
   kit = workbookKit();
@@ -75,7 +75,7 @@ describe('Allow Access', () => {
     expect((await allow({ owner: 't', code: 'TAB1' })).status).toBe(404);
     const onTab = await kit.call({
       method: 'POST',
-      path: '/book1/workbook/imports-allowed?tabId=book1t',
+      path: '/book1/workbook/imports?tabId=book1t',
       owner: 't',
       code: 'TAB1',
     });
@@ -92,12 +92,9 @@ describe('Allow Access', () => {
 
   it('refuses a document that is no spreadsheet, and another method', async () => {
     await kit.call({ path: '', body: kit.document('plan1', false) });
-    const res = await kit.call({ method: 'POST', path: '/plan1/workbook/imports-allowed' });
+    const res = await kit.call({ method: 'POST', path: '/plan1/workbook/imports' });
     expect(res.status).toBe(404);
-    expect(
-      (await kit.call({ method: 'GET', path: '/book1/workbook/imports-allowed' })).status,
-    ).toBe(405);
-    expect((await kit.call({ method: 'POST', path: '/book1/workbook/imports' })).status).toBe(405);
+    expect((await kit.call({ method: 'PUT', path: '/book1/workbook/imports' })).status).toBe(405);
   });
 
   it('survives a settings save', async () => {

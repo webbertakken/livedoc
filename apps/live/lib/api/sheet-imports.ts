@@ -36,7 +36,7 @@ export async function fetchSheetImport(
 
 /** An Editor allows the spreadsheet's imports, for good; the room sends the workbook to everyone. */
 export async function allowSheetImports(scope: SheetsScope): Promise<WorkbookSettingsResponse> {
-  const res = await apiFetch(workbookUrl(scope, 'imports-allowed'), {
+  const res = await apiFetch(workbookUrl(scope, 'imports'), {
     method: 'POST',
     headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
   });

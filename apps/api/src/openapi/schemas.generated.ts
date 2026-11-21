@@ -18148,6 +18148,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "format": {
         "$ref": "#/components/schemas/WorkbookFormat"
       },
+      "importsAllowed": {
+        "const": true,
+        "type": "boolean"
+      },
       "settings": {
         "$ref": "#/components/schemas/WorkbookSettings"
       }

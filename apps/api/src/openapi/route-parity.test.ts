@@ -51,11 +51,12 @@ for (const [segment, byPosition] of vocabulary) {
     ),
   );
   const maxLength = Math.max(documentedDepth, ...byPosition.keys()) + 1;
-  candidates.push(...candidatePaths(segment, byPosition, maxLength));
+  // One by one: a sweep this large passed as arguments runs the stack out.
+  for (const path of candidatePaths(segment, byPosition, maxLength)) candidates.push(path);
 }
 
 // The work is held, not the time: a cross past this is a sweep grown by a new deep word, raised on purpose or the
-// probe pruned. 112,616 paths on main (2026-11-20).
+// probe pruned. 128,618 paths with the imports' door (2026-11-21).
 const PROBE_PATHS_MAX = 150_000;
 // The hook's timeout only bounds a hung probe, so it follows the work: about 0.02 ms a dispatch on a developer's
 // machine (12 s for 563,080), and CI's shared runners under coverage up to thirty times that.

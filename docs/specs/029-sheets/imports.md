@@ -60,7 +60,7 @@ Google asks once per spreadsheet before its imports send and receive data from t
 - Until an Editor allows, every import in the spreadsheet is `#REF!` and nothing is fetched.
 - Allowing is for the spreadsheet, for everyone, for good: it is kept with the workbook, a copy starts without it,
   and it is never taken back (verified: Google's API refuses to set it back to false).
-- An Editor allows with `POST /api/documents/<id>/workbook/imports-allowed`, sent to everyone as a `workbook` op.
+- An Editor allows with `POST /api/documents/<id>/workbook/imports`, sent to everyone as a `workbook` op.
 - The api refuses to fetch for a spreadsheet not allowed, whatever the page asks.
 
 ## Fetching

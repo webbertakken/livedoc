@@ -85,9 +85,10 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
     return request.method === 'GET' ? file(ctx, documentId) : methodNotAllowed();
   if (segments.length === 5 && segments[4] === 'settings')
     return request.method === 'PUT' ? saveSettings(ctx, documentId) : methodNotAllowed();
-  if (segments.length === 5 && segments[4] === 'imports')
-    return request.method === 'GET' ? fetchImport(ctx, documentId) : methodNotAllowed();
-  if (segments.length === 5 && segments[4] === 'imports-allowed')
+  // One word for both doors: each new word this deep multiplies the route-parity probe's sweep.
+  if (segments.length === 5 && segments[4] === 'imports') {
+    if (request.method === 'GET') return fetchImport(ctx, documentId);
     return request.method === 'POST' ? allowImports(ctx, documentId) : methodNotAllowed();
+  }
   return handleWorkbookSheetRoutes(ctx);
 }

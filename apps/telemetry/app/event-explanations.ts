@@ -917,6 +917,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Spreadsheet|Exported|Fods':
     'Someone downloaded a spreadsheet as a flat ODF file, all in one XML.',
   'Spreadsheet|Exported|Xlsx': 'Someone downloaded a spreadsheet as an Excel file.',
+  'Spreadsheet|Unlocked|ImportAccess':
+    'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
   'Sheet|Searched|Function':
     'Someone searched the functions a Sheet formula can use, from the toolbar’s function picker.',
@@ -2800,6 +2802,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Spreadsheet|Created':
     'Someone made a spreadsheet (the value says how: blank, a template or a file).',
   'Spreadsheet|Exported': 'Someone downloaded a spreadsheet (the value says which file format).',
+  'Spreadsheet|Unlocked':
+    'An editor allowed something on a spreadsheet for good (the value says what).',
   'Sheet|Searched': 'Someone searched a list on a Sheet (the value says which: the functions).',
   'Plan|Imported': "Someone read a file into a board's cards (the value says which kind: Csv).",
   'Plan|Exported': "Someone downloaded a board's cards as a file (the value says which kind: Csv).",

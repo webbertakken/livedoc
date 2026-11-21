@@ -1,6 +1,6 @@
 // A spreadsheet's imports from the web (docs/specs/029-sheets/imports.md): GET /api/documents/<id>/workbook/imports
 // fetches one import for anyone who may read the spreadsheet, once an Editor allowed it, with the guards of
-// public-fetch.ts, the hour's cache and a per-spreadsheet rate; POST .../workbook/imports-allowed is that allowing.
+// public-fetch.ts, the hour's cache and a per-spreadsheet rate; POST .../workbook/imports is that allowing.
 import type { WorkbookRoomOp, WorkbookSettingsResponse } from '@livedoc/api-schema';
 import {
   extractImport,
