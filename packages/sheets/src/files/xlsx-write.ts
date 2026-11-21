@@ -23,12 +23,12 @@ import {
   DYNAMIC_ARRAY_METADATA_XML,
   OFFICE_RELATIONSHIPS_NS,
   SPREADSHEETML_NS,
-  STYLES_XML,
   toXstring,
   XLSX_ERRORS,
   XLSX_SHEET_NAME_MAX,
 } from './xlsx-parts';
 import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xlsx-bounds';
+import { XlsxStyles } from './xlsx-styles';
 import type {
   FileCell,
   FileLoss,
@@ -150,9 +150,10 @@ function markComputed(cell: FileCell, computed: Set<string>): void {
       if (dr > 0 || dc > 0) computed.add(`${cell.r + dr},${cell.c + dc}`);
 }
 
-function cellXml(cell: FileCell, write: CellWrite): string {
+function cellXml(cell: FileCell, write: CellWrite, style: number): string {
   const attrs = [
     `r="${cellAddress(cell.r, cell.c)}"`,
+    ...(style > 0 ? [`s="${style}"`] : []),
     ...(write.type ? [`t="${write.type}"`] : []),
     ...(write.array ? ['cm="1"'] : []),
   ];
@@ -169,6 +170,7 @@ function cellXml(cell: FileCell, write: CellWrite): string {
 function worksheetXml(
   sheet: FileSheet,
   strings: SharedStrings,
+  styles: XlsxStyles,
   renamed: ReadonlyMap<string, string>,
   losses: FileLoss[],
 ): { xml: string; dynamic: boolean } {
@@ -196,10 +198,11 @@ function worksheetXml(
   }
   const rows = new Map<number, string[]>();
   for (const cell of ordered) {
-    const write = cellWrite(cell, ctx);
+    // A cell with a number format and nothing else keeps its format, as an empty styled cell.
+    const write = cellWrite(cell, ctx) ?? (cell.format === undefined ? null : {});
     if (!write) continue;
     const row = rows.get(cell.r) ?? [];
-    row.push(cellXml(cell, write));
+    row.push(cellXml(cell, write, styles.xf(cell.format)));
     rows.set(cell.r, row);
   }
   if (ctx.cut > 0) losses.push({ k: 'text_cut', sheet: sheet.name, cells: ctx.cut });
@@ -242,9 +245,10 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const losses: FileLoss[] = [];
   const renamed = excelNames(file.sheets, losses);
   const strings = new SharedStrings();
+  const styles = new XlsxStyles();
   let dynamic = false;
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
-    const written = worksheetXml(sheet, strings, renamed, losses);
+    const written = worksheetXml(sheet, strings, styles, renamed, losses);
     dynamic ||= written.dynamic;
     return {
       name: `xl/worksheets/sheet${i + 1}.xml`,
@@ -275,7 +279,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       data: encode(workbookXml(names)),
     },
     ...sheetParts,
-    xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, STYLES_XML),
+    xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),
     xmlPart('xl/sharedStrings.xml', OOXML_CONTENT_TYPES.sharedStrings, strings.xml()),
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]

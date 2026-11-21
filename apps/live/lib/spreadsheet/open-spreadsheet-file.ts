@@ -64,17 +64,22 @@ export async function openSpreadsheetFile(
   onProgress: OpenProgress = () => {},
 ): Promise<OpenedSpreadsheet> {
   const { fileParts, readWorkbookFile, sheetsFromFile } = await import('@livedoc/sheets/files');
-  const read = await readWorkbookFile(new Uint8Array(await file.arrayBuffer()));
+  // The workbook it opens into: its locale reads the formats a file leaves to the reader's (Excel's short date).
+  const made = workbookMadeHere();
+  const read = await readWorkbookFile(
+    new Uint8Array(await file.arrayBuffer()),
+    made.settings.locale,
+  );
   if (!read.ok) {
     debugLog('[workbook] refused', { rejection: read.rejection, entry: read.entry });
     return { ok: false, message: REJECTION_COPY[read.rejection] };
   }
   // A spreadsheet holds at least one sheet (spreadsheet.md "Sheets in the sheet bar").
   if (read.file.sheets.length === 0) return { ok: false, message: NO_SHEETS };
-  const made = sheetsFromFile(read.file);
-  const losses = [...read.losses, ...made.losses];
+  const sheetsMade = sheetsFromFile(read.file, made.settings.locale);
+  const losses = [...read.losses, ...sheetsMade.losses];
   if (losses.length > 0) debugLog('[workbook] file read losses', { kinds: losses.map((l) => l.k) });
-  const parts = fileParts(made.sheets);
+  const parts = fileParts(sheetsMade.sheets);
   const documentId = crypto.randomUUID();
   const tabs = parts.seeds.map((sheet) => newSheetTab(crypto.randomUUID(), sheet.title));
   const sheets: SheetCreateRequest[] = parts.seeds.map((sheet, i) => ({
@@ -91,7 +96,7 @@ export async function openSpreadsheetFile(
       name: nameFromFile(file.name),
       tabs,
       sheets,
-      workbook: WorkbookRecord.withFormat(workbookMadeHere(), read.format),
+      workbook: WorkbookRecord.withFormat(made, read.format),
     });
     created = true;
     const scope: SheetsScope = { ownerId, documentId, shareCode: null, tabId: null };
@@ -99,7 +104,7 @@ export async function openSpreadsheetFile(
     debugLog('[workbook] file read', {
       format: read.format,
       sheets: sheets.length,
-      cells: made.sheets.reduce((n, s) => n + s.cells.length, 0),
+      cells: sheetsMade.sheets.reduce((n, s) => n + s.cells.length, 0),
       parts: parts.parts.length,
     });
     return { ok: true, documentId, format: read.format };

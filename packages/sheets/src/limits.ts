@@ -81,5 +81,6 @@ export const DROPDOWN_OPTIONS_MAX = 500;
 export const DROPDOWN_OPTION_MAX = 255;
 export const VALIDATION_HELP_MAX = 255;
 export const FORMAT_RULE_FORMULA_MAX = 1_000;
-// A Custom number format's code.
-export const FORMAT_CODE_MAX = 64;
+// A Custom number format's code: Excel's own ceiling, so a code any file carries fits (standard-mapping.md
+// "Number formats in the file").
+export const FORMAT_CODE_MAX = 255;
