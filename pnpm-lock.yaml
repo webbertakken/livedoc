@@ -1619,6 +1619,9 @@ importers:
         specifier: workspace:*
         version: link:../office-packages
     devDependencies:
+      '@livedoc/fake-google':
+        specifier: workspace:*
+        version: link:../fake-google
       '@livedoc/oxlint-config':
         specifier: workspace:*
         version: link:../oxlint-config

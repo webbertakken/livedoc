@@ -17,12 +17,14 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf node_modules .turbo coverage",
     "oracle:libreoffice": "ORACLE_SOURCE=libreoffice vitest run --config vitest.oracle.config.ts",
-    "oracle:google": "ORACLE_SOURCE=google vitest run --config vitest.oracle.config.ts"
+    "oracle:google": "ORACLE_SOURCE=google vitest run --config vitest.oracle.config.ts",
+    "oracle:google:consent": "node oracle/google-consent.ts"
   },
   "dependencies": {
     "@livedoc/office-packages": "workspace:*"
   },
   "devDependencies": {
+    "@livedoc/fake-google": "workspace:*",
     "@livedoc/oxlint-config": "workspace:*",
     "@livedoc/vitest-config": "workspace:*",
     "@types/node": "^26.6.4",

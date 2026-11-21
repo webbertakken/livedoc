@@ -20,6 +20,10 @@ export type FakeFile = {
   explicitlyTrashed: boolean;
   appProperties: Record<string, string>;
   content: string;
+  // The media's bytes as uploaded through the API; null while only text was set (the person's edit, metadata alone).
+  bytes: Uint8Array | null;
+  // A Google Sheet's spreadsheet properties (`locale`, `timeZone`), as the Sheets API set them.
+  properties: Record<string, string>;
   md5Checksum: string | null;
   headRevisionId: string | null;
   version: number;
@@ -40,7 +44,7 @@ type Tombstone = { appAccess: Set<string>; owner: string };
 
 export type StoreOptions = { emitDescendantChanges: boolean };
 
-const md5 = (text: string) => createHash('md5').update(text).digest('hex');
+const md5 = (media: string | Uint8Array) => createHash('md5').update(media).digest('hex');
 
 export class DriveStore {
   readonly files = new Map<string, FakeFile>();
@@ -95,6 +99,7 @@ export class DriveStore {
     parents: string[];
     appProperties?: Record<string, string>;
     content?: string;
+    bytes?: Uint8Array | null;
     viaApp: boolean;
     thumbnail?: FakeFile['thumbnail'];
   }): FakeFile {
@@ -111,7 +116,9 @@ export class DriveStore {
       explicitlyTrashed: false,
       appProperties: { ...(input.appProperties ?? {}) },
       content,
-      md5Checksum: isFolder ? null : md5(content),
+      bytes: input.bytes ?? null,
+      properties: {},
+      md5Checksum: isFolder ? null : md5(input.bytes ?? content),
       headRevisionId: isFolder ? null : `rev${++this.revCounter}`,
       version: 1,
       createdTime: now,
@@ -147,9 +154,15 @@ export class DriveStore {
     this.touch(file);
   }
 
-  writeContent(file: FakeFile, content: string, thumbnail?: FakeFile['thumbnail']): void {
+  writeContent(
+    file: FakeFile,
+    content: string,
+    thumbnail?: FakeFile['thumbnail'],
+    bytes: Uint8Array | null = null,
+  ): void {
     file.content = content;
-    file.md5Checksum = md5(content);
+    file.bytes = bytes;
+    file.md5Checksum = md5(bytes ?? content);
     file.headRevisionId = `rev${++this.revCounter}`;
     // Drive invalidates the thumbnail on every content change.
     file.thumbnail = thumbnail ?? null;

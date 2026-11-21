@@ -10,12 +10,16 @@
 //     create, update, delete), uploads (multipart, resumable).
 //   - `fields` is honoured; `q` supports what the mirror sends.
 //   - `user*` methods act as the person in Drive's own UI.
+//   - Google files: an upload converted to a Google type, `files.export` through the test's `convert`, and the
+//     Sheets API's `updateSpreadsheetProperties` (google-files.ts).
 //   - `fail` injects errors; `requests` records every call.
 
 import { DriveStore, FOLDER_MIME, type FakeFile, type StoreOptions } from './drive-store';
 import { parseFields, pickFields } from './fields';
+import { exportFile, updateSpreadsheet, type Convert } from './google-files';
 import { parseMultipartRelated } from './multipart';
 import { compileQuery } from './query';
+import { CORS, driveError, jsonResponse } from './responses';
 import { validateThumbnail } from './thumbnail';
 
 const ACCESS_TOKEN_TTL_S = 3600;
@@ -38,32 +42,9 @@ type FakeGoogleOptions = Partial<StoreOptions> & {
   // Answer every code exchange without a refresh token, as Google does after
   // the first consent without prompt=consent.
   omitRefreshToken?: boolean;
+  // How a Google file is exported (its uploaded bytes into `toMime`); exporting without it answers 400.
+  convert?: Convert;
 };
-
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization,content-type,x-upload-content-type,x-goog-drive-resource-keys',
-  'Access-Control-Expose-Headers': 'Location',
-};
-
-function jsonResponse(
-  status: number,
-  body: unknown,
-  headers: Record<string, string> = {},
-): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS, ...headers },
-  });
-}
-
-function driveError(status: number, reason: string, message = reason): Response {
-  return jsonResponse(status, {
-    error: { code: status, message, errors: [{ domain: 'global', reason, message }] },
-  });
-}
 
 // The OpenID claims Google's token endpoint answers for `user` (an email address): a stable subject, the address
 // verified, and a name made from its local part ("ada.reed@…" is "Ada Reed").
@@ -116,11 +97,13 @@ export class FakeGoogle {
   >();
   private counter = 0;
   private readonly now: () => number;
+  private readonly convert: Convert | undefined;
   omitRefreshToken: boolean;
 
   constructor(options: FakeGoogleOptions = {}) {
     this.now = options.now ?? (() => Date.now());
     this.omitRefreshToken = options.omitRefreshToken ?? false;
+    this.convert = options.convert;
     this.store = new DriveStore(this.now, {
       emitDescendantChanges: options.emitDescendantChanges ?? true,
     });
@@ -230,6 +213,7 @@ export class FakeGoogle {
       parents: [...source.parents],
       appProperties: options.keepAppProperties === false ? {} : { ...source.appProperties },
       content: options.content ?? source.content,
+      bytes: options.content === undefined ? source.bytes : null,
       viaApp: options.visibleToApp === true,
     });
     return copy.id;
@@ -491,7 +475,7 @@ export class FakeGoogle {
       if (!file) return driveError(404, 'notFound', `File not found: ${fileMatch[1]}.`);
       if (method === 'GET') {
         if (url.searchParams.get('alt') === 'media') {
-          return new Response(file.content, {
+          return new Response(file.bytes ? new Uint8Array(file.bytes) : file.content, {
             status: 200,
             headers: { 'Content-Type': file.mimeType, ...CORS },
           });
@@ -510,6 +494,20 @@ export class FakeGoogle {
       }
     }
 
+    const exportMatch = /^\/drive\/v3\/files\/([^/]+)\/export$/.exec(path);
+    if (exportMatch && method === 'GET') {
+      const file = this.visible(user, exportMatch[1]!);
+      if (!file) return driveError(404, 'notFound', `File not found: ${exportMatch[1]}.`);
+      return exportFile(file, url.searchParams.get('mimeType'), this.convert);
+    }
+
+    const sheetMatch = /^\/v4\/spreadsheets\/([^/:]+):batchUpdate$/.exec(path);
+    if (sheetMatch && method === 'POST') {
+      const file = this.visible(user, sheetMatch[1]!);
+      if (!file) return driveError(404, 'notFound', 'Requested entity was not found.');
+      return updateSpreadsheet(file, await request.json());
+    }
+
     const uploadMatch = /^\/upload\/drive\/v3\/files(?:\/([^/]+))?$/.exec(path);
     if (uploadMatch) return this.upload(request, url, method, user, uploadMatch[1] ?? null);
 
@@ -521,6 +519,7 @@ export class FakeGoogle {
     meta: Record<string, unknown>,
     content: string,
     thumbnail?: FakeFile['thumbnail'],
+    bytes: Uint8Array | null = null,
   ): FakeFile {
     const parents = Array.isArray(meta.parents) ? (meta.parents as string[]) : ['root'];
     for (const p of parents) {
@@ -534,6 +533,7 @@ export class FakeGoogle {
       parents,
       appProperties: (meta.appProperties as Record<string, string>) ?? {},
       content,
+      bytes,
       viaApp: true,
       thumbnail: thumbnail ?? this.thumbnailOf(meta),
     });
@@ -584,18 +584,18 @@ export class FakeGoogle {
       const session = this.uploads.get(uploadId);
       if (!session || session.user !== user) return driveError(404, 'notFound', 'upload session');
       this.uploads.delete(uploadId);
-      const content = await request.text();
-      return this.finishUpload(user, session.fileId, session.metadata, content, session.query);
+      const bytes = new Uint8Array(await request.arrayBuffer());
+      return this.finishUpload(user, session.fileId, session.metadata, bytes, session.query);
     }
 
     if (type === 'multipart') {
       const parts = parseMultipartRelated(
         request.headers.get('Content-Type') ?? '',
-        await request.text(),
+        new Uint8Array(await request.arrayBuffer()),
       );
       if (parts.length !== 2) throw new Error('multipart needs metadata and media');
       const meta = JSON.parse(parts[0]!.body) as Record<string, unknown>;
-      return this.finishUpload(user, fileId, meta, parts[1]!.body, url.searchParams);
+      return this.finishUpload(user, fileId, meta, parts[1]!.bytes, url.searchParams);
     }
 
     if (type === 'resumable' && (method === 'POST' || method === 'PATCH')) {
@@ -616,17 +616,18 @@ export class FakeGoogle {
     user: string,
     fileId: string | null,
     meta: Record<string, unknown>,
-    content: string,
+    bytes: Uint8Array,
     query: URLSearchParams,
   ): Response {
     const url = new URL(`https://www.googleapis.com/drive/v3/files?${query.toString()}`);
+    const content = new TextDecoder().decode(bytes);
     if (!fileId) {
-      const file = this.createFromMetadata(user, meta, content);
+      const file = this.createFromMetadata(user, meta, content, undefined, bytes);
       return this.respondFile(file, user, url);
     }
     const file = this.visible(user, fileId);
     if (!file) return driveError(404, 'notFound', `File not found: ${fileId}.`);
-    this.store.writeContent(file, content, this.thumbnailOf(meta));
+    this.store.writeContent(file, content, this.thumbnailOf(meta), bytes);
     const { contentHints: _hints, ...rest } = meta;
     void _hints;
     this.applyMetadata(file, rest, url, user);

@@ -1418,6 +1418,9 @@ connect these sheets." with **Allow Access** (verified: Google's help).
   exports that sheet as `.xlsx` and as `.ods` with Google's calculated values, reads the answers from the `.ods`, holds
   the `.xlsx`'s to them (a case the two exports answer differently is a problem named, never an answer), and deletes
   the Drive file afterwards, whether the category succeeded or failed.
+- Before exporting, the script sets the sheet's locale and time zone to the category's (`en_US`, `de_DE`) and UTC
+  through the Sheets API, as a converted file takes the account's own; it is the only Sheets API call.
+- Drive's answers replace downloads made by hand: there is no folder of downloads to read from.
 - The token is an OAuth client of the operator's (a Desktop app, scope `drive.file` only, published so its refresh
   token does not lapse after seven days): its client file at `~/.secrets/google-oracle-oauth-client.json`, its refresh
   token at `~/.secrets/google-oracle-refresh-token`, both mode 600, never printed or logged.
@@ -1425,7 +1428,7 @@ connect these sheets." with **Allow Access** (verified: Google's help).
   access, `prompt=consent`, PKCE, a random `state`) for the operator to open, takes the redirect's code, refuses a
   `state` that is not its own, exchanges the code and saves the refresh token, mode 600; it waits at most 10 minutes
   (default, D95).
-- A Drive call that fails with 429 or 5xx is tried again up to three times, a second, then 4, then 16 apart; any other
+- A Drive or Sheets call that fails with 429 or 5xx is tried again up to three times, a second, then 4, then 16 apart; any other
   failure stops the category and names the call and status, never the token (default, D96).
 - CI runs the corpus on every change, with no LibreOffice needed; a function reads **built** only while its cases pass,
   and every function the engine knows has at least one case.
