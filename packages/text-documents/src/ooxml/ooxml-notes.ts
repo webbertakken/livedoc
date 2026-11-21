@@ -65,11 +65,6 @@ export class FootnotesReader {
     this.#source = source;
   }
 
-  /** The footnotes part's name, when the document has one the reader can read. */
-  get partName(): string | undefined {
-    return this.#load()?.name;
-  }
-
   /** A note's blocks by its footnote's id; undefined when no such footnote is there. */
   blocks(id: string): Block[] | undefined {
     const part = this.#load();

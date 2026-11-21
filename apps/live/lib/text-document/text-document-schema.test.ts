@@ -13,6 +13,8 @@ import {
   BODY_BLOCKS,
   FIELD,
   FIELD_ATTRIBUTES,
+  FOOTNOTE,
+  FOOTNOTE_ATTRIBUTES,
   KEPT_BLOCK,
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,
@@ -36,8 +38,9 @@ describe('textDocumentSchema', () => {
       [KEPT_BLOCK]: KEPT_BLOCK_ATTRIBUTES,
       [KEPT_INLINE]: KEPT_INLINE_ATTRIBUTES,
       [FIELD]: FIELD_ATTRIBUTES,
+      [FOOTNOTE]: FOOTNOTE_ATTRIBUTES,
     };
-    for (const name of [...BODY_BLOCKS, KEPT_INLINE, FIELD]) {
+    for (const name of [...BODY_BLOCKS, KEPT_INLINE, FIELD, FOOTNOTE]) {
       const node = textDocumentSchema.nodes[name];
       expect(node, name).toBeDefined();
       expect(Object.keys(node!.spec.attrs ?? {}).sort()).toEqual([...attributes[name]!].sort());
@@ -91,6 +94,28 @@ describe('textDocumentSchema', () => {
     expect(field.isAtom && field.nodeSize).toBe(1);
   });
 
+  // page-layout.md "Footnotes": a mark is one character, drawn in superscript in its own formatting, read as nothing.
+  it('draws a footnote’s mark as one character in its own formatting', () => {
+    const mark = textDocumentSchema.nodes.footnote!.create({
+      story: 's1',
+      props: { italic: true },
+    });
+    const spec = mark.type.spec.toDOM!(mark) as unknown as [string, Record<string, string>];
+    expect(spec[0]).toBe('sup');
+    expect(spec[1]).toMatchObject({
+      class: 'text-document-footnote',
+      contenteditable: 'false',
+      'data-footnote': 's1',
+    });
+    expect(spec[1].style).toContain('font-style: italic');
+    const p = textDocumentSchema.nodes.paragraph!.create(null, [
+      textDocumentSchema.text('Claim'),
+      mark,
+    ]);
+    expect(p.textContent).toBe('Claim');
+    expect(mark.isAtom && mark.nodeSize).toBe(1);
+  });
+
   // page-layout.md "Breaks": a Word page or column break marked for the layout.
   it('marks a kept Word page or column break for the layout', () => {
     const attrs = (xml: string) => {
@@ -110,6 +135,7 @@ describe('textDocumentSchema', () => {
     'libreoffice/rich.docx',
     'word/VariousPictures.docx',
     'word/bookmarks.docx',
+    'libreoffice/features.docx',
   ])('binds the editor to %s without changing the state', async (file) => {
     const read = await readTextDocumentFile(new Uint8Array(readFileSync(join(CORPUS, file))));
     if (!read.ok) throw new Error(file);

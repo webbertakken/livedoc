@@ -35,6 +35,9 @@ api, agents) reads and writes one shape (default):
   a `false` that overrides a style's `true` is kept; then `link` (`href`), `text_style` (`id`) and `run_kept`
   (`kept`). Two people formatting one stretch differently each win on their own property.
 - **A kept inline** is a `kept_inline` atom inside its paragraph: its name, XML, formatting and link.
+- **A field** is a `field` atom (what it shows, its text last drawn, formatting and link); **a footnote's mark** is a
+  `footnote` atom naming its note by `story`, with the mark's formatting and link; the note's writing is a
+  `story:<id>` fragment, as a header's.
 - **Headers and footers** are root XML fragments named `story:<id>`, each in the body's layout; a section (the first in
   `document`, a later one in its `section_break`) holds `headers` as a whole value, its slots naming the fragments
   by id. Two people typing in one header merge by character, as in the body. A pasted section break naming a fragment
