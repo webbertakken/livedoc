@@ -1,0 +1,145 @@
+# Sizing
+
+LiveDoc's chrome is drawn on **one sizing scale**: one compact set of type sizes, heights, gaps, side padding, radii
+and icon sizes, the same on every surface of every app.
+It is taken from the [office shell](office-shell.md)'s measured sizes, one step lower in height (Webber, 2026-11-21).
+There is no density setting and no second scale: everyone sees the same sizes.
+
+Chrome is everything that is not content: toolbars, menus, rows, fields, buttons, dialogs, panels and pages' own text.
+Content is never on the scale: elements and text on the canvas, a text document's page, a sheet's cells, a form's
+answers and a slide keep the sizes their author chose.
+
+## Why
+
+- **One reading size.** Everything read or pressed is 14 px on a 20 px line, and 12 px is the only smaller step.
+- **Weight is rare, so it means something.** Text is regular; medium marks the control that is pressed, selected or
+  primary, so it stands out from the rest.
+- **A short ladder of heights, one job each.** Controls that sit together share a height, so their lines agree.
+- **Big type in tight boxes.** A 28 px control holds 14 px type: height goes to what is read, not to frames.
+- **Few icon sizes.** Icons that share a row share a size, so their ink lines up without help.
+
+## The scale
+
+Each step is a theme token in the shared theme (`packages/tailwind-config/theme.css`), named after its job.
+A surface names the token, never the number, so the scale changes in one place.
+
+### Type
+
+| Token               | Size on line | Job                                                                   |
+| ------------------- | ------------ | --------------------------------------------------------------------- |
+| `text-glyph`        | 10 on 12     | A glyph, never words: a key hint, a count in a badge                  |
+| `text-supporting`   | 12 on 16     | Supporting text: a description, a hint under a field, a timestamp     |
+| `text-body`         | 14 on 20     | Everything read or pressed: labels, menu items, rows, fields, buttons |
+| `text-panel-title`  | 16 on 24     | A panel's or a section's title                                        |
+| `text-name`         | 18 on 26     | A document's name in its title row                                    |
+| `text-dialog-title` | 22 on 28     | A dialog's title                                                      |
+| `text-page-title`   | 24 on 32     | A page's title (the Explorer's panes, Settings' pages)                |
+
+- **Weight** is regular (400) by default.
+- Medium (500) marks a pressed, selected or primary control, and nothing else.
+- **Headings are regular** (Webber, 2026-11-21): size alone carries the hierarchy, as the shell's dialog title does.
+- **No tracked capitals**: a label is written in sentence case, never set in capitals with wide letter spacing.
+- Nothing in the chrome reads under 12 px; 10 px is for a glyph only.
+
+### Heights
+
+| Token       | Height | Job                                                                      |
+| ----------- | ------ | ------------------------------------------------------------------------ |
+| `chip`      | 24     | The floor: a menu bar item, a chip, a small icon button                  |
+| `row`       | 28     | A row (menu item, list row, tree row), a toolbar control, an icon button |
+| `field`     | 32     | A field, a button; a canvas drawing tool                                 |
+| `prominent` | 36     | A primary action; the band around a toolbar of 28 px controls            |
+
+- A row is 28 px whatever it held before: a list of rows has one rhythm.
+- **A canvas drawing tool is 32 px** (Webber, 2026-11-21), the one exception to the 28 px toolbar control.
+- The tools are the most pressed controls in the product, pressed mid-gesture and often with a pen that reports as
+  a fine pointer, so they keep one step more.
+- Nothing pressable is drawn under 24 px on a fine pointer
+  ([WCAG 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum)).
+- A height token reads as `h-row`, `min-h-row` or `size-row`; a square control takes its step on both sides
+  (`size-row` is a 28 px icon button).
+
+### Icons
+
+| Token          | Size | Job                                 |
+| -------------- | ---- | ----------------------------------- |
+| `icon-chevron` | 12   | A chevron or a disclosure caret     |
+| `icon-row`     | 16   | An icon in a row, a menu or a field |
+| `icon-toolbar` | 18   | An icon in a toolbar control        |
+| `icon-title`   | 20   | An icon in a title row              |
+
+- An icon takes its size as a square: `size-icon-row`.
+
+### Gaps, padding and radii
+
+- **Gaps** step 2 (inside a group), 4, 8, 12, 16 and 24 px.
+- **Side padding** steps 8, 12, 16 and 24 px; a control's height comes from its height token, not from padding.
+- **Radii** are named after what they round:
+
+| Token     | Radius | Job                           |
+| --------- | ------ | ----------------------------- |
+| `control` | 6      | A control: button, field, row |
+| `menu`    | 8      | A menu or a popover           |
+| `surface` | 12     | A dialog, a card, a panel     |
+| `full`    | pill   | A pill or a round button      |
+
+- A radius reads as `rounded-control`, or on one side or corner as `rounded-t-surface`; square is `rounded-none`.
+
+## Touch
+
+- Touch keeps what it has: a control's tap area is 44 px on a coarse pointer ([Touch targets](touch-targets.md)).
+- The scale sets what is drawn; the 44 px pad and the touch-only sizes (44 px rows, 16 px fields) sit on top of it.
+- A size set only under a coarse pointer (`pointer-coarse:`) is touch's, not the scale's.
+
+## UI scale
+
+- [UI scale](../007-editor/ui-scale.md) is a person's own preference that multiplies the scale on the surfaces it
+  covers; it is not a density setting and its default (100%) draws the scale as written.
+- A token is the size drawn at that default: no chrome carries a zoom of its own on top of it (default).
+
+## The guard
+
+- A static guard, the **sizing guard** (`packages/tailwind-config`), refuses a size that is off the scale in a folder
+  that has moved to it; each app's own `sizing-guard.test.ts` runs it over that app's moved folders.
+- It refuses a type size, a weight, tracked capitals, a height, an icon size, a gap, a side padding or a radius that
+  is not a step above, and names the token to use instead.
+- A type size, a height, an icon size or a radius is named by its token, even when its number is on the scale.
+- A gap or a side padding is named by its number (`gap-2`, `px-3`), which must be a step.
+- A box under 12 px or over 36 px (a hairline, a dot, an avatar, a panel) is layout, not the scale, and passes.
+- It reads class strings only; sizes set under a coarse pointer are touch's and pass.
+- The folders it covers grow as each surface moves to the scale, and in the end cover every app.
+
+## How it rolls out
+
+The scale reaches the product one group of surfaces at a time, type and boxes together, each fitted once.
+The order and its reasons are in plan 0024 (Rollout).
+
+1. The scale written down: the tokens, this spec and the guard; nothing visible changes.
+2. The shared parts: buttons, fields, menus and dialogs' frames in `packages/ui` and the editor's primitives.
+3. The Explorer, home and the new document page.
+4. Dialogs and panels.
+5. The other tab kinds' own chrome: Plan, Sheets, Forms, notes.
+6. The canvas chrome: the editor's toolbars, palette, tab bar and selection toolbar, last.
+7. The other apps (help, marketing, telemetry), with the guard everywhere.
+
+Until a surface moves, it keeps its own sizes; this spec describes the surfaces that have moved.
+
+## Share roles
+
+The scale is presentation only.
+An Editor, a Participant and a Viewer see the same sizes; what each may do with a control is that control's rule.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D231** The glyph step's line: 10 px on a 12 px line, the smallest line that holds a key hint's ascenders
+  (default).
+- **D232** The tokens' names: each step is named after its job (`row`, `field`, `icon-toolbar`), not its number, so
+  a surface reads as what it is and the number can change in one place (default).
+- **D233** Where the zoom stands: a token is the size drawn on screen at the default UI scale, so no chrome carries
+  a zoom of its own (default).
+- **D234** What the guard reads: every static string in a source file outside tests, so a size in a constant (a
+  variant table, a shared class list) is held to the scale as one in markup is (default).
+- **D235** The tokens' unit: rem at a 16 px root, so a browser set to larger text grows the chrome with it (default).

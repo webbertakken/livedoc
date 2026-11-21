@@ -6,6 +6,7 @@ Follow the references below only as needed; never upfront.
 - ./appearance.md - when touching light / dark / system: one origin-wide setting, the no-flash boot script, the toggle
 - ./color-scheme.md - when working on Theme: Brand color and visual design tokens
 - ./brand-mark.md - when touching the logo, the wordmark, favicons, PWA icons or any brand media: the Page Stack, its two drawings, light and dark, the theme tint and the hover fan
+- ./sizing.md - when setting any size in the chrome (type, weight, height, icon, gap, padding, radius): the one compact scale, its tokens and its guard
 - ./destructive-actions.md - when styling a delete, trash or remove control: never red, styled as its neighbours
 - ./fonts.md - when working on Fonts: Eleven Google Fonts, pickable per element + as a per-tab default; the office kinds' document fonts (catalogue, serving, substitution, embedding)
 - ./canvas-accessibility.md - when working on Canvas accessibility baseline: Baseline canvas a11y: Tab/Shift+Tab element traversal (selection as focus), aria-labels on element views, SR-only polite live region for selection/delete/undo
