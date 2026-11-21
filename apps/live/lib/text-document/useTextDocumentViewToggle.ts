@@ -30,6 +30,14 @@ export const NON_PRINTING_TOGGLE: ViewToggle = {
   telemetry: 'TextDocumentNonPrinting',
 };
 
+/** View > Show print layout (page-layout.md "Print layout"): on by default, as Google's. */
+export const PRINT_LAYOUT_TOGGLE: ViewToggle = {
+  item: 'show-print-layout',
+  key: 'livedoc:v2:text-document-print-layout',
+  onByDefault: true,
+  telemetry: 'TextDocumentPrintLayout',
+};
+
 export function useTextDocumentViewToggle(toggle: ViewToggle): {
   shown: boolean;
   actions: OfficeActions;

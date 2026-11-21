@@ -500,7 +500,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   // A text document's View switches flipped (editing-surface.md "The ruler", text-and-paragraphs.md "Non-printing
   // characters").
   'apps/live/lib/text-document/useTextDocumentViewToggle.ts UI·Toggled': {
-    values: ['TextDocumentRuler', 'TextDocumentNonPrinting'],
+    values: ['TextDocumentRuler', 'TextDocumentNonPrinting', 'TextDocumentPrintLayout'],
   },
   // A text document's page setup or orientation changed by their dialogs (page-layout.md "Page setup").
   'apps/live/components/text-document/useTextDocumentPageSetup.tsx Tab·Changed': {

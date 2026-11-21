@@ -48,10 +48,29 @@ export const PAGELESS_TEXT_WIDTH_PT = 576;
 export const PAGELESS_EDGE_PT = 36;
 const PX_PER_PT = 96 / 72;
 
-/** The pageless column's width in points for `available` CSS pixels at zoom `scale`, never under an inch. */
-export function pagelessColumnPt(available: number, scale: number): number {
+/** View > Text width's choices (page-layout.md "Pageless"), in the menu's order. */
+export const TEXT_WIDTHS = ['narrow', 'medium', 'wide', 'full'] as const;
+export type TextWidth = (typeof TEXT_WIDTHS)[number];
+
+/** Each text width in points; Full has none but the room (default widths). */
+export const TEXT_WIDTH_PT: Record<TextWidth, number> = {
+  narrow: 468,
+  medium: PAGELESS_TEXT_WIDTH_PT,
+  wide: 720,
+  full: Number.POSITIVE_INFINITY,
+};
+
+/**
+ * The pageless column's width in points for `available` CSS pixels at zoom `scale`: the chosen text width, never wider
+ * than the room less half an inch each side, never under an inch.
+ */
+export function pagelessColumnPt(
+  available: number,
+  scale: number,
+  width: TextWidth = 'medium',
+): number {
   const room = available / scale / PX_PER_PT - 2 * PAGELESS_EDGE_PT;
-  return Math.max(MIN_TEXT_SIDE_PT, Math.min(PAGELESS_TEXT_WIDTH_PT, Math.round(room)));
+  return Math.max(MIN_TEXT_SIDE_PT, Math.min(TEXT_WIDTH_PT[width], Math.round(room)));
 }
 
 /**
@@ -98,6 +117,7 @@ export function usePagelessColumn(
   scroller: RefObject<HTMLElement | null>,
   scale: number,
   pageless: boolean,
+  width: TextWidth = 'medium',
 ): number {
   const [available, setAvailable] = useState(0);
   useEffect(() => {
@@ -110,8 +130,8 @@ export function usePagelessColumn(
     observer.observe(element);
     return () => observer.disconnect();
   }, [scroller, pageless]);
-  // Before the scroller is measured, the column at its full width.
-  return available > 0 ? pagelessColumnPt(available, scale) : PAGELESS_TEXT_WIDTH_PT;
+  // Before the scroller is measured, the column at the medium width.
+  return available > 0 ? pagelessColumnPt(available, scale, width) : PAGELESS_TEXT_WIDTH_PT;
 }
 
 /** The section the caret is in: its index (0 the first) and its section. */

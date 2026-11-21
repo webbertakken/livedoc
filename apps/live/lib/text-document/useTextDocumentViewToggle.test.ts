@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import {
   NON_PRINTING_TOGGLE,
+  PRINT_LAYOUT_TOGGLE,
   RULER_TOGGLE,
   useTextDocumentViewToggle,
 } from './useTextDocumentViewToggle';
@@ -33,5 +34,16 @@ describe('useTextDocumentViewToggle', () => {
     act(() => result.current.actions['show-non-printing-characters']!.run());
     expect(result.current.shown).toBe(true);
     expect(localStorage.getItem(NON_PRINTING_TOGGLE.key)).toBe('shown');
+  });
+
+  // page-layout.md "Print layout": on by default, as Google's.
+  it('shows print layout by default, and turns it off, counted', async () => {
+    const { track } = await import('@/lib/telemetry');
+    localStorage.removeItem(PRINT_LAYOUT_TOGGLE.key);
+    const { result } = renderHook(() => useTextDocumentViewToggle(PRINT_LAYOUT_TOGGLE));
+    expect(result.current.shown).toBe(true);
+    act(() => result.current.actions['show-print-layout']!.run());
+    expect(result.current.shown).toBe(false);
+    expect(track).toHaveBeenCalledWith('UI', 'Toggled', 'TextDocumentPrintLayout');
   });
 });
