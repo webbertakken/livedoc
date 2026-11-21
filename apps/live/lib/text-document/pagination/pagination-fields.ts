@@ -51,6 +51,22 @@ export function startOfBlocks(pagination: Pagination, blocks: number): number[] 
   return out;
 }
 
+// Where a textblock's fields stand inside it, kept by the (immutable) node: a layout reads every block's, and a
+// keystroke changes one (performance.md "A keystroke's frame").
+const fieldOffsets = new WeakMap<PmNode, readonly number[]>();
+
+function fieldOffsetsOf(node: PmNode): readonly number[] {
+  let offsets = fieldOffsets.get(node);
+  if (!offsets) {
+    const found: number[] = [];
+    node.descendants((child, offset) => {
+      if (child.type.name === FIELD) found.push(offset);
+    });
+    fieldOffsets.set(node, (offsets = found));
+  }
+  return offsets;
+}
+
 /** A decoration per field in the body, telling it its page's number and the page count. */
 export function fieldDecorations(
   nodes: readonly PmNode[],
@@ -61,8 +77,7 @@ export function fieldDecorations(
   const decorations: Decoration[] = [];
   nodes.forEach((node, block) => {
     if (!node.isTextblock) return;
-    node.descendants((child, offset) => {
-      if (child.type.name !== FIELD) return;
+    for (const offset of fieldOffsetsOf(node)) {
       const at = positions[block]! + 1 + offset;
       const number = numberOf(block);
       const shown: FieldShown = { fieldShown: { number, count } };
@@ -70,7 +85,7 @@ export function fieldDecorations(
       decorations.push(
         Decoration.node(at, at + 1, {}, { ...shown, key: `field:${number}/${count}` }),
       );
-    });
+    }
   });
   return decorations;
 }

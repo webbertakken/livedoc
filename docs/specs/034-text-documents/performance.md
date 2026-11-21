@@ -28,7 +28,8 @@ first load 1,368 to 1,020 KiB); its open must now fall well below a canvas docum
 - The frame that paints a keystroke holds the writing's own work alone: the edit, its live state, and the pages laid
   out again from the paragraph it touched.
 - What reads the writing is drawn after that frame is painted, once however many changes came in it: the toolbar's
-  pressed states and font size, the ruler, the outline, the footnotes under the writing, the save status.
+  pressed states and font size, the ruler, the outline, the footnotes under the writing, the save status, and the
+  caret as collaborators are told of it.
 - Every React commit while the writing has the focus reads the caret's place in the whole body, so the surface draws
   nothing again for a keystroke that only these parts need.
 - What is drawn from the blocks alone (breaks, paragraph boxes, sections, list items) is mapped through an edit of
