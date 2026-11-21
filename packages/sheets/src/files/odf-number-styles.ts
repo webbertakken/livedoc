@@ -71,7 +71,10 @@ function partsOf(body: string): Part[] {
       const end = body.indexOf(']', i);
       text(body.slice(i + 2, end).split('-')[0]!);
       i = end;
-    } else if (/[0#?,.%Ee+\-@dmyhsapDMYHSAP/:[\]]/.test(ch) && !(ch === '-' && !/[Ee]$/.test(body.slice(0, i)))) {
+    } else if (
+      /[0#?,.%Ee+\-@dmyhsapDMYHSAP/:[\]]/.test(ch) &&
+      !(ch === '-' && !/[Ee]$/.test(body.slice(0, i)))
+    ) {
       const last = parts.at(-1);
       if (last?.k === 'code') last.v += ch;
       else parts.push({ k: 'code', v: ch });
@@ -95,7 +98,8 @@ function digitsXml(code: string): string | null {
     `number:min-decimal-places="${decimals.replace(/[#?]+$/, '').length}"`,
     `number:min-integer-digits="${integer.replace(/[^0]/g, '').length}"`,
   ];
-  if (scientific) return `<number:scientific-number ${attrs.join(' ')} number:min-exponent-digits="${m[3]!.length}"/>`;
+  if (scientific)
+    return `<number:scientific-number ${attrs.join(' ')} number:min-exponent-digits="${m[3]!.length}"/>`;
   return `<number:number ${attrs.join(' ')}${integer.includes(',') ? ' number:grouping="true"' : ''}/>`;
 }
 
@@ -107,7 +111,8 @@ function numberSection(parts: Part[]): { kind: string; xml: string[] } | null {
   const xml: string[] = [];
   for (const part of parts) {
     if (part.k === 'text') xml.push(textXml(part.v));
-    else if (part.k === 'fill') xml.push(`<number:fill-character>${escapeXmlText(part.v)}</number:fill-character>`);
+    else if (part.k === 'fill')
+      xml.push(`<number:fill-character>${escapeXmlText(part.v)}</number:fill-character>`);
     else {
       const [before, digits = '', after = ''] = /^(%*)([^%]*)(%*)$/.exec(part.v)!.slice(1);
       if (before) xml.push(textXml(before));
@@ -159,7 +164,9 @@ function dateSection(parts: Part[]): { kind: string; xml: string[]; elapsed: boo
     else if (v === 'mmmmm') return null;
     else if (v.startsWith('m')) {
       date = true;
-      xml.push(`<number:month${v.length >= 3 ? ' number:textual="true"' : ''}${v.length === 2 || v.length === 4 ? ' number:style="long"' : ''}/>`);
+      xml.push(
+        `<number:month${v.length >= 3 ? ' number:textual="true"' : ''}${v.length === 2 || v.length === 4 ? ' number:style="long"' : ''}/>`,
+      );
     } else if (v.startsWith('y')) {
       date = true;
       xml.push(`<number:year${long(4)}/>`);
@@ -173,7 +180,8 @@ function dateSection(parts: Part[]): { kind: string; xml: string[]; elapsed: boo
     else if (v.startsWith('s')) xml.push(`<number:seconds${long(2)}/>`);
     else if (v.startsWith('.')) {
       const seconds = xml.at(-1);
-      if (!seconds?.startsWith('<number:seconds') || seconds.includes('decimal-places')) return null;
+      if (!seconds?.startsWith('<number:seconds') || seconds.includes('decimal-places'))
+        return null;
       xml[xml.length - 1] = seconds.replace('/>', ` number:decimal-places="${v.length - 1}"/>`);
     } else xml.push('<number:am-pm/>');
   }
@@ -207,7 +215,9 @@ export function dataStyleXml(name: string, code: string): string[] | null {
   if (sections.some((s) => s === null)) return null;
   const all = sections as Section[];
   const explicit = all.some((s) => s.condition !== undefined);
-  const conditions = explicit ? all.slice(0, -1).map((s) => s.condition) : DEFAULT_CONDITIONS[all.length]!;
+  const conditions = explicit
+    ? all.slice(0, -1).map((s) => s.condition)
+    : DEFAULT_CONDITIONS[all.length]!;
   if (conditions.some((c) => c === undefined)) return null;
   const styles: string[] = [];
   for (const [i, section] of all.entries()) {
@@ -227,10 +237,15 @@ export function dataStyleXml(name: string, code: string): string[] | null {
       ...('elapsed' in made && made.elapsed ? ['number:truncate-on-overflow="false"'] : []),
     ];
     const maps = main
-      ? conditions.map((c, k) => `<style:map style:condition="${escapeXmlAttribute(c!)}" style:apply-style-name="${name}P${k}"/>`)
+      ? conditions.map(
+          (c, k) =>
+            `<style:map style:condition="${escapeXmlAttribute(c!)}" style:apply-style-name="${name}P${k}"/>`,
+        )
       : [];
     const colour = section.colour ? [`<style:text-properties fo:color="${section.colour}"/>`] : [];
-    styles.push(`<number:${made.kind} ${attrs.join(' ')}>${[...colour, ...made.xml, ...maps].join('')}</number:${made.kind}>`);
+    styles.push(
+      `<number:${made.kind} ${attrs.join(' ')}>${[...colour, ...made.xml, ...maps].join('')}</number:${made.kind}>`,
+    );
   }
   return styles;
 }
