@@ -4,13 +4,11 @@
 import { Workbook } from '../engine/workbook';
 import type { Sheet } from '../sheet';
 import { SheetLimits } from '../sheet-limits';
-import type { WorkbookRecord } from '../workbook-record';
+import type { WorkbookFormat, WorkbookRecord } from '../workbook-record';
 import { writeFlatOds, writeOds } from './ods-write';
 import type { FileLoss } from './workbook-file';
 import { workbookFileOf } from './workbook-file';
-
-/** The formats a workbook is written in here: ODF as a package or flat. XLSX arrives with its mapping. */
-export type WrittenWorkbookFormat = 'ods' | 'fods';
+import { writeXlsx } from './xlsx-write';
 
 export type WrittenWorkbook = { data: Uint8Array<ArrayBuffer>; losses: FileLoss[] };
 
@@ -18,7 +16,7 @@ export function writeWorkbook(
   sheets: readonly Sheet[],
   record: WorkbookRecord,
   title: string,
-  format: WrittenWorkbookFormat,
+  format: WorkbookFormat,
 ): WrittenWorkbook {
   const engine = new Workbook({
     sheets: [...sheets],
@@ -29,6 +27,7 @@ export function writeWorkbook(
   });
   const file = workbookFileOf(engine, sheets);
   if (format === 'ods') return writeOds(file, title);
+  if (format === 'xlsx') return writeXlsx(file, title);
   const flat = writeFlatOds(file, title);
   return { data: new Uint8Array(new TextEncoder().encode(flat.data)), losses: flat.losses };
 }

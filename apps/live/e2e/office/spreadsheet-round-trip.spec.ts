@@ -9,7 +9,7 @@ import { officeMenuItem } from './office-menus';
 // A spreadsheet end to end (plan 0020 Phase 4; docs/specs/029-sheets/spreadsheet.md, sheet-store.md "In a
 // spreadsheet", standard-mapping.md, files-and-print.md): a new spreadsheet, stored in its room, a value and a formula
 // typed together in two browsers, downloaded as ODF, recalculated by LibreOffice to the same values, saved again by
-// it, and opened back here unchanged.
+// it, and opened back here unchanged; then saved by it as XLSX, opened here as an XLSX workbook and downloaded as one.
 
 const READY = '[data-spreadsheet-surface="ready"]';
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
@@ -104,5 +104,27 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   expect(await inputOf(page, 'A1')).toBe('21');
   expect(await inputOf(page, 'B1')).toBe('=A1*2');
   expect(await inputOf(page, 'A2')).toBe('rent');
+
+  // standard-mapping.md "Excel's grammar in detail": the same workbook as Excel's file keeps that format both ways.
+  const xlsx = join(dir, 'Budget in Excel.xlsx');
+  writeFileSync(
+    xlsx,
+    libreOfficeConvert(resaved, 'xlsx:Calc MS Excel 2007 XML', { recalculate: true }),
+  );
+  const fromOds = page.url();
+  const openXlsx = await officeMenuItem(page, ['File', 'Open']);
+  const [xlsxChooser] = await Promise.all([page.waitForEvent('filechooser'), openXlsx.click()]);
+  await xlsxChooser.setFiles(xlsx);
+  await page.waitForURL((url) => url.href !== fromOds);
+  await expect(page.locator(READY)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Budget in Excel');
+  expect(await inputOf(page, 'B1')).toBe('=A1*2');
+  const xlsxItem = await officeMenuItem(page, ['File', 'Download as Microsoft Excel (.xlsx)']);
+  const [xlsxDownload] = await Promise.all([page.waitForEvent('download'), xlsxItem.click()]);
+  expect(xlsxDownload.suggestedFilename()).toBe('Budget in Excel.xlsx');
+  const back = join(dir, 'Budget back.xlsx');
+  await xlsxDownload.saveAs(back);
+  const xlsxCsv = libreOfficeConvert(back, 'csv', { recalculate: true }).toString('utf8').trim();
+  expect(xlsxCsv.split(/\r?\n/)).toEqual(['21,42', 'rent,']);
   expectNoPageErrors(pageErrors);
 });

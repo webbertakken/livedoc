@@ -31,6 +31,9 @@ export const RELATIONSHIP_TYPES = {
   signatureOrigin:
     'http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/origin',
   vbaProject: 'http://schemas.microsoft.com/office/2006/relationships/vbaProject',
+  worksheet: `${TRANSITIONAL_RELS}/worksheet`,
+  sharedStrings: `${TRANSITIONAL_RELS}/sharedStrings`,
+  sheetMetadata: `${TRANSITIONAL_RELS}/sheetMetadata`,
 } as const;
 
 /** A relationship type with Strict's namespace read as Transitional's. */
@@ -53,4 +56,11 @@ export const OOXML_CONTENT_TYPES = {
   coreProperties: 'application/vnd.openxmlformats-package.core-properties+xml',
   extendedProperties: 'application/vnd.openxmlformats-officedocument.extended-properties+xml',
   spreadsheet: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml',
+  spreadsheetTemplate:
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml',
+  macroSpreadsheet: 'application/vnd.ms-excel.sheet.macroEnabled.main+xml',
+  worksheet: 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml',
+  sharedStrings: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml',
+  spreadsheetStyles: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml',
+  sheetMetadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
 } as const;

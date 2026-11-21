@@ -86,6 +86,10 @@ function readSettings(raw: unknown): WorkbookSettings | null {
 export const WorkbookRecord = {
   isFormat,
 
+  /** Whether two formats are one standard (fork C1): a workbook leaves in either form of its own, never the other. */
+  sameStandard: (a: WorkbookFormat, b: WorkbookFormat): boolean =>
+    (a === 'xlsx') === (b === 'xlsx'),
+
   /** Settings from the wire or the room, or null when any of them is not one. */
   readSettings,
 

@@ -12,10 +12,14 @@ import {
   XML_DECLARATION,
 } from '@livedoc/office-packages';
 import { toOpenFormula } from './open-formula';
-import type { FileCell, FileLoss, FileSheet, FileValue, WorkbookFile } from './workbook-file';
-
-/** A file written, and what it could not carry (a formula OpenFormula cannot say keeps only its value). */
-export type OdsWritten<T> = { data: T; losses: FileLoss[] };
+import type {
+  FileCell,
+  FileLoss,
+  FileSheet,
+  FileValue,
+  FileWritten,
+  WorkbookFile,
+} from './workbook-file';
 
 /** The generator every file LiveDoc writes names (office-packages.md "Metadata"). */
 export const ODS_GENERATOR = 'LiveDoc';
@@ -171,7 +175,7 @@ function metaXml(title: string): string[] {
 }
 
 /** The workbook as an ODF flat file (`.fods`): one `office:document`, every part inline. */
-export function writeFlatOds(file: WorkbookFile, title: string): OdsWritten<string> {
+export function writeFlatOds(file: WorkbookFile, title: string): FileWritten<string> {
   const losses: FileLoss[] = [];
   const data = [
     XML_DECLARATION,
@@ -185,7 +189,7 @@ export function writeFlatOds(file: WorkbookFile, title: string): OdsWritten<stri
 }
 
 /** The workbook as an ODF package (`.ods`): `content.xml` and `meta.xml` in the shared package. */
-export function writeOds(file: WorkbookFile, title: string): OdsWritten<Uint8Array<ArrayBuffer>> {
+export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Array<ArrayBuffer>> {
   const losses: FileLoss[] = [];
   const xml = (lines: string[]) =>
     new TextEncoder().encode([XML_DECLARATION, ...lines, ''].join('\n'));

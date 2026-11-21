@@ -10,9 +10,14 @@ import { pathToFileURL } from 'node:url';
 const SOFFICE = process.env.SOFFICE ?? 'soffice';
 const CONVERT_TIMEOUT_MS = 90_000;
 
-// Calc's "Recalculation on file load" for ODF set to Always (0), so a spreadsheet's values are LibreOffice's own,
-// never the cached ones the file carries.
-const RECALCULATE_ON_LOAD = `<item oor:path="/org.openoffice.Office.Calc/Formula/Load"><prop oor:name="ODFRecalcMode" oor:op="fuse"><value>0</value></prop></item>`;
+// Calc's "Recalculation on file load" for ODF and for Excel's files set to Always (0), so a spreadsheet's values are
+// LibreOffice's own, never the cached ones the file carries.
+const RECALCULATE_ON_LOAD = ['ODFRecalcMode', 'OOXMLRecalcMode']
+  .map(
+    (mode) =>
+      `<item oor:path="/org.openoffice.Office.Calc/Formula/Load"><prop oor:name="${mode}" oor:op="fuse"><value>0</value></prop></item>`,
+  )
+  .join('\n');
 
 // Tools › Options › Languages › Locale Setting: how LibreOffice reads text as numbers and dates.
 const LOCALE_SETTING = (locale: string) =>

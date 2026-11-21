@@ -934,14 +934,15 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      "A spreadsheet as a file, written from its sheets with every formula's value cached beside it and named after the document: ods or fods for an ODF workbook. 404 workbook_not_found when the document is no spreadsheet; 400 file_type_unknown; 409 format_not_native for another standard. Read access; never on a tab-scoped link.",
+      "A spreadsheet as a file, written from its sheets with every formula's value cached beside it and named after the document: ods or fods for an ODF workbook, xlsx for an XLSX one. 404 workbook_not_found when the document is no spreadsheet; 400 file_type_unknown; 409 format_not_native for another standard. Read access; never on a tab-scoped link.",
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [
       {
         name: 'format',
         required: false,
-        description: "The workbook's own format (the default), or the other ODF form: ods, fods.",
+        description:
+          "The workbook's own format (the default), or another form of its standard: ods, fods, xlsx.",
       },
     ],
     responseMediaType: 'application/vnd.oasis.opendocument.spreadsheet',

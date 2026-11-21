@@ -12,7 +12,6 @@ import {
   parseXml,
   readOdfPackage,
   refuse,
-  type PackageRefusal,
   type XmlElement,
   type XmlNode,
 } from '@livedoc/office-packages';
@@ -20,9 +19,7 @@ import { serialFromParts } from '../dates';
 import { DOCUMENT_CELLS_MAX, DOCUMENT_SHEETS_MAX, SHEET_COLS_MAX, SHEET_ROWS_MAX } from '../limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { fromOpenFormula } from './open-formula';
-import type { FileCell, FileLoss, FileSheet, FileValue, WorkbookFile } from './workbook-file';
-
-export type OdsRead = { ok: true; file: WorkbookFile; losses: FileLoss[] } | PackageRefusal;
+import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 
 const { office: OFFICE, table: TABLE, text: TEXT, calcext: CALCEXT } = ODF_NS;
 const ERRORS: readonly string[] = ERROR_CODES;
@@ -59,7 +56,8 @@ function cellText(cell: XmlElement): string {
 const ISO_DATE = /^(-?\d{4,})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?))?/;
 const ISO_DURATION = /^-?PT?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/;
 
-function dateSerial(text: string): number | null {
+/** An ISO 8601 date or date and time (`2024-03-01T12:00:00`) as a serial, or null. */
+export function isoDateSerial(text: string): number | null {
   const m = ISO_DATE.exec(text);
   if (!m) return null;
   const [, y, mo, d, h, mi, s] = m;
@@ -94,7 +92,7 @@ function cellValue(cell: XmlElement): FileValue | undefined {
     case 'currency':
       return numberValue(Number(attr('value')));
     case 'date':
-      return numberValue(dateSerial(attr('date-value') ?? ''));
+      return numberValue(isoDateSerial(attr('date-value') ?? ''));
     case 'time':
       return numberValue(durationDays(attr('time-value') ?? ''));
     case 'boolean':
@@ -187,7 +185,7 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
   return { name, rows, cols, cells };
 }
 
-function readBody(root: XmlElement): OdsRead {
+function readBody(root: XmlElement): FileRead {
   const spreadsheet = childElement(
     childElement(root, OFFICE, 'body') ?? root,
     OFFICE,
@@ -204,7 +202,7 @@ function readBody(root: XmlElement): OdsRead {
 }
 
 /** An `.ods` or `.fods` file's sheets, or the package's named rejection. */
-export async function readOds(bytes: Uint8Array<ArrayBuffer>): Promise<OdsRead> {
+export async function readOds(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead> {
   if (looksLikeXml(bytes)) {
     const parsed = parseXml(new TextDecoder().decode(bytes));
     if (!parsed.ok) return parsed;

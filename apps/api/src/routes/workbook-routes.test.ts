@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { DocumentResponse } from '@livedoc/api-schema';
 import { emptyLayout, WorkbookRecord } from '@livedoc/sheets';
-import { readOds } from '@livedoc/sheets/files';
+import { readOds, readXlsx } from '@livedoc/sheets/files';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
@@ -226,6 +226,36 @@ describe('downloading a spreadsheet', () => {
     const res = await call({ method: 'GET', path: '/book1/workbook/file?format=fods' });
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('table:formula="of:=[.A1]*2"');
+  });
+
+  // standard-mapping.md "Values in XLSX": an XLSX workbook leaves as XLSX, and never as ODF (fork C1).
+  it('writes an XLSX workbook as XLSX and refuses it as ODF', async () => {
+    const ods = spreadsheet();
+    await call({
+      path: '',
+      body: {
+        ...ods,
+        id: 'book2',
+        tabs: [{ ...ods.tabs[0]!, id: 'tab2' }],
+        sheets: [{ ...ods.sheets[0]!, id: 'sheetBk2', tabId: 'tab2' }],
+        workbook: WorkbookRecord.withFormat(record, 'xlsx'),
+      },
+    });
+    const res = await call({ method: 'GET', path: '/book2/workbook/file' });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe(
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    expect(res.headers.get('Content-Disposition')).toBe('attachment; filename="Q3 Budget.xlsx"');
+    const read = await readXlsx(new Uint8Array(await res.arrayBuffer()));
+    if (!read.ok) throw new Error(read.rejection);
+    expect(read.file.sheets[0]!.cells).toEqual([
+      { r: 0, c: 0, value: { k: 'n', v: 21 } },
+      { r: 0, c: 1, formula: '=A1*2', value: { k: 'n', v: 42 } },
+      { r: 1, c: 0, value: { k: 's', v: 'rent' } },
+    ]);
+    const odf = await call({ method: 'GET', path: '/book2/workbook/file?format=ods' });
+    expect(odf.status).toBe(409);
   });
 
   it.each([

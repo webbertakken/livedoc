@@ -2,11 +2,8 @@
 // `.dotx` or `.docm` read into the model under the package's guards and the document's limits, with its import report;
 // and the model written as the file its format leaves as.
 import {
-  listZip,
-  looksLikeXml,
-  oleKind,
+  packageKind,
   refuse,
-  startsWithZip,
   type PackageBudgets,
   type PackageRefusal,
 } from '@livedoc/office-packages';
@@ -27,13 +24,6 @@ import type { TextDocumentFileType } from './file-types';
 export type TextDocumentRead =
   | { ok: true; document: TextDocument; report: ImportReport; fileType: TextDocumentFileType }
   | PackageRefusal;
-
-function isOoxml(bytes: Uint8Array<ArrayBuffer>): boolean {
-  if (oleKind(bytes)) return true;
-  if (!startsWithZip(bytes)) return false;
-  const listed = listZip(bytes);
-  return listed.ok && listed.entries.some((e) => e.name === '[Content_Types].xml');
-}
 
 /** Kept XML past the limit is dropped, block by block and inline by inline, in reading order, and reported. */
 function withinKeptLimit(
@@ -78,7 +68,7 @@ export async function readTextDocumentFile(
   const report = new ReportBuilder();
   let document: TextDocument;
   let fileType: TextDocumentFileType;
-  if (!looksLikeXml(bytes) && isOoxml(bytes)) {
+  if (packageKind(bytes) === 'ooxml') {
     const read = await readOoxmlFile(bytes, report, limits.budgets);
     if (!read.ok) return read;
     document = read.document;
