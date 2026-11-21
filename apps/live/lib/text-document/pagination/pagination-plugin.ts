@@ -31,6 +31,7 @@ import {
   crossAttrs,
   crossLead,
   crossSplit,
+  headerCopy,
   lineGap,
   pageGeometries,
   rowGap,
@@ -43,6 +44,7 @@ import { pageLayout, storyKey, type StoryHeights } from './pagination-headers';
 import { notePlace, pageNotes, type NoteMark } from './pagination-notes';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
 import { tableSplitOffset } from './pagination-tables';
+import { headerRowsOf } from '../text-document-table-edits';
 import { columnWidths } from '../text-document-table-dom';
 import { lineNumberMarks, pageTopsInBody } from './pagination-line-numbers';
 import { readDrawnLines, type CrossColumns } from './pagination-line-reading';
@@ -86,7 +88,22 @@ export type PaginationOptions = {
 export type { PageGeometry } from './pagination-draw';
 
 // `inside`: in a paragraph, where Backspace and Delete reach across; `cross`: drawn for a box of columns.
-type GapSpec = { readonly key: string; readonly inside: boolean; readonly cross?: boolean };
+type GapSpec = {
+  readonly key: string;
+  readonly inside: boolean;
+  readonly cross?: boolean;
+  /** Its place among the widgets at its position, lower first; -1 unless said. */
+  readonly side?: number;
+};
+
+// A key for a node as drawn: the same while the node is unchanged (nodes are immutable).
+const nodeKeys = new WeakMap<PmNode, number>();
+let nodeKeyCount = 0;
+const nodeKey = (node: PmNode): number => {
+  let key = nodeKeys.get(node);
+  if (key === undefined) nodeKeys.set(node, (key = nodeKeyCount += 1));
+  return key;
+};
 
 /** Whether the browser draws a box of columns in rows, so a paragraph may cross onto the next page in columns. */
 export const canWrapColumns = (): boolean =>
@@ -399,16 +416,25 @@ class Pager {
           width: round(own.width * PX_PER_PT),
         };
         const head = round(page.frameOf(start.block, start.line, numbers[q]!).top);
-        const bands = { foot: round(height - PAGE_GAP_PX - head), head };
+        // A table's header rows repeated at the page's top are drawn after the page edge, inside the gap.
+        const repeat = round(start.repeat ?? 0);
+        const edge = height - repeat;
+        const bands = { foot: round(edge - PAGE_GAP_PX - head), head };
         const columns = node.type.name === TABLE ? columnWidths(node).length : 0;
         widget(
           at,
-          columns > 0 ? rowGap(height, bands, across, columns) : lineGap(height, bands, across),
+          columns > 0 ? rowGap(edge, bands, across, columns) : lineGap(edge, bands, across),
           {
-            key: `${columns > 0 ? `row:${columns}` : 'line'}:${height}:${across.left}:${across.width}:${head}`,
+            key: `${columns > 0 ? `row:${columns}` : 'line'}:${edge}:${across.left}:${across.width}:${head}`,
             inside: true,
+            side: -2,
           },
         );
+        if (repeat > 0)
+          for (let r = 0; r < headerRowsOf(node); r++) {
+            const row = node.child(r);
+            widget(at, headerCopy(row), { key: `header:${r}:${nodeKey(row)}`, inside: true });
+          }
       }
       for (const spacer of start.spacers ?? []) {
         const h = round(spacer.height);

@@ -2,6 +2,7 @@
 // the drawn writing from where it stands to where the layout places the next block (back up too, to a column's top),
 // the column each block of a region is in, a paragraph drawn as a box of columns across them, and each page's size
 // with its lines between columns, its header and its footer. Spacers are never text and never read.
+import { DOMSerializer, type Node as PmNode } from 'prosemirror-model';
 import type { HeaderFooterSlot } from '@livedoc/text-documents';
 import { PAGE_GAP_PX, type Cross, type PageFrame, type Pagination } from './pagination';
 import type { PageLayout, PageStory, StoryPlace } from './pagination-headers';
@@ -124,6 +125,20 @@ export function rowGap(
     cell.append(inside);
     gap.append(cell);
     return gap;
+  };
+}
+
+/**
+ * A table's header row drawn again at the top of a page the table continues on, after its page edge (tables.md
+ * "Laying out across pages"): a row of the table as the schema draws it, hidden from reading and never text.
+ */
+export function headerCopy(row: PmNode): () => HTMLElement {
+  return () => {
+    const copy = DOMSerializer.fromSchema(row.type.schema).serializeNode(row) as HTMLElement;
+    copy.classList.add(PAGE_GAP_CLASS, `${PAGE_GAP_CLASS}-header`);
+    copy.setAttribute('aria-hidden', 'true');
+    copy.contentEditable = 'false';
+    return copy;
   };
 }
 

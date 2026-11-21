@@ -8,6 +8,7 @@ export type PageRecord = {
   line: number;
   gap: number;
   blank: number;
+  repeat?: number;
   carried?: true;
   columns: ColumnStart[];
   spacers: Spacer[];
@@ -63,6 +64,7 @@ export const thawed = (start: PageStart): PageRecord => ({
   line: start.line,
   gap: start.gap,
   blank: start.blank,
+  ...(start.repeat ? { repeat: start.repeat } : {}),
   ...(start.carried ? { carried: true as const } : {}),
   columns: [...(start.columns ?? [])],
   spacers: [...(start.spacers ?? [])],

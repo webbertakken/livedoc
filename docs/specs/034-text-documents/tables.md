@@ -1,7 +1,8 @@
 # Tables
 
-**Status: in the model, the files and the editor.** Tables are read, written, converted, drawn, typed in and broken
-between rows across pages; inserting, reshaping, properties, repeated header rows and rows breaking inside are ahead.
+**Status: in the model, the files and the editor.** Tables are read, written, converted, drawn, inserted, reshaped,
+sorted, typed in and set by their properties; across pages they break between rows, their header rows repeated.
+Rows breaking inside, templates and the resize and move handles are ahead.
 
 Tables in a [text document](text-document.md), as Google Docs has them, built on `prosemirror-tables`
 ([Adopt or build](../../research/docs-open-standard/adopt-or-build.md)).
@@ -71,7 +72,7 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
   - Pinned rows are the table's header rows: their cells are column headers (`th scope="col"`), written as each format
     holds header rows (ODF `table:table-header-rows`, OOXML `w:tblHeader`). Pinning every row is refused (a table
     keeps one row of its own). One undo step.
-  - Repeating them at the top of each page the table continues on is ahead.
+  - They repeat at the top of each page the table continues on ([Laying out across pages](#laying-out-across-pages)).
 - **Rows that do not break across pages** (Table properties > Row > Allow row to overflow across pages, off).
 
 ## Table properties
@@ -202,7 +203,16 @@ its tallest cell; otherwise it moves whole, unless it is taller than a page, whe
 - In a section of columns a table moves to the next column or page whole, as kept content does `(default)`.
 - A table's rows are not line-numbered and do not count ([Line numbers](page-layout.md#line-numbers)), as Word's.
 - A footnote whose mark is in a cell is at the foot of the page its row is on.
-- Ahead: header rows repeating on each page; a row breaking between its lines; a row that may not break.
+- **Built: header rows repeat.** A page the table continues on starts with a copy of its header rows, then the next
+  row: the page's text area holds the copy's height less.
+  - The copy is drawn, never text: aria-hidden, not editable or selectable, read once by a screen reader as the
+    table's own header rows; it follows each change to them.
+  - Header rows never end a page alone: a table whose header rows would be all a page holds of it starts on the next
+    page, as a paragraph kept together does.
+  - They repeat only while they take at most half a page's text area `(default)`, as Word stops repeating header rows
+    that leave no room; a table whose cell spans from the header rows into the rows below repeats none.
+  - A page starting inside the header rows themselves (header rows taller than a page) repeats none.
+- Ahead: a row breaking between its lines; a row that may not break.
 
 ## Share roles
 

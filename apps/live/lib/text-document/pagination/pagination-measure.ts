@@ -16,7 +16,8 @@ import type { BlockMetrics } from './pagination';
 import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
 import type { NoteMark } from './pagination-notes';
 import { measuringRange } from './pagination-range';
-import { tableLines } from './pagination-tables';
+import { headerRowsOf } from '../text-document-table-edits';
+import { measureTable } from './pagination-tables';
 
 /** A page spacer's class: between blocks, or inside a paragraph between two of its lines. */
 export const PAGE_GAP_CLASS = 'text-document-page-gap';
@@ -27,7 +28,8 @@ const COLUMN_BREAK_MARK = 'br[data-column-break]';
 // A footnote's mark (text-document-schema.ts), naming its note's story.
 const NOTE_MARK = 'sup[data-footnote]';
 
-export type BlockRules = Pick<
+/** A block's rules, and a table's header rows, which repeat on each page it continues on. */
+export type BlockRules = { readonly headerRows?: number } & Pick<
   BlockMetrics,
   | 'atom'
   | 'keepWithNext'
@@ -50,7 +52,11 @@ const SECTION_STARTS: readonly SectionStart[] = [
  * between its rows, or whole in a section of columns (`inColumns`; tables.md "Laying out across pages").
  */
 export function rulesOf(node: PmNode, formatting: TextFormatting, inColumns = false): BlockRules {
-  if (node.type.name === TABLE) return inColumns ? { atom: true } : {};
+  if (node.type.name === TABLE) {
+    if (inColumns) return { atom: true };
+    const headerRows = headerRowsOf(node);
+    return headerRows > 0 ? { headerRows } : {};
+  }
   if (node.type.name === SECTION_BREAK) {
     const start = (node.attrs as { start: unknown }).start;
     return {
@@ -96,6 +102,7 @@ export function measureBlock(
   ratio: number,
   left: number,
 ): { metrics: BlockMetrics; inset: number; marks: NoteMark[] } {
+  const { headerRows = 0, ...own } = rules;
   const box = element.getBoundingClientRect();
   const style = getComputedStyle(element);
   const spacers = spacersIn(element, box.top, ratio);
@@ -106,8 +113,17 @@ export function measureBlock(
   let breakAfter = false;
   let columnBreakAfter = false;
   const marks: NoteMark[] = [];
+  let repeat: BlockMetrics['repeat'];
   if (!rules.atom && element instanceof HTMLTableElement) {
-    lines = tableLines(element, box.top, ratio, spacers, height, PAGE_GAP_CLASS);
+    ({ lines, repeat } = measureTable(
+      element,
+      box.top,
+      ratio,
+      spacers,
+      height,
+      PAGE_GAP_CLASS,
+      headerRows,
+    ));
     marks.push(...noteMarks(element, box.top, ratio, spacers, lines));
   } else if (!rules.atom) {
     const range = measuringRange(element.ownerDocument);
@@ -155,7 +171,8 @@ export function measureBlock(
       ...(breakAfter ? { breakAfter } : {}),
       ...(columnForced.length > 0 ? { columnForced } : {}),
       ...(columnBreakAfter ? { columnBreakAfter } : {}),
-      ...rules,
+      ...(repeat ? { repeat } : {}),
+      ...own,
     },
     inset: (box.left - left) / ratio,
     marks,
@@ -172,6 +189,8 @@ function noteMarks(
 ): NoteMark[] {
   const marks: NoteMark[] = [];
   for (const mark of element.querySelectorAll<HTMLElement>(NOTE_MARK)) {
+    // A copy of a table's header rows drawn at a page's top is no mark of its own.
+    if (mark.closest(`.${PAGE_GAP_CLASS}`)) continue;
     const r = mark.getBoundingClientRect();
     const middle = naturalOf(((r.top + r.bottom) / 2 - top) / ratio, spacers);
     // Raised above its line, a mark is on the last line starting above its middle.
