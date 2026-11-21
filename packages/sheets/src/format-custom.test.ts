@@ -19,7 +19,16 @@ describe('a custom format code', () => {
       '0;(0);"zero";@',
     ])
       expect(formatCodeReads(code), code).toBe(true);
-    for (const code of ['', '   ', '"open', '[h:mm', 'h]', '[[h]]', '0;0;0;0;0', 'x'.repeat(FORMAT_CODE_MAX + 1)])
+    for (const code of [
+      '',
+      '   ',
+      '"open',
+      '[h:mm',
+      'h]',
+      '[[h]]',
+      '0;0;0;0;0',
+      'x'.repeat(FORMAT_CODE_MAX + 1),
+    ])
       expect(formatCodeReads(code), code).toBe(false);
   });
   it('draws a number and text the same in every locale', () => {
