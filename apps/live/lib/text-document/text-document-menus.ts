@@ -317,7 +317,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       SEPARATOR,
       // tables.md "Format > Table": the order is (default) until Webber's capture.
       submenu('format-table', 'Table', [
-        item('table-properties', 'Table properties', 'edit'),
+        item('table-properties', 'Table properties', 'edit', BUILT),
         SEPARATOR,
         item('table-insert-row-above', 'Insert row above', 'edit', BUILT),
         item('table-insert-row-below', 'Insert row below', 'edit', BUILT),

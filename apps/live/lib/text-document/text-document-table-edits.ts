@@ -29,7 +29,11 @@ const rectOf = (state: EditorState): TableRect | null =>
   isInTable(state) ? selectedRect(state) : null;
 
 /** Every cell's `colwidth` set from `widths`, one per grid column, in the transaction's table at `tableStart`. */
-function setColumnWidths(tr: Transaction, tableStart: number, widths: readonly number[]): void {
+export function setColumnWidths(
+  tr: Transaction,
+  tableStart: number,
+  widths: readonly number[],
+): void {
   const table = tr.doc.nodeAt(tableStart - 1)!;
   const map = TableMap.get(table);
   const seen = new Set<number>();
