@@ -14,13 +14,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                | Means                                                                            | Rows |
 | --------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`           | In, by the spec named                                                            | 162  |
-| `specified, in part`  | In, but for the part its rule names as left out                                  | 26   |
-| `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 161  |
+| `specified`           | In, by the spec named                                                            | 156  |
+| `specified, in part`  | In, but for the part its rule names as left out                                  | 33   |
+| `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`      | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`      | Built, with the test that proves it                                              | 0    |
 
-- Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 102 `left out (F5)`.
+- Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 101 `left out (F5)`.
 - **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
   out, their data in a file kept untouched. A row reading `left out (F5)` is this matrix's reading of the reference,
   topic by topic: Webber may bring any one back in, and the row changes here first.
@@ -180,13 +180,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Edit images or objects
 
-| Topic                                  | Rule                                                           | Mode    | Status        | Spec                           |
-| -------------------------------------- | -------------------------------------------------------------- | ------- | ------------- | ------------------------------ |
-| Add images                             | Add a picture, kept in its own encoding, with alternative text | Editing | specified     | [Objects](objects.md#pictures) |
-| Modify images                          | Replace, move, resize, rotate, flip, crop                      | Editing | specified     | [Objects](objects.md#pictures) |
-| Edit images with external applications | Editing a picture in another program; Replace takes the result |         | left out (F5) | [Objects](objects.md#pictures) |
-| Add objects                            | Shapes drawn into the page; arrange, align, distribute         | Editing | specified     | [Objects](objects.md#shapes)   |
-| Delete images                          | Delete a picture from the page                                 | Editing | specified     | [Objects](objects.md#pictures) |
+| Topic                                  | Rule                                                                                                 | Mode    | Status             | Spec                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------- | ------------------ | ----------------------------------------------------- |
+| Add images                             | Add a picture, kept in its own encoding, with alternative text                                       | Editing | specified          | [Objects](objects.md#pictures)                        |
+| Modify images                          | Replace, move, resize, rotate, flip, crop                                                            | Editing | specified          | [Objects](objects.md#pictures)                        |
+| Edit images with external applications | Editing a picture in another program; Replace takes the result                                       |         | left out (F5)      | [Objects](objects.md#pictures)                        |
+| Add objects                            | A button is a field, for resetting fields or going to a page; adding video, sound and 3D is left out | Editing | specified, in part | [Building fields](building-fields.md#the-field-tools) |
+| Delete images                          | Delete a picture from the page                                                                       | Editing | specified          | [Objects](objects.md#pictures)                        |
 
 ## Adobe Express
 
@@ -228,17 +228,17 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Organise pages
 
-| Topic                               | Rule                                                           | Mode    | Status    | Spec                                                                      |
-| ----------------------------------- | -------------------------------------------------------------- | ------- | --------- | ------------------------------------------------------------------------- |
-| Delete pages in PDFs                | Delete pages; their marks return on undo                       | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
-| Move or copy pages within PDFs      | Drag, cut and paste, duplicate, reverse                        | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
-| Move or copy pages between two PDFs | Copy and move pages between two PDF documents                  | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
-| Rotate pages in PDFs                | Rotate pages in the file; View rotates one person's view       | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
-| Replace pages in PDFs               | Replace page content, keeping what sits on top                 | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
-| Renumber pages in PDFs              | Page labels by range, style, prefix and start                  | Editing | specified | [Organising pages](organising-pages.md#page-labels)                       |
-| Split PDFs                          | Split by pages, bookmarks, size or chosen places               | Editing | specified | [Organising pages](organising-pages.md#splitting)                         |
-| Extract pages from PDFs             | Extract pages as a new PDF document                            | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
-| Crop pages in PDFs                  | Crop by box or margins; what is cropped is hidden, not removed | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
+| Topic                               | Rule                                                                   | Mode    | Status    | Spec                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------- | ------- | --------- | ------------------------------------------------------------------------- |
+| Delete pages in PDFs                | Delete pages; their marks return on undo                               | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
+| Move or copy pages within PDFs      | Drag, cut and paste, duplicate, reverse                                | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
+| Move or copy pages between two PDFs | Copy and move pages between two PDF documents                          | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
+| Rotate pages in PDFs                | Rotate pages in the file; View rotates one person's view               | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
+| Replace pages in PDFs               | Replace page content from a PDF or a picture, keeping what sits on top | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
+| Renumber pages in PDFs              | Page labels by range, style, prefix and start                          | Editing | specified | [Organising pages](organising-pages.md#page-labels)                       |
+| Split PDFs                          | Split by pages, bookmarks, size or chosen places                       | Editing | specified | [Organising pages](organising-pages.md#splitting)                         |
+| Extract pages from PDFs             | Extract pages as a new PDF document                                    | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
+| Crop pages in PDFs                  | Crop by box or margins; what is cropped is hidden, not removed         | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
 
 ## Backgrounds and watermarks
 
@@ -271,15 +271,15 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Combine files
 
-| Topic                                   | Rule                                                       | Mode    | Status        | Spec                                              |
-| --------------------------------------- | ---------------------------------------------------------- | ------- | ------------- | ------------------------------------------------- |
-| Combine files into one PDF              | Several PDFs and LiveDoc documents into a new PDF document | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Rearrange or resize combined files      | Order and page ranges set before combining                 | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Insert one PDF into another             | Insert a PDF's pages                                       | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Insert a blank page into a PDF          | Insert a blank page                                        | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Insert web pages into a PDF             | Inserting a web page by its address                        |         | left out (F5) | [Organising pages](organising-pages.md#inserting) |
-| Insert a clipboard selection into a PDF | A copied picture becomes a page                            | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Embed PDFs in OLE container documents   | OLE containers are a desktop technology                    |         | left out (F5) |                                                   |
+| Topic                                   | Rule                                                                                              | Mode    | Status             | Spec                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------- |
+| Combine files into one PDF              | Several PDFs and LiveDoc documents into a new PDF document; other files join once open in LiveDoc | Editing | specified, in part | [Organising pages](organising-pages.md#inserting) |
+| Rearrange or resize combined files      | Order and page ranges set before combining                                                        | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Insert one PDF into another             | Insert a PDF's pages                                                                              | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Insert a blank page into a PDF          | Insert a blank page                                                                               | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Insert web pages into a PDF             | Inserting a web page by its address                                                               |         | left out (F5)      | [Organising pages](organising-pages.md#inserting) |
+| Insert a clipboard selection into a PDF | A copied picture or copied text becomes pages                                                     | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Embed PDFs in OLE container documents   | OLE containers are a desktop technology                                                           |         | left out (F5)      |                                                   |
 
 ## PDF layers
 
@@ -344,16 +344,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Fill and sign documents
 
-| Topic                                    | Rule                                                            | Mode      | Status             | Spec                                         |
-| ---------------------------------------- | --------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
-| E-sign agreements                        | Place a drawn signature or initials                             | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
-| Add digital signatures                   | Sign with a certificate file read in the browser                | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
-| Personalize digital signatures           | The visible appearance: name, date, reason, place, a graphic    | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
-| Modify e-signatures                      | Move, resize, delete and manage kept signatures                 | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
-| Add time stamps                          | A trusted time stamp where the host configured an authority     | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
-| Add verification information             | Verification information where the host configured an authority | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
-| Set up roaming ID accounts               | Certificates held by a service                                  |           | left out (C4)      | [Signing](signing.md)                        |
-| Manage certificates on directory servers | Certificate directory servers                                   |           | left out (F5)      | [Signing](signing.md)                        |
+| Topic                                    | Rule                                                                                  | Mode      | Status             | Spec                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
+| E-sign agreements                        | Place a drawn signature or initials                                                   | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
+| Add digital signatures                   | Sign with a certificate file read in the browser                                      | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
+| Personalize digital signatures           | The visible appearance: name, date, reason, place, a graphic                          | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
+| Modify e-signatures                      | Move, resize, delete and manage kept signatures                                       | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
+| Add time stamps                          | A trusted time stamp on a signature, or alone, where the host configured an authority | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Add verification information             | Verification information at signing or after, where the host configured an authority  | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Set up roaming ID accounts               | Certificates held by a service                                                        |           | left out (C4)      | [Signing](signing.md)                        |
+| Manage certificates on directory servers | Certificate directory servers                                                         |           | left out (F5)      | [Signing](signing.md)                        |
 
 ## PDF Spaces
 
@@ -380,16 +380,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Forms: create
 
-| Topic                                                                  | Rule                                                                 | Mode    | Status        | Spec                                                           |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------- | ------- | ------------- | -------------------------------------------------------------- |
-| Convert documents to PDF forms                                         | Detect fields proposes a field for each blank, made only when ticked | Editing | specified     | [Building fields](building-fields.md#detecting-fields)         |
-| Create PDF forms from scratch                                          | Every field type, drawn or placed                                    | Editing | specified     | [Building fields](building-fields.md#the-field-tools)          |
-| Align form fields                                                      | Align, centre, distribute, match size                                | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Copy form fields                                                       | Duplicate, multiple copies, across pages                             | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Move form fields                                                       | Move a field                                                         | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Resize form fields                                                     | Resize a field                                                       | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Select multiple form fields                                            | Select several fields                                                | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Enable filling and saving rights in PDF forms for Acrobat Reader users | Needs Adobe's own signing key                                        |         | left out (F5) | [Building fields](building-fields.md#together-and-in-the-file) |
+| Topic                                                                  | Rule                                                                                   | Mode    | Status             | Spec                                                           |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------------------- |
+| Convert documents to PDF forms                                         | Detect fields proposes a field for each blank, made only when ticked                   | Editing | specified          | [Building fields](building-fields.md#detecting-fields)         |
+| Create PDF forms from scratch                                          | Every field type, drawn or placed, on any PDF; starting from a blank page waits on F12 | Editing | specified, in part | [Building fields](building-fields.md#the-field-tools)          |
+| Align form fields                                                      | Align, centre, distribute, match size                                                  | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Copy form fields                                                       | Duplicate, multiple copies, across pages                                               | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Move form fields                                                       | Move a field                                                                           | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Resize form fields                                                     | Resize a field                                                                         | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Select multiple form fields                                            | Select several fields                                                                  | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Enable filling and saving rights in PDF forms for Acrobat Reader users | Needs Adobe's own signing key                                                          |         | left out (F5)      | [Building fields](building-fields.md#together-and-in-the-file) |
 
 ## Forms: fill and sign
 
@@ -403,14 +403,14 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Forms: customise fields
 
-| Topic                                  | Rule                                                                                          | Mode    | Status             | Spec                                                                  |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------ | --------------------------------------------------------------------- |
-| Change form field settings             | A field's properties in the side panel                                                        | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Form fields general settings           | General: name, tooltip, visibility, read-only, required                                       | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Field specific properties              | Options by field type                                                                         | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Field formatting options               | Number, percentage, date, time and special formats                                            | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Configure form fields for calculations | Sum, product, average, minimum, maximum and simple formulas; custom scripts are never written | Editing | specified, in part | [Building fields](building-fields.md#properties)                      |
-| Set form field navigation              | Tab order by rows, columns, structure or by hand                                              | Editing | specified          | [Building fields](building-fields.md#tab-order-and-calculation-order) |
+| Topic                                  | Rule                                                                                                                       | Mode    | Status             | Spec                                                                  |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | --------------------------------------------------------------------- |
+| Change form field settings             | A field's properties in the side panel                                                                                     | Editing | specified          | [Building fields](building-fields.md#properties)                      |
+| Form fields general settings           | General: name, type, locked, tooltip, visibility, read-only, required; the Actions tab is left out but for reset and go to | Editing | specified, in part | [Building fields](building-fields.md#properties)                      |
+| Field specific properties              | Options by field type                                                                                                      | Editing | specified          | [Building fields](building-fields.md#properties)                      |
+| Field formatting options               | Number, percentage, date, time and special formats                                                                         | Editing | specified          | [Building fields](building-fields.md#properties)                      |
+| Configure form fields for calculations | Sum, product, average, minimum, maximum and simple formulas; custom scripts are never written                              | Editing | specified, in part | [Building fields](building-fields.md#properties)                      |
+| Set form field navigation              | Tab order by rows, columns, structure or by hand                                                                           | Editing | specified          | [Building fields](building-fields.md#tab-order-and-calculation-order) |
 
 ## Forms: barcodes
 
@@ -444,57 +444,57 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Comment preferences
 
-| Topic                             | Rule                                                  | Mode      | Status    | Spec                              |
-| --------------------------------- | ----------------------------------------------------- | --------- | --------- | --------------------------------- |
-| Change author name on comments    | A comment's author is the person's display name       | Reviewing | specified | [Comments](comments.md#authors)   |
-| Set comment properties            | A mark's look, and making it the default for its kind | Reviewing | specified | [Marks](marks.md#changing-a-mark) |
-| Set or change text box properties | A Text mark's font, size, colour and alignment        | Reviewing | specified | [Marks](marks.md#changing-a-mark) |
+| Topic                             | Rule                                                                                     | Mode      | Status             | Spec                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ------------------ | --------------------------------- |
+| Change author name on comments    | A comment's author is the person's display name; a comment is never given another author | Reviewing | specified, in part | [Comments](comments.md#authors)   |
+| Set comment properties            | A mark's subject, look, a note's glyph, its history, and making its look the default     | Reviewing | specified          | [Marks](marks.md#changing-a-mark) |
+| Set or change text box properties | A Text mark's font, size, colour and alignment                                           | Reviewing | specified          | [Marks](marks.md#changing-a-mark) |
 
 ## Review documents
 
-| Topic                                           | Rule                                                                      | Mode      | Status             | Spec                                        |
-| ----------------------------------------------- | ------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
-| Insert text                                     | An Insert text mark                                                       | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Replace text                                    | A Replace text mark                                                       | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add attachments as comments                     | A Pinned file mark                                                        | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments in callouts                        | A Callout mark                                                            | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments to selected text or images         | Comment on selected text or an area                                       | Reviewing | specified          | [Comments](comments.md#anchors)             |
-| Add markups                                     | Highlight, underline, strikethrough, squiggly underline                   | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Change markup colors                            | Colours from the one colour picker                                        | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
-| Add comments using sticky notes or chat bubbles | A Note mark                                                               | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments in text boxes                      | A Text mark                                                               | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments to videos in Acrobat Pro           | Media a file embeds is not played                                         |           | left out (F5)      | [Marks](marks.md#kinds)                     |
-| Add shapes, lines, and freeform drawings        | Drawing, line, arrow, rectangle, ellipse, polygon, cloud, connected lines | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Delete comments                                 | Delete a mark; its thread is kept as on deleted content                   | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
-| Edit comments                                   | Edit one's own comment                                                    | Reviewing | specified          | [Comments](comments.md#threads)             |
-| Group and ungroup comments                      | Group and ungroup marks                                                   | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
-| Join PDF reviews                                | Opening a shared document is joining its review                           | Reviewing | specified, in part | [PDF document](pdf-document.md#share-roles) |
+| Topic                                           | Rule                                                                                     | Mode      | Status             | Spec                                        |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
+| Insert text                                     | An Insert text mark                                                                      | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Replace text                                    | A Replace text mark                                                                      | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add attachments as comments                     | A Pinned file mark                                                                       | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments in callouts                        | A Callout mark                                                                           | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments to selected text or images         | Comment on selected text or an area                                                      | Reviewing | specified          | [Comments](comments.md#anchors)             |
+| Add markups                                     | Highlight, underline, strikethrough, squiggly underline                                  | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Change markup colors                            | Colours from the one colour picker                                                       | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
+| Add comments using sticky notes or chat bubbles | A Note mark                                                                              | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments in text boxes                      | A Text mark                                                                              | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments to videos in Acrobat Pro           | Media a file embeds is not played                                                        |           | left out (F5)      | [Marks](marks.md#kinds)                     |
+| Add shapes, lines, and freeform drawings        | Drawing with an eraser, line, arrow, rectangle, ellipse, polygon, cloud, connected lines | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Delete comments                                 | Delete a mark; its thread is kept as on deleted content                                  | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
+| Edit comments                                   | Edit one's own comment                                                                   | Reviewing | specified          | [Comments](comments.md#threads)             |
+| Group and ungroup comments                      | Group and ungroup marks                                                                  | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
+| Join PDF reviews                                | Opening a shared document is joining its review                                          | Reviewing | specified, in part | [PDF document](pdf-document.md#share-roles) |
 
 ## Stamps
 
-| Topic                               | Rule                                                | Mode      | Status    | Spec                     |
-| ----------------------------------- | --------------------------------------------------- | --------- | --------- | ------------------------ |
-| Add or modify stamps                | Standard stamps, placed, resized, rotated           | Reviewing | specified | [Marks](marks.md#stamps) |
-| Create custom stamps                | Custom stamps from a picture or a PDF page          | Reviewing | specified | [Marks](marks.md#stamps) |
-| Create custom dynamic stamps        | Dynamic stamps with the stamper's name and the time | Reviewing | specified | [Marks](marks.md#stamps) |
-| Delete custom stamps and categories | Manage stamps: rename, delete, categories           | Reviewing | specified | [Marks](marks.md#stamps) |
-| Update digital stamp identities     | A dynamic stamp's name is the person's display name | Reviewing | specified | [Marks](marks.md#stamps) |
+| Topic                               | Rule                                                                    | Mode      | Status    | Spec                     |
+| ----------------------------------- | ----------------------------------------------------------------------- | --------- | --------- | ------------------------ |
+| Add or modify stamps                | Standard stamps, placed, resized, rotated                               | Reviewing | specified | [Marks](marks.md#stamps) |
+| Create custom stamps                | Custom stamps from a picture or a PDF page                              | Reviewing | specified | [Marks](marks.md#stamps) |
+| Create custom dynamic stamps        | Dynamic stamps with the stamper's name and the time                     | Reviewing | specified | [Marks](marks.md#stamps) |
+| Delete custom stamps and categories | Manage stamps: rename, delete, categories                               | Reviewing | specified | [Marks](marks.md#stamps) |
+| Update digital stamp identities     | Stamp identity: display name, title and organisation for dynamic stamps | Reviewing | specified | [Marks](marks.md#stamps) |
 
 ## Manage reviews
 
-| Topic                                 | Rule                                                       | Mode      | Status             | Spec                                                       |
-| ------------------------------------- | ---------------------------------------------------------- | --------- | ------------------ | ---------------------------------------------------------- |
-| View comments                         | The comments panel, with filters and search                | Viewing   | specified          | [Comments](comments.md#the-comments-panel)                 |
-| Add reactions to comments             | Emoji reactions on a comment                               | Reviewing | specified          | [Comments](comments.md#threads)                            |
-| Reply to comments                     | Replies, written into the file as replies                  | Reviewing | specified          | [Comments](comments.md#threads)                            |
-| Mark comments as unread or resolved   | Unread, resolve and reopen                                 | Reviewing | specified          | [Comments](comments.md#threads)                            |
-| Find comments                         | Search and filter comments                                 | Viewing   | specified          | [Comments](comments.md#the-comments-panel)                 |
-| Check for new comments                | New comments arrive live; there is nothing to check for    | Viewing   | specified, in part | [Comments](comments.md#threads)                            |
-| Unlock comments                       | Lock and unlock a mark                                     | Reviewing | specified          | [Marks](marks.md#changing-a-mark)                          |
-| Spell-check comments                  | The browser's spelling in the composer                     | Reviewing | specified, in part | [Comments](comments.md#threads)                            |
-| Publish comments from other reviewers | Publishing to a review server; comments are live           |           | left out (F5)      | [Comments](comments.md#in-the-file)                        |
-| Manage shared files                   | Shared documents are found in the Explorer                 | Files     | specified          | [Starting and finding](starting-and-finding.md#finding-it) |
-| Track shared PDF reviews              | Review trackers; the Inbox carries threads and assignments |           | left out (F5)      | [Comments](comments.md#notifications)                      |
+| Topic                                 | Rule                                                                                                   | Mode      | Status             | Spec                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- | ------------------ | ---------------------------------------------------------- |
+| View comments                         | The comments panel: filter, sort, search, expand, summary, export; exporting to Word is left out       | Viewing   | specified, in part | [Comments](comments.md#the-comments-panel)                 |
+| Add reactions to comments             | Emoji reactions on a comment                                                                           | Reviewing | specified          | [Comments](comments.md#threads)                            |
+| Reply to comments                     | Replies, written into the file as replies                                                              | Reviewing | specified          | [Comments](comments.md#threads)                            |
+| Mark comments as unread or resolved   | Unread, resolve and reopen, and a person's own tick                                                    | Reviewing | specified          | [Comments](comments.md#threads)                            |
+| Find comments                         | Search and filter comments                                                                             | Viewing   | specified          | [Comments](comments.md#the-comments-panel)                 |
+| Check for new comments                | New comments arrive live; there is nothing to check for                                                | Viewing   | specified, in part | [Comments](comments.md#threads)                            |
+| Unlock comments                       | Lock and unlock a mark                                                                                 | Reviewing | specified          | [Marks](marks.md#changing-a-mark)                          |
+| Spell-check comments                  | The browser's spelling in the composer                                                                 | Reviewing | specified, in part | [Comments](comments.md#threads)                            |
+| Publish comments from other reviewers | Publishing to a review server; comments are live                                                       |           | left out (F5)      | [Comments](comments.md#in-the-file)                        |
+| Manage shared files                   | Shared documents are found in the Explorer                                                             | Files     | specified          | [Starting and finding](starting-and-finding.md#finding-it) |
+| Track shared PDF reviews              | Shared documents are found in the Explorer and threads in the Inbox; per-reviewer tracking is left out | Files     | specified, in part | [Starting and finding](starting-and-finding.md#finding-it) |
 
 ## Protect with passwords
 
@@ -540,14 +540,14 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- | --------- | ----------------------------------------------------------------------------------- |
 | About redacting and sanitizing PDFs in Acrobat Pro  | Redaction and removing hidden information, each replacing the stored file with its history | Editing | specified | [Redaction and protection](redaction-and-protection.md)                             |
 | Types of redactable data                            | Text, pictures, shapes, marks, field values and the words they left elsewhere in the file  | Editing | specified | [Redaction and protection](redaction-and-protection.md#applying)                    |
-| Redact sensitive content in Acrobat Pro             | Mark, review, then apply                                                                   | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
+| Redact sensitive content in Acrobat Pro             | Mark, review, then apply: to a redacted copy, or to this PDF with its history purged       | Editing | specified | [Redaction and protection](redaction-and-protection.md#applying)                    |
 | Search and redact text in Acrobat Pro               | Find text to redact: words, lists and patterns                                             | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Text redaction properties in Acrobat Pro            | Fill colour and overlay text                                                               | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Redact images in PDFs                               | A picture's pixels under a mark are replaced in the picture itself                         | Editing | specified | [Redaction and protection](redaction-and-protection.md#applying)                    |
 | Change redaction appearance in Acrobat Pro          | How a redaction mark looks before and after applying                                       | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Sanitize PDFs in Acrobat Pro                        | Remove hidden information, listed with counts                                              | Editing | specified | [Redaction and protection](redaction-and-protection.md#removing-hidden-information) |
 | Apply multiple codes to a redaction in Acrobat Pro  | One or several redaction codes on a mark                                                   | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
-| Create redaction codes and code sets in Acrobat Pro | Make sets of redaction codes                                                               | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
+| Create redaction codes and code sets in Acrobat Pro | Sets of redaction codes; the two U.S. sets ship                                            | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Edit redaction codes and code sets in Acrobat Pro   | Edit and delete codes and sets                                                             | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 
 ## Protected view

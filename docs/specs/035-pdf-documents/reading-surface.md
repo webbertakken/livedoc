@@ -100,23 +100,23 @@ Every View item is seen by every level and changes one person's view only.
 
 ### Insert
 
-| Item                                                    | Does                                                                           | Level       | Mode      |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------- | --------- |
-| Comment                                                 | A comment on the selection, or a note where the next press lands               | participate | Reviewing |
-| Highlight, Underline, Strikethrough, Squiggly underline | A text mark on the selection                                                   | participate | Reviewing |
-| Text, Callout                                           | A text mark ([Marks](marks.md))                                                | participate | Reviewing |
-| Drawing                                                 | Freehand                                                                       | participate | Reviewing |
-| Shape ▸                                                 | Line, Arrow, Rectangle, Ellipse, Polygon, Cloud, Connected lines               | participate | Reviewing |
-| Stamp ▸                                                 | The stamps ([Marks](marks.md#stamps))                                          | participate | Reviewing |
-| Tick, Cross, Dot                                        | Fill marks for a PDF with no fields ([Fields](fields.md#a-pdf-with-no-fields)) | participate | Reviewing |
-| Signature ▸                                             | Drawn signature; Initials; Certificate signature ([Signing](signing.md))       | participate | Reviewing |
-| Text box                                                | New page content ([Editing text](editing-text.md))                             | edit        | Editing   |
-| Picture                                                 | [Objects](objects.md#pictures)                                                 | edit        | Editing   |
-| Link                                                    | [Objects](objects.md#links)                                                    | edit        | Editing   |
-| Field ▸                                                 | Each field type ([Building fields](building-fields.md))                        | edit        | Editing   |
-| Header and footer, Page numbers, Watermark, Background  | [Document tools](document-tools.md)                                            | edit        | Editing   |
-| Bookmark                                                | A bookmark to the place in view                                                | edit        | Editing   |
-| Embedded file                                           | [Document tools](document-tools.md#embedded-files)                             | edit        | Editing   |
+| Item                                                    | Does                                                                                 | Level       | Mode      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------- | --------- |
+| Comment                                                 | A comment on the selection, or a note where the next press lands                     | participate | Reviewing |
+| Highlight, Underline, Strikethrough, Squiggly underline | A text mark on the selection                                                         | participate | Reviewing |
+| Text, Callout                                           | A text mark ([Marks](marks.md))                                                      | participate | Reviewing |
+| Drawing                                                 | Freehand                                                                             | participate | Reviewing |
+| Shape ▸                                                 | Line, Arrow, Rectangle, Ellipse, Polygon, Cloud, Connected lines                     | participate | Reviewing |
+| Stamp ▸                                                 | The stamps ([Marks](marks.md#stamps))                                                | participate | Reviewing |
+| Tick, Cross, Dot                                        | Fill marks for a PDF with no fields ([Fields](fields.md#a-pdf-with-no-fields))       | participate | Reviewing |
+| Signature ▸                                             | Drawn signature; Initials; Certificate signature; Time stamp ([Signing](signing.md)) | participate | Reviewing |
+| Text box                                                | New page content ([Editing text](editing-text.md))                                   | edit        | Editing   |
+| Picture                                                 | [Objects](objects.md#pictures)                                                       | edit        | Editing   |
+| Link                                                    | [Objects](objects.md#links)                                                          | edit        | Editing   |
+| Field ▸                                                 | Each field type ([Building fields](building-fields.md))                              | edit        | Editing   |
+| Header and footer, Page numbers, Watermark, Background  | [Document tools](document-tools.md)                                                  | edit        | Editing   |
+| Bookmark                                                | A bookmark to the place in view                                                      | edit        | Editing   |
+| Embedded file                                           | [Document tools](document-tools.md#embedded-files)                                   | edit        | Editing   |
 
 ### Format
 

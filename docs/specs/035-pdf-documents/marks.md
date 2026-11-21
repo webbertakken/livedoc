@@ -76,8 +76,12 @@ written into the file as a standard annotation, so any reader shows it. The rese
   comments panel ([Comments](comments.md#when-the-mark-goes)).
 - **Marks the file arrived with behave the same** as marks made here: selected, moved, restyled, answered, deleted.
   Changing one is a live change naming it; the stored file is untouched until a bake.
-- **Properties** (the side panel, for one selected mark): its kind, author, when made and changed, its look, its
-  words, Locked, and "Make this look the default" for its kind.
+- **Properties** (the side panel, for one selected mark): its kind, author, **subject** (a short label of the
+  maker's own, the kind's name until changed), when made and changed, its look, its words, Locked, its **history**
+  (each state its thread was given, by whom and when), and "Make this look the default" for its kind.
+- **A Note's glyph** is one of the standard's: comment (default), note, help, key, insert, paragraph, new paragraph.
+- **Erase** (on the Drawing control) rubs out the strokes of a Drawing it passes over, whole strokes at a time; a
+  Drawing with no strokes left is deleted.
 
 ## Stamps
 
@@ -87,7 +91,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
   **Accepted**, **Rejected**.
 - **Dynamic stamps** carry the stamper's name and the time, written when placed: "Approved by Ada Lovelace, 21 Nov
   2026, 14:02", **Received**, **Reviewed**, **Revised**. The name is the person's display name, the time their
-  browser's, said to be.
+  browser's, said to be. **Stamp identity** (Manage stamps) adds a title and an organisation a person may fill in for
+  dynamic stamps that show them; they are kept with the account and written only into stamps that person places.
 - **Custom stamps**: made from a picture (PNG, JPEG, SVG drawn as a picture) or a page of a PDF, named, in a
   category; kept in this browser, or with the account when signed in; renamed, deleted and moved between categories
   in **Manage stamps**. A custom stamp's picture is a blob named in the mark.
