@@ -1,0 +1,182 @@
+{
+  "category": "Google",
+  "data": [
+    [1, 10, 100, "apple"],
+    [2, 20, 200, "Pear"],
+    [3, 30, null, "fig"],
+    [4, 40, 400, null],
+    [5, 50, 500, null],
+    [6, 60, null, null],
+    [7, 70, 700, null],
+    [8, 80, 800, null],
+    [9, 90, null, null],
+    [10, 100, 1000, null]
+  ],
+  "cases": [
+    {
+      "id": "ARRAYFORMULA.1",
+      "f": "=ARRAYFORMULA(SUM(IF(Data!A1:A10>5, Data!A1:A10, 0)))",
+      "cite": "https://support.google.com/docs/answer/3093275 (sample usage)",
+      "expect": [[40]]
+    },
+    {
+      "id": "ARRAYFORMULA.2",
+      "f": "=ARRAYFORMULA(Data!A1:C1+Data!A2:C2)",
+      "cols": 3
+    },
+    {
+      "id": "ARRAYFORMULA.3",
+      "f": "=ARRAYFORMULA(Data!A1:A3*2)",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.4",
+      "f": "=ARRAYFORMULA(Data!A1:A3&\"x\")",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.5",
+      "f": "=ARRAYFORMULA(UPPER(Data!D1:D3))",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.6",
+      "f": "=ARRAYFORMULA(7)"
+    },
+    {
+      "id": "ARRAYFORMULA.7",
+      "f": "=ARRAYFORMULA(Data!A1:B2)",
+      "rows": 2,
+      "cols": 2
+    },
+    {
+      "id": "ARRAYFORMULA.8",
+      "f": "=ARRAYFORMULA(IF(Data!A1:A3>2, \"big\", \"small\"))",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.9",
+      "f": "=ARRAYFORMULA(ROW(Data!A1:A3))",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.10",
+      "f": "=ARRAYFORMULA(Data!A1:A3*{1, 2})",
+      "rows": 3,
+      "cols": 2
+    },
+    {
+      "id": "ARRAYFORMULA.11",
+      "f": "=ARRAYFORMULA(Data!A1:A2=Data!B1:B2/10)",
+      "rows": 2,
+      "differs": {
+        "libreoffice": "LibreOffice writes the booleans of a matrix formula as 1 and 0"
+      },
+      "note": "Awaits Google's answer: LiveDoc keeps TRUE, as its other array results do (formulas.md \"Candidates\")"
+    },
+    {
+      "id": "ARRAYFORMULA.12",
+      "f": "=ARRAYFORMULA(SUMIF(Data!A1:A10, \">\"&Data!A1:A2))",
+      "rows": 2
+    },
+    {
+      "id": "ARRAYFORMULA.13",
+      "f": "=ARRAYFORMULA(VLOOKUP(Data!A2:A3, Data!A1:B10, 2, FALSE))",
+      "rows": 2
+    },
+    {
+      "id": "ARRAYFORMULA.14",
+      "f": "=ARRAYFORMULA(TEXT(Data!A1:A2, \"0.0\"))",
+      "rows": 2
+    },
+    {
+      "id": "ARRAYFORMULA.15",
+      "f": "=ARRAYFORMULA(IFERROR(1/(Data!A1:A3-1), \"none\"))",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.16",
+      "f": "=ARRAYFORMULA(Data!A1:A3^2)",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.17",
+      "f": "=ARRAYFORMULA(MAX(Data!A1:A3*-1))"
+    },
+    {
+      "id": "ARRAYFORMULA.18",
+      "f": "=ARRAYFORMULA(LEN(Data!D1:D3))",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.19",
+      "f": "=ARRAYFORMULA(Data!C1:C4*1)",
+      "rows": 4
+    },
+    {
+      "id": "ARRAYFORMULA.20",
+      "f": "=ARRAYFORMULA(SUMPRODUCT(Data!A1:A3, Data!B1:B3))"
+    },
+    {
+      "id": "ARRAYFORMULA.21",
+      "f": "=SUM(ARRAYFORMULA(Data!A1:A4*Data!B1:B4))",
+      "differs": {
+        "libreoffice": "LibreOffice has no ARRAYFORMULA function: only a formula's outermost one becomes its matrix formula"
+      },
+      "note": "ARRAYFORMULA inside a formula: its argument in an array context (formulas.md \"Arrays and spills\")"
+    },
+    {
+      "id": "ARRAYFORMULA.22",
+      "f": "=ARRAYFORMULA(TRANSPOSE(Data!A1:A3)*10)",
+      "cols": 3
+    },
+    {
+      "id": "ARRAYFORMULA.23",
+      "f": "=ARRAYFORMULA(COUNTIF(Data!A1:A10, \">\"&Data!A1:A3))",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.24",
+      "f": "=ARRAYFORMULA(AVERAGEIF(Data!A1:A10, \"<=\"&Data!A2:A3))",
+      "rows": 2
+    },
+    {
+      "id": "ARRAYFORMULA.25",
+      "f": "=ARRAYFORMULA(HLOOKUP(Data!A1:A2, {1, 2; \"one\", \"two\"}, 2, FALSE))",
+      "rows": 2
+    },
+    {
+      "id": "ARRAYFORMULA.26",
+      "f": "=ARRAYFORMULA(MATCH(Data!D2:D3, Data!D1:D3, 0))",
+      "rows": 2
+    },
+    {
+      "id": "ARRAYFORMULA.27",
+      "f": "=ARRAYFORMULA(LARGE(Data!A1:A10, {1, 2, 3}))",
+      "cols": 3
+    },
+    {
+      "id": "ARRAYFORMULA.28",
+      "f": "=ARRAYFORMULA(SMALL(Data!B1:B10, Data!A1:A2))",
+      "rows": 2
+    },
+    {
+      "id": "ARRAYFORMULA.29",
+      "f": "=ARRAYFORMULA(SUMIF(Data!A1:A10, Data!A1:A3, Data!B1:B10))",
+      "rows": 3
+    },
+    {
+      "id": "ARRAYFORMULA.30",
+      "f": "=ARRAYFORMULA(SUMIFS(Data!B1:B10, Data!A1:A10, Data!A1:A3))",
+      "rows": 3,
+      "differs": {
+        "libreoffice": "LibreOffice lifts SUMIFS over its criteria in a matrix formula; Google gives one value (D67)"
+      },
+      "note": "Awaits Google's answer (formulas.md \"Candidates\")"
+    },
+    {
+      "id": "ARRAYFORMULA.31",
+      "f": "=VLOOKUP(Data!A1:A3, Data!A1:B10, 2, FALSE)"
+    }
+  ]
+}

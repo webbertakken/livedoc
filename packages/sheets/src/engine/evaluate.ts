@@ -4,6 +4,7 @@
 import type { StoredRef } from '../sheet';
 import type { Node } from '../formula/ast';
 import { deref, lift, tooBig } from '../formula/fn';
+import { liftedCall } from '../formula/lifted-parameters';
 import { FUNCTIONS } from '../formula/registry';
 import { resolveRef } from '../formula/stored';
 import { arrayFrame, implicit, posToRange, rectangleOf } from './refs';
@@ -146,7 +147,11 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
           node.args.map((a) => () => evalArg(a)),
           argFrame,
         );
-      return def.impl(node.args.map(evalArg), argFrame);
+      const args = node.args.map(evalArg);
+      return (
+        liftedCall(node.name, args, argFrame, (each) => def.impl(each, argFrame)) ??
+        def.impl(args, argFrame)
+      );
     }
   }
 }

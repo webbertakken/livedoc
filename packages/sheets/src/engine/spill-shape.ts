@@ -3,6 +3,7 @@
 // aggregate (SUM of a range) never spills; a range on its own, an array function, or a scalar function lifted
 // over a range may.
 import type { Node } from '../formula/ast';
+import { LIFTED_PARAMETERS } from '../formula/lifted-parameters';
 import type { StoredRef } from '../sheet';
 
 const SCALAR_RESULT = new Set([
@@ -169,6 +170,11 @@ function refIsRange(ref: StoredRef | undefined): boolean {
   );
 }
 
+// A lifted argument that may hold many values; one left out (`VLOOKUP(,…)`) holds none.
+function maySpillArg(node: Node | null | undefined, refs: readonly StoredRef[]): boolean {
+  return !!node && maySpill(node, refs);
+}
+
 export function maySpill(node: Node, refs: readonly StoredRef[]): boolean {
   switch (node.k) {
     case 'stored':
@@ -186,6 +192,7 @@ export function maySpill(node: Node, refs: readonly StoredRef[]): boolean {
     case 'bin':
       return maySpill(node.a, refs) || maySpill(node.b, refs);
     case 'call':
+      if (LIFTED_PARAMETERS[node.name]?.some((i) => maySpillArg(node.args[i], refs))) return true;
       if (SCALAR_RESULT.has(node.name)) return false;
       if (ARRAY_RESULT.has(node.name)) return true;
       return node.args.some((a) => a !== null && maySpill(a, refs));

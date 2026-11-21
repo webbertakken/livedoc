@@ -119,6 +119,7 @@ const MEASURED_CATEGORIES = [
   'Date',
   'Filter',
   'Financial',
+  'Google',
   'Info',
   'Logical',
   'Lookup',
@@ -128,6 +129,7 @@ const MEASURED_CATEGORIES = [
   'Parser',
   'Statistical',
   'Text',
+  'Web',
 ];
 
 // A built catalogue row of formulas.md: its name and category.
