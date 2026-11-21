@@ -116,10 +116,10 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 | Insert comment                                   | `Ctrl+Alt+M`       | `⌘+Option+M`       | `Ctrl+Alt+M`       | specified |
 | Open comment history                             | `Ctrl+Alt+Shift+A` | `⌘+Option+Shift+A` | `Ctrl+Alt+Shift+A` | specified |
 | Enter current comment                            | `Ctrl+Alt+E, C`    | `Ctrl+⌘+E, C`      | `Ctrl+Alt+E, C`    | specified |
-| Insert footnote                                  | `Ctrl+Alt+F`       | `⌘+Option+F`       | `Ctrl+Alt+F`       | specified |
-| Move to current footnote                         | `Ctrl+Alt+E, F`    | `Ctrl+⌘+E, F`      | `Ctrl+Alt+E, F`    | specified |
-| Move to next footnote                            | `Ctrl+Alt+N, F`    | `Ctrl+⌘+N, F`      | `Ctrl+Alt+N, F`    | specified |
-| Move to previous footnote                        | `Ctrl+Alt+P, F`    | `Ctrl+⌘+P, F`      | `Ctrl+Alt+P, F`    | specified |
+| Insert footnote                                  | `Ctrl+Alt+F`       | `⌘+Option+F`       | `Ctrl+Alt+F`       | built     |
+| Move to current footnote                         | `Ctrl+Alt+E, F`    | `Ctrl+⌘+E, F`      | `Ctrl+Alt+E, F`    | built     |
+| Move to next footnote                            | `Ctrl+Alt+N, F`    | `Ctrl+⌘+N, F`      | `Ctrl+Alt+N, F`    | built     |
+| Move to previous footnote                        | `Ctrl+Alt+P, F`    | `Ctrl+⌘+P, F`      | `Ctrl+Alt+P, F`    | built     |
 | Move to next suggestion                          | `Ctrl+Alt+N, U`    | `Ctrl+⌘+N, U`      | `Ctrl+Alt+N, U`    | specified |
 | Move to previous suggestion                      | `Ctrl+Alt+P, U`    | `Ctrl+⌘+P, U`      | `Ctrl+Alt+P, U`    | specified |
 | Review suggested edits                           | `Ctrl+Alt+O, U`    | `Ctrl+⌘+O, U`      | `Ctrl+Alt+O, U`    | specified |

@@ -369,12 +369,13 @@ drawn at the foot of the page the mark falls on, as Google's and Word's.
 
 - **What a note is**: writing of its own, paragraphs as the body's (styles, text and paragraph formatting, lists),
   in Normal text at 10 pt (Google's size) where LiveDoc makes it, a file's own style where it brings one (default);
-  the mark is drawn as its number in superscript.
+  the mark is drawn as its number in superscript. ODF holds the 10 pt as the paragraph's own text formatting; OOXML,
+  which has none, as the formatting the first characters typed into an empty note take (default).
 - **Numbered** 1, 2, 3 through the document in the order of their marks, headers' and footers' never; a mark added,
   moved or removed numbers the others again at once.
 - **Insert > Footnote** (⌘⌥F) puts a mark at the caret, ending a selection there, and the caret in its new note,
-  one empty paragraph; one step of the body's undo. Not in a header, footer or note (dimmed there,
-  default). Typing in a note is a step of the note's own undo, as a header's.
+  one empty paragraph; one step of the body's undo. The mark takes the caret's text formatting (default). Not in a
+  header, footer or note (dimmed there, default). Typing in a note is a step of the note's own undo, as a header's.
 - **The mark** is one character to the caret: deleted, the note goes with it, one undo step; copied and pasted in
   LiveDoc, its note comes too as a new note; copied elsewhere it is its number.
 - **Drawn** at the foot of the page its mark's line is on, under a short rule a third of the text width wide (default),
@@ -384,9 +385,13 @@ drawn at the foot of the page the mark falls on, as Google's and Word's.
 - **Pageless**, on a phone and with print layout off, every note is drawn at the end of the writing, under a rule, in
   order (Google's pageless).
 - **Editing a note**: a click in it puts the caret there; the toolbar, undo and the clipboard act on it as in a header;
-  Escape or a press on the body leaves it; a note left empty stays, its mark keeps it (Google's). **Move to current
-  footnote** (Ctrl+Alt+E, F) goes from a mark to its note and back; **Move to next / previous footnote** (Ctrl+Alt+N,
-  F / Ctrl+Alt+P, F) go from mark to mark.
+  Escape or a press on the body leaves it, the caret just after its mark (default); a note left empty stays, its mark
+  keeps it, drawn as its number on a line of its own (Google's). Its mark taken away (undo, deleted, by another person)
+  ends the editing. A note and a header are never edited at once: entering one leaves the other (default).
+- **Move to current footnote** (Ctrl+Alt+E, F) goes from a mark (selected, or just before or after the caret) to its
+  note, and from a note back to just after its mark. **Move to next / previous footnote** (Ctrl+Alt+N, F / Ctrl+Alt+P,
+  F) put the caret just after the next or previous mark in the body, and from a note enter the next or previous note;
+  with none there nothing moves (default). Moving is anyone's; entering a note is an Editor's (default).
 - **Endnotes** in an arriving file are kept as the file has them and drawn as their text where they stand (default).
 - **Read**: a note's text is found by the document's search and counted by Word count as Google counts it (not by
   default); a screen reader reads a mark as "Footnote N".
