@@ -14,6 +14,7 @@ import { ySyncPlugin } from 'y-prosemirror';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
+  Columns,
   TextDocumentState,
   type ListDefinition,
   type PageSetup,
@@ -489,7 +490,13 @@ export function TextDocumentSurface({
     [format],
   );
   // Insert > Break (page-layout.md "Breaks").
-  const breakActions = useTextDocumentBreaks(editorView, liveDoc, format, writes);
+  const breakActions = useTextDocumentBreaks(
+    editorView,
+    liveDoc,
+    format,
+    writes,
+    page.pageless ? 1 : Columns.of(page.caret.section.setup).count,
+  );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({

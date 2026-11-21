@@ -150,3 +150,35 @@ describe('columns in files', () => {
     expect(PageSetup.equal(back.section.setup, blank.section.setup)).toBe(true);
   });
 });
+
+describe('column breaks in files (page-layout.md "Breaks")', () => {
+  it.each(['odt', 'fodt', 'docx'] as const)(
+    "writes a paragraph's column break before and reads it back, a page break winning (%s)",
+    async (type) => {
+      const format = type === 'docx' ? 'ooxml' : 'odf';
+      const blank = TextDocument.fromTexts(['One', 'Two', 'Three'], { format });
+      const [one, two, three] = blank.body as Paragraph[];
+      const body: Block[] = [
+        one!,
+        { ...two!, props: { ...two!.props, columnBreakBefore: true } },
+        { ...three!, props: { ...three!.props, pageBreakBefore: true } },
+      ];
+      const back = (await read(write({ ...blank, body }, type))).document;
+      const paragraphs = back.body.filter((b): b is Paragraph => b.type === 'paragraph');
+      expect(paragraphs.map(Paragraph.text)).toEqual(['One', 'Two', 'Three']);
+      expect(paragraphs[1]!.props.columnBreakBefore).toBe(true);
+      expect(paragraphs[1]!.inlines.some((i) => i.type === 'kept')).toBe(false);
+      expect(paragraphs[2]!.props.columnBreakBefore).toBeUndefined();
+      expect(paragraphs[2]!.props.pageBreakBefore).toBe(true);
+    },
+  );
+
+  it("writes ODF's column break before as the paragraph's break before", () => {
+    const blank = TextDocument.fromTexts(['One'], { format: 'odf' });
+    const [one] = blank.body as Paragraph[];
+    const xml = new TextDecoder().decode(
+      write({ ...blank, body: [{ ...one!, props: { columnBreakBefore: true } }] }, 'fodt'),
+    );
+    expect(xml).toContain('fo:break-before="column"');
+  });
+});

@@ -11,9 +11,11 @@ export function useTextDocumentBreaks(
   liveDoc: RefObject<Y.Doc | null>,
   format: TextDocumentFormat,
   canEdit: boolean,
+  // The caret's section's columns: Column break is dimmed with one.
+  columns = 1,
 ): OfficeActions {
   return useMemo(
-    () => textDocumentBreakActions(view, { canEdit, liveDoc, format }),
-    [view, canEdit, liveDoc, format],
+    () => textDocumentBreakActions(view, { canEdit, liveDoc, format, columns }),
+    [view, canEdit, liveDoc, format, columns],
   );
 }

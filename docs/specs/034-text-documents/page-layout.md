@@ -138,25 +138,31 @@ pages' setup.
 ## Breaks
 
 - Insert > Break: **Page break** (⌘Enter, Ctrl+Enter elsewhere), **Section break (next page)**, **Section break
-  (continuous)** and **Column break**, which is dimmed while the section has one column, as Google's
+  (continuous)** and **Column break**, which is dimmed while the caret's section has one column, as Google's
   ([Columns](#columns)).
 - **A page break** ends the paragraph at the caret, a selection replaced, and starts the rest on a new page: the new
   paragraph has its own **page break before**, which is how both formats hold one (`fo:break-before="page"`,
   `w:pageBreakBefore`). At a paragraph's start the paragraph moves to the new page and an empty one stays behind.
 - **Format > Line & paragraph spacing > Add page break before** is a switch beside the keep rules, on for every
   paragraph the selection touches unless all have it, then off for all, as Google's (2021).
-- **Backspace** at the start of a paragraph with its own page break before takes the break away and nothing else, one
-  undo step; the next Backspace joins as ever. **Delete** at the end of the paragraph before it does the same.
+- **A column break** ends the paragraph at the caret as a page break does, and starts the rest at the top of the next
+  column; after a section's last column, on the next page. The new paragraph has its own **column break before**:
+  ODF's `fo:break-before="column"`; Word has no paragraph property for it, so it is written as a `w:br` of the column
+  type at the paragraph's start, and such a break read back as the paragraph's column break before.
+- **Backspace** at the start of a paragraph with its own page or column break before takes the break away and nothing
+  else, one undo step; the next Backspace joins as ever. **Delete** at the end of the paragraph before it does the same.
 - **A section break** ends the paragraph at the caret and puts the break between the two halves: the new section
   starts on the next page or continues the page, with the page setup of the section the caret was in.
-- **Drawn**: in print layout a page break is the new page and a section break shows nothing. With non-printing
-  characters shown, or where no pages are laid out (pageless, a phone), each shows as a dotted line with its name,
-  **Page break** above its paragraph, **Section break (next page)** or **Section break (continuous)** on its own line,
-  in the muted ink of the non-printing characters: never text, never read by a screen reader; a section break is
-  selected and deleted whole.
+- **Drawn**: in print layout a page or column break is where the writing moves on, and a section break shows nothing.
+  With non-printing characters shown, or where no pages are laid out (pageless, a phone), each shows as a dotted line
+  with its name, **Page break** or **Column break** above its paragraph, **Section break (next page)** or **Section
+  break (continuous)** on its own line, in the muted ink of the non-printing characters: never text, never read by a
+  screen reader; a section break is selected and deleted whole.
 - A Word file's page break inside a paragraph (`w:br` of the page type, kept as the file has it) starts a new page at
-  the line after it, or before the next paragraph when nothing follows it; a column break is a line break until
-  columns are built.
+  the line after it, or before the next paragraph when nothing follows it; a column break (`w:br` of the column type)
+  starts the next column the same way.
+- In a section of one column, a column break starts a new page, as Word lays one (assumed); where no pages are laid out
+  it is a break in the column only.
 - A section has its own page setup, columns, headers and footers and page numbering.
 - Share roles: an Editor inserts and removes breaks; a Participant and a Viewer see none of the items.
 
@@ -240,7 +246,9 @@ Participant and a Viewer see none of Page setup, Page orientation and Columns.
 
 ## Telemetry
 
-`Tab · Changed · TextDocumentPageSetup`, `TextDocumentPageOrientation`, `TextDocumentPageless`, `TextDocumentColumns`, `TextDocumentHeaderFooter`;
-`Element · Added · TextDocumentBreak<Kind>` (`Page`, `SectionNextPage`, `SectionContinuous`), `TextDocumentFootnote`,
-`TextDocumentPageNumbers`; Add page break before is a keep rule (`Element · Changed · TextDocumentKeepRule`);
-`UI · Changed · TextDocumentPageDefault` when Set as default keeps one, before it is kept. Never text.
+- `Tab · Changed · TextDocumentPageSetup`, `TextDocumentPageOrientation`, `TextDocumentPageless`,
+  `TextDocumentColumns`, `TextDocumentHeaderFooter`.
+- `Element · Added · TextDocumentBreak<Kind>` (`Page`, `Column`, `SectionNextPage`, `SectionContinuous`),
+  `TextDocumentFootnote`, `TextDocumentPageNumbers`.
+- Add page break before is a keep rule (`Element · Changed · TextDocumentKeepRule`).
+- `UI · Changed · TextDocumentPageDefault` when Set as default keeps one, before it is kept. Never text.

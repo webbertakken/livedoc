@@ -138,3 +138,41 @@ test('selected paragraphs in columns of their own, balanced above the writing af
   await expect(body.locator('> p[data-column]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });
+
+test('a column break starts the next column, dimmed in one column, one undo step', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await newDocument(page);
+  await write(page, ['First column', 'Second column']);
+  const body = page.locator(BODY);
+
+  // One column: Column break is dimmed.
+  const dimmed = await officeMenuItem(page, ['Insert', 'Break', 'Column break']);
+  await expect(dimmed).toHaveAttribute('aria-disabled', 'true');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+
+  await body.locator('> p').first().click();
+  await (await officeMenuItem(page, ['Format', 'Columns', 'Two columns'])).click();
+  // The caret at the second paragraph's start: the break moves it to the second column.
+  await body.locator('> p').nth(1).click();
+  await page.keyboard.press('Home');
+  await page.waitForTimeout(100);
+  await (await officeMenuItem(page, ['Insert', 'Break', 'Column break'])).click();
+  const second = body.locator('> p').filter({ hasText: 'Second column' });
+  await expect(second).toHaveAttribute('data-column', '1');
+  const [a, b] = await Promise.all([
+    boxOf(page, 0),
+    second.evaluate((p) => p.getBoundingClientRect().top),
+  ]);
+  expect(b).toBeCloseTo(a.top, 0);
+  await page.screenshot({ path: test.info().outputPath('column-break.png') });
+
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(second).not.toHaveAttribute('data-column', '1');
+  expectNoPageErrors(pageErrors);
+});

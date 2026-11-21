@@ -268,4 +268,17 @@ describe('measureBlock', () => {
     expect(last.breakAfter).toBe(true);
     expect(last.forced).toBeUndefined();
   });
+
+  it('reads a Word column break as the start of a column at the line after it, or after the block', () => {
+    const element = document.createElement('p');
+    element.textContent = 'c'.repeat(30);
+    const mark = document.createElement('br');
+    mark.setAttribute('data-column-break', '');
+    element.append(mark);
+    document.body.append(element);
+    mark.getBoundingClientRect = () => rect(2, 16);
+    expect(measureBlock(element, {}, 1, 0).metrics).toMatchObject({ columnForced: [1] });
+    mark.getBoundingClientRect = () => rect(42, 16);
+    expect(measureBlock(element, {}, 1, 0).metrics.columnBreakAfter).toBe(true);
+  });
 });

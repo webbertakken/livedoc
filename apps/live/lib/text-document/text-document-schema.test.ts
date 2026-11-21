@@ -64,6 +64,20 @@ describe('textDocumentSchema', () => {
     });
   });
 
+  // page-layout.md "Breaks": a Word page or column break marked for the layout.
+  it('marks a kept Word page or column break for the layout', () => {
+    const attrs = (xml: string) => {
+      const node = textDocumentSchema.nodes.kept_inline!.create({
+        name: 'br',
+        xml: { xml, ns: {} },
+      });
+      return (node.type.spec.toDOM!(node) as unknown as [string, Record<string, string>])[1];
+    };
+    expect(attrs('<w:r><w:br w:type="page"/></w:r>')).toHaveProperty('data-page-break');
+    expect(attrs('<w:r><w:br w:type="column"/></w:r>')).toHaveProperty('data-column-break');
+    expect(attrs('<w:r><w:br/></w:r>')).not.toHaveProperty('data-column-break');
+  });
+
   it.each([
     'libreoffice/features.odt',
     'libreoffice/rich.docx',

@@ -421,3 +421,31 @@ describe('paginate, in columns (page-layout.md "Columns")', () => {
     );
   });
 });
+
+describe('paginate, column breaks (page-layout.md "Breaks")', () => {
+  const twoColumns = { ...page, columns: { count: 2, width: 190, gap: 20 } };
+
+  it('starts the next column at a column break, and the next page after the last column', () => {
+    const laid = paginate(
+      [para(1), para(1, { columnBreakBefore: true }), para(1, { columnBreakBefore: true })],
+      () => twoColumns,
+    );
+    expect(laid.starts[0]!.columns).toEqual([{ block: 1, line: 0, column: 1 }]);
+    expect(laid.starts[1]).toMatchObject({ block: 2, line: 0 });
+  });
+
+  it('starts a new page at a column break in a section of one column', () => {
+    expect(starts([para(1), para(1, { columnBreakBefore: true })])).toEqual([
+      [0, 0, 0, 0],
+      [1, 0, 100 - 20 + 50, 0],
+    ]);
+  });
+
+  it('starts the next column at the line after a Word column break inside a paragraph', () => {
+    const laid = paginate([para(3, { columnForced: [1] })], () => twoColumns);
+    expect(laid.starts[0]!.columns).toEqual([{ block: 0, line: 1, column: 1 }]);
+    expect(laid.starts[0]!.crosses?.[0]).toMatchObject({ splits: [1] });
+    const after = paginate([para(1, { columnBreakAfter: true }), para(1)], () => twoColumns);
+    expect(after.starts[0]!.columns).toEqual([{ block: 1, line: 0, column: 1 }]);
+  });
+});

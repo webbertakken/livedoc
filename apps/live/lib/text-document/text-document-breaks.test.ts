@@ -8,7 +8,10 @@ import { PageSetup, Styles, type ParagraphProps } from '@livedoc/text-documents'
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
   breakLabels,
+  COLUMN_BREAK_BEFORE_CLASS,
+  insertColumnBreak,
   insertPageBreak,
+  textDocumentBreakActions,
   insertSectionBreak,
   removePageBreakBackward,
   removePageBreakForward,
@@ -155,5 +158,50 @@ describe('breakLabels', () => {
     ]);
     const labels = breakLabels(doc, { ...formatting, styles }).find();
     expect(labels.map((d) => d.from)).toEqual([3, 6]);
+  });
+});
+
+describe('column breaks (page-layout.md "Breaks": a column break)', () => {
+  it('ends the paragraph at the caret and gives the rest its own column break before', () => {
+    const { state } = run(stateWith([p('one two')], 4), insertColumnBreak);
+    expect(state.doc.child(1).textContent).toBe(' two');
+    expect(own(state.doc.child(1))).toEqual({ columnBreakBefore: true });
+  });
+
+  it('takes a column break away with Backspace at its start, and with Delete before it', () => {
+    const doc = [p('one'), p('two', { columnBreakBefore: true, align: 'end' })];
+    const back = run(stateWith(doc, 6), removePageBreakBackward);
+    expect(back.done).toBe(true);
+    expect(own(back.state.doc.child(1))).toEqual({ align: 'end' });
+    const forward = run(stateWith(doc, 4), removePageBreakForward);
+    expect(own(forward.state.doc.child(1))).toEqual({ align: 'end' });
+  });
+
+  it('takes a page break away before a column break on the same paragraph', () => {
+    const doc = [p('one'), p('two', { columnBreakBefore: true, pageBreakBefore: true })];
+    expect(own(run(stateWith(doc, 6), removePageBreakBackward).state.doc.child(1))).toEqual({
+      columnBreakBefore: true,
+    });
+  });
+
+  it('labels a paragraph with its own column break', () => {
+    const doc = schema.nodes.doc!.create(null, [p('one'), p('two', { columnBreakBefore: true })]);
+    const [label] = breakLabels(doc, formatting).find();
+    expect((label as unknown as { type: { attrs: { class: string } } }).type.attrs.class).toBe(
+      COLUMN_BREAK_BEFORE_CLASS,
+    );
+  });
+
+  it("dims Column break while the caret's section has one column", () => {
+    const liveDoc = { current: null };
+    const one = textDocumentBreakActions(null, { canEdit: true, liveDoc, format: 'odf' });
+    expect(one['column-break']?.disabled).toBe(true);
+    const two = textDocumentBreakActions(null, {
+      canEdit: true,
+      liveDoc,
+      format: 'odf',
+      columns: 2,
+    });
+    expect(two['column-break']?.disabled).toBe(false);
   });
 });

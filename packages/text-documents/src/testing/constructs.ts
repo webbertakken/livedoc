@@ -281,6 +281,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         paragraph(format, 'normal', [run('Third section')]),
         { type: 'section', start: 'continuous', setup: columns },
         paragraph(format, 'normal', [run('Two columns')]),
+        paragraph(format, 'normal', [run('Second column')], { props: { columnBreakBefore: true } }),
         { type: 'section', start: 'continuous', setup: portrait },
         paragraph(format, 'normal', [run('One column again')]),
       ],

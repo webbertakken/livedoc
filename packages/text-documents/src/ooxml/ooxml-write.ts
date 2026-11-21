@@ -238,7 +238,9 @@ class OoxmlWriter {
       i = j;
     }
     const checked = p.list?.checked ? ' livedoc:checked="true"' : '';
-    return `<w:p${checked}>${this.pPr(p, ends)}${content}</w:p>`;
+    // Word has no column break before: a column break at the paragraph's start holds it.
+    const columnBreak = p.props.columnBreakBefore ? '<w:r><w:br w:type="column"/></w:r>' : '';
+    return `<w:p${checked}>${this.pPr(p, ends)}${columnBreak}${content}</w:p>`;
   }
 
   bodyXml(): string {

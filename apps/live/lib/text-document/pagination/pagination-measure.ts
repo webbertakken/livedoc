@@ -17,12 +17,19 @@ import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-l
 /** A page spacer's class: between blocks, or inside a paragraph between two of its lines. */
 export const PAGE_GAP_CLASS = 'text-document-page-gap';
 
-// A Word page break kept from the file, drawn as a line break (text-document-schema.ts).
+// A Word page or column break kept from the file, drawn as a line break (text-document-schema.ts).
 const PAGE_BREAK_MARK = 'br[data-page-break]';
+const COLUMN_BREAK_MARK = 'br[data-column-break]';
 
 export type BlockRules = Pick<
   BlockMetrics,
-  'atom' | 'keepWithNext' | 'keepTogether' | 'widowControl' | 'breakBefore' | 'startsSection'
+  | 'atom'
+  | 'keepWithNext'
+  | 'keepTogether'
+  | 'widowControl'
+  | 'breakBefore'
+  | 'columnBreakBefore'
+  | 'startsSection'
 >;
 
 const SECTION_STARTS: readonly SectionStart[] = [
@@ -55,6 +62,7 @@ export function rulesOf(node: PmNode, formatting: TextFormatting): BlockRules {
     ...(props.keepTogether ? { keepTogether: true } : {}),
     ...(props.widowControl ? { widowControl: true } : {}),
     ...(props.pageBreakBefore ? { breakBefore: true } : {}),
+    ...(props.columnBreakBefore ? { columnBreakBefore: true } : {}),
   };
 }
 
@@ -84,7 +92,9 @@ export function measureBlock(
   const height = box.height / ratio - spacers.reduce((sum, s) => sum + s.bottom - s.top, 0);
   let lines: BlockMetrics['lines'] = [];
   const forced: number[] = [];
+  const columnForced: number[] = [];
   let breakAfter = false;
+  let columnBreakAfter = false;
   if (!rules.atom) {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -97,13 +107,23 @@ export function measureBlock(
       px(style.borderTopWidth) + px(style.paddingTop),
       height - px(style.borderBottomWidth) - px(style.paddingBottom),
     );
-    // A Word page break starts the page at the line after its own, or the next block when it ends the paragraph.
-    for (const mark of element.querySelectorAll(PAGE_BREAK_MARK)) {
+    // A Word page or column break starts the page or column at the line after its own, or the next block when it
+    // ends the paragraph.
+    const lineAfter = (mark: Element): number | null => {
       const r = mark.getBoundingClientRect();
       const middle = naturalOf(((r.top + r.bottom) / 2 - box.top) / ratio, spacers);
       const own = lines.findIndex((line) => middle >= line.top && middle < line.bottom);
-      if (own >= 0 && own + 1 < lines.length) forced.push(own + 1);
+      return own >= 0 && own + 1 < lines.length ? own + 1 : null;
+    };
+    for (const mark of element.querySelectorAll(PAGE_BREAK_MARK)) {
+      const line = lineAfter(mark);
+      if (line !== null) forced.push(line);
       else breakAfter = true;
+    }
+    for (const mark of element.querySelectorAll(COLUMN_BREAK_MARK)) {
+      const line = lineAfter(mark);
+      if (line !== null) columnForced.push(line);
+      else columnBreakAfter = true;
     }
   }
   return {
@@ -114,6 +134,8 @@ export function measureBlock(
       lines,
       ...(forced.length > 0 ? { forced } : {}),
       ...(breakAfter ? { breakAfter } : {}),
+      ...(columnForced.length > 0 ? { columnForced } : {}),
+      ...(columnBreakAfter ? { columnBreakAfter } : {}),
       ...rules,
     },
     inset: (box.left - left) / ratio,

@@ -73,7 +73,9 @@ div.text-document-kept {
   content: 'Section break (even page)' / '';
 }
 .text-document-marks .text-document-break-before::before,
-[data-laid-out='flow'] .text-document-break-before::before {
+[data-laid-out='flow'] .text-document-break-before::before,
+.text-document-marks .text-document-column-break-before::before,
+[data-laid-out='flow'] .text-document-column-break-before::before {
   content: 'Page break' / '';
   display: block;
   margin-bottom: 8px;
@@ -83,6 +85,10 @@ div.text-document-kept {
   font:
     400 10px/1.6 system-ui,
     sans-serif;
+}
+.text-document-marks .text-document-column-break-before::before,
+[data-laid-out='flow'] .text-document-column-break-before::before {
+  content: 'Column break' / '';
 }
 .ProseMirror-selectednode.text-document-kept,
 .ProseMirror-selectednode.text-document-section-break {
@@ -351,7 +357,9 @@ div.text-document-kept {
 .text-document-marks .text-document-section-break::after,
 [data-laid-out='flow'] .text-document-section-break::after,
 .text-document-marks .text-document-break-before::before,
-[data-laid-out='flow'] .text-document-break-before::before {
+[data-laid-out='flow'] .text-document-break-before::before,
+.text-document-marks .text-document-column-break-before::before,
+[data-laid-out='flow'] .text-document-column-break-before::before {
   color: var(--text-document-mark-ink);
   user-select: none;
   pointer-events: none;
