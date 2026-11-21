@@ -14,8 +14,8 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                | Means                                                                            | Rows |
 | --------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`           | In, by the spec named                                                            | 156  |
-| `specified, in part`  | In, but for the part its rule names as left out                                  | 33   |
+| `specified`           | In, by the spec named                                                            | 148  |
+| `specified, in part`  | In, but for the part its rule names as left out                                  | 41   |
 | `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`      | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`      | Built, with the test that proves it                                              | 0    |
@@ -207,24 +207,24 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Links and attachments
 
-| Topic                           | Rule                                                                      | Mode    | Status    | Spec                                               |
-| ------------------------------- | ------------------------------------------------------------------------- | ------- | --------- | -------------------------------------------------- |
-| Add links to PDFs               | A link to a page view, a named place, a web address or a LiveDoc document | Editing | specified | [Objects](objects.md#links)                        |
-| Add attachments to PDFs         | Embed a file in the PDF                                                   | Editing | specified | [Document tools](document-tools.md#embedded-files) |
-| Change link formatting in PDFs  | Invisible or a visible rectangle, with its line                           | Editing | specified | [Objects](objects.md#links)                        |
-| Move or resize a link rectangle | Move and resize a link's rectangle                                        | Editing | specified | [Objects](objects.md#links)                        |
-| Open attachments in PDFs        | Saved only by a person; an embedded PDF opens as a new PDF document       | Viewing | specified | [Security](security.md#embedded-files)             |
-| Link to destinations            | A link to a named place                                                   | Editing | specified | [Objects](objects.md#links)                        |
-| Manage link destinations        | Named places listed, added, renamed, deleted                              | Editing | specified | [Objects](objects.md#links)                        |
+| Topic                           | Rule                                                                                                                      | Mode    | Status             | Spec                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------- |
+| Add links to PDFs               | A link to a page view, a named place, a web address or a LiveDoc document; a link that opens a file on a disk is left out | Editing | specified, in part | [Objects](objects.md#links)                        |
+| Add attachments to PDFs         | Embed a file in the PDF                                                                                                   | Editing | specified          | [Document tools](document-tools.md#embedded-files) |
+| Change link formatting in PDFs  | Invisible or a visible rectangle, with its line; locked or not                                                            | Editing | specified          | [Objects](objects.md#links)                        |
+| Move or resize a link rectangle | Move and resize a link's rectangle                                                                                        | Editing | specified          | [Objects](objects.md#links)                        |
+| Open attachments in PDFs        | Listed and saved by a person; an embedded PDF opens as a new PDF document; searching inside embedded files is left out    | Viewing | specified, in part | [Security](security.md#embedded-files)             |
+| Link to destinations            | A link to a named place                                                                                                   | Editing | specified          | [Objects](objects.md#links)                        |
+| Manage link destinations        | Named places listed, added, renamed, deleted                                                                              | Editing | specified          | [Objects](objects.md#links)                        |
 
 ## PDF properties
 
-| Topic                                     | Rule                                                             | Mode    | Status    | Spec                                           |
-| ----------------------------------------- | ---------------------------------------------------------------- | ------- | --------- | ---------------------------------------------- |
-| Document properties and metadata overview | Description, Security, Fonts and Size                            | Viewing | specified | [Document tools](document-tools.md#properties) |
-| Create document properties                | Custom properties by name and value                              | Editing | specified | [Document tools](document-tools.md#properties) |
-| Edit document metadata                    | Title, author, subject, keywords, written to both metadata homes | Editing | specified | [Document tools](document-tools.md#properties) |
-| View document metadata                    | Everyone who reads the document reads its properties             | Viewing | specified | [Document tools](document-tools.md#properties) |
+| Topic                                     | Rule                                                                                                            | Mode    | Status             | Spec                                           |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------- |
+| Document properties and metadata overview | Description, Security, Fonts and Size                                                                           | Viewing | specified          | [Document tools](document-tools.md#properties) |
+| Create document properties                | Custom properties by name and value                                                                             | Editing | specified          | [Document tools](document-tools.md#properties) |
+| Edit document metadata                    | Title, author, subject, keywords, written to both metadata homes; importing and exporting XMP files is left out | Editing | specified, in part | [Document tools](document-tools.md#properties) |
+| View document metadata                    | Properties, and the file's XMP as a read-only tree, for everyone who reads the document                         | Viewing | specified          | [Document tools](document-tools.md#properties) |
 
 ## Organise pages
 
@@ -242,23 +242,23 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Backgrounds and watermarks
 
-| Topic                       | Rule                                                             | Mode    | Status    | Spec                                            |
-| --------------------------- | ---------------------------------------------------------------- | ------- | --------- | ----------------------------------------------- |
-| Add watermarks to PDFs      | Text or picture, rotation, opacity, behind or in front, by pages | Editing | specified | [Document tools](document-tools.md#watermarks)  |
-| Remove watermarks           | Remove a watermark                                               | Editing | specified | [Document tools](document-tools.md#watermarks)  |
-| Update watermarks           | Update a watermark, another program's included                   | Editing | specified | [Document tools](document-tools.md#watermarks)  |
-| Add backgrounds to PDFs     | A colour or picture behind everything                            | Editing | specified | [Document tools](document-tools.md#backgrounds) |
-| Remove background from PDFs | Remove the background                                            | Editing | specified | [Document tools](document-tools.md#backgrounds) |
-| Update backgrounds in PDFs  | Update the background                                            | Editing | specified | [Document tools](document-tools.md#backgrounds) |
+| Topic                       | Rule                                                                                                | Mode    | Status             | Spec                                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------- | ------- | ------------------ | ----------------------------------------------- |
+| Add watermarks to PDFs      | Text or picture, rotation, opacity, behind or in front, by pages; several files at once is left out | Editing | specified, in part | [Document tools](document-tools.md#watermarks)  |
+| Remove watermarks           | Remove a watermark; several files at once is left out                                               | Editing | specified, in part | [Document tools](document-tools.md#watermarks)  |
+| Update watermarks           | Update a watermark, another program's included                                                      | Editing | specified          | [Document tools](document-tools.md#watermarks)  |
+| Add backgrounds to PDFs     | A colour or picture behind everything; several files at once is left out                            | Editing | specified, in part | [Document tools](document-tools.md#backgrounds) |
+| Remove background from PDFs | Remove the background                                                                               | Editing | specified          | [Document tools](document-tools.md#backgrounds) |
+| Update backgrounds in PDFs  | Update the background                                                                               | Editing | specified          | [Document tools](document-tools.md#backgrounds) |
 
 ## Headers and footers
 
-| Topic                              | Rule                                   | Mode    | Status    | Spec                                                    |
-| ---------------------------------- | -------------------------------------- | ------- | --------- | ------------------------------------------------------- |
-| Add headers and footers to PDFs    | Six boxes of text and tokens, by pages | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
-| Remove headers and footers         | Remove headers and footers             | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
-| Add page numbers to PDFs           | Page numbers in a style and pattern    | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
-| Modify headers and footers in PDFs | Update headers and footers             | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
+| Topic                              | Rule                                                                                    | Mode    | Status             | Spec                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------- |
+| Add headers and footers to PDFs    | Six boxes of text and tokens, by pages, with presets; several files at once is left out | Editing | specified, in part | [Document tools](document-tools.md#headers-and-footers) |
+| Remove headers and footers         | Remove headers and footers; several files at once is left out                           | Editing | specified, in part | [Document tools](document-tools.md#headers-and-footers) |
+| Add page numbers to PDFs           | Page numbers in a style and pattern                                                     | Editing | specified          | [Document tools](document-tools.md#headers-and-footers) |
+| Modify headers and footers in PDFs | Update headers and footers                                                              | Editing | specified          | [Document tools](document-tools.md#headers-and-footers) |
 
 ## Bates numbering
 
