@@ -89,7 +89,8 @@ and width, cell background, by the one colour picker), **Cell** (padding).
   are in; Column width the columns they are in; Table alignment and Left indent the whole table.
 - **What it shows**: each field the value the cells it changes share, blank where they differ.
 - **Fields** (lengths in the person's unit, as indents are, from 0 to 22 in):
-  - Rows: **Minimum row height** (a row grows past it with its writing; 0 or blank is none).
+  - Rows: **Minimum row height** (a row grows past it with its writing; 0 or blank is none); **Pin header rows**
+    (None, then 1 up to the table's rows less one, at most 10), the whole table's.
   - Columns: **Column width**, at least 0.1 in; the table grows or shrinks by the change.
   - Alignment: **Cell vertical alignment** (Top, Middle, Bottom); **Table alignment** (Left, Center, Right); **Left
     indent** (Left only, dimmed otherwise).
@@ -99,8 +100,7 @@ and width, cell background, by the one colour picker), **Cell** (padding).
   - Cell: **Cell padding**, every side alike.
 - A choice from a list or a colour applies at once; a typed length applies on Enter or when the field is left, and an
   invalid one says so under the field and changes nothing. Each change is one undo step, its focus kept in the panel.
-- Pin header rows and Allow row to overflow across pages join Rows when pinned header rows and rows that do not break
-  are built (ahead).
+- Allow row to overflow across pages joins Rows when rows breaking across pages are built (ahead).
 - Telemetry: `Element · Changed · TextDocumentTableProperties` per change. Logged
   `[text-document] table-properties` with the field.
 

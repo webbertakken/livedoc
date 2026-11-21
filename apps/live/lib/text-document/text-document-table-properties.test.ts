@@ -85,6 +85,8 @@ describe('tablePropertiesAt', () => {
   it('reads the caret\u2019s cell, its row and column, and the table', () => {
     expect(tablePropertiesAt(caretIn('b1'))).toEqual({
       rowHeight: 30,
+      headerRows: 0,
+      mostHeaderRows: 1,
       columnWidth: 200,
       verticalAlign: 'middle',
       align: 'start',
@@ -176,6 +178,12 @@ describe('setTableProperty', () => {
     expect(cellAttrs(state, 'b2').colwidth).toEqual([200]);
     state = apply(state, { field: 'columnWidth', value: 1 }).state;
     expect(cellAttrs(state, 'a1').colwidth).toEqual([7.2]);
+  });
+
+  it('pins header rows over the whole table', () => {
+    const state = apply(caretIn('b2'), { field: 'headerRows', value: 1 }).state;
+    expect(tablePropertiesAt(state)!.headerRows).toBe(1);
+    expect(apply(state, { field: 'headerRows', value: 2 }).ran).toBe(false);
   });
 
   it('aligns and indents the whole table', () => {
