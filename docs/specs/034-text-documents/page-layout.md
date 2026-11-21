@@ -77,6 +77,12 @@ setup's does, one undo step (assumed: Google's).
 View > Show print layout on: pages with gaps between them, headers, footers and footnotes drawn. Off: one column with
 page breaks shown as lines, no headers or footers. Per person.
 
+- **A person's own**, kept in this browser, on by default (Google's), as the ruler is; a Viewer chooses it too. The item
+  is checked while it is on; dimmed while the document is pageless, which has no pages either way (Google's).
+- **Off**, the writing is one sheet at the first section's width, as on a phone: no gaps, headers, footers or page
+  numbers (a page number shows 1), each break drawn as its dotted line ([Breaks](#breaks)); columns are one column.
+- Telemetry `UI · Toggled · TextDocumentPrintLayout`, counted before the change is kept.
+
 ## Pageless
 
 Format > Switch to pageless format: the document has no pages, breaks, headers, footers, page numbers or columns (they
@@ -92,9 +98,13 @@ pages' setup.
   holds as the document has it; **Set as default** keeps the person's default as pageless with that colour,
   and a new document they make starts pageless.
 - **Drawn pageless**: no sheet and no grey ground; the background colour (or the paper's white or dark) fills the
-  document's whole area, and the writing is a centred column at the text width, 8 in (576 pt) wide at medium, never
-  wider than the window less 0.5 in each side (default: medium until View > Text width is built), with 0.5 in above
-  the first line (default). The page setup's margins and paper are kept, unused, for printing and for switching back.
+  document's whole area, and the writing is a centred column at the text width, never wider than the window less
+  0.5 in each side, with 0.5 in above the first line (default). The page setup's margins and paper are kept, unused,
+  for printing and for switching back.
+- **View > Text width**, a person's own kept in this browser: **Narrow** 6.5 in, **Medium** 8 in, **Wide** 10 in, and
+  **Full** the window less 0.5 in each side (default widths; Google names them only); Medium until chosen (default).
+  The chosen one is checked; the items are dimmed while the document has pages (Google's). Telemetry
+  `UI · Changed · TextDocumentTextWidth<Width>`, counted before it is kept.
 - **The ruler pageless** spans the column: indents and tab stops as on a page, no margins to drag.
 - In the file: [Extensions](standard-mapping.md#extensions); another suite shows the document on its pages.
 
@@ -387,3 +397,5 @@ Participant and a Viewer see none of Page setup, Page orientation and Columns.
   `TextDocumentFootnote`, `TextDocumentPageNumbers`, `TextDocumentPageCount`.
 - Add page break before is a keep rule (`Element · Changed · TextDocumentKeepRule`).
 - `UI · Changed · TextDocumentPageDefault` when Set as default keeps one, before it is kept. Never text.
+- `UI · Toggled · TextDocumentPrintLayout` and `UI · Changed · TextDocumentTextWidth<Width>` (`Narrow`, `Medium`, `Wide`,
+  `Full`), a person's view, before it is kept.

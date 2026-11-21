@@ -56,7 +56,12 @@ import {
 import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
-import { NON_PRINTING_TOGGLE, RULER_TOGGLE } from './useTextDocumentViewToggle';
+import {
+  NON_PRINTING_TOGGLE,
+  PRINT_LAYOUT_TOGGLE,
+  RULER_TOGGLE,
+} from './useTextDocumentViewToggle';
+import { TEXT_WIDTH_ITEMS } from './useTextDocumentTextWidth';
 import { textDocumentUndoPlugins } from './text-document-undo';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -123,6 +128,9 @@ describe('the text document menus', () => {
         // View > Show ruler and Show non-printing characters (useTextDocumentViewToggle), bound by the surface.
         RULER_TOGGLE.item,
         NON_PRINTING_TOGGLE.item,
+        PRINT_LAYOUT_TOGGLE.item,
+        // View > Text width (useTextDocumentTextWidth), bound by the surface.
+        ...Object.values(TEXT_WIDTH_ITEMS),
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {

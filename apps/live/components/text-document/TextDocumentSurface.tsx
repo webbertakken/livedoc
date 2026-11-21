@@ -103,8 +103,10 @@ import {
 } from '@/lib/text-document/pagination/pagination-plugin';
 import { sectionWidthsPlugin } from '@/lib/text-document/pagination/pagination-sections';
 import { pageBox, pagelessSetup, usePagelessColumn } from '@/lib/text-document/text-document-page';
+import { useTextDocumentTextWidth } from '@/lib/text-document/useTextDocumentTextWidth';
 import {
   NON_PRINTING_TOGGLE,
+  PRINT_LAYOUT_TOGGLE,
   RULER_TOGGLE,
   useTextDocumentViewToggle,
 } from '@/lib/text-document/useTextDocumentViewToggle';
@@ -426,11 +428,15 @@ export function TextDocumentSurface({
     subscribeCaret: changes.subscribeCaret,
   });
   // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
-  const column = usePagelessColumn(scroller, scale, page.pageless);
+  // View > Text width, a person's own (page-layout.md "Pageless").
+  const textWidth = useTextDocumentTextWidth(page.pageless);
+  const column = usePagelessColumn(scroller, scale, page.pageless, textWidth.width);
   const drawn = page.pageless ? pagelessSetup(page.section.setup, column) : page.section.setup;
   // Pages are laid out unless pageless or on a phone, where the writing flows to the window.
   const wide = useMediaQuery('(min-width: 640px)');
-  const paginated = !page.pageless && wide;
+  // View > Show print layout, a person's own (page-layout.md "Print layout"): off, one sheet as on a phone.
+  const printLayout = useTextDocumentViewToggle(PRINT_LAYOUT_TOGGLE);
+  const paginated = !page.pageless && wide && printLayout.shown;
   // Headers and footers drawn on the pages, and one edited in place (page-layout.md "Headers and footers"); while one
   // is edited, the toolbar, the Format menu and Edit act on it.
   const headers = useTextDocumentHeadersAndFooters({
@@ -537,6 +543,11 @@ export function TextDocumentSurface({
       ...panels.actions,
       ...ruler.actions,
       ...marks.actions,
+      ...textWidth.actions,
+      [PRINT_LAYOUT_TOGGLE.item]: {
+        ...printLayout.actions[PRINT_LAYOUT_TOGGLE.item]!,
+        disabled: page.pageless,
+      },
       ...page.actions,
       ...columns.actions,
       ...breakActions,
@@ -549,6 +560,9 @@ export function TextDocumentSurface({
       page.actions,
       ruler.actions,
       marks.actions,
+      textWidth.actions,
+      printLayout.actions,
+      page.pageless,
       activeView,
       writes,
       formatting.actions,

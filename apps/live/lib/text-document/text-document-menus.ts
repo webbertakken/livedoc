@@ -140,7 +140,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         }),
       ]),
       SEPARATOR,
-      item('show-print-layout', 'Show print layout', 'view', { checkable: 'checkbox' }),
+      item('show-print-layout', 'Show print layout', 'view', {
+        checkable: 'checkbox',
+        status: 'built',
+      }),
       item('show-ruler', 'Show ruler', 'view', { checkable: 'checkbox', status: 'built' }),
       item('show-outline', 'Show outline', 'view', {
         checkable: 'checkbox',
@@ -156,10 +159,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       }),
       SEPARATOR,
       submenu('text-width', 'Text width', [
-        item('text-width-narrow', 'Narrow', 'view', { checkable: 'radio' }),
-        item('text-width-medium', 'Medium', 'view', { checkable: 'radio' }),
-        item('text-width-wide', 'Wide', 'view', { checkable: 'radio' }),
-        item('text-width-full', 'Full', 'view', { checkable: 'radio' }),
+        item('text-width-narrow', 'Narrow', 'view', { checkable: 'radio', status: 'built' }),
+        item('text-width-medium', 'Medium', 'view', { checkable: 'radio', status: 'built' }),
+        item('text-width-wide', 'Wide', 'view', { checkable: 'radio', status: 'built' }),
+        item('text-width-full', 'Full', 'view', { checkable: 'radio', status: 'built' }),
       ]),
       item('full-screen', 'Full screen', 'view'),
     ]),

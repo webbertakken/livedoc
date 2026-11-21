@@ -7,6 +7,7 @@ import {
   PAGELESS_TEXT_WIDTH_PT,
   pageBox,
   pagelessColumnPt,
+  TEXT_WIDTHS,
   pagelessSetup,
   setMargin,
   textWidthOf,
@@ -51,6 +52,16 @@ describe('the page pageless', () => {
     expect(pagelessColumnPt(600, 1)).toBe(378);
     expect(pagelessColumnPt(600, 2)).toBe(153);
     expect(pagelessColumnPt(150, 1)).toBe(MIN_TEXT_SIDE_PT);
+  });
+
+  // "View > Text width": narrow 6.5 in, wide 10 in, full the room less half an inch each side.
+  it('is the chosen text width, never wider than the room', () => {
+    expect(pagelessColumnPt(2000, 1, 'narrow')).toBe(468);
+    expect(pagelessColumnPt(2000, 1, 'wide')).toBe(720);
+    // 2000 px is 1500 pt, less half an inch each side.
+    expect(pagelessColumnPt(2000, 1, 'full')).toBe(1428);
+    expect(pagelessColumnPt(600, 1, 'wide')).toBe(378);
+    expect(TEXT_WIDTHS).toEqual(['narrow', 'medium', 'wide', 'full']);
   });
 
   it('draws the column with no side margins, keeping the colour', () => {

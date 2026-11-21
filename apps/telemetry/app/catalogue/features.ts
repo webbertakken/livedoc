@@ -1231,8 +1231,24 @@ export const TEXT_DOCUMENT_RULER_TOGGLED = chart(
   'UI',
   'Toggled',
   'Text Document View Switches',
-  "Someone showed or hid a text document's ruler or its non-printing characters (View menu).",
-  { types: ['TextDocumentRuler', 'TextDocumentNonPrinting'] },
+  "Someone showed or hid a text document's ruler, its non-printing characters or its print layout (View menu).",
+  { types: ['TextDocumentRuler', 'TextDocumentNonPrinting', 'TextDocumentPrintLayout'] },
+);
+
+// A person's pageless text width chosen (docs/specs/034-text-documents/page-layout.md "Pageless"): View > Text width.
+export const TEXT_DOCUMENT_TEXT_WIDTH = chart(
+  'UI',
+  'Changed',
+  'Text Document Text Width',
+  "Someone chose the width of a pageless text document's column from View > Text width.",
+  {
+    types: [
+      'TextDocumentTextWidthNarrow',
+      'TextDocumentTextWidthMedium',
+      'TextDocumentTextWidthWide',
+      'TextDocumentTextWidthFull',
+    ],
+  },
 );
 
 // A text document's lists (docs/specs/034-text-documents/lists.md "Telemetry"): paragraphs put in a list or taken out,
