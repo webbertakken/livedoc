@@ -34,7 +34,9 @@ function run(state: EditorState, command: Command) {
 const shape = (d: PmNode) => {
   const out: string[] = [];
   d.forEach((block) =>
-    out.push(block.type.name === 'table' ? `table ${block.childCount}` : `p "${block.textContent}"`),
+    out.push(
+      block.type.name === 'table' ? `table ${block.childCount}` : `p "${block.textContent}"`,
+    ),
   );
   return out;
 };
