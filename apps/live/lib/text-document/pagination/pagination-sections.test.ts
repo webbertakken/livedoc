@@ -101,6 +101,40 @@ describe('sectionInset', () => {
     expect(plugin.getState(after)!.find()).toHaveLength(0);
     expect(plugin.getState(after.apply(after.tr))).toBe(plugin.getState(after));
   });
+
+  // performance.md "A keystroke's frame": an edit of text keeps the sections, mapped, never worked out again.
+  it('keeps the sections through an edit of text, moved with it', () => {
+    let reads = 0;
+    const plugin = sectionWidthsPlugin(() => {
+      reads += 1;
+      return letter;
+    });
+    const state = EditorState.create({ doc, plugins: [plugin] });
+    const before = plugin
+      .getState(state)!
+      .find()
+      .map((d) => d.from);
+    const typed = state.apply(state.tr.insertText('xy', 1));
+    expect(reads).toBe(1);
+    expect(
+      plugin
+        .getState(typed)!
+        .find()
+        .map((d) => d.from),
+    ).toEqual(before.map((at) => at + 2));
+    const split = typed.apply(typed.tr.split(2));
+    expect(
+      plugin
+        .getState(split)!
+        .find()
+        .map((d) => d.from),
+    ).toEqual(
+      plugin
+        .getState(EditorState.create({ doc: split.doc, plugins: [plugin] }))!
+        .find()
+        .map((d) => d.from),
+    );
+  });
 });
 
 describe('sectionInset, with columns (page-layout.md "Columns")', () => {

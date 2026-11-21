@@ -40,17 +40,23 @@ function longDocument(): string {
   return path;
 }
 
-// The `[text-document] layout` lines' times, as the trace logs them.
-function layoutTimes(page: Page): number[] {
-  const times: number[] = [];
+// The `[text-document] layout` lines, as the trace logs them, with their times.
+function layoutLines(page: Page): { ms: number; line: string }[] {
+  const lines: { ms: number; line: string }[] = [];
   page.on('console', (message) => {
-    const text = message.text();
-    if (!text.startsWith('[text-document] layout')) return;
-    const ms = /ms:\s*([\d.]+)/.exec(text)?.[1];
-    if (ms) times.push(Number(ms));
+    const line = message.text();
+    if (!line.startsWith('[text-document] layout')) return;
+    const ms = /ms:\s*([\d.]+)/.exec(line)?.[1];
+    if (ms) lines.push({ ms: Number(ms), line });
   });
-  return times;
+  return lines;
 }
+
+const slowest = (lines: readonly { ms: number; line: string }[]) =>
+  lines.reduce<{ ms: number; line: string } | null>(
+    (most, l) => (most && most.ms >= l.ms ? most : l),
+    null,
+  );
 
 test('a 300-page text document: opened, typed in and pasted into within the budgets', async ({
   page,
@@ -58,7 +64,7 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
   test.setTimeout(600_000);
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.addInitScript(() => localStorage.setItem('livedoc:debug', 'text-document'));
-  const layouts = layoutTimes(page);
+  const layouts = layoutLines(page);
   await page.goto('/new?kind=text-document');
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
 
@@ -80,6 +86,7 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
   await middle.scrollIntoViewIfNeeded();
   await middle.click();
   await page.keyboard.press('End');
+  layouts.length = 0;
   await page.evaluate(() => {
     const w = window as unknown as { __keys: number[] };
     w.__keys = [];
@@ -98,7 +105,8 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
   }
   await page.waitForTimeout(500);
   const keys = await page.evaluate(() => (window as unknown as { __keys: number[] }).__keys);
-  const slowest = keys.length > 0 ? Math.max(...keys) : 0;
+  const slowestKeystroke = keys.length > 0 ? Math.max(...keys) : 0;
+  const typingLayout = slowest(layouts);
 
   // A paste of 10 pages after the middle paragraph.
   const tenPages = Array.from({ length: 150 }, (_, i) => `Pasted ${i + 1}. ${PARAGRAPH}`).join(
@@ -120,20 +128,24 @@ test('a 300-page text document: opened, typed in and pasted into within the budg
     })
     .toBeGreaterThanOrEqual(pages + 9);
   await page.waitForTimeout(1_000);
-  const pasteLayoutMs = layouts.length > 0 ? Math.max(...layouts) : 0;
+  const pasteLayout = slowest(layouts);
+  const pasteLayoutMs = pasteLayout?.ms ?? 0;
 
   const report = {
     pages,
     openMs,
     keystrokesOver16Ms: keys.length,
-    slowestKeystrokeMs: slowest,
+    keystrokeDurations: [...keys].sort((a, b) => a - b).join(','),
+    slowestKeystrokeMs: slowestKeystroke,
+    slowestTypingLayout: typingLayout?.line ?? null,
     pasteLayoutMs,
     pasteLayouts: layouts.length,
+    slowestPasteLayout: pasteLayout?.line ?? null,
   };
   console.log(`[text-document perf] ${JSON.stringify(report)}`);
   test
     .info()
     .annotations.push({ type: 'text-document-scale', description: JSON.stringify(report) });
-  expect(slowest).toBeLessThanOrEqual(TEXT_DOCUMENT_SCALE_BUDGETS.keystrokeMs);
+  expect(slowestKeystroke).toBeLessThanOrEqual(TEXT_DOCUMENT_SCALE_BUDGETS.keystrokeMs);
   expect(pasteLayoutMs).toBeLessThanOrEqual(TEXT_DOCUMENT_SCALE_BUDGETS.pasteLayoutMs);
 });

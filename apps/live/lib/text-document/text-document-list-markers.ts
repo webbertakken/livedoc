@@ -9,6 +9,7 @@ import { ListMarkers, type ListMarker, type ParagraphProps } from '@livedoc/text
 import { placeOf, toggleItemAt, type Lists } from './text-document-lists';
 import { INDENT_START } from './text-document-style-sheet';
 import { paperInk } from './text-document-paper';
+import { editedTextblocks } from './text-document-text-edits';
 
 export const listMarkersKey = new PluginKey<DecorationSet>('textDocumentListMarkers');
 const key = listMarkersKey;
@@ -18,8 +19,14 @@ export const TICKED_INK = '#5f6368';
 
 const NAME_MAX = 80;
 
-function markerDom(marker: ListMarker, hanging: number, item: PmNode, onTick: () => void) {
-  return (view: EditorView): HTMLElement => {
+// The marker's box ticks the item it is drawn in, wherever edits have moved it since.
+function markerDom(
+  marker: ListMarker,
+  hanging: number,
+  item: PmNode,
+  onTick: (pos: number) => void,
+) {
+  return (view: EditorView, getPos: () => number | undefined): HTMLElement => {
     const document = view.dom.ownerDocument;
     const span = document.createElement('span');
     span.className = 'text-document-list-marker';
@@ -35,7 +42,8 @@ function markerDom(marker: ListMarker, hanging: number, item: PmNode, onTick: ()
         box.tabIndex = -1;
         box.addEventListener('mousedown', (e) => {
           e.preventDefault();
-          onTick();
+          const at = getPos();
+          if (at !== undefined) onTick(at - 1);
         });
       } else box.setAttribute('aria-disabled', 'true');
       span.append(box);
@@ -92,15 +100,11 @@ export function listDecorations(
     );
     if (marker)
       decorations.push(
-        Decoration.widget(
-          pos + 1,
-          markerDom(marker, hanging, node, () => tick(pos)),
-          {
-            side: -1,
-            ignoreSelection: true,
-            key: `${marker.kind}:${marker.text}:${marker.kind === 'check' && marker.checked}:${hanging}:${node.textContent.slice(0, NAME_MAX)}`,
-          },
-        ),
+        Decoration.widget(pos + 1, markerDom(marker, hanging, node, tick), {
+          side: -1,
+          ignoreSelection: true,
+          key: `${marker.kind}:${marker.text}:${marker.kind === 'check' && marker.checked}:${hanging}:${node.textContent.slice(0, NAME_MAX)}`,
+        }),
       );
   });
   return DecorationSet.create(doc, decorations);
@@ -123,8 +127,15 @@ export function listMarkersPlugin(
     key,
     state: {
       init: (_config, state) => build(state),
-      apply: (tr, set, _old, state) =>
-        tr.docChanged || tr.getMeta(key) === REFRESH ? build(state) : set,
+      apply: (tr, set, _old, state) => {
+        if (tr.getMeta(key) === REFRESH) return build(state);
+        if (!tr.docChanged) return set;
+        // An edit of text outside the items keeps them drawn (performance.md "A keystroke's frame"); one inside an item
+        // may rename its box.
+        const edited = editedTextblocks(tr);
+        if (edited && !edited.some((node) => placeOf(node))) return set.map(tr.mapping, tr.doc);
+        return build(state);
+      },
     },
     props: { decorations: (state) => key.getState(state) },
     view: (editor) => {

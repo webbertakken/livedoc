@@ -23,6 +23,15 @@ The throttled open above was measured while a text document still loaded the can
 first load 1,368 to 1,020 KiB); its open must now fall well below a canvas document's, measured again with Phase 18's
 300-page document.
 
+## A keystroke's frame
+
+- The frame that paints a keystroke holds the writing's own work alone: the edit, its live state, and the pages laid
+  out again from the paragraph it touched.
+- What reads the writing is drawn after that frame is painted, once however many changes came in it: the toolbar's
+  pressed states and font size, the ruler, the outline, the footnotes under the writing, the save status.
+- Every React commit while the writing has the focus reads the caret's place in the whole body, so the surface draws
+  nothing again for a keystroke that only these parts need.
+
 ## How it is measured
 
 - The production build on the e2e stack (`scripts/e2e-stack.mjs`), Chromium, dark, 1280 by 860.

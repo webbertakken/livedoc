@@ -73,4 +73,29 @@ describe('paragraphBoxJoins', () => {
     expect(view.dom.querySelector('.text-document-box-joined-below')).toBeNull();
     view.destroy();
   });
+
+  // performance.md "A keystroke's frame": an edit of text keeps the joins, mapped, never worked out again.
+  it('keeps the joins through an edit of text', () => {
+    let reads = 0;
+    const plugin = paragraphBoxesPlugin(() => {
+      reads += 1;
+      return formatting;
+    });
+    const state = EditorState.create({
+      doc: docOf(p('a', boxed), p('b', boxed)),
+      plugins: [plugin],
+    });
+    const typed = state.apply(state.tr.insertText('xyz', 1));
+    expect(reads).toBe(1);
+    expect(
+      plugin
+        .getState(typed)!
+        .find()
+        .map((d) => [d.from, d.to]),
+    ).toEqual(
+      paragraphBoxJoins(typed.doc, formatting)
+        .find()
+        .map((d) => [d.from, d.to]),
+    );
+  });
 });

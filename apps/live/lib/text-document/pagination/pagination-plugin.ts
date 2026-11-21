@@ -91,6 +91,10 @@ export const canWrapColumns = (): boolean =>
 
 const key = new PluginKey<DecorationSet>('textDocumentPagination');
 
+// How many blocks a layout asks the editor for one by one (each ask walks the body's blocks to its place) before it reads
+// the body's children once instead (a copy of every child): a keystroke measures one to three (performance.md).
+const BLOCK_LOOKUPS_ASKED = 16;
+
 // The spacer inside a paragraph: drawn as the page's foot, the ground and the next page's head over the paragraph's
 // own background and borders, across the whole page.
 function lineGap(
@@ -500,11 +504,17 @@ class Pager {
         ms: Math.round((performance.now() - started) * 10) / 10,
       });
 
+    // A block's element: asked of the editor for the first few, as a keystroke measures one or two; past those, read
+    // from the body's children (its blocks and the spacers between them, in order), once.
     function blockElements(v: EditorView, all: PmNode[], at: number[]) {
-      // The body's children are its blocks and the spacers between them, in order.
-      const children = [...v.dom.children].filter((c) => !c.classList.contains(PAGE_GAP_CLASS));
-      const direct = children.length === all.length;
-      return (i: number): HTMLElement => (direct ? children[i] : v.nodeDOM(at[i]!)) as HTMLElement;
+      let asked = 0;
+      let children: Element[] | null = null;
+      return (i: number): HTMLElement => {
+        asked += 1;
+        if (asked <= BLOCK_LOOKUPS_ASKED) return v.nodeDOM(at[i]!) as HTMLElement;
+        children ??= [...v.dom.children].filter((c) => !c.classList.contains(PAGE_GAP_CLASS));
+        return (children.length === all.length ? children[i] : v.nodeDOM(at[i]!)) as HTMLElement;
+      };
     }
   }
 

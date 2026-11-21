@@ -43,7 +43,9 @@ describe('documentFamiliesOf', () => {
 
 describe('useGoogleDocumentFonts', () => {
   it('loads the families as the document opens, then once its text settles after a change', () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
     const changes = createTextDocumentChanges();
     const view = new EditorView(document.createElement('div'), {
       state: EditorState.create({
@@ -60,6 +62,9 @@ describe('useGoogleDocumentFonts', () => {
     expect(loadGoogleFamilies.mock.calls[0]![0]).toContain('Rubik');
     view.dispatch(view.state.tr.insertText('b', 1).addMark(1, 2, fontMark('Pacifico')));
     view.dispatch(view.state.tr.insertText('c', 1));
+    // The writing tells of its changes after the frame that paints them (performance.md "A keystroke's frame").
+    vi.advanceTimersToNextFrame();
+    vi.runOnlyPendingTimers();
     vi.advanceTimersByTime(499);
     expect(loadGoogleFamilies).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(1);
