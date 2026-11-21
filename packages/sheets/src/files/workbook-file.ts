@@ -2,11 +2,12 @@
 // name, cells by position, each with its formula in Google's syntax and the value it last showed. The bridge between
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
+import type { PackageRefusal } from '@livedoc/office-packages';
 import { layoutIndex } from '../layout';
 import { emptyLayout, splitCellKey, type CellInput, type Sheet, type SheetLayout } from '../sheet';
 import { makeSheetId, type Rand } from '../ids';
 import { compileFormula, renderFormula, type SheetHandle, type SheetsCtx } from '../formula/stored';
-import { isArray, isError, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
+import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
 import type { Workbook } from '../engine/workbook';
 import { SHEET_COLS_MAX, SHEET_ROWS_MAX } from '../limits';
 import { SheetName } from '../workbook/sheet-name';
@@ -31,12 +32,19 @@ export type FileSheet = { name: string; rows: number; cols: number; cells: FileC
 
 export type WorkbookFile = { sheets: FileSheet[] };
 
+/** A file read: its sheets and what could not be carried, or the package's named rejection. */
+export type FileRead = { ok: true; file: WorkbookFile; losses: FileLoss[] } | PackageRefusal;
+
+/** A file written, and what it could not carry (a formula the format cannot say keeps only its value). */
+export type FileWritten<T> = { data: T; losses: FileLoss[] };
+
 /** What a mapping could not carry, named so it is never silent (standard-mapping.md "Unknown content"). */
 export type FileLoss =
   | { k: 'formula_unread'; sheet: string; r: number; c: number }
   | { k: 'formula_unwritten'; sheet: string; r: number; c: number }
   | { k: 'sheet_cut'; sheet: string; rows: number; cols: number }
   | { k: 'sheets_cut'; kept: number; had: number }
+  | { k: 'sheet_unread'; sheet: string }
   | { k: 'sheet_renamed'; from: string; to: string };
 
 function fileValueOf(value: Scalar): FileValue | undefined {
@@ -44,10 +52,39 @@ function fileValueOf(value: Scalar): FileValue | undefined {
   if (typeof value === 'number') return { k: 'n', v: value };
   if (typeof value === 'string') return { k: 's', v: value };
   if (typeof value === 'boolean') return { k: 'b', v: value };
-  return isError(value) ? { k: 'e', v: value.e } : undefined;
+  return { k: 'e', v: value.e };
 }
 
-/** The workbook's sheets, in tab order, as a file holds them, with every value the engine shows now. */
+function shownValue(
+  engine: Workbook,
+  sheetId: string,
+  r: number,
+  c: number,
+): FileValue | undefined {
+  return fileValueOf(scalarOf(engine.value(sheetId, r, c)));
+}
+
+// The block a formula's result spills into, when it spilled past its own cell (standard-mapping.md "Arrays in the
+// file"): a blocked spill's result is its #REF!, and covers nothing.
+function spilledBlock(
+  engine: Workbook,
+  sheetId: string,
+  r: number,
+  c: number,
+): FileCell['spans'] | undefined {
+  const result = engine.formulaResult(sheetId, r, c);
+  if (!isArray(result)) return undefined;
+  // The engine gives one value, never a one-by-one array, so an array here always spilled past its cell.
+  return {
+    rows: result.rows.length,
+    cols: result.rows.reduce((n, row) => Math.max(n, row.length), 0),
+  };
+}
+
+/**
+ * The workbook's sheets, in tab order, as a file holds them, with every value the engine shows now: a spilled
+ * formula with its block, the block's other cells holding the values it spilled.
+ */
 export function workbookFileOf(engine: Workbook, sheets: readonly Sheet[]): WorkbookFile {
   return {
     sheets: sheets.map((sheet) => {
@@ -60,10 +97,16 @@ export function workbookFileOf(engine: Workbook, sheets: readonly Sheet[]): Work
         const r = index.rowPos.get(rowId);
         const c = index.colPos.get(colId);
         if (r === undefined || c === undefined) continue;
-        const shown = engine.value(sheet.id, r, c);
-        const value = fileValueOf(isArray(shown) ? scalarOf(shown) : shown);
+        const value = shownValue(engine, sheet.id, r, c);
         const out: FileCell = { r, c };
-        if ('f' in cell.input) out.formula = renderFormula(cell.input.f, ctx);
+        if ('f' in cell.input) {
+          out.formula = renderFormula(cell.input.f, ctx);
+          const spans = spilledBlock(engine, sheet.id, r, c);
+          if (spans) {
+            out.spans = spans;
+            cells.push(...blockCells(engine, sheet.id, out, spans));
+          }
+        }
         if (value) out.value = value;
         cells.push(out);
       }
@@ -76,6 +119,35 @@ export function workbookFileOf(engine: Workbook, sheets: readonly Sheet[]): Work
       };
     }),
   };
+}
+
+// The cells of a spilled block but its own that show a value, each holding the value spilled there.
+function blockCells(
+  engine: Workbook,
+  sheetId: string,
+  at: FileCell,
+  spans: NonNullable<FileCell['spans']>,
+): FileCell[] {
+  const out: FileCell[] = [];
+  for (let dr = 0; dr < spans.rows; dr++)
+    for (let dc = 0; dc < spans.cols; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      const value = shownValue(engine, sheetId, at.r + dr, at.c + dc);
+      if (value) out.push({ r: at.r + dr, c: at.c + dc, value });
+    }
+  return out;
+}
+
+/** The positions a file's cells cache for a block's formula: never inputs, as the formula spills there again. */
+export function blockCachePositions(cells: readonly FileCell[]): Set<string> {
+  const out = new Set<string>();
+  for (const cell of cells) {
+    if (!cell.spans || cell.formula === undefined) continue;
+    for (let dr = 0; dr < cell.spans.rows; dr++)
+      for (let dc = 0; dc < cell.spans.cols; dc++)
+        if (dr > 0 || dc > 0) out.add(`${cell.r + dr},${cell.c + dc}`);
+  }
+  return out;
 }
 
 /** A sheet to make from a file: its title, its grid, and its cells by id. */
@@ -132,7 +204,9 @@ export function sheetsFromFile(file: WorkbookFile, rand: Rand = Math.random): Sh
   const sheets = made.map((m, i): SheetFromFile => {
     const ctx: SheetsCtx = { own: handles[i]!, byTitle, byId };
     const cells: SheetFromFile['cells'] = [];
+    const cache = blockCachePositions(m.file.cells);
     for (const cell of m.file.cells) {
+      if (cache.has(`${cell.r},${cell.c}`)) continue;
       const r = m.layout.rows[cell.r];
       const c = m.layout.cols[cell.c];
       if (r === undefined || c === undefined) continue;

@@ -1226,6 +1226,14 @@ export const SPREADSHEETS_CREATED = chart(
   { types: ['Blank', 'Template', 'Import'] },
 );
 
+export const SPREADSHEETS_IMPORTED = chart(
+  'Spreadsheet',
+  'Imported',
+  'Spreadsheets Opened From Files',
+  'A file opened as a new spreadsheet, by the format it keeps.',
+  { types: ['Ods', 'Fods', 'Xlsx', 'Csv', 'Tsv'] },
+);
+
 export const SPREADSHEETS_EXPORTED = chart(
   'Spreadsheet',
   'Exported',
@@ -1249,7 +1257,12 @@ export const SPREADSHEETS: MetricStack = {
   title: 'Spreadsheets',
   blurb:
     'Spreadsheet documents on the open standards: made, opened from files, downloaded, imports allowed.',
-  members: [SPREADSHEETS_CREATED, SPREADSHEETS_EXPORTED, SPREADSHEETS_IMPORTS_ALLOWED],
+  members: [
+    SPREADSHEETS_CREATED,
+    SPREADSHEETS_IMPORTED,
+    SPREADSHEETS_EXPORTED,
+    SPREADSHEETS_IMPORTS_ALLOWED,
+  ],
 };
 
 // Forms (docs/specs/030-forms/forms.md "Telemetry"): forms started and built, published, opened and closed, and the

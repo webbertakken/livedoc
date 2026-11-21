@@ -99,3 +99,4 @@ export {
   type Relationships,
 } from './ooxml/ooxml-package';
 export { downloadFileName } from './file-name';
+export { packageKind, type PackageKind } from './package-kind';

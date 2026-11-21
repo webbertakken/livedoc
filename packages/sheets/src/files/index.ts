@@ -5,3 +5,7 @@ export * from './open-formula';
 export * from './ods-write';
 export * from './ods-read';
 export * from './write-workbook';
+export * from './excel-formula';
+export * from './xlsx-write';
+export * from './xlsx-read';
+export * from './read-workbook-file';

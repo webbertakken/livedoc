@@ -14,6 +14,42 @@ function seeded(n = 7): () => number {
 }
 
 describe('workbookFileOf', () => {
+  // standard-mapping.md "Arrays in the file": a spill is written with its block, its other cells caching its values.
+  it('gives a spilled formula its block and the block its values', () => {
+    const sheets = makeSheets(
+      {
+        S: {
+          A1: '=SEQUENCE(2, 2)',
+          D1: '=SEQUENCE(1)',
+          D3: '=SEQUENCE(2)',
+          D4: 'x',
+          E1: '=FILTER(D1:D3, D1:D3=1)',
+          F1: '=SEQUENCE(2)',
+        },
+      },
+      { rows: 5, cols: 7 },
+    );
+    const engine = new Workbook({ sheets, locale: 'en-GB' });
+    const cells = workbookFileOf(engine, sheets).sheets[0]!.cells;
+    expect(cells.filter((c) => c.r < 2 && c.c < 2)).toEqual([
+      {
+        r: 0,
+        c: 0,
+        formula: '=SEQUENCE(2, 2)',
+        spans: { rows: 2, cols: 2 },
+        value: { k: 'n', v: 1 },
+      },
+      { r: 0, c: 1, value: { k: 'n', v: 2 } },
+      { r: 1, c: 0, value: { k: 'n', v: 3 } },
+      { r: 1, c: 1, value: { k: 'n', v: 4 } },
+    ]);
+    // One value is no block; a blocked spill covers nothing.
+    expect(cells.find((c) => c.r === 0 && c.c === 3)!.spans).toBeUndefined();
+    expect(cells.find((c) => c.r === 2 && c.c === 3)!.spans).toBeUndefined();
+    expect(cells.find((c) => c.r === 0 && c.c === 4)!.spans).toBeUndefined();
+    expect(cells.find((c) => c.r === 0 && c.c === 5)!.spans).toEqual({ rows: 2, cols: 1 });
+  });
+
   // standard-mapping.md "One model, two mappings": the file holds positions, formulas as typed and their values.
   it('holds each sheet in order with positions, formulas and the values they show', () => {
     const sheets = makeSheets(
@@ -44,11 +80,12 @@ describe('workbookFileOf', () => {
     });
   });
 
-  it('holds the top left of a spilled array, and nothing for a formula that shows empty', () => {
-    const sheets = makeSheets({ S: { A1: '={1,2}', B2: '=C9' } }, { rows: 10, cols: 4 });
+  it('holds a spilled array whole, and no value for a formula or a spilled cell that shows empty', () => {
+    const sheets = makeSheets({ S: { A1: '={1,2,C9}', B2: '=C9' } }, { rows: 10, cols: 4 });
     const file = workbookFileOf(new Workbook({ sheets, locale: 'en-GB' }), sheets);
     expect(file.sheets[0]!.cells).toEqual([
-      { r: 0, c: 0, formula: '={1,2}', value: { k: 'n', v: 1 } },
+      { r: 0, c: 0, formula: '={1,2,C9}', spans: { rows: 1, cols: 3 }, value: { k: 'n', v: 1 } },
+      { r: 0, c: 1, value: { k: 'n', v: 2 } },
       { r: 1, c: 1, formula: '=C9' },
     ]);
   });
@@ -63,6 +100,32 @@ describe('workbookFileOf', () => {
 });
 
 describe('sheetsFromFile', () => {
+  // standard-mapping.md "Arrays in the file": a block's other cells are cache, never inputs.
+  it('skips the cells a block caches', () => {
+    const made = sheetsFromFile(
+      {
+        sheets: [
+          {
+            name: 'S',
+            rows: 2,
+            cols: 2,
+            cells: [
+              { r: 0, c: 0, formula: '=SEQUENCE(2)', spans: { rows: 2, cols: 1 } },
+              { r: 1, c: 0, value: { k: 'n', v: 2 } },
+              { r: 1, c: 1, value: { k: 'n', v: 9 }, spans: { rows: 2, cols: 2 } },
+              { r: 0, c: 1 },
+            ],
+          },
+        ],
+      },
+      seeded(),
+    );
+    expect(made.sheets[0]!.cells.map((c) => c.i)).toEqual([
+      { f: { t: 'SEQUENCE(2)', r: [] } },
+      { n: 9 },
+    ]);
+  });
+
   const file: WorkbookFile = {
     sheets: [
       {

@@ -1,6 +1,7 @@
 # Standard mapping
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** Both formats read and write sheets, cells, formulas and arrays (`@livedoc/sheets/files`);
+styles, number formats, unknown content and the other rows of the table below are ahead.
 
 How a [spreadsheet](spreadsheet.md)'s workbook maps onto its two native file formats (C1, ruled 2026-11-18: both
 native; a file keeps the format it arrived in). Research: [The standard](../../research/sheets-open-standard/standard.md).
@@ -59,6 +60,46 @@ The table is the contract the readers and writers are tested against, one test p
   and each file names the function whose meaning matches (S6, ruled 2026-11-18) ([Formulas](formulas.md)).
 - A formula read from a file that LiveDoc cannot evaluate keeps its text and shows its cached value, with a marker
   saying so; it is written back as it came.
+- An open-ended range (`A2:A`) has no form in either standard: it is written to the standards' last row or column
+  (1,048,576 and 16,384, `XFD`), and read back as that range.
+
+### Excel's grammar in detail
+
+- A function Excel added after 2007 carries Excel's prefix: `_xlfn.` for each name of MS-XLSX §2.2.2's future
+  function list and of Excel's dynamic arrays, `_xlfn._xlws.` for `FILTER` and `SORT`; the list is XlsxWriter's
+  record of both ([Working with formulas](https://xlsxwriter.readthedocs.io/working_with_formulas.html)).
+- `LAMBDA` and `LET` parameters carry `_xlpm.`, wherever the formula uses them.
+- A spilled range (`B2#`) is `_xlfn.ANCHORARRAY(B2)`.
+- A formula Excel's grammar cannot hold is written whole by S5's convention: one calling a Google-only function or a
+  function Excel does not have (`EASTERSUNDAY`), and one whose array literal holds more than constants
+  (`{A1:A3, B1:B3}`) (default, D83).
+- Reading undoes each: the prefixes go, `ANCHORARRAY` is a spill again, and `IFERROR(__xludf.DUMMYFUNCTION("…"), …)`
+  is the formula it wraps, as Google Sheets reads its own downloads.
+- A shared formula (`f@t="shared"`) is unfolded: each cell of its block holds the first cell's formula moved as a
+  copy moves it (relative parts move, absolute parts stay).
+- What Excel's grammar holds and Google's does not (a structured reference `Table1[Col]`, another workbook's
+  `[1]Sheet1!A1`, a data table) cannot be read: the cell keeps its cached value and the loss is named.
+
+## Arrays in the file
+
+- A formula whose result spills is written with its block: in ODF its matrix spans, in XLSX `f@t="array"` with
+  `@ref` and the dynamic-array cell metadata (`c@cm`, `xl/metadata.xml`), so Excel spills it as Google does.
+- The block's other cells carry the spilled values as their cached values, so a reader that does not calculate
+  shows them; in XLSX a block S5 wraps is no array, and its other cells are
+  `IFERROR(__xludf.DUMMYFUNCTION("""COMPUTED_VALUE"""), <value>)`, as Google Sheets writes them.
+- Reading, a block's other cells are cache: never inputs, so the formula spills into them again; a wrapped formula's
+  block is the run of `COMPUTED_VALUE` cells to its right and below.
+
+## Values in XLSX
+
+- Text is written once into the shared strings, in order of first use; a formula's text result is `c@t="str"`.
+- An error Excel knows (`#NULL!`, `#DIV/0!`, `#VALUE!`, `#REF!`, `#NAME?`, `#NUM!`, `#N/A`) is cached as `c@t="e"`;
+  another (`#ERROR!`) is cached as its text (default, D82).
+- In a workbook in the 1904 date system (`workbookPr@date1904`), a date (a number whose cell style's number format
+  shows a date or a time) is read 1,462 days later, so it keeps its day; a `c@t="d"` value (an ISO 8601 date) is
+  read as its serial.
+- A sheet's name past Excel's 31 characters is cut and numbered as a taken name is, the formulas naming it follow, and
+  the loss is named (`sheet_renamed`) (default, D84).
 
 ## Unknown content
 
@@ -92,3 +133,15 @@ The table is the contract the readers and writers are tested against, one test p
   where a part can be taken (rows past the limit).
 - Every import guard of [Security](../../research/sheets-open-standard/security.md) is a test with a named
   rejection.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D82** An error Excel does not know, cached in XLSX: Its text, as a text result (default).
+- **D83** What S5 wraps in XLSX: The whole formula, when it calls a Google-only function or one Excel does not have,
+  or its array literal holds more than constants (default).
+- **D84** A sheet name past 31 characters in XLSX: Cut and numbered as `SheetName.fit` makes a name (default).
+- **D85** An `.xlsm` opened: An XLSX workbook, its macros dropped and reported as the office packages drop them
+  (default).

@@ -2,7 +2,7 @@
 // downloads as the same file the api writes, written in this browser.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { emptyLayout, WorkbookRecord, type SheetJson } from '@livedoc/sheets';
-import { readOds } from '@livedoc/sheets/files';
+import { readOds, readXlsx } from '@livedoc/sheets/files';
 import { __setOfflineBackend, offlinePutRecord } from './offline-store';
 import { memBackend, testRecord } from './offline-test-utils';
 import { offlineWorkbookFile } from './offline-workbook-file';
@@ -61,6 +61,27 @@ describe('offlineWorkbookFile', () => {
     const { blob, fileName } = await offlineWorkbookFile('d1', 'fods');
     expect(fileName).toBe('Doc.fods');
     expect(await blob.text()).toContain('office:document');
+  });
+
+  it('writes an XLSX workbook as XLSX', async () => {
+    const [r0] = layout.rows;
+    const [c0] = layout.cols;
+    await offlinePutRecord(
+      testRecord({
+        workbook: WorkbookRecord.withFormat(workbook, 'xlsx'),
+        sheets: [sheet('sheetOne1', 't1', 'S', [{ r: r0!, c: c0!, i: { s: 'rent' } }])],
+      }),
+    );
+    const { blob, fileName } = await offlineWorkbookFile('d1', 'xlsx');
+    expect(fileName).toBe('Doc.xlsx');
+    expect(blob.type).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    const read = await readXlsx(new Uint8Array(await blob.arrayBuffer()));
+    expect(read.ok && read.file.sheets[0]!.cells).toEqual([
+      { r: 0, c: 0, value: { k: 's', v: 'rent' } },
+    ]);
+    await expect(offlineWorkbookFile('d1', 'ods')).rejects.toMatchObject({
+      code: 'format_not_native',
+    });
   });
 
   it('refuses a document that is no spreadsheet, and another standard', async () => {

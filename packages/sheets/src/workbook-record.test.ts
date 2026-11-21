@@ -97,5 +97,9 @@ describe('WorkbookRecord', () => {
   it('knows its formats', () => {
     expect(WorkbookRecord.isFormat('fods')).toBe(true);
     expect(WorkbookRecord.isFormat('csv')).toBe(false);
+    // standard-mapping.md "One model, two mappings": ODF's two forms are one standard, XLSX another (fork C1).
+    expect(WorkbookRecord.sameStandard('ods', 'fods')).toBe(true);
+    expect(WorkbookRecord.sameStandard('xlsx', 'xlsx')).toBe(true);
+    expect(WorkbookRecord.sameStandard('xlsx', 'ods')).toBe(false);
   });
 });

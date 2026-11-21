@@ -1,11 +1,11 @@
 // A spreadsheet's workbook doors (docs/specs/029-sheets/files-and-print.md, standard-mapping.md); its settings and its
 // sheets' changes have their own (workbook-settings-route.ts, workbook-sheet-routes.ts):
-//   GET /api/documents/<id>/workbook/file?format=ods|fods  the workbook as a file, written from the room's sheets
+//   GET /api/documents/<id>/workbook/file?format=ods|fods|xlsx  the workbook as a file, written from the room's sheets
 // with every value the engine works out cached beside its formula. A read, gated as the sheets are; a tab-scoped link
 // is never offered on a sheet tab (spreadsheet.md "The workbook shape"), so one reaches no file. Answered inside the
 // document's room.
 import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
-import { writeWorkbook, type WrittenWorkbookFormat } from '@livedoc/sheets/files';
+import { writeWorkbook } from '@livedoc/sheets/files';
 import { getDocumentMeta } from '../db';
 import { readWorkbook } from '../db/workbook';
 import { downloadFileName } from '@livedoc/office-packages';
@@ -24,11 +24,6 @@ const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 };
 
-// Which standard each file is in: an ODF workbook leaves as either ODF form, never as another standard until a person
-// converts it (fork C1).
-const isOdf = (format: WorkbookFormat): format is WrittenWorkbookFormat =>
-  format === 'ods' || format === 'fods';
-
 /** A file name safe in a Content-Disposition header, from the document's name. */
 export function workbookFileName(name: string, format: WorkbookFormat): string {
   return downloadFileName(name, format, UNTITLED_SPREADSHEET);
@@ -46,8 +41,9 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   if (!record) return workbookRefused('workbook_not_found', 404);
   const asked = ctx.url.searchParams.get('format') ?? record.format;
   if (!WorkbookRecord.isFormat(asked)) return workbookRefused('file_type_unknown', 400);
-  // Conversion is a person's choice (files-and-print.md "Converting"), and the XLSX mapping is still ahead.
-  if (!isOdf(asked) || !isOdf(record.format)) return workbookRefused('format_not_native', 409);
+  // A workbook leaves in its own standard (fork C1): converting is a person's choice (files-and-print.md "Converting").
+  if (!WorkbookRecord.sameStandard(asked, record.format))
+    return workbookRefused('format_not_native', 409);
   const [meta, sheets] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
     loadSpreadsheetSheets(ctx.env, documentId),

@@ -1,5 +1,5 @@
-// File › Open (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"): an `.ods` or `.fods` from the computer
-// becomes a new spreadsheet in that format, named after the file. The file is read here, under the office packages'
+// File › Open (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"): an `.ods`, `.fods`, `.xlsx` or `.xlsm`
+// from the computer becomes a new spreadsheet in the format its bytes are in (fork C1), named after the file. The file is read here, under the office packages'
 // guards, into sheets the api's create stores as it stores any seed sheets; a named rejection is worded for the person.
 import type { SheetCreateRequest } from '@livedoc/api-schema';
 import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
@@ -8,7 +8,8 @@ import { debugLog } from '@/lib/debug-log';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
 import { UNTITLED_SPREADSHEET } from './spreadsheet-name';
 
-export type OpenedSpreadsheet = { ok: true; documentId: string } | { ok: false; message: string };
+export type OpenedSpreadsheet =
+  { ok: true; documentId: string; format: WorkbookFormat } | { ok: false; message: string };
 
 // What each named rejection says (docs/specs/020-import-export/office-packages.md "Named rejections").
 const REJECTION_COPY: Record<string, string> = {
@@ -29,14 +30,9 @@ export function nameFromFile(fileName: string): string {
   return fileName.replace(/\.[^.]+$/, '').trim() || UNTITLED_SPREADSHEET;
 }
 
-/** The format a file keeps (fork C1): a flat file stays flat. */
-export function formatOfFile(fileName: string): WorkbookFormat {
-  return /\.fods$/i.test(fileName) ? 'fods' : 'ods';
-}
-
 export async function openSpreadsheetFile(ownerId: string, file: File): Promise<OpenedSpreadsheet> {
-  const { readOds, sheetsFromFile } = await import('@livedoc/sheets/files');
-  const read = await readOds(new Uint8Array(await file.arrayBuffer()));
+  const { readWorkbookFile, sheetsFromFile } = await import('@livedoc/sheets/files');
+  const read = await readWorkbookFile(new Uint8Array(await file.arrayBuffer()));
   if (!read.ok) {
     debugLog('[workbook] refused', { rejection: read.rejection, entry: read.entry });
     return { ok: false, message: REJECTION_COPY[read.rejection] ?? GENERIC };
@@ -61,13 +57,14 @@ export async function openSpreadsheetFile(ownerId: string, file: File): Promise<
       name: nameFromFile(file.name),
       tabs,
       sheets,
-      workbook: WorkbookRecord.withFormat(workbookMadeHere(), formatOfFile(file.name)),
+      workbook: WorkbookRecord.withFormat(workbookMadeHere(), read.format),
     });
     debugLog('[workbook] file read', {
+      format: read.format,
       sheets: sheets.length,
       cells: sheets.reduce((n, s) => n + (s.cells?.length ?? 0), 0),
     });
-    return { ok: true, documentId };
+    return { ok: true, documentId, format: read.format };
   } catch (error) {
     const code = error instanceof ApiError ? error.code : null;
     debugLog('[workbook] open refused', { code });

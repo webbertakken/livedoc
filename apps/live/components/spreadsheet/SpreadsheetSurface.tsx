@@ -53,7 +53,14 @@ const DOWNLOAD_LABEL = {
   xlsx: 'Download as Microsoft Excel (.xlsx)',
 } as const;
 const TELEMETRY_FORMAT = { ods: 'Ods', fods: 'Fods', xlsx: 'Xlsx' } as const;
-const OPEN_ACCEPT = '.ods,.fods,application/vnd.oasis.opendocument.spreadsheet';
+const OPEN_ACCEPT = [
+  '.ods',
+  '.fods',
+  '.xlsx',
+  '.xlsm',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+].join(',');
 
 // The spreadsheet's menus in the office shell (docs/specs/004-interface-design/office-shell.md "Menus as data"): File
 // with Open and the download of the format it is held in, until plan 0020 declares the rest.
@@ -119,6 +126,7 @@ export function SpreadsheetSurface({
     const opened = await openSpreadsheetFile(scope.ownerId, file);
     if (!opened.ok) return setProblem(opened.message);
     track('Spreadsheet', 'Created', 'Import');
+    track('Spreadsheet', 'Imported', TELEMETRY_FORMAT[opened.format]);
     window.location.assign(`/document/${opened.documentId}`);
   };
   return (

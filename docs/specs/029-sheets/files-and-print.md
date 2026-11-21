@@ -1,6 +1,7 @@
 # Files and print
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** File › Open and the download in the workbook's own format, for `.ods`, `.fods` and
+`.xlsx`; the rest is specified.
 
 How a [spreadsheet](spreadsheet.md) comes in, goes out, is printed, copied, shared and synced: Google Sheets' File
 menu on LiveDoc's own sharing. Both native formats are equals (C1, ruled 2026-11-18): a workbook keeps the file
@@ -21,8 +22,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 
 - CSV and TSV add **Separator Type** (Detect Automatically, Tab, Comma, Custom) and **Convert Text to Numbers, Dates
   and Formulas** (on by default); encoding detected (UTF-8, UTF-16 with a byte order mark, else Windows-1252).
-- Files: `.ods`, `.fods`, `.xlsx`, `.xlsm` (macros kept, never run), `.xls` is refused ("Save it as .xlsx first",
-  default), `.csv`, `.tsv`, `.txt` (as TSV).
+- Files: `.ods`, `.fods`, `.xlsx`, `.xlsm` (an XLSX workbook, its macros dropped and reported, never run:
+  [D85](standard-mapping.md#defaults)), `.xls` is refused ("Save it as .xlsx first", default), `.csv`, `.tsv`, `.txt`
+  (as TSV).
 - Every guard of [Security](../../research/sheets-open-standard/security.md) applies, each with its named rejection.
 - Telemetry: `Spreadsheet · Imported · <Format>` with the location.
 
