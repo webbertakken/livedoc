@@ -968,11 +968,11 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      'Fetch one IMPORTDATA, IMPORTFEED, IMPORTHTML or IMPORTXML for a spreadsheet: its rows of text, or the error the cell shows. Kept an hour for everyone; fresh=1 skips that. 400 import_invalid; 403 imports_not_allowed until an Editor allows access; 404 workbook_not_found; 429 past 60 fetches a minute per spreadsheet. Off unless the deployment sets SHEET_IMPORTS=on. Read access.',
+      'Fetch one IMPORTDATA, IMPORTFEED, IMPORTHTML or IMPORTXML for a spreadsheet: its rows of text, or the error the cell shows; kind=image answers the bytes of a picture IMAGE shows (PNG, JPEG, GIF, WebP, AVIF, BMP or an icon, by its first bytes), else 422 image_refused. Kept an hour for everyone; fresh=1 skips that. 400 import_invalid; 403 imports_not_allowed until an Editor allows access; 404 workbook_not_found; 429 past 60 fetches a minute per spreadsheet. Off unless the deployment sets SHEET_IMPORTS=on. Read access.',
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [
-      { name: 'kind', required: true, description: 'data, feed, html or xml.' },
+      { name: 'kind', required: true, description: 'data, feed, html, xml or image.' },
       { name: 'url', required: true, description: 'The address to fetch, http or https.' },
       {
         name: 'query',
@@ -997,7 +997,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
         why: { type: 'string' },
       },
     },
-    statuses: [200, 400, 401, 403, 404, 410, 429],
+    statuses: [200, 400, 401, 403, 404, 410, 422, 429],
   },
   {
     method: 'POST',

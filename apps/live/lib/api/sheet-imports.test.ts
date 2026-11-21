@@ -1,8 +1,8 @@
 // A spreadsheet's imports through the api (docs/specs/029-sheets/imports.md): the answer a cell shows for each way
-// the api answers, and Allow Access.
+// the api answers, a picture IMAGE shows, and Allow Access.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IMPORT_WORDS, type ImportAsk } from '@livedoc/sheets';
-import { allowSheetImports, fetchSheetImport } from './sheet-imports';
+import { allowSheetImports, fetchSheetImage, fetchSheetImport } from './sheet-imports';
 
 const scope = { documentId: 'd 1', ownerId: 'o', shareCode: 'CODE', tabId: 't1' };
 const ask: ImportAsk = {
@@ -72,5 +72,45 @@ describe('allowSheetImports', () => {
     expect(await allowSheetImports({ ...scope, tabId: null })).toEqual(body);
     expect(f.mock.calls[0]![0]).toMatch(/\/api\/documents\/d%201\/workbook\/imports$/);
     expect(f.mock.calls[0]![1]!.method).toBe('POST');
+  });
+});
+
+describe('fetchSheetImage', () => {
+  it('asks the imports door for a picture and keeps its bytes', async () => {
+    const f = vi.fn(
+      async (_url: string, _init?: RequestInit) =>
+        new Response(new Uint8Array([1, 2]), { headers: { 'content-type': 'image/png' } }),
+    );
+    vi.stubGlobal('fetch', f);
+    const blob = await fetchSheetImage(scope, 'https://a.example/a.png');
+    expect(blob?.type).toBe('image/png');
+    expect(blob?.size).toBe(2);
+    const url = new URL(f.mock.calls[0]![0], 'https://x.test');
+    expect(url.pathname).toBe('/api/documents/d%201/workbook/imports');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      kind: 'image',
+      url: 'https://a.example/a.png',
+      tabId: 't1',
+    });
+  });
+
+  it('is nothing for a refusal, an answer that is no picture, or no answer', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ error: 'image_refused' }, { status: 422 })),
+    );
+    expect(await fetchSheetImage(scope, 'https://a.example/a.png')).toBeNull();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ error: '#N/A', why: 'off' })),
+    );
+    expect(await fetchSheetImage(scope, 'https://a.example/a.png')).toBeNull();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('offline');
+      }),
+    );
+    expect(await fetchSheetImage(scope, 'https://a.example/a.png')).toBeNull();
   });
 });

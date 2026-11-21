@@ -91,10 +91,21 @@ export function svgImage(body: string, cacheControl: string): Response {
 // A PNG image body (the share card, docs/specs/013-workspace/share-link-previews.md), with `svgImage`'s CORS and the
 // caller's `Cache-Control`. A raster runs no script, so it needs no CSP.
 export function pngImage(body: Uint8Array | ReadableStream, cacheControl: string): Response {
+  return rasterImage(body, 'image/png', cacheControl);
+}
+
+// A raster image body of a known type (a PNG, a picture IMAGE shows): never sniffed by the browser as anything else.
+// Opened on its own it is a sandboxed document that loads nothing, should the type ever be wrong.
+export function rasterImage(
+  body: Uint8Array | ReadableStream,
+  type: string,
+  cacheControl: string,
+): Response {
   const headers = new Headers(CORS_HEADERS);
-  headers.set('Content-Type', 'image/png');
+  headers.set('Content-Type', type);
   headers.set('Cache-Control', cacheControl);
   headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Content-Security-Policy', "default-src 'none'; sandbox");
   return new Response(body, { headers });
 }
 

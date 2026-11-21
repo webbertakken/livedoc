@@ -170,9 +170,17 @@ export function tooBig(rows: number, cols: number): boolean {
 }
 
 // Apply a scalar function element-wise when any argument is an array (Sheets' ARRAYFORMULA lifting).
-export function lift(values: Value[], each: (xs: Scalar[]) => Value): Value {
+// `each` is told its place in the answer (0, 0 when no argument is an array).
+export function lift(
+  values: Value[],
+  each: (xs: Scalar[], at: readonly [number, number]) => Value,
+): Value {
   const arrays = values.filter(isArray);
-  if (arrays.length === 0) return each(values.map((v) => scalarOf(v)));
+  if (arrays.length === 0)
+    return each(
+      values.map((v) => scalarOf(v)),
+      [0, 0],
+    );
   let rows = 1;
   let cols = 1;
   for (const a of arrays) {
@@ -192,7 +200,15 @@ export function lift(values: Value[], each: (xs: Scalar[]) => Value): Value {
   const out: Value[][] = [];
   for (let i = 0; i < rows; i++) {
     const row: Value[] = [];
-    for (let j = 0; j < cols; j++) row.push(scalarOf(each(values.map((v) => pick(v, i, j)))));
+    for (let j = 0; j < cols; j++)
+      row.push(
+        scalarOf(
+          each(
+            values.map((v) => pick(v, i, j)),
+            [i, j],
+          ),
+        ),
+      );
     out.push(row);
   }
   return { rows: out };

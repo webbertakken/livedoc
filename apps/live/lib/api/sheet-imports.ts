@@ -1,9 +1,11 @@
 // A spreadsheet's imports through the api (docs/specs/029-sheets/imports.md): one import fetched, read as the answer
-// its cells show, and Allow Access. Called from the sheet chunk only (the store and the spreadsheet surface).
+// its cells show, a picture IMAGE shows, and Allow Access. Called from the sheet chunk only (the store and the
+// spreadsheet surface).
 import type { WorkbookSettingsResponse } from '@livedoc/api-schema';
 import { importParams, IMPORT_WORDS, type ImportAnswer, type ImportAsk } from '@livedoc/sheets';
 import { API_BASE, apiFetch, apiHeaders, expectOk } from './core';
 import type { SheetsScope } from './sheets';
+import { debugLog } from '@/lib/debug-log';
 
 function workbookUrl(scope: SheetsScope, rest: string, query = new URLSearchParams()): string {
   if (scope.tabId) query.set('tabId', scope.tabId);
@@ -32,6 +34,23 @@ export async function fetchSheetImport(
   console.warn('[sheet imports] refused', { status: res.status, code });
   if (code === 'imports_not_allowed') return { error: '#REF!', why: IMPORT_WORDS.blocked };
   return notFetched;
+}
+
+/** A picture IMAGE shows, fetched by the api (imports.md "IMAGE"); null when it is refused or not fetched. */
+export async function fetchSheetImage(scope: SheetsScope, url: string): Promise<Blob | null> {
+  try {
+    const res = await apiFetch(
+      workbookUrl(scope, 'imports', new URLSearchParams({ kind: 'image', url })),
+      {
+        headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
+      },
+    );
+    if (res.ok && res.headers.get('content-type')?.startsWith('image/')) return await res.blob();
+    debugLog('[sheet images] not shown', { status: res.status });
+  } catch (e) {
+    debugLog('[sheet images] request failed', { reason: (e as Error).name });
+  }
+  return null;
 }
 
 /** An Editor allows the spreadsheet's imports, for good; the room sends the workbook to everyone. */

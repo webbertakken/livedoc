@@ -40,6 +40,7 @@ export type FrameSource = {
   volatile(reader: CellNo, name: string): void;
   readsCards(reader: CellNo): void;
   importOf(reader: CellNo, request: ImportRequest): ImportRead | null;
+  importAccess(reader: CellNo): 'allowed' | 'blocked' | null;
   watchNow<T>(run: () => T): [T, boolean];
 };
 
@@ -132,6 +133,7 @@ export function cellFrame(
     volatile: (name) => src.volatile(reader, name),
     readsCards: () => src.readsCards(reader),
     importOf: (request) => src.importOf(reader, request),
+    importAccess: () => src.importAccess(reader),
     watchNow: (run) => src.watchNow(run),
   };
 }

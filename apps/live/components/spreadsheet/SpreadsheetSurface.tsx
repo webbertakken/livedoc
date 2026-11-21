@@ -25,6 +25,7 @@ import { useAttachedSheetStore } from '@/components/sheets/useAttachedSheetStore
 import { useFormulaInput } from '@/components/sheets/useFormulaInput';
 import { useFormulaPointing } from '@/components/sheets/useFormulaPointing';
 import { useSheetActions } from '@/components/sheets/useSheetActions';
+import { SheetImagesContext, useSheetImageLoader } from '@/components/sheets/sheet-images-context';
 import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { apiDownloadWorkbook } from '@/lib/api/workbook';
@@ -212,6 +213,7 @@ function SheetWorkspace({
 }) {
   const palette = planPalette(useCanvasSurface());
   const [announcement, setAnnouncement] = useState('');
+  const images = useSheetImageLoader(bridge.scope, bridge.importsAllowed === true);
   const { sheet, workbook } = useMemo(
     () => ({ sheet: store.sheet(sheetId)!, workbook: store.workbook(tabId) }),
     [store, sheetId, tabId, version], // oxlint-disable-line react/exhaustive-deps
@@ -234,19 +236,21 @@ function SheetWorkspace({
   });
   return (
     <SheetControllerProvider value={c}>
-      <div
-        data-spreadsheet-surface="ready"
-        className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden"
-        style={{ backgroundColor: palette.surface, color: palette.text }}
-      >
-        {bridge.importsAllowed === false && store.usesImports() ? (
-          <ImportAccessBar scope={bridge.scope} canAllow={bridge.canEdit && bridge.canShape} />
-        ) : null}
-        <SheetParts bridge={bridge} />
-        <p aria-live="polite" className="sr-only">
-          {announcement}
-        </p>
-      </div>
+      <SheetImagesContext.Provider value={images}>
+        <div
+          data-spreadsheet-surface="ready"
+          className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden"
+          style={{ backgroundColor: palette.surface, color: palette.text }}
+        >
+          {bridge.importsAllowed === false && store.usesImports() ? (
+            <ImportAccessBar scope={bridge.scope} canAllow={bridge.canEdit && bridge.canShape} />
+          ) : null}
+          <SheetParts bridge={bridge} />
+          <p aria-live="polite" className="sr-only">
+            {announcement}
+          </p>
+        </div>
+      </SheetImagesContext.Provider>
     </SheetControllerProvider>
   );
 }

@@ -12,6 +12,9 @@ import type { CellNo } from './cell-numbers';
 /** What a formula reads of an import: its answer, `pending` until it arrives, `blocked` until access is allowed. */
 export type ImportRead = ImportAnswer | 'pending' | 'blocked';
 
+// The key the cells that only ask for access are noted under: never an import's (those are JSON arrays).
+const ACCESS_KEY = 'access';
+
 export class ImportBook {
   private allowed: boolean;
   private readonly answers = new Map<string, ImportAnswer>();
@@ -39,6 +42,12 @@ export class ImportBook {
     if (answer) return answer;
     this.ask(key, false);
     return 'pending';
+  }
+
+  /** Whether `reader` may fetch, the read noted so allowing works it out again; nothing is asked (IMAGE's page fetches). */
+  access(reader: CellNo): 'allowed' | 'blocked' {
+    this.note(ACCESS_KEY, reader);
+    return this.allowed ? 'allowed' : 'blocked';
   }
 
   private note(key: string, reader: CellNo): void {

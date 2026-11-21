@@ -126,6 +126,7 @@ describe('lookup', () => {
     ['=XLOOKUP("Zed", A1:A3, D1:D3, "none")', 'none'],
     ['=XLOOKUP(2, B1:D1, B1:D1)', { e: '#N/A' }],
     ['=XLOOKUP(10, D1:D3, A1:C3)', 'Apple'],
+    ['=SUM(XLOOKUP(10, A1:D1, A1:D3))', 60],
     ['=XLOOKUP("red", C1:C3, A1:A3, , 0, -1)', 'Cherry'],
     ['=LOOKUP(2, B1:B3, D1:D3)', 20],
     ['=LOOKUP(2.5, B1:D3)', 20],

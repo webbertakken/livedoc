@@ -28,6 +28,8 @@ import {
 import { RULE_ARROW_PX, ruleCellDraw } from './rules/sheet-rule-draw';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 import { cellBox, mergeAt, type Geometry, type GridWindow } from './sheet-geometry';
+import { SheetImage } from './SheetImage';
+import { useSheetImages } from './sheet-images-context';
 import { SheetSparkline } from './SheetSparkline';
 
 const CELL_PAD = 4;
@@ -105,6 +107,7 @@ function shownValue(v: Value): { text: string; pending: boolean } {
 
 function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
   const { sheet, workbook, geometry: g, scroll, palette, locale } = p;
+  const images = useSheetImages();
   // Stored colours are drawn for this Sheet's surface: pale fills tinted on a dark one, ink kept readable (sheet.md
   // "Readable cells").
   const surface = {
@@ -262,6 +265,18 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             ink={f?.fc}
             accent={palette.focus}
             muted={palette.muted}
+            {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
+          />,
+        );
+      // An IMAGE draws its picture in the cell where the page fetches them (imports.md "IMAGE"); its value is "".
+      const picture = images && !pending.pending ? workbook.imageOf(sheet.id, r, c) : null;
+      if (picture && images)
+        out.push(
+          <SheetImage
+            key={`${key}i`}
+            image={picture}
+            loader={images}
+            box={box}
             {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
           />,
         );

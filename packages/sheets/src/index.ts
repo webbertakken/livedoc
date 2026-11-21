@@ -55,6 +55,7 @@ export * from './fit-widths';
 export * from './sheet-starters';
 export * from './hyperlink';
 export * from './sparkline/sparkline-shapes';
+export { imageHost, type CellImage, type ImageMode } from './images/cell-image';
 export type { Sparkline, SparklineKind, SparklineOptions } from './sparkline/sparkline-read';
 export * from './template-starts';
 export * from './template-start-ids';
