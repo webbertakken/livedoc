@@ -983,7 +983,7 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   JOIN: D('delimiter, value1, [value2, …]', 'Joins values with a delimiter', '=JOIN(" / ", A2:C2)'),
   REGEXMATCH: D(
     'text, pattern',
-    'TRUE when text matches a regular expression',
+    'TRUE when text matches a regular expression (RE2, as Google Sheets reads it)',
     '=REGEXMATCH(A2, "^\\d+$")',
   ),
   REGEXEXTRACT: D(
@@ -993,8 +993,8 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   ),
   REGEXREPLACE: D(
     'text, pattern, replacement',
-    'Replaces what matches a regular expression',
-    '=REGEXREPLACE(A2, "\\s+", " ")',
+    'Replaces what matches a regular expression; $1 puts back a group, $0 the match',
+    '=REGEXREPLACE(A2, "(\\w+) (\\w+)", "$2 $1")',
   ),
   ENCODEURL: D('text', 'Text written so it can go in a web address’s query', '=ENCODEURL(A2)'),
   ISURL: D('value', 'Whether a value is a web address', '=ISURL(A2)'),

@@ -11,32 +11,18 @@ import {
   flatScalars,
   flatValues,
   fn,
-  lift,
   opt,
   scalarFn,
   textArg,
-  valueArg,
   type FnDef,
 } from '../fn';
-import { err, isError, toNumber, toText, type Scalar, type Value } from '../values';
+import { err, isError, toNumber, toText, type Scalar } from '../values';
 import { boundedText } from '../operators';
-import { textEach, textFn, texts } from './text-args';
+import { textFn, texts } from './text-args';
 import { BYTE_TEXT_FUNCTIONS } from './text-bytes';
 import { NUMBER_TEXT_FUNCTIONS } from './text-numbers';
+import { REGEX_TEXT_FUNCTIONS } from './text-regex';
 import { regex, wildcardSource } from './text-patterns';
-
-// A REGEX function: its text must be text, not a number, as Google's are (formulas.md "Text").
-function regexFn(n: number, each: (ts: string[]) => Value): FnDef {
-  return fn(n, n, (args, f) =>
-    lift(
-      args.map((a) => valueArg(a, f)),
-      (xs) =>
-        typeof xs[0] === 'number'
-          ? err('#VALUE!', 'A regular expression reads text, not a number')
-          : textEach(xs, [], n, n, (ts) => each(ts)),
-    ),
-  );
-}
 
 /** Every value of every argument, ranges read whole, joined in order: CONCATENATE, and CONCAT as the standards have it. */
 export const JOIN_VALUES: FnDef = fn(1, MANY, (args, f) => {
@@ -197,24 +183,7 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     // A part that reads as a number is one, as in Google Sheets: SPLIT("3,4", ",") sums to 7, not 0.
     return { rows: [parts.map(splitPart)] };
   }),
-  REGEXMATCH: regexFn(2, ([t, p]) => {
-    const re = regex(p!, t!);
-    return re instanceof RegExp ? re.test(t!) : re;
-  }),
-  // The whole match, or its capture groups, one column each.
-  REGEXEXTRACT: regexFn(2, ([t, p]) => {
-    const re = regex(p!, t!);
-    if (!(re instanceof RegExp)) return re;
-    const m = re.exec(t!);
-    if (!m) return err('#N/A', 'The pattern did not match');
-    if (m.length === 1) return m[0];
-    if (m.length === 2) return m[1] ?? '';
-    return { rows: [m.slice(1).map((g) => g ?? '')] };
-  }),
-  REGEXREPLACE: regexFn(3, ([t, p, by]) => {
-    const re = regex(p!, t!, 'gu');
-    return re instanceof RegExp ? t!.replace(re, by!) : re;
-  }),
+  ...REGEX_TEXT_FUNCTIONS,
   ...BYTE_TEXT_FUNCTIONS,
   ...NUMBER_TEXT_FUNCTIONS,
 };

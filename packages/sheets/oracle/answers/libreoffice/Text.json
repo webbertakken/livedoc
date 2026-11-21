@@ -2,7 +2,7 @@
   "source": "libreoffice",
   "category": "Text",
   "by": "LibreOffice 26.8.3.1",
-  "made": "2026-11-20",
+  "made": "2026-11-21",
   "answers": {
     "ARABIC.1": [[14]],
     "ARABIC.2": [[2013]],
@@ -294,6 +294,41 @@
         }
       ]
     ],
+    "REGEXMATCH.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXMATCH.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXMATCH.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXMATCH.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXMATCH.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
     "REGEXEXTRACT.1": [
       [
         {
@@ -318,6 +353,20 @@
         }
       ]
     ],
+    "REGEXEXTRACT.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXEXTRACT.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
     "REGEXREPLACE.1": [
       [
         {
@@ -333,6 +382,48 @@
       ]
     ],
     "REGEXREPLACE.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.9": [
       [
         {
           "e": "#NAME?"

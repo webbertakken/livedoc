@@ -49,6 +49,9 @@ export const REGEX_WORK_MAX = 10_000_000;
 // `(a+)+$` on 24 characters (1.7e7) took 317 ms, `((a+)+)+$` on 16 (4.3e7) 401 ms, `.*a.*a.*a.*a.*a.*b` on 40 (5.7e6)
 // 110 ms, so this budget keeps the worst a cell can ask for to a few hundred milliseconds. Safe range: 1e6 to 3e7.
 export const REGEX_BACKTRACK_MAX = 10_000_000;
+// RE2 patterns kept translated (formula/functions/text-patterns.ts); a sheet's REGEX formulas share a few. Each is a
+// pattern's length or a few class ranges more; safe from 16 to 10,000.
+export const RE2_CACHE_MAX = 256;
 
 // A new sheet's sizes, and the smallest a person can drag to.
 export const COLUMN_WIDTH_NEW = 120;
