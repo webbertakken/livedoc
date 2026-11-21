@@ -123,7 +123,7 @@ diagram:
   [refusal](opening.md#refusals) with **Download**, and it syncs out byte for byte. Only a file too large to hold, or a
   server with no file storage, keeps a PDF out.
 - **None is opened by converting it.** Opening a PDF as a text document is another kind's import, a copy
-  ([Files and print](../034-text-documents/files-and-print.md#importing)).
+  ([Files and print](../034-text-documents/files-and-print.md#opening)).
 
 ## The single-tab document
 
