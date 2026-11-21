@@ -1,8 +1,14 @@
 // The clipboard's plain text (docs/specs/034-text-documents/text-and-paragraphs.md "Clipboard"): copied, a line per
 // paragraph, a list item after its marker as drawn; pasted, a paragraph per line in the formatting at the caret.
-import { Fragment, Slice, type ResolvedPos } from 'prosemirror-model';
+import { Fragment, Slice, type Node as PmNode, type ResolvedPos } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
-import { CHECK_MARKS, ListMarkers, type ListMarker, type ListPlace } from '@livedoc/text-documents';
+import {
+  CHECK_MARKS,
+  FOOTNOTE,
+  ListMarkers,
+  type ListMarker,
+  type ListPlace,
+} from '@livedoc/text-documents';
 import { placeOf, type Lists } from './text-document-lists';
 
 // Characters no paragraph holds: controls other than the tab (line ends are split into paragraphs first).
@@ -26,14 +32,27 @@ export function selectionMarkers(state: EditorState, lists: Lists): (ListMarker 
   return markers.slice(selection.$from.index(0), selection.$to.index(0) + 1);
 }
 
-/** A slice as plain text: a line per paragraph, a whole list item after its marker; kept content and breaks none. */
-export function plainTextOf(slice: Slice, markers: readonly (ListMarker | null)[] = []): string {
+/**
+ * A slice as plain text: a line per paragraph, a whole list item after its marker, a footnote's mark its number (by
+ * its story); kept content and breaks none.
+ */
+export function plainTextOf(
+  slice: Slice,
+  markers: readonly (ListMarker | null)[] = [],
+  noteNumbers: ReadonlyMap<string, number> = new Map(),
+): string {
+  const leaf = (node: PmNode): string =>
+    node.type.name === FOOTNOTE
+      ? String(noteNumbers.get(String((node.attrs as { story: unknown }).story)) ?? '')
+      : (node.type.spec.leafText?.(node) ?? '');
   const lines: string[] = [];
   slice.content.forEach((node, _offset, index) => {
     if (node.type.name !== 'paragraph') return;
     const marker = markers[index];
     const whole = index > 0 || slice.openStart === 0;
-    lines.push(`${marker && whole ? `${markerText(marker)} ` : ''}${node.textContent}`);
+    lines.push(
+      `${marker && whole ? `${markerText(marker)} ` : ''}${node.textBetween(0, node.content.size, '', leaf)}`,
+    );
   });
   return lines.join('\n');
 }

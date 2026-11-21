@@ -28,6 +28,8 @@ export type ClipboardHtmlContext = {
   readonly styles: readonly Style[];
   readonly defaults: StyleDefaults;
   readonly lists: Lists;
+  /** Each footnote's number by its story, as the document numbers them (page-layout.md "Footnotes"). */
+  readonly noteNumbers?: ReadonlyMap<string, number>;
 };
 
 const OMIT = 'data-livedoc-omit';
@@ -210,8 +212,11 @@ export function clipboardSerializer(read: () => ClipboardHtmlContext): DOMSerial
     kept_inline: () => omitted('span'),
     // A field pastes elsewhere as the text it shows (page-layout.md "Page numbers").
     field: (node) => ['span', typeof node.attrs.text === 'string' ? node.attrs.text : ''],
-    // A footnote's mark: left out until the clipboard knows its number (page-layout.md "Footnotes").
-    footnote: () => omitted('span'),
+    // A footnote's mark: its number in superscript (page-layout.md "Footnotes").
+    footnote: (node) => [
+      'sup',
+      String(context.noteNumbers?.get(String((node.attrs as { story: unknown }).story)) ?? ''),
+    ],
   };
 
   class ClipboardSerializer extends DOMSerializer {

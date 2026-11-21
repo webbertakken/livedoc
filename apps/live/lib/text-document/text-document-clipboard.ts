@@ -17,7 +17,10 @@ import {
   placeFragment,
   readFragment,
   type FragmentContext,
+  type NodeJson,
 } from './text-document-clipboard-fragment';
+import type { ClipboardNotes } from './text-document-footnote-clipboard';
+import { noteNumbersOf } from './text-document-footnotes-edit';
 import { clipboardSerializer } from './text-document-clipboard-html';
 import { plainTextOf, plainTextSlice, selectionMarkers } from './text-document-clipboard-text';
 import type { ListsAccess } from './text-document-lists';
@@ -46,6 +49,8 @@ export type ClipboardOptions = {
   onLeftOut: (count: number) => void;
   /** Whether Markdown text pasted is read as Markdown (Preferences > Automatically detect Markdown). */
   markdown?: () => boolean;
+  /** Footnotes' writing copied with their marks, and a note of its own for each mark pasted (page-layout.md "Footnotes"). */
+  notes?: ClipboardNotes;
 };
 
 // What the paste being read found, from its parse to its insertion.
@@ -55,6 +60,8 @@ type Reading = {
   pasted?: PastedLists;
   lists: Record<string, ListDefinition>;
   left: number;
+  /** The footnotes' writing a fragment brought, placed, by its story. */
+  notes?: Readonly<Record<string, NodeJson[]>>;
 };
 
 /** A pasted list's definition: its first level's kind for every level, each level read drawn as it was. */
@@ -132,10 +139,15 @@ export function clipboardPlugin({
   lists,
   onLeftOut,
   markdown = () => false,
+  notes,
 }: ClipboardOptions): Plugin {
   let reading: Reading | null = null;
-  const contextOrEmpty = () =>
-    read() ?? { styles: [], defaults: { paragraph: {}, text: {} }, lists: {} };
+  // The writing copied from, so the copy numbers its footnotes as the document does.
+  let editor: EditorView | null = null;
+  const contextOrEmpty = () => ({
+    ...(read() ?? { styles: [], defaults: { paragraph: {}, text: {} }, lists: {} }),
+    noteNumbers: editor ? noteNumbersOf(editor.state.doc) : new Map<string, number>(),
+  });
 
   // A paste's new lists are written first, on the paste's own undo step.
   const begin = (view: EditorView) => {
@@ -152,7 +164,9 @@ export function clipboardPlugin({
     if (context)
       dom.firstElementChild?.setAttribute(
         FRAGMENT_ATTRIBUTE,
-        JSON.stringify(makeFragment(slice, context)),
+        JSON.stringify(
+          makeFragment(slice, { ...context, ...(notes ? { readNote: notes.read } : {}) }),
+        ),
       );
     event.preventDefault();
     data.clearData();
@@ -165,10 +179,22 @@ export function clipboardPlugin({
   };
 
   return new Plugin({
+    view: (view) => {
+      editor = view;
+      return {
+        destroy: () => {
+          editor = null;
+        },
+      };
+    },
     props: {
       clipboardSerializer: clipboardSerializer(contextOrEmpty),
       clipboardTextSerializer: (slice, view) =>
-        plainTextOf(slice, selectionMarkers(view.state, lists.read())),
+        plainTextOf(
+          slice,
+          selectionMarkers(view.state, lists.read()),
+          noteNumbersOf(view.state.doc),
+        ),
       clipboardParser: pastedHtmlParser(textDocumentSchema),
       handleDOMEvents: {
         copy: (view, event) => copyOut(view, event, false),
@@ -192,6 +218,7 @@ export function clipboardPlugin({
                 slice,
                 lists: { ...placed.lists },
                 left: placed.left,
+                notes: placed.notes,
               };
               // Nothing more to parse: the fragment is the paste.
               return '';
@@ -220,11 +247,15 @@ export function clipboardPlugin({
         return plainTextSlice(text, $context);
       },
       transformPasted: (slice) => {
-        if (!reading) return slice;
-        if (reading.slice) return reading.slice;
-        return reading.source === 'Html' || reading.source === 'Markdown'
-          ? placePasted(slice, reading, read())
-          : slice;
+        const pasted = (): Slice => {
+          if (!reading) return slice;
+          if (reading.slice) return reading.slice;
+          return reading.source === 'Html' || reading.source === 'Markdown'
+            ? placePasted(slice, reading, read())
+            : slice;
+        };
+        // Each footnote's mark pasted or dropped names a note of its own.
+        return notes ? notes.place(pasted(), reading?.notes ?? {}) : pasted();
       },
       handlePaste: (view, _event, slice) => {
         if (!reading) return false;

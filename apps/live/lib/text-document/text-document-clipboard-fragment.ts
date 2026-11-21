@@ -5,6 +5,7 @@
 import type { Slice } from 'prosemirror-model';
 import {
   canonical,
+  FOOTNOTE,
   KEPT_BLOCK,
   KEPT_INLINE,
   ListDefinition,
@@ -50,6 +51,8 @@ export type FragmentContext = FragmentPlace & {
   readonly styles: readonly Style[];
   readonly defaults: StyleDefaults;
   readonly lists: Lists;
+  /** A footnote's writing by its story, as the document holds it (page-layout.md "Footnotes"). */
+  readonly readNote?: (story: string) => NodeJson[] | null;
 };
 
 export type ClipboardFragment = {
@@ -59,6 +62,8 @@ export type ClipboardFragment = {
   readonly styles: readonly Style[];
   readonly defaults: StyleDefaults;
   readonly lists: Lists;
+  /** The writing of each footnote whose mark is copied, by its story. */
+  readonly notes?: Readonly<Record<string, NodeJson[]>>;
 };
 
 export type FragmentRead =
@@ -70,6 +75,8 @@ export type PlacedFragment = {
   readonly slice: SliceJson;
   readonly lists: Lists;
   readonly left: number;
+  /** The copied footnotes' writing, placed as the slice is. */
+  readonly notes: Readonly<Record<string, NodeJson[]>>;
 };
 
 function walk(nodes: readonly NodeJson[] | undefined, visit: (node: NodeJson) => void): void {
@@ -100,7 +107,14 @@ export function makeFragment(slice: Slice, context: FragmentContext): ClipboardF
   const json = (slice.toJSON() as SliceJson | null) ?? {};
   const styleIds = new Set<string>();
   const listIds = new Set<string>();
+  const notes: Record<string, NodeJson[]> = {};
   walk(json.content, (node) => {
+    const story = attrsOf(node).story;
+    if (node.type === FOOTNOTE && typeof story === 'string' && !Object.hasOwn(notes, story))
+      notes[story] = context.readNote?.(story) ?? [];
+  });
+  const all = [...(json.content ?? []), ...Object.values(notes).flat()];
+  walk(all, (node) => {
     const style = attrsOf(node).style;
     if (node.type === 'paragraph' && typeof style === 'string') styleIds.add(style);
     const place = placeOf(node);
@@ -119,6 +133,7 @@ export function makeFragment(slice: Slice, context: FragmentContext): ClipboardF
     lists: Object.fromEntries(
       [...listIds].filter((id) => context.lists[id]).map((id) => [id, context.lists[id]!]),
     ),
+    ...(Object.keys(notes).length > 0 ? { notes } : {}),
   };
 }
 
@@ -135,7 +150,7 @@ const isStyle = (value: unknown): boolean =>
 
 function isFragment(value: unknown): value is ClipboardFragment {
   if (!isRecord(value) || value.v !== FRAGMENT_VERSION) return false;
-  const { source, slice, styles, defaults, lists } = value;
+  const { source, slice, styles, defaults, lists, notes } = value;
   return (
     isRecord(source) &&
     typeof source.documentId === 'string' &&
@@ -149,7 +164,8 @@ function isFragment(value: unknown): value is ClipboardFragment {
     isRecord(defaults.paragraph) &&
     isRecord(defaults.text) &&
     isRecord(lists) &&
-    Object.values(lists).every((list) => isRecord(list) && Array.isArray(list.levels))
+    Object.values(lists).every((list) => isRecord(list) && Array.isArray(list.levels)) &&
+    (notes === undefined || (isRecord(notes) && Object.values(notes).every(Array.isArray)))
   );
 }
 
@@ -236,7 +252,7 @@ export function placeFragment(
 ): PlacedFragment {
   const { source } = fragment;
   if (source.documentId === target.documentId && source.tabId === target.tabId)
-    return { slice: fragment.slice, lists: {}, left: 0 };
+    return { slice: fragment.slice, lists: {}, left: 0, notes: fragment.notes ?? {} };
   const style = styleMapper(fragment, target);
   const taken = new Set([...Object.keys(target.lists), ...(target.listIds ?? [])]);
   const listIds = new Map<string, string>();
@@ -310,5 +326,8 @@ export function placeFragment(
     });
 
   const content = placeNodes(fragment.slice.content);
-  return { slice: { ...fragment.slice, content }, lists, left };
+  const notes = Object.fromEntries(
+    Object.entries(fragment.notes ?? {}).map(([story, blocks]) => [story, placeNodes(blocks)]),
+  );
+  return { slice: { ...fragment.slice, content }, lists, left, notes };
 }

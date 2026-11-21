@@ -112,7 +112,12 @@ describe('readFragment', () => {
 describe('placeFragment', () => {
   it('places a fragment as copied in the tab it came from, kept content included', () => {
     const fragment = copied();
-    expect(placeFragment(fragment, odf)).toEqual({ slice: fragment.slice, lists: {}, left: 0 });
+    expect(placeFragment(fragment, odf)).toEqual({
+      slice: fragment.slice,
+      lists: {},
+      left: 0,
+      notes: {},
+    });
   });
 
   it('maps built-in styles by role, and makes another style Normal text with its look', () => {
@@ -158,5 +163,59 @@ describe('placeFragment', () => {
   it('gives each list one new id, past those the target holds or has taken', () => {
     const placed = placeFragment(copied(), { ...ooxml, listIds: ['L7'] });
     expect(Object.keys(placed.lists)).toEqual(['L8']);
+  });
+});
+
+// page-layout.md "Footnotes": a copied mark's note travels with it, placed in another document's terms as the slice is.
+describe('footnotes in the fragment', () => {
+  const noted = schema.node('doc', null, [
+    schema.nodes.paragraph!.create({ style: 'Standard' }, [
+      schema.text('Said'),
+      schema.nodes.footnote!.create({ story: 'n1' }),
+    ]),
+  ]);
+  const noteWriting: NodeJson[] = [
+    {
+      type: 'paragraph',
+      attrs: { style: 'Quote', list: { id: 'L1', level: 0 } },
+      content: [{ type: 'text', text: 'Source' }],
+    },
+  ];
+  const withNotes: FragmentContext = {
+    ...odf,
+    readNote: (story) => (story === 'n1' ? noteWriting : null),
+  };
+  const copiedNote = () => {
+    const state = EditorState.create({
+      doc: noted,
+      selection: TextSelection.create(noted, 1, noted.content.size - 1),
+    });
+    return makeFragment(state.selection.content(), withNotes);
+  };
+
+  it('carries the writing of each copied mark’s note, with the styles and lists it names', () => {
+    const fragment = copiedNote();
+    expect(fragment.notes).toEqual({ n1: noteWriting });
+    expect(fragment.styles.map((s) => s.id)).toContain('Quote');
+    expect(Object.keys(fragment.lists)).toEqual(['L1']);
+    expect(copied().notes).toBeUndefined();
+  });
+
+  it('reads notes back, and refuses notes of the wrong shape', () => {
+    const fragment = copiedNote();
+    expect(readFragment(JSON.stringify(fragment))).toEqual({ ok: true, fragment });
+    expect(readFragment(JSON.stringify({ ...fragment, notes: { n1: 'x' } }))).toEqual({
+      ok: false,
+      reason: 'shape',
+    });
+  });
+
+  it('places the notes as copied in the same tab, and in another document’s terms elsewhere', () => {
+    expect(placeFragment(copiedNote(), odf).notes).toEqual({ n1: noteWriting });
+    const placed = placeFragment(copiedNote(), ooxml);
+    const [note] = placed.notes.n1!;
+    expect(note!.attrs!.style).toBe('Normal');
+    expect(note!.attrs!.list).toEqual({ id: 'L2', level: 0 });
+    expect(placed.lists).toEqual({ L2: ListDefinition.of('number') });
   });
 });

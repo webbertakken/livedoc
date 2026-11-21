@@ -115,3 +115,8 @@ export function noteStartMarks(view: EditorView, format: TextDocumentFormat): vo
   const empty = state.doc.childCount === 1 && state.doc.firstChild!.content.size === 0;
   if (empty) view.dispatch(state.tr.setStoredMarks([type.create({ value: NOTE_SIZE_PT })]));
 }
+
+/** Each note's number by its story: its mark's place among the body's marks, from 1. */
+export function noteNumbersOf(doc: PmNode): Map<string, number> {
+  return new Map(marksIn(doc).map((mark, index) => [mark.story, index + 1]));
+}
