@@ -22,6 +22,10 @@ import type { Env } from './types';
 // tighter of the two (https://developers.cloudflare.com/workers/platform/limits/#subrequests; 10,000 on Paid).
 const WORKER_SERVICE_SUBREQUESTS = 1_000;
 
+// The 2,000-document run asserts counts, not speed. In SQLite with coverage on a shared CI runner it takes about
+// 5 s, past vitest's 5 s default; this bounds a hang without judging time.
+const LARGE_RUN_TIMEOUT_MS = 30_000;
+
 let warn: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {});
@@ -120,26 +124,30 @@ describe('purge tombstones', () => {
     expect(purged).toEqual(['A']);
   });
 
-  it("keep a daily Trash run of 2,000 documents inside one invocation's subrequests", async () => {
-    const db = sqliteD1();
-    const { env, purged } = rooms(db);
-    const ids = Array.from({ length: 2_000 }, (_, i) => `d${String(i).padStart(4, '0')}`);
-    const insert = db.sql.prepare(
-      `INSERT INTO documents (id, owner_id, name, saved_at, created_at, trashed_at) VALUES (?, 'o', ?, ?, ?, ?)`,
-    );
-    for (const id of ids) insert.run(id, id, T0, T0, T0);
-    let d1Calls = 0;
-    const counted = countingD1(env.DB, () => (d1Calls += 1));
-    const runEnv = Object.create(env, { DB: { value: counted } }) as Env;
-    const roomCalls = roomCallBudget();
-    await retryRoomPurges(runEnv, T0 + 31 * DAY, roomCalls);
-    expect(await purgeExpiredTrash(runEnv, T0 + 31 * DAY, { roomCalls })).toBe(2_000);
-    expect(purged.length).toBe(ROOM_PURGE_MAX_PER_RUN);
-    expect(d1Calls).toBeGreaterThan(0);
-    expect(purged.length + d1Calls).toBeLessThan(WORKER_SERVICE_SUBREQUESTS);
-    // The rest keep their tombstones for the next runs.
-    expect(tombstones(db.sql)).toHaveLength(2_000 - ROOM_PURGE_MAX_PER_RUN);
-  });
+  it(
+    "keep a daily Trash run of 2,000 documents inside one invocation's subrequests",
+    async () => {
+      const db = sqliteD1();
+      const { env, purged } = rooms(db);
+      const ids = Array.from({ length: 2_000 }, (_, i) => `d${String(i).padStart(4, '0')}`);
+      const insert = db.sql.prepare(
+        `INSERT INTO documents (id, owner_id, name, saved_at, created_at, trashed_at) VALUES (?, 'o', ?, ?, ?, ?)`,
+      );
+      for (const id of ids) insert.run(id, id, T0, T0, T0);
+      let d1Calls = 0;
+      const counted = countingD1(env.DB, () => (d1Calls += 1));
+      const runEnv = Object.create(env, { DB: { value: counted } }) as Env;
+      const roomCalls = roomCallBudget();
+      await retryRoomPurges(runEnv, T0 + 31 * DAY, roomCalls);
+      expect(await purgeExpiredTrash(runEnv, T0 + 31 * DAY, { roomCalls })).toBe(2_000);
+      expect(purged.length).toBe(ROOM_PURGE_MAX_PER_RUN);
+      expect(d1Calls).toBeGreaterThan(0);
+      expect(purged.length + d1Calls).toBeLessThan(WORKER_SERVICE_SUBREQUESTS);
+      // The rest keep their tombstones for the next runs.
+      expect(tombstones(db.sql)).toHaveLength(2_000 - ROOM_PURGE_MAX_PER_RUN);
+    },
+    LARGE_RUN_TIMEOUT_MS,
+  );
 });
 
 describe('a create of an id whose room still owes a purge', () => {
