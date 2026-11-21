@@ -83,6 +83,7 @@ import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSa
 import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
 import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
+import { TEXT_DOCUMENT_MODES } from '@/lib/text-document/text-document-modes';
 import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
 import { TextDocumentRightPanel } from './TextDocumentRightPanel';
 import { useTextDocumentWatermark } from './useTextDocumentWatermark';
@@ -204,7 +205,7 @@ export function TextDocumentSurface({
     mode,
     choice: modeChoice,
     actions: modeActions,
-  } = useOfficeMode(level, 'TextDocumentMode');
+  } = useOfficeMode(level, TEXT_DOCUMENT_MODES, 'TextDocumentMode');
   const writes = canEdit && mode === 'editing';
   // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back. Line numbers is
   // an Editor's (page-layout.md "Line numbers").
@@ -678,7 +679,7 @@ export function TextDocumentSurface({
         scope={scope}
         documentName={documentName}
         format={format}
-        level={levelInMode(level, mode)}
+        level={levelInMode(TEXT_DOCUMENT_MODES, level, mode)}
         editorActions={editorActions}
         mode={modeChoice}
         caret={caret}

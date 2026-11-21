@@ -9,7 +9,7 @@ import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
 import { TextDocument, TextDocumentState } from '@livedoc/text-documents';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
-import { OFFICE_MODES } from '@/lib/office/office-mode';
+import { TEXT_DOCUMENT_MODES } from './text-document-modes';
 import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
@@ -127,7 +127,7 @@ describe('the text document menus', () => {
         CONTINUE_NUMBERING,
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
-        ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
+        ...TEXT_DOCUMENT_MODES.filter((m) => m.status === 'built').map((m) => m.item),
         // The panels' items (useOfficePanels), bound by the surface.
         ...TEXT_DOCUMENT_PANELS.map((p) => p.item),
         // View > Show ruler and Show non-printing characters (useTextDocumentViewToggle), bound by the surface.
