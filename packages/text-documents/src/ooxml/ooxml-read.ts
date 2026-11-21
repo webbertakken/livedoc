@@ -730,7 +730,8 @@ class RunReader {
           break;
         case 'br': {
           const type = wVal(c, 'type');
-          if (type === 'column' && this.out.length === 0 && !this.columnBreak) this.columnBreak = true;
+          if (type === 'column' && this.out.length === 0 && !this.columnBreak)
+            this.columnBreak = true;
           else if (type === undefined || type === 'textWrapping')
             this.push('\n', style, props, ctx.link, kept);
           else this.keepWhole(r, rPr, c, ctx, props, style);
