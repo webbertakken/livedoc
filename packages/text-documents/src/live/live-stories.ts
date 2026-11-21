@@ -4,11 +4,15 @@
 import * as Y from 'yjs';
 import type { Block } from '../model/blocks';
 import {
+  HEADER_FOOTER_KINDS,
   HEADER_FOOTER_SLOTS,
   type HeaderFooter,
   type HeaderFooterSlot,
   type SectionHeaders,
+  type SectionHeadersOf,
 } from '../model/headers';
+import { BODY_FRAGMENT } from './live-root';
+import { DOCUMENT_MAP, SECTION_BREAK } from './live-names';
 
 /** A root fragment holding a header's or footer's blocks is named this, then its id. */
 export const STORY_PREFIX = 'story:';
@@ -17,15 +21,40 @@ export const STORY_PREFIX = 'story:';
 export type LiveStory = { readonly story: string; readonly part?: string };
 
 /** A section's headers and footers as the live state holds them. */
-export type LiveHeaders = {
-  readonly header?: Readonly<Partial<Record<HeaderFooterSlot, LiveStory>>>;
-  readonly footer?: Readonly<Partial<Record<HeaderFooterSlot, LiveStory>>>;
-  readonly differentFirst?: true;
-  readonly differentOddEven?: true;
-};
+export type LiveHeaders = SectionHeadersOf<LiveStory>;
 
 export const storyFragment = (doc: Y.Doc, id: string): Y.XmlFragment =>
   doc.getXmlFragment(`${STORY_PREFIX}${id}`);
+
+/** The first section's headers as held, in the document map. */
+export const liveFirstHeaders = (doc: Y.Doc): LiveHeaders | undefined =>
+  (doc.getMap<unknown>(DOCUMENT_MAP).get('section') as { headers?: LiveHeaders } | undefined)
+    ?.headers;
+
+/** Each section's headers as held: the first section's, then each section break's, in the body's order. */
+export function liveSectionHeaders(doc: Y.Doc): (LiveHeaders | undefined)[] {
+  const later = doc
+    .getXmlFragment(BODY_FRAGMENT)
+    .toArray()
+    .flatMap((node) =>
+      node instanceof Y.XmlElement && node.nodeName === SECTION_BREAK
+        ? [node.getAttribute('headers') as unknown as LiveHeaders | undefined]
+        : [],
+    );
+  return [liveFirstHeaders(doc), ...later];
+}
+
+/** Every story a section names, each once: section by section, headers before footers, default, first, even. */
+export function liveStoryIds(doc: Y.Doc): string[] {
+  const ids = new Set<string>();
+  for (const headers of liveSectionHeaders(doc))
+    for (const kind of HEADER_FOOTER_KINDS)
+      for (const slot of HEADER_FOOTER_SLOTS) {
+        const story = headers?.[kind]?.[slot]?.story;
+        if (typeof story === 'string') ids.add(story);
+      }
+  return [...ids];
+}
 
 /** Writes stories into their fragments, each once, giving each section's headers as ids. */
 export class StoryWriter {

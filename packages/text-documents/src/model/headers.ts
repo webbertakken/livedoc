@@ -16,23 +16,27 @@ export type HeaderFooter = {
   readonly part?: string;
 };
 
-export type HeaderFooterSet = Readonly<Partial<Record<HeaderFooterSlot, HeaderFooter>>>;
+/** A kind's slots, each holding a header (or what names one, as the live state's story ids). */
+export type HeaderFooterSetOf<T> = Readonly<Partial<Record<HeaderFooterSlot, T>>>;
+export type HeaderFooterSet = HeaderFooterSetOf<HeaderFooter>;
 
 /** A section's own headers and footers; a slot absent is linked to the previous section's. */
-export type SectionHeaders = {
-  readonly header?: HeaderFooterSet;
-  readonly footer?: HeaderFooterSet;
+export type SectionHeadersOf<T> = {
+  readonly header?: HeaderFooterSetOf<T>;
+  readonly footer?: HeaderFooterSetOf<T>;
   readonly differentFirst?: true;
   readonly differentOddEven?: true;
 };
+export type SectionHeaders = SectionHeadersOf<HeaderFooter>;
 
 /** A section's headers and footers with linking followed: what its pages show. */
-export type ResolvedHeaders = {
-  readonly header: HeaderFooterSet;
-  readonly footer: HeaderFooterSet;
+export type ResolvedHeadersOf<T> = {
+  readonly header: HeaderFooterSetOf<T>;
+  readonly footer: HeaderFooterSetOf<T>;
   readonly differentFirst: boolean;
   readonly differentOddEven: boolean;
 };
+export type ResolvedHeaders = ResolvedHeadersOf<HeaderFooter>;
 
 /** The header and footer margins a section with none has: 0.5 in (assumed: Google's). */
 export const HEADER_FOOTER_MARGIN_PT = 36;
@@ -43,7 +47,7 @@ export const HeadersAndFooters = {
     setup.margins[kind] ?? HEADER_FOOTER_MARGIN_PT,
   /** The slot a page shows: first on the section's first page, even on an even page, when switched on. */
   slotOf: (
-    headers: SectionHeaders | undefined,
+    headers: { readonly differentFirst?: boolean; readonly differentOddEven?: boolean } | undefined,
     firstOfSection: boolean,
     pageNumber: number,
   ): HeaderFooterSlot => {
@@ -52,12 +56,12 @@ export const HeadersAndFooters = {
     return 'default';
   },
   /** Each section's headers and footers, its own or else the previous section's, slot by slot; none for the first. */
-  resolve: (sections: readonly (SectionHeaders | undefined)[]): ResolvedHeaders[] => {
-    const out: ResolvedHeaders[] = [];
+  resolve: <T>(sections: readonly (SectionHeadersOf<T> | undefined)[]): ResolvedHeadersOf<T>[] => {
+    const out: ResolvedHeadersOf<T>[] = [];
     for (const own of sections) {
       const previous = out.at(-1);
-      const kind = (k: HeaderFooterKind): HeaderFooterSet => {
-        const set: Partial<Record<HeaderFooterSlot, HeaderFooter>> = {};
+      const kind = (k: HeaderFooterKind): HeaderFooterSetOf<T> => {
+        const set: Partial<Record<HeaderFooterSlot, T>> = {};
         for (const slot of HEADER_FOOTER_SLOTS) {
           const h = own?.[k]?.[slot] ?? previous?.[k][slot];
           if (h) set[slot] = h;

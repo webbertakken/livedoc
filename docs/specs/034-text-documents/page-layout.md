@@ -228,7 +228,16 @@ A section's pages each have a **header** in the top margin and a **footer** in t
   margin; the footer up from the footer margin. A header taller than the room above the top margin pushes the body's
   first line down by what it overflows, and a footer taller than its room pushes the body's foot up, as Word's and
   Google's (default: the room is the margin less the header margin). While the body is edited a header and footer are
-  drawn in the writing's ink at full strength (Google's); an empty one draws nothing.
+  drawn in the writing's ink at full strength (Google's); an empty one draws nothing and pushes nothing.
+- **A page's section** for its header and footer is the section its first line belongs to, as for its setup; the
+  page is that section's **first page** when it starts with the section's first line (the document's first page for
+  the first section), so a continuous section's first page header shows only where the section starts a page
+  (default). A page's number counts every page laid out before it, blank ones too.
+- A **blank page** left for an odd or even page section start draws no header or footer (default).
+- A page draws the same header as every other page showing it, formatting, lists and tab stops alike; one header
+  shared by sections of different widths is laid out at each section's text width.
+- **Read**: a drawn header or footer is never read with the body, nor reached by the caret, until it is entered
+  ([editing](#editing-headers-and-footers)); its text is found by the document's search (the digest's search text).
 - **Pageless**, on a phone and with print layout off no header or footer is drawn; they are kept and come back.
 - In the file:
   - ODF: a master page's `style:header`, `style:header-first` and `style:header-left` (even pages), and the same for

@@ -12,6 +12,7 @@ import {
   readLiveStyles,
 } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
+import { storyFragment } from './live/live-stories';
 import { DOCUMENT_MAP, LISTS_MAP, STYLES_MAP } from './live/live-names';
 import type { Section } from './model/sections';
 import type { ListDefinition } from './model/lists';
@@ -58,6 +59,13 @@ const SEED = Uint8Array.of(
 );
 
 const PARAGRAPH = 'paragraph';
+
+const paragraphsOf = (fragment: Y.XmlFragment): Body =>
+  fragment
+    .toArray()
+    .flatMap((node) =>
+      node instanceof Y.XmlElement && node.nodeName === PARAGRAPH ? [{ text: textOf(node) }] : [],
+    );
 
 function textOf(element: Y.XmlElement): string {
   return element
@@ -127,12 +135,9 @@ export const TextDocumentState = {
     Y.diffUpdate(update, stateVector),
   body: (doc: Y.Doc): Y.XmlFragment => doc.getXmlFragment(BODY_FRAGMENT),
   /** The body's paragraphs as plain values. */
-  paragraphs: (doc: Y.Doc): Body =>
-    TextDocumentState.body(doc)
-      .toArray()
-      .flatMap((node) =>
-        node instanceof Y.XmlElement && node.nodeName === PARAGRAPH ? [{ text: textOf(node) }] : [],
-      ),
+  paragraphs: (doc: Y.Doc): Body => paragraphsOf(TextDocumentState.body(doc)),
+  /** A header's or footer's paragraphs as plain values (page-layout.md "Headers and footers"). */
+  storyParagraphs: (doc: Y.Doc, id: string): Body => paragraphsOf(storyFragment(doc, id)),
   /** Replace the whole body with these paragraphs, as one transaction; an empty body keeps one empty paragraph. */
   replaceBody: (doc: Y.Doc, body: Body): void => {
     const fragment = TextDocumentState.body(doc);

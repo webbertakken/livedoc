@@ -11,7 +11,7 @@ import { wholeOf } from '../testing/compare';
 import { TextDocumentState } from '../text-document-state';
 import { textDocumentDigest } from '../digest';
 import { BODY_BLOCKS, DOCUMENT_MAP, KEPT_INLINE, TEXT_PROPERTY_MARKS } from './live-names';
-import { storyFragment } from './live-stories';
+import { liveStoryIds, storyFragment } from './live-stories';
 import { CONSTRUCTS } from '../testing/constructs';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
@@ -239,6 +239,20 @@ describe('the live layout', () => {
       expect(
         headers.header?.default?.blocks.map((b) => b.type === 'paragraph' && Paragraph.text(b)),
       ).toEqual(['Kept']);
+    });
+
+    it('names each story a section holds once, in section order, headers before footers', () => {
+      const doc = TextDocumentState.load([TextDocumentState.fromDocument(headed())]);
+      const texts = liveStoryIds(doc).map((id) =>
+        TextDocumentState.storyParagraphs(doc, id)
+          .map((p) => p.text)
+          .join(),
+      );
+      expect(texts).toEqual(['Header', 'First page header', 'Even page header', 'Footer']);
+    });
+
+    it('names none in a document without headers', () => {
+      expect(liveStoryIds(TextDocumentState.load())).toEqual([]);
     });
 
     it('keeps the first section’s headers when its setup is set', () => {
