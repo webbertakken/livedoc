@@ -41,6 +41,7 @@ Specs live in numbered category folders: the reserved `001`–`005` first (visio
 - ./032-wikis/README.md - when working on wikis (global and project): what makes a folder one, the entry page, wiki health, search, links between pages
 - ./033-information-security/README.md - when working on the ISMS (ISO 27001-aligned): scope, policy, assets, risks, Annex A controls
 - ./034-text-documents/README.md - when working on text documents: the Google Docs-like kind on ODF and OOXML, its parity matrix, editing surface, layout, review, files, storage, agents, the migration from Pages mode
+- ./035-pdf-documents/README.md - when working on PDF documents: the kind that holds one PDF and stays a PDF, its editing modes (Viewing, Reviewing, Editing), the Acrobat parity matrix, opening, saving, marks, comments, fields, signing, real editing, Dark pages, agents
 
 ## Workflow
 
