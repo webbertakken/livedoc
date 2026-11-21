@@ -18,7 +18,7 @@ const inEach = (formula: string, cells: Record<string, string> = {}) =>
     FORMULA_MEANINGS.map((meaning) => [meaning, calc(formula, cells, { meaning })]),
   );
 
-const error = (e: string) => expect.objectContaining({ e });
+const error = (e: string): unknown => expect.objectContaining({ e });
 
 describe('the meanings', () => {
   it('are Google’s and the two standards’', () => {
