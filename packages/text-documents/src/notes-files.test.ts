@@ -105,7 +105,9 @@ describe('footnotes in Word files', () => {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml',
     );
     expect(
-      pkg.relationships.get('word/document.xml')!.filter((r) => r.type === RELATIONSHIP_TYPES.footnotes),
+      pkg.relationships
+        .get('word/document.xml')!
+        .filter((r) => r.type === RELATIONSHIP_TYPES.footnotes),
     ).toHaveLength(1);
     // The note's link lies in the footnotes part's own relationships.
     expect(pkg.relationships.get('word/footnotes.xml')).toEqual([
@@ -148,12 +150,13 @@ describe('footnotes in Word files', () => {
     // The mark's superscript is every mark's: not its own formatting.
     expect(notes[0]!.props).toEqual({});
     const [p] = document.body as Paragraph[];
-    expect(p!.inlines.filter((i) => i.type === 'kept').map((i) => i.type === 'kept' && i.name)).toEqual([
-      'footnoteReference',
-      'footnoteReference',
-    ]);
+    expect(
+      p!.inlines.filter((i) => i.type === 'kept').map((i) => i.type === 'kept' && i.name),
+    ).toEqual(['footnoteReference', 'footnoteReference']);
     const footnotes = (await parts(write(document, 'docx'))).text('word/footnotes.xml')!;
-    expect(footnotes).toContain('<w:footnote w:id="1"><w:p><w:r><w:t xml:space="preserve">Custom</w:t></w:r></w:p></w:footnote>');
+    expect(footnotes).toContain(
+      '<w:footnote w:id="1"><w:p><w:r><w:t xml:space="preserve">Custom</w:t></w:r></w:p></w:footnote>',
+    );
     expect(footnotes).toContain('<w:footnote w:id="2">');
     const back = await read(write(document, 'docx'));
     expect(notesOf(back.document).map(noteTexts)).toEqual([[' Own']]);
@@ -186,7 +189,9 @@ describe('footnotes in Word files', () => {
     const { pkg } = await parts(write(document, 'docx'));
     expect(pkg.parts.has('word/footnotes.xml')).toBe(false);
     expect(
-      pkg.relationships.get('word/document.xml')!.some((r) => r.type === RELATIONSHIP_TYPES.footnotes),
+      pkg.relationships
+        .get('word/document.xml')!
+        .some((r) => r.type === RELATIONSHIP_TYPES.footnotes),
     ).toBe(false);
   });
 
