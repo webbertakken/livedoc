@@ -121,6 +121,7 @@ const SCALAR_RESULT = new Set([
 ]);
 
 const ARRAY_RESULT = new Set([
+  'QUERY',
   'MAP',
   'SCAN',
   'BYROW',

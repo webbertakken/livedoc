@@ -19,6 +19,7 @@ import { dims, err, isError, scalarOf, toBool, type Value, type ValueArray } fro
 import { ARRAY_SHAPE_FUNCTIONS } from './array-shape';
 import { MATRIX_FUNCTIONS } from './matrices';
 import { REGRESSION_FUNCTIONS } from './regression';
+import { QUERY_FUNCTIONS } from './query';
 import { everyColumn, keyIdentity, rowKeys, sortedIndexes, type RowKey } from './sorting';
 
 const NOTHING = err('#N/A', 'No rows matched');
@@ -223,8 +224,18 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
   ...ARRAY_SHAPE_FUNCTIONS,
   ...MATRIX_FUNCTIONS,
   ...REGRESSION_FUNCTIONS,
+  ...QUERY_FUNCTIONS,
 };
 
 // Their arguments are an array context (formulas.md "Arrays and spills"): ranges and arrays taken whole.
-for (const name of ['ARRAYFORMULA', 'FILTER', 'SORT', 'SORTN', 'SORTBY', 'UNIQUE', 'TRANSPOSE'])
+for (const name of [
+  'ARRAYFORMULA',
+  'QUERY',
+  'FILTER',
+  'SORT',
+  'SORTN',
+  'SORTBY',
+  'UNIQUE',
+  'TRANSPOSE',
+])
   ARRAY_FUNCTIONS[name] = arrayArgs(ARRAY_FUNCTIONS[name]!);

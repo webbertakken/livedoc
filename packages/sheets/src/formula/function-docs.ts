@@ -1151,6 +1151,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     '=MAKEARRAY(2, 3, LAMBDA(r, c, r*c))',
   ),
   // Arrays
+  QUERY: D(
+    'data, query, [headers]',
+    "A query in Google's query language over a range",
+    '=QUERY(A1:C20, "select A, sum(C) group by A", 1)',
+  ),
   FILTER: D(
     'range, condition1, [condition2, …]',
     'The rows that meet every condition',

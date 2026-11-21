@@ -1,16 +1,29 @@
 {
   "category": "Google",
   "data": [
-    [1, 10, 100, "apple"],
-    [2, 20, 200, "Pear"],
-    [3, 30, null, "fig"],
-    [4, 40, 400, null],
-    [5, 50, 500, null],
-    [6, 60, null, null],
-    [7, 70, 700, null],
-    [8, 80, 800, null],
-    [9, 90, null, null],
-    [10, 100, 1000, null]
+    [
+      1,
+      10,
+      100,
+      "apple",
+      null,
+      "name",
+      "dept",
+      "lunchTime",
+      "salary",
+      "hireDate",
+      "age",
+      "isSenior"
+    ],
+    [2, 20, 200, "Pear", null, "John", "Eng", 0.5, 1000, 38430, 35, true],
+    [3, 30, null, "fig", null, "Dave", "Eng", 0.5, 500, 38826, 27, false],
+    [4, 40, 400, null, null, "Sally", "Eng", 0.5416666666666666, 600, 38635, 30, false],
+    [5, 50, 500, null, null, "Ben", "Sales", 0.5, 400, 37539, 32, true],
+    [6, 60, null, null, null, "Dana", "Sales", 0.5, 350, 38238, 25, false],
+    [7, 70, 700, null, null, "Mike", "Marketing", 0.5416666666666666, 800, 38362, 24, true],
+    [8, 80, 800, null, null, null, null, null, null, null, null, null],
+    [9, 90, null, null, null, null, null, null, null, null, null, null],
+    [10, 100, 1000, null, null, null, null, null, null, null, null, null]
   ],
   "cases": [
     {
@@ -177,6 +190,291 @@
     {
       "id": "ARRAYFORMULA.31",
       "f": "=VLOOKUP(Data!A1:A3, Data!A1:B10, 2, FALSE)"
+    },
+    {
+      "id": "QUERY.1",
+      "f": "=QUERY(Data!F1:L7, \"select F where I > 700\", 1)",
+      "rows": 3,
+      "expect": [["name"], ["John"], ["Mike"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Where: select name where salary > 700), the header row as the label",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.2",
+      "f": "=QUERY(Data!F1:L7, \"select H, avg(I), count(K) group by L, H\", 1)",
+      "rows": 5,
+      "cols": 3,
+      "expect": [
+        ["lunchTime", "avg salary", "count age"],
+        [0.5, 425, 2],
+        [0.5416666666666666, 600, 1],
+        [0.5, 700, 2],
+        [0.5416666666666666, 800, 1]
+      ],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Group By example; Sheets labels an aggregate \"avg salary\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.3",
+      "f": "=QUERY(Data!F1:L7, \"select sum(I) pivot G\", 1)",
+      "rows": 2,
+      "cols": 3,
+      "expect": [
+        ["Eng", "Marketing", "Sales"],
+        [2100, 800, 750]
+      ],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Pivot: select sum(salary) pivot dept; one aggregate: the values alone)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.4",
+      "f": "=QUERY(Data!F1:L7, \"select L, sum(I) group by L pivot G\", 1)",
+      "rows": 3,
+      "cols": 4,
+      "expect": [
+        ["isSenior", "Eng", "Marketing", "Sales"],
+        [false, 1100, null, 350],
+        [true, 1000, 800, 400]
+      ],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Pivot with group by; a missing combination is null)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.5",
+      "f": "=QUERY(Data!F1:L7, \"select sum(I), max(I) pivot G\", 1)",
+      "rows": 2,
+      "cols": 6,
+      "expect": [
+        [
+          "Eng sum salary",
+          "Marketing sum salary",
+          "Sales sum salary",
+          "Eng max salary",
+          "Marketing max salary",
+          "Sales max salary"
+        ],
+        [2100, 800, 750, 1000, 800, 400]
+      ],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Pivot with two aggregations: the values, the aggregate and the label)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.6",
+      "f": "=QUERY(Data!F1:L7, \"select F, I order by I desc limit 2\", 1)",
+      "rows": 3,
+      "cols": 2,
+      "expect": [
+        ["name", "salary"],
+        ["John", 1000],
+        ["Mike", 800]
+      ],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Order By, Limit)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.7",
+      "f": "=QUERY(Data!F1:L7, \"select F where G = 'Eng' and I >= 600\", 1)",
+      "rows": 3,
+      "expect": [["name"], ["John"], ["Sally"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Where: and)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.8",
+      "f": "=QUERY(Data!F1:L7, \"select F where F contains 'a'\", 1)",
+      "rows": 4,
+      "expect": [["name"], ["Dave"], ["Sally"], ["Dana"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (contains, case-sensitive)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.9",
+      "f": "=QUERY(Data!F1:L7, \"select F where F starts with 'D'\", 1)",
+      "rows": 3,
+      "expect": [["name"], ["Dave"], ["Dana"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (starts with)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.10",
+      "f": "=QUERY(Data!F1:L7, \"select F where F like 'Da%'\", 1)",
+      "rows": 3,
+      "expect": [["name"], ["Dave"], ["Dana"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (like: % matches any run)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.11",
+      "f": "=QUERY(Data!F1:L7, \"select F where F matches '.*e'\", 1)",
+      "rows": 3,
+      "expect": [["name"], ["Dave"], ["Mike"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (matches: the whole value)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.12",
+      "f": "=QUERY(Data!F1:L7, \"select F where L = true\", 1)",
+      "rows": 4,
+      "expect": [["name"], ["John"], ["Ben"], ["Mike"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (boolean literal)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.13",
+      "f": "=QUERY(Data!F1:L7, \"select upper(F) where K < 26 label upper(F) ''\", 1)",
+      "rows": 2,
+      "expect": [["DANA"], ["MIKE"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (upper; every label empty: no label row)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.14",
+      "f": "=QUERY(Data!F1:L7, \"select year(J), month(J) where F = 'John' label year(J) '', month(J) ''\", 1)",
+      "cols": 2,
+      "expect": [[2005, 2]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (year; month is zero-based)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.15",
+      "f": "=QUERY(Data!F1:L7, \"select dayOfWeek(J) where F = 'John' label dayOfWeek(J) ''\", 1)",
+      "expect": [[7]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (dayOfWeek: Sunday is 1; 2005-03-19 a Saturday)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.16",
+      "f": "=QUERY(Data!F1:L7, \"select count(F) where I > 2000\", 1)",
+      "rows": 2,
+      "expect": [["count name"], [0]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (count: nulls not counted)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.17",
+      "f": "=QUERY(Data!F1:L7, \"select F where I > 5000\", 1)",
+      "expect": [["name"]],
+      "cite": "https://support.google.com/docs/answer/3093343 (header rows are labels; no row passes)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.18",
+      "f": "=QUERY(Data!F1:L7, \"select Col1 where Col4 > 700\", 1)",
+      "rows": 3,
+      "expect": [["name"], ["John"], ["Mike"]],
+      "cite": "https://support.google.com/docs/answer/3093343 (\"QUERY can accept either \"Col\" notation or \"A, B\" notation\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.19",
+      "f": "=QUERY({Data!F2:F7, Data!I2:I7}, \"select Col1 where Col2 < 450\", 0)",
+      "rows": 2,
+      "expect": [["Ben"], ["Dana"]],
+      "cite": "https://support.google.com/docs/answer/3093343 (an array's columns are Col1, Col2, ...)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.20",
+      "f": "=QUERY(Data!F1:L7, \"select X\", 1)",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093343 (an unknown column does not parse)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.21",
+      "f": "=QUERY(Data!F2:L7, \"select F where I > 5000\", 0)",
+      "expect": [
+        [
+          {
+            "e": "#N/A"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093343 (\"Query completed with an empty output.\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.22",
+      "f": "=QUERY(Data!F1:L7, \"select F offset 4\", 1)",
+      "rows": 3,
+      "expect": [["name"], ["Dana"], ["Mike"]],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (Offset)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.23",
+      "f": "=QUERY(Data!F1:L7, \"select F, I/1000 where I > 700 label I/1000 ''\", 1)",
+      "rows": 3,
+      "cols": 2,
+      "expect": [
+        ["name", ""],
+        ["John", 1],
+        ["Mike", 0.8]
+      ],
+      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (arithmetic; Label)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
+    },
+    {
+      "id": "QUERY.24",
+      "f": "=QUERY(Data!F1:L7, \"select F where I > 700\")",
+      "rows": 3,
+      "expect": [["name"], ["John"], ["Mike"]],
+      "cite": "https://support.google.com/docs/answer/3093343 (headers left out: guessed from the content)",
+      "differs": {
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+      }
     }
   ]
 }
