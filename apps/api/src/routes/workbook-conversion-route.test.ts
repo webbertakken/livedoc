@@ -176,7 +176,8 @@ describe('a spreadsheet opened from a file', () => {
       { r: kit.layout.rows[0], c: kit.layout.cols[0], i: { f: { t: 'CEILING(-2.5,-1)', r: [] } } },
     ];
     const made = kit.document('opened', true, cells as never);
-    const workbook = WorkbookRecord.opened(made.workbook!, 'ods');
+    const created = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'Europe/London' });
+    const workbook = WorkbookRecord.opened(created, 'ods');
     expect((await kit.call({ path: '', body: { ...made, workbook } })).status).toBe(201);
   });
 
