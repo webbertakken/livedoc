@@ -4,7 +4,14 @@
 // format ever sees an id and the model never sees a format.
 import type { PackageRefusal } from '@livedoc/office-packages';
 import { layoutIndex } from '../layout';
-import { emptyLayout, splitCellKey, type CellInput, type Sheet, type SheetLayout } from '../sheet';
+import {
+  emptyLayout,
+  splitCellKey,
+  type CellFormat,
+  type CellInput,
+  type Sheet,
+  type SheetLayout,
+} from '../sheet';
 import { makeSheetId, type Rand } from '../ids';
 import { compileFormula, renderFormula, type SheetHandle, type SheetsCtx } from '../formula/stored';
 import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
@@ -12,6 +19,7 @@ import type { Workbook } from '../engine/workbook';
 import { SheetLimits } from '../sheet-limits';
 import { SheetName } from '../workbook/sheet-name';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
+import { formatCodeOf, formatFromCode } from './number-format-code';
 
 export type FileValue =
   { k: 'n'; v: number } | { k: 's'; v: string } | { k: 'b'; v: boolean } | { k: 'e'; v: ErrorCode };
@@ -26,6 +34,8 @@ export type FileCell = {
   formula?: string;
   value?: FileValue;
   spans?: { rows: number; cols: number };
+  // Its number format as a format code (standard-mapping.md "Number formats in the file"); none for General.
+  format?: string;
 };
 
 export type FileSheet = { name: string; rows: number; cols: number; cells: FileCell[] };
@@ -46,7 +56,8 @@ export type FileLoss =
   | { k: 'sheets_cut'; kept: number; had: number }
   | { k: 'sheet_unread'; sheet: string }
   | { k: 'sheet_renamed'; from: string; to: string }
-  | { k: 'text_cut'; sheet: string; cells: number };
+  | { k: 'text_cut'; sheet: string; cells: number }
+  | { k: 'format_unread'; sheet: string; r: number; c: number };
 
 function fileValueOf(value: Scalar): FileValue | undefined {
   if (value === null) return undefined;
@@ -82,24 +93,47 @@ function spilledBlock(
   };
 }
 
+// Cells in order, one a position: a cell with only a format inside a spilled block lends the block's cell its format.
+function inOrder(cells: FileCell[]): FileCell[] {
+  cells.sort((a, b) => a.r - b.r || a.c - b.c);
+  const out: FileCell[] = [];
+  for (const cell of cells) {
+    const last = out.at(-1);
+    if (last && last.r === cell.r && last.c === cell.c) Object.assign(last, { ...cell, ...last });
+    else out.push(cell);
+  }
+  return out;
+}
+
 /**
  * The workbook's sheets, in tab order, as a file holds them, with every value the engine shows now: a spilled
- * formula with its block, the block's other cells holding the values it spilled.
+ * formula with its block, the block's other cells holding the values it spilled; each cell's number format as the code
+ * `locale` writes it (standard-mapping.md "Number formats in the file").
  */
-export function workbookFileOf(engine: Workbook, sheets: readonly Sheet[]): WorkbookFile {
+export function workbookFileOf(
+  engine: Workbook,
+  sheets: readonly Sheet[],
+  locale: string,
+): WorkbookFile {
   return {
     sheets: sheets.map((sheet) => {
       const index = layoutIndex(sheet.layout);
       const ctx = engine.ctxFor(sheet.id);
       const cells: FileCell[] = [];
       for (const [key, cell] of sheet.cells) {
-        if (!cell.input) continue;
+        const format = formatCodeOf(cell.format, locale) ?? undefined;
+        if (!cell.input && format === undefined) continue;
         const { r: rowId, c: colId } = splitCellKey(key);
         const r = index.rowPos.get(rowId);
         const c = index.colPos.get(colId);
         if (r === undefined || c === undefined) continue;
-        const value = shownValue(engine, sheet.id, r, c);
         const out: FileCell = { r, c };
+        if (format !== undefined) out.format = format;
+        if (!cell.input) {
+          cells.push(out);
+          continue;
+        }
+        const value = shownValue(engine, sheet.id, r, c);
         if ('f' in cell.input) {
           out.formula = renderFormula(cell.input.f, ctx);
           const spans = spilledBlock(engine, sheet.id, r, c);
@@ -111,12 +145,11 @@ export function workbookFileOf(engine: Workbook, sheets: readonly Sheet[]): Work
         if (value) out.value = value;
         cells.push(out);
       }
-      cells.sort((a, b) => a.r - b.r || a.c - b.c);
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,
         cols: sheet.layout.cols.length,
-        cells,
+        cells: inOrder(cells),
       };
     }),
   };
@@ -156,7 +189,7 @@ export type SheetFromFile = {
   id: string;
   title: string;
   layout: SheetLayout;
-  cells: { r: string; c: string; i: CellInput }[];
+  cells: { r: string; c: string; i?: CellInput; f?: CellFormat }[];
 };
 
 export type SheetsFromFile = { sheets: SheetFromFile[]; losses: FileLoss[] };
@@ -172,6 +205,19 @@ function literalInput(value: FileValue): CellInput | null {
     case 'e':
       return null;
   }
+}
+
+function cellFormatOf(
+  cell: FileCell,
+  sheet: string,
+  locale: string,
+  losses: FileLoss[],
+): CellFormat | undefined {
+  if (cell.format === undefined) return undefined;
+  const read = formatFromCode(cell.format, locale);
+  if (read.ok) return read.format;
+  losses.push({ k: 'format_unread', sheet, r: cell.r, c: cell.c });
+  return undefined;
 }
 
 type Made = { file: FileSheet; id: string; title: string; layout: SheetLayout };
@@ -207,9 +253,14 @@ function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] 
  * The sheets a file makes (a spreadsheet opened from it): each its grid (at least a new sheet's, at most what the
  * workbook's limits leave) and its cells, formulas compiled against the file's own sheets. A cell or a sheet past the
  * limits, a sheet name taken or too long, and a formula LiveDoc cannot read are each named in `losses`; the last
- * keeps its value.
+ * keeps its value. Each number format is read in `locale`, the workbook's (standard-mapping.md "Number formats in the
+ * file"); one that cannot be read is named too, its cell kept.
  */
-export function sheetsFromFile(file: WorkbookFile, rand: Rand = Math.random): SheetsFromFile {
+export function sheetsFromFile(
+  file: WorkbookFile,
+  locale: string,
+  rand: Rand = Math.random,
+): SheetsFromFile {
   const losses: FileLoss[] = [];
   const made = madeSheets(file, rand, losses);
   const handles: SheetHandle[] = made.map((m) => ({
@@ -238,7 +289,9 @@ export function sheetsFromFile(file: WorkbookFile, rand: Rand = Math.random): Sh
         else losses.push({ k: 'formula_unread', sheet: m.title, r: cell.r, c: cell.c });
       }
       input ??= cell.value ? literalInput(cell.value) : null;
-      if (input) cells.push({ r, c, i: input });
+      const format = cellFormatOf(cell, m.title, locale, losses);
+      if (input || format)
+        cells.push({ r, c, ...(input ? { i: input } : {}), ...(format ? { f: format } : {}) });
     }
     return { id: m.id, title: m.title, layout: m.layout, cells };
   });

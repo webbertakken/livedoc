@@ -21,7 +21,7 @@ export function workbookFileFor(sheets: readonly Sheet[], record: WorkbookRecord
     limits: SheetLimits.spreadsheet,
     iteration: record.settings.iterate,
   });
-  return workbookFileOf(engine, sheets);
+  return workbookFileOf(engine, sheets, record.settings.locale);
 }
 
 export function writeWorkbook(

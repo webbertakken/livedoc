@@ -22,7 +22,7 @@ import { fromExcelFormula } from './excel-formula';
 import { shiftFormulaText } from './formula-text-shift';
 import { isoDateSerial } from './ods-read';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
-import { dateStyles } from './xlsx-dates';
+import { dateStyles, readCellStyles, type XlsxCellStyle } from './xlsx-styles';
 import {
   DATE1904_OFFSET,
   fromXstring,
@@ -55,6 +55,7 @@ const SPREADSHEET_TYPES: ReadonlySet<string> = new Set([
 type Book = {
   ns: string;
   strings: readonly string[];
+  styles: readonly XlsxCellStyle[];
   dates: ReadonlySet<number>;
   date1904: boolean;
   budget: { cells: number };
@@ -168,6 +169,22 @@ function wrappedBlocks(cells: FileCell[], cache: ReadonlySet<string>): void {
   }
 }
 
+// A cell's number format, as its style's code; a style the file does not define is a named loss.
+function cellFormat(
+  cell: XmlElement,
+  book: Book,
+  sheet: string,
+  at: { r: number; c: number },
+): string | undefined {
+  const style = book.styles[Number(attributeOf(cell, '', 's') ?? 0)];
+  if (!style) return undefined;
+  if ('unknown' in style) {
+    book.losses.push({ k: 'format_unread', sheet, r: at.r, c: at.c });
+    return undefined;
+  }
+  return style.code ?? undefined;
+}
+
 function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   const cells: FileCell[] = [];
   const shared = new Map<string, Shared>();
@@ -189,9 +206,11 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
       }
       const read = cellFormula(cell, at, shared, book, name);
       const value = cellValue(cell, book);
+      const format = cellFormat(cell, book, name, at);
       if (read.cache) cache.add(`${at.r},${at.c}`);
-      if (read.formula === undefined && !value) continue;
+      if (read.formula === undefined && !value && format === undefined) continue;
       const out: FileCell = { ...at };
+      if (format !== undefined) out.format = format;
       if (read.formula !== undefined) out.formula = read.formula;
       if (read.spans) out.spans = read.spans;
       if (value) out.value = value;
@@ -206,8 +225,14 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   return { name, rows, cols, cells };
 }
 
-/** An `.xlsx` (or `.xlsm`, `.xltx`) file's sheets, or the package's named rejection. */
-export async function readXlsx(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead> {
+/**
+ * An `.xlsx` (or `.xlsm`, `.xltx`) file's sheets, or the package's named rejection. Excel's built-in short date reads
+ * in `locale`'s, as Excel shows it (D92).
+ */
+export async function readXlsx(
+  bytes: Uint8Array<ArrayBuffer>,
+  locale = 'en-US',
+): Promise<FileRead> {
   const read = await readOoxmlPackage(bytes);
   if (!read.ok) return read;
   const pkg = read.package;
@@ -225,10 +250,12 @@ export async function readXlsx(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead
   const date1904 = ['1', 'true'].includes(
     (workbookPr && attributeOf(workbookPr, '', 'date1904')) ?? '',
   );
+  const styles = readCellStyles(text(pkg, partOf(RELATIONSHIP_TYPES.styles)), locale);
   const book: Book = {
     ns,
     strings: sharedStrings(pkg, partOf(RELATIONSHIP_TYPES.sharedStrings), ns),
-    dates: dateStyles(text(pkg, partOf(RELATIONSHIP_TYPES.styles))),
+    styles,
+    dates: dateStyles(styles),
     date1904,
     budget: { cells: 0 },
     losses: [],
