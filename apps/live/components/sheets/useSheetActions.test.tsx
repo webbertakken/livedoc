@@ -437,6 +437,27 @@ describe('rows and columns', () => {
     expect(h.sheet().layout.hiddenRows ?? []).toEqual([]);
   });
 
+  // docs/specs/029-sheets/sheet.md "Row height": sized, and back to automatic.
+  it('returns sized rows to automatic with Fit to Data, as one write, and writes nothing for automatic rows', async () => {
+    const h = await rich();
+    h.run((a) => a.resize('r', [0, 1], 60));
+    const rows = h.sheet().layout.rows;
+    expect(h.sheet().layout.rowSize).toEqual({ [rows[0]!]: 60, [rows[1]!]: 60 });
+    h.run((a) => a.autofit('r', [0, 1, 2]));
+    expect(h.sheet().layout.rowSize ?? {}).toEqual({});
+    expect(h.view.result.current.actions.sizeOf('r', 0)).toBe(28);
+    // Automatic already: nothing is written, the layout stands as it was.
+    const fitted = h.sheet().layout;
+    h.run((a) => a.autofit('r', [0, 1, 2]));
+    expect(h.sheet().layout).toBe(fitted);
+  });
+
+  it('reads the size of a row as it is drawn: what its text needs', async () => {
+    const h = await rich();
+    h.typeAt(5, 0, 'one\ntwo\nthree');
+    expect(h.view.result.current.actions.sizeOf('r', 5)).toBe(3 * 17 + 8);
+  });
+
   it('resizes, autofits by the widest value, and reads sizes', async () => {
     const h = await rich();
     h.run((a) => a.resize('c', [0], 150));
@@ -448,8 +469,8 @@ describe('rows and columns', () => {
     h.run((a) => a.format({ fs: 20 }));
     h.run((a) => a.autofit('c', [1]));
     expect(h.view.result.current.actions.sizeOf('c', 1)).toBeGreaterThan(200);
-    h.run((a) => a.autofit('r', [1]));
-    expect(h.view.result.current.actions.sizeOf('r', 1)).toBeGreaterThan(24);
+    // A 20 point cell needs a 35 px line: its row, never sized, is that and 1 px.
+    expect(h.view.result.current.actions.sizeOf('r', 1)).toBe(35 + 1);
     // An empty column falls back to the smallest width.
     h.run((a) => a.autofit('c', [3]));
     expect(h.view.result.current.actions.sizeOf('c', 3)).toBe(24);

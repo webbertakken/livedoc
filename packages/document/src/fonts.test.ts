@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ES_NOTE_FONT } from './event-storming';
-import { FONTS, googleFontsHref, resolveFontStack } from './fonts';
+import { FONTS, fontIdOfStack, googleFontsHref, resolveFontStack } from './fonts';
 
 // The generic CSS families a stack is allowed to terminate in. docs/specs/004-interface-design/fonts.md:
 // fonts are a progressive enhancement, so every stack must end in one of
@@ -48,6 +48,14 @@ describe('FONTS catalogue invariants', () => {
         expect(f.google).not.toContain(':');
       }
     }
+  });
+});
+
+describe('fontIdOfStack', () => {
+  it('reads the id a stack was resolved from, and nothing for a stack no font has', () => {
+    for (const f of FONTS) expect(fontIdOfStack(resolveFontStack(f.id))).toBe(f.id);
+    expect(fontIdOfStack('Georgia')).toBeUndefined();
+    expect(fontIdOfStack(undefined)).toBeUndefined();
   });
 });
 

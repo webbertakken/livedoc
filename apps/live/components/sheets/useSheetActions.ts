@@ -31,7 +31,6 @@ import {
   moveSelection,
   parseFormula,
   resizeAxis,
-  baseRowHeight,
   localMs,
   serialFromMs,
   zonedMs,
@@ -302,28 +301,31 @@ export function useSheetActions() {
         const w = resizeAxis(c.sheet, axis, positions, px);
         if (w) c.write(w, axis === 'r' ? 'Rows' : 'Columns');
       },
-      // Double-click a header edge: the widest (tallest) value of the lines, measured roughly from their text.
+      // Fit to Data (a header's menu, or a double-click on its edge). A row fits its text by itself (sheet.md "Row
+      // height"), so fitting rows is taking their own sizes away: they are automatic again. A column takes the width
+      // of its widest value, measured roughly from its text.
       autofit: (axis: 'r' | 'c', positions: number[]) => {
+        if (axis === 'r') {
+          const { rows, rowSize } = c.sheet.layout;
+          const sized = positions.filter((p) => rowSize?.[rows[p]!] !== undefined);
+          const w = sized.length ? resizeAxis(c.sheet, 'r', sized, null) : null;
+          if (w) c.write(w, 'Rows');
+          return;
+        }
         const ext = c.workbook.extent(c.sheet.id);
         for (const p of positions) {
-          let best = axis === 'c' ? 24 : 18;
-          const n = axis === 'c' ? ext.rows : ext.cols;
-          for (let k = 0; k < n; k++) {
-            const [r, col] = axis === 'c' ? [k, p] : [p, k];
+          let best = 24;
+          for (let r = 0; r < ext.rows; r++) {
             const rowId = c.sheet.layout.rows[r]!;
-            const colId = c.sheet.layout.cols[col]!;
+            const colId = c.sheet.layout.cols[p]!;
             const f = c.sheet.cells.get(cellKey(rowId, colId))?.format;
-            const v = c.workbook.value(c.sheet.id, r, col);
+            const v = c.workbook.value(c.sheet.id, r, p);
             if (v === null) continue;
-            const px = fontPx(f);
             const text = typeof v === 'object' ? '#VALUE!' : String(v);
-            best = Math.max(
-              best,
-              axis === 'c' ? roughWidth(text, px) + 14 : Math.round(px * 1.3) + 8,
-            );
+            best = Math.max(best, roughWidth(text, fontPx(f)) + 14);
           }
-          const w = resizeAxis(c.sheet, axis, [p], Math.min(2000, Math.ceil(best)));
-          if (w) c.write(w, axis === 'r' ? 'Rows' : 'Columns');
+          const w = resizeAxis(c.sheet, 'c', [p], Math.min(2000, Math.ceil(best)));
+          if (w) c.write(w, 'Columns');
         }
       },
       // Dragged headers: lines from..to moved to before position `before`.
@@ -332,9 +334,10 @@ export function useSheetActions() {
         if (w && 'refused' in w) c.toast(w.refused);
         else if (w) c.write(w, axis === 'r' ? 'Rows' : 'Columns');
       },
+      // A line's size as drawn: a row's is its fit when it is automatic (sheet.md "Row height").
       sizeOf: (axis: 'r' | 'c', p: number) => {
         return axis === 'r'
-          ? baseRowHeight(c.sheet.layout, c.sheet.layout.rows[p]!)
+          ? c.geometry.rows[p + 1]! - c.geometry.rows[p]!
           : colWidth(c.sheet.layout, c.sheet.layout.cols[p]!);
       },
       // ---- Sort, filter, freeze ----

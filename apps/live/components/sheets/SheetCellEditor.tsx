@@ -11,6 +11,7 @@ import {
   formatA1,
   formulaSyntaxOf,
   formulaToLocale,
+  wrapLines,
 } from '@livedoc/sheets';
 import { argumentAt, argumentSlot, refSpans } from './formula-assist';
 import { useSheetController } from './sheet-controller';
@@ -156,6 +157,9 @@ export function FunctionAssist({
   return null;
 }
 
+// The editor's padding either side of its text (`px-1.5`).
+const EDITOR_PAD_PX = 6;
+
 export function SheetCellEditor({
   input,
   fontFamily,
@@ -182,13 +186,22 @@ export function SheetCellEditor({
   const colId = c.sheet.layout.cols[e.c]!;
   const f = c.sheet.cells.get(`${rowId}:${colId}`)?.format;
   const px = fontPx(f);
-  const lines = e.draft.split('\n').length;
   const lineH = Math.round(px * 1.3);
-  const longest = Math.max(...e.draft.split('\n').map((l) => l.length));
-  const width = Math.min(
-    Math.max(box.w, longest * px * 0.6 + 16),
-    Math.max(box.w, c.view.width - box.x - 8),
-  );
+  // A cell that wraps keeps its width and grows down as its text wraps (sheet.md "Editing"): its lines are counted
+  // in the room the editor's own padding leaves, with one to spare, past the first, for where the browser breaks a
+  // line sooner. Any
+  // other cell grows wider with its longest line, as far as the grid's edge, and taller with each line break.
+  const wraps = f?.wr === 'w';
+  const typed = e.draft.split('\n');
+  const longest = Math.max(...typed.map((l) => l.length));
+  const width = wraps
+    ? box.w
+    : Math.min(Math.max(box.w, longest * px * 0.6 + 16), Math.max(box.w, c.view.width - box.x - 8));
+  const wrapped = wraps
+    ? wrapLines(e.draft, width - EDITOR_PAD_PX * 2, px, { font: f?.ff ?? c.font, bold: !!f?.b })
+        .length
+    : 0;
+  const lines = wraps ? (wrapped > 1 ? wrapped + 1 : 1) : typed.length;
   const height = Math.max(box.h, lines * lineH + 8);
   const text = {
     fontSize: px,

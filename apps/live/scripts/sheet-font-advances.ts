@@ -37,7 +37,7 @@ const advances = await page.evaluate(
         for (let code = first; code <= last; code++)
           // Rounded up, so a line is never measured narrower than it draws.
           row.push(Math.ceil((ctx.measureText(String.fromCharCode(code)).width * 1000) / px));
-        out[id]![name] = row;
+        out[id][name] = row;
       }
     }
     return out;

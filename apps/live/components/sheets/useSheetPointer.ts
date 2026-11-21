@@ -22,7 +22,7 @@ import {
 } from '@livedoc/sheets';
 import { useAssignRef, useLatest } from '@/hooks/ui/useLatest';
 import { pointingTargetFor } from './sheet-pointing';
-import { useSheetController } from './sheet-controller';
+import { useSheetController, type SheetController } from './sheet-controller';
 import { cellBox, hitTest, mergeAt, totalSize, type Hit } from './sheet-geometry';
 import { fontPx } from './SheetCells';
 import { ruleHitAt } from './rules/sheet-rule-draw';
@@ -335,15 +335,9 @@ export function useSheetPointer(
         });
       }
     } else if (d.kind === 'resize') {
-      const sel = cc.selectionNow().ranges[cc.selectionNow().ranges.length - 1]!;
-      const whole =
-        d.axis === 'c'
-          ? sel.r1 === 0 && sel.r2 >= cc.grid.rows - 1
-          : sel.c1 === 0 && sel.c2 >= cc.grid.cols - 1;
-      const [a, b] = d.axis === 'c' ? [sel.c1, sel.c2] : [sel.r1, sel.r2];
-      // Several selected headers resize together.
-      const positions = whole && d.index >= a && d.index <= b ? range(a, b) : [d.index];
-      actions.resize(d.axis, positions, d.px);
+      // Only a drag that changed the size sizes the line: a press on an edge alone leaves a row automatic (sheet.md
+      // "Row height").
+      if (d.px !== d.size) actions.resize(d.axis, linesWith(cc, d.axis, d.index), d.px);
     } else if (d.kind === 'freeze') {
       const now = d.axis === 'c' ? cc.geometry.frozenCols : cc.geometry.frozenRows;
       if (d.count !== now) {
@@ -541,7 +535,7 @@ export function useSheetPointer(
     if (h.kind === 'cell' && cc.canEdit) actions.startEdit('cell');
     if ((h.kind === 'col' || h.kind === 'row') && h.edge && cc.canEdit) {
       const axis = h.kind === 'col' ? 'c' : 'r';
-      actions.autofit(axis, [h.kind === 'col' ? h.c : h.r]);
+      actions.autofit(axis, linesWith(cc, axis, h.kind === 'col' ? h.c : h.r));
     }
   };
 
@@ -671,6 +665,23 @@ export function useSheetPointer(
     ring: touch.ring,
     normaliseRange,
   };
+}
+
+// The lines a header's edge acts on: every selected whole line when the line is among them, so several selected
+// headers resize, and fit, together (sheet.md "Rows and columns"); else the line alone.
+function linesWith(
+  cc: Pick<SheetController, 'selectionNow' | 'grid'>,
+  axis: 'r' | 'c',
+  index: number,
+): number[] {
+  const ranges = cc.selectionNow().ranges;
+  const sel = ranges[ranges.length - 1]!;
+  const whole =
+    axis === 'c'
+      ? sel.r1 === 0 && sel.r2 >= cc.grid.rows - 1
+      : sel.c1 === 0 && sel.c2 >= cc.grid.cols - 1;
+  const [a, b] = axis === 'c' ? [sel.c1, sel.c2] : [sel.r1, sel.r2];
+  return whole && index >= a && index <= b ? range(a, b) : [index];
 }
 
 function range(a: number, b: number): number[] {

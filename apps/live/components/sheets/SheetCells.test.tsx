@@ -8,6 +8,8 @@ import {
   Workbook,
   WorkbookCopy,
   cellKey,
+  cellLines,
+  rowHeights,
   parseA1,
   readTypedInput,
   type CellFormat,
@@ -17,7 +19,7 @@ import {
 } from '@livedoc/sheets';
 import { planPalette } from '@/components/plan/plan-palette';
 import { SheetCells, fitNumber, fontPx, roughWidth } from './SheetCells';
-import { geometryOf, visibleWindow } from './sheet-geometry';
+import { geometryOf, visibleWindow, type Geometry } from './sheet-geometry';
 import { SheetImageLoader } from './sheet-image-loader';
 import { SheetImagesContext } from './sheet-images-context';
 
@@ -40,6 +42,9 @@ function grid(rows: number, cols: number, extra: Partial<SheetLayout> = {}): She
     },
   };
 }
+
+// The grid with no row sized: every row automatic, at least 28 px (sheet.md "Row height").
+const automatic = (): SheetLayout => ({ ...grid(10, 6), rowSize: {} });
 
 // A sheet typed in as a person would (A1 -> text), with formats by A1.
 function sheetOf(
@@ -85,9 +90,10 @@ function draw(
     view?: { width: number; height: number };
     fontFamily?: string;
     filterHead?: { r: number; cols: ReadonlySet<number> };
+    geometry?: Geometry;
   } = {},
 ) {
-  const geometry = geometryOf(sheet.layout);
+  const geometry = opts.geometry ?? geometryOf(sheet.layout);
   const scroll = opts.scroll ?? { top: 0, left: 0 };
   return render(
     <SheetCells
@@ -184,7 +190,44 @@ describe('the cells', () => {
     expect(textBox('top').style.alignItems).toBe('flex-start');
     expect(textBox('mid').style.alignItems).toBe('center');
     expect(textBox('mid').style.justifyContent).toBe('flex-end');
-    expect(textBox('wrapped').className).toContain('whitespace-pre-wrap');
+    // A cell that wraps is drawn on the lines the engine broke it into: the browser wraps nothing itself.
+    expect(textBox('wrapped').className).toContain('whitespace-pre');
+    expect(textBox('wrapped').className).not.toContain('pre-wrap');
+  });
+
+  // docs/specs/029-sheets/sheet.md "Row height": the grid draws exactly the lines that were measured.
+  it('draws a wrapping cell on the lines its row was sized by, in a row as tall as they need', () => {
+    const text = 'Rows grow to fit the text their cells hold, so nobody sizes them by hand';
+    const made = sheetOf(
+      { A1: text, A2: 'one\ntwo', A3: 'plain' },
+      { A1: { wr: 'w' } },
+      automatic(),
+    );
+    const heightOf = rowHeights(made.workbook, made.sheet.id);
+    const lines = cellLines(made.workbook, made.sheet.id, 0, 0, text);
+    expect(lines.length).toBeGreaterThan(2);
+    draw(made, { geometry: geometryOf(made.sheet.layout, new Set(), heightOf) });
+    const boxes = [...document.querySelectorAll<HTMLElement>('[data-sheet-text]')];
+    const [wrapped, broken, plain] = boxes;
+    expect(wrapped!.textContent).toBe(lines.join('\n'));
+    expect(wrapped!.style.height).toBe(`${lines.length * 17 + 8}px`);
+    expect(wrapped!.style.lineHeight).toBe('17px');
+    expect(broken!.textContent).toBe('one\ntwo');
+    expect(broken!.style.height).toBe(`${2 * 17 + 8}px`);
+    expect(plain!.style.height).toBe('28px');
+  });
+
+  it('keeps bottom-aligned text 3 px up only where its row has that to spare', () => {
+    const made = sheetOf(
+      { A1: 'big', A2: 'small' },
+      { A1: { fs: 18, va: 'b' }, A2: { va: 'b' } },
+      automatic(),
+    );
+    const heightOf = rowHeights(made.workbook, made.sheet.id);
+    draw(made, { geometry: geometryOf(made.sheet.layout, new Set(), heightOf) });
+    // 18 points is a 31 px line in a 32 px row: 1 px to spare.
+    expect(textBox('big').style.paddingBottom).toBe('1px');
+    expect(textBox('small').style.paddingBottom).toBe('3px');
   });
 
   it('draws a number format', () => {

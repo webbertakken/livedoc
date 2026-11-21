@@ -458,6 +458,7 @@ export function SheetGrid({
                 sheet={c.sheet}
                 workbook={c.workbook}
                 version={c.version}
+                font={c.font}
                 geometry={c.geometry}
                 window={window}
                 scroll={c.scroll}

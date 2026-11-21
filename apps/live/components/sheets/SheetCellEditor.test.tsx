@@ -65,6 +65,21 @@ describe('the cell editor', () => {
     expect(editor().style.fontFamily).toBe('Inter');
   });
 
+  // docs/specs/029-sheets/sheet.md "Editing": editing a cell that wraps keeps its width and grows down.
+  it('keeps the width of a cell that wraps and grows down as its text wraps', async () => {
+    const wrapping = await makeSheet({ cells: { B2: 'hello' }, format: { B2: { wr: 'w' } } });
+    show(wrapping);
+    act(() => actions.startEdit('cell'));
+    const box = cellBox(wrapping.ctl().geometry, 1, 1, { top: 0, left: 0 });
+    const short = Number.parseFloat(frame().style.height);
+    expect(frame().style.width).toBe(`${box.w + 2}px`);
+    fireEvent.change(editor(), {
+      target: { value: 'a long line of text that cannot fit the width of one column at all' },
+    });
+    expect(frame().style.width).toBe(`${box.w + 2}px`);
+    expect(Number.parseFloat(frame().style.height)).toBeGreaterThan(short + 17 * 2);
+  });
+
   it('covers a merged cell whole', () => {
     show(h);
     act(() => h.select('B2:C3'));

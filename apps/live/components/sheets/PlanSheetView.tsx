@@ -12,7 +12,7 @@ import { placeSheetChart, sheetChartsRemoval } from './sheet-charts';
 import { OPEN_TAB_TO_CHART, useSheetCharts } from './sheet-charts-context';
 import { Button } from '@livedoc/ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ShapeElement } from '@livedoc/document';
+import { fontIdOfStack, type ShapeElement } from '@livedoc/document';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { usePlan } from '@/components/plan/PlanContext';
 import { planOwnColours, planPalette } from '@/components/plan/plan-palette';
@@ -188,6 +188,7 @@ function SheetWorkspace({
     sheet: model.sheet!,
     workbook: model.workbook,
     version: model.version,
+    font: fontIdOfStack(fontFamily),
     palette,
     interactive,
     canEdit,

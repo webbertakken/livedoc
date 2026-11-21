@@ -120,6 +120,14 @@ export function resolveFontStack(id: string | undefined | null): string | undefi
   return BY_ID.get(id)?.stack;
 }
 
+const BY_STACK = new Map(FONTS.map((f) => [f.stack, f.id] as const));
+
+// The font id a CSS stack was resolved from: for a caller handed only the stack (a tab's font, as the canvas passes
+// it down) that needs the id (a Sheet measures its text by it, docs/specs/029-sheets/sheet.md "Row height").
+export function fontIdOfStack(stack: string | undefined | null): string | undefined {
+  return stack ? BY_STACK.get(stack) : undefined;
+}
+
 // The single Google Fonts stylesheet href covering every option. One
 // request defines every @font-face; the browser only downloads the
 // families actually applied to elements.

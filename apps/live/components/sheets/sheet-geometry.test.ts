@@ -224,3 +224,35 @@ describe('pageRows', () => {
     expect(pageRows(geometryOf(grid(100, 3)), 5)).toBe(1);
   });
 });
+
+// docs/specs/029-sheets/sheet.md "Row height": the grid places its rows by the heights they are drawn at.
+describe('geometryOf with row heights', () => {
+  it('places every row by the height it is given, hidden and filtered rows still at none', () => {
+    const layout = grid(5, 3);
+    const tall = new Map([
+      [layout.rows[1]!, 62],
+      [layout.rows[3]!, 500],
+    ]);
+    const g = geometryOf(
+      { ...layout, hiddenRows: [layout.rows[3]!] },
+      new Set([layout.rows[4]!]),
+      (id) => tall.get(id) ?? 28,
+    );
+    expect([...g.rows]).toEqual([0, 28, 90, 118, 118, 118]);
+    expect(cellBox(g, 1, 0, { top: 0, left: 0 }).h).toBe(62);
+    // A point in the taller row is that row's; the next row starts under it.
+    expect(hitTest(g, ROW_HEADER_PX + 5, COL_HEADER_PX + 80, { top: 0, left: 0 })).toEqual({
+      kind: 'cell',
+      r: 1,
+      c: 0,
+    });
+    expect(hitTest(g, ROW_HEADER_PX + 5, COL_HEADER_PX + 91, { top: 0, left: 0 })).toMatchObject({
+      r: 2,
+    });
+  });
+
+  it('falls back to the layout’s own sizes with no heights given', () => {
+    const g = geometryOf(grid(3, 3, { rowSize: { r0: 40 }, rowHeight: 24 }));
+    expect([...g.rows]).toEqual([0, 40, 64, 88]);
+  });
+});

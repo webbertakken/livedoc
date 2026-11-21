@@ -10,6 +10,7 @@ import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import {
   filteredOutRows,
+  rowHeights,
   single,
   valuesOnly,
   type GridRange,
@@ -51,6 +52,8 @@ export type SheetController = {
   sheet: Sheet;
   workbook: Workbook;
   version: number;
+  // The tab's font, by id: what a cell with no font of its own is measured in (sheet.md "Row height").
+  font: string | undefined;
   geometry: Geometry;
   grid: Grid;
   palette: PlanPalette;
@@ -153,6 +156,7 @@ export function useSheetControllerState(opts: {
   sheet: Sheet;
   workbook: Workbook;
   version: number;
+  font?: string | undefined;
   palette: PlanPalette;
   interactive: boolean;
   canEdit: boolean;
@@ -229,7 +233,17 @@ export function useSheetControllerState(opts: {
     () => (sheet.layout.filter ? filteredOutRows(workbook, sheet.id) : new Set<string>()),
     [workbook, sheet.id, sheet.layout.filter, version], // oxlint-disable-line react/exhaustive-deps
   );
-  const geometry = useMemo(() => geometryOf(sheet.layout, filtered), [sheet.layout, filtered]);
+  // How tall each row is drawn: a sized row its size, every other row what its text needs (sheet.md "Row height").
+  // Worked out again whenever a value may have changed; the same function while no height did, so the geometry and
+  // all that hangs on it stand.
+  const heightOf = useMemo(
+    () => rowHeights(workbook, sheet.id, opts.font),
+    [workbook, sheet, opts.font, version], // oxlint-disable-line react/exhaustive-deps
+  );
+  const geometry = useMemo(
+    () => geometryOf(sheet.layout, filtered, heightOf),
+    [sheet.layout, filtered, heightOf],
+  );
   const grid = useMemo<Grid>(() => {
     const ix = { rows: sheet.layout.rows.length, cols: sheet.layout.cols.length };
     return {
@@ -302,6 +316,7 @@ export function useSheetControllerState(opts: {
   const focusGrid = useCallback(() => gridEl?.focus({ preventScroll: true }), [gridEl]);
   return {
     ...opts,
+    font: opts.font,
     canShape,
     geometry,
     grid,

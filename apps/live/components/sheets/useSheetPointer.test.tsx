@@ -189,6 +189,28 @@ describe('headers', () => {
     expect(h.called('autofit').at(-1)).toEqual(['r', [0]]);
   });
 
+  // sheet.md "Rows and columns": several selected headers resize, and fit, together.
+  it('a double-click on the edge of one of several selected headers fits them all', async () => {
+    const h = await mountGrid({ rows: 5, cols: 4 });
+    drag(h, rowHead(0), rowHead(2));
+    fireEvent.doubleClick(h.viewport, rowHead(1, 22));
+    expect(h.called('autofit').at(-1)).toEqual(['r', [0, 1, 2]]);
+    // The three rows are automatic now, 28 px each; a row outside the selection is fitted alone.
+    fireEvent.doubleClick(h.viewport, {
+      clientX: 10,
+      clientY: COL_HEADER_PX + 3 * 28 + 2 * 24 - 2,
+    });
+    expect(h.called('autofit').at(-1)).toEqual(['r', [4]]);
+  });
+
+  // sheet.md "Row height": only a drag that changed the size sizes a line.
+  it('a press on a header edge that drags nowhere sizes nothing, so a row stays automatic', async () => {
+    const h = await mountGrid({ rows: 5, cols: 4 });
+    drag(h, rowHead(1, 22), rowHead(1, 22));
+    drag(h, colHead(1, 98), colHead(1, 98));
+    expect(h.called('resize')).toEqual([]);
+  });
+
   it('a drag of selected whole columns moves them, with a drop line', async () => {
     const h = await mountGrid({ rows: 5, cols: 8 });
     drag(h, colHead(1), colHead(1));
