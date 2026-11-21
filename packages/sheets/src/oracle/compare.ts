@@ -58,6 +58,23 @@ export function heldAnswer(
   return null;
 }
 
+/**
+ * Google's answer to a function it lacks: `#NAME?` in the block's first cell, the rest empty. A case under OpenFormula's
+ * authority answered so names no difference: Google never had the function.
+ */
+export function googleLacks(x: OracleCase, answer: OracleValue[][]): boolean {
+  const first = answer[0]?.[0];
+  return (
+    x.authority === 'openformula' &&
+    typeof first === 'object' &&
+    first?.e === '#NAME?' &&
+    answer
+      .flat()
+      .slice(1)
+      .every((v) => v === null)
+  );
+}
+
 /** Every pair of sources that answer a case differently without the case naming the difference. */
 export function unnamedDifferences(
   x: OracleCase,
@@ -65,7 +82,7 @@ export function unnamedDifferences(
 ): string[] {
   const given: [OracleSource, OracleValue[][]][] = [];
   if (x.expect) given.push(['cited', x.expect]);
-  if (answers.google) given.push(['google', answers.google]);
+  if (answers.google && !googleLacks(x, answers.google)) given.push(['google', answers.google]);
   if (answers.libreoffice) given.push(['libreoffice', answers.libreoffice]);
   const out: string[] = [];
   for (let i = 0; i < given.length; i++)

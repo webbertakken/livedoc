@@ -8,319 +8,396 @@
   "cases": [
     {
       "id": "AREAS.1",
-      "f": "=AREAS(Data!A1:B2)"
+      "f": "=AREAS(Data!A1:B2)",
+      "authority": "openformula"
     },
     {
       "id": "AREAS.2",
-      "f": "=AREAS(Data!A1)"
+      "f": "=AREAS(Data!A1)",
+      "authority": "openformula"
     },
     {
       "id": "AREAS.3",
-      "f": "=AREAS(Data!B2:B3)"
+      "f": "=AREAS(Data!B2:B3)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELI.1",
-      "f": "=BESSELI(1.5, 1)"
+      "f": "=BESSELI(1.5, 1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELI.2",
-      "f": "=BESSELI(0, 0)"
+      "f": "=BESSELI(0, 0)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELI.3",
-      "f": "=BESSELI(-2, 3)"
+      "f": "=BESSELI(-2, 3)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELI.4",
-      "f": "=BESSELI(10, 2)"
+      "f": "=BESSELI(10, 2)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELI.5",
-      "f": "=BESSELI(2.5, 0.9)"
+      "f": "=BESSELI(2.5, 0.9)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELI.6",
-      "f": "=BESSELI(1, -1)"
+      "f": "=BESSELI(1, -1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELI.7",
-      "f": "=BESSELI(\"x\", 1)"
+      "f": "=BESSELI(\"x\", 1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.1",
-      "f": "=BESSELJ(1.9, 2)"
+      "f": "=BESSELJ(1.9, 2)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.2",
-      "f": "=BESSELJ(0, 0)"
+      "f": "=BESSELJ(0, 0)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.3",
-      "f": "=BESSELJ(0, 2)"
+      "f": "=BESSELJ(0, 2)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.4",
-      "f": "=BESSELJ(-2, 3)"
+      "f": "=BESSELJ(-2, 3)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.5",
-      "f": "=BESSELJ(30, 5)"
+      "f": "=BESSELJ(30, 5)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.6",
-      "f": "=BESSELJ(5, 30)"
+      "f": "=BESSELJ(5, 30)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.7",
-      "f": "=BESSELJ(100, 0)"
+      "f": "=BESSELJ(100, 0)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELJ.8",
-      "f": "=BESSELJ(1, -1)"
+      "f": "=BESSELJ(1, -1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELK.1",
       "f": "=BESSELK(1.5, 1)",
+      "authority": "openformula",
       "tol": 0.000001,
       "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
     },
     {
       "id": "BESSELK.2",
       "f": "=BESSELK(0.5, 0)",
+      "authority": "openformula",
       "tol": 0.000001,
       "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
     },
     {
       "id": "BESSELK.3",
       "f": "=BESSELK(3, 4)",
+      "authority": "openformula",
       "tol": 0.000001,
       "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
     },
     {
       "id": "BESSELK.4",
       "f": "=BESSELK(10, 2)",
+      "authority": "openformula",
       "tol": 0.000001,
       "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
     },
     {
       "id": "BESSELK.5",
-      "f": "=BESSELK(0, 1)"
+      "f": "=BESSELK(0, 1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELK.6",
-      "f": "=BESSELK(-1, 1)"
+      "f": "=BESSELK(-1, 1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELK.7",
-      "f": "=BESSELK(1, -1)"
+      "f": "=BESSELK(1, -1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELY.1",
-      "f": "=BESSELY(2.5, 1)"
+      "f": "=BESSELY(2.5, 1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELY.2",
-      "f": "=BESSELY(0.5, 0)"
+      "f": "=BESSELY(0.5, 0)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELY.3",
-      "f": "=BESSELY(3, 4)"
+      "f": "=BESSELY(3, 4)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELY.4",
-      "f": "=BESSELY(10, 2)"
+      "f": "=BESSELY(10, 2)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELY.5",
-      "f": "=BESSELY(30, 5)"
+      "f": "=BESSELY(30, 5)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELY.6",
-      "f": "=BESSELY(0, 1)"
+      "f": "=BESSELY(0, 1)",
+      "authority": "openformula"
     },
     {
       "id": "BESSELY.7",
-      "f": "=BESSELY(1, -1)"
+      "f": "=BESSELY(1, -1)",
+      "authority": "openformula"
     },
     {
       "id": "BINOM.DIST.RANGE.1",
-      "f": "=BINOM.DIST.RANGE(60, 0.75, 48)"
+      "f": "=BINOM.DIST.RANGE(60, 0.75, 48)",
+      "authority": "openformula"
     },
     {
       "id": "BINOM.DIST.RANGE.2",
-      "f": "=BINOM.DIST.RANGE(60, 0.75, 45, 50)"
+      "f": "=BINOM.DIST.RANGE(60, 0.75, 45, 50)",
+      "authority": "openformula"
     },
     {
       "id": "BINOM.DIST.RANGE.3",
-      "f": "=BINOM.DIST.RANGE(10, 0.5, 0, 10)"
+      "f": "=BINOM.DIST.RANGE(10, 0.5, 0, 10)",
+      "authority": "openformula"
     },
     {
       "id": "BINOM.DIST.RANGE.4",
-      "f": "=BINOM.DIST.RANGE(10, 0.5, 6, 4)"
+      "f": "=BINOM.DIST.RANGE(10, 0.5, 6, 4)",
+      "authority": "openformula"
     },
     {
       "id": "BINOM.DIST.RANGE.5",
-      "f": "=BINOM.DIST.RANGE(10, 1.5, 3)"
+      "f": "=BINOM.DIST.RANGE(10, 1.5, 3)",
+      "authority": "openformula"
     },
     {
       "id": "BINOM.DIST.RANGE.6",
-      "f": "=BINOM.DIST.RANGE(10, 0.5, 11)"
+      "f": "=BINOM.DIST.RANGE(10, 0.5, 11)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQDIST.1",
-      "f": "=CHISQDIST(3.45, 2)"
+      "f": "=CHISQDIST(3.45, 2)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQDIST.2",
-      "f": "=CHISQDIST(3.45, 2, FALSE)"
+      "f": "=CHISQDIST(3.45, 2, FALSE)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQDIST.3",
-      "f": "=CHISQDIST(-1, 2)"
+      "f": "=CHISQDIST(-1, 2)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQDIST.4",
-      "f": "=CHISQDIST(10, 4.7)"
+      "f": "=CHISQDIST(10, 4.7)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQDIST.5",
-      "f": "=CHISQDIST(3, 0)"
+      "f": "=CHISQDIST(3, 0)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQINV.1",
-      "f": "=CHISQINV(0.42, 2)"
+      "f": "=CHISQINV(0.42, 2)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQINV.2",
-      "f": "=CHISQINV(0.95, 10)"
+      "f": "=CHISQINV(0.95, 10)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQINV.3",
-      "f": "=CHISQINV(0, 2)"
+      "f": "=CHISQINV(0, 2)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQINV.4",
-      "f": "=CHISQINV(1, 2)"
+      "f": "=CHISQINV(1, 2)",
+      "authority": "openformula"
     },
     {
       "id": "CHISQINV.5",
-      "f": "=CHISQINV(0.5, 4.7)"
+      "f": "=CHISQINV(0.5, 4.7)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.1",
-      "f": "=EASTERSUNDAY(2026)"
+      "f": "=EASTERSUNDAY(2026)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.2",
-      "f": "=EASTERSUNDAY(2000)"
+      "f": "=EASTERSUNDAY(2000)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.3",
-      "f": "=EASTERSUNDAY(1990)"
+      "f": "=EASTERSUNDAY(1990)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.4",
-      "f": "=EASTERSUNDAY(24)"
+      "f": "=EASTERSUNDAY(24)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.5",
-      "f": "=EASTERSUNDAY(85)"
+      "f": "=EASTERSUNDAY(85)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.6",
-      "f": "=EASTERSUNDAY(1582)"
+      "f": "=EASTERSUNDAY(1582)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.7",
-      "f": "=EASTERSUNDAY(9957)"
+      "f": "=EASTERSUNDAY(9957)",
+      "authority": "openformula"
     },
     {
       "id": "EASTERSUNDAY.8",
-      "f": "=EASTERSUNDAY(2026.7)"
+      "f": "=EASTERSUNDAY(2026.7)",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.1",
-      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\")"
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\")",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.2",
-      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", TRUE)"
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", TRUE)",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.3",
-      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", TRUE, 3)"
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", TRUE, 3)",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.4",
-      "f": "=EUROCONVERT(100, \"EUR\", \"ITL\")"
+      "f": "=EUROCONVERT(100, \"EUR\", \"ITL\")",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.5",
-      "f": "=EUROCONVERT(100, \"dem\", \"EUR\")"
+      "f": "=EUROCONVERT(100, \"dem\", \"EUR\")",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.6",
-      "f": "=EUROCONVERT(1, \"FRF\", \"USD\")"
+      "f": "=EUROCONVERT(1, \"FRF\", \"USD\")",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.7",
-      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", FALSE, 2)"
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", FALSE, 2)",
+      "authority": "openformula"
     },
     {
       "id": "EUROCONVERT.8",
-      "f": "=EUROCONVERT(5, \"EUR\", \"EUR\")"
+      "f": "=EUROCONVERT(5, \"EUR\", \"EUR\")",
+      "authority": "openformula"
     },
     {
       "id": "INFO.1",
-      "f": "=INFO(\"recalc\")"
+      "f": "=INFO(\"recalc\")",
+      "authority": "openformula"
     },
     {
       "id": "INFO.2",
-      "f": "=INFO(\"numfile\")"
+      "f": "=INFO(\"numfile\")",
+      "authority": "openformula"
     },
     {
       "id": "INFO.3",
-      "f": "=INFO(\"origin\")"
+      "f": "=INFO(\"origin\")",
+      "authority": "openformula"
     },
     {
       "id": "INFO.4",
-      "f": "=INFO(\"directory\")"
+      "f": "=INFO(\"directory\")",
+      "authority": "openformula"
     },
     {
       "id": "INFO.5",
-      "f": "=INFO(\"x\")"
+      "f": "=INFO(\"x\")",
+      "authority": "openformula"
     },
     {
       "id": "INFO.6",
-      "f": "=INFO(\"memavail\")"
+      "f": "=INFO(\"memavail\")",
+      "authority": "openformula"
     },
     {
       "id": "INFO.7",
-      "f": "=INFO(\"NUMFILE\")"
+      "f": "=INFO(\"NUMFILE\")",
+      "authority": "openformula"
     },
     {
       "id": "JIS.1",
-      "f": "=JIS(\"abc 123\")"
+      "f": "=JIS(\"abc 123\")",
+      "authority": "openformula"
     },
     {
       "id": "JIS.2",
-      "f": "=JIS(\"ｶﾀｶﾅ\")"
+      "f": "=JIS(\"ｶﾀｶﾅ\")",
+      "authority": "openformula"
     },
     {
       "id": "JIS.3",
-      "f": "=JIS(\"ｶﾞｷﾞ\")"
+      "f": "=JIS(\"ｶﾞｷﾞ\")",
+      "authority": "openformula"
     },
     {
       "id": "JIS.4",
-      "f": "=JIS(\"日本\")"
+      "f": "=JIS(\"日本\")",
+      "authority": "openformula"
     },
     {
       "id": "JIS.5",
-      "f": "=JIS(5)"
+      "f": "=JIS(5)",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.1",
       "f": "=NUMBERVALUE(\"1,234.5\")",
+      "authority": "openformula",
       "expect": [[1234.5]],
       "cite": "OpenFormula 1.3 Part 4, NUMBERVALUE: the separators default to those of the current locale (en-US: \".\" and \",\")",
       "differs": {
@@ -329,39 +406,48 @@
     },
     {
       "id": "NUMBERVALUE.2",
-      "f": "=NUMBERVALUE(\"1.234,5\", \",\", \".\")"
+      "f": "=NUMBERVALUE(\"1.234,5\", \",\", \".\")",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.3",
-      "f": "=NUMBERVALUE(\"  12 %\")"
+      "f": "=NUMBERVALUE(\"  12 %\")",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.4",
-      "f": "=NUMBERVALUE(\"12%%\")"
+      "f": "=NUMBERVALUE(\"12%%\")",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.5",
-      "f": "=NUMBERVALUE(\"\")"
+      "f": "=NUMBERVALUE(\"\")",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.6",
-      "f": "=NUMBERVALUE(\"1x\")"
+      "f": "=NUMBERVALUE(\"1x\")",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.7",
-      "f": "=NUMBERVALUE(\"1.5\", \"..\")"
+      "f": "=NUMBERVALUE(\"1.5\", \"..\")",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.8",
-      "f": "=NUMBERVALUE(\"1,5\", \",\", \",\")"
+      "f": "=NUMBERVALUE(\"1,5\", \",\", \",\")",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.9",
-      "f": "=NUMBERVALUE(3.5)"
+      "f": "=NUMBERVALUE(3.5)",
+      "authority": "openformula"
     },
     {
       "id": "NUMBERVALUE.10",
       "f": "=NUMBERVALUE(\"-1.5e3\")",
+      "authority": "openformula",
       "expect": [[-1500]],
       "cite": "OpenFormula 1.3 Part 4, NUMBERVALUE: the separators default to those of the current locale (en-US: \".\" and \",\")",
       "differs": {
@@ -370,11 +456,13 @@
     },
     {
       "id": "NUMBERVALUE.11",
-      "f": "=NUMBERVALUE(\"1 234,5\", \",\")"
+      "f": "=NUMBERVALUE(\"1 234,5\", \",\")",
+      "authority": "openformula"
     },
     {
       "id": "ODDFPRICE.1",
       "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2, 1)",
+      "authority": "openformula",
       "expect": [[113.597717474079]],
       "cite": "https://learn.microsoft.com/en-us/dax/oddfprice-function-dax: the example, ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100.00, 2, 1), is 113.597717474079",
       "differs": {
@@ -383,11 +471,13 @@
     },
     {
       "id": "ODDFPRICE.2",
-      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,12,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2)"
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,12,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDFPRICE.3",
       "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0, 0.0625, 100, 2)",
+      "authority": "openformula",
       "expect": [
         [
           {
@@ -402,11 +492,13 @@
     },
     {
       "id": "ODDFPRICE.4",
-      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, -0.01, 100, 2)"
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, -0.01, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDFPRICE.5",
       "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 0, 2)",
+      "authority": "openformula",
       "expect": [
         [
           {
@@ -421,19 +513,23 @@
     },
     {
       "id": "ODDFPRICE.6",
-      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 3)"
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 3)",
+      "authority": "openformula"
     },
     {
       "id": "ODDFPRICE.7",
-      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2, 5)"
+      "f": "=ODDFPRICE(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2, 5)",
+      "authority": "openformula"
     },
     {
       "id": "ODDFPRICE.8",
-      "f": "=ODDFPRICE(\"x\", DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2)"
+      "f": "=ODDFPRICE(\"x\", DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0785, 0.0625, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDFYIELD.1",
       "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2, 0)",
+      "authority": "openformula",
       "expect": [[0.0772455415972989]],
       "cite": "https://learn.microsoft.com/en-us/dax/oddfyield-function-dax: the example, ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.50, 100, 2, 0), is 0.0772455415972989",
       "differs": {
@@ -442,133 +538,165 @@
     },
     {
       "id": "ODDFYIELD.2",
-      "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 0, 100, 2)"
+      "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 0, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDFYIELD.3",
-      "f": "=ODDFYIELD(DATE(2009,3,1), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2)"
+      "f": "=ODDFYIELD(DATE(2009,3,1), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDFYIELD.4",
-      "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2, -1)"
+      "f": "=ODDFYIELD(DATE(2008,11,11), DATE(2021,3,1), DATE(2008,10,15), DATE(2009,3,1), 0.0575, 84.5, 100, 2, -1)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.1",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2, 0)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2, 0)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.2",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.3",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2, 4)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2, 4)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.4",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0, 100, 2)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.5",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 4)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 4)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.6",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 1)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 1)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.7",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2009,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2009,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.8",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0, 0.0405, 100, 2)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0, 0.0405, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.9",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, -0.01, 100, 2)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, -0.01, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.10",
-      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 0, 2)"
+      "f": "=ODDLPRICE(DATE(2008,2,7), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 0, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.11",
-      "f": "=ODDLPRICE(DATE(2007,10,15), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)"
+      "f": "=ODDLPRICE(DATE(2007,10,15), DATE(2008,6,15), DATE(2007,10,15), 0.0375, 0.0405, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLPRICE.12",
-      "f": "=ODDLPRICE(\"2/7/2008\", \"6/15/2008\", \"10/15/2007\", 0.0375, 0.0405, 100, 2.9, 0.9)"
+      "f": "=ODDLPRICE(\"2/7/2008\", \"6/15/2008\", \"10/15/2007\", 0.0375, 0.0405, 100, 2.9, 0.9)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLYIELD.1",
-      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2, 0)"
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2, 0)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLYIELD.2",
-      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2)"
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLYIELD.3",
-      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2, 4)"
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2, 4)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLYIELD.4",
-      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 4)"
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 4)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLYIELD.5",
-      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 0, 100, 2)"
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 0, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLYIELD.6",
-      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 5)"
+      "f": "=ODDLYIELD(DATE(2008,4,20), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 5)",
+      "authority": "openformula"
     },
     {
       "id": "ODDLYIELD.7",
-      "f": "=ODDLYIELD(DATE(2008,6,15), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2)"
+      "f": "=ODDLYIELD(DATE(2008,6,15), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.1",
       "f": "=Data!A1*10+Data!B1",
+      "authority": "openformula",
       "note": "The model the cases after it tabulate: this cell, read by MULTIPLE.OPERATIONS.2, both on sheet Cases"
     },
     {
       "id": "MULTIPLE.OPERATIONS.2",
       "f": "=Cases!B237*2+Data!A1",
+      "authority": "openformula",
       "note": "A formula reading the model (MULTIPLE.OPERATIONS.1) and Data!A1: worked out afresh along with it"
     },
     {
       "id": "MULTIPLE.OPERATIONS.3",
-      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2)"
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.4",
-      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2, Data!B1, Data!B2)"
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2, Data!B1, Data!B2)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.5",
-      "f": "=MULTIPLE.OPERATIONS(Cases!B237, Data!A3, Data!B3)"
+      "f": "=MULTIPLE.OPERATIONS(Cases!B237, Data!A3, Data!B3)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.6",
-      "f": "=MULTIPLE.OPERATIONS(Data!A1, Data!A1, Data!B1)"
+      "f": "=MULTIPLE.OPERATIONS(Data!A1, Data!A1, Data!B1)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.7",
-      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2, Data!B1)"
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2, Data!B1)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.8",
-      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, 7)"
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, 7)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.9",
-      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1:A2, Data!B1)"
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1:A2, Data!B1)",
+      "authority": "openformula"
     },
     {
       "id": "MULTIPLE.OPERATIONS.10",
-      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!B1, Data!B2, Data!A1, Data!A2)"
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!B1, Data!B2, Data!A1, Data!A2)",
+      "authority": "openformula"
     }
   ]
 }

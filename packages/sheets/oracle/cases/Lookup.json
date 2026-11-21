@@ -98,27 +98,33 @@
     },
     {
       "id": "XMATCH.1",
-      "f": "=XMATCH(\"Cherry\", Data!A1:A5)"
+      "f": "=XMATCH(\"Cherry\", Data!A1:A5)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.2",
-      "f": "=XMATCH(4, Data!B1:B5, -1)"
+      "f": "=XMATCH(4, Data!B1:B5, -1)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.3",
-      "f": "=XMATCH(4, Data!B1:B5, 1)"
+      "f": "=XMATCH(4, Data!B1:B5, 1)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.4",
-      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2)"
+      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.5",
-      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2, -1)"
+      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2, -1)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.6",
-      "f": "=XMATCH(\"Fig\", Data!A1:A5)"
+      "f": "=XMATCH(\"Fig\", Data!A1:A5)",
+      "authority": "openformula"
     },
     {
       "id": "XLOOKUP.1",

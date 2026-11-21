@@ -638,22 +638,26 @@
     {
       "id": "SORTBY.1",
       "f": "=SORTBY(Data!F1:F3, Data!A1:A3, -1)",
+      "authority": "openformula",
       "rows": 3
     },
     {
       "id": "SORTBY.2",
       "f": "=SORTBY(Data!A1:A3, {3;1;2})",
+      "authority": "openformula",
       "rows": 3
     },
     {
       "id": "SORTBY.3",
       "f": "=SORTBY(Data!A1:B3, Data!E1:E3, 1)",
+      "authority": "openformula",
       "rows": 3,
       "cols": 2
     },
     {
       "id": "SORTBY.4",
-      "f": "=SORTBY(Data!A1:A3, Data!A1:A2)"
+      "f": "=SORTBY(Data!A1:A3, Data!A1:A2)",
+      "authority": "openformula"
     },
     {
       "id": "SUMPRODUCT.1",
