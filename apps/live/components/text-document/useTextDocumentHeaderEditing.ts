@@ -58,6 +58,8 @@ export type TextDocumentHeaderEditing = {
   readonly toggleFirst: () => void;
   readonly toggleLink: () => void;
   readonly remove: () => void;
+  /** Runs a change with the edited one left, then enters the page's again (Headers and footers options). */
+  readonly changeAround: (run: (was: StoryEditing) => void) => void;
   readonly actions: OfficeActions;
 };
 
@@ -154,6 +156,19 @@ export function useTextDocumentHeaderEditing(input: {
     [liveDoc, stop],
   );
 
+  // A change made with the edited one left, then the page's header or footer entered again (it may be another now).
+  const changeAround = useCallback(
+    (run: (was: StoryEditing) => void) => {
+      const was = latest.current.entered;
+      if (!was) return;
+      stop(was);
+      latest.current = { ...latest.current, entered: null };
+      run(was);
+      enter(was.kind, was.page);
+    },
+    [stop, enter],
+  );
+
   // A change on the bar to the section's own headers, then the page's header entered again.
   const change = useCallback(
     (
@@ -164,28 +179,27 @@ export function useTextDocumentHeaderEditing(input: {
         doc: Y.Doc,
       ) => LiveHeaders | undefined,
     ) => {
-      const { view: body, format: kept, entered: was } = latest.current;
+      const { view: body, format: kept } = latest.current;
       const doc = liveDoc.current;
-      if (!body || !doc || !was) return;
-      stop(was);
-      latest.current = { ...latest.current, entered: null };
-      setLiveHeaders(
-        body,
-        doc,
-        kept,
-        was.section,
-        next(liveHeadersOf(body, doc, was.section), was, doc),
-      );
-      track('Tab', 'Changed', 'TextDocumentHeaderFooter');
-      debugLog('[text-document] header footer', {
-        section: was.section,
-        kind: was.kind,
-        slot: was.slot,
-        change: what,
+      if (!body || !doc) return;
+      changeAround((was) => {
+        setLiveHeaders(
+          body,
+          doc,
+          kept,
+          was.section,
+          next(liveHeadersOf(body, doc, was.section), was, doc),
+        );
+        track('Tab', 'Changed', 'TextDocumentHeaderFooter');
+        debugLog('[text-document] header footer', {
+          section: was.section,
+          kind: was.kind,
+          slot: was.slot,
+          change: what,
+        });
       });
-      enter(was.kind, was.page);
     },
-    [liveDoc, stop, enter],
+    [liveDoc, changeAround],
   );
   const toggleFirst = useCallback(() => {
     const on = !latest.current.entered?.differentFirst;
@@ -256,5 +270,15 @@ export function useTextDocumentHeaderEditing(input: {
     };
   }, [writes, view, enter, laidOut]);
 
-  return { editing, enter, leave, box: boxRef, toggleFirst, toggleLink, remove, actions };
+  return {
+    editing,
+    enter,
+    leave,
+    box: boxRef,
+    toggleFirst,
+    toggleLink,
+    remove,
+    changeAround,
+    actions,
+  };
 }

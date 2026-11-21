@@ -11,7 +11,7 @@ import { OfficePopup } from '@/components/office/OfficePopup';
 
 const NO_SHORTCUTS = () => null;
 
-/** The Options menu's entries; Header format and Page numbers come with their own work (9o, 9p). */
+/** The Options menu's entries; Page numbers comes with page numbers. */
 export function headerOptionsEntries(kind: HeaderFooterKind): readonly OfficeEntry[] {
   const name = kind === 'header' ? 'Header' : 'Footer';
   const entry = (id: string, label: string, built: boolean): OfficeEntry => ({
@@ -22,7 +22,7 @@ export function headerOptionsEntries(kind: HeaderFooterKind): readonly OfficeEnt
     status: built ? 'built' : 'comingSoon',
   });
   return [
-    entry(`${kind}-format`, `${name} format`, false),
+    entry(`${kind}-format`, `${name} format`, true),
     entry(`${kind}-page-numbers`, 'Page numbers', false),
     { kind: 'separator' },
     entry(`remove-${kind}`, `Remove ${kind}`, true),
@@ -38,6 +38,8 @@ export type TextDocumentHeaderBarProps = {
   onFirst: () => void;
   onLink: () => void;
   onRemove: () => void;
+  /** Header format (Footer format): Headers and footers options. */
+  onFormat: () => void;
   /** Escape: back into the header or footer. */
   onBack: () => void;
   toolbar: RefObject<HTMLDivElement | null>;
@@ -54,13 +56,17 @@ export function TextDocumentHeaderBar({
   onFirst,
   onLink,
   onRemove,
+  onFormat,
   onBack,
   toolbar,
 }: TextDocumentHeaderBarProps) {
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const label = kind === 'header' ? 'Header options' : 'Footer options';
-  const actions: OfficeActions = { [`remove-${kind}`]: { run: onRemove, disabled: linked } };
+  const actions: OfficeActions = {
+    [`${kind}-format`]: { run: onFormat },
+    [`remove-${kind}`]: { run: onRemove, disabled: linked },
+  };
   // Arrows move along the bar; Escape goes back into the writing.
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape' && !open) {

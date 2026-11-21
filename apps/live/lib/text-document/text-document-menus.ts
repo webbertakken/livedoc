@@ -300,7 +300,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         ]),
       ]),
       SEPARATOR,
-      item('headers-and-footers-options', 'Headers & footers', 'edit'),
+      item('headers-and-footers-options', 'Headers & footers', 'edit', BUILT),
       item('page-numbers-options', 'Page numbers', 'edit'),
       item('page-orientation', 'Page orientation', 'edit', BUILT),
       item('switch-to-pageless', 'Switch to Pageless format', 'edit', BUILT),

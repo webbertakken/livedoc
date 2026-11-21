@@ -3,7 +3,7 @@
 // it shows in place, or makes the section's own; the toolbar acts on it; Escape or a press on the body leaves, an
 // empty own one taken away; a double-click in a margin enters it; Editors only.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useLayoutEffect, useRef } from 'react';
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -17,6 +17,7 @@ import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo'
 import { TextDocumentSheets } from './TextDocumentSheets';
 import { FOOTER_ITEM, HEADER_ITEM } from './useTextDocumentHeaderEditing';
 import { useTextDocumentHeadersAndFooters } from './useTextDocumentHeadersAndFooters';
+import { HEADER_OPTIONS_ITEM } from './useTextDocumentHeaderOptions';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/text-document/pagination/pagination-plugin', () => ({
@@ -100,6 +101,7 @@ function Harness({
     writes,
     heights,
     caret: new Plugin({}),
+    caretSection: 0,
   });
   useLayoutEffect(() => seen(headers));
   return (
@@ -112,6 +114,7 @@ function Harness({
         editingBox={headers.box}
         editingBar={headers.bar}
       />
+      {headers.optionsDialog}
     </div>
   );
 }
@@ -236,6 +239,27 @@ describe('useTextDocumentHeadersAndFooters', () => {
     expect(edited.isDestroyed || !edited.editable).toBe(true);
   });
 
+  it("opens Headers and footers options from Format for the caret's section, applying its margins", async () => {
+    const seen: { current: Seen | null } = { current: null };
+    render(<Harness pages={pagesWith()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.actions[HEADER_OPTIONS_ITEM]!.run());
+    await settle();
+    expect(screen.getByRole('dialog', { name: 'Headers & footers' })).toBeTruthy();
+    expect(
+      screen.getByRole<HTMLInputElement>('checkbox', { name: 'Different first page' }).checked,
+    ).toBe(true);
+    // jsdom's language is en-US: inches.
+    fireEvent.change(screen.getByRole('textbox', { name: 'Header (in)' }), {
+      target: { value: '1' },
+    });
+    act(() => screen.getByRole('button', { name: 'Apply' }).click());
+    await settle();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(TextDocumentState.section(doc, 'odf').setup.margins.header).toBe(72);
+    expect(track).toHaveBeenCalledWith('Tab', 'Changed', 'TextDocumentHeaderFooter');
+  });
+
   it('offers nothing to a person who cannot edit, and dims the items without pages', async () => {
     const seen: { current: Seen | null } = { current: null };
     const { rerender } = render(<Harness pages={pagesWith()} writes={false} seen={watch(seen)} />);
@@ -245,6 +269,7 @@ describe('useTextDocumentHeadersAndFooters', () => {
     expect(seen.current!.editing).toBeNull();
     rerender(<Harness pages={[]} seen={watch(seen)} />);
     expect(seen.current!.actions[FOOTER_ITEM]!.disabled).toBe(true);
+    expect(seen.current!.actions[HEADER_OPTIONS_ITEM]!.disabled).toBe(true);
   });
 });
 
@@ -337,6 +362,23 @@ describe('the bar’s changes', () => {
     expect(seen.current!.editing).toBeNull();
     expect(liveFirstHeaders(doc)!.header).toEqual({ first: { story: 'h' } });
     expect(document.activeElement).toBe(view.dom);
+  });
+
+  it('applies options from Header format, moving into the header the page now shows', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    render(<Harness pages={pages()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.enter('header', 0));
+    await settle();
+    act(() => screen.getByRole('button', { name: 'Options' }).click());
+    act(() => screen.getByRole('menuitem', { name: /Header format/ }).click());
+    await settle();
+    const dialog = within(screen.getByRole('dialog', { name: 'Headers & footers' }));
+    act(() => dialog.getByRole('checkbox', { name: 'Different first page' }).click());
+    act(() => dialog.getByRole('button', { name: 'Apply' }).click());
+    await settle();
+    expect(liveFirstHeaders(doc)!.differentFirst).toBeUndefined();
+    expect(seen.current!.editing).toMatchObject({ story: 'd', differentFirst: false });
   });
 
   it('goes into the bar with Alt+F10, along it with the arrows, and back with Escape', async () => {

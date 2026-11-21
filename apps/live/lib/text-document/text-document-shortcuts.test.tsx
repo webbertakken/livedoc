@@ -22,6 +22,7 @@ import {
 } from '@/components/text-document/useTextDocumentPageSetup';
 import { COLUMN_ITEMS, COLUMNS_MORE_ITEM } from '@/components/text-document/useTextDocumentColumns';
 import { FOOTER_ITEM, HEADER_ITEM } from '@/components/text-document/useTextDocumentHeaderEditing';
+import { HEADER_OPTIONS_ITEM } from '@/components/text-document/useTextDocumentHeaderOptions';
 import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
   TEXT_DOCUMENT_KEY_ACTIONS,
@@ -85,6 +86,8 @@ describe('the text document menus', () => {
         // Insert > Headers & footers (useTextDocumentHeaderEditing), bound by the surface.
         HEADER_ITEM,
         FOOTER_ITEM,
+        // Format > Headers & footers (useTextDocumentHeaderOptions), bound by the surface.
+        HEADER_OPTIONS_ITEM,
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,
