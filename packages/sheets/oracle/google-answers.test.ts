@@ -69,13 +69,15 @@ function workedOut(
 
 function setup(convert: Convert) {
   const fake = new FakeGoogle({ convert });
+  const logs: string[] = [];
+  const token = fake.issueAccessToken('oracle');
   const drive = oracleDrive(
     fake.fetch,
-    fake.issueAccessToken('oracle'),
+    token,
     async () => {},
-    () => {},
+    (line) => logs.push(line),
   );
-  return { fake, drive };
+  return { fake, drive, logs, token };
 }
 
 describe('sheetsLocale', () => {
@@ -178,6 +180,33 @@ describe('googleAnswers', () => {
       /^locale answered 400 badRequest$/,
     );
     expect(fake.appFiles('oracle')).toEqual([]);
+  });
+
+  it('deletes every upload of a run that fails midway, logging each by id alone', async () => {
+    const { fake, drive, logs, token } = setup(workedOut(CATEGORY));
+    const second = { ...CATEGORY, category: 'Second' };
+    await googleAnswers(CATEGORY, drive);
+    let exports = 0;
+    fake.fail({
+      status: 403,
+      reason: 'exportSizeLimitExceeded',
+      match: (r) => r.path.endsWith('/export') && ++exports === 2,
+    });
+    await expect(googleAnswers(second, drive)).rejects.toThrow(
+      /^export .* answered 403 exportSizeLimitExceeded$/,
+    );
+    expect(fake.appFiles('oracle')).toEqual([]);
+    const ids = fake.requests
+      .filter((r) => r.method === 'DELETE')
+      .map((r) => r.path.split('/').pop());
+    expect(ids).toHaveLength(2);
+    expect(logs).toEqual(
+      ids.flatMap((id) => [
+        `[sheets oracle] uploaded id=${id}`,
+        `[sheets oracle] deleted id=${id}`,
+      ]),
+    );
+    expect(logs.join('\n')).not.toMatch(new RegExp(`${token}|Oracle|Data|SUM`));
   });
 
   it('joins a failed delete to the failure it follows', async () => {

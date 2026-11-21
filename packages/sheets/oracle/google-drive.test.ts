@@ -52,6 +52,13 @@ describe('oracleDrive', () => {
     expect(fake.get(id)).toBeUndefined();
   });
 
+  it('logs each upload and delete by its file id alone', async () => {
+    const { drive, logs } = setup();
+    const id = await drive.uploadAsSheet('Oracle Math', BYTES, XLSX_MIME);
+    await drive.remove(id);
+    expect(logs).toEqual([`[sheets oracle] uploaded id=${id}`, `[sheets oracle] deleted id=${id}`]);
+  });
+
   it('tries a 429 and a 5xx again, a second, then 4, then 16 apart', async () => {
     const { fake, drive, slept, logs } = setup();
     const id = await drive.uploadAsSheet('O', BYTES, XLSX_MIME);
@@ -60,7 +67,7 @@ describe('oracleDrive', () => {
     await drive.exportAs(id, ODS_MIME);
     expect(RETRY_DELAYS_MS).toEqual([1_000, 4_000, 16_000]);
     expect(slept).toEqual([1_000, 4_000, 16_000]);
-    expect(logs[0]).toBe(`[sheets oracle] retry export ${ODS_MIME} status=429 in=1000`);
+    expect(logs[1]).toBe(`[sheets oracle] retry export ${ODS_MIME} status=429 in=1000`);
   });
 
   it('stops after three retries, naming the call and status', async () => {

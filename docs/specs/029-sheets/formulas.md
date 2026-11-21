@@ -1417,7 +1417,8 @@ connect these sheets." with **Allow Access** (verified: Google's help).
   downloads by hand. For each category it uploads the category's workbook as an `.xlsx` converted to a Google Sheet,
   exports that sheet as `.xlsx` and as `.ods` with Google's calculated values, reads the answers from the `.ods`, holds
   the `.xlsx`'s to them (a case the two exports answer differently is a problem named, never an answer), and deletes
-  the Drive file afterwards, whether the category succeeded or failed.
+  the Drive file afterwards, whether the category succeeded or failed. Each upload and delete is logged by its file
+  id, never by what the file holds.
 - Before exporting, the script sets the sheet's locale and time zone to the category's (`en_US`, `de_DE`) and UTC
   through the Sheets API, as a converted file takes the account's own; it is the only Sheets API call.
 - Drive's answers replace downloads made by hand: there is no folder of downloads to read from.

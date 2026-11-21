@@ -1,6 +1,7 @@
 // The Drive and Sheets calls the oracle makes for Google's answers (docs/specs/029-sheets/formulas.md "The oracle",
 // D96): upload a workbook converted to a Google Sheet, set its locale and time zone, export it, delete it. A 429 or a
 // 5xx is tried again after RETRY_DELAYS_MS; any other failure throws a DriveCallError naming the call and status.
+// Each upload and delete is logged by its file id, never by what the file holds.
 import type { Fetch } from './google-oauth.ts';
 
 export const DRIVE_API = 'https://www.googleapis.com';
@@ -82,6 +83,7 @@ export function oracleDrive(
       );
       const { id } = (await res.json()) as { id?: unknown };
       if (typeof id !== 'string') throw new DriveCallError('upload', res.status, 'no id');
+      log(`[sheets oracle] uploaded id=${id}`);
       return id;
     },
     async setLocale(id, locale, timeZone) {
@@ -110,6 +112,7 @@ export function oracleDrive(
     },
     async remove(id) {
       await call('delete', `${DRIVE_API}/drive/v3/files/${id}`, { method: 'DELETE' });
+      log(`[sheets oracle] deleted id=${id}`);
     },
   };
 }
