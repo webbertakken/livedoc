@@ -1,9 +1,10 @@
 // A sheet's top-left window as plain data: what images, thumbnails,
 // PDFs and api or MCP renders draw, with no DOM. Only the cells inside the window are worked out.
 import { columnLetters } from '../address';
-import { colWidth, layoutIndex, posRangeOf, rowHeight } from '../layout';
+import { colWidth, layoutIndex, posRangeOf } from '../layout';
+import { cellLines, rowHeights } from '../row-fit';
 import { displayValue } from '../number-format';
-import { cellKey, type Border, type CellFormat, type Sheet } from '../sheet';
+import { cellKey, type Border, type CellFormat } from '../sheet';
 import { Workbook } from './workbook';
 import type { CardSource } from '../cards';
 import { sheetFromJson, type SheetJson } from '../sheet-json';
@@ -16,6 +17,9 @@ type RenderCell = {
   r: number; // index into the model's rows
   c: number; // index into the model's columns
   text: string;
+  // The text as it is drawn when it takes more than one line (sheet.md "Row height"): wrapped, or broken where its
+  // line breaks are.
+  lines?: string[];
   align: 'l' | 'c' | 'r';
   valign: 't' | 'm' | 'b';
   error?: true;
@@ -73,17 +77,20 @@ function visible(
   return out;
 }
 
+// `font` is the tab's font id: what a cell with no font of its own is measured in (row-fit.ts).
 export function renderWindow(
   wb: Workbook,
   sheetId: string,
   window: { width: number; height: number },
   locale: string,
+  font?: string,
 ): SheetRenderModel | undefined {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return undefined;
   const { layout } = sheet;
   const ix = layoutIndex(layout);
-  const rows = visible(layout.rows, ix.hiddenRows, (id) => rowHeight(layout, id), window.height);
+  const heightOf = rowHeights(wb, sheetId, font);
+  const rows = visible(layout.rows, ix.hiddenRows, heightOf, window.height);
   const cols = visible(layout.cols, ix.hiddenCols, (id) => colWidth(layout, id), window.width);
   const rowAt = new Map(rows.map((r, i) => [r, i]));
   const colAt = new Map(cols.map((c, i) => [c, i]));
@@ -106,8 +113,7 @@ export function renderWindow(
     let size = 0;
     if (axis === 'col')
       for (let k = c; k < c + (span?.colSpan ?? 1); k++) size += colWidth(layout, layout.cols[k]!);
-    else
-      for (let k = r; k < r + (span?.rowSpan ?? 1); k++) size += rowHeight(layout, layout.rows[k]!);
+    else for (let k = r; k < r + (span?.rowSpan ?? 1); k++) size += heightOf(layout.rows[k]!);
     return size;
   };
   const cells: RenderCell[] = [];
@@ -155,6 +161,11 @@ export function renderWindow(
         align: f.ha ?? shown.align,
         valign: f.va ?? 'm',
       };
+      if (shown.kind === 'text' && (f.wr === 'w' || shown.text.includes('\n'))) {
+        const lines = cellLines(wb, sheetId, r, c, shown.text, font);
+        if (lines.length > 1) out.lines = [...lines];
+        else out.text = lines[0] ?? '';
+      }
       if (shown.kind === 'error') out.error = true;
       if (f.b) out.bold = true;
       if (f.i) out.italic = true;
@@ -190,7 +201,7 @@ export function renderWindow(
   return {
     title: sheet.title,
     colWidths: cols.map((c) => colWidth(layout, layout.cols[c]!)),
-    rowHeights: rows.map((r) => rowHeight(layout, layout.rows[r]!)),
+    rowHeights: rows.map((r) => heightOf(layout.rows[r]!)),
     colLabels: cols.map((c) => columnLetters(c)),
     rowLabels: rows.map((r) => String(r + 1)),
     frozenRows: Math.min(layout.frozenRows ?? 0, rows.length),
@@ -204,7 +215,13 @@ export function renderWindow(
 // The grid a sheet's cells fill, in px (docs/specs/029-sheets/sheet.md "Exports and images"): its visible rows and
 // columns through the last that holds an input, a fill, a border or a merge, and one more of each so the grid reads
 // as going on; null for a sheet with nothing in it. A Sheet tab's image grows its Sheet to this, as the tab shows it.
-export function sheetContentSize(sheet: Sheet): { width: number; height: number } | null {
+export function sheetContentSize(
+  wb: Workbook,
+  sheetId: string,
+  font?: string,
+): { width: number; height: number } | null {
+  const sheet = wb.sheet(sheetId);
+  if (!sheet) return null;
   const { layout } = sheet;
   const ix = layoutIndex(layout);
   let lastRow = -1;
@@ -236,7 +253,7 @@ export function sheetContentSize(sheet: Sheet): { width: number; height: number 
   };
   return {
     width: span(layout.cols, ix.hiddenCols, lastCol, (id) => colWidth(layout, id)),
-    height: span(layout.rows, ix.hiddenRows, lastRow, (id) => rowHeight(layout, id)),
+    height: span(layout.rows, ix.hiddenRows, lastRow, rowHeights(wb, sheetId, font)),
   };
 }
 
@@ -251,7 +268,7 @@ type SheetFrame = { sheetId: string; width: number; height: number };
 export function renderModelsForTab(
   sheets: readonly SheetJson[],
   frames: readonly SheetFrame[],
-  opts: { locale?: string; cards?: CardSource | null; now?: () => number } = {},
+  opts: { locale?: string; cards?: CardSource | null; now?: () => number; font?: string } = {},
 ): Map<string, SheetRenderModel> {
   const out = new Map<string, SheetRenderModel>();
   if (frames.length === 0 || sheets.length === 0) return out;
@@ -263,7 +280,7 @@ export function renderModelsForTab(
   });
   for (const f of frames) {
     if (out.has(f.sheetId)) continue;
-    const model = renderFrameWindow(wb, f);
+    const model = renderFrameWindow(wb, f, opts.font);
     if (model) out.set(f.sheetId, model);
   }
   return out;
@@ -271,7 +288,11 @@ export function renderModelsForTab(
 
 // One Sheet element's window, from a workbook already holding its sheet (the editor's sheet store, for its images:
 // docs/specs/026-plan/plan-tabs.md "Export"): the cells that fit its grid area, inside the static render's chrome.
-export function renderFrameWindow(wb: Workbook, frame: SheetFrame): SheetRenderModel | undefined {
+export function renderFrameWindow(
+  wb: Workbook,
+  frame: SheetFrame,
+  font?: string,
+): SheetRenderModel | undefined {
   return renderWindow(
     wb,
     frame.sheetId,
@@ -280,6 +301,7 @@ export function renderFrameWindow(wb: Workbook, frame: SheetFrame): SheetRenderM
       height: Math.max(1, frame.height - STATIC_HEADER_H),
     },
     wb.locale,
+    font,
   );
 }
 

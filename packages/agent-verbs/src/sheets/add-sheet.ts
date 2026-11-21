@@ -253,7 +253,11 @@ async function fillAndPlace(
   const { x, y } = placeBeside(tab.elements);
   // A Sheet as large as what it holds, so it shows every filled cell, within bounds; a blank one its usual size.
   const element = { ...createShape('plan-sheet', x, y), planSheet: { sheetId: sheet.id } };
-  const content = sheetContentSize(sheet);
+  const content = sheetContentSize(
+    new Workbook({ sheets: [sheet], locale: AGENT_LOCALE }),
+    sheet.id,
+    tab.font,
+  );
   if (content) {
     element.width = Math.min(
       SHEET_FRAME_MAX.width,

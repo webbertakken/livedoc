@@ -297,6 +297,30 @@ describe('a sheet’s charts through later changes', () => {
     expect(sent[1]!.operations).toEqual([{ op: 'rm', target: 'el-chart' }]);
   });
 
+  // sheet-store.md "Shaping a sheet": cells alone can make a row taller (sheet.md "Row height").
+  it('keeps a chart on its cell when cells above it make their row taller, and reads no tab when none did', async () => {
+    const { api, sent } = setup({ elements: [SHEET_EL, CHART] });
+    const plain = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Sheet 1', changes: [{ op: 'set', at: 'A1', rows: [['one line']] }] },
+      'mcp',
+    );
+    expect(plain.applied).toHaveLength(1);
+    expect(sent).toHaveLength(0);
+    const grown = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Sheet 1', changes: [{ op: 'set', at: 'A1', rows: [['one\ntwo']] }] },
+      'mcp',
+    );
+    expect(grown.applied[1]).toBe('moved a chart back onto the cells it sits on');
+    // Row 1 is two lines tall (2 x 17 + 8 px); the chart sat 2 px into row 2.
+    expect(sent[0]!.operations).toEqual([
+      { op: 'set', target: 'el-chart', fields: { sheetAnchor: { x: 250, y: 42 + 2 } } },
+    ]);
+  });
+
   it('clears only the charts reading a range, refuses a range it cannot read, and sends nothing with nothing to do', async () => {
     const { api, sent } = setup({ elements: [SHEET_EL, CHART] });
     const none = await changeSheet(

@@ -7,7 +7,7 @@ import {
   indexAtOffset,
   layoutIndex,
   posRangeOf,
-  rowHeight,
+  baseRowHeight,
   type GridRange,
   type SheetLayout,
 } from '@livedoc/sheets';
@@ -44,7 +44,7 @@ export function geometryOf(
 ): Geometry {
   const ix = layoutIndex(layout);
   const hiddenRows = new Set([...ix.hiddenRows, ...filteredOut]);
-  const rows = axisOffsets(layout.rows, (id) => rowHeight(layout, id), hiddenRows);
+  const rows = axisOffsets(layout.rows, (id) => baseRowHeight(layout, id), hiddenRows);
   const cols = axisOffsets(layout.cols, (id) => colWidth(layout, id), ix.hiddenCols);
   const frozenRows = Math.min(layout.frozenRows ?? 0, layout.rows.length);
   const frozenCols = Math.min(layout.frozenCols ?? 0, layout.cols.length);

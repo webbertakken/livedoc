@@ -25,7 +25,9 @@ import {
   idRangeOf,
   parseA1,
   parseRangeText,
-  rowHeight,
+  baseRowHeight,
+  rowHeights,
+  type RowHeights,
   sheetChartTable,
   type IdRange,
   type SheetLayout,
@@ -107,16 +109,18 @@ const CANVAS_TOP_PX = 120;
 const refuse = (code: string, message: string): SheetRefusal => ({ ok: false, code, message });
 
 // A cell's top-left, in px from A1's corner: where a chart sits in its Sheet (hidden rows and columns take no room).
+// `heightOf` says how tall each row is drawn (rowHeights: a row fits its text); without it, a layout's own sizes.
 export function anchorAt(
   layout: SheetLayout,
   at: readonly [number, number],
+  heightOf: RowHeights = (id) => baseRowHeight(layout, id),
 ): { x: number; y: number } {
   const hiddenCols = new Set(layout.hiddenCols ?? []);
   const hiddenRows = new Set(layout.hiddenRows ?? []);
   let x = 0;
   for (const id of layout.cols.slice(0, at[1])) if (!hiddenCols.has(id)) x += colWidth(layout, id);
   let y = 0;
-  for (const id of layout.rows.slice(0, at[0])) if (!hiddenRows.has(id)) y += rowHeight(layout, id);
+  for (const id of layout.rows.slice(0, at[0])) if (!hiddenRows.has(id)) y += heightOf(id);
   return { x: Math.min(SHEET_ANCHOR_MAX, x), y: Math.min(SHEET_ANCHOR_MAX, y) };
 }
 
@@ -133,8 +137,10 @@ export function designCharts(
   sheetId: string,
   tables: readonly (DesignTableInput & { at0: [number, number] })[],
   palette: ChartPaletteId,
+  font?: string,
 ): SheetChartOut[] | SheetRefusal {
   const { layout } = wb.sheet(sheetId)!;
+  const heightOf = rowHeights(wb, sheetId, font);
   const { rows, cols } = layout;
   const out: SheetChartOut[] = [];
   for (const t of tables) {
@@ -160,7 +166,7 @@ export function designCharts(
         c2: cols[c0 + t.head.length - 1]!,
       },
       ...(picked.length ? { cols: picked.slice(0, CHART_SOURCE_COLS_MAX) } : {}),
-      anchor: anchorAt(layout, at),
+      anchor: anchorAt(layout, at, heightOf),
       width: sized(t.chart.width, SHEET_CHART_SIZE.width, CHART_MIN.width),
       height: sized(t.chart.height, SHEET_CHART_SIZE.height, CHART_MIN.height),
       palette:
@@ -177,8 +183,10 @@ export function buildChartChange(
   wb: Workbook,
   sheetId: string,
   change: SheetChartChange,
+  font?: string,
 ): { ok: true; writes: []; line: string; charts: SheetChartOut[] } | SheetRefusal {
   const { layout } = wb.sheet(sheetId)!;
+  const heightOf = rowHeights(wb, sheetId, font);
   const g = parseRangeText(change.range);
   const ids = g ? idRangeOf(layout, g.r1, g.c1, g.r2, g.c2) : null;
   if (!g || !ids || g.r2 >= layout.rows.length || g.c2 >= layout.cols.length)
@@ -222,7 +230,7 @@ export function buildChartChange(
         type: change.type,
         range: ids,
         ...(picked.length ? { cols: picked.slice(0, CHART_SOURCE_COLS_MAX) } : {}),
-        anchor: anchorAt(layout, at),
+        anchor: anchorAt(layout, at, heightOf),
         width: sized(change.width, SHEET_CHART_SIZE.width, CHART_MIN.width),
         height: sized(change.height, SHEET_CHART_SIZE.height, CHART_MIN.height),
         ...(palette ? { palette } : {}),

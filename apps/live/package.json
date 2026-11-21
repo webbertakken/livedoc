@@ -26,6 +26,7 @@
     "test:e2e:workbench": "E2E_WORKBENCH=1 playwright test --project=workbench",
     "test:e2e:office": "playwright test --project=office",
     "fonts:document": "node --import ../../scripts/ts-source-hooks.mjs scripts/document-fonts-css.ts",
+    "fonts:advances": "node --import ../../scripts/ts-source-hooks.mjs scripts/sheet-font-advances.ts",
     "fonts:google": "node --import ../../scripts/ts-source-hooks.mjs scripts/google-fonts-catalogue.ts"
   },
   "dependencies": {

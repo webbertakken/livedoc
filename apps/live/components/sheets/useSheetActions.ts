@@ -31,7 +31,7 @@ import {
   moveSelection,
   parseFormula,
   resizeAxis,
-  rowHeight,
+  baseRowHeight,
   localMs,
   serialFromMs,
   zonedMs,
@@ -334,7 +334,7 @@ export function useSheetActions() {
       },
       sizeOf: (axis: 'r' | 'c', p: number) => {
         return axis === 'r'
-          ? rowHeight(c.sheet.layout, c.sheet.layout.rows[p]!)
+          ? baseRowHeight(c.sheet.layout, c.sheet.layout.rows[p]!)
           : colWidth(c.sheet.layout, c.sheet.layout.cols[p]!);
       },
       // ---- Sort, filter, freeze ----

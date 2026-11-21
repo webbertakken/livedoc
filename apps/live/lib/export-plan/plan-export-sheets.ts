@@ -15,17 +15,18 @@ import { sheetMetricShown } from '@/components/plan/dashboard/sheet-metric-shown
 import type { SheetMetricArt } from '@livedoc/plan-art';
 
 // The cells each Sheet element shows, by sheet id: the window its frame has room for. A sheet the store has not
-// loaded is left out (it draws its frame and headers).
+// loaded is left out (it draws its frame and headers). `font` is the tab's font id, what rows are measured in.
 export function sheetModelsFor(
   elements: readonly Element[],
   store: Pick<SheetStore, 'sheet' | 'workbook'>,
+  font?: string,
 ): Map<string, SheetRenderModel> {
   const out = new Map<string, SheetRenderModel>();
   for (const frame of sheetFramesOf(elements)) {
     if (out.has(frame.sheetId)) continue;
     const sheet = store.sheet(frame.sheetId);
     if (!sheet) continue;
-    const model = renderFrameWindow(store.workbook(sheet.tabId), frame);
+    const model = renderFrameWindow(store.workbook(sheet.tabId), frame, font);
     if (model) out.set(frame.sheetId, model);
   }
   return out;
@@ -36,12 +37,13 @@ export function sheetModelsFor(
 // left out (it keeps its frame's size).
 export function sheetContentsFor(
   elements: readonly Element[],
-  store: Pick<SheetStore, 'sheet'>,
+  store: Pick<SheetStore, 'sheet' | 'workbook'>,
+  font?: string,
 ): Map<string, { width: number; height: number }> {
   const out = new Map<string, { width: number; height: number }>();
   for (const frame of sheetFramesOf(elements)) {
     const sheet = store.sheet(frame.sheetId);
-    const size = sheet ? sheetContentSize(sheet) : null;
+    const size = sheet ? sheetContentSize(store.workbook(sheet.tabId), sheet.id, font) : null;
     if (size) out.set(frame.sheetId, size);
   }
   return out;

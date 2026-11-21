@@ -9,7 +9,7 @@ import {
   layoutIndex,
   moveIds,
   posRangeOf,
-  rowHeight,
+  baseRowHeight,
 } from './layout';
 import {
   copyTitle,
@@ -57,8 +57,8 @@ describe('layout', () => {
     expect(layoutIndex(layout)).toBe(ix);
   });
   it('reads sizes with defaults', () => {
-    expect(rowHeight(layout, 'r2aa')).toBe(40);
-    expect(rowHeight(layout, 'r1aa')).toBe(ROW_HEIGHT_NEW);
+    expect(baseRowHeight(layout, 'r2aa')).toBe(40);
+    expect(baseRowHeight(layout, 'r1aa')).toBe(ROW_HEIGHT_NEW);
     expect(colWidth(layout, 'c1aa')).toBe(COLUMN_WIDTH_NEW);
   });
   it('maps ranges both ways', () => {

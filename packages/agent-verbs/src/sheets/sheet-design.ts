@@ -288,7 +288,8 @@ export function buildDesign(
   wb: Workbook,
   sheetId: string,
   input: SheetDesignInput,
-  opts: { dark: boolean },
+  // `font` is the tab's font id: what its charts' anchors are measured in (rowHeights).
+  opts: { dark: boolean; font?: string | undefined },
   rand: Rand = Math.random,
 ): DesignBuilt {
   const sheet = wb.sheet(sheetId)!;
@@ -375,7 +376,13 @@ export function buildDesign(
     );
     if (changes.length) send({ kind: 'layout', changes });
   }
-  const charts = designCharts(scratch, sheetId, tables, accentChartPalette(design.accent));
+  const charts = designCharts(
+    scratch,
+    sheetId,
+    tables,
+    accentChartPalette(design.accent),
+    opts.font,
+  );
   if ('ok' in charts) return charts;
   // What a one-series chart shows of a table's several value columns.
   const notes = tables

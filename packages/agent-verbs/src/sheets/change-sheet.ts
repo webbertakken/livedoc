@@ -16,19 +16,24 @@ import {
 } from '@livedoc/api-schema';
 import { tabPath } from '../verbs/shared';
 import { sheetChartElements, type SheetChartOut } from './sheet-charts';
-import { chartsCleared, chartsFollowing, type SheetChartEl } from './sheet-chart-follow';
+import {
+  chartsCleared,
+  chartsFollowing,
+  type SheetChartEl,
+  type SheetShape,
+} from './sheet-chart-follow';
 import { darkCanvas } from './sheet-design';
 import {
   SheetLimits,
   applySheetWrite,
   documentCellCount,
+  rowHeights,
   NOBODY,
   splitWrite,
   writesCapsProblem,
   type GridRange,
   type Rand,
   type Sheet,
-  type SheetLayout,
   type SheetWrite,
   type Workbook,
 } from '@livedoc/sheets';
@@ -168,7 +173,8 @@ async function updateSheetCharts(
   change: {
     add: readonly SheetChartOut[];
     clear: readonly (GridRange | null)[];
-    before: SheetLayout;
+    before: SheetShape;
+    after: SheetShape;
   },
   client: 'mcp' | 'cli',
 ): Promise<string[]> {
@@ -177,7 +183,7 @@ async function updateSheetCharts(
   const removed = new Set(
     change.clear.flatMap((range) => chartsCleared(els, sheetId, layout, range)),
   );
-  const moved = chartsFollowing(els, sheetId, change.before, layout).filter(
+  const moved = chartsFollowing(els, sheetId, change.before, change.after).filter(
     (m) => !removed.has(m.id),
   );
   const frame = tab.elements.find(
@@ -243,11 +249,14 @@ export async function changeSheet(
   }
   const { id, tabId } = found.sheet;
   const wb = await workbookFor(api, documentId, state, tabId);
-  const before = wb.sheet(id)!.layout;
   // A design is tinted for its tab's canvas, and charts are on the tab: read it only when a change needs it.
   const needsTab = input.changes.some((c) => TOUCHES_CHARTS.has(c.op));
-  const tab = needsTab ? (await api.json<TabResponse>(tabPath(documentId, tabId))).tab : null;
-  const dark = darkCanvas(tab?.backgroundColor);
+  const readTab = async () => (await api.json<TabResponse>(tabPath(documentId, tabId))).tab;
+  const early = needsTab ? await readTab() : null;
+  const dark = darkCanvas(early?.backgroundColor);
+  // Rows are measured in the tab's font where the tab is at hand, before and after alike.
+  const font = early?.font;
+  const before = { layout: wb.sheet(id)!.layout, heights: rowHeights(wb, id, font) };
   const { charts, clear, ...result } = await applySheetChanges(
     api,
     documentId,
@@ -257,8 +266,12 @@ export async function changeSheet(
     client,
     documentCellCount(sheets),
     Math.random,
-    { dark },
+    { dark, font },
   );
+  // A change to cells alone can make rows taller or shorter (sheet.md "Row height"), which moves the cells under a
+  // chart as a resize does: the tab is read then too.
+  const after = { layout: wb.sheet(id)!.layout, heights: rowHeights(wb, id, font) };
+  const tab = early ?? (after.heights !== before.heights ? await readTab() : null);
   if (tab) {
     try {
       const lines = await updateSheetCharts(
@@ -267,7 +280,7 @@ export async function changeSheet(
         tab,
         wb,
         id,
-        { add: charts, clear, before },
+        { add: charts, clear, before, after },
         client,
       );
       result.applied.push(...lines);

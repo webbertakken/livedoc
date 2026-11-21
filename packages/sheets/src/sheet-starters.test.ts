@@ -12,7 +12,7 @@ import {
   type SheetStarter,
 } from './sheet-starters';
 import { cellKey } from './sheet';
-import { colWidth, rowHeight } from './layout';
+import { colWidth, baseRowHeight } from './layout';
 
 const ctx = { now: 1, by: { id: '', name: '', color: '#000000' } };
 const NOW = Date.UTC(2026, 9, 9);
@@ -100,7 +100,7 @@ describe('the setup starts', () => {
   it('sets a blank sheet up with its size alone, no freeze', () => {
     const { next } = setUp({ start: null, size: 'roomy' });
     expect(next.cells.size).toBe(0);
-    expect([rowHeight(next.layout, next.layout.rows[0]!), next.layout.frozenRows]).toEqual([
+    expect([baseRowHeight(next.layout, next.layout.rows[0]!), next.layout.frozenRows]).toEqual([
       36,
       undefined,
     ]);

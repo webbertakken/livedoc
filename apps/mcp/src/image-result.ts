@@ -163,6 +163,7 @@ async function planContentFor(
       ? {
           sheets: renderModelsForTab(sheets.sheets, frames, {
             cards: sheetCards && items ? cardSourceOf(items.items, itemTypes) : null,
+            ...(tab.font ? { font: tab.font } : {}),
           }),
         }
       : {}),

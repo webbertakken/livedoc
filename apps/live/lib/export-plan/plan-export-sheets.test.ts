@@ -66,7 +66,9 @@ describe('the Sheets an image reads', () => {
     const missing = shape('m', 'plan-sheet', { planSheet: { sheetId: 'not-loaded' } });
     const contents = sheetContentsFor([sheetEl, missing], store);
     expect([...contents.keys()]).toEqual(['sheet-one']);
-    expect(contents.get('sheet-one')).toEqual(sheetContentSize(budget));
+    expect(contents.get('sheet-one')).toEqual(
+      sheetContentSize(store.workbook(budget.tabId), budget.id),
+    );
   });
 
   it('works out each framed Sheet’s cells from the store, leaving out one it has not loaded', () => {

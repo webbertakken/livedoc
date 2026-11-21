@@ -369,6 +369,7 @@ async function renderTabBodyToSvg(
   const sheets = frames.length
     ? renderModelsForTab(sheetJson, frames, {
         cards: sheetCards && items ? cardSourceOf(cardItems(items), typesOf(catalogue)) : null,
+        ...(tab.font ? { font: tab.font } : {}),
       })
     : undefined;
   const drawWith = {

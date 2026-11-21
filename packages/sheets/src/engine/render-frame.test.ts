@@ -25,7 +25,7 @@ describe('sheetContentSize', () => {
   it('reaches the last cell with an input, a fill or a merge, and one row and column more', () => {
     const b = book({ A1: 'Title', C4: '7' });
     const s = b.sheets[0]!;
-    expect(sheetContentSize(s)).toEqual({ width: 4 * 120, height: 5 * 28 });
+    expect(sheetContentSize(b.wb, s.id)).toEqual({ width: 4 * 120, height: 5 * 28 });
     const { rows, cols } = s.layout;
     s.cells.set(cellKey(rows[9]!, cols[0]!), { format: { bg: '#ff0000' } });
     s.cells.set(cellKey(rows[1]!, cols[1]!), { format: { b: true } });
@@ -38,13 +38,57 @@ describe('sheetContentSize', () => {
         merges: [{ r1: rows[0]!, c1: cols[0]!, r2: rows[0]!, c2: cols[5]! }],
       },
     };
-    expect(sheetContentSize(merged)).toEqual({ width: 200 + 6 * 120, height: 10 * 28 });
+    b.wb.updateSheet(merged);
+    expect(sheetContentSize(b.wb, s.id)).toEqual({ width: 200 + 6 * 120, height: 10 * 28 });
   });
 
   it('is null for a sheet with nothing in it, a lone bold cell included', () => {
     const b = book({});
     const s = b.sheets[0]!;
     s.cells.set(cellKey(s.layout.rows[0]!, s.layout.cols[0]!), { format: { b: true } });
-    expect(sheetContentSize(s)).toBeNull();
+    b.wb.updateSheet(s);
+    expect(sheetContentSize(b.wb, s.id)).toBeNull();
+    expect(sheetContentSize(b.wb, 'gone')).toBeNull();
+  });
+
+  // docs/specs/029-sheets/sheet.md "Row height": rows are as tall there as in the editor.
+  it('counts a row that grew with its wrapped text at the height it is drawn', () => {
+    const b = book({ A1: 'one\ntwo\nthree', A2: 'x' });
+    const s = b.sheets[0]!;
+    expect(sheetContentSize(b.wb, s.id)).toEqual({ width: 2 * 120, height: 3 * 17 + 8 + 2 * 28 });
+  });
+});
+
+// docs/specs/029-sheets/sheet.md "Row height": images and exports draw the lines that were measured.
+describe('renderWindow rows and lines', () => {
+  it('gives a row its fitted height and a wrapping cell its lines', () => {
+    const text = 'Rows grow to fit the text their cells hold, so nobody sizes them by hand';
+    const b = book({ A1: text, B1: 'one\ntwo', A2: 'plain' });
+    const s = b.sheets[0]!;
+    const key = cellKey(s.layout.rows[0]!, s.layout.cols[0]!);
+    const cells = s.cells.copy();
+    cells.set(key, { ...cells.get(key), format: { wr: 'w' } });
+    b.wb.updateSheet({ ...s, cells }, [key]);
+    const model = renderWindow(b.wb, s.id, { width: 300, height: 200 }, 'en-GB')!;
+    const [a1, b1, a2] = model.cells;
+    expect(a1!.lines!.length).toBeGreaterThan(2);
+    expect(a1!.lines!.join(' ')).toBe(text);
+    expect(b1!.lines).toEqual(['one', 'two']);
+    expect(a2!.lines).toBeUndefined();
+    expect(model.rowHeights[0]).toBe(a1!.lines!.length * 17 + 8);
+    expect(model.rowHeights[1]).toBe(28);
+  });
+
+  it('measures in the font it is given', () => {
+    const b = book({ A1: 'Rows grow to fit the text their cells hold' });
+    const s = b.sheets[0]!;
+    const key = cellKey(s.layout.rows[0]!, s.layout.cols[0]!);
+    const cells = s.cells.copy();
+    cells.set(key, { ...cells.get(key), format: { wr: 'w' } });
+    b.wb.updateSheet({ ...s, cells }, [key]);
+    const frame = { sheetId: s.id, width: 400, height: 300 };
+    const inter = renderFrameWindow(b.wb, frame)!;
+    const mono = renderFrameWindow(b.wb, frame, 'roboto-mono')!;
+    expect(mono.rowHeights[0]).toBeGreaterThan(inter.rowHeights[0]!);
   });
 });
