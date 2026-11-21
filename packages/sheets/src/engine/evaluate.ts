@@ -112,7 +112,11 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
       const ref = refs[node.i];
       const pos = ref ? resolveRef(ref, f.ctx) : null;
       const range = pos ? posToRange(pos, f) : null;
-      return range ? { ref: range } : err('#REF!');
+      if (range) return { ref: range };
+      // A sheet named by a title no sheet has: Google's words (formulas.md "Other sheets").
+      return pos?.sheet && 'title' in pos.sheet
+        ? err('#REF!', `Unresolved sheet name '${pos.sheet.title}'.`)
+        : err('#REF!');
     }
     // A typed A1 reference never reaches evaluation: stored templates hold `@n` (INDIRECT reads A1 itself).
     case 'ref':

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WorkbookRecord } from './workbook-record';
+import { WorkbookRecord, WORKBOOK_RANGE_SOURCES_MAX } from './workbook-record';
 
 const made = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'Europe/Amsterdam' });
 
@@ -33,6 +33,16 @@ describe('WorkbookRecord', () => {
     });
     expect(WorkbookRecord.read({ ...made, importsAllowed: false })).toEqual(made);
     expect(WorkbookRecord.read({ ...made, importsAllowed: 1 })).toEqual(made);
+  });
+
+  it('keeps the spreadsheets its IMPORTRANGEs read (formulas.md "Connecting two spreadsheets")', () => {
+    expect(WorkbookRecord.read({ ...made, rangeSources: ['a_1', 'b-2'] })).toEqual({
+      ...made,
+      rangeSources: ['a_1', 'b-2'],
+    });
+    const many = Array.from({ length: WORKBOOK_RANGE_SOURCES_MAX + 1 }, (_, i) => `s${i}`);
+    for (const bad of [[], ['a', 'a'], ['a b'], [1], 'a', many, ['x'.repeat(201)]])
+      expect(WorkbookRecord.read({ ...made, rangeSources: bad })).toBeNull();
   });
 
   it.each([

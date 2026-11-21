@@ -37,6 +37,11 @@ describe('values and recalculation', () => {
     b.set('B2', '1', 'Budget');
     expect(b.v('A1')).toBe(2);
   });
+  it('says which sheet title no sheet has, in Google\'s words (formulas.md "Other sheets")', () => {
+    const b = book({ 'Sheet 1': { A1: '=Nope!B2*2', A2: "='Budget 2'!B2" }, Budget: { B2: '21' } });
+    expect(b.v('A1')).toEqual({ e: '#REF!', why: "Unresolved sheet name 'Nope'." });
+    expect(b.v('A2')).toEqual({ e: '#REF!', why: "Unresolved sheet name 'Budget 2'." });
+  });
   it('spills a formula typed in later, over cells nothing read before', () => {
     const b = book({ C1: '5' });
     expect(b.v('A3')).toBe(null);

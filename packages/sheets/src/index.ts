@@ -24,6 +24,7 @@ export * from './number-format';
 export { formatCodeReads } from './format-codes';
 export * from './cards';
 export * from './imports/import-request';
+export * from './imports/range-import';
 export { extractImport, type FetchedPage } from './imports/extract';
 export * from './sort';
 export * from './fill';
@@ -73,6 +74,7 @@ export { EngineHost } from './engine/engine-host';
 export { EnginePort } from './engine/engine-port';
 export type { CellValue, EngineIn, EngineOut, EngineLimits } from './engine/engine-protocol';
 export { ITERATION_OFF, sameIteration, type Iteration } from './engine/loops';
+export type { ImportFamily } from './engine/import-book';
 export * from './workbook-record';
 export {
   renderFrameWindow,

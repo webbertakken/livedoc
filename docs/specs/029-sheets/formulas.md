@@ -85,8 +85,11 @@ as what it means, never as the text typed, so everyone reads it the same whateve
 
 - `'Sheet title'!B4` (quotes needed when the title holds a space or a symbol; `Budget!B4` otherwise) reads a cell
   of another sheet **on the same tab**, by its title; a range too (`'Q3 Costs'!A1:D20`).
+- In a spreadsheet the tab is the whole workbook: its sheets are the document's tabs ([Spreadsheet](spreadsheet.md)),
+  so a reference reads any of them, and renaming or deleting one acts on every sheet's formulas.
 - Renaming a sheet rewrites every formula on the tab that names it; a reference to a title no sheet on the tab has
-  (deleted, or never there) is `#REF!` until a sheet of that title is there again.
+  (deleted, or never there) is `#REF!` "Unresolved sheet name 'Title'." until a sheet of that title is there again
+  (verified: Google's words, its forums).
 - Inserting or deleting rows and columns in a sheet rewrites references to it in every sheet on the tab: a range in
   another sheet with a corner in deleted rows or columns shrinks to what is left, as the sheet's own ranges do
   (`=SUM(Costs!A1:A3)` with Costs' row 1 deleted reads `Costs!A1:A2`); a single cell reads `#REF!`. The shrink is
@@ -528,7 +531,7 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   dates in order (maturity, first coupon, settlement, issue; maturity, settlement, last interest), else `#NUM!`.
 
 **Web**: `HYPERLINK` (above), `ENCODEURL`, `ISURL`, `IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML`, `IMPORTXML`,
-`SPARKLINE` (its chart in [Charts](charts.md#sparklines)), `IMAGE`.
+`IMPORTRANGE`, `SPARKLINE` (its chart in [Charts](charts.md#sparklines)), `IMAGE`.
 
 - `ENCODEURL(text)` writes each byte of the text's UTF-8 as `%XX` but letters, digits, `-` and `_`, as LibreOffice
   and Excel keep them (`"hello, world!"` is `hello%2C%20world%21`, Google's example).
@@ -536,6 +539,7 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   is none.
 - The four imports fetch through the api Worker, once an Editor allows access: [Imports from the web](imports.md).
 - `IMAGE` shows a picture of the web in its cell, fetched the same way: [Imports from the web](imports.md#image).
+- `IMPORTRANGE` reads a range of another LiveDoc spreadsheet: [Other workbooks](#other-workbooks).
 
 **Engineering**: `BIN2OCT`, `BIN2HEX`, `BIN2DEC`, `OCT2BIN`, `OCT2HEX`, `OCT2DEC`, `HEX2BIN`, `HEX2OCT`, `HEX2DEC`,
 `DEC2BIN`, `DEC2OCT`, `DEC2HEX`, `BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT`, `BITRSHIFT`, `DELTA`, `GESTEP`, `ERF`,
@@ -979,7 +983,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `IMPORTDATA`          | Web         | `IMPORTDATA(url)`                                                                                              | Google      | S5                               | built                                                         |
 | `IMPORTFEED`          | Web         | `IMPORTFEED(url, [query], [headers], [num_items])`                                                             | Google      | S5                               | built                                                         |
 | `IMPORTHTML`          | Web         | `IMPORTHTML(url, query, index)`                                                                                | Google      | S5                               | built                                                         |
-| `IMPORTRANGE`         | Web         | `IMPORTRANGE(spreadsheet_url, range_string)`                                                                   | Google      | S5                               | planned                                                       |
+| `IMPORTRANGE`         | Web         | `IMPORTRANGE(spreadsheet_url, range_string)`                                                                   | Google      | S5                               | built                                                         |
 | `IMPORTXML`           | Web         | `IMPORTXML(url, xpath_query, [locale])`                                                                        | Google      | S5                               | built                                                         |
 | `IMPOWER`             | Math        | `IMPOWER(complex_base, exponent)`                                                                              | Google      | `IMPOWER`                        | built                                                         |
 | `IMPRODUCT`           | Engineering | `IMPRODUCT(factor1, [factor2, ...])`                                                                           | Google      | `IMPRODUCT`                      | built                                                         |
@@ -1280,12 +1284,73 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 
 ## Other workbooks
 
-- `IMPORTRANGE(spreadsheet_url, range_string)` reads a range of another LiveDoc spreadsheet by its document address,
-  with the reader's own access: a reader who may not open that spreadsheet sees `#REF!` ("You need access to …").
-- The first use in a spreadsheet asks an Editor to **Allow Access** (Google's consent), recorded for the pair of
-  documents; until allowed it shows `#REF!` with the button in its hover card.
-- Values refresh when the source changes, at most once a minute per pair; a file keeps the last values as cached.
-- Addresses of other services read `#REF!` ("Only LiveDoc spreadsheets can be imported").
+`IMPORTRANGE(spreadsheet_url, range_string)` reads a range of another LiveDoc spreadsheet, as Google Sheets' reads
+another Google spreadsheet (verified: Google's help, "IMPORTRANGE").
+It shares the imports' path through the page and the api ([Imports from the web](imports.md#fetching)), but never
+fetches from the web: it reads LiveDoc's own spreadsheets, so it works wherever LiveDoc runs, `SHEET_IMPORTS` or not.
+
+- `spreadsheet_url` is the spreadsheet's document address (`https://<host>/document/<id>`, any path after the id) or
+  its id alone, as Google takes a spreadsheet's address or its key (default, D75).
+- An address of anything else (another service's spreadsheet, a page) is `#REF!` "Only LiveDoc spreadsheets can be
+  imported"; an empty one is `#REF!` too (default, D75).
+- `range_string` is `[sheet_name!]range` (`"Sheet1!A2:B6"`, `"A2:B6"`) or a named range of the source; without a
+  sheet it reads the source's first sheet (verified: Google's help). Whole columns and rows (`"Data!A:C"`) and open
+  ranges (`"A2:A"`) read to the source's filled extent, as a reference does.
+- A range string that is no reference, or names a sheet or name the source does not have, is `#REF!` "Cannot find
+  range or sheet for imported range." (verified: third-party guides quote Google's words).
+- **Its answer** is the source's values, as the source's own engine works them out: numbers, text, booleans, empty
+  cells and errors (a `#DIV/0!` in the source reads `#DIV/0!`); one cell is one value, a range spills.
+- Number formats do not come with the values: a date reads as its serial number until a spill carries formats (D69's
+  gap); format the cells that receive it (default, D75).
+- An answer past the largest array (D3) is `#ERROR!` "Result too large" (verified: Google's words, third-party
+  guides; Google's own bound is 10 MB a request).
+- Arguments reading `NOW`, `RAND`, `RANDARRAY` or `RANDBETWEEN` are `#ERROR!`, as an import's are (verified:
+  Google's help, "Volatility").
+- While the answer is on its way the cell shows Loading… (`#N/A`, pending), as an import's does.
+
+### Connecting two spreadsheets
+
+Google asks once for each pair of spreadsheets: the first `IMPORTRANGE` from a new source is `#REF!` "You need to
+connect these sheets." with **Allow Access** (verified: Google's help).
+
+- A spreadsheet holding an `IMPORTRANGE` whose source is not yet connected shows a bar above the grid: "Some formulas
+  import ranges from other spreadsheets." with **Allow Access** for Editors, as the imports' bar does; one press
+  connects every source its formulas name that the Editor may open (default, D76).
+- Google offers the button in the cell's hover card; LiveDoc's bar is reachable by keyboard and screen reader, and
+  the hover card says why, as every error's does (default, D76).
+- Connecting is for the pair, for everyone, for good: it is kept with the destination's workbook as the sources it may
+  read, a copy starts without it, and it is never taken back (verified: Google's help, "Permission & access").
+- An Editor connects with `POST /api/documents/<id>/workbook/imports` naming the sources, sent to everyone as a
+  `workbook` op; a source the Editor may not open is not connected.
+- A spreadsheet reading itself needs no connecting (default, D76).
+- Connecting sends `Spreadsheet · Unlocked · RangeAccess`, before the change is saved ([Telemetry](../017-telemetry/telemetry.md)).
+- A spreadsheet in This Browser has nothing on a server to connect: its `IMPORTRANGE` reads as its imports do,
+  offered Sync Document first ([Imports](imports.md#a-spreadsheet-in-this-browser)).
+
+### Who reads what
+
+- Each reader reads with their own access: a reader who may not open the source sees `#REF!` "You don't have
+  permissions to access that sheet." (verified: Google's words), never its values.
+- A source that does not exist, is in someone's browser only, or is trashed reads the same words, so an address never
+  tells whether a document is there (default, D76).
+- Google reads with the access of the person who connected, so every Editor of the destination may import from it;
+  LiveDoc never widens anyone's access ([Plan's links](plan-links.md#who-may-do-what)), so it reads with the reader's.
+- A source that is no spreadsheet (a diagram, a wiki) reads "Cannot find range or sheet for imported range.".
+
+### Fresh values
+
+- The page asks for each distinct `IMPORTRANGE` once, and again every minute while the spreadsheet is open; the api
+  answers from its copy while the source has not changed, so a change in the source shows within about a minute
+  (Google's refresh on every source change; default, D77).
+- Typing the formula into its cell again asks afresh, as an import's does (verified: Google's help).
+- A source that itself imports is worked out with its own `IMPORTRANGE`s read in turn, at most 4 spreadsheets deep;
+  past that, or around a loop (A reads B reads A), the cell is `#REF!` "Circular dependency detected" (Google's
+  loop "never results in an actual data output"; default, D77).
+- A source's web imports and `IMAGE`s read as they do where no editor fetches (D65), since the api fetches nothing
+  for a source no one has open (default, D77).
+- Where no editor asks (the api, MCP and CLI reading values, a Plan Sheet) `IMPORTRANGE` is `#N/A` "Imports are
+  fetched while the spreadsheet is open", as an import is (D65).
+- A file keeps the last values as cached ([Files](files-and-print.md)).
 
 ## The oracle
 
@@ -1387,4 +1452,10 @@ The code cites each by its id.
   replacement runs per match); a group that took no part is empty text; a trailing backslash stays (default).
 - **D71** SPARKLINE's unstated choices: empty cells and other values skipped unless set; an unknown chart type
   `#VALUE!`; column colours applied in the order the help lists them; the accent's colours (charts.md "Sparklines").
+- **D75** IMPORTRANGE's addresses and values: a document address or id; anything else, or empty, `#REF!`; values
+  without their number formats (default).
+- **D76** Connecting spreadsheets: one bar with Allow Access for every unconnected source; a spreadsheet reading itself
+  needs none; a missing source reads as one the reader may not open (default).
+- **D77** IMPORTRANGE's freshness: asked again every minute while open; sources read 4 deep, a loop `#REF!`; a
+  source's web imports as where no editor fetches (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

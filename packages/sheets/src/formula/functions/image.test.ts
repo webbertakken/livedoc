@@ -162,7 +162,7 @@ describe('IMAGE in This Browser', () => {
     expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.offline });
     expect(b.v('A2')).toEqual({ e: '#REF!', why: IMPORT_WORDS.offline });
     expect(b.wb.takeImportAsks()).toEqual([]);
-    b.wb.refreshImports();
+    b.wb.refreshImports('web');
     expect(b.wb.takeImportAsks()).toEqual([]);
     b.wb.onlineImports(false);
     expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });

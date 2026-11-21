@@ -38,7 +38,23 @@ export type WorkbookRecord = {
   readonly settings: WorkbookSettings;
   // An Editor allowed its imports to fetch from the web (imports.md "Allow access"): for good, never on a copy.
   readonly importsAllowed?: true;
+  // The spreadsheets its IMPORTRANGEs may read, connected by an Editor (formulas.md "Connecting two spreadsheets"):
+  // for good, never on a copy; absent when none.
+  readonly rangeSources?: readonly string[];
 };
+
+/** The sources a workbook keeps at most, and an id's longest (the api's bound on a document id). */
+export const WORKBOOK_RANGE_SOURCES_MAX = 100;
+const RANGE_SOURCE_RE = /^[A-Za-z0-9_-]{1,200}$/;
+
+/** Connected sources from the wire or the room: each an id, no repeats, at most the bound; null when not. */
+function readRangeSources(raw: unknown): string[] | null {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > WORKBOOK_RANGE_SOURCES_MAX)
+    return null;
+  if (!raw.every((id): id is string => typeof id === 'string' && RANGE_SOURCE_RE.test(id)))
+    return null;
+  return new Set(raw).size === raw.length ? raw : null;
+}
 
 const isFormat = (value: unknown): value is WorkbookFormat =>
   (WORKBOOK_FORMATS as readonly unknown[]).includes(value);
@@ -93,15 +109,23 @@ export const WorkbookRecord = {
     format,
   }),
 
+  /** Sources as kept (the room's column), or none when they are not (logged by the caller). */
+  readRangeSources,
+
   /** A record from the wire or the room, or null when any part of it is not one. */
   read: (raw: unknown): WorkbookRecord | null => {
     if (typeof raw !== 'object' || raw === null) return null;
-    const { format, settings, importsAllowed } = raw as Record<string, unknown>;
+    const { format, settings, importsAllowed, rangeSources } = raw as Record<string, unknown>;
     if (!isFormat(format)) return null;
     const read = readSettings(settings);
     if (!read) return null;
-    return importsAllowed === true
-      ? { format, settings: read, importsAllowed }
-      : { format, settings: read };
+    const sources = rangeSources === undefined ? undefined : readRangeSources(rangeSources);
+    if (sources === null) return null;
+    return {
+      format,
+      settings: read,
+      ...(importsAllowed === true ? { importsAllowed } : {}),
+      ...(sources ? { rangeSources: sources } : {}),
+    };
   },
 } as const;

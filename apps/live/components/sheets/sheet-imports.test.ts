@@ -55,3 +55,44 @@ describe('SheetImports', () => {
     }
   });
 });
+
+describe('ranges waiting on their source', () => {
+  const range = (i: number, source = 'src1'): ImportAsk => ({
+    key: `r${i}`,
+    request: { kind: 'range', source, range: `A${i}` },
+    fresh: false,
+  });
+  const CONNECT: ImportAnswer = { error: '#REF!', why: 'connect', connect: true };
+
+  it('keeps the asks answered “connect” by source, and asks them again once connected', async () => {
+    const answers = new Map<string, ImportAnswer>([
+      ['r1', CONNECT],
+      ['r2', CONNECT],
+      ['r3', CONNECT],
+    ]);
+    const fetch = vi.fn(async (a: ImportAsk) => answers.get(a.key) ?? { values: [[1]] });
+    const waiting = vi.fn();
+    const imports = new SheetImports({ fetch, land: vi.fn(), waiting });
+    imports.take('*', [range(1), range(2), range(3, 'src2'), ask(4)]);
+    await settle();
+    expect(imports.waitingSources()).toEqual(['src1', 'src2']);
+    expect(waiting).toHaveBeenCalledTimes(3);
+    answers.clear();
+    imports.connected(['src1', 'nowhere']);
+    await settle();
+    expect(fetch).toHaveBeenCalledTimes(6);
+    expect(imports.waitingSources()).toEqual(['src2']);
+    imports.connected(['nowhere']);
+    expect(fetch).toHaveBeenCalledTimes(6);
+  });
+
+  it('keeps one ask once, however often it is answered so', async () => {
+    const waiting = vi.fn();
+    const imports = new SheetImports({ fetch: async () => CONNECT, land: vi.fn(), waiting });
+    imports.take('*', [range(1)]);
+    await settle();
+    imports.take('*', [range(1)]);
+    await settle();
+    expect(waiting).toHaveBeenCalledTimes(1);
+  });
+});

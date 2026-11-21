@@ -1,8 +1,9 @@
 // Web functions (docs/specs/029-sheets/formulas.md "Functions": Web): links and addresses, and the functions that
-// fetch through the api Worker (imports.ts, image.ts, S4).
+// fetch through the api Worker (imports.ts, image.ts, S4), and IMPORTRANGE, which reads LiveDoc through it.
 import { isUrl } from '../../text-checks';
 import { IMAGE_FUNCTIONS } from './image';
 import { IMPORT_FNS } from './imports';
+import { IMPORT_RANGE_FNS } from './import-range';
 import { SPARKLINE_FUNCTIONS } from './sparkline';
 import { scalarFn, type FnDef } from '../fn';
 import { isError, toText } from '../values';
@@ -24,6 +25,7 @@ export function encodeUrl(text: string): string {
 
 export const WEB_FUNCTIONS: Record<string, FnDef> = {
   ...IMPORT_FNS,
+  ...IMPORT_RANGE_FNS,
   ENCODEURL: scalarFn(1, 1, ([x]) => {
     const t = toText(x!);
     return isError(t) ? t : encodeUrl(t);

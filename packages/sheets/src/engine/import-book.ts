@@ -1,6 +1,8 @@
 // A workbook's imports (docs/specs/029-sheets/imports.md "Fetching"): each distinct import's answer, the formula
 // cells reading it, and what is still to be asked of the page. Only an editor's engine keeps one; elsewhere the
 // imports read their refusal. Allowing, an answer arriving and the hourly refresh name the cells to work out again.
+// IMPORTRANGE reads LiveDoc, not the web (formulas.md "Other workbooks"): it asks whatever the web's access, the api
+// saying whether the two spreadsheets are connected, and its answers are asked again every minute, not hourly.
 import {
   importKey,
   type ImportAccess,
@@ -9,6 +11,13 @@ import {
   type ImportRequest,
 } from '../imports/import-request';
 import type { CellNo } from './cell-numbers';
+
+/** Which imports a refresh asks again: the web's (hourly) or IMPORTRANGE's (every minute). */
+export type ImportFamily = 'web' | 'ranges';
+
+function familyOf(request: ImportRequest): ImportFamily {
+  return request.kind === 'range' ? 'ranges' : 'web';
+}
 
 /** What a formula reads of an import: its answer, `pending` until it arrives, `blocked` until access is allowed,
  * `offline` while the spreadsheet is saved only in this browser. */
@@ -19,6 +28,8 @@ const ACCESS_KEY = 'access';
 
 export class ImportBook {
   private access: ImportAccess;
+  // False where nothing fetches the web (the api reading a source for IMPORTRANGE): web imports read as with no book.
+  private readonly fetchesWeb: boolean;
   private readonly answers = new Map<string, ImportAnswer>();
   private readonly requests = new Map<string, ImportRequest>();
   private readonly readers = new Map<string, Set<CellNo>>();
@@ -29,16 +40,19 @@ export class ImportBook {
   private readonly retypedCells = new Set<CellNo>();
   private asks: ImportAsk[] = [];
 
-  constructor(access: ImportAccess) {
+  constructor(access: ImportAccess, fetchesWeb = true) {
     this.access = access;
+    this.fetchesWeb = fetchesWeb;
   }
 
   /** An import as `reader` reads it, the read noted; a first read asks the page for it. */
-  read(request: ImportRequest, reader: CellNo): ImportRead {
+  read(request: ImportRequest, reader: CellNo): ImportRead | null {
+    if (!this.fetchesWeb && request.kind !== 'range') return null;
     const key = importKey(request);
     this.note(key, reader);
     this.requests.set(key, request);
-    if (this.access !== 'allowed') return this.access;
+    if (this.access === 'offline') return 'offline';
+    if (this.access === 'blocked' && request.kind !== 'range') return 'blocked';
     const answer = this.answers.get(key);
     if (this.retypedCells.delete(reader)) this.ask(key, true);
     if (answer) return answer;
@@ -47,7 +61,8 @@ export class ImportBook {
   }
 
   /** Whether `reader` may fetch, the read noted so allowing works it out again; nothing is asked (IMAGE's page fetches). */
-  accessFor(reader: CellNo): ImportAccess {
+  accessFor(reader: CellNo): ImportAccess | null {
+    if (!this.fetchesWeb) return null;
     this.note(ACCESS_KEY, reader);
     return this.access;
   }
@@ -107,10 +122,11 @@ export class ImportBook {
     return [...this.keysOf.keys()];
   }
 
-  /** The hour is up: every import still read is asked again; answers no formula reads are let go. */
-  refresh(): void {
-    if (this.access !== 'allowed') return;
+  /** A family's time is up: each of its imports still read is asked again; its answers no formula reads are let go. */
+  refresh(family: ImportFamily): void {
+    if (this.access === 'offline') return;
     for (const key of [...this.answers.keys()]) {
+      if (familyOf(this.requests.get(key)!) !== family) continue;
       if ((this.readers.get(key)?.size ?? 0) > 0) this.ask(key, false);
       else {
         this.answers.delete(key);

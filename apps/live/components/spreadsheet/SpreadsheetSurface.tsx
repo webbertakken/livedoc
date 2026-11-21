@@ -35,6 +35,7 @@ import { openSpreadsheetFile } from '@/lib/spreadsheet/open-spreadsheet-file';
 import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { track } from '@/lib/telemetry';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
+import { RangeAccessBar } from './RangeAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
 import { useSheetBarPeers } from './useSheetBarPeers';
 
@@ -260,6 +261,13 @@ function SheetWorkspace({
     toast: bridge.toast,
     notify: bridge.notify,
   });
+  // The web's bar: Sync Document in This Browser (where IMPORTRANGE waits too), else Allow Access until allowed.
+  const importBar =
+    bridge.importAccess === 'offline'
+      ? store.usesImports() || store.usesRangeImports()
+      : bridge.importAccess === 'blocked' && store.usesImports();
+  // IMPORTRANGE's sources waiting to be connected (formulas.md "Connecting two spreadsheets").
+  const waiting = store.rangeSourcesWaiting();
   return (
     <SheetControllerProvider value={c}>
       <SheetImagesContext.Provider value={images}>
@@ -268,12 +276,20 @@ function SheetWorkspace({
           className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden"
           style={{ backgroundColor: palette.surface, color: palette.text }}
         >
-          {bridge.importAccess && bridge.importAccess !== 'allowed' && store.usesImports() ? (
+          {importBar ? (
             <ImportAccessBar
               scope={bridge.scope}
               canAllow={bridge.canEdit && bridge.canShape}
               offline={bridge.importAccess === 'offline'}
               sync={sync}
+              onAllowed={onWorkbook}
+            />
+          ) : null}
+          {waiting.length > 0 ? (
+            <RangeAccessBar
+              scope={bridge.scope}
+              sources={waiting}
+              canAllow={bridge.canEdit && bridge.canShape}
               onAllowed={onWorkbook}
             />
           ) : null}

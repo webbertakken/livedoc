@@ -1234,13 +1234,14 @@ export const SPREADSHEETS_EXPORTED = chart(
   { types: ['Ods', 'Fods', 'Xlsx', 'Csv', 'Tsv', 'Pdf', 'Html'] },
 );
 
-// docs/specs/029-sheets/imports.md "Telemetry": an Editor's Allow Access, once per spreadsheet.
+// docs/specs/029-sheets/imports.md "Telemetry": an Editor's Allow Access, once per spreadsheet; and formulas.md
+// "Connecting two spreadsheets": an Editor connecting the spreadsheets its IMPORTRANGEs read.
 export const SPREADSHEETS_IMPORTS_ALLOWED = chart(
   'Spreadsheet',
   'Unlocked',
   'Spreadsheet Imports Allowed',
-  'An editor allowed a spreadsheet’s imports to fetch from the web, once for good.',
-  { types: ['ImportAccess'] },
+  'An editor allowed a spreadsheet’s imports to fetch from the web, or connected the spreadsheets it imports ranges from.',
+  { types: ['ImportAccess', 'RangeAccess'] },
 );
 
 export const SPREADSHEETS: MetricStack = {

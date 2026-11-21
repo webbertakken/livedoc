@@ -6,6 +6,7 @@ import type { Value } from '../formula/values';
 import type { ImportAccess, ImportAnswer, ImportAsk } from '../imports/import-request';
 import type { SheetCellJson, SheetJson } from '../sheet-json';
 import type { Iteration } from './loops';
+import type { ImportFamily } from './import-book';
 
 export type EngineLimits = 'plan' | 'spreadsheet';
 
@@ -34,7 +35,7 @@ export type EngineIn =
   // The spreadsheet was synced to LiveDoc: its imports wait for Allow Access, or fetch when already allowed.
   | { t: 'imports-online'; rev: number; allowed: boolean }
   // The hour is up: every import still read is asked again.
-  | { t: 'imports-refresh'; rev: number };
+  | { t: 'imports-refresh'; rev: number; family: ImportFamily };
 
 /** A formula cell's value: [row, column, value], its whole array when it spills. */
 export type CellValue = [number, number, Value];

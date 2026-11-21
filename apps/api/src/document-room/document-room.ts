@@ -64,6 +64,8 @@ import type { ContentSummary } from '../db/content-summary';
 import type { DocumentCopy, DocumentOutline } from './document-content';
 import type { CreateOutcome, DocumentSeed } from './document-create';
 import type { RouteIdentity } from './document-route';
+import type { ImportAnswer } from '@livedoc/sheets';
+import type { RangeReadQuery } from '../routes/sheet-range-read';
 import { RoomWake } from './room-wake';
 import { roomIsolate, ServerTiming, withServerTiming } from '../server-timing';
 import type { SheetMigrationDry } from '../sheets-migration/sheet-migration-dry';
@@ -1274,6 +1276,14 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   async item(documentId: string, itemId: string): Promise<Item | null> {
     return (await this.content.rpc(documentId)).item(documentId, itemId);
+  }
+
+  async readRange(
+    documentId: string,
+    query: RangeReadQuery,
+    identity: RouteIdentity,
+  ): Promise<ImportAnswer> {
+    return (await this.content.rpc(documentId)).readRange(documentId, query, identity);
   }
 
   async respondToForm(

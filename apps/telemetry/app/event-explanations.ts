@@ -917,6 +917,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Spreadsheet|Exported|Fods':
     'Someone downloaded a spreadsheet as a flat ODF file, all in one XML.',
   'Spreadsheet|Exported|Xlsx': 'Someone downloaded a spreadsheet as an Excel file.',
+  'Spreadsheet|Unlocked|RangeAccess':
+    'An editor connected the spreadsheets a spreadsheet’s IMPORTRANGE formulas read, for good.',
   'Spreadsheet|Unlocked|ImportAccess':
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',

@@ -2,7 +2,7 @@
 // IMPORTHTML's tables and lists, IMPORTXML's nodes, IMPORTFEED's items, and the failures.
 import { describe, expect, it } from 'vitest';
 import { extractImport, isTabSeparated, isXml, tableRows, type FetchedPage } from './extract';
-import { IMPORT_WORDS, IMPORT_VALUES_MAX, type ImportRequest } from './import-request';
+import { IMPORT_WORDS, IMPORT_VALUES_MAX, type WebImportRequest } from './import-request';
 import { parseMarkup, type MarkupElement } from './markup';
 
 const page = (text: string, type = 'text/html', url = 'https://example.com/'): FetchedPage => ({
@@ -11,14 +11,18 @@ const page = (text: string, type = 'text/html', url = 'https://example.com/'): F
   url,
 });
 const EMPTY = { error: '#N/A', why: IMPORT_WORDS.empty };
-const data: ImportRequest = { kind: 'data', url: 'https://example.com/' };
-const html = (query: 'table' | 'list', index: number): ImportRequest => ({
+const data: WebImportRequest = { kind: 'data', url: 'https://example.com/' };
+const html = (query: 'table' | 'list', index: number): WebImportRequest => ({
   kind: 'html',
   url: 'https://example.com/',
   query,
   index,
 });
-const xml = (xpath: string): ImportRequest => ({ kind: 'xml', url: 'https://example.com/', xpath });
+const xml = (xpath: string): WebImportRequest => ({
+  kind: 'xml',
+  url: 'https://example.com/',
+  xpath,
+});
 
 describe('IMPORTDATA', () => {
   it('reads comma-separated rows, made even', () => {
@@ -152,7 +156,7 @@ describe('IMPORTFEED', () => {
       <description>&lt;p&gt;Hello &lt;a href="x"&gt;world&lt;/a&gt;&lt;img src="i"&gt;&lt;/p&gt;</description></item>
     <item><title>Two</title><guid>https://n.example/2</guid><description>Plain</description></item>
   </channel></rss>`;
-  const feed = (query: string, headers = false, items: number | null = null): ImportRequest => ({
+  const feed = (query: string, headers = false, items: number | null = null): WebImportRequest => ({
     kind: 'feed',
     url: 'https://n.example/feed',
     query,

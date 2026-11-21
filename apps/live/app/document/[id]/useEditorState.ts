@@ -1317,6 +1317,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
             : persistence.documentWorkbook.importsAllowed === true
               ? 'allowed'
               : 'blocked',
+          ...(persistence.documentWorkbook.rangeSources
+            ? { rangeSources: persistence.documentWorkbook.rangeSources }
+            : {}),
         }
       : {}),
     self: planItems.self,

@@ -55,7 +55,7 @@ export class EngineHost {
       else if (msg.t === 'imported') wb.landImport(msg.key, msg.answer);
       else if (msg.t === 'imports-allowed') wb.allowImports();
       else if (msg.t === 'imports-online') wb.onlineImports(msg.allowed);
-      else if (msg.t === 'imports-refresh') wb.refreshImports();
+      else if (msg.t === 'imports-refresh') wb.refreshImports(msg.family);
       else wb.tick();
     }
     this.collect();

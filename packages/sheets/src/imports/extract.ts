@@ -2,7 +2,12 @@
 // answers with, or the failure. Pure, run by the api Worker on what it fetched; the engine types the text.
 import { parseCsv } from '../csv';
 import { feedRows, readFeed } from './feed';
-import { boundedRows, IMPORT_WORDS, type ImportAnswer, type ImportRequest } from './import-request';
+import {
+  boundedRows,
+  IMPORT_WORDS,
+  type WebImportAnswer,
+  type WebImportRequest,
+} from './import-request';
 import {
   attrOf,
   elementsOf,
@@ -20,7 +25,7 @@ export type FetchedPage = { text: string; type: string; url: string };
 // The most columns or rows one cell may span: HTML's own ceilings are 1,000 and 65,534; the answer's bound still holds.
 const SPAN_MAX = 1_000;
 
-const empty = (): ImportAnswer => ({ error: '#N/A', why: IMPORT_WORDS.empty });
+const empty = (): WebImportAnswer => ({ error: '#N/A', why: IMPORT_WORDS.empty });
 
 export function isTabSeparated(page: FetchedPage): boolean {
   if (/text\/tab-separated-values/i.test(page.type)) return true;
@@ -98,7 +103,7 @@ function nodeRow(n: XNode): string[] {
   return [shownTextOf(n)];
 }
 
-function xmlRows(page: FetchedPage, xpath: string): ImportAnswer {
+function xmlRows(page: FetchedPage, xpath: string): WebImportAnswer {
   const expr = parseXPath(xpath);
   if ('error' in expr) return { error: '#VALUE!', why: expr.error };
   const root = parseMarkup(page.text, isXml(page) ? 'xml' : 'html');
@@ -111,7 +116,7 @@ function xmlRows(page: FetchedPage, xpath: string): ImportAnswer {
 }
 
 /** The rows an import answers from the page fetched for it, or why it gives none. */
-export function extractImport(r: ImportRequest, page: FetchedPage): ImportAnswer {
+export function extractImport(r: WebImportRequest, page: FetchedPage): WebImportAnswer {
   switch (r.kind) {
     case 'data': {
       if (page.text.trim() === '') return empty();

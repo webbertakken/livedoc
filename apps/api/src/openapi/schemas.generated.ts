@@ -18126,6 +18126,21 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "WorkbookConnectRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "sources": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "sources"
+    ],
+    "type": "object"
+  },
   "WorkbookFormat": {
     "enum": [
       "ods",
@@ -18151,6 +18166,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "importsAllowed": {
         "const": true,
         "type": "boolean"
+      },
+      "rangeSources": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
       },
       "settings": {
         "$ref": "#/components/schemas/WorkbookSettings"

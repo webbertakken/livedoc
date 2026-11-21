@@ -1,13 +1,19 @@
 // A spreadsheet's imports through the api (docs/specs/029-sheets/imports.md): the answer a cell shows for each way
 // the api answers, a picture IMAGE shows, and Allow Access.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { IMPORT_WORDS, type ImportAsk } from '@livedoc/sheets';
-import { allowSheetImports, fetchSheetImage, fetchSheetImport } from './sheet-imports';
+import { IMPORT_WORDS, RANGE_WORDS, type ImportAsk } from '@livedoc/sheets';
+import {
+  allowSheetImports,
+  connectSheetSources,
+  fetchSheetImage,
+  fetchSheetImport,
+} from './sheet-imports';
 
 const scope = { documentId: 'd 1', ownerId: 'o', shareCode: 'CODE', tabId: 't1' };
+const URL_A = 'https://a.example/x.csv';
 const ask: ImportAsk = {
   key: 'k',
-  request: { kind: 'data', url: 'https://a.example/x.csv' },
+  request: { kind: 'data', url: URL_A },
   fresh: true,
 };
 const reply = (body: unknown, status = 200) =>
@@ -37,8 +43,8 @@ describe('fetchSheetImport', () => {
   it.each([
     [429, {}, 'later'],
     [403, { error: 'imports_not_allowed' }, { error: '#REF!', why: IMPORT_WORDS.blocked }],
-    [404, { error: 'not_found' }, { error: '#N/A', why: IMPORT_WORDS.notFetched(ask.request.url) }],
-    [500, 'not json', { error: '#N/A', why: IMPORT_WORDS.notFetched(ask.request.url) }],
+    [404, { error: 'not_found' }, { error: '#N/A', why: IMPORT_WORDS.notFetched(URL_A) }],
+    [500, 'not json', { error: '#N/A', why: IMPORT_WORDS.notFetched(URL_A) }],
   ])('reads a %s as %j', async (status, body, answer) => {
     vi.stubGlobal(
       'fetch',
@@ -59,8 +65,44 @@ describe('fetchSheetImport', () => {
     );
     expect(await fetchSheetImport(scope, ask)).toEqual({
       error: '#N/A',
-      why: IMPORT_WORDS.notFetched(ask.request.url),
+      why: IMPORT_WORDS.notFetched(URL_A),
     });
+  });
+});
+
+describe('an IMPORTRANGE', () => {
+  const range: ImportAsk = {
+    key: 'r',
+    request: { kind: 'range', source: 'src1', range: 'A1:B2' },
+    fresh: false,
+  };
+
+  it('asks for the source and the range, and reads a failure as the source unread', async () => {
+    const f = reply({ values: [[1]] });
+    vi.stubGlobal('fetch', f);
+    expect(await fetchSheetImport(scope, range)).toEqual({ values: [[1]] });
+    const url = new URL(f.mock.calls[0]![0], 'https://x.test');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      kind: 'range',
+      source: 'src1',
+      range: 'A1:B2',
+      tabId: 't1',
+    });
+    vi.stubGlobal('fetch', reply({ error: 'room_unavailable' }, 503));
+    expect(await fetchSheetImport(scope, range)).toEqual({
+      error: '#N/A',
+      why: RANGE_WORDS.unreadable,
+    });
+  });
+
+  it('connects sources with a body, answering the workbook', async () => {
+    const body = { workbook: { format: 'ods', rangeSources: ['src1'] }, rev: 4 };
+    const f = reply(body);
+    vi.stubGlobal('fetch', f);
+    expect(await connectSheetSources(scope, ['src1'])).toEqual(body);
+    const init = f.mock.calls[0]![1]!;
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({ sources: ['src1'] });
   });
 });
 

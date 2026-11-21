@@ -36,6 +36,10 @@ export type WorkbookSettingsRequest = { settings: WorkbookSettings };
 
 export type WorkbookSettingsResponse = { workbook: WorkbookRecord; rev: number };
 
+// POST /documents/:id/workbook/imports with a body: connect the spreadsheets its IMPORTRANGEs read (formulas.md
+// "Connecting two spreadsheets"); without one, allow its web imports (imports.md "Allow access").
+export type WorkbookConnectRequest = { sources: string[] };
+
 // What only the workbook's doors refuse; the rest are the sheet store's (SHEET_ERRORS).
 export const WORKBOOK_ERRORS = [
   // The document is no spreadsheet.
@@ -53,6 +57,10 @@ export const WORKBOOK_ERRORS = [
   'import_invalid',
   // A picture IMAGE asked for that is not fetched, not a picture, or kept where Google refuses (imports.md "IMAGE").
   'image_refused',
+  // A connect body whose sources are not document ids (formulas.md "Connecting two spreadsheets").
+  'range_sources_invalid',
+  // A connect past the sources a workbook keeps (WORKBOOK_RANGE_SOURCES_MAX).
+  'range_sources_full',
 ] as const;
 export type WorkbookError = (typeof WORKBOOK_ERRORS)[number];
 

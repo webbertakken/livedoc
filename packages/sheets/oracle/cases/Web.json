@@ -222,6 +222,37 @@
         "libreoffice": "LibreOffice has no such function: Google-only, #NAME?"
       },
       "note": "imports.md \"Errors\": arguments reading NOW or RAND are refused before anything is fetched"
+    },
+    {
+      "id": "IMPORTRANGE.1",
+      "f": "=IMPORTRANGE(\"https://docs.nu/document/abc\", \"A\"&RANDBETWEEN(1, 1))",
+      "expect": [
+        [
+          {
+            "e": "#ERROR!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093340 (\"Volatility\": \"Import functions can't directly or indirectly reference a volatile function like NOW, RAND, or RANDBETWEEN\": #ERROR!)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: Google-only, #NAME?"
+      },
+      "note": "formulas.md \"Other workbooks\": arguments reading NOW or RAND are refused before anything is asked"
+    },
+    {
+      "id": "IMPORTRANGE.2",
+      "f": "=IMPORTRANGE(\"https://docs.nu/document/abc\")",
+      "expect": [
+        [
+          {
+            "e": "#N/A"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093340 (syntax \"IMPORTRANGE(spreadsheet_url, range_string)\": two arguments); https://support.google.com/docs/thread/29433263 (Google's arity error: \"#N/A ... Wrong number of arguments to IF\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: Google-only, #NAME?"
+      }
     }
   ]
 }

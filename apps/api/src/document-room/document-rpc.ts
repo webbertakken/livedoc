@@ -4,6 +4,9 @@
 // The worker calls these only through document-client.ts.
 
 import type { BugReportFiling } from '@livedoc/api-schema';
+import type { ImportAnswer } from '@livedoc/sheets';
+import { answerRangeRead, type RangeReadQuery } from '../routes/sheet-range-read';
+import { nestedFrom } from '../routes/sheet-range-import';
 import type { Item } from '@livedoc/items';
 import type { ContentSummary } from '../db/content-summary';
 import { readItem } from '../db';
@@ -56,6 +59,13 @@ export type DocumentRoomRpc = {
   item(documentId: string, itemId: string): Promise<Item | null>;
   // A public form's doors, /api/forms/:code... (read, respond, report), for a form this document holds.
   respondToForm(documentId: string, request: Request, identity: RouteIdentity): Promise<Response>;
+  // A range of this spreadsheet for another's IMPORTRANGE (docs/specs/029-sheets/formulas.md "Other workbooks"), read
+  // with the reader's own access; never reachable as an API path.
+  readRange(
+    documentId: string,
+    query: RangeReadQuery,
+    identity: RouteIdentity,
+  ): Promise<ImportAnswer>;
   // A bug report filed on the Bug Tracker board this document holds (docs/specs/016-platform/bug-reports.md).
   fileBugReport(
     documentId: string,
@@ -96,6 +106,12 @@ export function documentRpc(
     item: (documentId, itemId) => readItem(env, documentId, itemId),
     respondToForm: (_documentId, request, identity) =>
       answerFormRequest(documentRouteContext(env, request, identity, waitUntil)),
+    readRange: (documentId, query, identity) => {
+      // No share code rides along: a source is read with what the reader holds of it, never the asker's link.
+      const request = new Request(`https://room/api/documents/${documentId}/workbook`);
+      const ctx = documentRouteContext(env, request, identity, waitUntil);
+      return answerRangeRead(ctx, documentId, query, nestedFrom(ctx));
+    },
     fileBugReport: (documentId, tabId, filing) =>
       fileBugReportInRoom(env, documentId, tabId, filing, waitUntil),
     sharedTabCopy: (documentId, tabId) => sharedTabCopy(env, documentId, tabId),
