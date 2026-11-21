@@ -57,6 +57,8 @@ empty one), 320 pages, 870,000 characters, typed into on page 158 and pasted int
   nothing again for a keystroke that only these parts need.
 - What is drawn from the blocks alone (breaks, paragraph boxes, sections, list items) is mapped through an edit of
   text, never worked out again; a list item's own text edited draws the list items again.
+- Laying out reads text through one range per document, reused: each range left for the garbage collector makes every
+  node added to or taken from the body slower until it is collected (a 320-page layout leaves 8,000).
 - A local edit works out no selection in the live state: y-prosemirror walks the body up to the caret for each one,
   read only when a peer's edit arrives, so `patches/y-prosemirror@1.3.7.patch` leaves it unread; an upgrade of
   y-prosemirror carries the patch or drops it once upstream does the same.
