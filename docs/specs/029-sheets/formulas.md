@@ -684,10 +684,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 - The meaning is the spreadsheet's, set once when it opens from a file, and kept by its copies; a spreadsheet opened
   from a file before this rule keeps Google's, the answers it has always shown (default, D98).
 - A formula pasted or moved from another spreadsheet takes the meaning of the one it lands in, as its text does.
-- Converting (C1) a spreadsheet that has a file's meaning gives it the new format's; each formula calling a function
-  the table below answers differently in the two lists among the conversion's losses before it runs, and is never
-  rewritten, as few rewrites keep the value in every case (default, D97). Writing a spreadsheet with Google's meaning
-  to a file lists those its format's standard answers differently in the same way.
+- Converting (C1) a spreadsheet that has a file's meaning gives it the new format's; one with Google's keeps it. Each
+  formula calling a function the table below answers differently in the spreadsheet's meaning and the new format's
+  standard is listed among the conversion's losses before it runs, and is never rewritten, as few rewrites keep the
+  value in every case (default, D97). Writing a spreadsheet to a file lists those its format's standard answers
+  differently from its meaning in the same way, among the file's losses (`answers_differ`).
 - **Both accept, answered differently**: the answer in each meaning, each case the oracle's (`oracle/cases/`). "Google's"
   is Google's answer; LibreOffice's answers OpenFormula's where the standard and it agree (measured).
 
@@ -696,7 +697,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   | `CELL("sheet", A1)`                                | the sheet's name                  | Google's (Excel has no "sheet") | its number (§6.13.3)                  | Info CELL.9                     |
   | `SORT(range, 1, -1)`                               | -1 is TRUE: ascending             | descending (sort_order)         | descending (`COM.MICROSOFT.SORT`)     | Filter SORT.8                   |
   | `ADDRESS(2, 3, 1, TRUE, "Data")`                   | `Data!$C$2`                       | Google's                        | `Data.$C$2` (§6.14.2)                 | Lookup ADDRESS.7                |
-  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`             | -3, -2: away from and toward zero | Google's                        | -2, -3: toward +∞ and −∞ (§6.17.1)    | Math CEILING.9, FLOOR.9         |
+  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`             | -3, -2: away from and toward zero | Google's                        | -2, -3: toward +∞ and −∞ (§6.17.1)    | Math CEILING.4, FLOOR.4         |
   | `DOLLARDE(100.01, 8)`                              | 100.125: 100 1/8                  | Google's                        | 100.0125: 100 1/80 (§6.12.16)         | Financial DOLLARDE.1            |
   | `DOLLARFR(100.125, 8)`                             | 100.01                            | Google's                        | 100.1 (§6.12.17)                      | Financial DOLLARFR.1            |
   | `CUMIPMT(r, n, pv, 2.1, 4.9, 0)`, `CUMPRINC`       | periods 3 and 4                   | periods 2 to 4: truncated       | Google's (no rounding named)          | Financial CUMIPMT.4, CUMPRINC.4 |

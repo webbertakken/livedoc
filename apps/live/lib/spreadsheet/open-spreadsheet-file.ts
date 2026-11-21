@@ -96,7 +96,7 @@ export async function openSpreadsheetFile(
       name: nameFromFile(file.name),
       tabs,
       sheets,
-      workbook: WorkbookRecord.withFormat(made, read.format),
+      workbook: WorkbookRecord.opened(made, read.format),
     });
     created = true;
     const scope: SheetsScope = { ownerId, documentId, shareCode: null, tabId: null };

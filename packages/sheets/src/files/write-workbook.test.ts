@@ -59,4 +59,32 @@ describe('writeWorkbook', () => {
     const flat = new TextDecoder().decode(writeWorkbook([looped], on, 'Budget', 'fods').data);
     expect(flat).toContain('office:value="9.9609375"');
   });
+
+  // formulas.md, the file's meaning (D97): values cached in the spreadsheet's meaning, and the formulas its format's
+  // standard answers otherwise listed among the file's losses.
+  it('works values out in the spreadsheet’s meaning and lists what the format answers otherwise', () => {
+    const { layout } = sheet;
+    const compiled = compileFormula('=PERMUTATIONA(3, 4)', {
+      own: { id: sheet.id, title: sheet.title, layout },
+      byTitle: () => undefined,
+      byId: () => undefined,
+    });
+    if (!compiled.ok) throw new Error('formula');
+    const permuted = {
+      ...sheet,
+      cells: CellMap.from([
+        [cellKey(layout.rows[0]!, layout.cols[0]!), { input: { f: compiled.formula } }],
+      ]),
+    };
+    const made = writeWorkbook([permuted], record, 'Budget', 'fods');
+    expect(made.losses).toEqual([{ k: 'answers_differ', count: 1, functions: ['PERMUTATIONA'] }]);
+    const opened = writeWorkbook(
+      [permuted],
+      WorkbookRecord.opened(record, 'fods'),
+      'Budget',
+      'fods',
+    );
+    expect(opened.losses).toEqual([]);
+    expect(new TextDecoder().decode(opened.data)).toContain('office:value="81"');
+  });
 });

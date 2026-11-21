@@ -350,6 +350,9 @@
       "cite": "https://support.google.com/docs/answer/3267071 (\"sheet\" - returns the sheet name of the cell in `reference`)",
       "differs": {
         "libreoffice": "LibreOffice gives the sheet's number, as OpenFormula defines \"SHEET\"; Google gives its name, and Google's meaning wins where Google has it (S6)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
       }
     },
     {

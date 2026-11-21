@@ -37,6 +37,14 @@ describe('offlineWorkbookConversion', () => {
     expect((await offlineWorkbookConversion('d1', 'fods')).losses).toEqual([]);
   });
 
+  // formulas.md, the file's meaning (D97): a file's meaning becomes the new format's; Google's stays.
+  it('gives a file’s meaning the new format’s', async () => {
+    const opened = WorkbookRecord.opened(workbook, 'ods');
+    await offlinePutRecord(testRecord({ workbook: opened, sheets: [sheet] }));
+    expect((await offlineConvertWorkbook('d1', 'xlsx')).workbook.meaning).toBe('ooxml');
+    expect((await offlineGetRecord('d1'))?.workbook?.meaning).toBe('ooxml');
+  });
+
   it('refuses a document that is no spreadsheet', async () => {
     await offlinePutRecord(testRecord());
     await expect(offlineWorkbookConversion('d1', 'xlsx')).rejects.toMatchObject({

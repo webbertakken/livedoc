@@ -1314,6 +1314,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
           recalc: persistence.documentWorkbook.settings.recalc,
           locale: persistence.documentWorkbook.settings.locale,
           timeZone: persistence.documentWorkbook.settings.timeZone,
+          ...(persistence.documentWorkbook.meaning
+            ? { meaning: persistence.documentWorkbook.meaning }
+            : {}),
           importAccess: documentOffline
             ? 'offline'
             : persistence.documentWorkbook.importsAllowed === true

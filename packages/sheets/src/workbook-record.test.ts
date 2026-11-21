@@ -18,12 +18,37 @@ describe('WorkbookRecord', () => {
   });
 
   it('changes its format only when asked', () => {
-    expect(WorkbookRecord.withFormat(made, 'xlsx').format).toBe('xlsx');
+    expect(WorkbookRecord.converted(made, 'xlsx').format).toBe('xlsx');
     expect(made.format).toBe('ods');
   });
 
   it('reads back what it writes', () => {
     expect(WorkbookRecord.read(JSON.parse(JSON.stringify(made)))).toEqual(made);
+  });
+
+  // formulas.md, the file's meaning: a standard's, kept; absent, Google's (D98); anything else is no record.
+  it("keeps a file's meaning, and refuses one that is not", () => {
+    expect(WorkbookRecord.meaningOf('xlsx')).toBe('ooxml');
+    expect(WorkbookRecord.meaningOf('ods')).toBe('openformula');
+    expect(WorkbookRecord.meaningOf('fods')).toBe('openformula');
+    const opened = WorkbookRecord.opened(made, 'xlsx');
+    expect(opened).toEqual({ ...made, format: 'xlsx', meaning: 'ooxml' });
+    expect(made.meaning).toBeUndefined();
+    expect(WorkbookRecord.read(JSON.parse(JSON.stringify(opened)))).toEqual(opened);
+    expect(WorkbookRecord.read({ ...made, meaning: 'openformula' })?.meaning).toBe('openformula');
+    expect(WorkbookRecord.read({ ...made, meaning: 'google' })).toBeNull();
+    expect(WorkbookRecord.read({ ...made, meaning: 1 })).toBeNull();
+  });
+
+  // D97: converting gives a file's meaning the new format's; a spreadsheet made in LiveDoc keeps Google's.
+  it('converts its meaning with its format only when it has a file’s', () => {
+    const opened = WorkbookRecord.opened(made, 'fods');
+    expect(WorkbookRecord.converted(opened, 'xlsx')).toEqual({
+      ...opened,
+      format: 'xlsx',
+      meaning: 'ooxml',
+    });
+    expect(WorkbookRecord.converted(made, 'xlsx')).toEqual({ ...made, format: 'xlsx' });
   });
 
   it('keeps imports allowed only when they are (imports.md "Allow access")', () => {

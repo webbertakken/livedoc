@@ -1,6 +1,7 @@
 // The workbook row (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): what belongs to a spreadsheet as a
 // whole rather than to one of its sheets. One per spreadsheet, in its room; a document holds one exactly when it is
 // a spreadsheet (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
+import type { FileMeaning } from './formula/meaning';
 
 /** The native file format a workbook keeps (standard-mapping.md): ODF as a package or flat, or OOXML. */
 export const WORKBOOK_FORMATS = ['ods', 'fods', 'xlsx'] as const;
@@ -36,6 +37,10 @@ export type WorkbookSettings = {
 export type WorkbookRecord = {
   readonly format: WorkbookFormat;
   readonly settings: WorkbookSettings;
+  // Whose answer a formula Google and a standard answer differently gives (formulas.md, the file's meaning): the
+  // standard of the format it was opened from, kept by its copies; absent, Google's (made in LiveDoc, or opened from a
+  // file before the meaning was kept, D98).
+  readonly meaning?: FileMeaning;
   // An Editor allowed its imports to fetch from the web (imports.md "Allow access"): for good, never on a copy.
   readonly importsAllowed?: true;
   // The spreadsheets its IMPORTRANGEs may read, connected by an Editor (formulas.md "Connecting two spreadsheets"):
@@ -58,6 +63,9 @@ function readRangeSources(raw: unknown): string[] | null {
 
 const isFormat = (value: unknown): value is WorkbookFormat =>
   (WORKBOOK_FORMATS as readonly unknown[]).includes(value);
+
+const isFileMeaning = (value: unknown): value is FileMeaning =>
+  value === 'ooxml' || value === 'openformula';
 
 const isRecalc = (value: unknown): value is WorkbookRecalc =>
   (WORKBOOK_RECALC_MODES as readonly unknown[]).includes(value);
@@ -108,9 +116,21 @@ export const WorkbookRecord = {
     },
   }),
 
-  withFormat: (record: WorkbookRecord, format: WorkbookFormat): WorkbookRecord => ({
+  /** The meaning a format's file has: OOXML's for `.xlsx`, OpenFormula's for `.ods` and `.fods`. */
+  meaningOf: (format: WorkbookFormat): FileMeaning => (format === 'xlsx' ? 'ooxml' : 'openformula'),
+
+  /** A new spreadsheet's record opened from a file: the file's format and that format's meaning. */
+  opened: (made: WorkbookRecord, format: WorkbookFormat): WorkbookRecord => ({
+    ...made,
+    format,
+    meaning: WorkbookRecord.meaningOf(format),
+  }),
+
+  /** The record converted to `format`: a file's meaning becomes the new format's (D97); Google's stays Google's. */
+  converted: (record: WorkbookRecord, format: WorkbookFormat): WorkbookRecord => ({
     ...record,
     format,
+    ...(record.meaning ? { meaning: WorkbookRecord.meaningOf(format) } : {}),
   }),
 
   /** Sources as kept (the room's column), or none when they are not (logged by the caller). */
@@ -119,8 +139,12 @@ export const WorkbookRecord = {
   /** A record from the wire or the room, or null when any part of it is not one. */
   read: (raw: unknown): WorkbookRecord | null => {
     if (typeof raw !== 'object' || raw === null) return null;
-    const { format, settings, importsAllowed, rangeSources } = raw as Record<string, unknown>;
+    const { format, settings, importsAllowed, rangeSources, meaning } = raw as Record<
+      string,
+      unknown
+    >;
     if (!isFormat(format)) return null;
+    if (meaning !== undefined && !isFileMeaning(meaning)) return null;
     const read = readSettings(settings);
     if (!read) return null;
     const sources = rangeSources === undefined ? undefined : readRangeSources(rangeSources);
@@ -128,6 +152,7 @@ export const WorkbookRecord = {
     return {
       format,
       settings: read,
+      ...(meaning === undefined ? {} : { meaning }),
       ...(importsAllowed === true ? { importsAllowed } : {}),
       ...(sources ? { rangeSources: sources } : {}),
     };

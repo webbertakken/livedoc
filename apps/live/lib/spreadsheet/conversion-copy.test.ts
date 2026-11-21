@@ -84,4 +84,14 @@ describe('the conversion dialog’s words', () => {
       'Columns past XFD are left out of 2 sheets: A and B',
     );
   });
+
+  // formulas.md, the file's meaning (D97): formulas whose functions the new format's standard answers differently.
+  it('names the formulas that may answer differently in the new format', () => {
+    expect(
+      conversionLine({ k: 'answers_differ', count: 2, functions: ['CEILING', 'SORT'] }, 'ods'),
+    ).toBe('2 formulas may answer differently in OpenDocument: CEILING and SORT');
+    expect(conversionLine({ k: 'answers_differ', count: 1, functions: ['SORT'] }, 'xlsx')).toBe(
+      '1 formula may answer differently in Excel: SORT',
+    );
+  });
 });

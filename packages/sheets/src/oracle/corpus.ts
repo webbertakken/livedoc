@@ -32,6 +32,15 @@ export type OracleCase = {
   differs?: Partial<Record<OracleSource, string>>;
   // What the case shows: the spec rule it holds, by its section.
   note?: string;
+  // Its answer in a file's meaning where that differs from Google's (formulas.md, the file's meaning): OOXML's from
+  // Microsoft's help (cited), OpenFormula's written and cited or LibreOffice's own answer (`libreoffice`).
+  meaning?: OracleMeanings;
+};
+
+export type OracleMeanings = {
+  ooxml?: OracleValue[][];
+  openformula?: OracleValue[][] | 'libreoffice';
+  cite?: string;
 };
 
 export type OracleCategory = {
@@ -112,6 +121,26 @@ function isBlock(v: unknown): v is OracleValue[][] {
   return Array.isArray(v) && v.every((row) => Array.isArray(row) && row.every(isOracleValue));
 }
 
+// A case's answers in the files' meanings: at least one, each a block (OpenFormula's may be LibreOffice's), a written
+// answer cited.
+function meaningProblems(raw: unknown, at: string): string[] {
+  if (raw === undefined) return [];
+  if (typeof raw !== 'object' || raw === null) return [`${at}: meaning must name answers`];
+  const { ooxml, openformula, cite, ...rest } = raw as Record<string, unknown>;
+  const out: string[] = [];
+  if (Object.keys(rest).length > 0) out.push(`${at}: meaning holds ooxml, openformula and cite`);
+  if (ooxml === undefined && openformula === undefined)
+    out.push(`${at}: meaning names an answer in ooxml or openformula`);
+  if (ooxml !== undefined && !isBlock(ooxml))
+    out.push(`${at}: meaning.ooxml must be rows of values`);
+  if (openformula !== undefined && openformula !== 'libreoffice' && !isBlock(openformula))
+    out.push(`${at}: meaning.openformula must be rows of values or libreoffice`);
+  const written =
+    ooxml !== undefined || (openformula !== undefined && openformula !== 'libreoffice');
+  if (written && typeof cite !== 'string') out.push(`${at}: a written meaning cites where`);
+  return out;
+}
+
 function caseProblems(x: Record<string, unknown>, at: string): string[] {
   const out: string[] = [];
   if (typeof x.id !== 'string' || !ID.test(x.id)) out.push(`${at}: id must read NAME.n`);
@@ -129,6 +158,7 @@ function caseProblems(x: Record<string, unknown>, at: string): string[] {
       out.push(`${at}: tol must loosen the tolerance, at most to ${ORACLE_TOLERANCE_LOOSEST}`);
     if (typeof x.note !== 'string') out.push(`${at}: a loosened tol says why in note`);
   }
+  out.push(...meaningProblems(x.meaning, at));
   if (x.expect !== undefined && !isBlock(x.expect))
     out.push(`${at}: expect must be rows of values`);
   if ((x.expect === undefined) !== (typeof x.cite !== 'string'))

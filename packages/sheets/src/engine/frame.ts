@@ -4,6 +4,7 @@
 import type { CardSource } from '../cards';
 import type { ImportAccess, ImportRequest } from '../imports/import-request';
 import type { ImportRead } from './import-book';
+import type { FormulaMeaning } from '../formula/meaning';
 import type { SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
 import type { CellFormat } from '../sheet';
@@ -53,6 +54,8 @@ export type Frame = {
   col: number;
   ctx: SheetsCtx;
   locale: string;
+  // Whose answer a formula both Google and the file's standard accept gives (formulas.md, the file's meaning).
+  meaning: FormulaMeaning;
   // Whether ranges and arrays are taken whole where one value goes (formulas.md "Arrays and spills"): inside
   // ARRAYFORMULA, an array literal or an array argument, and everywhere on a Plan Sheet; else they intersect.
   arrays: boolean;

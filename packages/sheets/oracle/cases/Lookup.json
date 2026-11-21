@@ -302,6 +302,9 @@
       "cite": "https://support.google.com/docs/answer/3093308 (\"sheet - A string indicating the name of the sheet into which the address points\"; sample `ADDRESS(1,2,,,\"Sheet2\")`), written as Google writes a reference to another sheet",
       "differs": {
         "libreoffice": "LibreOffice writes a sheet in its own syntax, `Data.` before the cell; Google writes it as a reference is written, `Data!`"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
       }
     },
     {

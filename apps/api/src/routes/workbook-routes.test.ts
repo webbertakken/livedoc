@@ -113,6 +113,20 @@ describe('making a spreadsheet', () => {
     expect(unreferenced.n).toBe(0);
   });
 
+  // formulas.md, the file's meaning: kept by the spreadsheet opened from a file, and by its copies.
+  it('keeps a file’s meaning, made and copied', async () => {
+    const opened = WorkbookRecord.opened(record, 'xlsx');
+    await call({ path: '', body: spreadsheet({ workbook: opened }) });
+    const read = await (await call({ method: 'GET', path: '/book1' })).json<DocumentResponse>();
+    expect(read.document.workbook).toEqual(opened);
+    const res = await call({ path: '/book1/copy', body: {} });
+    const { document: copied } = await res.json<{ document: { id: string } }>();
+    const copy = await (
+      await call({ method: 'GET', path: `/${copied.id}` })
+    ).json<DocumentResponse>();
+    expect(copy.document.workbook?.meaning).toBe('ooxml');
+  });
+
   it('reads no workbook for any other document', async () => {
     await call({
       path: '',
@@ -239,7 +253,7 @@ describe('downloading a spreadsheet', () => {
         id: 'book2',
         tabs: [{ ...ods.tabs[0]!, id: 'tab2' }],
         sheets: [{ ...ods.sheets[0]!, id: 'sheetBk2', tabId: 'tab2' }],
-        workbook: WorkbookRecord.withFormat(record, 'xlsx'),
+        workbook: WorkbookRecord.converted(record, 'xlsx'),
       },
     });
     const res = await call({ method: 'GET', path: '/book2/workbook/file' });

@@ -39,8 +39,12 @@ function cellInfo(type: string, r: RangeRef, own: boolean, f: Frame): Value {
       return r.c1 + 1;
     case 'row':
       return r.r1 + 1;
-    case 'sheet':
-      return f.ctx.byId(r.sheetId)?.title ?? err('#REF!');
+    case 'sheet': {
+      // OpenFormula's is the sheet's number (Part 4 §6.13.3), Google's its name (the file's meaning).
+      const title = f.ctx.byId(r.sheetId)?.title;
+      if (title === undefined) return err('#REF!');
+      return f.meaning === 'openformula' ? f.sheetNumber(r.sheetId) : title;
+    }
     case 'contents':
       return read();
     case 'type': {

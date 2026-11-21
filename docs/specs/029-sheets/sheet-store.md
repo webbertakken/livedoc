@@ -61,7 +61,8 @@ by viewport, the limits, the workbook's doors, offline and copies. What the stor
   characters. References to other sheets are by sheet id across the document's tabs ([Spreadsheet](spreadsheet.md#what-a-workbook-holds)).
 - **The workbook row**: one per spreadsheet, in its room, holding its file format (`ods`, `fods` or `xlsx`), settings
   (locale, time zone, recalculation, iterative calculation), theme, named ranges and named functions, the document the `CARD` functions read, whether its imports may fetch from the web ([Imports](imports.md#allow-access)), the spreadsheets
-  its `IMPORTRANGE`s may read ([Formulas](formulas.md#connecting-two-spreadsheets)), and its rev.
+  its `IMPORTRANGE`s may read ([Formulas](formulas.md#connecting-two-spreadsheets)), its meaning when it was opened
+  from a file ([the file's meaning](formulas.md#function-catalogue)), and its rev.
 - **Styles** move to a table of their own: each distinct style once, by id; a cell holds a style id instead of its
   format JSON ([Formatting](formatting.md#styles-in-the-model)). A cell write may name a style by its keys; the room
   finds or makes its id. Built: a format that lands in a spreadsheet's cell, by a write, a create, a seed or a copy,

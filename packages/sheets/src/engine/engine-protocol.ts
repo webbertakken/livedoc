@@ -2,6 +2,7 @@
 // sends its sheets and every change to them; the Worker, the only engine, answers with which cells are waiting and
 // then their new values, in parts. Every message the page sends carries a rising \`rev\`; an answer names the last rev
 // it has taken in, so values worked out before a sheet's rows or columns moved are dropped.
+import type { FileMeaning } from '../formula/meaning';
 import type { Value } from '../formula/values';
 import type { ImportAccess, ImportAnswer, ImportAsk } from '../imports/import-request';
 import type { SheetCellJson, SheetJson } from '../sheet-json';
@@ -18,6 +19,8 @@ export type EngineIn =
       locale: string;
       // A spreadsheet's time zone (formulas.md "Locale"); absent, the viewer's.
       timeZone?: string;
+      // A spreadsheet's meaning (formulas.md, the file's meaning); absent, Google's.
+      meaning?: FileMeaning;
       limits: EngineLimits;
       iteration: Iteration;
       // A spreadsheet's imports (imports.md): fetched by the page, access allowed, not yet, or not while it is saved

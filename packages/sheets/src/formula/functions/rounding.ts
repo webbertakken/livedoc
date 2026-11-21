@@ -43,6 +43,9 @@ function multipleFn(up: boolean): FnDef {
     const factor = opt(args, 1, f, numArg, 1);
     if (isError(x)) return x;
     if (isError(factor)) return factor;
+    // Two arguments in OpenFormula's meaning are its mode 0, the mode left out (Part 4 §6.17.1; the file's meaning).
+    if (args.length === 2 && f.meaning === 'openformula')
+      return openFormulaMultiple(x, factor, 0, up);
     if (args.length < 3) return googleMultiple(x, factor, up);
     const mode = opt(args, 2, f, numArg, 0);
     return isError(mode) ? mode : openFormulaMultiple(x, factor, mode, up);

@@ -6775,6 +6775,14 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "FileMeaning": {
+    "description": "A file's meaning: a standard's, never Google's.",
+    "enum": [
+      "ooxml",
+      "openformula"
+    ],
+    "type": "string"
+  },
   "FilterCondition": {
     "additionalProperties": false,
     "properties": {
@@ -18326,6 +18334,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "importsAllowed": {
         "const": true,
         "type": "boolean"
+      },
+      "meaning": {
+        "$ref": "#/components/schemas/FileMeaning"
       },
       "rangeSources": {
         "items": {

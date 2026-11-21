@@ -9,10 +9,12 @@ export type WorkbookRow = {
   imports_allowed?: number;
   // The connected IMPORTRANGE sources as a JSON array, or null for none (formulas.md "Connecting two spreadsheets").
   range_sources?: string | null;
+  // The file's meaning ('ooxml', 'openformula'), or null for Google's (formulas.md, the file's meaning; D98).
+  meaning?: string | null;
 };
 
 /** The row's columns a record is read from. */
-export const WORKBOOK_COLUMNS = 'format, settings, imports_allowed, range_sources';
+export const WORKBOOK_COLUMNS = 'format, settings, imports_allowed, range_sources, meaning';
 
 function rangeSourcesOf(documentId: string, text: string | null | undefined): string[] | undefined {
   if (!text) return undefined;
@@ -25,6 +27,14 @@ function rangeSourcesOf(documentId: string, text: string | null | undefined): st
   const sources = WorkbookRecord.readRangeSources(raw);
   if (!sources) console.warn('[workbook] unreadable range sources', { documentId });
   return sources ?? undefined;
+}
+
+// A meaning the record cannot read is Google's, as a spreadsheet's before its meaning was kept (D98), and logged.
+function meaningOf(documentId: string, text: string | null | undefined): string | undefined {
+  if (text === null || text === undefined) return undefined;
+  if (text === 'ooxml' || text === 'openformula') return text;
+  console.warn('[workbook] unreadable meaning', { documentId });
+  return undefined;
 }
 
 /** A workbook row as its record, or null when it cannot be read (logged). */
@@ -40,11 +50,13 @@ export function workbookFromRow(
     settings = null;
   }
   const rangeSources = rangeSourcesOf(documentId, row.range_sources);
+  const meaning = meaningOf(documentId, row.meaning);
   const record = WorkbookRecord.read({
     format: row.format,
     settings,
     importsAllowed: row.imports_allowed === 1,
     ...(rangeSources ? { rangeSources } : {}),
+    ...(meaning ? { meaning } : {}),
   });
   if (!record) console.warn('[workbook] unreadable row', { documentId });
   return record;
@@ -70,9 +82,17 @@ export function insertWorkbookStatement(
   now: number,
 ): D1PreparedStatement {
   return env.DOCUMENT_DB.prepare(
-    `INSERT INTO workbook (document_id, format, settings, rev, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)
+    `INSERT INTO workbook (document_id, format, settings, meaning, rev, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 0, ?, ?)
      ON CONFLICT (document_id) DO NOTHING`,
-  ).bind(documentId, record.format, JSON.stringify(record.settings), now, now);
+  ).bind(
+    documentId,
+    record.format,
+    JSON.stringify(record.settings),
+    record.meaning ?? null,
+    now,
+    now,
+  );
 }
 
 /** The document's tab ids in order: a spreadsheet's sheets in the order of its sheet bar. */
@@ -183,7 +203,8 @@ export async function connectWorkbookRangeSources(
 
 /**
  * A spreadsheet converted to `format` (files-and-print.md "Converting"): one statement, landing only while the workbook
- * is still of the other standard, so two Editors converting at once convert it once. Its record as it now stands and
+ * is still of the other standard, so two Editors converting at once convert it once. A file's meaning becomes the new
+ * format's; Google's stays (D97). Its record as it now stands and
  * the row's new rev, or null when it is no spreadsheet or already in that standard.
  */
 export async function convertWorkbookFormat(
@@ -193,11 +214,12 @@ export async function convertWorkbookFormat(
   now: number,
 ): Promise<{ workbook: WorkbookRecord; rev: number } | null> {
   const row = await env.DOCUMENT_DB.prepare(
-    `UPDATE workbook SET format = ?, rev = rev + 1, updated_at = ?
+    `UPDATE workbook
+        SET format = ?, meaning = CASE WHEN meaning IS NULL THEN NULL ELSE ? END, rev = rev + 1, updated_at = ?
       WHERE document_id = ? AND (format = 'xlsx') <> (? = 'xlsx')
       RETURNING ${WORKBOOK_COLUMNS}, rev`,
   )
-    .bind(format, now, documentId, format)
+    .bind(format, WorkbookRecord.meaningOf(format), now, documentId, format)
     .first<WorkbookRow & { rev: number }>();
   const workbook = workbookFromRow(documentId, row ?? undefined);
   return row && workbook ? { workbook, rev: row.rev } : null;
