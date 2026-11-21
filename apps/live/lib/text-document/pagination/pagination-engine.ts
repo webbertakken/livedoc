@@ -28,6 +28,11 @@ import {
 const FIT_TOLERANCE_PX = 0.5;
 // Two tops this close are the same place.
 const SAME_PX = 0.01;
+/**
+ * The most of a page's text area a table's header rows take and still repeat on it (tables.md "Laying out across
+ * pages", default): taller, they would leave a page little room of its own, as Word stops repeating them.
+ */
+export const TABLE_REPEAT_MAX_SHARE = 0.5;
 
 export type PaginateOptions = {
   /** The browser draws a box of columns in rows (`column-wrap`): a paragraph may cross from a page's columns onto the next page. */
@@ -162,13 +167,16 @@ class Engine {
       cross: null,
       page,
     };
-    // A page laid again from inside a paragraph: the paragraph goes on from the page's top.
+    // A page laid again from inside a paragraph: the paragraph goes on from the page's top, below a table's header
+    // rows repeated there.
     if (page.line > 0) {
       const lines = linesOf(blocks[page.block]!);
+      const repeat = page.repeat ?? 0;
+      if (repeat > 0) this.state.cursor = { ...PAGE_TOP, y: repeat };
       this.state.placed = {
         block: page.block,
         strip: this.state.strip,
-        top: -(lines[page.line]?.top ?? 0),
+        top: repeat - (lines[page.line]?.top ?? 0),
         column: 0,
         atPageTop: true,
       };
@@ -271,6 +279,13 @@ class Engine {
     page.spacers = page.spacers.filter((s) => s.block !== block);
   }
 
+  // The height of block `block`'s header rows repeated at the top of a page of `frame` starting at its line `line`.
+  repeatAt(block: number, line: number, frame: PageFrame): number {
+    const repeat = this.blocks[block]?.repeat;
+    if (!repeat || line < repeat.lines) return 0;
+    return repeat.height <= frame.textHeight * TABLE_REPEAT_MAX_SHARE ? repeat.height : 0;
+  }
+
   // A new page starting at block `block`, line `line`. True when it starts where a page started before the change:
   // the rest is the previous layout's. `carried`: a box of columns carries the writing there, no spacer.
   newPage(block: number, line: number, endY: number, blank: number, carried = false): boolean {
@@ -282,9 +297,11 @@ class Engine {
     // From where the writing stops to the next page's text area, inside a paragraph or between blocks; a box of
     // columns carries the writing there itself.
     const across = frame.textHeight + frame.bottom + PAGE_GAP_PX + next.top;
+    // A table's header rows repeated at the page's top are drawn inside its gap.
+    const repeat = carried ? 0 : this.repeatAt(block, line, next);
     const gap = carried
       ? 0
-      : Math.max(0, across - (line > 0 ? endY : state.strip.y + state.strip.mb)) + blanks;
+      : Math.max(0, across - (line > 0 ? endY : state.strip.y + state.strip.mb)) + blanks + repeat;
     this.done.push(frozen(state.page));
     state.pages += blank;
     if (this.change && block > this.change.last) {
@@ -304,6 +321,7 @@ class Engine {
       line,
       gap,
       blank,
+      ...(repeat > 0 ? { repeat } : {}),
       ...(carried ? { carried: true as const } : {}),
       columns: [],
       spacers: [],
@@ -312,7 +330,7 @@ class Engine {
     };
     state.frame = next;
     state.pages += 1;
-    state.cursor = PAGE_TOP;
+    state.cursor = repeat > 0 ? { ...PAGE_TOP, y: repeat } : PAGE_TOP;
     state.onBox = [];
     // The strip in the new page's coordinates, from its text area's top.
     state.strip = { y: state.strip.y - across - blanks, mb: state.strip.mb };
@@ -567,6 +585,8 @@ class Engine {
     }
     let taken = fit;
     if (block.atom || (block.keepTogether && s === 0)) taken = 0;
+    // A table's header rows never end a page alone.
+    else if (block.repeat && s + taken <= block.repeat.lines) taken = 0;
     else if (block.widowControl) {
       if (remaining - taken < 2) taken = remaining - 2;
       if (taken < 2) taken = 0;

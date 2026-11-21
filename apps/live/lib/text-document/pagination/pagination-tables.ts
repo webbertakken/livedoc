@@ -38,21 +38,39 @@ export function tableSplitOffset(table: PmNode, line: number): number {
 }
 
 /**
- * A drawn table's lines in CSS pixels from its top, without the page gaps drawn between its rows (`spacers`): each line
- * from its first row's top to the next line's, the first from the table's top and the last to its foot (`height`).
+ * What a table's `headerRows` repeat on each page it continues on (tables.md "Laying out across pages"), from its lines'
+ * first rows (`starts`) and its lines: none without a row below them, or when a cell spans from them into one.
  */
-export function tableLines(
+export function tableRepeat(
+  starts: readonly number[],
+  lines: readonly LineBox[],
+  headerRows: number,
+): { lines: number; height: number } | undefined {
+  const count = starts.indexOf(headerRows);
+  if (headerRows <= 0 || count <= 0 || count >= lines.length) return undefined;
+  return { lines: count, height: lines[count]!.top };
+}
+
+/**
+ * A drawn table's lines in CSS pixels from its top, without the page gaps drawn between its rows (`spacers`): each line
+ * from its first row's top to the next line's, the first from the table's top and the last to its foot (`height`);
+ * and what its `headerRows` repeat.
+ */
+export function measureTable(
   element: HTMLTableElement,
   top: number,
   ratio: number,
   spacers: readonly Span[],
   height: number,
   gapClass: string,
-): LineBox[] {
+  headerRows: number,
+): { lines: LineBox[]; repeat?: { lines: number; height: number } } {
   const rows = [...(element.tBodies[0]?.rows ?? [])].filter((r) => !r.classList.contains(gapClass));
   const starts = lineStarts(rows.map((r) => [...r.cells].map((c) => c.rowSpan)));
   const tops = starts.map((r, k) =>
     k === 0 ? 0 : naturalOf((rows[r]!.getBoundingClientRect().top - top) / ratio, spacers),
   );
-  return tops.map((t, k) => ({ top: t, bottom: tops[k + 1] ?? height }));
+  const lines = tops.map((t, k) => ({ top: t, bottom: tops[k + 1] ?? height }));
+  const repeat = tableRepeat(starts, lines, headerRows);
+  return repeat ? { lines, repeat } : { lines };
 }

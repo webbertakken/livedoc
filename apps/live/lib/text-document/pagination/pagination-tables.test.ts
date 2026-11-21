@@ -8,7 +8,7 @@ import { EditorView } from 'prosemirror-view';
 import { Styles, type PageSetup } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from '../text-document-schema';
 import { PAGE_GAP_CLASS, measureBlock, rulesOf } from './pagination-measure';
-import { rowGap } from './pagination-draw';
+import { headerCopy, rowGap } from './pagination-draw';
 import { paginationPlugin, relayoutPages } from './pagination-plugin';
 import { tableLineRows, tableSplitOffset } from './pagination-tables';
 
@@ -22,6 +22,15 @@ const cell = (text: string, rowspan = 1) =>
   );
 const row = (...cells: ReturnType<typeof cell>[]) => schema.nodes.table_row!.create(null, cells);
 const table = (...rows: ReturnType<typeof row>[]) => schema.nodes.table!.create(null, rows);
+const header = (...texts: string[]) =>
+  row(
+    ...texts.map((text) =>
+      schema.nodes.table_header!.create(
+        null,
+        schema.nodes.paragraph!.create(null, schema.text(text)),
+      ),
+    ),
+  );
 const plainRows = (count: number) =>
   Array.from({ length: count }, (_, k) => row(cell(`r${k}a`), cell(`r${k}b`)));
 
@@ -67,6 +76,16 @@ describe('rulesOf a table', () => {
   it('breaks a table between rows, and moves it whole in a section of columns', () => {
     const t = table(...plainRows(2));
     expect(rulesOf(t, formatting)).toEqual({});
+    expect(rulesOf(t, formatting, true)).toEqual({ atom: true });
+  });
+
+  it('names its header rows, which repeat on each page it continues on', () => {
+    const header = row(
+      schema.nodes.table_header!.create(null, schema.nodes.paragraph!.create()),
+      schema.nodes.table_header!.create(null, schema.nodes.paragraph!.create()),
+    );
+    const t = table(header, ...plainRows(2));
+    expect(rulesOf(t, formatting)).toEqual({ headerRows: 1 });
     expect(rulesOf(t, formatting, true)).toEqual({ atom: true });
   });
 });
@@ -139,6 +158,20 @@ describe('measureBlock on a table', () => {
     expect(measureBlock(element, {}, 1, 0).marks).toEqual([{ line: 1, story: 'note-1' }]);
   });
 
+  it('repeats its header rows by their lines and height, never naming them a rule', () => {
+    const metrics = measureBlock(drawTable([[1], [1], [1]]), { headerRows: 1 }, 1, 0).metrics;
+    expect(metrics.repeat).toEqual({ lines: 1, height: 30 });
+    expect(metrics).not.toHaveProperty('headerRows');
+  });
+
+  it('reads no footnote mark in a copy of the header rows drawn at a page top', () => {
+    const element = drawTable([[1], [1], [1]], { at: 2, height: 100 });
+    const mark = document.createElement('sup');
+    mark.dataset.footnote = 'note-1';
+    element.tBodies[0]!.querySelector(`.${PAGE_GAP_CLASS}`)!.append(mark);
+    expect(measureBlock(element, { headerRows: 1 }, 1, 0).marks).toEqual([]);
+  });
+
   it('moves whole when its rules say so', () => {
     const metrics = measureBlock(drawTable([[1], [1]]), { atom: true }, 1, 0).metrics;
     expect(metrics).toMatchObject({ atom: true, lines: [], height: 60 });
@@ -162,6 +195,21 @@ describe('rowGap', () => {
     ]);
     expect(bands[0]!.style.marginLeft).toBe('-10px');
     expect(bands[0]!.style.width).toBe('600px');
+  });
+});
+
+describe('headerCopy', () => {
+  it('draws a header row again as a row of the table, hidden from reading and never text', () => {
+    const copy = headerCopy(header('Name', 'Age'))();
+    expect(copy.tagName).toBe('TR');
+    expect(copy.classList.contains(PAGE_GAP_CLASS)).toBe(true);
+    expect(copy.classList.contains(`${PAGE_GAP_CLASS}-header`)).toBe(true);
+    expect(copy.getAttribute('aria-hidden')).toBe('true');
+    expect(copy.contentEditable).toBe('false');
+    expect([...copy.children].map((c) => [c.tagName, c.textContent])).toEqual([
+      ['TH', 'Name'],
+      ['TH', 'Age'],
+    ]);
   });
 });
 
@@ -211,6 +259,56 @@ describe('a table across pages', () => {
     expect(gapAt).toBe(3);
     expect(rows[gapAt + 1]?.textContent).toBe('r3ar3b');
     expect((rows[gapAt]!.firstElementChild as HTMLTableCellElement).colSpan).toBe(2);
+    view.destroy();
+  });
+
+  it('draws the header rows again after the gap, the gap their height shorter', async () => {
+    const place = document.createElement('div');
+    document.body.append(place);
+    const view = new EditorView(place, {
+      state: EditorState.create({
+        doc: schema.nodes.doc!.create(null, [table(header('H1', 'H2'), ...plainRows(4))]),
+        plugins: [
+          paginationPlugin({
+            readFormatting: () => formatting,
+            read: () => ({ setup, pages: true }),
+            onPages: vi.fn(),
+          }),
+        ],
+      }),
+    });
+    view.dom.style.width = '600px';
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.classList.contains('ProseMirror')) return rect(0, 1000);
+      if (this.tagName === 'TABLE') return rect(0, 5 * ROW);
+      if (this.tagName === 'TR' && !this.classList.contains(PAGE_GAP_CLASS)) {
+        const own = [...this.parentElement!.children].filter(
+          (r) => !r.classList.contains(PAGE_GAP_CLASS),
+        );
+        return rect(own.indexOf(this) * ROW, ROW);
+      }
+      return rect(0, 0);
+    });
+    relayoutPages(view);
+    await Promise.resolve();
+    const rows = [...view.dom.querySelectorAll('tbody > tr')];
+    const gapAt = rows.findIndex((r) => r.classList.contains(`${PAGE_GAP_CLASS}-row`));
+    // The header and two rows fill 90 of the page's 100 px; the next page holds the copy, then the fourth row.
+    expect(gapAt).toBe(3);
+    const copy = rows[gapAt + 1]!;
+    expect(copy.classList.contains(`${PAGE_GAP_CLASS}-header`)).toBe(true);
+    expect(copy.textContent).toBe('H1H2');
+    expect(rows[gapAt + 2]?.textContent).toBe('r2ar2b');
+    // From the third row's foot (90) to the next text area (100 + 12): 22; the copy's 30 drawn after it.
+    const bands = [
+      ...rows[gapAt]!.querySelectorAll<HTMLElement>(`.${PAGE_GAP_CLASS}-inside > span`),
+    ];
+    expect(bands.map((b) => b.style.height)).toEqual(['10px', '12px', '0px']);
+    expect(
+      (rows[gapAt]!.querySelector(`.${PAGE_GAP_CLASS}-inside`) as HTMLElement).style.height,
+    ).toBe('22px');
     view.destroy();
   });
 });

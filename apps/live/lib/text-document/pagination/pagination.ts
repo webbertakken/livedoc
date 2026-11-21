@@ -48,6 +48,11 @@ export type BlockMetrics = {
   readonly columnBreakAfter?: boolean;
   /** A section break: where the section it starts begins. */
   readonly startsSection?: SectionStart;
+  /**
+   * A table's header rows, repeated at the top of a page starting inside it after them (tables.md "Laying out across
+   * pages"): how many of its lines they are and their height.
+   */
+  readonly repeat?: { readonly lines: number; readonly height: number };
   /** The notes whose marks are on its lines, each note's height at the page foot (page-layout.md "Footnotes"). */
   readonly notes?: readonly { readonly line: number; readonly height: number }[];
 };
@@ -74,6 +79,8 @@ export type PageStart = {
   readonly line: number;
   readonly gap: number;
   readonly blank: number;
+  /** The height of a table's header rows drawn at the page's top, inside its gap (tables.md "Laying out across pages"). */
+  readonly repeat?: number;
   /** A box of columns carries the writing onto this page (its row gap is the spacer). */
   readonly carried?: true;
   /** Where the page's columns after a region's first start. */
