@@ -580,7 +580,8 @@ Measured 2026-11-21 on the reference board (whiteboard), locally at 3.5x, three 
 - **The surfaces' prefetch ran inside the opening.** `requestIdleCallback` fires in the first idle
   gap, which on a large board comes between the opening's own late tasks: the editor's and the
   canvas's surfaces (the Explorer, search, layers, the style and tool panels, presenting, a board
-  scene's landing) then evaluated as tasks of 34-69 ms each at 3.3-3.6 s, the opening's last. They
+  scene's landing) and the element kinds not on the board then evaluated as tasks of 34-69 ms each at
+  3.3-3.6 s, the opening's last. They
   now wait for the page to go quiet first (`prefetchOnceQuiet`: no long task for 500 ms).
 
 ## Not tried

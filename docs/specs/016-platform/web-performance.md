@@ -285,7 +285,7 @@ How a family is reached and when it loads:
   (or arms its tool) once its family is in, so an element is never placed without its face. A press whose family
   cannot load places nothing (default).
 - **Once the board has settled.** Every remaining family is fetched when the opened board has rendered and the page
-  is idle (`prefetchWhenIdle`), so a paste, a template, a peer's new element or going offline later finds them in.
+  has gone quiet, then on idle (`prefetchOnceQuiet`, as the surfaces someone opens), so a paste, a template, a peer's new element or going offline later finds them in.
   A document whose tabs all have a surface fetches none of them
   ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-canvass-code)).
   An element that arrives before its family (a peer's, in a session's first seconds) draws when its family is in.
