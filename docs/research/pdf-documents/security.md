@@ -1,0 +1,46 @@
+# Security
+
+A PDF is untrusted input that can carry code, fetch from the network, hide content and exhaust a parser. What can go
+wrong, and the rule for each. Researched November 2026. Every abuse case here becomes a test with a named rejection
+in Phase 5.
+
+## The boundary
+
+- A PDF's bytes are parsed only **inside WebAssembly, in a worker**: a parser fault is a trap in a sandbox, not
+  memory corruption in the page, and a slow file blocks no frame. The api Worker is the same boundary on the server.
+- Nothing from a file reaches the DOM as markup: text is set as text, pictures are pixels the engine decoded, a link
+  is a filtered address.
+- The engine is PDFium, the reader Chrome ships and fuzzes continuously (assumed: OSS-Fuzz coverage, not re-read).
+  LibPDF, which parses again when a file is written, is pure JavaScript in the same worker and holds no secret.
+
+## Abuse cases
+
+| Case                                   | How it bites                                                                       | Rule                                                                                                                                                                   | Evidence                                                                                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **JavaScript**                         | Document, page, field and mark actions run code in a reader                        | No script from a file ever runs. The engine is driven without a script runtime; standard field actions are answered by LiveDoc's own functions ([Fields](fields.md))   | 12 corpus files carry scripts (verified: `pdfinfo`); the build has no script runtime (inferred: PDFium is built for WebAssembly without V8) |
+| **Launch and submit actions**          | Start a program, post field data to a server                                       | Never performed. Shown as "This file wanted to …", with no control that does it                                                                                        | `launch_action.pdf` opens and nothing is performed (verified: no action is ever executed by the calls LiveDoc makes)                        |
+| **Links**                              | `javascript:`, `file:`, `data:` and deceptive addresses                            | Only `http`, `https`, `mailto` and places in the document; opened with the address shown first, in a new tab with no opener                                            | As a text document's import ([Files and print](../../specs/034-text-documents/files-and-print.md#import-security))                          |
+| **Remote references**                  | Pictures, fonts or forms fetched from a URL on open: tracking, intranet probing    | The engine has no network. Nothing is fetched because a file asked                                                                                                     | The worker's engine is given bytes and no fetch                                                                                             |
+| **Decompression bombs**                | A small stream inflates to gigabytes                                               | Limits in the engine's use: `PDF_MAX_PAGE_PIXELS` per draw, a memory ceiling for the worker; past it the page shows "This page is too large to show" and the tab lives | `bomb_giant.pdf` opens and draws at 72 dpi in both readers                                                                                  |
+| **Parser crashes and hangs**           | Fuzzed structure, circular references                                              | A trap or a timeout ends the worker; the document shows the named refusal; the worker is restarted for the next file                                                   | The 3 fuzzed files open with no hang (verified); the corpus's circular outline needs a visited set when it is walked                        |
+| **Font and image decoders**            | The historic source of reader exploits                                             | They run inside the same WebAssembly; a decoded picture is only pixels                                                                                                 | The corpus's JPEG 2000 and CCITT files draw (verified)                                                                                      |
+| **Attachments**                        | A PDF carries any file, executables included                                       | Listed with name, size and type; saved only by a person's action; never opened by LiveDoc; a nested PDF opens as a new document through the same boundary              | `embedded_attachments.pdf`                                                                                                                  |
+| **Passwords**                          | Kept, logged or sent                                                               | Held in the worker's memory for the session, never stored, logged or sent to the server (fork F9); the api never sees an open password                                 | By construction                                                                                                                             |
+| **Metadata**                           | Author names, software, edit history, GPS in pictures                              | Shown in Details; **Remove hidden information** lists and strips it                                                                                                    | Phase 15                                                                                                                                    |
+| **Hidden text under redactions**       | A black box drawn over text that is still in the file                              | Redaction removes the content and rewrites; a test extracts text from the redacted area and expects none; earlier bases are purged ([Saving](saving.md))               | The engine's `EPDFText_RedactInRect`, to be proven                                                                                          |
+| **Content hidden from one reader**     | Layers, white-on-white text, text outside the page, shadow attacks on signed files | The signatures panel lists every change made after a signature; **Remove hidden information** finds the rest                                                           | Phase 11, Phase 15                                                                                                                          |
+| **Spoofed comment authors**            | A file says anyone wrote a comment                                                 | A comment read from a file is never credited to a LiveDoc person ([Comments](comments.md))                                                                             | Inferred from `apps/api/src/comments.ts`                                                                                                    |
+| **Oversized files**                    | Memory in the browser and the Worker                                               | `FILE_MAX_BYTES`; the Worker's engine only for a file that fits ([Bytes](bytes.md))                                                                                    | Measured                                                                                                                                    |
+| **Uploads that claim a wrong hash**    | Poisoning a blob others share                                                      | The key is checked against the bytes as they are stored                                                                                                                | [Bytes](bytes.md)                                                                                                                           |
+| **A browser's upload for a thumbnail** | A misleading picture or search text                                                | Used for display only, never as the file ([What the servers need](servers.md))                                                                                         | By rule                                                                                                                                     |
+
+## What is not defended here
+
+- A file that is itself a lie (a contract whose visible text differs between readers) beyond listing changes after
+  a signature: no reader detects every such file.
+- A person's own device: a `.p12` and its password are as safe as the browser they are typed into.
+
+## Logging
+
+Fingerprints carry the document and tab ids, sizes, counts and the named refusal: never a password, a file name, a
+field value, a signer's name or any text of the file.

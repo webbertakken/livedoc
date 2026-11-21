@@ -31,8 +31,10 @@ size). It is the one corpus every spike of this research ran on.
 
 - PDF versions 1.2 to 2.0 are present; 1.0 and 1.1 are not, and are added by hand-written files in Phase 5
   (verified: `pdfinfo` over the corpus).
-- Findings about the corpus itself: pdf.js's `signed_verified.pdf` reads "Digest Mismatch" in poppler's `pdfsig` as
-  it arrives, so it proves nothing about signatures; a validly signed file is made by signing one (verified).
+- Findings about the corpus itself: validators disagree on pdf.js's `signed_verified.pdf`. poppler's `pdfsig` reads
+  "Digest Mismatch" and "not total document signed"; a check with Web Crypto finds its digest and signature valid
+  over the whole file (verified: both run). It proves nothing either way, so a validly signed file is made by
+  signing one, and both validators agree on every file made that way.
 - Missing, and wanted from Webber's own work when a phase needs them: a real signed contract, a bank or government
   form with calculations, a phone scan of several pages, a PDF/A archive copy, a portfolio.
 
