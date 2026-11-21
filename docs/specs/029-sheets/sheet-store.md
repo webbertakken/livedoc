@@ -60,7 +60,7 @@ by viewport, the limits, the workbook's doors, offline and copies. What the stor
   the sheets' order, and a sheet's `title` is its tab's name, kept as one, unique in the workbook, up to 100
   characters. References to other sheets are by sheet id across the document's tabs ([Spreadsheet](spreadsheet.md#what-a-workbook-holds)).
 - **The workbook row**: one per spreadsheet, in its room, holding its file format (`ods`, `fods` or `xlsx`), settings
-  (locale, time zone, recalculation, iterative calculation), theme, named ranges and named functions, the document the `CARD` functions read, and its rev.
+  (locale, time zone, recalculation, iterative calculation), theme, named ranges and named functions, the document the `CARD` functions read, whether its imports may fetch from the web ([Imports](imports.md#allow-access)), and its rev.
 - **Styles** move to a table of their own: each distinct style once, by id; a cell holds a style id instead of its
   format JSON ([Formatting](formatting.md#styles-in-the-model)). A cell write may name a style by its keys; the room
   finds or makes its id. Built: a format that lands in a spreadsheet's cell, by a write, a create, a seed or a copy,
@@ -115,6 +115,7 @@ Built in the api; the sheet bar and File › Settings call it with the grid surf
   visible sheet (`sheet_last_visible`); until a sheet can be hidden, every sheet is visible.
 - **Settings**: saved whole, as the dialog's Save Settings writes them; one that is not a setting is refused
   (`settings_invalid`); the file format is not a setting, converting is ([Files and print](files-and-print.md#converting)).
+- **Allow Access** for the imports: once, for good, as a `workbook` op ([Imports](imports.md#allow-access)).
 - Editors only, never on a tab-scoped link; on a document that is no spreadsheet, `workbook_not_found`.
 - Each counts against the write rate limit and is sent live: the tab list as the document's, a sheet as a `sheets`
   op, the settings as a `workbook` op with the row's rev.

@@ -961,6 +961,56 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'WorkbookSettingsResponse',
     statuses: [200, 400, 401, 403, 404, 410],
   },
+  // A spreadsheet's imports from the web (docs/specs/029-sheets/imports.md).
+  {
+    method: 'GET',
+    path: '/documents/{id}/workbook/imports',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      'Fetch one IMPORTDATA, IMPORTFEED, IMPORTHTML or IMPORTXML for a spreadsheet: its rows of text, or the error the cell shows. Kept an hour for everyone; fresh=1 skips that. 400 import_invalid; 403 imports_not_allowed until an Editor allows access; 404 workbook_not_found; 429 past 60 fetches a minute per spreadsheet. Off unless the deployment sets SHEET_IMPORTS=on. Read access.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      { name: 'kind', required: true, description: 'data, feed, html or xml.' },
+      { name: 'url', required: true, description: 'The address to fetch, http or https.' },
+      {
+        name: 'query',
+        required: false,
+        description: 'html: table or list; feed: items or feed, with a type.',
+      },
+      { name: 'index', required: false, description: 'html: which table or list, from 1.' },
+      { name: 'xpath', required: false, description: 'xml: the XPath 1.0 query.' },
+      {
+        name: 'headers',
+        required: false,
+        description: 'feed: 1 for a first row of column titles, else 0.',
+      },
+      { name: 'items', required: false, description: 'feed: how many items, from 1.' },
+      { name: 'fresh', required: false, description: '1 to fetch past the hour kept.' },
+    ],
+    responseSchema: {
+      type: 'object',
+      properties: {
+        rows: { type: 'array', items: { type: 'array', items: { type: 'string' } } },
+        error: { type: 'string', enum: ['#N/A', '#REF!', '#VALUE!'] },
+        why: { type: 'string' },
+      },
+    },
+    statuses: [200, 400, 401, 403, 404, 410, 429],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/workbook/imports-allowed',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "Allow a spreadsheet's imports to fetch from the web, for good, as Google's Allow access. Sent live to everyone on it. 404 workbook_not_found. Edit access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: 'WorkbookSettingsResponse',
+    statuses: [200, 401, 403, 404, 410],
+  },
   {
     method: 'POST',
     path: '/documents/{id}/workbook/sheets',

@@ -60,12 +60,14 @@ Google asks once per spreadsheet before its imports send and receive data from t
 - Until an Editor allows, every import in the spreadsheet is `#REF!` and nothing is fetched.
 - Allowing is for the spreadsheet, for everyone, for good: it is kept with the workbook, a copy starts without it,
   and it is never taken back (verified: Google's API refuses to set it back to false).
+- An Editor allows with `POST /api/documents/<id>/workbook/imports-allowed`, sent to everyone as a `workbook` op.
 - The api refuses to fetch for a spreadsheet not allowed, whatever the page asks.
 
 ## Fetching
 
 - The editor's engine asks the page for each distinct import (its arguments, as text) once; the page asks the api,
   at most 4 at once, and hands the answer back to the engine, which works out the cells reading it again.
+- When the spreadsheet's rate is spent the page asks again a minute later, the cell Loading… meanwhile.
 - The same import in many cells, and in every open copy of the page, is fetched once: the api keeps each answer for
   an hour, shared by everyone, as Google's imports refresh (verified: "automatically check for updates every hour
   while the document is open"; opening the spreadsheet again does not refresh).
@@ -76,7 +78,7 @@ Google asks once per spreadsheet before its imports send and receive data from t
 
 ## The api's guards
 
-`GET /api/documents/<id>/imports` fetches one import for a spreadsheet the caller may read
+`GET /api/documents/<id>/workbook/imports` fetches one import for a spreadsheet the caller may read
 ([API](../015-api/api.md)).
 
 - It answers only where the deployment turns it on (`SHEET_IMPORTS=on`); without it, the refusal above.
@@ -99,7 +101,7 @@ Google asks once per spreadsheet before its imports send and receive data from t
 
 ## Telemetry
 
-`Spreadsheet · Allowed · ImportAccess` when an Editor allows access.
+`Spreadsheet · Unlocked · ImportAccess` when an Editor allows access, sent before the change is saved.
 
 ## Defaults
 

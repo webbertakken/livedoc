@@ -85,6 +85,11 @@ export type Env = {
   // outbound page fetch, so bound abuse. Keyed on CF-Connecting-IP. Optional:
   // absent (self-host) → "allow".
   UNFURL_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };
+  // Per-spreadsheet limiter for the imports' fetches (docs/specs/029-sheets/imports.md "The api's guards"); cache hits
+  // are not counted. Optional: absent (self-host) → "allow".
+  SHEET_IMPORT_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };
+  // "on" lets a spreadsheet's imports fetch from the web (imports.md); anything else, a refusal. Hosted profile only.
+  SHEET_IMPORTS?: string;
   // Per-owner limiter for POST /api/drive/token (docs/specs/022-drive-mirror/drive-mirror.md,
   // "Tokens"): each call reaches Google's token endpoint, so it gets a far
   // tighter bound than the general write limiter. Keyed on the account id.

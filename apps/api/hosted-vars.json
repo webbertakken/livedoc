@@ -1,5 +1,6 @@
 {
   "TELEMETRY_ENABLED": "true",
+  "SHEET_IMPORTS": "on",
   "IMAGE_MAX_PER_OWNER": "100",
   "IMAGE_MAX_BYTES_PER_OWNER": "104857600",
   "AI_MODEL": "gemini-3.5-flash-lite",

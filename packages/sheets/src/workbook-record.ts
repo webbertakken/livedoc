@@ -36,6 +36,8 @@ export type WorkbookSettings = {
 export type WorkbookRecord = {
   readonly format: WorkbookFormat;
   readonly settings: WorkbookSettings;
+  // An Editor allowed its imports to fetch from the web (imports.md "Allow access"): for good, never on a copy.
+  readonly importsAllowed?: true;
 };
 
 const isFormat = (value: unknown): value is WorkbookFormat =>
@@ -94,9 +96,12 @@ export const WorkbookRecord = {
   /** A record from the wire or the room, or null when any part of it is not one. */
   read: (raw: unknown): WorkbookRecord | null => {
     if (typeof raw !== 'object' || raw === null) return null;
-    const { format, settings } = raw as Record<string, unknown>;
+    const { format, settings, importsAllowed } = raw as Record<string, unknown>;
     if (!isFormat(format)) return null;
     const read = readSettings(settings);
-    return read ? { format, settings: read } : null;
+    if (!read) return null;
+    return importsAllowed === true
+      ? { format, settings: read, importsAllowed }
+      : { format, settings: read };
   },
 } as const;

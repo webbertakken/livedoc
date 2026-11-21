@@ -14,6 +14,7 @@ import type { DocumentRouteContext } from './context';
 import { openWorkbook } from './sheet-page-routes';
 import { sheetCaller, workbookRefused } from './sheet-route-kit';
 import { saveSettings } from './workbook-settings-route';
+import { allowImports, fetchImport } from './sheet-imports-route';
 import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
 
 const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
@@ -84,5 +85,9 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
     return request.method === 'GET' ? file(ctx, documentId) : methodNotAllowed();
   if (segments.length === 5 && segments[4] === 'settings')
     return request.method === 'PUT' ? saveSettings(ctx, documentId) : methodNotAllowed();
+  if (segments.length === 5 && segments[4] === 'imports')
+    return request.method === 'GET' ? fetchImport(ctx, documentId) : methodNotAllowed();
+  if (segments.length === 5 && segments[4] === 'imports-allowed')
+    return request.method === 'POST' ? allowImports(ctx, documentId) : methodNotAllowed();
   return handleWorkbookSheetRoutes(ctx);
 }

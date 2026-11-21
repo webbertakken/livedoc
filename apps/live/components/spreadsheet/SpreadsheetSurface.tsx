@@ -33,6 +33,7 @@ import { downloadBlob } from '@/lib/download-blob';
 import { openSpreadsheetFile } from '@/lib/spreadsheet/open-spreadsheet-file';
 import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { track } from '@/lib/telemetry';
+import { ImportAccessBar } from './ImportAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
 import { useSheetBarPeers } from './useSheetBarPeers';
 
@@ -238,6 +239,9 @@ function SheetWorkspace({
         className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden"
         style={{ backgroundColor: palette.surface, color: palette.text }}
       >
+        {bridge.importsAllowed === false && store.usesImports() ? (
+          <ImportAccessBar scope={bridge.scope} canAllow={bridge.canEdit && bridge.canShape} />
+        ) : null}
         <SheetParts bridge={bridge} />
         <p aria-live="polite" className="sr-only">
           {announcement}
