@@ -27,7 +27,8 @@ export class SheetImageLoader {
   private readonly listeners = new Map<string, Set<() => void>>();
   private readonly queue: string[] = [];
   private running = 0;
-  private disposed = false;
+  // Counted up each time every picture is let go, so an answer asked for before is not kept.
+  private generation = 0;
 
   constructor(deps: SheetImageLoaderDeps) {
     this.deps = {
@@ -64,9 +65,9 @@ export class SheetImageLoader {
     };
   }
 
-  /** The spreadsheet closed: every picture let go. */
+  /** The spreadsheet closed: every picture let go; drawn again, each is fetched afresh. */
   dispose(): void {
-    this.disposed = true;
+    this.generation++;
     for (const state of this.states.values())
       if (state.status === 'shown') this.deps.revoke(state.src);
     this.states.clear();
@@ -85,9 +86,10 @@ export class SheetImageLoader {
   }
 
   private async load(url: string): Promise<void> {
+    const generation = this.generation;
     const blob = await this.deps.fetch(url);
     // Let go while it was on its way: nothing to keep.
-    if (this.disposed || !this.states.has(url)) return;
+    if (generation !== this.generation || !this.states.has(url)) return;
     this.states.set(url, blob ? { status: 'shown', src: this.deps.objectUrl(blob) } : FAILED);
     for (const listener of this.listeners.get(url) ?? []) listener();
   }

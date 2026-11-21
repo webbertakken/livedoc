@@ -85,6 +85,10 @@ describe('SheetImageLoader', () => {
     expect(revoke).toHaveBeenCalledWith('blob:1');
     await settle('b', png);
     expect(loader.state('b')).toEqual({ status: 'loading' });
+    // Drawn again, it is fetched afresh.
+    loader.want('a');
+    await settle('a', png);
+    expect(loader.state('a')).toEqual({ status: 'shown', src: 'blob:2' });
   });
 
   it('draws from the browser’s object URLs by default', () => {
