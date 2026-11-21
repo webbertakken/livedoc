@@ -50,6 +50,25 @@ export {
 } from './model/blocks';
 export { Notes } from './model/notes';
 export {
+  Blocks,
+  CELL_SIDES,
+  TABLE_COLUMN_FALLBACK_PT,
+  Tables,
+  TEXT_DOCUMENT_TABLE_MAX_COLUMNS,
+  TEXT_DOCUMENT_TABLE_MAX_ROWS,
+  type CellBorders,
+  type CellPadding,
+  type CellProps,
+  type CellSide,
+  type CellVerticalAlign,
+  type GridPlace,
+  type Table,
+  type TableAlign,
+  type TableCell,
+  type TableRepair,
+  type TableRow,
+} from './model/tables';
+export {
   WATERMARK_DEFAULTS,
   watermarkBox,
   Watermarks,

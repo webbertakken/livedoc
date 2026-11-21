@@ -46,6 +46,7 @@ import { LIVEDOC_NS } from '../odf/odf-names';
 import { MC_NS, R_NS, W_NS, W_STRICT_NS, WRITTEN_W_NS } from './ooxml-names';
 import { ooxmlFieldKind } from './ooxml-fields';
 import { FootnotesReader, markProps } from './ooxml-notes';
+import { overLines, readOoxmlTable, tableLinesOf, type TableLines } from './ooxml-tables';
 import {
   MAPPED_PPR,
   MAPPED_RPR,
@@ -78,6 +79,9 @@ const isW = (e: XmlNode, local: string): boolean =>
   typeof e !== 'string' && e.uri === W_NS && e.local === local;
 const wVal = (e: XmlElement | undefined, local = 'val') =>
   e ? attributeOf(e, W_NS, local) : undefined;
+/** An on/off attribute that is there and not off (`0`, `false`, `off`). */
+const isOnAttribute = (value: string | undefined) =>
+  value !== undefined && !['0', 'false', 'off'].includes(value);
 
 // Field instructions that run things or fetch from elsewhere (files-and-print.md "Import security").
 const UNSAFE_FIELD = /^\s*(DDE|DDEAUTO|INCLUDETEXT|INCLUDEPICTURE|LINK|IMPORT)\b/i;
@@ -215,6 +219,10 @@ class OoxmlReader {
     defaults: { paragraph: {}, text: {} },
   };
 
+  /** The table styles of `styles.xml` by id, and the default one's id (tables.md "In the formats"). */
+  readonly tableStyles = new Map<string, XmlElement>();
+  defaultTableStyle: string | undefined;
+
   /** Tab stops a read left out or read as less (bar and list stops, heavy leaders), reported. */
   readonly dropTabs = (name: string): void => this.report.drop('tab-stop', name);
 
@@ -280,6 +288,11 @@ class OoxmlReader {
           kept: { xml: keptXmlOf(parsed!, e), read: canonical(values), residue: [] },
         };
         continue;
+      }
+      if (isW(e, 'style') && wVal(e, 'type') === 'table') {
+        const id = wVal(e, 'styleId') ?? '';
+        this.tableStyles.set(id, e);
+        if (isOnAttribute(wVal(e, 'default'))) this.defaultTableStyle = id;
       }
       const type = wVal(e, 'type');
       if (!isW(e, 'style') || (type !== 'paragraph' && type !== 'character')) {
@@ -457,7 +470,10 @@ class OoxmlReader {
           if (next) blocks.push({ type: 'section', ...next });
         }
       } else if (isW(e, 'sectPr')) continue;
-      else if (isW(e, 'proofErr')) this.report.drop('layout-hint', e.local);
+      else if (isW(e, 'tbl')) {
+        const table = this.table(e);
+        if (table) blocks.push(table);
+      } else if (isW(e, 'proofErr')) this.report.drop('layout-hint', e.local);
       else {
         blocks.push({ type: 'kept', name: e.local, xml: this.kept(doc, e) });
         this.report.keep(e.local);
@@ -575,6 +591,47 @@ class OoxmlReader {
       ...compact({ list, kept }),
       inlines,
     };
+  }
+
+  /** A table style's lines and margins, down its `w:basedOn`; the default table style's for none. */
+  styleLines(id: string | undefined, seen = new Set<string>()): TableLines {
+    const empty: TableLines = { borders: {}, margins: {} };
+    const style = this.tableStyles.get(id ?? this.defaultTableStyle ?? '');
+    if (!style || seen.has(id ?? '')) return empty;
+    seen.add(id ?? '');
+    const parent = wVal(childElement(style, W_NS, 'basedOn'));
+    const under = parent === undefined ? empty : this.styleLines(parent, seen);
+    return overLines(under, tableLinesOf(childElement(style, W_NS, 'tblPr')));
+  }
+
+  /** A `w:tbl` as a table, a kept block past the limits, or nothing for one with no rows. */
+  table(tbl: XmlElement): Block | null {
+    return readOoxmlTable(tbl, {
+      cellBlocks: (tc) => this.blocksOf(tc),
+      kept: (e) => this.kept(this.part.parsed, e),
+      propsKept: (e, values, mapped) => this.propsKept(this.part.parsed, e, values, mapped),
+      styleLines: (id) => this.styleLines(id),
+      report: this.report,
+      normal: this.normalId(),
+    });
+  }
+
+  /** The blocks a cell, header, footer or note holds: paragraphs, tables and kept elements. */
+  blocksOf(parent: XmlElement): Block[] {
+    const blocks: Block[] = [];
+    for (const e of childElements(parent)) {
+      if (isW(e, 'p')) blocks.push(this.paragraph(e, undefined));
+      else if (isW(e, 'tbl')) {
+        const table = this.table(e);
+        if (table) blocks.push(table);
+      } else if (isW(e, 'tcPr')) continue;
+      else if (isW(e, 'proofErr')) this.report.drop('layout-hint', e.local);
+      else {
+        blocks.push({ type: 'kept', name: e.local, xml: this.kept(this.part.parsed, e) });
+        this.report.keep(e.local);
+      }
+    }
+    return blocks;
   }
 
   normalId(): string {

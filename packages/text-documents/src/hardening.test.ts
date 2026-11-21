@@ -114,10 +114,11 @@ describe('import security', () => {
           W_P(
             `<w:fldSimple w:instr="INCLUDETEXT &quot;c:/secret.txt&quot;">${W_R('included')}</w:fldSimple>`,
           ) +
-          `<w:tbl><w:tr><w:tc>${W_P(field('DDE x'))}</w:tc></w:tr></w:tbl>`,
+          `<w:tbl><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:tc>${W_P(field('DDE x'))}</w:tc></w:tr></w:tbl>`,
       ),
     );
-    expect(read.texts).toEqual(['a shown b shown', 'included']);
+    // A field in a table's cell is read as the body's (tables.md "In the formats").
+    expect(read.texts).toEqual(['a shown b shown', 'included', 'shown']);
     const paragraph = read.document.body[0]!;
     expect(
       paragraph.type === 'paragraph' &&
@@ -126,16 +127,16 @@ describe('import security', () => {
     expect(read.report.dropped).toEqual([
       { reason: 'field', name: 'DDEAUTO', count: 1 },
       { reason: 'field', name: 'INCLUDETEXT', count: 1 },
-      { reason: 'field', name: 'field', count: 1 },
+      { reason: 'field', name: 'DDE', count: 1 },
     ]);
-    const table = read.document.body.find((b) => b.type === 'kept');
-    expect(table?.type === 'kept' && table.xml.xml.includes('DDE')).toBe(false);
+    const table = read.document.body.find((b) => b.type === 'table');
+    expect(table && JSON.stringify(table).includes('DDE')).toBe(false);
     const odf = await texts(
       fodt(
-        '<text:dde-connection-decls/><text:p>a <text:dde-connection text:connection-name="x">shown</text:dde-connection></text:p><table:table><table:table-row><table:table-cell><text:p><text:dde-connection>t</text:dde-connection></text:p></table:table-cell></table:table-row></table:table>',
+        '<text:dde-connection-decls/><text:p>a <text:dde-connection text:connection-name="x">shown</text:dde-connection></text:p><table:table><table:table-column/><table:table-row><table:table-cell><text:p><text:dde-connection>t</text:dde-connection></text:p></table:table-cell></table:table-row></table:table>',
       ),
     );
-    expect(odf.texts).toEqual(['a shown']);
+    expect(odf.texts).toEqual(['a shown', 't']);
     expect(odf.report.dropped.map((d) => d.name)).toEqual([
       'dde-connection-decls',
       'dde-connection',

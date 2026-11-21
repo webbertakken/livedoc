@@ -14,7 +14,9 @@ export type DroppedReason =
   | 'layout-hint'
   | 'tab-stop'
   | 'column-width'
-  | 'header-footer';
+  | 'header-footer'
+  | 'table-content'
+  | 'table-repaired';
 
 export type ReportItem = { readonly name: string; readonly count: number };
 

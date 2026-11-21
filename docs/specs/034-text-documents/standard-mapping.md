@@ -196,6 +196,8 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | OOXML to ODF             | A continuous section's start at (no page of its own to number), a `page-number-start` loss                              |
 | Either format to ODF     | Restart on each page is the whole document's: a section differing from the first numbered, a `line-number-restart` loss |
 | Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`             |
+| Either format, converted | A table's kept table style (`table:template-name`, `w:tblStyle`, `w:tblLook`), each a `table-style` loss                |
+| Either format            | A malformed table repaired on read (short and long rows, spans past an edge), reported `table-repaired`                 |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                                |
 
 ## Limits

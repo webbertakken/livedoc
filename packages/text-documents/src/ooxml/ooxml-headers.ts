@@ -17,6 +17,7 @@ import {
 } from '@livedoc/office-packages';
 import type { Block, Paragraph } from '../model/blocks';
 import type { Section } from '../model/sections';
+import type { Table } from '../model/tables';
 import type { OoxmlSource } from '../model/text-document';
 import { relativeTarget, type RelationshipList } from './ooxml-relationships';
 import type { ReportBuilder } from '../report';
@@ -97,6 +98,8 @@ export type HeaderPartsSource = {
   part: { parsed: XmlParsed; rels: readonly Relationship[] };
   readonly parsePart: (name: string) => XmlParsed | PackageRefusal | undefined;
   paragraph(p: XmlElement, endsWith: Section | undefined): Paragraph;
+  /** The blocks an element holds (paragraphs, tables, kept elements), read in the current part. */
+  blocksOf(parent: XmlElement): Block[];
   kept(parsed: XmlParsed, e: XmlElement): KeptXml;
 };
 
@@ -149,15 +152,7 @@ export class HeaderPartsReader {
     if (parsed?.ok && isW(parsed.root, ROOT_OF[kind])) {
       const outer = source.part;
       source.part = { parsed, rels: source.pkg.relationships.get(name) ?? [] };
-      const blocks: Block[] = [];
-      for (const e of childElements(parsed.root)) {
-        if (isW(e, 'p')) blocks.push(source.paragraph(e, undefined));
-        else if (isW(e, 'proofErr')) source.report.drop('layout-hint', e.local);
-        else {
-          blocks.push({ type: 'kept', name: e.local, xml: source.kept(parsed, e) });
-          source.report.keep(e.local);
-        }
-      }
+      const blocks = source.blocksOf(parsed.root);
       source.part = outer;
       story = { blocks, part: name };
     }
@@ -176,6 +171,7 @@ export type HeaderPartsHost = {
   partRels: RelationshipList;
   paragraphXml(p: Paragraph, ends: Section | undefined): string;
   kept(xml: KeptXml): string;
+  tableXml(table: Table): string;
 };
 
 type Part = { story: HeaderFooter; name: string; kind: HeaderFooterKind; id: string };
@@ -243,7 +239,9 @@ export class HeaderPartsWriter {
           ? host.paragraphXml(b, undefined)
           : b.type === 'kept'
             ? host.kept(b.xml)
-            : '',
+            : b.type === 'table'
+              ? host.tableXml(b)
+              : '',
       )
       .join('');
     host.partRels = outer;

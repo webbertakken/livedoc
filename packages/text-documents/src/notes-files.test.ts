@@ -162,19 +162,19 @@ describe('footnotes in Word files', () => {
     expect(notesOf(back.document).map(noteTexts)).toEqual([[' Own']]);
   });
 
-  it('keeps a table in a note, and writes a note opening with one under a paragraph holding its number', async () => {
+  it('reads a table in a note, and writes a note opening with one under a paragraph holding its number', async () => {
     const { document, report } = await read(
       docx(W_P(`${W_R('A')}<w:r><w:footnoteReference w:id="1"/></w:r>`), {
         rels: FOOTNOTES_REL,
         entries: [
           footnotesPart(
-            `${SEPARATORS}<w:footnote w:id="1"><w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl><w:p><w:proofErr w:type="spellStart"/>${W_R('After')}</w:p></w:footnote>`,
+            `${SEPARATORS}<w:footnote w:id="1"><w:tbl><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl><w:p><w:proofErr w:type="spellStart"/>${W_R('After')}</w:p></w:footnote>`,
           ),
         ],
       }),
     );
     const [note] = notesOf(document);
-    expect(note!.blocks.map((b) => b.type)).toEqual(['kept', 'paragraph']);
+    expect(note!.blocks.map((b) => b.type)).toEqual(['table', 'paragraph']);
     expect(report.dropped.map((d) => d.name)).toContain('proofErr');
     const footnotes = (await parts(write(document, 'docx'))).text('word/footnotes.xml')!;
     expect(footnotes).toMatch(

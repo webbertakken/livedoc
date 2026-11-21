@@ -16,6 +16,7 @@ import type {
 import type { ListDefinition } from '../model/lists';
 import type { TextProps } from '../model/props';
 import type { Section } from '../model/sections';
+import type { Table } from '../model/tables';
 import { Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
@@ -143,6 +144,8 @@ function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Blo
       }) as SectionBreak;
     }
     case KEPT_BLOCK:
+      // A table held whole until the editor draws tables (tables.md "Status").
+      if (a.table) return a.table as Table;
       return { type: 'kept', name: a.name as string, xml: a.xml as KeptBlock['xml'] };
     default:
       return null;

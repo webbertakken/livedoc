@@ -21,7 +21,8 @@ describe('conversion', () => {
   it('lists the losses before anything changes: kept content by name and count, and what the other format lacks', async () => {
     const features = await corpus('libreoffice/features.odt');
     const losses = conversionLosses(features, 'ooxml');
-    expect(losses).toContainEqual({ kind: 'kept', name: 'table', count: 1 });
+    // A table is the model's (tables.md "The model"): no loss.
+    expect(losses.map((l) => l.name)).not.toContain('table');
     // A footnote is the model's (page-layout.md "Footnotes"): no loss.
     expect(losses.map((l) => l.name)).not.toContain('note');
     expect(losses).toContainEqual({ kind: 'section-name', name: 'section-name', count: 1 });

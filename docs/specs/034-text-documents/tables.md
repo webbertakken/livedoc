@@ -1,6 +1,7 @@
 # Tables
 
-**Status: specified.** Nothing is built; a table in a file is a kept block until the model maps it.
+**Status: in the model and the files.** Tables are read, written and converted in both formats; the editor draws a
+table as a kept block, its values held whole in the live state, until it draws tables itself.
 
 Tables in a [text document](text-document.md), as Google Docs has them, built on `prosemirror-tables`
 ([Adopt or build](../../research/docs-open-standard/adopt-or-build.md)).
@@ -42,8 +43,8 @@ A table is a block of the body, beside paragraphs and section breaks, and may st
 note ([Standard mapping](standard-mapping.md#the-model)).
 
 - **`Table`**: its column widths in points (`columns`, one per grid column), its rows, how many leading rows are
-  **header rows** (`headerRows`, 0 when none), its alignment (`start`, `center`, `end`) and left indent in
-  points, and the file's own table properties kept.
+  **header rows** (`headerRows`, 0 when none), its alignment (`center`, `end`; at the start when absent) and left
+  indent in points, and the file's own table properties kept.
 - **`TableRow`**: its cells, a minimum height in points (or an exact one, `heightRule` `exact`), whether it may
   break across pages (`breaks`, true unless the file says not), and its kept properties.
 - **`TableCell`**: the blocks it holds (at least one paragraph; tables nest), how many columns and rows it spans
@@ -70,19 +71,24 @@ note ([Standard mapping](standard-mapping.md#the-model)).
 | Padding            | the cell style's `fo:padding-<side>`                                                                                | `w:tcMar`; the table's `w:tblCellMar` read into each cell without its own                                     |
 | Vertical alignment | the cell style's `style:vertical-align` (`top`, `middle`, `bottom`)                                                 | `w:vAlign` (`top`, `center`, `bottom`)                                                                        |
 
-- **Written** `(default)`: ODF, a table style `LiveDocTable<n>` (width the columns' sum, its alignment and indent),
-  a column style per distinct width, a row style per distinct row formatting and a cell style per distinct cell
-  formatting, all automatic styles of the part they stand in; a spanned place written as `table:covered-table-cell`.
+- **Written** `(default)`: ODF, a table style (width the columns' sum, its alignment and indent), a column style per
+  distinct width, a row style per distinct row formatting and a cell style per distinct cell formatting, all automatic
+  styles of the part they stand in, named by a hash of what they hold as LiveDoc's other automatic styles are
+  (`LDTable`, `LDColumn`, `LDRow`, `LDCell`); the table named `Table<n>`, the first number no other table holds; a
+  spanned place written as `table:covered-table-cell`.
   OOXML: `w:tblW` the columns' sum (`dxa`), `w:tblLayout w:type="fixed"`, each cell's `w:tcW` its columns' sum,
   its lines in `w:tcBorders` (none where it has none), padding in `w:tcMar`; a cell that continues a row span written
   `w:vMerge` with one empty paragraph, as Word writes it.
 - **Kept**: a table style the model does not map (`table:template-name`, `w:tblStyle` and its conditional formatting,
-  `w:tblLook`) stays on the table as kept properties, as does what else a table, row or cell element carries; a table
-  edited keeps them while the values the model reads from them are unchanged
-  ([Kept content](standard-mapping.md#kept-content)).
+  `w:tblLook`) stays on the table as kept properties, as does what else a table, row or cell element carries (in ODF
+  the element's own attributes, in OOXML its properties element); a table edited keeps them while the values the model
+  reads from them are unchanged ([Kept content](standard-mapping.md#kept-content)).
+- **A Word table style's lines and padding**: the `w:tblBorders` and `w:tblCellMar` of the table's `w:tblStyle`
+  (down its `w:basedOn`) are read under the table's own, so a table drawn by its style keeps its lines elsewhere.
 - **Read leniently**: a row shorter than the grid is filled with empty cells, a longer one widens the grid with columns
   of the table's average width; a span past the table's edge is cut to it; `w:hMerge` reads as `w:gridSpan`. Each is
-  reported as a repair (`table-repaired`).
+  reported as a repair (`table-repaired`), as is a table with no rows, which is dropped. A cell holding no paragraph
+  gets an empty one. A table past the [limits](#limits) stays a kept block, reported as kept.
 - A table nested in a cell is held and drawn; a table in a header, footer or note too.
 - **Conversion** between the formats carries every table value; a kept table style is dropped and listed.
 

@@ -2,6 +2,8 @@
 // format: what the writers and readers are proven on, and what the validation script writes and checks against each
 // format's schema (office-packages.md "Validation"). Test-only; never shipped.
 import type { Block, Paragraph } from '../model/blocks';
+import type { BorderDash, BorderLine } from '../model/props';
+import type { Table, TableCell } from '../model/tables';
 import { ListDefinition } from '../model/lists';
 import { ListPresets } from '../model/list-presets';
 import { PageSetup } from '../model/sections';
@@ -443,6 +445,79 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         run('.'),
       ]),
     ]),
+  // tables.md "The model": a header row, a cell across two columns and one down two rows, shading, lines, padding,
+  // vertical alignment, a row of exact height that may not break, a nested table and a note in a cell.
+  tables: (format) => {
+    const p = (text: string, props = {}) => paragraph(format, 'normal', [run(text, props)]);
+    const cell = (blocks: Block[], extra: Partial<TableCell> = {}): TableCell => ({
+      blocks,
+      props: {},
+      ...extra,
+    });
+    const line = (width: number, color = '#000000', dash: BorderDash = 'solid'): BorderLine => ({
+      width,
+      dash,
+      color,
+      space: 0,
+    });
+    const nested: Table = {
+      type: 'table',
+      columns: [54, 54],
+      headerRows: 0,
+      rows: [
+        { cells: [cell([p('n1')]), cell([p('n2')])] },
+        { cells: [cell([p('n3')]), cell([p('n4')])] },
+      ],
+    };
+    return base(format, [
+      p('Before the table'),
+      {
+        type: 'table',
+        columns: [144, 108, 216],
+        headerRows: 1,
+        align: 'center',
+        indent: 18,
+        rows: [
+          { cells: [cell([p('Name', { bold: true })]), cell([p('Kind')]), cell([p('Notes')])] },
+          {
+            height: 24,
+            cells: [
+              cell([p('Across two')], { colSpan: 2, props: { background: '#d9ead3' } }),
+              cell([p('Down two')], { rowSpan: 2, props: { verticalAlign: 'middle' } }),
+            ],
+          },
+          {
+            height: 36,
+            heightRule: 'exact',
+            breaks: false,
+            cells: [
+              cell([p('Lined')], {
+                props: {
+                  borders: {
+                    top: line(1),
+                    bottom: line(1),
+                    left: line(0.5, '#cc0000', 'dashed'),
+                    right: line(2, '#1155cc', 'dotted'),
+                  },
+                  padding: { top: 2, bottom: 2, left: 5, right: 5 },
+                  verticalAlign: 'bottom',
+                },
+              }),
+              cell([
+                paragraph(format, 'normal', [
+                  run('Nested, with a note'),
+                  { type: 'note', blocks: [p('In a cell.')], props: {} },
+                ]),
+                nested,
+                paragraph(format, 'normal', []),
+              ]),
+            ],
+          },
+        ],
+      },
+      p('After the table'),
+    ]);
+  },
   links: (format) =>
     base(format, [
       paragraph(format, 'normal', [

@@ -15,6 +15,7 @@ import {
   DOCUMENT_MAP,
   FIELD,
   FOOTNOTE,
+  KEPT_BLOCK,
   KEPT_INLINE,
   TEXT_PROPERTY_MARKS,
 } from './live-names';
@@ -220,6 +221,15 @@ describe('the live layout', () => {
     );
     expect(texts).toEqual([['The source.'], ['Bold, and a link', 'A second paragraph.']]);
     expect(textDocumentDigest(doc).searchText).toContain('A second paragraph.');
+  });
+
+  // tables.md "Status": until the editor draws tables, a table rides the state whole, as a kept block's value.
+  it.each(['odf', 'ooxml'] as const)('holds a table whole and reads it back (%s)', (format) => {
+    const document = CONSTRUCTS.tables!(format);
+    expect(wholeOf(live(document))).toBe(wholeOf(document));
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+    const held = TextDocumentState.body(doc).get(1) as Y.XmlElement;
+    expect([held.nodeName, held.getAttribute('name')]).toEqual([KEPT_BLOCK, 'table']);
   });
 
   // page-layout.md "Line numbers": each section's, the first's in the document map, the others' on their breaks.

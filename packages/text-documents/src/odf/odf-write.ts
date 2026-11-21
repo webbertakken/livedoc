@@ -43,6 +43,8 @@ import {
 import { Notes } from '../model/notes';
 import { Watermarks } from '../model/watermark';
 import { odfWatermarkStyles } from './odf-watermark';
+import { odfTableXml, type OdfTableHost } from './odf-tables';
+import { Blocks } from '../model/tables';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -93,6 +95,11 @@ class OdfWriter {
   readonly noteNumbers: Map<Note, number>;
   readonly #masterClaims = new Map<string, string>();
   readonly listNames = new Map<string, string>();
+  /** The lists written so far, so a list met again continues it (`text:continue-list`). */
+  readonly listsSeen = new Set<string>();
+  /** Table names the document's tables keep, and those given since. */
+  readonly #tableNames = new Set<string>();
+  #tableCount = 0;
   #sections = 0;
   readonly #layoutClaims = new Map<string, string>();
 
@@ -134,10 +141,28 @@ class OdfWriter {
     ];
     const resolved = HeadersAndFooters.resolve(sections.map((s) => s.headers));
     sections.forEach((section, i) => this.resolved.set(section, resolved[i]!));
+    const stories = sections.flatMap((s) =>
+      [s.headers?.header, s.headers?.footer].flatMap((set) => Object.values(set ?? {})),
+    );
+    for (const table of Blocks.tables([...document.body, ...stories.flatMap((s) => s.blocks)])) {
+      const name = table.tag?.xml.match(/\s[\w.-]+:name="([^"]*)"/)?.[1];
+      if (name !== undefined) this.#tableNames.add(name);
+    }
   }
 
   kept(xml: KeptXml): string {
     return keptXmlWithin(xml, this.ns);
+  }
+
+  /** A table name no other table of the document holds: `Table<n>`, as LibreOffice names them. */
+  tableName(): string {
+    let name: string;
+    do {
+      this.#tableCount += 1;
+      name = `Table${this.#tableCount}`;
+    } while (this.#tableNames.has(name));
+    this.#tableNames.add(name);
+    return name;
   }
 
   font(props: TextProps): void {
@@ -382,7 +407,15 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
   let firstInSection = true;
   let regionOpen: string | undefined;
   const lists = new ListWriter(w, out);
-  const listsSeen = new Set<string>();
+  const listsSeen = w.listsSeen;
+  const tables: OdfTableHost = {
+    ns: w.ns,
+    generated: (prefix, body) => w.generated(prefix, body),
+    keptName: (kept) => w.keptName(kept),
+    kept: (xml) => w.kept(xml),
+    cellXml: (cellBlocks) => contentXml(w, cellBlocks, true),
+    tableName: () => w.tableName(),
+  };
 
   const paragraphXml = (p: Paragraph): string => {
     const first = isFirstParagraph;
@@ -425,6 +458,7 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
     lists.close();
     if (block.type === 'paragraph') out.push(paragraphXml(block));
     else if (block.type === 'kept') out.push(w.kept(block.xml));
+    else if (block.type === 'table') out.push(odfTableXml(tables, block));
     else {
       section = block;
       firstInSection = true;

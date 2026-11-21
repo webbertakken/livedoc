@@ -203,18 +203,19 @@ describe('headers and footers in Word files', () => {
     expect([...pkg.parts.keys()].filter((n) => /header/.test(n))).toEqual(['word/header1.xml']);
   });
 
-  it('keeps a table in a header as kept content and drops its proofing marks, reported', async () => {
-    const hdr = `<?xml version="1.0"?><w:hdr xmlns:w="${W}"><w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl><w:p><w:proofErr w:type="spellStart"/><w:r><w:t>Hed</w:t></w:r></w:p><w:proofErr w:type="spellEnd"/></w:hdr>`;
+  it('reads a table in a header as a table and drops its proofing marks, reported', async () => {
+    const hdr = `<?xml version="1.0"?><w:hdr xmlns:w="${W}"><w:tbl><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl><w:p><w:proofErr w:type="spellStart"/><w:r><w:t>Hed</w:t></w:r></w:p><w:proofErr w:type="spellEnd"/></w:hdr>`;
     const result = await read(
       docx(`<w:p/><w:sectPr><w:headerReference w:type="default" r:id="rId9"/></w:sectPr>`, {
         rels: `<Relationship Id="rId9" Type="${R}/header" Target="header1.xml"/>`,
         entries: [{ name: 'word/header1.xml', data: hdr }],
       }),
     );
-    expect(textOf(result.document.section.headers?.header?.default)).toBe('[kept]|Hed');
-    expect(result.report.kept).toContainEqual({ name: 'tbl', count: 1 });
+    expect(textOf(result.document.section.headers?.header?.default)).toBe('[table]|Hed');
+    expect(result.report.kept).toEqual([]);
+    expect(result.report.dropped.map((d) => d.name)).toContain('proofErr');
     const back = (await read(write(result.document))).document;
-    expect(textOf(back.section.headers?.header?.default)).toBe('[kept]|Hed');
+    expect(textOf(back.section.headers?.header?.default)).toBe('[table]|Hed');
   });
 
   it('reads a reference whose part is a footer where a header belongs as no header', async () => {

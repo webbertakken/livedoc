@@ -37,20 +37,29 @@ function withinKeptLimit(
     return used <= limit;
   };
   let dropped = 0;
-  const body = document.body.flatMap((block): Block[] => {
-    if (block.type === 'kept') {
-      if (fits(block.xml.xml)) return [block];
-      dropped += 1;
-      return [];
-    }
-    if (block.type !== 'paragraph') return [block];
-    const inlines = block.inlines.filter((i: Inline) => {
-      if (i.type !== 'kept' || fits(i.xml.xml)) return true;
-      dropped += 1;
-      return false;
+  const within = (blocks: readonly Block[]): Block[] =>
+    blocks.flatMap((block): Block[] => {
+      if (block.type === 'kept') {
+        if (fits(block.xml.xml)) return [block];
+        dropped += 1;
+        return [];
+      }
+      if (block.type === 'table') {
+        const rows = block.rows.map((row) => ({
+          ...row,
+          cells: row.cells.map((cell) => ({ ...cell, blocks: within(cell.blocks) })),
+        }));
+        return [{ ...block, rows }];
+      }
+      if (block.type !== 'paragraph') return [block];
+      const inlines = block.inlines.filter((i: Inline) => {
+        if (i.type !== 'kept' || fits(i.xml.xml)) return true;
+        dropped += 1;
+        return false;
+      });
+      return [inlines.length === block.inlines.length ? block : { ...block, inlines }];
     });
-    return [inlines.length === block.inlines.length ? block : { ...block, inlines }];
-  });
+  const body = within(document.body);
   if (dropped === 0) return document;
   report.drop('kept-limit', 'kept content', dropped);
   return { ...document, body };
