@@ -18,6 +18,7 @@ import {
 } from '../fn';
 import { parseFormula } from '../parse';
 import { r1c1Range } from '../r1c1';
+import { MULTIPLE_OPERATIONS_FUNCTIONS } from './multiple-operations';
 import { REFERENCE_FUNCTIONS } from './reference';
 import { makeCriterion } from '../criteria';
 import {
@@ -325,4 +326,5 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
     },
   },
   ...REFERENCE_FUNCTIONS,
+  ...MULTIPLE_OPERATIONS_FUNCTIONS,
 };

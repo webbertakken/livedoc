@@ -8,7 +8,8 @@ import type { Value } from '../formula/values';
 import { colWidth } from '../layout';
 import { cellKey, type CellInput, type Sheet } from '../sheet';
 import { NO_CELL, type CellNo } from './cell-numbers';
-import type { Frame, RangeRef } from './frame';
+import type { CellAt, Frame, RangeRef } from './frame';
+import { workOutWith } from './what-if';
 
 /** What a frame reads of its workbook. */
 export type FrameSource = {
@@ -29,6 +30,8 @@ export type FrameSource = {
   // A cell's number, given on first sight; NO_CELL off its sheet's grid.
   noAt(sheetId: string, r: number, c: number): CellNo;
   claimOf(owner: CellNo): RangeRef | undefined;
+  // The formula cells that read a cell, by its value or through a range.
+  readersOf(at: CellAt): CellAt[];
   noteRange(reader: CellNo, range: RangeRef): void;
   // Spend reads from the top-level read's budget: false once it is spent.
   spend(reads: number): boolean;
@@ -121,6 +124,7 @@ export function cellFrame(
     now: src.now,
     rand: src.rand,
     cards: src.cards(),
+    workOut: (target, swaps) => workOutWith(src, reader, target, swaps),
     volatile: () => src.volatile(reader),
     readsCards: () => src.readsCards(reader),
   };

@@ -252,6 +252,179 @@
         }
       ]
     ],
-    "NUMBERVALUE.11": [[1234.5]]
+    "NUMBERVALUE.11": [[1234.5]],
+    "ODDFPRICE.1": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "ODDFPRICE.2": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDFPRICE.3": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "ODDFPRICE.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDFPRICE.5": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "ODDFPRICE.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDFPRICE.7": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDFPRICE.8": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "ODDFYIELD.1": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "ODDFYIELD.2": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDFYIELD.3": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDFYIELD.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDLPRICE.1": [[99.8782860147213]],
+    "ODDLPRICE.2": [[99.8782860147213]],
+    "ODDLPRICE.3": [[99.8782860147213]],
+    "ODDLPRICE.4": [[101.333333333333]],
+    "ODDLPRICE.5": [[99.8782860147213]],
+    "ODDLPRICE.6": [[99.8782860147213]],
+    "ODDLPRICE.7": [[99.5537807691092]],
+    "ODDLPRICE.8": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDLPRICE.9": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDLPRICE.10": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDLPRICE.11": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDLPRICE.12": [[99.8782860147213]],
+    "ODDLYIELD.1": [[0.045192235629169]],
+    "ODDLYIELD.2": [[0.045192235629169]],
+    "ODDLYIELD.3": [[0.045192235629169]],
+    "ODDLYIELD.4": [[0.045192235629169]],
+    "ODDLYIELD.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDLYIELD.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ODDLYIELD.7": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.1": [[12]],
+    "MULTIPLE.OPERATIONS.2": [[25]],
+    "MULTIPLE.OPERATIONS.3": [[67]],
+    "MULTIPLE.OPERATIONS.4": [[71]],
+    "MULTIPLE.OPERATIONS.5": [[12]],
+    "MULTIPLE.OPERATIONS.6": [[1]],
+    "MULTIPLE.OPERATIONS.7": [
+      [
+        {
+          "e": "Err:504"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.8": [
+      [
+        {
+          "e": "Err:504"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.9": [
+      [
+        {
+          "e": "Err:504"
+        }
+      ]
+    ],
+    "MULTIPLE.OPERATIONS.10": [[71]]
   }
 }

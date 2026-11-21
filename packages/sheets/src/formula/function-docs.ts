@@ -928,6 +928,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   ),
   SHEET: D('[value]', 'The place of a sheet among the sheets, from 1', '=SHEET(Data!A1)'),
   FORMULATEXT: D('cell', 'A cell’s formula, as text', '=FORMULATEXT(B2)'),
+  'MULTIPLE.OPERATIONS': D(
+    'formula_cell, row_cell, row_replacement, [column_cell, column_replacement]',
+    'A formula cell’s value with one or two cells read as others, for what-if tables',
+    '=MULTIPLE.OPERATIONS($B$5, $B$3, $A6, $B$2, C$5)',
+  ),
   // Text
   CONCATENATE: D('value1, [value2, …]', 'Joins values together', '=CONCATENATE(A2, " ", B2)'),
   TEXTJOIN: D(
@@ -1399,6 +1404,26 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'settlement, maturity, issue, rate, price, [basis]',
     'The yield of a security paying interest at maturity',
     '=YIELDMAT(A2, B2, C2, 6%, 99)',
+  ),
+  ODDFPRICE: D(
+    'settlement, maturity, issue, first_coupon, rate, yield, redemption, frequency, [basis]',
+    'The price of a security whose first coupon period is odd (short or long)',
+    '=ODDFPRICE(A2, B2, C2, D2, 7.85%, 6.25%, 100, 2, 1)',
+  ),
+  ODDFYIELD: D(
+    'settlement, maturity, issue, first_coupon, rate, price, redemption, frequency, [basis]',
+    'The yield of a security whose first coupon period is odd (short or long)',
+    '=ODDFYIELD(A2, B2, C2, D2, 5.75%, 84.5, 100, 2)',
+  ),
+  ODDLPRICE: D(
+    'settlement, maturity, last_interest, rate, yield, redemption, frequency, [basis]',
+    'The price of a security whose last coupon period is odd (short or long)',
+    '=ODDLPRICE(A2, B2, C2, 3.75%, 4.05%, 100, 2)',
+  ),
+  ODDLYIELD: D(
+    'settlement, maturity, last_interest, rate, price, redemption, frequency, [basis]',
+    'The yield of a security whose last coupon period is odd (short or long)',
+    '=ODDLYIELD(A2, B2, C2, 3.75%, 99.875, 100, 2)',
   ),
   DISC: D(
     'settlement, maturity, price, redemption, [basis]',
