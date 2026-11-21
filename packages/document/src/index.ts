@@ -14,6 +14,7 @@ import type { FormDefinition } from '@livedoc/forms';
 // self-drawing data shapes the same way the inline editor does.
 import type { TagColour } from './tag-colours';
 import { isSelfDrawingShape } from './data-shapes';
+import type { BlobKey } from './blob-key';
 import type { TabKind, TextDocumentFormat } from './tab-kind';
 import type { EsDeclined } from './event-storming-declined';
 import type { DashboardLayout } from './dashboard';
@@ -355,6 +356,10 @@ export type Tab = {
   // A text document's format (docs/specs/034-text-documents/text-document.md "The format it is in"), read via
   // `textDocumentFormatOf`. Its writing is not on the tab: the room holds its live state.
   format?: TextDocumentFormat;
+  // A PDF tab's stored file (docs/specs/035-pdf-documents/pdf-document.md "What it holds"): its key in the blob store
+  // and its size in bytes, read via `pdfTabOf`. Its live changes are not on the tab: the room holds them.
+  blob?: BlobKey;
+  size?: number;
   // The tab's editor mode, the same for everyone on it and the mode it opens in
   // (docs/specs/007-editor/editor-modes.md "Where the mode lives"). Absent = 'diagram' (read via
   // `opensInOf`); a switch sets it as one tab edit (withEditorModeSwitched). A tab stored in Workshop mode keeps
@@ -482,6 +487,8 @@ export {
   type TextDocumentFormat,
 } from './tab-kind';
 export { blobKeyOf, isBlobKey, type BlobKey } from './blob-key';
+export { FILE_SINGLE_UPLOAD_MAX_BYTES, FILE_TAB_MAX_BYTES } from './file-limits';
+export { isPdfTab, pdfTabOf, type PdfTabFile } from './pdf-tab';
 export { tabMixRefusal, type TabMixRefusal } from './tab-mix';
 export { TAB_SURFACES, hasCanvasTab, surfaceOf, type TabSurface } from './tab-surface';
 export * from './accent-edge';

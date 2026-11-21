@@ -14,6 +14,7 @@ describe('tabKindLabel', () => {
       'Dashboard',
       'Form',
       'Text document',
+      'PDF document',
     ]);
   });
 });
@@ -23,6 +24,7 @@ describe('tabKindName', () => {
     expect(tabKindName({ kind: 'board', opensIn: 'plan' })).toBe('Board tab');
     expect(tabKindName({ kind: 'form' })).toBe('Form tab');
     expect(tabKindName({ kind: 'text-document' })).toBe('Text document tab');
+    expect(tabKindName({ kind: 'pdf' })).toBe('PDF document tab');
   });
 
   it('names an event-storming board, whose glyph is Structured, by its kind alone', () => {

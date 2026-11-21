@@ -49,6 +49,9 @@ written into the file as a standard annotation, so any reader shows it. The rese
   and (Editing) Edit text; the context menu offers the same.
 - **The tool's look is remembered** per kind, per person, in this browser: colour, opacity, width, line style, line
   ends, fill, font and size. A new mark takes it.
+- **A highlight's first look** is the colour picker's soft Yellow for light paper, at full opacity `(default)`. A
+  highlight is drawn multiplied onto the page, so the words under it keep their own colour, here as in the file's
+  appearance stream.
 - A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it. Its writing
   direction is taken from what is typed, as a [field](fields.md#filling)'s is `(default)`.
 - **Snapping**: a line or shape snaps to the page's own lines and edges within `PDF_SNAP_PX`; ⌘ held turns snapping

@@ -35,10 +35,15 @@ and belong to an owner's gallery, never held exactly.
 | Up to `FILE_SINGLE_UPLOAD_MAX_BYTES` | One request: `PUT /api/files/:key`, the body streamed into storage, never held in memory           |
 | Above it, up to `FILE_TAB_MAX_BYTES` | Parts of `FILE_PART_BYTES`: begin, one `PUT` a part, complete; a dropped connection costs one part |
 
+- **An upload begins by asking**: `HEAD /api/files/:key` answers `200` when the owner already holds the key, and
+  nothing more is sent; `404 blob_not_held` when the bytes are wanted.
 - Parts go through the api, so a self-host needs only the bucket's binding: no second credential and no rule on the
   bucket.
-- An upload names the document it is for and asks edit access to it (participate access for bytes a Participant's
-  change brings: a drawn signature, a stamp's picture, a signed file); a tab-scoped link serves its own tab only.
+- An upload names the document it is for (`?document=<id>`) and asks edit access to it (participate access for bytes
+  a Participant's change brings: a drawn signature, a stamp's picture, a signed file); the bytes are then the
+  document owner's. A tab-scoped link serves its own tab only.
+- **An upload that names no document** is stored for the person uploading, who is about to make a document of their
+  own with it `(default)`: a dropped PDF's bytes are held before the document that names them exists.
 - An unfinished upload is forgotten after `FILE_UPLOAD_ABANDON_HOURS`; its parts count for nothing.
 - **Usage is checked before the first byte**: an upload that would pass the owner's allowance is refused with what is
   left ([Open source + distribution](../002-project-scope/open-source-and-business-model.md)).
