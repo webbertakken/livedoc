@@ -285,12 +285,16 @@ A section's pages each have a **header** in the top margin and a **footer** in t
   the clipboard work in it as in the body; Select all selects its writing. Breaks and columns are dimmed while a
   header or footer is edited (Google's); the edited one is read as a text box named "Header" or "Footer" (default).
 - **Escape**, or a press on the body, leaves it with the caret where the body had it; empty, it is removed.
-- **Headers and footers options**, a dialog: **Margins**, **Header** (from the top) and **Footer** (from the bottom),
-  in the person's unit; **Layout**, **Different first page** and **Different odd and even**; **Apply to**, **This
-  section** or **Whole document** (with more than one section); **Cancel** and **Apply**. A margin takes 0 up to the
-  page's height less 1 in, else "Enter a number from 0 to <most>." (default). Format > **Headers and footers** opens it
-  for the section of the edited header, else of the body's caret; Whole document sets every section's margins and
-  switches alike.
+- **Headers and footers options**, a dialog titled "Headers & footers" (Google's): **Margins**, **Header** (from the
+  top) and **Footer** (from the bottom), in the person's unit; **Layout**, **Different first page** and **Different
+  odd & even**; **Apply to**, **This section** or **Whole document** (with more than one section); **Cancel** and
+  **Apply**. A margin takes 0 up to the page's height less 1 in, else "Enter a number from 0 to <most>." (default). Format > **Headers & footers** and the
+  bar's **Header format** (**Footer format**) open it for the section of the edited header, else of the body's caret.
+  - It shows that section's margins and switches, and opens on This section (default).
+  - Whole document sets every section's margins and switches alike; a margin then takes 0 up to the shortest page's
+    height less 1 in (default).
+  - Apply while a header or footer is edited moves the caret into the one the page now shows, made when it shows
+    none, as the bar's switches do (default); Apply with nothing changed changes and counts nothing (default).
 - Every change is one undo step. Share roles as page setup's ([Share roles](#share-roles)): a Participant and a Viewer
   read headers and footers and cannot enter them.
 

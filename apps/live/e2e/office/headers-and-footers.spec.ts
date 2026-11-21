@@ -200,3 +200,64 @@ test('the header’s bar: a different first page, and its header removed', async
   await expect(header(2)).toHaveText('Running');
   expectNoPageErrors(pageErrors);
 });
+
+// "Headers and footers options": Format > Headers & footers sets the header margin, the header moving down by it;
+// Different first page from the bar's Header format moves the caret into page 1's own, new header.
+test('headers and footers options: the header margin, and a different first page', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await writeLong(page, 30);
+  await expect(page.locator('[data-page-sheet="2"]')).toBeVisible();
+  await page.keyboard.press('Control+Home');
+  const header = (sheet: number) =>
+    page.locator(`[data-page-sheet="${sheet}"] [data-page-story="header"]`);
+  const headerTop = async () => {
+    const sheet = await page.locator('[data-page-sheet="2"]').boundingBox();
+    const box = await header(2).boundingBox();
+    return box!.y - sheet!.y;
+  };
+
+  await (await officeMenuItem(page, ['Insert', 'Headers & footers', 'Header'])).click();
+  await page.keyboard.type('Report');
+  await page.keyboard.press('Escape');
+  await expect(header(2)).toHaveText('Report');
+  const before = await headerTop();
+
+  await (await officeMenuItem(page, ['Format', 'Headers & footers'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Headers & footers' });
+  await expect(dialog).toBeVisible();
+  const margin = dialog.getByRole('textbox', { name: /^Header \(/ });
+  const inches = (await margin.getAttribute('aria-label'))!.includes('(in)');
+  await expect(margin).toHaveValue(inches ? '0.5' : '1.27');
+  await margin.fill(inches ? '1' : '2.54');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('header-options.png') });
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(dialog).toHaveCount(0);
+  // Half an inch further down: 48 CSS pixels at the page's zoom, within a pixel.
+  await expect.poll(async () => (await headerTop()) - before).toBeGreaterThan(40);
+
+  // From the bar: Header format, Different first page; page 1 then shows a header of its own, made and entered.
+  await page.keyboard.press('Control+Home');
+  await (await officeMenuItem(page, ['Insert', 'Headers & footers', 'Header'])).click();
+  const bar = page.getByRole('toolbar', { name: 'Header options' });
+  await bar.getByRole('button', { name: 'Options' }).click();
+  await page.getByRole('menuitem', { name: /Header format/ }).click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('checkbox', { name: 'Different first page' }).check();
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  const editor = page.getByRole('textbox', { name: 'Header' });
+  await expect(editor).toBeFocused();
+  await expect(editor).toHaveText('');
+  await expect(bar.getByRole('checkbox', { name: 'Different first page' })).toBeChecked();
+  await expect(header(2)).toHaveText('Report');
+  await page.keyboard.press('Escape');
+  await expect(header(1)).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});

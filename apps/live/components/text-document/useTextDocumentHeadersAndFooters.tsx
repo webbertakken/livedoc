@@ -1,7 +1,14 @@
 // Headers and footers on the pages (docs/specs/034-text-documents/page-layout.md "Headers and footers"): their sources
 // drawn on every page (useTextDocumentStories) and one of them edited in place (useTextDocumentHeaderEditing), with
 // the keys, undo and caret changes it is edited with; while one is edited the toolbar acts on it.
-import { useCallback, useLayoutEffect, useRef, type MouseEvent, type RefObject } from 'react';
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type MouseEvent,
+  type RefObject,
+} from 'react';
 import type { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
@@ -12,6 +19,7 @@ import { pageAtPoint } from '@/lib/text-document/pagination/pagination-headers';
 import { storyEditingPlugins } from '@/lib/text-document/text-document-story-editing';
 import { TextDocumentHeaderBar } from './TextDocumentHeaderBar';
 import { useTextDocumentHeaderEditing } from './useTextDocumentHeaderEditing';
+import { useTextDocumentHeaderOptions } from './useTextDocumentHeaderOptions';
 import { useTextDocumentStories } from './useTextDocumentStories';
 
 export function useTextDocumentHeadersAndFooters(input: {
@@ -24,8 +32,10 @@ export function useTextDocumentHeadersAndFooters(input: {
   readonly heights: RefObject<Map<string, number>>;
   /** The plugin telling the toolbar of the caret's changes. */
   readonly caret: Plugin;
+  /** The section the body's caret is in: Headers and footers options opens on it. */
+  readonly caretSection: number;
 }) {
-  const { view, liveDoc, format, pages, writes, heights, caret } = input;
+  const { view, liveDoc, format, pages, writes, heights, caret, caretSection } = input;
   const leave = useRef(() => {});
   const toolbar = useRef<HTMLDivElement | null>(null);
   const plugins = useCallback(() => {
@@ -48,6 +58,17 @@ export function useTextDocumentHeadersAndFooters(input: {
   });
   const { enter } = editing;
   const edited = editing.editing;
+  // Headers and footers options, from Format and from the bar.
+  const options = useTextDocumentHeaderOptions({
+    view,
+    liveDoc,
+    format,
+    writes,
+    laidOut: (pages?.length ?? 0) > 0,
+    caretSection,
+    editing: edited,
+    changeAround: editing.changeAround,
+  });
   // The bar under the one being edited ("The bar").
   const bar = edited ? (
     <TextDocumentHeaderBar
@@ -58,6 +79,7 @@ export function useTextDocumentHeadersAndFooters(input: {
       onFirst={editing.toggleFirst}
       onLink={editing.toggleLink}
       onRemove={editing.remove}
+      onFormat={options.open}
       onBack={() => edited.view.focus()}
       toolbar={toolbar}
     />
@@ -73,11 +95,17 @@ export function useTextDocumentHeadersAndFooters(input: {
     },
     [pages, enter],
   );
+  const actions = useMemo(
+    () => ({ ...editing.actions, ...options.actions }),
+    [editing.actions, options.actions],
+  );
   return {
     storyHost: stories.host,
     ...editing,
     onDoubleClick,
     bar,
+    actions,
+    optionsDialog: options.dialog,
     /** What the toolbar, the Format menu and Edit act on: the header or footer edited, else the body. */
     activeView: editing.editing?.view ?? view,
   };

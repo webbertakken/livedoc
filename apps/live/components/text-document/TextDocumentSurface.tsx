@@ -437,6 +437,7 @@ export function TextDocumentSurface({
     writes,
     heights: storyHeights,
     caret: changes.plugin,
+    caretSection: page.caret.index,
   });
   const { activeView } = headers;
   // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
@@ -625,6 +626,7 @@ export function TextDocumentSurface({
       {preferences.dialog}
       {page.dialog}
       {columns.dialog}
+      {headers.optionsDialog}
       {lists.dialog}
       {limitReached ? (
         <p
