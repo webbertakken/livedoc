@@ -11,6 +11,7 @@ import {
   writeOdfPackage,
   XML_DECLARATION,
 } from '@livedoc/office-packages';
+import { OdsStyles } from './ods-styles';
 import { toOpenFormula } from './open-formula';
 import type {
   FileCell,
@@ -27,9 +28,39 @@ export const ODS_GENERATOR = 'LiveDoc';
 type Prefix = keyof typeof ODF_NS;
 
 // Each root declares only the namespaces its entry uses (office-packages.md "Writing a package").
-const CONTENT_NAMESPACES: readonly Prefix[] = ['office', 'table', 'text', 'of'];
+const CONTENT_NAMESPACES: readonly Prefix[] = [
+  'office',
+  'style',
+  'number',
+  'fo',
+  'table',
+  'text',
+  'of',
+];
 const META_NAMESPACES: readonly Prefix[] = ['office', 'meta', 'dc'];
-const FLAT_NAMESPACES: readonly Prefix[] = ['office', 'meta', 'dc', 'table', 'text', 'of'];
+const FLAT_NAMESPACES: readonly Prefix[] = [
+  'office',
+  'meta',
+  'dc',
+  'style',
+  'number',
+  'fo',
+  'table',
+  'text',
+  'of',
+];
+
+// What writing a sheet carries along: its name, the losses so far, and the cell styles named.
+type Out = { sheet: string; losses: FileLoss[]; styles: OdsStyles };
+
+// A cell's style, its number format's; a format ODF cannot say is named, the cell written without it.
+function styleAttribute(cell: FileCell, out: Out): string[] {
+  if (cell.format === undefined) return [];
+  const name = out.styles.cellStyle(cell.format);
+  if (name) return [`table:style-name="${name}"`];
+  out.losses.push({ k: 'format_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
+  return [];
+}
 
 function namespaces(prefixes: readonly Prefix[]): string {
   return prefixes.map((p) => `xmlns:${p}="${ODF_NS[p]}"`).join(' ');
@@ -69,11 +100,12 @@ function paragraphs(text: string): string {
     .join('');
 }
 
-function cellXml(cell: FileCell, sheet: string, losses: FileLoss[]): string {
+function cellXml(cell: FileCell, out: Out): string {
   const formula = cell.formula === undefined ? null : toOpenFormula(cell.formula);
   if (cell.formula !== undefined && formula === null)
-    losses.push({ k: 'formula_unwritten', sheet, r: cell.r, c: cell.c });
+    out.losses.push({ k: 'formula_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
   const attrs = [
+    ...styleAttribute(cell, out),
     ...(formula ? [`table:formula="${escapeXmlAttribute(formula)}"`] : []),
     ...(formula && cell.spans
       ? [
@@ -94,17 +126,12 @@ function emptyCells(n: number): string {
   return `<table:table-cell${repeated('columns', n)}/>`;
 }
 
-function rowXml(
-  cells: readonly FileCell[],
-  cols: number,
-  sheet: string,
-  losses: FileLoss[],
-): string[] {
+function rowXml(cells: readonly FileCell[], cols: number, out: Out): string[] {
   const lines = ['<table:table-row>'];
   let at = 0;
   for (const cell of cells) {
     if (cell.c > at) lines.push(emptyCells(cell.c - at));
-    lines.push(cellXml(cell, sheet, losses));
+    lines.push(cellXml(cell, out));
     at = cell.c + 1;
   }
   if (cols > at) lines.push(emptyCells(cols - at));
@@ -116,7 +143,8 @@ function emptyRows(n: number, cols: number): string {
   return `<table:table-row${repeated('rows', n)}>${emptyCells(cols)}</table:table-row>`;
 }
 
-function tableXml(sheet: FileSheet, losses: FileLoss[]): string[] {
+function tableXml(sheet: FileSheet, losses: FileLoss[], styles: OdsStyles): string[] {
+  const out: Out = { sheet: sheet.name, losses, styles };
   const rows = new Map<number, FileCell[]>();
   for (const cell of sheet.cells) {
     const row = rows.get(cell.r);
@@ -136,8 +164,7 @@ function tableXml(sheet: FileSheet, losses: FileLoss[]): string[] {
       ...rowXml(
         rows.get(r)!.sort((a, b) => a.c - b.c),
         cols,
-        sheet.name,
-        losses,
+        out,
       ),
     );
     at = r + 1;
@@ -154,12 +181,16 @@ const CALCULATION_SETTINGS =
   'table:search-criteria-must-apply-to-whole-cell="true" table:use-regular-expressions="false" ' +
   'table:use-wildcards="true"/>';
 
+// The body, after the automatic styles its cells name (D93).
 function bodyXml(file: WorkbookFile, losses: FileLoss[]): string[] {
+  const styles = new OdsStyles();
+  const tables = file.sheets.flatMap((sheet) => tableXml(sheet, losses, styles));
   return [
+    ...styles.automaticStyles(),
     '<office:body>',
     '<office:spreadsheet>',
     CALCULATION_SETTINGS,
-    ...file.sheets.flatMap((sheet) => tableXml(sheet, losses)),
+    ...tables,
     '</office:spreadsheet>',
     '</office:body>',
   ];
