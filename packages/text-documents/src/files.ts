@@ -17,6 +17,10 @@ import { readOdfFile } from './odf/odf-file';
 import { writeOdf } from './odf/odf-write';
 import { readOoxmlFile } from './ooxml/ooxml-read';
 import { writeOoxml } from './ooxml/ooxml-write';
+import { Styles } from './model/styles';
+import { Watermarks } from './model/watermark';
+import { odfWatermarkInline, readOdfWatermark } from './odf/odf-watermark';
+import { ooxmlWatermarkInline, readOoxmlWatermark } from './ooxml/ooxml-watermark';
 import { ReportBuilder, type ImportReport } from './report';
 import type { TextDocumentFileType } from './file-types';
 
@@ -87,6 +91,7 @@ export async function readTextDocumentFile(
   }
   if (TextDocument.characters(document) > (limits.maxChars ?? TEXT_DOCUMENT_MAX_CHARS))
     return refuse('document_too_large');
+  document = liftWatermark(document, report);
   document = withinKeptLimit(document, report, limits.keptBytes ?? KEPT_CONTENT_MAX_BYTES);
   return { ok: true, document, report: report.build(), fileType };
 }
@@ -102,8 +107,35 @@ export function writeTextDocumentFile(
 ): TextDocumentWrite {
   const odf = type === 'odt' || type === 'fodt';
   if (odf !== (document.format === 'odf')) return { ok: false, rejection: 'format_not_native' };
+  const placed = placeWatermark(document);
   const bytes = odf
-    ? writeOdf(document, { flat: type === 'fodt', generator })
-    : writeOoxml(document, generator);
+    ? writeOdf(placed, { flat: type === 'fodt', generator })
+    : writeOoxml(placed, generator);
   return { ok: true, bytes };
+}
+
+/** The watermark a file's headers hold, lifted into the document (page-layout.md "Watermark", "In the file"). */
+function liftWatermark(document: TextDocument, report: ReportBuilder): TextDocument {
+  const source = document.source;
+  const styles = source?.format === 'odf' ? [...source.pageStyles, ...source.automaticStyles] : [];
+  const read = (kept: Block | Inline) =>
+    source?.format === 'odf'
+      ? readOdfWatermark(kept, (name) => styles.find((s) => s.name === name)?.xml)
+      : readOoxmlWatermark(kept);
+  return Watermarks.lift(document, (kept) => {
+    const watermark = read(kept);
+    // Held by the model now, no longer kept content.
+    if (watermark && kept.type === 'kept') report.mapped(kept.name);
+    return watermark;
+  });
+}
+
+/** The document's watermark placed in its headers, as its format writes one. */
+function placeWatermark(document: TextDocument): TextDocument {
+  const normal = Styles.idOfRole(document.styles, 'normal') ?? '';
+  return Watermarks.place(
+    document,
+    document.format === 'odf' ? odfWatermarkInline : ooxmlWatermarkInline,
+    normal,
+  );
 }

@@ -41,6 +41,8 @@ import {
   type ParagraphLines,
 } from './odf-lines';
 import { Notes } from '../model/notes';
+import { Watermarks } from '../model/watermark';
+import { odfWatermarkStyles } from './odf-watermark';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -118,6 +120,10 @@ class OdfWriter {
     }
     for (const s of source?.automaticStyles ?? []) this.automatic.add(s.name, this.kept(s.xml));
     for (const s of source?.pageStyles ?? []) this.pageStyles.add(s.name, this.kept(s.xml));
+    // A watermark's shape names its own styles (page-layout.md "Watermark").
+    if (Watermarks.draws(document.watermark))
+      for (const s of odfWatermarkStyles(document.watermark))
+        this.pageStyles.replace(s.name, s.xml);
     for (const m of source?.masterStyles ?? []) {
       const xml = this.kept(m);
       this.masters.add(nameAttribute(xml) ?? '', xml);

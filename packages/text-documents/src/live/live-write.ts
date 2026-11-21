@@ -138,6 +138,8 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
     meta.set('section', plain({ ...section, headers: stories.headers(headers) }));
     if (document.pageless) meta.set('pageless', true);
     else meta.delete('pageless');
+    if (document.watermark) meta.set('watermark', plain(document.watermark));
+    else meta.delete('watermark');
     styles.clear();
     document.styles.forEach((style, order) => styles.set(style.id, { order, style: plain(style) }));
     lists.clear();

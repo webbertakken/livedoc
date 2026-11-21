@@ -15,6 +15,7 @@ import { BODY_FRAGMENT } from './live/live-root';
 import { storyFragment, type LiveHeaders } from './live/live-stories';
 import { DOCUMENT_MAP, LISTS_MAP, STYLES_MAP } from './live/live-names';
 import type { Section } from './model/sections';
+import type { Watermark } from './model/watermark';
 import type { ListDefinition } from './model/lists';
 import {
   addLiveStyle,
@@ -184,6 +185,17 @@ export const TextDocumentState = {
   setPageless: (doc: Y.Doc, on: boolean, origin?: unknown): void => {
     const meta = doc.getMap<unknown>(DOCUMENT_MAP);
     doc.transact(() => (on ? meta.set('pageless', true) : meta.delete('pageless')), origin);
+  },
+  /** The document's watermark (page-layout.md "Watermark"); none where it has none. */
+  watermark: (doc: Y.Doc): Watermark | undefined =>
+    doc.getMap<unknown>(DOCUMENT_MAP).get('watermark') as Watermark | undefined,
+  /** Sets the watermark, or takes it away, as one transaction with `origin`. */
+  setWatermark: (doc: Y.Doc, watermark: Watermark | undefined, origin?: unknown): void => {
+    const meta = doc.getMap<unknown>(DOCUMENT_MAP);
+    doc.transact(() => {
+      if (watermark) meta.set('watermark', JSON.parse(JSON.stringify(watermark)) as Watermark);
+      else meta.delete('watermark');
+    }, origin);
   },
   /** The live state's document map (metadata, defaults, the first section), which the editor's undo also tracks. */
   metaType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(DOCUMENT_MAP),

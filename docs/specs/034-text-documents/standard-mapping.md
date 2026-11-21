@@ -50,7 +50,8 @@ are no others. A text document only changes format when a person converts it ([C
 
 The model is plain values in `@livedoc/text-documents`, each a namespace of pure functions over immutable data.
 
-- **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, and its kept parts.
+- **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, its watermark
+  ([Watermark](page-layout.md#watermark)) and its kept parts.
 - **Body**: blocks in order, each a **paragraph**, a **section break** or a **kept block**.
 - **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
   and inlines: **runs** (characters with direct text formatting and an optional link), **fields** (a page number or

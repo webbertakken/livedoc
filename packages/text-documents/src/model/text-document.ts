@@ -10,6 +10,7 @@ import { Paragraph, type Block } from './blocks';
 import type { ListDefinition } from './lists';
 import { PageSetup, type PaperName, type Section } from './sections';
 import { Styles, type Style, type StyleDefaults } from './styles';
+import type { Watermark } from './watermark';
 
 export type TextDocumentFormat = 'odf' | 'ooxml';
 
@@ -80,6 +81,8 @@ export type TextDocument = {
   readonly section: Section;
   /** Shown as one continuous column, no pages (page-layout.md "Pageless"); absent is pages. */
   readonly pageless?: true;
+  /** Drawn behind the writing on every page (page-layout.md "Watermark"). */
+  readonly watermark?: Watermark;
   readonly body: readonly Block[];
   readonly source?: OdfSource | OoxmlSource;
 };

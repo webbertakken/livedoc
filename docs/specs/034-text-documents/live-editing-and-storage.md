@@ -42,7 +42,8 @@ api, agents) reads and writes one shape (default):
   `document`, a later one in its `section_break`) holds `headers` as a whole value, its slots naming the fragments
   by id. Two people typing in one header merge by character, as in the body. A pasted section break naming a fragment
   shares it until one of them is made its own (default).
-- **Beside the body**: the root map `document` holds `metadata`, `defaults` and the first `section` as whole values;
+- **Beside the body**: the root map `document` holds `metadata`, `defaults`, the first `section` and the `watermark` as
+  whole values;
   `styles` and `lists` are root maps by id, so two people changing two styles never collide; `source` holds what a
   file brought around the model (`json`) and its package entries by name (`entries`, as bytes), written once when the
   file is opened and replaced only by a conversion.

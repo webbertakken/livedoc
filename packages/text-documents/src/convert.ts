@@ -258,6 +258,8 @@ export function convertTextDocument(
       styles,
       lists,
       section,
+      ...(document.pageless ? { pageless: true as const } : {}),
+      ...(document.watermark ? { watermark: document.watermark } : {}),
       body,
     },
     losses,
