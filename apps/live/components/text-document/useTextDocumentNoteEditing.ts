@@ -213,6 +213,15 @@ export function useTextDocumentNoteEditing(input: {
     noteStartMarks(edited.view, latest.current.format);
   }, []);
 
+  // Its own box, drawn again once it is left, painted again.
+  const drawnKey = editing ? shown?.note.key : undefined;
+  const shownKey = useRef<string | undefined>(undefined);
+  useLayoutEffect(() => {
+    const was = shownKey.current;
+    shownKey.current = drawnKey;
+    if (was && was !== drawnKey) latest.current.stories.repaint(was);
+  }, [drawnKey]);
+
   // In its box while it is edited; back to its hidden place once its mark is gone.
   useLayoutEffect(() => {
     const edited = source.current;

@@ -129,6 +129,12 @@ test('a footnote is put in, written, left, entered again and undone', async ({
   await expect(edited).toHaveAttribute('aria-label', 'Footnote');
   await page.keyboard.type('The source, written in place.');
   await expect(edited).toHaveText('The source, written in place.');
+  // A note made in LiveDoc is at 10 pt.
+  const size = await edited
+    .locator('p')
+    .first()
+    .evaluate((p) => getComputedStyle(p).fontSize);
+  expect(Number.parseFloat(size)).toBeCloseTo((10 * 96) / 72, 1);
   await page.waitForTimeout(400);
   await page.screenshot({ path: test.info().outputPath('footnote-editing.png') });
 
@@ -143,7 +149,10 @@ test('a footnote is put in, written, left, entered again and undone', async ({
   // A press on the drawn note enters it; Move to current footnote goes back to the mark.
   await drawn.click();
   await expect(edited).toBeFocused();
-  await page.keyboard.press('Control+Alt+KeyE');
+  // A sequence: both keys under the same modifiers, held.
+  await page.keyboard.down('Control');
+  await page.keyboard.down('Alt');
+  await page.keyboard.press('KeyE');
   await page.keyboard.press('KeyF');
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');

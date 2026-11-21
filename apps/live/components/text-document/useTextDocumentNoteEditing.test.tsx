@@ -258,6 +258,8 @@ describe('editing a note', () => {
     const story = seen.current!.note!.story;
     act(() => seen.current!.leaveNote());
     await settle();
+    // Its own box drawn again, painted: an empty note is its number.
+    expect(container.querySelector('[data-note-number="1"]')!.textContent).toBe('1');
     written(story, 'Said');
     await settle();
     const drawn = container.querySelector<HTMLElement>(`[data-note-number="1"]`)!;

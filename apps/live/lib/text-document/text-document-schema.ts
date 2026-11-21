@@ -132,8 +132,16 @@ const nodes: Record<string, NodeSpec> = {
     // Its style by id, which the document's style sheet draws (text-and-paragraphs.md "Paragraph styles"), and its
     // own paragraph formatting over it ("Alignment and indents").
     toDOM: (node) => {
-      const { style, props } = node.attrs as { style: unknown; props: unknown };
-      const own = props && typeof props === 'object' ? cssText(paragraphDeclarations(props)) : '';
+      const { style, props, text } = node.attrs as {
+        style: unknown;
+        props: unknown;
+        text: unknown;
+      };
+      // ODF's text formatting the paragraph gives all its characters (standard-mapping.md "The model").
+      const own = cssText([
+        ...(props && typeof props === 'object' ? paragraphDeclarations(props) : []),
+        ...(text && typeof text === 'object' ? textDeclarations(text) : []),
+      ]);
       const attrs = {
         ...(typeof style === 'string' && style ? { 'data-style': style } : {}),
         ...(own ? { style: own } : {}),

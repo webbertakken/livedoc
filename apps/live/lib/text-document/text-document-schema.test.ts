@@ -205,4 +205,18 @@ describe('a paragraph drawn in its style', () => {
     ]);
     expect(toDom({})).toEqual(['p', { 'data-style': 'Title' }, 0]);
   });
+
+  // standard-mapping.md "The model": ODF's text formatting a paragraph gives all its characters, drawn on it; a note
+  // made in LiveDoc is 10 pt so (page-layout.md "Footnotes").
+  it('draws the text formatting it gives all its characters', () => {
+    const p = textDocumentSchema.nodes.paragraph!.create({
+      props: { align: 'end' },
+      text: { size: 10 },
+    });
+    expect(textDocumentSchema.nodes.paragraph!.spec.toDOM!(p)).toEqual([
+      'p',
+      { style: 'text-align: end; font-size: 10pt;' },
+      0,
+    ]);
+  });
 });
