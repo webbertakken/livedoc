@@ -22,20 +22,25 @@ Redaction is two steps, so nothing is destroyed by a slip: content is **marked**
 - **A redaction mark** shows as an outline in the redaction colour over content still readable, so it can be
   checked; hovering shows it as it will look applied. It is moved, resized and deleted as a mark is, and is listed
   in the comments panel under **Redactions**, each with its page and the text it will remove.
-- **Look when applied** (per mark, with a default): the fill colour (black by default, from the one
+- **Look when applied** (per mark, with a default): the fill colour (black by default, or none, which leaves the area blank; from the one
   [colour picker](../004-interface-design/colour-picker.md)), optional **overlay text** (custom words, or a
   **redaction code**) in a font, size and colour, repeated to fill the area or once, aligned.
 - **Redaction codes**: named sets of codes with their meanings ("Exemption 6: personal privacy"); a person makes,
-  edits and deletes sets and codes, kept with the account, and picks one or several for a mark. No set ships with
-  LiveDoc but two examples a person may delete `(default)`.
+  edits and deletes sets and codes, kept with the account, and picks one or several for a mark. Two sets ship, as Acrobat's do: the exemptions of the U.S. Freedom of Information Act and of the U.S. Privacy Act,
+  each code with its paragraph; a person may delete them.
 - Redaction marks are **live for everyone and not yet applied**: others see them outlined; they are in the file as
   the standard's own redaction annotations if it is baked meanwhile, so another reader can apply them too.
 
 ## Applying
 
 - **Apply redactions** (Tools > Redact) opens a dialog that says exactly what will happen, and nothing proceeds
-  without it: "Apply 14 redactions on 6 pages? The marked text and pictures are removed from this PDF for good. The
-  earlier file, its versions and its history are deleted, for everyone. This can't be undone."
+  without it. It offers two ways (fork F15 `(default)`):
+  - **Make a redacted copy** (the default button, as Acrobat saves a redacted file beside the one it came from): a
+    new PDF document, "<name> (redacted)", in the same folder, holding the redacted file and nothing of this
+    document's history. This document is unchanged, and the dialog says so: "This PDF still holds what you
+    redacted. Share the copy."
+  - **Redact this PDF**: "Apply 14 redactions on 6 pages? The marked text and pictures are removed from this PDF for
+    good. The earlier file, its versions and its history are deleted, for everyone. This can't be undone."
 - A tick, on by default: **Also remove hidden information** ([below](#removing-hidden-information)).
 - **What applying does to the content**: the text under a mark is removed from the page's content, not covered;
   the part of a picture under a mark is replaced by the fill in the picture's own pixels; shapes are cut; marks,
@@ -51,7 +56,8 @@ Redaction is two steps, so nothing is destroyed by a slip: content is **marked**
 
 ## What applying removes
 
-Applying redactions, and removing hidden information, do what no other change does:
+Redacting this PDF in place, and removing hidden information from it, do what no other change does (a redacted copy
+starts clean instead: it never held the content):
 
 - The stored file is **replaced** by the rewritten one ([Saving](saving.md#when-the-stored-file-is-replaced)).
 - **Every earlier stored file is purged** from the blob store, held or not, with every previous version and named

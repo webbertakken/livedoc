@@ -48,13 +48,17 @@ overlap:
 The shell's side panel (⌘⌥⇧A):
 
 - Every thread, by page and place, each with its anchor label, first comment, reply count and state.
-- **Filters**: All, For you, Open, Resolved, Unread; by author; by kind of mark; by page range. **Search** finds
-  words in comments.
+- **Filters**: All, For you, Open, Resolved, Unread, Ticked; by author; by kind of mark; by colour; by page range;
+  **Clear all** (⌘8). **Search** finds words in comments and shows the count.
+- **Sort**: by page (default), author, date, kind, unread or colour. **Expand all** and **Collapse all** open and
+  close every thread's replies.
+- **A tick** (⇧K): a person's own check mark on a thread, to keep track of what they have dealt with; it is theirs
+  alone, never in the file, and is not resolving.
 - **Marks without words** are listed under their own filter, so every mark is reachable from the panel.
 - A press goes to the thread's mark; arrow keys move between threads; the keys of a selected thread are R reply, E
   resolve, J next, K previous, Escape to leave.
 - The panel's menu: **Resolve all**, **Delete all** (an Editor's, asked first), **Import comments**, **Export
-  comments**, **Print with comments**, **Download a summary**.
+  comments** (all, or the selected threads), **Print with comments**, **Download a summary**.
 
 ## Authors
 

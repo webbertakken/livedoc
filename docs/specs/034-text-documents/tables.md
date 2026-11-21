@@ -29,13 +29,49 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
     cell stays. In a cell, Tab never types a tab nor indents a list `(default)`.
   - The row Tab adds copies the last row's cells (spans, lines, shading), empty; one undo step. A Viewer's Tab moves
     nothing in the writing.
+- **Table navigation** (keyboard-shortcuts.md "Table navigation"): Google's Ctrl+Alt+Shift+T sequences put the caret at
+  the start of a cell: the table's first or last, its column's first or last, its row's first or last, or the next or
+  previous one across or down; Exit table puts it after the table (before it when nothing follows), and Ctrl+Alt+Shift+N
+  or P, T in the next or previous table's first cell. A move with nowhere to go leaves the caret where it is. Anyone
+  who reads the document may move; moving changes nothing.
 - Insert a row above or below, a column left or right; delete a row, column or the table; **Distribute rows**,
   **Distribute columns**.
+  - A row inserted copies the caret's row's cells (spans across, lines, shading), one row high and empty; a cell
+    spanning down across the place grows by the row. With cells selected, as many rows as the selection spans
+    `(default)`, above its first or below its last.
+  - A column inserted copies the caret's column's cells, empty, at that column's width; then every column narrows in
+    proportion, so the table keeps its width `(default)`. A cell spanning across the place grows by the column. With
+    cells selected, as many columns as the selection spans `(default)`.
+  - Delete row and Delete column delete the rows or columns the caret or the selection is in; the columns left keep
+    their widths, so the table narrows `(default)`. Deleting every row or column deletes the table.
+  - Delete table takes the whole table away, the caret at the start of what follows it.
+  - **Distribute rows** gives the rows the caret or selection spans (every row with the caret alone) one minimum height,
+    the tallest one's as drawn `(default)`. **Distribute columns** gives the columns it spans one width each, their
+    widths' sum shared equally, so the table keeps its width.
+  - Each is one undo step, keeps the caret in its cell where the cell remains, and is an Editor's only.
 - **Merge cells** and **Unmerge cells** over a cell selection.
+  - Merge cells joins a rectangle of two or more selected cells into its first, the others' writing appended to it,
+    its width the columns' it covers; dimmed (and left out of the context menu) without such a selection.
+  - Unmerge cells splits the caret's merged cell back into one cell per place, the writing in the first; dimmed (and left
+    out of the context menu) unless the caret's cell spans more than one place.
 - **Move** rows and columns by dragging their edge handle (Google's six-dot grip).
 - **Resize** columns and rows by dragging their borders; a minimum of 0.1 in.
 - **Sort table** ascending or descending by the column at the caret (text, then numbers, as Google sorts).
+  - Format > Table > Sort table > **Sort ascending**, **Sort descending**; the cell's context menu has both as **Sort
+    table ascending**, **Sort table descending** `(default)`.
+  - Rows are ordered by the writing of their cell in the caret's column: cells that read as a number (`3`, `-2.5`,
+    `1,200`) come first in number order, then the rest by their words, ignoring case, numbers within words in number
+    order (`Item 2` before `Item 10`); empty cells last either way `(default)`. Rows that compare equal keep their
+    order.
+  - Header rows stay at the top, unsorted. Dimmed where a cell below the header rows spans rows, or fewer than two
+    rows would move. One undo step.
 - **Pin header rows**: the first n rows repeat at the top of each page.
+  - Format > Table > Pin header rows > **Don't pin** and **Pin up to row** n, n the caret's row; Table properties'
+    Rows section has **Pin header rows** (None, 1 to the table's rows less one, at most 10 `(default)`).
+  - Pinned rows are the table's header rows: their cells are column headers (`th scope="col"`), written as each format
+    holds header rows (ODF `table:table-header-rows`, OOXML `w:tblHeader`). Pinning every row is refused (a table
+    keeps one row of its own). One undo step.
+  - Repeating them at the top of each page the table continues on is ahead.
 - **Rows that do not break across pages** (Table properties > Row > Allow row to overflow across pages, off).
 
 ## Table properties
@@ -44,11 +80,43 @@ A side panel (Google's) with sections: **Rows** (minimum height, pin header rows
 **Alignment** (cell vertical alignment, table alignment left, centre, right, left indent), **Colour** (border colour
 and width, cell background, by the one colour picker), **Cell** (padding).
 
+- Opened by Format > Table > Table properties or the cell's context menu, in the right side panel
+  ([Office shell](../004-interface-design/office-shell.md#side-panels)); an Editor's only, as every side panel that
+  changes the writing. The item is dimmed (and left out of the context menu) outside a table.
+- Its sections are collapsible, each open when the panel opens `(default)`; it reads the caret's table again as the
+  caret moves, and outside a table says "Put the cursor in a table to see its properties." with no fields.
+- **What it changes**: the selected cells, or the caret's cell with none selected; Minimum row height the rows they
+  are in; Column width the columns they are in; Table alignment and Left indent the whole table.
+- **What it shows**: each field the value the cells it changes share, blank where they differ.
+- **Fields** (lengths in the person's unit, as indents are, from 0 to 22 in):
+  - Rows: **Minimum row height** (a row grows past it with its writing; 0 or blank is none); **Pin header rows**
+    (None, then 1 up to the table's rows less one, at most 10), the whole table's.
+  - Columns: **Column width**, at least 0.1 in; the table grows or shrinks by the change.
+  - Alignment: **Cell vertical alignment** (Top, Middle, Bottom); **Table alignment** (Left, Center, Right); **Left
+    indent** (Left only, dimmed otherwise).
+  - Colour: **Table border** colour (the one colour picker) and width (0 pt, 0.5 pt, 1 pt, 1.5 pt, 2.25 pt, 3 pt,
+    4.5 pt, 6 pt, Google's), setting every side of the cells it changes, drawn solid; 0 pt takes the lines away.
+    **Cell background colour** (the one colour picker, with None).
+  - Cell: **Cell padding**, every side alike.
+- A choice from a list or a colour applies at once; a typed length applies on Enter or when the field is left, and an
+  invalid one says so under the field and changes nothing. Each change is one undo step, its focus kept in the panel.
+- Allow row to overflow across pages joins Rows when rows breaking across pages are built (ahead).
+- Telemetry: `Element · Changed · TextDocumentTableProperties` per change. Logged
+  `[text-document] table-properties` with the field.
+
+## Format > Table
+
+`(default)`, until Webber's capture: **Table properties**; Insert row above, Insert row below, Insert column left,
+Insert column right; Delete row, Delete column, Delete table; Distribute rows, Distribute columns; Merge cells,
+Unmerge cells; Sort table (a submenu); Pin header rows (a submenu). Each dimmed outside a table, Merge and Unmerge as
+above, Sort as above.
+
 ## Context menu
 
 On a cell: the text menu, then Insert row above, Insert row below, Insert column left, Insert column right, Delete row,
-Delete column, Delete table, Distribute rows, Distribute columns, Merge cells / Unmerge cells, Sort table, Table
-properties.
+Delete column, Delete table, Distribute rows, Distribute columns, Merge cells / Unmerge cells, Sort table ascending, Sort
+table descending, Table properties. Its table items show only in a table (contextual), Merge cells only over a selection that can merge and
+Unmerge cells only on a merged cell; the order is `(default)` until Webber's capture.
 
 ## The model
 
@@ -134,7 +202,7 @@ its tallest cell; otherwise it moves whole, unless it is taller than a page, whe
 - In a section of columns a table moves to the next column or page whole, as kept content does `(default)`.
 - A table's rows are not line-numbered and do not count ([Line numbers](page-layout.md#line-numbers)), as Word's.
 - A footnote whose mark is in a cell is at the foot of the page its row is on.
-- Ahead: header rows repeating on each page; a row breaking between its lines; a row that may not break (10e).
+- Ahead: header rows repeating on each page; a row breaking between its lines; a row that may not break.
 
 ## Share roles
 
@@ -148,5 +216,6 @@ Editors change tables; a Participant only as suggestions (D7); a Viewer reads an
 ## Telemetry
 
 `Element · Added · TextDocumentTable`, `TextDocumentTableTemplate`; `Element · Changed · TextDocumentTable<Action>`
-(InsertRow, InsertColumn, Merge, Sort, PinHeader, …). Never content. Tab adding a row is `TextDocumentTableInsertRow`.
+(InsertRow, InsertColumn, DeleteRow, DeleteColumn, Delete, DistributeRows, DistributeColumns, Merge, Unmerge, Sort,
+PinHeader, …). Never content. Tab adding a row is `TextDocumentTableInsertRow`.
 The telemetry dashboard draws them as Text Document Tables (added) and Text Document Table Changes (changed).

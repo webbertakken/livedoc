@@ -12,7 +12,7 @@ A file whose bytes are a PDF ([What becomes a PDF document](pdf-document.md#what
 
 | Way                                          | Result                                                                                               |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| A drop on the Explorer                       | A PDF document in the folder dropped on, or the folder in view; several files make several documents |
+| A drop or a paste of a file on the Explorer  | A PDF document in the folder dropped on, or the folder in view; several files make several documents |
 | The Explorer's New > PDF document, or Import | The file chooser; the same result                                                                    |
 | A drop or a paste on an open document        | A PDF tab joins that document, for whoever may add tabs `(default)`; a toast names it with **Open**  |
 | A drop on a PDF document's pages             | Asked: **Open as a new document**, or (Editing) **Insert its pages here**                            |

@@ -10,7 +10,9 @@
     "./motion": "./src/motion.ts",
     "./motion-budget": "./src/motion-budget.ts",
     "./optical-guard": "./src/optical-guard.ts",
-    "./touch-target-guard": "./src/touch-target-guard.ts"
+    "./touch-target-guard": "./src/touch-target-guard.ts",
+    "./sizing": "./src/sizing.ts",
+    "./sizing-guard": "./src/sizing-guard.ts"
   },
   "files": [
     "theme.css",

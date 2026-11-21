@@ -231,21 +231,21 @@ The Accessibility menu shows only while screen reader support is on.
 
 ## Table navigation
 
-| Action                                | PC                    | Mac                 | ChromeOS              | Status    |
-| ------------------------------------- | --------------------- | ------------------- | --------------------- | --------- |
-| Move to the start of the table        | `Ctrl+Alt+Shift+T, S` | `Ctrl+⌘+Shift+T, S` | `Ctrl+Alt+Shift+T, S` | specified |
-| Move to the end of the table          | `Ctrl+Alt+Shift+T, D` | `Ctrl+⌘+Shift+T, D` | `Ctrl+Alt+Shift+T, D` | specified |
-| Move to the start of the table column | `Ctrl+Alt+Shift+T, I` | `Ctrl+⌘+Shift+T, I` | `Ctrl+Alt+Shift+T, I` | specified |
-| Move to the end of the table column   | `Ctrl+Alt+Shift+T, K` | `Ctrl+⌘+Shift+T, K` | `Ctrl+Alt+Shift+T, K` | specified |
-| Move to the next table column         | `Ctrl+Alt+Shift+T, B` | `Ctrl+⌘+Shift+T, B` | `Ctrl+Alt+Shift+T, B` | specified |
-| Move to the previous table column     | `Ctrl+Alt+Shift+T, V` | `Ctrl+⌘+Shift+T, V` | `Ctrl+Alt+Shift+T, V` | specified |
-| Move to the start of the table row    | `Ctrl+Alt+Shift+T, J` | `Ctrl+⌘+Shift+T, J` | `Ctrl+Alt+Shift+T, J` | specified |
-| Move to the end of the table row      | `Ctrl+Alt+Shift+T, L` | `Ctrl+⌘+Shift+T, L` | `Ctrl+Alt+Shift+T, L` | specified |
-| Move to the next table row            | `Ctrl+Alt+Shift+T, M` | `Ctrl+⌘+Shift+T, M` | `Ctrl+Alt+Shift+T, M` | specified |
-| Move to the previous table row        | `Ctrl+Alt+Shift+T, G` | `Ctrl+⌘+Shift+T, G` | `Ctrl+Alt+Shift+T, G` | specified |
-| Exit table                            | `Ctrl+Alt+Shift+T, E` | `Ctrl+⌘+Shift+T, E` | `Ctrl+Alt+Shift+T, E` | specified |
-| Move to the next table                | `Ctrl+Alt+Shift+N, T` | `Ctrl+⌘+Shift+N, T` | `Ctrl+Alt+Shift+N, T` | specified |
-| Move to the previous table            | `Ctrl+Alt+Shift+P, T` | `Ctrl+⌘+Shift+P, T` | `Ctrl+Alt+Shift+P, T` | specified |
+| Action                                | PC                    | Mac                 | ChromeOS              | Status |
+| ------------------------------------- | --------------------- | ------------------- | --------------------- | ------ |
+| Move to the start of the table        | `Ctrl+Alt+Shift+T, S` | `Ctrl+⌘+Shift+T, S` | `Ctrl+Alt+Shift+T, S` | built  |
+| Move to the end of the table          | `Ctrl+Alt+Shift+T, D` | `Ctrl+⌘+Shift+T, D` | `Ctrl+Alt+Shift+T, D` | built  |
+| Move to the start of the table column | `Ctrl+Alt+Shift+T, I` | `Ctrl+⌘+Shift+T, I` | `Ctrl+Alt+Shift+T, I` | built  |
+| Move to the end of the table column   | `Ctrl+Alt+Shift+T, K` | `Ctrl+⌘+Shift+T, K` | `Ctrl+Alt+Shift+T, K` | built  |
+| Move to the next table column         | `Ctrl+Alt+Shift+T, B` | `Ctrl+⌘+Shift+T, B` | `Ctrl+Alt+Shift+T, B` | built  |
+| Move to the previous table column     | `Ctrl+Alt+Shift+T, V` | `Ctrl+⌘+Shift+T, V` | `Ctrl+Alt+Shift+T, V` | built  |
+| Move to the start of the table row    | `Ctrl+Alt+Shift+T, J` | `Ctrl+⌘+Shift+T, J` | `Ctrl+Alt+Shift+T, J` | built  |
+| Move to the end of the table row      | `Ctrl+Alt+Shift+T, L` | `Ctrl+⌘+Shift+T, L` | `Ctrl+Alt+Shift+T, L` | built  |
+| Move to the next table row            | `Ctrl+Alt+Shift+T, M` | `Ctrl+⌘+Shift+T, M` | `Ctrl+Alt+Shift+T, M` | built  |
+| Move to the previous table row        | `Ctrl+Alt+Shift+T, G` | `Ctrl+⌘+Shift+T, G` | `Ctrl+Alt+Shift+T, G` | built  |
+| Exit table                            | `Ctrl+Alt+Shift+T, E` | `Ctrl+⌘+Shift+T, E` | `Ctrl+Alt+Shift+T, E` | built  |
+| Move to the next table                | `Ctrl+Alt+Shift+N, T` | `Ctrl+⌘+Shift+N, T` | `Ctrl+Alt+Shift+N, T` | built  |
+| Move to the previous table            | `Ctrl+Alt+Shift+P, T` | `Ctrl+⌘+Shift+P, T` | `Ctrl+Alt+Shift+P, T` | built  |
 
 ## Other tools and navigation
 

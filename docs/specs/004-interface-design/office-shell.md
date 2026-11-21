@@ -45,6 +45,7 @@ Four looks were drawn for D2, each in light and dark, desktop and phone; Webber 
 - A PDF's pages are the exception: they are their author's, drawn as the file says in both schemes, until the person
   turns on [Dark pages](../035-pdf-documents/dark-pages.md), their own view of them.
 - Every token pair meets WCAG 2.2 AA in both schemes: 4.5:1 for text, 3:1 for a control's outline and focus ring.
+- The shell's sizes are the source of LiveDoc's one [sizing scale](sizing.md), which every other surface moves to.
 
 ## Menus as data
 

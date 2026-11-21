@@ -48,6 +48,13 @@ document out for signature, and certificates issued by LiveDoc, are left out. Si
   set one and its name is shown.
 - **The visible appearance** shows the signer's name, the date, the reason and place where given, and optionally the
   person's drawn signature or a picture as its graphic; the text is real text, so it is read aloud.
+- **Lock after signing** (a tick in the dialog): the signature locks every field, so no value changes afterwards;
+  marks and further signatures are still additions on top.
+- **A time stamp alone** (Insert > Signature > Time stamp, where the host configured an authority): a document time
+  stamp with no signer, proving the file existed as it is at that time; it replaces the stored file as a certificate
+  signature does.
+- **Verification information after signing**: where the host configured an authority, a signature's row offers **Add
+  verification information**, which appends the revocation data for that signature as an addition.
 - **Several signatures**: a signed file is signed again as an addition; each earlier signature stays valid and covers
   the state it signed.
 - **A file that cannot take an addition** (a repaired one) is not signed: "This PDF was damaged when it arrived.
