@@ -62,6 +62,8 @@ import {
   RULER_TOGGLE,
 } from './useTextDocumentViewToggle';
 import { TEXT_WIDTH_ITEMS } from './useTextDocumentTextWidth';
+import { FOOTNOTE_ITEM } from './text-document-footnotes-edit';
+import { FOOTNOTE_KEY_ACTIONS } from '@/components/text-document/useTextDocumentNoteEditing';
 import { textDocumentUndoPlugins } from './text-document-undo';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -131,6 +133,8 @@ describe('the text document menus', () => {
         PRINT_LAYOUT_TOGGLE.item,
         // View > Text width (useTextDocumentTextWidth), bound by the surface.
         ...Object.values(TEXT_WIDTH_ITEMS),
+        // Insert > Footnote (useTextDocumentNoteEditing), bound by the surface.
+        FOOTNOTE_ITEM,
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {
@@ -156,7 +160,13 @@ describe('the text document menus', () => {
     const builtRows = TEXT_DOCUMENT_SHORTCUTS.filter((r) => r.status === 'built').map((r) => r.id);
     // Rows no item names, bound by their own id (office-shell.md "Shortcut layer").
     // The keys of several stretches, answered by the writing's own plugin (text-and-paragraphs.md "Selection").
-    const keyRows = [...TEXT_DOCUMENT_KEY_ACTIONS, TOGGLE_CHECKBOX, STRETCH_KEY_ROW];
+    // Moving between footnotes (useTextDocumentNoteEditing).
+    const keyRows = [
+      ...TEXT_DOCUMENT_KEY_ACTIONS,
+      TOGGLE_CHECKBOX,
+      STRETCH_KEY_ROW,
+      ...FOOTNOTE_KEY_ACTIONS,
+    ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),
     );

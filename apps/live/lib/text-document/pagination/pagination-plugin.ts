@@ -32,7 +32,7 @@ import {
 } from './pagination-draw';
 import { paginate } from './pagination-engine';
 import { pageLayout, storyKey, type StoryHeights } from './pagination-headers';
-import { pageNotes, type NoteMark } from './pagination-notes';
+import { notePlace, pageNotes, type NoteMark } from './pagination-notes';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
 import { bodySections, SECTIONS_CHANGED } from './pagination-sections';
 import {
@@ -137,6 +137,16 @@ export function pageIndexAt(view: EditorView, pos: number): number {
   return index;
 }
 
+/**
+ * The width a note whose mark stands at `pos` is drawn at: its section's text width (page-layout.md "Footnotes");
+ * null before pages are laid out.
+ */
+export function noteWidthAt(view: EditorView, pos: number): number | null {
+  const pager = pagers.get(view);
+  if (!pager?.laid) return null;
+  return pager.noteWidthAt(pos);
+}
+
 const pagers = new WeakMap<EditorView, Pager>();
 
 const heightsSaid = (heights: StoryHeights) =>
@@ -168,6 +178,15 @@ class Pager {
   /** The pages as last laid out, or null before any are. */
   get laid(): Pagination | null {
     return this.previous;
+  }
+
+  /** The text width of the section `pos` is in, which its note is drawn at. */
+  noteWidthAt(pos: number): number {
+    const { doc } = this.view.state;
+    const { setup, headers, numberStart } = this.options.read();
+    const sections = bodySections(doc, setup, headers, numberStart);
+    const block = doc.resolve(Math.min(pos, doc.content.size)).index(0);
+    return notePlace(sections.setups[sections.sectionOf[block] ?? 0]!).width;
   }
 
   invalidate(): void {
@@ -304,13 +323,7 @@ class Pager {
     const frames = sections.setups.map(pageFrame);
     const frameOf = (block: number) => frames[sections.sectionOf[block] ?? 0]!;
     // A note is drawn at its mark's section's left margin and text width (page-layout.md "Footnotes").
-    const noteIn = (block: number) => {
-      const own = sections.setups[sections.sectionOf[block] ?? 0]!;
-      return {
-        left: own.margins.left * PX_PER_PT,
-        width: (own.width - own.margins.left - own.margins.right) * PX_PER_PT,
-      };
-    };
+    const noteIn = (block: number) => notePlace(sections.setups[sections.sectionOf[block] ?? 0]!);
     const metrics = nodes.map((node, i) => {
       let entry = this.measured.get(node);
       if (!entry) {

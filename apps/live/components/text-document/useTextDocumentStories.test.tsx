@@ -15,6 +15,7 @@ import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import { TextDocumentSheets } from './TextDocumentSheets';
 import { storiesWanted, useTextDocumentStories } from './useTextDocumentStories';
 import { TextDocumentEndNotes } from './TextDocumentEndNotes';
+import { TextDocumentPageNotes } from './TextDocumentPageNotes';
 import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
 
 vi.mock('@/lib/text-document/pagination/pagination-plugin', () => ({ refreshPages: vi.fn() }));
@@ -84,6 +85,7 @@ function Harness({
   return (
     <div data-page-format="pages">
       <TextDocumentSheets pages={pages} shadow storyHost={stories.host} />
+      <TextDocumentPageNotes pages={pages} />
       <TextDocumentEndNotes notes={endNotes} />
     </div>
   );

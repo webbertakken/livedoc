@@ -1,6 +1,7 @@
-// Headers and footers on the pages (docs/specs/034-text-documents/page-layout.md "Headers and footers"): their sources
-// drawn on every page (useTextDocumentStories) and one of them edited in place (useTextDocumentHeaderEditing), with
-// the keys, undo and caret changes it is edited with; while one is edited the toolbar acts on it.
+// The writing of a page's own besides the body (docs/specs/034-text-documents/page-layout.md "Headers and footers",
+// "Footnotes"): headers, footers and footnotes, their sources drawn on every page (useTextDocumentStories), and one of
+// them edited in place (useTextDocumentHeaderEditing, useTextDocumentNoteEditing), never two at once, with the keys,
+// undo and caret changes it is edited with; while one is edited the toolbar acts on it.
 import {
   useCallback,
   useLayoutEffect,
@@ -20,11 +21,14 @@ import { storyEditingPlugins } from '@/lib/text-document/text-document-story-edi
 import { TextDocumentHeaderBar } from './TextDocumentHeaderBar';
 import { useTextDocumentHeaderEditing } from './useTextDocumentHeaderEditing';
 import { useTextDocumentHeaderOptions } from './useTextDocumentHeaderOptions';
+import { useTextDocumentNoteEditing } from './useTextDocumentNoteEditing';
 import { useTextDocumentPageNumbers } from './useTextDocumentPageNumbers';
 import { useTextDocumentStories } from './useTextDocumentStories';
 import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
 
-export function useTextDocumentHeadersAndFooters(input: {
+const NO_NOTES: readonly PageNote[] = [];
+
+export function useTextDocumentPageStories(input: {
   readonly view: EditorView | null;
   readonly liveDoc: RefObject<Y.Doc | null>;
   readonly format: TextDocumentFormat;
@@ -39,7 +43,8 @@ export function useTextDocumentHeadersAndFooters(input: {
   /** The section the body's caret is in: Headers and footers options opens on it. */
   readonly caretSection: number;
 }) {
-  const { view, liveDoc, format, pages, writes, heights, caret, caretSection, endNotes } = input;
+  const { view, liveDoc, format, pages, writes, heights, caret, caretSection } = input;
+  const endNotes = input.endNotes ?? NO_NOTES;
   const leave = useRef(() => {});
   const toolbar = useRef<HTMLDivElement | null>(null);
   const plugins = useCallback(() => {
@@ -62,11 +67,34 @@ export function useTextDocumentHeadersAndFooters(input: {
     pages,
     heights,
     plugins,
-    ...(endNotes ? { endNotes } : {}),
+    endNotes,
   });
-  const editing = useTextDocumentHeaderEditing({ view, liveDoc, format, pages, writes, stories });
+  const leaveNote = useRef(() => {});
+  const editing = useTextDocumentHeaderEditing({
+    view,
+    liveDoc,
+    format,
+    pages,
+    writes,
+    stories,
+    leaveOthers: () => leaveNote.current(),
+  });
+  // Footnotes put in and edited (page-layout.md "Footnotes").
+  const notes = useTextDocumentNoteEditing({
+    view,
+    liveDoc,
+    format,
+    pages,
+    endNotes,
+    writes,
+    stories,
+    inStory: editing.editing !== null,
+    leaveOthers: editing.leave,
+  });
   useLayoutEffect(() => {
-    leave.current = editing.leave;
+    leaveNote.current = notes.leave;
+    // Escape leaves whichever is edited.
+    leave.current = notes.editing ? notes.leave : editing.leave;
   });
   const { enter } = editing;
   const edited = editing.editing;
@@ -113,7 +141,8 @@ export function useTextDocumentHeadersAndFooters(input: {
   // body too (the body never writes in a margin); `scale` is the pages' zoom.
   const onDoubleClick = useCallback(
     (event: MouseEvent<HTMLElement>, scale: number) => {
-      if (!pages || (event.target as Element).closest?.('[data-story-editing]')) return;
+      if (!pages || (event.target as Element).closest?.('[data-story-editing], [data-page-notes]'))
+        return;
       const top = event.currentTarget.getBoundingClientRect().top;
       const hit = pageAtPoint(pages, (event.clientY - top) / scale);
       if (hit?.kind) enter(hit.kind, hit.index);
@@ -121,8 +150,13 @@ export function useTextDocumentHeadersAndFooters(input: {
     [pages, enter],
   );
   const actions = useMemo(
-    () => ({ ...editing.actions, ...options.actions, ...pageNumbers.actions }),
-    [editing.actions, options.actions, pageNumbers.actions],
+    () => ({
+      ...editing.actions,
+      ...options.actions,
+      ...pageNumbers.actions,
+      ...notes.actions,
+    }),
+    [editing.actions, options.actions, pageNumbers.actions, notes.actions],
   );
   return {
     storyHost: stories.host,
@@ -132,7 +166,12 @@ export function useTextDocumentHeadersAndFooters(input: {
     actions,
     optionsDialog: options.dialog,
     pageNumbersDialog: pageNumbers.dialog,
-    /** What the toolbar, the Format menu and Edit act on: the header or footer edited, else the body. */
-    activeView: editing.editing?.view ?? view,
+    /** The footnote being edited, its box and a press on a drawn note. */
+    note: notes.editing,
+    noteBox: notes.box,
+    leaveNote: notes.leave,
+    onNotePress: notes.onPress,
+    /** What the toolbar, the Format menu and Edit act on: the note, header or footer edited, else the body. */
+    activeView: notes.editing?.view ?? editing.editing?.view ?? view,
   };
 }

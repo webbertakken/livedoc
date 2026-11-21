@@ -520,6 +520,14 @@ div.text-document-kept {
   line-height: 0;
 }
 
+/* The note being edited: its number before its first paragraph, as a drawn note's ("Editing a note"). */
+.text-document-note-editing .text-document-story > :first-child::before {
+  content: var(--note-number);
+  vertical-align: super;
+  font-size: 0.7em;
+  line-height: 0;
+}
+
 .text-document-footnote::after {
   content: attr(data-number);
 }

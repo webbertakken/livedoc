@@ -71,8 +71,11 @@ export function useTextDocumentHeaderEditing(input: {
   readonly pages: readonly PageGeometry[] | null;
   readonly writes: boolean;
   readonly stories: TextDocumentStories;
+  /** Leaves a footnote being edited, before a header or footer is entered (page-layout.md "Footnotes"). */
+  readonly leaveOthers?: () => void;
 }): TextDocumentHeaderEditing {
   const { view, liveDoc, format, pages, writes, stories } = input;
+  const leaveOthers = useRef(input.leaveOthers);
   const [entered, setEntered] = useState<StoryEditing | null>(null);
   // Still on a page that shows headers, and still the person's to edit.
   const editing = entered && writes && pages?.[entered.page]?.place !== undefined ? entered : null;
@@ -81,6 +84,7 @@ export function useTextDocumentHeaderEditing(input: {
   const latest = useRef({ view, pages, writes, format, stories, entered });
   useLayoutEffect(() => {
     latest.current = { view, pages, writes, format, stories, entered };
+    leaveOthers.current = input.leaveOthers;
   });
 
   // Back to its hidden place; an empty own one taken out of its section.
@@ -121,6 +125,7 @@ export function useTextDocumentHeaderEditing(input: {
       if (!shown?.place || shown.section === undefined || !shown.slot) return;
       const { section, place } = shown;
       if (latest.current.entered) stop(latest.current.entered);
+      leaveOthers.current?.();
       // Read now, not from the pages: a change on the bar has not been laid out yet.
       const now = shownStory(doc, kind, section, shown.first === true, page + 1);
       const { slot } = now;

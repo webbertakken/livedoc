@@ -127,6 +127,7 @@ export function useTextDocumentStories(input: {
         }),
         stylesScope: body.dom.getAttribute('data-text-document-styles'),
         label: LABELS[kind],
+        drawsEmpty: kind === 'footnote',
         plugins: plugins?.() ?? [],
         onLaid: (laid) => {
           heights.current.set(key, laid.height);

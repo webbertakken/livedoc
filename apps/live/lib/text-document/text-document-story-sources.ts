@@ -41,6 +41,8 @@ export type StorySourceInput = {
   readonly plugins?: readonly Plugin[];
   /** What a screen reader calls it while it is edited: "Header" or "Footer". */
   readonly label: string;
+  /** Drawn even when it holds nothing: a footnote, whose empty line carries its number (page-layout.md "Footnotes"). */
+  readonly drawsEmpty?: boolean;
 };
 
 /** Draws nothing: one paragraph with no content, or none. */
@@ -169,7 +171,7 @@ export class StorySource {
 
   #measure(): void {
     if (this.view.isDestroyed) return;
-    const empty = isEmpty(this.view.state);
+    const empty = !this.#input.drawsEmpty && isEmpty(this.view.state);
     const height = empty ? 0 : this.#host.offsetHeight;
     if (empty === this.empty && height === this.height) return;
     this.empty = empty;

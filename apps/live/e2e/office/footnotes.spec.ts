@@ -66,13 +66,13 @@ test('footnotes open numbered, at the foot of their pages, and under the writing
   await expect(marks.nth(2)).toHaveAttribute('aria-label', 'Footnote 3');
 
   // Page 1 draws the first two notes at its foot under a rule; the last page the third.
-  const first = page.locator('[data-page-sheet="1"] [data-page-notes]');
+  const first = page.locator('[data-page-notes-of="1"] [data-page-notes]');
   await expect(first.locator('[data-note-number]')).toHaveText([
     '1The first source.',
     '2The second source.',
   ]);
   await expect(first.locator('[data-notes-rule]')).toBeVisible();
-  const last = page.locator('[data-page-sheet]').last().locator('[data-page-notes]');
+  const last = page.locator('[data-page-notes-of]').last().locator('[data-page-notes]');
   await expect(last.locator('[data-note-number]')).toHaveText(['3The third source.']);
 
   // The writing on page 1 stops above its notes.
@@ -102,5 +102,60 @@ test('footnotes open numbered, at the foot of their pages, and under the writing
   ]);
   await endNotes.scrollIntoViewIfNeeded();
   await page.screenshot({ path: test.info().outputPath('footnotes-pageless.png') });
+  expectNoPageErrors(pageErrors);
+});
+
+// Inserting and editing footnotes (page-layout.md "Footnotes", "Insert > Footnote", "Editing a note"): Ctrl+Alt+F puts
+// a mark at the caret and the caret in its new note at the page's foot; typing writes the note; Escape goes back just
+// after the mark; a press on the note enters it again; Move to current footnote goes back and forth; one undo in the
+// body takes the mark away.
+test('a footnote is put in, written, left, entered again and undone', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('A claim worth a source');
+  await page.keyboard.press('Control+Alt+KeyF');
+
+  // The mark, numbered, and the caret in its note at the foot of page 1.
+  await expect(body.locator('sup[data-footnote]')).toHaveAttribute('data-number', '1');
+  const edited = page.locator('[data-page-notes-of="1"] [data-note-editing] [role="textbox"]');
+  await expect(edited).toBeFocused();
+  await expect(edited).toHaveAttribute('aria-label', 'Footnote');
+  await page.keyboard.type('The source, written in place.');
+  await expect(edited).toHaveText('The source, written in place.');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('footnote-editing.png') });
+
+  // Escape: back in the body just after the mark, the note drawn with its number.
+  await page.keyboard.press('Escape');
+  await expect(body).toBeFocused();
+  await page.keyboard.type('!');
+  await expect(body.locator('p').first()).toHaveText('A claim worth a source!');
+  const drawn = page.locator('[data-page-notes-of="1"] [data-note-number="1"]');
+  await expect(drawn).toHaveText('1The source, written in place.');
+
+  // A press on the drawn note enters it; Move to current footnote goes back to the mark.
+  await drawn.click();
+  await expect(edited).toBeFocused();
+  await page.keyboard.press('Control+Alt+KeyE');
+  await page.keyboard.press('KeyF');
+  await page.keyboard.up('Alt');
+  await page.keyboard.up('Control');
+  await expect(body).toBeFocused();
+  await expect(drawn).toBeVisible();
+
+  // The whole note goes with its mark, one undo step in the body, after the character typed.
+  await page.keyboard.press('Control+KeyZ');
+  await expect(body.locator('p').first()).toHaveText('A claim worth a source');
+  await expect(body.locator('sup[data-footnote]')).toHaveCount(1);
+  await page.keyboard.press('Control+KeyZ');
+  await expect(body.locator('sup[data-footnote]')).toHaveCount(0);
+  await expect(page.locator('[data-page-notes]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });

@@ -16,8 +16,9 @@ import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import { TextDocumentSheets } from './TextDocumentSheets';
 import { FOOTER_ITEM, HEADER_ITEM } from './useTextDocumentHeaderEditing';
-import { useTextDocumentHeadersAndFooters } from './useTextDocumentHeadersAndFooters';
+import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { HEADER_OPTIONS_ITEM } from './useTextDocumentHeaderOptions';
+import { MOVE_TO_NEXT_FOOTNOTE, MOVE_TO_PREVIOUS_FOOTNOTE } from './useTextDocumentNoteEditing';
 import { PAGE_COUNT_ITEM, PAGE_NUMBERS_OPTIONS_ITEM } from './useTextDocumentPageNumbers';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -81,7 +82,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-type Seen = ReturnType<typeof useTextDocumentHeadersAndFooters>;
+type Seen = ReturnType<typeof useTextDocumentPageStories>;
 
 function Harness({
   pages,
@@ -94,7 +95,7 @@ function Harness({
 }) {
   const liveDoc = useRef<Y.Doc | null>(doc);
   const heights = useRef(new Map<string, number>());
-  const headers = useTextDocumentHeadersAndFooters({
+  const headers = useTextDocumentPageStories({
     view,
     liveDoc,
     format: 'odf',
@@ -128,7 +129,7 @@ const watch = (seen: { current: Seen | null }) => (headers: Seen) => {
 
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
 
-describe('useTextDocumentHeadersAndFooters', () => {
+describe('useTextDocumentPageStories', () => {
   it('edits the header a page shows in place, the toolbar acting on it ("Which one is edited")', async () => {
     const seen: { current: Seen | null } = { current: null };
     const { container } = render(<Harness pages={pagesWith()} seen={watch(seen)} />);
@@ -300,7 +301,11 @@ describe('useTextDocumentHeadersAndFooters', () => {
     const seen: { current: Seen | null } = { current: null };
     const { rerender } = render(<Harness pages={pagesWith()} writes={false} seen={watch(seen)} />);
     await settle();
-    expect(seen.current!.actions).toEqual({});
+    // Moving between footnotes is anyone's (page-layout.md "Footnotes"); nothing else is offered.
+    expect(Object.keys(seen.current!.actions).sort()).toEqual([
+      MOVE_TO_NEXT_FOOTNOTE,
+      MOVE_TO_PREVIOUS_FOOTNOTE,
+    ]);
     act(() => seen.current!.enter('header', 0));
     expect(seen.current!.editing).toBeNull();
     rerender(<Harness pages={[]} seen={watch(seen)} />);
