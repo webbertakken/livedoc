@@ -14,7 +14,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
   text box, a comment or a dialog. They can be turned off in Settings > Accessibility ("Single-key shortcuts"), as
   WCAG 2.1.4 asks.
 - A key of a tool the person's level does not allow does nothing and is not listed for them.
-- A tool key of another editing mode switches to it, as choosing the tool from a menu does
+- A tool key works in the editing mode that lists its tool; in another mode it does nothing
   ([Editing modes](editing-modes.md#switching)).
 - **Left out, because the browser owns them**: ⌘W, ⌘T, ⌘N, ⌘Tab and F5 keep the browser's meaning. Acrobat's
   window, portfolio, Help window and tools pane keys have nothing to act on here.

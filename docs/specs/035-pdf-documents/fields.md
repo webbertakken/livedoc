@@ -45,9 +45,10 @@ so a PDF's are always its fields. The research is [Fields](../../research/pdf-do
 - **A value is sent when the field is left**, or after `PDF_FIELD_IDLE_MS` without typing, as one undo step; others
   see it then, and see who is in the field meanwhile by their colour on its outline.
 - **Clear all fields** (Tools > Fill in) empties every field the person may fill, as one undo step, asked first.
-- **Saved details** `(default)`: a person may keep their own name, address, email, phone and date formats in this
-  browser, or with their account, and is offered them on a field whose name or tooltip matches; off until switched on
-  in Settings, never sent to anyone else, never guessed from another person's values.
+- **Remembered entries**: off until a person turns it on in Settings, as Acrobat's is. On, what that person types
+  into text fields is kept in this browser only and offered on a field of the same name later; numbers are kept only
+  where they also tick "Remember numbers"; **Forget all entries** empties it. Nothing is offered from another
+  person's values, and a password field is never remembered.
 - A field a certificate signature locked takes no value: "This field was locked when the PDF was signed."
   ([Signing](signing.md#changes-after-a-signature))
 

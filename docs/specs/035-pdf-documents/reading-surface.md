@@ -46,8 +46,9 @@ The shell draws it ([Office shell](../004-interface-design/office-shell.md#title
 ## Menus
 
 Declared as one catalogue ([Menus as data](../004-interface-design/office-shell.md#menus-as-data)); each item carries
-the least level that sees it and the editing mode it belongs to. Choosing an item of another mode switches to it
-([Editing modes](editing-modes.md#switching)). Shortcuts are in [Keyboard shortcuts](keyboard-shortcuts.md).
+the least level that sees it, and the shell draws the menus for the level of the editing mode the person is in
+([Editing modes](editing-modes.md#switching)): a `participate` item shows in Reviewing and Editing, an `edit` item in
+Editing. Shortcuts are in [Keyboard shortcuts](keyboard-shortcuts.md).
 
 ### File
 
@@ -75,8 +76,8 @@ the least level that sees it and the editing mode it belongs to. Choosing an ite
 | Select all               | The page's text, or every mark or object of the tool in hand             | view        |
 | Find                     | [Find](#find)                                                            | view        |
 | Find and replace         | [Editing text](editing-text.md#find-and-replace)                         | edit        |
-| Edit text                | Enters Editing with the text tool ([Editing text](editing-text.md))      | edit        |
-| Edit objects             | Enters Editing with the object tool ([Objects](objects.md))              | edit        |
+| Edit text                | The text tool ([Editing text](editing-text.md))                          | edit        |
+| Edit objects             | The object tool ([Objects](objects.md))                                  | edit        |
 | Take a snapshot          | Copies a dragged area of the page as a picture                           | view        |
 
 ### View
@@ -126,7 +127,7 @@ to act on is dimmed. Colours come from the one colour picker
 
 ### Pages
 
-Each enters Editing ([Organising pages](organising-pages.md)), least level `edit`: Organise pages; Insert ▸ (Blank
+Each is Editing's ([Organising pages](organising-pages.md)), least level `edit`: Organise pages; Insert ▸ (Blank
 page, From a PDF, From a LiveDoc document); Delete; Extract; Split; Replace; Rotate ▸; Crop; Resize; Page labels;
 Combine files.
 

@@ -41,24 +41,26 @@ text, fill forms, place comments and sign, but also a mode for real editing"; ru
 
 ## Switching
 
-- The switch sits at the right of the title row, as a text document's
-  ([Reading surface](reading-surface.md#the-title-row)): a menu of the modes the person's access level allows, each
-  with its glyph, name and one line.
+- The switch is the office shell's ([Modes](../004-interface-design/office-shell.md#modes)), at the right of the title
+  row ([Reading surface](reading-surface.md#the-title-row)). A PDF document declares its three modes to it, in this
+  order, each with its glyph, name, one line, the least level that reaches it and the level its menus and toolbar are
+  drawn for:
 
-| Mode          | Line under its name                  | Keys `(default)` |
-| ------------- | ------------------------------------ | ---------------- |
-| **Viewing**   | Read or print the PDF                | ⌘⌥⇧C             |
-| **Reviewing** | Mark text, comment, fill in and sign | ⌘⌥⇧X             |
-| **Editing**   | Change the pages themselves          | ⌘⌥⇧Z             |
+| Mode          | Line under its name                  | Reached from  | Drawn for     | Keys `(default)` |
+| ------------- | ------------------------------------ | ------------- | ------------- | ---------------- |
+| **Reviewing** | Mark text, comment, fill in and sign | `participate` | `participate` | ⌘⌥⇧X             |
+| **Editing**   | Change the pages themselves          | `edit`        | `edit`        | ⌘⌥⇧Z             |
+| **Viewing**   | Read or print the PDF                | `view`        | `view`        | ⌘⌥⇧C             |
 
 - The keys are a text document's for the same three places in the switch, so one habit serves both kinds; on Windows
   and Linux ⌘ is Ctrl and ⌥ is Alt.
-- **A person starts in Reviewing**, or in Viewing when their level allows no more `(default)`. An Editor starts in
+- **A person starts in Reviewing**, or in Viewing when their level allows no more `(default)`: the shell starts a
+  person in the first mode their level reaches, which is why Reviewing is declared first. An Editor starts in
   Reviewing too: real editing is entered on purpose.
-- **Choosing a tool of another mode switches to it.** Menus list every item the level allows whatever the mode
-  ([Office shell](../004-interface-design/office-shell.md)); choosing Edit > Edit text while Reviewing enters Editing,
-  and choosing Highlight while Viewing enters Reviewing. The switch then reads the new mode, and the change is
-  announced politely to a screen reader ("Editing").
+- **The menus are the mode's.** The shell draws them for the mode's level: Viewing lists what a Viewer has,
+  Reviewing adds what a Participant has, Editing lists everything. A tool of a mode the person is not in is not
+  listed; View > Mode and the switch are how a mode is entered, and the change is announced politely to a screen
+  reader ("Editing").
 - **The toolbar is the mode's.** Viewing shows the reading tools; Reviewing adds the mark, comment, fill and sign
   tools; Editing shows the page content tools, with Reviewing's tools one menu away
   ([Reading surface](reading-surface.md#the-toolbar)).
@@ -107,8 +109,8 @@ Fork F7 `(default)`: the modes line up with the access levels.
 
 ## Telemetry and observability
 
-- `Pdf · Changed · Mode.<Viewing|Reviewing|Editing>` when a person changes it, by the switch, a key or a tool, fired
-  before the mode applies.
+- `UI · Changed · PdfDocumentMode` when a person changes it, by the switch, its menu item or its keys: the shell's
+  own event, with the kind's mode type.
 - Fingerprint: `[pdf] mode-refused` (with the op kind and the level) when the room refuses a change the level does not
   allow.
 
@@ -116,5 +118,5 @@ Fork F7 `(default)`: the modes line up with the access levels.
 
 - A change refused for the level is undone locally with the toast "You can view this PDF, but not change it." (a
   Viewer) or "You can review this PDF, but not edit its pages." (a Participant).
-- A level lowered while a person is in a mode it no longer allows moves them to the most it allows, with the same
-  toast.
+- A level lowered while a person is in a mode it no longer reaches moves them to their starting mode, as the shell
+  does for every kind, with the same toast.

@@ -14,8 +14,8 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                | Means                                                                            | Rows |
 | --------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`           | In, by the spec named                                                            | 161  |
-| `specified, in part`  | In, but for the part its rule names as left out                                  | 27   |
+| `specified`           | In, by the spec named                                                            | 162  |
+| `specified, in part`  | In, but for the part its rule names as left out                                  | 26   |
 | `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 161  |
 | `not a function`      | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`      | Built, with the test that proves it                                              | 0    |
@@ -371,10 +371,10 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Forms: basics
 
-| Topic                 | Rule                                                                              | Mode      | Status             | Spec                        |
-| --------------------- | --------------------------------------------------------------------------------- | --------- | ------------------ | --------------------------- |
-| PDF forms overview    | A PDF's fields, filled together                                                   | Reviewing | specified          | [Fields](fields.md)         |
-| PDF forms preferences | Highlight fields and saved details; Acrobat's other form preferences are left out | Reviewing | specified, in part | [Fields](fields.md#filling) |
+| Topic                 | Rule                                                                                   | Mode      | Status             | Spec                        |
+| --------------------- | -------------------------------------------------------------------------------------- | --------- | ------------------ | --------------------------- |
+| PDF forms overview    | A PDF's fields, filled together                                                        | Reviewing | specified          | [Fields](fields.md)         |
+| PDF forms preferences | Highlight fields and remembered entries; Acrobat's other form preferences are left out | Reviewing | specified, in part | [Fields](fields.md#filling) |
 
 ## Forms: create
 
@@ -391,13 +391,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Forms: fill and sign
 
-| Topic                                | Rule                                                                                | Mode      | Status             | Spec                                           |
-| ------------------------------------ | ----------------------------------------------------------------------------------- | --------- | ------------------ | ---------------------------------------------- |
-| Check if a PDF form is fillable      | A notice says whether a PDF has fields; fields are highlighted                      | Reviewing | specified          | [Fields](fields.md#filling)                    |
-| Fill and sign forms                  | Fill every field type, checked as each is left                                      | Reviewing | specified          | [Fields](fields.md#filling)                    |
-| Fill and sign flat forms             | Text, tick, cross, dot, circle and line on a PDF with no fields                     | Reviewing | specified          | [Fields](fields.md#a-pdf-with-no-fields)       |
-| Fill forms automatically             | A person's saved details offered on matching fields; nothing is guessed from others | Reviewing | specified, in part | [Fields](fields.md#filling)                    |
-| Check security settings in PDF forms | Properties > Security says what the file allows                                     | Viewing   | specified          | [Document tools](document-tools.md#properties) |
+| Topic                                | Rule                                                               | Mode      | Status    | Spec                                           |
+| ------------------------------------ | ------------------------------------------------------------------ | --------- | --------- | ---------------------------------------------- |
+| Check if a PDF form is fillable      | A notice says whether a PDF has fields; fields are highlighted     | Reviewing | specified | [Fields](fields.md#filling)                    |
+| Fill and sign forms                  | Fill every field type, checked as each is left                     | Reviewing | specified | [Fields](fields.md#filling)                    |
+| Fill and sign flat forms             | Text, tick, cross, dot, circle and line on a PDF with no fields    | Reviewing | specified | [Fields](fields.md#a-pdf-with-no-fields)       |
+| Fill forms automatically             | Remembered entries, off until turned on, kept in this browser only | Reviewing | specified | [Fields](fields.md#filling)                    |
+| Check security settings in PDF forms | Properties > Security says what the file allows                    | Viewing   | specified | [Document tools](document-tools.md#properties) |
 
 ## Forms: customise fields
 
