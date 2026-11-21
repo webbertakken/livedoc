@@ -712,6 +712,39 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'The one-tailed p-value of a z-test',
     '=ZTEST(A2:A9, 10)',
   ),
+  AREAS: D('reference', 'How many areas a reference holds', '=AREAS(A1:B2)'),
+  BESSELI: D('x, n', 'The modified Bessel function Iₙ(x)', '=BESSELI(1.5, 1)'),
+  BESSELJ: D('x, n', 'The Bessel function Jₙ(x)', '=BESSELJ(1.9, 2)'),
+  BESSELK: D('x, n', 'The modified Bessel function Kₙ(x)', '=BESSELK(1.5, 1)'),
+  BESSELY: D('x, n', 'The Bessel function Yₙ(x)', '=BESSELY(2.5, 1)'),
+  'BINOM.DIST.RANGE': D(
+    'num_trials, prob_success, num_successes, [num_successes2]',
+    'The binomial chance of a range of successes',
+    '=BINOM.DIST.RANGE(60, 0.75, 45, 50)',
+  ),
+  CHISQDIST: D(
+    'x, degrees_freedom, [cumulative]',
+    'The chi-squared distribution at x (OpenFormula)',
+    '=CHISQDIST(3.45, 2)',
+  ),
+  CHISQINV: D(
+    'probability, degrees_freedom',
+    'The inverse of the left-tailed chi-squared distribution',
+    '=CHISQINV(0.42, 2)',
+  ),
+  EASTERSUNDAY: D('year', 'The date of Easter Sunday in a year', '=EASTERSUNDAY(2026)'),
+  EUROCONVERT: D(
+    'value, from_currency, to_currency, [full_precision], [triangulation_precision]',
+    'Converts between the euro and the currencies it replaced',
+    '=EUROCONVERT(100, "DEM", "EUR")',
+  ),
+  INFO: D('type', 'Information about the environment', '=INFO("recalc")'),
+  JIS: D('text', 'Half-width characters as full-width', '=JIS("abc")'),
+  NUMBERVALUE: D(
+    'text, [decimal_separator], [group_separator]',
+    'Text read as a number with the given separators',
+    '=NUMBERVALUE("1.234,5", ",", ".")',
+  ),
   // Database
   DSUM: D(
     'database, field, criteria',

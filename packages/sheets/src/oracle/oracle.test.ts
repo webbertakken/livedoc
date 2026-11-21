@@ -123,6 +123,7 @@ const MEASURED_CATEGORIES = [
   'Logical',
   'Lookup',
   'Math',
+  'OpenFormula',
   'Operator',
   'Parser',
   'Statistical',

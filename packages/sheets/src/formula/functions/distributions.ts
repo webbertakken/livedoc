@@ -227,6 +227,23 @@ const betaInv = numFn(3, 5, ([p, a, b, lo = 0, hi = 1]) =>
 const chiDist = numFn(3, 3, ([x, v, c]) =>
   checked([degrees(v!)], ([n]) => gammaDist(x!, n! / 2, 2, c !== 0)),
 );
+// OpenFormula's CHISQDIST: cumulative unless told otherwise, and 0 at or below 0 (its density too).
+const chiDistOpen = numFn(2, 3, ([x, v, c = 1]) =>
+  checked([degrees(v!)], ([n]) => {
+    if (x! <= 0) return 0;
+    return c ? gammaLower(n! / 2, x! / 2) : gammaPdf(x!, n! / 2, 2);
+  }),
+);
+// OpenFormula's CHISQINV: a probability from 0 to below 1.
+const chiInvOpen = numFn(2, 2, ([p, v]) =>
+  checked(
+    [
+      p! < 0 || p! >= 1 ? OUT_OF_DOMAIN('The probability must be from 0 to below 1') : p!,
+      degrees(v!),
+    ],
+    ([q, n]) => (q === 0 ? 0 : chiInverse(q!, n!)),
+  ),
+);
 const chiDistRight = numFn(2, 2, ([x, v]) =>
   checked([x! < 0 ? NEGATIVE_X : x!, degrees(v!)], ([, n]) => gammaUpper(n! / 2, x! / 2)),
 );
@@ -314,6 +331,8 @@ export const DISTRIBUTION_FUNCTIONS: Record<string, FnDef> = {
   'CHISQ.DIST.RT': chiDistRight,
   CHIDIST: chiDistRight,
   'CHISQ.INV': chiInv,
+  CHISQDIST: chiDistOpen,
+  CHISQINV: chiInvOpen,
   'CHISQ.INV.RT': chiInvRight,
   CHIINV: chiInvRight,
   'F.DIST': fDist,

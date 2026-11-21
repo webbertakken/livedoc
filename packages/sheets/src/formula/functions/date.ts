@@ -98,7 +98,27 @@ const UNIX_EPOCH_SERIAL = 25_569;
 const MS_PER_DAY = 86_400_000;
 const EPOCH_UNITS_PER_MS: Record<number, number> = { 1: 0.001, 2: 1, 3: 1000 };
 
+// Gregorian Easter (the anonymous Gregorian algorithm, as OpenFormula's EASTERSUNDAY): a two-digit year is 2000 to
+// 2029 or 1930 to 1999, as two-digit dates read; years 1583 to 9956 only, as LibreOffice's.
+const TWO_DIGIT_YEAR_PIVOT = 30;
+
+function easterSunday(y: number): Value {
+  let year = Math.trunc(y);
+  if (year >= 0 && year < 100) year += year < TWO_DIGIT_YEAR_PIVOT ? 2000 : 1900;
+  if (year < 1583 || year > 9956) return err('#NUM!', 'Easter is reckoned for 1583 to 9956');
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const h =
+    (19 * a + b - Math.floor(b / 4) - Math.floor((b - Math.floor((b + 8) / 25) + 1) / 3) + 15) % 30;
+  const l = (32 + 2 * (b % 4) + 2 * Math.floor(c / 4) - h - (c % 4)) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const o = h + l - 7 * m + 114;
+  return dateSerial(year, Math.floor(o / 31), (o % 31) + 1);
+}
+
 export const DATE_FUNCTIONS: Record<string, FnDef> = {
+  EASTERSUNDAY: numFn(1, 1, ([y]) => easterSunday(y!)),
   TODAY: volatileFn(0, 0, (_a, f) => Math.floor(f.now())),
   NOW: volatileFn(0, 0, (_a, f) => f.now()),
   DATE: numFn(3, 3, ([y, m, d]) => dateSerial(y!, m!, d!)),

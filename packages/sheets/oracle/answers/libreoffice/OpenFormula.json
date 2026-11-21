@@ -1,0 +1,257 @@
+{
+  "source": "libreoffice",
+  "category": "OpenFormula",
+  "by": "LibreOffice 26.8.3.1",
+  "made": "2026-11-21",
+  "answers": {
+    "AREAS.1": [[1]],
+    "AREAS.2": [[1]],
+    "AREAS.3": [[1]],
+    "BESSELI.1": [[0.981666428577908]],
+    "BESSELI.2": [[1]],
+    "BESSELI.3": [[-0.212739959239853]],
+    "BESSELI.4": [[2281.518967726]],
+    "BESSELI.5": [[3.28983914405012]],
+    "BESSELI.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BESSELI.7": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "BESSELJ.1": [[0.329925727692387]],
+    "BESSELJ.2": [[1]],
+    "BESSELJ.3": [[0]],
+    "BESSELJ.4": [[-0.128943249474402]],
+    "BESSELJ.5": [[-0.143240295512077]],
+    "BESSELJ.6": [[2.6711772782508e-21]],
+    "BESSELJ.7": [[0.0199858503042235]],
+    "BESSELJ.8": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BESSELK.1": [[0.277387803602702]],
+    "BESSELK.2": [[0.924419072100145]],
+    "BESSELK.3": [[0.305851210548178]],
+    "BESSELK.4": [[0.0000215098167224964]],
+    "BESSELK.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BESSELK.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BESSELK.7": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BESSELY.1": [[0.145918137966786]],
+    "BESSELY.2": [[-0.444518733506707]],
+    "BESSELY.3": [[-0.91668283872514]],
+    "BESSELY.4": [[-0.00586808244220866]],
+    "BESSELY.5": [[0.0316273592892641]],
+    "BESSELY.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BESSELY.7": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BINOM.DIST.RANGE.1": [[0.0839749674290475]],
+    "BINOM.DIST.RANGE.2": [[0.523629793471887]],
+    "BINOM.DIST.RANGE.3": [[1]],
+    "BINOM.DIST.RANGE.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BINOM.DIST.RANGE.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "BINOM.DIST.RANGE.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "CHISQDIST.1": [[0.821826948227101]],
+    "CHISQDIST.2": [[0.0890865258864492]],
+    "CHISQDIST.3": [[0]],
+    "CHISQDIST.4": [[0.959572318005487]],
+    "CHISQDIST.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "CHISQINV.1": [[1.08945435088334]],
+    "CHISQINV.2": [[18.3070380532751]],
+    "CHISQINV.3": [[0]],
+    "CHISQINV.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "CHISQINV.5": [[3.35669398003332]],
+    "EASTERSUNDAY.1": [[46117]],
+    "EASTERSUNDAY.2": [[36639]],
+    "EASTERSUNDAY.3": [[32978]],
+    "EASTERSUNDAY.4": [[45382]],
+    "EASTERSUNDAY.5": [[31144]],
+    "EASTERSUNDAY.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.7": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "EASTERSUNDAY.8": [[46117]],
+    "EUROCONVERT.1": [[0.3]],
+    "EUROCONVERT.2": [[0.298164361383444]],
+    "EUROCONVERT.3": [[0.29728616]],
+    "EUROCONVERT.4": [[193627]],
+    "EUROCONVERT.5": [[51.13]],
+    "EUROCONVERT.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "EUROCONVERT.7": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "EUROCONVERT.8": [[5]],
+    "INFO.1": [["Automatic"]],
+    "INFO.2": [[1]],
+    "INFO.3": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "INFO.4": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "INFO.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "INFO.6": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "INFO.7": [[1]],
+    "JIS.1": [["ａｂｃ １２３"]],
+    "JIS.2": [["カタカナ"]],
+    "JIS.3": [["ガギ"]],
+    "JIS.4": [["日本"]],
+    "JIS.5": [["５"]],
+    "NUMBERVALUE.1": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "NUMBERVALUE.2": [[1234.5]],
+    "NUMBERVALUE.3": [[0.12]],
+    "NUMBERVALUE.4": [[0.0012]],
+    "NUMBERVALUE.5": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "NUMBERVALUE.6": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "NUMBERVALUE.7": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "NUMBERVALUE.8": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "NUMBERVALUE.9": [[3.5]],
+    "NUMBERVALUE.10": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "NUMBERVALUE.11": [[1234.5]]
+  }
+}
