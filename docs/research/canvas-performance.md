@@ -480,9 +480,8 @@ Measured 2026-11-21: the probe on the hosted runner, and locally at 3.5x, interl
 - **The runner sets more of the gesture rows than the commit does.** Over 27 runs, the faster the
   runner's benchmark (and so the harder it is throttled), the more rows tend to miss: 0-4 misses at
   1.3-1.4x, 2-11 at 2.0-2.7x. Main itself missed 9 rows at 2.71x where `e663a2640` missed none at
-  1.30x the same hour. Inferred, not measured: the benchmark runs in a blank page, and a board's
-  work (a 500 KB stylesheet over thousands of nodes, paint) does not speed up with it, so a fast
-  runner is slowed past the reference.
+  1.30x the same hour. A board-shaped benchmark did not explain it (see "Calibrating on a
+  board-shaped workload" below).
 - **A release's own task lays the page out.** After `pointerup` the browser sends `mouseup` and
   `click` and then brings style and layout up to date, inside the release's task, whenever the
   release changed the page (a bare page with 3,000 boxes resized on `pointerup` shows it, with or
@@ -497,6 +496,48 @@ Measured 2026-11-21: the probe on the hosted runner, and locally at 3.5x, interl
   ms) ran alone, but the frame after it ran the selection toolbar's and the Quick Style panel's
   placement (`requestAnimationFrame`) with the layout of everything the selection mounted: 49-70 ms
   of one task with script in it. The work only moved.
+
+## Calibrating on a board-shaped workload
+
+Measured 2026-11-21 on eight hosted runners at once (one workflow, a matrix of eight jobs), each
+running six rows five times under both calibrations, twice, in alternating order; each run's
+longest main-thread task read from a trace.
+
+- **The workload**: a generated 2,400-rule utility stylesheet, 600 boxes with labels and SVG faces
+  and 200 full-size SVG strokes laid out, a tenth of them restyled, 60 hit tests, and the
+  objects-and-JSON work of a render. On the reference machine it reads 14.0 ms (the old benchmark
+  13.4 ms in the same rounds).
+- **It ranks runners as the old one does.** Its ratio to the old benchmark stayed between 1.00 and
+  1.12 on all eight runners (old 17.0-25.6 ms, board-shaped 17.0-28.7 ms), so it cannot correct a
+  skew the old one has.
+- **It did not narrow the spread.** Across the eight runners, the coefficient of variation of each
+  row's mean under the old calibration and under the board-shaped one: whiteboard select 0.074 and
+  0.125, drag 0.082 and 0.094, stroke at fit 0.137 and 0.134, stroke at 100% 0.122 and 0.142;
+  diagram select 0.066 and 0.092, marquee 0.069 and 0.051. Four rows wider, two about level: the
+  board-shaped calibration was dropped.
+- **What remains is small and follows the throttle itself.** Under the old calibration the rows
+  vary by 7-14% across runners, and the runners throttled hardest (2.9-3.2x) read 2-20%
+  above those throttled least (2.1-2.5x). Inferred, not measured: Chrome's throttle slows only the
+  page's main thread, so the harder it is applied the larger the main thread's share of a gesture
+  reads.
+
+## Arrows laid out with the board
+
+Measured 2026-11-21 on the reference board, locally at 3.5x, against main, with layout invalidation
+tracking.
+
+- **Every arrow's SVG was laid out again with the board.** The arrows' SVGs were `absolute inset-0
+h-full w-full` in the element plane, so each layout of the plane (a press, a release, a resize's
+  frames) marked all of them "Size changed" and laid out their paths: 593 such marks in a
+  marquee's release, 1,806 over a whiteboard drag at fit. Sized one pixel at the origin and drawing
+  past it, the release had 1 and the drag 6-8; the drag's layout over the gesture went from 248-435
+  ms to 147-208 ms, and the marquee release's from 8.2-8.9 ms to 6.0-6.5 ms. The board's pixels at
+  fit and at 100% are identical (0 of 1,296,000 differ) and an arrow's stroke still takes the
+  pointer.
+- **A marquee's containment test is not the cost.** Timed on its own in Node, testing the reference
+  board's 1,000 elements against the box takes 0.26 ms (about 1 ms at 3.5x); in a profile it read
+  5-8 ms because the listener also tells every element view the selection changed. An element grid
+  would not move the row.
 
 ## Not tried
 
