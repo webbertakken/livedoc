@@ -108,6 +108,8 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   moves on to the next control, so every control is in reach.
 - A control's tooltip names it and its shortcut in the platform's notation; a toggle carries `aria-pressed`, read
   afresh as the selection or the formatting at the caret changes.
+- Every target a pointer presses in the bar, a split control's chevron and a value field's list button included, is at
+  least 24 by 24 px (WCAG 2.2 AA, 2.5.8 Target Size); a chevron is no narrower than that beside its control.
 - **Value fields** (the zoom, the font size) are a field with a list, the WAI-ARIA combobox: a typed value applies on
   Enter, anything else puts the value back; Down or the chevron opens the list, Up and Down move in it, Enter takes
   one, Escape closes it, then puts back what was typed. The font size field shows the value at the caret, blank over

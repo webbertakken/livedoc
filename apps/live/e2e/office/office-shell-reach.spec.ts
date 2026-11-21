@@ -48,6 +48,26 @@ test('every control of the title row and the toolbar is reached from the keyboar
   expectNoPageErrors(pageErrors);
 });
 
+// office-shell.md "Toolbar": every target a pointer presses in the bar is at least 24 by 24 px (WCAG 2.2 AA, 2.5.8).
+test('every target in the toolbar is at least 24 by 24 px', async ({ page, pageErrors }) => {
+  await page.setViewportSize({ width: 1440, height: 860 });
+  await newTextDocument(page);
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+  const targets = await toolbar.locator('button:visible, input:visible').evaluateAll((elements) =>
+    elements.map((e) => {
+      const r = e.getBoundingClientRect();
+      return {
+        name: e.getAttribute('aria-label') ?? e.textContent?.trim() ?? e.tagName,
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+      };
+    }),
+  );
+  expect(targets.length).toBeGreaterThan(20);
+  expect(targets.filter((t) => t.width < 24 || t.height < 24)).toEqual([]);
+  expectNoPageErrors(pageErrors);
+});
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 760 }, hasTouch: true, isMobile: true });
 
