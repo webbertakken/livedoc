@@ -189,6 +189,33 @@ In order of precedence, highest first; same as Google Sheets:
 - Spilled cells are worked out, never stored: a CSV export and an agent read their values; an import or paste
   writes inputs only into cells it covers.
 
+## LAMBDA and LET
+
+- `LET(name1, value1, [name2, value2, …], expression)` names values inside one formula: each value is worked out once,
+  in order, and later values and the expression read the names before them. A value that is a range stays a range
+  (`=LET(r, A1:A9, ROWS(r))` is 9).
+- A **name** is case-insensitive, made of letters, digits, `_` and `.`, not starting with a digit and not a cell
+  reference (`A1`, `x1`): any other is `#VALUE!` ("Argument 1 of function LET is not a valid name.") (default, D68). A name
+  hides a named range or function of the same name inside its formula; one read before it is declared is `#NAME?`.
+- `LAMBDA(name1, [name2, …], expression)` makes a function of its names. It is called by brackets after it
+  (`=LAMBDA(x, x*2)(5)` is 10), by a `LET` name (`=LET(double, LAMBDA(x, x*2), double(5))`), or handed to a
+  helper below. Called with another count of values it is `#N/A` ("Wrong number of arguments to LAMBDA. Expected 1
+  argument, but got 2 arguments."). Left uncalled, as a cell's value or where a value goes, it is `#VALUE!` ("The
+  LAMBDA wasn't called with its values.") (default, D68).
+- The **helpers** apply a `LAMBDA` (or a named function, without brackets) over arrays; a last argument that is not
+  one is `#VALUE!` ("Argument must be a LAMBDA."), and one taking another count of names `#N/A` as above:
+  - `MAP(array1, [array2, …], LAMBDA)`: each value with its fellows at the same place in the other arrays, one name
+    each; arrays of other sizes are `#VALUE!` ("Array arguments to MAP are of different size.").
+  - `REDUCE(initial_value, array_or_range, LAMBDA)`: the accumulator and each value row by row, giving the last
+    accumulator, which may be an array; `SCAN` gives every accumulator, in the shape of the array.
+  - `BYROW(array_or_range, LAMBDA)` and `BYCOL`: each row (or column) as one value, a range of the range when it is
+    one, giving a column (or row) of results.
+  - `MAKEARRAY(rows, columns, LAMBDA)`: each row and column number from 1; a count below 1 is `#VALUE!`.
+  - A `MAP`, `BYROW`, `BYCOL`, `SCAN` or `MAKEARRAY` step that gives an array is `#VALUE!` ("Single value
+    expected. Nested array results are not supported."); a step's error stays in its place.
+- A formula applies a `LAMBDA` at most `LAMBDA_CALLS_MAX` times in all (the recalculation budget); past it the
+  formula is `#NUM!` ("This formula calls its LAMBDA too many times") (default, D68).
+
 ## Functions
 
 The engine knows the functions below today (and only these: any other name is `#NAME?`); the [function catalogue](#function-catalogue) is what it grows to. Arguments in brackets are
@@ -299,6 +326,8 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `DGET` gives the field of the one matching record, empty when it is empty; none is `#VALUE!`, more than one `#NUM!`.
 
 **Logic**: `IF`, `IFS`, `SWITCH`, `AND`, `OR`, `XOR`, `NOT`, `TRUE`, `FALSE`, `IFERROR`, `IFNA`.
+
+**Lambdas** ([above](#lambda-and-let)): `LAMBDA`, `LET`, `MAP`, `REDUCE`, `SCAN`, `BYROW`, `BYCOL`, `MAKEARRAY`.
 
 - `IFERROR(value, [value_if_error])` gives a blank for an error when it has no fallback, as Google's does.
 
@@ -575,6 +604,8 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   | `PERMUTATIONA(0, 2)`, `PERMUTATIONA(3, 4)`         | `#NUM!`                           | 0, 81                                | Statistical PERMUTATIONA.3, .4 |
   | `F.DIST(15.35, 7, 6)`, cumulative left out         | the density: FALSE by default     | the cumulative: ODF FDIST's TRUE     | Statistical F.DIST.6           |
   | `HYPERLINK(url, A1)`, A1 empty                     | the url                           | 0                                    | Web HYPERLINK.4                |
+  | `LET(x, 1, y, LET(z, 2, x+z), x+y)`                | 4: inner names see outer ones     | `#NAME?`                             | Logical LET.1                  |
+  | `LET(x, 2, X*3)`                                   | 6: names ignore case              | `#NAME?`                             | Logical LET.4                  |
 
 - **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
   (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
@@ -699,8 +730,8 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `BITOR`               | Engineering | `BITOR(value1, value2)`                                                                                        | Google      | `BITOR`                          | built                                                         |
 | `BITRSHIFT`           | Engineering | `BITRSHIFT(value, shift_amount)`                                                                               | Google      | `BITRSHIFT`                      | built                                                         |
 | `BITXOR`              | Engineering | `BITXOR(value1, value2)`                                                                                       | Google      | `BITXOR`                         | built                                                         |
-| `BYCOL`               | Array       | `BYCOL(array_or_range, LAMBDA)`                                                                                | Google      | `COM.MICROSOFT.BYCOL`            | planned                                                       |
-| `BYROW`               | Array       | `BYROW(array_or_range, LAMBDA)`                                                                                | Google      | `COM.MICROSOFT.BYROW`            | planned                                                       |
+| `BYCOL`               | Array       | `BYCOL(array_or_range, LAMBDA)`                                                                                | Google      | `COM.MICROSOFT.BYCOL`            | built                                                         |
+| `BYROW`               | Array       | `BYROW(array_or_range, LAMBDA)`                                                                                | Google      | `COM.MICROSOFT.BYROW`            | built                                                         |
 | `CARD`                | Plan cards  |                                                                                                                | LiveDoc     | S5                               | built; kept (C6)                                              |
 | `CARDCOUNT`           | Plan cards  |                                                                                                                | LiveDoc     | S5                               | built; kept (C6)                                              |
 | `CARDS`               | Plan cards  |                                                                                                                | LiveDoc     | S5                               | built; kept (C6)                                              |
@@ -936,14 +967,14 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `JIS`                 | OpenFormula |                                                                                                                | OpenFormula | `JIS`                            | built                                                         |
 | `JOIN`                | Text        | `JOIN(delimiter, value_or_array1, [value_or_array2, ...])`                                                     | Google      | S5                               | built                                                         |
 | `KURT`                | Statistical | `KURT(value1, value2)`                                                                                         | Google      | `KURT`                           | built                                                         |
-| `LAMBDA`              | Logical     | `LAMBDA(name, formula_expression)`                                                                             | Google      | `COM.MICROSOFT.LAMBDA`           | planned                                                       |
+| `LAMBDA`              | Logical     | `LAMBDA(name, formula_expression)`                                                                             | Google      | `COM.MICROSOFT.LAMBDA`           | built                                                         |
 | `LARGE`               | Statistical | `LARGE(data, n)`                                                                                               | Google      | `LARGE`                          | built                                                         |
 | `LCM`                 | Math        | `LCM(value1, value2)`                                                                                          | Google      | `LCM`                            | built                                                         |
 | `LEFT`                | Text        | `LEFT(string, [number_of_characters])`                                                                         | Google      | `LEFT`                           | built                                                         |
 | `LEFTB`               | Text        | `LEFTB(string, num_of_bytes)`                                                                                  | Google      | `LEFTB`                          | built                                                         |
 | `LEN`                 | Text        | `LEN(text)`                                                                                                    | Google      | `LEN`                            | built                                                         |
 | `LENB`                | Text        | `LENB(string)`                                                                                                 | Google      | `LENB`                           | built                                                         |
-| `LET`                 | Logical     | `LET(name1, value_expression1, [name2, …], [value_expression2, …], formula_expression )`                       | Google      | `COM.MICROSOFT.LET`              | planned                                                       |
+| `LET`                 | Logical     | `LET(name1, value_expression1, [name2, …], [value_expression2, …], formula_expression )`                       | Google      | `COM.MICROSOFT.LET`              | built                                                         |
 | `LINEST`              | Array       | `LINEST(known_data_y, [known_data_x], [calculate_b], [verbose])`                                               | Google      | `LINEST`                         | built                                                         |
 | `LN`                  | Math        | `LN(value)`                                                                                                    | Google      | `LN`                             | built                                                         |
 | `LOG`                 | Math        | `LOG(value, base)`                                                                                             | Google      | `LOG`                            | built                                                         |
@@ -957,8 +988,8 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `LOWER`               | Text        | `LOWER(text)`                                                                                                  | Google      | `LOWER`                          | built                                                         |
 | `LT`                  | Operator    | `LT(value1, value2)`                                                                                           | Google      | S5                               | built                                                         |
 | `LTE`                 | Operator    | `LTE(value1, value2)`                                                                                          | Google      | S5                               | built                                                         |
-| `MAKEARRAY`           | Array       | `MAKEARRAY(rows, columns, LAMBDA)`                                                                             | Google      | `COM.MICROSOFT.MAKEARRAY`        | planned                                                       |
-| `MAP`                 | Array       | `MAP(array1, [array2, ...], LAMBDA)`                                                                           | Google      | `COM.MICROSOFT.MAP`              | planned                                                       |
+| `MAKEARRAY`           | Array       | `MAKEARRAY(rows, columns, LAMBDA)`                                                                             | Google      | `COM.MICROSOFT.MAKEARRAY`        | built                                                         |
+| `MAP`                 | Array       | `MAP(array1, [array2, ...], LAMBDA)`                                                                           | Google      | `COM.MICROSOFT.MAP`              | built                                                         |
 | `MARGINOFERROR`       | Statistical | `MARGINOFERROR(range, confidence)`                                                                             | Google      | S5                               | built                                                         |
 | `MATCH`               | Lookup      | `MATCH(search_key, range, [search_type])`                                                                      | Google      | `MATCH`                          | built                                                         |
 | `MAX`                 | Statistical | `MAX(value1, [value2, ...])`                                                                                   | Google      | `MAX`                            | built                                                         |
@@ -1057,7 +1088,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `RANK.EQ`             | Statistical | `RANK.EQ(value, data, [is_ascending])`                                                                         | Google      | `COM.MICROSOFT.RANK.EQ`          | built                                                         |
 | `RATE`                | Financial   | `RATE(number_of_periods, payment_per_period, present_value, [future_value], [end_or_beginning], [rate_guess])` | Google      | `RATE`                           | built                                                         |
 | `RECEIVED`            | Financial   | `RECEIVED(settlement, maturity, investment, discount, [day_count_convention])`                                 | Google      | `RECEIVED`                       | built                                                         |
-| `REDUCE`              | Array       | `REDUCE(initial_value, array_or_range, LAMBDA)`                                                                | Google      | `COM.MICROSOFT.REDUCE`           | planned                                                       |
+| `REDUCE`              | Array       | `REDUCE(initial_value, array_or_range, LAMBDA)`                                                                | Google      | `COM.MICROSOFT.REDUCE`           | built                                                         |
 | `REGEXEXTRACT`        | Text        | `REGEXEXTRACT(text, regular_expression)`                                                                       | Google      | S5                               | built                                                         |
 | `REGEXMATCH`          | Text        | `REGEXMATCH(text, regular_expression)`                                                                         | Google      | S5                               | built                                                         |
 | `REGEXREPLACE`        | Text        | `REGEXREPLACE(text, regular_expression, replacement)`                                                          | Google      | S5                               | built                                                         |
@@ -1074,7 +1105,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `ROWS`                | Lookup      | `ROWS(range)`                                                                                                  | Google      | `ROWS`                           | built                                                         |
 | `RRI`                 | Financial   | `RRI(number_of_periods, present_value, future_value)`                                                          | Google      | `RRI`                            | built                                                         |
 | `RSQ`                 | Statistical | `RSQ(data_y, data_x)`                                                                                          | Google      | `RSQ`                            | built                                                         |
-| `SCAN`                | Array       | `SCAN(initial_value, array_or_range, LAMBDA)`                                                                  | Google      | `COM.MICROSOFT.SCAN`             | planned                                                       |
+| `SCAN`                | Array       | `SCAN(initial_value, array_or_range, LAMBDA)`                                                                  | Google      | `COM.MICROSOFT.SCAN`             | built                                                         |
 | `SEARCH`              | Text        | `SEARCH(search_for, text_to_search, [starting_at])`                                                            | Google      | `SEARCH`                         | built                                                         |
 | `SEARCHB`             | Text        | `SEARCHB(search_for, text_to_search, [starting_at])`                                                           | Google      | `SEARCHB`                        | built                                                         |
 | `SEC`                 | Math        | `SEC(angle)`                                                                                                   | Google      | `SEC`                            | built                                                         |
@@ -1292,4 +1323,6 @@ The code cites each by its id.
 - **D60** MULTIPLE.OPERATIONS's reach: Ranges read the replacement; spills as they stand; 250 formulas deep (default).
 - **D67** The functions that lift over arrays in an array context: those named in "Arrays and spills", as Google's
   idioms use them; `SUMIFS` and `COUNTIFS` give one value, as Google's forums report (default).
+- **D68** LAMBDA and LET's errors and limits: uncalled, or a name that is not one, `#VALUE!`; at most 100,000
+  applications a formula, past them `#NUM!` (default).
 - The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).

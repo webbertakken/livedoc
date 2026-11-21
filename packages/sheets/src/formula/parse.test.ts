@@ -38,6 +38,8 @@ function show(n: Node): string {
       return `(${show(n.a)} ${n.op} ${show(n.b)})`;
     case 'call':
       return `${n.name}(${n.args.map((a) => (a ? show(a) : '∅')).join(', ')})`;
+    case 'apply':
+      return `(${show(n.fn)})(${n.args.map((a) => (a ? show(a) : '∅')).join(', ')})`;
     case 'arr':
       return `{${n.rows.map((r) => r.map(show).join(',')).join(';')}}`;
     case 'range':
@@ -179,6 +181,13 @@ describe('parseFormula', () => {
     expect([...callsOf(tree)]).toEqual(['SUM', 'MAX']);
     expect([...callsOf(ast('=-ABS({1})%'))]).toEqual(['ABS']);
     expect(refsOf(ast('=-A1%+{1}'))).toHaveLength(1);
+  });
+  it('calls what a call gives with brackets after it (formulas.md "LAMBDA and LET")', () => {
+    expect(show(ast('=LAMBDA(x, x)(1)(, A1)'))).toBe(
+      '((LAMBDA(name:X, name:X))(1))(∅, ref(0,0,_,_))',
+    );
+    expect(refsOf(ast('=LAMBDA(x, x)(A1)'))).toHaveLength(1);
+    expect(parseFormula('=LAMBDA(x, x)(1').ok).toBe(false);
   });
   it('parses stored templates', () => {
     expect(

@@ -16,7 +16,16 @@ export type RefValue = { ref: RangeRef };
 // A union of references (formulas.md "Reference operators"): read by the functions that take references, #VALUE!
 // anywhere a value goes.
 export type AreasValue = { areas: RangeRef[] };
-export type EvalValue = Value | RefValue | AreasValue;
+// A function made by LAMBDA (formulas.md "LAMBDA and LET"): its names, and its formula worked out with values for
+// them. Never a cell's value: left uncalled it is #VALUE!.
+export type Lambda = {
+  readonly params: readonly string[];
+  apply(values: readonly EvalValue[]): EvalValue;
+};
+export type LambdaValue = { lambda: Lambda };
+export type EvalValue = Value | RefValue | AreasValue | LambdaValue;
+// The names a formula declares (LET, LAMBDA), upper-cased, to their values.
+export type Scope = ReadonlyMap<string, EvalValue>;
 
 // One cell, by its sheet and position.
 export type CellAt = { sheetId: string; r: number; c: number };
@@ -31,6 +40,10 @@ export function isAreas(v: EvalValue): v is AreasValue {
   return typeof v === 'object' && v !== null && 'areas' in v;
 }
 
+export function isLambda(v: EvalValue): v is LambdaValue {
+  return typeof v === 'object' && v !== null && 'lambda' in v;
+}
+
 export type Frame = {
   // The formula's own cell.
   sheetId: string;
@@ -41,6 +54,8 @@ export type Frame = {
   // Whether ranges and arrays are taken whole where one value goes (formulas.md "Arrays and spills"): inside
   // ARRAYFORMULA, an array literal or an array argument, and everywhere on a Plan Sheet; else they intersect.
   arrays: boolean;
+  // The names declared around the node being worked out (LET, LAMBDA); none outside them.
+  scope?: Scope;
   // A cell's value (worked out on demand). `inRange` when read as part of a noted range, so it is not noted on
   // its own as well.
   cell(sheetId: string, r: number, c: number, inRange?: boolean): Value;
