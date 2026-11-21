@@ -15,8 +15,11 @@ import {
   insertColumns,
   insertRows,
   mergeTableCells,
+  pinHeaderRows,
+  sortTable,
   unmergeTableCell,
 } from './text-document-table-edits';
+import { isInTable, selectedRect } from 'prosemirror-tables';
 import { startUndoStep } from './text-document-undo';
 
 // CSS pixels to points.
@@ -32,11 +35,16 @@ function drawnRowHeight(view: EditorView, rowPos: number): number {
   return (row.getBoundingClientRect().height / zoom) * PT_PER_PX;
 }
 
-/** Each item: its id, its change's telemetry name, and its command. */
+/** The rows Pin up to row pins: the caret's or the selection's last; 0 outside a table. */
+const pinnedUpTo = (view: EditorView): number =>
+  isInTable(view.state) ? selectedRect(view.state).bottom : 0;
+
+/** Each item: its id, its change's telemetry name, its command, and what it is called now where that changes. */
 export const TABLE_EDIT_ITEMS: readonly {
   readonly item: string;
   readonly telemetry: string;
   readonly command: (view: EditorView) => Command;
+  readonly label?: (view: EditorView) => string | undefined;
 }[] = [
   { item: 'table-insert-row-above', telemetry: 'InsertRow', command: () => insertRows('above') },
   { item: 'table-insert-row-below', telemetry: 'InsertRow', command: () => insertRows('below') },
@@ -65,6 +73,18 @@ export const TABLE_EDIT_ITEMS: readonly {
   },
   { item: 'table-merge-cells', telemetry: 'Merge', command: () => mergeTableCells },
   { item: 'table-unmerge-cells', telemetry: 'Unmerge', command: () => unmergeTableCell },
+  { item: 'table-sort-ascending', telemetry: 'Sort', command: () => sortTable('ascending') },
+  { item: 'table-sort-descending', telemetry: 'Sort', command: () => sortTable('descending') },
+  { item: 'table-pin-none', telemetry: 'PinHeader', command: () => pinHeaderRows(0) },
+  {
+    item: 'table-pin-current',
+    telemetry: 'PinHeader',
+    command: (view) => pinHeaderRows(pinnedUpTo(view)),
+    label: (view) => {
+      const rows = pinnedUpTo(view);
+      return rows > 0 ? `Pin up to row ${rows}` : undefined;
+    },
+  },
 ];
 
 export function textDocumentTableEditActions(
@@ -73,8 +93,11 @@ export function textDocumentTableEditActions(
 ): OfficeActions {
   if (!view || !canEdit) return {};
   const actions: Record<string, OfficeAction> = {};
-  for (const { item, telemetry, command } of TABLE_EDIT_ITEMS)
+  for (const { item, telemetry, command, label } of TABLE_EDIT_ITEMS)
     actions[item] = {
+      get label() {
+        return view.isDestroyed ? undefined : label?.(view);
+      },
       run: () => {
         if (view.isDestroyed) return;
         const own = command(view);

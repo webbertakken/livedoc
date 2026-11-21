@@ -12,10 +12,12 @@ import {
   type CellVerticalAlign,
 } from '@livedoc/text-documents';
 import { columnWidths } from './text-document-table-dom';
-import { setColumnWidths } from './text-document-table-edits';
+import { headerRowsOf, pinHeaderRows, setColumnWidths } from './text-document-table-edits';
 
 /** Google's border widths, in points. */
 export const TABLE_BORDER_WIDTHS: readonly number[] = [0, 0.5, 1, 1.5, 2.25, 3, 4.5, 6];
+/** The most header rows the panel offers to pin (default). */
+export const MOST_HEADER_ROWS = 10;
 /** The narrowest a column is set: 0.1 in. */
 export const MIN_COLUMN_WIDTH_PT = 7.2;
 
@@ -24,6 +26,9 @@ export type TableAlignChoice = 'start' | 'center' | 'end';
 /** What the panel shows, in points; null where the cells it changes differ. */
 export type TableProperties = {
   readonly rowHeight: number | null;
+  // The table's pinned header rows, and the most it may pin.
+  readonly headerRows: number;
+  readonly mostHeaderRows: number;
   readonly columnWidth: number | null;
   readonly verticalAlign: CellVerticalAlign | null;
   readonly align: TableAlignChoice;
@@ -40,6 +45,7 @@ export type TablePropertyChange =
       readonly field: 'rowHeight' | 'columnWidth' | 'indent' | 'borderWidth' | 'padding';
       readonly value: number;
     }
+  | { readonly field: 'headerRows'; readonly value: number }
   | { readonly field: 'verticalAlign'; readonly value: CellVerticalAlign }
   | { readonly field: 'align'; readonly value: TableAlignChoice }
   | { readonly field: 'borderColor'; readonly value: string }
@@ -90,6 +96,8 @@ export function tablePropertiesAt(state: EditorState): TableProperties | null {
   const { align, indent } = rect.table.attrs as { align: unknown; indent: unknown };
   return {
     rowHeight: shared(rows.map(({ node }) => (node.attrs.height as number | null) ?? 0)),
+    headerRows: headerRowsOf(rect.table),
+    mostHeaderRows: Math.min(MOST_HEADER_ROWS, rect.table.childCount - 1),
     columnWidth: shared(widths),
     verticalAlign: shared(props.map((p) => p.verticalAlign ?? 'top')),
     align: align === 'center' || align === 'end' ? align : 'start',
@@ -167,6 +175,7 @@ const round = (value: number) => Math.round(value * 100) / 100;
 export const setTableProperty =
   (change: TablePropertyChange): Command =>
   (state, dispatch) => {
+    if (change.field === 'headerRows') return pinHeaderRows(change.value)(state, dispatch);
     const target = targetOf(state);
     if (!target) return false;
     if (!dispatch) return true;

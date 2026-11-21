@@ -511,6 +511,8 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       'DistributeColumns',
       'Merge',
       'Unmerge',
+      'Sort',
+      'PinHeader',
     ].map((change) => `TextDocumentTable${change}`),
   },
   // Something pasted into a text document, by what was read (text-and-paragraphs.md "Clipboard").

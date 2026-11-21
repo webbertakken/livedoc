@@ -9,6 +9,8 @@ import { TextDocumentTablePropertiesPanel } from './TextDocumentTablePropertiesP
 
 const SHOWN: TableProperties = {
   rowHeight: 0,
+  headerRows: 0,
+  mostHeaderRows: 2,
   columnWidth: 144,
   verticalAlign: 'top',
   align: 'start',
@@ -82,6 +84,14 @@ describe('TextDocumentTablePropertiesPanel', () => {
     expect(field('Column width').value).toBe('');
     expect(list('Cell vertical alignment').value).toBe('');
     expect(list('Border width').value).toBe('');
+  });
+
+  it('pins header rows from None up to the most the table may pin', () => {
+    const onChange = panel({ ...SHOWN, headerRows: 1 });
+    expect(list('Pin header rows').value).toBe('1');
+    expect([...list('Pin header rows').options].map((o) => o.text)).toEqual(['None', '1', '2']);
+    fireEvent.change(list('Pin header rows'), { target: { value: '0' } });
+    expect(onChange).toHaveBeenCalledWith({ field: 'headerRows', value: 0 });
   });
 
   it('says where to put the cursor outside a table', () => {

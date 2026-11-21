@@ -269,3 +269,96 @@ export const mergeTableCells: Command = (state, dispatch, view) =>
 
 /** Split the caret's merged cell back into one cell per place. */
 export const unmergeTableCell: Command = keepingWidths(splitCell);
+
+/** The table's header rows: its leading rows whose cells are all header cells. */
+export function headerRowsOf(table: PmNode): number {
+  let count = 0;
+  for (let r = 0; r < table.childCount; r++) {
+    let all = table.child(r).childCount > 0;
+    table.child(r).forEach((cell) => {
+      if (cell.type.spec.tableRole !== 'header_cell') all = false;
+    });
+    if (!all) break;
+    count += 1;
+  }
+  return count;
+}
+
+/** Make the table's first `count` rows its header rows (pinned), the rest body rows; at least one body row stays. */
+export const pinHeaderRows =
+  (count: number): Command =>
+  (state, dispatch) => {
+    const rect = rectOf(state);
+    if (!rect || count < 0 || count >= rect.table.childCount) return false;
+    if (dispatch) {
+      const { schema } = state;
+      const tr = state.tr;
+      let at = rect.tableStart;
+      rect.table.forEach((row, _offset, index) => {
+        let cellAt = at + 1;
+        row.forEach((cell) => {
+          const type = index < count ? schema.nodes.table_header! : schema.nodes.table_cell!;
+          if (cell.type !== type) tr.setNodeMarkup(cellAt, type, cell.attrs);
+          cellAt += cell.nodeSize;
+        });
+        at += row.nodeSize;
+      });
+      dispatch(tr);
+    }
+    return true;
+  };
+
+// A cell's writing read as a number: digits with an optional sign, decimal point and thousands commas.
+const NUMBER = /^[-+]?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/;
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+/** Two cells' writing in sort order: numbers first in number order, then words, empty cells last (tables.md). */
+export function compareCells(a: string, b: string): number {
+  const x = a.trim();
+  const y = b.trim();
+  if (!x || !y) return x ? -1 : y ? 1 : 0;
+  const nx = NUMBER.test(x) ? Number(x.replaceAll(',', '')) : null;
+  const ny = NUMBER.test(y) ? Number(y.replaceAll(',', '')) : null;
+  if (nx !== null && ny !== null) return nx - ny;
+  if (nx !== null) return -1;
+  if (ny !== null) return 1;
+  return collator.compare(x, y);
+}
+
+/** Sort the rows below the header rows by the caret's column; refused where a body cell spans rows. */
+export const sortTable =
+  (direction: 'ascending' | 'descending'): Command =>
+  (state, dispatch) => {
+    const rect = rectOf(state);
+    if (!rect) return false;
+    const { table, map } = rect;
+    const header = headerRowsOf(table);
+    if (table.childCount - header < 2) return false;
+    for (let r = header; r < table.childCount; r++) {
+      let spans = false;
+      table.child(r).forEach((cell) => {
+        if ((cell.attrs.rowspan as number) > 1) spans = true;
+      });
+      if (spans) return false;
+    }
+    if (dispatch) {
+      const keyOf = (r: number) => {
+        const pos = map.map[r * map.width + rect.left]!;
+        return table.nodeAt(pos)!.textContent;
+      };
+      const body = Array.from({ length: table.childCount - header }, (_, k) => header + k);
+      const order = [...body].sort((a, b) => {
+        const empty = (r: number) => keyOf(r).trim() === '';
+        // Empty cells last whichever way.
+        if (empty(a) !== empty(b)) return empty(a) ? 1 : -1;
+        const c = compareCells(keyOf(a), keyOf(b));
+        return direction === 'ascending' ? c : -c;
+      });
+      const rows: PmNode[] = [];
+      for (let r = 0; r < header; r++) rows.push(table.child(r));
+      for (const r of order) rows.push(table.child(r));
+      const tr = state.tr.replaceWith(rect.tableStart, rect.tableStart + table.content.size, rows);
+      dispatch(tr);
+    }
+    return true;
+  };

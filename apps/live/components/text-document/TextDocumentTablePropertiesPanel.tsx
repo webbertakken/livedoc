@@ -201,6 +201,15 @@ export function TextDocumentTablePropertiesPanel({
     <div className="flex flex-col gap-1 px-1 pt-1">
       <Section title="Rows">
         {length('Minimum row height', p.rowHeight, 'rowHeight', { start: true })}
+        <ListField
+          label="Pin header rows"
+          value={String(p.headerRows)}
+          options={Array.from(
+            { length: p.mostHeaderRows + 1 },
+            (_, n) => [String(n), n === 0 ? 'None' : String(n)] as const,
+          )}
+          onChoose={(value) => onChange({ field: 'headerRows', value: Number(value) })}
+        />
       </Section>
       <Section title="Columns">{length('Column width', p.columnWidth, 'columnWidth')}</Section>
       <Section title="Alignment">

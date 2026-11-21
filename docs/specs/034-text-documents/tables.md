@@ -57,7 +57,21 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
 - **Move** rows and columns by dragging their edge handle (Google's six-dot grip).
 - **Resize** columns and rows by dragging their borders; a minimum of 0.1 in.
 - **Sort table** ascending or descending by the column at the caret (text, then numbers, as Google sorts).
+  - Format > Table > Sort table > **Sort ascending**, **Sort descending**; the cell's context menu has both as **Sort
+    table ascending**, **Sort table descending** `(default)`.
+  - Rows are ordered by the writing of their cell in the caret's column: cells that read as a number (`3`, `-2.5`,
+    `1,200`) come first in number order, then the rest by their words, ignoring case, numbers within words in number
+    order (`Item 2` before `Item 10`); empty cells last either way `(default)`. Rows that compare equal keep their
+    order.
+  - Header rows stay at the top, unsorted. Dimmed where a cell below the header rows spans rows, or fewer than two
+    rows would move. One undo step.
 - **Pin header rows**: the first n rows repeat at the top of each page.
+  - Format > Table > Pin header rows > **Don't pin** and **Pin up to row** n, n the caret's row; Table properties'
+    Rows section has **Pin header rows** (None, 1 to the table's rows less one, at most 10 `(default)`).
+  - Pinned rows are the table's header rows: their cells are column headers (`th scope="col"`), written as each format
+    holds header rows (ODF `table:table-header-rows`, OOXML `w:tblHeader`). Pinning every row is refused (a table
+    keeps one row of its own). One undo step.
+  - Repeating them at the top of each page the table continues on is ahead.
 - **Rows that do not break across pages** (Table properties > Row > Allow row to overflow across pages, off).
 
 ## Table properties
@@ -75,7 +89,8 @@ and width, cell background, by the one colour picker), **Cell** (padding).
   are in; Column width the columns they are in; Table alignment and Left indent the whole table.
 - **What it shows**: each field the value the cells it changes share, blank where they differ.
 - **Fields** (lengths in the person's unit, as indents are, from 0 to 22 in):
-  - Rows: **Minimum row height** (a row grows past it with its writing; 0 or blank is none).
+  - Rows: **Minimum row height** (a row grows past it with its writing; 0 or blank is none); **Pin header rows**
+    (None, then 1 up to the table's rows less one, at most 10), the whole table's.
   - Columns: **Column width**, at least 0.1 in; the table grows or shrinks by the change.
   - Alignment: **Cell vertical alignment** (Top, Middle, Bottom); **Table alignment** (Left, Center, Right); **Left
     indent** (Left only, dimmed otherwise).
@@ -85,8 +100,7 @@ and width, cell background, by the one colour picker), **Cell** (padding).
   - Cell: **Cell padding**, every side alike.
 - A choice from a list or a colour applies at once; a typed length applies on Enter or when the field is left, and an
   invalid one says so under the field and changes nothing. Each change is one undo step, its focus kept in the panel.
-- Pin header rows and Allow row to overflow across pages join Rows when pinned header rows and rows that do not break
-  are built (ahead).
+- Allow row to overflow across pages joins Rows when rows breaking across pages are built (ahead).
 - Telemetry: `Element · Changed · TextDocumentTableProperties` per change. Logged
   `[text-document] table-properties` with the field.
 
@@ -94,14 +108,14 @@ and width, cell background, by the one colour picker), **Cell** (padding).
 
 `(default)`, until Webber's capture: **Table properties**; Insert row above, Insert row below, Insert column left,
 Insert column right; Delete row, Delete column, Delete table; Distribute rows, Distribute columns; Merge cells,
-Unmerge cells; Sort table; Pin header rows. Each dimmed outside a table, Merge and Unmerge as above; Table properties,
-Sort table and Pin header rows "Coming soon" until their PRs.
+Unmerge cells; Sort table (a submenu); Pin header rows (a submenu). Each dimmed outside a table, Merge and Unmerge as
+above, Sort as above.
 
 ## Context menu
 
 On a cell: the text menu, then Insert row above, Insert row below, Insert column left, Insert column right, Delete row,
-Delete column, Delete table, Distribute rows, Distribute columns, Merge cells / Unmerge cells, Sort table, Table
-properties. Its table items show only in a table (contextual), Merge cells only over a selection that can merge and
+Delete column, Delete table, Distribute rows, Distribute columns, Merge cells / Unmerge cells, Sort table ascending, Sort
+table descending, Table properties. Its table items show only in a table (contextual), Merge cells only over a selection that can merge and
 Unmerge cells only on a merged cell; the order is `(default)` until Webber's capture.
 
 ## The model
