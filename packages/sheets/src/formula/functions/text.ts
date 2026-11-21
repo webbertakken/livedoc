@@ -63,23 +63,28 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     return k === 0 ? '' : chars.slice(-k).join('');
   }),
   MID: textFn(3, 3, 1, ([t], [start, n]) => {
-    if (start! < 1 || n! < 0) return err('#VALUE!');
+    if (start! < 1) return err('#NUM!', 'Positions are counted from 1');
+    if (n! < 0) return err('#VALUE!');
     return [...t!].slice(start! - 1, start! - 1 + n!).join('');
   }),
-  LEN: textFn(1, 1, 1, ([t]) => [...t!].length),
+  // Google counts UTF-16 code units, an emoji as 2, as Excel does; OpenFormula counts characters (Part 4 §6.20.13;
+  // the file's meaning).
+  LEN: textFn(1, 1, 1, ([t], _n, f) => (f.meaning === 'openformula' ? [...t!].length : t!.length)),
   UPPER: textFn(1, 1, 1, ([t]) => t!.toUpperCase()),
   LOWER: textFn(1, 1, 1, ([t]) => t!.toLowerCase()),
   PROPER: textFn(1, 1, 1, ([t]) =>
     t!
       .toLowerCase()
-      .replace(/(^|[^\p{L}\p{N}'])(\p{L})/gu, (_m, a: string, b: string) => a + b.toUpperCase()),
+      // A word starts after anything but a letter, an apostrophe and a digit too, as Google has it (It'S 2Nd).
+      .replace(/(^|[^\p{L}])(\p{L})/gu, (_m, a: string, b: string) => a + b.toUpperCase()),
   ),
   TRIM: textFn(1, 1, 1, ([t]) => t!.replace(/ +/g, ' ').trim()),
   CLEAN: textFn(1, 1, 1, ([t]) => [...t!].filter((ch) => ch.charCodeAt(0) >= 32).join('')),
   SUBSTITUTE: textFn(3, 4, 3, ([t, from, to], [nth]) => {
     if (from === '') return t!;
-    if (nth === undefined) return t!.split(from!).join(to);
-    if (nth < 1) return err('#VALUE!');
+    // The occurrence's fraction is dropped; 0, as left out, replaces every one, as Google has it.
+    if (nth !== undefined && nth < 0) return err('#VALUE!', 'The occurrence is never negative');
+    if (nth === undefined || Math.trunc(nth) === 0) return t!.split(from!).join(to);
     let at = -1;
     for (let k = 0; k < nth; k++) {
       at = t!.indexOf(from!, at + 1);
@@ -140,19 +145,20 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
   }),
   CHAR: textFn(1, 1, 0, (_t, [n]) => {
     const code = Math.trunc(n!);
-    return code < 1 || code > 0x10ffff ? err('#VALUE!') : String.fromCodePoint(code);
+    return code < 1 || code > 0x10ffff
+      ? err('#NUM!', 'There is no character with this number')
+      : String.fromCodePoint(code);
   }),
   CODE: textFn(1, 1, 1, ([t]) => (t === '' ? err('#VALUE!') : t!.codePointAt(0)!)),
   UNICODE: textFn(1, 1, 1, ([t]) => (t === '' ? err('#VALUE!') : t!.codePointAt(0)!)),
-  // A code point that is a character: none for a surrogate half or one Unicode leaves unassigned.
+  // A code point's character, unassigned ones too, as Google gives them; never a surrogate half, which no LiveDoc text
+  // holds (Google gives the half itself).
   UNICHAR: textFn(1, 1, 0, (_t, [n]) => {
     const code = Math.trunc(n!);
     if (code < 1 || code > 0x10ffff)
       return err('#VALUE!', 'There is no character with this number');
     const ch = String.fromCodePoint(code);
-    return /^[\p{Cs}\p{Cn}]$/u.test(ch)
-      ? err('#VALUE!', 'There is no character with this number')
-      : ch;
+    return /^\p{Cs}$/u.test(ch) ? err('#VALUE!', 'There is no character with this number') : ch;
   }),
   // Text as itself; any other value as empty text, an error as itself.
   T: scalarFn(1, 1, ([v]) => (typeof v === 'string' || isError(v!) ? v : '')),

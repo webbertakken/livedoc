@@ -8,7 +8,7 @@ import { heldAnswer, sameBlock, showBlock, unnamedDifferences } from './compare'
 import { OracleCorpus, type OracleAnswers, type OracleCategory } from './corpus';
 import { engineAnswers } from './oracle-engine';
 import { FUNCTIONS } from '../formula/registry';
-import { FILE_MEANINGS, MEANING_FUNCTIONS } from '../formula/meaning';
+import { CHAINED_POWER, FILE_MEANINGS, MEANING_FUNCTIONS } from '../formula/meaning';
 
 const ROOT = join(import.meta.dirname, '../../oracle');
 
@@ -191,7 +191,10 @@ describe('the catalogue against the corpus', () => {
   it("measures each function answered otherwise in a file's meaning there", () => {
     const meant = new Set(
       corpus.flatMap((c) =>
-        c.cases.filter((x) => x.meaning).map((x) => x.id.replace(/\.\d+$/, '')),
+        c.cases
+          .filter((x) => x.meaning)
+          // A language case of a power of a power stands for the operator.
+          .map((x) => (/\^.*\^/.test(x.f) ? CHAINED_POWER : x.id.replace(/\.\d+$/, ''))),
       ),
     );
     expect(Object.keys(MEANING_FUNCTIONS).filter((name) => !meant.has(name))).toEqual([]);

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { book, calc } from '../testing/book';
 import {
   answersDiffer,
+  CHAINED_POWER,
   FILE_MEANINGS,
   FORMULA_MEANINGS,
   functionsAnsweringDifferently,
@@ -29,7 +30,9 @@ describe('the meanings', () => {
 
 describe('the functions answering differently', () => {
   it('lists only functions the engine knows', () => {
-    expect(Object.keys(MEANING_FUNCTIONS).filter((name) => !FUNCTIONS[name])).toEqual([]);
+    expect(
+      Object.keys(MEANING_FUNCTIONS).filter((name) => !FUNCTIONS[name] && name !== CHAINED_POWER),
+    ).toEqual([]);
   });
 
   it('differ between two meanings when one lists the function and the other does not', () => {
@@ -45,6 +48,64 @@ describe('the functions answering differently', () => {
     expect(functionsAnsweringDifferently(f, 'ooxml', 'openformula')).toEqual(['CEILING', 'CELL']);
     expect(functionsAnsweringDifferently(f, 'google', 'ooxml')).toEqual(['SORT']);
     expect(functionsAnsweringDifferently('=SORT(', 'google', 'ooxml')).toEqual([]);
+  });
+
+  it('names a power of a power written without brackets by its operator', () => {
+    expect(functionsAnsweringDifferently('=2^3^2', 'google', 'ooxml')).toEqual(['^']);
+    expect(functionsAnsweringDifferently('=(2^3)^2', 'google', 'ooxml')).toEqual([]);
+    expect(functionsAnsweringDifferently('=2^(3^2)', 'google', 'ooxml')).toEqual([]);
+    expect(functionsAnsweringDifferently('=2^3^2', 'ooxml', 'openformula')).toEqual([]);
+  });
+});
+
+// A row of the table each: Google's answer, and each standard's.
+describe('each meaning answers', () => {
+  it('2^3^2 from the right in Google’s and from the left in the standards’', () => {
+    expect(inEach('=2^3^2')).toEqual({ google: 512, ooxml: 64, openformula: 64 });
+    expect(inEach('=2^3^2^0.5')).toEqual({
+      google: 2 ** (3 ** (2 ** 0.5)),
+      ooxml: 8,
+      openformula: 8,
+    });
+  });
+
+  it('YEARFRAC past a year by Google’s whole years, or OpenFormula’s average year', () => {
+    const f = '=YEARFRAC(DATE(2024, 1, 1), DATE(2025, 6, 30), 1)';
+    const got = inEach(f) as Record<FormulaMeaning, number>;
+    expect(got.google).toBeCloseTo(1 + 180 / 365, 12);
+    expect(got.ooxml).toBeCloseTo(1 + 180 / 365, 12);
+    expect(got.openformula).toBeCloseTo(546 / 365.5, 12);
+  });
+
+  it('ARABIC adds up any numerals, ROMAN(0) is empty and LEN counts characters only in OpenFormula’s', () => {
+    expect(inEach('=ARABIC("IIII")')).toEqual({
+      google: error('#VALUE!'),
+      ooxml: error('#VALUE!'),
+      openformula: 4,
+    });
+    expect(inEach('=ROMAN(0)')).toEqual({
+      google: error('#VALUE!'),
+      ooxml: error('#VALUE!'),
+      openformula: '',
+    });
+    expect(inEach('=LEN("😀")')).toEqual({ google: 2, ooxml: 2, openformula: 1 });
+  });
+
+  it('DECIMAL with a leading 0x only in OpenFormula’s', () => {
+    expect(inEach('=DECIMAL("0x1F", 16)')).toEqual({
+      google: error('#NUM!'),
+      ooxml: error('#NUM!'),
+      openformula: 31,
+    });
+  });
+
+  it('SUMPRODUCT reads TRUE and a number typed as text, but OOXML’s reads them as 0', () => {
+    const cells = { A1: 'TRUE', B1: '2', A2: "'5", B2: '3', A3: 'x', B3: '4' };
+    expect(inEach('=SUMPRODUCT(A1:A3, B1:B3)', cells)).toEqual({
+      google: 17,
+      ooxml: 0,
+      openformula: 17,
+    });
   });
 });
 

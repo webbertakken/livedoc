@@ -29,7 +29,13 @@
     },
     {
       "id": "ARABIC.5",
-      "f": "=ARABIC(\"IIII\")"
+      "f": "=ARABIC(\"IIII\")",
+      "differs": {
+        "libreoffice": "LibreOffice adds up any numerals, as OpenFormula Part 4 §6.19.2 does (IIII is 4); Google takes only a numeral ROMAN writes, #VALUE!"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "ARABIC.6",
@@ -41,11 +47,17 @@
     },
     {
       "id": "ARABIC.8",
-      "f": "=ARABIC(\"-XIV\")"
+      "f": "=ARABIC(\"-XIV\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a minus before the numeral, as OpenFormula takes numerals only; Google reads it"
+      }
     },
     {
       "id": "ARABIC.9",
-      "f": "=ARABIC(\" XIV \")"
+      "f": "=ARABIC(\" XIV \")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses spaces around the numeral, as OpenFormula takes numerals only; Google reads them"
+      }
     },
     {
       "id": "ARABIC.10",
@@ -59,7 +71,10 @@
     },
     {
       "id": "ASC.2",
-      "f": "=ASC(Data!A5)"
+      "f": "=ASC(Data!A5)",
+      "differs": {
+        "libreoffice": "LibreOffice keeps the full-width space; Google writes it half-width"
+      }
     },
     {
       "id": "ASC.3",
@@ -85,7 +100,7 @@
       "id": "CHAR.2",
       "f": "=CHAR(0)",
       "differs": {
-        "libreoffice": "LibreOffice gives empty text for 0; LiveDoc has no character 0, #VALUE!"
+        "libreoffice": "LibreOffice gives empty text for 0; Google #NUM!"
       }
     },
     {
@@ -432,7 +447,13 @@
     },
     {
       "id": "LEN.5",
-      "f": "=LEN(\"😀\")"
+      "f": "=LEN(\"😀\")",
+      "differs": {
+        "libreoffice": "LibreOffice counts characters, as OpenFormula Part 4 §6.20.13 does (1); Google counts UTF-16 code units, as Excel does (2)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "LENB.1",
@@ -460,10 +481,7 @@
     },
     {
       "id": "LENB.6",
-      "f": "=LENB(Data!A7)",
-      "differs": {
-        "libreoffice": "LibreOffice counts half-width katakana as two bytes (Asian script); LiveDoc as one, as the double-byte character sets do (D43)"
-      }
+      "f": "=LENB(Data!A7)"
     },
     {
       "id": "LOWER.1",
@@ -543,10 +561,7 @@
     },
     {
       "id": "PROPER.3",
-      "f": "=PROPER(\"it's 2nd-rate\")",
-      "differs": {
-        "libreoffice": "LibreOffice starts a word after any character but a letter (It'S 2Nd); LiveDoc after a space or mark, not an apostrophe or a digit"
-      }
+      "f": "=PROPER(\"it's 2nd-rate\")"
     },
     {
       "id": "PROPER.4",
@@ -787,11 +802,10 @@
     {
       "id": "REGEXREPLACE.9",
       "f": "=REGEXREPLACE(\"abc\", \"b\", \"$x\")",
-      "expect": [["a$xc"]],
-      "cite": "https://www.regular-expressions.info/googlesheets.html (\"A dollar sign that is not followed by a digit is a literal dollar sign\")",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
-      }
+      },
+      "note": "Google refuses a $ before no digit, #N/A: it names no group."
     },
     {
       "id": "REPLACE.1",
@@ -948,7 +962,13 @@
     },
     {
       "id": "ROMAN.7",
-      "f": "=ROMAN(0)"
+      "f": "=ROMAN(0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives empty text for 0, as OpenFormula Part 4 §6.19.17 does; Google #VALUE!"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "ROMAN.8",
@@ -964,11 +984,17 @@
     },
     {
       "id": "ROMAN.11",
-      "f": "=ROMAN(499, TRUE)"
+      "f": "=ROMAN(499, TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice reads TRUE as form 1; Google, as OpenFormula Part 4 §6.19.17, reads it as the classic form 0"
+      }
     },
     {
       "id": "ROMAN.12",
-      "f": "=ROMAN(499, FALSE)"
+      "f": "=ROMAN(499, FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice reads FALSE as form 0; Google, as OpenFormula Part 4 §6.19.17, reads it as the simplest form 4"
+      }
     },
     {
       "id": "ROMAN.13",
@@ -1111,7 +1137,10 @@
     },
     {
       "id": "SUBSTITUTE.4",
-      "f": "=SUBSTITUTE(\"a-b-c\", \"-\", \" \", 0)"
+      "f": "=SUBSTITUTE(\"a-b-c\", \"-\", \" \", 0)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses occurrence 0; Google replaces every one"
+      }
     },
     {
       "id": "SUBSTITUTE.5",
@@ -1236,7 +1265,8 @@
       ],
       "cite": "https://support.google.com/docs/answer/9369024 (\"If the number does not have a Unicode character, the method returns a #VALUE error\"; 55296 is a surrogate half, no character)",
       "differs": {
-        "libreoffice": "LibreOffice gives empty text for a surrogate half"
+        "libreoffice": "LibreOffice gives empty text for a surrogate half",
+        "google": "Google gives the surrogate half itself (its export writes ?), against its help; no LiveDoc text holds a lone surrogate"
       }
     },
     {

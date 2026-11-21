@@ -39,7 +39,12 @@ export const REGEX_TEXT_FUNCTIONS: Record<string, FnDef> = {
     const parts = parseReplacement(by!, compiled.groups);
     if ('missing' in parts)
       return compiled.re.test(t!)
-        ? err('#N/A', `The replacement names group $${parts.missing}, which the pattern lacks`)
+        ? err(
+            '#N/A',
+            parts.missing === null
+              ? 'A $ in the replacement names no group'
+              : `The replacement names group $${parts.missing}, which the pattern lacks`,
+          )
         : t!;
     return t!.replace(compiled.re, (...m: unknown[]) =>
       applyReplacement(parts, m.slice(0, compiled.groups + 1) as (string | undefined)[]),

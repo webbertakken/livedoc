@@ -17,9 +17,6 @@ describe('parseReplacement', () => {
     ['$2$1', 2, 'ba'],
     ['$12', 2, 'a2'],
     ['$01', 2, 'a'],
-    ['$', 0, '$'],
-    ['$x', 0, '$x'],
-    ['${1}', 2, '${1}'],
     ['\\$1', 2, '$1'],
     ['\\\\', 0, '\\'],
     ['\\n', 0, 'n'],
@@ -32,6 +29,12 @@ describe('parseReplacement', () => {
     const match = Array.from({ length: 13 }, (_, i) => `g${i}`);
     expect(apply('$12', 12, match)).toBe('g12');
     expect(apply('$123', 12, match)).toBe('g123');
+  });
+
+  it('names no group for a $ before no digit', () => {
+    expect(parseReplacement('$', 0)).toEqual({ missing: null });
+    expect(parseReplacement('a$x', 0)).toEqual({ missing: null });
+    expect(parseReplacement('${1}', 2)).toEqual({ missing: null });
   });
 
   it('names the first group the pattern lacks', () => {

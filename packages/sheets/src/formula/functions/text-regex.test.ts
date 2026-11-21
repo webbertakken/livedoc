@@ -13,7 +13,6 @@ describe('REGEX functions', () => {
     ['=REGEXREPLACE("abc", "b", "[$0]")', 'a[b]c'],
     ['=REGEXREPLACE("abc", "(b)", "$12")', 'ab2c'],
     ['=REGEXREPLACE("abc", "b", "\\$1")', 'a$1c'],
-    ['=REGEXREPLACE("abc", "b", "$")', 'a$c'],
     ['=REGEXREPLACE("abc", "x(y)", "$2")', 'abc'],
     ['=REGEXREPLACE("abc", "x*", "-")', '-a-b-c-'],
   ])('%s is %j', (f, v) => {
@@ -22,6 +21,7 @@ describe('REGEX functions', () => {
 
   it.each([
     ['=REGEXREPLACE("abc", "(b)", "$2")', '#N/A'],
+    ['=REGEXREPLACE("abc", "b", "$")', '#N/A'],
     ['=REGEXMATCH("ab", "(?<=a)b")', '#REF!'],
     ['=REGEXEXTRACT("aa", "(a)\\1")', '#REF!'],
     ['=REGEXMATCH("a", "\\p{L}")', '#REF!'],

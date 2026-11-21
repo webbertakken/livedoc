@@ -1,5 +1,6 @@
 // How text functions read their arguments (docs/specs/029-sheets/formulas.md "Functions": Text).
 import { fn, lift, valueArg, type FnDef } from '../fn';
+import type { Frame } from '../../engine/frame';
 import { isError, toNumber, toText, type Scalar, type Value } from '../values';
 import { boundedText } from '../operators';
 
@@ -19,13 +20,13 @@ export function textFn(
   min: number,
   max: number,
   nText: number,
-  each: (ts: string[], ns: (number | undefined)[]) => Value,
+  each: (ts: string[], ns: (number | undefined)[], f: Frame) => Value,
 ): FnDef {
   return fn(min, max, (args, f) => {
     const skipped = args.map((a) => a === null);
     return lift(
       args.map((a) => valueArg(a, f)),
-      (xs) => textEach(xs, { skipped, min, nText, locale: f.locale }, each),
+      (xs) => textEach(xs, { skipped, min, nText, locale: f.locale }, (ts, ns) => each(ts, ns, f)),
     );
   });
 }
