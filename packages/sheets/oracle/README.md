@@ -18,8 +18,9 @@ How to add a function: [Measure a function against the oracle](../../../docs/ins
 - Answers need LibreOffice 24.8 or later (its `FILTER`, `SORT`, `UNIQUE`, `XLOOKUP`, `LET`); each file records its
   version in `by`. A case naming a difference LibreOffice no longer has fails until the name goes.
 - `oracle:google` works through Drive with the oracle's own token: per category it uploads the workbook as an `.xlsx`
-  converted to a Google Sheet, sets its locale and UTC (Sheets API), exports `.ods` and `.xlsx`, reads the answers
-  from the `.ods`, names any case the `.xlsx` answers otherwise, and deletes the Drive file, also when it fails.
+  converted to a Google Sheet, sets its locale and UTC (Sheets API), exports it as `.xlsx`, reads the answers
+  from it, and deletes the Drive file, also when it fails (Google's `.ods` export writes booleans as numbers and
+  functions ODF lacks as `#NAME?`, so it is not read).
 - Its token, once: `pnpm --filter @livedoc/sheets oracle:google:consent` prints Google's consent address, takes the
   redirect on `127.0.0.1`, and saves the refresh token to `~/.secrets/google-oracle-refresh-token` (mode 600).
   It needs the operator's Desktop app client at `~/.secrets/google-oracle-oauth-client.json` (scope `drive.file`,

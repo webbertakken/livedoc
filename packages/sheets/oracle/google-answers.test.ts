@@ -12,7 +12,7 @@ import {
 } from '../src/oracle/corpus';
 import { engineAnswers } from '../src/oracle/oracle-engine';
 import { googleAnswers, ORACLE_TIME_ZONE, sheetsLocale } from './google-answers.ts';
-import { ODS_MIME, oracleDrive, type OracleDrive } from './google-drive.ts';
+import { ODS_MIME, oracleDrive, XLSX_MIME, type OracleDrive } from './google-drive.ts';
 
 // formulas.md "The oracle", Google's answers through Drive: a fake Drive whose conversion works the workbook out with
 // LiveDoc's own engine, as Google would with its own.
@@ -89,10 +89,12 @@ describe('sheetsLocale', () => {
 });
 
 describe('googleAnswers', () => {
-  it("reads every block from the .ods, holds the .xlsx's to it, and deletes the file", async () => {
+  it('reads every block from the .xlsx export, and deletes the file', async () => {
     let seen: Record<string, string> = {};
+    const asked: string[] = [];
     const { fake, drive } = setup(async (bytes, toMime, properties) => {
       seen = properties;
+      asked.push(toMime);
       return workedOut(CATEGORY)(bytes, toMime, properties);
     });
     const got = await googleAnswers(CATEGORY, drive);
@@ -104,53 +106,22 @@ describe('googleAnswers', () => {
       'TRUE.1': [[true]],
       'DIV.1': [[{ e: '#DIV/0!' }]],
     });
+    expect(asked).toEqual([XLSX_MIME]);
     expect(seen).toEqual({ locale: 'en_US', timeZone: 'Etc/GMT' });
     expect(fake.appFiles('oracle')).toEqual([]);
   });
 
-  it('names a case the two exports answer differently, never as an answer', async () => {
+  it("names the export's own problems", async () => {
     const { drive } = setup(
-      workedOut(CATEGORY, (toMime, at) => (toMime !== ODS_MIME && at.id === 'SUM.1' ? 7 : at.v)),
+      async () => writeXlsx({ sheets: [{ name: 'Other', rows: 1, cols: 1, cells: [] }] }, 'G').data,
     );
-    const got = await googleAnswers(CATEGORY, drive);
-    expect(got.problems).toEqual(['SUM.1: ods=6 xlsx=7']);
-    expect(got.answers['SUM.1']).toEqual([[6]]);
-  });
-
-  it("names the .xlsx's own problems apart", async () => {
-    const { drive } = setup(async (bytes, toMime, p) => {
-      if (toMime === ODS_MIME) return workedOut(CATEGORY)(bytes, toMime, p);
-      return writeXlsx({ sheets: [{ name: 'Other', rows: 1, cols: 1, cells: [] }] }, 'G').data;
-    });
-    const read = await googleAnswers(CATEGORY, drive);
-    expect(read.problems).toEqual(['xlsx no Cases sheet']);
-    expect(read.answers['SUM.1']).toEqual([[6]]);
-  });
-
-  it('names an empty answer the other export holds', async () => {
-    const { drive } = setup(
-      workedOut(CATEGORY, (toMime, at) =>
-        toMime !== ODS_MIME && at.id === 'SEQUENCE.1' && at.v === 2 ? null : at.v,
-      ),
-    );
-    const read = await googleAnswers(CATEGORY, drive);
-    expect(read.problems).toEqual(['SEQUENCE.1: ods=[[1],[2]] xlsx=[[1],[null]]']);
+    expect((await googleAnswers(CATEGORY, drive)).problems).toEqual(['no Cases sheet']);
   });
 
   it('names an export it cannot read', async () => {
-    const odsBad = setup(async (bytes, toMime, p) =>
-      toMime === ODS_MIME ? new Uint8Array([1, 2]) : workedOut(CATEGORY)(bytes, toMime, p),
-    );
-    expect((await googleAnswers(CATEGORY, odsBad.drive)).problems[0]).toMatch(
-      /^the \.ods export: /,
-    );
-    const xlsxBad = setup(async (bytes, toMime, p) =>
-      toMime === ODS_MIME ? workedOut(CATEGORY)(bytes, toMime, p) : new Uint8Array([1, 2]),
-    );
-    expect((await googleAnswers(CATEGORY, xlsxBad.drive)).problems[0]).toMatch(
-      /^the \.xlsx export: /,
-    );
-    expect(odsBad.fake.appFiles('oracle')).toEqual([]);
+    const { fake, drive } = setup(async () => new Uint8Array([1, 2]));
+    expect((await googleAnswers(CATEGORY, drive)).problems[0]).toMatch(/^the \.xlsx export: /);
+    expect(fake.appFiles('oracle')).toEqual([]);
   });
 
   it('names what the workbook cannot carry, uploading nothing', async () => {
@@ -190,7 +161,7 @@ describe('googleAnswers', () => {
     fake.fail({
       status: 403,
       reason: 'exportSizeLimitExceeded',
-      match: (r) => r.path.endsWith('/export') && ++exports === 2,
+      match: (r) => r.path.endsWith('/export') && ++exports === 1,
     });
     await expect(googleAnswers(second, drive)).rejects.toThrow(
       /^export .* answered 403 exportSizeLimitExceeded$/,

@@ -3,9 +3,9 @@
 // through Drive, with the token `oracle:google:consent` saved). Never in CI's unit run.
 // ORACLE_CATEGORY=<name> makes one category's only.
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { libreOfficeConvert } from '@livedoc/office-packages/libreoffice';
 import { it } from 'vitest';
 import { readOds } from '../src/files/ods-read';
@@ -97,6 +97,7 @@ it(`makes ${SOURCE}'s answers`, { timeout: 600_000 }, async () => {
     // Written whole per category, and only once every case is answered.
     const answers = await answered(category, by, drive);
     const path = join(ROOT, 'answers', SOURCE, `${category.category}.json`);
+    mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, `${JSON.stringify(answers, null, 2)}\n`);
   }
 });
