@@ -503,9 +503,14 @@ A row is **automatic** until it is given a size of its own; then it is **sized**
 - A character outside the table is measured by its kind (default, **D91**): an accented letter as its letter, a
   CJK character a full em, an emoji 1.25 em, anything else the font's average letter.
 - A cell with no font of its own is measured in its tab's font.
+- A tab with no font draws its cells in the device's own font, which differs by device and which no table holds.
+- Such text is measured in the **system face** (default, **D92**): each character as wide as the widest of the
+  fonts a device names draws it.
+- So on such a tab a line breaks a little early, and fits its cell in every one of those fonts.
 - The grid, images and exports draw exactly the lines that were measured, so an automatic row cuts no line off.
-- Where a browser draws a font wider than the table knows (a fallback while the font loads), a line may reach its
-  cell's edge.
+- They place a measured line by its font's own widths, never snapped to whole px, so it is as wide as measured.
+- Where a browser draws a font wider than was measured (a fallback while the font loads, or a device's font wider
+  than the system face), a line may reach its cell's edge.
 - An Editor sizes a row and returns it to automatic.
 - A Participant's typing and an agent's cells grow an automatic row all the same: that is no change of shape.
 - A Viewer sees the same heights.
@@ -1048,3 +1053,6 @@ The code cites each by its id.
 - **D90** The room an automatic row keeps round its text: 1 px for one line, 8 px for two or more (default).
 - **D91** How a character outside a font's width table is measured: an accented letter as its letter, a CJK
   character 1 em, an emoji 1.25 em, anything else the font's average letter (default).
+- **D92** What text with no font is measured in: the system face, each character at the widest of Inter (as
+  Adwaita Sans, and near macOS's), Selawik (Segoe UI's widths), Roboto, Ubuntu, Noto Sans, Cantarell, Arimo (Arial's
+  and Helvetica's widths) and DejaVu Sans; about 8% wider than Inter for prose, 17% in bold (default).

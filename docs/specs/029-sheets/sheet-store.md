@@ -289,7 +289,10 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   row above them, as a spreadsheet's do, so a table keeps its banding and number formats; columns take the look of the
   column left of them but not its number format. A chart sits at a px anchor, so when an agent's change inserts,
   resizes or deletes rows or columns before it, or makes rows before it taller or shorter with their text, the chart
-  is moved back onto the cell it sat on. A format rule an
+  is moved back onto the cell it sat on. An agent measures rows in the tab's font only when its change reads the tab
+  (a chart, a design, a resize, an insert or a delete); any other change measures them as a tab with no font is
+  measured ([Row height](sheet.md#row-height)), so on a tab that names a font a chart it moves may land a little off
+  its cell. A format rule an
   agent adds goes last unless it asks for `first` (the first rule met draws a cell).
 - **A design**: `add_sheet` and `change_sheet` take a sheet laid out as a template is
   ([Sheet templates](sheet.md#sheet-templates)): a heading and subtitle over the sheet's width, then blocks (tables
