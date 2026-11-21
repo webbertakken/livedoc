@@ -573,6 +573,16 @@ profiler and mapped through the build's source maps; three opens.
   as a new, equally empty map, and every slot reads it. It now keeps its identity while it says the
   same (`sameRemoteSelections`).
 
+## The prefetch of surfaces, after the page is quiet
+
+Measured 2026-11-21 on the reference board (whiteboard), locally at 3.5x, three traced opens.
+
+- **The surfaces' prefetch ran inside the opening.** `requestIdleCallback` fires in the first idle
+  gap, which on a large board comes between the opening's own late tasks: the editor's and the
+  canvas's surfaces (the Explorer, search, layers, the style and tool panels, presenting, a board
+  scene's landing) then evaluated as tasks of 34-69 ms each at 3.3-3.6 s, the opening's last. They
+  now wait for the page to go quiet first (`prefetchOnceQuiet`: no long task for 500 ms).
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.

@@ -5,11 +5,11 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const prefetchWhenIdle = vi.fn((_loaders: unknown): (() => void) => () => {});
+const prefetchOnceQuiet = vi.fn((_loaders: unknown): (() => void) => () => {});
 const recoverInBrowser = vi.fn((..._args: unknown[]): void => {});
 const setCanvasCodeFailureHandler = vi.fn((_handler: unknown): void => {});
 vi.mock('@/lib/idle-prefetch', () => ({
-  prefetchWhenIdle: (loaders: unknown) => prefetchWhenIdle(loaders),
+  prefetchOnceQuiet: (loaders: unknown) => prefetchOnceQuiet(loaders),
 }));
 vi.mock('@/lib/stale-build-navigation', () => ({
   browserNavigationDeps: () => 'deps',
@@ -38,13 +38,13 @@ describe('useCanvasCode', () => {
     const { rerender } = renderHook((props) => useCanvasCode(props), {
       initialProps: { settled: false, needsCanvas: true },
     });
-    expect(prefetchWhenIdle).not.toHaveBeenCalled();
+    expect(prefetchOnceQuiet).not.toHaveBeenCalled();
     rerender({ settled: true, needsCanvas: true });
-    expect(prefetchWhenIdle).toHaveBeenCalledWith(['the canvas', 'its surfaces']);
+    expect(prefetchOnceQuiet).toHaveBeenCalledWith(['the canvas', 'its surfaces']);
   });
 
   it('prefetches nothing for a document whose tabs all have a surface', () => {
     renderHook(() => useCanvasCode({ settled: true, needsCanvas: false }));
-    expect(prefetchWhenIdle).not.toHaveBeenCalled();
+    expect(prefetchOnceQuiet).not.toHaveBeenCalled();
   });
 });
