@@ -225,12 +225,19 @@ class Pager {
     this.options.onPages(pages);
   }
 
-  private apply(decorations: DecorationSet): void {
+  // Draws the decorations, unless the ones drawn (mapped through the edits since) are these already: a keystroke that
+  // moves no page start, column or field changes nothing, and building a set walks the whole body.
+  private apply(decorations: readonly Decoration[]): void {
     const current = key.getState(this.view.state) ?? DecorationSet.empty;
-    const was = current.find().map((d) => `${d.from}:${(d.spec as GapSpec).key}`);
-    const now = decorations.find().map((d) => `${d.from}:${(d.spec as GapSpec).key}`);
+    const said = (d: Decoration) => `${d.from}:${(d.spec as GapSpec).key}`;
+    const was = current.find().map(said).sort();
+    const now = decorations.map(said).sort();
     if (was.length === now.length && was.every((w, i) => w === now[i])) return;
-    this.view.dispatch(this.view.state.tr.setMeta(key, decorations).setMeta('addToHistory', false));
+    const set =
+      decorations.length > 0
+        ? DecorationSet.create(this.view.state.doc, [...decorations])
+        : DecorationSet.empty;
+    this.view.dispatch(this.view.state.tr.setMeta(key, set).setMeta('addToHistory', false));
   }
 
   // Takes away the boxes of columns drawn for the paragraphs `which` picks, so they are read as one column.
@@ -258,7 +265,7 @@ class Pager {
     if (!pages) {
       this.previous = null;
       this.nodes = [];
-      this.apply(DecorationSet.empty);
+      this.apply([]);
       this.tellPages([]);
       return;
     }
@@ -461,7 +468,7 @@ class Pager {
     decorations.push(
       ...fieldDecorations(nodes, positions, (block) => shown[startOf[block]!]!, pagesLaid),
     );
-    this.apply(DecorationSet.create(doc, decorations));
+    this.apply(decorations);
     const geometries = pageGeometries(pagination, {
       frameOf,
       page,

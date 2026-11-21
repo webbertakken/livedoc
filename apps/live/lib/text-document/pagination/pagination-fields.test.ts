@@ -61,5 +61,10 @@ describe('fieldDecorations', () => {
       [6, 7, { number: 4, count: 9 }],
       [9, 10, { number: 5, count: 9 }],
     ]);
+    // Keyed by what it shows, so a renumbered page draws its fields again.
+    expect(decorations.map((d) => (d.spec as { key: string }).key)).toEqual([
+      'field:4/9',
+      'field:5/9',
+    ]);
   });
 });

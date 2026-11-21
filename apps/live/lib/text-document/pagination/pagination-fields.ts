@@ -64,8 +64,12 @@ export function fieldDecorations(
     node.descendants((child, offset) => {
       if (child.type.name !== FIELD) return;
       const at = positions[block]! + 1 + offset;
-      const shown: FieldShown = { fieldShown: { number: numberOf(block), count } };
-      decorations.push(Decoration.node(at, at + 1, {}, shown));
+      const number = numberOf(block);
+      const shown: FieldShown = { fieldShown: { number, count } };
+      // Its key says what it shows, so the layout draws it again when its number or the count changes.
+      decorations.push(
+        Decoration.node(at, at + 1, {}, { ...shown, key: `field:${number}/${count}` }),
+      );
     });
   });
   return decorations;
