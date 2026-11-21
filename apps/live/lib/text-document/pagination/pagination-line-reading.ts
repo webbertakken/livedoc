@@ -5,6 +5,7 @@
 import { groupLines, type Span } from './pagination-lines';
 import { pageAt, type DrawnLine } from './pagination-line-numbers';
 import type { BlockMetrics } from './pagination';
+import { measuringRange } from './pagination-range';
 
 /** A box of columns' columns across the body: the first's left edge, from one's start to the next's, and how many. */
 export type CrossColumns = {
@@ -37,7 +38,7 @@ export type LineReading = {
 function textRects(element: HTMLElement): DOMRect[] {
   const rects: DOMRect[] = [];
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-  const range = document.createRange();
+  const range = measuringRange(element.ownerDocument);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (!node.textContent) continue;
     range.selectNodeContents(node);
