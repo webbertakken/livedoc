@@ -499,6 +499,20 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/text-document/text-document-list-actions.ts Element·Changed': {
     values: ['Bulleted', 'Numbered', 'Checklist'].map((kind) => `TextDocumentList${kind}`),
   },
+  // A text document's table reshaped, by the change's name (tables.md "Telemetry").
+  'apps/live/lib/text-document/text-document-table-actions.ts Element·Changed': {
+    values: [
+      'InsertRow',
+      'InsertColumn',
+      'DeleteRow',
+      'DeleteColumn',
+      'Delete',
+      'DistributeRows',
+      'DistributeColumns',
+      'Merge',
+      'Unmerge',
+    ].map((change) => `TextDocumentTable${change}`),
+  },
   // Something pasted into a text document, by what was read (text-and-paragraphs.md "Clipboard").
   'apps/live/lib/text-document/text-document-clipboard.ts Element·Changed': {
     values: ['Document', 'Html', 'Markdown', 'Plain'].map((source) => `TextDocumentPaste${source}`),
