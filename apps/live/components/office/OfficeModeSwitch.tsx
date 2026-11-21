@@ -1,8 +1,8 @@
 'use client';
 
-// The editing mode switch in the office title row (docs/specs/034-text-documents/editing-surface.md "The title row";
-// review.md "Editing modes"): a pill naming this person's mode, whose menu lists the modes their level allows with
-// what each does. A mode not yet built is listed dimmed.
+// The mode switch in the office title row (docs/specs/004-interface-design/office-shell.md "Modes"): a pill naming this
+// person's mode, whose menu lists the kind's modes their level reaches with what each does. A mode not yet built is
+// listed dimmed.
 import { useId, useRef } from 'react';
 import {
   ChevronDownIcon,
@@ -12,28 +12,21 @@ import {
   useMenu,
   useMenuButton,
 } from '@livedoc/ui';
-import { lucideEye, lucidePencil, lucidePencilLine } from '@livedoc/icons/lucide';
 import type { IconPrim } from '@livedoc/icons';
-import type { OfficeMode, OfficeModeInfo } from '@/lib/office/office-mode';
+import type { OfficeModeInfo } from '@/lib/office/office-mode';
 
-const GLYPHS: Record<OfficeMode, readonly IconPrim[]> = {
-  editing: lucidePencil,
-  suggesting: lucidePencilLine,
-  viewing: lucideEye,
-};
-
-function ModeGlyph({ mode }: { mode: OfficeMode }) {
+function ModeGlyph({ icon }: { icon: readonly IconPrim[] | undefined }) {
   return (
     <Glyph size={18} units={24}>
-      <Prims prims={GLYPHS[mode]} />
+      {icon ? <Prims prims={icon} /> : null}
     </Glyph>
   );
 }
 
 export type OfficeModeChoice = {
-  mode: OfficeMode;
+  mode: string;
   modes: readonly OfficeModeInfo[];
-  onChange: (mode: OfficeMode) => void;
+  onChange: (mode: string) => void;
 };
 
 export function OfficeModeSwitch({ mode, modes, onChange }: OfficeModeChoice) {
@@ -54,7 +47,7 @@ export function OfficeModeSwitch({ mode, modes, onChange }: OfficeModeChoice) {
         data-office-mode={mode}
         className="relative flex h-10 shrink-0 items-center gap-1.5 rounded-full pr-2 pl-3 text-sm font-medium text-(--office-ink) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
       >
-        <ModeGlyph mode={mode} />
+        <ModeGlyph icon={current?.icon} />
         <span className="text-optical-centre phone:sr-only">{current?.label}</span>
         <span className="phone:hidden">
           <ChevronDownIcon size={14} />
@@ -85,9 +78,9 @@ function ModeMenu({
 }: {
   trigger: HTMLElement | null;
   onClose: () => void;
-  mode: OfficeMode;
+  mode: string;
   modes: readonly OfficeModeInfo[];
-  onChoose: (mode: OfficeMode) => void;
+  onChoose: (mode: string) => void;
 }) {
   const { attach, surfaceProps } = useMenu({ onClose, trigger, label: 'Mode' });
   const descriptionId = useId();
@@ -114,7 +107,7 @@ function ModeMenu({
             className={`flex w-full items-start gap-3 px-4 py-2 text-left outline-none hover:bg-(--office-menu-hover) focus-visible:bg-(--office-menu-hover) ${soon ? 'opacity-50' : ''} ${m.mode === mode ? 'bg-(--office-pressed) text-(--office-pressed-ink)' : ''}`}
           >
             <span className="mt-0.5">
-              <ModeGlyph mode={m.mode} />
+              <ModeGlyph icon={m.icon} />
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-medium">{m.label}</span>

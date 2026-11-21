@@ -1,7 +1,8 @@
 # Office shell
 
 **Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer, the
-title row, the toolbar, side panels, dialogs, context menus and the keyboard shortcuts dialog are built.
+title row with its mode switch (each kind's modes), the toolbar, side panels, dialogs, context menus and the keyboard
+shortcuts dialog are built.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
 and the spreadsheet of plan 0020. It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
@@ -272,6 +273,25 @@ own) they appear without fading too ([Motion](motion.md#reduced-motion)).
   then focus back to the document.
 - **Colour** is chosen only with the one [colour picker](colour-picker.md), in its swatch-button skin.
 - **Toasts** use the shared toasts ([Toasts](toasts.md)).
+
+## Modes
+
+The title row's **mode switch** shows one person's mode on the document and lists the modes they may choose. The set
+of modes is the kind's own; the shell draws it, keeps the person's choice and binds its menu items.
+
+- A kind declares its modes once, in order, each with an id, its label, a line on what it does, its glyph (from the
+  repo's icon set), the least share level that reaches it, the level the menus and toolbar are drawn for in it (never
+  more than the session's), its status (`built` or `comingSoon`) and its menu item, whose catalogue row holds its
+  shortcut.
+- A text document's modes are Editing, Suggesting and Viewing
+  ([Review](../034-text-documents/review.md#editing-modes)); a PDF's are its own.
+- The switch lists the modes the session's level reaches; one not yet built is listed dimmed, "Coming soon" in place
+  of its line. A person starts in the first built mode their level reaches, else the kind's last mode.
+- A mode is one person's, never shared, kept while the surface is open and never stored; a level that changes under
+  the person leaves a mode it no longer reaches for the starting one.
+- What a mode lets the person change is the kind's: the shell gives the kind the mode and the level to draw at.
+- Each built mode's menu item is bound by the shell (`run` chooses it, `checked` while it is chosen); a change logs
+  `[office] mode` and tracks `UI · Changed · <the kind's mode type>`.
 
 ## Share roles
 

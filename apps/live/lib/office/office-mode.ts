@@ -1,60 +1,45 @@
-// A person's editing mode in an office kind (docs/specs/034-text-documents/review.md "Editing modes"): Editing,
-// Suggesting or Viewing, one person's, never shared, never more than their share level allows.
-import { levelAtLeast, type AccessLevel } from '@livedoc/api-schema';
+// A person's mode on an office kind (docs/specs/004-interface-design/office-shell.md "Modes"): the set is the kind's
+// own, each mode reached from a least share level and drawn at no more than the session's; one person's, never shared.
+import { levelAtLeast, lowerLevel, type AccessLevel } from '@livedoc/api-schema';
+import type { IconPrim } from '@livedoc/icons';
 import type { OfficeItemStatus } from './office-catalogue';
 
-export type OfficeMode = 'editing' | 'suggesting' | 'viewing';
-
-export type OfficeModeInfo = {
-  mode: OfficeMode;
+export type OfficeModeInfo<M extends string = string> = {
+  mode: M;
   label: string;
+  // What it does, under its label in the switch.
   description: string;
-  // The least level the mode is for.
+  // Its glyph (24 units).
+  icon: readonly IconPrim[];
+  // The least level that reaches it.
   level: AccessLevel;
+  // The level the menus and toolbar are drawn for in it, never more than the session's.
+  drawnAt: AccessLevel;
   status: OfficeItemStatus;
-  // Its menu item (View > Mode) and shortcut row.
+  // Its menu item, whose catalogue row holds its shortcut.
   item: string;
 };
 
-export const OFFICE_MODES: readonly OfficeModeInfo[] = [
-  {
-    mode: 'editing',
-    label: 'Editing',
-    description: 'Edit document directly',
-    level: 'edit',
-    status: 'built',
-    item: 'mode-editing',
-  },
-  {
-    mode: 'suggesting',
-    label: 'Suggesting',
-    description: 'Edits become suggestions',
-    level: 'participate',
-    status: 'comingSoon',
-    item: 'mode-suggesting',
-  },
-  {
-    mode: 'viewing',
-    label: 'Viewing',
-    description: 'Read or print final document',
-    level: 'view',
-    status: 'built',
-    item: 'mode-viewing',
-  },
-];
+/** The kind's modes a level reaches, in the kind's order. */
+export const modesFor = <M extends string>(
+  modes: readonly OfficeModeInfo<M>[],
+  level: AccessLevel,
+): OfficeModeInfo<M>[] => modes.filter((m) => levelAtLeast(level, m.level));
 
-/** The modes a level may use, in order. */
-export const modesFor = (level: AccessLevel): OfficeModeInfo[] =>
-  OFFICE_MODES.filter((m) => levelAtLeast(level, m.level));
-
-/** Where a person starts: the most their level allows of what is built. */
-export function startingMode(level: AccessLevel): OfficeMode {
-  return modesFor(level).find((m) => m.status === 'built')?.mode ?? 'viewing';
+/** Where a person starts: the first built mode their level reaches, else the kind's last mode. */
+export function startingMode<M extends string>(
+  modes: readonly OfficeModeInfo<M>[],
+  level: AccessLevel,
+): M {
+  return (modesFor(modes, level).find((m) => m.status === 'built') ?? modes[modes.length - 1]!)
+    .mode;
 }
 
-/** The level the menus and toolbar are drawn for in a mode: never more than the session's. */
-export function levelInMode(level: AccessLevel, mode: OfficeMode): AccessLevel {
-  if (mode === 'viewing') return 'view';
-  if (mode === 'suggesting') return levelAtLeast(level, 'participate') ? 'participate' : level;
-  return level;
+/** The level the menus and toolbar are drawn for in a mode: the lower of the session's and the mode's own. */
+export function levelInMode<M extends string>(
+  modes: readonly OfficeModeInfo<M>[],
+  level: AccessLevel,
+  mode: M,
+): AccessLevel {
+  return lowerLevel(level, modes.find((m) => m.mode === mode)?.drawnAt ?? 'view');
 }
