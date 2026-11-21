@@ -364,15 +364,74 @@ TextDocumentPageCount` from Page count; logs `[text-document] page numbers` with
 
 ## Footnotes
 
-- Insert > Footnote (⌘⌥F) puts a numbered mark at the caret and the caret in its note at the foot of the page.
-- Numbered 1, 2, 3 through the document; drawn below a short rule at the foot of the page their mark falls on,
-  continuing on the next page when long.
-- Endnotes in an arriving file are kept and drawn at the document's end.
+A **footnote** is a note tied to a place in the writing: a numbered **mark** in the text and the **note** itself,
+drawn at the foot of the page the mark falls on, as Google's and Word's.
 
-## Watermark and line numbers
+- **What a note is**: writing of its own, paragraphs as the body's (styles, text and paragraph formatting, lists),
+  in Normal text at 10 pt (Google's size) where LiveDoc makes it, a file's own style where it brings one (default);
+  the mark is drawn as its number in superscript.
+- **Numbered** 1, 2, 3 through the document in the order of their marks, headers' and footers' never; a mark added,
+  moved or removed numbers the others again at once.
+- **Insert > Footnote** (⌘⌥F) puts a mark at the caret, ending a selection there, and the caret in its new note,
+  one empty paragraph; one step of the body's undo. Not in a header, footer or note (dimmed there,
+  default). Typing in a note is a step of the note's own undo, as a header's.
+- **The mark** is one character to the caret: deleted, the note goes with it, one undo step; copied and pasted in
+  LiveDoc, its note comes too as a new note; copied elsewhere it is its number.
+- **Drawn** at the foot of the page its mark's line is on, under a short rule a third of the text width wide (default),
+  each note led by its number in superscript; the body's text height on that page shrinks by the notes' height, so a
+  line whose note does not fit below it moves to the next page with its mark (Google's: a note never splits, default).
+  A note taller than the page's text height is drawn whole and runs into the bottom margin (default).
+- **Pageless**, on a phone and with print layout off, every note is drawn at the end of the writing, under a rule, in
+  order (Google's pageless).
+- **Editing a note**: a click in it puts the caret there; the toolbar, undo and the clipboard act on it as in a header;
+  Escape or a press on the body leaves it; a note left empty stays, its mark keeps it (Google's). **Move to current
+  footnote** (Ctrl+Alt+E, F) goes from a mark to its note and back; **Move to next / previous footnote** (Ctrl+Alt+N,
+  F / Ctrl+Alt+P, F) go from mark to mark.
+- **Endnotes** in an arriving file are kept as the file has them and drawn as their text where they stand (default).
+- **Read**: a note's text is found by the document's search and counted by Word count as Google counts it (not by
+  default); a screen reader reads a mark as "Footnote N".
+- In the file:
+  - ODF: `text:note` with `text:note-class="footnote"`, its `text:note-citation` (the number) and `text:note-body`
+    holding paragraphs; a citation with its own label (`text:label`) and endnotes stay kept content.
+  - OOXML: a run's `w:footnoteReference w:id` naming a `w:footnote` of the footnotes part (its separator and
+    continuation separator footnotes, ids -1 and 0, written as Word does), the note's first paragraph led by its
+    `w:footnoteRef` run (the number, never the model's text); the mark's run superscript; `w:customMarkFollows` marks
+    and endnotes stay kept content.
+- Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Element · Added · TextDocumentFootnote` when
+  one is put in; logs `[text-document] footnote` with what changed.
 
-Neither exists in Google Docs' menus for text documents today (assumed); a watermark or line numbering in an arriving
-file is kept and drawn where the format holds it.
+## Line numbers
+
+Tools > **Line numbers** opens the **Line numbers** side panel (Google's): numbers beside each line of the writing,
+for referring to a line.
+
+- **Show line numbers** (a checkbox); **Continue throughout the document**, **Restart on each page** or **Restart on
+  each section**; **Apply to**, **Entire document** or **This section** (dimmed with one section). Each section has its
+  own: shown or not, and how it restarts.
+- **Drawn** in the left margin beside every line of the body, headings and empty paragraphs included, in the muted
+  ink of the ruler's numbers, right-aligned 0.25 in before the text (default); never in headers, footers or notes.
+  Pageless, on a phone and with print layout off none is drawn (Google's).
+- In the file: OOXML `w:lnNumType` in a section's `w:sectPr` (`w:countBy="1"`, `w:restart` `newPage`, `newSection`
+  or `continuous`); ODF `text:linenumbering-configuration` in the styles, the whole document's, a section without
+  them writing its paragraphs with `text:number-lines="false"` (default). Another count-by than 1 is kept and drawn
+  as every line (default).
+- Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentLineNumbers`.
+
+## Watermark
+
+Insert > **Watermark** opens the **Watermark** side panel (Google's), with **Image** and **Text**: a mark drawn behind
+the writing on every page.
+
+- **Text**: the words, their font, size, bold and italic, colour through the one colour picker, transparency, and
+  **Layout** diagonal or horizontal; **Remove watermark**; **Done**. **Image** waits for pictures
+  ([Objects](objects.md#pictures)) and is dimmed until then.
+- The document's own, one for all its pages (Google's); drawn centred on each page laid out, behind the writing and its
+  headers (default); pageless, on a phone and with print layout off none is drawn (Google's).
+- In the file: in the default header of each section, as each suite writes one: OOXML a VML shape whose id starts
+  `PowerPlusWaterMarkObject` holding a `v:textpath`; ODF a `draw:custom-shape` whose `draw:name` starts
+  `PowerPlusWaterMarkObject` with its text (LibreOffice's); read back as the watermark, anything else in a header kept
+  as it is.
+- Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentWatermark`.
 
 ## Performance
 
@@ -397,5 +456,6 @@ Participant and a Viewer see none of Page setup, Page orientation and Columns.
   `TextDocumentFootnote`, `TextDocumentPageNumbers`, `TextDocumentPageCount`.
 - Add page break before is a keep rule (`Element · Changed · TextDocumentKeepRule`).
 - `UI · Changed · TextDocumentPageDefault` when Set as default keeps one, before it is kept. Never text.
-- `UI · Toggled · TextDocumentPrintLayout` and `UI · Changed · TextDocumentTextWidth<Width>` (`Narrow`, `Medium`, `Wide`,
-  `Full`), a person's view, before it is kept.
+- `UI · Toggled · TextDocumentPrintLayout` and `UI · Changed · TextDocumentTextWidth<Width>` (`Narrow`, `Medium`,
+  `Wide`, `Full`), a person's view, before it is kept.
+- `Tab · Changed · TextDocumentLineNumbers`, `TextDocumentWatermark`.

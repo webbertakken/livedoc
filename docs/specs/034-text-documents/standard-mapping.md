@@ -54,7 +54,8 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 - **Body**: blocks in order, each a **paragraph**, a **section break** or a **kept block**.
 - **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
   and inlines: **runs** (characters with direct text formatting and an optional link), **fields** (a page number or
-  the page count, with the formatting of a run and the text last drawn) and **kept inlines**.
+  the page count, with the formatting of a run and the text last drawn), **notes** (a footnote's mark with its
+  formatting, holding the note's blocks) and **kept inlines**.
 - **`Style`**: a named paragraph or text style, its parent and next style, its formatting; the built-in styles are
   known by role (Normal text, Title, Subtitle, Heading 1 to 6) in either format's names.
 - **`ListDefinition`**: nine levels, each bullet (with its character), numbered (with its format, its label pattern
