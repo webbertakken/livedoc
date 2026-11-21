@@ -711,6 +711,7 @@ export function TextDocumentSurface({
               storyHost={headers.storyHost}
               editing={headers.editing}
               editingBox={headers.box}
+              editingBar={headers.bar}
             />
             {state === 'loading' ? (
               <p className="text-(--office-muted)" aria-live="polite">

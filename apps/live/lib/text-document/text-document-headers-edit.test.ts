@@ -13,12 +13,15 @@ import {
   TextDocumentState,
 } from '@livedoc/text-documents';
 import {
+  copyStory,
   isStoryEmpty,
   liveHeadersOf,
   makeStory,
   removeIfEmpty,
   setLiveHeaders,
+  shownStory,
   withSlot,
+  withSwitch,
 } from './text-document-headers-edit';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { textDocumentUndoPlugins } from './text-document-undo';
@@ -131,5 +134,55 @@ describe('removeIfEmpty', () => {
     expect(removeIfEmpty(view, doc, 'odf', { ...where, index: 0, story: written })).toBe(false);
     // Section 1 shows section 0's linked: not its own, so it stays.
     expect(removeIfEmpty(view, doc, 'odf', { ...where, story: written })).toBe(false);
+  });
+});
+
+// "The bar": which header a page shows, read from the live state now; the switches; a copy for unlinking.
+describe('shownStory', () => {
+  it('reads the page’s slot and its story, own or linked to the previous section’s', () => {
+    setLiveHeaders(view, doc, 'odf', 0, {
+      header: { default: { story: 'a' }, first: { story: 'f' } },
+      differentFirst: true,
+    });
+    expect(shownStory(doc, 'header', 0, true, 1)).toEqual({
+      slot: 'first',
+      story: 'f',
+      linked: false,
+      differentFirst: true,
+    });
+    expect(shownStory(doc, 'header', 0, false, 2)).toMatchObject({ slot: 'default', story: 'a' });
+    // Section 1 has none of its own: the previous section's default, linked; its own switch is off.
+    expect(shownStory(doc, 'header', 1, true, 3)).toEqual({
+      slot: 'default',
+      story: 'a',
+      linked: true,
+      differentFirst: false,
+    });
+    expect(shownStory(doc, 'footer', 0, false, 2)).toEqual({
+      slot: 'default',
+      linked: false,
+      differentFirst: true,
+    });
+  });
+});
+
+describe('withSwitch', () => {
+  it('switches a section’s own setting on and off, keeping its headers', () => {
+    const own = { header: { default: { story: 'a' } } };
+    expect(withSwitch(own, 'differentFirst', true)).toEqual({ ...own, differentFirst: true });
+    expect(withSwitch({ ...own, differentFirst: true }, 'differentFirst', false)).toEqual(own);
+    expect(withSwitch({ differentFirst: true }, 'differentFirst', false)).toBeUndefined();
+  });
+});
+
+describe('copyStory', () => {
+  it('copies a story’s writing under a new id, the copy its own', () => {
+    const id = makeStory(doc);
+    (storyFragment(doc, id).get(0) as Y.XmlElement).insert(0, [new Y.XmlText('Shared')]);
+    const copy = copyStory(doc, id);
+    expect(copy).not.toBe(id);
+    expect(TextDocumentState.storyParagraphs(doc, copy)).toEqual([{ text: 'Shared' }]);
+    (storyFragment(doc, copy).get(0) as Y.XmlElement).insert(0, [new Y.XmlText('Own ')]);
+    expect(TextDocumentState.storyParagraphs(doc, id)).toEqual([{ text: 'Shared' }]);
   });
 });

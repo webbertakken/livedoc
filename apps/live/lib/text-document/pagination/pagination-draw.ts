@@ -21,6 +21,8 @@ export type PageGeometry = {
   /** Its section and the header slot it shows (none on a blank page, or without headers laid out). */
   readonly section?: number;
   readonly slot?: HeaderFooterSlot;
+  /** It is its section's first page. */
+  readonly first?: boolean;
   /** Where its header and footer stand, shown or not (none on a blank page). */
   readonly place?: StoryPlace;
   /** Its top and bottom margins as drawn, pushed by a tall header or footer (none on a blank page). */
@@ -176,6 +178,7 @@ export function pageGeometries(
         ? {
             section: stories.section,
             slot: stories.slot,
+            first: stories.first,
             place: stories.place,
             ...(stories.header ? { header: stories.header } : {}),
             ...(stories.footer ? { footer: stories.footer } : {}),

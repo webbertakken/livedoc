@@ -6,7 +6,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState, type RefObject
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
-import type { HeaderFooterKind, HeaderFooterSlot } from '@livedoc/text-documents';
+import type { HeaderFooterKind, HeaderFooterSlot, LiveHeaders } from '@livedoc/text-documents';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -14,11 +14,14 @@ import type { PageGeometry } from '@/lib/text-document/pagination/pagination-dra
 import { storyKey } from '@/lib/text-document/pagination/pagination-headers';
 import { pageIndexAt } from '@/lib/text-document/pagination/pagination-plugin';
 import {
+  copyStory,
   liveHeadersOf,
   makeStory,
   removeIfEmpty,
   setLiveHeaders,
+  shownStory,
   withSlot,
+  withSwitch,
 } from '@/lib/text-document/text-document-headers-edit';
 import type { StorySource } from '@/lib/text-document/text-document-story-sources';
 import type { TextDocumentStories } from './useTextDocumentStories';
@@ -37,6 +40,9 @@ export type StoryEditing = {
   readonly slot: HeaderFooterSlot;
   /** Its editor: what the toolbar acts on while it is edited. */
   readonly view: EditorView;
+  /** The bar's facts: its section's own Different first page, and whether it is the previous section's. */
+  readonly differentFirst: boolean;
+  readonly linked: boolean;
 };
 
 export type TextDocumentHeaderEditing = {
@@ -48,6 +54,10 @@ export type TextDocumentHeaderEditing = {
   readonly leave: () => void;
   /** The callback ref for the box it is edited in. */
   readonly box: (element: HTMLDivElement | null) => void;
+  /** The bar's changes ("The bar"): each one step of the body's undo, the page's header entered again after. */
+  readonly toggleFirst: () => void;
+  readonly toggleLink: () => void;
+  readonly remove: () => void;
   readonly actions: OfficeActions;
 };
 
@@ -106,9 +116,12 @@ export function useTextDocumentHeaderEditing(input: {
       const page = at ?? pageIndexAt(body, body.state.selection.head);
       const shown = laid[page];
       if (!shown?.place || shown.section === undefined || !shown.slot) return;
-      const { section, slot, place } = shown;
+      const { section, place } = shown;
       if (latest.current.entered) stop(latest.current.entered);
-      let story = shown[kind]?.story;
+      // Read now, not from the pages: a change on the bar has not been laid out yet.
+      const now = shownStory(doc, kind, section, shown.first === true, page + 1);
+      const { slot } = now;
+      let story = now.story;
       if (!story) {
         story = makeStory(doc);
         setLiveHeaders(
@@ -126,10 +139,86 @@ export function useTextDocumentHeaderEditing(input: {
       if (!found) return;
       source.current = found;
       debugLog('[text-document] header footer', { section, kind, slot, change: 'entered' });
-      setEntered({ page, kind, key, story, section, slot, view: found.view });
+      setEntered({
+        page,
+        kind,
+        key,
+        story,
+        section,
+        slot,
+        view: found.view,
+        differentFirst: now.differentFirst,
+        linked: now.linked && story === now.story,
+      });
     },
     [liveDoc, stop],
   );
+
+  // A change on the bar to the section's own headers, then the page's header entered again.
+  const change = useCallback(
+    (
+      what: string,
+      next: (
+        own: LiveHeaders | undefined,
+        was: StoryEditing,
+        doc: Y.Doc,
+      ) => LiveHeaders | undefined,
+    ) => {
+      const { view: body, format: kept, entered: was } = latest.current;
+      const doc = liveDoc.current;
+      if (!body || !doc || !was) return;
+      stop(was);
+      latest.current = { ...latest.current, entered: null };
+      setLiveHeaders(
+        body,
+        doc,
+        kept,
+        was.section,
+        next(liveHeadersOf(body, doc, was.section), was, doc),
+      );
+      track('Tab', 'Changed', 'TextDocumentHeaderFooter');
+      debugLog('[text-document] header footer', {
+        section: was.section,
+        kind: was.kind,
+        slot: was.slot,
+        change: what,
+      });
+      enter(was.kind, was.page);
+    },
+    [liveDoc, stop, enter],
+  );
+  const toggleFirst = useCallback(() => {
+    const on = !latest.current.entered?.differentFirst;
+    change(on ? 'first-on' : 'first-off', (own) => withSwitch(own, 'differentFirst', on));
+  }, [change]);
+  const toggleLink = useCallback(() => {
+    const linked = latest.current.entered?.linked === true;
+    change(linked ? 'unlinked' : 'linked', (own, was, doc) =>
+      withSlot(own, was.kind, was.slot, linked ? copyStory(doc, was.story) : undefined),
+    );
+  }, [change]);
+  const remove = useCallback(() => {
+    const { view: body, format: kept, entered: was } = latest.current;
+    const doc = liveDoc.current;
+    if (!body || !doc || !was || was.linked) return;
+    stop(was);
+    setLiveHeaders(
+      body,
+      doc,
+      kept,
+      was.section,
+      withSlot(liveHeadersOf(body, doc, was.section), was.kind, was.slot, undefined),
+    );
+    track('Tab', 'Changed', 'TextDocumentHeaderFooter');
+    debugLog('[text-document] header footer', {
+      section: was.section,
+      kind: was.kind,
+      slot: was.slot,
+      change: 'removed',
+    });
+    setEntered(null);
+    body.focus();
+  }, [liveDoc, stop]);
 
   // In its page's editing box while it is edited; back when its page no longer shows headers. The page's own box,
   // drawn again once it is left, is painted again.
@@ -167,5 +256,5 @@ export function useTextDocumentHeaderEditing(input: {
     };
   }, [writes, view, enter, laidOut]);
 
-  return { editing, enter, leave, box: boxRef, actions };
+  return { editing, enter, leave, box: boxRef, toggleFirst, toggleLink, remove, actions };
 }

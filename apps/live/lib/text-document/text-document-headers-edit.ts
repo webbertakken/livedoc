@@ -6,7 +6,9 @@ import type { EditorView } from 'prosemirror-view';
 import * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
+  HeadersAndFooters,
   liveFirstHeaders,
+  liveSectionHeaders,
   SECTION_BREAK,
   storyFragment,
   TextDocumentState,
@@ -75,6 +77,52 @@ export function withSlot(
   const { [kind]: __, ...rest } = headers ?? {};
   const next: LiveHeaders = { ...rest, ...(Object.keys(set).length > 0 ? { [kind]: set } : {}) };
   return Object.keys(next).length > 0 ? next : undefined;
+}
+
+/** The headers with a section's own setting switched on or off; nothing left is none. */
+export function withSwitch(
+  headers: LiveHeaders | undefined,
+  name: 'differentFirst' | 'differentOddEven',
+  on: boolean,
+): LiveHeaders | undefined {
+  const { [name]: _, ...rest } = headers ?? {};
+  const next: LiveHeaders = on ? { ...rest, [name]: true } : rest;
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
+/**
+ * The header or footer a page shows, read from the live state now: its slot, its story if any, whether it is linked
+ * to the previous section's (the section has none of its own in that slot), and the section's own Different first
+ * page.
+ */
+export function shownStory(
+  doc: Y.Doc,
+  kind: HeaderFooterKind,
+  section: number,
+  first: boolean,
+  number: number,
+): { slot: HeaderFooterSlot; story?: string; linked: boolean; differentFirst: boolean } {
+  const all = liveSectionHeaders(doc);
+  const resolved = HeadersAndFooters.resolve(all)[section];
+  const own = all[section];
+  const slot = HeadersAndFooters.slotOf(resolved, first, number);
+  const story = resolved?.[kind][slot]?.story;
+  return {
+    slot,
+    ...(typeof story === 'string' ? { story } : {}),
+    linked: section > 0 && own?.[kind]?.[slot] === undefined,
+    differentFirst: own?.differentFirst === true,
+  };
+}
+
+/** A copy of a story's writing under a new random id: the copy is its own (unlinking, Word's). */
+export function copyStory(doc: Y.Doc, id: string): string {
+  const copy = crypto.randomUUID();
+  const blocks = storyFragment(doc, id)
+    .toArray()
+    .map((node) => node.clone() as Y.XmlElement | Y.XmlText);
+  doc.transact(() => storyFragment(doc, copy).insert(0, blocks));
+  return copy;
 }
 
 /** A new story: one empty paragraph in Normal text, under a new random id. */

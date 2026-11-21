@@ -271,6 +271,16 @@ A section's pages each have a **header** in the top margin and a **footer** in t
   footer) marks its edge, and a bar under it holds **Different first page** (a checkbox), **Link to previous** (a
   checkbox, in a section after the first) and **Options** (a menu: **Header format** or **Footer format**, opening
   Headers and footers options, **Page numbers**, and **Remove header** or **Remove footer**).
+- **The bar** stands under the header's line (over the footer's), at the text area's left, Google's; it is a toolbar
+  named "Header options" or "Footer options", reached from the header or footer with **Alt+F10** and left back to it
+  with **Escape** (the editors' convention, default).
+  - **Different first page** switches the section's own setting; the caret moves into the header the page now shows,
+    made when the page shows none (default).
+  - **Link to previous** is checked while the section has no header of its own in the page's slot. Unchecked, the
+    section gets its own copy of the header it showed (Word's); checked again, its own is given away for the previous
+    section's, which the caret moves into (default).
+  - **Remove header** takes the section's own header in that slot away and leaves for the body; dimmed while the
+    header is linked to the previous section's (default). **Page numbers** is dimmed until page numbers are built.
 - Every page drawing that header shows the edit as it is typed. Text and paragraph formatting, the toolbar, undo and
   the clipboard work in it as in the body; Select all selects its writing. Breaks and columns are dimmed while a
   header or footer is edited (Google's); the edited one is read as a text box named "Header" or "Footer" (default).
@@ -278,7 +288,9 @@ A section's pages each have a **header** in the top margin and a **footer** in t
 - **Headers and footers options**, a dialog: **Margins**, **Header** (from the top) and **Footer** (from the bottom),
   in the person's unit; **Layout**, **Different first page** and **Different odd and even**; **Apply to**, **This
   section** or **Whole document** (with more than one section); **Cancel** and **Apply**. A margin takes 0 up to the
-  page's height less 1 in, else "Enter a number from 0 to <most>." (default).
+  page's height less 1 in, else "Enter a number from 0 to <most>." (default). Format > **Headers and footers** opens it
+  for the section of the edited header, else of the body's caret; Whole document sets every section's margins and
+  switches alike.
 - Every change is one undo step. Share roles as page setup's ([Share roles](#share-roles)): a Participant and a Viewer
   read headers and footers and cannot enter them.
 

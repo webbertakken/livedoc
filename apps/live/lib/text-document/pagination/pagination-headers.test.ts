@@ -89,12 +89,13 @@ describe('pageLayout', () => {
       footer: { story: 'f', key: storyKey('f', width), left: 30 * PX, width, margin: 18 * PX },
       section: 0,
       slot: 'default',
+      first: false,
       place: { left: 30 * PX, width, header: 18 * PX, footer: 18 * PX },
     });
   });
 
   it('says the section and slot a page’s header is in, to make one where it shows none', () => {
-    expect(layout().storiesOf(0, 0, 1)).toMatchObject({ section: 0, slot: 'first' });
+    expect(layout().storiesOf(0, 0, 1)).toMatchObject({ section: 0, slot: 'first', first: true });
     expect(layout().storiesOf(2, 0, 3)).toMatchObject({ section: 1, slot: 'default' });
   });
 
@@ -195,12 +196,13 @@ describe('pageGeometries', () => {
       n === 1 ? { ...frame, top: frame.top + 10 } : frame,
     storiesOf: (_b: number, _l: number, n: number) =>
       n === 1
-        ? { header: story('first'), section: 0, slot: 'first' as const, place }
+        ? { header: story('first'), section: 0, slot: 'first' as const, first: true, place }
         : {
             header: story(`page ${n}`),
             footer: story('f'),
             section: 0,
             slot: 'default' as const,
+            first: false,
             place,
           },
   };

@@ -154,9 +154,11 @@ describe('paginationPlugin', () => {
     // Two pages of the setup, in CSS pixels.
     const place = { left: 0, width: 600, header: 48, footer: 48 };
     const plain = { top: 0, bottom: 0, section: 0, slot: 'default', place };
+    const firstPage = { ...plain, first: true };
+    const later = { ...plain, first: false };
     expect(onPages).toHaveBeenLastCalledWith([
-      { width: 600, height: 100, ...plain },
-      { width: 600, height: 100, ...plain },
+      { width: 600, height: 100, ...firstPage },
+      { width: 600, height: 100, ...later },
     ]);
     view.destroy();
   });
@@ -198,6 +200,7 @@ describe('paginationPlugin', () => {
         bottom: 0,
         section: 0,
         slot: 'default',
+        first: true,
         place: expect.anything(),
       },
       {
@@ -207,6 +210,7 @@ describe('paginationPlugin', () => {
         bottom: 0,
         section: 1,
         slot: 'default',
+        first: true,
         place: expect.anything(),
       },
     ]);
