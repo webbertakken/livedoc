@@ -96,7 +96,7 @@ describe('apiConvertWorkbook', () => {
       '/api/documents/d%201/workbook/conversion',
     );
     expect(init?.method).toBe('POST');
-    expect(JSON.parse(String(init?.body))).toEqual({ format: 'xlsx' });
+    expect(JSON.parse(init?.body as string)).toEqual({ format: 'xlsx' });
   });
 
   it('converts in this browser for a spreadsheet in This Browser', async () => {

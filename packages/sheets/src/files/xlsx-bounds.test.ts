@@ -9,7 +9,7 @@ import { writeXlsx } from './xlsx-write';
 async function worksheet(bytes: Uint8Array<ArrayBuffer>, part = 'xl/worksheets/sheet1.xml') {
   const read = await readOoxmlPackage(bytes);
   if (!read.ok) throw new Error(read.rejection);
-  return new TextDecoder().decode(read.package.parts.get(part)!);
+  return new TextDecoder().decode(read.package.parts.get(part));
 }
 
 // A formula within LiveDoc's 8,000 characters that Excel's prefixes take past its 8,192.
