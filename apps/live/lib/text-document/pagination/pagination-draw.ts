@@ -5,6 +5,7 @@
 import type { HeaderFooterSlot } from '@livedoc/text-documents';
 import type { Cross, PageFrame, Pagination } from './pagination';
 import type { PageLayout, PageStory, StoryPlace } from './pagination-headers';
+import type { PageNote } from './pagination-notes';
 import { PAGE_GAP_CLASS } from './pagination-measure';
 
 /** What a box of columns draws inside its paragraph: the room before its first line, and each column's start. */
@@ -31,6 +32,8 @@ export type PageGeometry = {
   /** The number it shows, and the page count (page-layout.md "Page numbers"); none on a blank page. */
   readonly number?: number;
   readonly count?: number;
+  /** The notes its marks bring, drawn at its foot (page-layout.md "Footnotes"); none on a blank page. */
+  readonly notes?: readonly PageNote[];
   readonly rules?: readonly {
     readonly top: number;
     readonly bottom: number;
@@ -154,6 +157,8 @@ export function pageGeometries(
     readonly lineBetween?: (block: number) => boolean;
     /** Each page's number as shown, by its start; its physical number when none is given. */
     readonly shown?: readonly number[];
+    /** Each page's notes, by its start. */
+    readonly notes?: readonly (readonly PageNote[])[];
   },
 ): PageGeometry[] {
   const { frameOf, page, lineBetween = () => false } = input;
@@ -193,6 +198,7 @@ export function pageGeometries(
           }
         : {}),
       ...(rules.length > 0 ? { rules } : {}),
+      ...(input.notes?.[q]?.length ? { notes: input.notes[q] } : {}),
     });
   }
   return pages;
@@ -207,6 +213,7 @@ export const pagesSaid = (pages: readonly PageGeometry[]): string =>
     .map(
       (p) =>
         `${p.width}x${p.height}${(p.rules ?? []).map((r) => `|${r.top}-${r.bottom}@${r.xs.join(',')}`).join('')}` +
-        `|h${storySaid(p.header)}|f${storySaid(p.footer)}|${p.section}:${p.slot}:${p.top}:${p.bottom}#${p.number}`,
+        `|h${storySaid(p.header)}|f${storySaid(p.footer)}|${p.section}:${p.slot}:${p.top}:${p.bottom}#${p.number}` +
+        (p.notes ?? []).map((n) => `|n${n.number}:${n.key}:${round(n.left)}`).join(''),
     )
     .join(',');

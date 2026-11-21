@@ -3,7 +3,8 @@
 // centred one under another a gap apart, under the writing the layout spaces onto them. Unlaid out (pageless, a phone)
 // one sheet fills the whole frame. A section's line between columns (page-layout.md "Columns") is drawn on its sheet,
 // a thin line in the writing's ink. Each page's header and footer (page-layout.md "Headers and footers") is drawn in
-// its margins, an empty one not at all; their sources lie hidden behind the first sheet. Drawn only: never read, never
+// its margins, an empty one not at all; their sources lie hidden behind the first sheet. Each page's footnotes (page-layout.md
+// "Footnotes") stand at the foot of its text area under a short rule, each led by its number. Drawn only: never read, never
 // focused.
 import type { ReactNode } from 'react';
 import { PAGE_GAP_PX } from '@/lib/text-document/pagination/pagination';
@@ -11,6 +12,9 @@ import type { PageGeometry } from '@/lib/text-document/pagination/pagination-dra
 import type { HeaderFooterKind } from '@livedoc/text-documents';
 import type { PageStory } from '@/lib/text-document/pagination/pagination-headers';
 import { STORY_KEY_ATTRIBUTE } from './useTextDocumentStories';
+import { NOTE_BOX_NUMBER_ATTRIBUTE } from '@/lib/text-document/text-document-footnotes';
+import { NOTES_GAP_PX } from '@/lib/text-document/pagination/pagination';
+import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
 
 export type TextDocumentSheetsProps = {
   /** Each page's size in CSS pixels, or null when the writing is not laid onto pages. */
@@ -43,6 +47,32 @@ const pageTops = (pages: readonly PageGeometry[]) =>
   pages.map((_, index) =>
     pages.slice(0, index).reduce((sum, above) => sum + above.height + PAGE_GAP_PX, 0),
   );
+
+/** A page's notes from the foot of its text area up: the rule, then each note's box, painted by its source. */
+function PageNotes({ notes, bottom }: { notes: readonly PageNote[]; bottom: number }) {
+  const first = notes[0]!;
+  return (
+    <div
+      data-page-notes=""
+      className="absolute flex flex-col"
+      style={{ left: first.left, width: first.width, bottom }}
+    >
+      <div className="flex items-center" style={{ height: NOTES_GAP_PX }}>
+        <div data-notes-rule="" className="h-px w-1/3 bg-current" />
+      </div>
+      {notes.map((note) => (
+        <div
+          key={note.key + note.number}
+          data-story={note.story}
+          {...{
+            [STORY_KEY_ATTRIBUTE]: note.key,
+            [NOTE_BOX_NUMBER_ATTRIBUTE]: String(note.number),
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function TextDocumentSheets({
   pages,
@@ -112,6 +142,9 @@ export function TextDocumentSheets({
                 )}
                 {story('header', page.header, index)}
                 {story('footer', page.footer, index)}
+                {page.notes?.length ? (
+                  <PageNotes notes={page.notes} bottom={page.bottom ?? 0} />
+                ) : null}
               </div>
             );
           })

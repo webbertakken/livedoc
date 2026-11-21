@@ -3,7 +3,8 @@
 // edited, and taken away when none does and it is not held. The sheets draw an empty box for each page's header and
 // footer; each box is painted here with a copy of its source's writing, again whenever that writing changes, and left
 // empty while the source is. Each source's height is kept for the layout, which lays the pages out again when one
-// changes.
+// changes. Footnotes' writing is drawn the same way, at each page's foot or, without pages, under the writing
+// (page-layout.md "Footnotes"), each box led by its note's number.
 import { useCallback, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import type { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -14,21 +15,39 @@ import type { PageGeometry } from '@/lib/text-document/pagination/pagination-dra
 import { refreshPages } from '@/lib/text-document/pagination/pagination-plugin';
 import { StorySource } from '@/lib/text-document/text-document-story-sources';
 import { fillFields, numbersOfBox } from '@/lib/text-document/text-document-fields';
+import { NOTE_BOX_NUMBER_ATTRIBUTE, numberNote } from '@/lib/text-document/text-document-footnotes';
+import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
 
 /** A page's header or footer box: the story at its width it draws. */
 export const STORY_KEY_ATTRIBUTE = 'data-story-key';
+/** What every box a source paints lies within: the page, its sheets and the writing. */
+const STORY_SCOPE = '[data-page-format]';
 
 /** A story at a width, and the kind it is drawn as. */
-export type WantedStory = { story: string; width: number; kind: HeaderFooterKind };
+export type WantedStory = { story: string; width: number; kind: HeaderFooterKind | 'footnote' };
+
+const LABELS: Record<WantedStory['kind'], string> = {
+  header: 'Header',
+  footer: 'Footer',
+  footnote: 'Footnote',
+};
 
 /** Each story at each width the pages draw, by its key, and the kind it is drawn as. */
-export function storiesWanted(pages: readonly PageGeometry[] | null): Map<string, WantedStory> {
+export function storiesWanted(
+  pages: readonly PageGeometry[] | null,
+  endNotes: readonly PageNote[] = [],
+): Map<string, WantedStory> {
   const wanted = new Map<string, WantedStory>();
-  for (const page of pages ?? [])
+  for (const page of pages ?? []) {
     for (const kind of ['header', 'footer'] as const) {
       const drawn = page[kind];
       if (drawn) wanted.set(drawn.key, { story: drawn.story, width: drawn.width, kind });
     }
+    for (const note of page.notes ?? [])
+      wanted.set(note.key, { story: note.story, width: note.width, kind: 'footnote' });
+  }
+  for (const note of endNotes)
+    wanted.set(note.key, { story: note.story, width: note.width, kind: 'footnote' });
   return wanted;
 }
 
@@ -49,6 +68,8 @@ export function useTextDocumentStories(input: {
   readonly format: TextDocumentFormat;
   /** The pages laid out, or null where none are (pageless, a phone, print layout off). */
   readonly pages: readonly PageGeometry[] | null;
+  /** The notes drawn under the writing where there are no pages. */
+  readonly endNotes?: readonly PageNote[];
   /** Each source's height by its key, read by the layout. */
   readonly heights: RefObject<Map<string, number>>;
   /** What a source takes edits with, made once for each source. */
@@ -58,7 +79,8 @@ export function useTextDocumentStories(input: {
   const host = useRef<HTMLDivElement | null>(null);
   const sources = useRef(new Map<string, StorySource>());
   const held = useRef(new Set<string>());
-  const wanted = useMemo(() => storiesWanted(pages), [pages]);
+  const { endNotes } = input;
+  const wanted = useMemo(() => storiesWanted(pages, endNotes), [pages, endNotes]);
   const drawn = useRef(wanted);
   // What a source is made with, read when one is made: in a layout effect or an event handler.
   const making = useRef({ view, format, plugins: input.plugins });
@@ -69,13 +91,17 @@ export function useTextDocumentStories(input: {
   // Each box drawing `key`, painted with its source's writing, or emptied.
   const paint = useCallback((key: string) => {
     const source = sources.current.get(key);
-    const boxes = host.current?.parentElement?.querySelectorAll<HTMLElement>(
+    // The pages' boxes and the notes under the writing: everything on the page.
+    const scope = host.current?.closest(STORY_SCOPE) ?? host.current?.parentElement;
+    const boxes = scope?.querySelectorAll<HTMLElement>(
       `[${STORY_KEY_ATTRIBUTE}="${CSS.escape(key)}"]`,
     );
     for (const box of boxes ?? [])
       if (source && !source.empty) {
         const copy = source.copy();
         fillFields(copy, numbersOfBox(box));
+        const number = box.getAttribute(NOTE_BOX_NUMBER_ATTRIBUTE);
+        if (number) numberNote(copy, number);
         box.replaceChildren(copy);
       } else box.replaceChildren();
   }, []);
@@ -100,7 +126,7 @@ export function useTextDocumentStories(input: {
           defaults: TextDocumentState.defaults(doc, madeFormat),
         }),
         stylesScope: body.dom.getAttribute('data-text-document-styles'),
-        label: kind === 'header' ? 'Header' : 'Footer',
+        label: LABELS[kind],
         plugins: plugins?.() ?? [],
         onLaid: (laid) => {
           heights.current.set(key, laid.height);

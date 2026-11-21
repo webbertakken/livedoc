@@ -119,6 +119,9 @@ import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
 // The served document fonts' faces, loaded with the surface, never on other pages (fonts.md "Served from LiveDoc").
 import '@/app/document-fonts.css';
 import { FIELD_NODE_VIEWS } from '@/lib/text-document/text-document-fields';
+import { footnoteNumbersPlugin } from '@/lib/text-document/text-document-footnotes';
+import { TextDocumentEndNotes } from './TextDocumentEndNotes';
+import { useTextDocumentEndNotes } from './useTextDocumentEndNotes';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -335,6 +338,8 @@ export function TextDocumentSurface({
                 // Columns are drawn only where pages are laid out (page-layout.md "Columns").
                 () => layout.current?.pages ?? false,
               ),
+              // Each footnote's mark told its number (page-layout.md "Footnotes").
+              footnoteNumbersPlugin(),
               // The writing laid onto pages (page-layout.md "Laying out").
               paginationPlugin({
                 readFormatting,
@@ -437,6 +442,12 @@ export function TextDocumentSurface({
   // View > Show print layout, a person's own (page-layout.md "Print layout"): off, one sheet as on a phone.
   const printLayout = useTextDocumentViewToggle(PRINT_LAYOUT_TOGGLE);
   const paginated = !page.pageless && wide && printLayout.shown;
+  // Without pages, the footnotes under the writing (page-layout.md "Footnotes").
+  const endNotes = useTextDocumentEndNotes(
+    editorView,
+    !paginated && state === 'ready',
+    changes.subscribe,
+  );
   // Headers and footers drawn on the pages, and one edited in place (page-layout.md "Headers and footers"); while one
   // is edited, the toolbar, the Format menu and Edit act on it.
   const headers = useTextDocumentHeadersAndFooters({
@@ -445,6 +456,7 @@ export function TextDocumentSurface({
     format,
     pages: paginated && state === 'ready' ? pageList : null,
     writes,
+    endNotes,
     heights: storyHeights,
     caret: changes.plugin,
     caretSection: page.caret.index,
@@ -740,6 +752,7 @@ export function TextDocumentSurface({
               </p>
             ) : null}
             <div ref={mount} />
+            <TextDocumentEndNotes notes={endNotes} />
           </div>
         </div>
       </OfficePanelLayout>
