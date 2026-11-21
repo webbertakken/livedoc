@@ -1,9 +1,10 @@
 // Numbers written as text (docs/specs/029-sheets/formulas.md "Text"): DOLLAR and FIXED in the spreadsheet's locale,
 // ROMAN and ARABIC as LibreOffice and Excel write Roman numerals.
 import { localeCurrency } from '../../locale-currency';
-import { boolArg, fn, intArg, numArg, opt, textArg, type FnDef } from '../fn';
+import { localeSeparators } from '../../input';
+import { boolArg, fn, intArg, numArg, opt, scalarFn, textArg, type FnDef } from '../fn';
 import type { Frame } from '../../engine/frame';
-import { err, isError, type Value } from '../values';
+import { err, isError, toText, type Scalar, type Value } from '../values';
 import { roundHalfAway } from './math';
 
 // Intl writes at most 100 decimals; past it the zeros are added by hand. Excel's limit on number_of_places is 127.
@@ -111,7 +112,43 @@ export function arabicValue(roman: string): number | null {
   return value;
 }
 
+// NUMBERVALUE: text read with the given decimal separator (one character) and group separators, the locale's
+// when left out. Group separators count only before the decimal one; spaces and line breaks are dropped; each
+// trailing % divides by 100. Empty text, or what is left reading as no number, is #VALUE!.
+const PLAIN_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i;
+
+function numberValue(xs: Scalar[], f: Frame): Value {
+  const texts: string[] = [];
+  for (const x of xs) {
+    const t = toText(x);
+    if (isError(t)) return t;
+    texts.push(t);
+  }
+  const [text, decimalGiven, groupGiven] = texts as [string, string?, string?];
+  const locale = localeSeparators(f.locale);
+  const decimal = decimalGiven ?? locale.decimal;
+  const groups = groupGiven ?? (decimalGiven === undefined ? locale.group : '');
+  if ([...decimal].length !== 1)
+    return err('#VALUE!', 'The decimal separator must be one character');
+  if (groups.includes(decimal))
+    return err('#VALUE!', 'The decimal separator cannot be a group separator');
+  // A number is already one, whatever the separators.
+  if (typeof xs[0] === 'number') return xs[0];
+  const at = text.indexOf(decimal);
+  let whole = at < 0 ? text : text.slice(0, at);
+  for (const g of groups) whole = whole.split(g).join('');
+  let s = (whole + (at < 0 ? '' : '.' + text.slice(at + 1))).replace(/[ \t\n\r]/g, '');
+  let percents = 0;
+  while (s.endsWith('%')) {
+    s = s.slice(0, -1);
+    percents++;
+  }
+  if (!PLAIN_NUMBER.test(s)) return err('#VALUE!', `"${text}" is not a number`);
+  return Number(s) / 100 ** percents;
+}
+
 export const NUMBER_TEXT_FUNCTIONS: Record<string, FnDef> = {
+  NUMBERVALUE: scalarFn(1, 3, numberValue),
   DOLLAR: fn(1, 2, (args, f) => {
     const x = numArg(args[0]!, f);
     const places = opt(args, 1, f, intArg, 2);

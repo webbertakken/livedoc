@@ -48,6 +48,7 @@ const FORMULA_FORMATS: Readonly<Record<string, FormulaFormat>> = {
   TO_DATE: DATE,
   COUPPCD: DATE,
   COUPNCD: DATE,
+  EASTERSUNDAY: DATE,
   NOW: { nf: 'datetime' },
   EPOCHTODATE: { nf: 'datetime' },
   TIME: { nf: 'time' },

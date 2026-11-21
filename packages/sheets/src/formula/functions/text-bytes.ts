@@ -78,6 +78,24 @@ const HALF_WIDTH: ReadonlyMap<string, string> = (() => {
   return map;
 })();
 
+// The other way: half-width ASCII and katakana to full-width, a kana and its sound mark to the voiced kana.
+const FULL_WIDTH: ReadonlyMap<string, string> = new Map(
+  [...HALF_WIDTH].map(([full, half]) => [half, full]),
+);
+
+function fullWidth(text: string): string {
+  const chars = [...text];
+  let out = '';
+  for (let i = 0; i < chars.length; i++) {
+    const pair = FULL_WIDTH.get(chars[i]! + (chars[i + 1] ?? ''));
+    if (pair) {
+      out += pair;
+      i++;
+    } else out += FULL_WIDTH.get(chars[i]!) ?? chars[i]!;
+  }
+  return out;
+}
+
 export const BYTE_TEXT_FUNCTIONS: Record<string, FnDef> = {
   LENB: textFn(1, 1, 1, ([t]) => bytesOf([...t!])),
   LEFTB: textFn(1, 2, 1, ([t], [n = 1]) => {
@@ -127,6 +145,7 @@ export const BYTE_TEXT_FUNCTIONS: Record<string, FnDef> = {
     const m = re.exec(hay!.slice(from));
     return m ? bytePosition(hay!, from + m.index) : err('#VALUE!', `"${needle}" was not found`);
   }),
+  JIS: textFn(1, 1, 1, ([t]) => fullWidth(t!)),
   ASC: textFn(1, 1, 1, ([t]) =>
     [...t!.normalize('NFC')].map((ch) => HALF_WIDTH.get(ch) ?? ch).join(''),
   ),

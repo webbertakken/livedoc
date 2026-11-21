@@ -5,11 +5,13 @@ import { formatNumber } from '../../number-format';
 import { fn, refArg, scalarFn, valueArg, type FnDef } from '../fn';
 import { findUnit } from '../units';
 import { err, isError, scalarOf, toNumber, toText } from '../values';
+import { EURO_FUNCTIONS } from './euro';
 
 // The value itself: the format the TO_ functions give is the formula's format (typed-input.ts FORMULA_FORMATS).
 const passThrough: FnDef = scalarFn(1, 1, ([x]) => x!);
 
 export const PARSER_FUNCTIONS: Record<string, FnDef> = {
+  ...EURO_FUNCTIONS,
   // A value in one unit as another of the same class: unknown units, or two classes, are #N/A.
   CONVERT: scalarFn(3, 3, ([x, from, to]) => {
     const value = toNumber(x!);

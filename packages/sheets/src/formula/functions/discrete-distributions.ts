@@ -36,6 +36,19 @@ const binomial = numFn(3, 4, ([s, t, p, c = 0]) => {
   return c ? binomialCdf(k, n, p!) : binomialPmf(k, n, p!);
 });
 
+// The chance of s to s2 successes (s alone when s2 is left out).
+const binomialRange = numFn(3, 4, ([t, p, a, b = a]) => {
+  const n = Math.trunc(t!);
+  const s = Math.trunc(a!);
+  const s2 = Math.trunc(b!);
+  if (s < 0 || s > s2 || s2 > n)
+    return OUT_OF_DOMAIN('The successes must run from 0 to the trials');
+  if (outside01(p!)) return BAD_PROBABILITY;
+  let sum = 0;
+  for (let k = s; k <= s2; k++) sum += binomialPmf(k, n, p!);
+  return Math.min(1, sum);
+});
+
 // The least k whose cumulative binomial probability reaches alpha.
 const binomialInverse = numFn(3, 3, ([t, p, a]) => {
   const n = Math.trunc(t!);
@@ -86,6 +99,7 @@ const poisson = numFn(2, 3, ([x, m, c = 1]): Value => {
 export const DISCRETE_DISTRIBUTION_FUNCTIONS: Record<string, FnDef> = {
   'BINOM.DIST': binomial,
   BINOMDIST: binomial,
+  'BINOM.DIST.RANGE': binomialRange,
   'BINOM.INV': binomialInverse,
   CRITBINOM: binomialInverse,
   'NEGBINOM.DIST': negativeBinomial,

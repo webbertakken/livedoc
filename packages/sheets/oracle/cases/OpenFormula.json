@@ -1,0 +1,376 @@
+{
+  "category": "OpenFormula",
+  "data": [
+    [1, 2],
+    [3, 4],
+    [5, 6]
+  ],
+  "cases": [
+    {
+      "id": "AREAS.1",
+      "f": "=AREAS(Data!A1:B2)"
+    },
+    {
+      "id": "AREAS.2",
+      "f": "=AREAS(Data!A1)"
+    },
+    {
+      "id": "AREAS.3",
+      "f": "=AREAS(Data!B2:B3)"
+    },
+    {
+      "id": "BESSELI.1",
+      "f": "=BESSELI(1.5, 1)"
+    },
+    {
+      "id": "BESSELI.2",
+      "f": "=BESSELI(0, 0)"
+    },
+    {
+      "id": "BESSELI.3",
+      "f": "=BESSELI(-2, 3)"
+    },
+    {
+      "id": "BESSELI.4",
+      "f": "=BESSELI(10, 2)"
+    },
+    {
+      "id": "BESSELI.5",
+      "f": "=BESSELI(2.5, 0.9)"
+    },
+    {
+      "id": "BESSELI.6",
+      "f": "=BESSELI(1, -1)"
+    },
+    {
+      "id": "BESSELI.7",
+      "f": "=BESSELI(\"x\", 1)"
+    },
+    {
+      "id": "BESSELJ.1",
+      "f": "=BESSELJ(1.9, 2)"
+    },
+    {
+      "id": "BESSELJ.2",
+      "f": "=BESSELJ(0, 0)"
+    },
+    {
+      "id": "BESSELJ.3",
+      "f": "=BESSELJ(0, 2)"
+    },
+    {
+      "id": "BESSELJ.4",
+      "f": "=BESSELJ(-2, 3)"
+    },
+    {
+      "id": "BESSELJ.5",
+      "f": "=BESSELJ(30, 5)"
+    },
+    {
+      "id": "BESSELJ.6",
+      "f": "=BESSELJ(5, 30)"
+    },
+    {
+      "id": "BESSELJ.7",
+      "f": "=BESSELJ(100, 0)"
+    },
+    {
+      "id": "BESSELJ.8",
+      "f": "=BESSELJ(1, -1)"
+    },
+    {
+      "id": "BESSELK.1",
+      "f": "=BESSELK(1.5, 1)",
+      "tol": 0.000001,
+      "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
+    },
+    {
+      "id": "BESSELK.2",
+      "f": "=BESSELK(0.5, 0)",
+      "tol": 0.000001,
+      "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
+    },
+    {
+      "id": "BESSELK.3",
+      "f": "=BESSELK(3, 4)",
+      "tol": 0.000001,
+      "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
+    },
+    {
+      "id": "BESSELK.4",
+      "f": "=BESSELK(10, 2)",
+      "tol": 0.000001,
+      "note": "LibreOffice's BESSELK uses polynomial approximations good to about 1e-8; LiveDoc's integral is exact to about 1e-15, so the two agree to one part in a million"
+    },
+    {
+      "id": "BESSELK.5",
+      "f": "=BESSELK(0, 1)"
+    },
+    {
+      "id": "BESSELK.6",
+      "f": "=BESSELK(-1, 1)"
+    },
+    {
+      "id": "BESSELK.7",
+      "f": "=BESSELK(1, -1)"
+    },
+    {
+      "id": "BESSELY.1",
+      "f": "=BESSELY(2.5, 1)"
+    },
+    {
+      "id": "BESSELY.2",
+      "f": "=BESSELY(0.5, 0)"
+    },
+    {
+      "id": "BESSELY.3",
+      "f": "=BESSELY(3, 4)"
+    },
+    {
+      "id": "BESSELY.4",
+      "f": "=BESSELY(10, 2)"
+    },
+    {
+      "id": "BESSELY.5",
+      "f": "=BESSELY(30, 5)"
+    },
+    {
+      "id": "BESSELY.6",
+      "f": "=BESSELY(0, 1)"
+    },
+    {
+      "id": "BESSELY.7",
+      "f": "=BESSELY(1, -1)"
+    },
+    {
+      "id": "BINOM.DIST.RANGE.1",
+      "f": "=BINOM.DIST.RANGE(60, 0.75, 48)"
+    },
+    {
+      "id": "BINOM.DIST.RANGE.2",
+      "f": "=BINOM.DIST.RANGE(60, 0.75, 45, 50)"
+    },
+    {
+      "id": "BINOM.DIST.RANGE.3",
+      "f": "=BINOM.DIST.RANGE(10, 0.5, 0, 10)"
+    },
+    {
+      "id": "BINOM.DIST.RANGE.4",
+      "f": "=BINOM.DIST.RANGE(10, 0.5, 6, 4)"
+    },
+    {
+      "id": "BINOM.DIST.RANGE.5",
+      "f": "=BINOM.DIST.RANGE(10, 1.5, 3)"
+    },
+    {
+      "id": "BINOM.DIST.RANGE.6",
+      "f": "=BINOM.DIST.RANGE(10, 0.5, 11)"
+    },
+    {
+      "id": "CHISQDIST.1",
+      "f": "=CHISQDIST(3.45, 2)"
+    },
+    {
+      "id": "CHISQDIST.2",
+      "f": "=CHISQDIST(3.45, 2, FALSE)"
+    },
+    {
+      "id": "CHISQDIST.3",
+      "f": "=CHISQDIST(-1, 2)"
+    },
+    {
+      "id": "CHISQDIST.4",
+      "f": "=CHISQDIST(10, 4.7)"
+    },
+    {
+      "id": "CHISQDIST.5",
+      "f": "=CHISQDIST(3, 0)"
+    },
+    {
+      "id": "CHISQINV.1",
+      "f": "=CHISQINV(0.42, 2)"
+    },
+    {
+      "id": "CHISQINV.2",
+      "f": "=CHISQINV(0.95, 10)"
+    },
+    {
+      "id": "CHISQINV.3",
+      "f": "=CHISQINV(0, 2)"
+    },
+    {
+      "id": "CHISQINV.4",
+      "f": "=CHISQINV(1, 2)"
+    },
+    {
+      "id": "CHISQINV.5",
+      "f": "=CHISQINV(0.5, 4.7)"
+    },
+    {
+      "id": "EASTERSUNDAY.1",
+      "f": "=EASTERSUNDAY(2026)"
+    },
+    {
+      "id": "EASTERSUNDAY.2",
+      "f": "=EASTERSUNDAY(2000)"
+    },
+    {
+      "id": "EASTERSUNDAY.3",
+      "f": "=EASTERSUNDAY(1990)"
+    },
+    {
+      "id": "EASTERSUNDAY.4",
+      "f": "=EASTERSUNDAY(24)"
+    },
+    {
+      "id": "EASTERSUNDAY.5",
+      "f": "=EASTERSUNDAY(85)"
+    },
+    {
+      "id": "EASTERSUNDAY.6",
+      "f": "=EASTERSUNDAY(1582)"
+    },
+    {
+      "id": "EASTERSUNDAY.7",
+      "f": "=EASTERSUNDAY(9957)"
+    },
+    {
+      "id": "EASTERSUNDAY.8",
+      "f": "=EASTERSUNDAY(2026.7)"
+    },
+    {
+      "id": "EUROCONVERT.1",
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\")"
+    },
+    {
+      "id": "EUROCONVERT.2",
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", TRUE)"
+    },
+    {
+      "id": "EUROCONVERT.3",
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", TRUE, 3)"
+    },
+    {
+      "id": "EUROCONVERT.4",
+      "f": "=EUROCONVERT(100, \"EUR\", \"ITL\")"
+    },
+    {
+      "id": "EUROCONVERT.5",
+      "f": "=EUROCONVERT(100, \"dem\", \"EUR\")"
+    },
+    {
+      "id": "EUROCONVERT.6",
+      "f": "=EUROCONVERT(1, \"FRF\", \"USD\")"
+    },
+    {
+      "id": "EUROCONVERT.7",
+      "f": "=EUROCONVERT(1, \"FRF\", \"DEM\", FALSE, 2)"
+    },
+    {
+      "id": "EUROCONVERT.8",
+      "f": "=EUROCONVERT(5, \"EUR\", \"EUR\")"
+    },
+    {
+      "id": "INFO.1",
+      "f": "=INFO(\"recalc\")"
+    },
+    {
+      "id": "INFO.2",
+      "f": "=INFO(\"numfile\")"
+    },
+    {
+      "id": "INFO.3",
+      "f": "=INFO(\"origin\")"
+    },
+    {
+      "id": "INFO.4",
+      "f": "=INFO(\"directory\")"
+    },
+    {
+      "id": "INFO.5",
+      "f": "=INFO(\"x\")"
+    },
+    {
+      "id": "INFO.6",
+      "f": "=INFO(\"memavail\")"
+    },
+    {
+      "id": "INFO.7",
+      "f": "=INFO(\"NUMFILE\")"
+    },
+    {
+      "id": "JIS.1",
+      "f": "=JIS(\"abc 123\")"
+    },
+    {
+      "id": "JIS.2",
+      "f": "=JIS(\"ｶﾀｶﾅ\")"
+    },
+    {
+      "id": "JIS.3",
+      "f": "=JIS(\"ｶﾞｷﾞ\")"
+    },
+    {
+      "id": "JIS.4",
+      "f": "=JIS(\"日本\")"
+    },
+    {
+      "id": "JIS.5",
+      "f": "=JIS(5)"
+    },
+    {
+      "id": "NUMBERVALUE.1",
+      "f": "=NUMBERVALUE(\"1,234.5\")",
+      "expect": [[1234.5]],
+      "cite": "OpenFormula 1.3 Part 4, NUMBERVALUE: the separators default to those of the current locale (en-US: \".\" and \",\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text with no separators given as having no decimal separator at all, so \".\" is refused"
+      }
+    },
+    {
+      "id": "NUMBERVALUE.2",
+      "f": "=NUMBERVALUE(\"1.234,5\", \",\", \".\")"
+    },
+    {
+      "id": "NUMBERVALUE.3",
+      "f": "=NUMBERVALUE(\"  12 %\")"
+    },
+    {
+      "id": "NUMBERVALUE.4",
+      "f": "=NUMBERVALUE(\"12%%\")"
+    },
+    {
+      "id": "NUMBERVALUE.5",
+      "f": "=NUMBERVALUE(\"\")"
+    },
+    {
+      "id": "NUMBERVALUE.6",
+      "f": "=NUMBERVALUE(\"1x\")"
+    },
+    {
+      "id": "NUMBERVALUE.7",
+      "f": "=NUMBERVALUE(\"1.5\", \"..\")"
+    },
+    {
+      "id": "NUMBERVALUE.8",
+      "f": "=NUMBERVALUE(\"1,5\", \",\", \",\")"
+    },
+    {
+      "id": "NUMBERVALUE.9",
+      "f": "=NUMBERVALUE(3.5)"
+    },
+    {
+      "id": "NUMBERVALUE.10",
+      "f": "=NUMBERVALUE(\"-1.5e3\")",
+      "expect": [[-1500]],
+      "cite": "OpenFormula 1.3 Part 4, NUMBERVALUE: the separators default to those of the current locale (en-US: \".\" and \",\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text with no separators given as having no decimal separator at all, so \".\" is refused"
+      }
+    },
+    {
+      "id": "NUMBERVALUE.11",
+      "f": "=NUMBERVALUE(\"1 234,5\", \",\")"
+    }
+  ]
+}

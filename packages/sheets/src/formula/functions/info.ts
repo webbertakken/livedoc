@@ -71,7 +71,28 @@ function isDate(arg: EvalValue, f: Frame): boolean | SheetError {
   return dateLike(v, false, f);
 }
 
+// INFO's answers about the environment (default, D58): one document open, recalculation automatic, and LiveDoc's own
+// name for the system; where OpenFormula has no answer to give here (the directory, the origin, memory) #N/A.
+const INFO_ANSWERS: Readonly<Record<string, string | number>> = {
+  numfile: 1,
+  recalc: 'Automatic',
+  system: 'LiveDoc',
+  osversion: 'LiveDoc',
+  release: 'LiveDoc',
+};
+const INFO_UNKNOWN = new Set(['directory', 'origin', 'memavail', 'memused', 'totmem']);
+
 export const INFO_FUNCTIONS: Record<string, FnDef> = {
+  INFO: scalarFn(1, 1, ([x]) => {
+    const key = typeof x === 'string' ? x.toLowerCase() : '';
+    if (INFO_UNKNOWN.has(key)) return err('#N/A', 'Not known here');
+    return INFO_ANSWERS[key] ?? err('#VALUE!', 'Not a kind of information INFO gives');
+  }),
+  // How many areas a reference holds: a union's parts, else 1; a value that is no reference is #VALUE!.
+  AREAS: fn(1, 1, ([x]) => {
+    if (isAreas(x!)) return x.areas.length;
+    return isRef(x!) ? 1 : err('#VALUE!', 'AREAS takes a reference');
+  }),
   ISBLANK: is((x) => x === null),
   ISNUMBER: is((x) => typeof x === 'number'),
   ISTEXT: is((x) => typeof x === 'string'),
