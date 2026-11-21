@@ -39,7 +39,7 @@ export type WorkbookRecord = {
   readonly settings: WorkbookSettings;
   // Whose answer a formula Google and a standard answer differently gives (formulas.md, the file's meaning): the
   // standard of the format it was opened from, kept by its copies; absent, Google's (made in LiveDoc, or opened from a
-  // file before the meaning was kept, D98).
+  // file before the meaning was kept, D101).
   readonly meaning?: FileMeaning;
   // An Editor allowed its imports to fetch from the web (imports.md "Allow access"): for good, never on a copy.
   readonly importsAllowed?: true;
@@ -126,7 +126,7 @@ export const WorkbookRecord = {
     meaning: WorkbookRecord.meaningOf(format),
   }),
 
-  /** The record converted to `format`: a file's meaning becomes the new format's (D97); Google's stays Google's. */
+  /** The record converted to `format`: a file's meaning becomes the new format's (D100); Google's stays Google's. */
   converted: (record: WorkbookRecord, format: WorkbookFormat): WorkbookRecord => ({
     ...record,
     format,

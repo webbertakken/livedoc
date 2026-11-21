@@ -71,7 +71,7 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   - **Columns**: "Columns past XFD are left out of 1 sheet: Wide" (Excel's last column; a workbook reaches ZZZ).
   - **Formulas that may answer differently**: "2 formulas may answer differently in OpenDocument: CEILING and SORT",
     each formula calling a function the spreadsheet's meaning (Google's for one made in LiveDoc) and the new format's
-    standard answer differently ([The file's meaning](formulas.md#function-catalogue), D97). Converting gives a
+    standard answer differently ([The file's meaning](formulas.md#function-catalogue), D100). Converting gives a
     spreadsheet with a file's meaning the new format's; one with Google's keeps it.
   - When there is none: "Everything in this spreadsheet fits the Excel format."
 - While it checks, the dialog says **Checking what the .xlsx file can hold…** with **Convert** off; a check that fails

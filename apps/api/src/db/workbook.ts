@@ -9,7 +9,7 @@ export type WorkbookRow = {
   imports_allowed?: number;
   // The connected IMPORTRANGE sources as a JSON array, or null for none (formulas.md "Connecting two spreadsheets").
   range_sources?: string | null;
-  // The file's meaning ('ooxml', 'openformula'), or null for Google's (formulas.md, the file's meaning; D98).
+  // The file's meaning ('ooxml', 'openformula'), or null for Google's (formulas.md, the file's meaning; D101).
   meaning?: string | null;
 };
 
@@ -29,7 +29,7 @@ function rangeSourcesOf(documentId: string, text: string | null | undefined): st
   return sources ?? undefined;
 }
 
-// A meaning the record cannot read is Google's, as a spreadsheet's before its meaning was kept (D98), and logged.
+// A meaning the record cannot read is Google's, as a spreadsheet's before its meaning was kept (D101), and logged.
 function meaningOf(documentId: string, text: string | null | undefined): string | undefined {
   if (text === null || text === undefined) return undefined;
   if (text === 'ooxml' || text === 'openformula') return text;
@@ -204,7 +204,7 @@ export async function connectWorkbookRangeSources(
 /**
  * A spreadsheet converted to `format` (files-and-print.md "Converting"): one statement, landing only while the workbook
  * is still of the other standard, so two Editors converting at once convert it once. A file's meaning becomes the new
- * format's; Google's stays (D97). Its record as it now stands and
+ * format's; Google's stays (D100). Its record as it now stands and
  * the row's new rev, or null when it is no spreadsheet or already in that standard.
  */
 export async function convertWorkbookFormat(

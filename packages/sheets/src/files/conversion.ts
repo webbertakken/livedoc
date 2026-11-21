@@ -29,7 +29,7 @@ export type ConversionLoss =
   | { k: 'formula_unwritten'; count: number }
   | { k: 'text_cut'; count: number }
   | { k: 'columns_cut'; count: number; sheets: string[] }
-  // Formulas calling a function the spreadsheet's meaning and the new format's standard answer differently (D97).
+  // Formulas calling a function the spreadsheet's meaning and the new format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] };
 
 export type ConversionLossKind = ConversionLoss['k'];

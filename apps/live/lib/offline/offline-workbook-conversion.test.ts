@@ -37,7 +37,7 @@ describe('offlineWorkbookConversion', () => {
     expect((await offlineWorkbookConversion('d1', 'fods')).losses).toEqual([]);
   });
 
-  // formulas.md, the file's meaning (D97): a file's meaning becomes the new format's; Google's stays.
+  // formulas.md, the file's meaning (D100): a file's meaning becomes the new format's; Google's stays.
   it('gives a file’s meaning the new format’s', async () => {
     const opened = WorkbookRecord.opened(workbook, 'ods');
     await offlinePutRecord(testRecord({ workbook: opened, sheets: [sheet] }));

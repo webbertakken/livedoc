@@ -60,7 +60,7 @@ describe('writeWorkbook', () => {
     expect(flat).toContain('office:value="9.9609375"');
   });
 
-  // formulas.md, the file's meaning (D97): values cached in the spreadsheet's meaning, and the formulas its format's
+  // formulas.md, the file's meaning (D100): values cached in the spreadsheet's meaning, and the formulas its format's
   // standard answers otherwise listed among the file's losses.
   it('works values out in the spreadsheet’s meaning and lists what the format answers otherwise', () => {
     const { layout } = sheet;

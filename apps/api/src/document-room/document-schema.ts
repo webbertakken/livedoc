@@ -470,7 +470,7 @@ ALTER TABLE workbook ADD COLUMN range_sources TEXT;
 `;
 
 // A spreadsheet's meaning (docs/specs/029-sheets/formulas.md, the file's meaning): 'ooxml' or 'openformula' for one
-// opened from a file, kept by its copies; null for Google's, as every spreadsheet before it (D98).
+// opened from a file, kept by its copies; null for Google's, as every spreadsheet before it (D101).
 const WORKBOOK_MEANING_STEP = `
 ALTER TABLE workbook ADD COLUMN meaning TEXT;
 `;

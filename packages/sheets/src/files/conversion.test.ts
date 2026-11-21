@@ -128,7 +128,7 @@ describe('conversionLosses', () => {
     expect(conversionLosses(file(sheet('Sheet1', [formula('=1+1')])), 'ods', 'xlsx')).toEqual([]);
   });
 
-  // formulas.md, the file's meaning (D97): the formulas the spreadsheet's meaning and the new format's answer otherwise.
+  // formulas.md, the file's meaning (D100): formulas the spreadsheet's meaning and the new format's answer otherwise.
   it('lists the formulas that may answer differently in the new format’s meaning', () => {
     const both = file(
       sheet('Sheet1', [formula('=SORT(A1:A3, 1, -1)'), formula('=CEILING(-2.5, -1)', 1)]),

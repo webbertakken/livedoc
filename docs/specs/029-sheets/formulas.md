@@ -682,12 +682,12 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 - Where the standard leaves the answer to the application (OpenFormula's "evaluators may", an implementation-defined
   character set, a conversion to integer it does not name) or refuses the formula, Google's answer stands.
 - The meaning is the spreadsheet's, set once when it opens from a file, and kept by its copies; a spreadsheet opened
-  from a file before this rule keeps Google's, the answers it has always shown (default, D98).
+  from a file before this rule keeps Google's, the answers it has always shown (default, D101).
 - A formula pasted or moved from another spreadsheet takes the meaning of the one it lands in, as its text does.
 - Converting (C1) a spreadsheet that has a file's meaning gives it the new format's; one with Google's keeps it. Each
   formula calling a function the table below answers differently in the spreadsheet's meaning and the new format's
   standard is listed among the conversion's losses before it runs, and is never rewritten, as few rewrites keep the
-  value in every case (default, D97). Writing a spreadsheet to a file lists those its format's standard answers
+  value in every case (default, D100). Writing a spreadsheet to a file lists those its format's standard answers
   differently from its meaning in the same way, among the file's losses (`answers_differ`).
 - **Both accept, answered differently**: the answer in each meaning, each case the oracle's (`oracle/cases/`). "Google's"
   is Google's answer; LibreOffice's answers OpenFormula's where the standard and it agree (measured).
@@ -1550,7 +1550,7 @@ The code cites each by its id.
   (default).
 - **D96** The oracle's Drive retries: 429 and 5xx three more times, 1, 4 and 16 seconds apart; any other stops the
   category (default).
-- **D97** Converting between meanings: The formulas that may answer differently are listed among the losses, never
+- **D100** Converting between meanings: The formulas that may answer differently are listed among the losses, never
   rewritten (default).
-- **D98** A spreadsheet opened from a file before the file's meaning: Keeps Google's meaning (default).
+- **D101** A spreadsheet opened from a file before the file's meaning: Keeps Google's meaning (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

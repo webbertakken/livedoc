@@ -168,7 +168,7 @@ describe('converting', () => {
   });
 });
 
-// formulas.md, the file's meaning (D97): a spreadsheet opened from a file keeps its meaning, made, copied and stored;
+// formulas.md, the file's meaning (D100): a spreadsheet opened from a file keeps its meaning, made, copied and stored;
 // converting gives it the new format's, converting back the old one's; the formulas answering otherwise are listed.
 describe('a spreadsheet opened from a file', () => {
   beforeEach(async () => {

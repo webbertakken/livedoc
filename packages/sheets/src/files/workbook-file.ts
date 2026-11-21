@@ -61,7 +61,7 @@ export type FileLoss =
   | { k: 'format_unwritten'; sheet: string; r: number; c: number }
   | { k: 'format_approximated'; sheet: string; code: string }
   | { k: 'formats_cut'; sheet: string }
-  // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D97).
+  // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] };
 
 function fileValueOf(value: Scalar): FileValue | undefined {

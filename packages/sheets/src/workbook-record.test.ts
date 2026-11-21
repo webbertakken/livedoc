@@ -26,7 +26,7 @@ describe('WorkbookRecord', () => {
     expect(WorkbookRecord.read(JSON.parse(JSON.stringify(made)))).toEqual(made);
   });
 
-  // formulas.md, the file's meaning: a standard's, kept; absent, Google's (D98); anything else is no record.
+  // formulas.md, the file's meaning: a standard's, kept; absent, Google's (D101); anything else is no record.
   it("keeps a file's meaning, and refuses one that is not", () => {
     expect(WorkbookRecord.meaningOf('xlsx')).toBe('ooxml');
     expect(WorkbookRecord.meaningOf('ods')).toBe('openformula');
@@ -40,7 +40,7 @@ describe('WorkbookRecord', () => {
     expect(WorkbookRecord.read({ ...made, meaning: 1 })).toBeNull();
   });
 
-  // D97: converting gives a file's meaning the new format's; a spreadsheet made in LiveDoc keeps Google's.
+  // D100: converting gives a file's meaning the new format's; a spreadsheet made in LiveDoc keeps Google's.
   it('converts its meaning with its format only when it has a file’s', () => {
     const opened = WorkbookRecord.opened(made, 'fods');
     expect(WorkbookRecord.converted(opened, 'xlsx')).toEqual({

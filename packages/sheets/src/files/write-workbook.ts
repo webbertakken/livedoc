@@ -32,7 +32,7 @@ function* formulasOf(file: WorkbookFile): Generator<string> {
     for (const cell of sheet.cells) if (cell.formula !== undefined) yield cell.formula;
 }
 
-/** The file's formulas that may answer differently read in a format's meaning than in the spreadsheet's (D97). */
+/** The file's formulas that may answer differently read in a format's meaning than in the spreadsheet's (D100). */
 export function answersDiffering(
   file: WorkbookFile,
   meaning: FormulaMeaning,

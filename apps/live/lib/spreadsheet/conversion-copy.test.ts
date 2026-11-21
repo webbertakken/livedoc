@@ -85,7 +85,7 @@ describe('the conversion dialog’s words', () => {
     );
   });
 
-  // formulas.md, the file's meaning (D97): formulas whose functions the new format's standard answers differently.
+  // formulas.md, the file's meaning (D100): formulas whose functions the new format's standard answers differently.
   it('names the formulas that may answer differently in the new format', () => {
     expect(
       conversionLine({ k: 'answers_differ', count: 2, functions: ['CEILING', 'SORT'] }, 'ods'),
