@@ -10,7 +10,7 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
 
 - Insert > Table opens a grid; hovering sizes it up to 20 × 20, a press inserts it at the caret, columns sharing the
   text width equally.
-  - The grid is the office shell's size grid ([Office shell](../../004-interface-design/office-shell.md#menus-as-data)).
+  - The grid is the office shell's size grid ([Office shell](../004-interface-design/office-shell.md#menus-as-data)).
   - The text width is the caret's section's (its column's in a section of columns; the cell's own width less its
     padding in a cell, where tables nest).
   - Inserted as Google's: a new table has no header rows and a 1 pt black line round every cell `(default)`, 5 pt
