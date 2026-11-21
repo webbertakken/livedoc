@@ -8,6 +8,7 @@ import { Plugin } from 'prosemirror-state';
 import { FOOTNOTE } from '@livedoc/text-documents';
 import type { TextFormatting } from './text-document-formatting';
 import { listKeysPlugin } from './text-document-list-actions';
+import { tableKeysPlugin } from './text-document-tables';
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { writingKeysPlugin } from './text-document-writing-keys';
 
@@ -47,6 +48,7 @@ export function storyEditingPlugins(input: {
     input.caret,
     new Plugin({ props: { transformPasted: withoutMarks } }),
     ...textDocumentUndoPlugins({ story: true }),
+    tableKeysPlugin(),
     listKeysPlugin(),
     writingKeysPlugin(input.readFormatting),
     keymap(baseKeymap),

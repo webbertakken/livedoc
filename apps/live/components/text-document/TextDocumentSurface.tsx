@@ -43,6 +43,8 @@ import { useTextDocumentPageSetup } from './useTextDocumentPageSetup';
 import { useTextDocumentClipboard } from './useTextDocumentClipboard';
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
+import { tableKeysPlugin } from '@/lib/text-document/text-document-tables';
+import { useTextDocumentTables } from '@/lib/text-document/useTextDocumentTables';
 import { listMarkersPlugin } from '@/lib/text-document/text-document-list-markers';
 import { writingKeysPlugin } from '@/lib/text-document/text-document-writing-keys';
 import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
@@ -335,6 +337,8 @@ export function TextDocumentSurface({
               // Adjacent paragraphs with the same borders share one box ("Borders and shading").
               paragraphBoxesPlugin(readFormatting),
               // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
+              // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
+              tableKeysPlugin(),
               listKeysPlugin(),
               // Tab types a tab, Shift+Enter breaks the line (text-and-paragraphs.md "Writing"), and each tab is
               // drawn to its stop ("Tab stops").
@@ -575,6 +579,12 @@ export function TextDocumentSurface({
     writes && headers.editing === null && headers.note === null,
     page.pageless ? 1 : Columns.of(page.caret.section.setup).count,
   );
+  // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
+  const tableActions = useTextDocumentTables(
+    editorView,
+    writes && headers.editing === null && headers.note === null,
+    Columns.width(page.caret.section.setup),
+  );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -597,10 +607,12 @@ export function TextDocumentSurface({
       ...page.actions,
       ...columns.actions,
       ...breakActions,
+      ...tableActions,
       ...headers.actions,
     }),
     [
       breakActions,
+      tableActions,
       columns.actions,
       headers.actions,
       page.actions,

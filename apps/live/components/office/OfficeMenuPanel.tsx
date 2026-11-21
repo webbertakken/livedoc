@@ -19,6 +19,7 @@ import type {
 } from '@/lib/office/office-catalogue';
 
 import { contextMenuPlace, type Point } from '@/lib/office/context-menu-place';
+import { OfficeSizeGrid } from './OfficeSizeGrid';
 import type { ShortcutText } from '@/lib/office/shortcut-notation';
 
 const PANEL =
@@ -264,6 +265,14 @@ export function OfficeMenuPanel({
               entry={entry}
               actions={actions}
               shortcutOf={shortcutOf}
+              onDone={onDone}
+            />
+          ) : entry.sizeGrid ? (
+            <OfficeSizeGrid
+              key={entry.id}
+              item={entry}
+              most={entry.sizeGrid}
+              action={actions[entry.id]}
               onDone={onDone}
             />
           ) : (
