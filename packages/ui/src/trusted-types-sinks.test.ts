@@ -7,7 +7,16 @@ import { TRUSTED_TYPES_CSP } from './trusted-types';
 // default policy first, and every app sends the header.
 
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
-const read = (path: string) => readFileSync(`${repo}${path}`, 'utf8');
+// Each source is read once: the checks below walk every file per sink and per importer.
+const texts = new Map<string, string>();
+function read(path: string): string {
+  let text = texts.get(path);
+  if (text === undefined) {
+    text = readFileSync(`${repo}${path}`, 'utf8');
+    texts.set(path, text);
+  }
+  return text;
+}
 const APPS = ['live', 'marketing', 'help', 'telemetry'] as const;
 
 function sources(dir: string, out: string[] = []): string[] {
