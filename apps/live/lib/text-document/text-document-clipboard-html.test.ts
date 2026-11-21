@@ -109,6 +109,17 @@ describe('clipboardSerializer', () => {
     expect(out).not.toMatch(/<span[^>]*><\/span>|<div/);
     expect(out).toMatch(/>a<\/p>$/);
   });
+
+  // page-layout.md "Page numbers": copied into another app, a field is its text.
+  it('writes a field as the text it shows', () => {
+    const out = html([
+      schema.nodes.paragraph!.create({}, [
+        schema.text('Page '),
+        schema.nodes.field!.create({ field: 'page-number', text: '4' }),
+      ]),
+    ]);
+    expect(out).toMatch(/Page <span>4<\/span><\/p>$/);
+  });
 });
 
 describe('export css', () => {

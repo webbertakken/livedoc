@@ -12,7 +12,15 @@ import {
   type XmlNode,
   type XmlParsed,
 } from '@livedoc/office-packages';
-import type { Block, Inline, KeptInline, Paragraph, Run, SectionBreak } from '../model/blocks';
+import type {
+  Block,
+  Field,
+  Inline,
+  KeptInline,
+  Paragraph,
+  Run,
+  SectionBreak,
+} from '../model/blocks';
 import {
   canonical,
   compact,
@@ -44,6 +52,7 @@ import {
   type SectionHeaders,
 } from '../model/headers';
 import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
+import { odfFieldKind, odfFieldText } from './odf-fields';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -61,6 +70,8 @@ type AutoStyle = {
   family: string;
   parent?: string;
   master?: string;
+  /** The page number its paragraph's page starts at (`style:page-number`), an integer; `auto` is none. */
+  pageNumber?: number;
   paragraph: ParagraphProps;
   text: TextProps;
   kept: KeptXml;
@@ -161,6 +172,7 @@ class OdfReader {
           ...compact({
             parent: attributeOf(style, NS.style, 'parent-style-name'),
             master: master || undefined,
+            pageNumber: pageNumberOf(style),
           }),
           paragraph: readParagraphProps(style, this.dropTabs),
           text: readTextProps(style, this.faces),
@@ -375,7 +387,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
   const masterStyles: KeptXml[] = [];
   reader.readMasters(parts.styles, masterStyles);
   reader.readStory = (element) => {
-    const story = new BodyReader(reader, styles, defaults);
+    const story = new BodyReader(reader, styles, defaults, true);
     story.container(element);
     return story.blocks;
   };
@@ -426,14 +438,20 @@ const KEPT_INLINE_SKIP = new Set(['soft-page-break']);
 class BodyReader {
   readonly blocks: Block[] = [];
   section: Section | undefined;
+  /** The first section's start at (page-layout.md "Page numbers"), from the body's first paragraph. */
+  firstStart: number | undefined;
   #setup = PageSetup.of('letter');
 
   readonly r: OdfReader;
   readonly styles: readonly Style[];
   readonly defaults: StyleDefaults;
 
-  constructor(r: OdfReader, styles: readonly Style[], defaults: StyleDefaults) {
+  /** A header's or footer's writing: its paragraphs start no page. */
+  readonly story: boolean;
+
+  constructor(r: OdfReader, styles: readonly Style[], defaults: StyleDefaults, story = false) {
     this.r = r;
+    this.story = story;
     this.styles = styles;
     this.defaults = defaults;
   }
@@ -453,7 +471,7 @@ class BodyReader {
         start: 'next-page',
         setup: this.#setup,
       };
-    return this.linked(first);
+    return this.linked({ ...first, ...compact({ numberStart: this.firstStart }) });
   }
 
   /** The sections' headers as their own, those the previous section has the same of linked (page-layout.md). */
@@ -583,16 +601,24 @@ class BodyReader {
     const text = auto && Object.keys(auto.text).length > 0 ? auto.text : undefined;
     const master = auto?.master;
     const isFirst = !this.blocks.some((b) => b.type === 'paragraph');
+    // A page's first paragraph names the number its page starts at: the body's first, or a section's.
+    const startsPage = !this.story && (isFirst || master !== undefined);
+    const start = startsPage ? auto?.pageNumber : undefined;
+    if (isFirst && !this.story) this.firstStart = start;
     if (master !== undefined) {
       const section = this.r.sectionOf(master, 'next-page');
       if (isFirst && !this.section && section) this.section = section;
       else if (section) {
         // A region's end straight before a new section is that section's start.
         if (isRegionEnd(this.blocks[this.blocks.length - 1])) this.blocks.pop();
-        this.blocks.push({ type: 'section', ...section } satisfies SectionBreak);
+        this.blocks.push({
+          type: 'section',
+          ...section,
+          ...compact({ numberStart: start }),
+        } satisfies SectionBreak);
       }
     }
-    const values = { style, props, text, master: isFirst ? undefined : master };
+    const values = { style, props, text, master: isFirst ? undefined : master, start };
     const kept: KeptProperties | undefined = auto
       ? { xml: auto.kept, read: canonical(values), residue: [], name: styleName }
       : undefined;
@@ -691,6 +717,18 @@ class InlineReader {
       for (const child of node.children) this.node(child, ctx);
       return;
     }
+    const field = odfFieldKind(node);
+    if (field) {
+      this.out.push({
+        type: 'field',
+        field,
+        text: odfFieldText(node),
+        props: ctx.props,
+        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+      } satisfies Field);
+      this.#afterSpace = false;
+      return;
+    }
     const kept: KeptInline = {
       type: 'kept',
       name: node.local,
@@ -719,6 +757,17 @@ class InlineReader {
     } else inner = { ...ctx, ...(name ? { style: name } : {}), kept: undefined };
     for (const child of node.children) this.node(child, inner);
   }
+}
+
+/** A paragraph style's `style:page-number`: an integer from 0, else none (`auto` continues). */
+function pageNumberOf(style: XmlElement): number | undefined {
+  const raw = attributeOf(
+    childElement(style, NS.style, 'paragraph-properties') ?? style,
+    NS.style,
+    'page-number',
+  );
+  const value = raw === undefined ? NaN : Number(raw);
+  return Number.isInteger(value) && value >= 0 ? value : undefined;
 }
 
 /** The continuous section a `text:section`'s end leaves behind: back to the setup before it. */

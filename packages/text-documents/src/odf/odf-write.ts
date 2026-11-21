@@ -31,6 +31,7 @@ import { columnsXml, pageLayoutPropsXml, paragraphPropsXml, textPropsXml } from 
 import { headerLayout, masterStoriesXml, shownKinds, withStories } from './odf-headers';
 import { HeadersAndFooters, type ResolvedHeaders } from '../model/headers';
 import { paragraphContentXml, type Segment } from './odf-text-content';
+import { odfFieldXml } from './odf-fields';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -144,22 +145,32 @@ class OdfWriter {
     return this.automatic.add(kept.name, this.kept(kept.xml)) ? kept.name : undefined;
   }
 
-  /** The paragraph's style; the first paragraph's master page is the document's, never part of what it read. */
-  paragraphStyle(p: Paragraph, master: string | undefined, first: boolean): string {
+  /**
+   * The paragraph's style; the first paragraph's master page is the document's, never part of what it read. A page's
+   * first paragraph carries the number its page starts at (`start`, page-layout.md "Page numbers").
+   */
+  paragraphStyle(
+    p: Paragraph,
+    master: string | undefined,
+    first: boolean,
+    start: number | undefined,
+  ): string {
     const values = {
       style: p.style,
       props: p.props,
       text: p.text,
       master: first ? undefined : master,
+      start,
     };
     if (keptStillHolds(p.kept, values)) {
       const name = this.keptName(p.kept);
       if (name) return name;
     }
     const { outlineLevel: _, ...props } = stopsWritten(this.tabs, p, this.tabsFromIndent);
-    if (isEmpty(props) && isEmpty(p.text ?? {}) && master === undefined) return p.style;
+    if (isEmpty(props) && isEmpty(p.text ?? {}) && master === undefined && start === undefined)
+      return p.style;
     this.font(p.text ?? {});
-    const inner = paragraphPropsXml(props) + textPropsXml(p.text ?? {});
+    const inner = withPageNumber(paragraphPropsXml(props), start) + textPropsXml(p.text ?? {});
     return this.generated('LDP', (name) => {
       const open = `<style:style${attr('style:name', name)} style:family="paragraph"${attr('style:parent-style-name', p.style)}${attr('style:master-page-name', master)}`;
       return inner ? `${open}>${inner}</style:style>` : `${open}/>`;
@@ -310,6 +321,15 @@ function bodyXml(w: OdfWriter): string {
   return contentXml(w, w.document.body, false);
 }
 
+// Paragraph properties with the number a page starts at, as `style:page-number`.
+function withPageNumber(propsXml: string, start: number | undefined): string {
+  if (start === undefined) return propsXml;
+  const number = attr('style:page-number', String(start));
+  return propsXml.startsWith('<style:paragraph-properties')
+    ? propsXml.replace('<style:paragraph-properties', `<style:paragraph-properties${number}`)
+    : `<style:paragraph-properties${number}/>`;
+}
+
 /** A header's or footer's blocks as a master page's element's content, their automatic styles in styles.xml. */
 function storyContentXml(w: OdfWriter, blocks: readonly Block[]): string {
   const outer = w.automatic;
@@ -325,23 +345,28 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
   const out: string[] = [];
   const firstMaster = story ? undefined : w.master(doc.section);
   let pendingMaster: string | undefined = firstMaster === 'Standard' ? undefined : firstMaster;
+  let pendingStart = story ? undefined : doc.section.numberStart;
   let isFirstParagraph = !story;
   let regionOpen: string | undefined;
   const lists = new ListWriter(w, out);
   const listsSeen = new Set<string>();
 
   const paragraphXml = (p: Paragraph): string => {
-    const master = pendingMaster;
-    pendingMaster = undefined;
     const first = isFirstParagraph;
+    const start = pendingStart;
+    // A start needs its page: the first paragraph names the document's master page with it, as LibreOffice does.
+    const master = pendingMaster ?? (first && start !== undefined ? firstMaster : undefined);
+    pendingMaster = undefined;
+    pendingStart = undefined;
     isFirstParagraph = false;
-    const style = w.paragraphStyle(p, master, first);
+    const style = w.paragraphStyle(p, master, first, start);
     const outline = p.props.outlineLevel ?? Styles.outlineLevel(doc.styles, p.style);
     const segments: Segment[] = p.inlines.map((i) => {
       const span = w.textStyle(i);
-      return i.type === 'run'
-        ? { kind: 'text', text: i.text, ...compact({ span, link: i.link }) }
-        : { kind: 'kept', xml: w.kept(i.xml), ...compact({ span, link: i.link }) };
+      if (i.type === 'run')
+        return { kind: 'text', text: i.text, ...compact({ span, link: i.link }) };
+      const xml = i.type === 'field' ? odfFieldXml(i) : w.kept(i.xml);
+      return { kind: 'kept', xml, ...compact({ span, link: i.link }) };
     });
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';
     const level = tag === 'text:h' ? attr('text:outline-level', String(outline)) : '';
@@ -370,6 +395,7 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
         }
       } else {
         pendingMaster = w.master(block);
+        pendingStart = block.numberStart;
         const next = blocks[i + 1];
         if (!next || next.type !== 'paragraph')
           out.push(

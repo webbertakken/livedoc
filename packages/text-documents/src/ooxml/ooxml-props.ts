@@ -327,14 +327,16 @@ export function readSection(
   sectPr: XmlElement,
   pageColor: string | undefined,
   onUnequal: () => void = () => {},
-): { start: SectionStart; setup: PageSetup } {
+): { start: SectionStart; setup: PageSetup; numberStart?: number } {
   const size = child(sectPr, 'pgSz');
   const margin = child(sectPr, 'pgMar');
   const cols = child(sectPr, 'cols');
   const count = Number(wAttr(cols, 'num'));
   // Columns of their own widths read as equal (page-layout.md "Columns").
   if (count > 1 && !onOffOf(wAttr(cols, 'equalWidth'), true)) onUnequal();
+  const numberStart = Number(wAttr(child(sectPr, 'pgNumType'), 'start') ?? NaN);
   return {
+    ...(Number.isInteger(numberStart) && numberStart >= 0 ? { numberStart } : {}),
     start: START_IN[val(child(sectPr, 'type')) ?? 'nextPage'] ?? 'next-page',
     setup: compact({
       width: twipsToPt(wAttr(size, 'w')) ?? 612,
@@ -373,6 +375,7 @@ export const MAPPED_SECTPR = new Set([
   'headerReference',
   'footerReference',
   'titlePg',
+  'pgNumType',
 ]);
 
 /**
@@ -384,10 +387,23 @@ export function sectionXml(
   setup: PageSetup,
   kept: readonly string[],
   keptXml?: string,
-  { references = '', titlePage = false }: { references?: string; titlePage?: boolean } = {},
+  {
+    references = '',
+    titlePage = false,
+    numberStart,
+  }: { references?: string; titlePage?: boolean; numberStart?: number } = {},
 ): string {
-  const carried = (name: string) =>
-    keptXml?.match(new RegExp(`<(?:\\w+:)?pgMar[^>]*\\s(?:\\w+:)?${name}="(-?\\d+)"`))?.[1];
+  // An attribute of an element the file's sectPr held, carried into the one written.
+  const carriedOf = (element: string, name: string) =>
+    keptXml?.match(new RegExp(`<(?:\\w+:)?${element}\\s[^>]*?(?:\\w+:)?${name}="([^"]*)"`))?.[1];
+  const carried = (name: string) => carriedOf('pgMar', name);
+  // Page numbering: its start (page-layout.md "Page numbers"), its format and chapter numbers as the file had them.
+  const numbering = {
+    'w:fmt': carriedOf('pgNumType', 'fmt'),
+    'w:start': numberStart === undefined ? undefined : String(numberStart),
+    'w:chapStyle': carriedOf('pgNumType', 'chapStyle'),
+    'w:chapSep': carriedOf('pgNumType', 'chapSep'),
+  };
   const m = setup.margins;
   return `<w:sectPr>${ordered(
     SECTPR_ORDER,
@@ -409,6 +425,9 @@ export function sectionXml(
         'w:footer': ptToTwips(m.footer ?? HEADER_FOOTER_MARGIN_PT),
         'w:gutter': carried('gutter') ?? '0',
       }),
+      pgNumType: Object.values(numbering).some((v) => v !== undefined)
+        ? tag('pgNumType', numbering)
+        : undefined,
       cols:
         setup.columns && setup.columns.count > 1
           ? tag('cols', {

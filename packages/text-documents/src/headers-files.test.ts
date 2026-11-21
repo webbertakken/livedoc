@@ -239,16 +239,16 @@ describe('headers and footers in Word files', () => {
 
 // "In the file" (ODF): a master page's header, header-first and header-left, linked when the previous section's.
 describe('headers and footers in OpenDocument files', () => {
-  it("reads LibreOffice's header, its field kept, and the body's top under it", async () => {
+  it("reads LibreOffice's header, its page number a field, and the body's top under it", async () => {
     const fs = await import('node:fs');
     const bytes = new Uint8Array(
       fs.readFileSync(new URL('../corpus/libreoffice/features.fodt', import.meta.url)),
     );
     const { document } = await read(bytes);
     const header = document.section.headers!.header!.default!;
-    expect(textOf(header)).toBe('Header text ');
+    expect(textOf(header)).toBe('Header text 0');
     const p = header.blocks[0] as Paragraph;
-    expect(p.inlines.some((i) => i.type === 'kept' && i.name === 'page-number')).toBe(true);
+    expect(p.inlines.some((i) => i.type === 'field' && i.field === 'page-number')).toBe(true);
     expect(document.section.setup.margins.header).toBe(72);
     expect(document.section.setup.margins.top).toBeCloseTo(86.148, 2);
     // The landscape section's master page has no header: it shows none of its own, as LibreOffice draws it.

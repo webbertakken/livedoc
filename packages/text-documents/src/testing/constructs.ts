@@ -326,6 +326,46 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     );
   },
+  fields: (format) => {
+    const setup = PageSetup.of('a4', format);
+    return base(
+      format,
+      [
+        paragraph(format, 'normal', [
+          run('Pages: '),
+          { type: 'field', field: 'page-count', text: '2', props: { italic: true } },
+        ]),
+        { type: 'section', start: 'next-page', setup, numberStart: 2 },
+        paragraph(format, 'normal', [run('Starts at two')]),
+      ],
+      {
+        section: {
+          start: 'next-page',
+          setup,
+          numberStart: 1,
+          headers: {
+            footer: {
+              default: {
+                blocks: [
+                  paragraph(
+                    format,
+                    'normal',
+                    [
+                      run('Page '),
+                      { type: 'field', field: 'page-number', text: '1', props: { bold: true } },
+                      run(' of '),
+                      { type: 'field', field: 'page-count', text: '2', props: {} },
+                    ],
+                    { props: { align: 'end' } },
+                  ),
+                ],
+              },
+            },
+          },
+        },
+      },
+    );
+  },
   links: (format) =>
     base(format, [
       paragraph(format, 'normal', [

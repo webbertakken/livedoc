@@ -10,7 +10,7 @@ import { TextDocument } from '../model/text-document';
 import { wholeOf } from '../testing/compare';
 import { TextDocumentState } from '../text-document-state';
 import { textDocumentDigest } from '../digest';
-import { BODY_BLOCKS, DOCUMENT_MAP, KEPT_INLINE, TEXT_PROPERTY_MARKS } from './live-names';
+import { BODY_BLOCKS, DOCUMENT_MAP, FIELD, KEPT_INLINE, TEXT_PROPERTY_MARKS } from './live-names';
 import { liveStoryIds, storyFragment } from './live-stories';
 import { CONSTRUCTS } from '../testing/constructs';
 
@@ -182,6 +182,20 @@ describe('the live layout', () => {
       true,
     );
   });
+
+  // page-layout.md "Page numbers": fields as atoms of their own, each section's start at kept.
+  it.each(['odf', 'ooxml'] as const)(
+    'reads fields and sections’ starts back as written (%s)',
+    (format) => {
+      const document = CONSTRUCTS.fields!(format);
+      expect(wholeOf(live(document))).toBe(wholeOf(document));
+      const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+      const first = TextDocumentState.body(doc).get(0) as Y.XmlElement;
+      expect(first.toArray().map((n) => (n instanceof Y.XmlElement ? n.nodeName : 'text'))).toEqual(
+        ['text', FIELD],
+      );
+    },
+  );
 
   it('still digests a formatted state by its characters', () => {
     const document = TextDocument.fromTexts(['One two', 'three']);

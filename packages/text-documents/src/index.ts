@@ -35,8 +35,11 @@ export {
 } from './file-types';
 export { base64OfBytes, bytesOfBase64 } from './base64';
 export {
+  FIELD_KINDS,
   Paragraph,
   type Block,
+  type Field,
+  type FieldKind,
   type Inline,
   type KeptBlock,
   type KeptInline,
@@ -148,6 +151,8 @@ export { conversionLosses, convertTextDocument, type ConversionLoss } from './co
 export { isSafeLink, type DroppedReason, type ImportReport, type ReportItem } from './report';
 export {
   BODY_BLOCKS,
+  FIELD,
+  FIELD_ATTRIBUTES,
   KEPT_BLOCK,
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,

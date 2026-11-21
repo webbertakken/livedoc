@@ -53,7 +53,8 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 - **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, and its kept parts.
 - **Body**: blocks in order, each a **paragraph**, a **section break** or a **kept block**.
 - **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
-  and inlines: **runs** (characters with direct text formatting and an optional link) and **kept inlines**.
+  and inlines: **runs** (characters with direct text formatting and an optional link), **fields** (a page number or
+  the page count, with the formatting of a run and the text last drawn) and **kept inlines**.
 - **`Style`**: a named paragraph or text style, its parent and next style, its formatting; the built-in styles are
   known by role (Normal text, Title, Subtitle, Heading 1 to 6) in either format's names.
 - **`ListDefinition`**: nine levels, each bullet (with its character), numbered (with its format, its label pattern
@@ -188,6 +189,7 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | ODF files                | Nested sections are written back one after another, each with its own columns                                    |
 | Either format            | Columns of unequal widths read as equal, as Google has them; reported as `column-width`                          |
 | OOXML to ODF             | A continuous section's own headers and footers (no master page of its own), each a `header-footer` loss          |
+| OOXML to ODF             | A continuous section's start at (no page of its own to number), a `page-number-start` loss                       |
 | Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`      |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                         |
 

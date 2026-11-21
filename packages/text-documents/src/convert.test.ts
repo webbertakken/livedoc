@@ -86,7 +86,16 @@ describe('conversion', () => {
     ['odf', 'ooxml', 'docx'],
     ['ooxml', 'odf', 'odt'],
   ] as const)
-    for (const name of ['text', 'paragraphs', 'styles', 'lists', 'sections', 'links', 'metadata'])
+    for (const name of [
+      'text',
+      'paragraphs',
+      'styles',
+      'lists',
+      'sections',
+      'fields',
+      'links',
+      'metadata',
+    ])
       it(`converts ${name} from ${from} to ${to}, holding the same model in the other format`, async () => {
         const { document } = convertTextDocument(CONSTRUCTS[name]!(from), to);
         expect(document.format).toBe(to);
@@ -113,6 +122,21 @@ describe('conversion', () => {
     expect(JSON.stringify(document)).not.toContain('"kept"');
     const written = writeTextDocumentFile(document, 'docx');
     expect(written.ok && (await readTextDocumentFile(written.bytes)).ok).toBe(true);
+  });
+
+  // page-layout.md "Page numbers": a continuous section's start at has no page of its own in an OpenDocument file.
+  it("lists a continuous section's start at as a loss going to ODF", () => {
+    const word = CONSTRUCTS.fields!('ooxml');
+    expect(conversionLosses(word, 'odf')).toEqual([]);
+    const continuous: TextDocument = {
+      ...word,
+      body: word.body.map((b) =>
+        b.type === 'section' ? { ...b, start: 'continuous' as const } : b,
+      ),
+    };
+    expect(conversionLosses(continuous, 'odf')).toEqual([
+      { kind: 'page-number-start', name: 'page-number-start', count: 1 },
+    ]);
   });
 
   // page-layout.md "Headers and footers": converted as the body is; an OpenDocument file does not hold them yet.

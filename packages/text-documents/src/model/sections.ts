@@ -40,6 +40,8 @@ export type Section = {
   readonly start: SectionStart;
   readonly setup: PageSetup;
   readonly headers?: SectionHeaders;
+  /** The number its first page has (page-layout.md "Page numbers"); absent, it counts on from the pages before. */
+  readonly numberStart?: number;
   readonly kept?: KeptProperties;
 };
 

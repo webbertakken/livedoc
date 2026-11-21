@@ -208,6 +208,8 @@ export function clipboardSerializer(read: () => ClipboardHtmlContext): DOMSerial
     section_break: () => omitted('div'),
     kept_block: () => omitted('div'),
     kept_inline: () => omitted('span'),
+    // A field pastes elsewhere as the text it shows (page-layout.md "Page numbers").
+    field: (node) => ['span', typeof node.attrs.text === 'string' ? node.attrs.text : ''],
   };
 
   class ClipboardSerializer extends DOMSerializer {

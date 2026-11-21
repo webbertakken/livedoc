@@ -9,6 +9,8 @@ import {
   type NodeSpec,
 } from 'prosemirror-model';
 import {
+  FIELD,
+  FIELD_ATTRIBUTES,
   KEPT_BLOCK,
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,
@@ -20,8 +22,10 @@ import {
   SECTION_BREAK_ATTRIBUTES,
 } from '@livedoc/text-documents';
 import { DocumentFonts } from '@livedoc/document';
-import { cssText, paragraphDeclarations } from './text-document-style-sheet';
+import { cssText, paragraphDeclarations, textDeclarations } from './text-document-style-sheet';
 import { paperFill, paperInk } from './text-document-paper';
+
+const fieldText = (text: unknown): string => (typeof text === 'string' ? text : '');
 
 const nullAttributes = (names: readonly string[]) =>
   Object.fromEntries(names.map((name) => [name, { default: null }]));
@@ -169,6 +173,33 @@ const nodes: Record<string, NodeSpec> = {
     toDOM: (node) => {
       const { name, xml } = node.attrs as { name: unknown; xml: unknown };
       return keptPlaceholder('span', name, xml);
+    },
+  },
+  // A page number or page count (page-layout.md "Page numbers"): one character to the caret, drawn in its own
+  // formatting with the text it last showed; copied as that text.
+  [FIELD]: {
+    group: 'inline',
+    inline: true,
+    atom: true,
+    selectable: true,
+    attrs: nullAttributes(FIELD_ATTRIBUTES),
+    leafText: (node) => fieldText(node.attrs.text),
+    toDOM: (node) => {
+      const { field, text, props } = node.attrs as {
+        field: unknown;
+        text: unknown;
+        props: unknown;
+      };
+      const own = props && typeof props === 'object' ? cssText(textDeclarations(props)) : '';
+      return [
+        'span',
+        {
+          contenteditable: 'false',
+          'data-field': typeof field === 'string' ? field : '',
+          ...(own ? { style: own } : {}),
+        },
+        fieldText(text),
+      ];
     },
   },
   text: { group: 'inline' },

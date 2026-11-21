@@ -10,6 +10,7 @@ import type { Section } from '../model/sections';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
+  FIELD,
   KEPT_INLINE,
   LINK_MARK,
   LISTS_MAP,
@@ -62,10 +63,11 @@ function inlineNodes(inlines: readonly Inline[]): (Y.XmlText | Y.XmlElement)[] {
       continue;
     }
     text = null;
-    const element = new Y.XmlElement(KEPT_INLINE);
+    const element = new Y.XmlElement(inline.type === 'field' ? FIELD : KEPT_INLINE);
     setAttributes(element, {
-      name: inline.name,
-      xml: inline.xml,
+      ...(inline.type === 'field'
+        ? { field: inline.field, text: inline.text }
+        : { name: inline.name, xml: inline.xml }),
       props: isEmpty(inline.props) ? undefined : inline.props,
       style: inline.style,
       link: inline.link,

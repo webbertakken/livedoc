@@ -110,7 +110,7 @@ describe('import security', () => {
       `<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>${instr}</w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>${W_R('shown')}<w:r><w:fldChar w:fldCharType="end"/></w:r>`;
     const read = await texts(
       docx(
-        W_P(`${W_R('a ')}${field('DDEAUTO cmd "/c calc"')}${W_R(' b ')}${field('PAGE')}`) +
+        W_P(`${W_R('a ')}${field('DDEAUTO cmd "/c calc"')}${W_R(' b ')}${field('AUTHOR')}`) +
           W_P(
             `<w:fldSimple w:instr="INCLUDETEXT &quot;c:/secret.txt&quot;">${W_R('included')}</w:fldSimple>`,
           ) +
