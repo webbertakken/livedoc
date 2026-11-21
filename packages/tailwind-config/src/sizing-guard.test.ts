@@ -187,7 +187,7 @@ describe('checkSizing', () => {
       ].join('\n'),
     );
 
-    const violations = checkSizing({ root, folders: ['moved'] });
+    const violations = checkSizing({ root, paths: ['moved'] });
 
     expect(violations).toEqual([
       expect.objectContaining({ file: 'moved/Row.tsx', line: 1, className: 'h-7' }),
@@ -201,25 +201,33 @@ describe('checkSizing', () => {
     write('moved/types.d.ts', "declare const a: 'text-sm';");
     write('later/Row.tsx', "export const a = 'text-sm';");
 
-    expect(checkSizing({ root, folders: ['moved'] })).toEqual([]);
+    expect(checkSizing({ root, paths: ['moved'] })).toEqual([]);
   });
 
-  it('checks nothing for an empty folder list', () => {
+  it('checks a moved file on its own, leaving its folder alone', () => {
+    write('ui/Button.tsx', "export const a = 'text-sm';");
+    write('ui/Footer.tsx', "export const a = 'text-sm';");
+    write('ui/Button.test.tsx', "export const a = 'text-sm';");
+
+    const violations = checkSizing({ root, paths: ['ui/Button.tsx', 'ui/Button.test.tsx'] });
+
+    expect(violations.map((v) => v.file)).toEqual(['ui/Button.tsx']);
+  });
+
+  it('checks nothing for an empty list', () => {
     write('later/Row.tsx', "export const a = 'text-sm';");
 
-    expect(checkSizing({ root, folders: [] })).toEqual([]);
+    expect(checkSizing({ root, paths: [] })).toEqual([]);
   });
 
-  it('throws on a folder that does not exist, so a typo never passes', () => {
-    expect(() => checkSizing({ root, folders: ['moevd'] })).toThrow(
-      /sizing guard: no folder moevd/,
-    );
+  it('throws on a path that does not exist, so a typo never passes', () => {
+    expect(() => checkSizing({ root, paths: ['moevd'] })).toThrow(/sizing guard: no path moevd/);
   });
 
   it('formats one line per refusal with its advice, and nothing when clean', () => {
     write('moved/Row.tsx', "export const a = 'h-7';");
 
-    const text = formatSizingViolations(checkSizing({ root, folders: ['moved'] }));
+    const text = formatSizingViolations(checkSizing({ root, paths: ['moved'] }));
 
     expect(text).toMatch(/^moved\/Row\.tsx:1 {2}h-7 {2}\(sizing guard: .*h-row.*\)$/);
     expect(formatSizingViolations([])).toBe('');

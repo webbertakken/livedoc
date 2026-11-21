@@ -1,11 +1,11 @@
 // The sizing guard (docs/specs/004-interface-design/sizing.md "The guard").
 //
-// A folder that has moved to the sizing scale draws every size from it: type, weight, capitals, heights, icons, gaps,
-// side padding and radii. The guard reads every static string in the folder's source (D234), splits it into classes
-// and refuses each one off the scale, naming the token to use instead. A size set under a coarse pointer is touch's
-// (docs/specs/004-interface-design/touch-targets.md) and passes. Each site runs it over its moved folders.
+// A folder or file that has moved to the sizing scale draws every size from it: type, weight, capitals, heights,
+// icons, gaps, side padding and radii. The guard reads every static string in its source (D234), splits it into
+// classes and refuses each one off the scale, naming the token to use instead. A size set under a coarse pointer is
+// touch's (docs/specs/004-interface-design/touch-targets.md) and passes. Each site runs it over its moved paths.
 
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { parseSourceFiles } from '@livedoc/source-ast';
 import {
@@ -25,7 +25,7 @@ const SCALE_CEILING_PX = Math.max(...Object.values(SIZING_SCALE.height));
 const SPACING_UNIT_PX = 4;
 
 const TYPE_TOKENS = Object.keys(SIZING_SCALE.type).map((step) => `text-${step}`);
-// Tailwind's own type sizes in px, the ones a moved folder must name by token.
+// Tailwind's own type sizes in px, the ones moved source must name by token.
 const TAILWIND_TYPE_PX: Record<string, number> = {
   xs: 12,
   sm: 14,
@@ -217,18 +217,19 @@ function staticStrings(root: Node, found: (text: string, at: Node) => void): voi
   visit(root);
 }
 
-/** Every off-scale class in the source under `folders` (paths relative to `root`). */
+/** Every off-scale class in the moved `paths` (folders or files, relative to `root`). */
 export function checkSizing({
   root,
-  folders,
+  paths,
 }: {
   root: string;
-  folders: readonly string[];
+  paths: readonly string[];
 }): SizingViolation[] {
-  const files = folders.flatMap((folder) => {
-    const dir = join(root, folder);
-    if (!existsSync(dir)) throw new Error(`sizing guard: no folder ${folder} under ${root}`);
-    return listSourceFiles(dir, isTypeScriptSource);
+  const files = paths.flatMap((path) => {
+    const full = join(root, path);
+    if (!existsSync(full)) throw new Error(`sizing guard: no path ${path} under ${root}`);
+    if (statSync(full).isDirectory()) return listSourceFiles(full, isTypeScriptSource);
+    return isTypeScriptSource(full) ? [full] : [];
   });
   const violations: SizingViolation[] = [];
   for (const sf of parseSourceFiles(files)) {
