@@ -14,15 +14,19 @@ export const TEXT_DOCUMENT_PAGE_ORIGIN = Symbol('text-document-page');
 /** The origin a person's change to the document's lists is made with (lists.md "Making a list"). */
 export const TEXT_DOCUMENT_LISTS_ORIGIN = Symbol('text-document-lists');
 
-export function textDocumentUndoPlugins(): Plugin[] {
+/**
+ * The body's undo, or with `story` a header's or footer's own (page-layout.md "Editing headers and footers"): its
+ * writing alone, the document's styles, lists and page setup staying on the body's.
+ */
+export function textDocumentUndoPlugins({ story = false }: { story?: boolean } = {}): Plugin[] {
   return [
     yUndoPlugin(),
     // The undo manager is made with the editor's state; its grouping and scope are set once the view holds it.
     new Plugin({
       view: (view) => {
         const undoManager = yUndoPluginKey.getState(view.state)?.undoManager;
-        if (undoManager) {
-          undoManager.captureTimeout = TEXT_DOCUMENT_UNDO_GROUP_MS;
+        if (undoManager) undoManager.captureTimeout = TEXT_DOCUMENT_UNDO_GROUP_MS;
+        if (undoManager && !story) {
           undoManager.addToScope(TextDocumentState.stylesType(undoManager.doc));
           undoManager.addTrackedOrigin(TEXT_DOCUMENT_STYLES_ORIGIN);
           undoManager.addToScope(TextDocumentState.listsType(undoManager.doc));

@@ -1,0 +1,65 @@
+// Headers and footers on the pages (docs/specs/034-text-documents/page-layout.md "Headers and footers"): their sources
+// drawn on every page (useTextDocumentStories) and one of them edited in place (useTextDocumentHeaderEditing), with
+// the keys, undo and caret changes it is edited with; while one is edited the toolbar acts on it.
+import { useCallback, useLayoutEffect, useRef, type MouseEvent, type RefObject } from 'react';
+import type { Plugin } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
+import type * as Y from 'yjs';
+import type { TextDocumentFormat } from '@livedoc/document';
+import { TextDocumentState } from '@livedoc/text-documents';
+import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
+import { pageAtPoint } from '@/lib/text-document/pagination/pagination-headers';
+import { storyEditingPlugins } from '@/lib/text-document/text-document-story-editing';
+import { useTextDocumentHeaderEditing } from './useTextDocumentHeaderEditing';
+import { useTextDocumentStories } from './useTextDocumentStories';
+
+export function useTextDocumentHeadersAndFooters(input: {
+  readonly view: EditorView | null;
+  readonly liveDoc: RefObject<Y.Doc | null>;
+  readonly format: TextDocumentFormat;
+  readonly pages: readonly PageGeometry[] | null;
+  readonly writes: boolean;
+  /** Each drawn story's height by its key, read by the layout. */
+  readonly heights: RefObject<Map<string, number>>;
+  /** The plugin telling the toolbar of the caret's changes. */
+  readonly caret: Plugin;
+}) {
+  const { view, liveDoc, format, pages, writes, heights, caret } = input;
+  const leave = useRef(() => {});
+  const plugins = useCallback(() => {
+    const doc = liveDoc.current;
+    if (!doc) return [];
+    return storyEditingPlugins({
+      caret,
+      readFormatting: () => ({
+        styles: TextDocumentState.styles(doc, format),
+        defaults: TextDocumentState.defaults(doc, format),
+      }),
+      leave: () => leave.current(),
+    });
+  }, [liveDoc, format, caret]);
+  const stories = useTextDocumentStories({ view, liveDoc, format, pages, heights, plugins });
+  const editing = useTextDocumentHeaderEditing({ view, liveDoc, format, pages, writes, stories });
+  useLayoutEffect(() => {
+    leave.current = editing.leave;
+  });
+  const { enter } = editing;
+  // A double-click in a page's top or bottom margin enters its header or footer, the space between pages inside the
+  // body too (the body never writes in a margin); `scale` is the pages' zoom.
+  const onDoubleClick = useCallback(
+    (event: MouseEvent<HTMLElement>, scale: number) => {
+      if (!pages || (event.target as Element).closest?.('[data-story-editing]')) return;
+      const top = event.currentTarget.getBoundingClientRect().top;
+      const hit = pageAtPoint(pages, (event.clientY - top) / scale);
+      if (hit?.kind) enter(hit.kind, hit.index);
+    },
+    [pages, enter],
+  );
+  return {
+    storyHost: stories.host,
+    ...editing,
+    onDoubleClick,
+    /** What the toolbar, the Format menu and Edit act on: the header or footer edited, else the body. */
+    activeView: editing.editing?.view ?? view,
+  };
+}

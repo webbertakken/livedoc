@@ -7,6 +7,7 @@
 // focused.
 import { PAGE_GAP_PX } from '@/lib/text-document/pagination/pagination';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
+import type { HeaderFooterKind } from '@livedoc/text-documents';
 import type { PageStory } from '@/lib/text-document/pagination/pagination-headers';
 import { STORY_KEY_ATTRIBUTE } from './useTextDocumentStories';
 
@@ -17,6 +18,10 @@ export type TextDocumentSheetsProps = {
   shadow: boolean;
   /** The hidden place the headers' and footers' sources lie in, beside the pages' boxes they paint. */
   storyHost?: (element: HTMLDivElement | null) => void;
+  /** The header or footer being edited, on which page (page-layout.md "Editing headers and footers"). */
+  editing?: { readonly page: number; readonly kind: HeaderFooterKind } | null;
+  /** The box the edited one is edited in, above the writing. */
+  editingBox?: (element: HTMLDivElement | null) => void;
 };
 
 /** The frame the pages need: the widest page across, every page and gap down; null before there are pages. */
@@ -30,13 +35,29 @@ export function sheetsFrame(
   };
 }
 
-export function TextDocumentSheets({ pages, shadow, storyHost }: TextDocumentSheetsProps) {
+/** Each page's top, down the pages. */
+const pageTops = (pages: readonly PageGeometry[]) =>
+  pages.map((_, index) =>
+    pages.slice(0, index).reduce((sum, above) => sum + above.height + PAGE_GAP_PX, 0),
+  );
+
+export function TextDocumentSheets({
+  pages,
+  shadow,
+  storyHost,
+  editing = null,
+  editingBox,
+}: TextDocumentSheetsProps) {
   const className = `text-document-sheet absolute ${shadow ? 'shadow-sm' : ''}`;
   const frame = sheetsFrame(pages);
+  const tops = pages ? pageTops(pages) : [];
+  const edited = editing && pages ? pages[editing.page] : undefined;
+  // Where it stands on its page, whether the page has shown it yet or not.
+  const editedPlace = edited?.place;
   // A header from its margin down, a footer up from its margin, at the section's left margin and text width; its
   // writing painted in by its source (useTextDocumentStories).
-  const story = (kind: 'header' | 'footer', place: PageStory | undefined) =>
-    place ? (
+  const story = (kind: HeaderFooterKind, place: PageStory | undefined, page: number) =>
+    place && !(editing?.page === page && editing.kind === kind) ? (
       <div
         data-page-story={kind}
         data-story={place.story}
@@ -50,45 +71,66 @@ export function TextDocumentSheets({ pages, shadow, storyHost }: TextDocumentShe
       />
     ) : null;
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-      {storyHost ? (
-        <div ref={storyHost} data-story-sources="" className="invisible absolute top-0 left-0" />
+    <>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        {storyHost ? (
+          <div ref={storyHost} data-story-sources="" className="invisible absolute top-0 left-0" />
+        ) : null}
+        {!pages || !frame ? (
+          <div className={`${className} inset-0`} />
+        ) : (
+          pages.map((page, index) => {
+            const at = tops[index]!;
+            return (
+              <div
+                key={index}
+                data-page-sheet={index + 1}
+                className={className}
+                style={{
+                  top: at,
+                  left: (frame.width - page.width) / 2,
+                  width: page.width,
+                  height: page.height,
+                }}
+              >
+                {(page.rules ?? []).flatMap((rule, r) =>
+                  rule.xs.map((x) => (
+                    <div
+                      key={`${r}:${x}`}
+                      data-column-line=""
+                      className="absolute w-px bg-current"
+                      style={{ left: x, top: rule.top, height: rule.bottom - rule.top }}
+                    />
+                  )),
+                )}
+                {story('header', page.header, index)}
+                {story('footer', page.footer, index)}
+              </div>
+            );
+          })
+        )}
+      </div>
+      {edited && editedPlace && editing && frame ? (
+        // The edited one, above the writing, a thin line under a header (over a footer) across its page.
+        <div
+          data-story-editing={editing.kind}
+          className={`text-document-story-editing absolute ${editing.kind === 'header' ? 'border-b' : 'border-t'}`}
+          style={{
+            left: (frame.width - edited.width) / 2,
+            width: edited.width,
+            paddingLeft: editedPlace.left,
+            paddingRight: edited.width - editedPlace.left - editedPlace.width,
+            ...(editing.kind === 'header'
+              ? { top: tops[editing.page]! + editedPlace.header }
+              : {
+                  top: tops[editing.page]! + edited.height - editedPlace.footer,
+                  transform: 'translateY(-100%)',
+                }),
+          }}
+        >
+          <div ref={editingBox} />
+        </div>
       ) : null}
-      {!pages || !frame ? (
-        <div className={`${className} inset-0`} />
-      ) : (
-        pages.map((page, index) => {
-          const at = pages
-            .slice(0, index)
-            .reduce((sum, above) => sum + above.height + PAGE_GAP_PX, 0);
-          return (
-            <div
-              key={index}
-              data-page-sheet={index + 1}
-              className={className}
-              style={{
-                top: at,
-                left: (frame.width - page.width) / 2,
-                width: page.width,
-                height: page.height,
-              }}
-            >
-              {(page.rules ?? []).flatMap((rule, r) =>
-                rule.xs.map((x) => (
-                  <div
-                    key={`${r}:${x}`}
-                    data-column-line=""
-                    className="absolute w-px bg-current"
-                    style={{ left: x, top: rule.top, height: rule.bottom - rule.top }}
-                  />
-                )),
-              )}
-              {story('header', page.header)}
-              {story('footer', page.footer)}
-            </div>
-          );
-        })
-      )}
-    </div>
+    </>
   );
 }

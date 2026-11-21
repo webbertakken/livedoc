@@ -499,3 +499,15 @@ div.text-document-kept {
 .text-document-column-mark-split {
   break-before: column;
 }
+/*
+ * A header or footer being edited (docs/specs/034-text-documents/page-layout.md "Editing headers and footers"): the
+ * body faded to 60% of its ink, which keeps it AA (#666666 on white 5.7:1, #949494 on #1e1f20 6.1:1); a thin line in
+ * the muted ink under the header (over the footer), across its page, above the writing.
+ */
+.text-document-page[data-editing-story] .text-document-body {
+  opacity: 0.6;
+}
+.text-document-story-editing {
+  z-index: 1;
+  border-color: var(--text-document-mark-ink);
+}

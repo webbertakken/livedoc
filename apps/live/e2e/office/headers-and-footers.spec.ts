@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { TextDocument, writeTextDocumentFile } from '@livedoc/text-documents';
 import { expect, expectNoPageErrors, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { officeMenuItem } from './office-menus';
 
 // Headers and footers drawn (docs/specs/034-text-documents/page-layout.md "Headers and footers"): a Word file's first
@@ -86,5 +87,67 @@ test('a Word file’s headers and footers are drawn in each page’s margins, a 
   // On a phone the writing flows to the window: no header or footer is drawn.
   await page.setViewportSize({ width: 600, height: 900 });
   await expect(page.locator('[data-page-story]')).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});
+
+async function writeLong(page: Page, count: number) {
+  await page.locator(BODY).click();
+  for (let i = 0; i < count; i++) {
+    if (i > 0) await page.keyboard.press('Enter');
+    await page.keyboard.insertText(`Paragraph ${i + 1}. ${TEXT}`);
+  }
+}
+
+// page-layout.md "Editing headers and footers": Insert > Headers & footers > Header puts the caret in a new header;
+// every page draws it as it is typed; bold and undo work in it; Escape leaves; a double-click in a page's bottom margin
+// enters its footer, and one left empty is taken away.
+test('a header made from the Insert menu is typed on every page, and an empty footer goes', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await writeLong(page, 30);
+  await expect(page.locator('[data-page-sheet="2"]')).toBeVisible();
+  await page.keyboard.press('Control+Home');
+
+  await (await officeMenuItem(page, ['Insert', 'Headers & footers', 'Header'])).click();
+  const editor = page.getByRole('textbox', { name: 'Header' });
+  await expect(editor).toBeFocused();
+  await expect(page.locator('[data-editing-story="header"]')).toBeVisible();
+  await page.keyboard.type('Quarterly ');
+  await page.keyboard.press('Control+B');
+  await page.keyboard.type('report');
+  // Every other page draws it as it is typed, the bold too.
+  const second = page.locator('[data-page-sheet="2"] [data-page-story="header"]');
+  await expect(second).toHaveText('Quarterly report');
+  await expect(second.locator('span', { hasText: 'report' })).toHaveCSS('font-weight', '700');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('header-editing.png') });
+  // Undo in the header takes back its own typing.
+  await page.keyboard.press('Control+Z');
+  await expect(editor).not.toContainText('report');
+  await page.keyboard.press('Control+Shift+Z');
+  await expect(editor).toHaveText('Quarterly report');
+
+  await page.keyboard.press('Escape');
+  await expect(editor).toHaveCount(0);
+  await expect(page.locator(BODY)).toBeFocused();
+  await expect(page.locator('[data-page-sheet="1"] [data-page-story="header"]')).toHaveText(
+    'Quarterly report',
+  );
+
+  // A double-click in page 1's bottom margin enters its footer; left empty, it goes.
+  // Page 1's foot scrolled into view first.
+  await page.locator('[data-region="document"]').evaluate((scroller) => scroller.scrollBy(0, 500));
+  const sheet = await page.locator('[data-page-sheet="1"]').boundingBox();
+  await page.mouse.dblclick(sheet!.x + sheet!.width / 2, sheet!.y + sheet!.height - 30);
+  await expect(page.getByRole('textbox', { name: 'Footer' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('textbox', { name: 'Footer' })).toHaveCount(0);
+  await expect(page.locator('[data-page-story="footer"]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });

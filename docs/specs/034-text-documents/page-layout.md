@@ -261,12 +261,19 @@ A section's pages each have a **header** in the top margin and a **footer** in t
 
 - Insert > **Headers and footers** > **Header** (⌘⌥O ⌘⌥H) and **Footer** (⌘⌥O ⌘⌥F), or a double-click in the top or
   bottom margin of a page, puts the caret in that page's header or footer at its end, making it when it is none.
+  The menu's page is the one the body's caret is on (the last page starting at or before the caret's paragraph).
+- **Which one is edited**: the header the page shows, a linked one too, so an edit shows on every page drawing it, the
+  previous section's included (Word's). A page showing none makes one: one empty paragraph in Normal text, the
+  section's own in the page's slot (first page, even page or default), under a new random id (default).
+- Making, removing, linking and unlinking a header are steps of the body's undo; typing and formatting in a header
+  are steps of the header's own undo, which Undo and Redo use while it is edited (default).
 - **While a header or footer is edited** the body is drawn faded (Google's), a thin line under the header (over the
   footer) marks its edge, and a bar under it holds **Different first page** (a checkbox), **Link to previous** (a
   checkbox, in a section after the first) and **Options** (a menu: **Header format** or **Footer format**, opening
   Headers and footers options, **Page numbers**, and **Remove header** or **Remove footer**).
 - Every page drawing that header shows the edit as it is typed. Text and paragraph formatting, the toolbar, undo and
-  the clipboard work in it as in the body; Select all selects its writing.
+  the clipboard work in it as in the body; Select all selects its writing. Breaks and columns are dimmed while a
+  header or footer is edited (Google's); the edited one is read as a text box named "Header" or "Footer" (default).
 - **Escape**, or a press on the body, leaves it with the caret where the body had it; empty, it is removed.
 - **Headers and footers options**, a dialog: **Margins**, **Header** (from the top) and **Footer** (from the bottom),
   in the person's unit; **Layout**, **Different first page** and **Different odd and even**; **Apply to**, **This

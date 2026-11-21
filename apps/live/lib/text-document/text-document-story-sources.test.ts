@@ -30,6 +30,7 @@ function source(doc: Y.Doc, onLaid = vi.fn()) {
     container,
     readFormatting: () => formatting,
     stylesScope: 'scope',
+    label: 'Header',
     onLaid,
   });
   return { made, container, onLaid };
@@ -124,6 +125,27 @@ describe('StorySource', () => {
     text.insert(0, 'A ');
     await settle();
     expect(paint).not.toHaveBeenCalled();
+  });
+
+  // "Editing headers and footers": the source itself is edited, in the page's editing box.
+  it('moves into a page’s box to be edited, the caret at its end, and back read only', async () => {
+    const { made, container } = source(storyDoc('Header'));
+    await settle();
+    const box = document.body.appendChild(document.createElement('div'));
+    made.edit(box);
+    expect(made.editing).toBe(true);
+    expect(box.contains(made.view.dom)).toBe(true);
+    expect(made.view.editable).toBe(true);
+    expect(made.view.dom.getAttribute('role')).toBe('textbox');
+    expect(made.view.dom.getAttribute('aria-label')).toBe('Header');
+    expect(made.view.state.selection.from).toBe(made.view.state.doc.content.size - 1);
+    made.stopEditing();
+    expect(made.editing).toBe(false);
+    expect(container.contains(made.view.dom)).toBe(true);
+    expect(made.view.editable).toBe(false);
+    expect(made.view.dom.hasAttribute('role')).toBe(false);
+    made.stopEditing();
+    expect(container.contains(made.view.dom)).toBe(true);
   });
 
   it('takes its hidden place away when destroyed', async () => {

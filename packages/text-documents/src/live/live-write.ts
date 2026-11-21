@@ -3,7 +3,7 @@
 import * as Y from 'yjs';
 import type { Block, Inline, KeptInline, Paragraph, Run } from '../model/blocks';
 import { isEmpty, type TextProps } from '../model/props';
-import { TextDocument } from '../model/text-document';
+import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import type { Style } from '../model/styles';
 import type { ListDefinition } from '../model/lists';
 import type { Section } from '../model/sections';
@@ -181,6 +181,26 @@ export function setLiveSection(doc: Y.Doc, section: Section, origin?: unknown): 
   const held = (meta.get('section') as { headers?: LiveHeaders } | undefined)?.headers;
   const { headers: _, ...rest } = section;
   doc.transact(() => meta.set('section', plain({ ...rest, headers: held })), origin);
+}
+
+/**
+ * The first section's own headers and footers set as the live state names them, as one transaction with `origin`;
+ * a document holding no first section yet gets a new one's (page-layout.md "Headers and footers").
+ */
+export function setLiveFirstHeaders(
+  doc: Y.Doc,
+  format: TextDocumentFormat,
+  headers: LiveHeaders | undefined,
+  origin?: unknown,
+): void {
+  const meta = doc.getMap<unknown>(DOCUMENT_MAP);
+  const held =
+    (meta.get('section') as Section | undefined) ?? TextDocument.blank({ format }).section;
+  const { headers: _, ...rest } = held;
+  doc.transact(
+    () => meta.set('section', plain({ ...rest, ...(headers ? { headers } : {}) })),
+    origin,
+  );
 }
 
 /** A list's definition set by id, as one transaction with `origin` (lists.md "Making a list"). */

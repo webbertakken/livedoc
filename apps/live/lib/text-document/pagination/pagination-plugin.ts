@@ -112,6 +112,22 @@ export function refreshPages(view: EditorView): void {
   pagers.get(view)?.schedule();
 }
 
+/**
+ * The page a place in the body is on, as an index into the pages drawn (blank ones counted): the last page starting
+ * at or before its paragraph; 0 before pages are laid out (page-layout.md "Editing headers and footers").
+ */
+export function pageIndexAt(view: EditorView, pos: number): number {
+  const pagination = pagers.get(view)?.laid;
+  if (!pagination) return 0;
+  const block = view.state.doc.resolve(pos).index(0);
+  const numbers = pageNumbers(pagination);
+  let index = 0;
+  pagination.starts.forEach((start, q) => {
+    if (start.block <= block) index = numbers[q]! - 1;
+  });
+  return index;
+}
+
 const pagers = new WeakMap<EditorView, Pager>();
 
 const heightsSaid = (heights: StoryHeights) =>
@@ -135,6 +151,11 @@ class Pager {
   constructor(view: EditorView, options: PaginationOptions) {
     this.view = view;
     this.options = options;
+  }
+
+  /** The pages as last laid out, or null before any are. */
+  get laid(): Pagination | null {
+    return this.previous;
   }
 
   invalidate(): void {

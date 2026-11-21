@@ -1442,7 +1442,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+O, H',
     'Ctrl+⌘+O, H',
     'Ctrl+Alt+O, H',
-    'specified',
+    'built',
   ),
   row(
     'insert-or-move-to-footer',
@@ -1451,7 +1451,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+O, F',
     'Ctrl+⌘+O, F',
     'Ctrl+Alt+O, F',
-    'specified',
+    'built',
   ),
   row(
     'move-focus-to-popup',

@@ -265,8 +265,8 @@ The Accessibility menu shows only while screen reader support is on.
 | Move to the end of the document       | —                          | `⌘+Down`                   | `Ctrl+Search+Right`          | specified     |
 | Move to next misspelling              | `Ctrl+'`                   | `⌘+'`                      | `Ctrl+'`                     | specified     |
 | Move to previous misspelling          | `Ctrl+;`                   | `⌘+;`                      | `Ctrl+;`                     | specified     |
-| Insert or move to header              | `Ctrl+Alt+O, H`            | `Ctrl+⌘+O, H`              | `Ctrl+Alt+O, H`              | specified     |
-| Insert or move to footer              | `Ctrl+Alt+O, F`            | `Ctrl+⌘+O, F`              | `Ctrl+Alt+O, F`              | specified     |
+| Insert or move to header              | `Ctrl+Alt+O, H`            | `Ctrl+⌘+O, H`              | `Ctrl+Alt+O, H`              | built         |
+| Insert or move to footer              | `Ctrl+Alt+O, F`            | `Ctrl+⌘+O, F`              | `Ctrl+Alt+O, F`              | built         |
 | Move focus to popup                   | `Ctrl+Alt+E, P`            | `Ctrl+⌘+E, P`              | `Ctrl+Alt+E, P`              | specified     |
 | Move focus out of document text       | `Ctrl+Alt+Shift+M`         | `⌘+Option+Shift+M`         | `Ctrl+Alt+Shift+M`           | specified     |
 | Return focus to document text         | —                          | `Esc`                      | `Esc`                        | specified     |

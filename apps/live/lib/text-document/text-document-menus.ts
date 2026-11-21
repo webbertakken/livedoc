@@ -195,8 +195,8 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('emoji', 'Emoji', 'edit'),
       item('footnote', 'Footnote', 'edit', { shortcut: 'insert-footnote' }),
       submenu('headers-and-footers', 'Headers & footers', [
-        item('header', 'Header', 'edit', { shortcut: 'insert-or-move-to-header' }),
-        item('footer', 'Footer', 'edit', { shortcut: 'insert-or-move-to-footer' }),
+        item('header', 'Header', 'edit', { shortcut: 'insert-or-move-to-header', ...BUILT }),
+        item('footer', 'Footer', 'edit', { shortcut: 'insert-or-move-to-footer', ...BUILT }),
       ]),
       item('page-numbers', 'Page numbers', 'edit'),
       submenu('break', 'Break', [
