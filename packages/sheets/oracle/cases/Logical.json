@@ -226,6 +226,89 @@
         "libreoffice": "LibreOffice gives a formula that hands on an empty cell 0; Google shows such a formula empty"
       },
       "note": "Awaits Google's answer: an empty value handed on by a function."
+    },
+    {
+      "id": "LAMBDA.1",
+      "f": "=LAMBDA(Salary, Salary*0.3)(1000)",
+      "expect": [[300]],
+      "cite": "https://support.google.com/docs/answer/12508718 (sample usage)",
+      "differs": {
+        "libreoffice": "LibreOffice has no LAMBDA: it is #NAME? there"
+      }
+    },
+    {
+      "id": "LAMBDA.2",
+      "f": "=LAMBDA(Temp, (5/9)*(Temp-32))(85)",
+      "expect": [[29.444444444444446]],
+      "cite": "https://support.google.com/docs/answer/12508718 (sample usage)",
+      "differs": {
+        "libreoffice": "LibreOffice has no LAMBDA: it is #NAME? there"
+      }
+    },
+    {
+      "id": "LAMBDA.3",
+      "f": "=LAMBDA(x, y, x-y)(10, 3)",
+      "expect": [[7]],
+      "cite": "https://support.google.com/docs/answer/12508718 (\"call the returned function with as many values as the name declares\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no LAMBDA: it is #NAME? there"
+      }
+    },
+    {
+      "id": "LAMBDA.4",
+      "f": "=LAMBDA(salary, salary*0.3)(Data!A1)",
+      "expect": [[0.3]],
+      "cite": "https://support.google.com/docs/answer/12508718 (example: =LAMBDA(salary, salary*0.3)(C5))",
+      "differs": {
+        "libreoffice": "LibreOffice has no LAMBDA: it is #NAME? there"
+      }
+    },
+    {
+      "id": "LET.1",
+      "f": "=LET(x, 1, y, LET(z, 2, x+z), x+y)",
+      "expect": [[4]],
+      "cite": "https://support.google.com/docs/answer/13190535 (\"Left-to-right scoping\": correct)",
+      "differs": {
+        "libreoffice": "LibreOffice's inner LET does not see the outer LET's names: x is #NAME? there"
+      }
+    },
+    {
+      "id": "LET.2",
+      "f": "=LET(avg, AVERAGE(Data!A1:A3), IF(avg>=4, \"Great\", IF(avg>=0, \"Good\", \"Poor\")))"
+    },
+    {
+      "id": "LET.3",
+      "f": "=LET(r, Data!A1:A4, ROWS(r))"
+    },
+    {
+      "id": "LET.4",
+      "f": "=LET(x, 2, X*3)",
+      "expect": [[6]],
+      "cite": "https://support.google.com/docs/answer/13190535 (\"usage is case-insensitive\")",
+      "differs": {
+        "libreoffice": "LibreOffice's LET names are case-sensitive: X is #NAME? there"
+      }
+    },
+    {
+      "id": "LET.5",
+      "f": "=LET(x, 1/0, 5)"
+    },
+    {
+      "id": "LET.6",
+      "f": "=LET(double, LAMBDA(n, n*2), double(21))",
+      "expect": [[42]],
+      "cite": "https://support.google.com/docs/answer/12508718 (a LAMBDA named and called)",
+      "differs": {
+        "libreoffice": "LibreOffice has no LAMBDA: it is #NAME? there"
+      }
+    },
+    {
+      "id": "LET.7",
+      "f": "=LET(x, 3, y, x*x, x+y)"
+    },
+    {
+      "id": "LET.8",
+      "f": "=LET(x, 1, y)"
     }
   ]
 }

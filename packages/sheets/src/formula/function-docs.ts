@@ -1109,6 +1109,47 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'The days between two dates in a 360-day year',
     '=DAYS360(A2, B2)',
   ),
+  // Lambdas
+  LAMBDA: D(
+    'name1, [name2, …], formula',
+    'A function of its names, called with values in brackets after it',
+    '=LAMBDA(x, x*2)(5)',
+  ),
+  LET: D(
+    'name1, value1, [name2, value2, …], formula',
+    'A formula reading names given values once',
+    '=LET(avg, AVERAGE(B2:D2), IF(avg>=4, "Great", "Good"))',
+  ),
+  MAP: D(
+    'array1, [array2, …], LAMBDA',
+    'Each value mapped by a LAMBDA',
+    '=MAP(A1:A5, LAMBDA(x, x*2))',
+  ),
+  REDUCE: D(
+    'initial_value, array, LAMBDA',
+    'The array reduced to one result by a LAMBDA',
+    '=REDUCE(0, A1:A5, LAMBDA(total, x, total+x))',
+  ),
+  SCAN: D(
+    'initial_value, array, LAMBDA',
+    'Every step of reducing the array, as an array',
+    '=SCAN(0, A1:A5, LAMBDA(total, x, total+x))',
+  ),
+  BYROW: D(
+    'array, LAMBDA',
+    'One value for each row by a LAMBDA',
+    '=BYROW(A1:C3, LAMBDA(row, SUM(row)))',
+  ),
+  BYCOL: D(
+    'array, LAMBDA',
+    'One value for each column by a LAMBDA',
+    '=BYCOL(A1:C3, LAMBDA(col, MAX(col)))',
+  ),
+  MAKEARRAY: D(
+    'rows, columns, LAMBDA',
+    'An array of the given size, each value by a LAMBDA',
+    '=MAKEARRAY(2, 3, LAMBDA(r, c, r*c))',
+  ),
   // Arrays
   FILTER: D(
     'range, condition1, [condition2, …]',

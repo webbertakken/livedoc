@@ -305,7 +305,7 @@ class Parser {
     if (t.k === 'ident' || t.k === 'sheet' || t.k === 'num') {
       if (t.k === 'ident') {
         const after = this.toks[this.toks.indexOf(t) + 1];
-        if (after?.k === 'lparen' && NAME_RE.test(t.v)) return this.call();
+        if (after?.k === 'lparen' && NAME_RE.test(t.v)) return this.applied(this.call());
       }
       const ref = this.tryRef();
       if (ref) return { k: 'ref', ref };
@@ -351,13 +351,27 @@ class Parser {
 
   private call(): Node {
     const name = this.next()!;
+    const { args, end } = this.argumentList();
+    return { k: 'call', name: name.v.toUpperCase(), args, start: name.start, end };
+  }
+
+  // Brackets after a call call its value with values: `LAMBDA(x, x*2)(5)` (formulas.md "LAMBDA and LET").
+  private applied(node: Node): Node {
+    let out = node;
+    while (this.peek()?.k === 'lparen')
+      out = { k: 'apply', fn: out, args: this.argumentList().args };
+    return out;
+  }
+
+  // `(`, the arguments (an empty one null), `)`.
+  private argumentList(): { args: (Node | null)[]; end: number } {
     this.next(); // (
     this.enter();
     const args: (Node | null)[] = [];
     if (this.peek()?.k === 'rparen') {
       const close = this.next()!;
       this.depth--;
-      return { k: 'call', name: name.v.toUpperCase(), args, start: name.start, end: close.end };
+      return { args, end: close.end };
     }
     for (;;) {
       const t = this.peek();
@@ -367,7 +381,7 @@ class Parser {
       if (sep?.k === 'comma') continue;
       if (sep?.k === 'rparen') {
         this.depth--;
-        return { k: 'call', name: name.v.toUpperCase(), args, start: name.start, end: sep.end };
+        return { args, end: sep.end };
       }
       throw new Fail(sep ? 'unexpected_token' : 'missing_close_bracket', sep?.start ?? this.end);
     }

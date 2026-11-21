@@ -8,6 +8,7 @@ import { DATE_FUNCTIONS } from './functions/date';
 import { ENGINEERING_FUNCTIONS } from './functions/engineering';
 import { FINANCE_FUNCTIONS } from './functions/finance';
 import { INFO_FUNCTIONS } from './functions/info';
+import { LAMBDA_FUNCTIONS } from './functions/lambdas';
 import { LOGIC_FUNCTIONS } from './functions/logic';
 import { LOOKUP_FUNCTIONS } from './functions/lookup';
 import { MATH_FUNCTIONS } from './functions/math';
@@ -23,6 +24,7 @@ export type FunctionFamily =
   | 'Statistics'
   | 'Database'
   | 'Logic'
+  | 'Lambdas'
   | 'Information'
   | 'Lookup'
   | 'Text'
@@ -40,6 +42,7 @@ export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>]
   ['Statistics', STATS_FUNCTIONS],
   ['Database', DATABASE_FUNCTIONS],
   ['Logic', LOGIC_FUNCTIONS],
+  ['Lambdas', LAMBDA_FUNCTIONS],
   ['Information', INFO_FUNCTIONS],
   ['Lookup', LOOKUP_FUNCTIONS],
   ['Text', TEXT_FUNCTIONS],

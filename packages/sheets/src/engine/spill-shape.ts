@@ -121,6 +121,11 @@ const SCALAR_RESULT = new Set([
 ]);
 
 const ARRAY_RESULT = new Set([
+  'MAP',
+  'SCAN',
+  'BYROW',
+  'BYCOL',
+  'MAKEARRAY',
   'IMPORTDATA',
   'IMPORTFEED',
   'IMPORTHTML',
@@ -191,6 +196,8 @@ export function maySpill(node: Node, refs: readonly StoredRef[]): boolean {
       return maySpill(node.a, refs);
     case 'bin':
       return maySpill(node.a, refs) || maySpill(node.b, refs);
+    case 'apply':
+      return maySpill(node.fn, refs) || node.args.some((a) => a !== null && maySpill(a, refs));
     case 'call':
       if (LIFTED_PARAMETERS[node.name]?.some((i) => maySpillArg(node.args[i], refs))) return true;
       if (SCALAR_RESULT.has(node.name)) return false;

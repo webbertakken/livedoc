@@ -45,7 +45,7 @@ export function isError(v: unknown): v is SheetError {
   return typeof v === 'object' && v !== null && 'e' in v;
 }
 
-export function isArray(v: Value): v is ValueArray {
+export function isArray(v: unknown): v is ValueArray {
   return typeof v === 'object' && v !== null && 'rows' in v;
 }
 

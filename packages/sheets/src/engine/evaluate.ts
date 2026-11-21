@@ -3,14 +3,23 @@
 // evaluation time, so a formula always reads the cells its ids name.
 import type { StoredRef } from '../sheet';
 import type { Node } from '../formula/ast';
-import { deref, lift, tooBig } from '../formula/fn';
+import { deref, lift, tooBig, UNCALLED_LAMBDA, type Thunk } from '../formula/fn';
+import { callLambda } from '../formula/lambda';
 import { liftedCall } from '../formula/lifted-parameters';
 import { FUNCTIONS } from '../formula/registry';
 import { resolveRef } from '../formula/stored';
 import { arrayFrame, implicit, posToRange, rectangleOf } from './refs';
 import { err, isArray, isError, type Value } from '../formula/values';
 import { binaryOperation, unaryOperation, type UnaryOperator } from '../formula/operators';
-import { isAreas, isRef, type EvalValue, type Frame, type RangeRef } from './frame';
+import {
+  isAreas,
+  isLambda,
+  isRef,
+  type EvalValue,
+  type Frame,
+  type RangeRef,
+  type Scope,
+} from './frame';
 
 function unary(kind: UnaryOperator, v: Value): Value {
   return lift([v], ([x]) => unaryOperation(kind, x!));
@@ -71,6 +80,16 @@ function joinLiteral(rows: Node[][], refs: readonly StoredRef[], f: Frame): Valu
   return { rows: out };
 }
 
+// A lazy argument: worked out when called, or within more names (LET, LAMBDA), over the names around it.
+function thunk(node: Node | null, refs: readonly StoredRef[], f: Frame): Thunk {
+  const run = () => (node ? evaluate(node, refs, f) : null);
+  return Object.assign(run, {
+    within: (names: Scope) =>
+      node ? evaluate(node, refs, { ...f, scope: new Map([...(f.scope ?? []), ...names]) }) : null,
+    identifier: node?.k === 'name' ? node.v : null,
+  });
+}
+
 export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): EvalValue {
   switch (node.k) {
     case 'num':
@@ -83,6 +102,8 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
       return err(node.v);
     // A named range reads as its cells (formulas.md "Named ranges").
     case 'name': {
+      const bound = f.scope?.get(node.v);
+      if (bound !== undefined) return bound;
       const pos = f.ctx.name?.(node.v);
       const range = pos ? posToRange(pos, f) : null;
       return range ? { ref: range } : err('#NAME?', `Unknown name ${node.v}`);
@@ -125,7 +146,25 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
       }
       return { areas };
     }
+    case 'apply': {
+      const fn = evaluate(node.fn, refs, f);
+      if (!isLambda(fn))
+        return isError(fn) ? fn : err('#VALUE!', 'Only a LAMBDA can be called with values');
+      return callLambda(
+        fn.lambda,
+        node.args.map((a) => (a ? evaluate(a, refs, f) : null)),
+        f,
+      );
+    }
     case 'call': {
+      // A LET or LAMBDA name holding a LAMBDA is called as one (`double(5)`).
+      const bound = f.scope?.get(node.name);
+      if (bound !== undefined && isLambda(bound))
+        return callLambda(
+          bound.lambda,
+          node.args.map((a) => (a ? evaluate(a, refs, f) : null)),
+          f,
+        );
       const def = FUNCTIONS[node.name];
       if (!def || !Object.prototype.hasOwnProperty.call(FUNCTIONS, node.name))
         return err('#NAME?', `Unknown function ${node.name}`);
@@ -144,10 +183,11 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
       const evalArg = (a: Node | null): EvalValue => (a ? evaluate(a, refs, argFrame) : null);
       if (def.lazy)
         return def.impl(
-          node.args.map((a) => () => evalArg(a)),
+          node.args.map((a) => thunk(a, refs, argFrame)),
           argFrame,
         );
       const args = node.args.map(evalArg);
+      if (!def.lambdas && args.some((a) => isLambda(a))) return err('#VALUE!', UNCALLED_LAMBDA);
       return (
         liftedCall(node.name, args, argFrame, (each) => def.impl(each, argFrame)) ??
         def.impl(args, argFrame)

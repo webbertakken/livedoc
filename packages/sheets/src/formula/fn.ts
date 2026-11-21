@@ -3,11 +3,13 @@
 // walking the numbers of a range for the aggregates.
 import {
   isAreas,
+  isLambda,
   isRef,
+  type AreasValue,
   type EvalValue,
   type Frame,
   type RangeRef,
-  type RefValue,
+  type Scope,
 } from '../engine/frame';
 import { implicit } from '../engine/refs';
 import { ARRAY_CELLS_MAX, RANGE_CELLS_MAX } from '../limits';
@@ -26,7 +28,16 @@ import {
   type ValueArray,
 } from './values';
 
-export type Thunk = () => EvalValue;
+// A lazy argument: worked out when called, or `within` more names (LET, LAMBDA); `identifier` is its name when it
+// is a bare one (`x`), else null.
+export type Thunk = {
+  (): EvalValue;
+  within(names: Scope): EvalValue;
+  readonly identifier: string | null;
+};
+
+// What a LAMBDA left uncalled is, wherever a value goes (formulas.md "LAMBDA and LET", D68).
+export const UNCALLED_LAMBDA = "The LAMBDA wasn't called with its values.";
 
 export type FnDef =
   | {
@@ -36,6 +47,8 @@ export type FnDef =
       volatile?: true;
       // Its arguments are worked out in an array context (formulas.md "Arrays and spills").
       arrays?: true;
+      // It takes a LAMBDA as an argument (MAP, REDUCE, ...); any other function given one is #VALUE!.
+      lambdas?: true;
       impl: (args: EvalValue[], f: Frame) => EvalValue;
     }
   | {
@@ -85,6 +98,7 @@ export function arrayArgs(def: FnDef): FnDef {
 // A reference read as a value: one cell's value, or the range as an array. A union is no value.
 export function deref(v: EvalValue, f: Frame): Value {
   if (isAreas(v)) return err('#VALUE!', 'A list of references gives no single value');
+  if (isLambda(v)) return err('#VALUE!', UNCALLED_LAMBDA);
   if (!isRef(v)) return v;
   const r = v.ref;
   if (r.r2 < r.r1 || r.c2 < r.c1) return { rows: [] };
@@ -213,7 +227,7 @@ export function finite(v: Value): Value {
 }
 
 // The arguments with each union taken apart into its references, for the functions that read a union as its cells.
-function eachArea(args: EvalValue[]): (Value | RefValue)[] {
+function eachArea(args: EvalValue[]): Exclude<EvalValue, AreasValue>[] {
   return args.flatMap((a) => (a !== null && isAreas(a) ? a.areas.map((ref) => ({ ref })) : [a]));
 }
 
