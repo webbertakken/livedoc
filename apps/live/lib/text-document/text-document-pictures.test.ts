@@ -6,7 +6,12 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { PICTURE, type PictureMedia } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
-import { pictureBox, pictureView, type PictureSource } from './text-document-pictures';
+import {
+  PICTURE_DRAWN_EVENT,
+  pictureBox,
+  pictureView,
+  type PictureSource,
+} from './text-document-pictures';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
 const picture = (attrs: Record<string, unknown>) =>
@@ -139,6 +144,18 @@ describe('a picture drawn', () => {
       expect(asked).toHaveBeenCalledTimes(1);
       expect(view.dom.style.width).toBe('90pt');
     });
+  });
+
+  // objects.md "Working with a picture": its own size is its pixels, noted once its image is drawn.
+  it('notes its own pixels once its image is drawn, and says so', () => {
+    const dom = draw({});
+    const told = vi.fn();
+    dom.addEventListener(PICTURE_DRAWN_EVENT, told);
+    const img = dom.querySelector('img')!;
+    Object.defineProperties(img, { naturalWidth: { value: 320 }, naturalHeight: { value: 160 } });
+    img.dispatchEvent(new Event('load'));
+    expect(dom.dataset).toMatchObject({ ownWidth: '320', ownHeight: '160' });
+    expect(told).toHaveBeenCalledOnce();
   });
 
   // objects.md "Working with a picture", Sizing by its handles: eight handles on a selected picture; the box follows the

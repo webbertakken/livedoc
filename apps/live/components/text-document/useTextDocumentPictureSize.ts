@@ -17,6 +17,7 @@ import {
   selectedPicture,
   setPictureSize,
 } from '@/lib/text-document/text-document-picture-edit';
+import { PICTURE_DRAWN_EVENT } from '@/lib/text-document/text-document-pictures';
 import { ownPictureSize } from '@/lib/text-document/text-document-picture-insert';
 import {
   changedPictureSize,
@@ -88,8 +89,15 @@ export function useTextDocumentPictureSize({
       setSelected((was) => (same(was, now) ? was : now));
     };
     update();
-    return subscribe(update);
-  }, [read, subscribe]);
+    // A gallery picture's own size is known once its image is drawn.
+    const dom = view?.dom;
+    dom?.addEventListener(PICTURE_DRAWN_EVENT, update);
+    const unsubscribe = subscribe(update);
+    return () => {
+      dom?.removeEventListener(PICTURE_DRAWN_EVENT, update);
+      unsubscribe();
+    };
+  }, [read, subscribe, view]);
 
   /** Writes a size as one undo step: the handles' release, or a field of the panel. */
   const resize = useCallback(
@@ -100,6 +108,8 @@ export function useTextDocumentPictureSize({
       startUndoStep(view);
       debugLog('[text-document] picture size', { done, by, ...size });
       if (done) track('Element', 'Changed', 'TextDocumentImageSize');
+      // A handle leaves the keyboard with the writing; the panel keeps it in its field.
+      if (by === 'handle') view.focus();
     },
     [canEdit, view],
   );

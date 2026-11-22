@@ -12,6 +12,8 @@ import { textDocumentSchema as schema } from '@/lib/text-document/text-document-
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track }));
 
+import { PICTURE_DRAWN_EVENT } from '@/lib/text-document/text-document-pictures';
+
 const { useTextDocumentPictureSize } = await import('./useTextDocumentPictureSize');
 
 // A PNG's header: 160 by 80 pixels, so its own size is 120 by 60 points.
@@ -39,7 +41,8 @@ function setup({ selected = true, canEdit = true, held = true, drawn = false } =
   TextDocumentState.addMedia(live, {
     m: held ? { mediaType: 'image/png', bytes: PNG } : { mediaType: 'image/png', image: 'img-1' },
   });
-  if (drawn) Object.assign((view.nodeDOM(1) as HTMLElement).dataset, { ownWidth: '320', ownHeight: '160' });
+  if (drawn)
+    Object.assign((view.nodeDOM(1) as HTMLElement).dataset, { ownWidth: '320', ownHeight: '160' });
   const toggle = { run: vi.fn() };
   const hook = renderHook(() =>
     useTextDocumentPictureSize({
@@ -89,6 +92,15 @@ describe('useTextDocumentPictureSize', () => {
       width: 240,
       height: 120,
     });
+  });
+
+  it('reads its own size again once its image is drawn', () => {
+    const { hook, view } = setup({ held: false });
+    expect(hook.result.current.picture?.own).toBeNull();
+    const dom = view.nodeDOM(1) as HTMLElement;
+    Object.assign(dom.dataset, { ownWidth: '320', ownHeight: '160' });
+    act(() => dom.dispatchEvent(new Event(PICTURE_DRAWN_EVENT, { bubbles: true })));
+    expect(hook.result.current.picture?.own).toEqual({ width: 240, height: 120 });
   });
 
   it("writes the panel's size, the ratio locked, counted", () => {

@@ -96,6 +96,9 @@ export type PictureSizingHooks = {
   readonly resize: (pos: number, size: PictureSize) => void;
 };
 
+/** Told, bubbling from a picture, once its image is drawn and its own pixels noted. */
+export const PICTURE_DRAWN_EVENT = 'text-document-picture-drawn';
+
 // A point is drawn as 4/3 of a pixel where nothing is laid out to measure.
 const PIXELS_A_POINT = 96 / 72;
 
@@ -146,6 +149,7 @@ export function pictureView(
       img.addEventListener('load', () => {
         dom.dataset.ownWidth = String(img.naturalWidth);
         dom.dataset.ownHeight = String(img.naturalHeight);
+        dom.dispatchEvent(new Event(PICTURE_DRAWN_EVENT, { bubbles: true }));
       });
       clip.replaceChildren(img);
       fit(current.attrs);
