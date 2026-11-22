@@ -11,6 +11,7 @@ import {
   writeOdfPackage,
   XML_DECLARATION,
 } from '@livedoc/office-packages';
+import { declarations, OdsKeptWriter } from './ods-kept-write';
 import { OdsStyles } from './ods-styles';
 import { toOpenFormula } from './open-formula';
 import type {
@@ -38,6 +39,7 @@ const CONTENT_NAMESPACES: readonly Prefix[] = [
   'of',
 ];
 const META_NAMESPACES: readonly Prefix[] = ['office', 'meta', 'dc'];
+const SETTINGS_NAMESPACES: readonly Prefix[] = ['office'];
 const FLAT_NAMESPACES: readonly Prefix[] = [
   'office',
   'meta',
@@ -50,8 +52,14 @@ const FLAT_NAMESPACES: readonly Prefix[] = [
   'of',
 ];
 
-// What writing a sheet carries along: its name, the losses so far, and the cell styles named.
-type Out = { sheet: string; losses: FileLoss[]; styles: OdsStyles };
+// What writing a sheet carries along: its name and index, the losses so far, the cell styles named, the kept content.
+type Out = {
+  sheet: string;
+  index: number;
+  losses: FileLoss[];
+  styles: OdsStyles;
+  kept: OdsKeptWriter;
+};
 
 // A cell's style, its number format's; a format ODF cannot say is named, the cell written without it.
 function styleAttribute(cell: FileCell, out: Out): string[] {
@@ -65,6 +73,9 @@ function styleAttribute(cell: FileCell, out: Out): string[] {
 function namespaces(prefixes: readonly Prefix[]): string {
   return prefixes.map((p) => `xmlns:${p}="${ODF_NS[p]}"`).join(' ');
 }
+
+const bindings = (prefixes: readonly Prefix[]) =>
+  Object.fromEntries(prefixes.map((p) => [p, ODF_NS[p]])) as Record<string, string>;
 
 function valueAttributes(value: FileValue): string {
   switch (value.k) {
@@ -114,9 +125,11 @@ function cellXml(cell: FileCell, out: Out): string {
       : []),
     ...(cell.value ? [valueAttributes(cell.value)] : []),
   ];
+  // Kept content stays on its cell: its attributes, and its children before and after the paragraphs.
+  const kept = out.kept.cell(out.index, cell.r, cell.c);
   const body = cell.value ? paragraphs(shownText(cell.value)) : '';
-  const open = attrs.length > 0 ? `<table:table-cell ${attrs.join(' ')}>` : '<table:table-cell>';
-  return `${open}${body}</table:table-cell>`;
+  const open = `<table:table-cell${attrs.map((a) => ` ${a}`).join('')}${kept?.attributes ?? ''}>`;
+  return `${open}${kept?.before ?? ''}${body}${kept?.after ?? ''}</table:table-cell>`;
 }
 
 const repeated = (axis: 'columns' | 'rows', n: number) =>
@@ -143,34 +156,42 @@ function emptyRows(n: number, cols: number): string {
   return `<table:table-row${repeated('rows', n)}>${emptyCells(cols)}</table:table-row>`;
 }
 
-function tableXml(sheet: FileSheet, losses: FileLoss[], styles: OdsStyles): string[] {
-  const out: Out = { sheet: sheet.name, losses, styles };
+function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'index'>): string[] {
+  const { kept } = out;
+  const sheetOut: Out = { ...out, sheet: sheet.name, index };
+  // A cell keeping content is written, empty or not, so its content stays on it.
+  const held = new Set(sheet.cells.map((c) => `${c.r},${c.c}`));
+  const keptCells = kept.cellsOf(index).filter((p) => !held.has(`${p.r},${p.c}`));
   const rows = new Map<number, FileCell[]>();
-  for (const cell of sheet.cells) {
+  for (const cell of [...sheet.cells, ...keptCells]) {
     const row = rows.get(cell.r);
     if (row) row.push(cell);
     else rows.set(cell.r, [cell]);
   }
-  const cols = Math.max(1, sheet.cols, ...sheet.cells.map((c) => c.c + 1));
-  const rowCount = Math.max(1, sheet.rows, ...sheet.cells.map((c) => c.r + 1));
+  // Reduced, not spread: a sheet's cells are past what a call's arguments hold.
+  let cols = Math.max(1, sheet.cols);
+  for (const row of rows.values()) for (const cell of row) cols = Math.max(cols, cell.c + 1);
+  let rowCount = Math.max(1, sheet.rows);
+  for (const r of rows.keys()) rowCount = Math.max(rowCount, r + 1);
   const lines = [
-    `<table:table table:name="${escapeXmlAttribute(sheet.name)}">`,
+    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${kept.tableAttributes(index)}>`,
+    ...kept.table('table-before', index),
     `<table:table-column${repeated('columns', cols)}/>`,
   ];
-  let at = 0;
+  let next = 0;
   for (const r of [...rows.keys()].sort((a, b) => a - b)) {
-    if (r > at) lines.push(emptyRows(r - at, cols));
+    if (r > next) lines.push(emptyRows(r - next, cols));
     lines.push(
       ...rowXml(
         rows.get(r)!.sort((a, b) => a.c - b.c),
         cols,
-        out,
+        sheetOut,
       ),
     );
-    at = r + 1;
+    next = r + 1;
   }
-  if (rowCount > at) lines.push(emptyRows(rowCount - at, cols));
-  lines.push('</table:table>');
+  if (rowCount > next) lines.push(emptyRows(rowCount - next, cols));
+  lines.push(...kept.table('table-after', index), '</table:table>');
   return lines;
 }
 
@@ -181,16 +202,20 @@ const CALCULATION_SETTINGS =
   'table:search-criteria-must-apply-to-whole-cell="true" table:use-regular-expressions="false" ' +
   'table:use-wildcards="true"/>';
 
-// The body, after the automatic styles its cells name (D93).
-function bodyXml(file: WorkbookFile, losses: FileLoss[]): string[] {
+// The body, after the scripts kept and the automatic styles its cells and its kept content name (D93).
+function bodyXml(file: WorkbookFile, losses: FileLoss[], kept: OdsKeptWriter): string[] {
   const styles = new OdsStyles();
-  const tables = file.sheets.flatMap((sheet) => tableXml(sheet, losses, styles));
+  const tables = file.sheets.flatMap((sheet, i) => tableXml(sheet, i, { losses, styles, kept }));
   return [
-    ...styles.automaticStyles(),
+    ...kept.workbook('scripts'),
+    ...styles.automaticStyles(kept.workbook('styles')),
     '<office:body>',
     '<office:spreadsheet>',
+    ...kept.spreadsheetBefore('before'),
     CALCULATION_SETTINGS,
+    ...kept.spreadsheetBefore('after'),
     ...tables,
+    ...kept.workbook('spreadsheet-after'),
     '</office:spreadsheet>',
     '</office:body>',
   ];
@@ -208,14 +233,21 @@ function metaXml(title: string): string[] {
 /** The workbook as an ODF flat file (`.fods`): one `office:document`, every part inline. */
 export function writeFlatOds(file: WorkbookFile, title: string): FileWritten<string> {
   const losses: FileLoss[] = [];
+  const own = bindings(FLAT_NAMESPACES);
+  const kept = new OdsKeptWriter(file.kept, own);
+  const body = bodyXml(file, losses, kept);
   const data = [
     XML_DECLARATION,
-    `<office:document ${namespaces(FLAT_NAMESPACES)} office:version="${ODF_VERSION}" office:mimetype="${ODF_MEDIA_TYPES.spreadsheet}">`,
+    `<office:document ${namespaces(FLAT_NAMESPACES)}${kept.rootDeclarations(own, true)} office:version="${ODF_VERSION}" office:mimetype="${ODF_MEDIA_TYPES.spreadsheet}">`,
     ...metaXml(title),
-    ...bodyXml(file, losses),
+    ...kept.settings({ ...kept.settingsNs, ...own }),
+    ...body,
     '</office:document>',
     '',
   ].join('\n');
+  // A flat file holds no package entries: a kept picture or object still reached is left out, and named (D111).
+  const left = kept.entries().filter((entry) => !entry.name.endsWith('/')).length;
+  if (left > 0) losses.push({ k: 'parts_left', count: left });
   return { data, losses };
 }
 
@@ -224,22 +256,44 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
   const losses: FileLoss[] = [];
   const xml = (lines: string[]) =>
     new TextEncoder().encode([XML_DECLARATION, ...lines, ''].join('\n'));
-  const root = (name: string, prefixes: readonly Prefix[], inner: string[]) => [
-    `<office:${name} ${namespaces(prefixes)} office:version="${ODF_VERSION}">`,
+  const root = (name: string, prefixes: readonly Prefix[], inner: string[], more = '') => [
+    `<office:${name} ${namespaces(prefixes)}${more} office:version="${ODF_VERSION}">`,
     ...inner,
     `</office:${name}>`,
   ];
+  const own = bindings(CONTENT_NAMESPACES);
+  const kept = new OdsKeptWriter(file.kept, own);
+  const body = bodyXml(file, losses, kept);
+  const settingsOwn = bindings(SETTINGS_NAMESPACES);
+  const settings = kept.settings({ ...kept.settingsNs, ...settingsOwn });
   const data = writeOdfPackage(ODF_MEDIA_TYPES.spreadsheet, [
     {
       name: 'content.xml',
       mediaType: 'text/xml',
-      data: xml(root('document-content', CONTENT_NAMESPACES, bodyXml(file, losses))),
+      data: xml(root('document-content', CONTENT_NAMESPACES, body, kept.rootDeclarations(own))),
     },
     {
       name: 'meta.xml',
       mediaType: 'text/xml',
       data: xml(root('document-meta', META_NAMESPACES, metaXml(title))),
     },
+    ...(settings.length > 0
+      ? [
+          {
+            name: 'settings.xml',
+            mediaType: 'text/xml',
+            data: xml(
+              root(
+                'document-settings',
+                SETTINGS_NAMESPACES,
+                settings,
+                declarations(kept.settingsNs, settingsOwn),
+              ),
+            ),
+          },
+        ]
+      : []),
+    ...kept.entries(),
   ]);
   return { data, losses };
 }

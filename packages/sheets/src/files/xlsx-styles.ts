@@ -108,6 +108,25 @@ export function readCellStyles(stylesXml: string | undefined, locale: string): X
   });
 }
 
+/**
+ * The cell styles (`cellXfs` indexes) that format more than the number: a font, fill or border other than the
+ * first, or an alignment or protection (standard-mapping.md "Unknown content", `styles_unread`, D104).
+ */
+export function styledCellStyles(stylesXml: string | undefined): Set<number> {
+  const out = new Set<number>();
+  const parsed = stylesXml === undefined ? undefined : parseXml(stylesXml, 'xl/styles.xml');
+  if (!parsed?.ok) return out;
+  const holder = childElements(parsed.root).find((e) => e.local === 'cellXfs');
+  const xfs = holder ? childElements(holder).filter((e) => e.local === 'xf') : [];
+  xfs.forEach((xf, i) => {
+    const own = ['fontId', 'fillId', 'borderId'].some(
+      (id) => (attributeOf(xf, '', id) ?? '0') !== '0',
+    );
+    if (own || childElements(xf).length > 0) out.add(i);
+  });
+  return out;
+}
+
 /** The cell styles whose number format shows a date. */
 export function dateStyles(styles: readonly XlsxCellStyle[]): Set<number> {
   const out = new Set<number>();
@@ -137,7 +156,8 @@ export class XlsxStyles {
   }
 
   /** `xl/styles.xml`: Google Sheets' default font, no fill, no border, and each number format's cell style. */
-  xml(): string {
+  /** The styles part, LiveDoc's styles and then `kept`: the file's differential formats and table styles (D110). */
+  xml(kept = ''): string {
     const own = [...this.own].map(
       ([code, id]) => `<numFmt numFmtId="${id}" formatCode="${escapeXmlAttribute(code)}"/>`,
     );
@@ -154,6 +174,7 @@ export class XlsxStyles {
       '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
       `<cellXfs count="${xfs.length + 1}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>${xfs.join('')}</cellXfs>` +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      kept +
       '</styleSheet>'
     );
   }

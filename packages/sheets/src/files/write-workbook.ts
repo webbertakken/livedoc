@@ -7,6 +7,8 @@ import { SheetLimits } from '../sheet-limits';
 import { formulasAnsweringDifferently, type FormulaMeaning } from '../formula/meaning';
 import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
 import { writeFlatOds, writeOds } from './ods-write';
+import { fileKept } from './kept-anchors';
+import { keptStandardOf, type KeptContent, type StoredAt } from './kept-content';
 import type { FileLoss, WorkbookFile } from './workbook-file';
 import { workbookFileOf } from './workbook-file';
 import { writeXlsx } from './xlsx-write';
@@ -48,16 +50,27 @@ function written(file: WorkbookFile, title: string, format: WorkbookFormat): Wri
   return { data: new Uint8Array(new TextEncoder().encode(flat.data)), losses: flat.losses };
 }
 
-/** The workbook as a format's file, with what it loses, the formulas its standard answers differently among them. */
+/**
+ * The workbook as a format's file, with what it loses, the formulas its standard answers differently among them. Its
+ * `kept` content goes into a file of its own standard only (D109), an item whose anchor is gone dropped and counted.
+ */
 export function writeWorkbook(
   sheets: readonly Sheet[],
   record: WorkbookRecord,
   title: string,
   format: WorkbookFormat,
+  kept?: KeptContent<StoredAt>,
 ): WrittenWorkbook {
   const file = workbookFileFor(sheets, record);
+  const losses: FileLoss[] = [];
+  if (kept && kept.standard === keptStandardOf(format)) {
+    const placed = fileKept(kept, sheets);
+    file.kept = placed.kept;
+    if (placed.dropped > 0) losses.push({ k: 'kept_dropped', count: placed.dropped });
+  }
   const out = written(file, title, format);
+  losses.unshift(...out.losses);
   const differ = answersDiffering(file, record.meaning ?? 'google', format);
-  if (differ.count === 0) return out;
-  return { data: out.data, losses: [...out.losses, { k: 'answers_differ', ...differ }] };
+  if (differ.count > 0) losses.push({ k: 'answers_differ', ...differ });
+  return { data: out.data, losses };
 }

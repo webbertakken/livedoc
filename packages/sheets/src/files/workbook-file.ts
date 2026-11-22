@@ -20,6 +20,8 @@ import { SheetLimits } from '../sheet-limits';
 import { SheetName } from '../workbook/sheet-name';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import { formatCodeOf, formatFromCode } from './number-format-code';
+import { storedKept } from './kept-anchors';
+import type { KeptContent, StoredAt } from './kept-content';
 
 export type FileValue =
   { k: 'n'; v: number } | { k: 's'; v: string } | { k: 'b'; v: boolean } | { k: 'e'; v: ErrorCode };
@@ -40,7 +42,8 @@ export type FileCell = {
 
 export type FileSheet = { name: string; rows: number; cols: number; cells: FileCell[] };
 
-export type WorkbookFile = { sheets: FileSheet[] };
+/** A workbook as a file holds it, and what it holds that the model does not (standard-mapping.md "Unknown content"). */
+export type WorkbookFile = { sheets: FileSheet[]; kept?: KeptContent };
 
 /** A file read: its sheets and what could not be carried, or the package's named rejection. */
 export type FileRead = { ok: true; file: WorkbookFile; losses: FileLoss[] } | PackageRefusal;
@@ -61,6 +64,16 @@ export type FileLoss =
   | { k: 'format_unwritten'; sheet: string; r: number; c: number }
   | { k: 'format_approximated'; sheet: string; code: string }
   | { k: 'formats_cut'; sheet: string }
+  // Kept content (standard-mapping.md "Unknown content"): a repeated cell's past D105, a construct not kept (D108),
+  // a kept anchor gone at a write, what the package dropped (D106).
+  | { k: 'kept_cut'; sheet: string; cells: number }
+  // A sheet's cells formatted past their number format (fonts, fills, borders, alignment): not read yet (D104).
+  | { k: 'styles_unread'; sheet: string }
+  | { k: 'kept_unread'; count: number }
+  | { k: 'kept_dropped'; count: number }
+  | { k: 'entries_dropped'; entries: string[] }
+  // Kept pictures and objects a flat file cannot hold (D111).
+  | { k: 'parts_left'; count: number }
   // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] };
 
@@ -197,7 +210,12 @@ export type SheetFromFile = {
   cells: { r: string; c: string; i?: CellInput; f?: CellFormat }[];
 };
 
-export type SheetsFromFile = { sheets: SheetFromFile[]; losses: FileLoss[] };
+/** The sheets a file makes, what it could not carry, and its kept content anchored to them by id. */
+export type SheetsFromFile = {
+  sheets: SheetFromFile[];
+  losses: FileLoss[];
+  kept?: KeptContent<StoredAt>;
+};
 
 function literalInput(value: FileValue): CellInput | null {
   switch (value.k) {
@@ -259,7 +277,7 @@ function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] 
  * workbook's limits leave) and its cells, formulas compiled against the file's own sheets. A cell or a sheet past the
  * limits, a sheet name taken or too long, and a formula LiveDoc cannot read are each named in `losses`; the last
  * keeps its value. Each number format is read in `locale`, the workbook's (standard-mapping.md "Number formats in the
- * file"); one that cannot be read is named too, its cell kept.
+ * file"); one that cannot be read is named too, its cell kept. Its kept content comes anchored to the sheets by id.
  */
 export function sheetsFromFile(
   file: WorkbookFile,
@@ -300,5 +318,9 @@ export function sheetsFromFile(
     }
     return { id: m.id, title: m.title, layout: m.layout, cells };
   });
-  return { sheets, losses };
+  if (!file.kept) return { sheets, losses };
+  // Kept content on a sheet, row or column the workbook's limits cut goes with it, counted.
+  const stored = storedKept(file.kept, made);
+  if (stored.dropped > 0) losses.push({ k: 'kept_dropped', count: stored.dropped });
+  return { sheets, losses, kept: stored.kept };
 }

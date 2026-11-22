@@ -28,6 +28,7 @@ import {
   XLSX_SHEET_NAME_MAX,
 } from './xlsx-parts';
 import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xlsx-bounds';
+import { ownIds, XlsxKeptWriter } from './xlsx-kept-write';
 import { XlsxStyles } from './xlsx-styles';
 import type {
   FileCell,
@@ -167,13 +168,17 @@ function cellXml(cell: FileCell, write: CellWrite, style: number): string {
   return `<c ${attrs.join(' ')}>${formula}${value}</c>`;
 }
 
+// The bindings every root LiveDoc writes declares: SpreadsheetML's, and relationships' as `r`.
+const OWN_NS = { '': SPREADSHEETML_NS, r: OFFICE_RELATIONSHIPS_NS };
+
 function worksheetXml(
   sheet: FileSheet,
-  strings: SharedStrings,
-  styles: XlsxStyles,
+  index: number,
+  book: { strings: SharedStrings; styles: XlsxStyles; kept: XlsxKeptWriter },
   renamed: ReadonlyMap<string, string>,
   losses: FileLoss[],
 ): { xml: string; dynamic: boolean } {
+  const { strings, styles, kept } = book;
   // Cells past Excel's last column are left out, and the cut named (D89).
   const ordered = sheet.cells
     .filter((cell) => cell.c < FILE_LAST_COL)
@@ -214,27 +219,41 @@ function worksheetXml(
         ordered.reduce((n, c) => Math.max(n, c.c), 0),
       )}`
     : 'A1';
+  const own = [
+    { name: 'dimension', xml: `<dimension ref="${extent}"/>` },
+    {
+      name: 'sheetData',
+      xml: lines.length > 0 ? ['<sheetData>', ...lines, '</sheetData>'].join('\n') : '<sheetData/>',
+    },
+  ];
+  const rootNs = kept.rootBindings('worksheet', OWN_NS, index);
   const xml = [
     XML_DECLARATION,
-    `<worksheet xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}">`,
-    `<dimension ref="${extent}"/>`,
-    lines.length > 0 ? ['<sheetData>', ...lines, '</sheetData>'].join('\n') : '<sheetData/>',
+    `<worksheet xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('worksheet', OWN_NS, index)}>`,
+    ...kept.worksheetChildren(index, own, rootNs),
     '</worksheet>',
     '',
   ].join('\n');
   return { xml, dynamic: ctx.dynamic };
 }
 
-function workbookXml(names: readonly string[]): string {
+function workbookXml(
+  names: readonly string[],
+  ids: readonly string[],
+  kept: XlsxKeptWriter,
+): string {
   const sheets = names.map(
     (name, i) =>
-      `<sheet name="${escapeXmlAttribute(name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`,
+      `<sheet name="${escapeXmlAttribute(name)}" sheetId="${i + 1}"${kept.sheetAttributes(i)} r:id="${ids[i]}"/>`,
   );
+  const own = [
+    { name: 'workbookPr', xml: '<workbookPr/>' },
+    { name: 'sheets', xml: `<sheets>${sheets.join('')}</sheets>` },
+  ];
   return [
     XML_DECLARATION,
-    `<workbook xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}">`,
-    '<workbookPr/>',
-    `<sheets>${sheets.join('')}</sheets>`,
+    `<workbook xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('workbook', OWN_NS)}>`,
+    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS)),
     '</workbook>',
     '',
   ].join('\n');
@@ -246,9 +265,11 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const renamed = excelNames(file.sheets, losses);
   const strings = new SharedStrings();
   const styles = new XlsxStyles();
+  // What the file kept goes back where it sat, its relationships with their ids (standard-mapping.md "Unknown content").
+  const kept = new XlsxKeptWriter(file.kept, file.sheets.length);
   let dynamic = false;
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
-    const written = worksheetXml(sheet, strings, styles, renamed, losses);
+    const written = worksheetXml(sheet, i, { strings, styles, kept }, renamed, losses);
     dynamic ||= written.dynamic;
     return {
       name: `xl/worksheets/sheet${i + 1}.xml`,
@@ -257,13 +278,16 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     };
   });
   const names = file.sheets.map((s) => renamed.get(s.name) ?? s.name);
-  const workbookRels: Relationship[] = sheetParts.map((part, i) => ({
-    id: `rId${i + 1}`,
+  const keptWorkbookRels = kept.relationships('workbook');
+  const workbookId = ownIds(keptWorkbookRels);
+  const workbookRels: Relationship[] = sheetParts.map((part) => ({
+    id: workbookId(),
     type: RELATIONSHIP_TYPES.worksheet,
     target: part.name.slice('xl/'.length),
   }));
+  const sheetIds = workbookRels.map((r) => r.id);
   const more = (type: string, target: string) =>
-    workbookRels.push({ id: `rId${workbookRels.length + 1}`, type, target });
+    workbookRels.push({ id: workbookId(), type, target });
   more(RELATIONSHIP_TYPES.styles, 'styles.xml');
   more(RELATIONSHIP_TYPES.sharedStrings, 'sharedStrings.xml');
   if (dynamic) more(RELATIONSHIP_TYPES.sheetMetadata, 'metadata.xml');
@@ -276,10 +300,14 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     {
       name: 'xl/workbook.xml',
       contentType: OOXML_CONTENT_TYPES.spreadsheet,
-      data: encode(workbookXml(names)),
+      data: encode(workbookXml(names, sheetIds, kept)),
     },
     ...sheetParts,
-    xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),
+    xmlPart(
+      'xl/styles.xml',
+      OOXML_CONTENT_TYPES.spreadsheetStyles,
+      styles.xml(kept.stylesheet({ '': SPREADSHEETML_NS })),
+    ),
     xmlPart('xl/sharedStrings.xml', OOXML_CONTENT_TYPES.sharedStrings, strings.xml()),
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]
@@ -295,18 +323,31 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       data: encode(ooxmlAppXml({}, statisticsOf([]), ODS_GENERATOR)),
     },
   ];
+  const keptPackageRels = kept.relationships('package');
+  const packageId = ownIds(keptPackageRels);
+  const keptParts = kept.parts();
   const relationships = new Map<string, readonly Relationship[]>([
     [
       '',
       [
-        { id: 'rId1', type: RELATIONSHIP_TYPES.officeDocument, target: 'xl/workbook.xml' },
-        { id: 'rId2', type: RELATIONSHIP_TYPES.coreProperties, target: 'docProps/core.xml' },
-        { id: 'rId3', type: RELATIONSHIP_TYPES.extendedProperties, target: 'docProps/app.xml' },
+        { id: packageId(), type: RELATIONSHIP_TYPES.officeDocument, target: 'xl/workbook.xml' },
+        { id: packageId(), type: RELATIONSHIP_TYPES.coreProperties, target: 'docProps/core.xml' },
+        {
+          id: packageId(),
+          type: RELATIONSHIP_TYPES.extendedProperties,
+          target: 'docProps/app.xml',
+        },
+        ...keptPackageRels,
       ],
     ],
-    ['xl/workbook.xml', workbookRels],
+    ['xl/workbook.xml', [...workbookRels, ...keptWorkbookRels]],
+    ...sheetParts.map((part, i): [string, Relationship[]] => [
+      part.name,
+      kept.relationships('sheet', i),
+    ]),
+    ...keptParts.relationships,
   ]);
-  return { data: writeOoxmlPackage(parts, relationships), losses };
+  return { data: writeOoxmlPackage([...parts, ...keptParts.parts], relationships), losses };
 }
 
 function encode(text: string): Uint8Array {

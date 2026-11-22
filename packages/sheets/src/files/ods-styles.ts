@@ -37,12 +37,31 @@ export class OdsStyles {
     return name;
   }
 
-  /** `office:automatic-styles`, or nothing when no cell has a format. */
-  automaticStyles(): string[] {
-    return this.xml.length === 0
+  /** `office:automatic-styles` with the `kept` ones after the cells', or nothing when there are none. */
+  automaticStyles(kept: readonly string[] = []): string[] {
+    const styles = [...this.xml, ...kept];
+    return styles.length === 0
       ? []
-      : ['<office:automatic-styles>', ...this.xml, '</office:automatic-styles>'];
+      : ['<office:automatic-styles>', ...styles, '</office:automatic-styles>'];
   }
+}
+
+/**
+ * The cell styles among a file's style containers that format more than the number: any properties of their own
+ * (a font, a fill, a border, an alignment) (standard-mapping.md "Unknown content", `styles_unread`, D104).
+ */
+export function odsStyledCellStyles(roots: readonly XmlElement[]): Set<string> {
+  const out = new Set<string>();
+  for (const root of roots)
+    for (const local of ['automatic-styles', 'styles']) {
+      const container = childElement(root, OFFICE, local);
+      for (const style of container ? childElements(container) : []) {
+        const name = attributeOf(style, STYLE, 'name');
+        const cell = attributeOf(style, STYLE, 'family') === 'table-cell';
+        if (cell && name !== undefined && childElements(style).length > 0) out.add(name);
+      }
+    }
+  return out;
 }
 
 /** A cell style's number format: its code read, none for a style with no data style. */

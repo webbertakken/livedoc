@@ -87,8 +87,14 @@ bytes.
 - Every file LiveDoc writes is validated in CI against **its own format's schema**: ODF against the OASIS ODF 1.4 RELAX
   NG schemas (main and manifest) with Jing (`-i`), ID-type checks off, after removing `livedoc:`, `loext:` and kept content as
   extended conformance defines; OOXML against the ISO/IEC 29500 Transitional XML schemas (WordprocessingML, DrawingML,
-  OPC content types and relationships) after removing the namespaces `mc:Ignorable` names and kept content. A test
-  writes one file per construct of the mapping, in each format, and validates each.
+  OPC content types and relationships, SpreadsheetML) after removing the namespaces `mc:Ignorable` names and kept
+  content. A test writes one file per construct of the mapping, in each format, and validates each, for text documents
+  and spreadsheets alike.
+- SpreadsheetML's text (`t`) leaves out `xml:space`, which Excel and LibreOffice write and Excel reads to keep a
+  text's edge spaces; LiveDoc writes it only on such text, and the check removes it, the one attribute it removes that
+  the file means.
+- The check is one module, `@livedoc/office-packages/validation` (Node only), and the script that fetches the schemas
+  is the office packages' `scripts/fetch-office-schemas.sh`; each package's `validate:files` runs its own constructs.
 - The OOXML schemas are ECMA-376 Part 4's Transitional RELAX NG (compact syntax) and Part 2's OPC schemas, checked by
   Jing too (`-c`). Schemas and Jing are fetched from their publishers by the validation script, each pinned by its
   SHA-256, into a gitignored cache; nothing of them is committed. CI's **Office files** job runs the validation.

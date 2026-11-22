@@ -158,14 +158,59 @@ The table is the contract the readers and writers are tested against, one test p
 
 ## Unknown content
 
-- Whatever a file holds that the model does not (a macro library, an embedded object, a format's own setting, a
-  smart chip, a filter view in XLSX that only ODF could hold) is kept with the workbook as the file's own XML, by
-  where it sat, and written back untouched to the same format.
-- Kept content whose anchor is gone (its sheet deleted, its cells cleared) is dropped at the next write, and the
-  write's report says so; nothing is dropped silently.
+- Whatever a file holds that the model does not (an embedded chart, a format's own setting, a smart chip, a filter view in XLSX that only ODF could hold) is kept with the workbook as the file's own XML, by
+  where it sat, and written back untouched to the same format. Built in `@livedoc/sheets/files` (`KeptContent`).
+- Every construct the mappings above do not read yet is kept until its mapping is built (charts and pictures, notes
+  and comments, merges, named ranges, validation and format rules, filters, protections; XLSX's print settings and
+  column widths), as text documents keep theirs. Styles are not kept: a cell's, row's or column's style beyond its
+  number format, and ODF's `styles.xml` (its page layouts, so its print settings, and the named styles a format rule
+  applies), wait for [Formatting](formatting.md) to map them. Until then a file's read names each sheet whose cells,
+  rows or columns name a cell style formatting more than the number (a font, fill, border or alignment:
+  `styles_unread`); ODF's row and column sizes are named by the import report (default, D104). XLSX's differential formats (`dxfs`) and table styles are kept in its styles part,
+  as kept format rules, tables and pivot tables name them by index; a kept column's `style` index is left out, as it
+  names a style LiveDoc does not write (default, D110).
+- **Grains**, each kept as the file's own XML with the namespace bindings it needs
+  ([Office packages](../020-import-export/office-packages.md), `keptXmlOf`), anchored where it sat:
+  - **Workbook**: ODF's `office:spreadsheet` children but its tables and `table:calculation-settings` (which LiveDoc
+    writes), each before or after the tables as it sat; `office:scripts`; the automatic styles of the families no
+    cell, row, column or table names (`graphic`, `paragraph`, `text`, `chart`), which kept drawings and notes
+    name. XLSX's `workbook` children but `workbookPr` and `sheets`.
+  - **Sheet**: ODF's `table:table` children but its columns and rows, each before or after them, and its attributes
+    but `table:name` and `table:style-name`; XLSX's `worksheet` children but `dimension` and `sheetData`, and its
+    `sheet` element's attributes but `name`, `sheetId` and `r:id`.
+  - **Cell** (ODF): a `table:table-cell`'s children but its paragraphs (a note, a drawing anchored to it) and its
+    attributes but those the reader reads (its value, type, formula, style, repeats and array spans), so a merge or a
+    validation stays on its cell. A repeated cell keeps them on each of its cells up to 1,000 cells; past that they
+    are not kept and the read names them (`kept_cut`) (default, D105).
+  - **Parts**: every package entry the reader does not read and the writer does not write: ODF's by path with its
+    media type (`settings.xml`, `Pictures/`, `Object 1/`, `Basic/`); XLSX's with its content type and its
+    relationships, each relationship kept on the workbook, sheet or package it came from with its id. Left out:
+    what the office packages drop, as what may run or signs bytes LiveDoc rewrites (macros, scripts, signatures,
+    thumbnails; [Office packages](../020-import-export/office-packages.md)), which the read names
+    (`entries_dropped`), and XLSX's `calcChain.xml`, a cache of the cells' formulas Excel rebuilds (default, D106).
+- **Sheets by place** (XLSX): a kept defined name of one sheet (`localSheetId`) is kept on that sheet and written
+  with the sheet's place at the write, and goes with it; a kept workbook view's `activeTab` or `firstSheet` past the
+  last sheet is written as the first (default, D112).
+- **Anchors by id.** In the store a sheet's kept content follows its sheet id and a cell's its row and column ids, so
+  it moves with its sheet, row and column, as the cells do; the kept XML itself is untouched, so a reference inside it
+  (a named range's, a chart's) still names the cells it named in the file (default, D107).
+- **Written back in place.** Each kept element is written where it sat: in ODF before or after the tables, columns
+  and rows; in XLSX at its place in the schema's order of the workbook's and worksheet's children. Kept relationships
+  keep their ids, and the writer numbers its own after them; a kept part is written while a kept relationship still
+  reaches it, or, in ODF, while kept XML still names its path, so a deleted sheet's drawings go with it.
+- **A flat `.fods` holds no package entries**: a kept picture or embedded object still reached is left out of it, and
+  the write names it (`parts_left`) (default, D111).
+- **Not kept, and named by the read (`kept_unread`)**: anything of a Strict XLSX (its namespaces differ from the
+  Transitional LiveDoc writes), and an XLSX element naming a relationship that is not kept (one to a dropped macro or
+  control), which another suite would read as damage (default, D108).
+- Kept content whose anchor is gone (its sheet, row or column deleted) is dropped at the next write, and the
+  write's report says so (`kept_dropped`); nothing is dropped silently.
 - Converting to the other format carries only what the model holds; the conversion lists what it leaves behind
   before it runs ([Files and print](files-and-print.md#converting)): the kept content, and what the model holds that
   the new format's file cannot (Excel's bounds and grammar above, OpenFormula's unwritten formulas).
+- The kept content stays with the workbook in its own format: a file of the other standard leaves it out (a
+  conversion's or a download's), and converting back, by **Undo** or later, writes it again where its anchors still
+  stand (default, D109).
 
 ## Conformance claimed
 
@@ -175,6 +220,10 @@ The table is the contract the readers and writers are tested against, one test p
   (OpenFormula Part 4 §2.3), measured by the oracle corpus ([Formulas](formulas.md#the-oracle)).
 - **XLSX**: every `.xlsx` written validates against ECMA-376 Transitional's schemas, checked in CI, and opens in
   Excel, LibreOffice and Google Sheets with the same values.
+- Built: `pnpm --filter @livedoc/sheets validate:files` writes one workbook per construct group (values, formulas,
+  arrays, number formats, Excel's bounds) in all three files, validates each against its schema with Jing, and has
+  LibreOffice open and save each again with the same values ([Office packages](../020-import-export/office-packages.md#validation));
+  CI's Office files job runs it.
 
 ## The flat form
 
@@ -211,3 +260,19 @@ The code cites each by its id.
   (default).
 - **D94** A format over empty cells in ODF: Kept for a cell repeated over at most 1,000 cells; a line's left out and
   named (default).
+- **D104** Styles beyond the number format in an arriving file: Not kept; named by the read (`styles_unread`) until
+  Formatting maps them (default).
+- **D105** A repeated ODF cell's kept attributes and children: Kept on each of its cells up to 1,000 cells, else not
+  kept and named (`kept_cut`) (default).
+- **D106** Package entries left out of kept content: What the office packages drop (named, `entries_dropped`), and
+  XLSX's `calcChain.xml` (default).
+- **D107** References inside kept XML: Untouched; they name what they named in the file (default).
+- **D108** Kept content of a Strict XLSX, and an XLSX element naming a relationship not kept: Not kept; named
+  (`kept_unread`) (default).
+- **D109** Kept content after a conversion: Stays with the workbook in its own format, left out of the other
+  standard's files, written again once converted back (default).
+- **D110** XLSX kept content naming styles: `dxfs` and `tableStyles` kept in the styles part; a kept `col`'s `style`
+  left out (default).
+- **D111** Kept package entries in a flat `.fods`: Left out, named (`parts_left`) (default).
+- **D112** XLSX kept content naming a sheet by its place: A defined name follows its sheet; a view's index past the
+  last sheet becomes the first (default).
