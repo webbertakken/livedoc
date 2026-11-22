@@ -1,0 +1,300 @@
+import { describe, expect, it, vi } from 'vitest';
+import { catalogueItems } from '@/lib/office/office-catalogue';
+import {
+  bindingsSignature,
+  gridMenuBindings,
+  historyBindings,
+  type GridMenuActions,
+  type GridMenuPort,
+} from './spreadsheet-menu-bindings';
+import { spreadsheetMenus } from './spreadsheet-menus';
+
+const actions = (): GridMenuActions => ({
+  toggle: vi.fn(),
+  numberFormat: vi.fn(),
+  format: vi.fn(),
+  clear: vi.fn(),
+  insert: vi.fn(),
+  shift: vi.fn(),
+  remove: vi.fn(),
+  moveAxis: vi.fn(() => true),
+  goTo: vi.fn(),
+  freeze: vi.fn(),
+  setOptions: vi.fn(),
+  sortColumn: vi.fn(),
+  sortRange: vi.fn(),
+  toggleFilter: vi.fn(),
+  cut: vi.fn(),
+  copy: vi.fn(),
+  paste: vi.fn(),
+  pasteSpecial: vi.fn(),
+});
+
+const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
+  canWrite: true,
+  canShape: true,
+  range: { r1: 1, c1: 1, r2: 3, c2: 1 },
+  active: { r: 1, c: 1 },
+  rows: 10,
+  cols: 5,
+  format: undefined,
+  frozenRows: 0,
+  frozenCols: 0,
+  showGrid: true,
+  filtered: false,
+  act: actions(),
+  ...over,
+});
+
+// docs/specs/029-sheets/surface.md "Menu bar"; grid-and-editing.md "Who may do what".
+describe('gridMenuBindings', () => {
+  it('binds every built grid item of the menus, and nothing the menus do not hold', () => {
+    const bound = Object.keys(gridMenuBindings(port()));
+    const built = catalogueItems(spreadsheetMenus('ods'))
+      .filter(({ item }) => item.status === 'built')
+      .map(({ item }) => item.id);
+    for (const id of bound) expect(built, id).toContain(id);
+  });
+
+  it('gives a Viewer Copy alone, a Participant the value items, an Editor the rest', () => {
+    expect(Object.keys(gridMenuBindings(port({ canWrite: false, canShape: false })))).toEqual([
+      'copy',
+    ]);
+    expect(Object.keys(gridMenuBindings(port({ canShape: false }))).sort()).toEqual(
+      ['copy', 'cut', 'delete-values', 'paste', 'paste-values-only'].sort(),
+    );
+    expect(Object.keys(gridMenuBindings(port())).length).toBeGreaterThan(50);
+  });
+
+  it('runs the clipboard and clearing items', () => {
+    const p = port();
+    const b = gridMenuBindings(p);
+    for (const id of ['cut', 'copy', 'paste', 'paste-values-only', 'paste-format-only'])
+      b[id]!.run();
+    b['delete-values']!.run();
+    b['clear-formatting']!.run();
+    expect(p.act.cut).toHaveBeenCalled();
+    expect(p.act.copy).toHaveBeenCalled();
+    expect(p.act.paste).toHaveBeenCalled();
+    expect(p.act.pasteSpecial).toHaveBeenNthCalledWith(1, 'values');
+    expect(p.act.pasteSpecial).toHaveBeenNthCalledWith(2, 'formats');
+    expect(p.act.clear).toHaveBeenNthCalledWith(1, 'inputs');
+    expect(p.act.clear).toHaveBeenNthCalledWith(2, 'formats');
+  });
+
+  it('moves the selected lines one place and the selection with them, dimmed at the edge', () => {
+    const p = port({ range: { r1: 1, c1: 1, r2: 3, c2: 2 } });
+    const b = gridMenuBindings(p);
+    b['move-row-up']!.run();
+    expect(p.act.moveAxis).toHaveBeenLastCalledWith('r', 1, 3, 0);
+    expect(p.act.goTo).toHaveBeenLastCalledWith({ r1: 0, c1: 1, r2: 2, c2: 2 });
+    b['move-row-down']!.run();
+    expect(p.act.moveAxis).toHaveBeenLastCalledWith('r', 1, 3, 5);
+    expect(p.act.goTo).toHaveBeenLastCalledWith({ r1: 2, c1: 1, r2: 4, c2: 2 });
+    b['move-column-left']!.run();
+    expect(p.act.moveAxis).toHaveBeenLastCalledWith('c', 1, 2, 0);
+    expect(p.act.goTo).toHaveBeenLastCalledWith({ r1: 1, c1: 0, r2: 3, c2: 1 });
+    b['move-column-right']!.run();
+    expect(p.act.moveAxis).toHaveBeenLastCalledWith('c', 1, 2, 4);
+    expect(p.act.goTo).toHaveBeenLastCalledWith({ r1: 1, c1: 2, r2: 3, c2: 3 });
+    const edge = gridMenuBindings(port({ range: { r1: 0, c1: 0, r2: 9, c2: 4 } }));
+    expect(
+      ['move-row-up', 'move-row-down', 'move-column-left', 'move-column-right'].map(
+        (id) => edge[id]!.disabled,
+      ),
+    ).toEqual([true, true, true, true]);
+  });
+
+  it('keeps the selection where it was when a move is refused', () => {
+    const p = port();
+    vi.mocked(p.act.moveAxis).mockReturnValue(false);
+    gridMenuBindings(p)['move-row-up']!.run();
+    expect(p.act.goTo).not.toHaveBeenCalled();
+  });
+
+  it('counts what insert and delete act on, as Google’s words do', () => {
+    const b = gridMenuBindings(port());
+    expect(b['insert-rows-above']!.label).toBe('Insert 3 Rows Above');
+    expect(b['insert-rows-below']!.label).toBe('Insert 3 Rows Below');
+    expect(b['insert-columns-left']!.label).toBe('Insert 1 Column Left');
+    expect(b['insert-columns-right']!.label).toBe('Insert 1 Column Right');
+    expect(b['delete-rows']!.label).toBe('Delete Rows 2 - 4');
+    expect(b['delete-columns']!.label).toBe('Delete Column B');
+    const wide = gridMenuBindings(port({ range: { r1: 4, c1: 0, r2: 4, c2: 27 } }));
+    expect(wide['delete-rows']!.label).toBe('Delete Row 5');
+    expect(wide['delete-columns']!.label).toBe('Delete Columns A - AB');
+  });
+
+  it('inserts, deletes and shifts', () => {
+    const p = port();
+    const b = gridMenuBindings(p);
+    for (const id of [
+      'insert-rows-above',
+      'insert-rows-below',
+      'insert-columns-left',
+      'insert-columns-right',
+      'delete-rows',
+      'delete-columns',
+      'insert-cells-shift-right',
+      'insert-cells-shift-down',
+      'delete-cells-shift-up',
+      'delete-cells-shift-left',
+    ])
+      b[id]!.run();
+    expect(vi.mocked(p.act.insert).mock.calls).toEqual([
+      ['r', 'before'],
+      ['r', 'after'],
+      ['c', 'before'],
+      ['c', 'after'],
+    ]);
+    expect(vi.mocked(p.act.remove).mock.calls).toEqual([['r'], ['c']]);
+    expect(vi.mocked(p.act.shift).mock.calls).toEqual([
+      ['insertRight'],
+      ['insertDown'],
+      ['deleteUp'],
+      ['deleteLeft'],
+    ]);
+  });
+
+  it('freezes, ticking what is frozen, Up to the active row and column', () => {
+    const p = port({ frozenRows: 2, frozenCols: 0, active: { r: 4, c: 2 } });
+    const b = gridMenuBindings(p);
+    expect(b['freeze-2-rows']!.checked).toBe(true);
+    expect(b['freeze-1-row']!.checked).toBe(false);
+    expect(b['freeze-no-columns']!.checked).toBe(true);
+    expect(b['freeze-up-to-row']!.label).toBe('Up to Row 5');
+    expect(b['freeze-up-to-column']!.label).toBe('Up to Column C');
+    expect(b['freeze-no-rows']!.label).toBeUndefined();
+    b['freeze-up-to-row']!.run();
+    b['freeze-no-rows']!.run();
+    b['freeze-up-to-column']!.run();
+    b['freeze-1-column']!.run();
+    expect(vi.mocked(p.act.freeze).mock.calls).toEqual([[5], [0], [undefined, 3], [undefined, 1]]);
+    expect(
+      gridMenuBindings(port({ frozenRows: 5, active: { r: 4, c: 0 } }))['freeze-up-to-row']!
+        .checked,
+    ).toBe(true);
+  });
+
+  it('shows or hides the gridlines, ticked while shown', () => {
+    const shown = port();
+    gridMenuBindings(shown)['show-gridlines']!.run();
+    expect(shown.act.setOptions).toHaveBeenCalledWith({ showGrid: false });
+    expect(gridMenuBindings(shown)['show-gridlines']!.checked).toBe(true);
+    const hidden = port({ showGrid: false });
+    gridMenuBindings(hidden)['show-gridlines']!.run();
+    expect(hidden.act.setOptions).toHaveBeenCalledWith({ showGrid: true });
+    expect(gridMenuBindings(hidden)['show-gridlines']!.checked).toBe(false);
+  });
+
+  it('toggles text styles, ticked from the active cell', () => {
+    const p = port({ format: { b: true, st: true } });
+    const b = gridMenuBindings(p);
+    expect(['bold', 'italic', 'underline', 'strikethrough'].map((id) => b[id]!.checked)).toEqual([
+      true,
+      false,
+      false,
+      true,
+    ]);
+    for (const id of ['bold', 'italic', 'underline', 'strikethrough']) b[id]!.run();
+    expect(vi.mocked(p.act.toggle).mock.calls).toEqual([['b'], ['i'], ['u'], ['st']]);
+  });
+
+  it('sets number formats, Automatic ticked for a cell with none', () => {
+    const plain = gridMenuBindings(port());
+    expect(plain['number-automatic']!.checked).toBe(true);
+    expect(plain['number-financial']).toBeUndefined();
+    const p = port({ format: { nf: 'percent' } });
+    const b = gridMenuBindings(p);
+    expect(b['number-percent']!.checked).toBe(true);
+    expect(b['number-automatic']!.checked).toBe(false);
+    b['number-date-time']!.run();
+    expect(p.act.numberFormat).toHaveBeenCalledWith('datetime');
+  });
+
+  it('aligns and wraps, the grid’s defaults clearing the cell’s own', () => {
+    const p = port();
+    const b = gridMenuBindings(p);
+    expect(b['align-middle']!.checked).toBe(true);
+    expect(b['wrap-overflow']!.checked).toBe(true);
+    expect(b['align-left']!.checked).toBe(false);
+    b['align-left']!.run();
+    b['align-middle']!.run();
+    b['align-bottom']!.run();
+    b['wrap-overflow']!.run();
+    b['wrap-clip']!.run();
+    expect(vi.mocked(p.act.format).mock.calls).toEqual([
+      [{ ha: 'l' }],
+      [{ va: null }],
+      [{ va: 'b' }],
+      [{ wr: null }],
+      [{ wr: 'c' }],
+    ]);
+    const set = gridMenuBindings(port({ format: { ha: 'r', va: 't', wr: 'w' } }));
+    expect(['align-right', 'align-top', 'wrap-wrap'].map((id) => set[id]!.checked)).toEqual([
+      true,
+      true,
+      true,
+    ]);
+  });
+
+  it('sizes the font, the default clearing the cell’s own', () => {
+    const p = port();
+    const b = gridMenuBindings(p);
+    expect(b['font-size-10']!.checked).toBe(true);
+    b['font-size-10']!.run();
+    b['font-size-24']!.run();
+    expect(vi.mocked(p.act.format).mock.calls).toEqual([[{ fs: null }], [{ fs: 24 }]]);
+    expect(gridMenuBindings(port({ format: { fs: 24 } }))['font-size-24']!.checked).toBe(true);
+  });
+
+  it('sorts the sheet and the range by the active column, and creates or removes a filter', () => {
+    const p = port({ active: { r: 2, c: 3 } });
+    const b = gridMenuBindings(p);
+    b['sort-sheet-a-to-z']!.run();
+    b['sort-sheet-z-to-a']!.run();
+    b['sort-range-a-to-z']!.run();
+    b['sort-range-z-to-a']!.run();
+    b['create-a-filter']!.run();
+    expect(vi.mocked(p.act.sortColumn).mock.calls).toEqual([[true], [false]]);
+    expect(vi.mocked(p.act.sortRange).mock.calls).toEqual([
+      [[{ col: 3, ascending: true }], false],
+      [[{ col: 3, ascending: false }], false],
+    ]);
+    expect(p.act.toggleFilter).toHaveBeenCalled();
+    expect(b['create-a-filter']!.label).toBeUndefined();
+    expect(gridMenuBindings(port({ filtered: true }))['create-a-filter']!.label).toBe(
+      'Remove Filter',
+    );
+  });
+});
+
+describe('historyBindings', () => {
+  it('binds Undo and Redo for anyone who writes, dimmed without a step', () => {
+    const history = { undo: vi.fn(), redo: vi.fn(), canUndo: true, canRedo: false };
+    const b = historyBindings(history, true);
+    expect(b.undo!.disabled).toBe(false);
+    expect(b.redo!.disabled).toBe(true);
+    b.undo!.run();
+    b.redo!.run();
+    expect(history.undo).toHaveBeenCalled();
+    expect(history.redo).toHaveBeenCalled();
+    expect(historyBindings(history, false)).toEqual({});
+    expect(historyBindings(null, true)).toEqual({});
+  });
+});
+
+describe('bindingsSignature', () => {
+  it('changes with what the menus draw, never with a new run', () => {
+    const run = () => {};
+    const a = bindingsSignature({ bold: { run, checked: true }, cut: { run } });
+    expect(bindingsSignature({ cut: { run: () => {} }, bold: { run, checked: true } })).toBe(a);
+    expect(bindingsSignature({ bold: { run }, cut: { run } })).not.toBe(a);
+    expect(
+      bindingsSignature({ bold: { run, checked: true }, cut: { run, disabled: true } }),
+    ).not.toBe(a);
+    expect(bindingsSignature({ bold: { run, checked: true }, cut: { run, label: 'x' } })).not.toBe(
+      a,
+    );
+  });
+});

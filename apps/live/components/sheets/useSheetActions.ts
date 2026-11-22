@@ -328,11 +328,11 @@ export function useSheetActions() {
           if (w) c.write(w, 'Columns');
         }
       },
-      // Dragged headers: lines from..to moved to before position `before`.
-      moveAxis: (axis: 'r' | 'c', from: number, to: number, before: number) => {
+      // Dragged headers: lines from..to moved to before position `before`; true when they moved.
+      moveAxis: (axis: 'r' | 'c', from: number, to: number, before: number): boolean => {
         const w = moveAxis(c.sheet, axis, from, to, before);
         if (w && 'refused' in w) c.toast(w.refused);
-        else if (w) c.write(w, axis === 'r' ? 'Rows' : 'Columns');
+        return !!w && !('refused' in w) && c.write(w, axis === 'r' ? 'Rows' : 'Columns');
       },
       // A line's size as drawn: a row's is its fit when it is automatic (sheet.md "Row height").
       sizeOf: (axis: 'r' | 'c', p: number) => {

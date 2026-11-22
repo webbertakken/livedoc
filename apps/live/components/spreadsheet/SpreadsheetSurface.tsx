@@ -6,13 +6,9 @@
 // its own chunk, with the engine, only when a spreadsheet opens.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { planPalette } from '@livedoc/document';
-import { WorkbookRecord } from '@livedoc/sheets';
-import { convertedFormat } from '@livedoc/sheets/files';
+import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
-import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
-import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
-import type { OfficeActions } from '@/lib/office/office-catalogue';
 import {
   SheetControllerProvider,
   useSheetController,
@@ -29,59 +25,18 @@ import { useSheetActions } from '@/components/sheets/useSheetActions';
 import { SheetImagesContext, useSheetImageLoader } from '@/components/sheets/sheet-images-context';
 import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import type { WorkbookScope } from '@/lib/api/workbook';
-import { apiDownloadWorkbook, type DownloadFormat } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
-import { downloadBlob } from '@/lib/download-blob';
-import {
-  nameFromFile,
-  openingNotice,
-  openSpreadsheetFile,
-} from '@/lib/spreadsheet/open-spreadsheet-file';
-import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
-import {
-  CONVERT_ITEM_ID,
-  DOWNLOAD_ITEMS,
-  SHEET_DOWNLOAD_ITEMS,
-  spreadsheetMenus,
-} from '@/lib/spreadsheet/spreadsheet-menus';
-import { track } from '@/lib/telemetry';
-import { ConversionDialog } from './ConversionDialog';
+import type { SpreadsheetHistory } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { ImportReportDialog } from './ImportReportDialog';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
 import { RangeAccessBar } from './RangeAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
+import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
+import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
+import { useGridMenuBindings } from './useGridMenuBindings';
 import { useSheetBarPeers } from './useSheetBarPeers';
-import { useWorkbookConversion } from './useWorkbookConversion';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
-
-const FORMAT_PILL = { ods: '.ODS', fods: '.FODS', xlsx: '.XLSX' } as const;
-const FORMAT_TITLE = {
-  ods: 'OpenDocument format',
-  fods: 'OpenDocument format, flat',
-  xlsx: 'Excel format',
-} as const;
-const TELEMETRY_FORMAT = {
-  ods: 'Ods',
-  fods: 'Fods',
-  xlsx: 'Xlsx',
-  csv: 'Csv',
-  tsv: 'Tsv',
-} as const;
-const OPEN_ACCEPT = [
-  '.ods',
-  '.fods',
-  '.xlsx',
-  '.xlsm',
-  '.csv',
-  '.tsv',
-  '.txt',
-  'application/vnd.oasis.opendocument.spreadsheet',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'text/csv',
-  'text/tab-separated-values',
-  'text/plain',
-].join(',');
 
 export function SpreadsheetSurface({
   scope,
@@ -92,6 +47,7 @@ export function SpreadsheetSurface({
   onSelectTab,
   sync,
   onWorkbook,
+  history = null,
 }: {
   scope: WorkbookScope;
   tabId: string;
@@ -103,104 +59,42 @@ export function SpreadsheetSurface({
   sync?: ImportSync;
   // A workbook record this page saved (Allow Access), applied without waiting for the room.
   onWorkbook?: (workbook: WorkbookRecord) => void;
+  // The person's one timeline, for Edit › Undo and Redo (grid-and-editing.md "Undo").
+  history?: SpreadsheetHistory | null;
 }) {
   const bridge = useSheetsBridgeContext();
   const sheetBarPeers = useSheetBarPeers(bridge);
-  // The document's own parts in the shell's title row (office-shell.md "Title row").
-  const office = useEditorLines()?.office ?? null;
-  const [problem, setProblem] = useState<string | null>(null);
-  const [opening, setOpening] = useState<string | null>(null);
-  const format = workbook.format;
   const root = useRef<HTMLElement | null>(null);
-  const catalogue = useMemo(() => spreadsheetMenus(format), [format]);
-  const download = async (asked: DownloadFormat) => {
-    setProblem(null);
-    try {
-      const { blob, fileName } = await apiDownloadWorkbook(scope, asked, tabId);
-      downloadBlob(blob, fileName);
-      track('Spreadsheet', 'Exported', TELEMETRY_FORMAT[asked]);
-    } catch (error) {
-      setProblem('The file could not be downloaded. Try again.');
-      debugLog('[workbook] download failed', { format: asked, error: String(error) });
-    }
-  };
-  const conversion = useWorkbookConversion({
-    scope,
-    format,
-    onWorkbook,
-    pushUndo: (step) => bridge?.pushUndo(step),
-    download,
-    setProblem,
-  });
-  // Convert is an Editor's (files-and-print.md "Who may do what"): bound only for one, so no one else sees it.
-  const editor = !!bridge && bridge.canEdit && bridge.canShape;
-  const actions: OfficeActions = {
-    ...Object.fromEntries(
-      DOWNLOAD_ITEMS.map((item) => [
-        item.id,
-        {
-          // The other standard is a converted copy, its losses listed first (files-and-print.md "Download").
-          run: () =>
-            WorkbookRecord.sameStandard(item.format, format)
-              ? void download(item.format)
-              : conversion.open('download', item.format),
-        },
-      ]),
-    ),
-    // The open sheet as CSV or TSV: no conversion, its values as shown (files-and-print.md "Download").
-    ...Object.fromEntries(
-      SHEET_DOWNLOAD_ITEMS.map((item) => [item.id, { run: () => void download(item.format) }]),
-    ),
-    ...(editor
-      ? { [CONVERT_ITEM_ID]: { run: () => conversion.open('convert', convertedFormat(format)) } }
-      : {}),
-  };
-  const open = async (file: File) => {
-    setProblem(null);
-    const name = nameFromFile(file.name);
-    setOpening(openingNotice(name, 0));
-    const opened = await openSpreadsheetFile(scope.ownerId, file, (share) =>
-      setOpening(openingNotice(name, share)),
-    );
-    setOpening(null);
-    if (!opened.ok) return setProblem(opened.message);
-    track('Spreadsheet', 'Created', 'Import');
-    track('Spreadsheet', 'Imported', TELEMETRY_FORMAT[opened.imported]);
-    window.location.assign(`/document/${opened.documentId}`);
-  };
+  // The open sheet's menu bindings, published up to the title row (surface.md "Menu bar").
+  const [channel] = useState(createOfficeBindingsChannel);
   return (
     <section
       ref={root}
       aria-label="Spreadsheet"
       className="office-shell absolute inset-0 flex flex-col bg-white dark:bg-slate-950"
     >
-      <OfficeTitleRow
-        name={documentName || UNTITLED_SPREADSHEET}
-        format={FORMAT_PILL[format]}
-        formatTitle={FORMAT_TITLE[format]}
-        problem={problem}
-        notice={opening}
-        catalogue={catalogue}
-        level={editor ? 'edit' : 'view'}
-        actions={actions}
-        shortcuts={[]}
-        keyScope={root}
-        opening={{ accept: OPEN_ACCEPT, onFile: (file) => void open(file) }}
-        chrome={office}
+      <SpreadsheetTitleRow
+        scope={scope}
         tabId={tabId}
+        format={workbook.format}
+        documentName={documentName}
+        level={
+          bridge ? spreadsheetLevel(bridge.canEdit, bridge.canEdit && bridge.canShape) : 'view'
+        }
+        history={history}
+        channel={channel}
+        keyScope={root}
+        onWorkbook={onWorkbook}
+        pushUndo={(step) => bridge?.pushUndo(step)}
       />
-      {bridge ? (
-        <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
-      ) : (
-        <Status state="loading" />
-      )}
+      <OfficeBindingsContext.Provider value={channel}>
+        {bridge ? (
+          <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
+        ) : (
+          <Status state="loading" />
+        )}
+      </OfficeBindingsContext.Provider>
       <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} peers={sheetBarPeers} />
-      <ConversionDialog
-        state={conversion.state}
-        onConfirm={conversion.confirm}
-        onRetry={conversion.retry}
-        onCancel={conversion.cancel}
-      />
       <ImportReportDialog documentId={scope.documentId} />
     </section>
   );
@@ -363,6 +257,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const input = useFormulaInput(actions);
   const c = useSheetController();
   const pointRef = useFormulaPointing(c, input);
+  useGridMenuBindings(actions);
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
   useEffect(() => {
