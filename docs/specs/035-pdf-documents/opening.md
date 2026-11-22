@@ -2,7 +2,9 @@
 
 **Status: specified; a first slice is built.** Built: a file read whole by the engine in a worker thread, every page's
 size read before any is drawn, the refusals shown by name with Download (a protected file among them, until its
-password screen is built). Reading by range, repair notices, passwords, the time and memory limits are not built.
+password screen is built). The engine reads a file's version, properties, page labels, what its permissions ask, and
+whether it has fields or a structure tree, and opens and writes a protected file given its password. The password
+screen, reading by range, repair notices, the time and memory limits are not built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.
 "Any PDF" is every PDF a common reader opens: PDF 1.0 to 2.0, linearised, encrypted, with damaged cross-references,
@@ -74,6 +76,12 @@ Fork F9 `(default)`.
   the notice "This PDF asks not to be changed." and **Enter permissions password**. Given, the person's level decides
   their modes as for any PDF. Permissions that forbid copying or printing are honoured the same way: Copy and Print
   are dimmed with the reason until the permissions password is given.
+- **What the permissions ask** is read as seven answers, each yes where the file asks nothing: printing, printing
+  at full resolution, changing page content, copying text and pictures, marks (with filling and signing), filling and
+  signing alone, and inserting, deleting and rotating pages. Text for screen readers is always allowed. Given the
+  permissions password, every answer is yes.
+- **The engine holds the file while it waits for a password**: the password is given to the engine that already has
+  the bytes, never sent with them again, and a wrong one leaves the engine waiting.
 - Permissions are a request, not a lock: any reader can ignore them
   ([The standard](../../research/pdf-documents/the-standard.md#what-the-design-leans-on)). LiveDoc honours them and says
   so in File > Properties.

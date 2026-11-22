@@ -5,6 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import { PageName, PdfLiveChanges, type PdfOpened } from '@livedoc/pdf-documents';
+import { plainDocument } from '@livedoc/pdf-documents/testing';
 import { ApiError } from '@/lib/api/core';
 import type { PdfEngineClient } from './pdf-engine-client';
 import { unboundPdfLiveChanges, type BindPdfLiveChanges } from './pdf-live-binding';
@@ -12,7 +13,7 @@ import { usePdfDocument, type PdfDocumentDeps } from './usePdfDocument';
 
 const KEY = 'ab'.repeat(32) as BlobKey;
 const scope = { ownerId: 'ada', documentId: 'D', tabId: 't1', shareCode: null };
-const PAGES = [{ name: PageName.ofObject(3), width: 612, height: 792 }];
+const PAGES = [{ name: PageName.ofObject(3), width: 612, height: 792, label: null }];
 const read = () => ({
   update: PdfLiveChanges.merge([]),
   stateVector: new Uint8Array(),
@@ -41,7 +42,7 @@ function engineThat(opens: PdfOpened) {
 function opening(
   over: Partial<PdfDocumentDeps> & { opens?: PdfOpened; bind?: BindPdfLiveChanges } = {},
 ) {
-  const made = engineThat(over.opens ?? { ok: true, pages: PAGES });
+  const made = engineThat(over.opens ?? { ok: true, pages: PAGES, document: plainDocument });
   const deps: PdfDocumentDeps = {
     loadState: vi.fn(async () => read()),
     readBlob: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),

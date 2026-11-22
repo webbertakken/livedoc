@@ -5,14 +5,18 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { PDF } from '@libpdf/core';
 import type { PdfEngine, PdfOpened } from '../engine-contract';
-import { PDF_MAX_PAGE_PIXELS } from '../limits';
+import { PDF_MAX_PAGE_PIXELS, PDF_PROPERTY_MAX_CHARS } from '../limits';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark } from '../mark';
 import { PageView } from '../page-view';
+import { PdfPermissions } from '../permissions';
 import {
   FIXTURE_LINE,
+  fieldsPdf,
+  labelledPdf,
   lockedPdf,
   noPagesPdf,
+  protectedPdf,
   readerWasm,
   spoiled,
   textPdf,
@@ -33,6 +37,10 @@ beforeAll(async () => {
 const opened = (result: PdfOpened) => {
   if (!result.ok) throw new Error('the fixture did not open');
   return result.pages;
+};
+const documentOf = (result: PdfOpened) => {
+  if (!result.ok) throw new Error('the fixture did not open');
+  return result.document;
 };
 
 /** The live changes holding one highlight over the fixture's line on the page given. */
@@ -110,10 +118,131 @@ describe('opening', () => {
   });
 
   it('asks for a password rather than refusing a file that has one', async () => {
-    const pdf = await PDF.load(stored.slice());
-    pdf.setProtection({ userPassword: 'open', ownerPassword: 'owner' });
-    const locked = (await pdf.save()) as Uint8Array<ArrayBuffer>;
+    const locked = await protectedPdf({ userPassword: 'open', ownerPassword: 'owner' });
     expect(await engine.open(locked)).toEqual({ ok: false, needsPassword: true });
+  });
+});
+
+// opening.md "Passwords"
+describe('a protected file', () => {
+  it('opens with its password, given to the engine that already holds the file', async () => {
+    const locked = await protectedPdf({ userPassword: 'open', ownerPassword: 'owner' });
+    expect(await engine.open(locked)).toEqual({ ok: false, needsPassword: true });
+    expect(await engine.unlock('not it')).toEqual({ ok: false, needsPassword: true, wrong: true });
+    const unlocked = await engine.unlock('open');
+    expect(opened(unlocked)).toHaveLength(2);
+    expect(documentOf(unlocked).encrypted).toBe(true);
+    expect((await engine.drawPage(0, 0.25))?.width).toBe(153);
+  });
+
+  it('reads what the permissions ask, and asks nothing once the permissions password is given', async () => {
+    const asking = await protectedPdf({
+      ownerPassword: 'owner',
+      permissions: { modify: false, copy: false, annotate: false, assemble: false },
+    });
+    const read = documentOf(await engine.open(asking));
+    expect(read.encrypted).toBe(true);
+    expect(read.permissions).toEqual({
+      print: true,
+      printSharp: true,
+      changeContent: false,
+      copy: false,
+      mark: false,
+      fill: true,
+      organise: false,
+    });
+    // A wrong permissions password leaves the file open, asking what it asked.
+    expect(await engine.unlock('not it')).toEqual({ ok: false, needsPassword: true, wrong: true });
+    expect((await engine.drawPage(0, 0.25))?.width).toBe(153);
+    expect(documentOf(await engine.unlock('owner')).permissions).toEqual(PdfPermissions.all());
+  });
+
+  it('writes a mark into a protected file where its password is, and the result opens with it', async () => {
+    const locked = await protectedPdf({ userPassword: 'open', ownerPassword: 'owner' });
+    await engine.open(locked);
+    const pages = opened(await engine.unlock('open'));
+    const doc = PdfLiveChanges.load();
+    PdfLiveChanges.addMark(
+      doc,
+      Mark.highlight({
+        id: 'mark-1',
+        page: pages[0]!.name,
+        quads: [[72, 732, 300, 732, 72, 716, 300, 716]],
+        text: 'The quick',
+        colour: '#fdf1a9',
+        opacity: 1,
+        author: 'Ada',
+        createdAt: Date.UTC(2026, 10, 21, 14, 2, 3),
+      })!,
+    );
+    const baked = await engine.bake(PdfLiveChanges.encode(doc));
+    if (!baked.ok) throw new Error(`not baked: ${baked.refusal}`);
+    expect(baked.kind).toBe('addition');
+    expect(await engine.open(baked.bytes)).toEqual({ ok: false, needsPassword: true });
+    opened(await engine.unlock('open'));
+    expect((await engine.fileMarks(0)).map((mark) => mark.id)).toEqual(['mark-1']);
+  });
+
+  it('answers a password given with no file waiting as nothing to open', async () => {
+    await engine.close();
+    expect(await engine.unlock('open')).toEqual({ ok: false, refusal: 'pdf_damaged' });
+  });
+
+  it('bakes nothing while it waits for its password', async () => {
+    const locked = await protectedPdf({ userPassword: 'open' });
+    await engine.open(locked);
+    expect(await engine.bake(PdfLiveChanges.encode(PdfLiveChanges.load()))).toEqual({
+      ok: false,
+      refusal: 'unreadable',
+    });
+  });
+});
+
+// opening.md "What is read": pages with their labels, the metadata, the form, the structure tree.
+describe('what a file says of itself', () => {
+  it('reads its version, and asks nothing of a file with no protection', async () => {
+    const read = documentOf(await engine.open(stored));
+    expect(read.version).toBe('1.7');
+    expect(read.encrypted).toBe(false);
+    expect(read.permissions).toEqual(PdfPermissions.all());
+    expect(read.tagged).toBe(false);
+    expect(read.form).toBe('none');
+  });
+
+  it('reads its properties as text, each cut to its limit', async () => {
+    const pdf = await PDF.load(stored.slice());
+    pdf.setTitle('Lease agreement');
+    pdf.setAuthor('Ada Lovelace');
+    pdf.setSubject('S'.repeat(PDF_PROPERTY_MAX_CHARS + 40));
+    pdf.setKeywords(['lease', 'flat']);
+    const read = documentOf(await engine.open((await pdf.save()) as Uint8Array<ArrayBuffer>));
+    expect(read.properties.title).toBe('Lease agreement');
+    expect(read.properties.author).toBe('Ada Lovelace');
+    expect(read.properties.subject).toHaveLength(PDF_PROPERTY_MAX_CHARS);
+    expect(read.properties.keywords).toContain('lease');
+    // A property the file does not name is empty.
+    expect(documentOf(await engine.open(labelledPdf())).properties).toMatchObject({
+      title: '',
+      author: '',
+      created: '',
+    });
+  });
+
+  it('reads a title written in another script', async () => {
+    const pdf = await PDF.load(stored.slice());
+    pdf.setTitle('Huurovereenkomst 賃貸借 🏠');
+    const read = documentOf(await engine.open((await pdf.save()) as Uint8Array<ArrayBuffer>));
+    expect(read.properties.title).toBe('Huurovereenkomst 賃貸借 🏠');
+  });
+
+  it('gives each page the label its file gives it, and none where the file gives none', async () => {
+    expect(opened(await engine.open(stored)).map((page) => page.label)).toEqual([null, null]);
+    const labelled = opened(await engine.open(labelledPdf()));
+    expect(labelled.map((page) => page.label)).toEqual(['i', 'ii', 'A-1']);
+  });
+
+  it('says a file has fields where it holds an interactive form', async () => {
+    expect(documentOf(await engine.open(fieldsPdf())).form).toBe('fields');
   });
 });
 

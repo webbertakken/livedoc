@@ -3,7 +3,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createPdfEngine } from '@livedoc/pdf-documents/engine';
 import type { PdfEngine } from '@livedoc/pdf-documents';
-import { FIXTURE_LINE, readerWasm, textPdf } from '@livedoc/pdf-documents/testing';
+import { FIXTURE_LINE, protectedPdf, readerWasm, textPdf } from '@livedoc/pdf-documents/testing';
 import { pdfEngineClient, type PdfEngineWorker } from './pdf-engine-client';
 import type { PdfEngineAnswer, PdfEnginePort, PdfEngineRequest } from './pdf-engine-protocol';
 import { servePdfEngine } from './pdf-engine-server';
@@ -69,6 +69,17 @@ describe('the engine over a worker thread', () => {
     expect(engine.stopped).toBe(false);
   });
 
+  // opening.md "Passwords": the password is given to the engine that already holds the file.
+  it('gives a password to the worker that holds the file', async () => {
+    const { worker } = joined(() => createPdfEngine({ wasm: wasm() }));
+    const engine = pdfEngineClient(worker);
+    const locked = await protectedPdf({ userPassword: 'open' });
+    expect(await engine.open(locked)).toEqual({ ok: false, needsPassword: true });
+    expect(await engine.unlock('wrong')).toEqual({ ok: false, needsPassword: true, wrong: true });
+    const opened = await engine.unlock('open');
+    expect(opened.ok && opened.document.encrypted).toBe(true);
+  });
+
   it('starts the engine once, on the first call', async () => {
     const start = vi.fn(() => createPdfEngine({ wasm: wasm() }));
     const engine = pdfEngineClient(joined(start).worker);
@@ -87,6 +98,7 @@ describe('the engine over a worker thread', () => {
     expect(await engine.open(await twoPages())).toEqual({ ok: false, refusal: 'pdf_stopped' });
     expect(engine.stopped).toBe(true);
     expect(worker.terminate).toHaveBeenCalledTimes(1);
+    expect(await engine.unlock('a password')).toEqual({ ok: false, refusal: 'pdf_stopped' });
     expect(await engine.drawPage(0, 1)).toBeNull();
     expect(await engine.selectText(0, { x: 0, y: 0 }, { x: 1, y: 1 })).toBeNull();
     expect(await engine.fileMarks(0)).toEqual([]);

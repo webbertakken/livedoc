@@ -21,8 +21,11 @@ export type {
   PageMatrix,
   PagePoint,
   PdfEngine,
+  PdfDocumentInfo,
   PdfOpened,
+  PdfProperties,
   PdfRefusal,
   TextSelection,
 } from './engine-contract';
 export { PageView } from './page-view';
+export { PdfPermissions } from './permissions';

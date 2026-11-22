@@ -27,10 +27,15 @@ const startsWith = (bytes: Uint8Array, prefix: Uint8Array): boolean =>
  * The stored file with each mark appended as one annotation. The stored bytes are never touched: the writer works
  * on a copy, is asked first whether it can append, and its answer is checked to hold the stored file as a prefix.
  */
-export async function bakeAddition(stored: Uint8Array, marks: readonly Mark[]): Promise<Addition> {
+export async function bakeAddition(
+  stored: Uint8Array,
+  marks: readonly Mark[],
+  // The password the file was opened with: a protected file is written only where its password is.
+  password: string | null = null,
+): Promise<Addition> {
   let pdf: PDF;
   try {
-    pdf = await PDF.load(stored.slice());
+    pdf = await PDF.load(stored.slice(), password === null ? undefined : { credentials: password });
   } catch {
     return { ok: false, refusal: 'unreadable' };
   }

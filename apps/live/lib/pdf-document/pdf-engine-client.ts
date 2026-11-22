@@ -31,6 +31,7 @@ export type PdfEngineClient = PdfEngine & {
 // What each call answers once the worker has stopped.
 const STOPPED = {
   open: { ok: false, refusal: 'pdf_stopped' } satisfies PdfOpened,
+  unlock: { ok: false, refusal: 'pdf_stopped' } satisfies PdfOpened,
   drawPage: null,
   selectText: null,
   fileMarks: [] as readonly FileMark[],
@@ -79,6 +80,8 @@ export function pdfEngineClient(
     // The bytes are handed over, not copied: the engine holds the stored file from here on, and a bake of no
     // changes answers it back.
     open: (bytes) => ask<PdfOpened>({ method: 'open', args: [bytes] }, [bytes.buffer]),
+    // The password crosses once, to the worker that holds the file, and is kept nowhere on this side.
+    unlock: (password) => ask<PdfOpened>({ method: 'unlock', args: [password] }),
     drawPage: (index, scale) =>
       ask<PageBitmap | null>({ method: 'drawPage', args: [index, scale] }),
     selectText: (index, from, to) =>

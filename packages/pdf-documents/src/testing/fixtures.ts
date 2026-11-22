@@ -3,6 +3,8 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { PDF } from '@libpdf/core';
+import type { PdfDocumentInfo } from '../engine-contract';
+import { PdfPermissions } from '../permissions';
 
 const require = createRequire(import.meta.url);
 
@@ -63,4 +65,53 @@ export function spoiled(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
     .toString('latin1')
     .replace(/startxref/g, 'startxxxx');
   return new Uint8Array(Buffer.from(text, 'latin1'));
+}
+
+const PAGE = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>';
+
+/** Three pages labelled "i", "ii" and "A-1": lower-case roman numerals, then a prefix with decimals. */
+export const labelledPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /PageLabels << /Nums [0 << /S /r >> 2 << /S /D /P (A-) >>] >> >>',
+    '<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 >>',
+    PAGE,
+    PAGE,
+    PAGE,
+  ]);
+
+/** One page with one text field named "name", valued "Ada": an interactive form. */
+export const fieldsPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R] >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R] >>',
+    '<< /Type /Annot /Subtype /Widget /FT /Tx /T (name) /V (Ada) /Rect [72 700 272 720] /P 3 0 R >>',
+  ]);
+
+/** What a file that says nothing of itself answers: no protection, no properties, no form. */
+export const plainDocument: PdfDocumentInfo = {
+  version: '1.7',
+  encrypted: false,
+  permissions: PdfPermissions.all(),
+  properties: {
+    title: '',
+    author: '',
+    subject: '',
+    keywords: '',
+    creator: '',
+    producer: '',
+    created: '',
+    modified: '',
+  },
+  tagged: false,
+  form: 'none',
+};
+
+/** The text fixture with protection set as given: an open password, a permissions password, what is asked. */
+export async function protectedPdf(
+  protection: Parameters<PDF['setProtection']>[0],
+): Promise<Uint8Array<ArrayBuffer>> {
+  const pdf = await PDF.load(await textPdf(2));
+  pdf.setProtection(protection);
+  return (await pdf.save()) as Uint8Array<ArrayBuffer>;
 }

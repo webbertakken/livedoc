@@ -95,12 +95,13 @@ rule is a test with a named rejection. The research is [Security](../../research
 
 ## Limits
 
-| Constant               | Value       | Why                                                                                               |
-| ---------------------- | ----------- | ------------------------------------------------------------------------------------------------- |
-| `PDF_STREAM_MAX_BYTES` | 268,435,456 | `(default)` One decoded stream; the corpus's largest honest stream is under a tenth of it         |
-| `PDF_MAX_TREE_DEPTH`   | 256         | `(default)` Deeper than any honest outline, page tree or field tree                               |
-| `PDF_LINK_MAX_CHARS`   | 2,048       | `(default)` A longer address is shown cut and never opened                                        |
-| `PDF_NAME_MAX_CHARS`   | 255         | `(default)` A file's strings shown as names (embedded files, PDF layers, bookmarks) are cut to it |
+| Constant                 | Value       | Why                                                                                               |
+| ------------------------ | ----------- | ------------------------------------------------------------------------------------------------- |
+| `PDF_STREAM_MAX_BYTES`   | 268,435,456 | `(default)` One decoded stream; the corpus's largest honest stream is under a tenth of it         |
+| `PDF_MAX_TREE_DEPTH`     | 256         | `(default)` Deeper than any honest outline, page tree or field tree                               |
+| `PDF_LINK_MAX_CHARS`     | 2,048       | `(default)` A longer address is shown cut and never opened                                        |
+| `PDF_NAME_MAX_CHARS`     | 255         | `(default)` A file's strings shown as names (embedded files, PDF layers, bookmarks) are cut to it |
+| `PDF_PROPERTY_MAX_CHARS` | 2,048       | `(default)` A property of the file (title, author, subject, keywords, producer) is cut to it      |
 
 ## Share roles
 

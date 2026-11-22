@@ -14,6 +14,10 @@ export const PDF_MAX_PAGE_PIXELS = 268_435_456;
 export const PDF_PAGE_PICTURE_MAX_PIXELS = 8_388_608;
 /** The most a PDF page measures on a side, in points: the standard's own 200 inches. */
 export const PDF_MAX_PAGE_POINTS = 14_400;
+/** (default) A property of the file (title, author, subject, keywords, producer) is cut to it (security.md "Limits"). */
+export const PDF_PROPERTY_MAX_CHARS = 2_048;
+/** (default) A file's string shown as a name (a page label, a bookmark, an embedded file) is cut to it. */
+export const PDF_NAME_MAX_CHARS = 255;
 /** (default) A Text mark's or a note's words, and the text a text mark covered; longer belongs in a document. */
 export const PDF_MARK_TEXT_MAX_CHARS = 10_000;
 /** (default) The quadrilaterals of one text mark: a page of small type selected whole is a few hundred lines. */

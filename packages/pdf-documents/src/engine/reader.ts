@@ -8,6 +8,7 @@ import type {
   PageInfo,
   PageMatrix,
   PagePoint,
+  PdfDocumentInfo,
   PdfOpened,
   PdfRefusal,
   TextSelection,
@@ -17,9 +18,12 @@ import {
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MAX_PAGE_PIXELS,
   PDF_MAX_PAGE_POINTS,
+  PDF_NAME_MAX_CHARS,
+  PDF_PROPERTY_MAX_CHARS,
 } from '../limits';
 import type { Quad } from '../mark';
 import { PageName } from '../page-name';
+import { PdfPermissions } from '../permissions';
 
 export type Pdfium = WrappedPdfiumModule;
 
@@ -31,6 +35,9 @@ type Runtime = {
   UTF16ToString(pointer: number): string;
 };
 
+// FPDF_GetFormType's answers; every other is an XFA form.
+const FORM_NONE = 0;
+const FORM_FIELDS = 1;
 // FPDF_GetLastError's answers.
 const ERROR_PASSWORD = 4;
 const ERROR_SECURITY = 5;
@@ -110,13 +117,14 @@ export class PdfReader {
     this.runtime.wasmExports.free(pointer);
   }
 
-  open(bytes: Uint8Array): PdfOpened {
+  /** Opens the bytes, with the password given; none is the empty one, which opens a file that asks for none. */
+  open(bytes: Uint8Array, password = ''): PdfOpened {
     this.close();
     const { p } = this;
     try {
       this.memory = this.alloc(bytes.length);
       this.heap.set(bytes, this.memory);
-      this.doc = p.FPDF_LoadMemDocument(this.memory, bytes.length, '');
+      this.doc = p.FPDF_LoadMemDocument(this.memory, bytes.length, password);
       if (!this.doc) {
         const error = p.FPDF_GetLastError();
         this.close();
@@ -128,7 +136,7 @@ export class PdfReader {
         this.close();
         return { ok: false, refusal: 'pdf_newer' };
       }
-      return { ok: true, pages: this.pages() };
+      return { ok: true, pages: this.pages(), document: this.document() };
     } catch {
       // A trap inside the reader: it is ended here, and a fresh one serves the next file.
       this.doc = 0;
@@ -142,16 +150,75 @@ export class PdfReader {
     const { p } = this;
     const size = this.alloc(8);
     const pages: PageInfo[] = [];
+    // A file that labels its pages labels its first: one read tells whether any page has a label to read.
+    const labelled = this.labelOf(0) !== null;
     for (let index = 0; index < this.count; index += 1) {
       const sized = p.FPDF_GetPageSizeByIndexF(this.doc, index, size);
       pages.push({
         name: PageName.ofObject(p.EPDFDoc_GetPageObjectNumberByIndex(this.doc, index)),
         width: clampSide(sized ? this.runtime.getValue(size, 'float') : 0),
         height: clampSide(sized ? this.runtime.getValue(size + 4, 'float') : 0),
+        label: labelled ? this.labelOf(index) : null,
       });
     }
     this.free(size);
     return pages;
+  }
+
+  /** A text the reader writes as UTF-16 into a buffer it is handed, cut to `most`; `ask` answers the bytes needed. */
+  private written(most: number, ask: (buffer: number, size: number) => number): string {
+    const size = ask(0, 0);
+    // Two bytes is the terminator alone: no text.
+    if (size <= 2) return '';
+    const buffer = this.alloc(size);
+    ask(buffer, size);
+    const read = this.runtime.UTF16ToString(buffer);
+    this.free(buffer);
+    return read.slice(0, most);
+  }
+
+  private labelOf(index: number): string | null {
+    const label = this.written(PDF_NAME_MAX_CHARS, (buffer, size) =>
+      this.p.FPDF_GetPageLabel(this.doc, index, buffer, size),
+    );
+    return label === '' ? null : label;
+  }
+
+  private property(tag: string): string {
+    return this.written(PDF_PROPERTY_MAX_CHARS, (buffer, size) =>
+      this.p.FPDF_GetMetaText(this.doc, tag, buffer, size),
+    );
+  }
+
+  private version(): string | null {
+    const out = this.alloc(4);
+    const named = this.p.FPDF_GetFileVersion(this.doc, out);
+    const version = this.runtime.getValue(out, 'i32');
+    this.free(out);
+    // The reader answers 17 for 1.7.
+    return named && version >= 10 ? `${Math.floor(version / 10)}.${version % 10}` : null;
+  }
+
+  private document(): PdfDocumentInfo {
+    const { p } = this;
+    const form = p.FPDF_GetFormType(this.doc);
+    return {
+      version: this.version(),
+      encrypted: p.FPDF_GetSecurityHandlerRevision(this.doc) >= 0,
+      permissions: PdfPermissions.of(p.FPDF_GetDocPermissions(this.doc)),
+      properties: {
+        title: this.property('Title'),
+        author: this.property('Author'),
+        subject: this.property('Subject'),
+        keywords: this.property('Keywords'),
+        creator: this.property('Creator'),
+        producer: this.property('Producer'),
+        created: this.property('CreationDate'),
+        modified: this.property('ModDate'),
+      },
+      tagged: Boolean(p.FPDFCatalog_IsTagged(this.doc)),
+      form: form === FORM_NONE ? 'none' : form === FORM_FIELDS ? 'fields' : 'xfa',
+    };
   }
 
   private withPage<T>(index: number, read: (page: number) => T): T | null {
@@ -311,7 +378,7 @@ export class PdfReader {
     p.FPDFAnnot_GetStringValue(annotation, 'NM', buffer, size);
     const name = this.runtime.UTF16ToString(buffer);
     this.free(buffer);
-    return name === '' ? null : name.slice(0, 255);
+    return name === '' ? null : name.slice(0, PDF_NAME_MAX_CHARS);
   }
 
   private quadsOf(annotation: number): Quad[] {
