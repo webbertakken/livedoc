@@ -2,6 +2,7 @@
 //   GET  /api/documents/<id>/pdf-documents/<tabId>/state    the live changes as one Yjs update, the stored file's
 //                                                           key in X-Stored-File; with since, only what lies beyond
 //   POST /api/documents/<id>/pdf-documents/<tabId>/updates  one Yjs update too large for a frame
+//   GET, PUT /api/documents/<id>/pdf-documents/<tabId>/thumbnail  a browser's thumbnail (pdf-thumbnail-routes.ts)
 // The read is gated as the tab is (a tab-scoped link on its own tab only). The update is an Editor's as it is, a
 // Participant's when the room finds it changes only what Reviewing changes ("The room's op kinds").
 // Answered inside the document's room. The stored file's bytes are the blob store's (blob-store-routes.ts).
@@ -19,6 +20,7 @@ import { storedPdfTab } from '../pdf-documents/pdf-document-store';
 import { PDF_LIVE_TAB } from '../pdf-documents/pdf-live-tab';
 import { CORS_HEADERS, forbidden, json } from '../responses';
 import { postLiveTabUpdate } from '../room-client';
+import { handlePdfThumbnailRoutes } from './pdf-thumbnail-routes';
 import {
   deniedOnTab,
   gateEdit,
@@ -42,6 +44,7 @@ const refusedUpdate = (
 export async function handlePdfDocumentRoutes(ctx: DocumentRouteContext): Promise<Response | null> {
   const { segments, request } = ctx;
   if (segments.length !== 6 || segments[3] !== 'pdf-documents') return null;
+  if (segments[5] === 'thumbnail') return handlePdfThumbnailRoutes(ctx);
   if (request.method === 'POST' && segments[5] === 'updates') return postUpdate(ctx);
   if (request.method === 'GET' && segments[5] === 'state') return readState(ctx);
   return null;

@@ -935,6 +935,32 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     requestSchema: { type: 'string', format: 'binary' },
     statuses: [204, 400, 401, 403, 404, 410, 413, 503],
   },
+  // A browser's thumbnail of a PDF document (docs/specs/035-pdf-documents/live-editing-and-storage.md "A browser's
+  // thumbnail").
+  {
+    method: 'GET',
+    path: '/documents/{id}/pdf-documents/{tabId}/thumbnail',
+    segment: 'documents',
+    tag: 'PDF documents',
+    summary:
+      "Whether this caller should send a picture of the PDF's first page for the document's thumbnail: { wanted }. True only for an Editor, on the document's first tab, where the server keeps snapshots and none is stored or the one stored was sent before the document was last saved. 404 pdf_not_found when the tab is no PDF tab.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: { type: 'object' },
+    statuses: [200, 401, 403, 404, 410],
+  },
+  {
+    method: 'PUT',
+    path: '/documents/{id}/pdf-documents/{tabId}/thumbnail',
+    segment: 'documents',
+    tag: 'PDF documents',
+    summary:
+      "The PDF's first page as a JPEG, its bytes as the body, for the document's thumbnail: for display only, stored marked as a browser's, never read back into the document. An Editor's only: 403 level_too_low. 400 thumbnail_invalid (not a JPEG, or a side of 0 or past 1,024 px); 413 thumbnail_too_large (past 200,000 bytes); 409 thumbnail_not_wanted (not the document's first tab); 404 pdf_not_found; 503 images_unavailable.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: { type: 'string', format: 'binary' },
+    statuses: [204, 400, 401, 403, 404, 409, 410, 413, 503],
+  },
   // The blob store's read (docs/specs/006-document/blob-store.md "Getting bytes out").
   {
     method: 'GET',

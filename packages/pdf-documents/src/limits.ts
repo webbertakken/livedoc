@@ -90,3 +90,17 @@ export const PDF_SIGNATURE_MAX_BYTES = 1_048_576;
 export const PDF_EMBEDDED_FILES_MAX = 500;
 /** (default) PDF layers read from one file; more are shown as the file sets them and not listed. */
 export const PDF_MAX_LAYERS = 1_000;
+/** (default) How wide the first page's picture is that a browser sends for the thumbnail: twice the widest card a
+ *  list draws. Safe range: 240 to 960. */
+export const PDF_THUMBNAIL_WIDTH_PX = 480;
+/** (default) The longest side that picture may have: a page four times as tall as wide still fits. The server
+ *  refuses more. */
+export const PDF_THUMBNAIL_MAX_SIDE_PX = 1_024;
+/** (default) The most bytes that picture may be, a JPEG: a page of photographs at that size. A list of 50 rows
+ *  stays under 14 MB as base64. */
+export const PDF_THUMBNAIL_MAX_BYTES = 200_000;
+/** (default) How long after its last confirmed change a surface sends the picture again: past the room's own write
+ *  of a change (2 s idle). Safe range: 2,000 to 60,000. */
+export const PDF_THUMBNAIL_IDLE_MS = 5_000;
+/** (default) The least time between two pictures one surface sends, as the room writes at most once a minute. */
+export const PDF_THUMBNAIL_MIN_INTERVAL_MS = 60_000;

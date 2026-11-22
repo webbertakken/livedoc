@@ -492,6 +492,12 @@ export function thumbnailKey(documentId: string, appearance?: Appearance): strin
   return appearance ? `thumb/${documentId}/${appearance}` : `thumb/${documentId}`;
 }
 
+// The first page of a PDF document as a browser drew it (docs/specs/035-pdf-documents/live-editing-and-storage.md "A
+// browser's thumbnail"): the picture the snapshots of a PDF tab are drawn from, kept apart from them.
+export function browserThumbnailKey(documentId: string): string {
+  return `thumb/${documentId}/browser`;
+}
+
 // The share card a link preview shows (docs/specs/013-workspace/share-link-previews.md): the first-tab snapshot drawn
 // as a 1200 x 630 PNG.
 export function shareCardKey(documentId: string): string {
@@ -504,6 +510,7 @@ export function snapshotKeys(documentId: string): string[] {
     thumbnailKey(documentId),
     ...APPEARANCES.map((a) => thumbnailKey(documentId, a)),
     shareCardKey(documentId),
+    browserThumbnailKey(documentId),
   ];
 }
 

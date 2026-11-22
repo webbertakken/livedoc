@@ -37,6 +37,7 @@ import { readForm } from '@livedoc/forms';
 import { formArt } from '@livedoc/plan-art';
 import { TextDocumentState, textDocumentPageSvg } from '@livedoc/text-documents';
 import { readLiveTabState } from './live-tabs/live-tab-store';
+import { pdfBrowserThumbnailSvg } from './pdf-documents/pdf-browser-thumbnail';
 import { TEXT_DOCUMENT_LIVE_TAB } from './text-documents/text-document-live-tab';
 import { cardSourceOf, itemIdsShownOnTab, typesOf, type Item } from '@livedoc/items';
 import { renderModelsForTab, sheetFramesOf } from '@livedoc/sheets';
@@ -297,6 +298,10 @@ async function renderTabBodyToSvg(
     );
     return textDocumentPageSvg(document);
   }
+  // A PDF document is the picture a browser sent of its first page (docs/specs/035-pdf-documents/
+  // live-editing-and-storage.md "A browser's thumbnail"): no engine reads a PDF here.
+  if (tabKindOf(parsed) === 'pdf')
+    return env.IMAGES ? pdfBrowserThumbnailSvg(env.IMAGES, liveDoc.id, body.id) : null;
   const form = tabKindOf(parsed) === 'form' ? readForm(parsed.form) : null;
   if (form) {
     const look = formLook(parsed);
