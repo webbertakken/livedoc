@@ -8,6 +8,12 @@ describe('surfaceOf', () => {
     expect(surfaceOf({ kind: 'text-document' }, true)).toBe('text-document');
   });
 
+  // docs/specs/035-pdf-documents/pdf-document.md "Why a tab kind": a PDF tab has a surface of its own.
+  it('names a PDF tab’s surface, in any document', () => {
+    expect(surfaceOf({ kind: 'pdf' }, false)).toBe('pdf');
+    expect(surfaceOf({ kind: 'pdf' }, true)).toBe('pdf');
+  });
+
   it('names a spreadsheet’s sheet tab’s surface', () => {
     expect(surfaceOf({ kind: 'sheet' }, true)).toBe('spreadsheet');
   });
@@ -28,13 +34,14 @@ describe('surfaceOf', () => {
   });
 
   it('names every surface it can answer', () => {
-    expect(TAB_SURFACES).toEqual(['text-document', 'spreadsheet']);
+    expect(TAB_SURFACES).toEqual(['text-document', 'spreadsheet', 'pdf']);
   });
 });
 
 describe('hasCanvasTab', () => {
   it('is false for a document whose tabs all have a surface', () => {
     expect(hasCanvasTab([{ kind: 'text-document' }], false)).toBe(false);
+    expect(hasCanvasTab([{ kind: 'pdf' }], false)).toBe(false);
     expect(hasCanvasTab([{ kind: 'sheet' }, { kind: 'sheet' }], true)).toBe(false);
   });
 

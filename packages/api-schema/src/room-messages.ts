@@ -181,6 +181,9 @@ export const MUTATION_OP_KINDS = [
   // One Yjs update to a text document (docs/specs/034-text-documents/live-editing-and-storage.md): the room applies
   // and stores it before relaying it, so nothing relayed is unstored; updates commute, so a replay is harmless.
   'text-document',
+  // One Yjs update to a PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "The
+  // room's op kinds"): stored by the room before it is relayed, as a text document's.
+  'pdf',
   'poll-start',
   'poll-end',
 ] as const;
@@ -227,6 +230,9 @@ export const SYSTEM_OP_KINDS = [
   // `text-document-refused` (docs/specs/034-text-documents/live-editing-and-storage.md "Refused edits"): the room
   // telling one sender its edit was refused; a forged one would only show a notice, but it comes from the room alone.
   'text-document-refused',
+  // `pdf-refused` (docs/specs/035-pdf-documents/live-editing-and-storage.md "The room's op kinds"): the room telling
+  // one sender its change was refused; it comes from the room alone.
+  'pdf-refused',
 ] as const;
 
 // The whole vocabulary. Every op the editor sends or handles is one of these
@@ -504,6 +510,11 @@ export type RoomOp =
   | { kind: 'text-document'; tabId: string; stale: true }
   // An update the room refused whole, to its sender alone ("Refused edits"): the limit it would pass.
   | { kind: 'text-document-refused'; tabId: string; limit: 'characters' | 'state' }
+  // One Yjs update to a PDF document's live changes, base64 (docs/specs/035-pdf-documents/live-editing-and-storage.md
+  // "Storage"); `stale` when the door stored one too large for a frame, and the room's refusal to its sender alone.
+  | { kind: 'pdf'; tabId: string; update: string }
+  | { kind: 'pdf'; tabId: string; stale: true }
+  | { kind: 'pdf-refused'; tabId: string; limit: 'characters' | 'state' }
   | {
       kind: 'vote';
       tabId: string;

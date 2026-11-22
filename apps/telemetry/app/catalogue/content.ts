@@ -1278,6 +1278,47 @@ export const SPREADSHEETS: MetricStack = {
   ],
 };
 
+// PDF documents (docs/specs/035-pdf-documents/pdf-document.md "Telemetry and observability"): PDFs arriving, marks
+// made, tools taken in hand and downloads. Never a name or any text of a file.
+export const PDFS_IMPORTED = chart(
+  'Pdf',
+  'Imported',
+  'PDFs Opened From Files',
+  'A PDF from the computer opened as a new PDF document, by the way it arrived.',
+  { types: ['Explorer'] },
+);
+
+export const PDF_MARKS_ADDED = chart(
+  'Pdf',
+  'Added',
+  'PDF Marks Made',
+  'A mark made on a PDF page, by its kind.',
+  { types: ['Mark.Highlight'] },
+);
+
+export const PDF_TOOLS_SELECTED = chart(
+  'Pdf',
+  'Selected',
+  'PDF Tools Taken In Hand',
+  'A tool chosen on a PDF document, from its toolbar, its Tools menu or its key.',
+  { types: ['Tool.Select', 'Tool.Highlight'], rising: 'neutral' },
+);
+
+export const PDFS_EXPORTED = chart(
+  'Pdf',
+  'Exported',
+  'PDFs Downloaded',
+  'A PDF document downloaded, by what was downloaded.',
+  { types: ['Pdf'] },
+);
+
+export const PDF_DOCUMENTS: MetricStack = {
+  stack: true,
+  title: 'PDF Documents',
+  blurb: 'PDF documents: opened from files, marked, and downloaded with every change in the file.',
+  members: [PDFS_IMPORTED, PDF_MARKS_ADDED, PDF_TOOLS_SELECTED, PDFS_EXPORTED],
+};
+
 // Forms (docs/specs/030-forms/forms.md "Telemetry"): forms started and built, published, opened and closed, and the
 // responses and reports their links take. Never a form's words.
 export const FORMS_CREATED = chart(

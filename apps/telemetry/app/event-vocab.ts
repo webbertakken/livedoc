@@ -65,6 +65,8 @@ const CATEGORY_COLORS: Record<TelemetryCategory, string> = {
   // Violet, the Event RSVP starter's: apart from Plan's blue and Sheet's green.
   Form: '#7c3aed',
   Spreadsheet: '#15803d',
+  // Signal red, the format's own colour in every file manager.
+  Pdf: '#b91c1c',
   Email: '#0d9488',
   Error: '#dc2626',
   // Warm stone, the marker on a whiteboard: apart from every blue and green.

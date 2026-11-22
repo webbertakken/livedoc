@@ -120,6 +120,8 @@ export const API_ROUTE_RESOURCES: ReadonlySet<string> = new Set([
   'forms',
   'shared',
   'images',
+  // The blob store (docs/specs/006-document/blob-store.md).
+  'files',
   'documents',
   'folders',
   'custom-themes',
@@ -195,6 +197,8 @@ const API_ROUTE_WORDS: ReadonlySet<string> = new Set([
   'rename',
   'text-documents',
   'updates',
+  // A PDF document's live changes; `files`, a blob a document holds, is a resource above.
+  'pdf-documents',
   'form-link',
   'form-seen',
   'form-preview',

@@ -5,7 +5,7 @@ LiveDoc runs at [docs.nu](https://docs.nu) on its own Cloudflare account. The to
 ## Shape
 
 - Workers: `docs-nu-api`, `docs-nu-marketing`, `docs-nu-live`, `docs-nu-telemetry`, `docs-nu-help`, `docs-nu-router` and `docs-nu-mcp` (production deploys it: `deploy_mcp: true`). `mcp.docs.nu` is attached to `docs-nu-mcp` as a custom domain in the Cloudflare dashboard (Workers → docs-nu-mcp → Domains & Routes), not by the deploy.
-- Resources: D1 `docs-nu`, R2 `docs-nu-images` and `docs-nu-bug-screenshots` (western Europe), and the KV namespace `docs-nu-mcp-oauth` for the MCP worker.
+- Resources: D1 `docs-nu`, R2 `docs-nu-images`, `docs-nu-files` and `docs-nu-bug-screenshots` (western Europe), and the KV namespace `docs-nu-mcp-oauth` for the MCP worker.
 - Rate limiters use namespace ids `7001`-`7018`: the ids are account-wide, and other workers on the account hold `1001` onwards.
 - Hostnames: `docs.nu` is canonical. `www.docs.nu` is attached to the router too, and a zone redirect rule (301, path and query kept) sends it to the apex. The zone has Always Use HTTPS on. Both zone settings live in the dashboard, not in this repo.
 - Hosted profile (`apps/api/hosted-vars.json`, applied only in `webbertakken/livedoc`): telemetry on, image gallery caps of 100 images and 100 MB per owner, `APP_BASE_URL` `https://docs.nu`. No Google client id yet, so the Drive mirror is off.

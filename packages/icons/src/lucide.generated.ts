@@ -236,6 +236,7 @@ export const lucideMilk: readonly IconPrim[] = [{"t":"path","d":"M8 2h8"},{"t":"
 export const lucideMinimize2: readonly IconPrim[] = [{"t":"path","d":"m14 10 7-7"},{"t":"path","d":"M20 10h-6V4"},{"t":"path","d":"m3 21 7-7"},{"t":"path","d":"M4 14h6v6"}];
 export const lucideMinus: readonly IconPrim[] = [{"t":"path","d":"M5 12h14"}];
 export const lucideMountain: readonly IconPrim[] = [{"t":"path","d":"m8 3 4 8 5-5 5 15H2L8 3z"}];
+export const lucideMousePointer2: readonly IconPrim[] = [{"t":"path","d":"M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"}];
 export const lucideMoveRight: readonly IconPrim[] = [{"t":"path","d":"M18 8L22 12L18 16"},{"t":"path","d":"M2 12H22"}];
 export const lucideMusic: readonly IconPrim[] = [{"t":"path","d":"M21 16V3a1 1 0 0 0-1.28-.96l-10 2.917a1 1 0 0 0-.72.96V19"},{"t":"circle","cx":18,"cy":16,"r":3},{"t":"circle","cx":6,"cy":19,"r":3}];
 export const lucideNetwork: readonly IconPrim[] = [{"t":"rect","x":16,"y":16,"w":6,"h":6,"rx":1},{"t":"rect","x":2,"y":16,"w":6,"h":6,"rx":1},{"t":"rect","x":9,"y":2,"w":6,"h":6,"rx":1},{"t":"path","d":"M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"},{"t":"path","d":"M12 12V8"}];

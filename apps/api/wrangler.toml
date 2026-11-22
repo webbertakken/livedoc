@@ -86,6 +86,13 @@ migrations_dir = "migrations"
 binding = "IMAGES"
 bucket_name = "docs-nu-images"
 
+# The blob store (docs/specs/006-document/blob-store.md): files' bytes held exactly, a PDF document's stored file among
+# them. Created out of band with `wrangler r2 bucket create docs-nu-files`. Without the binding every blob store
+# route answers 503 files_unavailable and no PDF document can be made; everything else works.
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "docs-nu-files"
+
 # Bug report screenshots (docs/specs/016-platform/bug-reports.md "Screenshots"), apart from images: read only by
 # the Bug Tracker's owner, expired after 90 days by the bucket's lifecycle rule (docs/operations/docs-nu.md
 # "Bug Tracker"). Absent, a report goes without its screenshot.

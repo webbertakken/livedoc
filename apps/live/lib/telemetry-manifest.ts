@@ -155,6 +155,12 @@ export const EMITTED_EVENT_PAIRS: readonly string[] = [
   'Note·Deleted',
   'Note·Opened',
   'Note·Used',
+  // PDF documents (docs/specs/035-pdf-documents/pdf-document.md "Telemetry and observability"): a mark made, a
+  // download, a PDF arriving, a tool taken in hand.
+  'Pdf·Added',
+  'Pdf·Exported',
+  'Pdf·Imported',
+  'Pdf·Selected',
   'Plan·Added',
   'Plan·Changed',
   'Plan·Created',

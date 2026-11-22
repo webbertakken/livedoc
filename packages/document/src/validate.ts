@@ -19,6 +19,7 @@ import type { Element, ShapeKind, Tab } from './index';
 // Value imports come from the data-shapes LEAF module (types only from
 // './index'), keeping this module out of the index ⇄ factories cycle.
 import { ALL_ANCHORS } from './arrow-types';
+import { pdfTabOf } from './pdf-tab';
 import { isPenColourName } from './pen-colours';
 import { ADDER_KEY_LENGTH } from './adder';
 import { ENTITY_MAX_FIELDS, PAGE_HEADING_MAX } from './data-shapes';
@@ -526,6 +527,7 @@ export function isValidTab(tab: unknown): tab is Tab {
   if (!isRecord(tab) || !isNonEmptyStr(tab.id) || typeof tab.name !== 'string') return false;
   if (!boundedArray(tab.elements, MAX_ELEMENTS_PER_TAB)) return false;
   if (tab.kind === 'text-document' && !isValidTextDocumentTab(tab)) return false;
+  if (tab.kind === 'pdf' && !isValidPdfTab(tab)) return false;
   const ids = new Set<string>();
   for (const el of tab.elements) {
     if (!isValidElement(el)) return false;
@@ -533,6 +535,12 @@ export function isValidTab(tab: unknown): tab is Tab {
     ids.add(el.id);
   }
   return true;
+}
+
+// A PDF tab holds no element, and names its stored file by key and size
+// (docs/specs/035-pdf-documents/pdf-document.md "What it holds").
+function isValidPdfTab(tab: Record<string, unknown>): boolean {
+  return (tab.elements as unknown[]).length === 0 && pdfTabOf(tab) !== null;
 }
 
 function isValidTextDocumentTab(tab: Record<string, unknown>): boolean {

@@ -8,6 +8,7 @@ import { SuppressElementIndicators } from '@/components/canvas/ElementIndicatorS
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
 import { surfaceOf, tabKindOf } from '@livedoc/document';
 import { TextDocumentHost } from '@/components/text-document/TextDocumentHost';
+import { PdfDocumentHost } from '@/components/pdf-document/PdfDocumentHost';
 import { applyDocumentRename } from './editor-page-helpers';
 import { SpreadsheetHost } from '@/components/spreadsheet/SpreadsheetHost';
 import { useBugReportPlace } from '@/lib/bug-report/place';
@@ -545,6 +546,17 @@ export function EditorView() {
                                                 // Add tab (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
                                                 <div className="relative flex min-h-0 flex-1 flex-col">
                                                   <TextDocumentHost tab={activeTab} />
+                                                  {documentGroup ? (
+                                                    <BottomLine
+                                                      tools={null}
+                                                      document={documentGroup}
+                                                    />
+                                                  ) : null}
+                                                </div>
+                                              ) : surface === 'pdf' ? (
+                                                // A PDF's pages, with the document group floating over them as over a text document.
+                                                <div className="relative flex min-h-0 flex-1 flex-col">
+                                                  <PdfDocumentHost tab={activeTab} />
                                                   {documentGroup ? (
                                                     <BottomLine
                                                       tools={null}

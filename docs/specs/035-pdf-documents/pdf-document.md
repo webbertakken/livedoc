@@ -1,6 +1,8 @@
 # PDF document
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the tab kind `pdf` and its surface, a PDF dropped on the Explorer
+becoming a PDF document, its stored file in the blob store, its pages read and drawn, a highlight, and Download as
+PDF. Everything else here is specified, not built.
 
 A **PDF document** is a tab of the `pdf` [tab kind](../006-document/document.md#domain-language): one PDF, read,
 reviewed and really edited by people together, live, and **always a PDF**. The file that leaves LiveDoc is a PDF any
@@ -177,7 +179,7 @@ role line.
   `Document · Loaded`, counted once.
 - A type is a preset token: never a name, a password, a field value or any text of the file.
 - Fingerprints, each with the document and tab ids and never content or names: `[pdf] stored`, `[pdf] opened`
-  (pages, bytes, whether read by range), `[pdf] refused` (with the refusal's name), `[pdf] limit-refused` (with the
+  (pages, bytes, whether read by range, how long the read and the engine took), `[pdf] refused` (with the refusal's name), `[pdf] limit-refused` (with the
   limit's name).
 
 ## Non-goals

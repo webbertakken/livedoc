@@ -50,6 +50,14 @@ What you do NOT need:
 
    The bucket name is bound to `IMAGES` in `apps/api/wrangler.toml`.
 
+   A second bucket holds files' bytes (optional, for PDF documents):
+
+   ```sh
+   pnpm exec wrangler r2 bucket create docs-nu-files
+   ```
+
+   It is bound to `FILES`. Without it every file route answers `503 files_unavailable` and no PDF document can be made; remove its `[[r2_buckets]]` block from `apps/api/wrangler.toml` to deploy without it.
+
 5. **Get an API token + account id**:
    - Account id is at the bottom-right of any Cloudflare dashboard page.
    - API token: create one with **Workers Scripts: Edit**, **D1: Edit**, **R2: Edit** (only if using images), **Workers KV: Edit** (for Durable Objects), and **Account → Account Settings: Read** on your account. Save it.

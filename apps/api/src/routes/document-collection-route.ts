@@ -60,6 +60,7 @@ import { compileSeededTabs } from './document-seed';
 import { hasTemplateSheets } from '@livedoc/templates';
 import { materialiseTemplateSheets } from '@livedoc/templates/template-sheets';
 import { readTextDocumentSeeds } from '../text-documents/seed-text-documents';
+import { TAB_BLOB_STATUS, tabBlobRefusal } from '../blob-store/tab-blobs';
 import { parsePlacement, resolvePlacement } from '../placement/resolve-placement';
 import { placementLookups } from '../placement/placement-lookups';
 import {
@@ -168,6 +169,9 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
             return payloadTooLarge();
           }
         }
+        // A PDF tab names bytes the blob store already holds for the owner, or the create is refused.
+        const blobs = await tabBlobRefusal(env, owner, body.tabs);
+        if (blobs) return json({ error: blobs }, { status: TAB_BLOB_STATUS[blobs] });
       }
       // A template's Sheets (docs/specs/029-sheets/sheet-store.md "Template starts"), however the tabs came (the
       // wizard, an agent, a template compiled above), on the validated tabs: made into seed sheets now, so the sheet exists the moment the

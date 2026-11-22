@@ -78,6 +78,10 @@ Then the document page with the canvas on demand ([Kinds outside the canvas](../
 measured 2026-11-20 on `main` at 0230a157e7 plus the change, the same way): `/document/<id>` and `/embed` 1,368 to
 1,020 KiB; a canvas document loads the canvas's chunk alongside, asked for at the open.
 
+Then the document page hosting the PDF document kind ([Performance](../035-pdf-documents/performance.md), measured
+2026-11-22 on `main` at 1adb2968a3 and on the change, the same way): `/document/<id>` and `/embed` 1,034 to
+1,036 KiB; the engine (2,088 KiB of WebAssembly and 284 KiB of script) loads only with a PDF tab.
+
 ## Rules
 
 ### Every page has a budget

@@ -53,10 +53,10 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 
 | Action                                               | Keys             | Acrobat's                | Mode      | Status    |
 | ---------------------------------------------------- | ---------------- | ------------------------ | --------- | --------- |
-| Select                                               | V                | The same                 | Every     | specified |
+| Select                                               | V                | The same                 | Every     | built     |
 | Hand; the hand while held                            | H; Space         | The same                 | Every     | specified |
 | Zoom to a dragged area                               | Z                | The same                 | Every     | specified |
-| Return to Select                                     | Escape           | The same                 | Every     | specified |
+| Return to Select                                     | Escape           | The same                 | Every     | built     |
 | Comment (a note)                                     | S                | The same                 | Reviewing | specified |
 | Highlight; cycle Highlight, Underline, Strikethrough | U; ⇧U            | The same                 | Reviewing | specified |
 | Text mark                                            | X                | The same                 | Reviewing | specified |
