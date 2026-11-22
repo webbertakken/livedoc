@@ -12,6 +12,7 @@ import { SheetCardRows } from './SheetCardRows';
 import { SheetCellSlot } from './SheetCellSlot';
 import { SheetRuleLayer } from './rules/SheetRuleLayer';
 import { invalidWhy } from './rules/sheet-rule-hover';
+import { SheetTouchLinkChip } from './SheetTouchLinkChip';
 import { previewFormatRules } from './rules/useSheetRulesState';
 import { SheetCellComments } from './SheetCellComments';
 import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
@@ -586,6 +587,7 @@ export function SheetGrid({
                 <SheetAddRows top={total.height - c.scroll.top} onAdd={actions.appendRows} />
               </SheetCellSlot>
             ) : null}
+            <SheetTouchLinkChip tapped={pointer.touchLink.tapped} onOpen={pointer.touchLink.open} />
             {hovered && (hoverError || hoverLink) && hoverBox ? (
               <SheetCellSlot r={hovered.r} c={hovered.c}>
                 <div

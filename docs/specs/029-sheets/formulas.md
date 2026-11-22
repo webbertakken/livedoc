@@ -695,7 +695,10 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   - **Opening**: Ctrl/⌘ and a press on the cell opens it in a new tab with no opener (`noopener,noreferrer`); on any
     other cell Ctrl/⌘ still adds to the selection, and a plain press on a link only selects it. The pointer's tooltip
     under a link shows its address and "⌘Click to open" (Ctrl+Click elsewhere). The cell menu offers **Open Link** for
-    the active cell's link, for every role: opening changes nothing, and it is the way in on a touch screen.
+    the active cell's link, for every role: opening changes nothing.
+  - **On a touch screen**: Ctrl/⌘ held with a tap opens the link as a click does (a tablet with a keyboard), and a
+    plain tap on a link selects it and shows its address under the cell with **Open**, as Google Sheets' link chip
+    does; the chip goes when the selection moves, and a pen works as a mouse.
   - Telemetry: `Sheet / Opened / Hyperlink`, never the address.
 - `REGEX…` functions run their RE2 pattern as a JavaScript regular expression of the same meaning, written from it
   (Google's runs in time linear in the text; this one backtracks). A regular expression cannot be stopped once it

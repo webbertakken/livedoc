@@ -31,6 +31,7 @@ import type { SheetActions } from './useSheetActions';
 import { useSheetPan } from './useSheetPan';
 import { openHyperlink } from '@/lib/open-hyperlink';
 import { TOUCH_GRIP_HIT_PX, useSheetTouch } from './useSheetTouch';
+import { useSheetTouchLink } from './useSheetTouchLink';
 
 const DRAG_START_PX = 4;
 const AUTOSCROLL_EDGE_PX = 24;
@@ -599,6 +600,7 @@ export function useSheetPointer(
       });
   };
 
+  const touchLink = useSheetTouchLink();
   const touch = useSheetTouch({
     interactive: c.interactive,
     maximised: c.maximised,
@@ -645,10 +647,18 @@ export function useSheetPointer(
     const h = hitAt(x, y);
     if (h.kind === 'none') return;
     if (cc.editing) actions.commitEdit('none');
-    if (h.kind === 'cell') cc.setSelection(single({ r: h.r, c: h.c }));
-    else if (h.kind === 'col') cc.setSelection(selectCols(h.c, h.c, cc.grid));
-    else if (h.kind === 'row') cc.setSelection(selectRows(h.r, h.r, cc.grid));
-    else cc.setSelection(selectAllCells(cc.grid));
+    if (h.kind === 'cell') {
+      // A link under the finger: Ctrl/⌘ and the tap open it; a plain tap marks it for the link chip (formulas.md
+      // "Text").
+      const link = cc.workbook.hyperlinkOf(cc.sheet.id, h.r, h.c);
+      if (touchLink.tap(e, { r: h.r, c: h.c }, link, !!cc.rules.paint)) return;
+      cc.setSelection(single({ r: h.r, c: h.c }));
+    } else {
+      touchLink.dismiss();
+      if (h.kind === 'col') cc.setSelection(selectCols(h.c, h.c, cc.grid));
+      else if (h.kind === 'row') cc.setSelection(selectRows(h.r, h.r, cc.grid));
+      else cc.setSelection(selectAllCells(cc.grid));
+    }
     cc.focusGrid();
   };
 
@@ -663,6 +673,7 @@ export function useSheetPointer(
     preview,
     hover,
     ring: touch.ring,
+    touchLink,
     normaliseRange,
   };
 }
