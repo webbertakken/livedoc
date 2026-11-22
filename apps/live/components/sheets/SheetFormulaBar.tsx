@@ -71,7 +71,7 @@ export function SheetFormulaBar({
 }) {
   const c = useSheetController();
   const range = c.selection.ranges[c.selection.ranges.length - 1]!;
-  // The selection, or its name when it is exactly a named range (sheet.md "Named ranges").
+  // The selection, or its name when it is exactly a named range (sheet.md "Named Ranges").
   const name = nameOfRange(c.sheet.layout, range) ?? formatRange(range);
   const [box, setBox] = useState<string | null>(null);
   const barRef = useRef<HTMLTextAreaElement | null>(null);

@@ -1,6 +1,6 @@
 'use client';
 
-// Sheet Settings' Named Ranges (docs/specs/029-sheets/sheet.md "Named ranges"): each name with its range, Go To
+// Sheet Settings' Named Ranges (docs/specs/029-sheets/sheet.md "Named Ranges"): each name with its range, Go To
 // (selects it) and, for an Editor, Remove (one undo step). Names are made in the name box.
 import { CloseIcon, Tooltip } from '@livedoc/ui';
 import { formatRange, posRangeOf } from '@livedoc/sheets';
@@ -28,7 +28,7 @@ export function SheetNamedRanges({
       </p>
     );
   return (
-    <ul aria-label="Named ranges" className="flex flex-col gap-1">
+    <ul aria-label="Named Ranges" className="flex flex-col gap-1">
       {names.map((x) => {
         const at = posRangeOf(layout, x);
         return (

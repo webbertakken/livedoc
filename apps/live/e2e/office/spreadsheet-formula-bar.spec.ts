@@ -68,7 +68,7 @@ test('the sheet bar sums a selection, and the formula bar names and helps', asyn
   await nameBox.fill('Amounts');
   await nameBox.press('Enter');
   await select(page, 'D9');
-  await page.getByRole('button', { name: 'Named ranges' }).click();
+  await page.getByRole('button', { name: 'Named Ranges' }).click();
   const amounts = page.getByRole('menuitem', { name: /Amounts/ });
   await expect(amounts).toContainText('A1:A2');
   await page.screenshot({

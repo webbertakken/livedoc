@@ -132,7 +132,7 @@ export function cycleAbsolute(
 }
 
 // The function names the word before the caret starts (case ignored), when it is a function position; then the
-// sheet's named ranges it starts (sheet.md "Named ranges"), listed in `ranges` too, as given.
+// sheet's named ranges it starts (sheet.md "Named Ranges"), listed in `ranges` too, as given.
 export function functionMatches(
   draft: string,
   caret: number,

@@ -59,7 +59,7 @@ export function NameBoxList({
       <button
         ref={setTrigger}
         type="button"
-        aria-label="Named ranges"
+        aria-label="Named Ranges"
         aria-haspopup="menu"
         aria-expanded={open}
         className="my-[2px] flex h-6 w-4 shrink-0 items-center justify-center rounded-sm hover:bg-black/5 dark:hover:bg-white/10"
@@ -77,7 +77,7 @@ export function NameBoxList({
             trigger={trigger}
             initialFocus="first"
             placement="popup"
-            label="Named ranges"
+            label="Named Ranges"
             onClose={() => setOpen(false)}
             onDone={() => setOpen(false)}
           />

@@ -105,7 +105,7 @@ describe('the formula bar', () => {
   it('lists the sheet’s named ranges under the name box’s arrow, and a pick selects one', () => {
     show(h);
     withGrid();
-    const list = () => screen.getByRole('button', { name: 'Named ranges' });
+    const list = () => screen.getByRole('button', { name: 'Named Ranges' });
     fireEvent.click(list());
     const none = screen.getByRole('menuitem', { name: /No named ranges/ });
     expect(none.getAttribute('aria-disabled')).toBe('true');
@@ -134,7 +134,7 @@ describe('the formula bar', () => {
     expect(fx().getAttribute('rows')).toBe('1');
   });
 
-  // docs/specs/029-sheets/sheet.md "Named ranges": naming is an Editor's; a Participant writes cells only, and still
+  // docs/specs/029-sheets/sheet.md "Named Ranges": naming is an Editor's; a Participant writes cells only, and still
   // goes to a name that is there.
   it('names nothing for a Participant, who still goes to an existing name', () => {
     const { rows, cols } = h.store.sheet(SHEET_ID)!.layout;

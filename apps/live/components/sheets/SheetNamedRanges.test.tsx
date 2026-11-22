@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Sheet Settings' Named Ranges (docs/specs/029-sheets/sheet.md "Named ranges").
+// Sheet Settings' Named Ranges (docs/specs/029-sheets/sheet.md "Named Ranges").
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SHEET_ID, makeSheet, renderSheet } from './sheet-ui-test-utils';
@@ -34,7 +34,7 @@ describe('the named ranges list', () => {
         'Name',
       );
     });
-    const list = screen.getByRole('list', { name: 'Named ranges' });
+    const list = screen.getByRole('list', { name: 'Named Ranges' });
     expect(within(list).getByText('Rate')).toBeTruthy();
     expect(within(list).getByText('A2')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Go To Rate' }));
