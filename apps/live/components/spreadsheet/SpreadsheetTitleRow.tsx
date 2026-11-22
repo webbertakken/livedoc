@@ -31,7 +31,9 @@ import {
   historyBindings,
   type SpreadsheetHistory,
 } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
+import { spreadsheetChoices } from '@/lib/spreadsheet/spreadsheet-choices';
 import { SPREADSHEET_SHORTCUTS } from '@/lib/spreadsheet/spreadsheet-shortcuts';
+import { SPREADSHEET_TOOLBAR } from '@/lib/spreadsheet/spreadsheet-toolbar';
 import { track } from '@/lib/telemetry';
 import { ConversionDialog } from './ConversionDialog';
 import { useChannelBindings, type OfficeBindingsChannel } from './office-bindings-channel';
@@ -101,6 +103,10 @@ export function SpreadsheetTitleRow({
   const [opening, setOpening] = useState<string | null>(null);
   const catalogue = useMemo(() => spreadsheetMenus(format), [format]);
   const grid = useChannelBindings(channel);
+  const fontSize = useMemo(
+    () => (grid.fontSize === null ? null : { read: () => grid.fontSize, set: grid.setFontSize }),
+    [grid],
+  );
   const download = async (asked: DownloadFormat) => {
     setProblem(null);
     try {
@@ -121,7 +127,7 @@ export function SpreadsheetTitleRow({
     setProblem,
   });
   const actions: OfficeActions = {
-    ...grid,
+    ...grid.actions,
     ...historyBindings(history, level !== 'view'),
     ...Object.fromEntries(
       DOWNLOAD_ITEMS.map((item) => [
@@ -174,6 +180,10 @@ export function SpreadsheetTitleRow({
         telemetryKind="Spreadsheet"
         chrome={chrome}
         tabId={tabId}
+        toolbar={SPREADSHEET_TOOLBAR}
+        fontSize={fontSize}
+        choices={spreadsheetChoices(catalogue, actions)}
+        refresh={channel.subscribe}
       />
       <ConversionDialog
         state={conversion.state}

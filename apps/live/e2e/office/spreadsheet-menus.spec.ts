@@ -4,7 +4,8 @@ import { officeMenuItem } from './office-menus';
 
 // The spreadsheet's menus (plan 0020 Phase 8 box 1; docs/specs/029-sheets/surface.md "Menu bar", D125): Google's
 // eight menus less Extensions, every planned row an item, those not built yet dimmed; Format › Text › Bold bolds the
-// active cell and ticks, Edit › Undo takes it back, Insert › Rows counts the selection, and the keys stay in the grid.
+// active cell and ticks, Edit › Undo takes it back, Insert › Rows counts the selection, the toolbar bolds and sizes
+// ("Toolbar", D128), and the keys stay in the grid.
 
 const READY = '[data-spreadsheet-surface="ready"]';
 
@@ -80,6 +81,23 @@ test('the menus run what the grid does, and dim what is still to come', async ({
   const pivot = await officeMenuItem(page, ['Insert', 'Pivot Table']);
   await expect(pivot).toHaveAttribute('aria-disabled', 'true');
   await page.keyboard.press('Escape');
+
+  // The toolbar (surface.md "Toolbar"): Bold pressed from it ticks the menu's Bold, and a size typed in its field.
+  await select(page, 'A3');
+  const toolbar = page.getByRole('toolbar');
+  const bold = toolbar.getByRole('button', { name: /^Bold/ });
+  await bold.click();
+  await expect(bold).toHaveAttribute('aria-pressed', 'true');
+  const size = toolbar.getByRole('combobox', { name: /Font Size/i });
+  await size.fill('14');
+  await size.press('Enter');
+  await select(page, 'A3');
+  await expect(size).toHaveValue('14');
+  await expect(toolbar.getByRole('button', { name: 'Insert Chart' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await page.screenshot({ path: test.info().outputPath('toolbar.png'), animations: 'disabled' });
 
   // The menu's Alt key opens it (surface.md "Menu bar"): Chrome's Alt+D for Data.
   await select(page, 'B1');

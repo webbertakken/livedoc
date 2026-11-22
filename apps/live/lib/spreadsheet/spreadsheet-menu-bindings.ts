@@ -3,6 +3,8 @@
 // and a dimmed item are read from the grid as the menus are drawn; labels count what an item acts on, as Google's do.
 import {
   FONT_SIZE_DEFAULT,
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
   columnLetters,
   type CellFormat,
   type FormatPatch,
@@ -18,6 +20,7 @@ type Axis = 'r' | 'c';
 export type GridMenuActions = {
   toggle: (flag: 'b' | 'i' | 'u' | 'st') => void;
   numberFormat: (nf: NumberFormatKind) => void;
+  decimals: (delta: 1 | -1) => void;
   format: (patch: FormatPatch) => void;
   clear: (what: 'inputs' | 'formats') => void;
   insert: (axis: Axis, side: 'before' | 'after') => void;
@@ -139,7 +142,19 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     'sort-range-z-to-a': run(() =>
       act.sortRange([{ col: port.active.c, ascending: false }], false),
     ),
-    'create-a-filter': run(act.toggleFilter, port.filtered ? { label: 'Remove Filter' } : {}),
+    'create-a-filter': run(act.toggleFilter, {
+      checked: port.filtered,
+      ...(port.filtered ? { label: 'Remove Filter' } : {}),
+    }),
+    // The toolbar's own (surface.md "Toolbar"): decimals, and the font size a point at a time (D128).
+    'decrease-decimal-places': run(() => act.decimals(-1)),
+    'increase-decimal-places': run(() => act.decimals(1)),
+    'font-size-decrease': run(() => setFontSize(act, fontSizeOf(f) - 1), {
+      disabled: fontSizeOf(f) <= FONT_SIZE_MIN,
+    }),
+    'font-size-increase': run(() => setFontSize(act, fontSizeOf(f) + 1), {
+      disabled: fontSizeOf(f) >= FONT_SIZE_MAX,
+    }),
   };
   for (const { id, axis, count } of FREEZE_ITEMS) {
     const frozen = axis === 'r' ? port.frozenRows : port.frozenCols;
@@ -175,14 +190,43 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     });
   }
   for (const size of MENU_FONT_SIZES) {
-    out[`font-size-${size}`] = run(
-      () => act.format({ fs: size === FONT_SIZE_DEFAULT ? null : size }),
-      {
-        checked: (f?.fs ?? FONT_SIZE_DEFAULT) === size,
-      },
-    );
+    out[`font-size-${size}`] = run(() => setFontSize(act, size), {
+      checked: fontSizeOf(f) === size,
+    });
   }
   return out;
+}
+
+const fontSizeOf = (f: CellFormat | undefined) => f?.fs ?? FONT_SIZE_DEFAULT;
+
+/** A size asked for, kept whole and within the grid's limits; the default clears the cell's own (D128). */
+export function sheetFontSize(pt: number): number | null {
+  const size = Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, Math.round(pt)));
+  return size === FONT_SIZE_DEFAULT ? null : size;
+}
+
+function setFontSize(act: GridMenuActions, pt: number) {
+  act.format({ fs: sheetFontSize(pt) });
+}
+
+/** What the open sheet offers the title row: its items' bindings and the active cell's font size. */
+export type GridOffice = {
+  actions: OfficeActions;
+  // The active cell's size in points; null while no sheet is open or the session may not format.
+  fontSize: number | null;
+  setFontSize: (pt: number) => void;
+};
+
+/** The grid's menu and toolbar bindings, and its font size for an Editor. */
+export function gridOffice(port: GridMenuPort): GridOffice {
+  const editor = port.canWrite && port.canShape;
+  return {
+    actions: gridMenuBindings(port),
+    fontSize: editor ? fontSizeOf(port.format) : null,
+    setFontSize: (pt) => {
+      if (editor) setFontSize(port.act, pt);
+    },
+  };
 }
 
 /** The grid's items for this session: Copy for anyone, values for a Participant, the rest for an Editor. */

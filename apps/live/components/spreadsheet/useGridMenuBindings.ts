@@ -2,7 +2,7 @@
 
 // The open sheet's menu bindings (docs/specs/029-sheets/surface.md "Menu bar"): the grid's actions and clipboard, its
 // selection and the active cell's look, put to the menus' items and published up to the title row.
-import { gridMenuBindings } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
+import { gridOffice } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import type { SheetActions } from '@/components/sheets/useSheetActions';
 import { useSheetClipboard } from '@/components/sheets/useSheetClipboard';
@@ -14,7 +14,7 @@ export function useGridMenuBindings(actions: SheetActions): void {
   const { selection, sheet } = c;
   const { layout } = sheet;
   usePublishedBindings(
-    gridMenuBindings({
+    gridOffice({
       canWrite: c.canEdit,
       canShape: c.canShape,
       range: selection.ranges[selection.ranges.length - 1]!,

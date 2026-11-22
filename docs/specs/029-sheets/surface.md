@@ -1,6 +1,6 @@
 # Surface
 
-**Status: partly built.** The title row and its menus, the formula bar, the grid and the sheet bar are built.
+**Status: partly built.** The title row, its menus and toolbar, the formula bar, the grid and the sheet bar are built.
 
 The screen of a spreadsheet, top to bottom, as Google Sheets lays it out. The frame (title row, menu bar, menu
 search, toolbar, side panel, dialogs) is the **office shell** shared with plan 0019's documents and specified there;
@@ -68,6 +68,14 @@ Left to right, a hairline between the groups:
 | End       | **Hide the Menus** (^)                                                                                                                                   |
 
 - Each control reads the active cell (Bold pressed when it is bold) and acts on the whole selection, one undo step.
+- A control shares its menu item's id and binding: Format as Currency and Format as Percent are Format › Number's,
+  Bold is Format › Text's, Create a Filter is Data's (pressed while the sheet has one).
+- **Font Size** shows the active cell's size (10 where it sets none); a size typed is kept within 6 to 96, and minus
+  and plus take one point off or on, as Google's do (default, D128).
+- **More Formats**, **Horizontal Align**, **Vertical Align** and **Text Wrapping** open the choices of Format ›
+  Number, Alignment and Wrapping, the one in force ticked; the control's glyph shows the alignment or wrapping there.
+- A control whose row is not yet built shows dimmed with "Coming soon"; a value field not yet built (Zoom, Font)
+  shows its placeholder (100%, Default) dimmed the same way.
 - Colours open the one [colour picker](../004-interface-design/colour-picker.md) in its toolbar skin.
 - Controls that do not fit fold from the right into **More** (⋮), never wrapping; on a phone the toolbar scrolls
   sideways, as Google's app does not but a narrow browser window must.
@@ -130,3 +138,4 @@ Version History (the shell's). Each is specified with its area.
   a submenu of them, a `;` a separator (default).
 - **D126** A menu row naming Google: Matched by LiveDoc's own words, Sheets Help as **Help** (default).
 - **D127** The menus' telemetry: The shell's events with the kind's name, Spreadsheet, never one per item (default).
+- **D128** The toolbar's font size steps: One point a press, within 6 to 96 (default).

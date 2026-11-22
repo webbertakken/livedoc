@@ -82,13 +82,47 @@ describe('SpreadsheetTitleRow', () => {
     const channel = createOfficeBindingsChannel();
     const bold = vi.fn();
     render(<Row channel={channel} />);
-    act(() => channel.set({ bold: { run: bold, checked: true } }));
+    act(() =>
+      channel.set({
+        actions: { bold: { run: bold, checked: true } },
+        fontSize: 10,
+        setFontSize: () => {},
+      }),
+    );
     openMenu('Format');
     openSub('Text');
     const boldItem = screen.getByRole('menuitemcheckbox', { name: /Bold/ });
     expect(boldItem.getAttribute('aria-checked')).toBe('true');
     fireEvent.click(boldItem);
     expect(bold).toHaveBeenCalled();
+  });
+
+  it('draws the toolbar from the open sheet: Bold pressed, the size field set through it', () => {
+    const channel = createOfficeBindingsChannel();
+    const bold = vi.fn();
+    const setFontSize = vi.fn();
+    render(<Row channel={channel} />);
+    act(() =>
+      channel.set({
+        actions: {
+          bold: { run: bold, checked: true },
+          'align-left': { run: vi.fn(), checked: true },
+        },
+        fontSize: 12,
+        setFontSize,
+      }),
+    );
+    const toolbar = screen.getByRole('toolbar');
+    const boldButton = within(toolbar).getByRole('button', { name: /^Bold/ });
+    expect(boldButton.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(boldButton);
+    expect(bold).toHaveBeenCalled();
+    const size = within(toolbar).getByRole<HTMLInputElement>('combobox', { name: /Font Size/i });
+    expect(size.value).toBe('12');
+    fireEvent.change(size, { target: { value: '14' } });
+    fireEvent.keyDown(size, { key: 'Enter' });
+    expect(setFontSize).toHaveBeenCalledWith(14);
+    expect(within(toolbar).getByRole('button', { name: /Horizontal Align: Left/ })).toBeTruthy();
   });
 
   it('binds Undo and Redo to the person’s timeline for anyone who writes', () => {
