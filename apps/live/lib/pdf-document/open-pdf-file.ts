@@ -4,12 +4,19 @@
 // kept is where a new document is: for someone whose documents start in This Browser the file is kept in this
 // browser's own store and named by a new offline record, and no request carries its bytes or its name
 // (live-editing-and-storage.md "A PDF that arrives").
-import { blobKeyOf, FILE_TAB_MAX_BYTES, type BlobKey, type Tab } from '@livedoc/document';
+import {
+  blobKeyOf,
+  FILE_TAB_MAX_BYTES,
+  truncateName,
+  type BlobKey,
+  type Tab,
+} from '@livedoc/document';
 import { isPdfBytes } from '@livedoc/pdf-documents';
 import { LocalBlobRefused, type LocalBlobRefusal } from '@/lib/blob-store/local-blob-store';
 import { LOCAL_STORE_COPY } from './pdf-this-browser-copy';
 import { sendBlob } from '@/lib/blob-store/send-blob';
 import { ApiError, apiCreateDocument } from '@/lib/api-client';
+import { fileStorageRefused } from '@/lib/api/capabilities';
 import { debugLog } from '@/lib/debug-log';
 import { createIdsFor } from '@/lib/new-document/create-failure';
 import { thisBrowserBlobs } from '@/lib/offline/offline-blobs';
@@ -36,12 +43,17 @@ export const PDF_ARRIVAL_COPY: Record<PdfArrivalRefusal, string> = {
   ...LOCAL_STORE_COPY,
 };
 
-export type OpenedPdf =
-  { ok: true; documentId: string; held: boolean } | { ok: false; refusal: PdfArrivalRefusal };
+export type PdfRefused = { ok: false; refusal: PdfArrivalRefusal };
 
-/** The document's name from the file's: its name without the extension. */
+export type OpenedPdf = { ok: true; documentId: string; held: boolean } | PdfRefused;
+
+/** A file taken as a PDF: its bytes, the key they hash to, and the name it gives what is made of it. */
+export type TakenPdf =
+  { ok: true; bytes: Uint8Array<ArrayBuffer>; key: BlobKey; name: string } | PdfRefused;
+
+/** The document's name from the file's: its name without the extension, within a name's length. */
 export function pdfNameFromFile(fileName: string): string {
-  return fileName.replace(/\.[^.]+$/, '').trim() || UNTITLED_PDF;
+  return truncateName(fileName.replace(/\.[^.]+$/, '')) || UNTITLED_PDF;
 }
 
 /** The PDF tab a new document is made with: it names its stored file, and holds nothing else. */
@@ -49,7 +61,8 @@ export function newPdfTab(id: string, name: string, blob: BlobKey, size: number)
   return { id, name, kind: 'pdf', elements: [], blob, size };
 }
 
-const refusalOf = (error: unknown): PdfArrivalRefusal => {
+/** The refusal a failed send or save is: the store's own by name, else not stored. */
+export const refusalOf = (error: unknown): PdfArrivalRefusal => {
   if (error instanceof LocalBlobRefused) return error.code;
   const code = error instanceof ApiError ? error.code : null;
   if (code === 'files_unavailable' || code === 'file_too_large' || code === 'usage_exceeded')
@@ -57,11 +70,31 @@ const refusalOf = (error: unknown): PdfArrivalRefusal => {
   return 'not_stored';
 };
 
-// Every refusal is logged by its name, the ones answered before a byte travels too.
-const refused = (refusal: PdfArrivalRefusal): OpenedPdf => {
+/** A refusal, logged by its name: the ones answered before a byte travels too. */
+export const refused = (refusal: PdfArrivalRefusal): PdfRefused => {
   debugLog(`[pdf] refused name=${refusal}`);
   return { ok: false, refusal };
 };
+
+/**
+ * Takes a file as a PDF about to be kept. Refused before a byte of it is read: a file past the cap, and one that
+ * would be `sent` to a host that says it stores no files (docs/specs/006-document/blob-store.md "Without object
+ * storage"). Then read, checked to be a PDF by its bytes, and hashed.
+ */
+export async function takePdfFile(
+  file: Pick<File, 'name' | 'size' | 'arrayBuffer'>,
+  sent: boolean,
+): Promise<TakenPdf> {
+  if (file.size > FILE_TAB_MAX_BYTES) return refused('file_too_large');
+  if (sent && (await fileStorageRefused())) return refused('files_unavailable');
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!isPdfBytes(bytes)) return refused('not_a_pdf');
+  try {
+    return { ok: true, bytes, key: await blobKeyOf(bytes), name: pdfNameFromFile(file.name) };
+  } catch {
+    return refused('not_stored');
+  }
+}
 
 // Keeps the file in this browser and names it by a new offline record. The bytes are kept first: a record never
 // names bytes this browser does not hold.
@@ -95,15 +128,14 @@ export async function openPdfFile(
   folderId?: string | null,
   where: SaveLocationId = 'livedoc',
 ): Promise<OpenedPdf> {
-  if (file.size > FILE_TAB_MAX_BYTES) return refused('file_too_large');
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!isPdfBytes(bytes)) return refused('not_a_pdf');
-  const { documentId, tabId } = createIdsFor(null);
-  const name = pdfNameFromFile(file.name);
   const started = Date.now();
+  const here = isOfflineLocation(where);
+  const taken = await takePdfFile(file, !here);
+  if (!taken.ok) return taken;
+  const { bytes, key, name } = taken;
+  const { documentId, tabId } = createIdsFor(null);
   try {
-    const key = await blobKeyOf(bytes);
-    if (isOfflineLocation(where)) {
+    if (here) {
       await keepHere({ documentId, tabId }, name, key, bytes);
       debugLog(
         `[pdf] arrived bytes=${bytes.byteLength} where=this-browser ms=${Date.now() - started}`,

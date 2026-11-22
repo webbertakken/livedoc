@@ -45,7 +45,9 @@ describe('AddTabMenu', () => {
   // the document can hold one (stored on LiveDoc).
   it('offers Text document after the Plan rows when the document can hold one', () => {
     const onAdd = vi.fn();
-    render(<AddTabMenu onAdd={onAdd} tabMode="diagram" offerTextDocument />);
+    render(
+      <AddTabMenu onAdd={onAdd} tabMode="diagram" offers={{ textDocument: true, pdf: false }} />,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Add tab' }));
     expect(items().map((i) => i.textContent)).toEqual([
       'Tab',
@@ -56,6 +58,46 @@ describe('AddTabMenu', () => {
     ]);
     fireEvent.click(document.querySelector('[data-add-tab-row="text-document"]')!);
     expect(onAdd).toHaveBeenCalledWith('text-document');
+  });
+
+  // docs/specs/035-pdf-documents/pdf-document.md "A PDF tab from a file": after Text document, only where the
+  // document is stored on LiveDoc and the host stores files.
+  it('offers PDF from a file last, with its mark, where the document can take one', () => {
+    const onAdd = vi.fn();
+    render(
+      <AddTabMenu onAdd={onAdd} tabMode="diagram" offers={{ textDocument: true, pdf: true }} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Add tab' }));
+    expect(items().map((i) => i.textContent)).toEqual([
+      'Tab',
+      'Board',
+      'Sheet',
+      'Dashboard',
+      'Text document',
+      'PDF from a file',
+    ]);
+    const row = document.querySelector<HTMLElement>('[data-add-tab-row="pdf"]')!;
+    expect(row.querySelector('svg')).not.toBeNull();
+    fireEvent.click(row);
+    expect(onAdd).toHaveBeenCalledWith('pdf');
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('offers PDF from a file without Text document where only it is offered, and never unasked', () => {
+    const { unmount } = render(
+      <AddTabMenu onAdd={vi.fn()} tabMode="diagram" offers={{ textDocument: false, pdf: true }} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Add tab' }));
+    expect(items().map((i) => i.textContent)).toEqual([
+      'Tab',
+      'Board',
+      'Sheet',
+      'Dashboard',
+      'PDF from a file',
+    ]);
+    unmount();
+    open();
+    expect(document.querySelector('[data-add-tab-row="pdf"]')).toBeNull();
   });
 
   it('draws the Tab row with the mark of the mode it will open in', () => {

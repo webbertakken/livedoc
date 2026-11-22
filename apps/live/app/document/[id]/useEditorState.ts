@@ -2795,6 +2795,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     documentList,
     ownerId: selfParticipant.id,
     documentId,
+    shareCode: sessionShareCode,
     createTab,
     commit,
     commitTabs,
@@ -4739,6 +4740,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     documentTeamId,
     setDocumentTeamId,
     emailEnabled,
+    // The host stores files: Add tab offers a PDF from a file (docs/specs/006-document/blob-store.md "Without object
+    // storage").
+    filesEnabled: capabilities.filesEnabled,
     actionPopoverOpenId,
     actionRows,
     assignActionFor,

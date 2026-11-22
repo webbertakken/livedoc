@@ -23,7 +23,7 @@ import { TabListRow } from './TabListRow';
 import { track } from '@/lib/telemetry';
 import type { TabsChrome, TabsChromeProps } from './tabs-chrome';
 import { peopleHereLabel } from './TabListButtons';
-import { addTabMark, addTabRows } from './AddTabMenu';
+import { addTabMark, addTabRows, NO_ADD_TAB_OFFERS } from './AddTabMenu';
 import { newTabMode } from '@/lib/new-tab-seed';
 
 // Where the list hangs: above its opener, its arrow at the opener's centre, kept inside the window's edge.
@@ -242,9 +242,10 @@ export function TabList({
         </ul>
         {readOnly ? null : (
           // The add menu's rows (docs/specs/007-editor/toolbar-layout.md "The tab list"): New Tab, New Board, New
-          // Sheet, New Dashboard and, where offered, New Text Document, each adding its choice and closing the list.
+          // Sheet, New Dashboard and, where offered, New Text Document and New PDF From a File, each adding its choice
+          // and closing the list.
           <div className="mt-1.5 flex flex-col gap-px border-t border-slate-200 pt-1.5 dark:border-slate-800">
-            {addTabRows(tabs.offerTextDocument ?? false).map(({ choice, footer }) => {
+            {addTabRows(tabs.addTabOffers ?? NO_ADD_TAB_OFFERS).map(({ choice, footer }) => {
               const Mark = addTabMark(choice, newTabMode(chrome.activeTab));
               return (
                 <button

@@ -9,21 +9,30 @@ import { useTabActions } from './useTabActions';
 
 // docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab".
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
+const chooser = vi.hoisted(() => ({ addPdfTabFromChooser: vi.fn(async () => {}) }));
+vi.mock('@/lib/pdf-document/pdf-tab-from-file', () => chooser);
 
 afterEach(() => {
   clearPlanStartLandings();
   vi.mocked(track).mockClear();
+  chooser.addPdfTabFromChooser.mockClear();
 });
 
 const first = { id: 't1', name: 'Tab 1', elements: [] } as unknown as Tab;
 
-function run(choice?: AddTabChoice, canEditStructure = true, active: Tab = first) {
+function run(
+  choice?: AddTabChoice,
+  canEditStructure = true,
+  active: Tab = first,
+  more: Record<string, unknown> = {},
+) {
   const commitTabs = vi.fn();
   const deps = new Proxy<Record<string, unknown>>(
     {
       tabs: [active],
       activeId: 't1',
       canEditStructure,
+      ...more,
       createTab: (name: string) => ({ id: 't2', name, elements: [] }) as unknown as Tab,
       commitTabs,
     },
@@ -106,5 +115,56 @@ describe('adding a Text document', () => {
 
   it('adds none for a session that cannot change the tabs', () => {
     expect(run('text-document', false).commitTabs).not.toHaveBeenCalled();
+  });
+});
+
+// docs/specs/035-pdf-documents/pdf-document.md "A PDF tab from a file": the chooser is opened for the open document,
+// and the tab lands only when the flow hands it back stored.
+describe('adding a PDF from a file', () => {
+  const open = { ownerId: 'ada', documentId: 'doc-1', shareCode: 'share-1' };
+  const pdf = {
+    id: 't2',
+    name: 'Lease',
+    kind: 'pdf',
+    elements: [],
+    blob: 'k',
+    size: 9,
+  } as unknown as Tab;
+
+  it('opens the chooser for the open document, and commits no tab by itself', () => {
+    const { commitTabs } = run('pdf', true, first, open);
+    expect(commitTabs).not.toHaveBeenCalled();
+    expect(chooser.addPdfTabFromChooser).toHaveBeenCalledOnce();
+    expect(chooser.addPdfTabFromChooser.mock.calls[0]).toMatchObject([{ ...open, tabId: 't2' }]);
+  });
+
+  it('lands the stored tab after the others, and never twice', () => {
+    const { commitTabs } = run('pdf', true, first, open);
+    const [{ land }] = chooser.addPdfTabFromChooser.mock.calls[0] as unknown as [
+      { land: (tab: Tab) => void },
+    ];
+    land(pdf);
+    const update = commitTabs.mock.calls[0]![0] as (ts: Tab[]) => Tab[];
+    expect(update([first])).toEqual([first, pdf]);
+    // The room may have told this page of the row it stored itself.
+    const told = [first, pdf];
+    expect(update(told)).toBe(told);
+  });
+
+  it('opens no chooser for a session that cannot change the tabs: a Participant, a Viewer', () => {
+    run('pdf', false, first, open);
+    expect(chooser.addPdfTabFromChooser).not.toHaveBeenCalled();
+  });
+
+  it('opens none in a spreadsheet, which holds only sheets', () => {
+    const toast = { error: vi.fn() };
+    run('pdf', true, first, { ...open, spreadsheet: true, toast });
+    expect(chooser.addPdfTabFromChooser).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith('A spreadsheet holds only sheets.');
+  });
+
+  it('opens none before the document is known', () => {
+    run('pdf', true, first, { ...open, documentId: null });
+    expect(chooser.addPdfTabFromChooser).not.toHaveBeenCalled();
   });
 });

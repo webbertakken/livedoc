@@ -21,6 +21,15 @@ export function apiGetCapabilities(): Promise<CapabilitiesResponse> {
   return capabilities;
 }
 
+/**
+ * Whether this host says it stores no files (docs/specs/006-document/blob-store.md "Without object storage"): a file
+ * that would be sent is then refused before a byte of it is read. False while the answer is not known (the request
+ * failed, an older api): the upload's own answer says it then.
+ */
+export async function fileStorageRefused(): Promise<boolean> {
+  return (await apiGetCapabilities()).filesEnabled === false;
+}
+
 // Tests only: a fresh page.
 export function resetCapabilitiesForTests(): void {
   capabilities = null;

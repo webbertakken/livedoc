@@ -105,7 +105,7 @@ export function DocumentGroup({
             <AddTabMenu
               onAdd={tabs.onAdd}
               tabMode={newTabMode(activeTab)}
-              offerTextDocument={tabs.offerTextDocument ?? false}
+              offers={tabs.addTabOffers}
             />
           )}
         </ToolbarPart>
