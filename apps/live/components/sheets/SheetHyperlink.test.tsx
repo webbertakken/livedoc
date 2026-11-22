@@ -107,13 +107,11 @@ describe('a HYPERLINK cell on a touch screen', () => {
     tap(h.viewport, cellPoint(0, 0));
     expect(chip()).not.toBeNull();
     act(() =>
-      h
-        .c()
-        .setSelection({
-          ...h.c().selection,
-          active: { r: 1, c: 0 },
-          ranges: [{ r1: 1, c1: 0, r2: 1, c2: 0 }],
-        }),
+      h.c().setSelection({
+        ...h.c().selection,
+        active: { r: 1, c: 0 },
+        ranges: [{ r1: 1, c1: 0, r2: 1, c2: 0 }],
+      }),
     );
     expect(chip()).toBeNull();
     tap(h.viewport, cellPoint(0, 0));
