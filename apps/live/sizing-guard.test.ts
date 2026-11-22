@@ -12,6 +12,10 @@ const SIZED_PATHS = [
   'app/explorer/ViewToggle.tsx',
   'app/explorer/ImportFromToolbar.tsx',
   'app/explorer/ExplorerEmptyState.tsx',
+  'app/explorer/details',
+  'app/explorer/explorer-route-document-row.tsx',
+  'app/explorer/folder-row.tsx',
+  'app/explorer/document-badges.tsx',
 ];
 
 describe('live sizing', () => {

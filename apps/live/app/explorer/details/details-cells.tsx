@@ -6,8 +6,6 @@ import { lucideKey, lucideMessageSquare, lucideShapes } from '@livedoc/icons/luc
 import { TAB_OPENING_ICONS, Glyph, Prims, Tooltip, lucideGlyph } from '@livedoc/ui';
 import { ROLE_PASS } from '@/components/dialogs/share-dialog-parts';
 import { FolderSolidIcon } from '@/components/primitives/explorer-icons';
-import { isPowerUserMode } from '@/lib/power-user-mode';
-import { useOptionalExplorer } from '../ExplorerContext';
 import type { DetailsColumn, DetailsColumnId } from './details-columns';
 import { formatDateTime } from './details-format';
 
@@ -21,16 +19,8 @@ export const SHOWN_FROM_CLASS: Record<DetailsColumn['shownFrom'], string> = {
   md: 'hidden md:table-cell',
 };
 
-// Rows at half height in power user mode ("Dense rows"): no vertical padding.
-export function useDenseRows(): boolean {
-  const explorer = useOptionalExplorer();
-  return explorer ? isPowerUserMode(explorer.prefs) : false;
-}
-
-export function cellClass(dense: boolean): string {
-  // Dense cells also drop the default line height, which would leave room under each icon.
-  return dense ? 'px-3 py-0 align-middle leading-none' : 'px-3 py-2 align-middle';
-}
+// Every cell of a row that is the sizing scale's row ("Rows"): the row sets the height, the cell adds none.
+export const CELL_CLASS = 'px-3 py-0 align-middle';
 
 // The icon columns' header icons, drawn in place of a title.
 const TypeHeaderIcon = lucideGlyph(lucideShapes, 13);
@@ -100,13 +90,7 @@ const CAP_HEIGHT_EM = 0.72;
 
 // A speech bubble holding the count, drawn as one icon: a faint outline, the number in full
 // contrast. Nothing for none (D151).
-export function CommentsCell({
-  stats,
-  dense = false,
-}: {
-  stats: DocumentStats | null | undefined;
-  dense?: boolean;
-}) {
+export function CommentsCell({ stats }: { stats: DocumentStats | null | undefined }) {
   if (!stats) return <NoValue label={NOT_COUNTED} />;
   const n = stats.comments;
   if (n === 0) return null;
@@ -116,12 +100,7 @@ export function CommentsCell({
   const fontSize = shown.length > 2 ? 8 : 10;
   return (
     <NamedIcon label={label}>
-      <Glyph
-        size={dense ? 20 : 24}
-        units={24}
-        weight={1}
-        className="text-slate-300 dark:text-slate-600"
-      >
+      <Glyph size={24} units={24} weight={1} className="text-slate-300 dark:text-slate-600">
         <Prims prims={lucideMessageSquare} />
         <text
           x={12}
@@ -154,7 +133,7 @@ export function AccessCell({ level }: { level: AccessLevel }) {
 export function DateCell({ at }: { at: number | undefined }) {
   if (at === undefined) return <NoValue label="Not known" />;
   return (
-    <span className="whitespace-nowrap text-xs tabular-nums text-slate-600 dark:text-slate-300">
+    <span className="whitespace-nowrap text-supporting tabular-nums text-slate-600 dark:text-slate-300">
       {formatDateTime(at)}
     </span>
   );

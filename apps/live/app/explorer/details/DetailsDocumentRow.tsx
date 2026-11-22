@@ -22,8 +22,7 @@ import {
   NoValue,
   SHOWN_FROM_CLASS,
   TypeCell,
-  cellClass,
-  useDenseRows,
+  CELL_CLASS,
 } from './details-cells';
 import { formatSize } from './details-format';
 import { useSnapshotPrefetch } from './useSnapshotPrefetch';
@@ -43,8 +42,6 @@ export function DetailsDocumentRow(props: DocumentEntryProps) {
     folderChip,
   } = props;
   const menu = useRowMenu({ disabled: renaming });
-  const dense = useDenseRows();
-  const CELL_CLASS = cellClass(dense);
   const rowRef = useRef<HTMLTableRowElement>(null);
   const local = isInThisBrowser(doc);
   const href = hrefForDocument(doc);
@@ -73,13 +70,13 @@ export function DetailsDocumentRow(props: DocumentEntryProps) {
   return (
     <tr
       ref={attachRow}
-      className="group transition hover:bg-slate-50 dark:hover:bg-slate-700/60"
+      className="group h-row transition hover:bg-slate-50 pointer-coarse:h-11 dark:hover:bg-slate-700/60"
       onContextMenu={menu.onContextMenu}
       {...(renaming ? {} : preview.rowProps)}
       {...documentDragProps(doc, renaming)}
     >
       <td className={`${CELL_CLASS} max-w-0`}>
-        <span className="flex min-w-0 items-center gap-1.5">
+        <span className="flex min-w-0 items-center gap-2">
           {favourite ? <FavouriteMarker /> : null}
           {renaming ? (
             <InlineRenameInput
@@ -87,13 +84,13 @@ export function DetailsDocumentRow(props: DocumentEntryProps) {
               ariaLabel={`Rename ${doc.name}`}
               onCommit={onCommitRename}
               onCancel={onCancelRename}
-              className="min-w-0 flex-1 rounded border border-brand-300 bg-white px-1 py-0 text-sm font-medium text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+              className="min-w-0 flex-1 rounded-control border border-brand-300 bg-white px-1 py-0 text-body text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
             />
           ) : (
             <Link
               href={href}
               {...preview.focusProps}
-              className="truncate text-sm font-medium text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
+              className="truncate text-body text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
             >
               <HighlightedTitle name={doc.name} />
             </Link>
@@ -113,13 +110,13 @@ export function DetailsDocumentRow(props: DocumentEntryProps) {
         <TypeCell stats={stats} />
       </td>
       <td className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.md} text-center`}>
-        <CommentsCell stats={stats} dense={dense} />
+        <CommentsCell stats={stats} />
       </td>
       <td className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.md} text-center`}>
         <AccessCell level={readerAccessOf(doc)} />
       </td>
       <td
-        className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.sm} whitespace-nowrap text-right text-xs tabular-nums text-slate-600 dark:text-slate-300`}
+        className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.sm} whitespace-nowrap text-right text-supporting tabular-nums text-slate-600 dark:text-slate-300`}
       >
         {stats ? formatSize(stats) : <NoValue label={NOT_COUNTED} />}
       </td>
@@ -134,7 +131,7 @@ export function DetailsDocumentRow(props: DocumentEntryProps) {
           <EllipsisTriggerButton
             {...menu.triggerProps}
             reveal
-            size={dense ? 'md' : 'lg'}
+            size="md"
             label={`Menu for ${doc.name}`}
           />
         )}
@@ -151,7 +148,7 @@ export function DetailsDocumentRow(props: DocumentEntryProps) {
 // shows, read from the page's cache the row's prefetch filled.
 function DocumentPreview({ doc, ownerId }: { doc: PaneDocument; ownerId: string | null }) {
   return (
-    <span className="flex flex-col gap-1.5">
+    <span className="flex flex-col gap-2">
       <DocumentThumbnail
         ownerId={ownerId}
         documentId={doc.id}
@@ -159,9 +156,9 @@ function DocumentPreview({ doc, ownerId }: { doc: PaneDocument; ownerId: string 
         empty={doc.empty}
         shareCode={doc.shared?.shareCode}
         offline={isInThisBrowser(doc)}
-        className="block h-44 w-full overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
+        className="block h-44 w-full overflow-hidden rounded-control border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
       />
-      <span className="truncate px-0.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+      <span className="truncate px-0.5 text-supporting text-slate-900 dark:text-slate-100">
         {doc.name}
       </span>
     </span>

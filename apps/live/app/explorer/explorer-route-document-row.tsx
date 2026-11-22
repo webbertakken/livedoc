@@ -56,12 +56,12 @@ export function DocumentRow(props: DocumentEntryProps) {
       ariaLabel={`Rename ${liveDoc.name}`}
       onCommit={onCommitRename}
       onCancel={onCancelRename}
-      className="rounded border border-brand-300 bg-white px-1 py-0 text-sm font-medium text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+      className="rounded-control border border-brand-300 bg-white px-1 py-0 text-body text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
     />
   ) : (
     <Link
       href={href}
-      className="truncate text-sm font-medium text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
+      className="truncate text-body text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
     >
       <HighlightedTitle name={liveDoc.name} />
     </Link>
@@ -70,7 +70,7 @@ export function DocumentRow(props: DocumentEntryProps) {
   return (
     <li
       className={
-        'group grid grid-cols-[1fr_140px_40px] items-center gap-2 px-4 py-2 transition hover:bg-slate-50 dark:hover:bg-slate-700 ' +
+        'group grid grid-cols-[1fr_140px_40px] min-h-row items-center gap-2 px-4 transition pointer-coarse:min-h-11 hover:bg-slate-50 dark:hover:bg-slate-700 ' +
         (showOwner
           ? 'sm:grid-cols-[1fr_110px_90px_140px_40px]'
           : 'sm:grid-cols-[1fr_90px_140px_40px]')
@@ -107,7 +107,7 @@ export function DocumentRow(props: DocumentEntryProps) {
         ) : null}
       </span>
       {showOwner ? (
-        <span className="hidden truncate text-xs text-slate-500 sm:block dark:text-slate-400">
+        <span className="hidden truncate text-supporting text-slate-500 sm:block dark:text-slate-400">
           {ownerLabelFor(liveDoc)}
         </span>
       ) : null}
@@ -116,7 +116,7 @@ export function DocumentRow(props: DocumentEntryProps) {
         {showVisibility ? <VisibilityBadge document={liveDoc} iconOnly={iconOnlyBadges} /> : null}
       </span>
       {/* The sync mark at the column's right edge, so the marks line up. */}
-      <span className="flex min-w-0 items-center justify-between gap-1.5">
+      <span className="flex min-w-0 items-center justify-between gap-2">
         <span className="flex min-w-0 items-center">
           <RelativeTimeChip at={liveDoc.savedAt} />
         </span>
@@ -129,7 +129,11 @@ export function DocumentRow(props: DocumentEntryProps) {
       {renaming ? (
         <span />
       ) : (
-        <EllipsisTriggerButton {...menu.triggerProps} label={`Menu for ${liveDoc.name}`} />
+        <EllipsisTriggerButton
+          {...menu.triggerProps}
+          size="md"
+          label={`Menu for ${liveDoc.name}`}
+        />
       )}
       {menu.open ? (
         <DocumentEntryMenu entry={props} anchor={menu.triggerRef.current} onClose={menu.close} />

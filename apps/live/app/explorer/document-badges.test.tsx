@@ -5,7 +5,7 @@
 
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { VisibilityBadge } from './document-badges';
+import { FolderChip, VisibilityBadge } from './document-badges';
 import type { PaneDocument } from './views';
 
 afterEach(cleanup);
@@ -32,5 +32,23 @@ describe('VisibilityBadge on a document in this browser', () => {
     const local = { ...PRIVATE, ownerId: 'offline' } as PaneDocument;
     const { container } = render(<VisibilityBadge document={local} />);
     expect(container.textContent).toBe('');
+  });
+});
+
+// The badges on the sizing scale (docs/specs/004-interface-design/sizing.md "Type"): the supporting step, regular.
+describe('document badges on the sizing scale', () => {
+  it('sets the visibility badge at the supporting step, regular', () => {
+    render(<VisibilityBadge document={PRIVATE} />);
+    const badge = screen.getByText('Private').parentElement!;
+    expect(badge.className).toMatch(/(^|\s)text-supporting(\s|$)/);
+    expect(badge.className).not.toMatch(/font-semibold|text-\[/);
+  });
+
+  it('sets the folder chip at the supporting step, its icon at the row step', () => {
+    render(<FolderChip label="Design" onOpen={() => {}} />);
+    const chip = screen.getByRole('button', { name: /Design/ });
+    expect(chip.className).toMatch(/(^|\s)text-supporting(\s|$)/);
+    expect(chip.className).toMatch(/(^|\s)rounded-control(\s|$)/);
+    expect(chip.querySelector('[class*="size-icon-row"]')).not.toBeNull();
   });
 });

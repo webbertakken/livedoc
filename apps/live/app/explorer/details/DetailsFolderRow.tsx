@@ -11,13 +11,7 @@ import type { FolderActionBundle } from '../explorer-view-props';
 import { FolderActionsMenu } from '../folder-actions-menu';
 import { menuHandlers } from '../folder-row';
 import { useExplorerDropTarget } from '../useExplorerDropTarget';
-import {
-  DateCell,
-  FolderTypeCell,
-  SHOWN_FROM_CLASS,
-  cellClass,
-  useDenseRows,
-} from './details-cells';
+import { DateCell, FolderTypeCell, SHOWN_FROM_CLASS, CELL_CLASS } from './details-cells';
 import { formatItems } from './details-format';
 
 // One folder in the Details view (docs/specs/013-workspace/explorer-details-view.md): name, "Folder",
@@ -40,19 +34,17 @@ export function DetailsFolderRow({
   getActions: (anchor: HTMLElement | null) => FolderActionBundle;
 }) {
   const menu = useRowMenu({ disabled: renaming });
-  const dense = useDenseRows();
-  const CELL_CLASS = cellClass(dense);
   const drop = useExplorerDropTarget({ teamId: folder.teamId ?? null, folderId: folder.id });
   return (
     <tr
-      className={`group transition hover:bg-slate-50 dark:hover:bg-slate-700/60 ${
+      className={`group h-row transition hover:bg-slate-50 pointer-coarse:h-11 dark:hover:bg-slate-700/60 ${
         drop.isDragOver ? DROP_TARGET_ROW : ''
       }`}
       onContextMenu={menu.onContextMenu}
       {...drop.handlers}
     >
       <td className={`${CELL_CLASS} max-w-0`}>
-        <span className="flex min-w-0 items-center gap-1.5">
+        <span className="flex min-w-0 items-center gap-2">
           {/* Where the Type column is hidden, the name carries the folder icon. */}
           <span aria-hidden className="shrink-0 text-amber-500 sm:hidden">
             <FolderSolidIcon />
@@ -63,13 +55,13 @@ export function DetailsFolderRow({
               ariaLabel={`Rename ${folder.name}`}
               onCommit={onCommitRename}
               onCancel={onCancelRename}
-              className="min-w-0 flex-1 rounded border border-brand-300 bg-white px-1 py-0 text-sm font-medium text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+              className="min-w-0 flex-1 rounded-control border border-brand-300 bg-white px-1 py-0 text-body text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
             />
           ) : (
             <button
               type="button"
               onClick={onOpen}
-              className="truncate text-left text-sm font-medium text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
+              className="truncate text-left text-body text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
             >
               {folder.name}
             </button>
@@ -83,7 +75,7 @@ export function DetailsFolderRow({
       <td className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.md}`} />
       <td className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.md}`} />
       <td
-        className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.sm} whitespace-nowrap text-right text-xs tabular-nums text-slate-600 dark:text-slate-300`}
+        className={`${CELL_CLASS} ${SHOWN_FROM_CLASS.sm} whitespace-nowrap text-right text-supporting tabular-nums text-slate-600 dark:text-slate-300`}
       >
         {formatItems(itemCount)}
       </td>
@@ -98,7 +90,7 @@ export function DetailsFolderRow({
           <EllipsisTriggerButton
             {...menu.triggerProps}
             reveal
-            size={dense ? 'md' : 'lg'}
+            size="md"
             label={`Menu for folder ${folder.name}`}
           />
         )}

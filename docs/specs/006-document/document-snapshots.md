@@ -19,7 +19,7 @@ avoids. So previews come from a **pre-rendered SVG**, not from element
 data at list time.
 
 Because SVG is vector, the same full-fidelity snapshot renders crisply
-as a 36px list thumbnail and as a full-size embed — there is no separate
+as a 32 by 24 px list thumbnail and as a full-size embed — there is no separate
 "thumbnail size" to generate. One stored artifact serves both surfaces.
 
 ## Render-on-read, cached in R2

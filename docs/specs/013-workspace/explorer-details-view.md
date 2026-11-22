@@ -58,10 +58,13 @@ by any column.
   as the list and card views; a right-click opens it too.
 - The table is named "Folders and documents" for assistive technology.
 
-## Dense rows
+## Rows
 
-- In [power user mode](../007-editor/power-user-mode.md) rows are half as tall: no vertical padding
-  around the cells and a smaller `⋯`. Everything else is the same.
+- Every row is the [sizing scale](../004-interface-design/sizing.md)'s row, 28 px, for everyone; on a touch
+  screen it is 44 px ([Touch targets](../004-interface-design/touch-targets.md)).
+- There is no denser variant: the scale's row is already the compact one, and power user mode draws the same rows.
+- The column headers read at the supporting step in their own case, never in tracked capitals; the sorted one is
+  medium.
 
 ## Sorting
 
