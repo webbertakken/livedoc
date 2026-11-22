@@ -631,7 +631,8 @@ coloured in one theme reads in the other (`@livedoc/document` `cellColours`):
 
 ### Freeze
 
-- **Freeze** keeps the first rows and/or columns in place while the rest scrolls (at most 100 rows and 26 columns):
+- **Freeze** keeps the first rows and/or columns in place while the rest scrolls (at most 100 rows and 26 columns,
+  and no more than leave a third of the grid to scroll):
   none, 1, 2, or up to the active
   cell's row or column. A thicker line marks the frozen edge, and it can be dragged to change it.
 - Freezing is the sheet's, seen by everyone, as in a spreadsheet.
@@ -1035,7 +1036,7 @@ Each default below was applied where this spec is silent or qualitative, and hol
 The code cites each by its id.
 
 - **D9** Toolbar, formula bar and status bar heights: 44, 28 and 24 px (default).
-- **D10** Row and column header sizes: 46 px wide row numbers, 22 px tall column letters (default).
+- **D10** Row and column header sizes: 46 px wide row numbers, 24 px tall column letters, as Google's (default).
 - **D11** How near a header edge a resize starts: 4 px (default).
 - **D12** Edge distance that auto-scrolls a drag: 24 px (default).
 - **D13** How often presence is sent while selecting: At most every 120 ms (default).

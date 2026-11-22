@@ -7,7 +7,7 @@ const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
 const CANVAS = '[data-canvas-a11y-root]';
 // The grid's header strips (apps/live/components/sheets/sheet-geometry.ts): a click past them lands on A1.
 const ROW_HEADER_PX = 46;
-const COL_HEADER_PX = 22;
+const COL_HEADER_PX = 24;
 
 const ids = (prefix: string, n: number) =>
   Array.from({ length: n }, (_, i) => `${prefix}${String(i).padStart(4, '0')}`);

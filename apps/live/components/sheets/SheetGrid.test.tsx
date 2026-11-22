@@ -8,6 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { restorePlanElement } from '@/hooks/plan/maximised-plan';
 import { sheetPresenceFor } from './sheet-presence-store';
 import { cellPoint, gridScrolls, installGridDom, mountGrid } from './sheet-grid-test-utils';
+import { COL_HEADER_PX } from './sheet-geometry';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/hooks/plan/maximised-plan', async (orig) => ({
@@ -112,7 +113,10 @@ describe('the grid frame', () => {
   it('scrolls to keep the active cell in view', async () => {
     const h = await mountGrid({ rows: 100 });
     select(h, 40, 0);
-    expect(gridScrolls).toContainEqual(['to', { top: 40 * 24 + 24 - (400 - 22), left: 0 }]);
+    expect(gridScrolls).toContainEqual([
+      'to',
+      { top: 40 * 24 + 24 - (400 - COL_HEADER_PX), left: 0 },
+    ]);
   });
 });
 
@@ -282,7 +286,7 @@ describe('the keyboard map', () => {
     h.grid.getBoundingClientRect = () => ({ left: 10, top: 20 }) as DOMRect;
     select(h, 1, 2);
     key(h, { key: 'ContextMenu' });
-    expect(h.c().menu).toEqual({ kind: 'cell', x: 10 + 46 + 200, y: 20 + 22 + 24 + 24 });
+    expect(h.c().menu).toEqual({ kind: 'cell', x: 10 + 46 + 200, y: 20 + COL_HEADER_PX + 24 + 24 });
   });
 });
 

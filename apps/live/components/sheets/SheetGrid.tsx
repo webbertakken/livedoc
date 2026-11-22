@@ -42,6 +42,7 @@ import { useSheetsBridgeContext } from '@/hooks/sheets/useSheetsBridge';
 import { ADD_ROWS_PX, SheetAddRows, roomFor } from './SheetAddRows';
 import { cellBox, pageRows, scrollToReveal, totalSize, visibleWindow } from './sheet-geometry';
 import { sheetKey } from './sheet-keys';
+import { domScrollOf, keepScrollRoom, scrollRoom, sheetScrollOf } from './sheet-scroll-room';
 import { refSpans, spanRange } from './formula-assist';
 import { useSheetPointer, type PointRef } from './useSheetPointer';
 import { useSheetClipboard } from './useSheetClipboard';
@@ -86,6 +87,14 @@ export function SheetGrid({
   // Room under the last row for Add Rows, for someone who may edit.
   const footer =
     (c.canShape ?? c.canEdit) && roomFor(c.workbook, c.sheet).rows > 0 ? ADD_ROWS_PX : 0;
+  // The scroll container's room: the sheet's size, or less where the sheet outgrows a browser's ceiling.
+  const room = scrollRoom(
+    {
+      width: c.geometry.headW + total.width,
+      height: c.geometry.headH + total.height + footer,
+    },
+    c.view,
+  );
   const window = visibleWindow(c.geometry, c.scroll, {
     width: Math.max(0, c.view.width - c.geometry.headW),
     height: Math.max(0, c.view.height - c.geometry.headH),
@@ -107,6 +116,16 @@ export function SheetGrid({
     ro.observe(el);
     return () => ro.disconnect();
   }, [c.gridEl, c.setView]); // oxlint-disable-line react/exhaustive-deps
+
+  // The room kept for pans and edge drags; a room that changes (rows added or deleted) reads the sheet's scroll afresh.
+  const { x: ratioX, y: ratioY } = room.ratio;
+  useLayoutEffect(() => {
+    const el = c.gridEl;
+    if (!el) return;
+    keepScrollRoom(el, room);
+    const now = sheetScrollOf(room, { top: el.scrollTop, left: el.scrollLeft });
+    if (now.top !== c.scroll.top || now.left !== c.scroll.left) c.setScroll(now);
+  }, [c.gridEl, ratioX, ratioY]); // oxlint-disable-line react/exhaustive-deps
 
   // The wheel scrolls the grid, not the canvas, while the grid can scroll that way (as a board's body).
   useEffect(() => {
@@ -132,7 +151,7 @@ export function SheetGrid({
       width: c.view.width - c.geometry.headW,
       height: c.view.height - c.geometry.headH,
     });
-    if (next) el.scrollTo({ top: next.top, left: next.left });
+    if (next) el.scrollTo(domScrollOf(room, next));
   }, [ar, ac]); // oxlint-disable-line react/exhaustive-deps
 
   // This person's selection, said to the room (useSheetPresence's store throttles it).
@@ -415,7 +434,12 @@ export function SheetGrid({
         data-sheet-grid
         className={`absolute left-0 top-0 h-full w-full outline-none ${c.interactive ? (c.maximised ? 'overflow-auto' : 'overflow-auto touch-none') : 'overflow-hidden'}`}
         onScroll={(e) =>
-          c.setScroll({ top: e.currentTarget.scrollTop, left: e.currentTarget.scrollLeft })
+          c.setScroll(
+            sheetScrollOf(room, {
+              top: e.currentTarget.scrollTop,
+              left: e.currentTarget.scrollLeft,
+            }),
+          )
         }
         onKeyDown={onKeyDown}
         onBlur={() => pointer.pan.releaseSpace()}
@@ -430,13 +454,7 @@ export function SheetGrid({
         onCut={clipboard.onCut}
         onPaste={clipboard.onPaste}
       >
-        <div
-          className="relative"
-          style={{
-            width: c.geometry.headW + total.width,
-            height: c.geometry.headH + total.height + footer,
-          }}
-        >
+        <div className="relative" style={room.spacer}>
           <div
             ref={viewportRef}
             // A held finger selects cells, so it never starts the browser's own text selection or callout.
