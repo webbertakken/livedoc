@@ -5,12 +5,14 @@
 // rejection is worded for the person.
 import type { SheetCreateRequest } from '@livedoc/api-schema';
 import { NOBODY, WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
-import type { PackageRejection } from '@livedoc/office-packages';
+import { PACKAGE_MAX_BYTES, type PackageRejection } from '@livedoc/office-packages';
 import type { FileParts, SheetsFromFile } from '@livedoc/sheets/files';
 import { ApiError, apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
 import { writeSheet, type SheetsScope } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
 import { debugLog } from '@/lib/debug-log';
+import { importReportLine } from './import-report-copy';
+import { keepImportReport } from './import-report-handoff';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
 import { UNTITLED_SPREADSHEET } from './spreadsheet-name';
 
@@ -70,20 +72,21 @@ export async function openSpreadsheetFile(
   file: File,
   onProgress: OpenProgress = () => {},
 ): Promise<OpenedSpreadsheet> {
+  // A file past the package's budget is refused before its bytes are read (files-and-print.md "Import security").
+  if (file.size > PACKAGE_MAX_BYTES) {
+    debugLog('[workbook] refused', { rejection: 'package_too_large', size: file.size });
+    return { ok: false, message: REJECTION_COPY.package_too_large };
+  }
   const files = await import('@livedoc/sheets/files');
   // The workbook it opens into: its locale reads the formats a file leaves to the reader's (Excel's short date).
   const made = workbookMadeHere();
+  const name = nameFromFile(file.name);
   const bytes = new Uint8Array(await file.arrayBuffer());
   const split = files.textFileSplitOf(file.name);
   let opened: { record: WorkbookRecord; imported: ImportedFormat; sheetsMade: SheetsFromFile };
   if (split) {
     // A CSV or TSV: one sheet, its values read as typed, in a new spreadsheet's format with Google's meaning (D117).
-    const sheetsMade = files.sheetsFromText(
-      bytes,
-      split,
-      nameFromFile(file.name),
-      made.settings.locale,
-    );
+    const sheetsMade = files.sheetsFromText(bytes, split, name, made.settings.locale);
     debugLog('[workbook] text file read', { encoding: sheetsMade.encoding, split });
     opened = { record: made, imported: split === 'tab' ? 'tsv' : 'csv', sheetsMade };
   } else {
@@ -120,7 +123,7 @@ export async function openSpreadsheetFile(
   try {
     await apiCreateDocument(ownerId, {
       id: documentId,
-      name: nameFromFile(file.name),
+      name,
       tabs,
       sheets,
       workbook: opened.record,
@@ -130,8 +133,12 @@ export async function openSpreadsheetFile(
     await sendParts(scope, parts, onProgress);
     // Then what the file holds that the model does not (standard-mapping.md "Unknown content"); a refusal bins it too.
     const left = sheetsMade.kept ? await sendKept(scope, sheetsMade.kept) : 0;
-    if (left > 0)
-      debugLog('[workbook] file read losses', { kinds: ['kept_too_large'], count: left });
+    if (left > 0) losses.push({ k: 'kept_too_large', count: left });
+    // What the file left behind, shown once on the spreadsheet it made (files-and-print.md "The import report").
+    const report = files.importReport(losses);
+    debugLog('[workbook] import report', { kinds: report.map((line) => line.k) });
+    if (report.length > 0)
+      keepImportReport(documentId, { name, lines: report.map(importReportLine) });
     debugLog('[workbook] file read', {
       format: opened.imported,
       sheets: sheets.length,

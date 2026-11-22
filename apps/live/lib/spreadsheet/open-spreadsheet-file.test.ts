@@ -1,10 +1,13 @@
 // docs/specs/029-sheets/files-and-print.md "Import", "A file sent in parts": File › Open reads the file by its bytes,
-// makes the spreadsheet in its format, sends the rest in parts with their progress, and leaves nothing half-made.
+// makes the spreadsheet in its format, sends the rest in parts with their progress, and leaves nothing half-made;
+// "The import report", "Import security": what it left behind waits for the spreadsheet; a file too large is refused.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { writeXlsx } from '@livedoc/sheets/files';
 import { ApiError, apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
 import { writeSheet } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
+import { PACKAGE_MAX_BYTES } from '@livedoc/office-packages';
+import { keepImportReport } from './import-report-handoff';
 import { nameFromFile, openingNotice, openSpreadsheetFile } from './open-spreadsheet-file';
 
 vi.mock('@/lib/api-client', async (real) => ({
@@ -14,6 +17,7 @@ vi.mock('@/lib/api-client', async (real) => ({
 }));
 vi.mock('@/lib/api/sheets', () => ({ writeSheet: vi.fn() }));
 vi.mock('@/lib/api/workbook-kept', () => ({ sendKept: vi.fn() }));
+vi.mock('./import-report-handoff', () => ({ keepImportReport: vi.fn() }));
 
 afterEach(() => vi.clearAllMocks());
 
@@ -46,6 +50,8 @@ describe('openSpreadsheetFile', () => {
     ]);
     expect(vi.mocked(writeSheet).mock.calls.every(([, , req]) => req.unchecked)).toBe(true);
     expect(progress.at(-1)).toBe(1);
+    // A file that left nothing behind opens without a report.
+    expect(keepImportReport).not.toHaveBeenCalled();
     expect(progress[0]).toBeLessThan(1);
   });
 
@@ -71,7 +77,23 @@ describe('openSpreadsheetFile', () => {
       'B.xlsx',
     );
     expect(await openSpreadsheetFile('me', blank)).toMatchObject({ ok: true });
-    expect(vi.mocked(apiCreateDocument).mock.calls[0]![1].sheets![0]!.title).toBe('Sheet1');
+    const created = vi.mocked(apiCreateDocument).mock.calls[0]![1];
+    expect(created.sheets![0]!.title).toBe('Sheet1');
+    expect(keepImportReport).toHaveBeenCalledWith(created.id, {
+      name: 'B',
+      lines: ['1 sheet name is changed to fit: “” becomes “Sheet1”'],
+    });
+  });
+
+  it('refuses a file past the package’s budget before reading its bytes', async () => {
+    const huge = new File(['x'], 'Huge.xlsx');
+    Object.defineProperty(huge, 'size', { value: PACKAGE_MAX_BYTES + 1 });
+    const read = vi.spyOn(huge, 'arrayBuffer');
+    expect(await openSpreadsheetFile('me', huge)).toEqual({
+      ok: false,
+      message: 'This file is too large to open.',
+    });
+    expect(read).not.toHaveBeenCalled();
   });
 
   it('bins nothing when the create itself is refused, and says why a file is refused', async () => {
@@ -111,6 +133,11 @@ describe('a file’s kept content', () => {
     vi.mocked(apiCreateDocument).mockResolvedValue({} as never);
     vi.mocked(sendKept).mockResolvedValue(1);
     expect(await openSpreadsheetFile('me', withKept())).toMatchObject({ ok: true });
+    // What the spreadsheet could not store is in the report.
+    expect(vi.mocked(keepImportReport).mock.calls[0]![1]).toEqual({
+      name: 'K',
+      lines: ['1 thing the file holds could not be kept'],
+    });
     const [scope, kept] = vi.mocked(sendKept).mock.calls[0]!;
     expect(scope).toMatchObject({ ownerId: 'me', shareCode: null });
     expect(kept.items.map((item) => item.xml)).toContain(CALC);
