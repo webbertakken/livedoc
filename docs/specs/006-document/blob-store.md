@@ -70,9 +70,9 @@ and belong to an owner's gallery, never held exactly.
 - **Usage is checked before the first byte**: an upload that would pass the owner's allowance is refused with what is
   left ([Open source + distribution](../002-project-scope/open-source-and-business-model.md)): `403 usage_exceeded`
   with `leftBytes`.
-- **The allowance is the deployment's** `(default)`: `FILE_MAX_BYTES_PER_OWNER`, the most bytes one owner's blobs
+- **The allowance is the deployment's**: `FILE_MAX_BYTES_PER_OWNER`, the most bytes one owner's blobs
   may count, the same for every owner, set as the gallery's caps are ([Images](../009-elements/images.md)). Unset,
-  there is none, as on a self-host; docs.nu sets 1,073,741,824 (1 GiB) `(default)`, in its hosted profile
+  there is none, as on a self-host; docs.nu sets 1,073,741,824 (1 GiB), in its hosted profile
   ([Deployment](../016-platform/deployment.md)). `GET /api/files` answers the caller's own
   `{ bytes, blobs, allowanceBytes }`, `allowanceBytes` null where there is none.
 
