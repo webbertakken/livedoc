@@ -10,7 +10,14 @@ import { sharePasswordOk } from '../auth/share-access';
 import { roomUnavailable } from '../document-room/document-route';
 import { capStoredName } from '../names';
 import {} from '../comments';
-import { copyDocument, getDocument, getParticipant, listSharedWith } from '../db';
+import { refusedBlob } from './blob-door';
+import {
+  copyDocument,
+  CopyUsageExceeded,
+  getDocument,
+  getParticipant,
+  listSharedWith,
+} from '../db';
 import { forbidden, json, notFound } from '../responses';
 import { recordDocumentDuplicated, recordVisitorCopied } from '../timeline';
 import {
@@ -86,6 +93,10 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
           owner === source.ownerId ? null : owner,
         );
       } catch (error) {
+        // The files the copy would hold do not fit what is left of the copier's file storage
+        // (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions").
+        if (error instanceof CopyUsageExceeded)
+          return refusedBlob('usage_exceeded', { documentId: id }, { leftBytes: error.leftBytes });
         // A room out of reach (the source's export or the copy's import); the source is untouched.
         return roomUnavailable(request, error);
       }

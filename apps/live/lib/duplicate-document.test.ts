@@ -15,6 +15,7 @@ vi.mock('./api/workbook-kept', () => ({
 }));
 
 vi.mock('./api/text-documents', () => ({ apiLoadTextDocumentState: vi.fn() }));
+vi.mock('./api/pdf-documents', () => ({ apiLoadPdfState: vi.fn() }));
 vi.mock('./offline/offline-store', () => ({
   isOfflineId: vi.fn(async () => false),
   offlineCreateDocument: vi.fn(async () => {}),
@@ -23,6 +24,7 @@ vi.mock('./offline/offline-store', () => ({
 }));
 
 import { apiCreateDocument, apiDeleteDocument, apiLoadDocument, apiLoadTab } from './api-client';
+import { apiLoadPdfState } from './api/pdf-documents';
 import { fetchKept, sendKept } from './api/workbook-kept';
 import { apiLoadTextDocumentState } from './api/text-documents';
 import { isOfflineId, offlineGetRecord, offlinePutRecord } from './offline/offline-store';
@@ -190,6 +192,38 @@ describe('duplicateDocument', () => {
     mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
     mLoadTab.mockResolvedValue({ ...tab('t1'), kind: 'text-document' });
     vi.mocked(apiLoadTextDocumentState).mockRejectedValue(new Error('down'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await duplicateDocument('owner', 'src')).toBeUndefined();
+    expect(mCreate).not.toHaveBeenCalled();
+  });
+
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions": a copy of one's own
+  // document names the same stored file, and the create carries each PDF tab's live changes.
+  it("seeds the copy with each PDF tab's live changes, under the tab's new id", async () => {
+    const pdf = { ...tab('t1'), kind: 'pdf', blob: 'a'.repeat(64), size: 9 };
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    mLoadTab.mockResolvedValue(pdf as never);
+    vi.mocked(apiLoadPdfState).mockResolvedValue({ update: Uint8Array.of(1, 2, 3) } as never);
+    await duplicateDocument('owner', 'src');
+    const payload = mCreate.mock.calls[0]![1];
+    const copied = payload.tabs![0]!;
+    expect(copied).toMatchObject({ kind: 'pdf', blob: pdf.blob, size: 9 });
+    expect(copied.id).not.toBe('t1');
+    expect(payload.pdfDocuments).toEqual([{ tabId: copied.id, state: 'AQID' }]);
+    expect(vi.mocked(apiLoadPdfState)).toHaveBeenCalledWith(
+      expect.objectContaining({ documentId: 'src', tabId: 't1', shareCode: null }),
+    );
+  });
+
+  it("makes no copy when a PDF tab's live changes cannot be read", async () => {
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    mLoadTab.mockResolvedValue({
+      ...tab('t1'),
+      kind: 'pdf',
+      blob: 'a'.repeat(64),
+      size: 9,
+    } as never);
+    vi.mocked(apiLoadPdfState).mockRejectedValue(new Error('down'));
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(await duplicateDocument('owner', 'src')).toBeUndefined();
     expect(mCreate).not.toHaveBeenCalled();

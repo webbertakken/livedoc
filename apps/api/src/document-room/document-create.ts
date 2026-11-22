@@ -12,6 +12,7 @@ import { seedTabs } from '../db/tabs';
 import { TabTooLargeError } from '../limits';
 import { seedItems } from '../routes/item-routes';
 import { seedSheets } from '../routes/sheet-routes';
+import { seedPdfDocuments, type PdfSeed } from '../pdf-documents/seed-pdf-documents';
 import { seedTextDocuments, type TextDocumentSeed } from '../text-documents/seed-text-documents';
 import { insertWorkbookStatement } from '../db/workbook';
 import type { WorkbookRecord } from '@livedoc/sheets';
@@ -36,6 +37,8 @@ export type DocumentSeed = {
   sheets: SheetCreateRequest[];
   // Text document tabs opened from files (seed-text-documents.ts); absent when the create opens none.
   textDocuments?: TextDocumentSeed[];
+  // PDF tabs made with their live changes (seed-pdf-documents.ts); absent when the create carries none.
+  pdfDocuments?: PdfSeed[];
   // A spreadsheet's workbook row (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"); absent for any other document.
   workbook?: WorkbookRecord | null;
 };
@@ -93,5 +96,7 @@ export async function createDocumentContent(
     const seeded = await seedTextDocuments(env, documentId, seed.textDocuments);
     if (!seeded.ok) return seeded;
   }
+  if (!seed.recommit && seed.pdfDocuments && seed.pdfDocuments.length > 0)
+    await seedPdfDocuments(env, documentId, seed.pdfDocuments);
   return { ok: true, summary: await contentSummaryOf(env, documentId) };
 }

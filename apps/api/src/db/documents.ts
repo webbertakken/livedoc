@@ -5,6 +5,14 @@
 import { readItemTypeCatalogue, type ItemTypeCatalogue } from '@livedoc/items';
 import { APPEARANCES, type Appearance } from '@livedoc/document';
 import type { DocumentDTO, DocumentEnv, DocumentSummary, Env, ParticipantDTO } from '../types';
+import { allowanceLeft } from '../blob-store/allowance';
+import {
+  blobGiveBytes,
+  blobGiveCopyStatements,
+  blobGiveOwnerChangeStatement,
+  blobKeysOfTabData,
+  logBlobsGiven,
+} from './blob-gives';
 import { imageGrantCopyStatements, imageGrantOwnerChangeStatement } from './image-grants';
 import { documentRemovalStatements } from './document-removal';
 import { purgeRooms } from '../room-purge-client';
@@ -393,8 +401,10 @@ export async function setDocumentFolder(
     return (res.meta.changes ?? 0) > 0;
   }
   // An owner change: the previous owner's images in it keep serving once it is the new owner's, granted in
-  // the same batch (a refused move leaves only a redundant grant, the old owner still owning it).
-  const [, res] = await env.DB.batch([
+  // the same batch (a refused move leaves only a redundant grant, the old owner still owning it). The files it
+  // holds are the new owner's too, given as rows (docs/specs/006-document/blob-store.md "A row is given").
+  const [given, , res] = await env.DB.batch([
+    blobGiveOwnerChangeStatement(env, newOwnerId, 'd.id = ?3', [id], Date.now()),
     imageGrantOwnerChangeStatement(
       env,
       'd.id = ?2 AND d.owner_id <> ?3',
@@ -403,6 +413,7 @@ export async function setDocumentFolder(
     ),
     update,
   ]);
+  logBlobsGiven(given?.meta.changes ?? 0, 'owner', id);
   return (res?.meta.changes ?? 0) > 0;
 }
 
@@ -524,6 +535,15 @@ export async function markThumbRendered(env: Env, id: string, drawnFrom: number)
 // The source's room exports its content, the copy's D1 row is written with the placement grants it carries (the
 // copy may serve what its source could), then the copy's room imports the content and answers the first summary.
 // An import that fails takes the new row back; the source is untouched. The caller has authorised the copy.
+/** A copy refused because the files it would give pass the copier's allowance; `leftBytes` is what is left. */
+export class CopyUsageExceeded extends Error {
+  readonly leftBytes: number;
+  constructor(leftBytes: number) {
+    super('usage_exceeded');
+    this.leftBytes = leftBytes;
+  }
+}
+
 export async function copyDocument(
   env: Env,
   sourceId: string,
@@ -540,14 +560,23 @@ export async function copyDocument(
   if (!content) return null;
   const now = Date.now();
   const images = [...new Set(content.tabs.flatMap((t) => imageRefIdsFromData(t.data)))];
-  const [inserted] = await env.DB.batch([
+  // The files the copy's tabs name are the copier's too, given as rows, never bytes
+  // (docs/specs/006-document/blob-store.md "A row is given"); refused before anything is made when they would pass
+  // the copier's allowance.
+  const blobs = [...new Set(content.tabs.flatMap((t) => blobKeysOfTabData(t.data)))];
+  const adds = await blobGiveBytes(env, sourceId, newOwnerId, blobs);
+  const left = adds > 0 ? await allowanceLeft(env, newOwnerId) : null;
+  if (left !== null && adds > left) throw new CopyUsageExceeded(left);
+  const [inserted, ...rest] = await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO documents (id, owner_id, name, shareable, folder_id, saved_at, created_at, ${INTENT_COLS})
        SELECT ?, ?, ?, 0, NULL, ?, ?, ${INTENT_COLS} FROM documents WHERE id = ? AND trashed_at IS NULL`,
     ).bind(newId, newOwnerId, newName, now, now, sourceId),
     ...imageGrantCopyStatements(env, sourceId, newId, images, now),
+    ...blobGiveCopyStatements(env, sourceId, newOwnerId, blobs, now),
   ]);
   if ((inserted?.meta?.changes ?? 0) === 0) return null;
+  if (blobs.length > 0) logBlobsGiven(rest.at(-1)?.meta.changes ?? 0, 'copy', newId);
   let summary: ContentSummary;
   try {
     summary = await documentRoom(env, newId).importCopy(content);

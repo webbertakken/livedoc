@@ -41,6 +41,7 @@ const GATE_KEEPERS = [
   'src/blob-store/blob-store.ts',
   'src/blob-store/tab-blobs.ts',
   'src/db/blobs.ts',
+  'src/db/blob-gives.ts',
   'src/db/blob-uploads.ts',
   'src/pdf-documents/**',
   // Who may change a live tab, judged where it is stored (kinds-outside-the-canvas.md "The level an update asks").

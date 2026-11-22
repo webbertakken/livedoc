@@ -15,6 +15,7 @@ import type {
   TeamRole,
 } from '@livedoc/api-schema';
 import type { Env } from '../types';
+import { blobGiveOwnerChangeStatement, logBlobsGiven } from './blob-gives';
 import { imageGrantOwnerChangeStatement } from './image-grants';
 
 // TEAM_COLS / JOINED_COUNT / TeamRow / rowToTeam are shared with the
@@ -319,8 +320,16 @@ export async function listTeamAdminUserIds(env: Env, teamId: string): Promise<st
 // owned by somebody who has gone stays open to them. The folders go too, so
 // no team row is left owned by a departed (or deleted) account.
 async function moveTeamWork(env: Env, teamId: string, fromUserId: string, toUserId: string) {
-  // Their images in these documents keep serving once the documents are someone else's.
-  await env.DB.batch([
+  // Their images in these documents keep serving once the documents are someone else's, and the files the documents
+  // hold are the new owner's too, given as rows (docs/specs/006-document/blob-store.md "A row is given").
+  const [given] = await env.DB.batch([
+    blobGiveOwnerChangeStatement(
+      env,
+      toUserId,
+      'd.owner_id = ?3 AND d.team_id = ?4',
+      [fromUserId, teamId],
+      Date.now(),
+    ),
     imageGrantOwnerChangeStatement(
       env,
       'd.owner_id = ?2 AND d.team_id = ?3',
@@ -333,6 +342,7 @@ async function moveTeamWork(env: Env, teamId: string, fromUserId: string, toUser
       teamId,
     ),
   ]);
+  logBlobsGiven(given?.meta.changes ?? 0, 'owner', `team:${teamId}`);
   await env.DB.prepare('UPDATE folders SET owner_id = ? WHERE owner_id = ? AND team_id = ?')
     .bind(toUserId, fromUserId, teamId)
     .run();

@@ -59,6 +59,7 @@ import { recordDocumentCreated, recordDocumentSynced } from '../timeline';
 import { compileSeededTabs } from './document-seed';
 import { hasTemplateSheets } from '@livedoc/templates';
 import { materialiseTemplateSheets } from '@livedoc/templates/template-sheets';
+import { readPdfSeeds } from '../pdf-documents/seed-pdf-documents';
 import { readTextDocumentSeeds } from '../text-documents/seed-text-documents';
 import { TAB_BLOB_STATUS, tabBlobRefusal } from '../blob-store/tab-blobs';
 import { parsePlacement, resolvePlacement } from '../placement/resolve-placement';
@@ -105,6 +106,7 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
         items?: unknown;
         sheets?: unknown;
         textDocuments?: unknown;
+        pdfDocuments?: unknown;
         workbook?: unknown;
       };
       const owner = requireOwner(ctx);
@@ -204,6 +206,10 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
       // Text documents opened from files (docs/specs/034-text-documents/files-and-print.md "Opening").
       const textDocumentSeeds = readTextDocumentSeeds(body.textDocuments, body.tabs ?? null);
       if (textDocumentSeeds instanceof Response) return textDocumentSeeds;
+      // PDF tabs made with their live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the
+      // Trash and versions").
+      const pdfSeeds = readPdfSeeds(body.pdfDocuments, body.tabs ?? null);
+      if (pdfSeeds instanceof Response) return pdfSeeds;
       // A spreadsheet's workbook (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"), over sheet tabs only.
       const seedWorkbook = readSeedWorkbook(
         body.workbook,
@@ -324,6 +330,7 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
           items: seedItemCreates,
           sheets: seedSheetCreates,
           textDocuments: textDocumentSeeds,
+          pdfDocuments: pdfSeeds,
           workbook: seedWorkbook,
         });
       } catch (error) {

@@ -15,17 +15,18 @@ vi.mock('@/lib/api-client', () => ({
 vi.mock('@/hooks/persistence/useDocumentListActions', () => ({
   useDocumentListActions: () => ({}),
 }));
+const toastError = vi.fn<(message: string) => void>();
 vi.mock('@/hooks/ui/useToast', () => ({
-  useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+  useToast: () => ({ success: vi.fn(), error: toastError }),
 }));
 
 const { useDocumentActions } = await import('./useDocumentActions');
 
 // The two hooks useDocumentActions calls are mocked above; one render gives its actions.
-function actions() {
+function actions(documentId: string | null = null, setCopying = vi.fn()) {
   return renderHook(() =>
     useDocumentActions({
-      documentId: null,
+      documentId,
       documentName: '',
       documentList: [],
       setDocumentList: vi.fn(),
@@ -36,7 +37,7 @@ function actions() {
       sharedDocuments: [],
       setSharedDocuments: vi.fn(),
       copying: false,
-      setCopying: vi.fn(),
+      setCopying,
       sessionShareCode: null,
       refreshTeamLibraries: vi.fn(),
       refreshDocumentList: vi.fn(),
@@ -45,6 +46,36 @@ function actions() {
 }
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
+
+// docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions": someone else's copy that
+// would pass their allowance is refused, and said.
+describe('makeCopy', () => {
+  beforeEach(() => {
+    toastError.mockReset();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('says a copy does not fit the file storage that is left, and lets the person try again', async () => {
+    const { ApiError } = await import('@/lib/api/core');
+    const { apiCopyDocument } = await import('@/lib/api-client');
+    vi.mocked(apiCopyDocument).mockRejectedValue(new ApiError('copy', 403, 'usage_exceeded'));
+    const setCopying = vi.fn();
+    await actions('d1', setCopying).makeCopy();
+    expect(toastError).toHaveBeenCalledExactlyOnceWith(
+      "This document doesn't fit in the file storage that is left.",
+    );
+    expect(setCopying.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it('stays silent on any other failure, as before', async () => {
+    const { apiCopyDocument } = await import('@/lib/api-client');
+    vi.mocked(apiCopyDocument).mockRejectedValue(new Error('offline'));
+    const setCopying = vi.fn();
+    await actions('d1', setCopying).makeCopy();
+    expect(toastError).not.toHaveBeenCalled();
+    expect(setCopying).toHaveBeenLastCalledWith(false);
+  });
+});
 
 // docs/specs/017-telemetry/telemetry.md: Team·Added·Document counts a document ENTERING a team library,
 // whichever surface filed it; Team·Moved·Document is every other scope move.

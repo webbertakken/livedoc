@@ -59,7 +59,9 @@ export async function handleTabLink(ctx: DocumentRouteContext): Promise<Response
   if (!copy) return notFound();
   // A spreadsheet's sheets live in its own room, so its tabs are never shared, either way
   // (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
-  if (copy.spreadsheet || (await isSpreadsheet(env, id))) {
+  // Nor is a PDF tab: its live changes are one room's, so two holders would each show their own
+  // (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions").
+  if (copy.spreadsheet || copy.pdf || (await isSpreadsheet(env, id))) {
     console.info('[tab-link] refused', { documentId: id, tabId, from, reason: 'tab_not_linkable' });
     return conflict('tab_not_linkable');
   }

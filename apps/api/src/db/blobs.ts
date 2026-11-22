@@ -67,20 +67,24 @@ export async function claimBlob(
   return row!.results[0]!.object;
 }
 
-/** The claim is held from now on: storage took the bytes and checked them against the key. */
+/**
+ * The claim is held from now on: storage took the bytes and checked them against the key. False when the row was
+ * held already, by an upload that ended first or as a row given meanwhile (blob-gives.ts).
+ */
 export async function markBlobStored(
   env: Db,
   ownerId: string,
   key: BlobKey,
   size: number,
   now: number,
-): Promise<void> {
-  await env.DB.prepare(
+): Promise<boolean> {
+  const res = await env.DB.prepare(
     `UPDATE blobs SET size = ?3, stored_at = ?4
       WHERE owner_id = ?1 AND key = ?2 AND stored_at IS NULL`,
   )
     .bind(ownerId, key, size, now)
     .run();
+  return res.meta.changes > 0;
 }
 
 /** What an owner's blobs count ("Usage"): each distinct key once, claims never. */

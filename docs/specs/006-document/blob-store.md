@@ -2,8 +2,8 @@
 
 **Status: specified; built on LiveDoc's servers.** Built: the `FILES` bucket, what an owner holds, an upload in one
 request and in parts, each checked against its key, resuming, usage and the allowance, reads whole and by range gated
-by the document's access and its holds, the holds each document tells, the retention sweep, and the named refusals of
-those. A Participant's upload, purging and This Browser are not built.
+by the document's access and its holds, the holds each document tells, the retention sweep, a row given with a copy
+or a change of owner, and the named refusals of those. A Participant's upload, purging and This Browser are not built.
 
 The **blob store** is where LiveDoc keeps a file's bytes, exactly: the bytes of a [file tab](file-tab.md), and a
 [PDF document](../035-pdf-documents/pdf-document.md)'s stored file, previous versions, pictures and embedded files. One
@@ -30,6 +30,18 @@ and belong to an owner's gallery, never held exactly.
   size, the object and when it was stored. The row is written before the first byte, as a claim, and is **held**
   only once storage has taken the bytes and checked them. A guest who signs up takes their rows with them, so no
   byte moves; a key the account already held stays the account's, and the guest's row is swept.
+- <a id="a-row-given"></a>**A row is given, never bytes** `(default)`: someone who copies another owner's document
+  is given a row for each key the copy's tabs name, and an owner a document passes to (a team's heir, a team document
+  moved into someone's own library) one for each key the document has told it holds, previous versions too. The row
+  names the object the bytes are already in: no byte moves and none is asked of a browser.
+  - A given row is its owner's own from then on: held, counted in their usage, kept by their documents' holds alone.
+  - The object stays for as long as any row names it, whoever leaves or is swept.
+  - A key the receiver already holds stays as it is. A claim of theirs not yet stored (an upload under way) becomes
+    the given row; the bytes that upload then stores are deleted, being an object no row names.
+  - A copy that would pass the copier's allowance is refused `403 usage_exceeded` before anything is made. A
+    document passing to another owner is never refused for it: their usage may stand past the allowance, and the
+    next upload is refused until it does not.
+  - Only a document someone may read gives its rows, so a key alone still tells nothing and opens nothing.
 - **The key is the content's SHA-256**, computed in the browser before anything is sent, so bytes LiveDoc already
   holds for that owner are never sent again: the upload begins by asking, and `200 held` ends it.
 - **The store checks the key against the bytes** as they are stored; bytes that do not hash to their key are refused
@@ -156,25 +168,29 @@ untouched by a file's size.
 - A blob whose document was purged is swept after its grace; one a tab or a previous version holds never is.
 - Bytes that do not hash to their key are refused and nothing is kept.
 - A range read returns exactly the bytes asked for; a key the document does not hold answers `404 blob_not_held`.
+- Someone else's copy reads its file after the original is purged and swept, counts in the copier's usage, and is
+  refused when it would pass their allowance; a document passed to another owner reads its file and its previous
+  versions.
+- An upload that ends after its claim became a given row leaves no object behind.
 - Without the bucket every route answers `503 files_unavailable`.
 
 ## Refusals
 
-| Name                    | Status | When                                                         |
-| ----------------------- | ------ | ------------------------------------------------------------ |
-| `files_unavailable`     | 503    | The server has no file storage                               |
-| `file_too_large`        | 413    | The bytes pass `FILE_TAB_MAX_BYTES`                          |
-| `key_invalid`           | 400    | The key is not 64 lower-case hex characters                  |
-| `key_mismatch`          | 422    | The bytes do not hash to the key                             |
-| `usage_exceeded`        | 403    | The owner's allowance would be passed                        |
-| `upload_not_found`      | 404    | A part or a complete for an upload that is gone              |
-| `part_invalid`          | 400    | A part out of order, or not `FILE_PART_BYTES` but the last   |
-| `size_invalid`          | 400    | `(default)` An upload in parts that names no whole size      |
-| `upload_incomplete`     | 409    | `(default)` A complete before every part is stored           |
-| `blob_not_held`         | 404    | The document does not hold that key                          |
-| `range_not_satisfiable` | 416    | A range past the blob's end                                  |
-| `length_required`       | 411    | `(default)` An upload that does not say how many bytes it is |
-| `store_failed`          | 502    | `(default)` Object storage did not take the bytes            |
+| Name                    | Status | When                                                          |
+| ----------------------- | ------ | ------------------------------------------------------------- |
+| `files_unavailable`     | 503    | The server has no file storage                                |
+| `file_too_large`        | 413    | The bytes pass `FILE_TAB_MAX_BYTES`                           |
+| `key_invalid`           | 400    | The key is not 64 lower-case hex characters                   |
+| `key_mismatch`          | 422    | The bytes do not hash to the key                              |
+| `usage_exceeded`        | 403    | The owner's allowance would be passed, by an upload or a copy |
+| `upload_not_found`      | 404    | A part or a complete for an upload that is gone               |
+| `part_invalid`          | 400    | A part out of order, or not `FILE_PART_BYTES` but the last    |
+| `size_invalid`          | 400    | `(default)` An upload in parts that names no whole size       |
+| `upload_incomplete`     | 409    | `(default)` A complete before every part is stored            |
+| `blob_not_held`         | 404    | The document does not hold that key                           |
+| `range_not_satisfiable` | 416    | A range past the blob's end                                   |
+| `length_required`       | 411    | `(default)` An upload that does not say how many bytes it is  |
+| `store_failed`          | 502    | `(default)` Object storage did not take the bytes             |
 
 ## Share roles
 
@@ -193,7 +209,9 @@ Fingerprints with the document id and the key's first 8 characters, never a name
 there), `[blob-store] stored bytes=<n> parts=<n>`, `[blob-store] refused name=<name>`, `[blob-store] read
 bytes=<n> ranged=<bool>`, `[blob-store] upload-begun parts=<n>`, `[blob-store] upload-resumed have=<n>`,
 `[blob-store] part-stored n=<n>`, `[blob-store] swept count=<n> uploads=<n>`, `[blob-store] sweep-paused`,
-`[blob-store] sweep-tripwire`, `[blob-store] purged`, `[blob-store] unavailable`.
+`[blob-store] sweep-tripwire`, `[blob-store] purged`, `[blob-store] unavailable`, `[blob-store] given count=<n>
+reason=<copy|owner>` (with the receiving document, never a key), `[blob-store] upload-superseded` (an upload's bytes
+deleted because its claim became a given row).
 
 ## Non-goals
 

@@ -59,6 +59,17 @@ const makeSpreadsheet = (net: RoomNetwork, id: string) =>
     );
 
 describe('POST /api/documents/:id/tabs/:tabId/link', () => {
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions": a PDF tab is never
+  // shared between documents.
+  it('never shares a PDF tab into another document', async () => {
+    const net = await network();
+    net.room('A').sql.exec("UPDATE tabs SET kind = 'pdf' WHERE id = 't'");
+    const res = await link(net, { from: 'A' });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'tab_not_linkable' });
+    expect(tabIds(net, 'B')).toEqual(['b1']);
+  });
+
   // docs/specs/029-sheets/spreadsheet.md "The workbook shape": a spreadsheet's sheets live in its own room.
   it('never shares a spreadsheet’s tab into another document', async () => {
     const net = await network();
