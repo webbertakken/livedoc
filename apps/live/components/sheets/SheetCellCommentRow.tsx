@@ -21,7 +21,6 @@ export function SheetCellCommentRow({ onDone }: { onDone: () => void }) {
   if (!has && !comments.canComment) return null;
   return (
     <MenuActionRow
-      plain
       label={has ? 'Show Comments' : 'Insert Comment'}
       icon={<CommentMenuIcon />}
       onClick={() => {

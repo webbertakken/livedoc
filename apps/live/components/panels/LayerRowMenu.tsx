@@ -184,19 +184,16 @@ export function LayerRowMenu({
           </div>
           <MenuGroupSeparator />
           <MenuActionRow
-            plain
             icon={visible ? <EyeOffIcon /> : <EyeIcon />}
             label={visible ? 'Hide Layer' : 'Show Layer'}
             onClick={onToggleVisibility}
           />
           <MenuActionRow
-            plain
             icon={locked ? <UnlockIcon /> : <LockIcon />}
             label={locked ? 'Unlock Layer' : 'Lock Layer'}
             onClick={onToggleLock}
           />
           <MenuActionRow
-            plain
             icon={<SoloIcon />}
             label="Hide Others"
             disabled={isTop && isBottom}
@@ -204,14 +201,12 @@ export function LayerRowMenu({
           />
           <MenuGroupSeparator />
           <MenuActionRow
-            plain
             icon={<BringToTopIcon />}
             label="Bring to Top"
             disabled={isTop}
             onClick={onBringToTop}
           />
           <MenuActionRow
-            plain
             icon={<SendToBottomIcon />}
             label="Send to Bottom"
             disabled={isBottom}
@@ -219,30 +214,26 @@ export function LayerRowMenu({
           />
           <MenuGroupSeparator />
           <MenuActionRow
-            plain
             icon={<MergeUpIcon />}
             label="Merge With Layer Above"
             disabled={isTop}
             onClick={thenClose(onMergeUp)}
           />
           <MenuActionRow
-            plain
             icon={<MergeDownIcon />}
             label="Merge With Layer Below"
             disabled={isBottom}
             onClick={thenClose(onMergeDown)}
           />
           <MenuGroupSeparator />
-          <MenuActionRow plain icon={<RenameIcon />} label="Rename" onClick={thenClose(onRename)} />
+          <MenuActionRow icon={<RenameIcon />} label="Rename" onClick={thenClose(onRename)} />
           <MenuActionRow
-            plain
             icon={<ClearIcon />}
             label="Clear Layer"
             disabled={elementCount === 0}
             onClick={(e) => ask('clear', e.currentTarget)}
           />
           <MenuActionRow
-            plain
             icon={<DeleteIcon />}
             label="Delete Layer"
             disabled={!canDelete}

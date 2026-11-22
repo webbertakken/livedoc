@@ -364,7 +364,6 @@ export function PortalMenu({
         <>
           <div data-testid="canvas-paste-row">
             <MenuActionRow
-              plain
               icon={<PasteMenuIcon />}
               label="Paste"
               disabled={!canvas.canPaste}
@@ -381,13 +380,11 @@ export function PortalMenu({
             all (docs/specs/007-editor/live-app.md "Tab menu"). Separators part the related groups:
             where the tab lives and what is on it. */}
       <MenuActionRow
-        plain
         icon={<FolderMenuIcon />}
         label="Add to Folder"
         onClick={() => setView('folder')}
       />
       <MenuActionRow
-        plain
         icon={<MoveIcon />}
         label="Add to Document"
         onClick={() => setView('copyTo')}
@@ -395,15 +392,13 @@ export function PortalMenu({
       />
       <MenuGroupSeparator />
       <MenuActionRow
-        plain
         icon={<FileImportIcon />}
         label={dataRows?.importLabel ?? 'Import'}
         onClick={dataRows ? () => (dataRows.onImport?.(), onClose()) : onImport}
         disabled={locked || (!!dataRows && !dataRows.onImport)}
       />
-      <MenuActionRow plain icon={<FileExportIcon />} label="Export" onClick={onExport} />
+      <MenuActionRow icon={<FileExportIcon />} label="Export" onClick={onExport} />
       <MenuActionRow
-        plain
         icon={<ClearIcon />}
         label="Clear"
         onClick={onClearContent}

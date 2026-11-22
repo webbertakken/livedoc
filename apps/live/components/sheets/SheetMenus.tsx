@@ -72,37 +72,31 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
         {c.canShape ? (
           <>
             <MenuActionRow
-              plain
               label={`Insert ${n} ${rows ? 'Above' : 'Left'}`}
               icon={<Glyph t={rows ? '↥' : '↤'} />}
               onClick={act(() => actions.insert(menu.axis, 'before'))}
             />
             <MenuActionRow
-              plain
               label={`Insert ${n} ${rows ? 'Below' : 'Right'}`}
               icon={<Glyph t={rows ? '↧' : '↦'} />}
               onClick={act(() => actions.insert(menu.axis, 'after'))}
             />
             <MenuActionRow
-              plain
               label={`Delete ${what}`}
               icon={<Glyph t="−" />}
               onClick={act(() => actions.remove(menu.axis))}
             />
             <MenuActionRow
-              plain
               label="Clear"
               icon={<ClearFormatIcon />}
               onClick={act(() => actions.clear('all'))}
             />
             <MenuActionRow
-              plain
               label={`Hide ${what}`}
               icon={<Glyph t="◌" />}
               onClick={act(() => actions.hide(menu.axis, true))}
             />
             <MenuActionRow
-              plain
               label="Fit to Data"
               icon={<Glyph t="⇔" />}
               onClick={act(() =>
@@ -121,13 +115,11 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
               <>
                 <ContextMenuDivider />
                 <MenuActionRow
-                  plain
                   label="Sort A to Z"
                   icon={<SortIcon />}
                   onClick={act(() => actions.sortColumn(true))}
                 />
                 <MenuActionRow
-                  plain
                   label="Sort Z to A"
                   icon={<SortIcon />}
                   onClick={act(() => actions.sortColumn(false))}
@@ -137,7 +129,6 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
           </>
         ) : (
           <MenuActionRow
-            plain
             label="Copy"
             icon={<Glyph t="⧉" />}
             onClick={act(() => clip.copyNow(false))}
@@ -175,9 +166,7 @@ function ResizeRow({
   const [px, setPx] = useState(String(now || (axis === 'c' ? 100 : 24)));
   const min = axis === 'c' ? 24 : 18;
   if (!open)
-    return (
-      <MenuActionRow plain label="Resize…" icon={<Glyph t="↔" />} onClick={() => setOpen(true)} />
-    );
+    return <MenuActionRow label="Resize…" icon={<Glyph t="↔" />} onClick={() => setOpen(true)} />;
   const done = () => {
     const n = Math.round(Number(px));
     if (Number.isFinite(n) && n > 0) onResize(Math.min(2000, Math.max(min, n)));
@@ -253,7 +242,6 @@ function FilterMenu({
   return (
     <ContextMenu position={at} label="Filter column" onClose={onClose}>
       <MenuActionRow
-        plain
         label="Sort A to Z"
         icon={<SortIcon />}
         onClick={() => {
@@ -262,7 +250,6 @@ function FilterMenu({
         }}
       />
       <MenuActionRow
-        plain
         label="Sort Z to A"
         icon={<SortIcon />}
         onClick={() => {

@@ -50,7 +50,6 @@ export function ExplorerHeaderMenu({
         onNewDocument ? (
           <MenuActionRow
             key="new"
-            plain
             icon={<PlusIcon />}
             label="New Document"
             onClick={run(onNewDocument)}
@@ -58,7 +57,6 @@ export function ExplorerHeaderMenu({
         ) : null,
         <MenuActionRow
           key="open"
-          plain
           icon={<OpenIcon />}
           label="Open Explorer"
           onClick={run(() => {
@@ -73,7 +71,6 @@ export function ExplorerHeaderMenu({
         actions.onShare ? (
           <MenuActionRow
             key="share"
-            plain
             icon={<ShareGlyph />}
             label="Share"
             onClick={run(actions.onShare)}
@@ -82,7 +79,6 @@ export function ExplorerHeaderMenu({
         actions.onExport ? (
           <MenuActionRow
             key="export"
-            plain
             icon={<ExportGlyph />}
             label="Export"
             onClick={run(actions.onExport)}
@@ -96,7 +92,6 @@ export function ExplorerHeaderMenu({
         helpArticle && minimalChrome ? (
           <MenuActionRow
             key="help"
-            plain
             icon={<HelpMarkIcon />}
             label="Help"
             onClick={run(() => openHelpArticle(helpArticle))}
@@ -105,7 +100,6 @@ export function ExplorerHeaderMenu({
         actions.onSearch ? (
           <MenuActionRow
             key="search"
-            plain
             icon={<SearchGlyph />}
             label="Search"
             onClick={run(actions.onSearch)}
@@ -113,7 +107,6 @@ export function ExplorerHeaderMenu({
         ) : null,
         <MenuActionRow
           key="github"
-          plain
           icon={<GithubIcon />}
           label="GitHub"
           onClick={run(() => {
@@ -124,7 +117,6 @@ export function ExplorerHeaderMenu({
         // in a new tab like GitHub so the open document stays put.
         <MenuActionRow
           key="licences"
-          plain
           icon={<ScaleIcon />}
           label="Licences"
           onClick={run(() => {
@@ -134,7 +126,6 @@ export function ExplorerHeaderMenu({
         actions.onOpenSettings ? (
           <MenuActionRow
             key="settings"
-            plain
             icon={<SettingsIcon />}
             label="Settings"
             onClick={run(actions.onOpenSettings)}

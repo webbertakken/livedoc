@@ -183,7 +183,7 @@ describe('PortalMenu rows by kind', () => {
         onClick={onClick}
         active={false}
       />
-      <MenuActionRow plain icon={null} label="Rename" onClick={onClick} />
+      <MenuActionRow icon={null} label="Rename" onClick={onClick} />
       <MenuActionRow icon={null} label="Paste" onClick={onClick} disabled />
       <MenuGroupSeparator />
       <MenuTile label="Hide Others" onClick={onClick} disabled />
@@ -240,5 +240,30 @@ describe('PortalMenu rows by kind', () => {
     expect(screen.getByRole('button', { name: 'Merge' }).getAttribute('aria-expanded')).toBe(
       'false',
     );
+  });
+});
+
+// docs/specs/004-interface-design/sizing.md: a menu row is 28 px with a 14 px regular label, and no row is set in
+// tracked capitals; the label reads as it is written.
+describe('PortalMenu rows on the sizing scale', () => {
+  const rowOf = (name: string) => screen.getByRole('button', { name });
+
+  it('draws a section header and an action row as 28 px rows at the reading size', () => {
+    render(
+      <>
+        <MenuAccordionSection title="Colours" icon={null} open={false} onToggle={() => {}}>
+          <span />
+        </MenuAccordionSection>
+        <MenuActionRow label="Bring to Front" icon={null} onClick={() => {}} />
+        <MenuActionRow label="Copy" icon={null} onClick={() => {}} disabled={false} />
+      </>,
+    );
+
+    for (const name of ['Colours', 'Bring to Front', 'Copy']) {
+      const row = rowOf(name).className;
+      expect(row, name).toContain('min-h-row');
+      expect(row, name).toContain('text-body');
+      expect(row, name).not.toMatch(/\buppercase\b|tracking-wider|font-semibold/);
+    }
   });
 });

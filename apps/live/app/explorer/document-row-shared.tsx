@@ -169,7 +169,6 @@ export function DocumentActionsMenu({
       <PortalMenu anchor={anchor} placement="below" beside={beside} onClose={onClose}>
         {header}
         <MenuActionRow
-          plain
           icon={<DocumentIcon />}
           label="Open"
           onClick={() => assignAppLocation(href)}
@@ -177,14 +176,12 @@ export function DocumentActionsMenu({
         <MenuGroupSeparator />
         {onRemoveFromTimeline ? (
           <MenuActionRow
-            plain
             icon={<CloseIcon size={11} />}
             label="Remove from Timeline"
             onClick={then(onRemoveFromTimeline)}
           />
         ) : null}
         <MenuActionRow
-          plain
           icon={<DismissSharedIcon />}
           label="Dismiss"
           onClick={then(() => onDismiss?.())}
@@ -201,20 +198,18 @@ export function DocumentActionsMenu({
       {isOpen ? null : (
         <>
           <MenuActionRow
-            plain
             icon={<DocumentIcon />}
             label="Open"
             onClick={onOpen ? then(onOpen) : () => assignAppLocation(href)}
           />
           {onShare ? (
-            <MenuActionRow plain icon={<ShareIcon />} label="Share" onClick={then(onShare)} />
+            <MenuActionRow icon={<ShareIcon />} label="Share" onClick={then(onShare)} />
           ) : null}
           <MenuGroupSeparator />
         </>
       )}
       {onStartRename ? (
         <MenuActionRow
-          plain
           icon={<PencilIcon size={12} />}
           label="Rename"
           onClick={then(onStartRename)}
@@ -222,7 +217,6 @@ export function DocumentActionsMenu({
       ) : null}
       {onDuplicate ? (
         <MenuActionRow
-          plain
           icon={<DuplicateIcon size={12} />}
           label="Duplicate"
           onClick={then(onDuplicate)}
@@ -230,7 +224,6 @@ export function DocumentActionsMenu({
       ) : null}
       {onMove ? (
         <MenuActionRow
-          plain
           icon={<FolderOutlineIcon />}
           label="Change Folder"
           onClick={then(() => onMove(anchor))}
@@ -242,7 +235,6 @@ export function DocumentActionsMenu({
       {onStartRename || onDuplicate || onMove ? <MenuGroupSeparator /> : null}
       {onToggleFavourite ? (
         <MenuActionRow
-          plain
           icon={<StarIcon filled={favourite} />}
           label={favourite ? 'Unfavourite' : 'Favourite'}
           onClick={then(onToggleFavourite)}
@@ -250,7 +242,6 @@ export function DocumentActionsMenu({
       ) : null}
       {tags.available && ownerId && anchor ? (
         <MenuActionRow
-          plain
           icon={<TagIcon />}
           label="Tags"
           onClick={then(() =>
@@ -259,11 +250,10 @@ export function DocumentActionsMenu({
         />
       ) : null}
       {onShowHistory ? (
-        <MenuActionRow plain icon={<HistoryIcon />} label="History" onClick={then(onShowHistory)} />
+        <MenuActionRow icon={<HistoryIcon />} label="History" onClick={then(onShowHistory)} />
       ) : null}
       {onToggleRecentExclusion ? (
         <MenuActionRow
-          plain
           icon={recentExcluded ? <ClockOffIcon /> : <ClockIcon />}
           // The label states what the click DOES, and by doing so tells
           // you the current state — which is why the document needs no
@@ -274,7 +264,6 @@ export function DocumentActionsMenu({
       ) : null}
       {liveDoc.team ? (
         <MenuActionRow
-          plain
           icon={<TeamIcon />}
           label="Open Team"
           onClick={() => {
@@ -285,14 +274,12 @@ export function DocumentActionsMenu({
       {ownerId ? (
         offline ? (
           <MenuActionRow
-            plain
             icon={<SyncIcon />}
             label="Sync Document"
             onClick={() => void syncToCloud()}
           />
         ) : (
           <MenuActionRow
-            plain
             icon={<TakeOfflineIcon />}
             label="Take Offline"
             onClick={() => void takeOffline()}
@@ -301,7 +288,6 @@ export function DocumentActionsMenu({
       ) : null}
       {onRemoveFromTimeline ? (
         <MenuActionRow
-          plain
           icon={<CloseIcon size={11} />}
           label="Remove from Timeline"
           onClick={then(onRemoveFromTimeline)}
@@ -310,12 +296,7 @@ export function DocumentActionsMenu({
       {onDelete ? (
         <>
           <MenuGroupSeparator />
-          <MenuActionRow
-            plain
-            icon={<TrashIcon size={12} />}
-            label="Delete"
-            onClick={then(onDelete)}
-          />
+          <MenuActionRow icon={<TrashIcon size={12} />} label="Delete" onClick={then(onDelete)} />
         </>
       ) : null}
     </PortalMenu>

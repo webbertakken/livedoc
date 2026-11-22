@@ -85,18 +85,12 @@ export function PlanCardMenu({
     >
       <ContextMenu position={at} label="Card menu" onClose={onClose}>
         <MenuHeader title={title} />
-        <MenuActionRow plain label="Open" icon={<PencilIcon />} onClick={act(onOpen)} />
+        <MenuActionRow label="Open" icon={<PencilIcon />} onClick={act(onOpen)} />
         {canEdit ? (
           <>
-            <MenuActionRow
-              plain
-              label="Duplicate"
-              icon={<DuplicateIcon />}
-              onClick={act(onDuplicate)}
-            />
+            <MenuActionRow label="Duplicate" icon={<DuplicateIcon />} onClick={act(onDuplicate)} />
             {canRetire && onAddSlide ? (
               <MenuActionRow
-                plain
                 label="Add to Slides"
                 icon={<SlideDeckIcon />}
                 onClick={act(onAddSlide)}
@@ -104,7 +98,6 @@ export function PlanCardMenu({
             ) : null}
             {canRetire && onEditType ? (
               <MenuActionRow
-                plain
                 label="Edit Card Type"
                 icon={<PlanCardsIcon size={16} />}
                 onClick={act(onEditType)}
@@ -115,7 +108,6 @@ export function PlanCardMenu({
                 <MenuGroupSeparator />
                 {columns.map((c) => (
                   <MenuActionRow
-                    plain
                     key={c.status}
                     label={`Move to ${c.name}`}
                     icon={
@@ -133,7 +125,6 @@ export function PlanCardMenu({
             ) : null}
             <MenuGroupSeparator />
             <MenuActionRow
-              plain
               label={flagged ? 'Remove Flag' : 'Flag'}
               icon={<PlanTypeGlyph glyph="flag" size={16} />}
               onClick={act(onFlag)}
@@ -141,12 +132,11 @@ export function PlanCardMenu({
             {canRetire ? (
               <>
                 <MenuActionRow
-                  plain
                   label={archived ? 'Restore' : 'Archive'}
                   icon={<PlanBoardTileArt preset="archive" size={16} />}
                   onClick={act(onArchive)}
                 />
-                <MenuActionRow plain label="Trash" icon={<TrashIcon />} onClick={act(onTrash)} />
+                <MenuActionRow label="Trash" icon={<TrashIcon />} onClick={act(onTrash)} />
               </>
             ) : null}
           </>

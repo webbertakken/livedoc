@@ -145,7 +145,7 @@ function PortalMenuFrame({
         <div
           ref={attach}
           {...surfaceProps}
-          className={`fixed z-[var(--z-popover)] flex ${frameWidth ?? (wide ? 'w-80' : 'w-56')} animate-fade-in flex-col rounded-md border border-slate-200 bg-white/90 py-1 text-sm shadow-lg outline-none backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-slate-950/40`}
+          className={`fixed z-[var(--z-popover)] flex ${frameWidth ?? (wide ? 'w-80' : 'w-56')} animate-fade-in flex-col rounded-menu border border-slate-200 bg-white/90 py-1.5 text-body shadow-lg outline-none backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-slate-950/40`}
           style={{
             left: at.left,
             top: at.top,
@@ -159,7 +159,7 @@ function PortalMenuFrame({
   );
 }
 
-// A collapsible category inside a menu: an uppercase header (icon + chevron)
+// A collapsible category inside a menu: a header row (icon + chevron)
 // that toggles its content. Controlled by the parent so only one section is
 // open at a time. The border-t (with `first:border-t-0`) butts the header up
 // to a flush separator, and the content height animates via the grid-rows
@@ -203,16 +203,18 @@ export function MenuAccordionSection({
         onClick={onToggle}
         onMouseDown={preserveFocus ? (e) => e.preventDefault() : undefined}
         aria-expanded={open}
-        className="flex w-full cursor-pointer items-center justify-between px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 transition hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-300"
+        className="flex min-h-row w-full cursor-pointer items-center justify-between px-3 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         <span className="flex items-center gap-2">
           {/* Fixed-width, centred icon slot so every category title starts at
               the same x regardless of the glyph's own width. */}
-          <span className="flex w-4 shrink-0 items-center justify-center">{icon}</span>
+          <span className="flex w-4 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400 [&_svg]:size-icon-row">
+            {icon}
+          </span>
           {title}
         </span>
         <ChevronDownIcon
-          className={`transition-transform duration-short ${open ? '' : '-rotate-90'}`}
+          className={`size-icon-chevron text-slate-500 transition-transform duration-short dark:text-slate-400 ${open ? '' : '-rotate-90'}`}
         />
       </button>
       <div
@@ -234,18 +236,15 @@ export function MenuAccordionSection({
   );
 }
 
-// A plain ACTION row: the same shape and rhythm as an accordion header
-// (fixed icon slot, uppercase label, full width) but it performs a verb
-// instead of expanding. For menus whose entries are things to DO rather than
-// settings to open — e.g. the event-storming note menu (docs/specs/021-event-storming/event-storming.md), which is
-// six verbs and no styling at all. Horizontal bars rather than a tile grid:
-// a verb list reads down the menu like every other row here.
+// An ACTION row: the same shape and rhythm as an accordion header (a fixed icon slot, the label, full width), but it
+// performs a verb instead of expanding. For menus whose entries are things to DO rather than settings to open (the
+// event-storming note menu, docs/specs/021-event-storming/event-storming.md; the document actions menu). A Delete or
+// Trash row looks like every other row (never red).
 export function MenuActionRow({
   label,
   icon,
   onClick,
   disabled = false,
-  plain = false,
   labelStyle,
 }: {
   label: string;
@@ -254,11 +253,6 @@ export function MenuActionRow({
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   // The label's own look (a font menu draws each font's name in that font).
   labelStyle?: CSSProperties;
-  // Sentence-case, 13px, full-contrast: the reading size for a menu
-  // that IS the list (the document actions menu), where the uppercase
-  // label rhythm of a category header is too quiet to scan eight verbs
-  // by. A Delete or Trash row looks like every other row (never red).
-  plain?: boolean;
   // A verb that exists but can't run right now (Paste with an empty
   // clipboard). It STAYS in the menu, greyed: hiding it would change the
   // menu's shape based on state the user can't see, and they'd learn the
@@ -266,50 +260,25 @@ export function MenuActionRow({
   disabled?: boolean;
 }) {
   const { itemProps } = useMenuItemProps({ disabled });
-  if (disabled && plain) {
-    // A command menu keeps it as a focusable, announced item that does nothing (D50). A plain row
-    // keeps its own reading size and layout, only greyed, so the list doesn't change shape.
-    return (
-      <span
-        aria-disabled
-        {...itemProps}
-        className="flex w-full cursor-not-allowed items-center gap-2.5 px-3 py-2 text-[13px] text-slate-500 dark:text-slate-600"
-      >
-        <span className="flex w-5 shrink-0 items-center justify-center [&_svg]:h-4 [&_svg]:w-4">
-          {icon}
-        </span>
-        {label}
+  const content = (
+    <>
+      <span className="flex w-5 shrink-0 items-center justify-center text-slate-400 [&_svg]:size-icon-row">
+        {icon}
       </span>
-    );
-  }
+      {labelStyle ? <span style={labelStyle}>{label}</span> : label}
+    </>
+  );
   if (disabled) {
-    // A command menu keeps it as a focusable, announced item that does nothing (D50).
+    // A command menu keeps it as a focusable, announced item that does nothing (D50). It keeps its size and layout,
+    // only greyed, so the list doesn't change shape.
     return (
       <span
         aria-disabled
         {...itemProps}
-        className="flex w-full cursor-not-allowed items-center gap-2 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-600"
+        className="flex min-h-row w-full cursor-not-allowed items-center gap-2 px-3 text-body text-slate-500"
       >
-        <span className="flex w-4 shrink-0 items-center justify-center">{icon}</span>
-        {label}
+        {content}
       </span>
-    );
-  }
-  if (plain) {
-    return (
-      <button
-        type="button"
-        {...itemProps}
-        onClick={onClick}
-        className={`flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-[13px] transition ${'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'}`}
-      >
-        <span
-          className={`flex w-5 shrink-0 items-center justify-center [&_svg]:h-4 [&_svg]:w-4 ${'text-slate-400 dark:text-slate-400'}`}
-        >
-          {icon}
-        </span>
-        {labelStyle ? <span style={labelStyle}>{label}</span> : label}
-      </button>
     );
   }
   return (
@@ -317,10 +286,9 @@ export function MenuActionRow({
       type="button"
       {...itemProps}
       onClick={onClick}
-      className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition ${'text-slate-500 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-300'}`}
+      className="flex min-h-row w-full cursor-pointer items-center gap-2 px-3 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
     >
-      <span className="flex w-4 shrink-0 items-center justify-center">{icon}</span>
-      {label}
+      {content}
     </button>
   );
 }
@@ -344,7 +312,7 @@ export function MenuHeader({ title, aside }: { title: string; aside?: ReactNode 
       <span
         id={id}
         {...(inCommandMenu ? { [MENU_LABEL_ATTR]: '' } : null)}
-        className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-700 dark:text-slate-200"
+        className="min-w-0 flex-1 truncate text-body text-slate-900 dark:text-slate-100"
       >
         {title}
       </span>
@@ -390,7 +358,7 @@ export function MenuActionButton({
       type="button"
       {...itemProps}
       onClick={onClick}
-      className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+      className="inline-flex min-h-row w-full cursor-pointer items-center justify-center gap-2 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
     >
       {icon}
       {label}

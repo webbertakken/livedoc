@@ -27,14 +27,12 @@ export function SheetFreezeRows({
       {[0, 1, 2].map((n) => (
         <MenuActionRow
           key={`r${n}`}
-          plain
           label={n === 0 ? 'No Rows' : `${n} Row${n > 1 ? 's' : ''}`}
           icon={<Check on={(c.sheet.layout.frozenRows ?? 0) === n} />}
           onClick={act(() => actions.freeze(n))}
         />
       ))}
       <MenuActionRow
-        plain
         label={`Up to Row ${r + 1}`}
         icon={<FreezeIcon />}
         onClick={act(() => actions.freeze(r + 1))}
@@ -44,14 +42,12 @@ export function SheetFreezeRows({
       {[0, 1, 2].map((n) => (
         <MenuActionRow
           key={`c${n}`}
-          plain
           label={n === 0 ? 'No Columns' : `${n} Column${n > 1 ? 's' : ''}`}
           icon={<Check on={(c.sheet.layout.frozenCols ?? 0) === n} />}
           onClick={act(() => actions.freeze(undefined, n))}
         />
       ))}
       <MenuActionRow
-        plain
         label={`Up to Column ${columnLetters(col)}`}
         icon={<FreezeIcon />}
         onClick={act(() => actions.freeze(undefined, col + 1))}

@@ -168,7 +168,6 @@ export function SheetToolbarMenu({
         ? NUMBER_ROWS.map((row) => (
             <MenuActionRow
               key={row.label}
-              plain
               label={row.label}
               icon={
                 <Check
@@ -185,7 +184,6 @@ export function SheetToolbarMenu({
       {kind === 'number' ? (
         // A format code of the person's own (sheet.md "Formatting"), in a popover against the same button.
         <MenuActionRow
-          plain
           label="Custom…"
           icon={<Check on={f?.nf === 'custom'} />}
           onClick={act(() => actions.openCustomFormat(anchor))}
@@ -195,7 +193,6 @@ export function SheetToolbarMenu({
         ? [{ id: null, label: 'Default', stack: undefined }, ...FONTS].map((font) => (
             <MenuActionRow
               key={font.id ?? 'default'}
-              plain
               label={font.label}
               // Each font named in its own face, so the menu is its own preview.
               {...(font.stack ? { labelStyle: { fontFamily: font.stack } } : {})}
@@ -208,7 +205,6 @@ export function SheetToolbarMenu({
         ? FONT_SIZES.map((fs) => (
             <MenuActionRow
               key={fs}
-              plain
               label={String(fs)}
               icon={<Check on={(f?.fs ?? FONT_SIZE_DEFAULT) === fs} />}
               onClick={act(() => actions.format({ fs: fs === FONT_SIZE_DEFAULT ? null : fs }))}
@@ -245,20 +241,13 @@ export function SheetToolbarMenu({
           />
         ) : (
           <>
+            <MenuActionRow label="Merge All" icon={<MergeIcon />} onClick={() => merge('all')} />
             <MenuActionRow
-              plain
-              label="Merge All"
-              icon={<MergeIcon />}
-              onClick={() => merge('all')}
-            />
-            <MenuActionRow
-              plain
               label="Merge Across"
               icon={<MergeIcon />}
               onClick={() => merge('across')}
             />
             <MenuActionRow
-              plain
               label="Unmerge"
               icon={<MergeIcon />}
               onClick={act(() => actions.unmerge())}
@@ -270,7 +259,6 @@ export function SheetToolbarMenu({
         ? (['o', 'w', 'c'] as const).map((wr) => (
             <MenuActionRow
               key={wr}
-              plain
               label={{ o: 'Overflow', w: 'Wrap', c: 'Clip' }[wr]}
               icon={<WrapIcon />}
               onClick={act(() => actions.format({ wr: wr === 'o' ? null : wr }))}
@@ -280,19 +268,16 @@ export function SheetToolbarMenu({
       {kind === 'sort' ? (
         <>
           <MenuActionRow
-            plain
             label="Sort Sheet A to Z"
             icon={<SortIcon />}
             onClick={act(() => actions.sortColumn(true))}
           />
           <MenuActionRow
-            plain
             label="Sort Sheet Z to A"
             icon={<SortIcon />}
             onClick={act(() => actions.sortColumn(false))}
           />
           <MenuActionRow
-            plain
             label="Custom Sort…"
             icon={<SortIcon />}
             onClick={act(() => c.setMenu({ kind: 'sort' }))}
@@ -303,7 +288,6 @@ export function SheetToolbarMenu({
         ? CHART_TYPES.map((type) => (
             <MenuActionRow
               key={type}
-              plain
               label={`${CHART_TYPE_LABELS[type]} Chart`}
               icon={<ChartTypeIcon type={type} />}
               onClick={act(() => actions.insertChart(type))}
@@ -315,7 +299,6 @@ export function SheetToolbarMenu({
         ? folded.map((b) => (
             <MenuActionRow
               key={b.label}
-              plain
               label={b.label}
               icon={b.icon}
               onClick={() => {

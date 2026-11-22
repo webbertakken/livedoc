@@ -375,7 +375,6 @@ function PageMenu({ row, actions }: { row: ContentsRow; actions: PageActions | n
           <MenuHeader title={row.name} />
           {actions.addToSlides ? (
             <MenuActionRow
-              plain
               icon={<SlideDeckIcon />}
               label="Add to Slides"
               onClick={then(actions.addToSlides)}
@@ -383,14 +382,12 @@ function PageMenu({ row, actions }: { row: ContentsRow; actions: PageActions | n
           ) : null}
           {actions.duplicate ? (
             <MenuActionRow
-              plain
               icon={<CopyIcon />}
               label="Duplicate"
               onClick={then(actions.duplicate)}
             />
           ) : null}
           <MenuActionRow
-            plain
             icon={row.locked ? <UnlockIcon /> : <LockToolIcon />}
             label={row.locked ? 'Unlock' : 'Lock'}
             onClick={then(actions.toggleLock)}
@@ -398,12 +395,7 @@ function PageMenu({ row, actions }: { row: ContentsRow; actions: PageActions | n
           {actions.remove ? (
             <>
               <MenuGroupSeparator />
-              <MenuActionRow
-                plain
-                icon={<DeleteIcon />}
-                label="Delete"
-                onClick={then(actions.remove)}
-              />
+              <MenuActionRow icon={<DeleteIcon />} label="Delete" onClick={then(actions.remove)} />
             </>
           ) : null}
         </PortalMenu>

@@ -60,14 +60,12 @@ export function FieldMenu({
           {reorder ? (
             <>
               <MenuActionRow
-                plain
                 label="Move Up"
                 icon={<ArrowUpIcon size={14} />}
                 disabled={!canUp}
                 onClick={run(() => onMove(-1))}
               />
               <MenuActionRow
-                plain
                 label="Move Down"
                 icon={<ArrowDownIcon size={14} />}
                 disabled={!canDown}
@@ -79,7 +77,6 @@ export function FieldMenu({
           {moveTargets.map((g) => (
             <MenuActionRow
               key={g.id ?? 'details'}
-              plain
               label={`Move to ${g.label}`}
               icon={<TabsLabelIcon />}
               onClick={run(() => onMoveTo(g.id))}
@@ -88,7 +85,7 @@ export function FieldMenu({
           {onRemove ? (
             <>
               {reorder || moveTargets.length > 0 ? <MenuGroupSeparator /> : null}
-              <MenuActionRow plain label="Remove" icon={<TrashIcon />} onClick={run(onRemove)} />
+              <MenuActionRow label="Remove" icon={<TrashIcon />} onClick={run(onRemove)} />
             </>
           ) : null}
         </PortalMenu>

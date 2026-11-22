@@ -38,7 +38,8 @@ A surface names the token, never the number, so the scale changes in one place.
 - **Weight** is regular (400) by default.
 - Medium (500) marks a pressed, selected or primary control, and nothing else.
 - **Headings are regular** (Webber, 2026-11-21): size alone carries the hierarchy, as the shell's dialog title does.
-- **No tracked capitals**: a label is written in sentence case, never set in capitals with wide letter spacing.
+- **No tracked capitals**: a label reads as its copy is written (a menu item or a button in Title Case), never set in
+  capitals with wide letter spacing.
 - Nothing in the chrome reads under 12 px; 10 px is for a glyph only.
 
 ### Heights

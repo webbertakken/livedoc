@@ -71,7 +71,6 @@ function FoldedCrumbs({
           {folded.map((crumb) => (
             <MenuActionRow
               key={crumb.id}
-              plain
               label={backLabel(crumb)}
               icon={<TypeGlyph item={crumb} types={types} size={14} />}
               onClick={() => {

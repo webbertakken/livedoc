@@ -93,7 +93,7 @@ export function ModeFilterMenu<T extends string>({
           }
         }}
         aria-label={`${label}: ${current.label}`}
-        className="flex w-full min-w-[9.5rem] items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 sm:w-auto dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400"
+        className="flex w-full min-w-[9.5rem] items-center gap-2 rounded-control border border-slate-200 bg-slate-50 px-3 h-field text-body text-slate-700 transition hover:border-brand-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 sm:w-auto dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400"
       >
         <span className="inline-flex shrink-0 text-slate-500 dark:text-slate-400">
           <CurrentIcon size={16} aria-hidden />

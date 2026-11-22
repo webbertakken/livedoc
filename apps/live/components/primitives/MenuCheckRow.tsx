@@ -31,7 +31,7 @@ export function MenuCheckRow({
       aria-disabled={disabled || undefined}
       {...itemProps}
       onClick={disabled ? undefined : onToggle}
-      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition ${
+      className={`flex min-h-row w-full items-center gap-2 px-3 text-left text-body transition ${
         disabled
           ? 'cursor-default text-slate-500 dark:text-slate-400'
           : 'cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
@@ -45,7 +45,7 @@ export function MenuCheckRow({
       </span>
       <span
         aria-hidden
-        className="flex w-5 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400 [&_svg]:h-4 [&_svg]:w-4"
+        className="flex w-5 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400 [&_svg]:size-icon-row"
       >
         {icon}
       </span>

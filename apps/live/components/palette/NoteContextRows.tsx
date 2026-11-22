@@ -39,7 +39,6 @@ export function NoteContextRows({
               icon={c.id === menu.currentId ? <CheckIcon size={14} /> : <ContextJoinIcon />}
               label={c.name}
               // Names read as written, not as an uppercase verb.
-              plain
               disabled={c.id === menu.currentId}
               onClick={runAndClose(() => menu.onAdd(c.id))}
             />

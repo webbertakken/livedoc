@@ -102,7 +102,7 @@ export function SheetCellMenu({
     return p && p.r1 <= range.r2 && range.r1 <= p.r2 && p.c1 <= range.c2 && range.c1 <= p.c2;
   });
   const row = (label: string, icon: React.ReactNode, run: () => void) => (
-    <MenuActionRow plain label={label} icon={icon} onClick={run} />
+    <MenuActionRow label={label} icon={icon} onClick={run} />
   );
   return (
     <ContextMenu position={at} label="Cell menu" onClose={onClose} flush>
@@ -164,7 +164,6 @@ export function SheetCellMenu({
           (formulas.md "Text"). */}
       {link ? (
         <MenuActionRow
-          plain
           label="Open Link"
           icon={<LinkMenuIcon />}
           onClick={act(() => openHyperlink(link))}
