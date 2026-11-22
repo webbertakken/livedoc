@@ -15,6 +15,7 @@ import type { TextDocument } from '../model/text-document';
 import type { ReportBuilder } from '../report';
 import { NS } from './odf-names';
 import { readOdfParts } from './odf-read';
+import { odfPictureLookup } from './odf-pictures';
 
 // A text document, its template, or a web page LibreOffice saved as one: all read as a text document.
 const TEXT_TYPES: readonly string[] = [
@@ -32,6 +33,7 @@ export async function readOdfFile(
   bytes: Uint8Array<ArrayBuffer>,
   report: ReportBuilder,
   budgets?: PackageBudgets,
+  maxObjects?: number,
 ): Promise<OdfFileRead> {
   if (looksLikeXml(bytes)) {
     if (budgets && bytes.byteLength > budgets.bytes) return refuse('package_too_large');
@@ -41,8 +43,18 @@ export async function readOdfFile(
       return refuse('package_damaged');
     if (!TEXT_TYPES.includes(attributeOf(parsed.root, NS.office, 'mimetype') ?? ''))
       return refuse('package_wrong_type');
+    const pictures = await odfPictureLookup([parsed.root], new Map());
+    if (pictures === 'too-large') return refuse('picture_too_large');
     const document = readOdfParts(
-      { content: parsed, styles: parsed, meta: parsed, settings: parsed, entries: [] },
+      {
+        content: parsed,
+        styles: parsed,
+        meta: parsed,
+        settings: parsed,
+        entries: [],
+        pictures,
+        ...(maxObjects === undefined ? {} : { maxObjects }),
+      },
       report,
     );
     return { ok: true, document, flat: true };
@@ -77,9 +89,16 @@ export async function readOdfFile(
     .map(([name, data]) => ({ name, data, mediaType: mediaTypes.get(name) ?? '' }))
     // By name, as they are written back: a package read again holds them in the same order.
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  const pictures = await odfPictureLookup(
+    [c!.root, ...(styles ? [styles.root] : [])],
+    new Map(kept.map((e) => [e.name, e.data])),
+  );
+  if (pictures === 'too-large') return refuse('picture_too_large');
   const document = readOdfParts(
     {
       content: c!,
+      pictures,
+      ...(maxObjects === undefined ? {} : { maxObjects }),
       ...(styles ? { styles } : {}),
       ...(meta ? { meta } : {}),
       ...(settings ? { settings } : {}),

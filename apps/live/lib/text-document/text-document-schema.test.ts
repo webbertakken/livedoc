@@ -20,6 +20,8 @@ import {
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
   PARAGRAPH_ATTRIBUTES,
+  PICTURE,
+  PICTURE_ATTRIBUTES,
   readTextDocumentFile,
   RUN_MARKS,
   SECTION_BREAK,
@@ -47,12 +49,13 @@ describe('textDocumentSchema', () => {
       [KEPT_INLINE]: KEPT_INLINE_ATTRIBUTES,
       [FIELD]: FIELD_ATTRIBUTES,
       [FOOTNOTE]: FOOTNOTE_ATTRIBUTES,
+      [PICTURE]: PICTURE_ATTRIBUTES,
       [TABLE]: TABLE_ATTRIBUTES,
       [TABLE_ROW]: TABLE_ROW_ATTRIBUTES,
       [TABLE_CELL]: TABLE_CELL_ATTRIBUTES,
       [TABLE_HEADER]: TABLE_CELL_ATTRIBUTES,
     };
-    for (const name of [...BODY_BLOCKS, ...TABLE_PARTS, KEPT_INLINE, FIELD, FOOTNOTE]) {
+    for (const name of [...BODY_BLOCKS, ...TABLE_PARTS, KEPT_INLINE, FIELD, FOOTNOTE, PICTURE]) {
       const node = textDocumentSchema.nodes[name];
       expect(node, name).toBeDefined();
       expect(Object.keys(node!.spec.attrs ?? {}).sort()).toEqual([...attributes[name]!].sort());

@@ -20,6 +20,7 @@
     "clean": "rm -rf node_modules .turbo coverage"
   },
   "dependencies": {
+    "@livedoc/items": "workspace:*",
     "saxes": "^6.0.0"
   },
   "devDependencies": {

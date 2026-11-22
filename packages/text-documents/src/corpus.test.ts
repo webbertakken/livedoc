@@ -36,7 +36,9 @@ function structure(document: TextDocument) {
                     ? [
                         `note: ${TextDocument.paragraphTexts({ ...document, body: i.blocks }).join(' / ')}`,
                       ]
-                    : [],
+                    : i.type === 'picture'
+                      ? [`picture ${i.width}×${i.height}${i.alt ? ` "${i.alt}"` : ''}`]
+                      : [],
               )
               .join(','),
           ]

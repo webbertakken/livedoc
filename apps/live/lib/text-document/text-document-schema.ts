@@ -20,6 +20,7 @@ import {
   keptBreakOf,
   keptPresenceOf,
   PARAGRAPH_ATTRIBUTES,
+  PICTURE,
   SECTION_BREAK,
   SECTION_BREAK_ATTRIBUTES,
 } from '@livedoc/text-documents';
@@ -27,6 +28,7 @@ import { DocumentFonts } from '@livedoc/document';
 import { cssText, paragraphDeclarations, textDeclarations } from './text-document-style-sheet';
 import { paperFill, paperInk } from './text-document-paper';
 import { tableNodeSpecs } from './text-document-table-dom';
+import { pictureNodeSpec } from './text-document-pictures';
 
 const fieldText = (text: unknown): string => (typeof text === 'string' ? text : '');
 
@@ -188,6 +190,8 @@ const nodes: Record<string, NodeSpec> = {
       return keptPlaceholder('span', name, xml);
     },
   },
+  // A picture in line (objects.md "In the editor"), drawn from its media by its node view.
+  [PICTURE]: pictureNodeSpec,
   // A page number or page count (page-layout.md "Page numbers"): one character to the caret, drawn in its own
   // formatting with the text it last showed; copied as that text.
   [FIELD]: {

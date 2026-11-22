@@ -71,9 +71,16 @@ export {
   ooxmlHighlightName,
 } from './colours';
 export {
+  isMappedPictureType,
   isPictureTooLarge,
+  MAPPED_PICTURE_TYPES,
+  mediaKeyOf,
+  PICTURE_DEFAULT_DPI,
+  PICTURE_EXTENSIONS,
   PICTURE_MAX_PIXELS,
   pictureHeader,
+  pictureOwnSize,
+  type MappedPictureType,
   type PictureHeader,
 } from './pictures';
 export {
