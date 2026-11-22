@@ -106,7 +106,7 @@ export function SidebarRow({
       <div
         data-tree-row
         {...rowProps}
-        className={`group flex items-center gap-1 rounded-md border px-1 transition-colors [li:focus-visible>&]:ring-2 [li:focus-visible>&]:ring-brand-500 ${
+        className={`group flex min-h-row items-center gap-1 rounded-control border px-1 transition-colors [li:focus-visible>&]:ring-2 [li:focus-visible>&]:ring-brand-500 ${
           highlighted ? `${DROP_TARGET_RING} ` : ''
         }${rowClassName ?? (selected ? CURRENT_ROW : RESTING_ROW)}`}
         style={{ paddingLeft: depth * INDENT_STEP + 4 }}
@@ -118,7 +118,7 @@ export function SidebarRow({
             e.stopPropagation();
             if (expandable) onToggleExpand?.();
           }}
-          className={`flex h-5 w-5 shrink-0 items-center justify-center text-slate-400 transition pointer-coarse:order-last pointer-coarse:-mr-1 pointer-coarse:h-auto pointer-coarse:w-11 pointer-coarse:self-stretch ${
+          className={`flex size-chip shrink-0 items-center justify-center text-slate-400 transition pointer-coarse:order-last pointer-coarse:-mr-1 pointer-coarse:h-auto pointer-coarse:w-11 pointer-coarse:self-stretch ${
             expandable
               ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200'
               : 'pointer-coarse:hidden'
@@ -129,11 +129,11 @@ export function SidebarRow({
         <span
           data-tree-activate
           onClick={renaming ? undefined : onActivate}
-          className={`flex min-w-0 flex-1 items-center gap-1.5 py-1 text-left text-xs pointer-coarse:gap-2.5 pointer-coarse:py-3 pointer-coarse:text-[15px] pointer-coarse:leading-5 ${
+          className={`flex min-w-0 flex-1 items-center gap-2 text-left text-body pointer-coarse:gap-2.5 pointer-coarse:py-3 pointer-coarse:text-[15px] pointer-coarse:leading-5 ${
             renaming ? '' : 'cursor-pointer'
           } ${
             selected
-              ? 'font-semibold text-brand-700 dark:text-brand-300'
+              ? 'font-medium text-brand-700 dark:text-brand-300'
               : 'text-slate-700 dark:text-slate-200'
           }`}
         >

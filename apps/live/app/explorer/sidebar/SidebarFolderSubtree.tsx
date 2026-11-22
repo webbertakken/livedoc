@@ -69,7 +69,7 @@ export function SidebarFolderSubtree({
             ariaLabel={`Rename ${folder.name}`}
             onCommit={(name) => onCommitRenameFolder(folder.id, name)}
             onCancel={onCancelRenameFolder}
-            className="rounded border border-brand-300 bg-white px-1 py-0 text-xs dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+            className="rounded-control border border-brand-300 bg-white px-1 py-0 text-body dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
           />
         ) : (
           <FolderLabel folderId={folder.id} name={folder.name} />

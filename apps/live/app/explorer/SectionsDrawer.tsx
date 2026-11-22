@@ -43,12 +43,12 @@ export function SectionsDrawer({
         className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] animate-slide-in-left flex-col overflow-y-auto border-r border-slate-200 bg-white px-3 py-4 shadow-xl outline-none dark:border-slate-700 dark:bg-slate-800"
       >
         <div className="mb-1 flex items-center justify-between pl-1">
-          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sections</span>
+          <span className="text-panel-title text-slate-700 dark:text-slate-200">Sections</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="flex size-row items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <CloseIcon size={11} />
           </button>

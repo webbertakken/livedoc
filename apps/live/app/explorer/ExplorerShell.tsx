@@ -216,7 +216,7 @@ function ShellChrome({ children }: { children: ReactNode }) {
           aria-label="Sections"
         >
           {/* The tree sits in a card beside the pane (docs/specs/013-workspace/explorer-structure.md "Look"). */}
-          <div className="sticky top-20 rounded-xl border border-slate-200 bg-white px-3 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="sticky top-20 rounded-surface border border-slate-200 bg-white px-3 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <AreaErrorBoundary area="ExplorerSidebar" fallback="panel">
               <ExplorerSidebar />
             </AreaErrorBoundary>

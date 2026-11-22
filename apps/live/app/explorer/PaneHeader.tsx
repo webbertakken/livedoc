@@ -95,13 +95,13 @@ export function PaneHeader({
               type="button"
               onClick={onOpenNav}
               aria-label="Browse sections"
-              className="-ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:hidden"
+              className="-ml-1 flex size-row shrink-0 items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:hidden"
             >
               <HamburgerIcon />
             </button>
           ) : null}
           {title ? (
-            <h1 className="min-w-0 truncate text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h1 className="min-w-0 truncate text-page-title text-slate-900 dark:text-slate-100">
               {title}
             </h1>
           ) : null}
@@ -142,7 +142,7 @@ export function PaneHeader({
       {showCrumbs ? (
         <nav
           aria-label="Breadcrumb"
-          className="flex flex-wrap items-center rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          className="flex flex-wrap items-center rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
         >
           {crumbs.map((c, i) => {
             const isLast = i === crumbs.length - 1;
@@ -159,12 +159,12 @@ export function PaneHeader({
                     onClick={c.onClick}
                     // A 20px crumb: padded to a finger's 44px on a touch screen, upward and downward only, so the
                     // crumbs beside it keep their own taps.
-                    className="relative touch-target-y rounded px-1.5 py-0.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                    className="relative touch-target-y rounded-control px-1 py-0.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                   >
                     {c.name}
                   </button>
                 ) : (
-                  <span className="rounded px-1.5 py-0.5 font-medium text-slate-900 dark:text-slate-100">
+                  <span className="rounded-control px-1 py-0.5 font-medium text-slate-900 dark:text-slate-100">
                     {c.name}
                   </span>
                 )}
