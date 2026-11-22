@@ -270,6 +270,7 @@ import { activeElementsCommit } from './active-elements-commit';
 import { useDragPreviewBroadcast } from '@/hooks/collab/useDragPreviewBroadcast';
 import { useArticleCaretBroadcast } from '@/hooks/collab/useArticleCaretBroadcast';
 import { useTextDocumentCaretBroadcast } from '@/hooks/collab/useTextDocumentCaretBroadcast';
+import { usePdfPresenceBroadcast } from '@/hooks/collab/usePdfPresenceBroadcast';
 
 // The open tab's elements before the tabs load.
 const NO_ELEMENTS: readonly Element[] = [];
@@ -1581,6 +1582,12 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   });
   // Where we are writing in a text document, live for collaborators (034-text-documents/live-editing-and-storage.md).
   useTextDocumentCaretBroadcast({
+    roomRef,
+    live: hydrated && !!documentId && (documentShareable || !!documentTeamId),
+    hidden: voteCursorsHidden,
+  });
+  // Where we are in a PDF document, live for collaborators (035-pdf-documents/live-editing-and-storage.md).
+  usePdfPresenceBroadcast({
     roomRef,
     live: hydrated && !!documentId && (documentShareable || !!documentTeamId),
     hidden: voteCursorsHidden,

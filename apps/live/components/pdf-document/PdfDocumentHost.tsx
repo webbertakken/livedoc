@@ -36,6 +36,8 @@ export function PdfDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly?
       canReview={canReview}
       author={selfParticipant.name}
       chrome={readOnly ? null : office}
+      // A person is on one tab: the other pane of a split says nothing of where they are ("Presence").
+      present={!readOnly}
       sequence={(op) => roomRef.current?.sequence(op) ?? Promise.resolve(false)}
     />
   );

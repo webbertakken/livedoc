@@ -26,6 +26,9 @@ const GUTTER_PX = 24;
 // (reading-surface.md "The pages": memory is bounded). Safe ranges: 50% to 200%, and 200% to 600%.
 const NEAR_MARGIN = '100% 0px';
 const HELD_MARGIN = '300% 0px';
+// The page in view is the one under the middle of the view (live-editing-and-storage.md "Presence"): the view drawn
+// in to a line across its middle, so no scroll is listened to and no layout read.
+const MIDDLE_MARGIN = '-50% 0px';
 
 function useWidth(element: RefObject<HTMLElement | null>): number {
   const [width, setWidth] = useState(0);
@@ -87,6 +90,7 @@ export function PdfPages({
   marks,
   tool,
   onHighlight,
+  onPageInView,
 }: {
   scroller: RefObject<HTMLDivElement | null>;
   pages: readonly PageInfo[];
@@ -96,6 +100,8 @@ export function PdfPages({
   marks: PdfMarksStore;
   tool: PdfPageTool;
   onHighlight: (index: number, selection: TextSelection) => void;
+  // Told the page in view, by its index, as it changes.
+  onPageInView?: (index: number) => void;
 }) {
   const width = useWidth(scroller);
   const widest = useMemo(() => Math.max(...pages.map((page) => page.width), 1), [pages]);
@@ -103,15 +109,22 @@ export function PdfPages({
     zoomScale(zoom, Math.max(width - 2 * GUTTER_PX, 1), widest * CSS_PER_POINT) * CSS_PER_POINT;
   const near = usePagesWithin(scroller, NEAR_MARGIN);
   const held = usePagesWithin(scroller, HELD_MARGIN);
+  const middle = usePagesWithin(scroller, MIDDLE_MARGIN);
   const { watch: watchNear } = near;
   const { watch: watchHeld } = held;
+  const { watch: watchMiddle, within: underMiddle } = middle;
   const register = useCallback(
     (index: number, element: HTMLElement | null) => {
       watchNear(index, element);
       watchHeld(index, element);
+      watchMiddle(index, element);
     },
-    [watchNear, watchHeld],
+    [watchNear, watchHeld, watchMiddle],
   );
+  useEffect(() => {
+    // Between two pages nothing lies under the middle: the page last under it stands.
+    if (underMiddle.size > 0) onPageInView?.(Math.min(...underMiddle));
+  }, [underMiddle, onPageInView]);
   const byPage = useSyncExternalStore(marks.subscribe, marks.get, marks.get);
 
   return (

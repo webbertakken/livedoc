@@ -34,6 +34,7 @@ import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-bud
 import { PdfStoredFiles, type PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
   DOWNLOAD_PDF,
   PDF_MENUS,
@@ -98,6 +99,7 @@ export function PdfDocumentSurface({
   canReview,
   author,
   chrome,
+  present,
   sequence,
 }: {
   scope: PdfDocumentScope;
@@ -110,6 +112,8 @@ export function PdfDocumentSurface({
   author: string;
   // The document's own parts in the title row; null where another pane shows them.
   chrome: OfficeChrome | null;
+  // Whether this is the tab the person is on: the other pane of a split says nothing of where they are.
+  present: boolean;
   // One frame, or one replacement of the stored file, to the document's room; true once the room has stored it.
   sequence: (op: PdfFrame | PdfStoredAsking) => Promise<boolean>;
 }) {
@@ -189,6 +193,37 @@ export function PdfDocumentSurface({
           ?.scrollIntoView({ block: 'nearest' });
       }),
     [undo, pages],
+  );
+
+  // "Presence": the page in view and the mode, said for the tab this person is on, and taken back on leaving it.
+  const inView = useRef(0);
+  const publishPlace = useCallback(() => {
+    if (!present || !pages) return;
+    const page = pages[Math.min(inView.current, pages.length - 1)];
+    if (page) setLocalPdfPresence(tabId, { page: page.name, mode, held: null });
+  }, [present, pages, tabId, mode]);
+  useEffect(publishPlace, [publishPlace]);
+  useEffect(() => (present ? () => setLocalPdfPresence(tabId, null) : undefined), [present, tabId]);
+  const onPageInView = useCallback(
+    (index: number) => {
+      inView.current = index;
+      publishPlace();
+    },
+    [publishPlace],
+  );
+  // A press on a person in the title row goes to the page they are on; false where their page is not in this file.
+  const goToPerson = useCallback(
+    (personId: string): boolean => {
+      const peer = pdfPresencePeersOf(tabId).find((person) => person.id === personId);
+      const at = peer ? (pages ?? []).findIndex((page) => page.name === peer.place.page) : -1;
+      const element =
+        at < 0 ? null : scroller.current?.querySelector(`[data-pdf-page="${at + 1}"]`);
+      if (!element) return false;
+      element.scrollIntoView({ block: 'start' });
+      track('UI', 'Used', 'PdfDocumentFollow');
+      return true;
+    },
+    [tabId, pages],
   );
 
   const storedFile = open.phase === 'ready' || open.phase === 'refused' ? open.storedFile : null;
@@ -309,6 +344,7 @@ export function PdfDocumentSurface({
         keyScope={root}
         chrome={chrome}
         tabId={scope.tabId}
+        onFollow={goToPerson}
         saveStatus={ready?.binding.saveStatus ?? null}
         toolbar={PDF_TOOLBAR}
         zoom={ready ? { value: zoom, onChange: setZoom } : null}
@@ -338,6 +374,7 @@ export function PdfDocumentSurface({
           marks={marks}
           tool={inHand}
           onHighlight={onHighlight}
+          onPageInView={onPageInView}
         />
       ) : null}
       {open.phase === 'refused' ? (
