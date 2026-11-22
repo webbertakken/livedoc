@@ -33,14 +33,15 @@ export function CountBadge({
 }) {
   const painted = background !== undefined && color !== undefined;
   const colours = painted
-    ? 'font-semibold'
+    ? ''
     : tone === 'brand'
-      ? `bg-brand-700 font-semibold text-white ${SOLID_BRAND_DARK}`
-      : 'bg-slate-200 font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+      ? `bg-brand-700 text-white ${SOLID_BRAND_DARK}`
+      : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+  // Where an icon would sit (docs/specs/004-interface-design/sizing.md "Shapes"): 16 or 18 px, its figure a glyph.
   const box =
     size === 'md'
-      ? 'h-[18px] min-w-[18px] px-1.5 text-[11px] tabular-nums'
-      : 'h-4 min-w-[1rem] px-1 text-[10px]';
+      ? 'h-icon-toolbar min-w-icon-toolbar px-1 text-glyph tabular-nums'
+      : 'h-icon-row min-w-icon-row px-1 text-glyph';
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center rounded-full ${box} ${colours}${

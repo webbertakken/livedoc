@@ -24,6 +24,9 @@ const SIZED_PATHS = [
   'components/primitives/ChipField.tsx',
   'components/primitives/SegmentedRadio.tsx',
   'components/primitives/HelpArticleLink.tsx',
+  'components/primitives/MadeByAiPill.tsx',
+  'components/primitives/ThisBrowserPill.tsx',
+  'components/primitives/RelativeTimeChip.tsx',
 ];
 
 describe('live sizing', () => {
