@@ -129,8 +129,8 @@ a cloud document's once they were read whole.
 
 - The bytes live in the **origin private file system**, one file per key in a `blobs` directory, so no list ever
   reads them; the offline record holds the key and the size only, on the tab that names them.
-- Where the origin private file system is missing or cannot be written from a page, the bytes are an IndexedDB Blob
-  in a store of their own (`bytes`, in the `livedoc-blobs` database), read whole into memory before use.
+- Where the origin private file system is missing or cannot be written from a page, the bytes are held whole
+  in an IndexedDB store of their own (`bytes`, in the `livedoc-blobs` database), read into memory before use.
 - **An index** beside them (`index`, in the same database) names each key held, its size and when it was last used
   `(default)`. A key is held once its bytes are written whole; bytes whose size is not the index's are not there.
 - **Read whole** `(default)`: the engine is handed every byte, as from LiveDoc's servers. A read by range from the

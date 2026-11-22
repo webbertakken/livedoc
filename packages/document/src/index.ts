@@ -488,6 +488,8 @@ export {
 } from './tab-kind';
 export { blobKeyOf, isBlobKey, type BlobKey } from './blob-key';
 export {
+  FILE_LOCAL_CACHE_MAX_BYTES,
+  FILE_LOCAL_FRESH_MS,
   FILE_PART_BYTES,
   FILE_PREVIOUS_VERSION_DAYS,
   FILE_SINGLE_UPLOAD_MAX_BYTES,
