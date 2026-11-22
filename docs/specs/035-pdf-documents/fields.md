@@ -2,8 +2,8 @@
 
 **Status: specified; a first slice is built.** Built: the engine reads a page's fields as the file holds them: each
 place a field shows, with its full name, type, value, options, label and what the file says of it (read-only,
-required, hidden, multi-line, password, several choices, a value of one's own); a field value held in the live
-changes; and a bake that writes each value into its field with its appearance, as an addition. Filling on the
+required, hidden, multi-line, password, several choices, a value of one's own); a page drawn with its fields as the
+file drew them; a field value held in the live changes; and a bake that writes each value into its field with its appearance, as an addition. Filling on the
 surface, the fields panel, formats and everything a person sees are not built.
 
 A PDF's **fields** are the inputs it carries: text fields, tick boxes, radio groups, dropdowns, lists, buttons and
@@ -30,6 +30,8 @@ so a PDF's are always its fields. The research is [Fields](../../research/pdf-do
 - A field may show in several places (its **widgets**); filling one fills them all.
 - A field is named by its **full name** in the file's field tree ("applicant.address.city"); two fields with one
   full name are one field.
+- **A field is drawn on its page as the file drew it**: its value, its border, its tick and a button's face show
+  wherever the page shows, in every mode and before anyone fills it.
 - Read-only and hidden fields are as the file says: a read-only field shows its value and takes none; a hidden one
   is not shown.
 - **A password field's value is never read out of the file** `(default)`: the engine answers it empty, so it reaches

@@ -41,12 +41,9 @@ export function readFields(
   most = PDF_MAX_FIELDS,
 ): readonly PageField[] {
   const { p } = file;
-  const form = file.formOf();
-  if (!form) return [];
   return (
-    file.withPage(index, (page) => {
-      // A tick box's state is the form's own answer, which it has once the page is the form's too.
-      p.FORM_OnAfterLoadPage(page, form);
+    file.withFormPage(index, (page, form) => {
+      if (!form) return [];
       const fields: PageField[] = [];
       const count = p.FPDFPage_GetAnnotCount(page);
       for (let n = 0; n < count && fields.length < most; n += 1) {
@@ -59,7 +56,6 @@ export function readFields(
         if (type) fields.push(fieldOf(file, form, annotation, type));
         p.FPDFPage_CloseAnnot(annotation);
       }
-      p.FORM_OnBeforeClosePage(page, form);
       return fields;
     }) ?? []
   );

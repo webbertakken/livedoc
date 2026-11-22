@@ -1,5 +1,5 @@
 // Drawing a page (docs/specs/035-pdf-documents/reading-surface.md "The pages"): the page as the file says, the file's
-// own marks included, never past the pixel ceiling.
+// own marks and its fields as the file drew them included, never past the pixel ceiling.
 import { type PageBitmap, type PageMatrix, type PagePoint } from '../engine-contract';
 import { PDF_MAX_PAGE_PIXELS } from '../limits';
 import { clampSide, type ReaderFile } from './reader-file';
@@ -58,7 +58,7 @@ function matrixOf(file: ReaderFile, page: number, width: number, height: number)
 
 export function drawPage(file: ReaderFile, index: number, scale: number): PageBitmap | null {
   const { p } = file;
-  return file.withPage(index, (page) => {
+  return file.withFormPage(index, (page, form) => {
     const pageWidth = clampSide(p.FPDF_GetPageWidthF(page));
     const pageHeight = clampSide(p.FPDF_GetPageHeightF(page));
     const asked = Number.isFinite(scale) && scale > 0 ? scale : 1;
@@ -70,6 +70,8 @@ export function drawPage(file: ReaderFile, index: number, scale: number): PageBi
     if (!bitmap) return null;
     p.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, WHITE);
     p.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, 0, RENDER_FLAGS);
+    // The reader leaves a file's fields to its form: without this a filled form shows empty boxes.
+    if (form) p.FPDF_FFLDraw(form, bitmap, page, 0, 0, width, height, 0, RENDER_FLAGS);
     const buffer = p.FPDFBitmap_GetBuffer(bitmap);
     const stride = p.FPDFBitmap_GetStride(bitmap);
     const rgba = new Uint8ClampedArray(width * height * 4);

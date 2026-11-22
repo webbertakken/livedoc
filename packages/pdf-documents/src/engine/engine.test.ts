@@ -14,6 +14,7 @@ import {
   FIXTURE_LINE,
   actionsPdf,
   circularOutlinePdf,
+  drawnFieldPdf,
   deepOutlinePdf,
   fieldsPdf,
   labelledPdf,
@@ -279,6 +280,17 @@ describe('drawing', () => {
     expect(bitmap.rgba.some((value, at) => at % 4 === 0 && value < 128)).toBe(true);
     // An upright page: page space's y runs up from the bottom edge.
     expect(PageView.toView(bitmap.toView, { x: 72, y: 720 })).toEqual({ x: 72, y: 72 });
+  });
+
+  // fields.md "What a file's fields are": a field shows as the file drew it, on the page, before anyone fills it.
+  it("draws a file's fields as the file drew them", async () => {
+    await engine.open(drawnFieldPdf());
+    const bitmap = (await engine.drawPage(0, 1))!;
+    const inTheField = PageView.toView(bitmap.toView, { x: 172, y: 710 });
+    const at = (inTheField.y * bitmap.width + inTheField.x) * 4;
+    expect([...bitmap.rgba.slice(at, at + 4)]).toEqual([0, 0, 0, 255]);
+    // And nothing of the form is left on the paper beside it.
+    expect([...bitmap.rgba.slice(0, 4)]).toEqual([255, 255, 255, 255]);
   });
 
   it('answers nothing for a page that is not there', async () => {

@@ -102,6 +102,23 @@ export class ReaderFile {
     }
   }
 
+  /**
+   * A page with the form told of it for as long as `read` runs: a tick box's state and a field's drawing are the
+   * form's own answers, which it has once the page is the form's too. The form is 0 where the file has none.
+   */
+  withFormPage<T>(index: number, read: (page: number, form: number) => T): T | null {
+    const form = this.formOf();
+    return this.withPage(index, (page) => {
+      if (!form) return read(page, 0);
+      this.p.FORM_OnAfterLoadPage(page, form);
+      try {
+        return read(page, form);
+      } finally {
+        this.p.FORM_OnBeforeClosePage(page, form);
+      }
+    });
+  }
+
   /** The form's environment for the open file; 0 where the file has no form. */
   formOf(): number {
     const { p } = this;

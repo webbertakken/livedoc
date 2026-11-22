@@ -311,6 +311,19 @@ export function formPdf(options = 3): Uint8Array<ArrayBuffer> {
   ]);
 }
 
+/**
+ * One page with one text field the file has drawn: its appearance fills its box, 200 by 20 points at 72 in and 700
+ * up, with black.
+ */
+export const drawnFieldPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R] >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Annots [4 0 R] >>',
+    '<< /Type /Annot /Subtype /Widget /Rect [72 700 272 720] /P 3 0 R /F 4 /FT /Tx /T (city) /V (Delft) /AP << /N 5 0 R >> >>',
+    stream('/Type /XObject /Subtype /Form /BBox [0 0 200 20]', '0 0 0 rg 0 0 200 20 re f'),
+  ]);
+
 /** One page and two embedded files: "notes.txt" with its size, type and description said, and "run.exe" with none. */
 export const embeddedFilesPdf = (): Uint8Array<ArrayBuffer> =>
   rawPdf([
