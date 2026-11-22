@@ -157,7 +157,8 @@ describe('performance', () => {
   it('notes targets in time linear in their number', { timeout: TIMEOUT_MS }, () => {
     const fastest = (tab: Tab) => {
       let best = Infinity;
-      for (let run = 0; run < RUNS; run++) {
+      // Sub-millisecond at a small size: the best of more runs, at sizes where a stray pause cannot double it.
+      for (let run = 0; run < RUNS * 3; run++) {
         const state = createState(tab, {}, () => {});
         best = Math.min(
           best,
@@ -168,8 +169,8 @@ describe('performance', () => {
       }
       return best;
     };
-    const small = fastest(frameOf(2400));
-    const large = fastest(frameOf(2400 * GROWTH));
+    const small = fastest(frameOf(12_000));
+    const large = fastest(frameOf(12_000 * GROWTH));
     expect(large / small).toBeLessThan(RATIO_CEILING);
   });
 
