@@ -85,8 +85,8 @@ export class PdfReader {
     }
   }
 
-  drawPage(index: number, scale: number): PageBitmap | null {
-    return drawPage(this.file, index, scale);
+  drawPage(index: number, scale: number, ceiling?: number): PageBitmap | null {
+    return drawPage(this.file, index, scale, ceiling);
   }
 
   outline(most?: number): Outline {

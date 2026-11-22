@@ -30,7 +30,7 @@ import {
 } from '../testing/hostile';
 import { pdfEngineOver } from './engine';
 import { createPdfEngine } from './index';
-import { startReader } from './reader';
+import { PdfReader, startReader } from './reader';
 
 let engine: PdfEngine;
 // Every line the engine has logged since the test began.
@@ -139,10 +139,16 @@ describe('abuse cases', () => {
       expect((await engine.heldBytes()) - before).toBeLessThan((side * side) / 2);
     });
 
+    // The picture a draw makes holds to the ceiling it is given; that the ceiling is PDF_MAX_PAGE_PIXELS whatever is
+    // asked is the size's own test (draw-page.test.ts), which draws no gibibyte to prove it.
     it('draws at most the pixel ceiling, whatever scale is asked', async () => {
-      pagesOf(await engine.open(bombPdf(8)));
-      const drawn = (await engine.drawPage(0, 1e6))!;
-      expect(drawn.width * drawn.height).toBeLessThanOrEqual(PDF_MAX_PAGE_PIXELS);
+      const reader = new PdfReader(await startReader(readerWasm()));
+      pagesOf(reader.open(bombPdf(8)));
+      const ceiling = 65_536;
+      const drawn = reader.drawPage(0, 1e6, ceiling)!;
+      expect(drawn.width * drawn.height).toBeLessThanOrEqual(ceiling);
+      expect(drawn.rgba).toHaveLength(drawn.width * drawn.height * 4);
+      expect(PDF_MAX_PAGE_PIXELS).toBeGreaterThan(ceiling);
     });
   });
 
