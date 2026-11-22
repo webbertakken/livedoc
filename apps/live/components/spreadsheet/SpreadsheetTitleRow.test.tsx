@@ -10,6 +10,7 @@ import type { SpreadsheetHistory } from '@/lib/spreadsheet/spreadsheet-menu-bind
 import { track } from '@/lib/telemetry';
 import { createOfficeBindingsChannel } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
+import { useSpreadsheetZoom } from './spreadsheet-zoom';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/download-blob', () => ({ downloadBlob: vi.fn() }));
@@ -38,6 +39,7 @@ function Row({
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   const [pushed] = useState(() => vi.fn());
+  const { zoom } = useSpreadsheetZoom();
   return (
     <div ref={root}>
       <SpreadsheetTitleRow
@@ -48,6 +50,7 @@ function Row({
         level={level}
         history={history}
         channel={channel}
+        zoom={zoom}
         keyScope={root}
         onWorkbook={undefined}
         pushUndo={pushed}
@@ -123,6 +126,29 @@ describe('SpreadsheetTitleRow', () => {
     fireEvent.keyDown(size, { key: 'Enter' });
     expect(setFontSize).toHaveBeenCalledWith(14);
     expect(within(toolbar).getByRole('button', { name: /Horizontal Align: Left/ })).toBeTruthy();
+  });
+
+  // surface.md "Grid": View › Zoom and the toolbar's field set the one zoom, for a Viewer too.
+  it('zooms from View › Zoom and the toolbar’s field alike, the level ticked', () => {
+    render(<Row level="view" />);
+    const field = within(screen.getByRole('toolbar')).getByRole<HTMLInputElement>('combobox', {
+      name: /Zoom/,
+    });
+    expect(field.value).toBe('100%');
+    openMenu('View');
+    openSub('Zoom');
+    expect(screen.getByRole('menuitemradio', { name: '100%' }).getAttribute('aria-checked')).toBe(
+      'true',
+    );
+    fireEvent.click(screen.getByRole('menuitemradio', { name: '150%' }));
+    expect(field.value).toBe('150%');
+    expect(track).toHaveBeenCalledWith('UI', 'Changed', 'SpreadsheetZoom');
+    fireEvent.change(field, { target: { value: '110' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(field.value).toBe('110%');
+    openMenu('View');
+    openSub('Zoom');
+    expect(screen.queryAllByRole('menuitemradio', { checked: true })).toEqual([]);
   });
 
   it('binds Undo and Redo to the person’s timeline for anyone who writes', () => {

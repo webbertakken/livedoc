@@ -74,8 +74,10 @@ Left to right, a hairline between the groups:
   and plus take one point off or on, as Google's do (default, D128).
 - **More Formats**, **Horizontal Align**, **Vertical Align** and **Text Wrapping** open the choices of Format ›
   Number, Alignment and Wrapping, the one in force ticked; the control's glyph shows the alignment or wrapping there.
-- A control whose row is not yet built shows dimmed with "Coming soon"; a value field not yet built (Zoom, Font)
-  shows its placeholder (100%, Default) dimmed the same way.
+- **Zoom** shows the grid's zoom; its list holds the seven levels, and a whole number from 50 to 200 typed applies
+  ([Grid](#grid)).
+- A control whose row is not yet built shows dimmed with "Coming soon"; a value field not yet built (Font) shows its
+  placeholder (Default) dimmed the same way.
 - Colours open the one [colour picker](../004-interface-design/colour-picker.md) in its toolbar skin.
 - Controls that do not fit fold from the right into **More** (⋮), never wrapping; on a phone the toolbar scrolls
   sideways, as Google's app does not but a narrow browser window must.
@@ -104,6 +106,14 @@ Left to right, a hairline between the groups:
 Column letters across the top (24 px), row numbers down the left (46 px), the frozen panes with their thick grey
 bars to drag, the cells, and the overlays (selection, fill handle, charts, images, presence, comments' corners).
 Everything about it is [Grid and editing](grid-and-editing.md).
+
+- **Zoom** scales the column letters, row numbers and cells together inside the grid's frame, from 50% to 200%;
+  every other band keeps its size, and everything in the grid works as at 100% (selecting, dragging, editing, menus).
+- View › Zoom lists the toolbar's seven levels (50%, 75%, 90%, 100%, 125%, 150%, 200%) as radio items, the level in
+  force ticked; a typed level between them ticks none. There is no Fit: a sheet has no page to fit.
+- The zoom is the person's own view: never saved, sent or undone, and open to a Viewer. It stays as sheets are
+  switched and is 100% each time the spreadsheet opens (default, D133).
+- A level picked is one `UI` `Changed` `SpreadsheetZoom` event, whichever way it was picked.
 
 ## Sheet bar
 
@@ -157,3 +167,5 @@ Version History (the shell's). Each is specified with its area.
   the grid, kept for the page (default).
 - **D131** The function help card hidden by F1: Kept hidden for the person in their browser until F1 again (default).
 - **D132** The summary with no number selected: Count, whatever the pick (default).
+- **D133** The grid's zoom: Kept for the page across sheets, 100% each time the spreadsheet opens, as
+  [Grid and editing](grid-and-editing.md#the-grid) keeps it never saved (default).

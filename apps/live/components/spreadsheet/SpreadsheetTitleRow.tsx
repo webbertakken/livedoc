@@ -10,6 +10,7 @@ import { convertedFormat } from '@livedoc/sheets/files';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
+import type { OfficeZoom } from '@/components/office/OfficeZoomField';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { apiDownloadWorkbook, type DownloadFormat } from '@/lib/api/workbook';
@@ -34,6 +35,7 @@ import {
 import { spreadsheetChoices } from '@/lib/spreadsheet/spreadsheet-choices';
 import { SPREADSHEET_SHORTCUTS } from '@/lib/spreadsheet/spreadsheet-shortcuts';
 import { SPREADSHEET_TOOLBAR } from '@/lib/spreadsheet/spreadsheet-toolbar';
+import { zoomBindings } from '@/lib/spreadsheet/spreadsheet-zoom';
 import { track } from '@/lib/telemetry';
 import { ConversionDialog } from './ConversionDialog';
 import { useChannelBindings, type OfficeBindingsChannel } from './office-bindings-channel';
@@ -81,6 +83,7 @@ export function SpreadsheetTitleRow({
   level,
   history,
   channel,
+  zoom,
   keyScope,
   onWorkbook,
   pushUndo,
@@ -93,6 +96,8 @@ export function SpreadsheetTitleRow({
   // The person's one timeline; null before the editor has one.
   history: SpreadsheetHistory | null;
   channel: OfficeBindingsChannel;
+  // The person's zoom on the grid (surface.md "Grid"): the toolbar's field and View › Zoom.
+  zoom: OfficeZoom;
   keyScope: RefObject<HTMLElement | null>;
   onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
   pushUndo: (step: ItemUndoStep) => void;
@@ -129,6 +134,7 @@ export function SpreadsheetTitleRow({
   const actions: OfficeActions = {
     ...grid.actions,
     ...historyBindings(history, level !== 'view'),
+    ...zoomBindings(zoom),
     ...Object.fromEntries(
       DOWNLOAD_ITEMS.map((item) => [
         item.id,
@@ -182,6 +188,7 @@ export function SpreadsheetTitleRow({
         tabId={tabId}
         toolbar={SPREADSHEET_TOOLBAR}
         fontSize={fontSize}
+        zoom={zoom}
         choices={spreadsheetChoices(catalogue, actions)}
         refresh={channel.subscribe}
       />

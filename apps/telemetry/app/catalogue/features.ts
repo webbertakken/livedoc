@@ -1087,6 +1087,15 @@ export const SPREADSHEET_STARRED = chart(
   { types: ['SpreadsheetStar'], rising: 'neutral' },
 );
 
+// A spreadsheet's grid zoom picked from View › Zoom or its toolbar (docs/specs/029-sheets/surface.md "Grid").
+export const SPREADSHEET_ZOOMED = chart(
+  'UI',
+  'Changed',
+  'Spreadsheet Zoom',
+  "A spreadsheet's grid zoom picked from View › Zoom or its toolbar: a level or a typed value.",
+  { types: ['SpreadsheetZoom'], rising: 'neutral' },
+);
+
 // A text document's zoom changed from its toolbar (docs/specs/034-text-documents/editing-surface.md "Zoom").
 export const TEXT_DOCUMENT_ZOOMED = chart(
   'UI',
@@ -1416,6 +1425,7 @@ export const EDITOR_CHROME: MetricStack = {
     TOOL_FINDER_USED,
     TEXT_DOCUMENT_STARRED,
     SPREADSHEET_STARRED,
+    SPREADSHEET_ZOOMED,
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
     TEXT_DOCUMENT_MODE,

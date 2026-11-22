@@ -17,6 +17,7 @@ import {
   spreadsheetMenus,
 } from './spreadsheet-menus';
 import { SPREADSHEET_SHORTCUTS } from './spreadsheet-shortcuts';
+import { ZOOM_ITEMS } from './spreadsheet-zoom';
 
 // The parity matrix's menu rows (docs/specs/029-sheets/parity-matrix.md): each a menu, its words and its status.
 const MATRIX = readFileSync(
@@ -175,6 +176,7 @@ describe('spreadsheetMenus', () => {
       ...DOWNLOAD_ITEMS.map((i) => i.id),
       ...SHEET_DOWNLOAD_ITEMS.map((i) => i.id),
       'copy',
+      ...ZOOM_ITEMS.map((i) => i.id),
       'search-the-menus',
     ]);
   });

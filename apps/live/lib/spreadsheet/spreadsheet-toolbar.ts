@@ -93,9 +93,7 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
   {
     id: 'view',
     label: 'View',
-    controls: [
-      control('zoom', 'Zoom', 'view', { kind: 'text', text: '100%', width: 64, list: true }),
-    ],
+    controls: [control('zoom', 'Zoom', 'view', { kind: 'zoom' }, { built: true })],
   },
   {
     id: 'number',
