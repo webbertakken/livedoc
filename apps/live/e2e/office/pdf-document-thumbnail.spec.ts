@@ -102,13 +102,23 @@ test('an Editor’s open PDF sends its first page, marks included, for the lists
 
   // The Explorer's row draws it.
   await page.goto('/explorer/all');
-  const row = page.locator('img[src^="blob:"]').first();
-  await expect(row).toBeVisible({ timeout: 30_000 });
-  // Shown whole: the picture fades in over the sketch that stood for it.
-  await expect(row).toHaveCSS('opacity', '1');
+  const thumbnailBox = page.locator('[data-document-thumbnail]').first();
+  // Shown whole: the picture fades in over the sketch that stood for it, and the sketch leaves once the fade is over.
+  const shownWhole = async () => {
+    await expect(thumbnailBox.locator('img[src^="blob:"]')).toBeVisible({ timeout: 30_000 });
+    await expect(thumbnailBox.getByTestId('thumbnail-loader')).toHaveCount(0);
+  };
+  await shownWhole();
   await page.screenshot({ path: test.info().outputPath('pdf-thumbnail-dark.png') });
+  // A scheme has its own snapshot, asked for again: the same light paper in both.
+  const lightAnswered = page.waitForResponse(
+    (response) =>
+      response.url().includes(`/documents/${id}/thumbnail?`) &&
+      response.url().includes('appearance=light'),
+  );
   await page.emulateMedia({ colorScheme: 'light' });
-  await expect(row).toBeVisible();
+  await lightAnswered;
+  await shownWhole();
   await page.screenshot({ path: test.info().outputPath('pdf-thumbnail-light.png') });
   expectNoPageErrors(pageErrors);
 });
