@@ -1,6 +1,6 @@
 # Surface
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** The title row and its menus, the formula bar, the grid and the sheet bar are built.
 
 The screen of a spreadsheet, top to bottom, as Google Sheets lays it out. The frame (title row, menu bar, menu
 search, toolbar, side panel, dialogs) is the **office shell** shared with plan 0019's documents and specified there;
@@ -33,6 +33,23 @@ a spreadsheet in use); each band below is checked against it.
 Each menu holds the items of its [parity matrix](parity-matrix.md) rows, in that order, under that spec. An item
 whose row is not yet built shows dimmed with "Coming soon" in its hover card; a row left out (C3) has no item. The
 menu search (Alt+/, the shell's) finds every item by its name and its submenu's name.
+
+- An item is its row's words before any parentheses, in Title Case; a row whose parentheses list choices is a
+  submenu of them, each in Title Case, with a separator where the row parts them with `;` (default, D125).
+- A row whose words name Google is matched by LiveDoc's own: Help › Sheets Help is **Help** (default, D126).
+- An item counts what it acts on as Google's does: **Insert 3 Rows Above** with three rows selected, **Delete Rows
+  2 - 4**, **Up to Row 5** at the active cell's row.
+- An item that cannot run now (Unmerge outside a merge, Row Up at the first row) shows dimmed; one that is on (Bold
+  in the active cell, Show › Formulas) shows its tick, read as the menu opens.
+- An item is bound while the session's role may use it, as [Who may do what](grid-and-editing.md#who-may-do-what)
+  says: a Viewer sees Copy, Download, Print, Find, View's own and Help; a Participant also Undo, Redo, Cut, Paste,
+  Paste Special › Values Only and Delete › Values; an Editor everything.
+- Undo and Redo are the person's one timeline ([Undo](grid-and-editing.md#undo)); Cut, Copy and Paste the grid's
+  clipboard, as its keys are.
+- Each menu opens with its Alt key, Google's (Alt+F for File in Chrome, Alt+Shift+F in other browsers); the
+  shortcuts the grid hears itself are listed beside their items once the grid's keys join the shell's registry.
+- The shell's events name the kind: `UI · Opened · SpreadsheetMenu<Name>` as a menu opens, `UI · Used ·
+SpreadsheetToolFinder`, never one per item (default, D127).
 
 ## Toolbar
 
@@ -106,3 +123,10 @@ Version History (the shell's). Each is specified with its area.
   with F6 in turn, and each control has its name.
 - Keyboard reach, focus, contrast and reduced motion meet WCAG 2.2 AA; the grid's own rules are in
   [Grid and editing](grid-and-editing.md#accessibility).
+
+## Defaults
+
+- **D125** A menu row's items: Its words before any parentheses, in Title Case; parentheses listing choices make it
+  a submenu of them, a `;` a separator (default).
+- **D126** A menu row naming Google: Matched by LiveDoc's own words, Sheets Help as **Help** (default).
+- **D127** The menus' telemetry: The shell's events with the kind's name, Spreadsheet, never one per item (default).

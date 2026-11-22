@@ -476,6 +476,11 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       ),
       'TextDocumentMove',
       'TextDocumentShortcuts',
+      // The spreadsheet's (docs/specs/029-sheets/surface.md "Menu bar", D127).
+      ...['File', 'Edit', 'View', 'Insert', 'Format', 'Data', 'Tools', 'Help'].map(
+        (menu) => `SpreadsheetMenu${menu}`,
+      ),
+      'SpreadsheetMove',
     ],
   },
   // A side panel of an office kind opened (docs/specs/004-interface-design/office-shell.md "Side panels"), by its title.
@@ -542,9 +547,11 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/office/useOfficeMode.ts UI·Changed': {
     values: ['TextDocumentMode', 'PdfDocumentMode'],
   },
-  'apps/live/components/office/OfficeTitleRow.tsx UI·Toggled': { values: ['TextDocumentStar'] },
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Toggled': {
+    values: ['TextDocumentStar', 'SpreadsheetStar'],
+  },
   'apps/live/components/office/OfficeTitleRow.tsx UI·Used': {
-    values: ['TextDocumentToolFinder', 'TextDocumentFollow'],
+    values: ['TextDocumentToolFinder', 'TextDocumentFollow', 'SpreadsheetToolFinder'],
   },
   'apps/live/components/dialogs/settings/settings-catalogue.ts UI·Toggled': {
     values: PRESENTATION_SETTINGS.toggled,

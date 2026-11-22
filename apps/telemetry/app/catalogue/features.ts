@@ -1065,8 +1065,8 @@ export const TOOL_FINDER_USED = chart(
   'UI',
   'Used',
   'Tool Finder Used',
-  "An item run from a text document's tool finder (Search the menus).",
-  { types: ['TextDocumentToolFinder'] },
+  "An item run from a text document's or a spreadsheet's tool finder (Search the menus).",
+  { types: ['TextDocumentToolFinder', 'SpreadsheetToolFinder'] },
 );
 
 // A text document starred from its title row (docs/specs/034-text-documents/editing-surface.md "The title row").
@@ -1076,6 +1076,15 @@ export const TEXT_DOCUMENT_STARRED = chart(
   'Text Document Star',
   "A text document's star pressed in its title row.",
   { types: ['TextDocumentStar'], rising: 'neutral' },
+);
+
+// A spreadsheet starred from its title row (docs/specs/029-sheets/surface.md "Layout").
+export const SPREADSHEET_STARRED = chart(
+  'UI',
+  'Toggled',
+  'Spreadsheet Star',
+  "A spreadsheet's star pressed in its title row.",
+  { types: ['SpreadsheetStar'], rising: 'neutral' },
 );
 
 // A text document's zoom changed from its toolbar (docs/specs/034-text-documents/editing-surface.md "Zoom").
@@ -1393,6 +1402,7 @@ export const EDITOR_CHROME: MetricStack = {
     EXPLORER_VIEW,
     TOOL_FINDER_USED,
     TEXT_DOCUMENT_STARRED,
+    SPREADSHEET_STARRED,
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
     TEXT_DOCUMENT_MODE,
@@ -1577,6 +1587,13 @@ export const TEXT_DOCUMENT_MENUS_OPENED = opened(
   (t) => (t ?? '').startsWith('TextDocumentMenu'),
 );
 
+// A spreadsheet's menus opened from its menu bar (docs/specs/029-sheets/surface.md "Menu bar", D127), by name.
+export const SPREADSHEET_MENUS_OPENED = opened(
+  'Spreadsheet Menus',
+  "A menu of a spreadsheet's menu bar opened: File, Edit, View, Insert, Format, Data, Tools or Help.",
+  (t) => (t ?? '').startsWith('SpreadsheetMenu'),
+);
+
 // A text document's side panel opened (docs/specs/004-interface-design/office-shell.md "Side panels"): the outline, line numbers and the watermark.
 export const TEXT_DOCUMENT_PANELS_OPENED = opened(
   'Text Document Panels',
@@ -1620,6 +1637,7 @@ export const PANELS_OPENED: MetricStack = {
     MIND_OUTLINE_OPENED,
     ACTION_SIGN_IN_NUDGE,
     TEXT_DOCUMENT_MENUS_OPENED,
+    SPREADSHEET_MENUS_OPENED,
     TEXT_DOCUMENT_PANELS_OPENED,
     TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
     TEXT_DOCUMENT_MORE_FONTS_OPENED,

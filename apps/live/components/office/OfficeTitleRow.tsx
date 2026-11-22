@@ -40,7 +40,7 @@ import { OfficeSaveStatusShown } from './OfficeSaveStatus';
 import { OfficeIconButton, OfficeTitleActions } from './OfficeTitleActions';
 import { OfficeContextMenu, type OfficeContextMenuSource } from './OfficeContextMenu';
 import { OfficeShortcutsDialog } from './OfficeShortcutsDialog';
-import { useOfficeContextMenu } from './useOfficeContextMenu';
+import { useOfficeContextMenu, type OfficeTelemetryKind } from './useOfficeContextMenu';
 import { OfficeToolFinder } from './OfficeToolFinder';
 import { useOfficeShortcuts, type ShortcutRun } from './useOfficeShortcuts';
 
@@ -100,7 +100,7 @@ export function OfficeTitleRow({
   // File > Open's picker: binds the item `open`.
   opening?: OfficeFileOpening;
   // `TextDocument` sends `UI · Opened · TextDocumentMenu<Name>`, `UI · Used · TextDocumentToolFinder`, ...
-  telemetryKind?: 'TextDocument';
+  telemetryKind?: OfficeTelemetryKind;
   // The document's own parts, from the editor page; null outside it (a test), where the name is text alone.
   chrome?: OfficeChrome | null;
   // The tab this surface shows, and how it brings a person's selection here into view (false: not found).

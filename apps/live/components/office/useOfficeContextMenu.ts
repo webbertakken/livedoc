@@ -24,6 +24,9 @@ export type OfficeContextMenuState = {
   close: () => void;
 };
 
+// The office kinds that send the shell's events, each under its own name (office-shell.md "Telemetry").
+export type OfficeTelemetryKind = 'TextDocument' | 'Spreadsheet';
+
 export function useOfficeContextMenu({
   scope,
   source,
@@ -36,7 +39,7 @@ export function useOfficeContextMenu({
   source: OfficeContextMenuSource | null;
   level: AccessLevel;
   actions: OfficeActions;
-  telemetryKind?: 'TextDocument';
+  telemetryKind?: OfficeTelemetryKind;
   // A context menu opening closes any menu of the menu bar.
   onOpen: () => void;
 }): OfficeContextMenuState {

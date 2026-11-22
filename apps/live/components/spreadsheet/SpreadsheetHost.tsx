@@ -22,6 +22,10 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
     documentWorkbook,
     syncToCloud,
     receiveWorkbookRecord,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useEditorContext();
   if (!documentId || !documentWorkbook) return null;
   return (
@@ -35,6 +39,7 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
       // Imports in This Browser wait for the document's own Sync Document, never as the 'self' placeholder.
       sync={{ run: syncToCloud, ready: selfParticipant.id !== 'self' }}
       onWorkbook={receiveWorkbookRecord}
+      history={{ undo: () => void undo(), redo: () => void redo(), canUndo, canRedo }}
     />
   );
 }
