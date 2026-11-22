@@ -36,8 +36,9 @@ what the editor downloads. Measured on the tracer bullet (plan 0022, Phase 4) an
 - At 4x CPU the tasks of 50 to 82 ms while scrolling are a whole-page picture put on its canvas; tiles
   ([Reading surface](reading-surface.md#the-pages)) make each put smaller.
 - Taken under load (28 cores, load 34 to 45): the workstation is shared, so the measured numbers are upper bounds.
-  One run of the 93 MB file ended with the page and the local api both stopped while the machine had 7 GB of memory
-  left for everything on it; the run recorded here was made with 15 GB free. A quiet run is still to be recorded.
+  One run of the 93 MB file was ended by the machine's low-memory guard, the page's process at 588 MiB, while other
+  work had left the machine under a tenth of its memory; the run recorded here was made with 15 GB free. A quiet run
+  is still to be recorded.
 
 ## How it is measured
 
