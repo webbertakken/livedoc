@@ -45,7 +45,7 @@ export function FilterSearchBox({
   return (
     <div
       role="search"
-      className="flex w-full min-w-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1 pl-2 pr-1 transition-colors duration-micro focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/25 dark:border-slate-700 dark:bg-slate-800"
+      className="flex w-full min-w-0 min-h-field items-center gap-2 rounded-control border border-slate-200 bg-white py-0.5 pl-2 pr-0 transition-colors duration-micro focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/25 dark:border-slate-700 dark:bg-slate-800"
       // A press on the box's empty space puts the caret in the text.
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
@@ -63,7 +63,7 @@ export function FilterSearchBox({
         {chips.map((chip, i) => (
           <span
             key={chip.key}
-            className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-50 py-0.5 pl-2 pr-1 text-[12px] text-brand-800 ring-1 ring-inset ring-brand-200 dark:bg-brand-500/10 dark:text-brand-100 dark:ring-brand-500/30"
+            className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-50 py-0.5 pl-2 pr-0 text-supporting text-brand-800 ring-1 ring-inset ring-brand-200 dark:bg-brand-500/10 dark:text-brand-100 dark:ring-brand-500/30"
           >
             <span className="font-medium">{chip.field}:</span>
             <span className="truncate">{chip.value}</span>
@@ -72,7 +72,7 @@ export function FilterSearchBox({
                 <button
                   type="button"
                   aria-label={`Remove ${chip.field}: ${chip.value}`}
-                  className="flex h-4 w-4 cursor-pointer items-center justify-center rounded-full transition hover:bg-brand-100 dark:hover:bg-brand-500/20"
+                  className="flex size-icon-row cursor-pointer items-center justify-center rounded-full transition hover:bg-brand-100 dark:hover:bg-brand-500/20"
                   onClick={() => {
                     onRemoveChip(i);
                     input.current?.focus();
@@ -91,7 +91,7 @@ export function FilterSearchBox({
           autoFocus={autoFocus}
           aria-label={ariaLabel}
           placeholder={chips.length ? 'Search these…' : placeholder}
-          className="min-w-[6rem] flex-1 bg-transparent py-0.5 text-xs text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
+          className="min-w-[6rem] flex-1 bg-transparent py-0.5 text-body text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
           onChange={(e) => onQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Backspace' && query === '' && chips.length && onRemoveChip) {
@@ -108,7 +108,7 @@ export function FilterSearchBox({
             <button
               type="button"
               aria-label="Clear Search"
-              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+              className="flex size-chip cursor-pointer items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
               onClick={() => {
                 onClear();
                 input.current?.focus();

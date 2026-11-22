@@ -15,9 +15,9 @@ describe('EllipsisTriggerButton', () => {
 
   it('sizes the square from the size variant, large by default', () => {
     const { rerender } = render(<EllipsisTriggerButton label="m" onClick={noop} />);
-    expect(screen.getByRole('button').className).toContain('h-7 w-7');
-    rerender(<EllipsisTriggerButton label="m" onClick={noop} size="sm" />);
-    expect(screen.getByRole('button').className).toContain('h-5 w-5');
+    expect(screen.getByRole('button').className).toContain('size-row');
+    rerender(<EllipsisTriggerButton label="m" onClick={noop} size="md" />);
+    expect(screen.getByRole('button').className).toContain('size-chip');
   });
 
   it('hides until hover in reveal mode only where the pointer can hover', () => {

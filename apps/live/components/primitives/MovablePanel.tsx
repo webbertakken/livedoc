@@ -241,7 +241,7 @@ export function MovablePanel({
                   }
                 : { top: px(56), right: px(12) }),
         }}
-        className={`pointer-events-auto absolute z-[var(--z-toolbar)] flex ${sheet ? 'rounded-t-lg border-x-0 border-b-0' : `${popoverWidth} max-w-[calc(100vw-2rem)] rounded-lg border`} cursor-default flex-col border-slate-200 bg-white shadow-lg shadow-slate-900/5 transition-opacity duration-micro dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40`}
+        className={`pointer-events-auto absolute z-[var(--z-toolbar)] flex ${sheet ? 'rounded-t-surface border-x-0 border-b-0' : `${popoverWidth} max-w-[calc(100vw-2rem)] rounded-surface border`} cursor-default flex-col border-slate-200 bg-white shadow-lg shadow-slate-900/5 transition-opacity duration-micro dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40`}
       >
         {anchor ? (
           <div
@@ -259,7 +259,7 @@ export function MovablePanel({
             headerActions like the Explorer's "New" button) reachable.
             Reset-position / drag affordances are intentionally omitted:
             a popover doesn't drag. */}
-        <div className="flex items-center justify-between gap-2 rounded-t-lg border-b border-slate-200 px-2 py-1.5 dark:border-slate-800">
+        <div className="flex items-center justify-between gap-2 rounded-t-surface border-b border-slate-200 px-2 py-1.5 dark:border-slate-800">
           <span className="flex min-w-0 items-center gap-1.5">
             <PanelTitle title={title} />
             {titleAdornment}
@@ -316,7 +316,7 @@ export function MovablePanel({
       // canvas surface); the header re-asserts cursor-grab since that's
       // the only part you can drag. When docked at rest the panel is a
       // static flex child of its corner stack (no absolute / corner class).
-      className={`pointer-events-auto ${positionClass} z-[var(--z-panel)] flex cursor-default ${width} flex-col rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40 ${finalCornerClass}`}
+      className={`pointer-events-auto ${positionClass} z-[var(--z-panel)] flex cursor-default ${width} flex-col rounded-surface border border-slate-200 bg-white shadow-lg shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40 ${finalCornerClass}`}
     >
       <MovablePanelHeader
         headerRef={headerRef}

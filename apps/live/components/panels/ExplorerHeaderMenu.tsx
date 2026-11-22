@@ -140,7 +140,7 @@ export function ExplorerHeaderMenu({
   return (
     <>
       <EllipsisTriggerButton
-        size="sm"
+        size="md"
         label="More"
         expanded={anchor !== null}
         onClick={(e) => setAnchor(anchor ? null : e.currentTarget)}
