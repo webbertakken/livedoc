@@ -102,14 +102,18 @@ export function pictureElement(picture: Picture): Y.XmlElement {
   return element;
 }
 
-/** Each media the document's pictures hold, into the state's `media` map by key. */
+/** Each media the document's pictures hold, into the state's `media` map by key: its bytes, or its gallery image. */
 export function writeLiveMedia(
   map: Y.Map<unknown>,
   media: readonly [string, PictureMedia][],
 ): void {
   for (const [key, m] of media)
     if (!map.has(key))
-      map.set(key, { mediaType: m.mediaType, bytes: m.bytes, ...(m.part ? { part: m.part } : {}) });
+      map.set(key, {
+        mediaType: m.mediaType,
+        ...(Pictures.holdsBytes(m) ? { bytes: m.bytes } : { image: m.image }),
+        ...(m.part ? { part: m.part } : {}),
+      });
 }
 
 function paragraphNode(paragraph: Paragraph, stories: StoryWriter): Y.XmlElement {

@@ -16,6 +16,8 @@ export type TextDocumentDigest = {
   readonly hasContent: boolean;
   /** The body's plain text, then each header's and footer's, then each note's, one line a paragraph. */
   readonly searchText: string;
+  /** The gallery images its pictures hold, each once: the tab's references in the room's index. */
+  readonly imageIds: readonly string[];
 };
 
 const WORD = /\S+/g;
@@ -39,5 +41,6 @@ export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
         TextDocumentState.storyParagraphs(doc, id).map((p) => p.text),
       ),
     ].join('\n'),
+    imageIds: TextDocumentState.galleryImages(doc),
   };
 }

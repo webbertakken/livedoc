@@ -34,11 +34,26 @@ export type Picture = {
   readonly kept?: KeptProperties;
 };
 
-/** A picture's bytes, their media type, and the package entry they arrived in, which they are written back to. */
-export type PictureMedia = {
+/**
+ * A picture's media type, the package entry it arrived in (written back to), and where its bytes live
+ * (objects.md "Where the bytes live"): held here, or a gallery image named by id.
+ */
+export type PictureMedia = HeldPictureMedia | GalleryPictureMedia;
+
+/** Media whose bytes are in hand: what a file is written from. */
+export type HeldPictureMedia = {
   readonly mediaType: MappedPictureType;
-  readonly bytes: Uint8Array;
   readonly part?: string;
+  readonly bytes: Uint8Array;
+  readonly image?: never;
+};
+
+/** Media whose bytes are a gallery image's, read back by its id before a file is written. */
+export type GalleryPictureMedia = {
+  readonly mediaType: MappedPictureType;
+  readonly part?: string;
+  readonly image: string;
+  readonly bytes?: never;
 };
 
 export type DocumentMedia = Readonly<Record<string, PictureMedia>>;
@@ -85,6 +100,48 @@ export const Pictures = {
       const media = document.media?.[key];
       return media ? [[key, media] as [string, PictureMedia]] : [];
     });
+  },
+  /** Whether the media's bytes are in hand. */
+  holdsBytes: (media: PictureMedia): media is HeldPictureMedia => media.bytes instanceof Uint8Array,
+  /** The media of the key with its bytes in hand; none for a gallery media not yet read. */
+  heldBytes: (document: TextDocument, key: string): HeldPictureMedia | undefined => {
+    const media = document.media?.[key];
+    return media && Pictures.holdsBytes(media) ? media : undefined;
+  },
+  /**
+   * The document with each gallery media its pictures hold read into bytes, each image once; `unavailable` names
+   * the keys whose bytes could not be read (a read answering nothing, or failing), which stay as they were.
+   */
+  resolveMedia: async (
+    document: TextDocument,
+    read: (imageId: string) => Promise<Uint8Array | undefined>,
+  ): Promise<{ document: TextDocument; unavailable: string[] }> => {
+    const wanted = Pictures.heldMedia(document).filter(
+      (entry): entry is [string, GalleryPictureMedia] => !Pictures.holdsBytes(entry[1]),
+    );
+    if (wanted.length === 0) return { document, unavailable: [] };
+    const ids = [...new Set(wanted.map(([, m]) => m.image))];
+    const bytes = new Map(
+      await Promise.all(
+        ids.map(
+          async (id) =>
+            [
+              id,
+              await Promise.resolve()
+                .then(() => read(id))
+                .catch(() => undefined),
+            ] as const,
+        ),
+      ),
+    );
+    const media: Record<string, PictureMedia> = { ...document.media };
+    const unavailable: string[] = [];
+    for (const [key, m] of wanted) {
+      const got = bytes.get(m.image);
+      if (!got) unavailable.push(key);
+      else media[key] = { mediaType: m.mediaType, ...(m.part ? { part: m.part } : {}), bytes: got };
+    }
+    return { document: { ...document, media }, unavailable };
   },
   /** A crop that cuts nothing is no crop. */
   crop: (crop: PictureCrop | undefined): PictureCrop | undefined =>

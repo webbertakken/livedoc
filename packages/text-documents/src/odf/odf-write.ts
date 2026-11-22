@@ -184,7 +184,7 @@ class OdfWriter {
 
   /** A picture in line as its frame, its graphic style generated (objects.md "In the formats"); none without media. */
   pictureXml(picture: Picture): string {
-    const media = this.document.media?.[picture.media];
+    const media = Pictures.heldBytes(this.document, picture.media);
     if (!media) return '';
     const props = odfPictureStyle(picture, media);
     const style = this.generated(
@@ -720,6 +720,7 @@ export function writeOdf(document: TextDocument, { flat, generator }: OdfWriteOp
       : [];
   // Each picture's media at its entry, once; one kept content still names is written as kept (objects.md "Written").
   const media = Pictures.heldMedia(document)
+    .flatMap(([key, m]) => (Pictures.holdsBytes(m) ? [[key, m] as const] : []))
     .map(([key, m]) => ({
       name: odfMediaEntry(key, m),
       mediaType: m.mediaType as string,

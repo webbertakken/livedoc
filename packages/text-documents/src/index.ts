@@ -55,6 +55,8 @@ export {
   type DocumentMedia,
   type Picture,
   type PictureCrop,
+  type GalleryPictureMedia,
+  type HeldPictureMedia,
   type PictureMedia,
 } from './model/pictures';
 export {
