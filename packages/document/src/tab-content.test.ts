@@ -34,6 +34,10 @@ describe('tabHoldsContent', () => {
 
   it.each<[string, Partial<Tab>]>([
     ['an element (Diagram, Event Storming, Board and Sheet tabs)', { elements: [box] }],
+    [
+      'a stored file (a PDF document)',
+      { kind: 'pdf', blob: 'a'.repeat(64) as Tab['blob'], size: 9 },
+    ],
     ['an article, even a blank one (Pages)', { articles: { flow: { blocks: [] } } }],
     ['a form, even one with no questions', { kind: 'form', form: {} as Tab['form'] }],
     [

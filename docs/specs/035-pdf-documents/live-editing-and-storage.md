@@ -293,7 +293,9 @@ Explorer and search through the room's outbox ([Document storage](../006-documen
 - **Counts**: pages, marks, open threads, fields and fields filled, certificate signatures; whether the file is
   protected, and whether any page is a scanned page without recognised text.
 - **Content summary**: a PDF document is never "empty": it has a stored file, so the
-  [empty document clean-up](../013-workspace/empty-document-cleanup.md) never takes it.
+  [empty document clean-up](../013-workspace/empty-document-cleanup.md) never takes it, and its tab always counts
+  as something to draw, so every list asks for its thumbnail. A tab is read so by the file it names, with or
+  without live changes.
 - **Tab stats**: a PDF tab's size is its stored file's bytes with its row's and its live changes' `(default)`, so
   the Explorer's Details view says what the file weighs
   ([Explorer details view](../013-workspace/explorer-details-view.md)).

@@ -70,12 +70,13 @@ test('an Editor’s open PDF sends its first page, marks included, for the lists
   await page.getByRole('button', { name: 'Highlight', exact: true }).click();
   await dragAcrossFirstLine(page, first);
   await expect(page.locator(MARKS)).toHaveCount(1);
-  const document = (await (
+  const liveDoc = (await (
     await page.request.get(`${apiBase}/documents/${id}`, { headers: await headers() })
-  ).json()) as { tabs: { id: string }[] };
+  ).json()) as { document: { tabs: { id: string }[] } };
+  const tabId = liveDoc.document.tabs[0]!.id;
   const wanted = async () => {
     const res = await page.request.get(
-      `${apiBase}/documents/${id}/pdf-documents/${document.tabs[0]!.id}/thumbnail`,
+      `${apiBase}/documents/${id}/pdf-documents/${tabId}/thumbnail`,
       { headers: await headers() },
     );
     return res.ok() ? ((await res.json()) as { wanted: boolean }).wanted : null;

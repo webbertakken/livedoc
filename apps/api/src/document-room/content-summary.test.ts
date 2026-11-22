@@ -97,10 +97,28 @@ describe('contentSummaryOf', () => {
     expect(summary.hasContent).toBe(false);
   });
 
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "The digest": a PDF document is never "empty", so its
+  // thumbnail is asked for, whatever count its tab was stored with.
+  it.each([
+    ['a count from before its file was counted', 0, 1],
+    ['a count never taken', undefined, 1],
+    ['its file counted', 1, 1],
+  ])(
+    'counts a tab holding a stored file as something to draw, with %s',
+    async (_, stored, count) => {
+      tab('a', 0, `{"elements":[],"kind":"pdf","blob":"${'a'.repeat(64)}","size":9}`, stored);
+      expect(await contentSummaryOf(env, D)).toMatchObject({
+        firstTabCount: count,
+        hasContent: true,
+      });
+    },
+  );
+
   it.each([
     ['an element', '{"elements":[{"id":"e"}]}'],
     ['an article', '{"elements":[],"articles":[{"id":"x"}]}'],
     ['a form', '{"elements":[],"form":{"questions":[]}}'],
+    ['a stored file', `{"elements":[],"kind":"pdf","blob":"${'a'.repeat(64)}","size":9}`],
     [
       'a filled dashboard slot',
       '{"elements":[],"dashboard":{"rows":[{"id":"r","slots":[{"id":"a"},{"id":"b","content":{"type":"note"}}]}]}}',

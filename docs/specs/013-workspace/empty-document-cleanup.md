@@ -21,7 +21,9 @@ stored the same way ([Forms](../030-forms/forms.md)), so a tab holding a form ke
 document too, even a form with no questions yet. A Dashboard tab's slots are stored on its tab too
 ([Plan tabs](../026-plan/plan-tabs.md#dashboard-tab)), so a dashboard with any slot holding something (a note, a
 title, a card, a view, a tab) keeps its document. A [spreadsheet](../029-sheets/spreadsheet.md)'s sheet tab holds
-its cells in its sheet, so a spreadsheet with any filled cell keeps its document. A document with
+its cells in its sheet, so a spreadsheet with any filled cell keeps its document. A
+[PDF document](../035-pdf-documents/pdf-document.md)'s tab names its stored file, so a PDF document is never empty,
+whether or not anyone has marked it. A document with
 no tabs at all is empty too. Nothing else counts as content: a name, extra
 blank tabs, a tab's settings (background, grid), a share link, a star or a
 folder never keep a document. Comments and actions live on elements, so an

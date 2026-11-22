@@ -51,10 +51,12 @@ describe('deleteAccount snapshot cleanup (docs/specs/006-document/document-snaps
       'thumb/d1/light',
       'thumb/d1/dark',
       'og/d1',
+      'thumb/d1/browser',
       'thumb/d2',
       'thumb/d2/light',
       'thumb/d2/dark',
       'og/d2',
+      'thumb/d2/browser',
     ]);
   });
 

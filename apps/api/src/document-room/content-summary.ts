@@ -30,12 +30,19 @@ const HAS_CONTENT = `CASE
        WHEN COALESCE(json_array_length(t.data, '$.elements'), 0) > 0 THEN 1
        WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.articles')) THEN 1
        WHEN json_type(t.data, '$.form') = 'object' THEN 1
+       WHEN json_type(t.data, '$.blob') = 'text' THEN 1
 ${LIVE_TAB_HAS_CONTENT}       WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.dashboard.rows') r, json_each(r.value, '$.slots') s
                      WHERE json_type(s.value, '$.content') = 'object') THEN 1
        ELSE 0
      END`;
 
-type TabCountRow = { tab_id: string; element_count: number; has_content: number };
+type TabCountRow = {
+  tab_id: string;
+  element_count: number;
+  has_content: number;
+  // The tab names a stored file (a PDF document's): it always has that to draw.
+  holds_file: number;
+};
 // A spreadsheet's sheet tab: its sheets' filled cells and their stored bytes.
 type SheetTabRow = { tab_id: string; cells: number; bytes: number };
 // A live tab (a text document's): its characters and its stored state's bytes, as its last digest counted them.
@@ -47,7 +54,8 @@ export async function contentSummaryOf(
 ): Promise<ContentSummary> {
   const [tabs, stats, sheetTabs, textDocumentTabs] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
-      `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${HAS_CONTENT} AS has_content
+      `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${HAS_CONTENT} AS has_content,
+              CASE WHEN json_valid(t.data) AND json_type(t.data, '$.blob') = 'text' THEN 1 ELSE 0 END AS holds_file
          FROM document_tabs dt JOIN tabs t ON t.id = dt.tab_id
         WHERE dt.document_id = ?
         ORDER BY dt.order_index ASC`,
@@ -69,7 +77,10 @@ export async function contentSummaryOf(
   );
   const countOf = (row: TabCountRow): number => {
     const sheet = sheets.get(row.tab_id);
-    return sheet ? sheet.cells : (texts.get(row.tab_id)?.characters ?? row.element_count);
+    const count = sheet ? sheet.cells : (texts.get(row.tab_id)?.characters ?? row.element_count);
+    // A PDF's live changes count no characters, and a tab stored before its file was counted says 0: its file is
+    // still there to draw, so its thumbnail is asked for.
+    return row.holds_file === 1 ? Math.max(1, count) : count;
   };
   const tabCounts: Record<string, number> = {};
   for (const row of rows) tabCounts[row.tab_id] = countOf(row);

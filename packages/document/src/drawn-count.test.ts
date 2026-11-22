@@ -11,6 +11,12 @@ describe('drawnCount', () => {
     expect(drawnCount({ elements: [{}], form: { v: 1 } })).toBe(2);
   });
 
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "The digest": a PDF document is never "empty".
+  it('counts a stored file as one thing to draw', () => {
+    expect(drawnCount({ elements: [], blob: 'a'.repeat(64) })).toBe(1);
+    expect(drawnCount({ elements: [], blob: null })).toBe(0);
+  });
+
   it('reads anything else as nothing to draw', () => {
     expect(drawnCount({})).toBe(0);
     expect(drawnCount({ elements: 'x', form: null })).toBe(0);
