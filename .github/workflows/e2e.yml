@@ -216,11 +216,29 @@ jobs:
         shell: bash
         run: OFFICE_SCHEMAS_DIR="$GITHUB_WORKSPACE/.office-schemas" pnpm --filter @livedoc/sheets validate:files
 
-      # docs/specs/035-pdf-documents/saving.md "The validators' claim": every file of the PDF corpus written as an
-      # addition and as a rewrite, through qpdf and poppler's pdfsig; a missing tool fails the step.
-      - name: Validate written PDFs with qpdf and pdfsig
+      # The wider PDF corpus and the second renderer, pinned by their checksums in the script, kept between runs: a
+      # cached run reaches no outside host (GitHub's raw files, the npm registry).
+      - name: Restore the PDF corpus
+        id: pdf-corpus
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .pdf-corpus
+          key: pdf-corpus-${{ hashFiles('packages/pdf-documents/scripts/fetch-pdf-corpus.sh') }}
+
+      # docs/specs/035-pdf-documents/saving.md "The validators' claim": every file of the PDF corpora read whole, its
+      # first page held against PDF.js's, and written as an addition and as a rewrite, through qpdf and poppler's
+      # pdfsig; a missing tool fails the step.
+      - name: Validate read and written PDFs with qpdf, pdfsig and a second renderer
         shell: bash
-        run: pnpm --filter @livedoc/pdf-documents validate:files
+        run: PDF_CORPUS_DIR="$GITHUB_WORKSPACE/.pdf-corpus" pnpm --filter @livedoc/pdf-documents validate:files
+
+      # Saved once fetched and unpacked, whatever the validation found.
+      - name: Save the PDF corpus
+        if: always() && steps.pdf-corpus.outputs.cache-hit != 'true' && hashFiles('.pdf-corpus/oracle/node_modules/.unpacked') != ''
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .pdf-corpus
+          key: ${{ steps.pdf-corpus.outputs.cache-primary-key }}
 
       # Saved once fetched and checked, whatever the validation found, so no failing step costs the next run its cache.
       - name: Save the office schemas

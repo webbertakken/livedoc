@@ -129,16 +129,29 @@ everyone on the document; every client reloads the pages it shows, keeping its p
 ## The validators' claim
 
 - A baked file is handed out only after the engine has **reopened it**: its page count, and each changed page's draw,
-  are checked against what was meant; a turned page is checked to stand as it was turned. A bake that fails the check is not handed out: "This PDF couldn't be written.
-  Your changes are safe." with **Try again**, and the stored file and live changes stay as they were.
+  are checked against what was meant; a turned page is checked to stand as it was turned. A bake that fails the
+  check is not handed out: "This PDF couldn't be written. Your changes are safe." with **Try again**, and the stored
+  file and live changes stay as they were.
 - In tests, every baked file also passes `qpdf --check`, has its stored file as a prefix where the bake was an
-  addition, keeps every earlier signature valid by poppler's `pdfsig`, and draws the same outside what changed
+  addition, keeps every earlier signature valid by poppler's `pdfsig`, and draws pixel for pixel as before outside
+  what changed: the first page around the mark added to it, and the last page whole
   ([The corpus and the validators](../../research/pdf-documents/corpus-and-validators.md#validators-and-oracles)).
 - **Built**: `pnpm --filter @livedoc/pdf-documents validate:files` writes every file of the repository's corpus
-  (`packages/pdf-documents/corpus`) as an addition and as a rewrite, in CI's Office files job, where a missing tool
-  fails the run. A written file is clean in `qpdf --check` wherever the file it came from is, and never holds an
-  error where that one holds none: a flaw a file arrived with is kept, never mended in passing. The render
-  comparison against a second renderer, and the wider corpus fetched in CI, are not built.
+  (`packages/pdf-documents/corpus`) and of the wider corpus as an addition and as a rewrite, in CI's Office files
+  job, where a missing tool fails the run. A written file is clean in `qpdf --check` wherever the file it came from
+  is, and never holds an error where that one holds none: a flaw a file arrived with is kept, never mended in
+  passing.
+- **The wider corpus** is other projects' test files under terms the repository does not take in, and files made
+  from one of them with qpdf (linearised, protected, cut short, a thousand pages): fetched by URL at a pinned commit
+  and held to a SHA-256, into a cache CI keeps, never committed. Each opens with the pages expected of it or is
+  refused by the name expected, within `PDF_OPEN_TIMEOUT_MS`, is read whole, and is left byte for byte as it came.
+- **Against a second renderer**: the first page of every file of the wider corpus is drawn by the engine and by
+  PDF.js at one size, and a page passes where the two differ on **less than 1% of its pixels** `(default)`,
+  counting a pixel as different past a colour distance of 0.3 and leaving out the edges each smooths its own way.
+  Measured: a median 0.04%, nine pages in ten under 0.62%. A file past the tolerance is **named** with its measured
+  share and what differs (hairlines, a Type 3 glyph's colour, a page a few pixels high); the tolerance is never
+  raised for one, and a named file that comes to draw alike fails until it is named no more. The second renderer
+  is a tool of the validation, as qpdf is, and ships nowhere.
 - A bake LiveDoc's servers make is the same code as a browser's; a file past `PDF_SERVER_BAKE_MAX_BYTES`, or a
   protected one, is baked only where a person or the CLI is
   ([Live editing and storage](live-editing-and-storage.md#what-the-servers-make)).

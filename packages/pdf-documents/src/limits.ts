@@ -7,6 +7,9 @@ export const PDF_SNIFF_BYTES = 1_024;
 export const PDF_MAX_MARKS = 20_000;
 /** (default) A ceiling on a PDF document's pages; a file arriving with more opens and takes no insert. */
 export const PDF_MAX_PAGES = 100_000;
+/** (default) Reading a file's structure takes at most this long before the engine is ended (opening.md "Limits"): the
+ *  slowest corpus file takes under a second. Safe range: 10,000 to 120,000. */
+export const PDF_OPEN_TIMEOUT_MS = 30_000;
 /** (default) One draw of one page; a decompression bomb draws at most this. Safe range: 2^24 to 2^28. */
 export const PDF_MAX_PAGE_PIXELS = 268_435_456;
 /** (default) The whole-page picture a page is first drawn as (reading-surface.md "Limits"): sharper detail is the tiles'.

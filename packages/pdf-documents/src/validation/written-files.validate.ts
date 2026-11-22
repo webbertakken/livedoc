@@ -1,7 +1,8 @@
 // Every file LiveDoc writes, through the validators (docs/specs/035-pdf-documents/saving.md "The validators' claim"):
-// each file of the corpus that opens is baked as an addition (a highlight on its first page) and as a rewrite (its
-// first page turned); each written file passes `qpdf --check` wherever the file it came from does, an addition holds
-// that file as a prefix, and poppler's `pdfsig` says of each earlier signature what it said before. Run by
+// each file that opens, of the repository's corpus and of the wider one fetched beside it, is baked as an addition (a
+// highlight on its first page) and as a rewrite (its first page turned); each written file passes `qpdf --check` wherever the file it came from does, an addition holds
+// that file as a prefix, poppler's `pdfsig` says of each earlier signature what it said before, and the pages draw
+// pixel for pixel as before outside what changed. Run by
 // `pnpm --filter @livedoc/pdf-documents validate:files`, in CI's Office files job. Needs `qpdf` and `pdfsig`: a
 // missing tool fails the run, since a check that is skipped proves nothing.
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -10,22 +11,42 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createPdfEngine } from '../engine/index';
-import type { PdfEngine } from '../engine-contract';
+import type { PageBitmap, PagePoint, PdfEngine } from '../engine-contract';
 import { PdfLiveChanges } from '../live-changes';
-import { Mark } from '../mark';
+import { Mark, type Quad } from '../mark';
 import type { PageName } from '../page-name';
+import { PageView } from '../page-view';
 import { PdfChange, PdfChangeset } from '../pdf-change';
-import { corpusBytes, corpusFiles, type CorpusFile } from '../testing/corpus';
+import { corpusBytes, corpusFiles } from '../testing/corpus';
 import { readerWasm, signedPdf } from '../testing/fixtures';
+import { fetchPdfCorpus, fetchedBytes, fetchedFiles } from './fetched-corpus';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-written-pdf-'));
 // qpdf's own exit codes: nothing wrong, errors, warnings alone.
 const CLEAN = 0;
 const ERRORS = 2;
 
+/** A file to write from: one of the repository's corpus, or of the wider one. */
+type Source = {
+  readonly file: string;
+  readonly pages?: number;
+  readonly password?: string;
+  /** Whether it opens only by being repaired, so it takes no addition. */
+  readonly repaired?: boolean;
+  /** Whether the reader opens it and the writer does not. */
+  readonly unwritable?: boolean;
+  readonly bytes: () => Uint8Array<ArrayBuffer>;
+};
+
+const sources: readonly Source[] = [
+  ...corpusFiles().map((file) => ({ ...file, bytes: () => corpusBytes(file) })),
+  ...fetchedFiles().map((file) => ({ ...file, bytes: () => fetchedBytes(file) })),
+];
+
 let engine: PdfEngine;
 
 beforeAll(async () => {
+  fetchPdfCorpus();
   // Asked first, so a machine without the tools fails here by name.
   execFileSync('qpdf', ['--version'], { stdio: 'ignore' });
   execFileSync('pdfsig', ['-v'], { stdio: 'ignore' });
@@ -50,12 +71,19 @@ const signatureVerdicts = (path: string): string[] =>
     .filter((line) => line.includes('Signature Validation:'))
     .map((line) => line.trim());
 
+// The highlight every addition makes, in page space, and two of its opposite corners.
+const HIGHLIGHT_QUAD: Quad = [10, 40, 60, 40, 10, 20, 60, 20];
+const HIGHLIGHT_CORNERS = [
+  { x: 10, y: 40 },
+  { x: 60, y: 20 },
+] as const;
+
 const highlightOn = (page: PageName): PdfChange =>
   PdfChange.addMark(
     Mark.highlight({
       id: 'validated',
       page,
-      quads: [[10, 40, 60, 40, 10, 20, 60, 20]],
+      quads: [HIGHLIGHT_QUAD],
       text: '',
       colour: '#fdf1a9',
       opacity: 1,
@@ -64,7 +92,7 @@ const highlightOn = (page: PageName): PdfChange =>
     })!,
   );
 
-async function opened(file: CorpusFile, bytes: Uint8Array<ArrayBuffer>) {
+async function opened(file: Source, bytes: Uint8Array<ArrayBuffer>) {
   const first = await engine.open(bytes);
   const result = file.password ? await engine.unlock(file.password) : first;
   if (!result.ok) throw new Error(`${file.file} did not open`);
@@ -79,15 +107,47 @@ async function baked(changes: readonly PdfChange[]) {
   return result;
 }
 
+// The scale the pages are drawn at to be held against each other: a letter page is some 300 by 400 pixels.
+const COMPARE_SCALE = 0.5;
+
+/** How many pixels of a page differ between two drawings of it, outside the highlight where one was made. */
+function differingOutside(before: PageBitmap, after: PageBitmap, highlighted: boolean): number {
+  expect([after.width, after.height]).toEqual([before.width, before.height]);
+  // The matrix places a point at 72 dpi; the drawing is at COMPARE_SCALE of that.
+  const [one, other] = HIGHLIGHT_CORNERS.map((corner) => {
+    const { x, y } = PageView.toView(before.toView, corner);
+    return { x: x * COMPARE_SCALE, y: y * COMPARE_SCALE };
+  }) as [PagePoint, PagePoint];
+  // A pixel of slack around the highlight: its smoothed edge is the highlight's too.
+  const inside = (x: number, y: number): boolean =>
+    highlighted &&
+    x >= Math.min(one.x, other.x) - 1 &&
+    x <= Math.max(one.x, other.x) + 1 &&
+    y >= Math.min(one.y, other.y) - 1 &&
+    y <= Math.max(one.y, other.y) + 1;
+  let differing = 0;
+  for (let at = 0; at < before.rgba.length; at += 4) {
+    const pixel = at / 4;
+    if (inside(pixel % before.width, Math.floor(pixel / before.width))) continue;
+    if (
+      before.rgba[at] !== after.rgba[at] ||
+      before.rgba[at + 1] !== after.rgba[at + 1] ||
+      before.rgba[at + 2] !== after.rgba[at + 2]
+    )
+      differing += 1;
+  }
+  return differing;
+}
+
 const startsWith = (bytes: Uint8Array, prefix: Uint8Array): boolean =>
   bytes.length > prefix.length && prefix.every((byte, at) => bytes[at] === byte);
 
 describe('every written PDF passes the validators', () => {
   // opening.md "Passwords": a file the writer cannot open is read and never written; its bake is refused by name.
-  it.each(corpusFiles().filter((file) => file.unwritable))(
+  it.each(sources.filter((file) => file.unwritable))(
     '$file is refused by name, and nothing is written',
     async (file) => {
-      const pages = await opened(file, corpusBytes(file));
+      const pages = await opened(file, file.bytes());
       const doc = PdfLiveChanges.load();
       PdfChangeset.apply(doc, [highlightOn(pages[0]!.name)]);
       expect(await engine.bake(PdfLiveChanges.encode(doc))).toEqual({
@@ -97,14 +157,19 @@ describe('every written PDF passes the validators', () => {
     },
   );
 
-  describe.each(corpusFiles().filter((file) => file.pages && !file.unwritable))('$file', (file) => {
-    const stored = corpusBytes(file);
-    const arrived = onDisk(`arrived-${file.file}`, stored);
+  describe.each(sources.filter((file) => file.pages && !file.unwritable))('$file', (file) => {
+    // Read once the wider corpus is fetched, never while the tests are gathered.
+    let stored: Uint8Array<ArrayBuffer>;
+    let arrived: string;
+    beforeAll(() => {
+      stored = file.bytes();
+      arrived = onDisk(`arrived-${file.file}`, stored);
+    });
     /**
      * "The file is the author's": a flaw the file arrived with is kept, never mended in passing. So a written file
      * is clean wherever the file it came from is, and never holds an error where that one holds none.
      */
-    const expectNoWorse = (path: string, { password }: CorpusFile): void => {
+    const expectNoWorse = (path: string, { password }: Source): void => {
       const before = qpdfCheck(arrived, password);
       const after = qpdfCheck(path, password);
       if (before === CLEAN) expect(after).toBe(CLEAN);
@@ -113,6 +178,9 @@ describe('every written PDF passes the validators', () => {
 
     it('written as an addition: valid wherever the file was, the file its prefix, its signatures as they were', async () => {
       const pages = await opened(file, stored);
+      const last = pages.length - 1;
+      const first = (await engine.drawPage(0, COMPARE_SCALE))!;
+      const untouched = (await engine.drawPage(last, COMPARE_SCALE))!;
       const result = await baked([highlightOn(pages[0]!.name)]);
       const path = onDisk(`addition-${file.file}`, result.bytes);
       // A file that opens only by being repaired takes no addition: it is rewritten, then appended to.
@@ -122,16 +190,29 @@ describe('every written PDF passes the validators', () => {
       if (!file.repaired) expect(signatureVerdicts(path)).toEqual(signatureVerdicts(arrived));
       await opened(file, result.bytes);
       expect((await engine.fileMarks(0)).map((mark) => mark.id)).toContain('validated');
+      // It draws the same outside what changed: the first page around its highlight, the last page whole.
+      expect(differingOutside(first, (await engine.drawPage(0, COMPARE_SCALE))!, true)).toBe(0);
+      if (last > 0)
+        expect(
+          differingOutside(untouched, (await engine.drawPage(last, COMPARE_SCALE))!, false),
+        ).toBe(0);
     });
 
     it('written as a rewrite: valid, with its first page turned', async () => {
       const pages = await opened(file, stored);
       const turn = pages[0]!.rotation === 90 ? 180 : 90;
+      const last = pages.length - 1;
+      const untouched = (await engine.drawPage(last, COMPARE_SCALE))!;
       const result = await baked([PdfChange.turnPage(pages[0]!.name, turn)]);
       const path = onDisk(`rewrite-${file.file}`, result.bytes);
       expect(result.kind).toBe('rewrite');
       expectNoWorse(path, file);
       expect((await opened(file, result.bytes))[0]!.rotation).toBe(turn);
+      // A file written anew draws a page nobody touched as it drew before.
+      if (last > 0)
+        expect(
+          differingOutside(untouched, (await engine.drawPage(last, COMPARE_SCALE))!, false),
+        ).toBe(0);
     });
   });
 
