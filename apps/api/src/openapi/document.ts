@@ -235,6 +235,11 @@ const TAGS = [
     name: 'Bug reports',
     description: 'Report a Bug: reports filed on a private board, and their screenshots.',
   },
+  {
+    name: 'Worker issues',
+    description:
+      "The operator's webhook: Cloudflare Workers Issues files new worker errors on the Bug Tracker.",
+  },
   { name: 'Telemetry', description: 'Anonymous first-party usage events and the public summary.' },
   { name: 'Meta', description: 'Capabilities, link unfurl, and this document.' },
 ];

@@ -116,6 +116,8 @@ export const API_ROUTE_RESOURCES: ReadonlySet<string> = new Set([
   'share',
   // Report a Bug (docs/specs/016-platform/bug-reports.md).
   'bug-reports',
+  // The Workers Issues webhook (docs/specs/016-platform/worker-issues.md).
+  'worker-issues',
   // A form link's public doors (docs/specs/030-forms/forms.md).
   'forms',
   'shared',

@@ -55,6 +55,7 @@ enabled = true
 invocation_logs = false
 ```
 
+- Beside it, `[observability.issues]` turns on Cloudflare Workers Issues ([Worker issues](worker-issues.md)).
 - The frontends (marketing, live, help, telemetry) serve static files and run no code of ours, so they log nothing.
 - Pull request previews are generated from these files and keep the block
   ([Pull request previews](preview-deployments.md)).

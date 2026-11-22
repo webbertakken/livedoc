@@ -144,6 +144,11 @@ class_name = "DocumentRoom"
 name = "LEGACY_DOCUMENT_ROOM"
 class_name = "LegacyDocumentRoom"
 
+# The worker issues ledger (docs/specs/016-platform/worker-issues.md), reached by name, one instance.
+[[durable_objects.bindings]]
+name = "WORKER_ISSUES_LEDGER"
+class_name = "WorkerIssuesLedger"
+
 [[migrations]]
 tag = "v1"
 new_classes = ["DiagramRoom"]
@@ -163,6 +168,12 @@ renamed_classes = [{ from = "DocumentRoom", to = "LegacyDocumentRoom" }]
 [[migrations]]
 tag = "v4"
 new_sqlite_classes = ["DocumentRoom"]
+
+# The worker issues ledger (docs/specs/016-platform/worker-issues.md "Vocabulary"): one SQLite-backed instance holding
+# what must outlive a D1 outage: the delivery keys seen, held cards, the operator's address and the hour's emails.
+[[migrations]]
+tag = "v5"
+new_sqlite_classes = ["WorkerIssuesLedger"]
 
 # Scheduled jobs the worker handles via the `scheduled` export. One
 # entry per cron; each fires the same handler with `event.cron` set
@@ -227,6 +238,14 @@ name = "BUG_REPORT_RATE_LIMITER"
 type = "ratelimit"
 namespace_id = "7018"
 simple = { limit = 5, period = 60 }
+
+# Worker issues' webhook (docs/specs/016-platform/worker-issues.md "The receiver" step 3): 30 deliveries a minute per
+# network, checked before the secret. Absent binding → no throttle (self-host).
+[[unsafe.bindings]]
+name = "WORKER_ISSUES_RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "7020"
+simple = { limit = 30, period = 60 }
 
 # Per-IP throttle for GET /api/unfurl (docs/specs/009-elements/link-cards.md): an unauthenticated outbound
 # page fetch for link-card previews. 60/60s is plenty for a user dropping
@@ -432,3 +451,8 @@ redact_query_string = true
 [observability.logs]
 enabled = true
 invocation_logs = false
+
+# Workers Issues (docs/specs/016-platform/worker-issues.md): Cloudflare groups this worker's errors into issues, and an
+# automation sends a new or returning one to the api's receiver. Wrangler 4.134 or later.
+[observability.issues]
+enabled = true

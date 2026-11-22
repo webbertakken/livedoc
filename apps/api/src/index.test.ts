@@ -489,3 +489,25 @@ describe('the retired Community routes', () => {
     },
   );
 });
+
+// docs/specs/016-platform/worker-issues.md "The receiver" step 1: without its secret the webhook is an unknown route,
+// byte for byte; with it, an unsigned delivery reaches the route and is refused there by name.
+describe('the worker issues webhook', () => {
+  beforeEach(() => resolveApiTokenMock.mockResolvedValue(null));
+  const post = (path: string) =>
+    new Request(`https://api.test${path}`, { method: 'POST', body: '{"text":"x"}' });
+
+  it('answers as an unknown route on a host without the secret', async () => {
+    const off = await worker.fetch(post('/api/worker-issues'), env());
+    const unknown = await worker.fetch(post('/api/no-such-route'), env());
+    expect(off.status).toBe(404);
+    expect(await off.text()).toBe(await unknown.text());
+  });
+
+  it('reaches the route on a host with the secret', async () => {
+    const on = { ...env(), WORKER_ISSUES_WEBHOOK_SECRET: 'whsec' } as Env;
+    const res = await worker.fetch(post('/api/worker-issues'), on);
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: 'unauthorized' });
+  });
+});

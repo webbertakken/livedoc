@@ -67,6 +67,9 @@ invite** — read from the [User preferences](../007-editor/user-preferences.md)
     opt-out: the recipient may have no account to hold a preference, and the
     Decline link is the one-click way to stop them. Stamps on the invite's own
     `team_members` row (`reminder1_sent_at` to `reminder3_sent_at`, `reminder_attempts`, `clock_started_at`, migration 0095); see [Teams → Reminders and expiry](../013-workspace/teams.md#reminders-and-expiry).
+14. **Worker issue** (transactional, operator only, kind `WorkerIssue`): a new or returning worker error, to the
+    Bug Tracker's owner, at most 10 an hour. Not opt-out: it stops when the Issues automations or the webhook secret
+    go. See [Worker issues](../016-platform/worker-issues.md#the-email).
 
 The three opt-out lifecycle/notification categories (`notifyComments`,
 `notifyTips`, `notifyMilestones`) join the [Account settings & email notifications](profile-and-email-notifications.md) pair in `getNotificationPrefs`

@@ -2123,6 +2123,34 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     statuses: [200, 404],
   },
 
+  // ---- Worker issues (docs/specs/016-platform/worker-issues.md) ----
+  {
+    method: 'POST',
+    path: '/worker-issues',
+    segment: 'worker-issues',
+    tag: 'Worker issues',
+    summary:
+      "A Cloudflare Workers Issues automation's webhook, for the host's operator: a new or returning worker error filed on the Bug Tracker (201), stored or held to be filed shortly (202), or a repeat or the destination's test (200), and emailed to the Bug Tracker's owner. Authenticated by the cf-webhook-auth secret; a host without WORKER_ISSUES_WEBHOOK_SECRET answers 404 not_found. 400 invalid_json or unknown_shape, 401 unauthorized, 413 payload_too_large past 1 MiB, 429 rate_limited, 503 worker_issues_unavailable.",
+    auth: 'public',
+    requestSchema: {
+      type: 'object',
+      description:
+        'The Cloudflare Notifications webhook payload (name, text, data, ts, account_id, alert_type, ...).',
+    },
+    responseSchema: {
+      type: 'object',
+      properties: {
+        outcome: { type: 'string', enum: ['filed', 'stored', 'held', 'repeat', 'test'] },
+        number: {
+          type: 'integer',
+          description: "The card's number on the Bug Tracker, when filed.",
+        },
+      },
+      required: ['outcome'],
+    },
+    statuses: [201, 200, 202, 400, 401, 405, 413, 429, 503],
+  },
+
   // ---- Forms, the public side (docs/specs/030-forms/forms.md "Filling in a form") ----
   {
     method: 'GET',

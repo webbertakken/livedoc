@@ -76,7 +76,8 @@ export type EmailKind =
   | 'FormSuspended'
   | 'TokenExpiring'
   | 'AccountDeleted'
-  | 'SignInCode';
+  | 'SignInCode'
+  | 'WorkerIssue';
 
 export type RenderedEmail = {
   kind: EmailKind;
@@ -97,7 +98,7 @@ function profilePath(env: Env): string {
   return `${appBaseUrl(env)}/explorer?settings=notifications`;
 }
 
-type Section = {
+export type Section = {
   heading: string;
   intro: string;
   // The dim inbox preview line shown next to the subject. Kept distinct from the
@@ -122,7 +123,7 @@ function lockup(base: string, fontSize: number, centred = false): string {
         </tr></table></a>`;
 }
 
-function shell(env: Env, section: Section): string {
+export function shell(env: Env, section: Section): string {
   const base = appBaseUrl(env);
   const preheader = `<span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;max-height:0;overflow:hidden">${section.preheader ?? section.intro}</span>`;
   const points = (section.points ?? [])
@@ -541,9 +542,9 @@ export function mentionedEmail(
 // Escaping for the one piece of user-influenced text in an email body (the
 // team name): the repo's one markup escaper for the body, and a plain-text
 // variant for the subject line. A local copy used to skip the apostrophe.
-const escapeHtml = xmlEscape;
+export const escapeHtml = xmlEscape;
 
-function escapeText(s: string): string {
+export function escapeText(s: string): string {
   return s.replace(/[\r\n]+/g, ' ').slice(0, 80);
 }
 

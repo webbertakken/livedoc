@@ -372,6 +372,26 @@ addresses are not kept. Read them in the dashboard under Workers & Pages, the
 worker, Observability. To keep none, set `enabled = false` under `[observability]` in the three `wrangler.toml`
 files. See [Worker logs](../specs/016-platform/worker-logs.md).
 
+## Worker issues (optional)
+
+Cloudflare Workers Issues groups the api, mcp and router's errors (`[observability.issues]`, on in the three
+`wrangler.toml` files; free during its beta). To have a new or returning error filed as a card on your Bug Tracker and
+emailed to its owner, set a secret and point an Issues automation at the api
+([Worker issues](../specs/016-platform/worker-issues.md)):
+
+```sh
+# from apps/api; keep the file private: the destination needs the same value
+openssl rand -base64 32 > ~/.worker-issues-secret
+pnpm exec wrangler secret put WORKER_ISSUES_WEBHOOK_SECRET < ~/.worker-issues-secret
+```
+
+Then, per worker, add two automations under the worker's **Issues**, **Automations**: an occurrence threshold of 1
+and a recurrence after 24 hours of inactivity, both sending to one **Generic Webhook** destination at
+`https://<your host>/api/worker-issues` with that secret. The cards need a Bug Tracker (`BUG_REPORT_DOCUMENT_ID`,
+`BUG_REPORT_TAB_ID`); the email needs email configured and goes to the Bug Tracker's owner. Without the secret the
+route answers `404` and nothing is filed or sent. To turn detection off, set `enabled = false` under
+`[observability.issues]`. The steps docs.nu followed are in [docs.nu deployment](./docs-nu.md#worker-issues).
+
 ## What can break, and how to debug
 
 - **`account not authorized` from wrangler**: the API token is missing a scope. See the token list above; most often it's missing **Account → Account Settings: Read**, which wrangler uses to look up your account.

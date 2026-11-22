@@ -706,6 +706,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Email|Sent|Week1': 'The one-week onboarding email went out.',
   'Email|Sent|Week2': 'The two-week onboarding email went out.',
   'Email|Sent|Welcome': 'The welcome email went out just after someone signed up.',
+  'Email|Sent|WorkerIssue':
+    'The operator was emailed that a new kind of server error appeared, or came back after a quiet spell.',
   'Error|Api|Internal':
     'A LiveDoc server crashed while handling a request. No longer recorded in this bare form; a crash like this now also records which endpoint or tool broke.',
   'Error|Api|Network.SendEmail':

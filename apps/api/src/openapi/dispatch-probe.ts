@@ -186,6 +186,8 @@ export async function probeDispatch(
     GOOGLE_CLIENT_ID: 'probe-client',
     GOOGLE_CLIENT_SECRET: 'probe-secret',
     DRIVE_TOKEN_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+    // The Workers Issues webhook (docs/specs/016-platform/worker-issues.md), off without its secret.
+    WORKER_ISSUES_WEBHOOK_SECRET: 'probe-secret',
   } as unknown as Env;
   // Requests under /api/documents/:id/ are handed to the document's room, which answers with the same handlers
   // against its SQLite (the DOCUMENT_DB trap); its relays reach no room.
