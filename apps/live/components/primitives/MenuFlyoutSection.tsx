@@ -355,8 +355,8 @@ function Flyout({
       >
         {plain ? (
           <>
-            <span className="flex min-w-0 items-center gap-2.5">
-              <span className="flex w-5 shrink-0 items-center justify-center text-slate-400 [&_svg]:h-4 [&_svg]:w-4">
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="flex w-5 shrink-0 items-center justify-center text-slate-400 [&_svg]:size-icon-row">
                 {icon}
               </span>
               {title}

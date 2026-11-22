@@ -71,6 +71,10 @@ A surface names the token, never the number, so the scale changes in one place.
 
 - An icon takes its size as a square: `size-icon-row`.
 
+### Shapes
+
+- A popover's arrow is one drawn size wherever it points: `size-arrow`, 12 px.
+
 ### Gaps, padding and radii
 
 - **Gaps** step 2 (inside a group), 4, 8, 12, 16 and 24 px.

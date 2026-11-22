@@ -12,6 +12,14 @@ const SIZED_PATHS = [
   'components/primitives/BackBar.tsx',
   'components/primitives/SearchInput.tsx',
   'components/primitives/FilterSearchBox.tsx',
+  'components/primitives/AccordionSection.tsx',
+  'components/primitives/ConfirmPopover.tsx',
+  'components/primitives/MentionMenu.tsx',
+  'components/primitives/MenuFlyoutPanel.tsx',
+  'components/primitives/MenuFlyoutSection.tsx',
+  'components/primitives/MenuSliderRow.tsx',
+  'components/primitives/MenuTiles.tsx',
+  'components/primitives/PreviewSliderRow.tsx',
 ];
 
 describe('live sizing', () => {

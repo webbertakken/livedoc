@@ -20,10 +20,19 @@ const HEIGHT = { chip: 24, row: 28, field: 32, prominent: 36 } as const;
 /** Icon sizes in px, read as `size-<step>`. */
 const ICON = { 'icon-chevron': 12, 'icon-row': 16, 'icon-toolbar': 18, 'icon-title': 20 } as const;
 
+/** Drawn shapes in px, read as `size-<step>`: a popover's arrow, one size wherever it points. */
+const SHAPE = { arrow: 12 } as const;
+
 /** Radii in px, read as `rounded-<step>`; Tailwind's `full` and `none` complete them. */
 const RADIUS = { control: 6, menu: 8, surface: 12 } as const;
 
-export const SIZING_SCALE = { type: TYPE, height: HEIGHT, icon: ICON, radius: RADIUS } as const;
+export const SIZING_SCALE = {
+  type: TYPE,
+  height: HEIGHT,
+  icon: ICON,
+  shape: SHAPE,
+  radius: RADIUS,
+} as const;
 
 /** Gap steps in Tailwind spacing units (4 px each): 2 inside a group, then 4, 8, 12, 16 and 24 px. */
 export const GAP_STEPS = [0, 0.5, 1, 2, 3, 4, 6] as const;

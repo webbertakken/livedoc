@@ -16,15 +16,14 @@ import { useMenuItemProps } from './menu-item-props';
 // header, or a plain verb row) and the floating panel that holds its contents.
 
 export const sectionTriggerClass = (open: boolean) =>
-  `flex w-full cursor-pointer items-center justify-between px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition ${
+  `flex min-h-row w-full cursor-pointer items-center justify-between px-3 text-body transition pointer-coarse:min-h-11 ${
     open
-      ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-      : // Slate 500, as MenuAccordionSection's: slate 400 read at 2.6:1 on the white menu.
-        'text-slate-500 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-300'
+      ? 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
+      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
   }`;
 
 export const plainTriggerClass = (open: boolean) =>
-  `flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-[13px] transition ${
+  `flex min-h-row w-full cursor-pointer items-center justify-between gap-2 px-3 text-body transition pointer-coarse:min-h-11 ${
     open
       ? 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
       : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
@@ -127,11 +126,11 @@ function FlyoutFrame({
         // rendered behind — tapping Collaborate on a phone appeared to do
         // nothing at all. Same reason the token exists for menus opened inside
         // a dialog.
-        className={`fixed z-[var(--z-popover)] flex animate-fade-in flex-col rounded-md outline-none ${
+        className={`fixed z-[var(--z-popover)] flex animate-fade-in flex-col rounded-menu outline-none ${
           isPanel
             ? 'max-h-[calc(100dvh-1rem)] w-72 overflow-y-auto overscroll-contain'
             : 'w-56 overflow-hidden'
-        } border border-slate-200 text-sm shadow-lg dark:border-slate-700 dark:shadow-slate-950/40 ${
+        } border border-slate-200 text-body shadow-lg dark:border-slate-700 dark:shadow-slate-950/40 ${
           // A phone lays the panel straight over its parent menu: see-through, the rows underneath read
           // through it as ghost text. Beside the menu on a wide screen it keeps the frosted glass.
           isMobile
@@ -174,7 +173,7 @@ function FlyoutMobileHeader({
     <div className="order-first flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
       <span
         aria-hidden
-        className="flex min-w-0 items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+        className="flex min-w-0 items-center gap-2 text-body text-slate-700 dark:text-slate-200"
       >
         <span className="flex w-4 shrink-0 items-center justify-center">{icon}</span>
         <span className="truncate">{title}</span>
@@ -184,7 +183,7 @@ function FlyoutMobileHeader({
         {...itemProps}
         aria-label={`Close ${title}`}
         onClick={onClose}
-        className="-mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        className="-mr-1 flex size-row shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
       >
         <CloseIcon />
       </button>

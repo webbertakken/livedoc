@@ -40,7 +40,7 @@ export function MenuSliderRow({
   return (
     <div className="px-3 py-1.5">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{label}</p>
+        <p className="text-supporting text-slate-500 dark:text-slate-400">{label}</p>
         {action}
       </div>
       <div className={`mt-1 flex items-center gap-2 ${ticks?.length ? 'pb-3.5' : ''}`}>
@@ -62,11 +62,11 @@ export function MenuSliderRow({
           {ticks?.length ? (
             // The breakpoints, pinned under the track. Each sits where the thumb's centre does at
             // that value: the native thumb is ~16px, so the track's usable run is inset 8px each side.
-            <div aria-hidden className="absolute inset-x-0 top-full mt-1 h-3">
+            <div aria-hidden className="absolute inset-x-0 top-full mt-1">
               {ticks.map((t) => (
                 <span
                   key={t}
-                  className="absolute -translate-x-1/2 text-[9px] tabular-nums leading-3 text-slate-500 dark:text-slate-400"
+                  className="absolute -translate-x-1/2 text-glyph tabular-nums text-slate-500 dark:text-slate-400"
                   style={{ left: `calc(8px + (100% - 16px) * ${(t - min) / (max - min)})` }}
                 >
                   {t}
@@ -75,7 +75,7 @@ export function MenuSliderRow({
             </div>
           ) : null}
         </div>
-        <span className="w-10 text-right text-xs font-medium tabular-nums text-slate-700 dark:text-slate-200">
+        <span className="w-10 text-right text-supporting tabular-nums text-slate-700 dark:text-slate-200">
           {display}
         </span>
         {trailing}

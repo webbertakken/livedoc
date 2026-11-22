@@ -19,7 +19,7 @@ export function AccordionSection({
   onToggle,
   trailing,
   headerClassName = 'flex w-full items-center justify-between py-2 text-left',
-  titleClassName = 'text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400',
+  titleClassName = 'text-body text-slate-700 dark:text-slate-200',
   chevronClassName,
   bodyClassName = 'flex flex-col gap-2 pb-2',
   children,
@@ -40,7 +40,7 @@ export function AccordionSection({
     <div>
       <button type="button" onClick={onToggle} aria-expanded={open} className={headerClassName}>
         <span className={titleClassName}>{title}</span>
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-2">
           {trailing}
           <ChevronIcon open={open} className={chevronClassName} />
         </span>

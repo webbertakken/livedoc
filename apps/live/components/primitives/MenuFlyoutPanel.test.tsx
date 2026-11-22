@@ -7,7 +7,7 @@ import { cleanup, render } from '@testing-library/react';
 import { createRef } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { FlyoutPanel } from './MenuFlyoutPanel';
+import { FlyoutPanel, plainTriggerClass, sectionTriggerClass } from './MenuFlyoutPanel';
 
 function panel(isMobile: boolean): HTMLElement {
   const { container } = render(
@@ -42,5 +42,20 @@ describe('FlyoutPanel surface', () => {
     const el = panel(false);
     expect(el.className).toContain('bg-white/95');
     expect(el.className).toContain('backdrop-blur-sm');
+  });
+});
+
+// docs/specs/004-interface-design/sizing.md: a flyout's section header is a 28 px row at the reading size, in its
+// own case, and 44 px on a touch screen.
+describe('flyout triggers on the sizing scale', () => {
+  it('draws the section header and the plain row alike, without tracked capitals', () => {
+    for (const open of [false, true]) {
+      for (const cls of [sectionTriggerClass(open), plainTriggerClass(open)]) {
+        expect(cls).toContain('min-h-row');
+        expect(cls).toContain('text-body');
+        expect(cls).toContain('pointer-coarse:min-h-11');
+        expect(cls).not.toMatch(/\buppercase\b|tracking-wider|font-semibold/);
+      }
+    }
   });
 });
