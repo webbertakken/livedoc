@@ -56,7 +56,10 @@ test('the menus run what the grid does, and dim what is still to come', async ({
   await (await officeMenuItem(page, ['Format', 'Text', 'Bold'])).click();
   await select(page, 'A1');
   expect(await boldTicked(page)).toBe('true');
-  await page.screenshot({ path: test.info().outputPath('format-text-menu.png') });
+  await page.screenshot({
+    path: test.info().outputPath('format-text-menu.png'),
+    animations: 'disabled',
+  });
 
   // Edit › Undo takes the bold back, one step.
   await (await officeMenuItem(page, ['Edit', 'Undo'])).click();
@@ -66,7 +69,10 @@ test('the menus run what the grid does, and dim what is still to come', async ({
   // Two rows selected: Insert › Rows counts them, and the value moves down two.
   await select(page, 'A1:A2');
   const insert = await officeMenuItem(page, ['Insert', 'Rows', 'Insert 2 Rows Above']);
-  await page.screenshot({ path: test.info().outputPath('insert-rows-menu.png') });
+  await page.screenshot({
+    path: test.info().outputPath('insert-rows-menu.png'),
+    animations: 'disabled',
+  });
   await insert.click();
   expect(await inputOf(page, 'A3')).toBe('Total');
 
