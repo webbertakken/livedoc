@@ -4,11 +4,9 @@
 
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Folder } from '@/lib/api-client';
 import { writeLocalStorageValue } from '@/hooks/ui/useLocalStorageValue';
 import { DOCUMENT_DRAG_MIME } from '@/components/panels/explorer-drag-mime';
-import type { ExplorerViewProps } from '../explorer-view-props';
-import type { PaneDocument } from '../views';
+import { paneDocument, projectsFolder, viewProps } from '../explorer-view.fixture';
 import { DetailsView } from './DetailsView';
 import { ExplorerProvider } from '../ExplorerContext';
 import type { ExplorerStateValue } from '../useExplorerState';
@@ -30,53 +28,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const doc = (id: string, over: Partial<PaneDocument> = {}): PaneDocument => ({
-  id,
-  name: id,
-  folderId: null,
-  savedAt: 1,
-  shareCode: null,
-  ownerId: 'me',
-  // Empty, so no thumbnail is fetched.
-  empty: true,
-  ...over,
-});
-
-const folder: Folder = {
-  id: 'f1',
-  name: 'Projects',
-  parentId: null,
-  createdAt: 1,
-  updatedAt: 1,
-  teamId: null,
-} as Folder;
-
-function view(documents: PaneDocument[], folders: Folder[] = []): ExplorerViewProps {
-  return {
-    folders,
-    documents,
-    ownerId: 'me',
-    onOpenFolder: vi.fn(),
-    onCommitRenameFolder: vi.fn(),
-    onCancelRenameFolder: vi.fn(),
-    renamingFolderId: null,
-    renamingDocumentId: null,
-    onCommitRenameDocument: vi.fn(),
-    onCancelRenameDocument: vi.fn(),
-    folderActions: () => ({
-      rename: vi.fn(),
-      newSubfolder: vi.fn(),
-      move: vi.fn(),
-      delete: vi.fn(),
-    }),
-    onStartRenameDocument: vi.fn(),
-    onDuplicateDocument: vi.fn(),
-    onDeleteDocument: vi.fn(),
-    onMoveDocument: vi.fn(),
-    childrenCount: () => 1,
-    documentsCount: () => 2,
-  };
-}
+const doc = paneDocument;
+const folder = projectsFolder;
+const view = viewProps;
 
 const rowNames = () =>
   screen

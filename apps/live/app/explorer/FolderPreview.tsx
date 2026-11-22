@@ -21,7 +21,7 @@ import { folderPreviewTiles, type FolderPreviewContents } from './folder-preview
 // flex-wrap centring is what puts one tile in the middle and two side by
 // side without a per-count layout.
 const tileBox =
-  'flex h-[calc(50%-0.25rem)] w-[calc(50%-0.25rem)] items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800';
+  'flex h-[calc(50%-0.25rem)] w-[calc(50%-0.25rem)] items-center justify-center overflow-hidden rounded-control border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800';
 
 export function FolderPreview({
   contents,
@@ -60,7 +60,7 @@ export function FolderPreview({
         ) : (
           <span
             key={`f:${tile.folder.id}`}
-            className={`${tileBox} text-brand-400 dark:text-brand-300 [&_svg]:h-5 [&_svg]:w-5`}
+            className={`${tileBox} text-brand-400 dark:text-brand-300 [&_svg]:size-icon-title`}
           >
             <FolderSolidIcon open={false} />
           </span>
@@ -68,7 +68,7 @@ export function FolderPreview({
       )}
       {hidden > 0 ? (
         <span
-          className={`${tileBox} text-xs font-medium text-slate-500 dark:text-slate-400`}
+          className={`${tileBox} text-supporting text-slate-500 dark:text-slate-400`}
         >{`+${hidden}`}</span>
       ) : null}
     </span>

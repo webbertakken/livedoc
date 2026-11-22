@@ -167,7 +167,7 @@ function DocumentCard(
         </Link>
       )}
 
-      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+      <div className="flex flex-1 flex-col gap-2 p-3">
         <div className="flex items-start gap-1">
           {renaming ? (
             <InlineRenameInput
@@ -175,12 +175,12 @@ function DocumentCard(
               ariaLabel={`Rename ${liveDoc.name}`}
               onCommit={onCommitRename}
               onCancel={onCancelRename}
-              className="min-w-0 flex-1 rounded border border-brand-300 bg-white px-1 py-0 text-sm font-medium text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+              className="min-w-0 flex-1 rounded-control border border-brand-300 bg-white px-1 py-0 text-body text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
             />
           ) : (
             <Link
               href={href}
-              className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
+              className="min-w-0 flex-1 truncate text-body text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
             >
               <HighlightedTitle name={liveDoc.name} />
             </Link>
@@ -220,7 +220,9 @@ function DocumentCard(
           </span>
         </div>
         {ownerLabel ? (
-          <span className="truncate text-xs text-slate-500 dark:text-slate-400">{ownerLabel}</span>
+          <span className="truncate text-supporting text-slate-500 dark:text-slate-400">
+            {ownerLabel}
+          </span>
         ) : null}
       </div>
       {menu.open ? (
