@@ -28,7 +28,6 @@ const blobsInMemory = () => {
     }),
   };
 };
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => __setOfflineBackend(memBackend()));
 afterEach(() => {
@@ -41,10 +40,13 @@ describe('a cloud PDF’s stored file', () => {
   it('is read from LiveDoc once, kept, and read from this browser the next time', async () => {
     const { blobs } = blobsInMemory();
     const stored = await file('%PDF-1.7 on LiveDoc');
-    const fromLiveDoc = vi.fn(async () => stored.bytes);
+    const fromLiveDoc = vi.fn(async () => stored.bytes.slice());
     const read = keptBlobRead(fromLiveDoc, () => blobs);
-    expect(await read(scope, stored.key)).toEqual(stored.bytes);
-    await settle();
+    const first = await read(scope, stored.key);
+    expect(first).toEqual(stored.bytes);
+    // The engine's worker takes the buffer itself: what was kept is whole all the same.
+    structuredClone(first.buffer, { transfer: [first.buffer] });
+    expect(first.byteLength).toBe(0);
     expect(await read(scope, stored.key)).toEqual(stored.bytes);
     expect(fromLiveDoc).toHaveBeenCalledTimes(1);
   });

@@ -80,6 +80,8 @@ export function localBlobStore(deps: {
       let before: LocalBlobEntry | null = null;
       let entered = false;
       try {
+        // A blob is never empty: bytes handed over to a worker before they were kept would be.
+        if (bytes.byteLength === 0) throw new Error('no bytes to keep');
         place = await deps.bytes();
         before = await index.get(key);
         await index.put({ key, size: bytes.byteLength, usedAt: now });

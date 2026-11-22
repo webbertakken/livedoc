@@ -157,6 +157,13 @@ describe('this browser’s blob store', () => {
     expect(place.held.size).toBe(0);
   });
 
+  it('refuses to keep no bytes at all: a blob is never empty', async () => {
+    const { store, index } = memoryBlobStore();
+    const key = await blobKeyOf(bytesOf('handed to a worker first'));
+    expect(await refusal(store.keep(key, new Uint8Array(0), 1))).toBe('local_store_unavailable');
+    expect(index.entries.size).toBe(0);
+  });
+
   it('takes bytes that have no entry as held, and names them from then on', async () => {
     const { store, bytes: place } = memoryBlobStore();
     const bytes = bytesOf('kept before the index was');

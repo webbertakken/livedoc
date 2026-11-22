@@ -36,8 +36,9 @@ export const keptBlobRead =
       return kept;
     }
     const bytes = await read(scope, key);
-    // Kept for the next open; the pages do not wait for it.
-    void blobs().keepRead(key, bytes);
+    // Kept for the next open, before the bytes are handed on: the engine's worker takes the buffer itself, and a
+    // copy to keep meanwhile would hold a large file twice in memory.
+    await blobs().keepRead(key, bytes);
     return bytes;
   };
 

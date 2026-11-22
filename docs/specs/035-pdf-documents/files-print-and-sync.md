@@ -41,6 +41,10 @@ A file whose bytes are a PDF ([What becomes a PDF document](pdf-document.md#what
 - A person who may not add a document where they dropped is told so; the drop is never taken silently by the browser
   (which would replace LiveDoc with the browser's own viewer).
 - Several PDFs dropped together open as several documents, with one toast ("4 PDFs added") and the first opened.
+- **A drop in the page's first moments waits** `(default)`: until the Explorer knows who is here (a guest's id is
+  asked of the server as the page opens), a dropped file is held, up to `PDF_DROP_OWNER_WAIT_MS`, then opened. Past
+  it: "LiveDoc isn't ready yet. Drop the PDF again in a moment." A section that takes no document says so at once.
+- A file that could not be taken at all is said too: "This PDF couldn't be opened. Try again." `(default)`.
 
 ## Downloading
 
@@ -150,11 +154,12 @@ A PDF document is a **native file** ([Native files](../027-repositories/native-f
 
 ## Limits
 
-| Constant              | Value | Why                                                                             |
-| --------------------- | ----- | ------------------------------------------------------------------------------- |
-| `PDF_PRINT_DPI`       | 150   | `(default)` Where pages are drawn for print; safe range 100 to 300              |
-| `PDF_PICTURE_MAX_DPI` | 600   | `(default)` Pages as pictures; a Letter page at 600 dpi is 33 megapixels        |
-| `PDF_DROP_MAX_FILES`  | 50    | `(default)` PDFs taken from one drop; more are refused together, with the count |
+| Constant                 | Value  | Why                                                                                          |
+| ------------------------ | ------ | -------------------------------------------------------------------------------------------- |
+| `PDF_PRINT_DPI`          | 150    | `(default)` Where pages are drawn for print; safe range 100 to 300                           |
+| `PDF_PICTURE_MAX_DPI`    | 600    | `(default)` Pages as pictures; a Letter page at 600 dpi is 33 megapixels                     |
+| `PDF_DROP_MAX_FILES`     | 50     | `(default)` PDFs taken from one drop; more are refused together, with the count              |
+| `PDF_DROP_OWNER_WAIT_MS` | 10,000 | `(default)` How long a drop waits for the Explorer to know who is here; safe range 2 to 30 s |
 
 ## Share roles
 
