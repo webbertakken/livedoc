@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/objects.md "Inserting": Insert > Image's items and the toolbar's list are an Editor's;
 // a picture file pasted is stored, placed and counted by where it came from; a refusal is said under the toolbar.
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -47,8 +47,6 @@ function setup(canEdit = true) {
   return { hook, view };
 }
 
-const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
-
 beforeEach(() => {
   addImageFileForDocument.mockReset();
   track.mockReset();
@@ -86,7 +84,8 @@ describe('useTextDocumentPictures', () => {
       taken = hook.result.current.take([png()], 'Paste');
     });
     expect(taken).toBe(true);
-    await settle();
+    // Stored, read and hashed in turn: waited for, never timed.
+    await waitFor(() => expect(track).toHaveBeenCalled());
     expect(addImageFileForDocument).toHaveBeenCalledWith('me', 'D', expect.any(File));
     expect(view.state.doc.firstChild!.childCount).toBe(2);
     expect(track).toHaveBeenCalledWith('Element', 'Added', 'TextDocumentImagePaste');
@@ -101,8 +100,7 @@ describe('useTextDocumentPictures', () => {
     act(() => {
       hook.result.current.take([png()], 'Drop');
     });
-    await settle();
-    expect(hook.result.current.notice).not.toBeNull();
+    await waitFor(() => expect(hook.result.current.notice).not.toBeNull());
     expect(track).not.toHaveBeenCalled();
     act(() => {
       vi.advanceTimersByTime(PICTURE_NOTICE_MS);
