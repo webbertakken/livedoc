@@ -17,6 +17,7 @@ import { subscribeLists } from './text-document-live-lists';
 import { paragraphBoxesPlugin } from './text-document-paragraph-boxes';
 import { textDocumentSchema } from './text-document-schema';
 import { FIELD_NODE_VIEWS, fieldNumbersPlugin } from './text-document-fields';
+import { tableView } from './text-document-table-dom';
 import { tabStopsPlugin } from './text-document-tab-layout';
 
 /** A drawn story's class, on its source and every copy. */
@@ -92,7 +93,7 @@ export class StorySource {
           changed,
         ],
       }),
-      nodeViews: FIELD_NODE_VIEWS,
+      nodeViews: { ...FIELD_NODE_VIEWS, table: tableView },
       editable: () => this.#editing,
       attributes: () => ({
         class: `${STORY_CLASS} whitespace-pre-wrap break-words outline-none`,

@@ -3,7 +3,13 @@
 // padding and vertical alignment; a header row's cells as column headers. A side with no line shows a faint guide on
 // screen (the style sheet's), never printed. Values are checked before they reach a style attribute.
 import { tableNodes } from 'prosemirror-tables';
-import type { DOMOutputSpec, Node as PmNode, NodeSpec } from 'prosemirror-model';
+import {
+  DOMSerializer,
+  type DOMOutputSpec,
+  type Node as PmNode,
+  type NodeSpec,
+} from 'prosemirror-model';
+import type { EditorView, NodeView } from 'prosemirror-view';
 import {
   CELL_SIDES,
   TABLE,
@@ -135,3 +141,38 @@ export function tableNodeSpecs(): Record<string, NodeSpec> {
     [TABLE_HEADER]: { ...specs.table_header, toDOM: cellDom('th') },
   };
 }
+
+/**
+ * A table as the editor draws it: its columns and width come from its cells (`tableDom`), so a change to a cell's width
+ * draws them again, though the table node itself is unchanged; its rows are its content.
+ */
+export function tableView(node: PmNode, view: EditorView): NodeView {
+  const render = (from: PmNode) => DOMSerializer.renderSpec(view.dom.ownerDocument, tableDom(from));
+  const { dom, contentDOM } = render(node);
+  let drawn = node;
+  return {
+    dom,
+    contentDOM,
+    update(next) {
+      if (next.type !== drawn.type) return false;
+      if (!sameColumns(next, drawn) || !next.sameMarkup(drawn)) {
+        const fresh = render(next).dom;
+        dom.setAttribute('style', fresh.getAttribute('style') ?? '');
+        dom
+          .querySelector(':scope > colgroup')
+          ?.replaceWith(fresh.querySelector(':scope > colgroup')!);
+      }
+      drawn = next;
+      return true;
+    },
+    // Only its rows are writing: its own style and columns change with it.
+    ignoreMutation: (mutation) =>
+      mutation.type !== 'selection' && !(contentDOM?.contains(mutation.target) ?? false),
+  };
+}
+
+const sameColumns = (a: PmNode, b: PmNode): boolean => {
+  const x = columnWidths(a);
+  const y = columnWidths(b);
+  return x.length === y.length && x.every((w, i) => w === y[i]);
+};

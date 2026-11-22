@@ -2,7 +2,7 @@
 
 **Status: in the model, the files and the editor.** Tables are read, written, converted, drawn, inserted, reshaped,
 sorted, typed in and set by their properties; across pages they break between rows and inside rows allowed to, their
-header rows repeated. Templates and the resize and move handles are ahead.
+header rows repeated; columns and rows resize by their borders. Templates and the move handles are ahead.
 
 Tables in a [text document](text-document.md), as Google Docs has them, built on `prosemirror-tables`
 ([Adopt or build](../../research/docs-open-standard/adopt-or-build.md)).
@@ -56,7 +56,18 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
   - Unmerge cells splits the caret's merged cell back into one cell per place, the writing in the first; dimmed (and left
     out of the context menu) unless the caret's cell spans more than one place.
 - **Move** rows and columns by dragging their edge handle (Google's six-dot grip).
-- **Resize** columns and rows by dragging their borders; a minimum of 0.1 in.
+- **Resize** columns and rows by dragging their borders.
+  - Over a cell's right or bottom border (within 4 px `(default)`) the pointer becomes a resize cursor; pressing and
+    dragging draws a guide line where the border would go, and releasing sets it, one undo step. Escape cancels.
+  - A border between two columns moves width from one to the other: the table keeps its width. The table's right
+    border widens or narrows its last column, and the table with it. A column is at least 0.1 in.
+  - A row's bottom border sets its minimum height (Table properties' Minimum row height), at least 6 pt
+    `(default)`; the row still grows with its writing.
+  - A merged cell's right border is its last column's; its bottom border its last row's.
+  - An Editor's only: a Viewer and a Participant see no resize cursor.
+  - Without a pointer, or without dragging (WCAG 2.5.7), Table properties' Column width and Minimum row height set
+    the same.
+  - Telemetry: `Element · Changed · TextDocumentTableResizeColumn`, `TextDocumentTableResizeRow`.
 - **Sort table** ascending or descending by the column at the caret (text, then numbers, as Google sorts).
   - Format > Table > Sort table > **Sort ascending**, **Sort descending**; the cell's context menu has both as **Sort
     table ascending**, **Sort table descending** `(default)`.
