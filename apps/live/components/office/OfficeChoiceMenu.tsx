@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { ChevronDownIcon, Glyph, HoverCard, Prims } from '@livedoc/ui';
 import type { IconPrim } from '@livedoc/icons';
-import type { OfficeActions, OfficeEntry } from '@/lib/office/office-catalogue';
+import { noShortcuts, type OfficeActions, type OfficeEntry } from '@/lib/office/office-catalogue';
 import { OfficeMenuPanel } from './OfficeMenuPanel';
 import { OfficePopup } from './OfficePopup';
 import type { OfficeGrid } from './OfficeChoiceGrid';
@@ -25,8 +25,6 @@ export type OfficeChoice = {
 
 /** The kind's choice controls, by control id. */
 export type OfficeChoices = Readonly<Record<string, OfficeChoice>>;
-
-const NO_SHORTCUTS = () => null;
 
 export function OfficeChoiceMenu({
   id,
@@ -102,7 +100,7 @@ export function OfficeChoiceMenu({
           <OfficeMenuPanel
             entries={entries}
             actions={actions}
-            shortcutOf={NO_SHORTCUTS}
+            shortcutOf={noShortcuts}
             trigger={trigger}
             initialFocus="first"
             placement="popup"

@@ -18,6 +18,7 @@ import { useSheetController } from './sheet-controller';
 import { cellBox, mergeAt } from './sheet-geometry';
 import { cellColours, isLightColor, resolveFontStack } from '@livedoc/document';
 import { fontPx } from './SheetCells';
+import { useFunctionHelpHidden } from './function-help-pref';
 import type { FormulaInput } from './useFormulaInput';
 
 // The draft with each reference wrapped in its colour, for the overlay (and the formula bar).
@@ -58,6 +59,7 @@ export function FunctionAssist({
   const syntax = formulaSyntaxOf(c.locale);
   const separator = argumentSeparatorOf(syntax);
   const arg = argumentAt(draft, input.caret, separator);
+  const helpHidden = useFunctionHelpHidden();
   // A dropdown cell's options matching the typing (data-validation.md "Using a dropdown").
   if (input.options)
     return (
@@ -122,7 +124,7 @@ export function FunctionAssist({
         ))}
       </ul>
     );
-  if (arg) {
+  if (arg && !helpHidden) {
     const doc = FUNCTION_DOCS[arg.name]!;
     const slot = argumentSlot(arg.name, arg.index);
     return (

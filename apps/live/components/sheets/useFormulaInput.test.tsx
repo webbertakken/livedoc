@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { track } from '@/lib/telemetry';
 import { makeSheet, renderSheet, type SheetHarness } from './sheet-ui-test-utils';
 import { SheetCellEditor } from './SheetCellEditor';
+import { functionHelpHidden } from './function-help-pref';
 import type { SheetActions } from './useSheetActions';
 import type { FormulaInput } from './useFormulaInput';
 
@@ -71,6 +72,19 @@ describe('the formula input', () => {
     expect(h.ctl().editing).toBeNull();
     expect(h.value('B2')).toBe('old');
     expect(active(h)).toEqual({ r: 1, c: 1 });
+  });
+
+  it('hides the function help card on F1 and shows it again, in a formula only (surface.md D131)', () => {
+    show(h);
+    edit('type', '=SUM(');
+    expect(screen.getByRole('note')).toBeTruthy();
+    key('F1');
+    expect(screen.queryByRole('note')).toBeNull();
+    key('F1');
+    expect(screen.getByRole('note')).toBeTruthy();
+    edit('type', 'plain');
+    key('F1');
+    expect(functionHelpHidden()).toBe(false);
   });
 
   it('breaks the line at the caret on Alt+Enter', () => {

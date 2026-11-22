@@ -13,6 +13,12 @@ const ann = { id: 'ann', name: 'Ann', color: '#e11d48' };
 const bob = { id: 'bob', name: 'Bob', color: '#2563eb' };
 
 describe('SheetBar', () => {
+  it('keeps room at its end for the selection’s summary', () => {
+    const slot = vi.fn<(element: HTMLDivElement | null) => void>();
+    render(<SheetBar tabs={tabs} activeId="t1" onSelect={() => {}} summarySlot={slot} />);
+    expect((slot.mock.calls[0]![0] as HTMLElement).hasAttribute('data-sheet-summary')).toBe(true);
+  });
+
   it('opens a sheet on a click and moves with the arrows', () => {
     const onSelect = vi.fn();
     render(<SheetBar tabs={tabs} activeId="t1" onSelect={onSelect} />);

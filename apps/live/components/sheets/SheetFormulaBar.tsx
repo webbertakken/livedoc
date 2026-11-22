@@ -3,6 +3,8 @@
 // The formula bar (docs/specs/029-sheets/sheet.md "Formula bar"): the name box (the selection; a reference or range
 // typed there and Enter selects it) and fx with the active cell's input as typed, edited there as in the cell. A
 // spilled cell shows its formula greyed. Read-only for someone who may not edit.
+import { NameBoxList } from './NameBoxList';
+import { useFormulaBarHeight } from './useFormulaBarHeight';
 import { focusOpenEdit } from './focus-open-edit';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -82,7 +84,7 @@ export function SheetFormulaBar({
     : owner
       ? inputTextAt(c, owner.r, owner.c)
       : inputTextAt(c, r, col);
-  const lines = Math.min(3, shown.split('\n').length);
+  const { lines, max, handle } = useFormulaBarHeight(shown, c.view.height);
   useEffect(() => {
     if (editing?.origin === 'bar') barRef.current?.focus();
   }, [editing?.origin]);
@@ -135,6 +137,14 @@ export function SheetFormulaBar({
             else c.focusGrid();
           }
         }}
+      />
+      <NameBoxList
+        layout={c.sheet.layout}
+        goTo={(range) => {
+          actions.goTo(range);
+          c.focusGrid();
+        }}
+        colour={c.palette.muted}
       />
       <span
         className="ml-1.5 flex h-7 w-8 shrink-0 items-center justify-center border-l font-serif text-[13px] italic"
@@ -195,6 +205,18 @@ export function SheetFormulaBar({
           />
         )}
       </div>
+      <div
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Formula bar height"
+        aria-valuemin={1}
+        aria-valuemax={max}
+        aria-valuenow={lines}
+        tabIndex={0}
+        data-formula-bar-handle
+        className="absolute inset-x-0 -bottom-1 z-10 h-2 cursor-row-resize focus-visible:bg-sky-500/40"
+        {...handle}
+      />
     </div>
   );
 }
