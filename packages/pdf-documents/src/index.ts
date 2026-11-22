@@ -39,6 +39,17 @@ export {
   type SignatureRead,
   type SignerCertificate,
 } from './file-signature';
+export { FieldValue } from './field-value';
+export {
+  PdfChange,
+  PdfChangeset,
+  type MarkLook,
+  type PdfChangeRefusal,
+  type PdfChangeRoot,
+  type PdfChangesetResult,
+  type PdfEntry,
+  type RemovedKind,
+} from './pdf-change';
 export { PageView } from './page-view';
 export { PdfPermissions } from './permissions';
 export { LinkTarget, type PdfActionKind } from './link-target';
