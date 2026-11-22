@@ -25,8 +25,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const has = (className: string, token: string) =>
-  new RegExp(`(^|\\s)${token.replace(/[[\]:]/g, '\\$&')}(\\s|$)`).test(className);
+const has = (className: string, token: string) => className.split(/\s+/).includes(token);
 
 const shared = {
   id: 's1',
