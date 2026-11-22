@@ -40,7 +40,7 @@ A preview's configuration is generated from the production `wrangler.toml` of ea
 The generator renames and repoints, and refuses what it cannot repoint safely:
 
 - Worker names and service bindings move from `docs-nu-<app>` to `docs-nu-pr-<n>-<app>`. A service binding that is not a `docs-nu-` worker is refused: it would reach outside the preview.
-- The D1 and R2 bindings point at the preview's own database and bucket.
+- The D1 and R2 bindings point at the preview's own database and bucket. Every R2 binding (images, files, bug report screenshots) shares that one bucket: each names its objects its own way, and none lists the bucket to decide what to delete.
 - Rate limiters move from `70xx` to `71xx`. Their namespace ids are account-wide, so a preview never spends production's counters. An id outside `70xx` is refused.
 - A KV binding is refused: only the MCP worker has one, and previews do not run it.
 - Production's routes and every named environment are dropped. The router alone gets a route, its preview host as a custom domain, and `workers_dev`.
