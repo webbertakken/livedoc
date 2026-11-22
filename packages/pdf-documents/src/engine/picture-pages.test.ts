@@ -29,7 +29,10 @@ const plain = (
 });
 
 const written = async (pages: readonly PicturePage[]) => {
-  const result = await writePicturePages(pages, new Date(Date.UTC(2026, 10, 22)));
+  const result = await writePicturePages(pages, {
+    title: 'Quarterly plan',
+    at: new Date(Date.UTC(2026, 10, 22)),
+  });
   if (!result.ok) throw new Error(result.refusal);
   return result.bytes;
 };
@@ -66,14 +69,26 @@ describe('pages of pictures written as a PDF', () => {
     expect(seen).toEqual([...rgb]);
   });
 
-  it('says it is LiveDoc’s, made when it was written', async () => {
+  it('says its title, that LiveDoc made it and when, and names no author', async () => {
     const opened = await engine.open(
       await written([plain(1, 1, [0, 0, 0], { pageWidth: 10, pageHeight: 10 })]),
     );
-    expect(opened.ok && opened.document.properties).toMatchObject({
+    expect(opened.ok && opened.document.properties).toEqual({
+      title: 'Quarterly plan',
+      author: '',
+      subject: '',
+      keywords: '',
+      creator: 'LiveDoc',
       producer: 'LiveDoc',
       created: 'D:20261122000000Z',
+      modified: 'D:20261122000000Z',
     });
+    // A file given no title has none, and never the writer's placeholder.
+    const untitled = await writePicturePages([
+      plain(1, 1, [0, 0, 0], { pageWidth: 10, pageHeight: 10 }),
+    ]);
+    const read = await engine.open(untitled.ok ? untitled.bytes : new Uint8Array());
+    expect(read.ok && read.document.properties.title).toBe('');
   });
 
   it('refuses by name what is no PDF: no page, a picture that is not its size, a page out of bounds', async () => {

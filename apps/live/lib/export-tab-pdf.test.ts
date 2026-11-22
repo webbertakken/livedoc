@@ -24,7 +24,8 @@ vi.mock('./export-tab', () => ({
 
 const { exportPagesAsPdf, exportTabAsPdf, singlePageMedia } = await import('./export-tab-pdf');
 
-const TAB = {} as Tab;
+const TAB = { name: 'Roadmap' } as Tab;
+const MOST = PDF_MAX_PAGE_POINTS;
 const page = (width: number, height: number) => ({ rect: { width, height } }) as LaidOutPage;
 const filled = (width: number, height: number, rgba: readonly number[]) =>
   Array.from({ length: width * height }, () => rgba).flat();
@@ -47,22 +48,22 @@ async function opened(blob: Blob) {
 describe('singlePageMedia', () => {
   it('sizes the page from CSS px, not device pixels', () => {
     // An 1000 x 500 CSS px tab rendered at 2x.
-    expect(singlePageMedia(2000, 1000, 2)).toEqual({ mediaW: 750, mediaH: 375 });
+    expect(singlePageMedia(2000, 1000, 2, MOST)).toEqual({ mediaW: 750, mediaH: 375 });
   });
 
   it('gives the same page whatever scale the render took', () => {
-    expect(singlePageMedia(1000, 500, 1)).toEqual(singlePageMedia(2000, 1000, 2));
+    expect(singlePageMedia(1000, 500, 1, MOST)).toEqual(singlePageMedia(2000, 1000, 2, MOST));
   });
 
   it('shrinks a page past the PDF limit uniformly to fit it', () => {
     // 32768 x 16384 CSS px, rendered at 0.5 to stay under the canvas cap.
-    const { mediaW, mediaH } = singlePageMedia(16384, 8192, 0.5);
+    const { mediaW, mediaH } = singlePageMedia(16384, 8192, 0.5, MOST);
     expect(mediaW).toBe(PDF_MAX_PAGE_POINTS);
     expect(mediaH).toBe(PDF_MAX_PAGE_POINTS / 2);
   });
 
   it('keeps a tall page inside the limit on its long side', () => {
-    const { mediaW, mediaH } = singlePageMedia(4000, 40000, 1);
+    const { mediaW, mediaH } = singlePageMedia(4000, 40000, 1, MOST);
     expect(mediaH).toBe(PDF_MAX_PAGE_POINTS);
     expect(mediaW).toBe(1440);
   });
@@ -75,7 +76,7 @@ describe('a tab exported as a PDF', () => {
     rendered = [{ width: 4, height: 2, scale: 2, pixels: filled(4, 2, [255, 0, 0, 128]) }];
     const pdf = await opened(await exportTabAsPdf(TAB));
     expect(pdf.pages.map((p) => [p.width, p.height])).toEqual([[1.5, 1]]);
-    expect(pdf.document.properties.producer).toBe('LiveDoc');
+    expect(pdf.document.properties).toMatchObject({ title: 'Roadmap', producer: 'LiveDoc' });
     const drawn = (await engine.drawPage(0, 4))!;
     expect([...drawn.rgba.slice(0, 4)]).toEqual([255, 127, 127, 255]);
   });

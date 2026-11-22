@@ -2,7 +2,7 @@
 // writer"): how every other kind's Download as PDF is written, by the repository's one PDF writer. It parses nothing
 // of anyone's: what it is handed is LiveDoc's own pixels. Loaded where a PDF is asked for, never before.
 import { PDF, PDFImage, PdfName, PdfNumber, PdfStream } from '@libpdf/core';
-import { PDF_MAX_PAGE_POINTS } from '../limits';
+import { PDF_MAX_PAGE_POINTS, PDF_PROPERTY_MAX_CHARS } from '../limits';
 
 /** One page that is one picture, drawn across the whole of it. */
 export type PicturePage = {
@@ -22,6 +22,9 @@ export type PicturePagesRefusal = 'no_pages' | 'picture_size' | 'page_size';
 export type PicturePagesWritten =
   | { readonly ok: true; readonly bytes: Uint8Array<ArrayBuffer> }
   | { readonly ok: false; readonly refusal: PicturePagesRefusal };
+
+/** The most a page measures on a side, in points: said here too, for a caller that loads only this entry. */
+export { PDF_MAX_PAGE_POINTS } from '../limits';
 
 const PRODUCER = 'LiveDoc';
 
@@ -44,17 +47,23 @@ async function deflated(bytes: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
   return new Uint8Array(await new Response(packed).arrayBuffer());
 }
 
+/** What the file says of itself: the title it is given, and when it was made (now, unless said). */
+export type PicturePagesSaid = { readonly title?: string; readonly at?: Date };
+
 /**
- * The pages as one PDF, in the order given; `at` is when it is made, said in the file. A picture's pixels are packed
- * without loss and never re-encoded.
+ * The pages as one PDF, in the order given. A picture's pixels are packed without loss and never re-encoded. The
+ * file names LiveDoc as what made it, and no author: who exports a tab is not written into it.
  */
 export async function writePicturePages(
   pages: readonly PicturePage[],
-  at: Date = new Date(),
+  { title = '', at = new Date() }: PicturePagesSaid = {},
 ): Promise<PicturePagesWritten> {
   const refusal = refusalOf(pages);
   if (refusal) return { ok: false, refusal };
   const pdf = PDF.create();
+  // Every property is set: the writer fills any it is not told with a placeholder of its own.
+  pdf.setTitle(title.slice(0, PDF_PROPERTY_MAX_CHARS));
+  pdf.setAuthor('');
   pdf.setProducer(PRODUCER);
   pdf.setCreator(PRODUCER);
   pdf.setCreationDate(at);

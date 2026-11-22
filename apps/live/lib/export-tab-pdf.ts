@@ -1,20 +1,23 @@
 // PDF export (docs/specs/013-workspace/folders.md export menu): the rendered canvas as a PDF of one page, or one
 // per page, each page one picture. The pixels are packed without loss and the file is written by the repository's
 // one PDF writer (docs/specs/035-pdf-documents/files-print-and-sync.md "One writer"), which loads when a PDF is
-// asked for and never with the editor.
+// asked for and never with the editor: nothing of it is imported here but its types.
 import type { LaidOutPage, Tab } from '@livedoc/document';
-import { PDF_MAX_PAGE_POINTS } from '@livedoc/pdf-documents';
 import type { PicturePage, PicturePagesRefusal } from '@livedoc/pdf-documents/pictures';
 import { renderedExportScale, renderTabToCanvas, type ImageExportOpts } from './export-tab';
 
+const loadWriter = () => import('@livedoc/pdf-documents/pictures');
+
 export async function exportTabAsPdf(tab: Tab, opts: ImageExportOpts = {}): Promise<Blob> {
   const canvas = await renderTabToCanvas(tab, opts);
+  const { PDF_MAX_PAGE_POINTS } = await loadWriter();
   const { mediaW, mediaH } = singlePageMedia(
     canvas.width,
     canvas.height,
     renderedExportScale(canvas),
+    PDF_MAX_PAGE_POINTS,
   );
-  return picturesAsPdf([{ ...pictureOf(canvas), pageWidth: mediaW, pageHeight: mediaH }]);
+  return picturesAsPdf([{ ...pictureOf(canvas), pageWidth: mediaW, pageHeight: mediaH }], tab);
 }
 
 // CSS px to PDF points (96 to 72 per inch): an A4 page is 595 x 842 pt, as printed.
@@ -22,15 +25,17 @@ const PT_PER_PX = 0.75;
 
 /** A single-page PDF's page in points: the canvas at its CSS size (pixels / render scale) at
  *  0.75 pt per px, so it prints at the size it shows rather than at the render's 2x; a page past
- *  the most a PDF page measures shrinks uniformly to fit it. The image keeps every pixel either way. */
+ *  `mostPoints`, the most a PDF page measures on a side, shrinks uniformly to fit it. The image keeps
+ *  every pixel either way. */
 export function singlePageMedia(
   pixelW: number,
   pixelH: number,
   scale: number,
+  mostPoints: number,
 ): { mediaW: number; mediaH: number } {
   const w = (pixelW / scale) * PT_PER_PX;
   const h = (pixelH / scale) * PT_PER_PX;
-  const fit = Math.min(1, PDF_MAX_PAGE_POINTS / Math.max(w, h, 1));
+  const fit = Math.min(1, mostPoints / Math.max(w, h, 1));
   const pt = (n: number) => Math.max(1, Math.round(n * fit * 100) / 100);
   return { mediaW: pt(w), mediaH: pt(h) };
 }
@@ -54,7 +59,7 @@ export async function exportPagesAsPdf(
       pageHeight: Math.round(page.rect.height * PT_PER_PX * 100) / 100,
     });
   }
-  return picturesAsPdf(out);
+  return picturesAsPdf(out, tab);
 }
 
 // The canvas's pixels as RGB, alpha composited onto white: a PDF's /DeviceRGB carries no alpha, and
@@ -80,9 +85,10 @@ const NOT_WRITTEN: Readonly<Record<PicturePagesRefusal, string>> = {
   page_size: 'A page is larger than a PDF page can be.',
 };
 
-async function picturesAsPdf(pages: readonly PicturePage[]): Promise<Blob> {
-  const { writePicturePages } = await import('@livedoc/pdf-documents/pictures');
-  const written = await writePicturePages(pages);
+/** The pages as a PDF titled as their tab is named. */
+async function picturesAsPdf(pages: readonly PicturePage[], tab: Tab): Promise<Blob> {
+  const { writePicturePages } = await loadWriter();
+  const written = await writePicturePages(pages, { title: tab.name });
   if (!written.ok) throw new Error(NOT_WRITTEN[written.refusal]);
   return new Blob([written.bytes], { type: 'application/pdf' });
 }

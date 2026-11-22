@@ -105,7 +105,8 @@ drawn.
 - **A canvas tab's and a Pages tab's PDF** is a page a picture: the pixels packed without loss, never re-encoded,
   each page the size in points its tab or sheet shows at. The writer loads when a PDF is asked for, never with the
   editor, and refuses by name what is no PDF: no page (`no_pages`), a picture that is not its size
-  (`picture_size`), a page past the most a PDF page measures (`page_size`). The file says LiveDoc made it and when.
+  (`picture_size`), a page past the most a PDF page measures (`page_size`). The file is titled as its tab is named,
+  says LiveDoc made it and when, and names no author `(default)`.
 - **Opened as a text document**: File > Open as a text document runs the text document's own import of a PDF (text
   and pictures, reading order guessed) and makes a **copy** as a text document
   ([Files and print](../034-text-documents/files-and-print.md#opening)); the PDF document is unchanged.
