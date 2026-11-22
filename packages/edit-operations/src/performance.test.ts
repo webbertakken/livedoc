@@ -18,6 +18,10 @@ const FRAMES = 10;
 const GROWTH = 4;
 const RATIO_CEILING = 8;
 const RUNS = 3;
+// Passes a run of a sub-millisecond step makes, so the run is long enough to time.
+const PASSES = 10;
+// How many times more targets the larger run notes.
+const NOTES_GROWTH = 10;
 // Sized to time tens of milliseconds an apply; coverage on a CI runner makes that seconds.
 const TIMEOUT_MS = 30_000;
 
@@ -155,23 +159,28 @@ describe('performance', () => {
 
   // Noting each resolved target once searched the targets so far (`includes`): quadratic in a `set … all`.
   it('notes targets in time linear in their number', { timeout: TIMEOUT_MS }, () => {
+    // One pass is a fraction of a millisecond, too short to tell from a stray pause, and a set past the cache's size
+    // grows slower than its count: each run notes the targets into several fresh states, made before the clock starts,
+    // at sizes a cache still holds.
     const fastest = (tab: Tab) => {
       let best = Infinity;
-      // Sub-millisecond at a small size: the best of more runs, at sizes where a stray pause cannot double it.
-      for (let run = 0; run < RUNS * 3; run++) {
-        const state = createState(tab, {}, () => {});
+      for (let run = 0; run < RUNS; run++) {
+        const states = Array.from({ length: PASSES }, () => createState(tab, {}, () => {}));
         best = Math.min(
           best,
           cpuMsOf(() => {
-            for (const el of tab.elements) noteTarget(state, el.id);
+            for (const state of states) for (const el of tab.elements) noteTarget(state, el.id);
           }),
         );
       }
       return best;
     };
-    const small = fastest(frameOf(12_000));
-    const large = fastest(frameOf(12_000 * GROWTH));
-    expect(large / small).toBeLessThan(RATIO_CEILING);
+    // Its sets and arrays grow past what a cache and the young heap hold, which costs a linear step up to two and a
+    // half times its growth under a loaded machine: so ten times the targets, against a ceiling of four times that,
+    // still a tenth of the hundredfold a quadratic step takes.
+    const small = fastest(frameOf(1000));
+    const large = fastest(frameOf(1000 * NOTES_GROWTH));
+    expect(large / small).toBeLessThan(NOTES_GROWTH * 4);
   });
 
   it('walks past a row of boxes in time linear in the row', { timeout: TIMEOUT_MS }, () => {
