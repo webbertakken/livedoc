@@ -6,7 +6,7 @@ Pages mode is removed whole (fork C2, ruled): the mode and its five page kinds, 
 wireframe, with everything only they use. This spec says what becomes of the content stored in them, and what a person
 sees. Production held, on 2026-11-18, 113 documents not in the Trash, 2 of them made in Pages, and no article added
 through the editor since telemetry began (`Tab · Changed · ArticleAdded` 0); agents wrote articles 7 times
-(`Cli · Used · ArticleSet`) (verified: read-only D1 queries, plan 0019's blueprint).
+(`Cli · Used · ArticleSet`) (verified: read-only D1 queries).
 
 ## Articles (fork D4)
 
