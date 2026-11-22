@@ -12,6 +12,7 @@ const SIZED_PATHS = [
   'src/dialog',
   'src/hint/HintSurface.tsx',
   'src/HoverCard.tsx',
+  'src/CountBadge.tsx',
 ];
 
 describe('ui sizing', () => {

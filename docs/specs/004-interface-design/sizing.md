@@ -74,6 +74,9 @@ A surface names the token, never the number, so the scale changes in one place.
 ### Shapes
 
 - A popover's arrow is one drawn size wherever it points: `size-arrow`, 12 px.
+- A count badge sits where an icon would: 16 or 18 px (`size-icon-row`, `size-icon-toolbar`), its figure in
+  `text-glyph`.
+- A switch's track and knob are drawn art, sized by the switch itself; the row that holds a switch is on the scale.
 
 ### Gaps, padding and radii
 

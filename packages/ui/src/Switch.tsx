@@ -240,7 +240,7 @@ type RowButtonProps = Omit<
 >;
 
 // The row's layout when the caller names none: the words, then the switch at the end.
-const ROW_LAYOUT = 'flex w-full items-center justify-between gap-3 rounded-md text-left';
+const ROW_LAYOUT = 'flex w-full items-center justify-between gap-3 rounded-control text-left';
 
 /**
  * A row that is itself the switch: its words and the track (a presentational Switch) inside one `role="switch"`
