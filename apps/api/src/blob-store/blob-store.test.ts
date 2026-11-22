@@ -6,8 +6,7 @@ import { testFilesBucket } from './test-files-bucket';
 
 const bytes = Uint8Array.from(new TextEncoder().encode('%PDF-1.7 twenty bytes'));
 const stream = (value: Uint8Array) => new Blob([value.slice()]).stream();
-const textOf = async (body: ReadableStream | null) =>
-  body ? new Response(body).text() : null;
+const textOf = async (body: ReadableStream | null) => (body ? new Response(body).text() : null);
 
 describe('the blob store', () => {
   it('names an object by its owner and key, so two owners never share one', async () => {
