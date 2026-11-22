@@ -95,7 +95,7 @@ export function SettingsPopover({
           aria-label={title}
           aria-expanded={open}
           aria-haspopup="dialog"
-          className={`relative flex h-5 w-5 touch-target items-center justify-center rounded transition ${
+          className={`relative flex size-chip touch-target items-center justify-center rounded-control transition ${
             open
               ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200'
               : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100'
@@ -111,7 +111,7 @@ export function SettingsPopover({
             role="dialog"
             aria-label={title}
             onPointerDown={(e) => e.stopPropagation()}
-            className="fixed z-[var(--z-overlay)] flex animate-fade-in flex-col gap-0.5 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
+            className="fixed z-[var(--z-overlay)] flex animate-fade-in flex-col overflow-y-auto rounded-menu border border-slate-200 bg-white py-1.5 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
             style={{
               left: pos?.left ?? -9999,
               top: pos?.top ?? -9999,
@@ -152,12 +152,12 @@ export function SettingsPopoverResetRow({
           onReset();
           onClose();
         }}
-        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:disabled:hover:bg-transparent"
+        className="flex min-h-row w-full items-center gap-2 px-3 py-1 text-left text-body text-slate-700 pointer-coarse:min-h-11 transition hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:disabled:hover:bg-transparent"
       >
         <ResetPositionGlyph />
         <span className="flex flex-col">
           <span>Reset position</span>
-          <span className="text-[10px] font-normal leading-snug text-slate-500 dark:text-slate-400">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
             {resettable ? 'Snap back to the default corner.' : 'Already at the default corner.'}
           </span>
         </span>

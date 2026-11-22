@@ -134,7 +134,7 @@ export function DetailsDocumentRow(props: DocumentEntryProps) {
           <EllipsisTriggerButton
             {...menu.triggerProps}
             reveal
-            size={dense ? 'sm' : 'lg'}
+            size={dense ? 'md' : 'lg'}
             label={`Menu for ${doc.name}`}
           />
         )}

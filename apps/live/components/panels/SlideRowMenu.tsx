@@ -83,7 +83,7 @@ export function SlideRowMenu({
     <>
       <EllipsisTriggerButton
         ref={setButton}
-        size="sm"
+        size="md"
         label={`Options for ${slideName(slide, index)}`}
         expanded={open}
         // The row is draggable and pressable; neither should fire because the

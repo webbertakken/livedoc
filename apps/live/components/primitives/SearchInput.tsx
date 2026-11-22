@@ -58,7 +58,7 @@ export function SearchInput({
         aria-controls={listboxId}
         aria-expanded={listboxId ? true : undefined}
         aria-autocomplete={listboxId ? 'list' : undefined}
-        className="w-full rounded-md border border-slate-200 bg-white py-1 pl-2 pr-7 text-xs text-slate-700 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        className="h-field w-full rounded-control border border-slate-200 bg-white pl-2 pr-6 text-body text-slate-700 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
       />
       {value ? (
         <HoverCard title="Clear search" description={clearDescription}>
@@ -68,7 +68,7 @@ export function SearchInput({
             aria-label={clearAriaLabel}
             // slate-500 / slate-400 rather than a fainter grey: an icon needs 3:1 against the field
             // (WCAG 2.2 1.4.11), and the lighter one was easy to miss.
-            className="absolute right-1 top-1/2 flex h-5 w-5 -translate-y-1/2 touch-target items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+            className="absolute right-0 top-1/2 flex size-chip -translate-y-1/2 touch-target items-center justify-center rounded-control text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
           >
             <Glyph size={14} units={12} strokeLinejoin="miter">
               <path d="M3 3 L9 9 M9 3 L3 9" />

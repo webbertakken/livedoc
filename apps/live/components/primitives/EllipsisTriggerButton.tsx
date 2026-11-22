@@ -10,12 +10,11 @@ export function EllipsisGlyph({ size = 14 }: { size?: number }) {
 
 // Each a 44px tap area on a touch screen (`touch-target`), whatever its drawn size.
 const SIZE_CLASS = {
-  // The panel's dense rows (Explorer tree, slide deck, panel header).
-  sm: 'h-5 w-5 relative touch-target',
-  // The Explorer page's sidebar tree and the panel's document rows.
-  md: 'h-6 w-6 relative touch-target',
-  // The Explorer page's list rows and cards.
-  lg: 'h-7 w-7 relative touch-target',
+  // A dense row: the Explorer's trees, the slide deck, the panel's document rows (docs/specs/004-interface-design/
+  // sizing.md: the chip step, the smallest anything pressable is drawn).
+  md: 'size-chip relative touch-target',
+  // The Explorer page's list rows and cards: an icon button at the row step.
+  lg: 'size-row relative touch-target',
 } as const;
 
 // The row / card ⋯ menu trigger, one button for every Explorer surface
@@ -82,7 +81,7 @@ export const EllipsisTriggerButton = forwardRef<
       aria-haspopup="menu"
       aria-expanded={expanded}
       className={[
-        'inline-flex shrink-0 items-center justify-center rounded text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200',
+        'inline-flex shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200',
         SIZE_CLASS[size],
         revealClass,
         tuck ? '-mr-1 -mt-0.5' : '',
