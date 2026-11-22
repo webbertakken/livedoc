@@ -52,7 +52,7 @@ function joined(start: (log: PdfEngineLog) => Promise<PdfEngine>) {
       toPage.push(wire(message));
       queueMicrotask(() =>
         worker.onmessage?.({
-          data: structuredClone<PdfEngineMessage>(message as PdfEngineMessage),
+          data: structuredClone<PdfEngineMessage>(message),
         }),
       );
     },
@@ -199,9 +199,11 @@ describe('the engine over a worker thread', () => {
       Object.assign(new Error('x'), { name: 'a b\nc' }),
     ]) {
       vi.mocked(debugLog).mockClear();
-      const { worker } = joined(async () => {
-        throw thrown;
-      });
+      // A library may fail with anything at all, an error or not.
+      const failing: PromiseLike<PdfEngine> = {
+        then: (_, refuse) => Promise.resolve(refuse?.(thrown)) as never,
+      };
+      const { worker } = joined(async () => failing);
       await pdfEngineClient(worker).close();
       expect(logged()).toEqual(['[pdf] worker-restarted reason=trap detail=Error']);
     }
