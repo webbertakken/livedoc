@@ -31,8 +31,11 @@ function specLimits(): Map<string, number> {
   );
 }
 
-/** Every value the code gives a constant of that name: one, unless it is declared twice. */
-function codeValues(name: string): number[] {
+/**
+ * Every number the code declares as a constant, by its name: one read of the sources for them all, since each
+ * read walks the whole working tree.
+ */
+function declaredNumbers(): Map<string, number[]> {
   let out = '';
   try {
     out = execFileSync(
@@ -43,25 +46,33 @@ function codeValues(name: string): number[] {
         '-h',
         '-E',
         '-e',
-        `^export const ${name} = [0-9_]+;`,
+        '^export const [A-Z][A-Z_]+ = [0-9_]+;',
         '--',
-        'apps',
-        'packages',
+        'apps/*.ts',
+        'packages/*.ts',
       ],
-      { cwd: ROOT, encoding: 'utf8' },
+      { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 },
     );
   } catch (error) {
     // git grep exits 1 when nothing matches.
     if ((error as { status?: number }).status !== 1) throw error;
   }
-  return out
-    .split('\n')
-    .filter((line) => line !== '')
-    .map((line) => Number(/= ([0-9_]+);/.exec(line)![1]!.replaceAll('_', '')));
+  const declared = new Map<string, number[]>();
+  for (const line of out.split('\n')) {
+    const found = /^export const ([A-Z_]+) = ([0-9_]+);/.exec(line);
+    if (!found) continue;
+    const values = declared.get(found[1]!) ?? [];
+    values.push(Number(found[2]!.replaceAll('_', '')));
+    declared.set(found[1]!, values);
+  }
+  return declared;
 }
 
 describe('a PDF’s limits', () => {
   const limits = specLimits();
+  const declared = declaredNumbers();
+  /** Every value the code gives a constant of that name: one, unless it is declared twice. */
+  const codeValues = (name: string): number[] => declared.get(name) ?? [];
 
   it('are read from the spec’s table', () => {
     expect(limits.size).toBeGreaterThanOrEqual(18);

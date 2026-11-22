@@ -90,6 +90,8 @@ function loggedNames(): Set<string> {
 
 describe('a PDF’s fingerprints', () => {
   const built = new Set(BUILT_SPECS.flatMap((spec) => [...namedBy(spec)]));
+  // One read of the sources for every fingerprint: each read walks the whole working tree.
+  const logged = loggedAmong([...built]);
 
   it('are read from the specs', () => {
     expect(built.size).toBeGreaterThan(40);
@@ -99,13 +101,12 @@ describe('a PDF’s fingerprints', () => {
 
   it('are each logged by the code, once their spec is built', () => {
     const due = [...built].filter((name) => !(name in NOT_BUILT));
-    const logged = loggedAmong(due);
     expect(due.filter((name) => !logged.has(name)).sort()).toEqual([]);
   });
 
   it('are not logged before the phase that builds them', () => {
     for (const name of Object.keys(NOT_BUILT)) expect(built.has(name), name).toBe(true);
-    expect([...loggedAmong(Object.keys(NOT_BUILT))]).toEqual([]);
+    expect(Object.keys(NOT_BUILT).filter((name) => logged.has(name))).toEqual([]);
   });
 
   it('are each named by a spec, whatever the code logs', () => {
