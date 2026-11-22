@@ -1,6 +1,7 @@
 # Objects
 
-**Status: in progress.** A picture in line is held, read and written in both formats, kept in the live state, and drawn.
+**Status: in progress.** A picture in line is held, read and written in both formats, kept in the live state, drawn,
+inserted, pasted and dropped, its bytes in the gallery.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -79,13 +80,49 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 
 ### In the editor
 
-- The live state holds a picture as a `picture` atom inside its paragraph, its values as attributes, and each media's
-  bytes in the root map `media` by key ([Live editing and storage](live-editing-and-storage.md#the-layout)).
+- The live state holds a picture as a `picture` atom inside its paragraph, its values as attributes, and each media in
+  the root map `media` by key ([Live editing and storage](live-editing-and-storage.md#the-layout)).
 - The editor draws a picture in line at its size, its crop cutting its media; it is one character to the caret, and
   can be selected, copied, moved and deleted, as a kept inline can.
 - A screen reader reads its alternative text; a decorative picture reads as nothing (an empty `alt`).
 - A picture whose media the state lacks shows as a grey box of its size reading "Picture, not loaded" (default).
 - Media no picture holds stays in `media`, so an undo brings its picture back whole; a file never carries it.
+
+### Where the bytes live
+
+- **In the gallery.** A text document a room holds keeps each media's bytes as a gallery image of the person who
+  brought them ([Image element + per-owner gallery](../009-elements/images.md)): its `media` entry names the image by
+  id (`image`) and holds no bytes.
+  The key stays the SHA-256 of the bytes, the gallery's own dedupe key, so equal bytes are one image.
+- **In the state.** A text document in This Browser, one on a deployment without image storage (`images_unavailable`),
+  and media the gallery refuses (`gallery_full`, `file_too_large`) keep their bytes in the entry (`bytes`), so such a
+  document works whole, offline and self-hosted.
+- **Opening a file** uploads each picture's media to the opener's gallery, once per key, before the state is written;
+  an upload refused keeps that media's bytes in the state, logged with its reason, and the import report counts them
+  (default).
+  A JPEG is kept as the gallery keeps every JPEG, its metadata stripped, so it leaves a file without it.
+- **Drawn** from the gallery through `/api/images/<id>?d=<document>` under its placement rules, or from the state's
+  bytes; a picture the reader may not be served shows as missing.
+- **Written to a file** (download, export, conversion, sync): the room reads each gallery media's bytes from image
+  storage under the same placement rules as the byte endpoint, and a file written in this browser reads them through
+  that endpoint; a media it cannot read leaves its picture out of the file, logged (`picture-unavailable`) and counted
+  (`X-Pictures-Left-Out`), and the title row says how many pictures the download left out, never silently.
+- **Referenced.** The gallery images a text document's pictures hold are its references in the
+  [reference index](../009-elements/images.md#reference-index), so retention never sweeps them; media no picture
+  holds is no reference.
+
+### Inserting
+
+- **Insert > Image** opens the shared image picker (Upload, LiveDoc gallery, Search); By URL and Camera wait for their
+  rulings (fetching a URL needs the api's own fetcher). The picture chosen is placed in line at the caret.
+- **Its size** is its pixels at 96 an inch, scaled down to fit the text width and the page's text height, keeping its
+  ratio, as Google places one (default).
+- **Paste and drop** of picture files (PNG, JPEG, GIF, WebP) upload each and place it at the caret or the drop point;
+  other files are refused as the picker refuses them, with its message.
+- Copying a picture into another text document carries its media: a gallery media by its id, served there under the
+  placement rules; state bytes as they are.
+- Share roles: an Editor inserts, pastes and drops pictures; a Participant only as suggestions (D7); a Viewer copies.
+- Telemetry: `Element · Added · TextDocumentImage<Source>` (Upload, Gallery, Search, Paste, Drop).
 
 ## Drawings
 

@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Pictures, readTextDocumentFile } from '@livedoc/text-documents';
-import { expect, expectNoPageErrors, test } from '../fixtures';
+import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
 // Pictures in line (docs/specs/034-text-documents/objects.md "In the editor", "In the formats"): a Word file's pictures
 // are drawn at their size from their media, read by their alternative text; one Word kept (a metafile) stays kept;
-// the file leaves holding the same pictures and the same bytes.
+// the file leaves holding the same pictures. Their bytes go to the opener's gallery (objects.md "Where the bytes live"),
+// the document placing them (images.md "Reference index"), and leave read back from it, a JPEG without its metadata.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const FILE = join(
@@ -44,7 +45,33 @@ test('a Word file’s pictures are drawn, and leave as they came', async ({ page
   await tomcat.click();
   await expect(body.locator('.ProseMirror-selectednode.text-document-picture')).toHaveCount(1);
 
-  // Downloaded, the same pictures with the same bytes.
+  // The PNG and the JPEG are the opener's gallery images now, the document placing both once its outbox drains.
+  const headers = await pageOwnerHeaders(page);
+  const gallery = await page.evaluate(async (headers) => {
+    const res = await fetch('/api/images', { headers });
+    return ((await res.json()) as { images: { id: string; contentType: string }[] }).images;
+  }, headers);
+  expect(gallery.map((i) => i.contentType).sort()).toEqual(['image/jpeg', 'image/png']);
+  const documentId = new URL(page.url()).pathname.split('/').filter(Boolean).at(-1);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          async ({ headers, documentId }) => {
+            const res = await fetch('/api/images/usage', { headers });
+            const { usage } = (await res.json()) as { usage: Record<string, { id: string }[]> };
+            return Object.entries(usage)
+              .filter(([, documents]) => documents.some((d) => d.id === documentId))
+              .map(([id]) => id)
+              .sort();
+          },
+          { headers, documentId },
+        ),
+      { timeout: 20_000 },
+    )
+    .toEqual(gallery.map((i) => i.id).sort());
+
+  // Downloaded, the same pictures; the PNG with the same bytes, the JPEG as the gallery keeps it.
   const downloadItem = await officeMenuItem(page, ['File', 'Download', 'Microsoft Word (.docx)']);
   const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);
   const saved = test.info().outputPath('VariousPictures.docx');
@@ -55,10 +82,15 @@ test('a Word file’s pictures are drawn, and leave as they came', async ({ page
   ]);
   expect(arrived.ok && left.ok).toBe(true);
   if (arrived.ok && left.ok) {
-    expect(Pictures.ofDocument(left.document)).toEqual(Pictures.ofDocument(arrived.document));
-    expect(Pictures.heldMedia(left.document).map(([key]) => key)).toEqual(
-      Pictures.heldMedia(arrived.document).map(([key]) => key),
-    );
+    const shape = (document: typeof left.document) =>
+      Pictures.ofDocument(document).map(({ media: _, ...picture }) => picture);
+    expect(shape(left.document)).toEqual(shape(arrived.document));
+    const parts = (document: typeof left.document) =>
+      Pictures.heldMedia(document).map(([key, m]) => [
+        m.part,
+        m.mediaType === 'image/png' ? key : 'jpeg',
+      ]);
+    expect(parts(left.document)).toEqual(parts(arrived.document));
   }
   expectNoPageErrors(pageErrors);
 });

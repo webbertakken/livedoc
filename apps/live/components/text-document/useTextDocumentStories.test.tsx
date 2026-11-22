@@ -81,6 +81,7 @@ function Harness({
     pages,
     heights: held,
     endNotes,
+    gallery: { gallery: async () => null, release: () => {} },
   });
   return (
     <div data-page-format="pages">

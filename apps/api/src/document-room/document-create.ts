@@ -93,7 +93,7 @@ export async function createDocumentContent(
     }
   }
   if (!seed.recommit && seed.textDocuments && seed.textDocuments.length > 0) {
-    const seeded = await seedTextDocuments(env, documentId, seed.textDocuments);
+    const seeded = await seedTextDocuments(env, documentId, seed.owner, seed.textDocuments);
     if (!seeded.ok) return seeded;
   }
   if (!seed.recommit && seed.pdfDocuments && seed.pdfDocuments.length > 0)

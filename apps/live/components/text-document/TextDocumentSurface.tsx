@@ -16,6 +16,7 @@ import { tableResizePlugin } from '@/lib/text-document/text-document-table-resiz
 import { tableMovePlugin } from '@/lib/text-document/text-document-table-move-plugin';
 import { tableView } from '@/lib/text-document/text-document-table-dom';
 import { pictureView } from '@/lib/text-document/text-document-pictures';
+import { galleryPicturesOf } from '@/lib/text-document/text-document-gallery-pictures';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
@@ -209,6 +210,11 @@ export function TextDocumentSurface({
   // The pages' zoom, this person's for this document (editing-surface.md "Zoom").
   const { zoom, scale } = useTextDocumentZoom(scope.documentId, scroller);
   const { ownerId, documentId, tabId, shareCode } = scope;
+  // Pictures named in the gallery are read as this reader is served them (objects.md "Where the bytes live").
+  const gallery = useMemo(
+    () => galleryPicturesOf({ ownerId, documentId, shareCode }),
+    [ownerId, documentId, shareCode],
+  );
   // The latest sender and gate, read when an update goes out, so a new room connection never rebinds the editor.
   // This person's editing mode (review.md "Editing modes"): the writing takes edits only in Editing.
   const {
@@ -418,7 +424,10 @@ export function TextDocumentSurface({
           nodeViews: {
             ...FIELD_NODE_VIEWS,
             table: tableView,
-            [PICTURE]: pictureView((key) => TextDocumentState.media(doc, key)),
+            [PICTURE]: pictureView({
+              media: (key) => TextDocumentState.media(doc, key),
+              ...galleryPicturesOf(where),
+            }),
           },
           // Read only in Viewing (or for a Viewer), yet still focusable: the keyboard reads it, and its shortcuts work.
           attributes: () => ({
@@ -532,6 +541,7 @@ export function TextDocumentSurface({
     heights: storyHeights,
     caret: changes.plugin,
     caretSection: page.caret.index,
+    gallery,
   });
   const { activeView } = headers;
   // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.

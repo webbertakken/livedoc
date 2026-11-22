@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { apiLoadTextDocumentStateSince, apiPostTextDocumentUpdate } from './text-documents';
+import {
+  apiDownloadTextDocument,
+  apiLoadTextDocumentStateSince,
+  apiPostTextDocumentUpdate,
+} from './text-documents';
 
 // docs/specs/034-text-documents/live-editing-and-storage.md "Reading it", "Sending" and "Reconnecting".
 
@@ -52,5 +56,29 @@ describe('apiPostTextDocumentUpdate', () => {
     expect(new Headers(init?.headers).get('X-Share-Code')).toBe('code-1');
     stub(async () => Response.json({ error: 'update_too_large' }, { status: 413 }));
     await expect(apiPostTextDocumentUpdate(scope, Uint8Array.of(1))).rejects.toThrow();
+  });
+});
+
+// files-and-print.md "Downloading"; objects.md "Where the bytes live": the pictures a download left out are counted.
+describe('apiDownloadTextDocument', () => {
+  it('reads the file, its name, and the pictures it left out', async () => {
+    stub(
+      async () =>
+        new Response(Uint8Array.of(1, 2), {
+          headers: {
+            'Content-Disposition': 'attachment; filename="Q3.docx"',
+            'X-Pictures-Left-Out': '2',
+          },
+        }),
+    );
+    const file = await apiDownloadTextDocument(scope, 'docx');
+    expect(file.fileName).toBe('Q3.docx');
+    expect(file.leftOut).toBe(2);
+    expect(new Uint8Array(await file.blob.arrayBuffer())).toEqual(Uint8Array.of(1, 2));
+  });
+
+  it('counts none where the answer says nothing of pictures', async () => {
+    stub(async () => new Response(Uint8Array.of(1)));
+    expect((await apiDownloadTextDocument(scope, 'odt')).leftOut).toBe(0);
   });
 });

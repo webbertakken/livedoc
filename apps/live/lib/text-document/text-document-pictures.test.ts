@@ -4,9 +4,9 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { PICTURE } from '@livedoc/text-documents';
+import { PICTURE, type PictureMedia } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
-import { pictureBox, pictureView } from './text-document-pictures';
+import { pictureBox, pictureView, type PictureSource } from './text-document-pictures';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
 const picture = (attrs: Record<string, unknown>) =>
@@ -47,17 +47,17 @@ describe('a picture drawn', () => {
     );
   });
 
-  const draw = (attrs: Record<string, unknown>, media = true) => {
-    const node = picture(attrs);
-    const view = pictureView(() => (media ? { mediaType: 'image/png', bytes: PNG } : undefined))(
-      node,
-      {} as EditorView,
-      () => 0,
-      [],
-      undefined as never,
-    );
-    return view.dom;
-  };
+  const held = (media: boolean) => (): PictureMedia | undefined =>
+    media ? { mediaType: 'image/png', bytes: PNG } : undefined;
+  const sourceOf = (
+    media: (key: string) => PictureMedia | undefined,
+    gallery: PictureSource['gallery'] = async () => null,
+    release = vi.fn(),
+  ): PictureSource => ({ media, gallery, release });
+  const viewOf = (attrs: Record<string, unknown>, source: PictureSource) =>
+    pictureView(source)(picture(attrs), {} as EditorView, () => 0, [], undefined as never);
+  const draw = (attrs: Record<string, unknown>, media = true) =>
+    viewOf(attrs, sourceOf(held(media))).dom;
 
   it('shows its media at its size, read by its alternative text', () => {
     const dom = draw({ alt: 'A green field' });
@@ -81,6 +81,65 @@ describe('a picture drawn', () => {
     expect(dom.classList.contains('text-document-picture-missing')).toBe(true);
   });
 
+  // objects.md "Where the bytes live": a gallery media is drawn from its image, under the placement rules.
+  describe('from the gallery', () => {
+    const gallery = (): PictureMedia => ({ mediaType: 'image/png', image: 'img-1' });
+    const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it('shows the image the gallery serves, and gives its URL back when gone', async () => {
+      const release = vi.fn();
+      const asked = vi.fn(async () => 'blob:gallery');
+      const view = viewOf({ alt: 'Sky' }, sourceOf(gallery, asked, release));
+      expect(view.dom.querySelector('img')).toBeNull();
+      expect(view.dom.textContent).toBe('');
+      await settled();
+      expect(asked).toHaveBeenCalledWith('img-1');
+      const img = view.dom.querySelector('img')!;
+      expect(img.getAttribute('src')).toBe('blob:gallery');
+      expect(img.getAttribute('alt')).toBe('Sky');
+      view.destroy!();
+      expect(release).toHaveBeenCalledWith('blob:gallery');
+    });
+
+    it('shows a picture the reader may not be served as missing', async () => {
+      const view = viewOf(
+        {},
+        sourceOf(gallery, async () => null),
+      );
+      await settled();
+      expect(view.dom.textContent).toBe('Picture, not loaded');
+    });
+
+    it('shows a picture the gallery fails to read as missing', async () => {
+      const view = viewOf(
+        {},
+        sourceOf(gallery, () => Promise.reject(new Error('offline'))),
+      );
+      await settled();
+      expect(view.dom.classList.contains('text-document-picture-missing')).toBe(true);
+    });
+
+    it('gives back a URL that arrives after the view is gone', async () => {
+      const release = vi.fn();
+      const view = viewOf(
+        {},
+        sourceOf(gallery, async () => 'blob:late', release),
+      );
+      view.destroy!();
+      await settled();
+      expect(release).toHaveBeenCalledWith('blob:late');
+    });
+
+    it('reads its image once while only its size changes', async () => {
+      const asked = vi.fn(async () => 'blob:gallery');
+      const view = viewOf({}, sourceOf(gallery, asked));
+      await settled();
+      view.update!(picture({ width: 90 }), [], undefined as never);
+      await settled();
+      expect(asked).toHaveBeenCalledTimes(1);
+      expect(view.dom.style.width).toBe('90pt');
+    });
+  });
   it('is one atom of the paragraph, read as no text', () => {
     const state = EditorState.create({
       doc: textDocumentSchema.node('doc', null, [

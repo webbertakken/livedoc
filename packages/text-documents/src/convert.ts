@@ -318,7 +318,13 @@ export function convertTextDocument(
   const { kept: _, ...metadata } = document.metadata;
   // Pictures' media travel, the entries they arrived in being the other format's (objects.md "In the formats").
   const media = Pictures.heldMedia(document).map(
-    ([key, m]) => [key, { mediaType: m.mediaType, bytes: m.bytes }] as const,
+    ([key, m]) =>
+      [
+        key,
+        Pictures.holdsBytes(m)
+          ? { mediaType: m.mediaType, bytes: m.bytes }
+          : { mediaType: m.mediaType, image: m.image },
+      ] as const,
   );
   return {
     document: {

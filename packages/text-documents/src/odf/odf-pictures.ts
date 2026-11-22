@@ -17,7 +17,13 @@ import {
 } from '@livedoc/office-packages';
 import { base64OfBytes, bytesOfBase64 } from '../base64';
 import { findMedia, type FoundMedia, type MediaTaken } from '../picture-media';
-import { Pictures, type Picture, type PictureCrop, type PictureMedia } from '../model/pictures';
+import {
+  Pictures,
+  type HeldPictureMedia,
+  type Picture,
+  type PictureCrop,
+  type PictureMedia,
+} from '../model/pictures';
 import { NS } from './odf-names';
 
 /** The media of each `draw:image` a read may hold as a picture's, by element. */
@@ -245,7 +251,7 @@ export function readOdfPicture(
 const LOEXT = `xmlns:loext="${NS.loext}"`;
 
 /** The picture's automatic graphic style's body: on the baseline, its crop and whether it is decorative. */
-export function odfPictureStyle(picture: Picture, media: PictureMedia): string {
+export function odfPictureStyle(picture: Picture, media: HeldPictureMedia): string {
   const crop = Pictures.crop(picture.crop);
   const header = pictureHeader(media.bytes);
   const own = header && pictureOwnSize(header);
@@ -264,7 +270,7 @@ export const odfMediaEntry = (key: string, media: PictureMedia): string =>
 /** The picture's frame: `name` its `draw:name`, `style` its automatic style's, its media by entry or as base64. */
 export function odfPictureXml(
   picture: Picture,
-  media: PictureMedia,
+  media: HeldPictureMedia,
   { name, style, flat }: { name: string; style: string; flat: boolean },
 ): string {
   const source = flat

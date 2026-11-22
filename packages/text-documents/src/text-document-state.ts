@@ -20,6 +20,7 @@ import type { Section } from './model/sections';
 import type { Watermark } from './model/watermark';
 import type { ListDefinition } from './model/lists';
 import { paragraphElementsOf } from './live/live-tables';
+import { liveGalleryImages } from './live/live-media';
 import {
   addLiveStyle,
   setLiveList,
@@ -211,6 +212,8 @@ export const TextDocumentState = {
   /** Media a paste brought, each written once by its key; a key the state holds keeps its own bytes. */
   addMedia: (doc: Y.Doc, media: Readonly<Record<string, PictureMedia>>): void =>
     doc.transact(() => writeLiveMedia(doc.getMap<unknown>(MEDIA_MAP), Object.entries(media))),
+  /** The ids of the gallery images its pictures hold: the tab's references (objects.md "Where the bytes live"). */
+  galleryImages: (doc: Y.Doc): string[] => liveGalleryImages(doc),
   /** The live state's lists map, which the editor's undo also tracks. */
   listsType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(LISTS_MAP),
   /** The live state's styles map, which the editor's undo also tracks (live-editing-and-storage.md "Undo"). */

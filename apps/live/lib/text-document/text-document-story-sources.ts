@@ -19,6 +19,7 @@ import { textDocumentSchema } from './text-document-schema';
 import { FIELD_NODE_VIEWS, fieldNumbersPlugin } from './text-document-fields';
 import { tableView } from './text-document-table-dom';
 import { pictureView } from './text-document-pictures';
+import type { GalleryPictures } from './text-document-gallery-pictures';
 import { tabStopsPlugin } from './text-document-tab-layout';
 
 /** A drawn story's class, on its source and every copy. */
@@ -45,6 +46,8 @@ export type StorySourceInput = {
   readonly label: string;
   /** Drawn even when it holds nothing: a footnote, whose empty line carries its number (page-layout.md "Footnotes"). */
   readonly drawsEmpty?: boolean;
+  /** Where its pictures' gallery images are read from (objects.md "Where the bytes live"). */
+  readonly gallery: GalleryPictures;
 };
 
 /** Draws nothing: one paragraph with no content, or none. */
@@ -97,7 +100,10 @@ export class StorySource {
       nodeViews: {
         ...FIELD_NODE_VIEWS,
         table: tableView,
-        [PICTURE]: pictureView((key) => TextDocumentState.media(doc, key)),
+        [PICTURE]: pictureView({
+          media: (key) => TextDocumentState.media(doc, key),
+          ...input.gallery,
+        }),
       },
       editable: () => this.#editing,
       attributes: () => ({

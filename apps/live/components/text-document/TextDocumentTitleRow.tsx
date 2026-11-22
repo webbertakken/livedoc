@@ -13,6 +13,8 @@ import type { OfficeSaveStatusSource } from '@/components/office/office-save-sta
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { TextDocumentScope } from '@/lib/api/text-documents';
 import { apiDownloadTextDocument } from '@/lib/api/text-documents';
+import { apiFetchImageBytes } from '@/lib/api/images';
+import { leftOutNotice } from '@/lib/text-document/text-document-download';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
@@ -35,13 +37,15 @@ import { openTextDocumentFile } from '@/lib/text-document/open-text-document-fil
 // A text document no room holds is written in this browser; the writer loads only when it is asked for.
 async function writtenHere(
   doc: Y.Doc | null,
-  format: TextDocumentFormat,
-  name: string,
-  type: TextDocumentFileType,
+  file: { format: TextDocumentFormat; name: string; type: TextDocumentFileType },
+  scope: TextDocumentScope,
 ) {
   if (!doc) throw new Error('text document not loaded');
   const { textDocumentFileOf } = await import('@/lib/text-document/text-document-file');
-  return textDocumentFileOf(doc, format, name, type);
+  // A picture pasted from a document whose media is in the gallery is read back from it (objects.md).
+  const readImage = (imageId: string) =>
+    apiFetchImageBytes(scope.ownerId, imageId, { documentId: scope.documentId });
+  return textDocumentFileOf(doc, { ...file, readImage });
 }
 
 // What the title row says of each format, and the files it downloads as itself.
@@ -126,10 +130,11 @@ export function TextDocumentTitleRow({
     const download = async (type: TextDocumentFileType) => {
       setProblem(null);
       try {
-        const { blob, fileName } = localDoc
-          ? await writtenHere(localDoc(), format, documentName, type)
+        const { blob, fileName, leftOut } = localDoc
+          ? await writtenHere(localDoc(), { format, name: documentName, type }, scope)
           : await apiDownloadTextDocument(scope, type);
         downloadBlob(blob, fileName);
+        if (leftOut > 0) setProblem(leftOutNotice(leftOut));
         track('Document', 'Exported', DOWNLOADS[type].telemetry);
       } catch (error) {
         setProblem('The file could not be downloaded. Try again.');

@@ -221,16 +221,20 @@ export function readLiveStyles(doc: Y.Doc, format: TextDocumentFormat): Style[] 
   return stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? [...TextDocument.blank({ format }).styles];
 }
 
-/** One media as the state holds it, when whole: a media type the model maps, and its bytes. */
+/**
+ * One media as the state holds it, when whole: a media type the model maps, and either its bytes or the gallery image
+ * they are (objects.md "Where the bytes live"); an entry holding neither, or both, is none.
+ */
 function mediaOf(value: unknown): PictureMedia | undefined {
-  const m = value as { mediaType?: unknown; bytes?: unknown; part?: unknown } | undefined;
-  if (!(m?.bytes instanceof Uint8Array) || typeof m.mediaType !== 'string') return undefined;
-  if (!isMappedPictureType(m.mediaType)) return undefined;
-  return {
-    mediaType: m.mediaType,
-    bytes: m.bytes,
-    ...(typeof m.part === 'string' ? { part: m.part } : {}),
-  };
+  const m = value as
+    { mediaType?: unknown; bytes?: unknown; image?: unknown; part?: unknown } | undefined;
+  if (typeof m?.mediaType !== 'string' || !isMappedPictureType(m.mediaType)) return undefined;
+  const bytes = m.bytes instanceof Uint8Array ? m.bytes : undefined;
+  const image = typeof m.image === 'string' && m.image.length > 0 ? m.image : undefined;
+  const part = typeof m.part === 'string' ? { part: m.part } : {};
+  if (bytes && image === undefined) return { mediaType: m.mediaType, ...part, bytes };
+  if (image !== undefined && !bytes) return { mediaType: m.mediaType, ...part, image };
+  return undefined;
 }
 
 /** A picture's media by its key, as the state's `media` map holds it (objects.md "In the editor"). */

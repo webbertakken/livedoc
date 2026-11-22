@@ -22,7 +22,7 @@ import type { Section } from '../model/sections';
 import { HeaderPartsWriter } from './ooxml-headers';
 import { RelationshipList, relativeTarget } from './ooxml-relationships';
 import { ooxmlMediaPart, ooxmlPictureXml } from './ooxml-pictures';
-import type { Picture, PictureMedia } from '../model/pictures';
+import { Pictures, type HeldPictureMedia, type Picture } from '../model/pictures';
 import { keptXmlTexts } from '../picture-media';
 import { Styles, type Style } from '../model/styles';
 import type { TabStop } from '../model/tab-stops';
@@ -81,7 +81,7 @@ class OoxmlWriter {
   /** Each of the body's notes with its footnote's id (page-layout.md "Footnotes"). */
   readonly noteIds: Map<Note, string>;
   /** The media the pictures written hold, by the part each is written at (objects.md "In the formats"). */
-  readonly mediaParts = new Map<string, PictureMedia>();
+  readonly mediaParts = new Map<string, HeldPictureMedia>();
   /** The last `wp:docPr` id given: numbered after those kept content holds. */
   #pictureId: number;
   /** Each section's place among the sections, by the section itself. */
@@ -248,7 +248,7 @@ class OoxmlWriter {
 
   /** A picture in line, its media written at its part and named by the part's relationships; none without media. */
   pictureXml(picture: Picture): string {
-    const media = this.doc.media?.[picture.media];
+    const media = Pictures.heldBytes(this.doc, picture.media);
     if (!media) return '';
     const part = ooxmlMediaPart(picture.media, media, this.mainPart);
     this.mediaParts.set(part, media);

@@ -29,3 +29,7 @@ export function parseTextDocumentCaret(op: unknown): TextDocumentCaret | null {
 /** The header a text document's state answer carries its state vector in, base64
  *  (docs/specs/034-text-documents/live-editing-and-storage.md "Reconnecting"). */
 export const TEXT_DOCUMENT_STATE_VECTOR_HEADER = 'X-State-Vector';
+
+/** The header a text document's file answer counts the pictures it left out in: media it could not read
+ *  (docs/specs/034-text-documents/objects.md "Where the bytes live"). */
+export const TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER = 'X-Pictures-Left-Out';

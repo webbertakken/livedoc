@@ -5,7 +5,8 @@ import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
 import { downloadFileName } from '@livedoc/office-packages';
-import { TextDocumentState, writeTextDocumentFile } from '@livedoc/text-documents';
+import { Pictures, TextDocumentState, writeTextDocumentFile } from '@livedoc/text-documents';
+import { debugLog } from '@/lib/debug-log';
 
 const MEDIA_TYPES = {
   odt: 'application/vnd.oasis.opendocument.text',
@@ -13,24 +14,37 @@ const MEDIA_TYPES = {
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 } as const;
 
-export function textDocumentFileOf(
+/** A written file: its bytes, its name, and how many pictures it left out, their media not read. */
+export type WrittenTextDocumentFile = { blob: Blob; fileName: string; leftOut: number };
+
+export async function textDocumentFileOf(
   doc: Y.Doc,
-  format: TextDocumentFormat,
-  name: string,
-  // The file asked for: the format's own (an OpenDocument one may be flat); another format's is a conversion.
-  type: TextDocumentFileType = format === 'ooxml' ? 'docx' : 'odt',
-): { blob: Blob; fileName: string } {
+  file: {
+    format: TextDocumentFormat;
+    name: string;
+    // The file asked for: the format's own (an OpenDocument one may be flat); another format's is a conversion.
+    type?: TextDocumentFileType;
+    // A gallery media's bytes (objects.md "Where the bytes live"): a picture it cannot read is left out.
+    readImage?: (imageId: string) => Promise<Uint8Array | undefined>;
+  },
+): Promise<WrittenTextDocumentFile> {
+  const { format, name, readImage = async () => undefined } = file;
+  const type = file.type ?? (format === 'ooxml' ? 'docx' : 'odt');
   if ((type === 'docx') !== (format === 'ooxml'))
     throw new Error('text document file refused: format_not_native');
   const live = TextDocumentState.document(doc, format);
+  const read = await Pictures.resolveMedia(live, readImage);
+  if (read.unavailable.length > 0)
+    debugLog('[text-document] pictures left out of the file', { media: read.unavailable });
   // Its title is the document's name, as the room writes it.
   const written = writeTextDocumentFile(
-    { ...live, metadata: { ...live.metadata, title: name } },
+    { ...read.document, metadata: { ...live.metadata, title: name } },
     type,
   );
   if (!written.ok) throw new Error(`text document file refused: ${written.rejection}`);
   return {
     blob: new Blob([written.bytes.slice().buffer], { type: MEDIA_TYPES[type] }),
     fileName: downloadFileName(name, type, 'Untitled'),
+    leftOut: read.unavailable.length,
   };
 }

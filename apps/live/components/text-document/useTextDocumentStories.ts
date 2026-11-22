@@ -17,6 +17,7 @@ import { StorySource } from '@/lib/text-document/text-document-story-sources';
 import { fillFields, numbersOfBox } from '@/lib/text-document/text-document-fields';
 import { NOTE_BOX_NUMBER_ATTRIBUTE, numberNote } from '@/lib/text-document/text-document-footnotes';
 import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
+import type { GalleryPictures } from '@/lib/text-document/text-document-gallery-pictures';
 
 /** A page's header or footer box: the story at its width it draws. */
 export const STORY_KEY_ATTRIBUTE = 'data-story-key';
@@ -74,6 +75,8 @@ export function useTextDocumentStories(input: {
   readonly heights: RefObject<Map<string, number>>;
   /** What a source takes edits with, made once for each source. */
   readonly plugins?: () => Plugin[];
+  /** Where its pictures' gallery images are read from. */
+  readonly gallery: GalleryPictures;
 }): TextDocumentStories {
   const { view, liveDoc, format, pages, heights } = input;
   const host = useRef<HTMLDivElement | null>(null);
@@ -83,9 +86,9 @@ export function useTextDocumentStories(input: {
   const wanted = useMemo(() => storiesWanted(pages, endNotes), [pages, endNotes]);
   const drawn = useRef(wanted);
   // What a source is made with, read when one is made: in a layout effect or an event handler.
-  const making = useRef({ view, format, plugins: input.plugins });
+  const making = useRef({ view, format, plugins: input.plugins, gallery: input.gallery });
   useLayoutEffect(() => {
-    making.current = { view, format, plugins: input.plugins };
+    making.current = { view, format, plugins: input.plugins, gallery: input.gallery };
   });
 
   // Each box drawing `key`, painted with its source's writing, or emptied.
@@ -112,7 +115,7 @@ export function useTextDocumentStories(input: {
       if (known) return known;
       const doc = liveDoc.current;
       const container = host.current;
-      const { view: body, format: madeFormat, plugins } = making.current;
+      const { view: body, format: madeFormat, plugins, gallery } = making.current;
       if (!body || !doc || !container) return undefined;
       const source = new StorySource({
         doc,
@@ -128,6 +131,7 @@ export function useTextDocumentStories(input: {
         stylesScope: body.dom.getAttribute('data-text-document-styles'),
         label: LABELS[kind],
         drawsEmpty: kind === 'footnote',
+        gallery,
         plugins: plugins?.() ?? [],
         onLaid: (laid) => {
           heights.current.set(key, laid.height);

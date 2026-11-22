@@ -16,6 +16,7 @@ describe('textDocumentDigest', () => {
       pages: 1,
       hasContent: false,
       searchText: '',
+      imageIds: [],
     });
   });
 
@@ -26,6 +27,7 @@ describe('textDocumentDigest', () => {
       pages: 1,
       hasContent: true,
       searchText: 'Hello, world.\n\n  two  words ',
+      imageIds: [],
     });
   });
 

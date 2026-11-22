@@ -1,6 +1,9 @@
 // A text document's doors (docs/specs/034-text-documents/live-editing-and-storage.md "Storage",
 // files-and-print.md "Downloading"): its live state, to load a surface, and its file, to download.
-import { TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
+import {
+  TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER,
+  TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+} from '@livedoc/api-schema';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
 import { API_BASE, apiFetch, apiHeaders, expectOkVoid } from './core';
@@ -69,9 +72,11 @@ export async function apiPostTextDocumentUpdate(
 export async function apiDownloadTextDocument(
   scope: TextDocumentScope,
   type: TextDocumentFileType,
-): Promise<{ blob: Blob; fileName: string }> {
+): Promise<{ blob: Blob; fileName: string; leftOut: number }> {
   const res = await bytesOf(scope, `file?type=${type}`, 'text document file');
   const disposition = res.headers.get('Content-Disposition') ?? '';
   const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `Untitled.${type}`;
-  return { blob: await res.blob(), fileName };
+  // The pictures it left out, their media not read (objects.md "Where the bytes live").
+  const leftOut = Number(res.headers.get(TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER) ?? 0) || 0;
+  return { blob: await res.blob(), fileName, leftOut };
 }

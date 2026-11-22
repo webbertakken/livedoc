@@ -12,6 +12,8 @@ export type LiveTabDigest = {
   readonly pages: number;
   readonly hasContent: boolean;
   readonly searchText: string;
+  /** The gallery images its state places: its rows in the reference index (images.md "Reference index"). */
+  readonly imageIds?: readonly string[];
 };
 
 /**
