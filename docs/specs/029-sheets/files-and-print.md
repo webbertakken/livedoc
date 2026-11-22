@@ -44,7 +44,7 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 
 - A file is read up to the workbook's limits ([Spreadsheet](spreadsheet.md#limits)): a sheet's rows and columns, the
   rows over every sheet, the grid's cells and 200 sheets; past them it is cut, each cut named in the read's losses
-  (shown to the person with the import report, a later step of plan 0020 Phase 7).
+  (shown to the person in the [import report](#the-import-report)).
 - The new spreadsheet is made with each sheet's first 1,000 rows and 26 columns and as many of its cells as one
   request of 4 MB carries; the rest follows in writes, in order: each sheet's other rows, its other columns, then its
   cells, each write within a write's own limits (default, D86).
@@ -53,6 +53,51 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 - While it is sent, the title row shows **Opening “<name>”… <n>%**, the share of rows, columns and cells sent.
 - A part refused moves the half-made spreadsheet to the Bin and says the file could not be opened; nothing half-made is
   left in the Explorer.
+
+### The import report
+
+- A file opened that left anything behind opens its spreadsheet with the **import report**, a dialog titled
+  **Opened “<name>”** saying "Some of what the file holds is not in the spreadsheet:", then one line a kind, counted,
+  naming up to three sheets, cells, codes or parts, as the conversion dialog lists ([Converting](#converting)), and
+  **OK** (default, D120).
+- It is shown once, to the person who opened the file, on the spreadsheet the file made; nothing left behind is
+  silent, and a file that left nothing behind opens without it.
+- Its lines, in this order (default, D120):
+  - **Sheets**: "3 sheets past the 200th are left out"; "1 chart sheet is left out: Chart1".
+  - **Limits**: "1 sheet is cut to the spreadsheet's limits: Data"; "Cells past the first 2,000,000 are left out of
+    1 sheet: Data" ([Limits](#limits)).
+  - **Formulas**: "4 formulas LiveDoc cannot read keep only their last values: Data!B2, Data!B3 and Data!C9" (a
+    reference to another workbook, a table's structured reference).
+  - **Text**: "1 cell's text is cut to 50,000 characters".
+  - **What may run**: "The file's macros are removed and never run"; "The file's digital signature is removed, as
+    LiveDoc changes what it signed"; "2 embedded objects are left out".
+  - **Kept content**: "3 things the file holds could not be kept"
+    ([Standard mapping](standard-mapping.md#unknown-content)).
+  - **Number formats**: "2 number formats LiveDoc cannot read are left out: Data!A1"; "1 number format is shown as
+    near as LiveDoc can: [$-F800]dddd"; "Formats over long runs of empty cells are left out of 1 sheet: Data".
+  - **Styles**: "Fonts, fills, borders and alignment are not shown yet in 2 sheets: Data and Totals".
+  - **Sizes**: "Row heights and column widths are not read yet in 1 sheet: Data".
+  - **Sheet names**: "2 sheet names are changed to fit: “Data” becomes “Data (2)”".
+- A file's preview picture (its thumbnail) is not listed: it shows nothing in the sheet, and LiveDoc's files carry
+  none.
+
+### Import security
+
+Every case of [Security](../../research/sheets-open-standard/security.md) is a test citing it
+(`packages/sheets/src/files/import-security.test.ts`), each with its named rejection or its line in the import report:
+
+- A file past 100 MB is refused before it is read (`package_too_large`); so is a package inflating past 200 MB or
+  holding more than 5,000 entries. One entry's inflation ratio has no cap of its own: deflate's is at most 1,032 to 1,
+  and the shared budget bounds what every entry inflates to (default, D122).
+- A DOCTYPE is refused (`xml_doctype_refused`); no entity is ever resolved.
+- Macros, scripts, signatures and embedded programs are dropped, never run and never written back, and listed.
+- A text cell starting `=` stays text, never a formula; a CSV download writes it safe ([Sheet](sheet.md#csv)).
+- A link opens only by an allowed scheme ([Formulas](formulas.md#functions)); a reference to another workbook keeps its
+  last value, listed as a formula LiveDoc cannot read.
+- However few bytes repeat them, a file makes at most 200 sheets (`sheets_cut`) and 2,000,000 cells (`cells_cut`);
+  its names and other kept content stay within their sizes (`kept_too_large`, D113). Styles make no table in the
+  model: each cell carries its own format, so a file's styles cost no more than its bytes and the cells they format.
+- Fetching functions and regular expressions are guarded where they run ([Formulas](formulas.md)).
 
 ## Download
 
@@ -137,7 +182,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 
 ## Limits
 
-A file up to 100 MB; the workbook's limits ([Spreadsheet](spreadsheet.md#limits)); a print up to 1,000 pages.
+A file up to 100 MB, read up to 2,000,000 cells (D121); the workbook's limits
+([Spreadsheet](spreadsheet.md#limits)); a print up to 1,000 pages.
 
 ## Defaults
 
@@ -154,3 +200,10 @@ The code cites each by its id.
   detected, a `.tsv`'s and a `.txt`'s a tab; made in a new spreadsheet's format with Google's meaning (default).
 - **D118** A CSV or TSV downloaded: The open sheet, named `<spreadsheet> - <sheet>` as Google names it; a TSV quoted
   as a CSV is (default).
+- **D120** The import report: A dialog on the spreadsheet a file made, shown once, one line a kind, counted, naming
+  up to three, in the order above; a file's thumbnail not listed (default).
+- **D121** Cells one file makes: 2,000,000, the rest left out and listed (`cells_cut`); a file of two million repeated
+  cells takes about 550 MB through the read, the sheets and their parts (measured in Node); safe range 1,000,000 to
+  4,000,000 (default).
+- **D122** One package entry's inflation ratio: No cap of its own; the shared byte budget bounds every entry
+  (default).

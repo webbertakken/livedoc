@@ -6,8 +6,6 @@ import {
   readOoxmlPackage,
   writeOdfPackage,
   writeOoxmlPackage,
-  type OoxmlPart,
-  type Relationship,
 } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import { readWorkbookFile } from './read-workbook-file';
@@ -17,6 +15,7 @@ import { fromXstring, readBlock, readCellAddress, SPREADSHEETML_NS, toXstring } 
 import { readXlsx } from './xlsx-read';
 import { writeXlsx } from './xlsx-write';
 import { writeFlatOds, writeOds } from './ods-write';
+import { xlsx } from '../testing/hand-files';
 
 const decode = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
 const dates = (xml: string | undefined) => dateStyles(readCellStyles(xml, 'en-US'));
@@ -205,66 +204,6 @@ describe('readXlsx', () => {
     });
   });
 });
-
-// A package from hand-written parts, as other makers write them.
-function xlsx(
-  sheets: string[],
-  options: {
-    workbook?: string;
-    strings?: string;
-    styles?: string;
-    mediaType?: string;
-    rels?: Relationship[];
-  } = {},
-): Uint8Array<ArrayBuffer> {
-  const encode = (text: string) => new TextEncoder().encode(text);
-  const ns = `xmlns="${SPREADSHEETML_NS}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`;
-  const parts: OoxmlPart[] = [
-    {
-      name: 'xl/workbook.xml',
-      contentType: options.mediaType ?? OOXML_CONTENT_TYPES.spreadsheet,
-      data: encode(
-        options.workbook ??
-          `<workbook ${ns}><sheets>${sheets.map((_, i) => `<sheet name="S${i + 1}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
-      ),
-    },
-    ...sheets.map((xml, i) => ({
-      name: `xl/worksheets/sheet${i + 1}.xml`,
-      contentType: OOXML_CONTENT_TYPES.worksheet,
-      data: encode(`<worksheet ${ns}><sheetData>${xml}</sheetData></worksheet>`),
-    })),
-  ];
-  const rels: Relationship[] =
-    options.rels ??
-    sheets.map((_, i) => ({
-      id: `rId${i + 1}`,
-      type: RELATIONSHIP_TYPES.worksheet,
-      target: `worksheets/sheet${i + 1}.xml`,
-    }));
-  if (options.strings !== undefined) {
-    parts.push({
-      name: 'xl/sharedStrings.xml',
-      contentType: OOXML_CONTENT_TYPES.sharedStrings,
-      data: encode(options.strings),
-    });
-    rels.push({ id: 'rS', type: RELATIONSHIP_TYPES.sharedStrings, target: 'sharedStrings.xml' });
-  }
-  if (options.styles !== undefined) {
-    parts.push({
-      name: 'xl/styles.xml',
-      contentType: OOXML_CONTENT_TYPES.spreadsheetStyles,
-      data: encode(options.styles),
-    });
-    rels.push({ id: 'rT', type: RELATIONSHIP_TYPES.styles, target: 'styles.xml' });
-  }
-  return writeOoxmlPackage(
-    parts,
-    new Map([
-      ['', [{ id: 'rId1', type: RELATIONSHIP_TYPES.officeDocument, target: 'xl/workbook.xml' }]],
-      ['xl/workbook.xml', rels],
-    ]),
-  );
-}
 
 async function cellsOf(bytes: Uint8Array<ArrayBuffer>) {
   const read = await readXlsx(bytes);

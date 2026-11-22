@@ -8,6 +8,7 @@ import {
 } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import { readOds } from './ods-read';
+import type { FileRead } from './workbook-file';
 import { SPREADSHEETML_NS } from './xlsx-parts';
 import { readXlsx } from './xlsx-read';
 
@@ -28,7 +29,10 @@ function fods(table: string): Uint8Array<ArrayBuffer> {
   );
 }
 
-const lossesOf = async (bytes: Uint8Array<ArrayBuffer>, read = readOds) => {
+const lossesOf = async (
+  bytes: Uint8Array<ArrayBuffer>,
+  read: (bytes: Uint8Array<ArrayBuffer>) => Promise<FileRead> = readOds,
+) => {
   const out = await read(bytes);
   if (!out.ok) throw new Error(out.rejection);
   return out.losses.filter((l) => l.k === 'styles_unread');

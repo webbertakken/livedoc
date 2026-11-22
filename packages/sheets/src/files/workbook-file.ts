@@ -56,6 +56,8 @@ export type FileLoss =
   | { k: 'formula_unread'; sheet: string; r: number; c: number }
   | { k: 'formula_unwritten'; sheet: string; r: number; c: number }
   | { k: 'sheet_cut'; sheet: string; rows: number; cols: number }
+  // A sheet whose cells past the most one file makes are left out (D121).
+  | { k: 'cells_cut'; sheet: string }
   | { k: 'sheets_cut'; kept: number; had: number }
   | { k: 'sheet_unread'; sheet: string }
   | { k: 'sheet_renamed'; from: string; to: string }
@@ -69,6 +71,8 @@ export type FileLoss =
   | { k: 'kept_cut'; sheet: string; cells: number }
   // A sheet's cells formatted past their number format (fonts, fills, borders, alignment): not read yet (D104).
   | { k: 'styles_unread'; sheet: string }
+  // An ODF sheet whose rows or columns are sized by hand: its sizes are not read yet (D104, D124).
+  | { k: 'sizes_unread'; sheet: string }
   | { k: 'kept_unread'; count: number }
   | { k: 'kept_dropped'; count: number }
   // Kept items, relationships and entries past the sizes a spreadsheet stores (D113).
@@ -232,14 +236,28 @@ function literalInput(value: FileValue): CellInput | null {
   }
 }
 
+// Each code read once a file: a file of two million cells holds a few codes (D121).
+type FormatsRead = (code: string) => ReturnType<typeof formatFromCode>;
+
+function formatsRead(locale: string): FormatsRead {
+  const read = new Map<string, ReturnType<typeof formatFromCode>>();
+  return (code) => {
+    const known = read.get(code);
+    if (known) return known;
+    const made = formatFromCode(code, locale);
+    read.set(code, made);
+    return made;
+  };
+}
+
 function cellFormatOf(
   cell: FileCell,
   sheet: string,
-  locale: string,
+  formats: FormatsRead,
   losses: FileLoss[],
 ): CellFormat | undefined {
   if (cell.format === undefined) return undefined;
-  const read = formatFromCode(cell.format, locale);
+  const read = formats(cell.format);
   if (read.ok) return read.format;
   losses.push({ k: 'format_unread', sheet, r: cell.r, c: cell.c });
   return undefined;
@@ -288,6 +306,7 @@ export function sheetsFromFile(
 ): SheetsFromFile {
   const losses: FileLoss[] = [];
   const made = madeSheets(file, rand, losses);
+  const formats = formatsRead(locale);
   const handles: SheetHandle[] = made.map((m) => ({
     id: m.id,
     title: m.title,
@@ -314,7 +333,7 @@ export function sheetsFromFile(
         else losses.push({ k: 'formula_unread', sheet: m.title, r: cell.r, c: cell.c });
       }
       input ??= cell.value ? literalInput(cell.value) : null;
-      const format = cellFormatOf(cell, m.title, locale, losses);
+      const format = cellFormatOf(cell, m.title, formats, losses);
       if (input || format)
         cells.push({ r, c, ...(input ? { i: input } : {}), ...(format ? { f: format } : {}) });
     }
