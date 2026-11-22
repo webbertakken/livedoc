@@ -92,6 +92,14 @@ Setting it up, once (the CLI steps were run against a local stack and file as de
 Stored reports are read with `wrangler d1 execute docs-nu --remote --command "SELECT id, reason, attempts, created_at
 FROM bug_reports"`; the refile files them every 15 minutes once the board takes them.
 
+## Logs
+
+The api, mcp and router keep their own log lines in Workers Logs ([Worker logs](../specs/016-platform/worker-logs.md)).
+
+- Read them in the Cloudflare dashboard: Workers & Pages, the worker, Observability.
+- Search by fingerprint: `api error route=` for a `500`, `[d1] unavailable` for a `503 storage_unavailable`.
+- `pnpm exec wrangler tail docs-nu-api` (from `apps/api`) is the live stream; it keeps nothing.
+
 ## Deploy
 
 From a clean checkout of the commit to ship:
