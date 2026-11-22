@@ -10,17 +10,20 @@ import {
   isFunctionDeclaration,
   isIdentifier,
   isMethodDeclaration,
+  isNoSubstitutionTemplateLiteral,
   isNonNullExpression,
   isNumericLiteral,
   isParameterDeclaration,
   isParenthesizedExpression,
   isPropertyAccessExpression,
+  isStringLiteral,
   isTypeReferenceNode,
   isVariableDeclaration,
   SyntaxKind,
   type Node,
   type SourceFile,
 } from 'typescript/unstable/ast';
+import { FEATURE_OFF_ERROR, FEATURE_OFF_ERRORS } from '@livedoc/api-schema';
 import { parseSourceFiles } from '@livedoc/source-ast';
 import { describe, expect, it } from 'vitest';
 
@@ -32,6 +35,7 @@ import { describe, expect, it } from 'vitest';
 
 const API_DIR = fileURLToPath(new URL('.', import.meta.url));
 const APP_DIR = fileURLToPath(new URL('../..', import.meta.url));
+const API_WORKER_DIR = fileURLToPath(new URL('../../../api/src', import.meta.url));
 const NOT_SOURCE_DIRS = new Set(['node_modules', '.next', '.next-dev', 'out', 'e2e']);
 
 // The reporting path: each reports a 5xx it is handed (core.ts).
@@ -251,6 +255,7 @@ describe('every editor response read reaches the reporting path', () => {
           'async function judge(res: Response) {',
           '  return res.ok;',
           '}',
+          // Skips a feature-off 503 by hand, before the reporting path: it would swallow every other 503 too.
           'export async function readC() {',
           "  const res = await fetcher('/api/c');",
           '  if (res.status === 503) return null;',
@@ -278,6 +283,13 @@ describe('every editor response read reaches the reporting path', () => {
           "  if (res.status === 409) return 'taken';",
           "  return expectOk(res, 'read b');",
           '}',
+          // Leaves a feature-off 503 to the reporting path, which knows it is no fault, then answers the gallery off.
+          'export async function readC() {',
+          "  const res = await apiFetch('/api/images');",
+          "  await reportServerError(res, 'list images');",
+          '  if (res.status === 503) return null;',
+          "  return expectOk(res, 'list images');",
+          '}',
         ].join('\n'),
       );
       expect(unreportedResponseReads([unreported])).toEqual([
@@ -290,6 +302,32 @@ describe('every editor response read reaches the reporting path', () => {
       expect(unreportedResponseReads([reported])).toEqual([]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // A feature switched off is not a fault, so its 503 tokens are the one exception to reporting every 5xx
+  // (docs/specs/017-telemetry/telemetry.md). The api answers them from that same list, or a token renamed on one side
+  // would turn a switched-off feature into a standing false fault.
+  it('finds the api answering every feature-off 503 from the shared list, never from a literal', () => {
+    const workerSources = appSources(API_WORKER_DIR);
+    expect(workerSources.length).toBeGreaterThan(50);
+    const literals: string[] = [];
+    const files = workerSources.filter((path) => {
+      const text = readFileSync(path, 'utf8');
+      return FEATURE_OFF_ERRORS.some((token) => text.includes(token));
+    });
+    parseSourceFiles(files).forEach((sf, i) => {
+      walk(sf, (node) => {
+        const isText = isStringLiteral(node) || isNoSubstitutionTemplateLiteral(node);
+        if (isText && (FEATURE_OFF_ERRORS as readonly string[]).includes(node.text)) {
+          literals.push(`${basename(files[i]!)}: ${node.getText()}`);
+        }
+      });
+    });
+    expect(literals).toEqual([]);
+    const workerText = workerSources.map((path) => readFileSync(path, 'utf8')).join('\n');
+    for (const feature of Object.keys(FEATURE_OFF_ERROR)) {
+      expect(workerText).toContain(`FEATURE_OFF_ERROR.${feature}`);
     }
   });
 });

@@ -71,3 +71,32 @@ describe('apiReadHome', () => {
     expect(seen).toEqual([]);
   });
 });
+
+// A feature this deployment has not configured is switched off, not failing: its 503 is never a fault
+// (docs/specs/017-telemetry/telemetry.md `Http<status>.<Action>.<Code>`). Every other 503 still reports.
+describe('a feature switched off', () => {
+  it.each(['ai_not_configured', 'images_unavailable'])('does not report a 503 %s', async (code) => {
+    const seen = reportsSeen();
+    await reportServerError(answer(503, { error: code }), 'read notes');
+    await expect(expectOk(answer(503, { error: code }), 'list images')).rejects.toBeInstanceOf(
+      ApiError,
+    );
+    expect(seen).toEqual([]);
+  });
+
+  it.each([
+    ['storage_unavailable', 'Http503.ListImages.StorageUnavailable'],
+    ['content_moving', 'Http503.ListImages.ContentMoving'],
+    ['room_unavailable', 'Http503.ListImages.RoomUnavailable'],
+  ])('still reports a 503 %s, the server failing to serve', async (code, type) => {
+    const seen = reportsSeen();
+    await reportServerError(answer(503, { error: code }), 'list images');
+    expect(seen).toEqual([type]);
+  });
+
+  it('still reports a feature-off token on any status but 503', async () => {
+    const seen = reportsSeen();
+    await reportServerError(answer(500, { error: 'ai_not_configured' }), 'read notes');
+    expect(seen).toEqual(['Http500.ReadNotes.AiNotConfigured']);
+  });
+});

@@ -32,7 +32,13 @@
 // a loop floods as hard as a throw that does: one editor stuck refetching a
 // forbidden tab sent `Http403.LoadTab` every 15 to 65 seconds for weeks,
 // nearly half of every stored event.
-import { apiRouteLabel, errorNameToken, errorTypeToken, readErrorCode } from '@livedoc/api-schema';
+import {
+  apiRouteLabel,
+  errorNameToken,
+  errorTypeToken,
+  isFeatureOff,
+  readErrorCode,
+} from '@livedoc/api-schema';
 import { createPerTypeCap } from '@livedoc/telemetry-client';
 
 let apiErrorReporter: ((type: string) => void) | null = null;
@@ -82,8 +88,17 @@ export function reportApiError(status: number, action: string, code: string | nu
   report(apiErrorType(status, action, code));
 }
 
-// A failed response, counted once however many helpers read it (`reportServerError`, then an `expectOk*`).
-export function reportResponseFailure(res: Response, action: string, code: string | null): void {
+// A failed response, counted once however many helpers read it (`reportServerError`, then an `expectOk*`), unless
+// its code is expected: the caller's own (`expected`, a refusal it retries), or, for every caller, a 503 saying this
+// deployment switched the feature off (`isFeatureOff`): a feature switched off is not a fault
+// (docs/specs/017-telemetry/telemetry.md).
+export function reportResponseFailure(
+  res: Response,
+  action: string,
+  code: string | null,
+  expected?: (code: string | null) => boolean,
+): void {
+  if (isFeatureOff(res.status, code) || expected?.(code)) return;
   if (reported.has(res)) return;
   reported.add(res);
   reportApiError(res.status, action, code);

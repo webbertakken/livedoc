@@ -445,7 +445,7 @@ async function failedResponse(
   expected?: (code: string | null) => boolean,
 ): Promise<ApiError> {
   const code = await readErrorCode(res);
-  if (!expected?.(code)) reportResponseFailure(res, action, code);
+  reportResponseFailure(res, action, code, expected);
   const err = new ApiError(action, res.status, code);
   markReported(err);
   return err;
