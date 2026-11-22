@@ -1,6 +1,7 @@
 // An agent's changes to a sheet's shape (docs/specs/029-sheets/sheet-store.md "Agents", "Shaping a sheet"): column and
-// row sizes (px, or fitted to what the cells show), merges, borders and the filter, built by the engine's own commands
-// (resizeAxis, fitColumnsWrite, mergeRange, unmergeRange, borderRange). Pure: the caller sends what this returns.
+// row sizes (px, columns fitted to what their cells show, rows handed back to fit their text), merges, borders and the
+// filter, built by the engine's own commands (resizeAxis, fitColumnsWrite, mergeRange, unmergeRange, borderRange).
+// Pure: the caller sends what this returns.
 import {
   AXIS_SIZE_MAX,
   COLUMN_WIDTH_MIN,
@@ -18,6 +19,7 @@ import {
   unmergeRange,
   type BorderMode,
   type CellChange,
+  type Sheet,
   type SheetWrite,
   type Workbook,
 } from '@livedoc/sheets';
@@ -69,6 +71,25 @@ const spanText = (axis: 'r' | 'c', at: readonly number[]) => {
     : `${noun}s ${name(at[0]!)}:${name(at[at.length - 1]!)}`;
 };
 
+// Rows handed back to automatic (docs/specs/029-sheets/sheet.md "Row height"): a row with no size of its own fits its
+// text, so fitting rows is taking their sizes away. Only rows that hold one are written, as the editor's Fit to Data
+// does; the line says how many did, since a read of the sheet shows no row sizes.
+function fitRows(sheet: Sheet, at: readonly number[]): Built {
+  const { rows, rowSize } = sheet.layout;
+  const sized = at.filter((p) => rowSize?.[rows[p]!] !== undefined);
+  const span = spanText('r', at);
+  const one = at.length === 1;
+  if (sized.length === 0)
+    return { ok: true, writes: [], line: `${span} already ${one ? 'fits its' : 'fit their'} text` };
+  return {
+    ok: true,
+    writes: [resizeAxis(sheet, 'r', sized, null)!],
+    line: one
+      ? `fitted ${span} to its text`
+      : `fitted ${span} to their text, ${sized.length} of them sized before`,
+  };
+}
+
 function resize(
   wb: Workbook,
   sheetId: string,
@@ -77,6 +98,8 @@ function resize(
   const sheet = wb.sheet(sheetId)!;
   if ((change.cols === undefined) === (change.rows === undefined))
     return refuse('write_invalid', 'Resize names cols ("A:C") or rows ("2:5"), one of them.');
+  if (change.fit && change.px !== undefined)
+    return refuse('write_invalid', 'Resize takes px or fit: true, one of them.');
   const axis = change.cols !== undefined ? 'c' : 'r';
   const text = (change.cols ?? change.rows)!;
   const size = axis === 'c' ? sheet.layout.cols.length : sheet.layout.rows.length;
@@ -89,7 +112,7 @@ function resize(
         : `"${text}" is not rows of the sheet ("3", or "3:5").`,
     );
   if (change.fit) {
-    if (axis === 'r') return refuse('write_invalid', 'Fit sizes columns; give rows a px height.');
+    if (axis === 'r') return fitRows(sheet, at);
     const write = fitColumnsWrite(wb, sheetId, at);
     return {
       ok: true,
@@ -106,10 +129,7 @@ function resize(
     change.px < min ||
     change.px > AXIS_SIZE_MAX
   )
-    return refuse(
-      'write_invalid',
-      `Give px, ${min} to ${AXIS_SIZE_MAX}${axis === 'c' ? ', or fit: true' : ''}.`,
-    );
+    return refuse('write_invalid', `Give px, ${min} to ${AXIS_SIZE_MAX}, or fit: true.`);
   const px = Math.round(change.px);
   return {
     ok: true,

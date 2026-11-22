@@ -3,6 +3,7 @@
 // over the Sheet in one changeset with their first read, and a new Sheet made as large as what it holds.
 import { describe, expect, it } from 'vitest';
 import type { ApiClient } from '@livedoc/api-client';
+import type { SheetJson } from '@livedoc/sheets';
 import { DOC_A, fakeApi, tabsOfA } from '../testing/fake-api';
 import { seeded, sheetJson, sheetServer, type SheetServer } from '../testing/sheets';
 import { addSheet } from './add-sheet';
@@ -25,14 +26,19 @@ const SHEET_EL = {
 type SentChangeset = { operations: { op: string; element: Record<string, unknown> }[] };
 
 function setup(
-  opts: { background?: string; elements?: unknown[]; changesets?: (r: Request) => Response } = {},
+  opts: {
+    background?: string;
+    elements?: unknown[];
+    changesets?: (r: Request) => Response;
+    sheet?: SheetJson;
+  } = {},
 ): {
   api: ApiClient;
   server: SheetServer;
   sent: SentChangeset[];
 } {
   const server = sheetServer(DOC_A, [
-    sheetJson({ id: 'sheet_blank1', tabId: ONE, title: 'Sheet 1' }),
+    opts.sheet ?? sheetJson({ id: 'sheet_blank1', tabId: ONE, title: 'Sheet 1' }),
   ]);
   const sent: SentChangeset[] = [];
   const api = fakeApi(
@@ -319,6 +325,33 @@ describe('a sheet’s charts through later changes', () => {
     expect(sent[0]!.operations).toEqual([
       { op: 'set', target: 'el-chart', fields: { sheetAnchor: { x: 250, y: 42 + 2 } } },
     ]);
+  });
+
+  // sheet.md "Row height", Back to automatic: handed back, a row is as tall as its text again, as after a resize.
+  it('keeps a chart on its cell when rows above it are handed back to automatic', async () => {
+    const blank = sheetJson({ id: 'sheet_blank1', tabId: ONE, title: 'Sheet 1' });
+    const [first] = blank.layout.rows;
+    const sheet = { ...blank, layout: { ...blank.layout, rowSize: { [first!]: 100 } } };
+    // The chart sits 2 px into row 2, under a first row sized to 100 px.
+    const below = { ...CHART, sheetAnchor: { x: 250, y: 102 } };
+    const { api, sent, server } = setup({ sheet, elements: [SHEET_EL, below] });
+    const fit = { sheet: 'Sheet 1', changes: [{ op: 'resize' as const, rows: '1:5', fit: true }] };
+    const fitted = await changeSheet(api, DOC_A, fit, 'mcp');
+    expect(fitted.applied).toEqual([
+      'fitted rows 1:5 to their text, 1 of them sized before',
+      'moved a chart back onto the cells it sits on',
+    ]);
+    expect(server.writes.map((w) => w.write)).toEqual([
+      { kind: 'layout', changes: [{ k: 'size', axis: 'r', ids: [first], px: null }] },
+    ]);
+    expect(sent[0]!.operations).toEqual([
+      { op: 'set', target: 'el-chart', fields: { sheetAnchor: { x: 250, y: 30 } } },
+    ]);
+    // Automatic already: nothing is written to the sheet, and no chart moves.
+    const again = await changeSheet(api, DOC_A, fit, 'mcp');
+    expect(again.applied).toEqual(['rows 1:5 already fit their text']);
+    expect(server.writes).toHaveLength(1);
+    expect(sent).toHaveLength(1);
   });
 
   it('clears only the charts reading a range, refuses a range it cannot read, and sends nothing with nothing to do', async () => {

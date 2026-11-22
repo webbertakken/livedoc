@@ -281,8 +281,8 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
     from a file or stdin), `sheet add <doc> [--tab] [--title] [--csv]`, `sheet insert-rows`, `sheet insert-cols`,
     `sheet rm-rows`, `sheet rm-cols`.
 - **Shaping a sheet**: `change_sheet` also resizes columns (`resize`: px, or `fit` to what the cells show) and rows
-  (`resize`: px, which makes a row sized; every other row fits its text by itself, so an agent that wraps cells sizes
-  no rows: [Row height](sheet.md#row-height)),
+  (`resize`: px, which makes a row sized, or `fit`, which hands sized rows back to automatic; every other row fits
+  its text by itself, so an agent that wraps cells sizes no rows: [Row height](sheet.md#row-height)),
   merges and unmerges cells, draws borders (`border`: all, outer, inner, a side, or none), turns the filter on over a
   range or off, and adds a chart over the sheet's cells (`chart`: a type, an A1 range, the columns to chart by header,
   and the cell its top-left sits on, by default beside the range, in its table's accent family) and takes them off
@@ -295,6 +295,11 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   measured, as Inter ([Row height](sheet.md#row-height)), so on a tab that names another font a chart it moves may
   land a little off its cell. A format rule an
   agent adds goes last unless it asks for `first` (the first rule met draws a cell).
+  - `fit` on rows takes every sized row among the rows named, hidden ones too, and writes nothing when none is sized.
+  - Its answer says how many of several rows held a size, as `read_sheet` shows no row sizes.
+  - A fitted column keeps the width it was given; a fitted row holds no size and goes on fitting its text.
+  - `resize` takes px or `fit`, never both: the two together are refused (`write_invalid`), on rows and columns.
+  - A `resize` is a change of shape: a token with less than edit access is refused it, px and `fit` alike.
 - **A design**: `add_sheet` and `change_sheet` take a sheet laid out as a template is
   ([Sheet templates](sheet.md#sheet-templates)): a heading and subtitle over the sheet's width, then blocks (tables
   with a header, rows, a total row, number formats, input columns, dropdown and checkbox columns by header name;

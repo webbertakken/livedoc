@@ -492,10 +492,13 @@ A row is **automatic** until it is given a size of its own; then it is **sized**
 - A merged cell never makes a row taller, across columns or down rows; its text has the room its rows give.
 - A row is at most 2,000 px tall; text past that is cut off there.
 - A hidden row, and a row a filter leaves out, has no height.
-- **Sized**: dragging a row header's edge, **Resize…** and an agent's `resize` give a row a size of its own.
+- **Sized**: dragging a row header's edge, **Resize…** and an agent's `resize` with px give a row a size of its own.
 - A sized row keeps that height whatever its cells hold; text that does not fit is cut off.
-- **Back to automatic**: **Fit to Data** in the row header's menu, or a double-click on the row header's edge.
-- Both take every selected row when the row is among them: one change, one undo step.
+- **Back to automatic**: **Fit to Data** in the row header's menu, a double-click on the row header's edge, or an
+  agent's `resize` with `fit`.
+- The menu and the double-click take every selected row when the row is among them: one change, one undo step.
+- An agent's `fit` takes every sized row among the rows it names, hidden ones too, in one change
+  ([Agents](sheet-store.md#agents)).
 - Cell Size and Row Height (Sheet Settings) set the least an automatic row is; sized rows keep their size.
 - A sheet made before rows fitted needs nothing: its sized rows stay as set, and the rest fit when next drawn.
 - Lines are broken without a browser, from a table of each font's own character widths, bold a little wider.
@@ -510,7 +513,8 @@ A row is **automatic** until it is given a size of its own; then it is **sized**
 - They place a measured line by its font's own widths, never snapped to whole px, so it is as wide as measured.
 - Where a browser draws a font wider than was measured (a fallback while the font loads, or a device's font wider
   than Inter), a line may reach past its cell's edge.
-- An Editor sizes a row and returns it to automatic.
+- An Editor sizes a row and returns it to automatic, by hand or through an agent.
+- An agent acting for a Participant or a Viewer is refused both, as that person is.
 - A Participant's typing and an agent's cells grow an automatic row all the same: that is no change of shape.
 - A Viewer sees the same heights.
 - A chart keeps its place when rows above it grow with their text, as when a row is dragged taller.

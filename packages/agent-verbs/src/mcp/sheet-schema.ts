@@ -74,7 +74,7 @@ const formatArg = z
       .nullable()
       .optional()
       .describe(
-        'Long text runs over empty neighbours, wraps, or is clipped; null for overflow. A cell that wraps makes its row as tall as its lines need, unless the row was given a height (resize).',
+        'Long text runs over empty neighbours, wraps, or is clipped; null for overflow. A cell that wraps makes its row as tall as its lines need, unless the row was given a height (resize with px; resize with fit hands it back).',
       ),
     numberFormat: z
       .string()
@@ -490,7 +490,7 @@ const sheetChange = z.discriminatedUnion('op', [
     op: z
       .literal('resize')
       .describe(
-        'Size columns (px, or fit to what their cells show) or rows (px). A row needs no size: it fits its text by itself, so a wrapped cell makes it taller. A row given px keeps that height whatever its cells hold.',
+        'Size columns (px, or fit to what their cells show) or rows (px, or fit to hand them back to fitting their text). Give px or fit, never both. A row needs no size: it fits its text by itself, so a wrapped cell makes it taller. A row given px keeps that height whatever its cells hold, cutting off text that does not fit, until fit hands it back.',
       ),
     cols: z.string().optional().describe('Columns, "C" or "A:F".'),
     rows: z.string().optional().describe('Rows, "3" or "4:20".'),
@@ -504,7 +504,7 @@ const sheetChange = z.discriminatedUnion('op', [
       .boolean()
       .optional()
       .describe(
-        'Columns only: each as wide as the widest value it shows (a dropdown chip’s room included), 56 to 360 px; a cell merged across columns does not count.',
+        'Columns: each as wide as the widest value it shows (a dropdown chip’s room included), 56 to 360 px, a width it then keeps; a cell merged across columns does not count. Rows: every row of the range with a height of its own loses it and fits its text from then on, hidden rows too; the answer says how many had one. Rows that fit already are left alone.',
       ),
   }),
   z.object({
