@@ -26,7 +26,7 @@ export function SegmentSlider({
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute ${flush ? 'inset-y-0 left-0' : 'bottom-0.5 left-0.5 top-0.5'} rounded-md transition-[transform,opacity,background-color] duration-short ease-out ${className} ${
+      className={`pointer-events-none absolute ${flush ? 'inset-y-0 left-0' : 'bottom-0.5 left-0.5 top-0.5'} rounded-control transition-[transform,opacity,background-color] duration-short ease-out ${className} ${
         index < 0 ? 'opacity-0' : 'opacity-100'
       }`}
       style={{

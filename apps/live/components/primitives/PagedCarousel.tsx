@@ -17,7 +17,7 @@ const prefersReducedMotion = () =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
 const NAV_BUTTON =
-  'flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
+  'flex size-field items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
 
 export function PagedCarousel<T>({
   items,
@@ -72,7 +72,7 @@ export function PagedCarousel<T>({
   return (
     <div className="flex flex-col gap-2">
       {/* px-1 lines the heading up with the tiles, which sit inside their page's p-1. */}
-      <div className="flex min-h-8 items-center justify-between gap-2 px-1">
+      <div className="flex min-h-field items-center justify-between gap-2 px-1">
         {heading}
         <div className="flex items-center gap-2">
           {controls}
@@ -87,7 +87,7 @@ export function PagedCarousel<T>({
               >
                 <PrevIcon />
               </button>
-              <div className="flex items-center gap-1.5 px-1">
+              <div className="flex items-center gap-2 px-1">
                 {pages.map((_, i) => (
                   <button
                     key={i}
@@ -95,7 +95,7 @@ export function PagedCarousel<T>({
                     aria-label={`${label} page ${i + 1} of ${pages.length}`}
                     aria-current={i === page ? 'true' : undefined}
                     onClick={() => goTo(i)}
-                    className="flex h-6 w-4 items-center justify-center"
+                    className="flex h-chip w-4 items-center justify-center"
                   >
                     <span
                       className={`block h-1.5 rounded-full transition-all motion-reduce:transition-none ${

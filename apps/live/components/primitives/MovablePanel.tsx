@@ -246,11 +246,11 @@ export function MovablePanel({
         {anchor ? (
           <div
             // A sheet starts at the canvas's edge, so the arrow is measured from there.
-            style={{ left: px((sheet ? anchor.left : 0) + anchor.arrowOffset) - 7 }}
-            className={`absolute h-3.5 w-3.5 rotate-45 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${
+            style={{ left: px((sheet ? anchor.left : 0) + anchor.arrowOffset) - 6 }}
+            className={`absolute size-arrow rotate-45 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${
               anchor.bottom !== undefined
-                ? '-bottom-[7px] rounded-br-sm border-b border-r'
-                : '-top-[7px] rounded-tl-sm border-l border-t'
+                ? '-bottom-[6px] border-b border-r'
+                : '-top-[6px] border-l border-t'
             }`}
           />
         ) : null}
@@ -260,7 +260,7 @@ export function MovablePanel({
             Reset-position / drag affordances are intentionally omitted:
             a popover doesn't drag. */}
         <div className="flex items-center justify-between gap-2 rounded-t-surface border-b border-slate-200 px-2 py-1.5 dark:border-slate-800">
-          <span className="flex min-w-0 items-center gap-1.5">
+          <span className="flex min-w-0 items-center gap-2">
             <PanelTitle title={title} />
             {titleAdornment}
           </span>

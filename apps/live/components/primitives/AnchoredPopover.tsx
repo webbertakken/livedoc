@@ -185,7 +185,7 @@ export function AnchoredPopover({
         data-anchored-popover
         // Over its dialog, over a tour ring drawn on that dialog (TourStage layer="modal", one below), so a
         // menu opened mid-tour is never dimmed, and over a menu's flyout (z-popover) it opens from.
-        className="fixed z-[calc(var(--z-popover)+1)] overflow-y-auto overscroll-contain rounded-lg shadow-lg"
+        className="fixed z-[calc(var(--z-popover)+1)] overflow-y-auto overscroll-contain rounded-menu shadow-lg"
         style={{
           width: `min(${width}px, calc(100vw - ${2 * EDGE}px))`,
           left: pos?.left ?? -9999,

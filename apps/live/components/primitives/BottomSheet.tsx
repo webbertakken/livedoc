@@ -34,7 +34,7 @@ export const BottomSheet = forwardRef<HTMLDivElement, BottomSheetProps>(function
           paddingBottom: safeInset('bottom'),
           ...sheet.style,
         }}
-        className={`fixed inset-x-0 bottom-0 ${zClassName} mx-auto flex max-h-[60dvh] w-full max-w-lg animate-sheet-up flex-col overflow-hidden rounded-t-surface border border-b-0 border-slate-200 bg-white text-sm shadow-[0_-8px_40px_-12px_rgb(0_0_0/0.25)] dark:border-slate-700 dark:bg-slate-900`}
+        className={`fixed inset-x-0 bottom-0 ${zClassName} mx-auto flex max-h-[60dvh] w-full max-w-lg animate-sheet-up flex-col overflow-hidden rounded-t-surface border border-b-0 border-slate-200 bg-white text-body shadow-[0_-8px_40px_-12px_rgb(0_0_0/0.25)] dark:border-slate-700 dark:bg-slate-900`}
       >
         {/* The grab handle: the full width of the sheet, that drags it down. */}
         <SheetHandle handleProps={sheet.handleProps} />

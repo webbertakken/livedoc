@@ -22,11 +22,7 @@ export function MentionText({
     <>
       {mentionSegments(text, mentions).map((seg, i) =>
         seg.mention ? (
-          <span
-            key={i}
-            className={`rounded px-0.5 font-semibold ${chipClassName}`}
-            style={chipStyle}
-          >
+          <span key={i} className={`rounded-control px-0.5 ${chipClassName}`} style={chipStyle}>
             {seg.text}
           </span>
         ) : (

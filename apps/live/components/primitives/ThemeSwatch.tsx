@@ -77,7 +77,7 @@ export function ThemeSwatch({
   // like for them.
   const { appearance } = useAppearance();
   const theme = themeHalf(written, appearance);
-  const boxH = heightClass ?? (size === 'lg' ? 'h-28' : size === 'md' ? 'h-20' : 'h-9');
+  const boxH = heightClass ?? (size === 'lg' ? 'h-28' : size === 'md' ? 'h-20' : 'h-prominent');
   const [c0, c1, c2] = nodeColours(theme);
   const connector = theme.rootColor?.stroke ?? baseTri(theme).stroke;
   // The faint SVG dot hint only renders when NOT showing the real
@@ -104,7 +104,7 @@ export function ThemeSwatch({
     <span
       aria-hidden
       style={containerStyle}
-      className={`block ${boxH} w-full overflow-hidden rounded-md border border-slate-200 dark:border-slate-600`}
+      className={`block ${boxH} w-full overflow-hidden rounded-control border border-slate-200 dark:border-slate-600`}
     >
       <svg
         viewBox="0 0 100 64"

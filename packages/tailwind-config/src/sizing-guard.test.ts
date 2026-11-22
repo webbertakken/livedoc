@@ -167,7 +167,17 @@ describe('judgeClass', () => {
   });
 
   it('passes words that are not utilities', () => {
-    for (const ok of ['Rename', 'https://docs.nu', 'h-row-ish', '', 'text', 'rounded-corners']) {
+    for (const ok of [
+      'Rename',
+      'https://docs.nu',
+      'h-row-ish',
+      '',
+      'text',
+      'rounded-corners',
+      'gap-',
+      'h-',
+      'text-',
+    ]) {
       expect(judgeClass(ok), ok).toBeNull();
     }
   });

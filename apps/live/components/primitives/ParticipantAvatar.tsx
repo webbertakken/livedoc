@@ -63,7 +63,7 @@ export function ParticipantAvatar({
         fontSize: Math.round(size * 0.4),
         boxShadow: `0 0 0 2px white, 0 0 0 ${AVATAR_RING_OVERHANG_PX}px ${ringColor}`,
       }}
-      className={`font-semibold text-white ${IDENTITY_FILL}`}
+      className={`text-white ${IDENTITY_FILL}`}
     >
       {initialsOf(participant.name)}
     </PictureDisc>
@@ -91,7 +91,7 @@ export function ParticipantAvatar({
         {badges.map((b) => (
           <span
             key={b}
-            className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+            className="rounded-full bg-slate-100 px-1 py-0.5 text-glyph text-slate-600 dark:bg-slate-700 dark:text-slate-300"
           >
             {b}
           </span>

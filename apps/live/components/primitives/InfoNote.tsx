@@ -8,7 +8,7 @@ import { Glyph, Prims } from '@livedoc/ui';
 export function InfoNote({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`flex items-start gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] leading-snug text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400${
+      className={`flex items-start gap-2 rounded-menu border border-slate-200 bg-slate-50 px-3 py-2 text-supporting text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400${
         className ? ` ${className}` : ''
       }`}
     >
