@@ -143,7 +143,7 @@ The code cites each by its id.
 - **D10** What "permissive and weak-copyleft" admits: The twenty ids in `LICENCE_ALLOWLIST`: today's shipped licences
   plus common permissive peers (default). Four joined with the PDF engine's reader, each permissive and each the
   licence of a work compiled into it: `FTL` (FreeType), `IJG` (libjpeg-turbo), `libpng-2.0` (libpng) and
-  `Unicode-3.0` (ICU) (default).
+  `Unicode-3.0` (ICU).
 - **D11** Parallel or sequential analysis: Sequential: deterministic logs, bounded memory beside turbo's own parallel
   builds (default).
 - **D12** Footer placement: In the footer's Legal column, last (default).

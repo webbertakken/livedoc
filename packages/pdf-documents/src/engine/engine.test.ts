@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { PDF } from '@libpdf/core';
 import type { PdfEngine, PdfOpened } from '../engine-contract';
-import { PDF_MAX_PAGE_PIXELS, PDF_MAX_TREE_DEPTH, PDF_PROPERTY_MAX_CHARS } from '../limits';
+import { PDF_MAX_TREE_DEPTH, PDF_PROPERTY_MAX_CHARS } from '../limits';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark } from '../mark';
 import { PageView } from '../page-view';
@@ -300,13 +300,11 @@ describe('drawing', () => {
     expect(await engine.drawPage(0.5, 1)).toBeNull();
   });
 
-  // security.md "Abuse cases": a decompression bomb draws at most PDF_MAX_PAGE_PIXELS.
-  it('never draws past the pixel ceiling, whatever scale is asked', async () => {
+  // The size a page is drawn at, its ceiling with it, is drawnSize's (draw-page.test.ts).
+  it('draws at the page’s own size when the scale asked is no size', async () => {
     const tiny = PDF.create();
     tiny.addPage({ width: 8, height: 8 });
     await engine.open((await tiny.save()) as Uint8Array<ArrayBuffer>);
-    const bitmap = (await engine.drawPage(0, 1e9))!;
-    expect(bitmap.width * bitmap.height).toBeLessThanOrEqual(PDF_MAX_PAGE_PIXELS);
     const asked = (await engine.drawPage(0, Number.NaN))!;
     expect([asked.width, asked.height]).toEqual([8, 8]);
   });

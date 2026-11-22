@@ -56,16 +56,36 @@ function matrixOf(file: ReaderFile, page: number, width: number, height: number)
   ];
 }
 
-export function drawPage(file: ReaderFile, index: number, scale: number): PageBitmap | null {
+/**
+ * The picture a page of `pageWidth` by `pageHeight` points is drawn as, in pixels: the page at the scale asked, a scale
+ * that is no size read as 1. A draw never passes the pixel ceiling: the scale gives way, the page still shows.
+ */
+export function drawnSize(
+  pageWidth: number,
+  pageHeight: number,
+  scale: number,
+  ceiling = PDF_MAX_PAGE_PIXELS,
+): { width: number; height: number } {
+  const asked = Number.isFinite(scale) && scale > 0 ? scale : 1;
+  const fit = Math.min(asked, Math.sqrt(ceiling / (pageWidth * pageHeight)));
+  return {
+    width: Math.max(1, Math.floor(pageWidth * fit)),
+    height: Math.max(1, Math.floor(pageHeight * fit)),
+  };
+}
+
+/** Draws a page; `ceiling` is the most pixels its picture may hold, the limit's own unless a test hands a smaller. */
+export function drawPage(
+  file: ReaderFile,
+  index: number,
+  scale: number,
+  ceiling?: number,
+): PageBitmap | null {
   const { p } = file;
   return file.withFormPage(index, (page, form) => {
     const pageWidth = clampSide(p.FPDF_GetPageWidthF(page));
     const pageHeight = clampSide(p.FPDF_GetPageHeightF(page));
-    const asked = Number.isFinite(scale) && scale > 0 ? scale : 1;
-    // A draw never passes the pixel ceiling: the scale gives way, the page still shows.
-    const fit = Math.min(asked, Math.sqrt(PDF_MAX_PAGE_PIXELS / (pageWidth * pageHeight)));
-    const width = Math.max(1, Math.floor(pageWidth * fit));
-    const height = Math.max(1, Math.floor(pageHeight * fit));
+    const { width, height } = drawnSize(pageWidth, pageHeight, scale, ceiling);
     const bitmap = p.FPDFBitmap_CreateEx(width, height, BITMAP_BGRA, 0, 0);
     if (!bitmap) return null;
     p.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, WHITE);

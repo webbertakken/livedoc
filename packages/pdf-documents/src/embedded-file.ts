@@ -72,11 +72,16 @@ const RUNS_ON_A_COMPUTER: ReadonlySet<string> = new Set([
   ...['docm', 'xlsm', 'pptm'],
 ]);
 
-// A computer drops the dots and spaces a name ends with before it reads the ending: "run.exe. " runs.
-const TRAILING = /[. ]+$/;
+// A computer drops the dots and spaces a name ends with before it reads the ending: "run.exe. " runs. Walked from the
+// end, one step a character: a name is a file's to say, and a pattern here would be slow on one made to be.
+const withoutTrailing = (name: string): string => {
+  let end = name.length;
+  while (end > 0 && (name[end - 1] === '.' || name[end - 1] === ' ')) end -= 1;
+  return name.slice(0, end);
+};
 
 const runs = (name: string): boolean => {
-  const read = name.replace(TRAILING, '');
+  const read = withoutTrailing(name);
   const dot = read.lastIndexOf('.');
   return dot >= 0 && RUNS_ON_A_COMPUTER.has(read.slice(dot + 1).toLowerCase());
 };
