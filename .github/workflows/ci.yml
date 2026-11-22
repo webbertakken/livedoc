@@ -81,7 +81,10 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Guards a hung job, never the suite's pace: the coverage step alone takes about 12.5 minutes on main, so 15 cut
+    # passing runs short.
+    timeout-minutes: 25
+
     permissions:
       contents: read
       id-token: write
