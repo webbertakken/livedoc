@@ -6,7 +6,7 @@ import { checkSizing, formatSizingViolations } from '@livedoc/tailwind-config/si
 const root = fileURLToPath(new URL('.', import.meta.url));
 
 // The Explorer's parts still to move to the scale (plan 0024, slice 3); everything else under it has moved.
-const EXPLORER_NOT_YET_SIZED = new Set(['lens', 'new-document']);
+const EXPLORER_NOT_YET_SIZED = new Set(['new-document']);
 const EXPLORER_SIZED = readdirSync(`${root}app/explorer`)
   .filter((entry) => !EXPLORER_NOT_YET_SIZED.has(entry))
   .map((entry) => `app/explorer/${entry}`);
