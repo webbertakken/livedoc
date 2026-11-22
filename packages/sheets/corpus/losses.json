@@ -310,9 +310,7 @@
     ]
   },
   "libreoffice/comments.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
