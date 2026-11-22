@@ -114,6 +114,25 @@ kind**. The room stores each one the same way, the kind declaring only what is i
 - **Copies**: a copied document's live tabs carry their state, stored as chunks under the new tab ids.
 - Kinds: the text document (`text-document`, tables `text_document_*`) and the PDF document (`pdf`, tables `pdf_*`).
 
+**In the editor**, a live tab kind's surface is bound to the room the same way too (`apps/live/lib/live-tab/`), the
+kind again declaring only what is its own
+([Sending, reconnecting and the local copy](../034-text-documents/live-editing-and-storage.md#storage) are specified
+with the text document):
+
+- **The kind declares**: its frame's op kind, its log tag, a frame's characters, how long an unconfirmed change waits
+  before this browser keeps it, how its state loads and reads a state vector, its bus, and the database its local
+  copies are kept in.
+- **A bus per kind** takes that kind's ops from the room connection (an update, a stale tab, a refusal) to the open
+  surface of the tab they name; a surface opened later reads the stored state, which holds them all.
+- **One connection state** for every kind: the room opening and closing is told once, and a re-hydrate asks every
+  kind's open surfaces to catch up.
+- **The binding**: the room's updates are heard from before the state is read; each local change goes out as one frame
+  while the room is open, or by the door when too large for one; a catch-up reads what the room holds beyond this
+  browser and sends what the room lacks; a change the room has not confirmed is kept in this browser's local copy and
+  dropped once the room holds it; the save status reads the binding's facts (a change pending, saving failed).
+- A surface that read its state before it could bind (a PDF document opens its stored file in between) says so, and
+  the binding catches up at once, so nothing relayed in between is lost.
+
 ## The Explorer
 
 - A document's **kind** is its first tab's kind ([Explorer filters](../013-workspace/explorer-filters.md)); each kind
@@ -145,3 +164,5 @@ kind**. The room stores each one the same way, the kind declaring only what is i
 - Switching between a canvas tab and a surface tab restores each one's view.
 - A one-tab surface document hides the active tab segment; a two-tab one and a one-tab canvas document show it.
 - The add menu's Text document row adds a text document tab and selects it.
+- A live tab kind's bus delivers only its own tab's updates and refusals, every bus hears the one connection and the
+  re-hydrate, and a binding given a state read earlier catches up at once.
