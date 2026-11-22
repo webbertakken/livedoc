@@ -99,7 +99,9 @@ describe('useTextDocumentPictureSize', () => {
     expect(hook.result.current.picture?.own).toBeNull();
     const dom = view.nodeDOM(1) as HTMLElement;
     Object.assign(dom.dataset, { ownWidth: '320', ownHeight: '160' });
-    act(() => dom.dispatchEvent(new Event(PICTURE_DRAWN_EVENT, { bubbles: true })));
+    act(() => {
+      dom.dispatchEvent(new Event(PICTURE_DRAWN_EVENT, { bubbles: true }));
+    });
     expect(hook.result.current.picture?.own).toEqual({ width: 240, height: 120 });
   });
 
