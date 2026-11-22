@@ -391,8 +391,9 @@ export function EditorView() {
             tabs={{
               tabs: tabs,
               spreadsheet: ctx.documentWorkbook !== null,
-              // This Browser does not hold a text document yet (docs/specs/006-document/kinds-outside-the-canvas.md).
-              offerTextDocument: !isOffline,
+              // This Browser takes neither from the add menu, and a PDF from a file asks a host that stores files
+              // (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
+              addTabOffers: { textDocument: !isOffline, pdf: !isOffline && ctx.filesEnabled },
               activeId: activeId,
               // Clicking an avatar in a presence stack opens the Collaborators
               // modal (docs/specs/012-collaboration/collaborator-enhancements.md), which is where Follow (docs/specs/012-collaboration/follow-me-viewport.md) lives.

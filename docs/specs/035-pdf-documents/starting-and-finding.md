@@ -1,6 +1,7 @@
 # Starting and finding
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: adding a tab's PDF from a file, and a PDF arriving by a drop on
+the Explorer. Everything else here is specified, not built.
 
 How a [PDF document](pdf-document.md) comes to be in the Explorer and is found again.
 
@@ -17,7 +18,7 @@ document:
 - **Another document kept as a PDF**: a text document's, a spreadsheet's or a canvas tab's Download as PDF offers
   "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source
   ([Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf)).
-- **Adding a tab** to a document offers **PDF from a file**.
+- **Adding a tab** to a document offers **PDF from a file** ([PDF document](pdf-document.md#a-pdf-tab-from-a-file)).
 - There is no template gallery for PDF documents.
 
 ## Finding it

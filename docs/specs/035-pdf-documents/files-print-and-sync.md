@@ -1,7 +1,7 @@
 # Files, print and sync
 
 **Status: specified; a first slice is built.** Built: a PDF dropped on the Explorer (one or several), kept in This
-Browser for a guest where sign-in is offered, and File > Download > PDF. A file sent to LiveDoc is sent before the
+Browser for a guest where sign-in is offered, the add menu's PDF from a file, and File > Download > PDF. A file sent to LiveDoc is sent before the
 document opens. A canvas tab's and a Pages tab's
 Download as PDF are written by the one writer, with a guard that finds a second. Every other way in and out is not
 built.
@@ -37,7 +37,9 @@ A file whose bytes are a PDF ([What becomes a PDF document](pdf-document.md#what
   meanwhile are live changes, sent once the stored file is confirmed.
 - A file already held for that owner is not sent again.
 - A drop where no file storage exists, or of a file too large, is answered by its
-  [refusal](opening.md#refusals) at once, before any byte travels, and nothing is made.
+  [refusal](opening.md#refusals) at once, before any byte travels, and nothing is made. Whether file storage exists
+  is asked of the host before the file is read
+  ([Without object storage](../006-document/blob-store.md#without-object-storage)).
 - A person who may not add a document where they dropped is told so; the drop is never taken silently by the browser
   (which would replace LiveDoc with the browser's own viewer).
 - Several PDFs dropped together open as several documents, with one toast ("4 PDFs added") and the first opened.

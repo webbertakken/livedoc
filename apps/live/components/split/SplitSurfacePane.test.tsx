@@ -12,6 +12,11 @@ vi.mock('@/components/text-document/TextDocumentHost', () => ({
     <div data-testid="text-document" data-tab={tab.id} data-read-only={String(readOnly)} />
   ),
 }));
+vi.mock('@/components/pdf-document/PdfDocumentHost', () => ({
+  PdfDocumentHost: ({ tab, readOnly }: { tab: Tab; readOnly?: boolean }) => (
+    <div data-testid="pdf-document" data-tab={tab.id} data-read-only={String(readOnly)} />
+  ),
+}));
 
 const { SplitSurfacePane } = await import('./SplitSurfacePane');
 
@@ -31,6 +36,21 @@ describe('SplitSurfacePane', () => {
     expect(
       screen.getByRole('region', { name: 'Notes, side by side. Click to edit.' }),
     ).toBeTruthy();
+  });
+
+  // "A PDF tab in the other pane shows its pages live and read-only".
+  it('shows a PDF’s pages, read-only, and moves the editor across on a press', () => {
+    const onFocus = vi.fn();
+    const pdfTab = { id: 'p', name: 'Agreement', kind: 'pdf', elements: [] } as unknown as Tab;
+    render(<SplitSurfacePane tab={pdfTab} onFocus={onFocus} />);
+    const surface = screen.getByTestId('pdf-document');
+    expect(surface.dataset.tab).toBe('p');
+    expect(surface.dataset.readOnly).toBe('true');
+    expect(
+      screen.getByRole('region', { name: 'Agreement, side by side. Click to edit.' }),
+    ).toBeTruthy();
+    fireEvent.pointerDown(surface);
+    expect(onFocus).toHaveBeenCalledWith('Click');
   });
 
   it('shows a spreadsheet’s sheet by its name until its surface has a read-only view', () => {

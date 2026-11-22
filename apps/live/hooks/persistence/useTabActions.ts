@@ -32,6 +32,7 @@ import { apiLinkTab } from '@/lib/api-client';
 import { newTabOpening, newTabSeed, type AddTabChoice } from '@/lib/new-tab-seed';
 import { newTextDocumentTab, TEXT_DOCUMENT_TAB_NAME } from '@/lib/text-document/text-document-tab';
 import { noteTextDocumentMade } from '@/lib/text-document/text-document-made';
+import { addPdfTabFromChooser } from '@/lib/pdf-document/pdf-tab-from-file';
 import { PLAN_START_LANDING, setPlanStartLanding } from '@/lib/plan-start-landing';
 import { track } from '@/lib/telemetry';
 import { debugLog } from '@/lib/debug-log';
@@ -66,6 +67,8 @@ type TabActionsDeps = {
   ownerId: string;
   // The open document: an Offline Mode one embeds imported images.
   documentId: string | null;
+  // The share link the session came by, sent with what a PDF tab from a file stores for the document.
+  shareCode?: string | null;
   // Factory for a blank tab (kept in the page because the initial-state
   // initialiser also uses it).
   createTab: (name: string) => Tab;
@@ -138,6 +141,17 @@ export function useTabActions(deps: TabActionsDeps) {
     return true;
   };
 
+  // A tab outside the canvas joining the document: after the others, selected, with nothing of a canvas held. One
+  // already here by that id (the room told this page of its own save) is not added twice.
+  const landSurfaceTab = (tab: Tab) => {
+    commitTabs((ts) => (ts.some((t) => t.id === tab.id) ? ts : [...ts, tab]));
+    markTabLoaded(tab.id);
+    setActiveId(tab.id);
+    setSelectedId(null);
+    setEditingId(null);
+    setFormatSourceId(null);
+  };
+
   // The add menu's choice (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab"): a Tab in the active
   // tab's mode, so a Pages tab's + makes a Pages tab, or a Board, Sheet or Dashboard, a Plan start landing on that
   // choice (newTabOpening, plan-start-landing.ts).
@@ -150,14 +164,23 @@ export function useTabActions(deps: TabActionsDeps) {
     if (choice === 'text-document') {
       const tab = newTextDocumentTab(createTab(TEXT_DOCUMENT_TAB_NAME).id, TEXT_DOCUMENT_TAB_NAME);
       noteTextDocumentMade(tab.id);
-      commitTabs((ts) => [...ts, tab]);
-      markTabLoaded(tab.id);
+      landSurfaceTab(tab);
       track('Tab', 'Created', 'TextDocument');
       debugLog('[tabs] added', { tabId: tab.id, choice });
-      setActiveId(tab.id);
-      setSelectedId(null);
-      setEditingId(null);
-      setFormatSourceId(null);
+      return;
+    }
+    // A PDF from a file (docs/specs/035-pdf-documents/pdf-document.md "A PDF tab from a file"): chosen, stored and
+    // only then a tab here, so it lands once its file and its row are LiveDoc's.
+    if (choice === 'pdf') {
+      if (!documentId) return;
+      void addPdfTabFromChooser({
+        ownerId,
+        documentId,
+        shareCode: deps.shareCode ?? null,
+        tabId: createTab('').id,
+        toast,
+        land: landSurfaceTab,
+      });
       return;
     }
     // The new tab takes the active tab's look (newTabSeed); its mode is newTabOpening's.

@@ -10,6 +10,7 @@ import { useAppearance } from '@/hooks/ui/useAppearance';
 import type { Participant } from '@/lib/identity';
 import type { EllipsisMenuButton } from '@/components/chrome/EllipsisMenuButton';
 import type { AddTabChoice } from '@/lib/new-tab-seed';
+import type { AddTabOffers } from './AddTabMenu';
 import { tabDataRows } from '@/components/chrome/tab-data-rows';
 import { useTabReorderDrag } from '@/components/chrome/useTabReorderDrag';
 
@@ -30,8 +31,9 @@ export type TabsChromeProps = {
   // A spreadsheet draws its tabs as the sheet bar at the foot of its grid (docs/specs/029-sheets/spreadsheet.md "The
   // workbook shape"): the group then shows no active tab, stack or Add tab.
   spreadsheet?: boolean;
-  // Whether Add tab offers a text document (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
-  offerTextDocument?: boolean;
+  // The tabs outside the canvas Add tab offers here: a text document, a PDF from a file
+  // (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip"). Absent: none.
+  addTabOffers?: AddTabOffers;
   activeId: string;
   onSelect: (id: string) => void;
   // The add menu's choice (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab").

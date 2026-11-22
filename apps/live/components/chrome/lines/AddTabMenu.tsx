@@ -14,7 +14,7 @@ import {
   type MenuInitialFocus,
 } from '@livedoc/ui';
 import type { SwitchableEditorMode } from '@livedoc/document';
-import { lucideFileText } from '@livedoc/icons/lucide';
+import { lucideFile, lucideFileText } from '@livedoc/icons/lucide';
 import { TOOLBAR_ICON_BUTTON } from '@/components/chrome/toolbar-surface';
 import { PLAN_KIND_ICONS } from '@/components/chrome/editor-mode/TabModeIcon';
 import {
@@ -43,12 +43,27 @@ const TEXT_DOCUMENT_ROW = {
   footer: 'New Text Document',
 } as const;
 
-/** The add menu's rows, and the tab list footer's: Text document only where it is offered. */
-export function addTabRows(offerTextDocument: boolean): typeof ADD_TAB_ROWS {
-  return offerTextDocument ? [...ADD_TAB_ROWS, TEXT_DOCUMENT_ROW] : ADD_TAB_ROWS;
+// A PDF tab from the computer, after Text document, where the document can hold one: stored on LiveDoc, on a host
+// that stores files (docs/specs/035-pdf-documents/pdf-document.md "A PDF tab from a file").
+const PDF_ROW = { choice: 'pdf', label: 'PDF from a file', footer: 'New PDF From a File' } as const;
+
+/** The tabs outside the canvas the add menu offers in this document. */
+export type AddTabOffers = { readonly textDocument: boolean; readonly pdf: boolean };
+
+export const NO_ADD_TAB_OFFERS: AddTabOffers = { textDocument: false, pdf: false };
+
+/** The add menu's rows, and the tab list footer's: Text document and PDF from a file only where offered. */
+export function addTabRows(offers: AddTabOffers): typeof ADD_TAB_ROWS {
+  return [
+    ...ADD_TAB_ROWS,
+    ...(offers.textDocument ? [TEXT_DOCUMENT_ROW] : []),
+    ...(offers.pdf ? [PDF_ROW] : []),
+  ];
 }
 
 const TEXT_DOCUMENT_MARK = lucideGlyph(lucideFileText, 16);
+// The tab pill's own for a PDF tab (TabModeIcon).
+const PDF_MARK = lucideGlyph(lucideFile, 16);
 
 /** A row's mark: the Tab row the mark of the mode its tab opens in, a Plan row its kind's glyph. */
 export function addTabMark(
@@ -56,23 +71,24 @@ export function addTabMark(
   tabMode: SwitchableEditorMode,
 ): ComponentType<IconProps> {
   if (choice === 'text-document') return TEXT_DOCUMENT_MARK;
+  if (choice === 'pdf') return PDF_MARK;
   return choice === 'tab' ? EDITOR_MODE_ICONS[tabMode] : PLAN_KIND_ICONS[choice];
 }
 
 // The document group's + (docs/specs/007-editor/toolbar-layout.md "The bottom line"): a menu button named "Add tab"
 // opening the add menu, which hangs above it (the bottom line), its right edge on the button's, kept inside the
-// viewport. Tab, then Board, Sheet and Dashboard, each its mark and name; choosing adds it and closes the menu. The
-// same plain look and keyboard as the mode menu (useMenu). Shown only to someone who may add tabs (the caller gates).
+// viewport. Tab, then Board, Sheet and Dashboard, then what is offered outside the canvas, each its mark and name;
+// choosing adds it and closes the menu. The same plain look and keyboard as the mode menu (useMenu). Shown only to someone who may add tabs (the caller gates).
 export function AddTabMenu({
   onAdd,
   tabMode,
-  offerTextDocument = false,
+  offers = NO_ADD_TAB_OFFERS,
 }: {
   onAdd: (choice: AddTabChoice) => void;
   // The mode a Tab added now opens in (newTabOpening), whose mark the Tab row wears.
   tabMode: SwitchableEditorMode;
-  // Whether the document can hold a text document tab (addTabRows).
-  offerTextDocument?: boolean;
+  // The tabs outside the canvas this document can take (addTabRows).
+  offers?: AddTabOffers;
 }) {
   const { open, close, toggle, initialFocus, trigger, onTriggerKeyDown, setTrigger } =
     useMenuButton();
@@ -105,7 +121,7 @@ export function AddTabMenu({
           trigger={trigger}
           initialFocus={initialFocus}
           tabMode={tabMode}
-          offerTextDocument={offerTextDocument}
+          offers={offers}
           onClose={close}
           onAdd={onAdd}
         />
@@ -118,14 +134,14 @@ function AddTabPanel({
   trigger,
   initialFocus,
   tabMode,
-  offerTextDocument,
+  offers,
   onClose,
   onAdd,
 }: {
   trigger: HTMLElement | null;
   initialFocus: MenuInitialFocus;
   tabMode: SwitchableEditorMode;
-  offerTextDocument: boolean;
+  offers: AddTabOffers;
   onClose: () => void;
   onAdd: (choice: AddTabChoice) => void;
 }) {
@@ -172,7 +188,7 @@ function AddTabPanel({
         }
         className={`fixed z-(--z-popover) min-w-44 max-w-[calc(100vw-1rem)] ${CHROME_MENU_SURFACE}`}
       >
-        {addTabRows(offerTextDocument).map(({ choice, label }) => {
+        {addTabRows(offers).map(({ choice, label }) => {
           const Mark = addTabMark(choice, tabMode);
           return (
             <button

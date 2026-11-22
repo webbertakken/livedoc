@@ -155,6 +155,25 @@ describe('TabList', () => {
     ]);
   });
 
+  // docs/specs/007-editor/toolbar-layout.md "The tab list": the footer is the add menu's rows, the offered ones too.
+  it('offers New Text Document and New PDF From a File where the add menu does, and adds a PDF', () => {
+    const { list, props, onClose } = renderList({
+      addTabOffers: { textDocument: true, pdf: true },
+    });
+    const footer = [...list.querySelectorAll<HTMLElement>('[data-tab-list-new]')];
+    expect(footer.map((b) => b.textContent)).toEqual([
+      'New Tab',
+      'New Board',
+      'New Sheet',
+      'New Dashboard',
+      'New Text Document',
+      'New PDF From a File',
+    ]);
+    fireEvent.click(within(list).getByRole('button', { name: 'New PDF From a File' }));
+    expect(props.onAdd).toHaveBeenCalledWith('pdf');
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
   it.each([
     ['New Tab', 'tab'],
     ['New Sheet', 'sheet'],

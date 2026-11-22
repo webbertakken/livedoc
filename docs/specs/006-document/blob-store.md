@@ -159,6 +159,9 @@ A self-host without the `FILES` bucket has no blob store. Everything else works:
 
 - every route answers `503 files_unavailable`; a dropped file is answered "This server has no file storage.";
 - file tabs and PDF documents cannot be made; the Explorer and the add menu do not offer them;
+- a browser asks first: `GET /api/capabilities` says `filesEnabled`, and where it says no, a file that would be sent
+  is refused before a byte of it is read. Where the answer is not known (the request failed, an older api), the
+  file is read and the upload's own answer says it `(default)`. A file kept in This Browser asks nothing;
 - a repository sync leaves such files in the repository, untouched, and reports them.
 
 ## Limits

@@ -933,6 +933,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Pdf|Imported|Explorer':
     'Someone dropped a PDF on the Explorer, which opened it as a new PDF document.',
+  'Pdf|Imported|Tab':
+    'Someone chose a PDF from their computer in the + menu, which added it to the document as a PDF tab.',
   'Pdf|Added|Mark.Highlight': 'Someone highlighted text on a PDF page.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',
@@ -1145,6 +1147,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone added a Sheet tab from the + menu, opening Start Planning on its spreadsheets.',
   'Tab|Created|Dashboard':
     'Someone added a Dashboard tab from the + menu, opening Start Planning on its dashboards.',
+  'Tab|Created|TextDocument': 'Someone added a text document tab from the + menu.',
+  'Tab|Created|Pdf': 'Someone added a PDF tab from the + menu, from a file on their computer.',
   'Tab|Deleted|': 'A tab was removed from a document.',
   'Tab|Duplicated|': 'A tab was duplicated.',
   'Tab|Ended|CountdownTimer':

@@ -1286,8 +1286,8 @@ export const PDFS_IMPORTED = chart(
   'Pdf',
   'Imported',
   'PDFs Opened From Files',
-  'A PDF from the computer opened as a new PDF document, by the way it arrived.',
-  { types: ['Explorer'] },
+  'A PDF from the computer opened as a new PDF document or added as a PDF tab, by the way it arrived.',
+  { types: ['Explorer', 'Tab'] },
 );
 
 export const PDF_MARKS_ADDED = chart(

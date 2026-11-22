@@ -64,7 +64,7 @@ on two lines over the canvas, a top line and a bottom line, each a single row wh
   3. a divider, then the **contributors**: the avatars of everyone else in the document, up to three, then **+N**. A press opens the
      same tab list. Not drawn while nobody else is here;
   4. **Add tab** (+), for someone who may add tabs: it opens the **add menu**, **Tab**, **Board**, **Sheet**,
-     **Dashboard** and, in a document stored on LiveDoc, **Text document**
+     **Dashboard** and, in a document stored on LiveDoc, **Text document** and **PDF from a file**
      ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)), below or above it as there is room, styled as the mode menu (36 px rows with each one's mark)
      ([Editor modes](editor-modes.md#where-the-mode-lives)). A menu button (`aria-haspopup="menu"`, named "Add
      tab"), its rows `menuitem`s, arrow keys, Home, End, Enter, Space and Escape as every menu.
@@ -81,8 +81,8 @@ the contributors), arrow at that button, kept 12 px inside the canvas, in the me
   kind), its name (cut short with an ellipsis), and
   the [presence stack](../012-collaboration/collaborator-enhancements.md) of who is on it. The active tab's row is
   tinted and carries its tab menu (⋯). Pressing a row switches to that tab and closes the list.
-- **Footer**: **New Tab**, **New Board**, **New Sheet**, **New Dashboard** and, where the add menu offers it,
-  **New Text Document** (the add menu's rows), for someone who may add tabs.
+- **Footer**: **New Tab**, **New Board**, **New Sheet**, **New Dashboard** and, where the add menu offers them,
+  **New Text Document** and **New PDF From a File** (the add menu's rows), for someone who may add tabs.
 - Rows drag to reorder and into or out of a folder, and rename on a double-click, for someone who may change the
   document's tabs; every other tab-bar gesture lives here too, so nothing the tab bar did is lost.
 - It is a menu: the arrow keys walk the rows, Enter switches, Escape closes and returns focus to the button that

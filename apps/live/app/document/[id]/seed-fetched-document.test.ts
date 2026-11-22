@@ -178,9 +178,19 @@ describe('seedFetchedDocument and the canvas’s code', () => {
     expect(resetTabs).toHaveBeenCalledTimes(1);
   });
 
-  it('never asks for it for a text document tab', async () => {
+  it.each([
+    ['a text document', { kind: 'text-document', format: 'odf' }],
+    [
+      'a PDF',
+      {
+        kind: 'pdf',
+        blob: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        size: 1,
+      },
+    ],
+  ])('never asks for it for %s tab', async (_, kind) => {
     apiLoadTab.mockResolvedValue({
-      tab: { id: 't1', name: 'Tab 1', kind: 'text-document', format: 'odf', elements: [] },
+      tab: { id: 't1', name: 'Tab 1', ...kind, elements: [] },
       rev: 1,
     } as never);
     canvas.asked.length = 0;

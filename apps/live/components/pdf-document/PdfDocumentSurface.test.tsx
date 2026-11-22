@@ -6,6 +6,7 @@
 // not be placed; "Undo": the person's own steps, from the menu's keys and the toolbar; "Presence": the page in view
 // and the mode, said for the tab the person is on, and a press on a person going to their page; "Offline and This
 // Browser": a PDF kept here is read from this browser, and its stored file is not replaced for the budget.
+import type { OfficeChrome } from '@/components/office/office-chrome';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
@@ -101,6 +102,7 @@ function show(
   role: 'edit' | 'participate' | 'view' = 'edit',
   present = true,
   home: 'room' | 'this-browser' = 'room',
+  chrome: OfficeChrome | null = null,
 ) {
   open.now = now;
   return render(
@@ -110,7 +112,7 @@ function show(
       level={role}
       canReview={role !== 'view'}
       author="Ada"
-      chrome={null}
+      chrome={chrome}
       present={present}
       sequence={async () => true}
       home={home}
@@ -413,6 +415,74 @@ describe('a PDF document’s surface', () => {
     expect(screen.getByRole('button', { name: 'Select' })).toBeTruthy();
     fireEvent.keyDown(surface(container), { key: 'u' });
     expect(surface(container).getAttribute('data-pdf-tool')).toBe('select');
+  });
+
+  // editing-modes.md: a person starts in Reviewing, or the most their level allows; the switch offers what the
+  // level allows, Editing dimmed until it is built.
+  describe('the mode switch', () => {
+    const offered = () => screen.getAllByRole('menuitemradio').map((item) => item.textContent);
+
+    it('starts an Editor in Reviewing, with Editing dimmed and Viewing to choose', async () => {
+      show(await ready(), 'edit');
+      fireEvent.click(screen.getByRole('button', { name: 'Mode: Reviewing' }));
+      expect(offered()).toEqual([
+        'ReviewingMark text, comment, fill in and sign',
+        'EditingComing soon',
+        'ViewingRead or print the PDF',
+      ]);
+      expect(
+        screen.getByRole('menuitemradio', { name: /Editing/ }).getAttribute('aria-disabled'),
+      ).toBe('true');
+    });
+
+    it('takes the tools that mark away in Viewing, and hands them back in Reviewing', async () => {
+      show(await ready(), 'edit');
+      fireEvent.click(screen.getByRole('button', { name: 'Mode: Reviewing' }));
+      fireEvent.click(screen.getByRole('menuitemradio', { name: /Viewing/ }));
+      expect(screen.getByRole('button', { name: 'Mode: Viewing' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Highlight' })).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Mode: Viewing' }));
+      fireEvent.click(screen.getByRole('menuitemradio', { name: /Reviewing/ }));
+      expect(screen.getByRole('button', { name: 'Highlight' })).toBeTruthy();
+    });
+
+    it('offers a Participant Reviewing and Viewing, never Editing', async () => {
+      show(await ready(), 'participate');
+      fireEvent.click(screen.getByRole('button', { name: 'Mode: Reviewing' }));
+      expect(offered()).toEqual([
+        'ReviewingMark text, comment, fill in and sign',
+        'ViewingRead or print the PDF',
+      ]);
+    });
+
+    it('offers a Viewer Viewing alone', async () => {
+      show(await ready(), 'view');
+      fireEvent.click(screen.getByRole('button', { name: 'Mode: Viewing' }));
+      expect(offered()).toEqual(['ViewingRead or print the PDF']);
+    });
+
+    // kinds-outside-the-canvas.md "The surface": in the editor's pane the title row holds the document's own parts,
+    // the switch among them; the other pane of a split is handed none.
+    it('sits among the document’s own parts where the editor hands them', async () => {
+      const chrome: OfficeChrome = {
+        back: { kind: 'explorer' },
+        rename: vi.fn(),
+        renameNonce: 0,
+        star: { starred: false, onToggle: vi.fn() },
+        move: vi.fn(),
+        share: { shareable: true, onOpen: vi.fn() },
+        makeCopy: null,
+        onOpenSettings: vi.fn(),
+        onOpenAccount: vi.fn(),
+        people: [],
+        onOpenTab: vi.fn(),
+      };
+      show(await ready(), 'edit', true, 'room', chrome);
+      expect(screen.getByRole('button', { name: 'Share' })).toBeTruthy();
+      expect(screen.getAllByRole('button', { name: 'Mode: Reviewing' })).toHaveLength(1);
+      fireEvent.click(screen.getByRole('button', { name: 'Share' }));
+      expect(chrome.share!.onOpen).toHaveBeenCalledTimes(1);
+    });
   });
 
   // live-editing-and-storage.md "Presence".

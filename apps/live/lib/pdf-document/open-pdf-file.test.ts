@@ -2,7 +2,7 @@
 // docs/specs/006-document/blob-store.md "Getting bytes in": hash, ask, send only what is not held, then name it;
 // live-editing-and-storage.md "A PDF that arrives", "Errors in This Browser": kept in this browser, sent nowhere.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { blobKeyOf, FILE_TAB_MAX_BYTES, isValidTab } from '@livedoc/document';
+import { blobKeyOf, FILE_TAB_MAX_BYTES, isValidTab, NAME_MAX_LENGTH } from '@livedoc/document';
 
 const api = vi.hoisted(() => ({
   apiHoldsBlob: vi.fn(),
@@ -13,6 +13,8 @@ vi.mock('@/lib/api/files', () => ({
   apiHoldsBlob: api.apiHoldsBlob,
   apiStoreBlob: api.apiStoreBlob,
 }));
+const caps = vi.hoisted(() => ({ fileStorageRefused: vi.fn(async () => false) }));
+vi.mock('@/lib/api/capabilities', () => caps);
 vi.mock('@/lib/api-client', async () => {
   const { ApiError } = await import('@/lib/api/core');
   return { ApiError, apiCreateDocument: api.apiCreateDocument };
@@ -34,6 +36,7 @@ const file = (bytes: Uint8Array<ArrayBuffer>, name = 'Lease 2026.pdf', size = by
 beforeEach(() => {
   for (const fn of Object.values(api)) fn.mockReset();
   api.apiHoldsBlob.mockResolvedValue(false);
+  caps.fileStorageRefused.mockReset().mockResolvedValue(false);
 });
 
 describe('openPdfFile', () => {
@@ -94,6 +97,19 @@ describe('openPdfFile', () => {
     expect(read).not.toHaveBeenCalled();
   });
 
+  // docs/specs/006-document/blob-store.md "Without object storage": a browser asks first, and a host that says it
+  // stores no files is said before a byte of the file is read.
+  it('says a host without file storage before the file is read, and asks nothing more', async () => {
+    caps.fileStorageRefused.mockResolvedValue(true);
+    const read = vi.fn();
+    const pdf = { name: 'Lease.pdf', size: PDF.byteLength, arrayBuffer: read } as unknown as File;
+    expect(await openPdfFile('ada', pdf)).toEqual({ ok: false, refusal: 'files_unavailable' });
+    expect(read).not.toHaveBeenCalled();
+    expect(api.apiHoldsBlob).not.toHaveBeenCalled();
+    expect(api.apiCreateDocument).not.toHaveBeenCalled();
+    expect(PDF_ARRIVAL_COPY.files_unavailable).toBe('This server has no file storage.');
+  });
+
   // opening.md "Telemetry and observability": `[pdf] refused name=<name>`, whatever refused it.
   it('logs every refusal by its name, the ones answered before a byte travels too', async () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
@@ -133,6 +149,11 @@ describe('openPdfFile', () => {
     expect(pdfNameFromFile('Q3 report.final.pdf')).toBe('Q3 report.final');
     expect(pdfNameFromFile('.pdf')).toBe('Untitled PDF');
   });
+
+  it("keeps the name within a name's length, on one line", () => {
+    expect([...pdfNameFromFile(`${'x'.repeat(400)}.pdf`)]).toHaveLength(NAME_MAX_LENGTH);
+    expect(pdfNameFromFile('Lease \n 2026.pdf')).toBe('Lease 2026');
+  });
 });
 
 // "A PDF that arrives for someone whose new documents start in This Browser is hashed, kept in this browser's store
@@ -155,6 +176,8 @@ describe('openPdfFile in This Browser', () => {
   });
 
   it('keeps the file in this browser and names it by a new offline record, asking LiveDoc nothing', async () => {
+    // Whether the host stores files is not this browser's question: nothing is sent.
+    caps.fileStorageRefused.mockResolvedValue(true);
     const { blobs } = here();
     const opened = await openPdfFile('guest', file(PDF), undefined, 'browser');
     expect(opened).toMatchObject({ ok: true, held: false });

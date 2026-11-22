@@ -296,6 +296,24 @@ describe('the canvas’s code at the open', () => {
     expect(canvas.loadCanvasCode).not.toHaveBeenCalled();
   });
 
+  // "Opening a document whose first tab is outside the canvas opens straight onto its surface, with no canvas code."
+  it('is not asked for a PDF tab', async () => {
+    serve({
+      '/api/documents/d1': json({
+        document: doc('g1'),
+        openedTab: {
+          id: 't1',
+          kind: 'pdf',
+          blob: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          size: 1,
+          elements: [],
+        },
+      }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(canvas.loadCanvasCode).not.toHaveBeenCalled();
+  });
+
   it('is not asked for a spreadsheet’s sheet tab, through a share link too', async () => {
     serve({
       '/api/share/c1': json({
