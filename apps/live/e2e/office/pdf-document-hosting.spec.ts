@@ -46,7 +46,9 @@ test('opening a PDF asks for none of the canvas’s code', async ({ page, pageEr
   expect(lines.some((line) => line.startsWith('[pdf] opened '))).toBe(true);
   expect(lines.filter((line) => line.startsWith('[canvas-code] '))).toEqual([]);
   // The canvas is not mounted, nor the paper that holds its place while it loads.
-  await expect(page.locator('[data-canvas-root], [data-testid="canvas-placeholder"]')).toHaveCount(0);
+  await expect(page.locator('[data-canvas-root], [data-testid="canvas-placeholder"]')).toHaveCount(
+    0,
+  );
   expectNoPageErrors(pageErrors);
 });
 
