@@ -11,7 +11,7 @@ export function LongPressRing({ point }: { point: { x: number; y: number } | nul
     <Portal>
       <div
         aria-hidden
-        className="animate-longpress-hold pointer-events-none fixed z-[var(--z-toast)] h-9 w-9 rounded-full border-2 border-brand-500/70"
+        className="animate-longpress-hold pointer-events-none fixed z-[var(--z-toast)] size-prominent rounded-full border-2 border-brand-500/70"
         style={{ left: point.x, top: point.y }}
       />
     </Portal>

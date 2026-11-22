@@ -195,7 +195,11 @@ export function judgeClass(className: string): string | null {
     return judgeRadius(undefined, utility.slice('rounded-'.length));
 
   for (const [prefix, judge] of FAMILIES) {
-    if (utility.startsWith(`${prefix}-`)) return judge(prefix, utility.slice(prefix.length + 1));
+    // A prefix with nothing after it is a word being built (`gap-${n}`), not a class.
+    if (utility.startsWith(`${prefix}-`)) {
+      const value = utility.slice(prefix.length + 1);
+      return value === '' ? null : judge(prefix, value);
+    }
   }
   return null;
 }

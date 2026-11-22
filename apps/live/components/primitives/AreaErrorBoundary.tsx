@@ -115,7 +115,7 @@ export class AreaErrorBoundary extends Component<Props, { failed: boolean }> {
     return (
       <div
         role="alert"
-        className={`flex flex-wrap items-center justify-center gap-3 p-4 text-sm text-slate-600 dark:text-slate-300 ${
+        className={`flex flex-wrap items-center justify-center gap-3 p-4 text-body text-slate-600 dark:text-slate-300 ${
           this.props.fallbackClassName ?? ''
         }`}
       >
