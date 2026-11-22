@@ -37,6 +37,8 @@ const BUILT = { status: 'built' } as const;
 
 /** File > Download > PDF: the bake, every live change in the file (files-print-and-sync.md "Downloading"). */
 export const DOWNLOAD_PDF = 'download-pdf';
+export const UNDO = 'undo';
+export const REDO = 'redo';
 export const TOOL_SELECT = 'tool-select';
 export const TOOL_HIGHLIGHT = 'tool-highlight';
 
@@ -63,8 +65,8 @@ export const PDF_MENUS: OfficeCatalogue = [
     item('print', 'Print', 'view'),
   ]),
   menu('edit', 'Edit', [
-    item('undo', 'Undo', 'participate'),
-    item('redo', 'Redo', 'participate'),
+    item(UNDO, 'Undo', 'participate', { shortcut: 'undo', status: 'built' }),
+    item(REDO, 'Redo', 'participate', { shortcut: 'redo', status: 'built' }),
     SEPARATOR,
     item('find', 'Find', 'view'),
   ]),

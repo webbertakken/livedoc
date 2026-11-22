@@ -46,6 +46,12 @@ export const PDF_MARK_TEXT_MAX_CHARS = 10_000;
 export const PDF_MARK_MAX_QUADS = 2_000;
 /** (default) Past it the stored file is replaced (saving.md "Limits"); the room refuses a state beyond it. */
 export const PDF_LIVE_CHANGES_MAX_BYTES = 4_194_304;
+/** (default) Past it an idle Editor's surface replaces the stored file: three quarters of the ceiling, so ordinary use
+ *  never meets the ceiling itself (live-editing-and-storage.md "Replacing the stored file"). */
+export const PDF_REPLACE_AT_BYTES = 3_145_728;
+/** (default) How long nothing changed here or arrived before a surface replaces the stored file for the budget.
+ *  Safe range: 5,000 to 120,000. */
+export const PDF_REPLACE_IDLE_MS = 20_000;
 /** (default) One posted update: the api's body cap, as a text document's. */
 export const PDF_UPDATE_MAX_BYTES = 8_000_000;
 /** One stored chunk of the encoded state: under the room's 2,000,000-byte row cap with room for the row's columns. */
@@ -57,6 +63,8 @@ export const PDF_LOG_UPDATES = 500;
 /** (default) How long a change the room has not confirmed waits before this browser keeps it, as a text document's.
  *  Safe range: 100 to 2,000. */
 export const PDF_LOCAL_SAVE_MS = 500;
+/** Changes typed within this long of each other are one step of a person's undo, as a text document's. */
+export const PDF_UNDO_GROUP_MS = 500;
 /** The most base64 one `pdf` op carries: inside the room's 256 KB message cap with room for the envelope. */
 export const PDF_FRAME_CHARS = 200_000;
 /** (default) A coordinate read from a file is held within two pages' reach of the page's origin (security.md "Limits"). */

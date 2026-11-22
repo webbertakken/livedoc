@@ -44,13 +44,21 @@ export async function apiLoadPdfState(
   return { update: new Uint8Array(await res.arrayBuffer()), stateVector, storedFile };
 }
 
-/** Send one update by the door: one too large for a frame. Resolves once the room has stored it. */
-export async function apiPostPdfUpdate(scope: PdfDocumentScope, update: Uint8Array): Promise<void> {
+/**
+ * Send one update by the door: one too large for a frame. `on`: the stored file it was made on; the room refuses
+ * one made on another. Resolves once the room has stored it.
+ */
+export async function apiPostPdfUpdate(
+  scope: PdfDocumentScope,
+  update: Uint8Array,
+  on: BlobKey,
+): Promise<void> {
   const res = await apiFetch(door(scope, 'updates'), {
     method: 'POST',
     headers: {
       ...(await apiHeaders(scope.ownerId, { share: scope.shareCode })),
       'Content-Type': 'application/octet-stream',
+      [PDF_STORED_FILE_HEADER]: on,
     },
     body: update.slice().buffer,
   });

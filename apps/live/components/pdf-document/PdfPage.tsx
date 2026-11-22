@@ -24,7 +24,14 @@ const REDRAW_SETTLE_MS = 150;
 
 export type PdfPageTool = 'select' | 'highlight';
 
-type Drawn = { toView: PageMatrix; scale: number; fileMarks: readonly string[] };
+// `by`: the drawer that drew it. A replaced stored file comes with another, and the page is then drawn again,
+// its picture staying until the new one arrives (live-editing-and-storage.md "Replacing the stored file").
+type Drawn = {
+  toView: PageMatrix;
+  scale: number;
+  fileMarks: readonly string[];
+  by: PdfPageDrawer;
+};
 
 const pointsOf = (matrix: PageMatrix, quad: Quad): string =>
   // The standard orders a quad upper left, upper right, lower left, lower right: around its edge is 0, 1, 3, 2.
@@ -88,7 +95,7 @@ export const PdfPage = memo(function PdfPage({
     }
     if (!wanted) return;
     const scale = pictureScale(page, cssPerPoint, window.devicePixelRatio || 1);
-    if (drawn && Math.abs(drawn.scale - scale) < 0.01) return;
+    if (drawn && drawn.by === drawer && Math.abs(drawn.scale - scale) < 0.01) return;
     let cancelled = false;
     const timer = setTimeout(
       () => {
@@ -99,7 +106,8 @@ export const PdfPage = memo(function PdfPage({
           if (cancelled || !canvas.current) return;
           paint(canvas.current, bitmap);
           setFailed(false);
-          setDrawn({ toView: bitmap.toView, scale, fileMarks: fileMarks.map((mark) => mark.id) });
+          const marks = fileMarks.map((mark) => mark.id);
+          setDrawn({ toView: bitmap.toView, scale, fileMarks: marks, by: drawer });
         });
       },
       drawn ? REDRAW_SETTLE_MS : 0,

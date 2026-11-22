@@ -2052,6 +2052,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "emailOutbox": {
         "type": "boolean"
       },
+      "filesEnabled": {
+        "type": "boolean"
+      },
       "googleClientId": {
         "type": [
           "string",

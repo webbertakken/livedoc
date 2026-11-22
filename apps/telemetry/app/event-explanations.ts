@@ -936,6 +936,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',
   'Pdf|Exported|Pdf':
     'Someone downloaded a PDF document as a PDF, with every change made in LiveDoc written into the file.',
+  'Pdf|Undone|': 'Someone took back their last change to a PDF document.',
+  'Pdf|Redone|': 'Someone made again a change to a PDF document they had taken back.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
   'Sheet|Searched|Function':
     'Someone searched the functions a Sheet formula can use, from the toolbar’s function picker.',
@@ -2830,6 +2832,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Pdf|Added': 'Someone made a mark on a PDF page (the value says which kind).',
   'Pdf|Selected': 'Someone took a tool in hand on a PDF document (the value says which).',
   'Pdf|Exported': 'Someone downloaded a PDF document (the value says as what).',
+  'Pdf|Undone': 'Someone took back their last change to a PDF document.',
+  'Pdf|Redone': 'Someone made again a change to a PDF document they had taken back.',
   'Sheet|Searched': 'Someone searched a list on a Sheet (the value says which: the functions).',
   'Plan|Imported': "Someone read a file into a board's cards (the value says which kind: Csv).",
   'Plan|Exported': "Someone downloaded a board's cards as a file (the value says which kind: Csv).",

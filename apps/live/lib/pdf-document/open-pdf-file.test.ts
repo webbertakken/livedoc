@@ -35,7 +35,7 @@ describe('openPdfFile', () => {
     const opened = await openPdfFile('ada', file(PDF), 'folder-1');
     expect(opened.ok && opened.held).toBe(false);
     const key = await blobKeyOf(PDF);
-    expect(api.apiStoreBlob).toHaveBeenCalledWith('ada', key, PDF);
+    expect(api.apiStoreBlob).toHaveBeenCalledWith('ada', key, PDF, undefined);
     const [owner, created] = api.apiCreateDocument.mock.calls[0] as [
       string,
       { id: string; tabs: unknown[] },
@@ -91,6 +91,7 @@ describe('openPdfFile', () => {
   it.each([
     ['files_unavailable', 503, 'files_unavailable'],
     ['file_too_large', 413, 'file_too_large'],
+    ['usage_exceeded', 403, 'usage_exceeded'],
     ['key_mismatch', 422, 'not_stored'],
     [null, 500, 'not_stored'],
   ] as const)('names the refusal %s as it is told', async (code, status, refusal) => {

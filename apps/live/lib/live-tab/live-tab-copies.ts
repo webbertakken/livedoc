@@ -11,7 +11,14 @@ const STORE = 'copies';
 const OPEN_TIMEOUT_MS = 4_000;
 
 export type CopyKey = { documentId: string; tabId: string };
-export type LiveTabCopy = CopyKey & { update: Uint8Array; savedAt: number };
+export type LiveTabCopy = CopyKey & {
+  update: Uint8Array;
+  savedAt: number;
+  /** What the state the copy was made of stood on, for a kind whose state stands on something. */
+  on?: string;
+  /** What the copy holds beyond the room, as its kind reads it. */
+  beyond?: unknown;
+};
 
 function open(database: string): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -75,9 +82,15 @@ export const liveTabCopies = (database: string): LiveTabCopyStore => ({
     if (!found) return null;
     const copy = found as Partial<LiveTabCopy>;
     // A record not in this shape is no copy of ours: read as none.
-    return copy.update instanceof Uint8Array && typeof copy.savedAt === 'number'
-      ? { documentId: key.documentId, tabId: key.tabId, update: copy.update, savedAt: copy.savedAt }
-      : null;
+    if (!(copy.update instanceof Uint8Array) || typeof copy.savedAt !== 'number') return null;
+    return {
+      documentId: key.documentId,
+      tabId: key.tabId,
+      update: copy.update,
+      savedAt: copy.savedAt,
+      ...(typeof copy.on === 'string' ? { on: copy.on } : {}),
+      ...(copy.beyond === undefined ? {} : { beyond: copy.beyond }),
+    };
   },
   async write(copy) {
     await run(database, 'readwrite', (store) => store.put(copy));

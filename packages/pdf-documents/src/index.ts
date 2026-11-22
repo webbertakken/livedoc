@@ -11,6 +11,7 @@ export {
   type PdfRoot,
   type PdfStored,
 } from './live-changes';
+export { PDF_REVIEWING_ROOTS, pdfLevelAsked, type PdfLevelAsked } from './level-asked';
 export { pdfDigest, type PdfDigest } from './digest';
 export type {
   BakeRefusal,
@@ -51,6 +52,12 @@ export {
   type PdfEntry,
   type RemovedKind,
 } from './pdf-change';
+export {
+  PdfUnconfirmed,
+  type PdfAnchors,
+  type PdfCarried,
+  type UnconfirmedChange,
+} from './unconfirmed';
 export { PageView } from './page-view';
 export { PdfPermissions } from './permissions';
 export { LinkTarget, type PdfActionKind } from './link-target';

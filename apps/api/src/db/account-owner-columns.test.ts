@@ -48,6 +48,9 @@ const OWNER_COLUMNS: OwnerColumn[] = [
   // Explorer Home's opens (docs/specs/013-workspace/explorer-home.md): guests open documents too.
   { table: 'document_opens', column: 'owner_id', migrate: { kind: 'moves' } },
   { table: 'images', column: 'owner_id', migrate: { kind: 'moves' } },
+  // The blob store (docs/specs/006-document/blob-store.md): guests store files too.
+  { table: 'blobs', column: 'owner_id', migrate: { kind: 'moves' } },
+  { table: 'blob_uploads', column: 'owner_id', migrate: { kind: 'moves' } },
   // Stored bug reports (docs/specs/016-platform/bug-reports.md "Screenshots"): guests report too.
   { table: 'bug_reports', column: 'owner_id', migrate: { kind: 'moves' } },
   { table: 'participants', column: 'id', migrate: { kind: 'moves' } },
@@ -161,6 +164,22 @@ function seedGuestHoldable(sql: DatabaseSync, id: string, peerDocument: string) 
     });
   }
   insert(sql, 'user_preferences', { owner_id: id, prefs: '{}', updated_at: T0 });
+  insert(sql, 'blobs', {
+    owner_id: id,
+    key: 'a'.repeat(64),
+    size: 40,
+    object: `${id}/${'a'.repeat(64)}.00000000`,
+    claimed_at: T0,
+    stored_at: T0,
+  });
+  insert(sql, 'blob_uploads', {
+    id: `up-${id}`,
+    owner_id: id,
+    key: 'b'.repeat(64),
+    size: 9,
+    r2_upload: 'r2',
+    begun_at: T0,
+  });
   insert(sql, 'bug_reports', {
     id: `br-${id}`,
     owner_id: id,

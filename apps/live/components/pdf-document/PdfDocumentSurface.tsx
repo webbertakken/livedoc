@@ -11,6 +11,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type KeyboardEvent,
 } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
@@ -28,9 +29,19 @@ import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
+import { sendBlob } from '@/lib/blob-store/send-blob';
+import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-budget-replacement';
+import { PdfStoredFiles, type PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
-import { DOWNLOAD_PDF, PDF_MENUS, TOOL_HIGHLIGHT, TOOL_SELECT } from '@/lib/pdf-document/pdf-menus';
+import {
+  DOWNLOAD_PDF,
+  PDF_MENUS,
+  REDO,
+  TOOL_HIGHLIGHT,
+  TOOL_SELECT,
+  UNDO,
+} from '@/lib/pdf-document/pdf-menus';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
 import { pdfRoomBinding, type PdfFrame } from '@/lib/pdf-document/pdf-room-binding';
 import {
@@ -40,6 +51,7 @@ import {
 } from '@/lib/pdf-document/pdf-refusals';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
 import { PDF_TOOLBAR } from '@/lib/pdf-document/pdf-toolbar';
+import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfDocument } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
 import { PdfNotice, PdfNoticeButton } from './PdfNotice';
@@ -48,8 +60,27 @@ import { PdfPages } from './PdfPages';
 
 /** "This PDF holds the most marks LiveDoc keeps for one file (20,000)." (marks.md "Errors"). */
 const TOO_MANY_MARKS_COPY = 'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
-/** Said once a change the room refused has been taken back (live-editing-and-storage.md "Limits"). */
+/** Said once a change the room refused for a limit has been dropped (live-editing-and-storage.md "Limits"). */
 const CHANGES_DO_NOT_FIT_COPY = 'This PDF has more unsaved changes than fit.';
+/** Said once a change refused for the level has been dropped (editing-modes.md "Errors"). */
+const VIEW_ONLY_COPY = 'You can view this PDF, but not change it.';
+const REVIEW_ONLY_COPY = 'You can review this PDF, but not edit its pages.';
+
+/** What a person is told of changes that could not be placed on a replaced stored file
+ *  (live-editing-and-storage.md "A change carried across a replacement"). */
+export const lostChangesCopy = (count: number): string =>
+  count === 1
+    ? '1 change couldn’t be placed on the new file.'
+    : `${count} changes couldn’t be placed on the new file.`;
+
+const NO_STEPS: PdfUndoState = { canUndo: false, canRedo: false };
+const neverChanges = () => () => {};
+
+/** What a person is told once a change the room refused has been dropped. */
+export const droppedChangeCopy = (refusal: PdfDocumentRefusal, level: AccessLevel): string => {
+  if (refusal !== 'level_too_low') return CHANGES_DO_NOT_FIT_COPY;
+  return level === 'view' ? VIEW_ONLY_COPY : REVIEW_ONLY_COPY;
+};
 
 const megabytes = (bytes: number): string =>
   bytes < 1_000_000
@@ -79,17 +110,17 @@ export function PdfDocumentSurface({
   author: string;
   // The document's own parts in the title row; null where another pane shows them.
   chrome: OfficeChrome | null;
-  // One frame to the document's room; true once the room has stored it.
-  sequence: (op: PdfFrame) => Promise<boolean>;
+  // One frame, or one replacement of the stored file, to the document's room; true once the room has stored it.
+  sequence: (op: PdfFrame | PdfStoredAsking) => Promise<boolean>;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const [attempt, setAttempt] = useState(0);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // Read as the binding sends: a level that changes, or a room that reconnects, never binds again.
-  const live = useRef({ canReview, sequence });
+  const live = useRef({ canReview, sequence, level });
   useLayoutEffect(() => {
-    live.current = { canReview, sequence };
+    live.current = { canReview, sequence, level };
   });
   const bind = useCallback<BindPdfLiveChanges>(
     (read) =>
@@ -113,8 +144,52 @@ export function PdfDocumentSurface({
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
 
-  const binding = ready?.binding ?? null;
-  useEffect(() => binding?.onRefused(() => setProblem(CHANGES_DO_NOT_FIT_COPY)), [binding]);
+  // "Replacing the stored file": an Editor's idle surface replaces it for the budget.
+  useEffect(() => {
+    if (!ready) return undefined;
+    const document = { documentId, shareCode };
+    const watch = watchPdfBudget({
+      tabId,
+      doc: ready.binding.doc,
+      storedFile: ready.storedFile,
+      pages: ready.pages.length,
+      engine: ready.engine,
+      canReplace: () => live.current.level === 'edit',
+      isSaved: ready.binding.isSaved,
+      store: (key, bytes) => sendBlob(ownerId, key, bytes, { document }),
+      ask: (asking) => live.current.sequence(asking),
+      onRefused: (listener) => PdfStoredFiles.onRefused(tabId, listener),
+    });
+    return watch.stop;
+  }, [ready, ownerId, documentId, tabId, shareCode]);
+
+  const onDropped = ready?.onDropped ?? null;
+  useEffect(
+    () => onDropped?.((refusal) => setProblem(droppedChangeCopy(refusal, live.current.level))),
+    [onDropped],
+  );
+
+  const onLost = ready?.onLost ?? null;
+  useEffect(() => onLost?.((count) => setProblem(lostChangesCopy(count))), [onLost]);
+
+  // "Undo": the person's own steps on these live changes; a step returning shows the page it was made on.
+  const undo = ready?.undo ?? null;
+  const steps = useSyncExternalStore(
+    undo?.subscribe ?? neverChanges,
+    () => undo?.get() ?? NO_STEPS,
+    () => NO_STEPS,
+  );
+  const pages = ready?.pages ?? null;
+  useEffect(
+    () =>
+      undo?.onReturn((place) => {
+        const at = (pages ?? []).findIndex((page) => page.name === place.page);
+        scroller.current
+          ?.querySelector(`[data-pdf-page="${at + 1}"]`)
+          ?.scrollIntoView({ block: 'nearest' });
+      }),
+    [undo, pages],
+  );
 
   const storedFile = open.phase === 'ready' || open.phase === 'refused' ? open.storedFile : null;
   const download = useCallback(async () => {
@@ -147,11 +222,14 @@ export function PdfDocumentSurface({
     (index: number, selection: TextSelection) => {
       const page = ready?.pages[index];
       if (!ready || !page) return;
-      const made = addHighlight(
-        ready.binding.doc,
-        { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
-        selection,
-        { author, now: Date.now(), id: crypto.randomUUID() },
+      // One mark drawn is one step of the person's undo, made on this page.
+      const made = ready.undo.step({ page: page.name }, () =>
+        addHighlight(
+          ready.binding.doc,
+          { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
+          selection,
+          { author, now: Date.now(), id: crypto.randomUUID() },
+        ),
       );
       if (made.ok) {
         debugLog('[pdf] mark-added kind=highlight');
@@ -172,13 +250,27 @@ export function PdfDocumentSurface({
       ...(ready
         ? { [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' } }
         : {}),
-      ...(marking
+      ...(marking && undo
         ? {
+            [UNDO]: {
+              run: () => {
+                track('Pdf', 'Undone');
+                undo.undo();
+              },
+              disabled: !steps.canUndo,
+            },
+            [REDO]: {
+              run: () => {
+                track('Pdf', 'Redone');
+                undo.redo();
+              },
+              disabled: !steps.canRedo,
+            },
             [TOOL_HIGHLIGHT]: { run: () => pickTool('highlight'), checked: inHand === 'highlight' },
           }
         : {}),
     }),
-    [modeActions, storedFile, download, ready, marking, inHand, pickTool],
+    [modeActions, storedFile, download, ready, marking, undo, steps, inHand, pickTool],
   );
 
   // The tools' own keys, heard anywhere on the surface but a text field (keyboard-shortcuts.md "Tools").

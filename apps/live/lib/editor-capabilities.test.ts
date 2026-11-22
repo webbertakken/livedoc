@@ -77,13 +77,12 @@ describe('resolveEditorCapabilities', () => {
   });
 
   // docs/specs/035-pdf-documents/editing-modes.md "Share roles": Reviewing's changes are `pdfReviews`, Editing's
-  // `pdfEdits`. Ruling F7 gives a Participant all of Reviewing; the room takes a PDF's changes from Editors alone
-  // until it checks what a Participant's update touches, so until then both are an Editor's.
-  it('gives a PDF’s changes to an Editor alone', () => {
+  // `pdfEdits`. Ruling F7 gives a Participant all of Reviewing; the room checks what a Participant's update touches.
+  it('gives Reviewing a PDF to a Participant, and Editing it to an Editor alone', () => {
     const can = (level: 'edit' | 'participate' | 'view') =>
       resolveEditorCapabilities({ level, adderKey: ME });
     expect([can('edit').pdfReviews, can('edit').pdfEdits]).toEqual([true, true]);
-    expect([can('participate').pdfReviews, can('participate').pdfEdits]).toEqual([false, false]);
+    expect([can('participate').pdfReviews, can('participate').pdfEdits]).toEqual([true, false]);
     expect([can('view').pdfReviews, can('view').pdfEdits]).toEqual([false, false]);
   });
 

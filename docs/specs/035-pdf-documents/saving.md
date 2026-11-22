@@ -109,7 +109,8 @@ everyone on the document; every client reloads the pages it shows, keeping its p
   content, the same text under a highlight) and report those that do not: "3 marks couldn't be placed on the new file.
   They are kept in the previous version." ([Files, print and sync](files-print-and-sync.md#repository-sync))
 - Replacing for the budget is done by the first client that is able and idle, as an ordinary change: undo history
-  before it is no longer steppable, and version history still reaches it.
+  before it is no longer steppable, and version history still reaches it. How a replacement is made, checked and
+  told is [Live editing and storage](live-editing-and-storage.md#replacing-the-stored-file).
 - Who may trigger each: [Share roles](#share-roles).
 
 ## Previous versions and version history
@@ -191,4 +192,4 @@ where=<browser|api|cli>`, `[pdf] bake-refused reason=<reopen|timeout|cannot-appe
 | A bake fails its reopen check or passes its time             | "This PDF couldn't be written. Your changes are safe." **Try again**              |
 | A change would turn a signed file into a rewrite             | The warning of [Signing](signing.md#changes-after-a-signature), before the change |
 | The blob store refuses the new stored file (full, too large) | "This PDF couldn't be stored: <reason>. Your changes are still live."             |
-| A replacement arrives while a person is mid-change           | The change is carried onto the new stored file, or reported as an anchor lost     |
+| A replacement arrives while a person is mid-change           | The change is carried onto the new stored file, or said to be lost `(default)`    |

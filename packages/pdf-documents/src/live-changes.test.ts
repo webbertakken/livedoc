@@ -29,6 +29,34 @@ function person(): { doc: Y.Doc; sent: Uint8Array[] } {
 }
 
 describe('PdfLiveChanges', () => {
+  // live-editing-and-storage.md "Replacing the stored file": the fingerprint.
+  it('gives two states that show the same changes one fingerprint, whatever order they arrived in', async () => {
+    const ada = person();
+    const bob = person();
+    PdfLiveChanges.setStored(ada.doc, { blob: BLOB, pages: 3 });
+    PdfLiveChanges.addMark(ada.doc, highlight('a'));
+    PdfLiveChanges.addMark(bob.doc, highlight('b'));
+    const one = PdfLiveChanges.load([...ada.sent, ...bob.sent]);
+    const other = PdfLiveChanges.load([...bob.sent, ...ada.sent].reverse());
+    const print = await PdfLiveChanges.fingerprint(one);
+    expect(print).toMatch(/^[0-9a-f]{64}$/);
+    expect(await PdfLiveChanges.fingerprint(other)).toBe(print);
+    expect(await PdfLiveChanges.fingerprint(PdfLiveChanges.load(ada.sent))).not.toBe(print);
+  });
+
+  it('gives a state another fingerprint once anything it shows is changed, a deletion too', async () => {
+    const ada = person();
+    PdfLiveChanges.addMark(ada.doc, highlight('a'));
+    PdfLiveChanges.addMark(ada.doc, highlight('b'));
+    const before = await PdfLiveChanges.fingerprint(ada.doc);
+    // A deletion moves no state vector: the fingerprint is what tells.
+    const vector = PdfLiveChanges.stateVectorOf(PdfLiveChanges.encode(ada.doc));
+    PdfLiveChanges.removeMark(ada.doc, 'b');
+    expect(PdfLiveChanges.stateVectorOf(PdfLiveChanges.encode(ada.doc))).toEqual(vector);
+    expect(await PdfLiveChanges.fingerprint(ada.doc)).not.toBe(before);
+    expect(await PdfLiveChanges.fingerprint(PdfLiveChanges.load())).toMatch(/^[0-9a-f]{64}$/);
+  });
+
   it('holds nothing for a PDF nobody changed', () => {
     const doc = PdfLiveChanges.load([PdfLiveChanges.merge([])]);
     expect(PdfLiveChanges.isEmpty(doc)).toBe(true);
@@ -36,15 +64,23 @@ describe('PdfLiveChanges', () => {
     expect(PdfLiveChanges.stored(doc)).toBeNull();
   });
 
-  it("gives every root's shared type, so one person's changes to any of them are taken back", () => {
-    // live-editing-and-storage.md "Undo": the person's own changes only, newest first.
+  it("gives every root's shared type but `stored` to undo, so a change to any is taken back and the stored file stays named", () => {
+    // live-editing-and-storage.md "Undo": the person's own changes only, newest first; every root but `stored`.
     const doc = PdfLiveChanges.load();
     expect(PdfLiveChanges.roots(doc)).toHaveLength(PDF_ROOTS.length);
-    const undo = new Y.UndoManager([...PdfLiveChanges.roots(doc)], { captureTimeout: 0 });
-    PdfLiveChanges.addMark(doc, highlight('a'));
+    expect(PdfLiveChanges.undoScope(doc)).toHaveLength(PDF_ROOTS.length - 1);
+    const undo = new Y.UndoManager(PdfLiveChanges.undoScope(doc), { captureTimeout: 0 });
+    doc.transact(() => {
+      PdfLiveChanges.setStored(doc, { blob: BLOB, pages: 2 });
+      PdfLiveChanges.addMark(doc, highlight('a'));
+    });
     PdfLiveChanges.addMark(doc, highlight('b'));
     undo.undo();
     expect(PdfLiveChanges.marks(doc).map((m) => m.id)).toEqual(['a']);
+    undo.undo();
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    expect(PdfLiveChanges.stored(doc)).toEqual({ blob: BLOB, pages: 2 });
+    expect(undo.canUndo()).toBe(false);
   });
 
   it('names its stored file, which alone is no change', () => {

@@ -3,10 +3,10 @@
 // Answered inside the document's room. A self-host without the `FILES` bucket answers `503 files_unavailable`.
 import { isBlobKey, type BlobKey } from '@livedoc/document';
 import { byteRangeOf, readBlob } from '../blob-store/blob-store';
-import { getDocumentMeta } from '../db';
+import { getDocumentMeta, heldBlob } from '../db';
 import { documentBlobHold } from '../pdf-documents/pdf-document-store';
 import { CORS_HEADERS, json } from '../responses';
-import { refusedBlob } from './blob-store-routes';
+import { refusedBlob, short } from './blob-door';
 import {
   deniedOnTab,
   gateGrant,
@@ -14,8 +14,6 @@ import {
   requireOwner,
   type DocumentRouteContext,
 } from './context';
-
-const short = (key: string): string => key.slice(0, 8);
 
 // What every read of a blob carries: the key as a strong validator, kept for good by the reader that may have it,
 // and never a type a browser would run.
@@ -57,7 +55,9 @@ export async function handleDocumentFileRoutes(
     refusal.headers.set('Content-Range', `bytes */${hold.size}`);
     return refusal;
   }
-  const body = await readBlob(env.FILES, meta.ownerId, key, range);
+  // The object is the one the document owner's row names: a guest's bytes stay where they were stored.
+  const held = await heldBlob(env, meta.ownerId, key);
+  const body = held ? await readBlob(env.FILES, held.object, range) : null;
   if (!body) {
     // The tab names bytes the store no longer has (docs/specs/035-pdf-documents/opening.md "Refusals").
     console.error(`[blob-store] missing document=${documentId} key=${short(key)}`);

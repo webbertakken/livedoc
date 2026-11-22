@@ -67,6 +67,7 @@ import { isBugReportRefileMinute, runBugReportRefile } from './bug-reports/refil
 import { deleteOldBugReportWindows } from './db/bug-reports';
 import { handleImages } from './routes/images';
 import { handleBlobStoreRoutes } from './routes/blob-store-routes';
+import { sweepBlobs } from './blob-store/blob-retention';
 import { handleMigrate } from './routes/migrate';
 import { handleGuestId } from './routes/guest-id';
 import { handleParticipants } from './routes/participants';
@@ -526,6 +527,13 @@ const worker = {
         'rows',
         now - OUTBOX_RETENTION_MS,
         deleteOldOutboxMail,
+      );
+      // docs/specs/006-document/blob-store.md "Holds and retention": unfinished uploads past their day, and blobs
+      // nothing has held for the grace.
+      ctx.waitUntil(
+        sweepBlobs(env, now).catch((err: unknown) =>
+          console.error('[blob-store] sweep failed', err),
+        ),
       );
       // docs/specs/013-workspace/timeline.md §3.5: the Timeline feed keeps a year.
       scheduleSweep(

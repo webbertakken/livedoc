@@ -2,12 +2,17 @@
 // docs/specs/035-pdf-documents/opening.md "Refusals", "Keyboard and accessibility"; editing-modes.md "Share roles";
 // reading-surface.md "The toolbar", "Share roles"; keyboard-shortcuts.md "Tools": what the surface shows for each
 // state of an open, and which tools each role is offered; live-editing-and-storage.md "Limits": what it says once a
-// change the room refused was taken back.
+// change the room refused was dropped; "A change carried across a replacement": what it says of changes that could
+// not be placed; "Undo": the person's own steps, from the menu's keys and the toolbar.
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
-import { PageName, PdfLiveChanges } from '@livedoc/pdf-documents';
+import { Mark, PageName, PdfChange, PdfLiveChanges } from '@livedoc/pdf-documents';
+import type { PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
+import { unboundPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
+import { PDF_LOCAL_ORIGIN, pdfUndo } from '@/lib/pdf-document/pdf-undo';
 import type { PdfDocumentOpen } from '@/lib/pdf-document/usePdfDocument';
+import { track } from '@/lib/telemetry';
 import { PdfDocumentSurface } from './PdfDocumentSurface';
 
 const open = vi.hoisted(() => ({ now: { phase: 'opening' } as unknown, attempts: [] as number[] }));
@@ -17,13 +22,21 @@ vi.mock('@/lib/pdf-document/usePdfDocument', () => ({
     return open.now;
   },
 }));
-const refused = vi.hoisted(() => ({ listeners: new Set<() => void>() }));
+const dropped = vi.hoisted(() => ({
+  listeners: new Set<(refusal: PdfDocumentRefusal) => void>(),
+  lost: new Set<(count: number) => void>(),
+}));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
 const KEY = 'ab'.repeat(32) as BlobKey;
 const scope = { ownerId: 'ada', documentId: 'D', tabId: 't1', shareCode: null };
 
-function ready(): PdfDocumentOpen {
+async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
+  const binding = await unboundPdfLiveChanges({
+    update: PdfLiveChanges.merge([]),
+    stateVector: new Uint8Array(),
+    storedFile: KEY,
+  });
   return {
     phase: 'ready',
     pages: [
@@ -34,26 +47,27 @@ function ready(): PdfDocumentOpen {
     bytes: 1_250_000,
     engine: {} as never,
     drawer: { draw: async () => null, forget: () => {} },
-    binding: {
-      doc: PdfLiveChanges.load(),
-      close: () => {},
-      saveStatus: null,
-      onRefused: (listener) => {
-        refused.listeners.add(listener);
-        return () => refused.listeners.delete(listener);
-      },
+    binding,
+    undo: pdfUndo(binding.doc),
+    onLost: (listener) => {
+      dropped.lost.add(listener);
+      return () => dropped.lost.delete(listener);
+    },
+    onDropped: (listener) => {
+      dropped.listeners.add(listener);
+      return () => dropped.listeners.delete(listener);
     },
   };
 }
 
-function show(now: PdfDocumentOpen, role: 'edit' | 'view' = 'edit') {
+function show(now: PdfDocumentOpen, role: 'edit' | 'participate' | 'view' = 'edit') {
   open.now = now;
   return render(
     <PdfDocumentSurface
       scope={scope}
       documentName="Lease"
       level={role}
-      canReview={role === 'edit'}
+      canReview={role !== 'view'}
       author="Ada"
       chrome={null}
       sequence={async () => true}
@@ -67,12 +81,31 @@ class NoObserver {
   disconnect() {}
 }
 
+/** A surface with a width, so its pages are laid out. */
+class WidthObserver extends NoObserver {
+  private readonly report: () => void;
+  constructor(report: () => void) {
+    super();
+    this.report = report;
+  }
+  override observe() {
+    this.report();
+  }
+}
+function laidOut() {
+  vi.stubGlobal('ResizeObserver', WidthObserver);
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(900);
+}
+
 beforeEach(() => {
   open.attempts.length = 0;
   vi.stubGlobal('ResizeObserver', NoObserver);
   vi.stubGlobal('IntersectionObserver', NoObserver);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 const surface = (container: HTMLElement) => container.querySelector('[data-pdf-surface]')!;
 
@@ -117,8 +150,8 @@ describe('a PDF document’s surface', () => {
     expect(open.attempts.at(-1)).toBe(1);
   });
 
-  it('names the file in its pill, and gives an Editor the Highlight tool with its keys', () => {
-    const { container } = show(ready());
+  it('names the file in its pill, and gives an Editor the Highlight tool with its keys', async () => {
+    const { container } = show(await ready());
     expect(surface(container).getAttribute('data-pdf-surface')).toBe('ready');
     expect(container.querySelector('[data-pdf-pages="2"]')).toBeTruthy();
     expect(screen.getByLabelText('PDF, 2 pages, 1.3 MB').textContent).toBe('PDF');
@@ -140,22 +173,126 @@ describe('a PDF document’s surface', () => {
     expect(surface(container).getAttribute('data-pdf-tool')).toBe('select');
   });
 
-  it('says so once a change the room refused was taken back, and stops listening when it goes', () => {
-    const { unmount } = show(ready());
+  it('says so once a change the room refused was dropped, and stops listening when it goes', async () => {
+    const { unmount } = show(await ready());
     expect(screen.queryByRole('alert')).toBeNull();
     act(() => {
-      for (const listener of refused.listeners) listener();
+      for (const listener of dropped.listeners) listener('state');
     });
     expect(screen.getByRole('alert').textContent).toBe(
       'This PDF has more unsaved changes than fit.',
     );
     unmount();
-    expect(refused.listeners.size).toBe(0);
+    expect(dropped.listeners.size).toBe(0);
+  });
+
+  // editing-modes.md "Errors": a change refused for the level is dropped with the level's own line.
+  it.each([
+    ['participate', 'You can review this PDF, but not edit its pages.'],
+    ['view', 'You can view this PDF, but not change it.'],
+  ] as const)('tells a session at %s why its change was dropped', async (role, sentence) => {
+    const { unmount } = show(await ready(), role);
+    act(() => {
+      for (const listener of dropped.listeners) listener('level_too_low');
+    });
+    expect(screen.getByRole('alert').textContent).toBe(sentence);
+    unmount();
+  });
+
+  it.each([
+    [1, '1 change couldn’t be placed on the new file.'],
+    [3, '3 changes couldn’t be placed on the new file.'],
+  ])(
+    'says so when %i of a person’s changes could not be placed on a replaced file',
+    async (count, sentence) => {
+      const { unmount } = show(await ready());
+      act(() => {
+        for (const listener of dropped.lost) listener(count);
+      });
+      expect(screen.getByRole('alert').textContent).toBe(sentence);
+      unmount();
+      expect(dropped.lost.size).toBe(0);
+    },
+  );
+
+  // live-editing-and-storage.md "Undo": the person's own steps; dimmed where there is none.
+  it('takes a person’s step back and makes it again from the toolbar, each dimmed with nothing to do', async () => {
+    const now = await ready();
+    const mark = Mark.highlight({
+      id: 'm',
+      page: now.pages[1]!.name,
+      quads: [[72, 720, 172, 720, 72, 700, 172, 700]],
+      text: 'The quick',
+      colour: '#fdf1a9',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 1_795_000_000_000,
+    })!;
+    laidOut();
+    const { container } = show(now, 'participate');
+    const shown = vi.fn();
+    Element.prototype.scrollIntoView = shown;
+    const button = (name: string) => screen.getByRole('button', { name });
+    expect(button('Undo').getAttribute('aria-disabled')).toBe('true');
+    expect(button('Redo').getAttribute('aria-disabled')).toBe('true');
+    act(() => {
+      now.undo.step({ page: mark.page }, () =>
+        PdfChange.apply(now.binding.doc, PdfChange.addMark(mark), PDF_LOCAL_ORIGIN),
+      );
+    });
+    expect(button('Undo').getAttribute('aria-disabled')).toBeNull();
+    fireEvent.click(button('Undo'));
+    expect(PdfLiveChanges.marks(now.binding.doc)).toEqual([]);
+    expect(track).toHaveBeenCalledWith('Pdf', 'Undone');
+    // The step's page is shown again: page two of this file.
+    expect(shown.mock.contexts[0]).toBe(container.querySelector('[data-pdf-page="2"]'));
+    expect(button('Undo').getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(button('Redo'));
+    expect(PdfLiveChanges.marks(now.binding.doc)).toEqual([mark]);
+    expect(track).toHaveBeenCalledWith('Pdf', 'Redone');
+    expect(button('Redo').getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('takes a step back by its key, and makes it again', async () => {
+    const now = await ready();
+    const { container } = show(now);
+    Element.prototype.scrollIntoView = vi.fn();
+    act(() => {
+      now.undo.step({ page: now.pages[0]!.name }, () =>
+        PdfChange.apply(
+          now.binding.doc,
+          PdfChange.turnPage(now.pages[0]!.name, 90),
+          PDF_LOCAL_ORIGIN,
+        ),
+      );
+    });
+    fireEvent.keyDown(surface(container), { key: 'z', code: 'KeyZ', ctrlKey: true });
+    expect(PdfLiveChanges.pageTurns(now.binding.doc).size).toBe(0);
+    fireEvent.keyDown(surface(container), {
+      key: 'z',
+      code: 'KeyZ',
+      ctrlKey: true,
+      shiftKey: true,
+    });
+    expect(PdfLiveChanges.pageTurns(now.binding.doc).size).toBe(1);
+  });
+
+  // reading-surface.md "The toolbar": Undo and Redo are hidden in Viewing, and from a Viewer.
+  it('draws a Viewer no Undo', async () => {
+    show(await ready(), 'view');
+    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Redo' })).toBeNull();
+  });
+
+  // editing-modes.md "Share roles": a Participant does all of Reviewing (F7).
+  it('offers a Participant the tools that mark', async () => {
+    show(await ready(), 'participate');
+    expect(screen.getByRole('button', { name: 'Highlight' })).toBeTruthy();
   });
 
   // "A Viewer has the Viewing toolbar": a control above the session's level is not drawn.
-  it('draws a Viewer no tool that marks, and takes none in hand by its key', () => {
-    const { container } = show(ready(), 'view');
+  it('draws a Viewer no tool that marks, and takes none in hand by its key', async () => {
+    const { container } = show(await ready(), 'view');
     expect(screen.queryByRole('button', { name: 'Highlight' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Select' })).toBeTruthy();
     fireEvent.keyDown(surface(container), { key: 'u' });

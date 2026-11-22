@@ -1312,11 +1312,35 @@ export const PDFS_EXPORTED = chart(
   { types: ['Pdf'] },
 );
 
+export const PDF_UNDOS = chart(
+  'Pdf',
+  'Undone',
+  'PDF Undos',
+  'A person’s own change to a PDF document taken back.',
+  { rising: 'neutral' },
+);
+
+export const PDF_REDOS = chart(
+  'Pdf',
+  'Redone',
+  'PDF Redos',
+  'A change to a PDF document made again after it was taken back.',
+  { rising: 'neutral' },
+);
+
 export const PDF_DOCUMENTS: MetricStack = {
   stack: true,
   title: 'PDF Documents',
-  blurb: 'PDF documents: opened from files, marked, and downloaded with every change in the file.',
-  members: [PDFS_IMPORTED, PDF_MARKS_ADDED, PDF_TOOLS_SELECTED, PDFS_EXPORTED],
+  blurb:
+    'PDF documents: opened from files, marked, changes taken back, and downloaded with every change in the file.',
+  members: [
+    PDFS_IMPORTED,
+    PDF_MARKS_ADDED,
+    PDF_TOOLS_SELECTED,
+    PDF_UNDOS,
+    PDF_REDOS,
+    PDFS_EXPORTED,
+  ],
 };
 
 // Forms (docs/specs/030-forms/forms.md "Telemetry"): forms started and built, published, opened and closed, and the

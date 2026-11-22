@@ -3,7 +3,8 @@
 // the api, agents and the CLI. Maps by id, each property a whole value, so two people changing one mark merge per
 // property. A PDF nobody changed has no state at all.
 import * as Y from 'yjs';
-import { isBlobKey, type BlobKey } from '@livedoc/document';
+import { blobKeyOf, isBlobKey, type BlobKey } from '@livedoc/document';
+import { canonical } from './canonical';
 import { FieldValue } from './field-value';
 import { PDF_MAX_PAGES } from './limits';
 import { Mark } from './mark';
@@ -147,9 +148,30 @@ export const PdfLiveChanges = {
     return turns;
   },
 
-  /** Every root's shared type: what one person's undo watches (live-editing-and-storage.md "Undo"). */
+  /** Every root's shared type, in the layout's order. */
   roots: (doc: Y.Doc): readonly (Y.Array<unknown> | Y.Map<unknown>)[] =>
     PDF_ROOTS.map((root) => (root === 'pageOrder' ? doc.getArray(root) : doc.getMap(root))),
+  /**
+   * What one person's undo watches (live-editing-and-storage.md "Undo"): every root but `stored`. Naming the stored
+   * file is nobody's act, so taking a first change back leaves it named.
+   */
+  undoScope: (doc: Y.Doc): (Y.Array<unknown> | Y.Map<unknown>)[] =>
+    PdfLiveChanges.roots(doc).filter((_root, at) => PDF_ROOTS[at] !== 'stored'),
+
+  /**
+   * The fingerprint of what the changes show ("Replacing the stored file"): the SHA-256 of what every root holds,
+   * its keys in order. Two states that show the same changes answer the same, whatever order their updates came in;
+   * a replacement names the fingerprint of the changes its file holds, and the room compares it with its own.
+   */
+  fingerprint: (doc: Y.Doc): Promise<string> => {
+    const held = Object.fromEntries(
+      PdfLiveChanges.roots(doc).map((root, at): [PdfRoot, unknown] => [
+        PDF_ROOTS[at]!,
+        root.toJSON(),
+      ]),
+    );
+    return blobKeyOf(new Uint8Array(new TextEncoder().encode(canonical(held))));
+  },
 
   /** Whether nothing was changed since the stored file: such a state is never baked (saving.md "An unchanged file"). */
   isEmpty: (doc: Y.Doc): boolean =>

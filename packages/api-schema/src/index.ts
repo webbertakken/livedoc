@@ -629,6 +629,10 @@ export type CapabilitiesResponse = {
   // Google Drive mirror (docs/specs/022-drive-mirror/drive-mirror.md): how the deployment
   // gets Google access tokens. Optional so an older worker parses as 'off'.
   driveMode?: DriveMode;
+  // The deployment has file storage, the blob store's bucket (docs/specs/006-document/blob-store.md "Without
+  // object storage"): without it no PDF document or file tab can be made, and the app offers none. Optional so an
+  // older worker parses as false.
+  filesEnabled?: boolean;
 };
 
 // Per-day buckets for the trend charts on the dashboard. `days` is

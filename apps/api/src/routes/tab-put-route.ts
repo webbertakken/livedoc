@@ -30,7 +30,7 @@ import { applyRoomLedger, fetchRoomLedger } from '../room-client';
 import { recordTabSave } from '../timeline';
 import type { TabSaveDocument } from '../db/tab-save-document';
 import { keepStoredStructure } from '../tab-structure';
-import { TAB_BLOB_STATUS, tabBlobRefusal } from '../blob-store/tab-blobs';
+import { keepStoredFile, TAB_BLOB_STATUS, tabBlobRefusal } from '../blob-store/tab-blobs';
 import { readBody, type DocumentRouteContext } from './context';
 
 // Fields of the stored record, not of the tab body; a client echoing them back never stores them
@@ -111,7 +111,10 @@ export async function handleTabPut(
     const kept =
       scope && existingTab ? keepStoredStructure(ledger.tab, existingTab, scope) : ledger.tab;
     if (kept !== ledger.tab) console.info('[tabs] tab.structure.kept', { documentId: id, tabId });
-    const body: Tab = { ...kept };
+    // A PDF tab's stored file is the room's to replace, never a save's ("Replacing the stored file").
+    const filed = keepStoredFile(kept, existingTab);
+    if (filed !== kept) console.info(`[pdf] save-kept-stored-file document=${id} tab=${tabId}`);
+    const body: Tab = { ...filed };
     // The name cap (docs/specs/006-document/name-length.md): a new or changed name is shortened;
     // an autosave echoing the stored name unchanged keeps it.
     // A spreadsheet's sheet tab is named as its sheet: a rename is the sheet's (tab-name-route.ts), never an autosave's.

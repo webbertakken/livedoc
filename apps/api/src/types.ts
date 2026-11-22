@@ -218,6 +218,9 @@ export type Env = {
   // Unset or non-positive = no limit. Hosted docs.nu sets
   // this to "104857600" (100 MB).
   IMAGE_MAX_BYTES_PER_OWNER?: string;
+  // The most bytes one owner's blobs may count (docs/specs/006-document/blob-store.md "Getting bytes in"), a decimal
+  // byte count read as the image caps are. Unset or non-positive = no allowance. Hosted docs.nu sets "1073741824".
+  FILE_MAX_BYTES_PER_OWNER?: string;
   // Google Drive mirror (docs/specs/022-drive-mirror/drive-mirror.md, "Self-hosting").
   // GOOGLE_CLIENT_ID (plain var) switches the feature on at all; with
   // GOOGLE_CLIENT_SECRET and DRIVE_TOKEN_KEY (both secrets) the worker brokers

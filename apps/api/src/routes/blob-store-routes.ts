@@ -1,40 +1,18 @@
 // The blob store's doors in (docs/specs/006-document/blob-store.md "Getting bytes in"):
+//   GET  /api/files                        what the caller's blobs count, and the allowance
 //   GET  /api/files/<key>[?document=<id>]  whether the owner holds the key: the question an upload begins with
 //   PUT  /api/files/<key>[?document=<id>]  the bytes, in one request, streamed into storage and checked against the key
+//   .../files/<key>/uploads...             the same in parts (blob-upload-routes.ts)
 // A self-host without the `FILES` bucket answers each `503 files_unavailable`. The door out is a document's
 // (document-file-routes.ts).
-import { FILE_TAB_MAX_BYTES, isBlobKey } from '@livedoc/document';
-import {
-  BLOB_STORE_REFUSALS,
-  heldBlobSize,
-  storeBlob,
-  type BlobStoreRefusal,
-} from '../blob-store/blob-store';
-import { getDocumentMeta } from '../db';
+import { isBlobKey } from '@livedoc/document';
+import { filesAllowance } from '../blob-store/allowance';
+import { storeBlob } from '../blob-store/blob-store';
+import { blobUsage, claimBlob, getDocumentMeta, heldBlob, markBlobStored } from '../db';
 import { json, notFound } from '../responses';
+import { declaredLength, refusedBlob, short, sizeRefusal, type BlobDoor } from './blob-door';
+import { blobUploadDoorOf, handleBlobUploadRoutes } from './blob-upload-routes';
 import { deniedOnTab, gateEdit, missingDocument, requireOwner, type RouteContext } from './context';
-
-const short = (key: string): string => key.slice(0, 8);
-
-export /** A refusal, logged with its fingerprint and answered by name. */
-function refusedBlob(
-  name: BlobStoreRefusal,
-  where: { documentId?: string | null; key?: string },
-  extra: Record<string, unknown> = {},
-): Response {
-  const fingerprint = name === 'files_unavailable' ? 'unavailable' : `refused name=${name}`;
-  console.warn(
-    `[blob-store] ${fingerprint} document=${where.documentId ?? '-'} key=${where.key ? short(where.key) : '-'}`,
-  );
-  return json({ error: name, ...extra }, { status: BLOB_STORE_REFUSALS[name] });
-}
-
-/** The declared size of an upload, or null when the request does not say one. */
-function declaredLength(request: Request): number | null {
-  const header = request.headers.get('Content-Length');
-  const length = header === null ? Number.NaN : Number(header);
-  return Number.isSafeInteger(length) && length > 0 ? length : null;
-}
 
 // Whose the bytes are, or the response that refuses the caller: the document's owner when the upload names a
 // document (edit access asked; a tab-scoped link is refused, as on every document-level door), else the caller's own.
@@ -47,10 +25,43 @@ async function blobOwnerOf(ctx: RouteContext, caller: string): Promise<string | 
   return meta.ownerId;
 }
 
+async function usage(ctx: RouteContext): Promise<Response> {
+  if (!ctx.env.FILES) return refusedBlob('files_unavailable', {});
+  const caller = requireOwner(ctx);
+  if (caller instanceof Response) return caller;
+  return json({ ...(await blobUsage(ctx.env, caller)), allowanceBytes: filesAllowance(ctx.env) });
+}
+
+async function storeInOneRequest(ctx: RouteContext, door: BlobDoor): Promise<Response> {
+  const { bucket, key, ownerId, documentId } = door;
+  // Bytes already held for that owner are never read again: the body is left unread.
+  if (await heldBlob(ctx.env, ownerId, key)) {
+    console.info(`[blob-store] held document=${documentId ?? '-'} key=${short(key)}`);
+    return json({ held: true });
+  }
+  // The size is refused before any byte is read.
+  const length = declaredLength(ctx.request);
+  if (length === null || !ctx.request.body)
+    return refusedBlob('length_required', { documentId, key });
+  const refusal = await sizeRefusal(ctx, door, length);
+  if (refusal) return refusal;
+  const object = await claimBlob(ctx.env, ownerId, key, length, Date.now());
+  const outcome = await storeBlob(bucket, object, key, ctx.request.body);
+  if (outcome !== 'stored') return refusedBlob(outcome, { documentId, key });
+  await markBlobStored(ctx.env, ownerId, key, length, Date.now());
+  console.info(
+    `[blob-store] stored document=${documentId ?? '-'} key=${short(key)} bytes=${length} parts=1`,
+  );
+  return json({ stored: true }, { status: 201 });
+}
+
 export async function handleBlobStoreRoutes(ctx: RouteContext): Promise<Response> {
   const { request, env, segments, url } = ctx;
-  if (segments.length !== 3) return notFound();
-  if (request.method !== 'PUT' && request.method !== 'GET') return notFound();
+  if (segments.length === 2) return request.method === 'GET' ? usage(ctx) : notFound();
+  const whole = segments.length === 3;
+  if (whole && request.method !== 'PUT' && request.method !== 'GET') return notFound();
+  const upload = whole ? null : blobUploadDoorOf(segments, request.method);
+  if (!whole && !upload) return notFound();
   const key = segments[2]!;
   const documentId = url.searchParams.get('document');
   if (!env.FILES) return refusedBlob('files_unavailable', { documentId });
@@ -59,24 +70,10 @@ export async function handleBlobStoreRoutes(ctx: RouteContext): Promise<Response
   if (caller instanceof Response) return caller;
   const ownerId = await blobOwnerOf(ctx, caller);
   if (ownerId instanceof Response) return ownerId;
+  const door: BlobDoor = { bucket: env.FILES, key, ownerId, documentId };
 
-  const held = await heldBlobSize(env.FILES, ownerId, key);
+  if (upload) return handleBlobUploadRoutes(ctx, door, upload);
   // Not holding the bytes is an answer, never an error: the upload that follows is the ordinary path.
-  if (request.method === 'GET') return json({ held: held !== null });
-  // Bytes already held for that owner are never read again: the body is left unread.
-  if (held !== null) {
-    console.info(`[blob-store] held document=${documentId ?? '-'} key=${short(key)}`);
-    return json({ held: true });
-  }
-  // The size is refused before any byte is read.
-  const length = declaredLength(request);
-  if (length === null || !request.body) return refusedBlob('length_required', { documentId, key });
-  if (length > FILE_TAB_MAX_BYTES)
-    return refusedBlob('file_too_large', { documentId, key }, { limitBytes: FILE_TAB_MAX_BYTES });
-  const outcome = await storeBlob(env.FILES, ownerId, key, request.body);
-  if (outcome !== 'stored') return refusedBlob(outcome, { documentId, key });
-  console.info(
-    `[blob-store] stored document=${documentId ?? '-'} key=${short(key)} bytes=${length} parts=1`,
-  );
-  return json({ stored: true }, { status: 201 });
+  if (request.method === 'GET') return json({ held: (await heldBlob(env, ownerId, key)) !== null });
+  return storeInOneRequest(ctx, door);
 }
