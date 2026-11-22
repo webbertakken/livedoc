@@ -174,6 +174,32 @@ test('a picture is inserted from the computer, and pasted as a file', async ({
   }, headers);
   expect(gallery.map((i) => i.width)).toEqual([240]);
 
+  // objects.md "Working with a picture": Alt text writes its description; Replace image keeps it and the width.
+  await (await officeMenuItem(page, ['Format', 'Image', 'Alt text'])).click();
+  const altDialog = page.getByRole('dialog', { name: 'Alt text' });
+  await altDialog.getByLabel('Description').fill('A teal band');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('alt-text-dialog.png') });
+  await altDialog.getByRole('button', { name: 'OK' }).click();
+  await expect(body.getByRole('img', { name: 'A teal band' })).toBeVisible();
+  const widthBefore = (await body.locator('.text-document-picture').first().boundingBox())!.width;
+  const [replacer] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    (
+      await officeMenuItem(page, ['Format', 'Image', 'Replace image', 'Upload from computer'])
+    ).click(),
+  ]);
+  await replacer.setFiles({
+    name: 'square.png',
+    mimeType: 'image/png',
+    buffer: solidPng(100, 100, [120, 40, 160]),
+  });
+  const replaced = body.getByRole('img', { name: 'A teal band' });
+  await expect.poll(() => replaced.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBe(100);
+  const square = (await body.locator('.text-document-picture').first().boundingBox())!;
+  expect(Math.round(square.width)).toBe(Math.round(widthBefore));
+  expect(Math.round(square.height)).toBe(Math.round(widthBefore));
+
   // A picture file pasted lands at the caret.
   await page.keyboard.press('End');
   const pasted = solidPng(60, 60, [200, 80, 0]).toString('base64');

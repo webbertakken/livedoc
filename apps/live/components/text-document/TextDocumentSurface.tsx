@@ -144,6 +144,7 @@ import { TextDocumentEndNotes } from './TextDocumentEndNotes';
 import { TextDocumentPageNotes } from './TextDocumentPageNotes';
 import { useTextDocumentEndNotes } from './useTextDocumentEndNotes';
 import { useTextDocumentPictures } from './useTextDocumentPictures';
+import { useTextDocumentPictureEditing } from './useTextDocumentPictureEditing';
 import {
   picturePastePlugin,
   type TakePictureFiles,
@@ -651,6 +652,13 @@ export function TextDocumentSurface({
   useLayoutEffect(() => {
     takePictureFiles.current = pictures.take;
   });
+  // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
+  const pictureEditing = useTextDocumentPictureEditing({
+    view: editorView,
+    canEdit: writes && headers.editing === null && headers.note === null,
+    subscribe: changes.subscribeCaret,
+    bring: pictures.bring,
+  });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -675,6 +683,7 @@ export function TextDocumentSurface({
       ...breakActions,
       ...tableActions,
       ...pictures.actions,
+      ...pictureEditing.actions,
       ...tableProperties.actions,
       ...headers.actions,
     }),
@@ -682,6 +691,7 @@ export function TextDocumentSurface({
       breakActions,
       tableActions,
       pictures.actions,
+      pictureEditing.actions,
       tableProperties.actions,
       columns.actions,
       headers.actions,
@@ -775,6 +785,7 @@ export function TextDocumentSurface({
       {paragraphs.dialog}
       {clipboard.dialog}
       {pictures.dialog}
+      {pictureEditing.dialog}
       {preferences.dialog}
       {page.dialog}
       {columns.dialog}

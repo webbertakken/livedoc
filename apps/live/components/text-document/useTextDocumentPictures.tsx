@@ -18,9 +18,11 @@ import { track } from '@/lib/telemetry';
 import { IMAGE_ENTRIES } from '@/lib/text-document/text-document-menus';
 import {
   placePictureFile,
+  INSERT_PICTURE,
   placeStoredPicture,
   storeOrKeep,
   type PicturePlacing,
+  type PutPicture,
 } from '@/lib/text-document/text-document-picture-place';
 import type { TakePictureFiles } from '@/lib/text-document/text-document-picture-paste';
 import { addImageFileForDocument, UPLOAD_ACCEPT_ATTR, type PickedImage } from '@/lib/upload-image';
@@ -35,7 +37,20 @@ export const PICTURE_NOTICE_MS = 10_000;
 /** The toolbar's Insert image control, whose list is Insert > Image's. */
 export const INSERT_IMAGE_CONTROL = 'insert-image';
 
-type Source = 'Upload' | 'Gallery' | 'Search' | 'Paste' | 'Drop';
+export type Source = 'Upload' | 'Gallery' | 'Search' | 'Paste' | 'Drop';
+
+/** How a picture brought goes in, and what is counted once it has: inserted at the caret, or in a picture's place. */
+export type Bringing = {
+  readonly put: PutPicture;
+  readonly placed: (source: Source) => void;
+  // The most files one choice brings (Replace image takes one).
+  readonly most?: number;
+};
+
+const INSERTING: Bringing = {
+  put: INSERT_PICTURE,
+  placed: (source) => track('Element', 'Added', `TextDocumentImage${source}`),
+};
 
 const SOURCE_OF_PICK: Record<NonNullable<PickedImage['source']>, Source> = {
   upload: 'Upload',
@@ -70,7 +85,7 @@ export function useTextDocumentPictures({
   // The text's room at the caret in points: its column's width and the page's text height.
   room: { width: number; height: number };
 }) {
-  const [picker, setPicker] = useState<ImagePickerTab | null>(null);
+  const [picker, setPicker] = useState<{ tab: ImagePickerTab; bringing: Bringing } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   useEffect(() => {
     if (notice === null) return;
@@ -98,12 +113,11 @@ export function useTextDocumentPictures({
   );
 
   const placeFiles = useCallback(
-    async (files: readonly File[], source: Source) => {
+    async (files: readonly File[], source: Source, bringing: Bringing = INSERTING) => {
       setNotice(null);
       // One after another, each at the caret the last one left.
       for (const file of files)
-        if (await placePictureFile(placing, file, store))
-          track('Element', 'Added', `TextDocumentImage${source}`);
+        if (await placePictureFile(placing, file, store, bringing.put)) bringing.placed(source);
     },
     [placing, store],
   );
@@ -117,18 +131,23 @@ export function useTextDocumentPictures({
     [canEdit, placeFiles],
   );
 
-  const chooseFile = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = UPLOAD_ACCEPT_ATTR;
-    input.addEventListener('change', () => void placeFiles([...(input.files ?? [])], 'Upload'), {
-      once: true,
-    });
-    input.click();
-  }, [placeFiles]);
+  const chooseFile = useCallback(
+    (bringing: Bringing = INSERTING) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = UPLOAD_ACCEPT_ATTR;
+      input.addEventListener(
+        'change',
+        () => void placeFiles([...(input.files ?? [])].slice(0, bringing.most), 'Upload', bringing),
+        { once: true },
+      );
+      input.click();
+    },
+    [placeFiles],
+  );
 
   const onPicked = useCallback(
-    async (picked: PickedImage) => {
+    async (picked: PickedImage, bringing: Bringing) => {
       setPicker(null);
       setNotice(null);
       const bytes = await pickedBytes(picked, { ownerId, documentId }).catch(() => undefined);
@@ -138,8 +157,8 @@ export function useTextDocumentPictures({
         return;
       }
       const stored = picked.id.startsWith('data:') ? null : picked.id;
-      if (await placeStoredPicture(placing, bytes, stored))
-        track('Element', 'Added', `TextDocumentImage${SOURCE_OF_PICK[picked.source ?? 'upload']}`);
+      if (await placeStoredPicture(placing, bytes, stored, bringing.put))
+        bringing.placed(SOURCE_OF_PICK[picked.source ?? 'upload']);
     },
     [ownerId, documentId, placing],
   );
@@ -147,9 +166,9 @@ export function useTextDocumentPictures({
   const actions = useMemo((): OfficeActions => {
     if (!canEdit || !view) return {};
     return {
-      'image-upload': { run: chooseFile },
-      'image-search': { run: () => setPicker('search') },
-      'image-gallery': { run: () => setPicker('gallery') },
+      'image-upload': { run: () => chooseFile() },
+      'image-search': { run: () => setPicker({ tab: 'search', bringing: INSERTING }) },
+      'image-gallery': { run: () => setPicker({ tab: 'gallery', bringing: INSERTING }) },
     };
   }, [canEdit, view, chooseFile]);
 
@@ -166,8 +185,8 @@ export function useTextDocumentPictures({
         ownerId={ownerId}
         documentId={documentId}
         forElementId={null}
-        initialTab={picker}
-        onSelect={(picked) => void onPicked(picked)}
+        initialTab={picker.tab}
+        onSelect={(picked) => void onPicked(picked, picker.bringing)}
         onClose={() => {
           setPicker(null);
           view?.focus();
@@ -185,5 +204,14 @@ export function useTextDocumentPictures({
       </p>
     ) : null;
 
-  return { actions, choices, dialog, notice: noticeBar, take };
+  // What Replace image brings a picture with: the file chooser or the picker, in a picture's place.
+  const bring = useMemo(
+    () => ({
+      chooseFile,
+      openPicker: (tab: ImagePickerTab, bringing: Bringing) => setPicker({ tab, bringing }),
+    }),
+    [chooseFile],
+  );
+
+  return { actions, choices, dialog, notice: noticeBar, take, bring };
 }

@@ -132,6 +132,23 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 - Share roles: an Editor inserts, pastes and drops pictures; a Participant only as suggestions (D7); a Viewer copies.
 - Telemetry: `Element · Added · TextDocumentImage<Source>` (Upload, Gallery, Search, Paste, Drop).
 
+### Working with a picture
+
+- **Format > Image**, with a picture selected (default order, until a capture): Crop image, Image options, Alt text,
+  Replace image (Upload from computer, Search the web, LiveDoc gallery, as Insert > Image), Reset image. Each is
+  dimmed while no picture is selected; Crop, Image options and Reset wait for their parts.
+- **The context menu** on a selected picture adds, after the text items: Crop image, Replace image (the image picker,
+  its Upload tab holding the computer's files), Image options, Alt text, each only while a picture is selected.
+- **Alt text** (Format > Image, the context menu, ⌘⌥Y): a dialog titled "Alt text" with a Description field and "Mark
+  as decorative", which empties and disables the description, as Google's; OK writes both to the picture as one undo
+  step, Cancel or Escape changes nothing. A decorative picture reads as nothing to a screen reader.
+- **Replace image** places the new picture's media in the old one's place, keeping its alternative text, title,
+  decorative mark and width, its height following the new picture's ratio and its crop dropped (default), as one undo
+  step; it is chosen, stored and refused as an inserted picture is.
+- Share roles: an Editor alone; a Viewer and a Participant see the items dimmed (a Participant's suggestions wait for
+  D7).
+- Telemetry: `Element · Changed · TextDocumentImageAltText`, `TextDocumentImageReplace`.
+
 ## Drawings
 
 - **Insert > Drawing > New** opens a LiveDoc canvas in a dialog (a Sketch canvas with the Structured palette, the
