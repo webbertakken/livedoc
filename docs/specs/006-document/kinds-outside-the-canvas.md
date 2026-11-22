@@ -134,7 +134,8 @@ kind**. The room stores each one the same way, the kind declaring only what is i
   in the [reference index](../009-elements/images.md#reference-index) with the images the digest names, so the
   index trails a live tab by one drain. A tab holds content when its digest says so,
   and its characters and stored bytes join the content summary. Logged `digest` with every count the kind's digest
-  holds (a text document's characters, words and pages; a PDF's pages and marks too), its bytes and how long it took.
+  holds (a text document's characters, words and pages; a PDF's pages and marks too), how many images it names,
+  its bytes and how long it took.
 - **Copies**: a copied document's live tabs carry their state, stored as chunks under the new tab ids.
 - Kinds: the text document (`text-document`, tables `text_document_*`) and the PDF document (`pdf`, tables `pdf_*`).
 
