@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe('ImportReportDialog', () => {
-    it('is nothing on the static page, which holds no report', () => {
+  it('is nothing on the static page, which holds no report', () => {
     keepImportReport('doc-1', { name: 'Budget', lines: ['x'] });
     expect(renderToString(<ImportReportDialog documentId="doc-1" />)).toBe('');
   });
