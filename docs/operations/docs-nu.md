@@ -6,7 +6,7 @@ LiveDoc runs at [docs.nu](https://docs.nu) on its own Cloudflare account. The to
 
 - Workers: `docs-nu-api`, `docs-nu-marketing`, `docs-nu-live`, `docs-nu-telemetry`, `docs-nu-help`, `docs-nu-router` and `docs-nu-mcp` (production deploys it: `deploy_mcp: true`). `mcp.docs.nu` is attached to `docs-nu-mcp` as a custom domain in the Cloudflare dashboard (Workers → docs-nu-mcp → Domains & Routes), not by the deploy.
 - Resources: D1 `docs-nu`, R2 `docs-nu-images`, `docs-nu-files` and `docs-nu-bug-screenshots` (western Europe), and the KV namespace `docs-nu-mcp-oauth` for the MCP worker.
-- Rate limiters use namespace ids `7001`-`7018`: the ids are account-wide, and other workers on the account hold `1001` onwards.
+- Rate limiters use namespace ids `7001`-`7020` (the next is `7021`): the ids are account-wide, previews take `7101` onwards, and other workers on the account hold `1001` onwards.
 - Hostnames: `docs.nu` is canonical. `www.docs.nu` is attached to the router too, and a zone redirect rule (301, path and query kept) sends it to the apex. The zone has Always Use HTTPS on. Both zone settings live in the dashboard, not in this repo.
 - Hosted profile (`apps/api/hosted-vars.json`, applied only in `webbertakken/livedoc`): telemetry on, image gallery caps of 100 images and 100 MB per owner, `APP_BASE_URL` `https://docs.nu`. No Google client id yet, so the Drive mirror is off.
 - Sign-in is on (`BETTER_AUTH_SECRET`, Google and email codes); its codes are sent as `LiveDoc <hello@docs.nu>`. AI is off until its key is set.
@@ -99,6 +99,52 @@ The api, mcp and router keep their own log lines in Workers Logs ([Worker logs](
 - Read them in the Cloudflare dashboard: Workers & Pages, the worker, Observability.
 - Search by fingerprint: `api error route=` for a `500`, `[d1] unavailable` for a `503 storage_unavailable`.
 - `pnpm exec wrangler tail docs-nu-api` (from `apps/api`) is the live stream; it keeps nothing.
+
+## Worker issues
+
+A new kind of error in the api, mcp or router becomes a card on the Bug Tracker and one email to Webber
+([Worker issues](../specs/016-platform/worker-issues.md)). Cloudflare Workers Issues detects and groups the errors
+(`[observability.issues]` in each `wrangler.toml`, on with the deploy); its automations call the api's receiver.
+
+What the hosted setup holds:
+
+- **The secret** `WORKER_ISSUES_WEBHOOK_SECRET` on `docs-nu-api`, and the same value in the destination. Unset, the
+  receiver answers `404` as if it were not there.
+- **The destination**: a Generic Webhook, "docs.nu Bug Tracker", `https://docs.nu/api/worker-issues`, with that secret.
+- **Six automations**, two per worker (`docs-nu-api`, `docs-nu-mcp`, `docs-nu-router`), each sending to the
+  destination: **First sight** (occurrence threshold 1) and **Back after a quiet spell** (recurrence after 24 hours of
+  inactivity). An automation names one worker or the whole account; the whole account would also send the previews'
+  issues and every other project's.
+- **The ledger** (Durable Object `WorkerIssuesLedger`) and **the rate limiter** `WORKER_ISSUES_RATE_LIMITER`
+  (namespace `7020`) come with the deploy and need nothing created.
+
+Setting it up, once, after the deploy that ships the receiver:
+
+1. Make a secret and keep it: `openssl rand -base64 32 > ~/.secrets/docs-nu-worker-issues-webhook-secret` (mode 600).
+2. Set it on the api, from `apps/api`:
+   `pnpm exec wrangler secret put WORKER_ISSUES_WEBHOOK_SECRET < ~/.secrets/docs-nu-worker-issues-webhook-secret`.
+3. Let the Bug Report type show labels, so an issue card's **Worker Issue** label shows on the board:
+
+   ```sh
+   echo '[{"op":"set","type":"Bug Report","addFields":["Labels"]}]' | livedoc type apply "Bug Tracker" -f -
+   ```
+
+4. In the dashboard, Workers & Pages, `docs-nu-api`, **Issues**, **Automations**, **Add automation**:
+   - Trigger **Occurrence threshold**, value `1`.
+   - Destination: **Create destination**, **Generic Webhook**, name "docs.nu Bug Tracker", URL
+     `https://docs.nu/api/worker-issues`, the secret from step 1, then **Create destination**.
+   - Name it "First sight", turn on **Enabled**, then **Create**.
+5. Add a second automation on `docs-nu-api`: **Recurrence after inactivity**, 24 hours, the same destination, named
+   "Back after a quiet spell", **Enabled**.
+6. Repeat steps 4 and 5 on `docs-nu-mcp` and `docs-nu-router`, choosing the existing destination.
+7. Check it end to end: open any issue (or wait for one) and send it to the destination by hand from its actions. The
+   run shows **succeeded**; a card lands in Reported on the Bug Tracker, titled `<worker>: <error>` and labelled Worker
+   Issue; Webber gets one email. The api logs `[worker-issues] delivery.received` and `card.filed`.
+8. Read the card's **Other fields**: they list what the real payload carried that the receiver did not name. Fold any
+   field worth naming back into [Worker issues](../specs/016-platform/worker-issues.md) and the receiver.
+
+Cards and emails stop when the automations are disabled or the secret is deleted
+(`pnpm exec wrangler secret delete WORKER_ISSUES_WEBHOOK_SECRET`).
 
 ## Deploy
 

@@ -183,6 +183,9 @@ The **scheduled refile** (every 15 minutes, on the every-minute cron) files up t
 when the Bug Tracker is configured; a filed row is deleted, one still refused keeps its row with the new reason and its
 attempt count. Every path logs under `[bug-reports]`.
 
+A [worker issue](worker-issues.md) is filed, stored and refiled the same way, as a Bug Report card with a marked
+origin: its row has `reporter_kind` `workers-issues`, no `owner_id`, and the issue in its `issue` column.
+
 ## The Bug Tracker board
 
 The Bug Tracker is a document in the hosted operator's account, unshared, with:

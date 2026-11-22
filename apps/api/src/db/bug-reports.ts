@@ -1,7 +1,13 @@
 // Bug reports in D1 (docs/specs/016-platform/bug-reports.md "Filing"): the reports
 // the Bug Tracker's board could not take, kept with the reason until the refile files them, and the 600 s report
 // window per visitor.
-import { parseBugReportContext, type BugReportFiling, type BugReporter } from '@livedoc/api-schema';
+import {
+  parseBugReportContext,
+  parseWorkerIssue,
+  type BugReportFiling,
+  type BugReporter,
+  type WorkerIssue,
+} from '@livedoc/api-schema';
 import type { Env } from '../types';
 
 // Why the board did not take a report (the spec's reason table).
@@ -37,12 +43,14 @@ type Row = {
   context: string | null;
   screenshot_key: string | null;
   screenshot_url: string | null;
+  issue: string | null;
   reason: BugReportStoreReason;
   attempts: number;
   created_at: number;
 };
 
 function reporterOf(row: Row): BugReporter {
+  if (row.reporter_kind === 'workers-issues') return { kind: 'workers-issues', id: null };
   if (row.owner_id === null) return { kind: 'anonymous', id: null };
   return { kind: row.reporter_kind === 'account' ? 'account' : 'guest', id: row.owner_id };
 }
@@ -56,12 +64,23 @@ function contextOf(raw: string | null) {
   }
 }
 
+function issueOf(raw: string | null): WorkerIssue | null {
+  if (!raw) return null;
+  try {
+    return parseWorkerIssue(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
 function toStored(row: Row): StoredBugReport {
   const filing: BugReportFiling = { title: row.title, reporter: reporterOf(row) };
   if (row.details) filing.details = row.details;
   const context = contextOf(row.context);
   if (context) filing.context = context;
   if (row.screenshot_url) filing.screenshotUrl = row.screenshot_url;
+  const issue = issueOf(row.issue);
+  if (issue) filing.issue = issue;
   return {
     id: row.id,
     filing,
@@ -82,8 +101,8 @@ export async function storeBugReport(
   const id = crypto.randomUUID();
   await env.DB.prepare(
     `INSERT INTO bug_reports (id, owner_id, reporter_kind, title, details, context, screenshot_key, screenshot_url,
-       reason, attempts, created_at, last_attempt_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+       issue, reason, attempts, created_at, last_attempt_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
   )
     .bind(
       id,
@@ -94,6 +113,7 @@ export async function storeBugReport(
       filing.context ? JSON.stringify(filing.context) : null,
       screenshotKey,
       filing.screenshotUrl ?? null,
+      filing.issue ? JSON.stringify(filing.issue) : null,
       reason,
       now,
       now,
@@ -105,8 +125,8 @@ export async function storeBugReport(
 // The oldest stored reports, at most `limit`.
 export async function listDueBugReports(env: Env, limit: number): Promise<StoredBugReport[]> {
   const rows = await env.DB.prepare(
-    `SELECT id, owner_id, reporter_kind, title, details, context, screenshot_key, screenshot_url, reason, attempts,
-       created_at
+    `SELECT id, owner_id, reporter_kind, title, details, context, screenshot_key, screenshot_url, issue, reason,
+       attempts, created_at
      FROM bug_reports ORDER BY created_at, id LIMIT ?`,
   )
     .bind(limit)

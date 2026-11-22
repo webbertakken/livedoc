@@ -43,6 +43,11 @@ redact_query_string = true
 enabled = true
 invocation_logs = false
 
+# Workers Issues (docs/specs/016-platform/worker-issues.md): Cloudflare groups this worker's errors into issues, and an
+# automation sends a new or returning one to the api's receiver. Wrangler 4.134 or later.
+[observability.issues]
+enabled = true
+
 # Local dev (`wrangler dev --env local --port 4000`, the workspace `dev`
 # script): service bindings can't reach the local Next dev servers, so this
 # environment defines none and sets plain HTTP origins instead. The worker

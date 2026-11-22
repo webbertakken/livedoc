@@ -62,6 +62,14 @@ export type Env = {
   BUG_REPORT_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };
   BUG_REPORT_DOCUMENT_ID?: string;
   BUG_REPORT_TAB_ID?: string;
+  // Worker issues (docs/specs/016-platform/worker-issues.md): the webhook secret Cloudflare sends in `cf-webhook-auth`
+  // (`wrangler secret put WORKER_ISSUES_WEBHOOK_SECRET`; unset, the receiver answers as an unknown route), the burst
+  // gate per network (absent, no throttle), and the ledger (absent, no once-only guard, holding or remembered address).
+  WORKER_ISSUES_WEBHOOK_SECRET?: string;
+  WORKER_ISSUES_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };
+  WORKER_ISSUES_LEDGER?: DurableObjectNamespace<
+    import('./worker-issues/ledger').WorkerIssuesLedger
+  >;
   // Cloudflare Workers Rate Limiting API binding. Caps per-owner
   // writes (POST / PUT / DELETE) at the configured limit/period in
   // wrangler.toml. Optional so self-host deployments without the

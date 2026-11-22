@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { BugReportFiling } from '@livedoc/api-schema';
+import { workerIssueFiling, type BugReportFiling, type WorkerIssue } from '@livedoc/api-schema';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import {
   BUG_REPORT_WINDOW_MAX,
@@ -34,6 +34,39 @@ const filing = (extra: Partial<BugReportFiling> = {}): BugReportFiling => ({
 });
 
 describe('stored bug reports', () => {
+  // docs/specs/016-platform/worker-issues.md "Filing, storing and holding": an issue card stored and read back.
+  it('keeps a worker issue in its own column, reported by Workers Issues', async () => {
+    const issue: WorkerIssue = {
+      trigger: 'recurrence',
+      worker: 'docs-nu-api',
+      error: 'E',
+      count: 3,
+    };
+    await storeBugReport(
+      db.env,
+      { filing: workerIssueFiling(issue), screenshotKey: null, reason: 'board_busy' },
+      1,
+    );
+    const [row] = await listDueBugReports(db.env, 5);
+    expect(row?.filing).toEqual(workerIssueFiling(issue));
+    expect(db.sql.prepare('SELECT owner_id, reporter_kind FROM bug_reports').get()).toEqual({
+      owner_id: null,
+      reporter_kind: 'workers-issues',
+    });
+  });
+
+  it('reads an issue row whose issue no longer parses as an anonymous report', async () => {
+    const issue: WorkerIssue = { trigger: 'first_sight', error: 'E' };
+    await storeBugReport(
+      db.env,
+      { filing: workerIssueFiling(issue), screenshotKey: null, reason: 'board_busy' },
+      1,
+    );
+    db.sql.exec(`UPDATE bug_reports SET issue = 'nope'`);
+    const [row] = await listDueBugReports(db.env, 5);
+    expect(row?.filing).toEqual({ title: 'E', reporter: { kind: 'workers-issues', id: null } });
+  });
+
   it('stores a filing and gives it back whole, oldest first', async () => {
     await storeBugReport(
       db.env,

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { ITEM_UNKNOWN_STRING_MAX, type ItemTypeDef } from '@livedoc/items';
 import type { BugReportContext } from './bug-report';
+import type { WorkerIssue } from './worker-issue';
 import {
   BUG_REPORT_TYPE_LABEL,
   bugReportCard,
   findBugReportType,
   reporterLine,
+  workerIssueFiling,
   type BugReportFiling,
 } from './bug-report-card';
 
@@ -122,5 +124,58 @@ describe('bugReportCard', () => {
     }));
     const card = bugReportCard(filing({ context: { ...context, recentErrors: many } }), fullType);
     expect((card.fields['f-ctx'] as string).length).toBeLessThanOrEqual(ITEM_UNKNOWN_STRING_MAX);
+  });
+});
+
+// docs/specs/016-platform/worker-issues.md "The issue card": a Bug Report card with a marked origin.
+describe('bugReportCard for a worker issue', () => {
+  const issue: WorkerIssue = {
+    trigger: 'first_sight',
+    worker: 'docs-nu-api',
+    title: 'TypeError: boom',
+    error: 'TypeError: boom',
+    stack: 'TypeError: boom\n    at home (route.ts:1:2)',
+    route: 'GET /api/home',
+    version: 'v-9',
+  };
+  const issueFiling: BugReportFiling = {
+    title: 'docs-nu-api: TypeError: boom',
+    reporter: { kind: 'workers-issues', id: null },
+    issue,
+  };
+
+  it('fills Context from the issue, labels it, and says Workers Issues reported it', () => {
+    const card = bugReportCard(issueFiling, fullType);
+    expect(card.fields).toEqual({
+      title: 'docs-nu-api: TypeError: boom',
+      labels: ['Worker Issue', 'docs-nu-api'],
+      description: 'Stack:\nTypeError: boom\n    at home (route.ts:1:2)',
+      'f-ctx':
+        'Worker: docs-nu-api\nTrigger: First sight\nError: TypeError: boom\nRoute: GET /api/home\nVersion: v-9',
+      'f-rep': 'Workers Issues',
+      'f-rel': 'v-9',
+    });
+  });
+
+  it('says Workers Issues for its reporter line', () => {
+    expect(reporterLine({ kind: 'workers-issues', id: null })).toBe('Workers Issues');
+  });
+
+  it('keeps the stack in the description ahead of fields the type lacks', () => {
+    const card = bugReportCard(issueFiling, { ...fullType, custom: [] });
+    expect(card.fields['description']).toMatch(
+      /^Stack:\nTypeError: boom[\s\S]*\n\nContext:\nWorker: docs-nu-api/,
+    );
+  });
+});
+
+describe('workerIssueFiling', () => {
+  it('files the issue under its title, reported by Workers Issues', () => {
+    const issue: WorkerIssue = { trigger: 'recurrence', worker: 'w', error: 'E' };
+    expect(workerIssueFiling(issue)).toEqual({
+      title: 'w: E',
+      reporter: { kind: 'workers-issues', id: null },
+      issue,
+    });
   });
 });

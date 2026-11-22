@@ -155,6 +155,14 @@ export const SIGN_IN_CODE_EMAILS = email(
   'neutral',
 );
 
+// docs/specs/016-platform/worker-issues.md "The email": the operator told a worker error appeared or came back.
+export const WORKER_ISSUE_EMAILS = email(
+  'WorkerIssue',
+  'Worker Issue Emails',
+  'The operator told a new kind of server error appeared, or came back after a quiet spell. At most 10 an hour.',
+  'bad',
+);
+
 export const EMAIL_KIND_METRICS: readonly Metric[] = [
   WELCOME_EMAILS,
   WEEK1_EMAILS,
@@ -177,6 +185,7 @@ export const EMAIL_KIND_METRICS: readonly Metric[] = [
   TOKEN_EXPIRING_EMAILS,
   ACCOUNT_DELETED_EMAILS,
   SIGN_IN_CODE_EMAILS,
+  WORKER_ISSUE_EMAILS,
 ];
 
 export const EMAILS_SENT: MetricStack = {

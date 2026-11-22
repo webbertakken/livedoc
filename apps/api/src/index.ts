@@ -42,6 +42,7 @@ import { handleTokens } from './routes/tokens';
 import { handleOauthExchange } from './routes/oauth';
 import { DocumentRoom } from './document-room/document-room';
 import { LegacyDocumentRoom } from './document-room/legacy-document-room';
+import { WorkerIssuesLedger } from './worker-issues/ledger';
 import { CORS_HEADERS, forbidden, json, notFound, payloadTooLarge, rateLimited } from './responses';
 import { failedRequestResponse } from './request-failure';
 import { deleteOldDocumentOpens } from './db/document-opens';
@@ -65,6 +66,8 @@ import { handleForms } from './routes/forms';
 import { handleBugReports } from './bug-reports/route';
 import { isBugReportRefileMinute, runBugReportRefile } from './bug-reports/refile';
 import { deleteOldBugReportWindows } from './db/bug-reports';
+import { handleWorkerIssues } from './worker-issues/route';
+import { refileHeldWorkerIssues } from './worker-issues/held-refile';
 import { handleImages } from './routes/images';
 import { handleBlobStoreRoutes } from './routes/blob-store-routes';
 import { sweepBlobs } from './blob-store/blob-retention';
@@ -96,7 +99,7 @@ import { apiIsolate, ServerTiming, withServerTiming } from './server-timing';
 import { backgroundWaitUntil } from './background';
 import type { Env } from './types';
 
-export { DocumentRoom, LegacyDocumentRoom };
+export { DocumentRoom, LegacyDocumentRoom, WorkerIssuesLedger };
 
 // Per-owner write rate limit (security audit item). Returns true
 // when the caller is over the configured cap (wrangler.toml's
@@ -434,6 +437,9 @@ async function routeApiRequest(
     // A form link's public doors (docs/specs/030-forms/forms.md "Filling in a form").
     case 'bug-reports':
       return handleBugReports(ctx);
+    // Workers Issues' webhook (docs/specs/016-platform/worker-issues.md), off without its secret.
+    case 'worker-issues':
+      return handleWorkerIssues(ctx);
     case 'forms':
       return await handleForms(ctx);
     case 'custom-themes':
@@ -650,8 +656,12 @@ const worker = {
       );
       // docs/specs/016-platform/bug-reports.md "Filing": every 15 minutes, stored bug reports are filed again.
       if (isBugReportRefileMinute(event.scheduledTime)) {
+        // docs/specs/016-platform/worker-issues.md "Filing, storing and holding": the cards held while D1 was down
+        // go first, into the board or D1, where the bug report refile picks up what is stored.
         ctx.waitUntil(
-          runBugReportRefile(env, Date.now())
+          refileHeldWorkerIssues(env, Date.now())
+            .catch((err: unknown) => console.error('[worker-issues] held.refile_failed', err))
+            .then(() => runBugReportRefile(env, Date.now()))
             .then(() => undefined)
             .catch((err: unknown) => console.error('[bug-reports] refile.failed', err)),
         );
