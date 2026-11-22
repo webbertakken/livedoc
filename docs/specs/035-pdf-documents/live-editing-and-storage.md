@@ -12,9 +12,9 @@ on their avatar in the title row, a copy with its live changes (one's own and so
 another owner, a PDF tab never shared between documents, the Trash, and This Browser: a PDF kept and changed there,
 arriving there, synced, taken offline, copied and purged, and a cloud PDF's file kept once read. Opening a cloud PDF
 without a connection, the stored file replaced for the budget in This Browser, branches, the copy dialog, versions,
-what the servers make, the selection an undo puts back and the line a dimmed Undo says are not built; nor, of
-presence, a person's colour on a thumbnail, anything held (a text selection, a mark, an object, a text box typed in)
-and the mode in an avatar's tooltip, each drawn with the area that shows it.
+what the servers make (but a browser's thumbnail, which is built), the selection an undo puts back and the line a
+dimmed Undo says are not built; nor, of presence, a person's colour on a thumbnail, anything held (a text selection,
+a mark, an object, a text box typed in) and the mode in an avatar's tooltip, each drawn with the area that shows it.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The
@@ -323,6 +323,51 @@ A thumbnail, search text, an agent's preview and a baked file for a sync each ne
 - A self-host on a plan without the CPU time to draw a page (Workers Free) falls to the browser for all four, and
   the self-hosting notes say so.
 
+### A browser's thumbnail
+
+The engine is not in the api Worker yet, so the first page a list shows is the one a browser drew.
+
+- **Who sends one**: an Editor's open surface `(default)`. A Participant's and a Viewer's never do, so nobody below
+  an Editor decides what a document's preview shows; their marks reach it when an Editor next has the PDF open.
+- **Of what**: the PDF tab that is its document's first tab, as every snapshot is of the first tab; the first page in
+  the order, with its turn.
+- **Never** of a file opened with a password (it has a lock, [Opening](opening.md#passwords)), nor of a
+  [This Browser](#this-browser) document, which no server lists.
+- **What is drawn**: the page as the engine draws it, on white, with the live marks over it as the surface draws
+  them; `PDF_THUMBNAIL_WIDTH_PX` wide, smaller where a side would pass `PDF_THUMBNAIL_MAX_SIDE_PX`. Always light
+  paper: Dark pages never reaches it, nor anything a person holds or has selected, nor anyone's presence.
+- **As a JPEG** of at most `PDF_THUMBNAIL_MAX_BYTES`: drawn again once at a lower quality when it is more, then
+  given up, which is logged.
+- **When**: the surface asks whether one is wanted once it has drawn the first page, and sends one when it is; and
+  it sends one `PDF_THUMBNAIL_IDLE_MS` after its own last change was confirmed, at most once every
+  `PDF_THUMBNAIL_MIN_INTERVAL_MS`. Nothing waits on it and a failure changes nothing: it is logged.
+- **Wanted** is: the server keeps snapshots, the tab is the document's first, and no picture is stored for it or the
+  one stored was sent before the document was last saved.
+- **Stored marked as a browser's** (`thumb/<documentId>/browser`, with the save it was sent at), apart from the
+  snapshots drawn from it. An upload removes those, so the next read draws from the new picture; all of it goes
+  with the document.
+- **Shown** by every delivery path of [Document snapshots](../006-document/document-snapshots.md): a white page
+  holding the picture. Until a first one is sent the PDF has none, and its row shows its glyph.
+  - The save a picture was sent at may be older than a change the room had not written yet; the next Editor to open
+    the PDF then sends another `(default)`.
+  - A list that asked before the first picture was sent shows it at its next load `(default)`.
+- **Never read back**: the picture is for display, checked as a JPEG of the sizes above, stripped of its metadata,
+  and placed in a snapshot LiveDoc draws itself, so nothing in it reaches a page as markup.
+
+| Door                                                      | Answers                                                          |
+| --------------------------------------------------------- | ---------------------------------------------------------------- |
+| `GET /api/documents/<id>/pdf-documents/<tabId>/thumbnail` | `{ wanted }`: read as the tab is; false for anyone but an Editor |
+| `PUT /api/documents/<id>/pdf-documents/<tabId>/thumbnail` | `204`; the body is the JPEG                                      |
+
+| Refusal                    | When                                                           |
+| -------------------------- | -------------------------------------------------------------- |
+| `403 level_too_low`        | A Participant or a Viewer sends one                            |
+| `404 pdf_not_found`        | The tab is no PDF tab of the document                          |
+| `409 thumbnail_not_wanted` | The tab is not the document's first                            |
+| `400 thumbnail_invalid`    | Not a JPEG, or a side of 0 or past `PDF_THUMBNAIL_MAX_SIDE_PX` |
+| `413 thumbnail_too_large`  | Past `PDF_THUMBNAIL_MAX_BYTES`                                 |
+| `503 images_unavailable`   | The server keeps no snapshots (no image storage)               |
+
 ## Offline and This Browser
 
 - <a id="this-browser"></a>**A PDF document in This Browser** keeps its stored file in this browser's own store
@@ -444,21 +489,26 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 
 ## Limits
 
-| Constant                      | Value     | Why                                                                                        |
-| ----------------------------- | --------- | ------------------------------------------------------------------------------------------ |
-| `PDF_LIVE_CHANGES_MAX_BYTES`  | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))               |
-| `PDF_REPLACE_AT_BYTES`        | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself             |
-| `PDF_REPLACE_IDLE_MS`         | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s                  |
-| `PDF_UPDATE_MAX_BYTES`        | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                    |
-| `PDF_INLINE_MAX_BYTES`        | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                     |
-| `PDF_SEARCH_TEXT_MAX_CHARS`   | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only     |
-| `PDF_PRESENCE_MAX_CHARS`      | 512       | `(default)` Three names and two numbers                                                    |
-| `PDF_PRESENCE_NAME_MAX_CHARS` | 80        | `(default)` An inserted page's name is 66 at most, a mark's id 36                          |
-| `PDF_PRESENCE_FRESH_MS`       | 3,000     | `(default)` A text document's caret label                                                  |
-| `PDF_UNDO_GROUP_MS`           | 500       | A text document's typing group                                                             |
-| `PDF_LOCAL_SAVE_MS`           | 500       | `(default)` A change the room has not confirmed by then is kept in this browser            |
-| `PDF_LOCAL_SAVE_RETRY_MS`     | 5,000     | `(default)` A failed save in This Browser is written again by itself, as a text document's |
-| `LIVE_TAB_PARTING_MAX_CHARS`  | 1,000,000 | `(default)` A parting copy as base64: a fifth of the 5 MB a browser gives `localStorage`   |
+| Constant                        | Value     | Why                                                                                        |
+| ------------------------------- | --------- | ------------------------------------------------------------------------------------------ |
+| `PDF_LIVE_CHANGES_MAX_BYTES`    | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))               |
+| `PDF_REPLACE_AT_BYTES`          | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself             |
+| `PDF_REPLACE_IDLE_MS`           | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s                  |
+| `PDF_UPDATE_MAX_BYTES`          | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                    |
+| `PDF_INLINE_MAX_BYTES`          | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                     |
+| `PDF_SEARCH_TEXT_MAX_CHARS`     | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only     |
+| `PDF_PRESENCE_MAX_CHARS`        | 512       | `(default)` Three names and two numbers                                                    |
+| `PDF_PRESENCE_NAME_MAX_CHARS`   | 80        | `(default)` An inserted page's name is 66 at most, a mark's id 36                          |
+| `PDF_PRESENCE_FRESH_MS`         | 3,000     | `(default)` A text document's caret label                                                  |
+| `PDF_UNDO_GROUP_MS`             | 500       | A text document's typing group                                                             |
+| `PDF_LOCAL_SAVE_MS`             | 500       | `(default)` A change the room has not confirmed by then is kept in this browser            |
+| `PDF_LOCAL_SAVE_RETRY_MS`       | 5,000     | `(default)` A failed save in This Browser is written again by itself, as a text document's |
+| `LIVE_TAB_PARTING_MAX_CHARS`    | 1,000,000 | `(default)` A parting copy as base64: a fifth of the 5 MB a browser gives `localStorage`   |
+| `PDF_THUMBNAIL_WIDTH_PX`        | 480       | `(default)` Twice the widest card a list draws; safe range 240 to 960                      |
+| `PDF_THUMBNAIL_MAX_SIDE_PX`     | 1,024     | `(default)` A page four times as tall as wide still fits; the server refuses more          |
+| `PDF_THUMBNAIL_MAX_BYTES`       | 200,000   | `(default)` A page of photographs at that size; a list of 50 rows stays under 14 MB        |
+| `PDF_THUMBNAIL_IDLE_MS`         | 5,000     | `(default)` Past the room's own write of a change (2 s idle); safe range 2 to 60 s         |
+| `PDF_THUMBNAIL_MIN_INTERVAL_MS` | 60,000    | `(default)` One upload a minute from a surface at most, as the room writes                 |
 
 A change past a limit is refused whole and named: `pdf_too_many_marks`, `pdf_too_many_pages`, `update_too_large`,
 `live_changes_too_large` (when a replacement cannot be made, with "This PDF has more unsaved changes than fit. Ask
@@ -491,7 +541,9 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
   `[pdf] stored-file-replaced` ([Saving](saving.md#telemetry-and-observability)),
   `[pdf] replacement-refused name=<name>`, `[pdf] save-kept-stored-file`, `[pdf] digest pages=<n> marks=<n>`,
   `[pdf] server-made what=<thumbnail|text|preview|bake> ms=<n>`, `[pdf] server-declined what=<what> reason=<reason>`,
-  `[pdf] browser-upload what=<thumbnail|text>`, `[pdf] local-store refused=<reason>`,
+  `[pdf] browser-upload what=<thumbnail|text> bytes=<n>`, `[pdf] browser-upload-refused name=<name>`,
+  `[pdf] thumbnail-sent bytes=<n> quality=<q>`, `[pdf] thumbnail-skipped reason=<reason>`,
+  `[pdf] local-store refused=<reason>`,
   `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`,
   `[pdf] presence-refused`.
 - In This Browser: `[pdf] saved in this browser bytes=<n>`, `[pdf] save in this browser failed`,

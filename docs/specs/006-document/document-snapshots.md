@@ -87,6 +87,11 @@ a slide drew in 1.33 ms as a 42 KB whole canvas and draws in 0.14 ms as a
 600-paragraph article drew in 6.5 ms at 528 KB and draws in 5.6 ms at
 9 KB (the article's writing estimate dominates either way).
 
+A first tab that is a **PDF document** snapshots as a white page holding the picture a browser sent of its first
+page ([A browser's thumbnail](../035-pdf-documents/live-editing-and-storage.md#a-browsers-thumbnail)): the api
+Worker holds no PDF engine yet. With no picture sent it has no snapshot, and that answer is never kept by the
+browser (`Cache-Control: no-store`), since a picture can arrive without the document being saved again.
+
 An empty / unparseable first tab yields no snapshot (the endpoints 404
 and the row shows its generic icon). Deleting a document clears its R2
 object. The freshness column needs no backfill: the first read of each
