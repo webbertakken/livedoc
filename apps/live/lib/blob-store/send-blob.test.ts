@@ -50,7 +50,11 @@ describe('sendBlob', () => {
   it('sends a file of FILE_SINGLE_UPLOAD_MAX_BYTES in one request', async () => {
     const onProgress = vi.fn();
     expect(await sendBlob('ada', KEY, SMALL, { onProgress })).toEqual({ held: false });
-    expect(api.apiStoreBlob).toHaveBeenCalledWith('ada', KEY, SMALL, undefined);
+    // The very bytes, never a copy: told by identity, since comparing 32 MiB one byte at a time takes seconds.
+    expect(api.apiStoreBlob).toHaveBeenCalledTimes(1);
+    const [owner, key, bytes, document] = api.apiStoreBlob.mock.calls[0] as unknown[];
+    expect([owner, key, document]).toEqual(['ada', KEY, undefined]);
+    expect(bytes).toBe(SMALL);
     expect(api.apiBeginBlobUpload).not.toHaveBeenCalled();
     expect(onProgress).toHaveBeenCalledWith(SMALL.byteLength, SMALL.byteLength);
   });
