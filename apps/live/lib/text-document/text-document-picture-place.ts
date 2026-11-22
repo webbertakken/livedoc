@@ -1,12 +1,14 @@
 // Placing a picture brought into the writing (docs/specs/034-text-documents/objects.md "Inserting"): a file chosen,
 // pasted or dropped is stored (the gallery, or its bytes where the gallery cannot hold it), then placed at the caret;
 // a picture picked in the picker is already stored, its bytes read once for its key and type.
+import type { Command } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import { FEATURE_OFF_ERROR } from '@livedoc/api-schema';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import { ImageUploadError } from '@/lib/upload-image';
+import { startUndoStep } from './text-document-undo';
 import {
   insertedPictureSize,
   insertPicture,
@@ -26,6 +28,15 @@ export type PicturePlacing = {
   readonly onRefused: (message: string) => void;
 };
 
+/** How a stored picture goes into the writing: inserted at the caret, or in a picture's place (Replace image). */
+export type PutPicture = (picture: {
+  key: string;
+  pixels: { width: number; height: number };
+  size: { width: number; height: number };
+}) => Command;
+
+export const INSERT_PICTURE: PutPicture = ({ key, size }) => insertPicture({ key, ...size });
+
 /** The id a file is stored as in the gallery, or null where the gallery cannot hold it and the state keeps its bytes. */
 export type StorePicture = (file: File) => Promise<string | null>;
 
@@ -34,6 +45,7 @@ export async function placeStoredPicture(
   placing: PicturePlacing,
   bytes: Uint8Array,
   stored: string | null,
+  put: PutPicture = INSERT_PICTURE,
 ): Promise<boolean> {
   const picture = await pictureFromBytes(bytes);
   if (!picture.ok) {
@@ -47,7 +59,10 @@ export async function placeStoredPicture(
   const media = pictureMediaOf(picture.mediaType, bytes, stored);
   TextDocumentState.addMedia(doc, { [picture.key]: media });
   const size = insertedPictureSize(picture.pixels, placing.room());
-  const placed = insertPicture({ key: picture.key, ...size })(view.state, view.dispatch);
+  // One insert or replacement is one undo step.
+  startUndoStep(view);
+  const placed = put({ key: picture.key, pixels: picture.pixels, size })(view.state, view.dispatch);
+  startUndoStep(view);
   debugLog('[text-document] picture placed', {
     key: picture.key,
     gallery: media.image !== undefined,
@@ -62,6 +77,7 @@ export async function placePictureFile(
   placing: PicturePlacing,
   file: File,
   store: StorePicture,
+  put: PutPicture = INSERT_PICTURE,
 ): Promise<boolean> {
   let stored: string | null;
   try {
@@ -76,7 +92,7 @@ export async function placePictureFile(
     });
     return false;
   }
-  return placeStoredPicture(placing, new Uint8Array(await file.arrayBuffer()), stored);
+  return placeStoredPicture(placing, new Uint8Array(await file.arrayBuffer()), stored, put);
 }
 
 /** The store for a document: the gallery, or the bytes in the state where it answers `images_unavailable`. */

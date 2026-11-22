@@ -96,7 +96,7 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 
 | Action                         | PC                | Mac                  | ChromeOS                | Status    |
 | ------------------------------ | ----------------- | -------------------- | ----------------------- | --------- |
-| Alt text                       | `Ctrl+Alt+Y`      | `⌘+Option+Y`         | `Ctrl+Alt+Y`            | specified |
+| Alt text                       | `Ctrl+Alt+Y`      | `⌘+Option+Y`         | `Ctrl+Alt+Y`            | built     |
 | Resize larger                  | `Ctrl+Alt+K`      | `⌘+Ctrl+K`           | `Ctrl+Alt+K`            | specified |
 | Resize larger horizontally     | `Ctrl+Alt+B`      | `⌘+Ctrl+B`           | `Ctrl+Alt+B`            | specified |
 | Resize larger vertically       | `Ctrl+Alt+I`      | `⌘+Ctrl+I`           | `Ctrl+Alt+I`            | specified |

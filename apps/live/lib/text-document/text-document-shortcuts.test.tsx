@@ -97,6 +97,11 @@ describe('the text document menus', () => {
         'image-upload',
         'image-search',
         'image-gallery',
+        // Format > Image (useTextDocumentPictureEditing), bound by the surface.
+        'image-alt-text',
+        'image-replace-upload',
+        'image-replace-search',
+        'image-replace-gallery',
         // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
         PREFERENCES_ITEM,
         // File > Page setup, Format > Page orientation and Switch to pageless (useTextDocumentPageSetup), by the surface.

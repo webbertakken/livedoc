@@ -550,7 +550,8 @@ export const ELEMENTS_CHANGED = chart(
   'Restyled or edited: colour, text, arrow ends, size, presets, the format painter and more.',
   // An article's writing formatted (`Article…`) is its own card (Article Formatting, features.ts), as is a text
   // document's (`TextDocumentFormat…`, Text Document Formatting; its styles, Text Document Paragraph Style),
-  // as are a logo page's tools (Logo Tools Used) and a text document's tables' changes (Text Document Table Changes).
+  // as are a logo page's tools (Logo Tools Used), a text document's tables' changes (Text Document Table Changes)
+  // and its pictures' (Text Document Picture Changes).
   // An entity's fields and a relationship's cardinality are Data Models'.
   {
     typeIn: (t) =>
@@ -562,6 +563,7 @@ export const ELEMENTS_CHANGED = chart(
       !TEXT_DOCUMENT_PASTE.typeIn!(t) &&
       !TEXT_DOCUMENT_RULER.typeIn!(t) &&
       !(t ?? '').startsWith('TextDocumentTable') &&
+      !(t ?? '').startsWith('TextDocumentImage') &&
       !LOGO_TOOL_TYPES.includes(t ?? '') &&
       !DATA_MODEL_CHANGED.includes(t ?? ''),
   },

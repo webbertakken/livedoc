@@ -353,7 +353,17 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
           item('table-pin-current', 'Pin up to current row', 'edit', BUILT),
         ]),
       ]),
-      item('image-options', 'Image', 'edit'),
+      submenu('format-image', 'Image', [
+        item('image-crop', 'Crop image', 'edit'),
+        item('image-options', 'Image options', 'edit'),
+        item('image-alt-text', 'Alt text', 'edit', { shortcut: 'alt-text', ...BUILT }),
+        submenu('image-replace', 'Replace image', [
+          item('image-replace-upload', 'Upload from computer', 'edit', BUILT),
+          item('image-replace-search', 'Search the web', 'edit', BUILT),
+          item('image-replace-gallery', 'LiveDoc gallery', 'edit', BUILT),
+        ]),
+        item('image-reset', 'Reset image', 'edit'),
+      ]),
       item('borders-and-lines', 'Borders & lines', 'edit', { keywords: ['shading'] }),
       SEPARATOR,
       item('clear-formatting', 'Clear formatting', 'edit', {
@@ -426,6 +436,12 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
     { id: 'continue-numbering', contextual: true },
     SEPARATOR,
     item('select-all-matching-text', 'Select all matching text', 'view', BUILT),
+    // On a selected picture (objects.md "Working with a picture"); the order is (default) until a capture.
+    SEPARATOR,
+    { id: 'image-crop', contextual: true },
+    { id: 'image-replace-gallery', label: 'Replace image', contextual: true },
+    { id: 'image-options', contextual: true },
+    { id: 'image-alt-text', contextual: true },
     // On a cell (tables.md "Context menu"): only in a table; the order is (default) until Webber's capture.
     SEPARATOR,
     ...[

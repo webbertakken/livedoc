@@ -334,7 +334,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Y',
     '⌘+Option+Y',
     'Ctrl+Alt+Y',
-    'specified',
+    'built',
   ),
   row(
     'resize-larger',
