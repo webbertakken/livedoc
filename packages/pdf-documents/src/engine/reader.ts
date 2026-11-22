@@ -24,7 +24,7 @@ import { readMarks } from './read-marks';
 import { readLinks, readOutline } from './read-outline';
 import { readSignatures, type SignatureHeld } from './read-signatures';
 import { readPageText, selectText } from './read-text';
-import { ReaderFile, type Pdfium } from './reader-file';
+import { ReaderFile, type Clamped, type Pdfium } from './reader-file';
 
 export type { Pdfium } from './reader-file';
 
@@ -119,6 +119,16 @@ export class PdfReader {
 
   embeddedFiles(most?: number): EmbeddedFiles {
     return readEmbeddedFiles(this.file, most);
+  }
+
+  /** What was held back of the file since this was last asked (security.md "The boundary"). */
+  takeClamped(): ReadonlyMap<Clamped, number> {
+    return this.file.takeClamped();
+  }
+
+  /** The bytes of memory the reader holds: its heap, which grows and never shrinks. */
+  heldBytes(): number {
+    return this.file.heap.length;
   }
 
   /** How many pages the open file has; 0 when none is open. */

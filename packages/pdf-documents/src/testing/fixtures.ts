@@ -126,6 +126,7 @@ export const plainDocument: PdfDocumentInfo = {
   },
   tagged: false,
   form: 'none',
+  scripts: 0,
 };
 
 /** The text fixture with protection set as given: an open password, a permissions password, what is asked. */
@@ -252,7 +253,7 @@ export const xfaPdf = (): Uint8Array<ArrayBuffer> =>
     '<< /Length 0 >>\nstream\n\nendstream',
   ]);
 
-const stream = (dictionary: string, body: string): string =>
+export const stream = (dictionary: string, body: string): string =>
   `<< ${dictionary} /Length ${body.length} >>\nstream\n${body}\nendstream`;
 
 /**

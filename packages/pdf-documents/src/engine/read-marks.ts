@@ -9,7 +9,7 @@ import {
   PDF_NAME_MAX_CHARS,
   PDF_PAGE_MAX_MARKS,
 } from '../limits';
-import { held, type ReaderFile } from './reader-file';
+import type { ReaderFile } from './reader-file';
 
 // The file's own words for what sits on a page, by the reader's number; a link, a pop-up and a field's widget are
 // not marks.
@@ -50,13 +50,15 @@ export function readMarks(
     file.withPage(index, (page) => {
       const marks: FileMark[] = [];
       const count = p.FPDFPage_GetAnnotCount(page);
-      for (let n = 0; n < count && marks.length < most; n += 1) {
+      let n = 0;
+      for (; n < count && marks.length < most; n += 1) {
         const annotation = p.FPDFPage_GetAnnot(page, n);
         if (!annotation) continue;
         const subtype = SUBTYPES[p.FPDFAnnot_GetSubtype(annotation)];
         if (subtype) marks.push(markOf(file, annotation, subtype));
         p.FPDFPage_CloseAnnot(annotation);
       }
+      if (n < count) file.clamped('list');
       return marks;
     }) ?? []
   );
@@ -110,7 +112,7 @@ export function rectOf(
   const out = file.alloc(16);
   file.heap.fill(0, out, out + 16);
   file.p.FPDFAnnot_GetRect(annotation, out);
-  const side = (at: number): number => held(file.runtime.getValue(out + at * 4, 'float'));
+  const side = (at: number): number => file.held(file.runtime.getValue(out + at * 4, 'float'));
   const rect = [side(0), side(3), side(2), side(1)] as const;
   file.free(out);
   return rect;
@@ -141,7 +143,9 @@ function opacityOf(file: ReaderFile, annotation: number): number {
 
 function quadsOf(file: ReaderFile, annotation: number): Quad[] {
   const { p } = file;
-  const count = Math.min(p.FPDFAnnot_CountAttachmentPoints(annotation), PDF_MARK_MAX_QUADS);
+  const held = p.FPDFAnnot_CountAttachmentPoints(annotation);
+  const count = Math.min(held, PDF_MARK_MAX_QUADS);
+  if (held > count) file.clamped('list');
   const out = file.alloc(32);
   const quads: Quad[] = [];
   for (let n = 0; n < count; n += 1) {
@@ -149,8 +153,10 @@ function quadsOf(file: ReaderFile, annotation: number): Quad[] {
     const quad = [0, 4, 8, 12, 16, 20, 24, 28].map((at) =>
       file.runtime.getValue(out + at, 'float'),
     );
+    // A quadrilateral out of reach is dropped whole: moved to the edge it would cover text it never covered.
     if (quad.every((n) => Number.isFinite(n) && Math.abs(n) <= PDF_MAX_COORDINATE))
       quads.push(quad as unknown as Quad);
+    else file.clamped('coordinate');
   }
   file.free(out);
   return quads;

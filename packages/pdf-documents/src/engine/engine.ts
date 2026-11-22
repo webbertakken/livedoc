@@ -1,7 +1,7 @@
 // The engine over a started reader (docs/specs/035-pdf-documents/security.md "The boundary"): one reader and one
 // writer behind the one interface. It holds one open stored file.
 import type { PDF } from '@libpdf/core';
-import type { BakeResult, PageInfo, PdfEngine, PdfOpened } from '../engine-contract';
+import type { BakeResult, PageInfo, PdfEngine, PdfEngineLog, PdfOpened } from '../engine-contract';
 import { FileSignature } from '../file-signature';
 import { PdfLiveChanges } from '../live-changes';
 import { bakeChanges } from './bake';
@@ -9,9 +9,22 @@ import { PdfReader, type Pdfium } from './reader';
 import { signerOf } from './signer';
 import { layersOf, openWriter } from './writer';
 
-/** The engine over a started reader; `write` is the writer, the engine's own unless a test hands another. */
-export function pdfEngineOver(pdfium: Pdfium, write: typeof bakeChanges = bakeChanges): PdfEngine {
+/**
+ * The engine over a started reader; `write` is the writer, the engine's own unless a test hands another, and `log`
+ * takes what the engine decides: fingerprints of its own words, never a file's.
+ */
+export function pdfEngineOver(
+  pdfium: Pdfium,
+  write: typeof bakeChanges = bakeChanges,
+  log: PdfEngineLog = () => {},
+): PdfEngine {
   const reader = new PdfReader(pdfium);
+  /** An answer on its way out: what was held back in reading it is logged, once a call (security.md "The boundary"). */
+  const said = <T>(answer: T): T => {
+    for (const [what, count] of reader.takeClamped())
+      log(`[pdf] value-clamped what=${what} count=${count}`);
+    return answer;
+  };
   let stored: Uint8Array<ArrayBuffer> | null = null;
   // The file held while its password is asked, and the password it opened with: both the engine's alone.
   let waiting: Uint8Array<ArrayBuffer> | null = null;
@@ -29,7 +42,10 @@ export function pdfEngineOver(pdfium: Pdfium, write: typeof bakeChanges = bakeCh
     waiting = !opened.ok && opened.needsPassword ? bytes : null;
     written = null;
     pages = opened.ok ? opened.pages : [];
-    return opened;
+    // security.md "Scripts": counted and never run.
+    if (opened.ok && opened.document.scripts > 0)
+      log(`[pdf] script-ignored count=${opened.document.scripts}`);
+    return said(opened);
   };
 
   async function bake(liveChanges: Uint8Array): Promise<BakeResult> {
@@ -78,24 +94,27 @@ export function pdfEngineOver(pdfium: Pdfium, write: typeof bakeChanges = bakeCh
       return { ...opened, wrong: true };
     },
     drawPage: async (index, scale) => reader.drawPage(index, scale),
-    outline: async () => reader.outline(),
-    links: async (index) => reader.links(index),
-    pageText: async (index) => reader.pageText(index),
-    selectText: async (index, from, to) => reader.selectText(index, from, to),
-    fileMarks: async (index) => reader.fileMarks(index),
-    fields: async (index) => reader.fields(index),
+    outline: async () => said(reader.outline()),
+    links: async (index) => said(reader.links(index)),
+    pageText: async (index) => said(reader.pageText(index)),
+    selectText: async (index, from, to) => said(reader.selectText(index, from, to)),
+    fileMarks: async (index) => said(reader.fileMarks(index)),
+    fields: async (index) => said(reader.fields(index)),
     signatures: async () => {
       const bytes = stored?.length ?? 0;
-      return reader
-        .signatures()
-        .map(({ read, contents }) =>
-          FileSignature.of(read, bytes, contents ? signerOf(contents) : null),
-        );
+      return said(reader.signatures()).map(({ read, contents }) =>
+        FileSignature.of(read, bytes, contents ? signerOf(contents) : null),
+      );
     },
-    embeddedFiles: async () => reader.embeddedFiles(),
-    layers: async () => layersOf(await writer()),
+    embeddedFiles: async () => said(reader.embeddedFiles()),
+    layers: async () => {
+      const { layers, cut } = layersOf(await writer());
+      if (cut) log('[pdf] value-clamped what=list count=1');
+      return layers;
+    },
     canAppend: async () => (await writer())?.canSaveIncrementally() === null,
     bake,
+    heldBytes: async () => reader.heldBytes(),
     close: async () => {
       reader.close();
       stored = waiting = password = written = null;

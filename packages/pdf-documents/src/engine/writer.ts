@@ -22,16 +22,22 @@ export async function openWriter(stored: Uint8Array, password: string | null): P
   }
 }
 
-/** The file's PDF layers in the file's order, at most `most`; none where the writer could not read the file. */
-export function layersOf(pdf: PDF | null, most = PDF_MAX_LAYERS): readonly PdfLayer[] {
-  if (!pdf) return [];
-  return pdf
-    .getLayers()
-    .slice(0, most)
-    .map((layer) => ({
+/**
+ * The file's PDF layers in the file's order, at most `most`, and whether it holds more; none where the writer could
+ * not read the file.
+ */
+export function layersOf(
+  pdf: PDF | null,
+  most = PDF_MAX_LAYERS,
+): { readonly layers: readonly PdfLayer[]; readonly cut: boolean } {
+  const held = pdf?.getLayers() ?? [];
+  return {
+    layers: held.slice(0, most).map((layer) => ({
       id: `o:${layer.ref.objectNumber}`,
       name: layer.name.slice(0, PDF_NAME_MAX_CHARS),
       visible: layer.visible,
       locked: layer.locked,
-    }));
+    })),
+    cut: held.length > most,
+  };
 }

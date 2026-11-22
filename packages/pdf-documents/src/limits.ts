@@ -7,9 +7,17 @@ export const PDF_SNIFF_BYTES = 1_024;
 export const PDF_MAX_MARKS = 20_000;
 /** (default) A ceiling on a PDF document's pages; a file arriving with more opens and takes no insert. */
 export const PDF_MAX_PAGES = 100_000;
-/** (default) Reading a file's structure takes at most this long before the engine is ended (opening.md "Limits"): the
- *  slowest corpus file takes under a second. Safe range: 10,000 to 120,000. */
-export const PDF_OPEN_TIMEOUT_MS = 30_000;
+/** (default) How long the engine may answer nothing while a call waits (an open, a draw, a bake) before whoever
+ *  started it ends it (opening.md "Limits"). Measured on a 93 MB file: 0.03 s, 0.7 s, 0.5 s. Safe range: 10,000 to
+ *  120,000. */
+export const PDF_ENGINE_TIMEOUT_MS = 30_000;
+/** (default) The most memory the engine's reader may hold in a browser before it is ended; a 100 MB file read whole
+ *  was measured at 724 MiB at most. Safe range: 2^29 to 2^31. */
+export const PDF_WORKER_MAX_BYTES = 1_073_741_824;
+/** (default) The same on a phone: a device that says it has 4 GB of memory or less, or says nothing and is touched. */
+export const PDF_WORKER_PHONE_MAX_BYTES = 268_435_456;
+/** (default) The most memory, in gigabytes, a device says it has and is still held to the phone's ceiling. */
+export const PDF_PHONE_MAX_DEVICE_GB = 4;
 /** (default) One draw of one page; a decompression bomb draws at most this. Safe range: 2^24 to 2^28. */
 export const PDF_MAX_PAGE_PIXELS = 268_435_456;
 /** (default) The whole-page picture a page is first drawn as (reading-surface.md "Limits"): sharper detail is the tiles'.

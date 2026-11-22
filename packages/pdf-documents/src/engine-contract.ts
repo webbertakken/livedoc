@@ -61,6 +61,8 @@ export type PdfDocumentInfo = {
   readonly tagged: boolean;
   /** Its interactive form: none, fields, or an XFA form (fields.md "XFA"). */
   readonly form: 'none' | 'fields' | 'xfa';
+  /** How many scripts it names for the document as a whole; none is ever run (security.md "Scripts"). */
+  readonly scripts: number;
 };
 
 export type PdfOpened =
@@ -167,6 +169,12 @@ export type BakeResult =
     }
   | { readonly ok: false; readonly refusal: BakeRefusal };
 
+/**
+ * Where the engine writes what it decided (security.md "Logging and telemetry"): a fingerprint made of the engine's
+ * own words, counts and names, never of anything a file wrote.
+ */
+export type PdfEngineLog = (fingerprint: string) => void;
+
 export type PdfEngine = {
   /** Opens the stored file; whatever was open before is closed. */
   open(bytes: Uint8Array<ArrayBuffer>): Promise<PdfOpened>;
@@ -203,5 +211,10 @@ export type PdfEngine = {
   canAppend(): Promise<boolean>;
   /** The open stored file with the live changes (one Yjs update) written in. */
   bake(liveChanges: Uint8Array): Promise<BakeResult>;
+  /**
+   * How many bytes of memory the engine's reader holds. It grows as a file asks and never shrinks, so whoever
+   * started the engine ends it past a ceiling (opening.md "Limits").
+   */
+  heldBytes(): Promise<number>;
   close(): Promise<void>;
 };

@@ -1,32 +1,59 @@
 // docs/specs/035-pdf-documents/security.md "The boundary": the engine's one interface over a worker thread. The two
 // sides are joined here by a port that hands messages across as a worker's would, around the real engine.
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createPdfEngine } from '@livedoc/pdf-documents/engine';
-import type { PdfEngine } from '@livedoc/pdf-documents';
+import {
+  PDF_ENGINE_TIMEOUT_MS,
+  PDF_WORKER_MAX_BYTES,
+  PDF_WORKER_PHONE_MAX_BYTES,
+  type PdfEngine,
+  type PdfEngineLog,
+} from '@livedoc/pdf-documents';
 import {
   FIXTURE_LINE,
   linksPdf,
+  marksPdf,
   outlinePdf,
   protectedPdf,
   readerWasm,
   textPdf,
 } from '@livedoc/pdf-documents/testing';
-import { pdfEngineClient, type PdfEngineWorker } from './pdf-engine-client';
-import type { PdfEngineAnswer, PdfEnginePort, PdfEngineRequest } from './pdf-engine-protocol';
+import { debugLog } from '@/lib/debug-log';
+import { pdfEngineClient, pdfWorkerCeiling, type PdfEngineWorker } from './pdf-engine-client';
+import type { PdfEngineMessage, PdfEnginePort, PdfEngineRequest } from './pdf-engine-protocol';
 import { servePdfEngine } from './pdf-engine-server';
+
+vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
 
 const wasm = readerWasm;
 const twoPages = () => textPdf(2);
+const logged = () => vi.mocked(debugLog).mock.calls.map(([line]) => line);
+
+afterEach(() => {
+  vi.mocked(debugLog).mockClear();
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 /** A worker and its page, joined: each message is cloned as it crosses, as a worker's is. */
-function joined(start: () => Promise<PdfEngine>) {
+function joined(start: (log: PdfEngineLog) => Promise<PdfEngine>) {
   const transfers: Transferable[][] = [];
+  // Everything that crossed, each way, as the text it would be on a wire.
+  const toPage: string[] = [];
+  const toWorker: string[] = [];
+  const wire = (message: unknown): string =>
+    JSON.stringify(message, (_, value: unknown) =>
+      ArrayBuffer.isView(value) ? `<${value.byteLength} bytes>` : value,
+    );
   const port: PdfEnginePort = {
     onmessage: null,
     postMessage: (message, transfer) => {
       transfers.push(transfer);
+      toPage.push(wire(message));
       queueMicrotask(() =>
-        worker.onmessage?.({ data: structuredClone<PdfEngineAnswer>(message as PdfEngineAnswer) }),
+        worker.onmessage?.({
+          data: structuredClone<PdfEngineMessage>(message as PdfEngineMessage),
+        }),
       );
     },
   };
@@ -34,11 +61,26 @@ function joined(start: () => Promise<PdfEngine>) {
     onmessage: null,
     onerror: null,
     terminate: vi.fn(),
-    postMessage: (message) =>
-      queueMicrotask(() => port.onmessage?.({ data: structuredClone<PdfEngineRequest>(message) })),
+    postMessage: (message) => {
+      toWorker.push(wire(message));
+      queueMicrotask(() => port.onmessage?.({ data: structuredClone<PdfEngineRequest>(message) }));
+    },
   };
   servePdfEngine(port, start);
-  return { worker, transfers };
+  return { worker, transfers, toPage, toWorker };
+}
+
+/** A worker that answers only when the test says, and holds what it was asked. */
+function silent() {
+  const asked: PdfEngineRequest[] = [];
+  const worker: PdfEngineWorker = {
+    onmessage: null,
+    onerror: null,
+    terminate: vi.fn(),
+    postMessage: (message) => asked.push(message),
+  };
+  const says = (data: PdfEngineMessage) => worker.onmessage?.({ data });
+  return { worker, asked, says };
 }
 
 describe('the engine over a worker thread', () => {
@@ -124,8 +166,9 @@ describe('the engine over a worker thread', () => {
   // opening.md "Refusals": the engine trapped, or never started: `pdf_stopped`, and every call still answers.
   it('answers every call as stopped once the worker stops, and says so once', async () => {
     const stopped = vi.fn();
-    const { worker } = joined(async () => {
-      throw new Error('out of memory');
+    const { worker, toPage } = joined(async () => {
+      // An error's own words may quote the file: only its name crosses, and only its name is logged.
+      throw new RangeError('out of memory near "a line of the file"');
     });
     const engine = pdfEngineClient(worker, stopped);
     expect(await engine.open(await twoPages())).toEqual({ ok: false, refusal: 'pdf_stopped' });
@@ -144,8 +187,24 @@ describe('the engine over a worker thread', () => {
     expect(await engine.layers()).toEqual([]);
     expect(await engine.canAppend()).toBe(false);
     expect(await engine.bake(Uint8Array.of(0, 0))).toEqual({ ok: false, refusal: 'unreadable' });
-    expect(stopped).toHaveBeenCalledTimes(1);
-    expect(stopped.mock.calls[0]![0]).toContain('out of memory');
+    expect(await engine.heldBytes()).toBe(0);
+    expect(stopped.mock.calls).toEqual([['trap']]);
+    expect(logged()).toEqual(['[pdf] worker-restarted reason=trap detail=RangeError']);
+    expect(toPage.join('\n')).not.toContain('a line of the file');
+  });
+
+  it('names a failure that is no error, or has no plain name, only as an error', async () => {
+    for (const thrown of [
+      'a line of the file',
+      Object.assign(new Error('x'), { name: 'a b\nc' }),
+    ]) {
+      vi.mocked(debugLog).mockClear();
+      const { worker } = joined(async () => {
+        throw thrown;
+      });
+      await pdfEngineClient(worker).close();
+      expect(logged()).toEqual(['[pdf] worker-restarted reason=trap detail=Error']);
+    }
   });
 
   it('treats a worker’s own error as a stop, settling what was asked', async () => {
@@ -158,9 +217,10 @@ describe('the engine over a worker thread', () => {
     };
     const engine = pdfEngineClient(worker, stopped);
     const drawing = engine.drawPage(0, 1);
-    worker.onerror?.({ message: 'worker crashed' });
+    worker.onerror?.({ message: 'worker crashed near "a line of the file"' });
     expect(await drawing).toBeNull();
-    expect(stopped).toHaveBeenCalledWith('worker crashed');
+    expect(stopped.mock.calls).toEqual([['trap']]);
+    expect(logged()).toEqual(['[pdf] worker-restarted reason=trap detail=WorkerError']);
     worker.onerror?.('again');
     expect(stopped).toHaveBeenCalledTimes(1);
   });
@@ -169,10 +229,161 @@ describe('the engine over a worker thread', () => {
     const stopped = vi.fn();
     const { worker } = joined(() => createPdfEngine({ wasm: wasm() }));
     const engine = pdfEngineClient(worker, stopped);
-    worker.onmessage?.({ data: { id: 99, ok: true, value: null } });
+    worker.onmessage?.({ data: { id: 99, ok: true, value: null, held: 0 } });
     engine.terminate();
     expect(worker.terminate).toHaveBeenCalledTimes(1);
     expect(stopped).not.toHaveBeenCalled();
     expect((await engine.open(await twoPages())).ok).toBe(false);
+  });
+});
+
+// security.md "The boundary": the engine is held to a time and to a size by the page that started it.
+describe('the engine held to a time', () => {
+  const opening = async () => {
+    vi.useFakeTimers();
+    const stopped = vi.fn();
+    const { worker, asked, says } = silent();
+    const engine = pdfEngineClient(worker, stopped);
+    const open = engine.open(await twoPages());
+    return { stopped, worker, asked, says, engine, open };
+  };
+
+  // security.md "Abuse cases": a parser hang ends the worker: `pdf_stopped`.
+  it('ends a worker that answers nothing for the limit while a call waits', async () => {
+    const { stopped, worker, says, engine, open } = await opening();
+    says({ ready: true });
+    vi.advanceTimersByTime(PDF_ENGINE_TIMEOUT_MS - 1);
+    expect(worker.terminate).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(await open).toEqual({ ok: false, refusal: 'pdf_stopped' });
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+    expect(engine.stopped).toBe(true);
+    expect(stopped.mock.calls).toEqual([['timeout']]);
+    expect(logged()).toEqual(['[pdf] worker-restarted reason=timeout detail=Silence']);
+  });
+
+  it('gives each call its own time: an answer starts the count again', async () => {
+    const { worker, asked, says, engine, open } = await opening();
+    says({ ready: true });
+    const drawing = engine.drawPage(0, 1);
+    vi.advanceTimersByTime(PDF_ENGINE_TIMEOUT_MS - 1);
+    says({ id: asked[0]!.id, ok: true, value: { ok: false, refusal: 'pdf_damaged' }, held: 1 });
+    expect(await open).toEqual({ ok: false, refusal: 'pdf_damaged' });
+    vi.advanceTimersByTime(PDF_ENGINE_TIMEOUT_MS - 1);
+    expect(worker.terminate).not.toHaveBeenCalled();
+    says({ id: asked[1]!.id, ok: true, value: null, held: 1 });
+    expect(await drawing).toBeNull();
+    // Nothing waits: a worker left alone for an hour is not ended.
+    vi.advanceTimersByTime(3_600_000);
+    expect(worker.terminate).not.toHaveBeenCalled();
+  });
+
+  it('is not kept alive by what is asked of it: a call asked later does not start the count again', async () => {
+    const { worker, says, engine, open } = await opening();
+    says({ ready: true });
+    vi.advanceTimersByTime(PDF_ENGINE_TIMEOUT_MS - 1);
+    const drawing = engine.drawPage(0, 1);
+    vi.advanceTimersByTime(1);
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+    expect(await open).toEqual({ ok: false, refusal: 'pdf_stopped' });
+    expect(await drawing).toBeNull();
+  });
+
+  it('counts no time while the engine is still loading: that wait is the network’s', async () => {
+    const { worker, asked, says, open } = await opening();
+    vi.advanceTimersByTime(PDF_ENGINE_TIMEOUT_MS * 10);
+    expect(worker.terminate).not.toHaveBeenCalled();
+    says({ ready: true });
+    vi.advanceTimersByTime(PDF_ENGINE_TIMEOUT_MS - 1);
+    says({ id: asked[0]!.id, ok: true, value: { ok: false, refusal: 'pdf_newer' }, held: 1 });
+    expect(await open).toEqual({ ok: false, refusal: 'pdf_newer' });
+  });
+
+  it('stops counting when the surface closes it', async () => {
+    const { stopped, says, engine } = await opening();
+    says({ ready: true });
+    engine.terminate();
+    vi.advanceTimersByTime(PDF_ENGINE_TIMEOUT_MS * 2);
+    expect(stopped).not.toHaveBeenCalled();
+  });
+});
+
+describe('the engine held to a size', () => {
+  // security.md "Abuse cases": a file that asks for too much memory ends the worker: `pdf_stopped`.
+  it('ends a worker whose reader holds more than the ceiling, the call that found it answered as stopped', async () => {
+    const stopped = vi.fn();
+    const { worker, asked, says } = silent();
+    const engine = pdfEngineClient(worker, stopped, { timeoutMs: 1_000, maxBytes: 1_000 });
+    const open = engine.open(await twoPages());
+    says({ id: asked[0]!.id, ok: true, value: { ok: false, refusal: 'pdf_damaged' }, held: 1_001 });
+    expect(await open).toEqual({ ok: false, refusal: 'pdf_stopped' });
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+    expect(stopped.mock.calls).toEqual([['memory']]);
+    expect(logged()).toEqual(['[pdf] worker-restarted reason=memory detail=held=1001']);
+  });
+
+  it('says with every answer what the reader holds, and lets a worker under the ceiling be', async () => {
+    const { worker, toPage } = joined(() => createPdfEngine({ wasm: wasm() }));
+    const engine = pdfEngineClient(worker);
+    await engine.open(await twoPages());
+    const held = await engine.heldBytes();
+    expect(held).toBeGreaterThan(1_000_000);
+    expect(held).toBeLessThan(PDF_WORKER_MAX_BYTES);
+    expect(toPage.filter((message) => message.includes('"held"'))).toHaveLength(2);
+    expect(engine.stopped).toBe(false);
+  });
+
+  // opening.md "Limits": a phone says it has 4 GB or less, or says nothing and is touched.
+  it('is a phone’s ceiling where the device says it is small, or says nothing and is touched', () => {
+    expect(pdfWorkerCeiling({ deviceMemory: 8, coarsePointer: true })).toBe(PDF_WORKER_MAX_BYTES);
+    expect(pdfWorkerCeiling({ deviceMemory: 4, coarsePointer: false })).toBe(
+      PDF_WORKER_PHONE_MAX_BYTES,
+    );
+    expect(pdfWorkerCeiling({ deviceMemory: undefined, coarsePointer: true })).toBe(
+      PDF_WORKER_PHONE_MAX_BYTES,
+    );
+    expect(pdfWorkerCeiling({ deviceMemory: undefined, coarsePointer: false })).toBe(
+      PDF_WORKER_MAX_BYTES,
+    );
+  });
+});
+
+// security.md "Logging and telemetry"
+describe('what the engine logs', () => {
+  it('is written by the page that started it, as the engine wrote it', async () => {
+    const { worker } = joined((log) => createPdfEngine({ wasm: wasm(), log }));
+    const engine = pdfEngineClient(worker);
+    await engine.open(marksPdf(20_000));
+    await engine.fileMarks(0);
+    expect(logged()).toEqual([
+      '[pdf] value-clamped what=coordinate count=2',
+      '[pdf] value-clamped what=text count=1',
+    ]);
+  });
+
+  // security.md "Abuse cases": a password kept, logged or sent: no route or log carries it, by test.
+  it('never carries a password: it crosses once, to the worker, and comes back in nothing', async () => {
+    const password = 'correct horse battery staple';
+    const wrong = 'a wrong guess';
+    const network = vi.fn(() => {
+      throw new Error('the engine asked the network');
+    });
+    vi.stubGlobal('fetch', network);
+    const { worker, toPage, toWorker } = joined((log) => createPdfEngine({ wasm: wasm(), log }));
+    const engine = pdfEngineClient(worker);
+    expect(await engine.open(await protectedPdf({ userPassword: password }))).toMatchObject({
+      needsPassword: true,
+    });
+    expect(await engine.unlock(wrong)).toMatchObject({ wrong: true });
+    expect((await engine.unlock(password)).ok).toBe(true);
+    await engine.drawPage(0, 0.25);
+    expect((await engine.bake(Uint8Array.of(0, 0))).ok).toBe(true);
+    await engine.close();
+    for (const secret of [password, wrong]) {
+      expect(toWorker.filter((message) => message.includes(secret))).toHaveLength(1);
+      expect(toPage.join('\n')).not.toContain(secret);
+      expect(logged().join('\n')).not.toContain(secret);
+    }
+    expect(network).not.toHaveBeenCalled();
   });
 });

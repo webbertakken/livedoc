@@ -46,7 +46,8 @@ export function readFields(
       if (!form) return [];
       const fields: PageField[] = [];
       const count = p.FPDFPage_GetAnnotCount(page);
-      for (let n = 0; n < count && fields.length < most; n += 1) {
+      let n = 0;
+      for (; n < count && fields.length < most; n += 1) {
         const annotation = p.FPDFPage_GetAnnot(page, n);
         if (!annotation) continue;
         const type =
@@ -56,6 +57,7 @@ export function readFields(
         if (type) fields.push(fieldOf(file, form, annotation, type));
         p.FPDFPage_CloseAnnot(annotation);
       }
+      if (n < count) file.clamped('list');
       return fields;
     }) ?? []
   );

@@ -7,7 +7,7 @@ import type { BlobKey } from '@livedoc/document';
 import { PageName, PdfLiveChanges, type PageInfo, type PdfOpened } from '@livedoc/pdf-documents';
 import { plainDocument } from '@livedoc/pdf-documents/testing';
 import { ApiError } from '@/lib/api/core';
-import type { PdfEngineClient } from './pdf-engine-client';
+import type { PdfEngineClient, PdfEngineStop } from './pdf-engine-client';
 import { unboundPdfLiveChanges, type BindPdfLiveChanges } from './pdf-live-binding';
 import { usePdfDocument, type PdfDocumentDeps } from './usePdfDocument';
 
@@ -23,7 +23,7 @@ const read = () => ({
 });
 
 function engineThat(opens: PdfOpened) {
-  let stop: (reason: string) => void = () => {};
+  let stop: (reason: PdfEngineStop) => void = () => {};
   const engine = {
     open: vi.fn(async () => opens),
     drawPage: vi.fn(async () => null),
@@ -38,7 +38,7 @@ function engineThat(opens: PdfOpened) {
     stop = onStopped;
     return engine;
   };
-  return { engine, startEngine, stop: (reason: string) => stop(reason) };
+  return { engine, startEngine, stop: (reason: PdfEngineStop) => stop(reason) };
 }
 
 function opening(

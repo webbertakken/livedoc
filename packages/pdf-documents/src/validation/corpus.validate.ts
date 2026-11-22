@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createPdfEngine } from '../engine/index';
 import type { PdfEngine, PdfOpened } from '../engine-contract';
-import { PDF_OPEN_TIMEOUT_MS } from '../limits';
+import { PDF_ENGINE_TIMEOUT_MS } from '../limits';
 import { PdfLiveChanges } from '../live-changes';
 import { readerWasm } from '../testing/fixtures';
 import {
@@ -62,8 +62,8 @@ describe('the wider corpus', () => {
       const arrived = sha256(bytes);
       const started = performance.now();
       const result = await opened(file, bytes);
-      // security.md "Abuse cases": no file holds the reader past `PDF_OPEN_TIMEOUT_MS`.
-      expect(performance.now() - started).toBeLessThan(PDF_OPEN_TIMEOUT_MS);
+      // security.md "Abuse cases": no file holds the reader past `PDF_ENGINE_TIMEOUT_MS`.
+      expect(performance.now() - started).toBeLessThan(PDF_ENGINE_TIMEOUT_MS);
       if (!result.ok) throw new Error(`${file.file} did not open`);
       expect(result.pages).toHaveLength(file.pages!);
       // Everything the engine reads of a file is read, and none of it traps.

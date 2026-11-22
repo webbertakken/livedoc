@@ -4,7 +4,7 @@ import { type PageInfo, type PdfDocumentInfo } from '../engine-contract';
 import { PageName } from '../page-name';
 import { PdfPermissions } from '../permissions';
 import { PDF_NAME_MAX_CHARS, PDF_PROPERTY_MAX_CHARS } from '../limits';
-import { FORM_FIELDS, FORM_NONE, clampSide, type ReaderFile } from './reader-file';
+import { FORM_FIELDS, FORM_NONE, type ReaderFile } from './reader-file';
 
 // The reader's count of quarter turns, as degrees; a file that names no quarter turn turns the page by none.
 const QUARTER_TURNS: Readonly<Record<number, 90 | 180 | 270>> = { 1: 90, 2: 180, 3: 270 };
@@ -19,8 +19,8 @@ export function readPages(file: ReaderFile): PageInfo[] {
     const sized = p.FPDF_GetPageSizeByIndexF(file.doc, index, size);
     pages.push({
       name: PageName.ofObject(p.EPDFDoc_GetPageObjectNumberByIndex(file.doc, index)),
-      width: clampSide(sized ? file.runtime.getValue(size, 'float') : 0),
-      height: clampSide(sized ? file.runtime.getValue(size + 4, 'float') : 0),
+      width: file.side(sized ? file.runtime.getValue(size, 'float') : 0),
+      height: file.side(sized ? file.runtime.getValue(size + 4, 'float') : 0),
       rotation: QUARTER_TURNS[p.EPDF_GetPageRotationByIndex(file.doc, index)] ?? 0,
       label: labelled ? labelOf(file, index) : null,
     });
@@ -70,5 +70,7 @@ export function readDocument(file: ReaderFile): PdfDocumentInfo {
     },
     tagged: Boolean(p.FPDFCatalog_IsTagged(file.doc)),
     form: form === FORM_NONE ? 'none' : form === FORM_FIELDS ? 'fields' : 'xfa',
+    // Counted, never read: no script of a file is evaluated, or handed on as text here (security.md "Scripts").
+    scripts: Math.max(p.FPDFDoc_GetJavaScriptActionCount(file.doc), 0),
   };
 }

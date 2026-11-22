@@ -7,7 +7,34 @@ const said = { name: 'notes.txt', size: 5, type: 'text/plain', description: 'Mee
 // security.md "Embedded files"
 describe('an embedded file', () => {
   it('is listed with the name, size, type and description the PDF gives', () => {
-    expect(EmbeddedFile.of(said)).toEqual(said);
+    expect(EmbeddedFile.of(said)).toEqual({ ...said, runs: false });
+  });
+
+  // security.md "Embedded files": which files run is told by the name's ending, never by the type the file names.
+  it('is told apart where its name ends as a program, a script, a shortcut or a file with macros does', () => {
+    for (const name of [
+      'setup.exe',
+      'RUN.BAT',
+      'a.b.ps1',
+      'link.lnk',
+      'budget.xlsm',
+      'tool.jar',
+      'x.command',
+    ])
+      expect(EmbeddedFile.of({ ...said, name }).runs, name).toBe(true);
+    for (const name of ['notes.txt', 'exe', 'report.exe.pdf', 'archive.zip', '', '.', 'jar.'])
+      expect(EmbeddedFile.of({ ...said, name }).runs, name).toBe(false);
+  });
+
+  it('is told apart whatever type the PDF names, and however its name hides its ending', () => {
+    expect(EmbeddedFile.of({ ...said, name: 'photo.exe', type: 'image/png' }).runs).toBe(true);
+    // A computer drops the dots and spaces a name ends with.
+    expect(EmbeddedFile.of({ ...said, name: 'run.exe. . ' }).runs).toBe(true);
+    // The direction marks are gone before the ending is read: the name shows as it is judged.
+    const turned = EmbeddedFile.of({ ...said, name: 'invoice\u202Efdp.exe' });
+    expect([turned.name, turned.runs]).toEqual(['invoicefdp.exe', true]);
+    // A name cut to its limit is judged by the ending it had.
+    expect(EmbeddedFile.of({ ...said, name: `${'n'.repeat(400)}.scr` }).runs).toBe(true);
   });
 
   it('has no path separator, control character or direction mark in its name', () => {

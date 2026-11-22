@@ -26,7 +26,9 @@ export function readSignatures(
   const { p } = file;
   const signatures: SignatureHeld[] = [];
   if (!file.doc) return signatures;
-  const count = Math.min(p.FPDF_GetSignatureCount(file.doc), most);
+  const held = p.FPDF_GetSignatureCount(file.doc);
+  const count = Math.min(held, most);
+  if (held > count) file.clamped('list');
   for (let n = 0; n < count; n += 1) {
     const signature = p.FPDF_GetSignatureObject(file.doc, n);
     if (!signature) continue;

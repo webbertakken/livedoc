@@ -37,7 +37,7 @@ function placeOf(file: ReaderFile, destination: number): LinkTarget | null {
   const named = (flag: number, value: number): number | null => {
     const read = file.runtime.getValue(value, 'float');
     return located && file.runtime.getValue(flag, 'i32') !== 0 && Number.isFinite(read)
-      ? read
+      ? file.held(read)
       : null;
   };
   const place: LinkTarget = {
@@ -94,6 +94,7 @@ export function readOutline(file: ReaderFile, most = PDF_OUTLINE_MAX_ITEMS): Out
     ) {
       if (items.length >= most) {
         cut = true;
+        file.clamped('list');
         return;
       }
       read.add(item);
@@ -128,10 +129,8 @@ export function readLinks(
     while (links.length < most && p.FPDFLink_Enumerate(page, out, out + 4)) {
       const link = file.runtime.getValue(out + 4, 'i32');
       if (!p.FPDFLink_GetAnnotRect(link, out + 8)) continue;
-      const side = (at: number): number => {
-        const read = file.runtime.getValue(out + 8 + at * 4, 'float');
-        return Number.isFinite(read) ? read : 0;
-      };
+      const side = (at: number): number =>
+        file.held(file.runtime.getValue(out + 8 + at * 4, 'float'));
       const action = p.FPDFLink_GetAction(link);
       const destination = action ? 0 : p.FPDFLink_GetDest(file.doc, link);
       const target = destination
@@ -141,6 +140,7 @@ export function readLinks(
           : null;
       if (target) links.push({ rect: [side(0), side(3), side(2), side(1)], target });
     }
+    if (links.length >= most && p.FPDFLink_Enumerate(page, out, out + 4)) file.clamped('list');
     file.free(out);
   });
   return links;

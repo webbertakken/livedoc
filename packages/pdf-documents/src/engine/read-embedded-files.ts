@@ -10,6 +10,7 @@ export function readEmbeddedFiles(file: ReaderFile, most = PDF_EMBEDDED_FILES_MA
   const files: EmbeddedFile[] = [];
   if (!file.doc) return { files, cut: false };
   const count = Math.max(p.FPDFDoc_GetAttachmentCount(file.doc), 0);
+  if (count > most) file.clamped('list');
   const out = file.alloc(4);
   for (let n = 0; n < Math.min(count, most); n += 1) {
     const attachment = p.FPDFDoc_GetAttachment(file.doc, n);

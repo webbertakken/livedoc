@@ -31,11 +31,12 @@ export function readPageText(
         codes[at] = p.FPDFText_GetUnicode(text, at);
         if (p.FPDFText_HasUnicodeMapError(text, at) === 1) unmapped.push(at);
         if (!p.FPDFText_GetCharBox(text, at, out, out + 8, out + 16, out + 24)) continue;
-        boxes[at * 4] = file.runtime.getValue(out, 'double');
-        boxes[at * 4 + 1] = file.runtime.getValue(out + 16, 'double');
-        boxes[at * 4 + 2] = file.runtime.getValue(out + 8, 'double');
-        boxes[at * 4 + 3] = file.runtime.getValue(out + 24, 'double');
+        boxes[at * 4] = file.held(file.runtime.getValue(out, 'double'));
+        boxes[at * 4 + 1] = file.held(file.runtime.getValue(out + 16, 'double'));
+        boxes[at * 4 + 2] = file.held(file.runtime.getValue(out + 8, 'double'));
+        boxes[at * 4 + 3] = file.held(file.runtime.getValue(out + 24, 'double'));
       }
+      if (held > count) file.clamped('list');
       return PageText.of(codes, boxes, { unmapped, cut: held > count });
     } finally {
       file.free(out);
@@ -80,9 +81,8 @@ function rectsOf(file: ReaderFile, text: number, start: number, count: number): 
   for (let n = 0; n < rects; n += 1) {
     if (!p.FPDFText_GetRect(text, n, out, out + 8, out + 16, out + 24)) continue;
     const [left, top, right, bottom] = [0, 8, 16, 24].map((at) =>
-      file.runtime.getValue(out + at, 'double'),
+      file.held(file.runtime.getValue(out + at, 'double')),
     ) as [number, number, number, number];
-    if (![left, top, right, bottom].every(Number.isFinite)) continue;
     quads.push([left, top, right, top, left, bottom, right, bottom]);
   }
   file.free(out);

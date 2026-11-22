@@ -20,12 +20,18 @@ export const FORM_FIELDS = 1;
 const BYTES = new TextDecoder();
 
 /** A coordinate read from a file, held within reach of the page; one that is no number is the origin. */
-export const held = (n: number): number =>
+const heldCoordinate = (n: number): number =>
   Number.isFinite(n) ? Math.min(Math.max(n, -PDF_MAX_COORDINATE), PDF_MAX_COORDINATE) : 0;
 
 /** A page's side in points, held within what a PDF page may measure. */
 export const clampSide = (points: number): number =>
   Number.isFinite(points) ? Math.min(Math.max(points, 1), PDF_MAX_PAGE_POINTS) : 1;
+
+/**
+ * What of a file was held back on its way out (security.md "The boundary"): a coordinate out of reach, a page's
+ * size out of bounds, a text cut to its limit, a list cut to its limit.
+ */
+export type Clamped = 'coordinate' | 'size' | 'text' | 'list';
 
 export class ReaderFile {
   readonly p: Pdfium;
@@ -37,6 +43,8 @@ export class ReaderFile {
   // The form's environment, started when a page's fields are first read: field values are read through it.
   private form = 0;
   private formInfo = 0;
+  // How many values of each sort were held back since the tally was last taken.
+  private tally = new Map<Clamped, number>();
 
   constructor(pdfium: Pdfium) {
     this.p = pdfium;
@@ -67,6 +75,39 @@ export class ReaderFile {
     return this.doc !== 0;
   }
 
+  /** Counts a value held back: it is logged, never passed on as the file wrote it. */
+  clamped(what: Clamped): void {
+    this.tally.set(what, (this.tally.get(what) ?? 0) + 1);
+  }
+
+  /** What was held back since this was last asked, and counts it no more. */
+  takeClamped(): ReadonlyMap<Clamped, number> {
+    const taken = this.tally;
+    this.tally = new Map();
+    return taken;
+  }
+
+  /** A coordinate read from the file, held within reach of the page. */
+  held(n: number): number {
+    const within = heldCoordinate(n);
+    if (within !== n) this.clamped('coordinate');
+    return within;
+  }
+
+  /** A page's side as the file says it, held within what a PDF page may measure. */
+  side(points: number): number {
+    const within = clampSide(points);
+    if (within !== points) this.clamped('size');
+    return within;
+  }
+
+  /** A text of the file, cut to `most` characters. */
+  private cut(text: string, most: number): string {
+    if (text.length <= most) return text;
+    this.clamped('text');
+    return text.slice(0, most);
+  }
+
   /** A text the reader writes as UTF-16 into a buffer it is handed, cut to `most`; `ask` answers the bytes needed. */
   written(most: number, ask: (buffer: number, size: number) => number): string {
     const size = ask(0, 0);
@@ -76,7 +117,7 @@ export class ReaderFile {
     ask(buffer, size);
     const read = this.runtime.UTF16ToString(buffer);
     this.free(buffer);
-    return read.slice(0, most);
+    return this.cut(read, most);
   }
 
   /** A text the reader writes as bytes into a buffer it is handed, cut to `most`. */
@@ -88,7 +129,7 @@ export class ReaderFile {
     ask(buffer, size);
     const read = BYTES.decode(this.heap.slice(buffer, buffer + size - 1));
     this.free(buffer);
-    return read.slice(0, most);
+    return this.cut(read, most);
   }
 
   withPage<T>(index: number, read: (page: number) => T): T | null {

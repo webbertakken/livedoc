@@ -5,8 +5,9 @@ size read before any is drawn, the refusals shown by name with Download (a prote
 password screen is built). The engine reads a file's version, properties, page labels, what its permissions ask, and
 whether it has fields or a structure tree, a page's text with each character's box, the outline and a page's links
 (none followed), a page's marks and fields as the file holds them, its certificate signatures, embedded files and
-PDF layers, and opens and writes a protected file given its password. The password
-screen, reading by range, repair notices, the time and memory limits are not built.
+PDF layers, and opens and writes a protected file given its password; the engine is ended when it answers nothing
+for too long or holds too much memory, and the PDF then shows as stopped. The password screen, reading by range and
+repair notices are not built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.
 "Any PDF" is every PDF a common reader opens: PDF 1.0 to 2.0, linearised, encrypted, with damaged cross-references,
@@ -108,16 +109,16 @@ A refusal fills the pages' place: a glyph, one sentence, a second line saying wh
 **Download** (the stored file, byte for byte) wherever the bytes are held. The title row, sharing and the Trash work
 as for any document.
 
-| Name                        | When                                                                                       | Copy                                                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `pdf_damaged`               | The engine cannot read the file, repaired or not                                           | "This PDF is damaged and can't be opened. You can still download the file."                      |
-| `pdf_newer`                 | The file opens with no pages, or names a feature or filter the engine does not know        | "This PDF uses a newer kind of PDF than LiveDoc reads yet. You can still download the file."     |
-| `pdf_certificate_protected` | The file is encrypted to certificates (F14, ruled: refused by name)                        | "This PDF is locked to specific people's certificates, which LiveDoc doesn't open."              |
-| `pdf_rights_protected`      | The file names a rights service or another security handler                                | "This PDF is protected by a rights service, which LiveDoc doesn't open."                         |
-| `pdf_stopped`               | Reading passed `PDF_OPEN_TIMEOUT_MS` or the worker's memory ceiling, or the engine trapped | "LiveDoc stopped reading this PDF, because it asked for too much time or memory." **Try again**  |
-| `file_too_large`            | The bytes pass `FILE_TAB_MAX_BYTES`; nothing is stored                                     | "This file is larger than 100 MB, the most LiveDoc holds for one file."                          |
-| `files_unavailable`         | The server has no file storage; nothing is stored                                          | "This server has no file storage."                                                               |
-| `blob_missing`              | The stored file's bytes are gone from the store                                            | "This PDF's file is missing from storage." with **Restore a previous version** where one is kept |
+| Name                        | When                                                                                           | Copy                                                                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `pdf_damaged`               | The engine cannot read the file, repaired or not                                               | "This PDF is damaged and can't be opened. You can still download the file."                      |
+| `pdf_newer`                 | The file opens with no pages, or names a feature or filter the engine does not know            | "This PDF uses a newer kind of PDF than LiveDoc reads yet. You can still download the file."     |
+| `pdf_certificate_protected` | The file is encrypted to certificates (F14, ruled: refused by name)                            | "This PDF is locked to specific people's certificates, which LiveDoc doesn't open."              |
+| `pdf_rights_protected`      | The file names a rights service or another security handler                                    | "This PDF is protected by a rights service, which LiveDoc doesn't open."                         |
+| `pdf_stopped`               | The engine answered nothing for `PDF_ENGINE_TIMEOUT_MS`, passed its memory ceiling, or trapped | "LiveDoc stopped reading this PDF, because it asked for too much time or memory." **Try again**  |
+| `file_too_large`            | The bytes pass `FILE_TAB_MAX_BYTES`; nothing is stored                                         | "This file is larger than 100 MB, the most LiveDoc holds for one file."                          |
+| `files_unavailable`         | The server has no file storage; nothing is stored                                              | "This server has no file storage."                                                               |
+| `blob_missing`              | The stored file's bytes are gone from the store                                                | "This PDF's file is missing from storage." with **Restore a previous version** where one is kept |
 
 - A refusal is told apart from damage: a PDF made by tomorrow's software is "newer", never "damaged"
   ([The standard](../../research/pdf-documents/the-standard.md#in-the-wild)).
@@ -132,16 +133,17 @@ as for any document.
 
 ## Limits
 
-| Constant                    | Value                | Why                                                                                                                                          |
-| --------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FILE_TAB_MAX_BYTES`        | 100,000,000 (100 MB) | The file tab's cap (F6, ruled): a phone holds such a file by range without loading it whole ([Bytes](../../research/pdf-documents/bytes.md)) |
-| `FILE_WHOLE_READ_MAX_BYTES` | 8,388,608 (8 MiB)    | `(default)` Under it one request is the simplest path; above it page one must not wait for the file                                          |
-| `PDF_RANGE_BLOCK_BYTES`     | 65,536               | `(default)` The block the engine's reader is fed; a paper's first page is 4 blocks of 16                                                     |
-| `PDF_OPEN_TIMEOUT_MS`       | 30,000               | `(default)` Reading the structure of the slowest corpus file takes under a second; safe range 10 to 120 s                                    |
-| `PDF_OPEN_NOTICE_MS`        | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                         |
-| `PDF_MAX_PAGE_PIXELS`       | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                    |
-| `PDF_PAGE_TEXT_MAX_CHARS`   | 200,000              | `(default)` One page's text read at once, twenty times a dense page; a page past it reads its first part and says so                         |
-| `PDF_WORKER_MAX_BYTES`      | 1,073,741,824        | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Measured: 724 MiB at most                                    |
+| Constant                     | Value                | Why                                                                                                                                                          |
+| ---------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `FILE_TAB_MAX_BYTES`         | 100,000,000 (100 MB) | The file tab's cap (F6, ruled): a phone holds such a file by range without loading it whole ([Bytes](../../research/pdf-documents/bytes.md))                 |
+| `FILE_WHOLE_READ_MAX_BYTES`  | 8,388,608 (8 MiB)    | `(default)` Under it one request is the simplest path; above it page one must not wait for the file                                                          |
+| `PDF_RANGE_BLOCK_BYTES`      | 65,536               | `(default)` The block the engine's reader is fed; a paper's first page is 4 blocks of 16                                                                     |
+| `PDF_ENGINE_TIMEOUT_MS`      | 30,000               | `(default)` The engine answering nothing while a call waits: an open, a draw, a bake. Measured on a 93 MB file: 0.03 s, 0.7 s, 0.5 s; safe range 10 to 120 s |
+| `PDF_OPEN_NOTICE_MS`         | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                                         |
+| `PDF_MAX_PAGE_PIXELS`        | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                                    |
+| `PDF_PAGE_TEXT_MAX_CHARS`    | 200,000              | `(default)` One page's text read at once, twenty times a dense page; a page past it reads its first part and says so                                         |
+| `PDF_WORKER_MAX_BYTES`       | 1,073,741,824        | `(default)` The reader's memory in a browser, said with every answer. Measured: 724 MiB at most                                                              |
+| `PDF_WORKER_PHONE_MAX_BYTES` | 268,435,456          | `(default)` The same on a phone: a device that says it has 4 GB of memory or less, or says nothing and is touched, not pointed at                            |
 
 ## Share roles
 

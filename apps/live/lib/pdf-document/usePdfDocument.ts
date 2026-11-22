@@ -11,7 +11,11 @@ import { apiReadBlob } from '@/lib/api/files';
 import { apiLoadPdfState, type PdfDocumentScope, type PdfStateRead } from '@/lib/api/pdf-documents';
 import { ApiError } from '@/lib/api-client';
 import { debugLog } from '@/lib/debug-log';
-import { startPdfEngineWorker, type PdfEngineClient } from './pdf-engine-client';
+import {
+  startPdfEngineWorker,
+  type PdfEngineClient,
+  type PdfEngineStop,
+} from './pdf-engine-client';
 import type { BindPdfLiveChanges, PdfLiveBinding } from './pdf-live-binding';
 import { pdfPageDrawer, type PdfPageDrawer } from './pdf-page-drawer';
 import type { PdfSurfaceRefusal } from './pdf-refusals';
@@ -37,7 +41,7 @@ export type PdfDocumentOpen =
 export type PdfDocumentDeps = {
   loadState: (scope: PdfDocumentScope) => Promise<PdfStateRead>;
   readBlob: (scope: PdfDocumentScope, key: BlobKey) => Promise<Uint8Array<ArrayBuffer>>;
-  startEngine: (onStopped: (reason: string) => void) => PdfEngineClient;
+  startEngine: (onStopped: (reason: PdfEngineStop) => void) => PdfEngineClient;
 };
 
 const BROWSER: PdfDocumentDeps = {

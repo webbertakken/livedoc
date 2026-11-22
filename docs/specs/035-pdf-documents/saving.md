@@ -144,7 +144,7 @@ everyone on the document; every client reloads the pages it shows, keeping its p
 - **The wider corpus** is other projects' test files under terms the repository does not take in, and files made
   from one of them with qpdf (linearised, protected, cut short, a thousand pages): fetched by URL at a pinned commit
   and held to a SHA-256, into a cache CI keeps, never committed. Each opens with the pages expected of it or is
-  refused by the name expected, within `PDF_OPEN_TIMEOUT_MS`, is read whole, and is left byte for byte as it came.
+  refused by the name expected, within `PDF_ENGINE_TIMEOUT_MS`, is read whole, and is left byte for byte as it came.
 - **Against a second renderer**: the first page of every file of the wider corpus is drawn by the engine and by
   PDF.js at one size, and a page passes where the two differ on **less than 1% of its pixels** `(default)`,
   counting a pixel as different past a colour distance of 0.3 and leaving out the edges each smooths its own way.

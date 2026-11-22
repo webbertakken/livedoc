@@ -396,8 +396,14 @@ describe('embedded files', () => {
     opened(await engine.open(embeddedFilesPdf()));
     expect(await engine.embeddedFiles()).toEqual({
       files: [
-        { name: 'notes.txt', size: 5, type: 'text/plain', description: 'Meeting notes' },
-        { name: '..run.exe', size: null, type: '', description: '' },
+        {
+          name: 'notes.txt',
+          size: 5,
+          type: 'text/plain',
+          description: 'Meeting notes',
+          runs: false,
+        },
+        { name: '..run.exe', size: null, type: '', description: '', runs: true },
       ],
       cut: false,
     });
@@ -448,7 +454,10 @@ describe('PDF layers', () => {
   });
 
   it('answers none where the writer cannot read the file, or with no file open', async () => {
-    expect(layersOf(await openWriter(new Uint8Array([1, 2, 3]), null))).toEqual([]);
+    expect(layersOf(await openWriter(new Uint8Array([1, 2, 3]), null))).toEqual({
+      layers: [],
+      cut: false,
+    });
     await engine.close();
     expect(await engine.layers()).toEqual([]);
   });
