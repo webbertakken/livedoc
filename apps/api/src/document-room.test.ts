@@ -795,6 +795,31 @@ describe('DocumentRoom op-role enforcement', () => {
     for (const msg of received) expect(msg).not.toHaveProperty('seq');
   });
 
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "Presence": where a person is in a PDF document relays
+  // unordered and is never logged; "Every role is present": a Viewer's page is relayed as an Editor's is.
+  it.each(['edit', 'participate', 'view'] as const)(
+    'relays the page a person is on in a PDF document, unordered, at the %s level',
+    (level) => {
+      const { room } = newRoom();
+      const reader = connect(room, 'reader', level);
+      const other = connect(room, 'other', 'edit');
+      other.ws.sent.length = 0;
+
+      sendFrame(room, reader.ws, {
+        kind: 'op',
+        op: { kind: 'pdf-presence', tabId: 't', page: 'p:3', mode: 'viewing' },
+      });
+      sendFrame(room, reader.ws, {
+        kind: 'op',
+        op: { kind: 'pdf-presence', tabId: 't', page: null },
+      });
+
+      const received = opsReceived(other.ws);
+      expect(received).toHaveLength(2);
+      for (const msg of received) expect(msg).not.toHaveProperty('seq');
+    },
+  );
+
   // docs/specs/008-canvas/drag-preview.md: an editor's live drag relays unordered, and a viewer's never
   // relays at all — a viewer must not make others' elements appear to move.
   it("relays an editor's drag preview unordered, and drops a viewer's", () => {

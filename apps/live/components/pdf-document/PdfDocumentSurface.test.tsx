@@ -3,13 +3,21 @@
 // reading-surface.md "The toolbar", "Share roles"; keyboard-shortcuts.md "Tools": what the surface shows for each
 // state of an open, and which tools each role is offered; live-editing-and-storage.md "Limits": what it says once a
 // change the room refused was dropped; "A change carried across a replacement": what it says of changes that could
-// not be placed; "Undo": the person's own steps, from the menu's keys and the toolbar.
+// not be placed; "Undo": the person's own steps, from the menu's keys and the toolbar; "Presence": the page in view
+// and the mode, said for the tab the person is on, and a press on a person going to their page.
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import { Mark, PageName, PdfChange, PdfLiveChanges } from '@livedoc/pdf-documents';
 import type { PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
 import { unboundPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
+import {
+  getLocalPdfPresence,
+  receivePdfPresence,
+  resetPdfPresenceForTests,
+  setLocalPdfPresence,
+  syncPdfPresencePeople,
+} from '@/lib/pdf-document/pdf-presence-store';
 import { PDF_LOCAL_ORIGIN, pdfUndo } from '@/lib/pdf-document/pdf-undo';
 import type { PdfDocumentOpen } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
@@ -27,6 +35,21 @@ const dropped = vi.hoisted(() => ({
   lost: new Set<(count: number) => void>(),
 }));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
+// The title row as it is, with what the surface hands it kept: a press on a person reaches the surface through it.
+const titleRow = vi.hoisted(() => ({
+  handed: null as { tabId?: string; onFollow?: (personId: string) => boolean } | null,
+}));
+vi.mock('@/components/office/OfficeTitleRow', async (original) => {
+  const actual = await original<typeof import('@/components/office/OfficeTitleRow')>();
+  type Props = Parameters<typeof actual.OfficeTitleRow>[0];
+  return {
+    ...actual,
+    OfficeTitleRow: (props: Props) => {
+      titleRow.handed = props;
+      return <actual.OfficeTitleRow {...props} />;
+    },
+  };
+});
 
 const KEY = 'ab'.repeat(32) as BlobKey;
 const scope = { ownerId: 'ada', documentId: 'D', tabId: 't1', shareCode: null };
@@ -60,7 +83,11 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
   };
 }
 
-function show(now: PdfDocumentOpen, role: 'edit' | 'participate' | 'view' = 'edit') {
+function show(
+  now: PdfDocumentOpen,
+  role: 'edit' | 'participate' | 'view' = 'edit',
+  present = true,
+) {
   open.now = now;
   return render(
     <PdfDocumentSurface
@@ -70,10 +97,39 @@ function show(now: PdfDocumentOpen, role: 'edit' | 'participate' | 'view' = 'edi
       canReview={role !== 'view'}
       author="Ada"
       chrome={null}
+      present={present}
       sequence={async () => true}
     />,
   );
 }
+
+/** Observers that can be told what lies within them, kept by the margin each was made with. */
+const watching = new Map<string, WatchedObserver>();
+class WatchedObserver {
+  private readonly tell: IntersectionObserverCallback;
+  private readonly watched = new Set<Element>();
+  constructor(tell: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+    this.tell = tell;
+    watching.set(options?.rootMargin ?? '', this);
+  }
+  observe(element: Element) {
+    this.watched.add(element);
+  }
+  unobserve(element: Element) {
+    this.watched.delete(element);
+  }
+  disconnect() {}
+  /** The pages now within this observer, by their numbers; every other page is outside it. */
+  holds(pageNumbers: readonly number[]) {
+    const entries = [...this.watched].map((target) => ({
+      target,
+      isIntersecting: pageNumbers.includes(Number((target as HTMLElement).dataset.pdfPage)),
+    }));
+    act(() => this.tell(entries as unknown as IntersectionObserverEntry[], this as never));
+  }
+}
+/** The line across the middle of the view (PdfPages' MIDDLE_MARGIN). */
+const underTheMiddle = () => watching.get('-50% 0px')!;
 
 class NoObserver {
   observe() {}
@@ -99,6 +155,9 @@ function laidOut() {
 
 beforeEach(() => {
   open.attempts.length = 0;
+  watching.clear();
+  titleRow.handed = null;
+  resetPdfPresenceForTests();
   vi.stubGlobal('ResizeObserver', NoObserver);
   vi.stubGlobal('IntersectionObserver', NoObserver);
 });
@@ -114,7 +173,7 @@ describe('a PDF document’s surface', () => {
     const { container } = show({ phase: 'opening' });
     expect(surface(container).getAttribute('data-pdf-surface')).toBe('opening');
     expect(screen.getByRole('status').textContent).toBe('Opening this PDF…');
-    expect(screen.queryByRole('button', { name: 'Editing mode: Reviewing' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Mode: Reviewing' })).toBeNull();
   });
 
   it('shows a refusal as a named region with its sentence, and Download while the file is held', () => {
@@ -297,5 +356,90 @@ describe('a PDF document’s surface', () => {
     expect(screen.getByRole('button', { name: 'Select' })).toBeTruthy();
     fireEvent.keyDown(surface(container), { key: 'u' });
     expect(surface(container).getAttribute('data-pdf-tool')).toBe('select');
+  });
+
+  // live-editing-and-storage.md "Presence".
+  describe('presence', () => {
+    const BOB = { id: 'b', name: 'Bob', color: '#0f0' };
+
+    it.each([
+      ['edit', 'reviewing'],
+      ['participate', 'reviewing'],
+      ['view', 'viewing'],
+    ] as const)('says the page in view and the mode, at the %s level', async (role, mode) => {
+      show(await ready(), role);
+      expect(getLocalPdfPresence()).toEqual({ tabId: 't1', page: 'p:3', mode, held: null });
+    });
+
+    it('follows the page under the middle of the view, and keeps the last one between two pages', async () => {
+      laidOut();
+      vi.stubGlobal('IntersectionObserver', WatchedObserver);
+      show(await ready());
+      underTheMiddle().holds([2]);
+      expect(getLocalPdfPresence()?.page).toBe('p:5');
+      underTheMiddle().holds([]);
+      expect(getLocalPdfPresence()?.page).toBe('p:5');
+      // Two pages touch the line as one gives way to the next: the earlier one is the page in view.
+      underTheMiddle().holds([1, 2]);
+      expect(getLocalPdfPresence()?.page).toBe('p:3');
+    });
+
+    it('says the mode a person switches to', async () => {
+      show(await ready());
+      fireEvent.click(screen.getByRole('menuitem', { name: 'View' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Mode' }));
+      fireEvent.click(screen.getByRole('menuitemradio', { name: /Viewing/ }));
+      expect(getLocalPdfPresence()).toMatchObject({ page: 'p:3', mode: 'viewing' });
+    });
+
+    it('says nothing while the PDF opens or is refused', () => {
+      show({ phase: 'opening' });
+      expect(getLocalPdfPresence()).toBeNull();
+    });
+
+    it('takes the place back when the surface goes', async () => {
+      const shown = show(await ready());
+      shown.unmount();
+      expect(getLocalPdfPresence()).toBeNull();
+    });
+
+    it('says nothing from the other pane of a split, and leaves the place of the tab the person is on', async () => {
+      setLocalPdfPresence('t1', { page: 'p:9', mode: 'editing', held: null });
+      const shown = show(await ready(), 'edit', false);
+      expect(getLocalPdfPresence()).toMatchObject({ page: 'p:9', mode: 'editing' });
+      shown.unmount();
+      expect(getLocalPdfPresence()).toMatchObject({ page: 'p:9' });
+    });
+
+    it('goes to the page a person is on when they are pressed in the title row', async () => {
+      laidOut();
+      const scrolled = vi.fn();
+      Element.prototype.scrollIntoView = scrolled;
+      const { container } = show(await ready(), 'view');
+      syncPdfPresencePeople([BOB]);
+      receivePdfPresence('b', { tabId: 't1', page: 'p:5', mode: 'reviewing', held: null });
+      expect(titleRow.handed?.tabId).toBe('t1');
+      let found = false;
+      act(() => {
+        found = titleRow.handed!.onFollow!('b');
+      });
+      expect(found).toBe(true);
+      expect(scrolled.mock.contexts).toEqual([container.querySelector('[data-pdf-page="2"]')]);
+      expect(scrolled).toHaveBeenCalledWith({ block: 'start' });
+      expect(track).toHaveBeenCalledWith('UI', 'Used', 'PdfDocumentFollow');
+    });
+
+    it('goes nowhere for a person on a page this file does not hold, on another tab, or unknown', async () => {
+      laidOut();
+      const scrolled = vi.fn();
+      Element.prototype.scrollIntoView = scrolled;
+      show(await ready());
+      syncPdfPresencePeople([BOB, { id: 'c', name: 'Cy', color: '#00f' }]);
+      receivePdfPresence('b', { tabId: 't1', page: 'p:99', mode: 'reviewing', held: null });
+      receivePdfPresence('c', { tabId: 't2', page: 'p:5', mode: 'reviewing', held: null });
+      for (const id of ['b', 'c', 'nobody']) expect(titleRow.handed!.onFollow!(id)).toBe(false);
+      expect(scrolled).not.toHaveBeenCalled();
+      expect(track).not.toHaveBeenCalledWith('UI', 'Used', 'PdfDocumentFollow');
+    });
   });
 });

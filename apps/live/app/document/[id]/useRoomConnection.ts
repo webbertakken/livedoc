@@ -1,6 +1,11 @@
 import type { RemoteApply } from '@/hooks/canvas/history-replay';
 import { LiveTabRoom } from '@/lib/live-tab/live-tab-bus';
 import { PdfDocumentBus, PdfStoredFiles } from '@/lib/pdf-document/pdf-document-bus';
+import {
+  receivePdfPresence,
+  resetPdfPresencePeers,
+  syncPdfPresencePeople,
+} from '@/lib/pdf-document/pdf-presence-store';
 import { TextDocumentBus } from '@/lib/text-document/text-document-bus';
 import {
   useEffect,
@@ -15,6 +20,7 @@ import { noteAccessEnded } from '@/lib/access-notice';
 import type { EditorMode, QaNote } from '@livedoc/document';
 import {
   parseArticleCaret,
+  parsePdfPresence,
   parseTextDocumentCaret,
   type AgentPresence,
   type AvatarPresence,
@@ -388,6 +394,9 @@ export function useRoomConnection(opts: {
       // whoever left (docs/specs/007-editor/article-pages.md "Collaboration").
       syncArticlePeople(participants);
       syncTextDocumentPeople(participants);
+      // Where each person is in a PDF document is named from here too, and whoever joined hears where we are
+      // (docs/specs/035-pdf-documents/live-editing-and-storage.md "Presence").
+      syncPdfPresencePeople(participants);
       // Drop tab-focus entries for people who left so their avatar
       // dot doesn't linger on a tab they no longer occupy, AND seed
       // from the presence list: the room echoes each peer's current
@@ -526,6 +535,12 @@ export function useRoomConnection(opts: {
         // The stored file was replaced, told by the room alone: that tab's surface opens the new file in place.
         // The tab's own row follows by the `tab-meta` the room tells just before.
         if (from === 'system') PdfStoredFiles.replaced(op.tabId);
+      } else if (op.kind === 'pdf-presence') {
+        // Where a collaborator is in a PDF document (docs/specs/035-pdf-documents/live-editing-and-storage.md
+        // "Presence"), checked field by field; a malformed one is refused, drawing nothing.
+        const presence = parsePdfPresence(op);
+        if (presence) receivePdfPresence(from, presence);
+        else debugLog('[pdf] presence-refused');
       } else if (op.kind === 'text-document-caret') {
         // A collaborator's selection in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
         // "Presence"), checked field by field; drawn by that tab's surface, never written.
@@ -717,6 +732,7 @@ export function useRoomConnection(opts: {
       prunePeerDragPreviews(new Set());
       resetArticlePeers();
       resetTextDocumentPeers();
+      resetPdfPresencePeers();
       return;
     }
     joinedRef.current = false;
@@ -796,6 +812,7 @@ export function useRoomConnection(opts: {
       presence.cancel();
       resetArticlePeers();
       resetTextDocumentPeers();
+      resetPdfPresencePeers();
       // Nobody's words outlive the room they were said in.
       resetSpeechBubbles();
       openedRoom.close();

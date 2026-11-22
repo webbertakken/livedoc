@@ -1106,13 +1106,15 @@ export const PDF_DOCUMENT_MODE = chart(
   { types: ['PdfDocumentMode'], rising: 'neutral' },
 );
 
-// A person here followed from a text document's title row: their caret brought into view, or their tab opened.
+// A person here followed from an office kind's title row: in a text document their caret brought into view, or their
+// tab opened; in a PDF document the page they are on (docs/specs/035-pdf-documents/live-editing-and-storage.md
+// "Presence").
 export const TEXT_DOCUMENT_FOLLOWED = chart(
   'UI',
   'Used',
   'Person Followed',
-  "Someone here pressed in a text document's title row, to see where they are.",
-  { types: ['TextDocumentFollow'] },
+  "Someone here pressed in a text document's or a PDF document's title row, to see where they are.",
+  { types: ['TextDocumentFollow', 'PdfDocumentFollow'] },
 );
 
 // A text document's writing formatted (docs/specs/034-text-documents/text-and-paragraphs.md "Telemetry"): bold,

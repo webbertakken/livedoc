@@ -5,6 +5,7 @@ import type { AvatarConfig } from './avatar';
 import type { AvatarSayOp } from './avatar-say';
 import type { LivePoll } from './poll';
 import type { DragPreviewPatch } from './drag-preview';
+import type { PdfPresenceHeld, PdfPresenceMode } from './pdf-presence';
 import type { ChangesetRoomOp } from './changesets';
 import type { ItemsRoomOp, ItemTypesRoomOp } from './items';
 import type { SheetsRoomOp } from './sheets';
@@ -143,6 +144,9 @@ export const PRESENCE_OP_KINDS = [
   // Where someone is writing in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
   // "Presence"): their selection as Yjs relative positions, at cursor rates, writing nothing.
   'text-document-caret',
+  // Where someone is in a PDF document (docs/specs/035-pdf-documents/live-editing-and-storage.md "Presence"): the
+  // page in view and what they hold, at cursor rates, writing nothing. From any session: a Viewer's page is sent.
+  'pdf-presence',
   // Whose hands are on a Plan board's card (docs/specs/026-plan/plan-board.md "What the board shows"):
   // the card someone is dragging or reading, so peers ring it in their colour. Ephemeral, never
   // logged, from any session (a viewer reads items too).
@@ -603,6 +607,17 @@ export type RoomOp =
   | { kind: 'article-caret'; tabId: string; flow: null }
   | { kind: 'text-document-caret'; tabId: string; anchor: string; head: string }
   | { kind: 'text-document-caret'; tabId: string; anchor: null }
+  // The sender's place in a PDF document (docs/specs/035-pdf-documents/live-editing-and-storage.md "Presence"): the
+  // page in view by its name, their editing mode and at most one thing held. `page: null` means the sender left
+  // the tab, so peers drop them. Throttled like the cursor; parsed with parsePdfPresence.
+  | {
+      kind: 'pdf-presence';
+      tabId: string;
+      page: string;
+      mode: PdfPresenceMode;
+      held?: PdfPresenceHeld | null;
+    }
+  | { kind: 'pdf-presence'; tabId: string; page: null }
   // One sample of the sender's laser-pointer trail (canvas-coords).
   // Sent on every pointer move while the sender is in laser tool
   // mode, throttled like cursor. Receivers append to a per-
