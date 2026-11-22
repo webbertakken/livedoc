@@ -35,10 +35,17 @@ const GATE_KEEPERS = [
   'src/db/document-removal.ts',
   // The blob store and a PDF document's doors: who may read a file's bytes, and which bytes a tab may name
   // (docs/specs/006-document/blob-store.md).
+  'src/blob-store/allowance.ts',
+  'src/blob-store/blob-parts.ts',
+  'src/blob-store/blob-retention.ts',
   'src/blob-store/blob-store.ts',
   'src/blob-store/tab-blobs.ts',
+  'src/db/blobs.ts',
+  'src/db/blob-uploads.ts',
   'src/pdf-documents/**',
+  'src/routes/blob-door.ts',
   'src/routes/blob-store-routes.ts',
+  'src/routes/blob-upload-routes.ts',
   'src/routes/document-file-routes.ts',
   'src/routes/pdf-document-routes.ts',
 ];

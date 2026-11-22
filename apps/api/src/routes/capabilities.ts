@@ -68,6 +68,9 @@ export function handleCapabilities(ctx: RouteContext): Response {
     // docs/specs/022-drive-mirror/drive-mirror.md: which Drive token path the app takes;
     // 'off' hides the Drive entry.
     driveMode: driveMode(env),
+    // docs/specs/006-document/blob-store.md "Without object storage": no bucket, no PDF documents and no file tabs,
+    // and the app offers none.
+    filesEnabled: Boolean(env.FILES),
     ...cliCapabilities(ctx),
   });
 }

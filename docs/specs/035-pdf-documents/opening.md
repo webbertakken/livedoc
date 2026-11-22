@@ -118,6 +118,7 @@ as for any document.
 | `pdf_stopped`               | The engine answered nothing for `PDF_ENGINE_TIMEOUT_MS`, passed its memory ceiling, or trapped | "LiveDoc stopped reading this PDF, because it asked for too much time or memory." **Try again**  |
 | `file_too_large`            | The bytes pass `FILE_TAB_MAX_BYTES`; nothing is stored                                         | "This file is larger than 100 MB, the most LiveDoc holds for one file."                          |
 | `files_unavailable`         | The server has no file storage; nothing is stored                                              | "This server has no file storage."                                                               |
+| `usage_exceeded`            | The owner's allowance for files would be passed; nothing is stored                             | `(default)` "This file doesn't fit in the file storage that is left."                            |
 | `blob_missing`              | The stored file's bytes are gone from the store                                                | "This PDF's file is missing from storage." with **Restore a previous version** where one is kept |
 
 - A refusal is told apart from damage: a PDF made by tomorrow's software is "newer", never "damaged"

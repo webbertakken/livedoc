@@ -79,6 +79,8 @@ describe('hosted profile', () => {
     // unguarded while this file looked right.
     expect(parsePositiveCap(vars.IMAGE_MAX_PER_OWNER)).toBe(100);
     expect(parsePositiveCap(vars.IMAGE_MAX_BYTES_PER_OWNER)).toBe(100 * 1024 * 1024);
+    // The blob store's allowance (docs/specs/006-document/blob-store.md "Getting bytes in").
+    expect(parsePositiveCap(vars.FILE_MAX_BYTES_PER_OWNER)).toBe(1024 * 1024 * 1024);
   });
 
   it('names only vars the worker reads', async () => {

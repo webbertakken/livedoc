@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeyOf, FILE_TAB_MAX_BYTES, type BlobKey } from '@livedoc/document';
 import { testFilesBucket, type TestFilesBucket } from '../blob-store/test-files-bucket';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
+import { migrateOwnerId } from '../db';
 import { handleBlobStoreRoutes } from './blob-store-routes';
 import { handleDocuments } from './documents';
 import { makeTestRouteContext } from './test-route-context';
@@ -71,8 +72,8 @@ describe('getting bytes in', () => {
     const res = await files('PUT', `/api/files/${key}`, { bytes: PDF });
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ stored: true });
-    expect([...bucket.objects.keys()]).toEqual([`ada/${key}`]);
-    expect(bucket.objects.get(`ada/${key}`)).toEqual(PDF);
+    expect(bucket.objects.size).toBe(1);
+    expect(bucket.blob('ada', key)).toEqual(PDF);
   });
 
   // "An upload begins by asking": bytes already held for that owner are never sent again.
@@ -174,7 +175,7 @@ describe('getting bytes in', () => {
     ).toBe(403);
     const owner = await files('PUT', `/api/files/${nextKey}?document=D`, { bytes: next });
     expect(owner.status).toBe(201);
-    expect(bucket.objects.has(`ada/${nextKey}`)).toBe(true);
+    expect(bucket.blob('ada', nextKey)).toEqual(next);
     const missing = await files('PUT', `/api/files/${nextKey}?document=nope`, { bytes: next });
     expect(missing.status).toBe(404);
   });
@@ -294,6 +295,24 @@ describe('getting bytes out', () => {
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: 'blob_missing' });
   });
+
+  it('names bytes a tab holds whose row has gone from what the owner holds', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    db.sql.prepare('DELETE FROM blobs').run();
+    const res = await read(`/api/documents/D/files/${key}`);
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: 'blob_missing' });
+  });
+
+  // "A guest's blobs are the account's after signing up, read under the same documents."
+  it('reads a guest’s file under the account they signed up to, no byte moved', async () => {
+    const before = [...bucket.objects.keys()];
+    await migrateOwnerId(db.env, 'ada', 'account-1');
+    const res = await documents('GET', `/api/documents/D/files/${key}`, { owner: 'account-1' });
+    expect(res.status).toBe(200);
+    expect(new Uint8Array(await res.arrayBuffer())).toEqual(PDF);
+    expect([...bucket.objects.keys()]).toEqual(before);
+  });
 });
 
 // "Without object storage": every route answers 503 files_unavailable, and no PDF document can be made.
@@ -314,5 +333,7 @@ describe('without the bucket', () => {
       expect(await res.json()).toEqual({ error: 'files_unavailable' });
     }
     expect((await files('GET', `/api/files/${key}`)).status).toBe(503);
+    expect((await files('GET', '/api/files')).status).toBe(503);
+    expect((await files('POST', `/api/files/${key}/uploads?size=9`)).status).toBe(503);
   });
 });

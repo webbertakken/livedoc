@@ -1,7 +1,7 @@
 // docs/specs/006-document/blob-store.md "Where the bytes live", "Getting bytes out".
 import { describe, expect, it, vi } from 'vitest';
-import { blobKeyOf, type BlobKey } from '@livedoc/document';
-import { blobObjectName, byteRangeOf, heldBlobSize, readBlob, storeBlob } from './blob-store';
+import { blobKeyOf } from '@livedoc/document';
+import { byteRangeOf, readBlob, storeBlob } from './blob-store';
 import { testFilesBucket } from './test-files-bucket';
 
 const bytes = Uint8Array.from(new TextEncoder().encode('%PDF-1.7 twenty bytes'));
@@ -9,26 +9,18 @@ const stream = (value: Uint8Array) => new Blob([value.slice()]).stream();
 const textOf = async (body: ReadableStream | null) => (body ? new Response(body).text() : null);
 
 describe('the blob store', () => {
-  it('names an object by its owner and key, so two owners never share one', async () => {
-    const key = await blobKeyOf(bytes);
-    expect(blobObjectName('ada', key)).toBe(`ada/${key}`);
-    expect(blobObjectName('ada', key)).not.toBe(blobObjectName('grace', key));
-  });
-
-  it('stores bytes under their key, and says what an owner holds', async () => {
+  it('stores bytes as the object it is told, checked against their key', async () => {
     const bucket = testFilesBucket();
     const key = await blobKeyOf(bytes);
-    expect(await heldBlobSize(bucket, 'ada', key)).toBeNull();
-    expect(await storeBlob(bucket, 'ada', key, stream(bytes))).toBe('stored');
-    expect(await heldBlobSize(bucket, 'ada', key)).toBe(bytes.byteLength);
-    expect(await heldBlobSize(bucket, 'grace', key)).toBeNull();
+    expect(await storeBlob(bucket, `ada/${key}`, key, stream(bytes))).toBe('stored');
+    expect(bucket.objects.get(`ada/${key}`)).toEqual(bytes);
   });
 
   // "The store checks the key against the bytes as they are stored": refused, and nothing is kept.
   it('refuses bytes that do not hash to their key, keeping nothing', async () => {
     const bucket = testFilesBucket();
     const other = await blobKeyOf(Uint8Array.of(1, 2, 3));
-    expect(await storeBlob(bucket, 'ada', other, stream(bytes))).toBe('key_mismatch');
+    expect(await storeBlob(bucket, `ada/${other}`, other, stream(bytes))).toBe('key_mismatch');
     expect(bucket.objects.size).toBe(0);
   });
 
@@ -37,18 +29,18 @@ describe('the blob store', () => {
     const bucket = testFilesBucket();
     bucket.failPuts = true;
     const key = await blobKeyOf(bytes);
-    expect(await storeBlob(bucket, 'ada', key, stream(bytes))).toBe('store_failed');
+    expect(await storeBlob(bucket, `ada/${key}`, key, stream(bytes))).toBe('store_failed');
     expect(error).toHaveBeenCalledTimes(1);
     error.mockRestore();
   });
 
-  it('reads a blob whole or one range of it, and nothing for an object that is gone', async () => {
+  it('reads an object whole or one range of it, and nothing for an object that is gone', async () => {
     const bucket = testFilesBucket();
     const key = await blobKeyOf(bytes);
-    await storeBlob(bucket, 'ada', key, stream(bytes));
-    expect(await textOf(await readBlob(bucket, 'ada', key, null))).toBe('%PDF-1.7 twenty bytes');
-    expect(await textOf(await readBlob(bucket, 'ada', key, { offset: 1, length: 3 }))).toBe('PDF');
-    expect(await readBlob(bucket, 'ada', 'f'.repeat(64) as BlobKey, null)).toBeNull();
+    await storeBlob(bucket, 'an/object', key, stream(bytes));
+    expect(await textOf(await readBlob(bucket, 'an/object', null))).toBe('%PDF-1.7 twenty bytes');
+    expect(await textOf(await readBlob(bucket, 'an/object', { offset: 1, length: 3 }))).toBe('PDF');
+    expect(await readBlob(bucket, 'another/object', null)).toBeNull();
   });
 });
 

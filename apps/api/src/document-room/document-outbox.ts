@@ -11,6 +11,7 @@ import { collabIndexRowsFromElements, type Element } from '@livedoc/document';
 import { tabSearchText } from '@livedoc/document-views';
 import { itemsSearchText } from '@livedoc/items';
 import { sheetSearchInputs } from '@livedoc/sheets';
+import { tabBlobHolds } from '../blob-store/tab-blobs';
 import { contentSearchStatements, ITEMS_SEARCH_KEY } from '../db/content-search';
 import { listItems } from '../db/items';
 import { listSheets } from '../db/sheets';
@@ -263,6 +264,35 @@ function goneTabStatements(
   ];
 }
 
+// The keys the tab holds in the blob store (docs/specs/006-document/blob-store.md "Holds and retention"), replaced
+// whole: what the retention sweep reads. A tab of a kind that never holds a blob writes nothing; a tab that has gone
+// lets go of what it held.
+function blobHoldStatements(
+  env: DocumentEnv,
+  documentId: string,
+  tabId: string,
+  tab: StoredTab | null,
+  body: Record<string, unknown>,
+): D1PreparedStatement[] {
+  const holds = tab ? tabBlobHolds(body) : [];
+  if (holds === null) return [];
+  const stmts = [
+    env.DB.prepare('DELETE FROM document_blobs WHERE document_id = ?1 AND tab_id = ?2').bind(
+      documentId,
+      tabId,
+    ),
+  ];
+  if (holds.length > 0)
+    stmts.push(
+      env.DB.prepare(
+        `INSERT INTO document_blobs (document_id, tab_id, key, until)
+         SELECT ?1, ?2, value ->> '$.key', value ->> '$.until' FROM json_each(?3)
+          WHERE ${EXISTS_DOCUMENT}`,
+      ).bind(documentId, tabId, JSON.stringify(holds)),
+    );
+  return stmts;
+}
+
 // The tab's content search row (docs/specs/013-workspace/content-search.md): its text with the texts it holds outside
 // its body (the inputs of the sheets it references, a text document's writing), or a delete when it has gone or holds
 // no text.
@@ -284,6 +314,7 @@ const TAB_UNIT_PARTS = [
   collabStatements,
   formLinkStatements,
   goneTabStatements,
+  blobHoldStatements,
   searchStatements,
 ] as const;
 

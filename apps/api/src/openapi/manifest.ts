@@ -1690,6 +1690,101 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
   // The blob store's upload (docs/specs/006-document/blob-store.md "Getting bytes in").
   {
     method: 'GET',
+    path: '/files',
+    segment: 'files',
+    tag: 'Files',
+    summary:
+      "What the caller's blobs count: their bytes, each distinct key once, how many there are, and the deployment's allowance for one owner, null where it sets none. 503 files_unavailable on a host without file storage.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: {
+      type: 'object',
+      properties: {
+        bytes: { type: 'integer' },
+        blobs: { type: 'integer' },
+        allowanceBytes: { type: ['integer', 'null'] },
+      },
+      required: ['bytes', 'blobs', 'allowanceBytes'],
+    },
+    statuses: [200, 401, 503],
+  },
+  {
+    method: 'POST',
+    path: '/files/{key}/uploads',
+    segment: 'files',
+    tag: 'Files',
+    summary:
+      "Begin storing a file in parts, or resume: size is the whole file's bytes. 200 held when the owner already holds the key; 200 with the owner's unfinished upload of that key and size and the parts storage has; else 201 with a new upload. Parts are partBytes each but the last. 400 key_invalid, size_invalid; 403 usage_exceeded (leftBytes); 413 file_too_large (limitBytes); 502 store_failed; 503 files_unavailable.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      { name: 'size', required: true, description: "The whole file's bytes." },
+      {
+        name: 'document',
+        required: false,
+        description: 'The document the bytes are for; they are then its owner’s.',
+      },
+    ],
+    responseSchema: {
+      type: 'object',
+      properties: {
+        held: { type: 'boolean' },
+        upload: { type: 'string' },
+        partBytes: { type: 'integer' },
+        parts: { type: 'array', items: { type: 'integer' } },
+      },
+    },
+    statuses: [201, 200, 400, 401, 403, 404, 413, 502, 503],
+  },
+  {
+    method: 'PUT',
+    path: '/files/{key}/uploads/{upload}/parts/{n}',
+    segment: 'files',
+    tag: 'Files',
+    summary:
+      'Store part n of an upload, counted from 1: the next part, or one already stored, which it replaces. The body is the part, with Content-Length: partBytes, or what is left of the size for the last. Answers the parts storage has. 400 part_invalid; 404 upload_not_found; 502 store_failed; 503 files_unavailable.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'document',
+        required: false,
+        description: 'The document the bytes are for; they are then its owner’s.',
+      },
+    ],
+    requestSchema: { type: 'string', format: 'binary' },
+    responseSchema: {
+      type: 'object',
+      properties: { parts: { type: 'array', items: { type: 'integer' } } },
+      required: ['parts'],
+    },
+    statuses: [200, 400, 401, 403, 404, 502, 503],
+  },
+  {
+    method: 'POST',
+    path: '/files/{key}/uploads/{upload}/complete',
+    segment: 'files',
+    tag: 'Files',
+    summary:
+      'Put an upload’s parts together and store the whole under its key, checked against it as a single request is. 201 stored. 404 upload_not_found; 409 upload_incomplete (parts) before every part is stored; 422 key_mismatch when the whole does not hash to the key, which ends the upload; 502 store_failed, after which the complete may be tried again; 503 files_unavailable.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'document',
+        required: false,
+        description: 'The document the bytes are for; they are then its owner’s.',
+      },
+    ],
+    responseSchema: {
+      type: 'object',
+      properties: { stored: { type: 'boolean' } },
+      required: ['stored'],
+    },
+    statuses: [201, 400, 401, 403, 404, 409, 422, 502, 503],
+  },
+  {
+    method: 'GET',
     path: '/files/{key}',
     segment: 'files',
     tag: 'Files',
@@ -1717,7 +1812,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'files',
     tag: 'Files',
     summary:
-      "Store a file's bytes under their key, the bytes' SHA-256 as 64 lower-case hex characters: the body is the bytes, with Content-Length. 200 held when the owner already holds the key (GET on this path asks first), else 201 stored. With document, the bytes are stored for that document's owner and edit access to it is asked; without, for the caller, who is about to make a document with them. 400 key_invalid; 411 length_required; 413 file_too_large (limitBytes); 422 key_mismatch when the bytes do not hash to the key; 502 store_failed; 503 files_unavailable on a host without file storage.",
+      "Store a file's bytes under their key, the bytes' SHA-256 as 64 lower-case hex characters: the body is the bytes, with Content-Length. 200 held when the owner already holds the key (GET on this path asks first), else 201 stored. With document, the bytes are stored for that document's owner and edit access to it is asked; without, for the caller, who is about to make a document with them. 400 key_invalid; 403 usage_exceeded (leftBytes) when the owner's allowance would be passed; 411 length_required; 413 file_too_large (limitBytes); 422 key_mismatch when the bytes do not hash to the key; 502 store_failed; 503 files_unavailable on a host without file storage.",
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [

@@ -1,8 +1,9 @@
 // A tab may name only bytes the blob store holds (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage":
-// "sent before the tab names them"), so no reader ever opens a tab whose file is not there.
-import { pdfTabOf } from '@livedoc/document';
+// "sent before the tab names them"), so no reader ever opens a tab whose file is not there; and a tab holds the
+// bytes it names (docs/specs/006-document/blob-store.md "Holds and retention").
+import { pdfTabOf, type BlobKey } from '@livedoc/document';
+import { heldBlob } from '../db/blobs';
 import type { Env } from '../types';
-import { heldBlobSize } from './blob-store';
 
 export type TabBlobRefusal = 'files_unavailable' | 'blob_missing';
 
@@ -11,7 +12,7 @@ export type TabBlobRefusal = 'files_unavailable' | 'blob_missing';
  * owner at the size the tab names. Tabs of every other kind name no blob and ask nothing.
  */
 export async function tabBlobRefusal(
-  env: Pick<Env, 'FILES'>,
+  env: Pick<Env, 'FILES' | 'DB'>,
   ownerId: string,
   tabs: readonly unknown[],
 ): Promise<TabBlobRefusal | null> {
@@ -22,7 +23,7 @@ export async function tabBlobRefusal(
       console.warn('[blob-store] unavailable document=- key=-');
       return 'files_unavailable';
     }
-    if ((await heldBlobSize(env.FILES, ownerId, file.blob)) !== file.size) {
+    if ((await heldBlob(env, ownerId, file.blob))?.size !== file.size) {
       console.warn(
         `[blob-store] refused name=blob_missing document=- key=${file.blob.slice(0, 8)}`,
       );
@@ -37,3 +38,20 @@ export const TAB_BLOB_STATUS: Record<TabBlobRefusal, number> = {
   files_unavailable: 503,
   blob_missing: 409,
 };
+
+/** A hold: a key, and the day the hold ends; null while the tab names the key. */
+export type BlobHold = { readonly key: BlobKey; readonly until: number | null };
+
+/**
+ * The keys a tab's body holds ("Each document tells what it holds"): a PDF tab's stored file, for as long as the tab
+ * names it. Null for a tab of a kind that never holds a blob, which tells nothing.
+ */
+export function tabBlobHolds(body: {
+  kind?: unknown;
+  blob?: unknown;
+  size?: unknown;
+}): BlobHold[] | null {
+  if (body.kind !== 'pdf') return null;
+  const file = pdfTabOf(body);
+  return file ? [{ key: file.blob, until: null }] : [];
+}
