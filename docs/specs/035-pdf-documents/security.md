@@ -3,8 +3,9 @@
 **Status: specified; a first slice is built.** Built: the boundary (a PDF's bytes are parsed only in WebAssembly, in a
 worker thread with no script runtime, and only typed, bounded values leave it), guarded by a test that no code outside
 the engine names the libraries beneath it; and what the engine answers of links, bookmarks and actions: a place in
-the document, an address of an opened scheme, or a named refusal, with circular and over-deep outlines stopped. The
-surface's handling of links, embedded files and the remaining abuse cases' tests are not built.
+the document, an address of an opened scheme, or a named refusal, with circular and over-deep outlines stopped; and
+embedded files listed by a cleaned name, never opened. The surface's handling of links and embedded files, and the
+remaining abuse cases' tests, are not built.
 
 A PDF is untrusted input: it can carry code, ask for the network, hide content, lie about its authors and exhaust a
 parser. This spec is the trust boundary of a [PDF document](pdf-document.md) and the rule for every abuse case; each
@@ -56,7 +57,11 @@ rule is a test with a named rejection. The research is [Security](../../research
 
 ## Embedded files
 
-- Listed with name, size and type; the name is shown as text, with control characters and path separators removed.
+- Listed with name, size and type; the name is shown as text, with control characters and path separators removed,
+  and the characters that turn the direction of text with them `(default)`, so a name cannot show another ending
+  than it has.
+- **The size is what the file says it is** `(default)`: a file that says none shows no size until it is saved. No
+  embedded file is decoded to be counted. The type is the one the file names, where it is written as a type is.
 - **Saved only by a person's action** (**Save** on the row); never opened, previewed or run by LiveDoc. A type that
   runs on a computer (an executable, a script, a shortcut) carries a warning line before it is saved.
 - An embedded PDF may be **opened as a new PDF document**, through this same boundary; nothing else is opened.
@@ -107,6 +112,8 @@ rule is a test with a named rejection. The research is [Security](../../research
 | `PDF_PROPERTY_MAX_CHARS` | 2,048       | `(default)` A property of the file (title, author, subject, keywords, producer) is cut to it      |
 | `PDF_OUTLINE_MAX_ITEMS`  | 20,000      | `(default)` Bookmarks read from one file; past it the outline is cut and says so                  |
 | `PDF_PAGE_MAX_LINKS`     | 5,000       | `(default)` Links read on one page                                                                |
+| `PDF_MAX_COORDINATE`     | 28,800      | `(default)` A coordinate read from a file is held within two pages' reach of the page's origin    |
+| `PDF_MAX_LAYERS`         | 1,000       | `(default)` PDF layers read from one file; more are shown as the file sets them and not listed    |
 
 ## Share roles
 

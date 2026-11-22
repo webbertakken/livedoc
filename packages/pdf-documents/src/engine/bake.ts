@@ -1,9 +1,10 @@
 // Baking (docs/specs/035-pdf-documents/saving.md "Addition or rewrite"): the stored file with what Reviewing added
-// appended as one incremental update. The only file that drives the writer; what it writes for a mark is the
+// appended as one incremental update. With writer.ts, the only files that drive the writer; what it writes for a mark is the
 // mapping of marks.md "In the file". Deterministic: every date, id and order comes from the marks, never the clock.
-import { PDF, PdfString, rgb } from '@libpdf/core';
+import { PdfString, rgb } from '@libpdf/core';
 import type { Mark } from '../mark';
 import { PageName } from '../page-name';
+import { openWriter } from './writer';
 
 export type Addition =
   | { readonly ok: true; readonly bytes: Uint8Array<ArrayBuffer>; readonly anchorsLost: number }
@@ -33,12 +34,8 @@ export async function bakeAddition(
   // The password the file was opened with: a protected file is written only where its password is.
   password: string | null = null,
 ): Promise<Addition> {
-  let pdf: PDF;
-  try {
-    pdf = await PDF.load(stored.slice(), password === null ? undefined : { credentials: password });
-  } catch {
-    return { ok: false, refusal: 'unreadable' };
-  }
+  const pdf = await openWriter(stored, password);
+  if (!pdf) return { ok: false, refusal: 'unreadable' };
   // A silent fall back to a rewrite is a defect: the writer says whether it can append before anything is written.
   if (pdf.canSaveIncrementally() !== null) return { ok: false, refusal: 'cannot-append' };
   const pages = new Map(pdf.getPages().map((page) => [page.ref.objectNumber, page]));

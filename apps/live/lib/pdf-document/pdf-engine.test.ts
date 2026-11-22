@@ -70,6 +70,11 @@ describe('the engine over a worker thread', () => {
     expect(selected?.text).toBe(FIXTURE_LINE.slice(0, selected?.text.length));
     expect(selected?.text.length).toBeGreaterThan(3);
     expect(await engine.fileMarks(0)).toEqual([]);
+    // What a file holds besides its pages crosses as plain values: this one holds none of it.
+    expect(await engine.fields(0)).toEqual([]);
+    expect(await engine.signatures()).toEqual([]);
+    expect(await engine.embeddedFiles()).toEqual({ files: [], cut: false });
+    expect(await engine.layers()).toEqual([]);
     // No changes: the stored file itself, and still there to bake again.
     const empty = Uint8Array.of(0, 0);
     for (const _ of [1, 2]) {
@@ -132,6 +137,10 @@ describe('the engine over a worker thread', () => {
     expect(await engine.links(0)).toEqual([]);
     expect(await engine.selectText(0, { x: 0, y: 0 }, { x: 1, y: 1 })).toBeNull();
     expect(await engine.fileMarks(0)).toEqual([]);
+    expect(await engine.fields(0)).toEqual([]);
+    expect(await engine.signatures()).toEqual([]);
+    expect(await engine.embeddedFiles()).toEqual({ files: [], cut: false });
+    expect(await engine.layers()).toEqual([]);
     expect(await engine.bake(Uint8Array.of(0, 0))).toEqual({ ok: false, refusal: 'unreadable' });
     expect(stopped).toHaveBeenCalledTimes(1);
     expect(stopped.mock.calls[0]![0]).toContain('out of memory');

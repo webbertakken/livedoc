@@ -25,11 +25,20 @@ export type {
   PagePoint,
   PdfEngine,
   PdfDocumentInfo,
+  PdfLayer,
   PdfOpened,
   PdfProperties,
   PdfRefusal,
   TextSelection,
 } from './engine-contract';
+export { EmbeddedFile, type EmbeddedFileInput, type EmbeddedFiles } from './embedded-file';
+export type { FieldOption, PageField, PdfFieldType } from './file-field';
+export {
+  FileSignature,
+  type Certification,
+  type SignatureRead,
+  type SignerCertificate,
+} from './file-signature';
 export { PageView } from './page-view';
 export { PdfPermissions } from './permissions';
 export { LinkTarget, type PdfActionKind } from './link-target';

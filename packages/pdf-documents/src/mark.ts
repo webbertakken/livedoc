@@ -1,7 +1,7 @@
 // A mark (docs/specs/035-pdf-documents/marks.md): something placed on top of a PDF page that leaves its page content
 // alone. A value object: made and checked here, held in the live changes one property a whole value, written into the
 // file as one annotation by the bake. The kinds join as they are built; a highlight is the first.
-import { PDF_MARK_MAX_QUADS, PDF_MARK_TEXT_MAX_CHARS } from './limits';
+import { PDF_MARK_MAX_QUADS, PDF_MARK_TEXT_MAX_CHARS, PDF_MAX_COORDINATE } from './limits';
 import { PageName } from './page-name';
 
 /** One quadrilateral in page space, as the standard's QuadPoints order them: upper left, upper right, lower left,
@@ -32,8 +32,6 @@ export type Mark = {
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 const COLOUR = /^#[0-9a-f]{6}$/;
-/** Page space is points from the page's own origin; a box may sit anywhere within two pages' reach of it. */
-const COORDINATE_MAX = 28_800;
 /** A display name, cut as every name shown from a file is (security.md "Limits": PDF_NAME_MAX_CHARS). */
 const AUTHOR_MAX_CHARS = 255;
 const OPACITY_MIN = 0.1;
@@ -43,7 +41,9 @@ const TIME_MAX = 8.64e15;
 const isQuad = (value: unknown): value is Quad =>
   Array.isArray(value) &&
   value.length === 8 &&
-  value.every((n) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= COORDINATE_MAX);
+  value.every(
+    (n) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= PDF_MAX_COORDINATE,
+  );
 
 const isTime = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= TIME_MAX;

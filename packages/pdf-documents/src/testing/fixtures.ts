@@ -2,7 +2,9 @@
 // load it (a browser's worker fetches the same file as an asset).
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { PDF } from '@libpdf/core';
+import { CryptoKeySigner, PDF } from '@libpdf/core';
+import * as asn1js from 'asn1js';
+import * as pkijs from 'pkijs';
 import type { PdfDocumentInfo } from '../engine-contract';
 import { PdfPermissions } from '../permissions';
 
@@ -230,3 +232,148 @@ export const xfaPdf = (): Uint8Array<ArrayBuffer> =>
     PAGE,
     '<< /Length 0 >>\nstream\n\nendstream',
   ]);
+
+const stream = (dictionary: string, body: string): string =>
+  `<< ${dictionary} /Length ${body.length} >>\nstream\n${body}\nendstream`;
+
+/**
+ * One page of marks as files hold them: a highlight with its colour, opacity, author, words and dates under its own
+ * name; a reply to it, a state reply and a grouped caret; a pop-up, which is no mark; a note the file gives neither
+ * name nor colour, and a reply to that; and a note whose words run past any limit.
+ */
+export function marksPdf(longWords = 0): Uint8Array<ArrayBuffer> {
+  const at = '/Rect [72 700 172 720]';
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R 5 0 R 6 0 R 7 0 R 8 0 R 9 0 R 10 0 R 11 0 R] >>',
+    `<< /Type /Annot /Subtype /Highlight ${at} /QuadPoints [72 720 172 720 72 700 172 700] /NM (hl-1) /C [1 0.5 0] /CA 0.5 /T (Grace) /Contents (Check this) /Subj (Fact) /M (D:20261121140203Z) /CreationDate (D:20261120090000Z) /Popup 8 0 R >>`,
+    `<< /Type /Annot /Subtype /Text ${at} /NM (re-1) /IRT 4 0 R /T (Ada) /Contents (Agreed) /M (D:20261121150000Z) >>`,
+    `<< /Type /Annot /Subtype /Text ${at} /NM (st-1) /IRT 4 0 R /T (Ada) /State (Accepted) /StateModel (Review) >>`,
+    `<< /Type /Annot /Subtype /Caret ${at} /NM (ca-1) /IRT 4 0 R /RT /Group >>`,
+    `<< /Type /Annot /Subtype /Popup ${at} /Parent 4 0 R >>`,
+    '<< /Type /Annot /Subtype /Text /Rect [-99999 5 99999 20] /C [] /CA 7 >>',
+    `<< /Type /Annot /Subtype /Text ${at} /IRT 9 0 R >>`,
+    `<< /Type /Annot /Subtype /Text ${at} /NM (long) /Contents (${'w'.repeat(longWords)}) >>`,
+  ]);
+}
+
+/**
+ * One page with a form as files hold them: a text field "applicant.city" (inside "applicant") valued "Delft" and
+ * labelled; a multi-line read-only required one; a password field holding a value; a tick box that is on; a radio
+ * group "colour" of two buttons, the second on; a dropdown that takes a value of one's own and a list that takes several, of three options each; a push button; an empty
+ * signature field; and a field hidden from view.
+ */
+export function formPdf(options = 3): Uint8Array<ArrayBuffer> {
+  const widget = (bottom: number, rest: string): string =>
+    `<< /Type /Annot /Subtype /Widget /Rect [72 ${bottom} 272 ${bottom + 20}] /P 3 0 R ${rest} >>`;
+  const opt = Array.from({ length: options }, (_, n) => `(Option ${n + 1})`).join(' ');
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R 6 0 R 7 0 R 8 0 R 9 0 R 12 0 R 13 0 R 14 0 R 15 0 R 16 0 R] >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [5 0 R 6 0 R 7 0 R 8 0 R 10 0 R 11 0 R 12 0 R 13 0 R 14 0 R 15 0 R 16 0 R] >>',
+    '<< /T (applicant) /Kids [5 0 R] >>',
+    widget(700, '/Parent 4 0 R /FT /Tx /T (city) /V (Delft) /TU (The city you live in)'),
+    widget(660, '/FT /Tx /T (notes) /Ff 4099 /V (Line one)'),
+    widget(620, '/FT /Tx /T (secret) /Ff 8192 /V (hunter2)'),
+    widget(580, '/FT /Btn /T (agree) /V /Yes /AS /Yes /AP << /N << /Yes 17 0 R /Off 17 0 R >> >>'),
+    '<< /FT /Btn /Ff 32768 /T (colour) /V /blue /Kids [10 0 R 11 0 R] >>',
+    widget(540, '/Parent 9 0 R /AS /Off /AP << /N << /red 17 0 R /Off 17 0 R >> >>'),
+    widget(500, '/Parent 9 0 R /AS /blue /AP << /N << /blue 17 0 R /Off 17 0 R >> >>'),
+    widget(460, `/FT /Ch /Ff 393216 /T (country) /Opt [${opt}] /V (Option 2)`),
+    widget(420, `/FT /Ch /Ff 2097152 /T (languages) /Opt [${opt}] /V [(Option 1) (Option 3)]`),
+    widget(
+      380,
+      '/FT /Btn /Ff 65536 /T (send) /A << /S /SubmitForm /F (https://example.com/submit) >>',
+    ),
+    widget(340, '/FT /Sig /T (signature)'),
+    widget(300, '/FT /Tx /T (unseen) /F 2 /V (kept)'),
+    stream('/Type /XObject /Subtype /Form /BBox [0 0 200 20]', ''),
+  ]);
+}
+
+/** One page and two embedded files: "notes.txt" with its size, type and description said, and "run.exe" with none. */
+export const embeddedFilesPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Names << /EmbeddedFiles << /Names [(notes.txt) 4 0 R (run.exe) 6 0 R] >> >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    '<< /Type /Filespec /F (notes.txt) /UF (notes.txt) /Desc (Meeting notes) /EF << /F 5 0 R >> >>',
+    stream('/Type /EmbeddedFile /Subtype /text#2Fplain /Params << /Size 5 >>', 'hello'),
+    '<< /Type /Filespec /F (../run.exe) /EF << /F 7 0 R >> >>',
+    stream('/Type /EmbeddedFile', 'MZ'),
+  ]);
+
+/**
+ * One page and three PDF layers: "Plan" shown, "Notes" hidden, "Border" shown and locked; then as many more, each
+ * shown, as `more` says.
+ */
+export function layersPdf(more = 0): Uint8Array<ArrayBuffer> {
+  const extra = Array.from({ length: more }, (_, n) => n + 7);
+  const all = [4, 5, 6, ...extra].map((n) => `${n} 0 R`).join(' ');
+  return rawPdf([
+    `<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [${all}] /D << /Order [${all}] /OFF [5 0 R] /Locked [6 0 R] >> >> >>`,
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    '<< /Type /OCG /Name (Plan) >>',
+    '<< /Type /OCG /Name (Notes) >>',
+    '<< /Type /OCG /Name (Border) >>',
+    ...extra.map((n) => `<< /Type /OCG /Name (Layer ${n}) >>`),
+  ]);
+}
+
+/**
+ * One page and two signature fields signed by hand, neither with bytes that are a signature: the first certifies
+ * the file, allowing fields to be filled, and says a byte range of two runs; the second says no byte range.
+ */
+export const signaturesPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R 5 0 R] /SigFlags 3 >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R 5 0 R] >>',
+    '<< /Type /Annot /Subtype /Widget /FT /Sig /T (first) /Rect [0 0 0 0] /P 3 0 R /V 6 0 R >>',
+    '<< /Type /Annot /Subtype /Widget /FT /Sig /T (second) /Rect [0 0 0 0] /P 3 0 R /V 7 0 R >>',
+    '<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached /ByteRange [0 10 20 30] /Contents <0011223344> /Reason (Certified) /M (D:20261121140203Z) /Reference [<< /Type /SigRef /TransformMethod /DocMDP /TransformParams << /Type /TransformParams /P 2 /V /1.2 >> >>] >>',
+    '<< /Type /Sig /Filter /Adobe.PPKLite /Contents <00> >>',
+  ]);
+
+const SIGNER_NAME = [
+  ['2.5.4.3', 'Ada Lovelace'],
+  ['2.5.4.10', 'Analytical Engines'],
+] as const;
+
+/** A certificate made here for a key made here, naming "Ada Lovelace" of "Analytical Engines", issued by itself. */
+async function selfSigned(): Promise<{ key: CryptoKey; certificate: Uint8Array }> {
+  const keys = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
+    'sign',
+    'verify',
+  ]);
+  const certificate = new pkijs.Certificate();
+  certificate.version = 2;
+  certificate.serialNumber = new asn1js.Integer({ value: 0x1234 });
+  for (const name of [certificate.issuer, certificate.subject])
+    for (const [type, value] of SIGNER_NAME)
+      name.typesAndValues.push(
+        new pkijs.AttributeTypeAndValue({ type, value: new asn1js.Utf8String({ value }) }),
+      );
+  certificate.notBefore.value = new Date(Date.UTC(2026, 0, 1));
+  certificate.notAfter.value = new Date(Date.UTC(2036, 0, 1));
+  await certificate.subjectPublicKeyInfo.importKey(keys.publicKey);
+  await certificate.sign(keys.privateKey, 'SHA-256');
+  return { key: keys.privateKey, certificate: new Uint8Array(certificate.toSchema().toBER(false)) };
+}
+
+/**
+ * The text fixture signed with a certificate made here (Ada Lovelace, Analytical Engines), for the reason given,
+ * at 14:02:03 UTC on 21 November 2026 by the signer's clock.
+ */
+export async function signedPdf(reason = 'I approve'): Promise<Uint8Array<ArrayBuffer>> {
+  const { key, certificate } = await selfSigned();
+  const pdf = await PDF.load(await textPdf(1));
+  const signed = await pdf.sign({
+    signer: new CryptoKeySigner(key, certificate, 'EC', 'ECDSA'),
+    reason,
+    signingTime: new Date(Date.UTC(2026, 10, 21, 14, 2, 3)),
+  });
+  return signed.bytes as Uint8Array<ArrayBuffer>;
+}

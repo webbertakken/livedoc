@@ -2,7 +2,8 @@
 
 **Status: specified; a first slice is built.** Built: a Highlight, made with the tool in hand by dragging across a
 line's text, live in the document's changes, drawn over the page, written into the file as a standard annotation
-under its own id and read back by it. Every other kind, changing a mark, and the room's own-marks check are not built.
+under its own id and read back by it; and the engine reads every mark a file holds, of any kind, as the file says
+it. Every other kind made here, changing a mark, and the room's own-marks check are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -119,6 +120,11 @@ written into the file as a standard annotation, so any reader shows it. The rese
   [removing hidden information](redaction-and-protection.md#removing-hidden-information).
 - **Read back the same**: a mark LiveDoc wrote and another reader changed is read by its `NM`; one without `NM` gets
   an id from its object number.
+- **What is read of a mark a file holds**: its id, the file's own word for its kind, its rectangle and the
+  quadrilaterals of a text mark, its colour and opacity, its author's name, its words, its subject, the dates as the
+  file writes them, the mark it answers (as a reply, or grouped with it) and a state reply's state. A pop-up, a link
+  and a field's place are not marks. Each is bounded on the way out: a name cut to `PDF_NAME_MAX_CHARS`, words to
+  `PDF_MARK_TEXT_MAX_CHARS`, a coordinate held within `PDF_MAX_COORDINATE`, at most `PDF_PAGE_MAX_MARKS` a page.
 - **What other readers cannot hold** (a mark's group beyond the standard's own, its lock beyond the standard's flag,
   a custom stamp's category) rides a private entry of LiveDoc's own in the annotation, which other readers ignore and
   keep.
@@ -142,6 +148,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 | Constant                    | Value               | Why                                                                                            |
 | --------------------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
 | `PDF_MAX_MARKS`             | 20,000              | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))                 |
+| `PDF_PAGE_MAX_MARKS`        | 5,000               | `(default)` Marks read on one page; a page past it reads its first, and the rest still draw    |
 | `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                      |
 | `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                         |
 | `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000               |

@@ -4,7 +4,8 @@
 size read before any is drawn, the refusals shown by name with Download (a protected file among them, until its
 password screen is built). The engine reads a file's version, properties, page labels, what its permissions ask, and
 whether it has fields or a structure tree, a page's text with each character's box, the outline and a page's links
-(none followed), and opens and writes a protected file given its password. The password
+(none followed), a page's marks and fields as the file holds them, its certificate signatures, embedded files and
+PDF layers, and opens and writes a protected file given its password. The password
 screen, reading by range, repair notices, the time and memory limits are not built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.

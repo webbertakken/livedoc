@@ -1,9 +1,12 @@
 // The engine over a started reader (docs/specs/035-pdf-documents/security.md "The boundary"): one reader and one
 // writer behind the one interface. It holds one open stored file.
-import type { BakeResult, PdfEngine, PdfOpened } from '../engine-contract';
+import type { BakeResult, PdfEngine, PdfLayer, PdfOpened } from '../engine-contract';
+import { FileSignature } from '../file-signature';
 import { PdfLiveChanges } from '../live-changes';
 import { bakeAddition } from './bake';
 import { PdfReader, type Pdfium } from './reader';
+import { signerOf } from './signer';
+import { layersOf } from './writer';
 
 /** The engine over a started reader; `write` is the writer, the engine's own unless a test hands another. */
 export function pdfEngineOver(
@@ -15,12 +18,15 @@ export function pdfEngineOver(
   // The file held while its password is asked, and the password it opened with: both the engine's alone.
   let waiting: Uint8Array<ArrayBuffer> | null = null;
   let password: string | null = null;
+  // The layers of the open file, read once: the writer reads the whole file to answer them.
+  let layers: Promise<readonly PdfLayer[]> | null = null;
 
   const opening = (bytes: Uint8Array<ArrayBuffer>, given: string | null): PdfOpened => {
     const opened = reader.open(bytes, given ?? '');
     stored = opened.ok ? bytes : null;
     password = opened.ok ? given : null;
     waiting = !opened.ok && opened.needsPassword ? bytes : null;
+    layers = null;
     return opened;
   };
 
@@ -60,10 +66,21 @@ export function pdfEngineOver(
     pageText: async (index) => reader.pageText(index),
     selectText: async (index, from, to) => reader.selectText(index, from, to),
     fileMarks: async (index) => reader.fileMarks(index),
+    fields: async (index) => reader.fields(index),
+    signatures: async () => {
+      const bytes = stored?.length ?? 0;
+      return reader
+        .signatures()
+        .map(({ read, contents }) =>
+          FileSignature.of(read, bytes, contents ? signerOf(contents) : null),
+        );
+    },
+    embeddedFiles: async () => reader.embeddedFiles(),
+    layers: async () => (stored ? (layers ??= layersOf(stored, password)) : []),
     bake,
     close: async () => {
       reader.close();
-      stored = waiting = password = null;
+      stored = waiting = password = layers = null;
     },
   };
 }

@@ -329,7 +329,7 @@ describe('the outline', () => {
     // A link that leads nowhere is no link.
     expect(await engine.links(0)).toEqual([]);
     // A mark the file gives no name is named by its object.
-    expect(await engine.fileMarks(0)).toEqual([
+    expect(await engine.fileMarks(0)).toMatchObject([
       { id: 'o:13', subtype: 'highlight', quads: [[72, 720, 172, 720, 72, 700, 172, 700]] },
     ]);
   });

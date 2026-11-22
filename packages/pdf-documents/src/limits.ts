@@ -48,3 +48,23 @@ export const PDF_LOG_UPDATES = 500;
 export const PDF_LOCAL_SAVE_MS = 500;
 /** The most base64 one `pdf` op carries: inside the room's 256 KB message cap with room for the envelope. */
 export const PDF_FRAME_CHARS = 200_000;
+/** (default) A coordinate read from a file is held within two pages' reach of the page's origin (security.md "Limits"). */
+export const PDF_MAX_COORDINATE = 28_800;
+/** (default) Marks read on one page; a page past it reads its first, and the rest still draw. Safe range: 500 to 50,000. */
+export const PDF_PAGE_MAX_MARKS = 5_000;
+/** (default) Fields read from one file, and places read on one page (fields.md "Limits"). */
+export const PDF_MAX_FIELDS = 10_000;
+/** (default) A field's full name (building-fields.md "Limits"). */
+export const PDF_FIELD_NAME_MAX_CHARS = 255;
+/** (default) One field value, unless the field's own maximum is smaller (fields.md "Limits"). */
+export const PDF_FIELD_VALUE_MAX_CHARS = 100_000;
+/** (default) Options of one dropdown or list (building-fields.md "Limits"). */
+export const PDF_FIELD_OPTIONS_MAX = 5_000;
+/** (default) Signatures read from one file; more are kept in the file and not listed (signing.md "Limits"). */
+export const PDF_MAX_SIGNATURES = 1_000;
+/** (default) One signature's bytes read; a signature with its certificates is tens of kilobytes. */
+export const PDF_SIGNATURE_MAX_BYTES = 1_048_576;
+/** (default) Embedded files listed and added here; a file with more keeps them all (document-tools.md "Limits"). */
+export const PDF_EMBEDDED_FILES_MAX = 500;
+/** (default) PDF layers read from one file; more are shown as the file sets them and not listed. */
+export const PDF_MAX_LAYERS = 1_000;

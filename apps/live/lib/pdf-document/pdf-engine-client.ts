@@ -4,12 +4,16 @@
 // and says so once (opening.md "Refusals": `pdf_stopped`).
 import type {
   BakeResult,
+  EmbeddedFiles,
   FileMark,
+  FileSignature,
   Outline,
   PageBitmap,
+  PageField,
   PageLink,
   PageText,
   PdfEngine,
+  PdfLayer,
   PdfOpened,
   TextSelection,
 } from '@livedoc/pdf-documents';
@@ -41,6 +45,10 @@ const STOPPED = {
   pageText: null,
   selectText: null,
   fileMarks: [] as readonly FileMark[],
+  fields: [] as readonly PageField[],
+  signatures: [] as readonly FileSignature[],
+  embeddedFiles: { files: [], cut: false } satisfies EmbeddedFiles,
+  layers: [] as readonly PdfLayer[],
   bake: { ok: false, refusal: 'unreadable' } satisfies BakeResult,
   close: undefined,
 } as const;
@@ -96,6 +104,10 @@ export function pdfEngineClient(
     selectText: (index, from, to) =>
       ask<TextSelection | null>({ method: 'selectText', args: [index, from, to] }),
     fileMarks: (index) => ask<readonly FileMark[]>({ method: 'fileMarks', args: [index] }),
+    fields: (index) => ask<readonly PageField[]>({ method: 'fields', args: [index] }),
+    signatures: () => ask<readonly FileSignature[]>({ method: 'signatures', args: [] }),
+    embeddedFiles: () => ask<EmbeddedFiles>({ method: 'embeddedFiles', args: [] }),
+    layers: () => ask<readonly PdfLayer[]>({ method: 'layers', args: [] }),
     bake: (liveChanges) => ask<BakeResult>({ method: 'bake', args: [liveChanges] }),
     close: () => ask<void>({ method: 'close', args: [] }),
     terminate: () => stop('closed', false),

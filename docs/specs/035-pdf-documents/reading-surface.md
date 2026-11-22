@@ -199,6 +199,8 @@ the choice is remembered per person per document.
 | **Signatures**     | [The signatures panel](signing.md#the-signatures-panel)                                                | Nothing                                                                               |
 | **Fields**         | Every field in tab order, with its type and whether it is filled; a press goes to it                   | The field list of [Building fields](building-fields.md)                               |
 
+- **Layers** lists the file's PDF layers by name in the file's order, each shown or hidden as the file sets it; a
+  layer the file locks shows its state and takes no change.
 - A panel with nothing to show says so in one line ("This PDF has no bookmarks.") and, in Editing, offers the first
   one ("Add a bookmark").
 - Thumbnails are drawn as the pages are scrolled to, light paper always, marks included.

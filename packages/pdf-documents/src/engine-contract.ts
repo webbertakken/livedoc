@@ -1,6 +1,9 @@
 // The one interface a PDF is read, drawn and written through (docs/specs/035-pdf-documents/security.md "The
 // boundary", opening.md "What is read", saving.md): the surface, the api and the CLI speak only this, never the
 // library beneath it. Every value that crosses it is typed and bounded; nothing of a file crosses as markup.
+import type { EmbeddedFiles } from './embedded-file';
+import type { PageField } from './file-field';
+import type { FileSignature } from './file-signature';
 import type { LinkTarget } from './link-target';
 import type { Quad } from './mark';
 import type { PageName } from './page-name';
@@ -103,13 +106,44 @@ export type PagePoint = { readonly x: number; readonly y: number };
 /** The text between two points of a page, with the quadrilaterals of the glyphs it covers, in page space. */
 export type TextSelection = { readonly text: string; readonly quads: readonly Quad[] };
 
-/** A mark the file itself holds, as far as the engine reads it. */
+/** A mark the file itself holds, as the file says it (marks.md "In the file", comments.md "In the file"). */
 export type FileMark = {
   /** Its `NM` where it has one, else `o:<object number>`. */
   readonly id: string;
   /** The file's own word for it, in lower case (`highlight`, `text`, `ink`). */
   readonly subtype: string;
+  /** Its box in page space: left, bottom, right, top. */
+  readonly rect: readonly [number, number, number, number];
+  /** The glyphs a text mark covers; none for every other kind. */
   readonly quads: readonly Quad[];
+  /** `#rrggbb`; null where the file names no colour. */
+  readonly colour: string | null;
+  /** 0 to 1; 1 where the file names none. */
+  readonly opacity: number;
+  /** The name the file gives as its author. A file can say any name: it is never a LiveDoc person's. */
+  readonly author: string;
+  /** Its words: the first comment of its thread, or a Text mark's text. */
+  readonly words: string;
+  /** The short label its maker gave it; empty where there is none. */
+  readonly subject: string;
+  /** The dates as the file writes them (`D:20261121140203Z`); empty where it gives none. */
+  readonly created: string;
+  readonly modified: string;
+  /** The mark it answers, by id, and whether it is grouped with it rather than a reply; null for a mark of its own. */
+  readonly answers: { readonly mark: string; readonly grouped: boolean } | null;
+  /** A state reply's state (`Review`, `Accepted`); null for every other mark. */
+  readonly state: { readonly model: string; readonly state: string } | null;
+};
+
+/** A PDF layer: optional content a file shows or hides (reading-surface.md "The left panel"). */
+export type PdfLayer = {
+  /** `o:<object number>`. */
+  readonly id: string;
+  readonly name: string;
+  /** Whether the file shows it as it opens. */
+  readonly visible: boolean;
+  /** Whether the file asks that its state is not changed. */
+  readonly locked: boolean;
 };
 
 /** Why a bake was not handed out (saving.md "The validators' claim", "Addition or rewrite"). */
@@ -147,6 +181,14 @@ export type PdfEngine = {
   selectText(index: number, from: PagePoint, to: PagePoint): Promise<TextSelection | null>;
   /** The marks the file itself holds on a page. */
   fileMarks(index: number): Promise<readonly FileMark[]>;
+  /** The places on a page where the file's fields show, each with its field's value. */
+  fields(index: number): Promise<readonly PageField[]>;
+  /** The certificate signatures the file holds, as read: none is checked here. */
+  signatures(): Promise<readonly FileSignature[]>;
+  /** The files the PDF carries inside it, listed and never opened. */
+  embeddedFiles(): Promise<EmbeddedFiles>;
+  /** The file's PDF layers, in the file's order; none where it has none. */
+  layers(): Promise<readonly PdfLayer[]>;
   /** The open stored file with the live changes (one Yjs update) written in. */
   bake(liveChanges: Uint8Array): Promise<BakeResult>;
   close(): Promise<void>;

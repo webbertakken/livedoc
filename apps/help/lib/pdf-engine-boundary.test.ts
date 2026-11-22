@@ -57,6 +57,10 @@ describe('the engine’s boundary', () => {
     expect(sourcesNaming('pdfium|libpdf')).toEqual([]);
   });
 
+  it('keeps the names of what reads a signature’s bytes inside the engine', () => {
+    expect(sourcesNaming('pkijs|asn1js')).toEqual([]);
+  });
+
   it('finds a name where one is', () => {
     // The guard itself reads the tree: a pattern that matched nothing anywhere would pass for the wrong reason.
     const inside = execFileSync(
