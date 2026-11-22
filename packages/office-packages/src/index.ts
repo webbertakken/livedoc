@@ -30,6 +30,7 @@ export { escapeXmlAttribute, escapeXmlText, XML_DECLARATION } from './xml/xml-wr
 export { isSafeEntryName } from './odf/entry-names';
 export { ODF_MEDIA_TYPES, ODF_NS, ODF_VERSION } from './odf/odf-namespaces';
 export {
+  isDroppedOdfEntry,
   looksLikeXml,
   odfManifest,
   PACKAGE_DATE,
@@ -93,6 +94,8 @@ export {
 } from './ooxml/ooxml-namespaces';
 export { oleKind } from './ooxml/ole';
 export {
+  isDroppedOoxmlPart,
+  isDroppedOoxmlRelationship,
   readOoxmlPackage,
   relationshipPartOf,
   relationshipsXml,

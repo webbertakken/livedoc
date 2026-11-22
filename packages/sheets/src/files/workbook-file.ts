@@ -71,6 +71,8 @@ export type FileLoss =
   | { k: 'styles_unread'; sheet: string }
   | { k: 'kept_unread'; count: number }
   | { k: 'kept_dropped'; count: number }
+  // Kept items, relationships and entries past the sizes a spreadsheet stores (D113).
+  | { k: 'kept_too_large'; count: number }
   | { k: 'entries_dropped'; entries: string[] }
   // Kept pictures and objects a flat file cannot hold (D111).
   | { k: 'parts_left'; count: number }

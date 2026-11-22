@@ -42,6 +42,10 @@ const WRITTEN_TYPES: ReadonlySet<string> = new Set([
 const WRITTEN_PARTS =
   /^(xl\/workbook\.xml|xl\/worksheets\/[^/]*\.xml|xl\/styles\.xml|xl\/sharedStrings\.xml|xl\/metadata\.xml|docProps\/(core|app)\.xml)$/;
 
+/** Whether the XLSX writer writes a part of this name itself (relationships and content types too): none is kept. */
+export const isWrittenXlsxPart = (name: string): boolean =>
+  WRITTEN_PARTS.test(name) || name === '[Content_Types].xml' || name.endsWith('.rels');
+
 // The workbook's and a worksheet's children the reader reads or the writer writes.
 export const WORKBOOK_READ: ReadonlySet<string> = new Set(['workbookPr', 'sheets']);
 export const WORKSHEET_READ: ReadonlySet<string> = new Set(['dimension', 'sheetData']);

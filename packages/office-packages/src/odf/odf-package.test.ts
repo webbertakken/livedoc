@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { writeZip as writeTestZip } from '../zip/zip-writer-fixture';
 import { isSafeEntryName } from './entry-names';
-import { looksLikeXml, odfManifest, readOdfPackage, writeOdfPackage } from './odf-package';
+import {
+  isDroppedOdfEntry,
+  looksLikeXml,
+  odfManifest,
+  readOdfPackage,
+  writeOdfPackage,
+} from './odf-package';
 import { ODF_MEDIA_TYPES } from './odf-namespaces';
 
 const TEXT = ODF_MEDIA_TYPES.text;
@@ -9,6 +15,14 @@ const xml = (s: string) => new TextEncoder().encode(s);
 const MANIFEST_NS = 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0';
 
 // docs/specs/020-import-export/office-packages.md "Writing a package".
+describe('isDroppedOdfEntry', () => {
+  it('names what may run or signs bytes, and nothing else', () => {
+    expect(isDroppedOdfEntry('Basic/Standard/Module1.xml')).toBe(true);
+    expect(isDroppedOdfEntry('META-INF/documentsignatures.xml')).toBe(true);
+    expect(isDroppedOdfEntry('Pictures/1.png')).toBe(false);
+  });
+});
+
 describe('writeOdfPackage', () => {
   it('writes mimetype first and stored, then the manifest, then the entries', async () => {
     const bytes = writeOdfPackage(TEXT, [

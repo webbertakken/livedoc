@@ -12,6 +12,7 @@
 // every tab of the browser in step).
 
 import type { SheetJson, WorkbookRecord } from '@livedoc/sheets';
+import type { KeptContent, StoredAt } from '@livedoc/sheets/files';
 import type { LiveDoc, DocumentSummary, RecordedIntent, TabSummary } from '@livedoc/api-schema';
 import { utcDay } from '@livedoc/api-schema';
 import { drawnCount, migrateStoredTab, stampTabKind, tabKindOf } from '@livedoc/document';
@@ -85,6 +86,9 @@ export type OfflineDocumentRecord = {
   // The workbook row when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md "Offline documents"):
   // its file format and settings. Absent for any other document.
   workbook?: WorkbookRecord;
+  // A spreadsheet's kept content (docs/specs/029-sheets/sheet-store.md "Offline documents"): what the file it was
+  // opened from held that the model does not, written back into files of its standard. Absent when it keeps none.
+  kept?: KeptContent<StoredAt>;
   // Each text document tab's whole live state and when it was saved (docs/specs/034-text-documents/
   // live-editing-and-storage.md "A text document in This Browser"). Optional: a tab without one reads as the seed.
   textDocuments?: OfflineTextDocumentState[];

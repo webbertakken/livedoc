@@ -20,24 +20,30 @@ export type KeptStandard = 'odf' | 'ooxml';
  * `stylesheet` (`dxfs`, `tableStyles`), `sheet-attribute` (its `sheet` element's), `worksheet` and
  * `worksheet-attribute` (its root's).
  */
-export type KeptPlace =
-  | 'scripts'
-  | 'styles'
-  | 'settings'
-  | 'spreadsheet-before'
-  | 'spreadsheet-after'
-  | 'table-before'
-  | 'table-after'
-  | 'table-attribute'
-  | 'cell'
-  | 'cell-after'
-  | 'cell-attribute'
-  | 'workbook'
-  | 'workbook-attribute'
-  | 'stylesheet'
-  | 'sheet-attribute'
-  | 'worksheet'
-  | 'worksheet-attribute';
+export const KEPT_PLACES = [
+  'scripts',
+  'styles',
+  'settings',
+  'spreadsheet-before',
+  'spreadsheet-after',
+  'table-before',
+  'table-after',
+  'table-attribute',
+  'cell',
+  'cell-after',
+  'cell-attribute',
+  'workbook',
+  'workbook-attribute',
+  'stylesheet',
+  'sheet-attribute',
+  'worksheet',
+  'worksheet-attribute',
+] as const;
+export type KeptPlace = (typeof KEPT_PLACES)[number];
+
+/** Whether a value names a place kept content sits at. */
+export const isKeptPlace = (value: unknown): value is KeptPlace =>
+  (KEPT_PLACES as readonly unknown[]).includes(value);
 
 /** An item's anchor in a file: its sheet's index, its cell's zero-based row and column. */
 export type FileAt = { sheet?: number; r?: number; c?: number };

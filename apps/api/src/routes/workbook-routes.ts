@@ -9,6 +9,7 @@ import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
 import { writeWorkbook } from '@livedoc/sheets/files';
 import { getDocumentMeta } from '../db';
 import { readWorkbook } from '../db/workbook';
+import { readKept } from '../db/workbook-kept';
 import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, forbidden, methodNotAllowed } from '../responses';
 import type { DocumentRouteContext } from './context';
@@ -16,6 +17,7 @@ import { openWorkbook } from './sheet-page-routes';
 import { sheetCaller, workbookRefused } from './sheet-route-kit';
 import { saveSettings } from './workbook-settings-route';
 import { conversionLosses, convert } from './workbook-conversion-route';
+import { keepFileContent, readKeptContent } from './workbook-kept-route';
 import { allowImports, fetchImport } from './sheet-imports-route';
 import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
@@ -43,12 +45,14 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   if (!record) return workbookRefused('workbook_not_found', 404);
   const asked = ctx.url.searchParams.get('format') ?? record.format;
   if (!WorkbookRecord.isFormat(asked)) return workbookRefused('file_type_unknown', 400);
-  const [meta, sheets] = await Promise.all([
+  const [meta, sheets, kept] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
     loadSpreadsheetSheets(ctx.env, documentId),
+    readKept(ctx.env, documentId),
   ]);
   const name = meta?.name ?? '';
-  const written = writeWorkbook(sheets, record, name, asked);
+  // The file's kept content goes into files of its standard only (standard-mapping.md "Unknown content", D109).
+  const written = writeWorkbook(sheets, record, name, asked, kept);
   const body = written.data;
   console.info(
     `[workbook] file written document=${documentId} format=${asked} sheets=${sheets.length} bytes=${body.byteLength} losses=${written.losses.length} ms=${Date.now() - started}`,
@@ -79,6 +83,10 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
   if (segments.length === 5 && segments[4] === 'conversion') {
     if (request.method === 'GET') return conversionLosses(ctx, documentId);
     return request.method === 'POST' ? convert(ctx, documentId) : methodNotAllowed();
+  }
+  if (segments.length === 5 && segments[4] === 'kept') {
+    if (request.method === 'GET') return readKeptContent(ctx, documentId);
+    return request.method === 'POST' ? keepFileContent(ctx, documentId) : methodNotAllowed();
   }
   if (segments.length === 5 && segments[4] === 'imports') {
     if (request.method === 'GET') return fetchImport(ctx, documentId);

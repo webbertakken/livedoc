@@ -37,6 +37,29 @@ describe('offlineWorkbookConversion', () => {
     expect((await offlineWorkbookConversion('d1', 'fods')).losses).toEqual([]);
   });
 
+  // files-and-print.md "Converting" (D109): the kept content a file of the other standard leaves behind is listed.
+  it('lists the kept content the other standard leaves behind', async () => {
+    const kept = {
+      standard: 'odf' as const,
+      items: [
+        {
+          place: 'table-after' as const,
+          xml: '<table:shapes/>',
+          ns: {},
+          at: { sheet: 'sheetOne1' },
+        },
+      ],
+      relationships: [],
+      parts: [],
+    };
+    await offlinePutRecord(testRecord({ workbook, kept, sheets: [sheet] }));
+    expect((await offlineWorkbookConversion('d1', 'xlsx')).losses).toContainEqual({
+      k: 'kept',
+      count: 1,
+      kinds: ['drawings'],
+    });
+  });
+
   // formulas.md, the file's meaning (D100): a file's meaning becomes the new format's; Google's stays.
   it('gives a file’s meaning the new format’s', async () => {
     const opened = WorkbookRecord.opened(workbook, 'ods');

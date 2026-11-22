@@ -7,6 +7,11 @@ vi.mock('./api-client', () => ({
   apiLoadDocument: vi.fn(),
   apiLoadTab: vi.fn(),
   apiCreateDocument: vi.fn(),
+  apiDeleteDocument: vi.fn(async () => {}),
+}));
+vi.mock('./api/workbook-kept', () => ({
+  fetchKept: vi.fn(async () => undefined),
+  sendKept: vi.fn(),
 }));
 
 vi.mock('./api/text-documents', () => ({ apiLoadTextDocumentState: vi.fn() }));
@@ -17,7 +22,8 @@ vi.mock('./offline/offline-store', () => ({
   offlinePutRecord: vi.fn(async () => {}),
 }));
 
-import { apiCreateDocument, apiLoadDocument, apiLoadTab } from './api-client';
+import { apiCreateDocument, apiDeleteDocument, apiLoadDocument, apiLoadTab } from './api-client';
+import { fetchKept, sendKept } from './api/workbook-kept';
 import { apiLoadTextDocumentState } from './api/text-documents';
 import { isOfflineId, offlineGetRecord, offlinePutRecord } from './offline/offline-store';
 import { ApiError } from './api/core';
@@ -87,6 +93,60 @@ describe('duplicateDocument', () => {
     mLoadTab.mockResolvedValue(tab('t1'));
     await duplicateDocument('owner', 'src');
     expect(mCreate.mock.calls[0]![1]).toMatchObject({ workbook });
+  });
+
+  // sheet-store.md "Copies and exports": a spreadsheet's kept content comes with it, sent after the create.
+  describe("a spreadsheet's kept content", () => {
+    const kept = { standard: 'odf', items: [], relationships: [], parts: [] } as never;
+    const spreadsheet = () => {
+      mLoadDocument.mockResolvedValue({
+        ...sourceDocument([{ id: 't1' }])!,
+        workbook: {} as never,
+      });
+      mLoadTab.mockResolvedValue(tab('t1'));
+    };
+
+    it('is read from the source and sent to the copy', async () => {
+      spreadsheet();
+      vi.mocked(fetchKept).mockResolvedValueOnce(kept);
+      const newId = await duplicateDocument('owner', 'src');
+      expect(vi.mocked(fetchKept).mock.calls[0]![0]).toEqual({
+        ownerId: 'owner',
+        documentId: 'src',
+        shareCode: null,
+      });
+      expect(vi.mocked(sendKept).mock.calls[0]).toEqual([
+        { ownerId: 'owner', documentId: newId, shareCode: null },
+        kept,
+      ]);
+    });
+
+    it('fails the copy when it cannot be read, before any create', async () => {
+      spreadsheet();
+      vi.mocked(fetchKept).mockRejectedValueOnce(new Error('down'));
+      expect(await duplicateDocument('owner', 'src')).toBeUndefined();
+      expect(mCreate).not.toHaveBeenCalled();
+    });
+
+    it('moves the half-made copy to the Bin when it is refused', async () => {
+      spreadsheet();
+      vi.mocked(fetchKept).mockResolvedValueOnce(kept);
+      vi.mocked(sendKept).mockRejectedValueOnce(new Error('refused'));
+      vi.mocked(apiDeleteDocument).mockRejectedValueOnce(new Error('offline'));
+      expect(await duplicateDocument('owner', 'src')).toBeUndefined();
+      expect(apiDeleteDocument).toHaveBeenCalledWith('owner', mCreate.mock.calls[0]![1].id);
+    });
+
+    it('comes with a copy made in This Browser', async () => {
+      spreadsheet();
+      vi.mocked(isOfflineId).mockImplementation(async (id) => id === 'src');
+      vi.mocked(offlineGetRecord).mockResolvedValue({ id: 'x', kept } as never);
+      await duplicateDocument('owner', 'src');
+      expect(vi.mocked(offlinePutRecord).mock.calls[0]![0]).toMatchObject({ kept });
+      expect(fetchKept).not.toHaveBeenCalled();
+      vi.mocked(offlineGetRecord).mockReset();
+      vi.mocked(isOfflineId).mockImplementation(async () => false);
+    });
   });
 
   // docs/specs/034-text-documents/live-editing-and-storage.md "Copies": each text document's state seeds the copy.

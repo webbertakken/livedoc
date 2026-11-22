@@ -25,7 +25,13 @@
 
 import type { CreationIntent, DocumentPlacement, RecordedIntent } from '@livedoc/api-schema';
 import { remapTabLinks, tabKindOf, type Tab } from '@livedoc/document';
-import { apiCreateDocument, apiLoadDocument, apiLoadTab, apiSaveDocumentMeta } from './api-client';
+import {
+  apiCreateDocument,
+  apiDeleteDocument,
+  apiLoadDocument,
+  apiLoadTab,
+  apiSaveDocumentMeta,
+} from './api-client';
 import { ApiError } from './api/core';
 import {
   isOfflineId,
@@ -37,6 +43,7 @@ import { fetchItems } from './api/items';
 import { storeAsCreates } from '@livedoc/items';
 import { fetchAllSheets, sheetAsCreate } from './api/sheets';
 import { apiLoadTextDocumentState } from './api/text-documents';
+import { fetchKept, sendKept } from './api/workbook-kept';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 
 // The refusals that mean "not beside the source for this person", where the copy is filed at the
@@ -49,6 +56,22 @@ const PLACE_REFUSALS: ReadonlySet<string> = new Set([
 const EXPLICIT_ROOT: DocumentPlacement = { teamId: null, folderId: null };
 
 // The source's recorded creation intent, carried unchanged; none when it is unknown.
+// The copy's kept content sent after its create; a refusal moves the half-made copy to the Bin and fails the copy.
+async function keptSent(
+  ownerId: string,
+  documentId: string,
+  kept: NonNullable<Awaited<ReturnType<typeof fetchKept>>>,
+): Promise<boolean> {
+  try {
+    await sendKept({ ownerId, documentId, shareCode: null }, kept);
+    return true;
+  } catch (error) {
+    console.warn('[duplicate] kept content refused', { documentId, error: String(error) });
+    await apiDeleteDocument(ownerId, documentId).catch(() => {});
+    return false;
+  }
+}
+
 function recordedIntentOf(src: RecordedIntent): CreationIntent | undefined {
   if (!src.opensIn || !src.tabKind) return undefined;
   return {
@@ -124,10 +147,19 @@ export async function duplicateDocument(
       );
       // Each text document's state under its tab's new id (docs/specs/034-text-documents/
       // live-editing-and-storage.md "A text document in This Browser").
-      const textDocuments = ((await offlineGetRecord(sourceId))?.textDocuments ?? [])
+      const source = await offlineGetRecord(sourceId);
+      const textDocuments = (source?.textDocuments ?? [])
         .filter((t) => tabIdMap.has(t.tabId))
         .map((t) => ({ ...t, tabId: tabIdMap.get(t.tabId)! }));
-      if (itemStore?.items.length || src.itemTypes || sheets.length || textDocuments.length) {
+      // A spreadsheet's kept content (sheet-store.md "Copies and exports"), anchored to the sheet ids the copy keeps.
+      const kept = source?.kept;
+      if (
+        itemStore?.items.length ||
+        src.itemTypes ||
+        sheets.length ||
+        textDocuments.length ||
+        kept
+      ) {
         const rec = await offlineGetRecord(newId);
         if (rec) {
           await offlinePutRecord({
@@ -143,6 +175,7 @@ export async function duplicateDocument(
             ...(src.itemTypes ? { itemTypes: src.itemTypes } : {}),
             ...(sheets.length ? { sheets } : {}),
             ...(textDocuments.length ? { textDocuments } : {}),
+            ...(kept ? { kept } : {}),
           });
         }
       }
@@ -178,6 +211,17 @@ export async function duplicateDocument(
     console.warn('[duplicate] text document state unreadable', { sourceId, error: String(error) });
     return undefined;
   }
+  // A spreadsheet's kept content comes with it (sheet-store.md "Copies and exports"); one that cannot be read fails
+  // the copy rather than leave it behind.
+  let kept: Awaited<ReturnType<typeof fetchKept>>;
+  try {
+    kept = src.workbook
+      ? await fetchKept({ ownerId, documentId: src.id, shareCode: null })
+      : undefined;
+  } catch (error) {
+    console.warn('[duplicate] kept content unreadable', { sourceId, error: String(error) });
+    return undefined;
+  }
   const create = (place: DocumentPlacement) =>
     apiCreateDocument(ownerId, {
       id: newId,
@@ -204,6 +248,7 @@ export async function duplicateDocument(
       return undefined;
     }
   }
+  if (kept && !(await keptSent(ownerId, newId, kept))) return undefined;
   // Tab-folder structure (docs/specs/006-document/tab-folders.md) doesn't ride the create — the seed
   // path strips per-tab `folder` — so it's re-applied via the same meta
   // PUT the autosave uses. Best-effort: a copy with loose tabs beats no

@@ -138,6 +138,8 @@ describe('workbenchRouteVerdict', () => {
     ['GET', 'documents/doc1/workbook/file'],
     ['GET', 'documents/doc1/workbook/conversion'],
     ['POST', 'documents/doc1/workbook/conversion'],
+    ['GET', 'documents/doc1/workbook/kept'],
+    ['POST', 'documents/doc1/workbook/kept'],
     ['PUT', 'documents/doc1/workbook/settings'],
     ['POST', 'documents/doc1/workbook/sheets'],
     ['DELETE', 'documents/doc1/workbook/sheets/s1'],

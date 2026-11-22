@@ -20,6 +20,7 @@ import {
   type OfflineDocumentRecord,
 } from './offline-store';
 import { fetchAllSheets } from '../api/sheets';
+import { fetchKept } from '../api/workbook-kept';
 import { apiLoadTextDocumentState } from '../api/text-documents';
 import {
   OfflineSyncIncompleteError,
@@ -106,6 +107,8 @@ async function downloadAndRemoveCloudCopy(
   const itemStore = await fetchItems({ ownerId, documentId, shareCode, tabId: null });
   // And the sheet store, all or nothing (docs/specs/029-sheets/sheet-store.md "Offline documents").
   const sheets = await fetchAllSheets({ ownerId, documentId, shareCode, tabId: null });
+  // And a spreadsheet's kept content, all or nothing (sheet-store.md "Offline documents").
+  const kept = liveDoc.workbook ? await fetchKept({ ownerId, documentId, shareCode }) : undefined;
   // And every text document's state, all or nothing (docs/specs/034-text-documents/live-editing-and-storage.md "A text
   // document in This Browser"): a failed read throws and aborts before the server copy goes.
   const now = Date.now();
@@ -159,6 +162,7 @@ async function downloadAndRemoveCloudCopy(
     ...(sheets.length ? { sheets } : {}),
     // A spreadsheet stays one (docs/specs/029-sheets/sheet-store.md "Offline documents").
     ...(liveDoc.workbook ? { workbook: liveDoc.workbook } : {}),
+    ...(kept ? { kept } : {}),
     ...(textDocuments.length ? { textDocuments } : {}),
   };
   await offlinePutRecord(rec);

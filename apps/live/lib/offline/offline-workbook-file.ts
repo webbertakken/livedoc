@@ -18,7 +18,8 @@ export async function offlineWorkbookFile(
   const rec = await offlineGetRecord(documentId);
   if (!rec?.workbook) throw new ApiError('workbook file', 404, 'workbook_not_found');
   const sheets = (await offlineFetchSheets(documentId, null)).map(sheetFromJson);
-  const written = writeWorkbook(sheets, rec.workbook, rec.name, format);
+  // Its kept content goes into files of its standard only (standard-mapping.md "Unknown content", D109).
+  const written = writeWorkbook(sheets, rec.workbook, rec.name, format, rec.kept);
   debugLog('[workbook] offline file written', {
     format,
     sheets: sheets.length,

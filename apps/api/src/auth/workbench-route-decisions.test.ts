@@ -64,6 +64,9 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'GET /documents/{id}/workbook/conversion': 'allow',
   'POST /documents/{id}/workbook/conversion': 'allow',
   'PUT /documents/{id}/workbook/settings': 'allow',
+  // Its kept content, the file it was opened from, and nothing outside it.
+  'GET /documents/{id}/workbook/kept': 'allow',
+  'POST /documents/{id}/workbook/kept': 'allow',
   'GET /documents/{id}/workbook/imports': 'confined',
   'POST /documents/{id}/workbook/imports': 'confined',
   'POST /documents/{id}/workbook/sheets': 'allow',

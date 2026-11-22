@@ -3,6 +3,8 @@ import { listZip } from '../zip/zip-reader';
 import { writeZip as writeTestZip } from '../zip/zip-writer-fixture';
 import { OOXML_CONTENT_TYPES, RELATIONSHIP_TYPES, transitionalType } from './ooxml-namespaces';
 import {
+  isDroppedOoxmlPart,
+  isDroppedOoxmlRelationship,
   readOoxmlPackage,
   relationshipPartOf,
   relationshipsXml,
@@ -233,5 +235,14 @@ describe('writeOoxmlPackage', () => {
     expect(relationshipsXml([{ id: 'r', type: 't', target: 'a&b', external: true }])).toContain(
       '<Relationship Id="r" Type="t" Target="a&amp;b" TargetMode="External"/>',
     );
+  });
+});
+
+describe('isDroppedOoxmlPart and isDroppedOoxmlRelationship', () => {
+  it('names what may run, signs bytes or stands for OLE, and nothing else', () => {
+    expect(isDroppedOoxmlPart('xl/vbaProject.bin')).toBe(true);
+    expect(isDroppedOoxmlPart('xl/media/image1.png')).toBe(false);
+    expect(isDroppedOoxmlRelationship(RELATIONSHIP_TYPES.vbaProject)).toBe(true);
+    expect(isDroppedOoxmlRelationship(RELATIONSHIP_TYPES.styles)).toBe(false);
   });
 });

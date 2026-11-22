@@ -95,3 +95,36 @@ describe('offlineWorkbookFile', () => {
     });
   });
 });
+
+// standard-mapping.md "Unknown content" (D109): the record's kept content goes into a file of its standard only.
+describe('an offline spreadsheet’s kept content', () => {
+  const NAMES =
+    '<table:named-expressions><table:named-range table:name="T" table:base-cell-address="$S.$A$1" table:cell-range-address="$S.$A$1"/></table:named-expressions>';
+  const kept = {
+    standard: 'odf' as const,
+    items: [
+      {
+        place: 'spreadsheet-after' as const,
+        xml: NAMES,
+        ns: { table: 'urn:oasis:names:tc:opendocument:xmlns:table:1.0' },
+        at: {},
+      },
+    ],
+    relationships: [],
+    parts: [],
+  };
+
+  it('is written into a file of its standard and left out of the other’s', async () => {
+    await offlinePutRecord(
+      testRecord({ workbook, kept, sheets: [sheet('sheetOne1', 't1', 'S', [])] }),
+    );
+    const ods = await readOds(
+      new Uint8Array(await (await offlineWorkbookFile('d1', 'ods')).blob.arrayBuffer()),
+    );
+    expect(ods.ok && ods.file.kept?.items.map((item) => item.xml)).toEqual([NAMES]);
+    const xlsx = await readXlsx(
+      new Uint8Array(await (await offlineWorkbookFile('d1', 'xlsx')).blob.arrayBuffer()),
+    );
+    expect(xlsx.ok && JSON.stringify(xlsx.file.kept ?? null)).not.toContain('named-expressions');
+  });
+});

@@ -62,6 +62,10 @@ vi.mock('../api/sheets', () => ({
   fetchCloudSheets: vi.fn(async () => []),
   sheetAsCreate: (s: unknown) => s,
 }));
+vi.mock('../api/workbook-kept', () => ({
+  fetchKept: vi.fn(async () => undefined),
+  sendKept: vi.fn(async () => 0),
+}));
 vi.mock('../api/text-documents', () => ({
   apiLoadTextDocumentState: vi.fn(async () => Uint8Array.of(7, 7)),
 }));
@@ -107,6 +111,7 @@ const sheets = await import('../api/sheets');
 const store = await import('./offline-store');
 const tagsApi = await import('@/lib/api/tags');
 const textDocuments = await import('../api/text-documents');
+const keptApi = await import('../api/workbook-kept');
 const {
   ConversionInProgressError,
   conversionInProgress,
@@ -193,6 +198,23 @@ describe('saveOfflineToCloud (offline -> cloud)', () => {
     } as never);
     await saveOfflineToCloud('d1', 'owner');
     expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({ workbook });
+  });
+
+  // sheet-store.md "Offline documents": the kept content goes after the create; a refusal takes the cloud copy back.
+  it("sends a spreadsheet's kept content after the create, or takes the cloud copy back", async () => {
+    const kept = { standard: 'odf', items: [], relationships: [], parts: [] };
+    const rec = { id: 'd1', name: 'Budget', tabs: [], workbook: {}, kept };
+    vi.mocked(store.offlineGetRecord).mockResolvedValueOnce(rec as never);
+    await saveOfflineToCloud('d1', 'owner');
+    expect(vi.mocked(keptApi.sendKept).mock.calls[0]).toEqual([
+      { ownerId: 'owner', documentId: 'd1', shareCode: null },
+      kept,
+    ]);
+    vi.mocked(store.offlineGetRecord).mockResolvedValueOnce(rec as never);
+    vi.mocked(keptApi.sendKept).mockRejectedValueOnce(new Error('refused'));
+    vi.mocked(core.apiDelete).mockClear();
+    await expect(saveOfflineToCloud('d1', 'owner')).rejects.toThrow('refused');
+    expect(core.apiDelete).toHaveBeenCalledTimes(1);
   });
 
   // docs/specs/034-text-documents/live-editing-and-storage.md "A text document in This Browser".
@@ -351,6 +373,22 @@ describe('takeCloudOffline (cloud -> offline)', () => {
     } as never);
     await takeCloudOffline('d1', 'owner');
     expect(vi.mocked(store.offlinePutRecord).mock.calls[0]![0]).toMatchObject({ workbook });
+  });
+
+  // sheet-store.md "Offline documents": Take offline reads the kept content before the server copy goes.
+  it("keeps a spreadsheet's kept content on the offline record, read before the delete", async () => {
+    const kept = { standard: 'odf', items: [], relationships: [], parts: [] };
+    vi.mocked(keptApi.fetchKept).mockResolvedValueOnce(kept as never);
+    vi.mocked(apiClient.apiLoadDocument).mockResolvedValueOnce({
+      id: 'd1',
+      name: 'Budget',
+      tabs: [{ id: 't1' }],
+      teamId: null,
+      workbook: { format: 'ods' },
+    } as never);
+    await takeCloudOffline('d1', 'owner');
+    expect(vi.mocked(keptApi.fetchKept).mock.calls[0]![0]).toMatchObject({ documentId: 'd1' });
+    expect(vi.mocked(store.offlinePutRecord).mock.calls[0]![0]).toMatchObject({ kept });
   });
 
   // docs/specs/034-text-documents/live-editing-and-storage.md "A text document in This Browser".

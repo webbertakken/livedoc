@@ -471,6 +471,55 @@ const WORKBOOK_MEANING_STEP = `
 ALTER TABLE workbook ADD COLUMN meaning TEXT;
 `;
 
+// A spreadsheet's kept content (db/workbook-kept.ts; docs/specs/029-sheets/sheet-store.md "In a spreadsheet", Unknown
+// content): the standard it is of and its bytes on the workbook row; its items and relationships in the file's order;
+// its package entries by name, their bytes in chunks under the row cap (D114). A sheet's go with the sheet.
+const WORKBOOK_KEPT_STEP = `
+ALTER TABLE workbook ADD COLUMN kept_standard TEXT;
+ALTER TABLE workbook ADD COLUMN kept_bytes INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE IF NOT EXISTS workbook_kept_items (
+  document_id TEXT    NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  seq         INTEGER NOT NULL,
+  place       TEXT    NOT NULL,
+  xml         TEXT    NOT NULL,
+  ns          TEXT    NOT NULL,
+  sheet_id    TEXT,
+  row_id      TEXT,
+  col_id      TEXT,
+  PRIMARY KEY (document_id, seq),
+  FOREIGN KEY (document_id, sheet_id) REFERENCES sheets (document_id, id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS workbook_kept_relationships (
+  document_id TEXT    NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  seq         INTEGER NOT NULL,
+  source      TEXT    NOT NULL CHECK (source IN ('package', 'workbook', 'sheet')),
+  sheet_id    TEXT,
+  rel_id      TEXT    NOT NULL,
+  type        TEXT    NOT NULL,
+  target      TEXT    NOT NULL,
+  external    INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (document_id, seq),
+  FOREIGN KEY (document_id, sheet_id) REFERENCES sheets (document_id, id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS workbook_kept_parts (
+  document_id TEXT    NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  name        TEXT    NOT NULL,
+  seq         INTEGER NOT NULL,
+  type        TEXT    NOT NULL,
+  rels        TEXT    NOT NULL,
+  size        INTEGER NOT NULL,
+  PRIMARY KEY (document_id, name)
+);
+CREATE TABLE IF NOT EXISTS workbook_kept_chunks (
+  document_id TEXT    NOT NULL,
+  name        TEXT    NOT NULL,
+  idx         INTEGER NOT NULL,
+  bytes       BLOB    NOT NULL,
+  PRIMARY KEY (document_id, name, idx),
+  FOREIGN KEY (document_id, name) REFERENCES workbook_kept_parts (document_id, name) ON DELETE CASCADE
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -487,6 +536,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   liveTabSchemaStep(PDF_LIVE_TAB.tables),
   // A PDF tab's previous versions ("Replacing the stored file").
   PDF_PREVIOUS_STEP,
+  WORKBOOK_KEPT_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

@@ -211,6 +211,12 @@ The table is the contract the readers and writers are tested against, one test p
 - The kept content stays with the workbook in its own format: a file of the other standard leaves it out (a
   conversion's or a download's), and converting back, by **Undo** or later, writes it again where its anchors still
   stand (default, D109).
+- **Kept with the spreadsheet**: opening a file stores its kept content in the spreadsheet's room
+  ([Sheet store](sheet-store.md#in-a-spreadsheet)), and every file the spreadsheet is written as (a download, an
+  offline download, a conversion's list) carries it; so do its copies and its trips to and from This Browser.
+- A spreadsheet keeps up to 16 MB of a file's kept content, each element or attribute up to 1 MB and each package
+  entry up to 5 MB; what is past them is left out, entries the first, with the relationships naming them, and the
+  read names it (`kept_too_large`) (default, D113).
 
 ## Conformance claimed
 
@@ -276,3 +282,5 @@ The code cites each by its id.
 - **D111** Kept package entries in a flat `.fods`: Left out, named (`parts_left`) (default).
 - **D112** XLSX kept content naming a sheet by its place: A defined name follows its sheet; a view's index past the
   last sheet becomes the first (default).
+- **D113** Kept content a spreadsheet stores: Up to 16 MB, an item up to 1 MB, a package entry up to 5 MB; past them
+  left out, entries first, with the relationships naming them, and named (`kept_too_large`) (default).

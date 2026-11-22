@@ -665,6 +665,15 @@ export * from './changesets';
 export * from './items';
 export * from './sheets';
 export * from './workbook';
+// Only its types: its codec reads the office files' entry, so callers import it from '@livedoc/api-schema/workbook-kept'.
+export type {
+  KeptError,
+  KeptPartDto,
+  KeptRelationshipLinkDto,
+  WorkbookKeptDto,
+  WorkbookKeptResponse,
+  WorkbookKeptStoredResponse,
+} from './workbook-kept';
 export * from './telemetry-schema';
 export * from './timing-telemetry';
 export * from './server-emitted-events';

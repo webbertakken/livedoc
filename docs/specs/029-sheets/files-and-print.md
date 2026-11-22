@@ -36,6 +36,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 - The new spreadsheet is made with each sheet's first 1,000 rows and 26 columns and as many of its cells as one
   request of 4 MB carries; the rest follows in writes, in order: each sheet's other rows, its other columns, then its
   cells, each write within a write's own limits (default, D86).
+- Then what the file holds that the model does not, its kept content ([Standard
+  mapping](standard-mapping.md#unknown-content)), up to its sizes (D113), in requests of its own (D114).
 - While it is sent, the title row shows **Opening “<name>”… <n>%**, the share of rows, columns and cells sent.
 - A part refused moves the half-made spreadsheet to the Bin and says the file could not be opened; nothing half-made is
   left in the Explorer.
@@ -73,9 +75,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     each formula calling a function the spreadsheet's meaning (Google's for one made in LiveDoc) and the new format's
     standard answer differently ([The file's meaning](formulas.md#function-catalogue), D100). Converting gives a
     spreadsheet with a file's meaning the new format's; one with Google's keeps it.
-    - **Kept from the file**: "4 things kept from the OpenDocument file stay behind: drawings, notes and named ranges", the
-      kept content ([Standard mapping](standard-mapping.md#unknown-content)) counted by element, named by kind, the
-      three most common first; it stays with the spreadsheet, and converting back writes it again (D109).
+  - **Kept from the file**: "4 things kept from the OpenDocument file stay behind: drawings, notes and named ranges",
+    the kept content ([Standard mapping](standard-mapping.md#unknown-content)) counted by element, named by kind, the
+    three most common first; it stays with the spreadsheet, and converting back writes it again (D109).
   - When there is none: "Everything in this spreadsheet fits the Excel format."
 - While it checks, the dialog says **Checking what the .xlsx file can hold…** with **Convert** off; a check that fails
   says "This spreadsheet could not be checked. Try again." with **Try Again** and **Cancel**, and nothing changes.
