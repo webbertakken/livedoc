@@ -73,7 +73,7 @@ function TagSidebarRow({
   return (
     <SidebarRow
       icon={
-        <span className="flex h-[13px] w-[13px] items-center justify-center">
+        <span className="flex size-icon-chevron items-center justify-center">
           <TagDot colour={tag.colour} />
         </span>
       }

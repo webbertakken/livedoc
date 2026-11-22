@@ -27,7 +27,7 @@ export function ImportFromToolbar({
         const step = e.key === 'ArrowRight' ? 1 : -1;
         buttons[(at + step + buttons.length) % buttons.length]!.focus();
       }}
-      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white py-[2px] pr-[2px] pl-[2px] text-xs font-medium text-slate-500 shadow-sm sm:pl-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+      className="inline-flex items-center gap-1 rounded-menu border border-slate-200 bg-white p-0.5 text-body text-slate-500 shadow-sm sm:pl-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
     >
       <span aria-hidden className="hidden pr-1 text-optical-line sm:inline">
         Import from
@@ -38,7 +38,7 @@ export function ImportFromToolbar({
             type="button"
             aria-label={`Import from ${source.name}`}
             onClick={() => onImport(source.id)}
-            className="flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none dark:hover:bg-slate-700"
+            className="flex size-chip items-center justify-center rounded-control transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none dark:hover:bg-slate-700"
           >
             {source.icon}
           </button>

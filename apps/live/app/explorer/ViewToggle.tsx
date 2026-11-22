@@ -35,7 +35,7 @@ export function ViewToggle({
     <div
       role="group"
       aria-label="View mode"
-      className="flex items-center gap-0.5 rounded-md phone:hidden border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800"
+      className="flex items-center gap-0.5 rounded-menu phone:hidden border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800"
     >
       <ToggleButton
         active={mode === 'list'}
@@ -86,7 +86,7 @@ function ToggleButton({
         aria-label={label}
         aria-pressed={active}
         className={
-          'flex h-7 w-7 items-center justify-center rounded transition ' +
+          'flex size-row items-center justify-center rounded-control transition ' +
           (active
             ? 'bg-white text-brand-700 shadow-sm dark:bg-slate-700 dark:text-brand-300'
             : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200')

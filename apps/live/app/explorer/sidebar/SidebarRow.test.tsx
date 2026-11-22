@@ -31,7 +31,7 @@ describe('SidebarRow', () => {
     row();
     const item = screen.getByRole('treeitem');
     expect(item.querySelector('[data-sidebar-tile]')).toBeNull();
-    expect(item.querySelector('[data-tree-activate]')!.className).toMatch(/\btext-xs\b/);
+    expect(item.querySelector('[data-tree-activate]')!.className).toMatch(/\btext-body\b/);
     expect(item.querySelector('[data-testid="icon"]')).not.toBeNull();
   });
 
@@ -53,7 +53,7 @@ describe('SidebarRow', () => {
     row();
     const gutter = gutterOf(screen.getByRole('treeitem'));
     expect(gutter).not.toBeNull();
-    expect(gutter?.className).toMatch(/\bw-5\b/);
+    expect(gutter?.className).toMatch(/\bsize-chip\b/);
   });
 
   it('puts the gutter before the icon on every row, expandable or not', () => {

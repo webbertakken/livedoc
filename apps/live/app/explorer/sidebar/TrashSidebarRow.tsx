@@ -109,7 +109,7 @@ export function TrashSidebarRow() {
         <>
           <span
             className={
-              over ? 'font-semibold text-white' : target ? 'text-sky-800 dark:text-sky-200' : ''
+              over ? 'font-medium text-white' : target ? 'text-sky-800 dark:text-sky-200' : ''
             }
           >
             {words}
