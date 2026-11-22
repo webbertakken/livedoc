@@ -4,7 +4,16 @@
 import { describe, expect, it } from 'vitest';
 import { DOMSerializer } from 'prosemirror-model';
 import { textDocumentSchema } from './text-document-schema';
-import { CELL_GUIDES, cellStyle, columnWidths, TABLE_CLASS } from './text-document-table-dom';
+import { EditorState } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
+import {
+  CELL_GUIDES,
+  cellStyle,
+  columnWidths,
+  TABLE_CLASS,
+  tableView,
+} from './text-document-table-dom';
+import { setColumnWidths } from './text-document-table-edits';
 
 const s = textDocumentSchema;
 const p = (text: string) => s.nodes.paragraph!.create(null, text ? [s.text(text)] : []);
@@ -90,5 +99,33 @@ describe('a table drawn', () => {
       }),
     ).toEqual({ style: '', guides: 'tblr' });
     expect(cellStyle(null)).toEqual({ style: '', guides: 'tblr' });
+  });
+});
+
+describe('tableView', () => {
+  it("draws the columns again when a cell's width changes, the table itself unchanged", () => {
+    const place = document.createElement('div');
+    const view = new EditorView(place, {
+      state: EditorState.create({ doc: s.nodes.doc!.create(null, [table()]) }),
+      nodeViews: { table: tableView },
+    });
+    const drawn = view.dom.querySelector('table')!;
+    expect([...drawn.querySelectorAll('col')].map((c) => c.style.width)).toEqual([
+      '100pt',
+      '50pt',
+      '60pt',
+    ]);
+    const tr = view.state.tr;
+    setColumnWidths(tr, 1, [130, 20, 60]);
+    view.dispatch(tr);
+    expect(view.dom.querySelector('table')).toBe(drawn);
+    expect([...drawn.querySelectorAll('col')].map((c) => c.style.width)).toEqual([
+      '130pt',
+      '20pt',
+      '60pt',
+    ]);
+    expect(drawn.style.width).toBe('210pt');
+    expect(drawn.querySelector('td')?.textContent).toBe('a');
+    view.destroy();
   });
 });

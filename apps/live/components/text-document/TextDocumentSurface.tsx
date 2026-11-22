@@ -12,6 +12,8 @@ import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
 import { tableEditing } from 'prosemirror-tables';
+import { tableResizePlugin } from '@/lib/text-document/text-document-table-resize-plugin';
+import { tableView } from '@/lib/text-document/text-document-table-dom';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
@@ -306,6 +308,9 @@ export function TextDocumentSurface({
             schema: textDocumentSchema,
             plugins: [
               ySyncPlugin(TextDocumentState.body(doc)),
+              // Columns and rows resized by dragging their borders (tables.md "Working in a table"): before the cells'
+              // selecting, so a press on a border selects no cells.
+              tableResizePlugin(),
               // Cells selected together, tables kept whole as they are edited (tables.md "In the editor").
               tableEditing(),
               changes.plugin,
@@ -398,8 +403,9 @@ export function TextDocumentSurface({
             ],
           }),
           editable: () => live.current.writes,
-          // Page numbers and page counts drawn as their page's (page-layout.md "Page numbers").
-          nodeViews: FIELD_NODE_VIEWS,
+          // Page numbers and page counts drawn as their page's (page-layout.md "Page numbers"); a table's columns drawn
+          // again as its cells' widths change (tables.md "In the editor").
+          nodeViews: { ...FIELD_NODE_VIEWS, table: tableView },
           // Read only in Viewing (or for a Viewer), yet still focusable: the keyboard reads it, and its shortcuts work.
           attributes: () => ({
             role: 'textbox',

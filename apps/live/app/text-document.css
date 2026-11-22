@@ -605,3 +605,23 @@ div.text-document-kept {
     light-dark(rgb(26 115 232 / 0.18), rgb(138 180 248 / 0.24))
   );
 }
+/* Resizing a table by its borders (docs/specs/034-text-documents/tables.md "Working in a table", Resize). */
+.ProseMirror[data-table-resize='column'] {
+  cursor: col-resize;
+}
+.ProseMirror[data-table-resize='row'] {
+  cursor: row-resize;
+}
+.text-document-table-resize-guide {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+}
+.text-document-table-resize-guide[data-kind='column'] {
+  width: 2px;
+  margin-left: -1px;
+}
+.text-document-table-resize-guide[data-kind='row'] {
+  height: 2px;
+  margin-top: -1px;
+}
