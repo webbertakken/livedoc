@@ -4,10 +4,7 @@
 // on at first; each field applies on Enter or when left, an invalid one says so; Reset; without a picture, a hint.
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import {
-  TextDocumentImageOptionsPanel,
-  type PictureSizing,
-} from './TextDocumentImageOptionsPanel';
+import { TextDocumentImageOptionsPanel, type PictureSizing } from './TextDocumentImageOptionsPanel';
 
 const SHOWN: PictureSizing = { width: 72, height: 36, own: { width: 144, height: 72 } };
 
@@ -41,9 +38,9 @@ describe('TextDocumentImageOptionsPanel', () => {
     expect(field('Height').value).toBe('0.5');
     expect(field('Scale width').value).toBe('50');
     expect(field('Scale height').value).toBe('50');
-    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Lock aspect ratio' }).checked).toBe(
-      true,
-    );
+    expect(
+      screen.getByRole<HTMLInputElement>('checkbox', { name: 'Lock aspect ratio' }).checked,
+    ).toBe(true);
   });
 
   it('applies a width in points, locked to the ratio', () => {
