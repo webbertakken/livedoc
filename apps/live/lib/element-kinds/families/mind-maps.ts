@@ -26,5 +26,6 @@ export {
   setMindDirection,
   setMindNumbered,
   summariseMindOutline,
+  tidyMindBranches,
   ungroupMindNodes,
 } from '@livedoc/document';

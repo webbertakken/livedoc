@@ -654,6 +654,35 @@ name after it.
 The selects take connectors too: a selected branch moves, copies and restyles
 with the lines that join it.
 
+### Several nodes selected
+
+A selection of mind nodes is a mind selection, so its menu carries the same **Mind Map** row, whatever the editor
+mode or finish.
+
+- **Which selections.** Every member is a mind node, or a line pinned at both ends to mind nodes (a branch's
+  connector, a link between two nodes). The lines are carried along, never counted as another kind
+  (`mindSelectionNodes`). A selection with any other element keeps the multi-selection menu without it.
+- **What each row does.** Every row acts on the selected nodes, never on the lines:
+  - **Edit Outline**: offered only when every selected node belongs to one map.
+  - **Tidy Map**: every map with a selected node, each laid out once.
+  - **Tidy Branches**: the selected nodes' branches (below); offered only for several nodes.
+  - **Select Branch**: every selected node's branch together; **Select Whole Map**: every map with a selected node.
+  - **Branching**: the rows every selected node offers; the pick goes to each node, a root taking only a flow a
+    root can take. The row ticked is the one every node shares, or none when they differ.
+  - **Spacing**: each selected map takes the pick; the row ticked is the one every map shares, or none.
+
+### Tidy Branches
+
+**Tidy Branches** lays out each selected node's branch, the node and everything under it, in the map's flow, spacing
+and each node's own direction, keeping the selected node where it is.
+
+- A node inside another selected node's branch is arranged once, as part of that branch.
+- Nodes placed by hand inside a branch are put back into the layout, as Tidy Map does for the whole map.
+- Nothing outside the selected branches moves: not the parents, not the siblings, not other trees.
+- The branches' connectors re-anchor by the flow's rule.
+- It is one undo step, synced like any change, and says what it did: **Branches tidied**, or **Branches already
+  tidy** when nothing moved (`Element` · `Changed` · `MindTidyBranches`).
+
 Share roles: all of it is an **Editor's**. A Participant or a Viewer sees no Mind
 Map section, as today; the outline badge on a root keeps its own rule (see
 "Edit Outline").

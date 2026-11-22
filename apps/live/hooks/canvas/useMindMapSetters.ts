@@ -132,6 +132,19 @@ export function useMindMapSetters({
 
   const tidyMindMapSelected = () => tidy(currentSelectionIds());
 
+  // Tidy Branches (docs/specs/009-elements/mind-node.md "Tidy Branches"): each selected node's branch laid out from
+  // the node, one commit, saying what it did; nothing outside the branches moves.
+  const tidyMindBranchesSelected = () => {
+    const ids = currentSelectionIds();
+    if (ids.size === 0) return;
+    const { tidyMindBranches } = mindModel();
+    const changes = tidyMindBranches(elements(), ids) !== elements();
+    if (changes) commit((all) => tidyMindBranches(all, ids));
+    debugLog(`[mind-layout] tidy-branches selected=${ids.size} changed=${changes}`);
+    notify(changes ? 'success' : 'info', changes ? 'Branches tidied' : 'Branches already tidy');
+    track('Element', 'Changed', 'MindTidyBranches');
+  };
+
   // Tidy Map on the map `id` belongs to: the badge on a map's root (element-badges.tsx).
   const tidyMindMap = (id: string) => tidy(new Set([id]));
 
@@ -172,6 +185,7 @@ export function useMindMapSetters({
     setMindFlowSelected,
     setMindSpacingSelected,
     tidyMindMapSelected,
+    tidyMindBranchesSelected,
     tidyMindMap,
     mindArrangeActions,
   };
