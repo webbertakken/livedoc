@@ -27,7 +27,7 @@ import { useExplorerDropTarget } from './useExplorerDropTarget';
 // leaving the box blank.
 export function FolderCardGlyph() {
   return (
-    <span className="[&_svg]:h-9 [&_svg]:w-9">
+    <span className="[&_svg]:h-10 [&_svg]:w-10">
       <FolderSolidIcon open={false} />
     </span>
   );
@@ -75,20 +75,20 @@ export function FolderCard({
       >
         {preview ?? <FolderCardGlyph />}
       </button>
-      <div className="flex items-start gap-1 p-2.5">
+      <div className="flex items-start gap-1 p-3">
         {renaming ? (
           <InlineRenameInput
             initial={folder.name}
             ariaLabel={`Rename ${folder.name}`}
             onCommit={onCommitRename}
             onCancel={onCancelRename}
-            className="min-w-0 flex-1 rounded border border-brand-300 bg-white px-1 py-0 text-sm font-medium text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+            className="min-w-0 flex-1 rounded-control border border-brand-300 bg-white px-1 py-0 text-body text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
           />
         ) : (
           <button
             type="button"
             onClick={onOpen}
-            className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-sm font-medium text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
+            className="flex min-w-0 flex-1 items-center gap-2 text-left text-body text-slate-900 transition hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
           >
             <span className="truncate">{folder.name}</span>
             {childCount > 0 ? <CountBadge count={childCount} className="shrink-0" /> : null}

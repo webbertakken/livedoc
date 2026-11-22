@@ -33,7 +33,7 @@ function idOf(snapshot: Record<string, unknown>, key: string): string | null {
 }
 
 const RENAME_INPUT_CLASS =
-  'min-w-0 w-full rounded border border-brand-300 bg-white px-1 py-0 text-sm font-medium text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100';
+  'min-w-0 w-full rounded-control border border-brand-300 bg-white px-1 py-0 text-body text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100';
 
 // The card's subject as the menu header should name it. Renderers
 // build the on-card subject from the same snapshot keys; this is the

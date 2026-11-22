@@ -1,5 +1,6 @@
 'use client';
 
+import { SIZING_SCALE } from '@livedoc/tailwind-config/sizing';
 import { useMemo } from 'react';
 import { documentEntryPropsFor, type ExplorerViewProps } from '@/app/explorer/explorer-view-props';
 import { LIST_CARD } from '@/components/primitives/surface-classes';
@@ -9,8 +10,8 @@ import { WindowGap, windowChildren } from '@/components/primitives/windowed-list
 import { useEntryKeys } from '../explorer-entry-keys';
 import { useExplorerListPlace } from '../useExplorerListPlace';
 
-// A Details row's height before one is measured.
-const DETAILS_ROW_STRIDE_PX = 41;
+// A Details row's height before one is measured: the scale's row (explorer-details-view.md "Rows").
+const DETAILS_ROW_STRIDE_PX = SIZING_SCALE.height.row;
 import { DetailsDocumentRow } from './DetailsDocumentRow';
 import { DetailsFolderRow } from './DetailsFolderRow';
 import { DetailsHeader } from './DetailsHeader';

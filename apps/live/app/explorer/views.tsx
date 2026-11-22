@@ -7,6 +7,7 @@
 // component that takes its data and callbacks via props: no module-
 // level state, no api calls. The page wires them together.
 
+import { SIZING_SCALE } from '@livedoc/tailwind-config/sizing';
 import Link from 'next/link';
 import { documentEntryPropsFor, type ExplorerViewProps } from '@/app/explorer/explorer-view-props';
 import type { DocumentListItem, SharedWithItem } from '@/lib/api-client';
@@ -25,8 +26,8 @@ import { WindowGap, windowChildren } from '@/components/primitives/windowed-list
 import { useEntryKeys } from './explorer-entry-keys';
 import { useExplorerListPlace } from './useExplorerListPlace';
 
-// A List view row's height before one is measured (thumbnail, name, one line of chips).
-const LIST_ROW_STRIDE_PX = 45;
+// A List view row's height before one is measured: the scale's row (sizing.md "Heights").
+const LIST_ROW_STRIDE_PX = SIZING_SCALE.height.row;
 
 // The Shared with you chip per level (docs/specs/013-workspace/share-roles.md).
 const SHARED_CHIP: Record<AccessLevel, string> = {
@@ -134,7 +135,7 @@ export function ListView(props: ExplorerViewProps) {
     <div className={LIST_CARD}>
       <div
         className={
-          'grid grid-cols-[1fr_140px_40px] items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 ' +
+          'grid grid-cols-[1fr_140px_40px] items-center gap-2 border-b border-slate-200 bg-slate-50/70 min-h-row px-4 text-supporting text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 ' +
           (showOwner
             ? 'sm:grid-cols-[1fr_110px_90px_140px_40px]'
             : 'sm:grid-cols-[1fr_90px_140px_40px]')
@@ -197,7 +198,7 @@ export function SharedList({
   }
   return (
     <div className={LIST_CARD}>
-      <div className="grid grid-cols-[1fr_60px_140px_40px] items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 sm:grid-cols-[1fr_110px_60px_140px_40px]">
+      <div className="grid grid-cols-[1fr_60px_140px_40px] items-center gap-2 border-b border-slate-200 bg-slate-50/70 min-h-row px-4 text-supporting text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 sm:grid-cols-[1fr_110px_60px_140px_40px]">
         <span>Name</span>
         <span className="hidden sm:block">Owner</span>
         <span>Role</span>
@@ -208,11 +209,11 @@ export function SharedList({
         {shared.map((s) => (
           <li
             key={s.id}
-            className="group grid grid-cols-[1fr_60px_140px_40px] items-center gap-2 px-4 py-2 transition hover:bg-slate-50 dark:hover:bg-slate-700 sm:grid-cols-[1fr_110px_60px_140px_40px]"
+            className="group grid min-h-row grid-cols-[1fr_60px_140px_40px] items-center gap-2 px-4 transition pointer-coarse:min-h-11 hover:bg-slate-50 dark:hover:bg-slate-700 sm:grid-cols-[1fr_110px_60px_140px_40px]"
           >
             <Link
               href={`/document/${s.id}?s=${encodeURIComponent(s.shareCode)}`}
-              className="flex min-w-0 items-center gap-2 truncate text-sm font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
+              className="flex min-w-0 items-center gap-2 truncate text-body text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300"
             >
               <DocumentThumbnail
                 ownerId={ownerId}
@@ -225,10 +226,10 @@ export function SharedList({
                 <HighlightedTitle name={s.name} />
               </span>
             </Link>
-            <span className="hidden truncate text-xs text-slate-500 sm:block dark:text-slate-400">
+            <span className="hidden truncate text-supporting text-slate-500 sm:block dark:text-slate-400">
               {s.ownerName || 'Unknown owner'}
             </span>
-            <span className="inline-flex w-fit items-center rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30">
+            <span className="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-supporting text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30">
               {SHARED_CHIP[s.role]}
             </span>
             <RelativeTimeChip at={s.savedAt} />
@@ -237,7 +238,7 @@ export function SharedList({
                 type="button"
                 onClick={() => onDismiss(s.id)}
                 aria-label={DISMISS_SHARED.ariaLabel(s.name)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-600 dark:hover:text-slate-200"
+                className="inline-flex size-chip items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-600 dark:hover:text-slate-200"
               >
                 <DismissSharedIcon />
               </button>
@@ -258,10 +259,10 @@ export function SkeletonRows({ count = 6, framed = true }: { count?: number; fra
   const rows = (
     <ul className="divide-y divide-slate-100 dark:divide-slate-700/60">
       {Array.from({ length: count }).map((_, i) => (
-        <li key={i} className="flex items-center gap-3 px-4 py-3">
-          <span className="h-4 w-4 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-          <span className="h-4 flex-1 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-          <span className="h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+        <li key={i} className="flex min-h-row items-center gap-3 px-4 pointer-coarse:min-h-11">
+          <span className="size-icon-row animate-pulse rounded-control bg-slate-200 dark:bg-slate-700" />
+          <span className="h-icon-row flex-1 animate-pulse rounded-control bg-slate-200 dark:bg-slate-700" />
+          <span className="h-icon-row w-24 animate-pulse rounded-control bg-slate-200 dark:bg-slate-700" />
         </li>
       ))}
     </ul>

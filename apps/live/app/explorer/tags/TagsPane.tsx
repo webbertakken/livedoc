@@ -69,7 +69,7 @@ export function TagsPane({ documents, tagId, onOpenTag, onNewTag, renderDocument
     );
   }
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {tags.map((t) => (
         <TagSection
           key={t.id}
@@ -98,11 +98,11 @@ function TagSection({
   const menu = useTagActionsMenu(tag);
   return (
     <section aria-labelledby={headingId} data-tag-section={tag.id}>
-      <div className="group mb-2.5 flex items-center gap-2.5" onContextMenu={menu.onContextMenu}>
+      <div className="group mb-2 flex items-center gap-2" onContextMenu={menu.onContextMenu}>
         <h2 id={headingId} className="min-w-0">
           <TagChip tag={tag} size="md" onOpen={onOpen} />
         </h2>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           {documentCountLabel(documents.length)}
         </span>
         <span className="flex-1" />
@@ -112,7 +112,7 @@ function TagSection({
       {documents.length > 0 ? (
         renderDocuments(documents)
       ) : (
-        <p className="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-[13px] text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <p className="rounded-surface border border-dashed border-slate-200 px-4 py-3 text-body text-slate-500 dark:border-slate-700 dark:text-slate-400">
           Nothing tagged yet. Choose Tags in a document&rsquo;s menu to add some.
         </p>
       )}

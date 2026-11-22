@@ -23,7 +23,7 @@ import { Glyph as UiGlyph } from '@livedoc/ui';
 
 function Glyph({ d }: { d: string }) {
   return (
-    <UiGlyph size={16} units={24} className="h-4 w-4">
+    <UiGlyph size={16} units={24} className="size-icon-row">
       <path d={d} />
     </UiGlyph>
   );
