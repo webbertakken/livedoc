@@ -4,9 +4,12 @@
 // change, and at once when the page is hidden or the tab closes. Each save sends what changed since the last one,
 // which the store merges into what it holds, so another browser tab's saves are never undone. Browser tabs on the
 // same tab pass each change to each other on the kind's BroadcastChannel, so both stay live. A failed save is
-// written again by itself.
+// written again by itself. A save begun as the page goes is never finished by the browser, so each save "at once"
+// is preceded by a parting copy ("A page's last moment"), which the next binding of the tab joins to the store.
 import * as Y from 'yjs';
 import { debugLog } from '@/lib/debug-log';
+import { joinPartingCopies, partingCopy } from './live-tab-parting';
+import { partingStorage, type PartingStorage } from './live-tab-parting-keys';
 import { liveTabSaveFacts, type SaveFactsSource } from './live-tab-save-status';
 
 /** The origin another browser tab's change is applied with: that tab saves it, so this one never sends it on. */
@@ -44,6 +47,8 @@ export type LiveTabLocalDeps = {
   retryDelayMs?: number;
   /** The channel to the browser's other tabs; none where BroadcastChannel is missing. */
   channel?: () => LiveTabLocalChannel | null;
+  /** Where parting copies are written: the browser's synchronous storage unless a test hands another. */
+  partingStorage?: PartingStorage | null;
 };
 
 export type LiveTabLocalBinding = {
@@ -71,6 +76,10 @@ export async function openLiveTabLocal(
 ): Promise<LiveTabLocalBinding> {
   const { documentId, tabId } = deps;
   const { tag } = kind;
+  const storage = deps.partingStorage === undefined ? partingStorage() : deps.partingStorage;
+  // What a page left behind as it went joins the store before the store is read.
+  if (deps.canEdit) await joinPartingCopies(storage, { documentId, tabId, tag }, deps.save);
+  const parting = partingCopy(storage, { documentId, tabId, tag });
   const stored = await deps.load();
   const doc = kind.load(stored ? [stored] : []);
   const saveDelay = deps.saveDelayMs ?? kind.saveMs;
@@ -78,6 +87,8 @@ export async function openLiveTabLocal(
   // What the store is known to hold: each save sends what this browser tab has beyond it.
   let saved = stored ? Y.encodeStateVectorFromUpdate(stored) : new Uint8Array([0]);
   let dirty = false;
+  // Saves begun and not ended: what they carry is not in the store yet.
+  let inFlight = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let chain: Promise<void> = Promise.resolve();
   let closed = false;
@@ -88,16 +99,20 @@ export async function openLiveTabLocal(
     timer = null;
     if (!dirty || !deps.canEdit) return;
     dirty = false;
+    inFlight += 1;
     const update = Y.encodeStateAsUpdate(doc, saved);
     const vector = Y.encodeStateVector(doc);
     chain = chain
       .then(() => deps.save(update))
       .then(() => {
         saved = vector;
+        inFlight -= 1;
+        if (!dirty && inFlight === 0) parting.remove();
         facts.set({ pending: dirty, failed: false });
         debugLog(`${tag} saved in this browser`, { tabId, bytes: update.byteLength });
       })
       .catch((error: unknown) => {
+        inFlight -= 1;
         dirty = true;
         facts.set({ pending: true, failed: true });
         // Written again by itself, so a failure clears without another change.
@@ -124,10 +139,15 @@ export async function openLiveTabLocal(
   };
   doc.on('update', onUpdate);
 
-  const onHide = () => {
-    if (document.visibilityState === 'hidden') save();
+  // The page may be gone before the save ends: what the store lacks is written synchronously first.
+  const saveAtOnce = () => {
+    if (deps.canEdit && (dirty || inFlight > 0)) parting.write(Y.encodeStateAsUpdate(doc, saved));
+    save();
   };
-  window.addEventListener('pagehide', save);
+  const onHide = () => {
+    if (document.visibilityState === 'hidden') saveAtOnce();
+  };
+  window.addEventListener('pagehide', saveAtOnce);
   document.addEventListener('visibilitychange', onHide);
 
   return {
@@ -135,10 +155,10 @@ export async function openLiveTabLocal(
     close: () => {
       closed = true;
       doc.off('update', onUpdate);
-      window.removeEventListener('pagehide', save);
+      window.removeEventListener('pagehide', saveAtOnce);
       document.removeEventListener('visibilitychange', onHide);
       channel?.close();
-      save();
+      saveAtOnce();
     },
     settled: () => chain,
     saveFacts: { get: facts.get, subscribe: facts.subscribe },

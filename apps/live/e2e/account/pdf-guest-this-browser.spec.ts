@@ -71,14 +71,19 @@ test('a guest’s dropped PDF is kept in This Browser, and travels only when the
   await page.getByRole('button', { name: 'Highlight', exact: true }).click();
   await dragAcrossFirstLine(page, first);
   await expect(page.locator(MARKS)).toHaveCount(1);
-  // Saved a moment after the change (PDF_LOCAL_SAVE_MS): the status says Saving until the record holds it.
-  await expect(page.locator('[data-save-status]').first()).toHaveAttribute(
-    'data-save-status',
-    'this-browser',
-  );
+  // Reloaded at once, before the change is saved (PDF_LOCAL_SAVE_MS): the browser never finishes a save begun as
+  // the page goes, so the highlight comes back from the page's parting copy ("A page's last moment"), which has
+  // joined the record by the time the page is drawn.
   await page.reload();
   await pageOneDrawn(page);
   await expect(page.locator(MARKS)).toHaveCount(1);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => Object.keys(localStorage).filter((key) => key.includes('live-tab-parting')).length,
+      ),
+    )
+    .toBe(0);
   await page.screenshot({ path: test.info().outputPath('pdf-guest-this-browser.png') });
   expect(sent).toEqual([]);
   const headers = await pageOwnerHeaders(page, { Origin: new URL(baseURL!).origin });

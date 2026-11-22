@@ -3,13 +3,14 @@
 // kinds-outside-the-canvas.md "Live state": a live tab kind in This Browser saves a moment after a change and at
 // once when the page is hidden or the tab closes, merges into what is stored, and passes each change to the
 // browser's other tabs.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 import {
   openLiveTabLocal,
   type LiveTabLocalDeps,
   type LiveTabLocalKind,
 } from './live-tab-local-binding';
+import { LIVE_TAB_PARTING_PREFIX } from './live-tab-parting-keys';
 
 const KIND: LiveTabLocalKind = {
   tag: '[kind]',
@@ -59,9 +60,26 @@ function browser() {
   return { tab, save, storedWords, ends };
 }
 
+beforeEach(() => {
+  localStorage.clear();
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+
+const partingCopies = () =>
+  Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i)!).filter((key) =>
+    key.startsWith(LIVE_TAB_PARTING_PREFIX),
+  );
+/** A save the test ends itself, as a store's write that outlives its page or not. */
+function heldSave() {
+  let land = () => {};
+  const held = new Promise<void>((resolve) => {
+    land = resolve;
+  });
+  return { held, land };
+}
 
 describe('a live tab kind in This Browser', () => {
   it('starts from nothing, saves a change after the delay, and reads it back next time', async () => {
@@ -194,6 +212,165 @@ describe('a live tab kind in This Browser', () => {
         },
       }),
     ).rejects.toThrow('the record is gone');
+  });
+});
+
+// docs/specs/035-pdf-documents/live-editing-and-storage.md "A page's last moment"
+describe('a live tab kind’s last moment in This Browser', () => {
+  it('writes a parting copy as the page leaves with a change unsaved, and removes it when the save lands', async () => {
+    const b = browser();
+    const { held, land } = heldSave();
+    const binding = await b.tab({ saveDelayMs: 60_000 });
+    b.save.mockImplementationOnce(async (update) => {
+      await held;
+      await b.save(update);
+    });
+    write(binding.doc, 'late');
+    window.dispatchEvent(new Event('pagehide'));
+    expect(partingCopies()).toHaveLength(1);
+    land();
+    await binding.settled();
+    expect(partingCopies()).toEqual([]);
+    expect(b.storedWords()).toEqual(['late']);
+    binding.close();
+  });
+
+  // "One left behind joins the record when the PDF is next opened here"
+  it('has the change the next time, when the page went before its save landed', async () => {
+    const b = browser();
+    const gone = await b.tab({ saveDelayMs: 60_000 });
+    // The browser never finishes this save: the page is gone.
+    b.save.mockImplementationOnce(() => new Promise<void>(() => {}));
+    write(gone.doc, 'last word');
+    window.dispatchEvent(new Event('pagehide'));
+    gone.close();
+    await tick();
+    expect(b.storedWords()).toEqual([]);
+    expect(partingCopies()).toHaveLength(1);
+
+    const again = await b.tab();
+    expect(words(again.doc)).toEqual(['last word']);
+    expect(b.storedWords()).toEqual(['last word']);
+    expect(partingCopies()).toEqual([]);
+    again.close();
+  });
+
+  it('holds what a save still under way carries', async () => {
+    const b = browser();
+    const gone = await b.tab();
+    b.save.mockImplementationOnce(() => new Promise<void>(() => {}));
+    write(gone.doc, 'under way');
+    await tick();
+    expect(b.save).toHaveBeenCalledTimes(1);
+    window.dispatchEvent(new Event('pagehide'));
+    gone.close();
+    const again = await b.tab();
+    expect(words(again.doc)).toEqual(['under way']);
+    again.close();
+  });
+
+  it('writes one when the page is hidden and when the binding closes', async () => {
+    const b = browser();
+    const hidden = await b.tab({ saveDelayMs: 60_000 });
+    b.save.mockImplementation(() => new Promise<void>(() => {}));
+    write(hidden.doc, 'hidden');
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+    visibility.mockRestore();
+    expect(partingCopies()).toHaveLength(1);
+    const closing = await b.tab({ saveDelayMs: 60_000, tabId: 't2' });
+    write(closing.doc, 'closing');
+    closing.close();
+    expect(partingCopies()).toHaveLength(2);
+    hidden.close();
+  });
+
+  it('writes none when everything is saved', async () => {
+    const b = browser();
+    const binding = await b.tab();
+    write(binding.doc, 'saved');
+    await tick();
+    await binding.settled();
+    window.dispatchEvent(new Event('pagehide'));
+    binding.close();
+    expect(partingCopies()).toEqual([]);
+  });
+
+  it('keeps the copy while its save fails, until one lands', async () => {
+    const b = browser();
+    const binding = await b.tab({ saveDelayMs: 60_000, retryDelayMs: 5 });
+    b.save.mockRejectedValueOnce(new Error('disk full'));
+    write(binding.doc, 'kept');
+    window.dispatchEvent(new Event('pagehide'));
+    await binding.settled();
+    expect(partingCopies()).toHaveLength(1);
+    await tick();
+    await tick();
+    await binding.settled();
+    expect(b.storedWords()).toEqual(['kept']);
+    expect(partingCopies()).toEqual([]);
+    binding.close();
+  });
+
+  it('keeps the copy while a later change is still due', async () => {
+    const b = browser();
+    const { held, land } = heldSave();
+    const binding = await b.tab({ saveDelayMs: 60_000 });
+    b.save.mockImplementationOnce(async (update) => {
+      await held;
+      await b.save(update);
+    });
+    write(binding.doc, 'first');
+    window.dispatchEvent(new Event('pagehide'));
+    write(binding.doc, 'second');
+    land();
+    await binding.settled();
+    expect(partingCopies()).toHaveLength(1);
+    binding.close();
+    await binding.settled();
+    expect(partingCopies()).toEqual([]);
+    expect(b.storedWords()).toEqual(['first', 'second']);
+  });
+
+  it('opens on what is stored when a copy left behind cannot be saved, and keeps the copy', async () => {
+    const b = browser();
+    const gone = await b.tab({ saveDelayMs: 60_000 });
+    b.save.mockImplementationOnce(() => new Promise<void>(() => {}));
+    write(gone.doc, 'last word');
+    gone.close();
+    await tick();
+    b.save.mockRejectedValueOnce(new Error('no store'));
+    const again = await b.tab();
+    expect(words(again.doc)).toEqual([]);
+    expect(partingCopies()).toHaveLength(1);
+    again.close();
+  });
+
+  it('never writes or joins one for a session that may not change the tab', async () => {
+    const b = browser();
+    const gone = await b.tab({ saveDelayMs: 60_000 });
+    b.save.mockImplementationOnce(() => new Promise<void>(() => {}));
+    write(gone.doc, 'last word');
+    gone.close();
+    await tick();
+    b.save.mockClear();
+    const reader = await b.tab({ canEdit: false });
+    write(reader.doc, 'not mine');
+    window.dispatchEvent(new Event('pagehide'));
+    reader.close();
+    expect(b.save).not.toHaveBeenCalled();
+    expect(partingCopies()).toHaveLength(1);
+  });
+
+  it('works without the browser’s synchronous storage', async () => {
+    const b = browser();
+    const binding = await b.tab({ saveDelayMs: 60_000, partingStorage: null });
+    write(binding.doc, 'kept');
+    window.dispatchEvent(new Event('pagehide'));
+    await binding.settled();
+    expect(b.storedWords()).toEqual(['kept']);
+    expect(partingCopies()).toEqual([]);
+    binding.close();
   });
 });
 

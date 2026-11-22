@@ -39,6 +39,7 @@ import {
   offlineGetRecord,
   offlinePutRecord,
 } from './offline/offline-store';
+import { offlineRecordWithPartings } from './offline/offline-partings';
 import { fetchItems } from './api/items';
 import { storeAsCreates } from '@livedoc/items';
 import { fetchAllSheets, sheetAsCreate } from './api/sheets';
@@ -148,7 +149,9 @@ export async function duplicateDocument(
       );
       // Each text document's state under its tab's new id (docs/specs/034-text-documents/
       // live-editing-and-storage.md "A text document in This Browser").
-      const source = await offlineGetRecord(sourceId);
+      // With what a closing page left of a live tab ("A page's last moment"), so the copy holds it too.
+      const read = await offlineGetRecord(sourceId);
+      const source = read && (await offlineRecordWithPartings(read));
       const textDocuments = (source?.textDocuments ?? [])
         .filter((t) => tabIdMap.has(t.tabId))
         .map((t) => ({ ...t, tabId: tabIdMap.get(t.tabId)! }));

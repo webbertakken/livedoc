@@ -8,6 +8,8 @@ import { pdfTabOf } from '@livedoc/document';
 import { PdfLiveChanges } from '@livedoc/pdf-documents';
 import { ApiError } from '../api/core';
 import type { PdfStateRead } from '../api/pdf-documents';
+import { joinPartingCopies } from '../live-tab/live-tab-parting';
+import type { PartingStorage } from '../live-tab/live-tab-parting-keys';
 import {
   offlineGetRecord,
   offlineUpdateRecord,
@@ -71,4 +73,24 @@ export function offlineSavePdfState(
       };
     }),
   );
+}
+
+/**
+ * Join what a closing page left of each PDF tab to the record ("A page's last moment"), as the tab's next open
+ * would. Answers how many joined.
+ */
+export async function offlineJoinPdfPartingCopies(
+  rec: Pick<OfflineDocumentRecord, 'id' | 'tabs'>,
+  storage: PartingStorage | null,
+): Promise<number> {
+  let joined = 0;
+  for (const tab of rec.tabs) {
+    if (!pdfTabOf(tab)) continue;
+    joined += await joinPartingCopies(
+      storage,
+      { documentId: rec.id, tabId: tab.id, tag: '[pdf]' },
+      (update) => offlineSavePdfState(rec.id, tab.id, update),
+    );
+  }
+  return joined;
 }

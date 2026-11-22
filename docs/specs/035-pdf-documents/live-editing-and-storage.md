@@ -334,6 +334,15 @@ A thumbnail, search text, an agent's preview and a baked file for a sync each ne
     reads as its stored file unchanged.
   - A change is saved `PDF_LOCAL_SAVE_MS` after it, and at once when the page is hidden or the tab closes; each save
     merges into what is stored in one transaction, so another browser tab's saves are never undone.
+  - **A page's last moment**: a browser does not finish a save begun as its page
+    goes. So when the page is hidden, left or the tab closed, what is not saved yet is first written to the browser's
+    synchronous storage (`localStorage`), all at once: a **parting copy**, one a browser tab on the PDF. It is
+    removed when its save lands.
+    - One left behind joins the record when the PDF is next opened here, and before Sync Document or Duplicate reads
+      the record; it goes with a record that is deleted.
+    - One that cannot be read is removed and logged, never merged.
+    - Past `LIVE_TAB_PARTING_MAX_CHARS`, or where the browser refuses it, none is written, which is logged
+      `(default)`: a change that large made in a page's last half second is lost.
   - Browser tabs open on the same PDF pass each change to each other on the `livedoc-pdf-document` BroadcastChannel,
     so both stay live.
   - It has one person, its owner, who reviews and edits it as an Editor; no presence is said and nothing is refused
@@ -449,6 +458,7 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 | `PDF_UNDO_GROUP_MS`           | 500       | A text document's typing group                                                             |
 | `PDF_LOCAL_SAVE_MS`           | 500       | `(default)` A change the room has not confirmed by then is kept in this browser            |
 | `PDF_LOCAL_SAVE_RETRY_MS`     | 5,000     | `(default)` A failed save in This Browser is written again by itself, as a text document's |
+| `LIVE_TAB_PARTING_MAX_CHARS`  | 1,000,000 | `(default)` A parting copy as base64: a fifth of the 5 MB a browser gives `localStorage`   |
 
 A change past a limit is refused whole and named: `pdf_too_many_marks`, `pdf_too_many_pages`, `update_too_large`,
 `live_changes_too_large` (when a replacement cannot be made, with "This PDF has more unsaved changes than fit. Ask
@@ -488,3 +498,6 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
   `[pdf] arrived bytes=<n> where=this-browser`, `[pdf] sync-sent tabs=<n> bytes=<n> held=<n>`,
   `[pdf] sync-refused name=<name>`, `[pdf] taken-offline tabs=<n> bytes=<n> local=<n>`,
   `[pdf] take-offline-refused name=<name>`, `[pdf] kept-read bytes=<n>` (a cloud PDF's file read from this browser).
+- A parting copy: `[pdf] parting-copy written chars=<n>`, `[pdf] parting-copy skipped reason=<too_large|refused>`,
+  `[pdf] parting-copy joined count=<n>`, `[pdf] parting-copy unreadable`, `[pdf] parting-copy kept error=<error>`
+  (one whose save failed, left for the next open).

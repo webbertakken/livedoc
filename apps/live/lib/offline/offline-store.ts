@@ -23,7 +23,9 @@ import {
   type Item,
   type ItemTypeCatalogue,
 } from '@livedoc/items';
+import { debugLog } from '../debug-log';
 import { DocumentTrashedError } from '../document-trashed';
+import { forgetPartingCopies, partingStorage } from '../live-tab/live-tab-parting-keys';
 import {
   offlineBackend,
   setOfflineBackend,
@@ -337,11 +339,19 @@ async function writeLive(
   });
 }
 
+// What goes with a record besides its row: its id, and what a closing page left of its live tabs
+// (docs/specs/035-pdf-documents/live-editing-and-storage.md "A page's last moment").
+function forgetRecord(id: string): void {
+  forgetOfflineId(id);
+  const parted = forgetPartingCopies(partingStorage(), id);
+  if (parted > 0) debugLog(`[offline-store] parting-copies-forgotten count=${parted}`);
+}
+
 // A write that found no record: a quiet no-op when this tab has already forgotten the id, otherwise
 // the id is forgotten and the write fails out loud.
 function failOnMissing(id: string): void {
   if (!isOfflineIdSync(id)) return;
-  forgetOfflineId(id);
+  forgetRecord(id);
   console.warn('[offline-store] write-to-missing-record, id forgotten');
   throw new OfflineDocumentMissingError(id);
 }
@@ -509,7 +519,7 @@ export async function offlineDeleteDocument(id: string): Promise<void> {
   // with (or observe a half-applied) delete.
   await serializeOfflineWrite(async () => {
     await offlineBackend().delete(id);
-    forgetOfflineId(id);
+    forgetRecord(id);
   });
 }
 
@@ -532,7 +542,7 @@ export async function offlineDeleteIfUnchanged(
       found = { outcome: same ? 'deleted' : 'changed', rec };
       return same ? 'delete' : undefined;
     });
-    if (found.outcome !== 'changed') forgetOfflineId(id);
+    if (found.outcome !== 'changed') forgetRecord(id);
     return found;
   });
 }

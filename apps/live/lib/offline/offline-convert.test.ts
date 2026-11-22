@@ -80,6 +80,11 @@ vi.mock('./offline-images', () => ({
     t.elements.flatMap((el) => (el.type === 'image' && el.imageId ? [el.imageId] : [])),
 }));
 
+// What a closing page left of a live tab (./offline-partings has its own tests): here, that the sync reads through it.
+vi.mock('./offline-partings', () => ({
+  offlineRecordWithPartings: vi.fn(async (rec: unknown) => rec),
+}));
+
 // A PDF's own part of each conversion (./offline-pdf-conversion has its own tests): here, where it sits in the
 // sequence.
 vi.mock('./offline-pdf-conversion', () => ({
@@ -137,6 +142,7 @@ const tagsApi = await import('@/lib/api/tags');
 const textDocuments = await import('../api/text-documents');
 const keptApi = await import('../api/workbook-kept');
 const pdfConversion = await import('./offline-pdf-conversion');
+const partings = await import('./offline-partings');
 const { LocalBlobRefused } = await import('../blob-store/local-blob-store');
 const {
   ConversionInProgressError,
@@ -269,6 +275,21 @@ describe('saveOfflineToCloud (offline -> cloud)', () => {
     expect(vi.mocked(pdfConversion.sendOfflinePdfFiles)).toHaveBeenCalledWith(rec, 'owner');
     expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({
       pdfDocuments: [{ tabId: 'p1', state: 'AQID' }],
+    });
+  });
+
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "A page's last moment": one left behind joins the
+  // record before Sync Document reads it.
+  it('uploads the record as it reads with what a closing page left', async () => {
+    const rec = { id: 'd1', name: 'Lease', tabs: [{ ...PDF_TAB, id: 'p1' }] };
+    const joined = { ...rec, name: 'Lease, with the last change' };
+    vi.mocked(store.offlineGetRecord).mockResolvedValueOnce(rec as never);
+    vi.mocked(partings.offlineRecordWithPartings).mockResolvedValueOnce(joined as never);
+    await saveOfflineToCloud('d1', 'owner');
+    expect(vi.mocked(partings.offlineRecordWithPartings)).toHaveBeenCalledWith(rec);
+    expect(vi.mocked(pdfConversion.sendOfflinePdfFiles)).toHaveBeenCalledWith(joined, 'owner');
+    expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({
+      name: 'Lease, with the last change',
     });
   });
 

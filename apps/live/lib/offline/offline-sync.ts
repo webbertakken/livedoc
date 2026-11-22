@@ -20,6 +20,7 @@ import { fetchCloudSheets, sheetAsCreate } from '../api/sheets';
 import { sendKept } from '../api/workbook-kept';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 import { uploadEmbeddedImages } from './offline-images';
+import { offlineRecordWithPartings } from './offline-partings';
 import {
   offlineDeleteIfUnchanged,
   offlineGetRecord,
@@ -163,8 +164,9 @@ export async function syncOfflineDocument(
   offlineId: string,
   ownerId: string,
 ): Promise<OfflineSyncResult> {
-  let rec = await offlineGetRecord(offlineId);
-  if (!rec) throw new Error('offline document not found');
+  const read = await offlineGetRecord(offlineId);
+  if (!read) throw new Error('offline document not found');
+  let rec = await offlineRecordWithPartings(read);
   const imageIds = new Map<string, string>();
   for (let attempt = 1; ; attempt++) {
     for (const [dataUrl, id] of await upload(rec, ownerId)) imageIds.set(dataUrl, id);
