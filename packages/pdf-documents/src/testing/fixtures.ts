@@ -258,14 +258,16 @@ const stream = (dictionary: string, body: string): string =>
 /**
  * One page of marks as files hold them: a highlight with its colour, opacity, author, words and dates under its own
  * name; a reply to it, a state reply and a grouped caret; a pop-up, which is no mark; a note the file gives neither
- * name nor colour, and a reply to that; and a note whose words run past any limit.
+ * name nor colour, and a reply to that; and a note whose words run past any limit. `listApart`: the page names its
+ * list of marks as an object of its own, as most software writes it, rather than holding the list itself.
  */
-export function marksPdf(longWords = 0): Uint8Array<ArrayBuffer> {
+export function marksPdf(longWords = 0, listApart = false): Uint8Array<ArrayBuffer> {
   const at = '/Rect [72 700 172 720]';
+  const list = '[4 0 R 5 0 R 6 0 R 7 0 R 8 0 R 9 0 R 10 0 R 11 0 R]';
   return rawPdf([
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R 5 0 R 6 0 R 7 0 R 8 0 R 9 0 R 10 0 R 11 0 R] >>',
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Annots ${listApart ? '12 0 R' : list} >>`,
     `<< /Type /Annot /Subtype /Highlight ${at} /QuadPoints [72 720 172 720 72 700 172 700] /NM (hl-1) /C [1 0.5 0] /CA 0.5 /T (Grace) /Contents (Check this) /Subj (Fact) /M (D:20261121140203Z) /CreationDate (D:20261120090000Z) /Popup 8 0 R >>`,
     `<< /Type /Annot /Subtype /Text ${at} /NM (re-1) /IRT 4 0 R /T (Ada) /Contents (Agreed) /M (D:20261121150000Z) >>`,
     `<< /Type /Annot /Subtype /Text ${at} /NM (st-1) /IRT 4 0 R /T (Ada) /State (Accepted) /StateModel (Review) >>`,
@@ -274,6 +276,7 @@ export function marksPdf(longWords = 0): Uint8Array<ArrayBuffer> {
     '<< /Type /Annot /Subtype /Text /Rect [-99999 5 99999 20] /C [] /CA 7 >>',
     `<< /Type /Annot /Subtype /Text ${at} /IRT 9 0 R >>`,
     `<< /Type /Annot /Subtype /Text ${at} /NM (long) /Contents (${'w'.repeat(longWords)}) >>`,
+    ...(listApart ? [list] : []),
   ]);
 }
 

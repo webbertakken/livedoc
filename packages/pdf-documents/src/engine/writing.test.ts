@@ -17,6 +17,7 @@ import {
   outlinePdf,
   privateDataPdf,
   protectedPdf,
+  rawPdf,
   readerWasm,
   signedPdf,
   spoiled,
@@ -163,6 +164,70 @@ describe('writing a deletion of the file’s own mark', () => {
     ]);
     expect(result.kind).toBe('addition');
     expect(startsWith(result.bytes, file)).toBe(true);
+    opened(await engine.open(result.bytes));
+    expect((await engine.fileMarks(0)).map((mark) => mark.id)).toEqual([
+      're-1',
+      'st-1',
+      'ca-1',
+      'o:10',
+      'long',
+    ]);
+  });
+});
+
+// saving.md "What is kept untouched": most software writes a page's list of marks as an object of its own; a change
+// to one mark of such a page keeps every other, the file's fields among them.
+describe('a page that names its list of marks as an object of its own', () => {
+  const OWN = ['hl-1', 're-1', 'st-1', 'ca-1', 'o:9', 'o:10', 'long'];
+
+  it('keeps every mark the file holds there when one is added', async () => {
+    const pages = opened(await engine.open(marksPdf(0, true)));
+    expect((await engine.fileMarks(0)).map((mark) => mark.id)).toEqual(OWN);
+    const result = await bakeWith([
+      PdfChange.addMark(
+        Mark.highlight({
+          id: 'added',
+          page: pages[0]!.name,
+          quads: [[10, 40, 60, 40, 10, 20, 60, 20]],
+          text: '',
+          colour: '#fdf1a9',
+          opacity: 1,
+          author: 'Ada',
+          createdAt: at,
+        })!,
+      ),
+    ]);
+    expect(result.kind).toBe('addition');
+    opened(await engine.open(result.bytes));
+    expect((await engine.fileMarks(0)).map((mark) => mark.id)).toEqual([...OWN, 'added']);
+  });
+
+  it('removes a mark from a list that also holds a mark written in place and an entry that is none', async () => {
+    const page =
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Annots 4 0 R >>';
+    const note = '/Type /Annot /Subtype /Text /Rect [72 700 92 720]';
+    opened(
+      await engine.open(
+        rawPdf([
+          '<< /Type /Catalog /Pages 2 0 R >>',
+          '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+          page,
+          `[5 0 R 7 << ${note} /Contents (In place) >>]`,
+          `<< ${note} /NM (named) >>`,
+        ]),
+      ),
+    );
+    const result = await bakeWith([PdfChange.removeFromFile('named', 'mark')]);
+    opened(await engine.open(result.bytes));
+    expect((await engine.fileMarks(0)).map((mark) => mark.words)).toEqual(['In place']);
+  });
+
+  it('removes the marks named from it, and no other', async () => {
+    opened(await engine.open(marksPdf(0, true)));
+    const result = await bakeWith([
+      PdfChange.removeFromFile('hl-1', 'mark'),
+      PdfChange.removeFromFile('o:9', 'mark'),
+    ]);
     opened(await engine.open(result.bytes));
     expect((await engine.fileMarks(0)).map((mark) => mark.id)).toEqual([
       're-1',

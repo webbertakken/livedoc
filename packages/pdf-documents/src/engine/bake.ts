@@ -3,7 +3,16 @@
 // the stored file is rewritten first; what Reviewing added is then appended as one incremental update. With
 // writer.ts, the only files that drive the writer. Deterministic: every date, id and order comes from the changes,
 // never the clock.
-import { PdfString, rgb, type PDF, type PDFPage } from '@libpdf/core';
+import {
+  PdfArray,
+  PdfDict,
+  PdfRef,
+  PdfString,
+  rgb,
+  type PDF,
+  type PdfObject,
+  type PDFPage,
+} from '@libpdf/core';
 import type { FieldValue } from '../field-value';
 import type { Mark } from '../mark';
 import { PageName } from '../page-name';
@@ -59,8 +68,35 @@ function turn(pages: Pages, turns: BakeChanges['turns']): number {
   return lost;
 }
 
+/** A page's list of marks and fields where the page names it as an object of its own; null where it holds it. */
+function listApart(pdf: PDF, page: PDFPage): PdfArray | null {
+  const named = page.dict.get('Annots');
+  const list = named instanceof PdfRef ? pdf.getObject(named) : null;
+  return list instanceof PdfArray ? list : null;
+}
+
+/**
+ * Holds a page's list of marks and fields in the page itself, before anything is added to it or removed from it.
+ * Most software writes the list as an object of its own, and the writer then sees no list at all: it would write a
+ * new one holding only what was added, so every mark and field the page had would be gone from it, and it would
+ * find nothing to remove (saving.md "What is kept untouched").
+ */
+function holdList(pdf: PDF, page: PDFPage): void {
+  const list = listApart(pdf, page);
+  if (list) page.dict.set('Annots', PdfArray.of(...list));
+}
+
+/** A mark as the reader names it: its own name, else its object. */
+function nameOf(pdf: PDF, entry: PdfObject): string | null {
+  const mark = entry instanceof PdfRef ? pdf.getObject(entry) : entry;
+  if (!(mark instanceof PdfDict)) return null;
+  const own = mark.getString('NM')?.asString();
+  if (own) return own;
+  return entry instanceof PdfRef ? `o:${entry.objectNumber}` : null;
+}
+
 /** Appends each mark to its page as one annotation (marks.md "In the file"); answers how many have no page. */
-function addMarks(pages: Pages, marks: readonly Mark[]): number {
+function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
   let lost = 0;
   for (const mark of marks) {
     const page = pages.get(mark.page);
@@ -68,6 +104,7 @@ function addMarks(pages: Pages, marks: readonly Mark[]): number {
       lost += 1;
       continue;
     }
+    holdList(pdf, page);
     const annotation = page.addHighlightAnnotation({
       quadPoints: mark.quads.map((quad) => [...quad]),
       color: rgb(channel(mark.colour, 1), channel(mark.colour, 3), channel(mark.colour, 5)),
@@ -82,13 +119,15 @@ function addMarks(pages: Pages, marks: readonly Mark[]): number {
 }
 
 /** Removes the stored file's own marks that were deleted, each named as the reader names it. */
-function removeMarks(pages: Pages, removed: BakeChanges['removed']): void {
+function removeMarks(pdf: PDF, pages: Pages, removed: BakeChanges['removed']): void {
   if (![...removed.values()].includes('mark')) return;
-  for (const page of pages.values())
-    for (const annotation of page.getAnnotations()) {
-      const id = annotation.name ?? `o:${annotation.ref?.objectNumber}`;
-      if (removed.get(id) === 'mark') page.removeAnnotation(annotation);
-    }
+  for (const page of pages.values()) {
+    const deleted = (entry: PdfObject): boolean => removed.get(nameOf(pdf, entry) ?? '') === 'mark';
+    // A page none of whose marks was deleted is left as it is, its list where the file wrote it.
+    if ([...(listApart(pdf, page) ?? [])].some(deleted)) holdList(pdf, page);
+    for (const annotation of page.getAnnotations())
+      if (deleted(annotation.ref ?? annotation.dict)) page.removeAnnotation(annotation);
+  }
 }
 
 /**
@@ -150,8 +189,8 @@ export async function bakeChanges(
     pdf = rewritten;
   }
   const pages = pagesOf(pdf, order);
-  anchorsLost += addMarks(pages, changes.marks);
-  removeMarks(pages, changes.removed);
+  anchorsLost += addMarks(pdf, pages, changes.marks);
+  removeMarks(pdf, pages, changes.removed);
   const fieldsLost = changes.fieldValues.filter((value) => !fillField(pdf, value)).length;
   const bytes = (await pdf.save({ incremental: true })) as Uint8Array<ArrayBuffer>;
   if (!startsWith(bytes, base)) return { ok: false, refusal: 'cannot-append' };

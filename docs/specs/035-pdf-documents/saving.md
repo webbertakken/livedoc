@@ -79,6 +79,9 @@ A change is written one of two ways, by its kind, never by the engine's convenie
 kept and written back.
 
 - In an **addition**, every byte of the stored file is kept by construction.
+- **A page keeps every mark and field a change does not name.** Most software writes a page's list of marks and
+  fields as an object of its own; a mark added to such a page, or removed from it, leaves every other entry of the
+  list on the page. A page no change names is not written at all.
 - In a **rewrite**, everything the engine reads is carried across object for object: fonts and their subsets, pictures
   in their own encoding (a JPEG is never re-encoded), colour spaces and output intents, PDF layers, embedded files,
   the structure tree, metadata streams, page labels, article threads, named destinations, the form's scripts as text,
