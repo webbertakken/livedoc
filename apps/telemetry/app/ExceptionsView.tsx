@@ -3,14 +3,23 @@
 import type { TelemetrySummary, TelemetryWindowKey } from '@livedoc/api-schema';
 import { MetricGroups, type MetricGroup } from './MetricCards';
 import { CardColumns } from './CardColumns';
-import { isRecovery, isServerCrash } from './error-kinds';
+import {
+  isApiClientException,
+  isDroppedConnection,
+  isRecovery,
+  isRefusal,
+  isServerCrash,
+  isServerFault,
+} from './error-kinds';
 import {
   CLIENT_EXCEPTIONS,
-  FAILED_REQUESTS,
+  DROPPED_CONNECTIONS,
   LOAD_RECOVERY,
   REALTIME_RESYNCS,
+  REFUSALS,
   STALE_CHUNK_RELOADS,
   SERVER_CRASHES,
+  SERVER_FAULTS,
 } from './metric-catalogue';
 import { RankCard, rank } from './RankCard';
 import { rankTrend, windowLabel } from './windows';
@@ -33,8 +42,10 @@ export const GROUPS: MetricGroup[] = [
   {
     title: 'Error volume',
     metrics: [
-      FAILED_REQUESTS,
+      SERVER_FAULTS,
       SERVER_CRASHES,
+      REFUSALS,
+      DROPPED_CONNECTIONS,
       CLIENT_EXCEPTIONS,
       REALTIME_RESYNCS,
       STALE_CHUNK_RELOADS,
@@ -56,11 +67,17 @@ export function ExceptionsView({
   const trend = rankTrend(summary, active);
   const isApi = (r: { category: string; action: string }) =>
     r.category === 'Error' && r.action === 'Api';
-  const failed = rank(rows, (r) => isApi(r) && !isServerCrash(r.type));
+  // Every Error·Api row lands in exactly one ranking, as in the cards above (apiFailureCard).
+  const faults = rank(rows, (r) => isApi(r) && isServerFault(r.type));
+  const refusals = rank(rows, (r) => isApi(r) && isRefusal(r.type));
+  const dropped = rank(rows, (r) => isApi(r) && isDroppedConnection(r.type));
   const crashes = rank(rows, (r) => isApi(r) && isServerCrash(r.type));
   const client = rank(
     rows,
-    (r) => r.category === 'Error' && r.action === 'Client' && !isRecovery(r.type),
+    (r) =>
+      r.category === 'Error' &&
+      ((r.action === 'Client' && !isRecovery(r.type)) ||
+        (r.action === 'Api' && isApiClientException(r.type))),
   );
   const warning = rank(rows, (r) => r.category === 'Error' && r.action === 'Warning');
 
@@ -77,13 +94,13 @@ export function ExceptionsView({
         <CardColumns>
           <RankCard
             trend={trend}
-            title="Failed Requests"
-            subtitle="By status and the request, route, or MCP tool that failed, as the caller saw it"
+            title="Server Faults"
+            subtitle="By status and the request, route, MCP tool or CLI command the server failed"
             category="Error"
             action="Api"
-            items={failed}
+            items={faults}
             daily={summary.daily}
-            emptyLabel="No failed requests in this window. Good."
+            emptyLabel="No server faults in this window. Good."
           />
           <RankCard
             trend={trend}
@@ -94,6 +111,26 @@ export function ExceptionsView({
             items={crashes}
             daily={summary.daily}
             emptyLabel="No server crashes in this window. Good."
+          />
+          <RankCard
+            trend={trend}
+            title="Refusals"
+            subtitle="By status and the request the server said no to, with the reason it gave"
+            category="Error"
+            action="Api"
+            items={refusals}
+            daily={summary.daily}
+            emptyLabel="No refusals in this window."
+          />
+          <RankCard
+            trend={trend}
+            title="Dropped Connections"
+            subtitle="By the route, MCP tool or CLI command whose request never got an answer"
+            category="Error"
+            action="Api"
+            items={dropped}
+            daily={summary.daily}
+            emptyLabel="No dropped connections in this window."
           />
           <RankCard
             trend={trend}

@@ -222,7 +222,10 @@ describe('the Settings tab', () => {
       (e) =>
         typeof e.type === 'string' &&
         !charts.some(
-          (m) => m.category === e.category && m.action === e.action && m.typeIn?.(e.type as string),
+          (m) =>
+            m.category === e.category &&
+            m.action === e.action &&
+            m.typeIn?.(e.type as string, e.action),
         ),
     );
     expect(missing.map((e) => `${e.category}·${e.action}·${String(e.type)}`)).toEqual([]);

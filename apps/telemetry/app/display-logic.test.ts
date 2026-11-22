@@ -47,8 +47,9 @@ describe('headlineTotal', () => {
   it('sums only the headline members when the stack names them', () => {
     // All Visitors: New + Returning, never the guest / signed-in split of Returning.
     expect(headlineTotal(ALL_VISITORS, [10, 20, 15, 5])).toBe(30);
-    // Exceptions: failed requests + client exceptions, not the crashes that double them.
-    expect(headlineTotal(EXCEPTIONS, [100, 3, 10, 1])).toBe(110);
+    // Exceptions: server faults + client exceptions, not the crashes that double them, nor the refusals and
+    // dropped connections that are not faults. Members: faults, crashes, refusals, dropped, client exceptions.
+    expect(headlineTotal(EXCEPTIONS, [1, 5, 8, 148, 10])).toBe(11);
   });
 
   it('has no total when a count it needs is missing', () => {
@@ -61,7 +62,16 @@ describe('headlineTotal', () => {
 describe('headlineMembers', () => {
   it('marks what the head sums, so its combined line agrees with its number', () => {
     expect(headlineMembers(ALL_VISITORS)).toEqual([true, true, false, false]);
-    expect(headlineMembers(EXCEPTIONS)).toEqual([true, false, true, false, false, false]);
+    expect(headlineMembers(EXCEPTIONS)).toEqual([
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+    ]);
   });
 });
 

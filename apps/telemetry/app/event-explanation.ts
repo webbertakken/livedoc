@@ -110,7 +110,7 @@ function apiError(type: string): string | null {
   if (kind === 'Internal' && rest.length >= 2)
     return `A LiveDoc server crashed while handling a request to its ${words(rest.slice(1).join(' '))} endpoint.`;
   if (kind === 'Internal' && rest.length === 1)
-    return `An AI tool's ${words(rest[0]!)} request never completed, because the LiveDoc server behind it failed.`;
+    return `The ${words(rest[0]!)} request from an AI tool or the command line never got an answer from the LiveDoc server.`;
   return null;
 }
 
