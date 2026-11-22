@@ -25,8 +25,12 @@ const HELD = `EXISTS (SELECT 1 FROM document_blobs h JOIN documents d ON d.id = 
                 WHERE h.key = blobs.key AND d.owner_id = blobs.owner_id
                   AND (h.until IS NULL OR h.until > ?1))`;
 
-// Deletes the objects no row names any more. A row moved to another owner, or given to one, names its object still.
-async function deleteUnnamedObjects(env: SweepEnv, bucket: R2Bucket, objects: readonly string[]) {
+/** Deletes the objects no row names. A row moved to another owner, or given to one, names its object still. */
+export async function deleteUnnamedObjects(
+  env: SweepEnv,
+  bucket: R2Bucket,
+  objects: readonly string[],
+) {
   if (objects.length === 0) return;
   const named = await env.DB.prepare(
     'SELECT DISTINCT object FROM blobs WHERE object IN (SELECT value FROM json_each(?))',

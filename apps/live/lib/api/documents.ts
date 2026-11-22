@@ -241,6 +241,9 @@ export async function apiCreateDocument(
     // Text document tabs opened from files (docs/specs/034-text-documents/files-and-print.md "Opening"), or a copy's
     // live states (live-editing-and-storage.md "Copies"), base64.
     textDocuments?: ({ tabId: string; file: string } | { tabId: string; state: string })[];
+    // PDF tabs made with their live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the
+    // Trash and versions"): a Yjs update, base64.
+    pdfDocuments?: { tabId: string; state: string }[];
     // A spreadsheet's workbook record (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"): its tabs are
     // all sheet tabs, its sheets in `sheets`.
     workbook?: WorkbookRecord;
@@ -276,6 +279,7 @@ export async function apiCreateDocument(
       // The type catalogue rides the create (a copy's, a Plan template's card types); absent is the default types.
       ...(d.itemTypes ? { itemTypes: d.itemTypes } : {}),
       ...(d.textDocuments && d.textDocuments.length ? { textDocuments: d.textDocuments } : {}),
+      ...(d.pdfDocuments && d.pdfDocuments.length ? { pdfDocuments: d.pdfDocuments } : {}),
       ...(d.workbook ? { workbook: d.workbook } : {}),
     }),
   });

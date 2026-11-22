@@ -7,6 +7,7 @@
 // (document-file-routes.ts).
 import { isBlobKey } from '@livedoc/document';
 import { filesAllowance } from '../blob-store/allowance';
+import { deleteUnnamedObjects } from '../blob-store/blob-retention';
 import { storeBlob } from '../blob-store/blob-store';
 import { blobUsage, claimBlob, getDocumentMeta, heldBlob, markBlobStored } from '../db';
 import { json, notFound } from '../responses';
@@ -48,7 +49,13 @@ async function storeInOneRequest(ctx: RouteContext, door: BlobDoor): Promise<Res
   const object = await claimBlob(ctx.env, ownerId, key, length, Date.now());
   const outcome = await storeBlob(bucket, object, key, ctx.request.body);
   if (outcome !== 'stored') return refusedBlob(outcome, { documentId, key });
-  await markBlobStored(ctx.env, ownerId, key, length, Date.now());
+  if (!(await markBlobStored(ctx.env, ownerId, key, length, Date.now()))) {
+    // The row was held meanwhile: by the same upload sent twice (the same object, kept), or as a row given with a
+    // copy ("A row is given, never bytes"), whose object the row names now; these bytes are then no row's.
+    await deleteUnnamedObjects(ctx.env, bucket, [object]);
+    console.info(`[blob-store] upload-superseded document=${documentId ?? '-'} key=${short(key)}`);
+    return json({ held: true });
+  }
   console.info(
     `[blob-store] stored document=${documentId ?? '-'} key=${short(key)} bytes=${length} parts=1`,
   );

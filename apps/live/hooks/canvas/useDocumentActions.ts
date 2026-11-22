@@ -24,7 +24,8 @@ import { useDocumentListActions } from '@/hooks/persistence/useDocumentListActio
 import type { FolderNode } from '@/hooks/persistence/useDocumentListActions';
 import { useToast } from '@/hooks/ui/useToast';
 import { documentMovedMessage } from '@/lib/document-toast-copy';
-import { DOCUMENT_FAILURE } from '@/lib/write-failure-copy';
+import { ApiError } from '@/lib/api/core';
+import { COPY_DOES_NOT_FIT, DOCUMENT_FAILURE } from '@/lib/write-failure-copy';
 
 type DocumentActionsDeps = {
   documentId: string | null;
@@ -166,9 +167,13 @@ export function useDocumentActions(deps: DocumentActionsDeps) {
       // account; a distinct signal from duplicating your own (type 'Copy').
       track('Document', 'Duplicated', 'Copy');
       window.location.assign(`${window.location.origin}/document/${copy.id}`);
-    } catch {
-      // Network / auth glitch; let the user try again. Leave the
-      // header button enabled by clearing the loading flag.
+    } catch (error) {
+      // A copy whose files do not fit the copier's file storage says so; any other failure (network, auth) is
+      // silent. Either way the button is enabled again by clearing the loading flag.
+      if (error instanceof ApiError && error.code === 'usage_exceeded') {
+        console.warn('[document] copy refused name=usage_exceeded');
+        toast.error(COPY_DOES_NOT_FIT);
+      }
       setCopying(false);
     }
   };

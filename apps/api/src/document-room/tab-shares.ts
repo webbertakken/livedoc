@@ -42,12 +42,21 @@ export type SharedTabCopy = {
   members: string[];
   // Whether the holder is a spreadsheet, whose tabs are never shared (docs/specs/029-sheets/spreadsheet.md).
   spreadsheet: boolean;
+  // Whether the tab is a PDF document, never shared either: its live changes are one room's
+  // (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions").
+  pdf: boolean;
 };
 
 // Messages one drain sends; each is one call to another room, a body up to a tab's size.
 export const SHARE_DRAIN_MAX = 50;
 
-type StoredTab = { name: string; data: string; updated_at: number; order_index: number };
+type StoredTab = {
+  name: string;
+  data: string;
+  kind: string | null;
+  updated_at: number;
+  order_index: number;
+};
 
 async function storedTab(
   env: DocumentEnv,
@@ -55,7 +64,7 @@ async function storedTab(
   tabId: string,
 ): Promise<StoredTab | null> {
   return env.DOCUMENT_DB.prepare(
-    `SELECT t.name, t.data, t.updated_at, dt.order_index FROM tabs t
+    `SELECT t.name, t.data, t.kind, t.updated_at, dt.order_index FROM tabs t
        JOIN document_tabs dt ON dt.tab_id = t.id
       WHERE dt.document_id = ? AND t.id = ?`,
   )
@@ -127,6 +136,7 @@ export async function sharedTabCopy(
     updatedAt: tab.updated_at,
     members: [documentId, ...(await holdersOf(env, tabId))],
     spreadsheet: await isSpreadsheet(env, documentId),
+    pdf: tab.kind === 'pdf',
   };
 }
 

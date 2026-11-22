@@ -355,7 +355,27 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 - **Make a copy** makes a document whose PDF tab names the same `blob` (the bytes are stored once) with the live
   changes copied; the dialog offers "Copy comments" and, where the file has certificate signatures, says the copy
   keeps them and their validity.
+  - **A copy of one's own document** is made by the editor: the new document's PDF tab names the same `blob`, and
+    the create carries each PDF tab's live changes (`pdfDocuments: [{ tabId, state }]`, a Yjs update as base64),
+    stored as the tab's state before anyone opens it. A state that cannot be read fails the copy rather than leave
+    it without its changes.
+  - **The create refuses a seed** `400 pdf_seed_invalid` when it names no PDF tab of the request, names one twice, is
+    no Yjs update, or names another stored file than its tab's; `413 live_changes_too_large` past
+    `PDF_LIVE_CHANGES_MAX_BYTES`. Nothing is made.
+  - **Someone else's copy** (a share link's reader, a teammate) is made by the api, room to room, and is theirs: they
+    are given the stored file as [a row, never bytes](../006-document/blob-store.md#a-row-given), so the copy opens
+    after the original is purged. It counts in their usage; one that would pass their allowance is refused
+    `403 usage_exceeded`, said as "This document doesn't fit in the file storage that is left." `(default)`.
+  - **A copy has no previous versions**: it begins at the stored file the original is on, with the live changes on
+    it. A tab-scoped reader's copy is their tab alone, as every kind's.
+- **A document that passes to another owner** (a team's heir, a team document moved into someone's own library) takes
+  its stored file and its previous versions with it, given the same way.
+- **A PDF tab is never shared between documents** `(default)`: its live changes are one room's, so a tab held by two
+  documents would show each its own. Linking one answers `409 tab_not_linkable`, as a spreadsheet's tabs do.
 - **The Trash** keeps a deleted PDF document as any document; its blobs stay counted until the Trash lets go.
+  - What a trashed document holds stays held, previous versions until their day, so a restore finds every byte.
+  - Purging it lets go of them; the retention sweep then deletes what nothing else of that owner holds, after its
+    grace ([Blob store](../006-document/blob-store.md#holds-and-retention)).
 - **Versions** are a stored file's key and a point in its live changes
   ([Saving](saving.md#previous-versions-and-version-history)); automatic versions are taken after every 30 minutes of
   changes or 1,000 changes, whichever first (`PDF_VERSION_EVERY`, `(default)`, a text document's rule), named ones

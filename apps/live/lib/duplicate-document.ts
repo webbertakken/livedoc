@@ -42,6 +42,7 @@ import {
 import { fetchItems } from './api/items';
 import { storeAsCreates } from '@livedoc/items';
 import { fetchAllSheets, sheetAsCreate } from './api/sheets';
+import { apiLoadPdfState } from './api/pdf-documents';
 import { apiLoadTextDocumentState } from './api/text-documents';
 import { fetchKept, sendKept } from './api/workbook-kept';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
@@ -222,6 +223,25 @@ export async function duplicateDocument(
     console.warn('[duplicate] kept content unreadable', { sourceId, error: String(error) });
     return undefined;
   }
+  // Each PDF tab's live changes too (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and
+  // versions"): the copy's tab names the same stored file, and what was changed on it comes along or the copy fails.
+  let pdfDocuments: { tabId: string; state: string }[];
+  try {
+    pdfDocuments = await Promise.all(
+      fullTabs
+        .filter((t): t is Tab => t !== null && tabKindOf(t) === 'pdf')
+        .map(async (t) => {
+          const scope = { ownerId, documentId: src.id, tabId: t.id, shareCode: null };
+          return {
+            tabId: tabIdMap.get(t.id)!,
+            state: base64OfBytes((await apiLoadPdfState(scope)).update),
+          };
+        }),
+    );
+  } catch (error) {
+    console.warn('[duplicate] pdf live changes unreadable', { sourceId, error: String(error) });
+    return undefined;
+  }
   const create = (place: DocumentPlacement) =>
     apiCreateDocument(ownerId, {
       id: newId,
@@ -235,6 +255,7 @@ export async function duplicateDocument(
       ...(sheets.length ? { sheets: sheets.map(sheetAsCreate) } : {}),
       ...(src.workbook ? { workbook: src.workbook } : {}),
       ...(textDocuments.length ? { textDocuments } : {}),
+      ...(pdfDocuments.length ? { pdfDocuments } : {}),
     });
   try {
     await create(placement ?? { teamId: src.teamId, folderId: src.folderId });

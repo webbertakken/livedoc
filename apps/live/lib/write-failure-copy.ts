@@ -23,3 +23,9 @@ export const DOCUMENT_FAILURE = {
   delete: failure('delete', 'the document'),
   duplicate: failure('duplicate', 'the document'),
 } as const satisfies Record<string, FailureCopy>;
+
+/**
+ * A copy of someone else's document whose files would pass what is left of the copier's file storage
+ * (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions").
+ */
+export const COPY_DOES_NOT_FIT = "This document doesn't fit in the file storage that is left.";
