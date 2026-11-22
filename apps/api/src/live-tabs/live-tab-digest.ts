@@ -46,8 +46,7 @@ export async function refreshLiveTabDigest(
   await env.DOCUMENT_DB.batch([written, saved, ...refs]);
   // Every count the kind's digest holds, a kind's own beside the shared ones (a PDF's marks).
   const counts = Object.entries(digest)
-    .filter(([, count]) => typeof count === 'number')
-    .map(([name, count]) => `${name}=${count}`)
+    .flatMap(([name, count]) => (typeof count === 'number' ? [`${name}=${count}`] : []))
     .join(' ');
   console.info(
     `${kind.tag} digest document=${documentId} tab=${tabId} ${counts} images=${digest.imageIds?.length ?? 0} bytes=${stateBytes} ms=${Date.now() - started}`,
