@@ -1,0 +1,458 @@
+{
+  "excel/50096.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/54034.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/55406_Conditional_formatting_sample.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/DataValidations-49244.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/DateFormatTests.xlsx": {
+    "read": {
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/ExcelTables.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/Formatting.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/NumberFormatTests.xlsx": {
+    "read": {
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/SampleSS.xlsx": {
+    "read": {
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/WithConditionalFormatting.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/WithDrawing.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/WithTable.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/comments.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/shared_formulas.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "excel/table-sample.xlsx": {
+    "read": {
+      "formula_unread": 12
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/50096.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "formats_cut": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/54034.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "formats_cut": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/55406_Conditional_formatting_sample.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/DataValidations-49244.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/DataValidations-49244.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/DateFormatTests.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "formats_cut": 2,
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/ExcelTables.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/Formatting.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "format_approximated": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/NumberFormatTests.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "formats_cut": 2,
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/NumberFormatTests.xlsx": {
+    "read": {
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/SampleSS.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/WithConditionalFormatting.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/WithDrawing.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/WithTable.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/comments.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/comments.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/shared_formulas.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/shared_formulas.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/table-sample.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "formats_cut": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/DataValidations-49244.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/DataValidations-49244.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/NumberFormatTests.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "formats_cut": 2,
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/NumberFormatTests.xlsx": {
+    "read": {
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/SampleSS.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/SampleSS.xlsx": {
+    "read": {
+      "styles_unread": 2
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/comments.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 3
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/comments.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/google-functions.ods": {
+    "read": {
+      "entries_dropped": 1,
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/google-functions.xlsx": {
+    "read": {
+      "styles_unread": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "answers_differ",
+      "kept"
+    ]
+  }
+}

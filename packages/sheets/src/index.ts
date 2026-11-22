@@ -29,6 +29,8 @@ export { extractImport, type FetchedPage } from './imports/extract';
 export * from './sort';
 export * from './fill';
 export * from './csv';
+export * from './text-decoding';
+export * from './sheet-text';
 export * from './filter';
 export * from './find';
 export * from './clipboard';

@@ -45,6 +45,16 @@ describe('apiDownloadWorkbook', () => {
     expect(new URL(f.mock.calls[0]![0], 'https://x.test').searchParams.get('format')).toBe('xlsx');
   });
 
+  // files-and-print.md "Download" (D118): CSV and TSV name the open sheet's tab.
+  it('asks for the open sheet as CSV or TSV by its tab', async () => {
+    const f = vi.fn(async (_url: string, _init?: RequestInit) => new Response('a,b'));
+    vi.stubGlobal('fetch', f);
+    await apiDownloadWorkbook(scope, 'csv', 'tab 1');
+    const url = new URL(f.mock.calls[0]![0], 'https://x.test');
+    expect(url.searchParams.get('format')).toBe('csv');
+    expect(url.searchParams.get('tab')).toBe('tab 1');
+  });
+
   it('names a file the api did not name after the format', async () => {
     vi.stubGlobal(
       'fetch',

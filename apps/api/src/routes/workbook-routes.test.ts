@@ -236,6 +236,29 @@ describe('downloading a spreadsheet', () => {
     ]);
   });
 
+  // files-and-print.md "Download" (D118): the open sheet as CSV or TSV, values as shown, named after both.
+  it.each([
+    ['csv', ',', 'text/csv; charset=utf-8'],
+    ['tsv', '\t', 'text/tab-separated-values; charset=utf-8'],
+  ])('writes the open sheet as %s', async (format, sep, type) => {
+    const res = await call({
+      method: 'GET',
+      path: `/book1/workbook/file?format=${format}&tab=tab1`,
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe(type);
+    expect(res.headers.get('Content-Disposition')).toBe(
+      `attachment; filename="Q3 Budget - Sheet1.${format}"`,
+    );
+    expect(await res.text()).toBe(`21${sep}42\r\nrent${sep}\r\n`);
+  });
+
+  it('refuses a CSV of a tab that holds no sheet', async () => {
+    const res = await call({ method: 'GET', path: '/book1/workbook/file?format=csv' });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: 'sheet_not_found' });
+  });
+
   it('writes the flat form when asked', async () => {
     const res = await call({ method: 'GET', path: '/book1/workbook/file?format=fods' });
     expect(res.status).toBe(200);

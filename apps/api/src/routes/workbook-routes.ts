@@ -5,8 +5,9 @@
 // workbook keeps its format, files-and-print.md "Download"). A read, gated as the sheets are; a tab-scoped link
 // is never offered on a sheet tab (spreadsheet.md "The workbook shape"), so one reaches no file. Answered inside the
 // document's room.
+//   GET /api/documents/<id>/workbook/file?format=csv|tsv&tab=<tabId>  the open sheet as CSV or TSV, values as shown.
 import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
-import { writeWorkbook } from '@livedoc/sheets/files';
+import { writeSheetText, writeWorkbook } from '@livedoc/sheets/files';
 import { getDocumentMeta } from '../db';
 import { readWorkbook } from '../db/workbook';
 import { readKept } from '../db/workbook-kept';
@@ -44,6 +45,7 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   const record = await readWorkbook(ctx.env, documentId);
   if (!record) return workbookRefused('workbook_not_found', 404);
   const asked = ctx.url.searchParams.get('format') ?? record.format;
+  if (asked === 'csv' || asked === 'tsv') return sheetFile(ctx, documentId, record, asked);
   if (!WorkbookRecord.isFormat(asked)) return workbookRefused('file_type_unknown', 400);
   const [meta, sheets, kept] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
@@ -64,6 +66,47 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
       'Cache-Control': 'no-cache',
       'Content-Type': FILE_MEDIA_TYPES[asked],
       'Content-Disposition': `attachment; filename="${workbookFileName(name, asked)}"`,
+    },
+  });
+}
+
+const TEXT_MEDIA_TYPES = {
+  csv: 'text/csv; charset=utf-8',
+  tsv: 'text/tab-separated-values; charset=utf-8',
+} as const;
+
+// The open sheet (by its tab) as CSV or TSV (files-and-print.md "Download", D118): values as shown, injection-safe,
+// named `<spreadsheet> - <sheet>` as Google names it.
+async function sheetFile(
+  ctx: DocumentRouteContext,
+  documentId: string,
+  record: WorkbookRecord,
+  asked: 'csv' | 'tsv',
+): Promise<Response> {
+  const started = Date.now();
+  const [meta, sheets] = await Promise.all([
+    getDocumentMeta(ctx.env, documentId),
+    loadSpreadsheetSheets(ctx.env, documentId),
+  ]);
+  const written = writeSheetText(
+    sheets,
+    record,
+    ctx.url.searchParams.get('tab') ?? '',
+    asked === 'csv' ? ',' : '\t',
+  );
+  if (!written) return workbookRefused('sheet_not_found', 404);
+  const name = `${meta?.name ?? UNTITLED_SPREADSHEET} - ${written.title}`;
+  const body = new TextEncoder().encode(written.text);
+  console.info(
+    `[workbook] sheet file written document=${documentId} format=${asked} bytes=${body.byteLength} ms=${Date.now() - started}`,
+  );
+  return new Response(body, {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Cache-Control': 'no-cache',
+      'Content-Type': TEXT_MEDIA_TYPES[asked],
+      'Content-Disposition': `attachment; filename="${downloadFileName(name, asked, UNTITLED_SPREADSHEET)}"`,
     },
   });
 }

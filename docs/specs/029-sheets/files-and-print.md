@@ -26,6 +26,18 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   [D85](standard-mapping.md#defaults)), `.xls` is refused ("Save it as .xlsx first", default), `.csv`, `.tsv`, `.txt`
   (as TSV).
 - Every guard of [Security](../../research/sheets-open-standard/security.md) applies, each with its named rejection.
+- Built for CSV and TSV: **File › Open** takes a `.csv`, `.tsv` or `.txt` as a new spreadsheet (Create New
+  Spreadsheet; the other ways come with File › Import):
+  - Its text is read as UTF-8 (a byte order mark or none), as UTF-16 when a byte order mark says so, else, when it
+    is not UTF-8, as Windows-1252 (default, D117).
+  - A `.csv` is split by the separator it was written with, by the rules of [Sheet](sheet.md#csv) (comma,
+    semicolon or tab); a `.tsv` and a `.txt` by tabs (default, D117).
+  - Its one sheet is named after the file and holds at least a new sheet's grid; each value is read as if typed in
+    the workbook's locale, so numbers, dates, percentages and formulas are read as such
+    (Convert Text to Numbers, Dates and Formulas on, as by default).
+  - It is read up to the workbook's limits, each cut named in the read's losses, as any file's.
+  - The spreadsheet is made in the format a new one is ([Spreadsheet](spreadsheet.md#making-a-spreadsheet)), with
+    Google's meaning, as its formulas are typed (default, D117).
 - Telemetry: `Spreadsheet · Imported · <Format>` with the location.
 
 ### A file sent in parts
@@ -51,6 +63,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   the dialog before the download runs (**Download** and **Cancel**); the download is a converted copy, and the
   workbook keeps its own format.
 - CSV and TSV are injection-safe, as today ([Sheet](sheet.md#csv)).
+- Built for CSV and TSV: the open sheet's every row and column up to its last filled cell, each value as shown,
+  written by the api (in this browser for a spreadsheet in This Browser) as `<spreadsheet> - <sheet>.csv` (or
+  `.tsv`), UTF-8; a TSV is a CSV with tabs for commas, quoted the same way, so it reads back whole (default, D118).
 
 ## Converting
 
@@ -135,3 +150,7 @@ The code cites each by its id.
   out of each file written in it (default).
 - **D88** How the conversion dialog lists its losses: One line a kind, counted, naming up to three sheets or functions
   (default).
+- **D117** A CSV or TSV opened: UTF-8, UTF-16 by its byte order mark, else Windows-1252; a `.csv`'s separator
+  detected, a `.tsv`'s and a `.txt`'s a tab; made in a new spreadsheet's format with Google's meaning (default).
+- **D118** A CSV or TSV downloaded: The open sheet, named `<spreadsheet> - <sheet>` as Google names it; a TSV quoted
+  as a CSV is (default).

@@ -11,19 +11,25 @@ import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
 export type WorkbookScope = { ownerId: string; documentId: string; shareCode: string | null };
 
-/** The workbook as a file, with the name the api gave it. */
+/** What File › Download writes: the workbook in a format, or the open sheet as CSV or TSV (files-and-print.md). */
+export type DownloadFormat = WorkbookFormat | 'csv' | 'tsv';
+
+/** The workbook (or, as CSV or TSV, the sheet on `tabId`) as a file, with the name the api gave it. */
 export async function apiDownloadWorkbook(
   scope: WorkbookScope,
-  format: WorkbookFormat,
+  format: DownloadFormat,
+  tabId = '',
 ): Promise<{ blob: Blob; fileName: string }> {
   // An offline spreadsheet is written in this browser (sheet-store.md "Offline documents").
   if (await isOfflineId(scope.documentId))
     return (await import('../offline/offline-workbook-file')).offlineWorkbookFile(
       scope.documentId,
       format,
+      tabId,
     );
+  const tab = format === 'csv' || format === 'tsv' ? `&tab=${encodeURIComponent(tabId)}` : '';
   const res = await apiFetch(
-    `${API_BASE}/documents/${encodeURIComponent(scope.documentId)}/workbook/file?format=${format}`,
+    `${API_BASE}/documents/${encodeURIComponent(scope.documentId)}/workbook/file?format=${format}${tab}`,
     { headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }) },
   );
   await expectOkVoid(res, 'workbook file');

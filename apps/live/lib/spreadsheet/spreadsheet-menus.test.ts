@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { OfficeItem, OfficeSubmenu } from '@/lib/office/office-catalogue';
-import { CONVERT_ITEM_ID, DOWNLOAD_ITEMS, spreadsheetMenus } from './spreadsheet-menus';
+import {
+  CONVERT_ITEM_ID,
+  DOWNLOAD_ITEMS,
+  SHEET_DOWNLOAD_ITEMS,
+  spreadsheetMenus,
+} from './spreadsheet-menus';
 
 // docs/specs/029-sheets/files-and-print.md "Download" and "Converting": File › Download in the three native formats,
 // and Convert to the other standard, an Editor's.
@@ -19,8 +24,11 @@ describe('spreadsheetMenus', () => {
       'Microsoft Excel (.xlsx)',
       'OpenDocument (.ods)',
       'Flat OpenDocument (.fods)',
+      'Comma-separated values (.csv, current sheet)',
+      'Tab-separated values (.tsv, current sheet)',
     ]);
     expect(DOWNLOAD_ITEMS.map((i) => i.format)).toEqual(['xlsx', 'ods', 'fods']);
+    expect(SHEET_DOWNLOAD_ITEMS.map((i) => i.format)).toEqual(['csv', 'tsv']);
   });
 
   it('names the format Convert goes to, and keeps it an Editor’s', () => {

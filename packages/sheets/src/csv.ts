@@ -3,6 +3,10 @@ import { SHEET_COLS_MAX, SHEET_ROWS_MAX } from './limits';
 
 export type ParsedCsv = { rows: string[][]; truncated: boolean };
 
+/** How many rows and columns a read keeps: a Plan Sheet's grid unless a spreadsheet's is asked for. */
+export type CsvBounds = { rows: number; cols: number };
+const SHEET_BOUNDS: CsvBounds = { rows: SHEET_ROWS_MAX, cols: SHEET_COLS_MAX };
+
 // How many lines `separatorOf` reads to choose.
 const SEPARATOR_SAMPLE_LINES = 20;
 
@@ -53,16 +57,20 @@ function firstRecordHasTab(body: string): boolean {
   return false;
 }
 
-// Rows of fields, split by `sep`, else by the separator the text was written with (separatorOf).
-export function parseCsv(text: string, sep?: string): ParsedCsv {
+// Rows of fields, split by `sep`, else by the separator the text was written with (separatorOf), cut at `bounds`.
+export function parseCsv(text: string, sep?: string, bounds: CsvBounds = SHEET_BOUNDS): ParsedCsv {
   const body = text.startsWith('\ufeff') ? text.slice(1) : text;
-  const { rows, truncated } = readCsv(body, sep ?? separatorOf(body));
+  const { rows, truncated } = readCsv(body, sep ?? separatorOf(body), bounds);
   return { rows, truncated };
 }
 
 // RFC 4180 read by `d`. `stray`: a quote was taken as text (one mid-field, or text after a field's closing quote),
 // which a file written with `d` never holds.
-function readCsv(body: string, d: string): ParsedCsv & { stray: boolean } {
+function readCsv(
+  body: string,
+  d: string,
+  bounds: CsvBounds = SHEET_BOUNDS,
+): ParsedCsv & { stray: boolean } {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
@@ -75,8 +83,8 @@ function readCsv(body: string, d: string): ParsedCsv & { stray: boolean } {
     row.push(field);
     field = '';
     closed = false;
-    if (row.length > SHEET_COLS_MAX) {
-      row = row.slice(0, SHEET_COLS_MAX);
+    if (row.length > bounds.cols) {
+      row = row.slice(0, bounds.cols);
       truncated = true;
     }
     rows.push(row);
@@ -116,7 +124,7 @@ function readCsv(body: string, d: string): ParsedCsv & { stray: boolean } {
       endRow();
       if (ch === '\r' && body[i + 1] === '\n') i++;
       i++;
-      if (rows.length >= SHEET_ROWS_MAX) {
+      if (rows.length >= bounds.rows) {
         truncated = i < body.length;
         return { rows, truncated, stray };
       }
@@ -149,8 +157,12 @@ export function csvSafeField(field: string): string {
 }
 
 // `safe` (every download leaving the app, never a sheet's own round trip): each field a spreadsheet would run as a
-// formula is made inert (csvSafeField).
-export function toCsv(rows: readonly (readonly string[])[], opts: { safe?: boolean } = {}): string {
+// formula is made inert (csvSafeField). `sep` a tab writes TSV, quoted as CSV is, so it reads back whole.
+export function toCsv(
+  rows: readonly (readonly string[])[],
+  opts: { safe?: boolean; sep?: ',' | '\t' } = {},
+): string {
   const field = opts.safe ? (f: string) => quote(csvSafeField(f)) : quote;
-  return rows.map((r) => r.map(field).join(',')).join('\r\n') + (rows.length ? '\r\n' : '');
+  const sep = opts.sep ?? ',';
+  return rows.map((r) => r.map(field).join(sep)).join('\r\n') + (rows.length ? '\r\n' : '');
 }

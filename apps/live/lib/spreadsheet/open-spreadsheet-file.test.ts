@@ -138,3 +138,31 @@ describe('the words', () => {
     expect(openingNotice('Q3', 2)).toBe('Opening “Q3”… 100%');
   });
 });
+
+// files-and-print.md "Import" (D117): a CSV or TSV opens as one sheet of a new spreadsheet, values read as typed.
+describe('a CSV or TSV opened', () => {
+  it.each([
+    ['Prices.csv', 'Tea;3,50\nCake;=1+1\n', 'csv'],
+    ['Prices.tsv', 'Tea\t3,50\nCake\t=1+1\n', 'tsv'],
+    ['Prices.txt', 'Tea\t3,50\nCake\t=1+1\n', 'tsv'],
+  ])(
+    'makes %s one sheet named after it, in a new spreadsheet’s format',
+    async (name, text, imported) => {
+      vi.mocked(apiCreateDocument).mockResolvedValue({} as never);
+      const opened = await openSpreadsheetFile('me', new File([text], name));
+      expect(opened).toMatchObject({ ok: true, format: 'ods', imported });
+      const created = vi.mocked(apiCreateDocument).mock.calls[0]![1];
+      expect(created.workbook).toMatchObject({ format: 'ods' });
+      expect(created.workbook?.meaning).toBeUndefined();
+      const sheet = created.sheets![0]!;
+      expect(sheet.title).toBe('Prices');
+      expect(sheet.cells!.map((c) => c.i)).toEqual([
+        { s: 'Tea' },
+        { s: '3,50' },
+        { s: 'Cake' },
+        expect.objectContaining({ f: expect.anything() }),
+      ]);
+      expect(sendKept).not.toHaveBeenCalled();
+    },
+  );
+});

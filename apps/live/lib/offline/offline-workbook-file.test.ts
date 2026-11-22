@@ -128,3 +128,37 @@ describe('an offline spreadsheet’s kept content', () => {
     expect(xlsx.ok && JSON.stringify(xlsx.file.kept ?? null)).not.toContain('named-expressions');
   });
 });
+
+// files-and-print.md "Download" (D118): the open sheet as CSV or TSV, written in this browser as the api writes it.
+describe('an offline sheet as CSV or TSV', () => {
+  it.each([
+    ['csv', '21\r\n', 'text/csv;charset=utf-8'],
+    ['tsv', '21\r\n', 'text/tab-separated-values;charset=utf-8'],
+  ] as const)('writes the sheet on the tab as %s, named after both', async (format, text, type) => {
+    const [r0] = layout.rows;
+    const [c0] = layout.cols;
+    await offlinePutRecord(
+      testRecord({
+        name: 'Q3',
+        workbook,
+        sheets: [sheet('sheetOne1', 't1', 'Costs', [{ r: r0!, c: c0!, i: { n: 21 } }])],
+      }),
+    );
+    const { blob, fileName } = await offlineWorkbookFile('d1', format, 't1');
+    expect(fileName).toBe(`Q3 - Costs.${format}`);
+    expect(blob.type).toBe(type);
+    expect(await blob.text()).toBe(text);
+  });
+
+  it('names an unnamed spreadsheet’s file as untitled, and refuses a tab with no sheet', async () => {
+    await offlinePutRecord(
+      testRecord({ name: '', workbook, sheets: [sheet('sheetOne1', 't1', 'S', [])] }),
+    );
+    expect((await offlineWorkbookFile('d1', 'csv', 't1')).fileName).toBe(
+      'Untitled spreadsheet - S.csv',
+    );
+    await expect(offlineWorkbookFile('d1', 'tsv', 'gone')).rejects.toMatchObject({
+      code: 'sheet_not_found',
+    });
+  });
+});

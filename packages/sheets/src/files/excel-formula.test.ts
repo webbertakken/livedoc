@@ -76,6 +76,35 @@ describe('S5 in XLSX', () => {
     );
     expect(unwrapDummyFunction('IFERROR(A1, 2)')).toBeNull();
   });
+
+  // Measured in the corpus (corpus/google/google-functions.xlsx): Google joins a text past Excel's 255 characters
+  // from pieces, and so does LiveDoc.
+  it('joins a formula past 255 characters from pieces, and reads such pieces back', () => {
+    const long = `=LEN(REGEXREPLACE("${'x'.repeat(300)}","y","z"))`;
+    const wrapped = dummyFunction(long, 300);
+    const literals = /DUMMYFUNCTION\((.*)\),300\)$/.exec(wrapped)![1]!;
+    const pieces = [...literals.matchAll(/"((?:[^"]|"")*)"/g)].map((m) =>
+      m[1]!.replace(/""/g, '"'),
+    );
+    expect(pieces.map((p) => p.length)).toEqual([255, 74]);
+    expect(literals).toContain('"&"');
+    expect(unwrapDummyFunction(wrapped)).toBe(long);
+    expect(unwrapDummyFunction('IFERROR(__xludf.DUMMYFUNCTION("A(""a" & "b"")"),1)')).toBe(
+      '=A("ab")',
+    );
+    expect(dummyFunction('=', 1)).toBe('IFERROR(__xludf.DUMMYFUNCTION(""),1)');
+  });
+});
+
+describe('a string literal past Excel’s 255 characters', () => {
+  it('is joined from pieces, bracketed as one value', () => {
+    const text = 'y'.repeat(256);
+    expect(toExcelFormula(`=LEN("${text}")+1`)).toBe(`LEN(("${'y'.repeat(255)}"&"y"))+1`);
+    expect(fromExcelFormula(`LEN(("${'y'.repeat(255)}"&"y"))+1`)).toBe(
+      `=LEN(("${'y'.repeat(255)}"&"y"))+1`,
+    );
+    expect(toExcelFormula(`=LEN("${'y'.repeat(255)}")`)).toBe(`LEN("${'y'.repeat(255)}")`);
+  });
 });
 
 describe('fromExcelFormula', () => {
