@@ -14,6 +14,7 @@ import {
   layersPdf,
   marksPdf,
   outlinePdf,
+  privateDataPdf,
   protectedPdf,
   readerWasm,
   signedPdf,
@@ -255,6 +256,29 @@ describe('a rewrite', () => {
     );
     opened(await engine.open(await turned(marksPdf())));
     expect((await engine.fileMarks(0)).map((mark) => mark.id)).toContain('hl-1');
+  });
+
+  // saving.md "What is kept untouched": what LiveDoc does not understand is kept and written back.
+  it('keeps other software’s private data it does not understand', async ({ skip }) => {
+    const pages = opened(await engine.open(privateDataPdf()));
+    const result = await bakeWith([PdfChange.turnPage(pages[0]!.name, 90)]);
+    expect(result.kind).toBe('rewrite');
+    const file = join(mkdtempSync(join(tmpdir(), 'pdf-writing-')), 'private.pdf');
+    writeFileSync(file, result.bytes);
+    try {
+      execFileSync('qpdf', ['--version'], { stdio: 'ignore' });
+    } catch {
+      skip('qpdf is not installed');
+    }
+    // The file as plain objects, whatever way the writer packed them.
+    const plain = execFileSync('qpdf', ['--qdf', '--object-streams=disable', file, '-'], {
+      encoding: 'latin1',
+      maxBuffer: 16 * 1024 * 1024,
+    });
+    expect(plain).toContain('/OtherSoftware');
+    expect(plain).toContain('(kept as it came)');
+    expect(plain).toMatch(/\/Unknown \/Thing/);
+    expect(plain).toMatch(/\/Numbers \[\s*1\s+2\s+3\s*\]/);
   });
 
   // saving.md "Addition or rewrite": a protected file is rewritten protected.

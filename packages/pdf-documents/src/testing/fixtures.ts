@@ -69,7 +69,7 @@ export function spoiled(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
   return new Uint8Array(Buffer.from(text, 'latin1'));
 }
 
-const PAGE = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>';
+const PAGE = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>';
 
 /** Three pages labelled "i", "ii" and "A-1": lower-case roman numerals, then a prefix with decimals. */
 export const labelledPdf = (): Uint8Array<ArrayBuffer> =>
@@ -89,6 +89,15 @@ export const rotatedPdf = (): Uint8Array<ArrayBuffer> =>
     ...[90, 180, 270, 0, 45].map(
       (turn) => `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Rotate ${turn} >>`,
     ),
+  ]);
+
+/** One page, and in its catalogue an entry of other software's, with its own words: nothing LiveDoc reads. */
+export const privateDataPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /OtherSoftware << /Words (kept as it came) /Deep 4 0 R >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    '<< /Unknown /Thing /Numbers [1 2 3] >>',
   ]);
 
 /** One page with one text field named "name", valued "Ada": an interactive form. */
