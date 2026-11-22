@@ -4,6 +4,7 @@ export * from './limits';
 export * from './workbook/sheet-name';
 export * from './workbook/cell-style';
 export * from './workbook/workbook-limits';
+export * from './files/file-read-limits';
 export * from './sheet-limits';
 export * from './workbook/axis-chunks';
 export * from './workbook/row-span';

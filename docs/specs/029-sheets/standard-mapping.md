@@ -155,23 +155,27 @@ The table is the contract the readers and writers are tested against, one test p
   (`format_approximated`); a code ODF cannot say here (a fraction, a scaling comma) is written without its format and
   named (`format_unwritten`).
 - A cell's format is its own cell style's, else its row's default cell style's, else its column's. An empty cell keeps
-  its own style's format where the file repeats it over at most 1,000 cells; a format over more, or a row's or
-  column's default over empty cells, is a whole line's, which the grid does not hold yet, and is named (`formats_cut`)
-  (default, D94).
+  its own style's format where the file repeats it over at most 1,000 cells; a format over more is a whole line's,
+  which the grid does not hold yet, and is named (`formats_cut`) (default, D94).
+- A row's or column's default cell style formats the cells the file fills in it; over its empty cells it shows
+  nothing, as Excel's column styles show nothing (D110), and is not named (default, D123).
 
 ## Unknown content
 
-- Whatever a file holds that the model does not (an embedded chart, a format's own setting, a smart chip, a filter view in XLSX that only ODF could hold) is kept with the workbook as the file's own XML, by
-  where it sat, and written back untouched to the same format. Built in `@livedoc/sheets/files` (`KeptContent`).
+- Whatever a file holds that the model does not (an embedded chart, a format's own setting, a smart chip, a filter
+  view in XLSX that only ODF could hold) is kept with the workbook as the file's own XML, by where it sat, and written
+  back untouched to the same format. Built in `@livedoc/sheets/files` (`KeptContent`).
 - Every construct the mappings above do not read yet is kept until its mapping is built (charts and pictures, notes
   and comments, merges, named ranges, validation and format rules, filters, protections; XLSX's print settings and
   column widths), as text documents keep theirs. Styles are not kept: a cell's, row's or column's style beyond its
   number format, and ODF's `styles.xml` (its page layouts, so its print settings, and the named styles a format rule
   applies), wait for [Formatting](formatting.md) to map them. Until then a file's read names each sheet whose cells,
   rows or columns name a cell style formatting more than the number (a font, fill, border or alignment:
-  `styles_unread`); ODF's row and column sizes are named by the import report (default, D104). XLSX's differential formats (`dxfs`) and table styles are kept in its styles part,
-  as kept format rules, tables and pivot tables name them by index; a kept column's `style` index is left out, as it
-  names a style LiveDoc does not write (default, D110).
+  `styles_unread`); ODF's row and column sizes are not read yet either, and a sheet sized by hand is named
+  (`sizes_unread`) (default, D104): its columns of more than one width, or a row whose height is not its text's
+  (`style:use-optimal-row-height` other than true) (default, D124). XLSX's differential formats (`dxfs`) and table
+  styles are kept in its styles part, as kept format rules, tables and pivot tables name them by index; a kept
+  column's `style` index is left out, as it names a style LiveDoc does not write (default, D110).
 - **Grains**, each kept as the file's own XML with the namespace bindings it needs
   ([Office packages](../020-import-export/office-packages.md), `keptXmlOf`), anchored where it sat:
   - **Workbook**: ODF's `office:spreadsheet` children but its tables and `table:calculation-settings` (which LiveDoc
@@ -261,11 +265,12 @@ and write is measured against what arrives in practice, not only against LiveDoc
 
 ## Limits
 
-- A file over 100 MB, or one that inflates past 1 GB, or holds more than the workbook's limits
-  ([Spreadsheet](spreadsheet.md#limits)), is refused with a named rejection (`package_too_large`, [Office packages](../020-import-export/office-packages.md#named-rejections)), or cut and said so
-  where a part can be taken (rows past the limit).
-- Every import guard of [Security](../../research/sheets-open-standard/security.md) is a test with a named
-  rejection.
+- A file over 100 MB, or a package that inflates past 200 MB, is refused with a named rejection (`package_too_large`,
+  [Office packages](../020-import-export/office-packages.md#named-rejections)); a file holding more than the
+  workbook's limits ([Spreadsheet](spreadsheet.md#limits)) or 2,000,000 cells is cut, and the cut listed in the
+  import report.
+- Every import guard of [Security](../../research/sheets-open-standard/security.md) is a test with its named
+  rejection or its line in the import report ([Files and print](files-and-print.md#import-security)).
 
 ## Defaults
 
@@ -308,3 +313,7 @@ The code cites each by its id.
   left out, entries first, with the relationships naming them, and named (`kept_too_large`) (default).
 - **D119** The corpus's files: Excel's from Apache POI's test data, saved again by LibreOffice 26.8 and by Google
   Sheets (default).
+- **D123** A row's or column's default cell format in ODF: On the cells the file fills in it; not named over its empty
+  cells (default).
+- **D124** An ODF sheet sized by hand: Columns of more than one width, or a row not at its text's height; named
+  (`sizes_unread`) (default).

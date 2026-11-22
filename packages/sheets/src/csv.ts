@@ -1,10 +1,14 @@
 // CSV (docs/specs/029-sheets/sheet.md "CSV"): RFC 4180 both ways, cut at the grid's limits.
 import { SHEET_COLS_MAX, SHEET_ROWS_MAX } from './limits';
 
-export type ParsedCsv = { rows: string[][]; truncated: boolean };
+/** A read: its rows, whether a row or column bound cut it, and whether the cells bound stopped it (`full`). */
+export type ParsedCsv = { rows: string[][]; truncated: boolean; full?: boolean };
 
-/** How many rows and columns a read keeps: a Plan Sheet's grid unless a spreadsheet's is asked for. */
-export type CsvBounds = { rows: number; cols: number };
+/**
+ * How many rows and columns a read keeps: a Plan Sheet's grid unless a spreadsheet's is asked for; `cells`, the most
+ * fields it reads, stops it at the row that would pass them (a file opened, files-and-print.md "Import security").
+ */
+export type CsvBounds = { rows: number; cols: number; cells?: number };
 const SHEET_BOUNDS: CsvBounds = { rows: SHEET_ROWS_MAX, cols: SHEET_COLS_MAX };
 
 // How many lines `separatorOf` reads to choose.
@@ -60,8 +64,8 @@ function firstRecordHasTab(body: string): boolean {
 // Rows of fields, split by `sep`, else by the separator the text was written with (separatorOf), cut at `bounds`.
 export function parseCsv(text: string, sep?: string, bounds: CsvBounds = SHEET_BOUNDS): ParsedCsv {
   const body = text.startsWith('\ufeff') ? text.slice(1) : text;
-  const { rows, truncated } = readCsv(body, sep ?? separatorOf(body), bounds);
-  return { rows, truncated };
+  const { rows, truncated, full } = readCsv(body, sep ?? separatorOf(body), bounds);
+  return full ? { rows, truncated, full } : { rows, truncated };
 }
 
 // RFC 4180 read by `d`. `stray`: a quote was taken as text (one mid-field, or text after a field's closing quote),
@@ -78,16 +82,21 @@ function readCsv(
   let closed = false;
   let stray = false;
   let truncated = false;
+  let full = false;
+  let cells = 0;
   let i = 0;
-  const endRow = () => {
-    row.push(field);
+  // A field past the columns kept is never held, so one long line of separators costs nothing.
+  const pushField = () => {
+    if (row.length < bounds.cols) row.push(field);
+    else truncated = true;
     field = '';
     closed = false;
-    if (row.length > bounds.cols) {
-      row = row.slice(0, bounds.cols);
-      truncated = true;
-    }
-    rows.push(row);
+  };
+  const endRow = () => {
+    pushField();
+    cells += row.length;
+    if (cells > (bounds.cells ?? Infinity)) full = true;
+    else rows.push(row);
     row = [];
   };
   while (i < body.length) {
@@ -114,14 +123,13 @@ function readCsv(
       continue;
     }
     if (ch === d) {
-      row.push(field);
-      field = '';
-      closed = false;
+      pushField();
       i++;
       continue;
     }
     if (ch === '\r' || ch === '\n') {
       endRow();
+      if (full) return { rows, truncated, full, stray };
       if (ch === '\r' && body[i + 1] === '\n') i++;
       i++;
       if (rows.length >= bounds.rows) {
@@ -135,7 +143,7 @@ function readCsv(
     i++;
   }
   if (field !== '' || row.length > 0) endRow();
-  return { rows, truncated, stray };
+  return { rows, truncated, full, stray };
 }
 
 // A semicolon and a tab are quoted too, though the file is comma-separated: a sheet whose cells hold one would

@@ -7,6 +7,7 @@ import {
   childElement,
   childElements,
   OOXML_CONTENT_TYPES,
+  PACKAGE_BUDGETS,
   parseXml,
   readOoxmlPackage,
   refuse,
@@ -14,6 +15,7 @@ import {
   resolvePartName,
   textContent,
   type OoxmlPackage,
+  type PackageBudgets,
   type XmlElement,
 } from '@livedoc/office-packages';
 import { SheetLimits } from '../sheet-limits';
@@ -21,6 +23,7 @@ import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { fromExcelFormula } from './excel-formula';
 import { shiftFormulaText } from './formula-text-shift';
 import { isoDateSerial } from './ods-read';
+import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 import { WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { dateStyles, readCellStyles, styledCellStyles, type XlsxCellStyle } from './xlsx-styles';
@@ -37,7 +40,7 @@ import {
 const {
   rows: ROWS_MAX,
   cols: COLS_MAX,
-  gridCells: CELLS_MAX,
+
   sheets: SHEETS_MAX,
 } = SheetLimits.spreadsheet;
 
@@ -196,6 +199,7 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   const shared = new Map<string, Shared>();
   const cache = new Set<string>();
   let cut = false;
+  let cellsCut = false;
   let styled = false;
   let nextRow = 0;
   for (const row of children(childElement(root, book.ns, 'sheetData'), book.ns, 'row')) {
@@ -207,8 +211,13 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
       const at = address === undefined ? { r, c: nextCol } : readCellAddress(address);
       if (!at || !Number.isInteger(at.r) || at.r < 0) continue;
       nextCol = at.c + 1;
-      if (at.r >= ROWS_MAX || at.c >= COLS_MAX || book.budget.cells >= CELLS_MAX) {
+      if (at.r >= ROWS_MAX || at.c >= COLS_MAX) {
         cut = true;
+        continue;
+      }
+      // However many cells a file holds, it makes at most so many (D121).
+      if (book.budget.cells >= FILE_READ_CELLS_MAX) {
+        cellsCut = true;
         continue;
       }
       styled ||= book.styled.has(Number(attributeOf(cell, '', 's') ?? 0));
@@ -228,6 +237,7 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   }
   wrappedBlocks(cells, cache);
   if (cut) book.losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
+  if (cellsCut) book.losses.push({ k: 'cells_cut', sheet: name });
   // Formatting past the number format waits for Formatting's mapping: named (D104).
   if (styled) book.losses.push({ k: 'styles_unread', sheet: name });
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
@@ -242,8 +252,9 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
 export async function readXlsx(
   bytes: Uint8Array<ArrayBuffer>,
   locale = 'en-US',
+  budgets: PackageBudgets = PACKAGE_BUDGETS,
 ): Promise<FileRead> {
-  const read = await readOoxmlPackage(bytes);
+  const read = await readOoxmlPackage(bytes, budgets);
   if (!read.ok) return read;
   const pkg = read.package;
   if (!SPREADSHEET_TYPES.has(pkg.mediaType)) return refuse('package_wrong_type');
@@ -286,14 +297,15 @@ export async function readXlsx(
       continue;
     }
     const part = rel && resolvePartName(pkg.mainPart, rel.target);
-    const xml = text(pkg, part);
-    if (xml === undefined) return refuse('package_damaged', { entry: part ?? pkg.mainPart });
-    const worksheet = parseXml(xml, part);
-    if (!worksheet.ok) return worksheet;
+    // A sheet past the most a workbook holds is never parsed.
     if (sheets.length === SHEETS_MAX) {
       book.losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: listed.length });
       break;
     }
+    const xml = text(pkg, part);
+    if (xml === undefined) return refuse('package_damaged', { entry: part ?? pkg.mainPart });
+    const worksheet = parseXml(xml, part);
+    if (!worksheet.ok) return worksheet;
     placed.set(at, sheets.length);
     keeper?.sheetEntry(sheet, sheets.length);
     keeper?.worksheet(worksheet, part!, sheets.length);

@@ -16,6 +16,7 @@ export {
   type PackageRefusal,
   type PackageRejection,
 } from './rejections';
+export { droppedEntryKind, type DroppedEntryKind } from './dropped-entries';
 export {
   attributeOf,
   childElement,

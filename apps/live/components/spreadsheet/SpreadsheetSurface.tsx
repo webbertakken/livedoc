@@ -46,6 +46,7 @@ import {
 } from '@/lib/spreadsheet/spreadsheet-menus';
 import { track } from '@/lib/telemetry';
 import { ConversionDialog } from './ConversionDialog';
+import { ImportReportDialog } from './ImportReportDialog';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
 import { RangeAccessBar } from './RangeAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
@@ -200,6 +201,7 @@ export function SpreadsheetSurface({
         onRetry={conversion.retry}
         onCancel={conversion.cancel}
       />
+      <ImportReportDialog documentId={scope.documentId} />
     </section>
   );
 }

@@ -8,6 +8,7 @@ import {
 } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import { readOds } from './ods-read';
+import type { FileRead } from './workbook-file';
 import { SPREADSHEETML_NS } from './xlsx-parts';
 import { readXlsx } from './xlsx-read';
 
@@ -28,7 +29,10 @@ function fods(table: string): Uint8Array<ArrayBuffer> {
   );
 }
 
-const lossesOf = async (bytes: Uint8Array<ArrayBuffer>, read = readOds) => {
+const lossesOf = async (
+  bytes: Uint8Array<ArrayBuffer>,
+  read: (bytes: Uint8Array<ArrayBuffer>) => Promise<FileRead> = readOds,
+) => {
   const out = await read(bytes);
   if (!out.ok) throw new Error(out.rejection);
   return out.losses.filter((l) => l.k === 'styles_unread');
@@ -92,12 +96,23 @@ describe('styles past the number format', () => {
           ],
         ]),
       );
+    // Excel's default alignment and protection, as LibreOffice writes on every style, format nothing.
     const xfs =
-      '<xf numFmtId="0"/><xf numFmtId="0" fontId="1"/><xf numFmtId="0"><alignment wrapText="1"/></xf>';
+      '<xf numFmtId="0"/><xf numFmtId="0" fontId="1"/><xf numFmtId="0"><alignment wrapText="1"/></xf>' +
+      '<xf numFmtId="0"><alignment horizontal="general" vertical="bottom" wrapText="false"/><protection locked="true" hidden="false"/></xf>' +
+      '<xf numFmtId="0"><protection locked="0"/></xf>' +
+      `<xf numFmtId="0"><alignment xmlns:x="urn:x" x:own="1"/></xf>` +
+      '<xf numFmtId="0"><alignment justify="1"/></xf><xf numFmtId="0"><extLst/></xf><xf numFmtId="0"><constructor/></xf>';
     expect(await lossesOf(xlsx(xfs, '<c r="A1" s="1"><v>1</v></c>'), readXlsx)).toEqual([
       { k: 'styles_unread', sheet: 'A' },
     ]);
     expect(await lossesOf(xlsx(xfs, '<c r="A1" s="2"><v>1</v></c>'), readXlsx)).toHaveLength(1);
     expect(await lossesOf(xlsx(xfs, '<c r="A1"><v>1</v></c>'), readXlsx)).toEqual([]);
+    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="3"><v>1</v></c>'), readXlsx)).toEqual([]);
+    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="4"><v>1</v></c>'), readXlsx)).toHaveLength(1);
+    for (const s of [5, 6, 7, 8])
+      expect(await lossesOf(xlsx(xfs, `<c r="A1" s="${s}"><v>1</v></c>`), readXlsx)).toHaveLength(
+        1,
+      );
   });
 });

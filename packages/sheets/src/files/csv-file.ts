@@ -14,6 +14,7 @@ import { decodeTextFile, type TextEncodingName } from '../text-decoding';
 import { readTypedInput } from '../typed-input';
 import type { WorkbookRecord } from '../workbook-record';
 import { WORKBOOK_COLS_MAX, WORKBOOK_ROWS_MAX } from '../workbook/workbook-limits';
+import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import {
   sheetsFromFile,
   type FileLoss,
@@ -68,6 +69,7 @@ export function sheetsFromText(
   const parsed = parseCsv(text, split === 'tab' ? '\t' : undefined, {
     rows: WORKBOOK_ROWS_MAX,
     cols: WORKBOOK_COLS_MAX,
+    cells: FILE_READ_CELLS_MAX,
   });
   const width = parsed.rows.reduce((w, row) => Math.max(w, row.length), 0);
   // A read cut at a bound held more than it kept there: one more line, so the cut is named as any file's is.
@@ -106,6 +108,8 @@ export function sheetsFromText(
         ...(value.f ? { f: value.f } : {}),
       });
     }
+  // However many fields the text holds, it makes at most so many cells (D121).
+  if (parsed.full) losses.push({ k: 'cells_cut', sheet: sheet.title });
   if (cut > 0) losses.push({ k: 'text_cut', sheet: sheet.title, cells: cut });
   return { sheets: [{ ...sheet, cells }], losses, encoding };
 }

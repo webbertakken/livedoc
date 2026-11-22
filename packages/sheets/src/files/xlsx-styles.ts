@@ -8,6 +8,7 @@ import {
   childElements,
   escapeXmlAttribute,
   parseXml,
+  type XmlElement,
 } from '@livedoc/office-packages';
 import { shortDateCode } from './number-format-code';
 import { SPREADSHEETML_NS } from './xlsx-parts';
@@ -108,9 +109,38 @@ export function readCellStyles(stylesXml: string | undefined, locale: string): X
   });
 }
 
+// Excel's defaults of an alignment and a protection (ECMA-376 18.8.1, 18.8.33): one that says only these formats
+// nothing, as LibreOffice writes on every cell style.
+const XF_DEFAULTS = new Map<string, Map<string, readonly string[]>>(
+  Object.entries({
+    alignment: {
+      horizontal: ['general'],
+      vertical: ['bottom'],
+      textRotation: ['0'],
+      wrapText: ['0', 'false'],
+      indent: ['0'],
+      relativeIndent: ['0'],
+      justifyLastLine: ['0', 'false'],
+      shrinkToFit: ['0', 'false'],
+      readingOrder: ['0'],
+    },
+    protection: { locked: ['1', 'true'], hidden: ['0', 'false'] },
+  }).map(([local, attributes]) => [local, new Map(Object.entries(attributes))]),
+);
+
+// Whether an `xf`'s child formats the cell: any but an alignment or protection holding only Excel's defaults.
+function formats(child: XmlElement): boolean {
+  const defaults = XF_DEFAULTS.get(child.local);
+  if (!defaults) return true;
+  return child.attributes.some(
+    ({ uri, local, value }) => uri !== '' || !(defaults.get(local) ?? []).includes(value),
+  );
+}
+
 /**
  * The cell styles (`cellXfs` indexes) that format more than the number: a font, fill or border other than the
- * first, or an alignment or protection (standard-mapping.md "Unknown content", `styles_unread`, D104).
+ * first, or an alignment or protection other than Excel's default (standard-mapping.md "Unknown content",
+ * `styles_unread`, D104).
  */
 export function styledCellStyles(stylesXml: string | undefined): Set<number> {
   const out = new Set<number>();
@@ -122,7 +152,7 @@ export function styledCellStyles(stylesXml: string | undefined): Set<number> {
     const own = ['fontId', 'fillId', 'borderId'].some(
       (id) => (attributeOf(xf, '', id) ?? '0') !== '0',
     );
-    if (own || childElements(xf).length > 0) out.add(i);
+    if (own || childElements(xf).some(formats)) out.add(i);
   });
   return out;
 }

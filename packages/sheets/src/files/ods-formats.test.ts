@@ -6,11 +6,9 @@ import { describe, expect, it } from 'vitest';
 import { ODS_FORMAT_REPEAT_MAX, readOds } from './ods-read';
 import { writeFlatOds, writeOds } from './ods-write';
 import type { WorkbookFile } from './workbook-file';
+import { flatOds, ODF_NAMESPACES } from '../testing/hand-files';
 
 const encode = (text: string) => new TextEncoder().encode(text);
-const NS = Object.entries(ODF_NS)
-  .map(([p, uri]) => `xmlns:${p}="${uri}"`)
-  .join(' ');
 
 const file: WorkbookFile = {
   sheets: [
@@ -74,15 +72,6 @@ describe('number formats written to ODF', () => {
   });
 });
 
-// A flat document as another maker writes one: styles in office:styles and automatic ones, defaults on lines.
-function flat(styles: string, automatic: string, table: string): Uint8Array<ArrayBuffer> {
-  return encode(
-    `<?xml version="1.0"?><office:document ${NS} office:mimetype="application/vnd.oasis.opendocument.spreadsheet">` +
-      `<office:styles>${styles}</office:styles><office:automatic-styles>${automatic}</office:automatic-styles>` +
-      `<office:body><office:spreadsheet><table:table table:name="S">${table}</table:table></office:spreadsheet></office:body></office:document>`,
-  );
-}
-
 const PERCENT =
   '<number:percentage-style style:name="P"><number:number number:decimal-places="1" number:min-integer-digits="1"/><number:text>%</number:text></number:percentage-style>';
 const DATE =
@@ -92,7 +81,7 @@ const QUARTER = '<number:date-style style:name="Q"><number:quarter/></number:dat
 describe('number formats read from other makers’ ODF', () => {
   it('reads a cell’s own style, its row’s, its column’s, a named style’s parent, and names what it cannot hold', async () => {
     const read = await readOds(
-      flat(
+      flatOds(
         `${PERCENT}<style:style style:name="Named" style:family="table-cell" style:data-style-name="P"/>`,
         `${DATE}${QUARTER}<style:style style:name="ce1" style:family="table-cell" style:parent-style-name="Named"/>` +
           '<style:style style:name="ce2" style:family="table-cell" style:data-style-name="D"/>' +
@@ -125,10 +114,10 @@ describe('number formats read from other makers’ ODF', () => {
   it('reads named styles from a package’s styles.xml, and none from one it cannot read', async () => {
     const content = (cells: string) =>
       encode(
-        `<office:document-content ${NS}><office:body><office:spreadsheet><table:table table:name="S"><table:table-row>${cells}</table:table-row></table:table></office:spreadsheet></office:body></office:document-content>`,
+        `<office:document-content ${ODF_NAMESPACES}><office:body><office:spreadsheet><table:table table:name="S"><table:table-row>${cells}</table:table-row></table:table></office:spreadsheet></office:body></office:document-content>`,
       );
     const styles = encode(
-      `<office:document-styles ${NS}><office:styles>${PERCENT}<style:style style:name="Named" style:family="table-cell" style:data-style-name="P"/></office:styles></office:document-styles>`,
+      `<office:document-styles ${ODF_NAMESPACES}><office:styles>${PERCENT}<style:style style:name="Named" style:family="table-cell" style:data-style-name="P"/></office:styles></office:document-styles>`,
     );
     const cell =
       '<table:table-cell table:style-name="Named" office:value-type="float" office:value="1"/>';
@@ -159,7 +148,7 @@ describe('values a maker leaves bare', () => {
   it('reads a date or time without its value as none, and a duration without hours', async () => {
     const read = await readOds(
       encode(
-        `<?xml version="1.0"?><office:document ${NS} office:mimetype="application/vnd.oasis.opendocument.spreadsheet">` +
+        `<?xml version="1.0"?><office:document ${ODF_NAMESPACES} office:mimetype="application/vnd.oasis.opendocument.spreadsheet">` +
           '<office:spreadsheet><table:table table:name="S"><table:table-row>' +
           '<table:table-cell office:value-type="date"/><table:table-cell office:value-type="time"/>' +
           '<table:table-cell office:value-type="time" office:time-value="PT36M"/>' +

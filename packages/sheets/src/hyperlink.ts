@@ -1,6 +1,5 @@
-// A HYPERLINK's target (docs/specs/029-sheets/formulas.md "Text"; docs/specs/029-sheets/formulas.md): kept
-// only when it is an
-// http, https or mailto address of a sane length, so a `javascript:` or `data:` target typed into a formula, or one
+// A HYPERLINK's target (docs/specs/029-sheets/formulas.md "Text"): kept only when it is an http, https or mailto
+// address of a sane length, so a `javascript:` or `data:` target typed into a formula, or one
 // arriving in an imported CSV, can never be opened. Anything else draws the label as plain text.
 
 // The longest target kept: well past any real address, short of a smuggled payload.

@@ -9,9 +9,11 @@ import {
   looksLikeXml,
   ODF_MEDIA_TYPES,
   ODF_NS,
+  PACKAGE_BUDGETS,
   parseXml,
   readOdfPackage,
   refuse,
+  type PackageBudgets,
   type XmlElement,
   type XmlNode,
   type XmlParsed,
@@ -19,8 +21,10 @@ import {
 import { serialFromParts } from '../dates';
 import { SheetLimits } from '../sheet-limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
+import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
+import { odsHandSized, type OdsHandSized } from './ods-sizes';
 import { odsCellFormats, odsStyledCellStyles, type OdsCellFormats } from './ods-styles';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
@@ -29,7 +33,7 @@ import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workb
 const {
   rows: ROWS_MAX,
   cols: COLS_MAX,
-  gridCells: CELLS_MAX,
+
   sheets: SHEETS_MAX,
 } = SheetLimits.spreadsheet;
 
@@ -222,6 +226,7 @@ type Book = {
   budget: Budget;
   formats: OdsCellFormats;
   styled: ReadonlySet<string>;
+  handSized: OdsHandSized;
   keeper: OdsKeeper;
 };
 
@@ -235,6 +240,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const columns = columnStyles(table);
   const cells: FileCell[] = [];
   let cut = false;
+  let cellsCut = false;
   let styled = columns.some((style) => book.styled.has(style ?? ''));
   let r = 0;
   for (const row of rowsOf(table)) {
@@ -284,8 +290,13 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     }
     if (rowCells.length > 0) {
       for (let k = 0; k < rowRepeat; k++) {
-        if (r + k >= ROWS_MAX || budget.cells + rowCells.length > CELLS_MAX) {
+        if (r + k >= ROWS_MAX) {
           cut = true;
+          break;
+        }
+        // However few bytes repeat them, a file makes at most so many cells (D121).
+        if (budget.cells + rowCells.length > FILE_READ_CELLS_MAX) {
+          cellsCut = true;
           break;
         }
         budget.cells += rowCells.length;
@@ -299,12 +310,14 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), extent.rows);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), extent.cols);
   if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
-  // Formatting past the number format waits for Formatting's mapping: named (D104).
+  if (cellsCut) losses.push({ k: 'cells_cut', sheet: name });
+  // Formatting past the number format, and the sizes of a sheet sized by hand, wait for their mappings: named (D104).
   if (styled) losses.push({ k: 'styles_unread', sheet: name });
+  if (book.handSized(table)) losses.push({ k: 'sizes_unread', sheet: name });
   if (keeper.cut > cutBefore)
     losses.push({ k: 'kept_cut', sheet: name, cells: keeper.cut - cutBefore });
-  if (sheet.cut.formats || columns.some((style) => formatOf(style, sheet) !== undefined))
-    losses.push({ k: 'formats_cut', sheet: name });
+  // A line's own default format over its empty cells shows nothing, and is not named (D123).
+  if (sheet.cut.formats) losses.push({ k: 'formats_cut', sheet: name });
   return { name, rows, cols, cells };
 }
 
@@ -317,6 +330,7 @@ function readBody(
   const root = parsed.root;
   const formats = odsCellFormats([root, ...styleRoots]);
   const styled = odsStyledCellStyles([root, ...styleRoots]);
+  const handSized = odsHandSized([root, ...styleRoots]);
   const spreadsheet = childElement(
     childElement(root, OFFICE, 'body') ?? root,
     OFFICE,
@@ -330,7 +344,7 @@ function readBody(
   keeper.spreadsheet(spreadsheet);
   const sheets = tables
     .slice(0, SHEETS_MAX)
-    .map((t, i) => readTable(t, i, { losses, budget, formats, styled, keeper }));
+    .map((t, i) => readTable(t, i, { losses, budget, formats, styled, handSized, keeper }));
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   // A file that keeps nothing reads as the model alone.
@@ -340,9 +354,14 @@ function readBody(
   return { ok: true, file: { sheets, kept }, losses };
 }
 
-/** An `.ods` or `.fods` file's sheets, or the package's named rejection. */
-export async function readOds(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead> {
+/** An `.ods` or `.fods` file's sheets, or the package's named rejection; `budgets` the package's (tests pass smaller). */
+export async function readOds(
+  bytes: Uint8Array<ArrayBuffer>,
+  budgets: PackageBudgets = PACKAGE_BUDGETS,
+): Promise<FileRead> {
   if (looksLikeXml(bytes)) {
+    // A flat file is under the package's own budget for its bytes (files-and-print.md "Import security").
+    if (bytes.length > budgets.bytes) return refuse('package_too_large');
     const parsed = parseXml(new TextDecoder().decode(bytes));
     if (!parsed.ok) return parsed;
     const mediaType = attributeOf(parsed.root, OFFICE, 'mimetype');
@@ -350,7 +369,7 @@ export async function readOds(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead>
       return refuse('package_wrong_type');
     return readBody(parsed, [], new OdsKeeper(parsed), []);
   }
-  const opened = await readOdfPackage(bytes);
+  const opened = await readOdfPackage(bytes, budgets);
   if (!opened.ok) return opened;
   const pkg = opened.package;
   if (pkg.mediaType !== ODF_MEDIA_TYPES.spreadsheet) return refuse('package_wrong_type');

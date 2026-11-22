@@ -3,7 +3,8 @@
 Follow the references below only as needed; never upfront.
 
 Abuse cases for imports, exports and functions that fetch. Researched 2026-11-18. Each case becomes a test with a
-named rejection in Phase 7 or 13.
+named rejection in Phase 7 or 13; those of a file opened are built
+([Import security](../../specs/029-sheets/files-and-print.md#import-security)).
 
 | Case                                    | How it bites                                                                                                                                 | Guard                                                                                                                                                                                     |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

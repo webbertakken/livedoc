@@ -19,7 +19,7 @@ XML, looking and working as Google Sheets does. It is specified and being built 
 - ./charts.md - when working on a spreadsheet's charts, the chart editor or sparklines
 - ./pivot-tables.md - when working on pivot tables and their editor
 - ./review.md - when working on notes, comments, version history or a cell's edit history in a spreadsheet
-- ./files-and-print.md - when working on import, download, converting between formats, print, copies, publishing, repositories
+- ./files-and-print.md - when working on import, the import report, import security, download, converting between formats, print, copies, publishing, repositories
 - ./settings.md - when working on spreadsheet settings (locale, time zone, recalculation, iteration), Tools and View
 - ./plan-links.md - when working on what Plan reads from or writes to a spreadsheet: dashboards, form responses, card tables
 - ./templates.md - when working on spreadsheet templates
