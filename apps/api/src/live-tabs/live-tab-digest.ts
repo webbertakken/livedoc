@@ -2,6 +2,7 @@
 // stored state when the outbox drains the tab, so the listing's counts and has-content, and content search, never read
 // the state per keystroke. Its search text is never kept in the room: the drain gives it to D1.
 import type { DocumentEnv } from '../types';
+import { imageRefReplaceStatements } from '../db/image-refs';
 import type { LiveTabDigest, LiveTabKind } from './live-tab-kind';
 import { storedUpdates } from './live-tab-store';
 
@@ -40,9 +41,11 @@ export async function refreshLiveTabDigest(
     stateBytes,
     now,
   );
-  await env.DOCUMENT_DB.batch([written, saved]);
+  // The tab's rows in the reference index follow its state in the same batch, so the index trails it by one drain.
+  const refs = imageRefReplaceStatements(env, tabId, [...(digest.imageIds ?? [])]);
+  await env.DOCUMENT_DB.batch([written, saved, ...refs]);
   console.info(
-    `${kind.tag} digest document=${documentId} tab=${tabId} characters=${digest.characters} words=${digest.words} bytes=${stateBytes} ms=${Date.now() - started}`,
+    `${kind.tag} digest document=${documentId} tab=${tabId} characters=${digest.characters} words=${digest.words} images=${digest.imageIds?.length ?? 0} bytes=${stateBytes} ms=${Date.now() - started}`,
   );
   return digest;
 }

@@ -13,7 +13,11 @@ import {
   writeTextDocumentFile,
   type TextDocumentFileType,
 } from '@livedoc/text-documents';
-import { TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
+import {
+  TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER,
+  TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+} from '@livedoc/api-schema';
+import { galleryMediaRead } from '../text-documents/gallery-media';
 import { getDocumentMeta } from '../db';
 import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, json } from '../responses';
@@ -77,7 +81,13 @@ export async function handleTextDocumentRoutes(
   // Conversion is a person's choice (File > Convert); until it is built, only the document's own format leaves.
   // The file is derived from the live state; its title is the document's name, written on save.
   const live = TextDocumentState.document(TextDocumentState.load([state]), tab.format);
-  const document = { ...live, metadata: { ...live.metadata, title: meta.name } };
+  // Gallery media are read back first; a picture whose bytes cannot be read is left out, and said so.
+  const read = await galleryMediaRead(env, documentId, live);
+  for (const key of read.unavailable)
+    console.warn(
+      `[text-document] picture-unavailable document=${documentId} tab=${tabId} media=${key}`,
+    );
+  const document = { ...read.document, metadata: { ...live.metadata, title: meta.name } };
   // A download never changes a document's format behind a person's back (fork C1): the other format is refused.
   const written = writeTextDocumentFile(document, type);
   if (!written.ok) return json({ error: written.rejection }, { status: 409 });
@@ -88,6 +98,7 @@ export async function handleTextDocumentRoutes(
   return bytesResponse(file, {
     'Content-Type': FILE_MEDIA_TYPES[type],
     'Content-Disposition': `attachment; filename="${fileNameOf(meta.name, type)}"`,
+    [TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER]: String(read.unavailable.length),
   });
 }
 

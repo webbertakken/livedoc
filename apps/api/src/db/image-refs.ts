@@ -1,5 +1,6 @@
 // image_refs: the image reference index (docs/specs/009-elements/images.md, "Reference index"), in the document's
-// room. A projection of the image elements inside `tabs.data`, so the room answers which images it places without
+// room. A projection of the image elements inside `tabs.data`, and of the gallery images a live tab's state places
+// (written by its digest, live-tabs/live-tab-digest.ts), so the room answers which images it places without
 // reading a tab body; its outbox pushes the document's whole set to D1's `document_images`
 // (document-room/document-outbox.ts), which retention, the usage map and grants read across documents.
 //

@@ -1,7 +1,6 @@
 // /api/images — per-owner gallery + dedup'd upload + auth-gated byte
 // read (docs/specs/009-elements/images.md).
 
-import { sha256Hex } from '@livedoc/api-schema';
 import { documentRoom } from '../document-room/document-client';
 import {
   deleteImage,
@@ -9,13 +8,16 @@ import {
   findImageBySha,
   getDocumentMeta,
   getImage,
-  imageTotalsByOwner,
   imageUsageByOwner,
-  insertImage,
   listImagesByOwner,
 } from '../db';
-import { ACCEPTED_IMAGE_TYPES, type AcceptedImageType, sniffImageType } from '../image-sniff';
-import { stripJpegMetadata } from '../image-strip';
+import { ACCEPTED_IMAGE_TYPES, type AcceptedImageType } from '../image-sniff';
+import {
+  galleryRoom,
+  hasImageStore,
+  storeGalleryImage,
+  type GalleryStoreRefusal,
+} from '../gallery-store';
 import {
   badRequest,
   conflict,
@@ -32,25 +34,20 @@ import { parsePositiveCap } from '../positive-cap';
 
 export { parsePositiveCap };
 
-// The 403 a full gallery answers with, or null when the upload fits.
-function galleryFull(
-  caps: { maxImages: number | null; maxBytes: number | null },
-  totals: { count: number; bytes: number },
-  incomingBytes: number,
-): Response | null {
-  if (caps.maxImages !== null && totals.count >= caps.maxImages) {
-    return json(
-      { error: 'gallery_full', reason: 'count', limit: caps.maxImages, current: totals.count },
-      { status: 403 },
-    );
+// What a refused store answers, in the upload's words (docs/specs/009-elements/images.md "Size cap").
+function storeRefused(refusal: GalleryStoreRefusal): Response {
+  switch (refusal.error) {
+    case 'file_too_large':
+      return json(refusal, { status: 413 });
+    case 'unsupported_type':
+      return json({ ...refusal, acceptedTypes: ACCEPTED_IMAGE_TYPES }, { status: 415 });
+    case 'malformed_jpeg':
+      return json(refusal, { status: 415 });
+    case 'gallery_full':
+      return json(refusal, { status: 403 });
+    case 'upload_conflict':
+      return conflict('upload_conflict');
   }
-  if (caps.maxBytes !== null && totals.bytes + incomingBytes > caps.maxBytes) {
-    return json(
-      { error: 'gallery_full', reason: 'bytes', limit: caps.maxBytes, current: totals.bytes },
-      { status: 403 },
-    );
-  }
-  return null;
 }
 
 // Per-owner gallery + dedup'd upload + auth-gated byte read.
@@ -60,7 +57,7 @@ function galleryFull(
 export async function handleImages(ctx: RouteContext): Promise<Response> {
   const { request, env, url, segments, resolveOwner } = ctx;
   if (segments[1] !== 'images') return notFound();
-  if (!env.IMAGES) return imagesUnavailable();
+  if (!hasImageStore(env)) return imagesUnavailable();
 
   // GET /api/images: gallery list. Owner only.
   if (segments.length === 2 && request.method === 'GET') {
@@ -127,117 +124,29 @@ export async function handleImages(ctx: RouteContext): Promise<Response> {
     // either total still pays the parse: that is acceptable because
     // the early X-Image-Sha256 path above already handles the common
     // dedupe case without the parse.
-    const maxImages = parsePositiveCap(env.IMAGE_MAX_PER_OWNER);
-    const maxBytes = parsePositiveCap(env.IMAGE_MAX_BYTES_PER_OWNER);
-    const caps = { maxImages, maxBytes };
-    if (maxImages !== null || maxBytes !== null) {
-      const full = galleryFull(caps, await imageTotalsByOwner(env, owner), declaredLen);
-      if (full) return full;
-    }
+    const full = await galleryRoom(env, owner, declaredLen);
+    if (full) return storeRefused(full);
     const width = Number(request.headers.get('X-Image-Width') ?? '0');
     const height = Number(request.headers.get('X-Image-Height') ?? '0');
     if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
       return badRequest('missing or invalid X-Image-Width / X-Image-Height');
     }
     const originalName = originalNameOf(request.headers.get('X-Image-Original-Name'));
-    const bytes = await request.arrayBuffer();
-    if (bytes.byteLength > MAX_IMAGE_BYTES) {
-      // Defence-in-depth: Content-Length is client-supplied
-      // and could lie. Re-check after the buffer has fully
-      // landed.
-      return json({ error: 'file_too_large', limitBytes: MAX_IMAGE_BYTES }, { status: 413 });
-    }
-    const sniffed = sniffImageType(new Uint8Array(bytes.slice(0, 16)));
-    if (!sniffed || sniffed !== declaredType) {
-      return json(
-        {
-          error: 'unsupported_type',
-          acceptedTypes: ACCEPTED_IMAGE_TYPES,
-        },
-        { status: 415 },
-      );
-    }
-    const sha = await sha256Hex(bytes);
-    // Dedupe: same owner + same bytes returns the existing
-    // row without an R2 write. We hash the ORIGINAL bytes
-    // (matching the client-supplied SHA) so re-uploading the
-    // same file deduplicates predictably; the stored bytes
-    // below may differ from the hashed bytes when JPEG
-    // metadata is stripped.
-    const existing = await findImageBySha(env, owner, sha);
-    if (existing) {
-      return json({ image: existing, deduped: true });
-    }
-    // Strip metadata from JPEGs (EXIF GPS, camera serial,
-    // JFIF / ICC / comment markers) before writing to R2.
-    // The visible image content stays bit-identical; only
-    // the privacy-sensitive byte segments leave. PNG / WebP
-    // / GIF pass through unchanged: real-world leaks via
-    // those formats are rare and would need per-format
-    // chunk walkers. See docs/specs/009-elements/images.md + image-strip.ts.
-    let storedBytes: ArrayBuffer = bytes;
-    if (sniffed === 'image/jpeg') {
-      try {
-        storedBytes = stripJpegMetadata(bytes);
-      } catch {
-        // Malformed JPEG: fail the upload rather than store
-        // the original (which would leak the metadata we're
-        // trying to remove). The user can re-export a clean
-        // copy and retry.
-        return json({ error: 'malformed_jpeg' }, { status: 415 });
-      }
-    }
-    const id = crypto.randomUUID();
-    await env.IMAGES.put(id, storedBytes, {
-      httpMetadata: { contentType: sniffed },
-      customMetadata: {
-        ownerId: owner,
-        originalName: originalName ?? '',
-      },
+    const stored = await storeGalleryImage(env, owner, {
+      bytes: await request.arrayBuffer(),
+      contentType: declaredType,
+      width,
+      height,
+      originalName,
     });
-    let image: Awaited<ReturnType<typeof insertImage>>;
-    try {
-      image = await insertImage(
-        env,
-        {
-          id,
-          ownerId: owner,
-          contentType: sniffed,
-          byteSize: storedBytes.byteLength,
-          width,
-          height,
-          sha256: sha,
-          originalName,
-        },
-        caps,
-      );
-    } catch (err) {
-      // No row will ever name these bytes, and the retention sweep only walks rows: never leave them.
-      await env.IMAGES.delete(id);
-      throw err;
+    if (!stored.ok) {
+      const { ok: _, ...refusal } = stored;
+      return storeRefused(refusal);
     }
-    if (!image) {
-      // The same bytes uploaded at the same moment (the file dropped twice, two tabs): the other upload's
-      // row won. Ours is an orphan; the answer is theirs, as a dedupe.
-      const raced = await findImageBySha(env, owner, sha);
-      if (raced) {
-        await env.IMAGES.delete(id);
-        console.info('[images] racing upload of the same bytes deduped', { owner });
-        return json({ image: raced, deduped: true });
-      }
-      // A concurrent upload filled the gallery after the check above; the
-      // insert refused atomically, so the bytes just written are an orphan.
-      await env.IMAGES.delete(id);
-      console.info('[images] cap refused a racing upload', { owner });
-      const totals = await imageTotalsByOwner(env, owner);
-      // Room again already (an image was deleted meanwhile): let the client retry.
-      return galleryFull(caps, totals, storedBytes.byteLength) ?? conflict('upload_conflict');
-    }
-    // docs/specs/013-workspace/timeline.md §4.5: only a genuinely NEW upload. The dedupe branches
-    // above return early, so pasting the same screenshot twice is one
-    // event, and the day's uploads coalesce into one counted bubble.
-    ctx.waitUntil?.(recordImageUploaded(env, owner));
-    return json({ image, deduped: false });
+    // docs/specs/013-workspace/timeline.md §4.5: only a genuinely NEW upload, so pasting the same screenshot twice
+    // is one event, and the day's uploads coalesce into one counted bubble.
+    if (!stored.deduped) ctx.waitUntil?.(recordImageUploaded(env, owner));
+    return json({ image: stored.image, deduped: stored.deduped });
   }
 
   // GET /api/images/usage: owner-only. Returns the inverse

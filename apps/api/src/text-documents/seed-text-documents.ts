@@ -14,6 +14,7 @@ import type { DocumentEnv } from '../types';
 import { bytesOfBase64 } from '@livedoc/text-documents';
 import { appendLiveTabUpdate, storeLiveTabState } from '../live-tabs/live-tab-store';
 import { TEXT_DOCUMENT_LIVE_TAB } from './text-document-live-tab';
+import { mediaIntoGallery } from './gallery-media';
 
 export type TextDocumentSeed = { tabId: string; format: TextDocumentFormat } & (
   { file: Uint8Array } | { state: Uint8Array }
@@ -72,6 +73,8 @@ const REJECTION_STATUS: Record<string, number> = {
 export async function seedTextDocuments(
   env: DocumentEnv,
   documentId: string,
+  // Who opens the files: their pictures go to this owner's gallery (objects.md "Where the bytes live").
+  ownerId: string,
   seeds: readonly TextDocumentSeed[],
 ): Promise<{ ok: true } | { ok: false; status: number; body: unknown }> {
   for (const seed of seeds) {
@@ -105,12 +108,18 @@ export async function seedTextDocuments(
     const dropped = read.report.dropped.reduce((n, d) => n + d.count, 0);
     const kept = read.report.kept.reduce((n, k) => n + k.count, 0);
     if (dropped > 0) console.info(`[package] dropped document=${documentId} items=${dropped}`);
+    const imported = await mediaIntoGallery(env, ownerId, read.document);
+    const keptMedia = Object.entries(imported.kept);
+    if (imported.gallery > 0 || keptMedia.length > 0)
+      console.info(
+        `[text-document] media document=${documentId} tab=${seed.tabId} gallery=${imported.gallery} kept=${keptMedia.reduce((n, [, c]) => n + c, 0)} refused=${keptMedia.map(([reason, c]) => `${reason}:${c}`).join(',') || '-'}`,
+      );
     // The whole model goes into the live state, kept content included (live-editing-and-storage.md "The layout").
     await appendLiveTabUpdate(
       env,
       TEXT_DOCUMENT_LIVE_TAB,
       seed.tabId,
-      TextDocumentState.fromDocument(read.document),
+      TextDocumentState.fromDocument(imported.document),
     );
     console.info(
       `[text-document] file-read document=${documentId} tab=${seed.tabId} blocks=${read.document.body.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
