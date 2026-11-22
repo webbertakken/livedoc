@@ -235,7 +235,7 @@ and write is measured against what arrives in practice, not only against LiveDoc
 - Each file is read, made into sheets, written in its own format and read again, and written in the other standard:
   - The second read holds every sheet, cell value, formula (in the model's own text), number format and kept item the
     first made (the round trip loses nothing it did not name).
-  - Every loss each step names is recorded per file (`corpus/losses.json`): a loss that appears or goes fails the
+  - Every loss each step names is recorded per file (`packages/sheets/corpus/losses.json`): a loss that appears or goes fails the
     run, so none is silent and none is fixed unnoticed.
 - The corpus is made again by `pnpm --filter @livedoc/sheets corpus:make` (LibreOffice and Google by hand, as the
   oracle is); the round trips run in the unit run.
