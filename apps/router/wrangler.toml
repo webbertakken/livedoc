@@ -33,10 +33,11 @@ binding = "HELP"
 service = "docs-nu-help"
 
 # Workers Logs (docs/specs/016-platform/worker-logs.md): the worker's own log lines are kept in this Cloudflare
-# account, so a failure nobody was tailing can still be read. Invocation logs stay off: one stores every request's
-# URL, and a URL carries document ids and share codes.
+# account, so a failure nobody was tailing can still be read. Invocation logs stay off (they store each request's
+# headers, address and location), and query strings are cut from the path every log line is stored with.
 [observability]
 enabled = true
+redact_query_string = true
 
 [observability.logs]
 enabled = true
