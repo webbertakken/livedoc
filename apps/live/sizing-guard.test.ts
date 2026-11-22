@@ -20,6 +20,10 @@ const SIZED_PATHS = [
   'components/primitives/MenuSliderRow.tsx',
   'components/primitives/MenuTiles.tsx',
   'components/primitives/PreviewSliderRow.tsx',
+  'components/primitives/NumberStepper.tsx',
+  'components/primitives/ChipField.tsx',
+  'components/primitives/SegmentedRadio.tsx',
+  'components/primitives/HelpArticleLink.tsx',
 ];
 
 describe('live sizing', () => {

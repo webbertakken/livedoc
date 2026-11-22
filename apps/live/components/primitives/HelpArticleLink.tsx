@@ -87,7 +87,7 @@ export function HelpArticleLink({
         <a
           {...common}
           // touch-target: a 16px line of text, padded to a finger's 44px on a touch screen.
-          className={`relative touch-target inline-flex items-center gap-1 text-xs font-medium text-blue-600 underline-offset-2 transition hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300${
+          className={`relative touch-target inline-flex items-center gap-1 text-supporting text-blue-600 underline-offset-2 transition hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300${
             className ? ` ${className}` : ''
           }`}
         >
@@ -107,7 +107,7 @@ export function HelpArticleLink({
         <a
           {...common}
           aria-label={title}
-          className={`optical-edges inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white${
+          className={`optical-edges inline-flex min-h-row items-center gap-2 rounded-control border border-slate-200 bg-white px-3 text-body text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white${
             className ? ` ${className}` : ''
           }`}
         >
@@ -141,11 +141,11 @@ export function HelpArticleLink({
         <a
           {...common}
           aria-label={title}
-          className={`relative touch-target inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100${
+          className={`relative touch-target inline-flex h-field shrink-0 items-center gap-1 rounded-control px-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100${
             className ? ` ${className}` : ''
           }`}
         >
-          <span aria-hidden className="text-[14px] font-semibold leading-none">
+          <span aria-hidden className="text-body leading-none">
             ?
           </span>
           Help
@@ -154,13 +154,13 @@ export function HelpArticleLink({
     );
   }
 
-  const box = `relative touch-target ${size === 'md' ? 'h-7 w-7 text-[15px]' : 'h-5 w-5 text-[13px]'}`;
+  const box = `relative touch-target ${size === 'md' ? 'size-row text-panel-title' : 'size-chip text-body'}`;
   return (
     <HoverCard title={title} description={description}>
       <a
         {...common}
         aria-label={title}
-        className={`inline-flex ${box} shrink-0 items-center justify-center rounded font-semibold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100${
+        className={`inline-flex ${box} shrink-0 items-center justify-center rounded-control leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100${
           className ? ` ${className}` : ''
         }`}
       >

@@ -16,12 +16,12 @@ const PlusGlyph = lucideGlyph(lucidePlus, 14);
 type NumberStepperTone = { line: string; field: string; text: string; muted: string };
 
 const BUTTON =
-  'flex shrink-0 items-center justify-center rounded-md transition disabled:cursor-not-allowed disabled:opacity-35';
+  'flex shrink-0 items-center justify-center rounded-control transition disabled:cursor-not-allowed disabled:opacity-35';
 const BUTTON_SLATE =
-  'h-7 w-7 text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm disabled:hover:bg-transparent disabled:hover:shadow-none dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-50';
+  'size-row text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm disabled:hover:bg-transparent disabled:hover:shadow-none dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-50';
 // Toned: the toolbar's own hover wash, so it reads on any Sheet colour.
 const BUTTON_TONED =
-  'h-6 w-6 hover:bg-black/5 disabled:hover:bg-transparent dark:hover:bg-white/10';
+  'size-chip hover:bg-black/5 disabled:hover:bg-transparent dark:hover:bg-white/10';
 
 export function NumberStepper({
   label,
@@ -81,8 +81,8 @@ export function NumberStepper({
     <span
       className={
         tone
-          ? 'flex h-7 shrink-0 items-center gap-0.5 rounded-md border px-px'
-          : 'flex shrink-0 items-center gap-0.5 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-900'
+          ? 'flex h-row shrink-0 items-center gap-0.5 rounded-control border px-0.5'
+          : 'flex shrink-0 items-center gap-0.5 rounded-menu bg-slate-100 p-0.5 dark:bg-slate-900'
       }
       style={tone ? { borderColor: tone.line } : undefined}
     >
@@ -90,8 +90,8 @@ export function NumberStepper({
       <span
         className={
           tone
-            ? 'flex h-[22px] items-center rounded px-1.5'
-            : 'flex h-7 items-center rounded-md bg-white px-1.5 shadow-sm dark:bg-slate-700'
+            ? 'flex h-chip items-center rounded-control px-2'
+            : 'flex h-row items-center rounded-control bg-white px-2 shadow-sm dark:bg-slate-700'
         }
         style={tone ? { backgroundColor: tone.field } : undefined}
       >
@@ -118,14 +118,14 @@ export function NumberStepper({
               set(stepBy ? stepBy(from, dir) : from + dir * step);
             }
           }}
-          className={`w-9 bg-transparent text-center text-xs font-medium tabular-nums outline-none ${
+          className={`w-9 bg-transparent text-center text-body tabular-nums outline-none ${
             tone ? '' : 'text-slate-900 dark:text-slate-50'
           }`}
           style={tone ? { color: tone.text } : undefined}
         />
         {unit ? (
           <span
-            className={`pl-0.5 text-[11px] ${tone ? '' : 'text-slate-500 dark:text-slate-400'}`}
+            className={`pl-0.5 text-supporting ${tone ? '' : 'text-slate-500 dark:text-slate-400'}`}
             style={tone ? { color: tone.muted } : undefined}
           >
             {unit}

@@ -23,7 +23,7 @@ export function SegmentedRadio<T extends string | number>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={`relative grid rounded-lg p-0.5 ${SEGMENT_TRACK} ${className}`}
+      className={`relative grid rounded-menu p-0.5 ${SEGMENT_TRACK} ${className}`}
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       <SegmentSlider
@@ -40,9 +40,9 @@ export function SegmentedRadio<T extends string | number>({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.id)}
-            className={`relative z-10 rounded-md py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
+            className={`relative z-10 min-h-row rounded-control text-body transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
               on
-                ? 'text-white'
+                ? 'font-medium text-white'
                 : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
             }`}
           >

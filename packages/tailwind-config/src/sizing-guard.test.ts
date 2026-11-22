@@ -109,11 +109,22 @@ describe('judgeClass', () => {
 
   it('refuses a side padding off the steps', () => {
     expect(judgeClass('px-2.5')).toMatch(/padding/);
-    expect(judgeClass('p-1')).toMatch(/padding/);
+    expect(judgeClass('p-1.5')).toMatch(/padding/);
     expect(judgeClass('pl-5')).toMatch(/padding/);
     expect(judgeClass('pe-[10px]')).toMatch(/padding/);
     expect(judgeClass('px-row')).toMatch(/padding/);
-    for (const ok of ['px-0', 'px-2', 'pr-3', 'ps-4', 'p-6', 'py-1.5', 'pt-5', 'pb-[3px]']) {
+    for (const ok of [
+      'px-0',
+      'p-0.5',
+      'px-1',
+      'px-2',
+      'pr-3',
+      'ps-4',
+      'p-6',
+      'py-1.5',
+      'pt-5',
+      'pb-[3px]',
+    ]) {
       expect(judgeClass(ok), ok).toBeNull();
     }
   });

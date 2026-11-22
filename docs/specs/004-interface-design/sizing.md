@@ -79,6 +79,7 @@ A surface names the token, never the number, so the scale changes in one place.
 
 - **Gaps** step 2 (inside a group), 4, 8, 12, 16 and 24 px.
 - **Side padding** steps 8, 12, 16 and 24 px; a control's height comes from its height token, not from padding.
+- A track or a band inset around its controls steps 2 or 4 px (a segmented track, a stepper, the toolbar band).
 - **Radii** are named after what they round:
 
 | Token     | Radius | Job                           |
