@@ -56,14 +56,17 @@ test('a Word file’s pictures are drawn, and leave as they came', async ({ page
   await expect
     .poll(
       () =>
-        page.evaluate(async (headers) => {
-          const res = await fetch('/api/images/usage', { headers });
-          const { usage } = (await res.json()) as { usage: Record<string, { id: string }[]> };
-          return Object.entries(usage)
-            .filter(([, documents]) => documents.some((d) => d.id === documentId))
-            .map(([id]) => id)
-            .sort();
-        }, headers),
+        page.evaluate(
+          async ({ headers, documentId }) => {
+            const res = await fetch('/api/images/usage', { headers });
+            const { usage } = (await res.json()) as { usage: Record<string, { id: string }[]> };
+            return Object.entries(usage)
+              .filter(([, documents]) => documents.some((d) => d.id === documentId))
+              .map(([id]) => id)
+              .sort();
+          },
+          { headers, documentId },
+        ),
       { timeout: 20_000 },
     )
     .toEqual(gallery.map((i) => i.id).sort());
