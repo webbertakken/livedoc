@@ -45,10 +45,22 @@ test('an Editor’s open PDF sends its first page, marks included, for the lists
   baseURL,
   pageErrors,
 }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(120_000);
   const headers = async () => pageOwnerHeaders(page, { Origin: new URL(baseURL!).origin });
   const thumbnail = async (id: string) =>
     page.request.get(`${apiBase}/documents/${id}/thumbnail`, { headers: await headers() });
+  // The surface asks whether a picture is wanted as it opens. The answer is held until a highlight is made, so the
+  // one picture this test waits for is known to be drawn with a mark on the page.
+  let answer = () => {};
+  const held = new Promise<void>((resolve) => {
+    answer = resolve;
+  });
+  const asked: string[] = [];
+  await page.route('**/pdf-documents/*/thumbnail', async (route) => {
+    asked.push(route.request().method());
+    if (route.request().method() === 'GET') await held;
+    await route.continue();
+  });
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.goto('/explorer/all');
   await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
@@ -57,47 +69,27 @@ test('an Editor’s open PDF sends its first page, marks included, for the lists
   const first = await pageOneDrawn(page);
   const id = new URL(page.url()).pathname.split('/')[2]!;
 
-  // Asked on open, wanted, sent: the api answers a white page holding a JPEG of the first page.
-  await expect.poll(async () => (await thumbnail(id)).status(), { timeout: 30_000 }).toBe(200);
-  const plain = await thumbnail(id);
-  expect(plain.headers()['content-type']).toContain('image/svg+xml');
-  const before = await pictureIn(page, await plain.text());
-  expect(before).toMatchObject({ width: 480, highlighted: 0 });
-  // Light paper, whatever the scheme: the page's corner is white.
-  for (const channel of before!.corner) expect(channel).toBeGreaterThan(240);
+  // No picture yet: the PDF has no snapshot, an answer no browser keeps.
+  const none = await thumbnail(id);
+  expect(none.status()).toBe(404);
+  expect(none.headers()['cache-control']).toBe('no-store');
 
-  // A highlight, saved by the room; once the room has written the document's save, a picture is wanted again.
   await page.getByRole('button', { name: 'Highlight', exact: true }).click();
   await dragAcrossFirstLine(page, first);
   await expect(page.locator(MARKS)).toHaveCount(1);
-  const liveDoc = (await (
-    await page.request.get(`${apiBase}/documents/${id}`, { headers: await headers() })
-  ).json()) as { document: { tabs: { id: string }[] } };
-  const tabId = liveDoc.document.tabs[0]!.id;
-  const wanted = async () => {
-    const res = await page.request.get(
-      `${apiBase}/documents/${id}/pdf-documents/${tabId}/thumbnail`,
-      { headers: await headers() },
-    );
-    return res.ok() ? ((await res.json()) as { wanted: boolean }).wanted : null;
-  };
-  await expect.poll(wanted, { timeout: 90_000, intervals: [1_000] }).toBe(true);
+  await expect.poll(() => asked).toEqual(['GET']);
+  answer();
 
-  // An Editor who opens the PDF now is asked for one, and sends the page with its highlight. (The surface that made
-  // the highlight sends it by itself too, a minute after its last picture at most.)
-  await page.reload();
-  await pageOneDrawn(page);
-  await expect(page.locator(MARKS)).toHaveCount(1);
-  await expect
-    .poll(
-      async () => (await pictureIn(page, await (await thumbnail(id)).text()))?.highlighted ?? 0,
-      {
-        timeout: 60_000,
-        intervals: [1_000],
-      },
-    )
-    .toBeGreaterThan(200);
-  expect(await wanted()).toBe(false);
+  // Wanted, so sent: the api answers a white page holding a JPEG of the first page, its highlight on it.
+  await expect.poll(async () => (await thumbnail(id)).status(), { timeout: 30_000 }).toBe(200);
+  const drawn = await thumbnail(id);
+  expect(drawn.headers()['content-type']).toContain('image/svg+xml');
+  const picture = await pictureIn(page, await drawn.text());
+  expect(picture).toMatchObject({ width: 480 });
+  expect(picture!.highlighted).toBeGreaterThan(200);
+  // Light paper, whatever the scheme: the page's corner is white.
+  for (const channel of picture!.corner) expect(channel).toBeGreaterThan(240);
+  expect(asked).toEqual(['GET', 'PUT']);
 
   // The Explorer's row draws it.
   await page.goto('/explorer/all');
