@@ -75,6 +75,17 @@ describe('workerIssueEmail', () => {
     expect(email.html).not.toContain('Open the Bug Tracker');
   });
 
+  it('names a recurrence without a worker', () => {
+    const email = workerIssueEmail(
+      env,
+      { trigger: 'recurrence', error: 'E' },
+      { kind: 'waiting' },
+      null,
+    );
+    expect(email.subject).toBe('Worker error back: E');
+    expect(email.html).toContain('A worker error is back');
+  });
+
   it('keeps a long subject to one line of 80 characters', () => {
     const email = workerIssueEmail(
       env,

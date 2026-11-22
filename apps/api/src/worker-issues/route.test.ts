@@ -400,7 +400,48 @@ describe('POST /api/worker-issues, during an outage', () => {
   });
 });
 
+describe('POST /api/worker-issues, without a ledger', () => {
+  it('files and emails, unguarded, on a host whose worker has no ledger binding', async () => {
+    db.env.WORKER_ISSUES_LEDGER = undefined;
+    expect((await post(sampleDelivery())).status).toBe(201);
+    expect((await post(sampleDelivery())).status).toBe(201);
+    expect(sent).toHaveLength(2);
+    expect(await refileHeldWorkerIssues(db.env, 1)).toEqual({
+      held: 0,
+      filed: 0,
+      stored: 0,
+      kept: 0,
+    });
+  });
+
+  it('refiles nothing while the ledger is down', async () => {
+    ledgerDown = true;
+    expect(await refileHeldWorkerIssues(db.env, 1)).toEqual({
+      held: 0,
+      filed: 0,
+      stored: 0,
+      kept: 0,
+    });
+  });
+});
+
 describe('POST /api/worker-issues, the email', () => {
+  it('still files when the email fails to send', async () => {
+    db.env.EMAIL = { send: () => Promise.reject(new Error('provider down')) };
+    expect((await post(sampleDelivery())).body).toEqual({ outcome: 'filed', number: 1 });
+  });
+
+  it('sends the email before answering where there is no waitUntil', async () => {
+    const ctx = makeTestRouteContext('POST', '/api/worker-issues', {
+      env: db.env,
+      owner: null,
+      body: sampleDelivery(),
+      headers: { 'cf-webhook-auth': SECRET },
+    });
+    expect((await handleWorkerIssues(ctx)).status).toBe(201);
+    expect(sent).toHaveLength(1);
+  });
+
   it('sends none without a Bug Tracker, whose card is stored as unconfigured', async () => {
     db.env.BUG_REPORT_DOCUMENT_ID = undefined;
     expect((await post(sampleDelivery())).body).toEqual({ outcome: 'stored' });
