@@ -20,6 +20,8 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
   window, portfolio, Help window and tools pane keys have nothing to act on here.
 - The shell's own keys (menus by access key, the tool finder, the shortcuts dialog, F6 between regions) are the
   shell's ([Office shell](../004-interface-design/office-shell.md)).
+- A menu's access key is a text document's for the menu of the same name; the **Pages** menu, which a text document
+  has none of, opens by P `(default)`: Alt+P in Chrome, Alt+Shift+P in other browsers, Ctrl+Option+P on a Mac.
 
 ## Reading
 

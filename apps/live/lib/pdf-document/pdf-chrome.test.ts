@@ -6,10 +6,10 @@ import { levelInMode, modesFor, startingMode } from '@/lib/office/office-mode';
 import { visibleToolbar } from '@/lib/office/office-toolbar';
 import { SHELL_BOUND_ITEMS } from '@/lib/office/office-catalogue';
 import { DOWNLOAD_PDF, PDF_MENUS, REDO, TOOL_HIGHLIGHT, TOOL_SELECT, UNDO } from './pdf-menus';
-import { PDF_MODES } from './pdf-modes';
+import { PDF_MODES, type PdfMode } from './pdf-modes';
 import { PDF_REFUSAL_COPY, pdfRefusalDownloads, pdfRefusalRetries } from './pdf-refusals';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
-import { PDF_TOOLBAR } from './pdf-toolbar';
+import { pdfToolbar } from './pdf-toolbar';
 
 describe("a PDF document's editing modes", () => {
   it('declares Reviewing, Editing and Viewing, in that order', () => {
@@ -61,6 +61,39 @@ describe("a PDF document's menus and toolbar", () => {
     ).toEqual([]);
   });
 
+  // office-shell.md "Menus as data": what is not built is `comingSoon`, so what is built is exactly what runs.
+  it('calls built what the surface or the shell runs, and nothing else', () => {
+    const built = catalogueItems(PDF_MENUS)
+      .filter(({ item }) => item.status === 'built')
+      .map(({ item }) => item.id);
+    // File > Open is the shell's where a kind hands it a file picker; a PDF's waits on how one is started.
+    expect(built.toSorted()).toEqual(BOUND.filter((id) => id !== 'open').toSorted());
+  });
+
+  // office-shell.md "Toolbar": a control that runs a menu item shares the item's id, so one binding serves both.
+  it('builds a control as far as the menu item it runs, for the same levels', () => {
+    const items = new Map(catalogueItems(PDF_MENUS).map(({ item }) => [item.id, item]));
+    const shared = PDF_MODES.flatMap((mode) => pdfToolbar(mode.mode))
+      .flatMap((group) => group.controls)
+      .filter((control) => items.has(control.id));
+    expect(shared.length).toBeGreaterThan(15);
+    for (const control of shared) {
+      const item = items.get(control.id)!;
+      expect([control.id, control.status, control.level]).toEqual([
+        item.id,
+        item.status,
+        item.level,
+      ]);
+    }
+  });
+
+  it('gives no two controls of a toolbar one id', () => {
+    for (const mode of PDF_MODES) {
+      const ids = pdfToolbar(mode.mode).flatMap((group) => group.controls.map((c) => c.id));
+      expect(new Set(ids).size, mode.label).toBe(ids.length);
+    }
+  });
+
   it('binds each built mode’s menu item to its mode', () => {
     const items = catalogueItems(PDF_MENUS).map(({ item }) => item.id);
     for (const mode of PDF_MODES) expect(items).toContain(mode.item);
@@ -78,12 +111,30 @@ describe("a PDF document's menus and toolbar", () => {
     expect(seen('view')).not.toContain(UNDO);
     expect(seen('participate')).toEqual(expect.arrayContaining([UNDO, REDO]));
     const fields = { zoom: true, fontSize: false, font: false, colour: false, choice: false };
-    const controls = (level: 'view' | 'participate') =>
-      visibleToolbar(PDF_TOOLBAR, level, actions, fields).flatMap((group) =>
-        group.controls.map((control) => control.id),
+    // What runs today; the controls beside them are drawn dimmed until their phases land.
+    const controls = (mode: PdfMode, level: 'view' | 'participate') =>
+      visibleToolbar(pdfToolbar(mode), level, actions, fields)
+        .flatMap((group) => group.controls)
+        .filter((control) => control.status === 'built')
+        .map((control) => control.id);
+    expect(controls('viewing', 'view')).toEqual(['zoom', TOOL_SELECT]);
+    expect(controls('reviewing', 'participate')).toEqual([
+      UNDO,
+      REDO,
+      'zoom',
+      TOOL_SELECT,
+      TOOL_HIGHLIGHT,
+    ]);
+    // "The toolbar": a mode's own tools are not another mode's.
+    const labels = (mode: PdfMode) =>
+      visibleToolbar(pdfToolbar(mode), 'edit', actions, fields).flatMap((group) =>
+        group.controls.map((control) => control.label),
       );
-    expect(controls('view')).toEqual(['zoom', TOOL_SELECT]);
-    expect(controls('participate')).toEqual([UNDO, REDO, 'zoom', TOOL_SELECT, TOOL_HIGHLIGHT]);
+    expect(labels('viewing')).toContain('Page display');
+    expect(labels('viewing')).not.toContain('Highlight');
+    expect(labels('reviewing')).not.toContain('Page display');
+    expect(labels('editing')).toEqual(expect.arrayContaining(['Edit text', 'Organise pages']));
+    expect(labels('editing')).not.toContain('Highlight');
   });
 
   // keyboard-shortcuts.md "Tools": Select V, Highlight U; the modes' keys are a text document's for the same places.
