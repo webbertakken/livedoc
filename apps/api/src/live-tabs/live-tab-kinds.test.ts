@@ -155,6 +155,31 @@ describe('a live tab kind of its own', () => {
       has_content: 1,
     });
   });
+
+  // "The digest and summary": logged `digest` with every count the kind's digest holds.
+  it('logs its digest with every count the kind\u2019s digest holds', async () => {
+    const db = sqliteD1();
+    const { room } = await roomWith(db);
+    await room.accept(
+      { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const },
+      frame('n1', 'hello'),
+    );
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const counting: LiveTabKind = {
+      ...NOTES,
+      state: {
+        ...NOTES.state,
+        digest: (updates) => ({ ...NOTES.state.digest(updates), marks: 2 }),
+      },
+    };
+    await refreshLiveTabDigest(db.env, counting, 'D', 'n1');
+    const logged = info.mock.calls.map(([message]) => message as string);
+    info.mockRestore();
+    expect(logged).toHaveLength(1);
+    expect(logged[0]).toMatch(
+      /^\[test-notes\] digest document=D tab=n1 characters=5 words=1 pages=1 marks=2 images=0 bytes=5 ms=\d+$/,
+    );
+  });
 });
 
 describe('the live tab kinds', () => {

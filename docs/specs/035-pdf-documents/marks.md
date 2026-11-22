@@ -182,7 +182,8 @@ a mark another person made is refused with `not_your_mark`.
 - `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Locked>`,
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
   `Pdf · Created · CustomStamp`. Never a mark's words, a stamp's name or a file's name.
-- Fingerprints: `[pdf] mark-refused name=<name>`, `[pdf] marks-read count=<n> unknown=<n>` (per open).
+- Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
+  `[pdf] marks-read count=<n> unknown=<n>` (per open).
 
 ## Errors
 

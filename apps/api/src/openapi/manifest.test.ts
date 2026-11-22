@@ -340,3 +340,25 @@ describe('OpenAPI teams surface', () => {
     expect(usable).toEqual(['GET /teams', 'GET /teams/{id}', 'GET /teams/{id}/library']);
   });
 });
+
+// docs/specs/015-api/api.md "PDF documents": each door declares every status its refusals answer.
+describe('a PDF document’s doors', () => {
+  const statusesOf = (method: string, door: string) =>
+    ROUTE_MANIFEST.find(
+      (route) =>
+        route.method === method && route.path === `/documents/{id}/pdf-documents/{tabId}/${door}`,
+    )!.statuses;
+
+  it('declare the statuses their refusals answer', () => {
+    expect(statusesOf('GET', 'state')).toEqual(expect.arrayContaining([200, 400, 404]));
+    // 403 level_too_low; 409 update_unreadable and stored_file_changed; 413 for both sizes.
+    expect(statusesOf('POST', 'updates')).toEqual(
+      expect.arrayContaining([204, 400, 403, 404, 409, 413, 503]),
+    );
+    expect(statusesOf('GET', 'thumbnail')).toEqual(expect.arrayContaining([200, 404]));
+    // 403 level_too_low; 409 thumbnail_not_wanted; 503 images_unavailable.
+    expect(statusesOf('PUT', 'thumbnail')).toEqual(
+      expect.arrayContaining([204, 400, 403, 404, 409, 413, 503]),
+    );
+  });
+});

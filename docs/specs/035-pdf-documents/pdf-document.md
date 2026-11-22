@@ -178,9 +178,11 @@ role line.
   ([Office shell](../004-interface-design/office-shell.md#telemetry)), and an open is the editor's own
   `Document · Loaded`, counted once.
 - A type is a preset token: never a name, a password, a field value or any text of the file.
-- Fingerprints, each with the document and tab ids and never content or names: `[pdf] stored`, `[pdf] opened`
-  (pages, bytes, whether read by range, how long the read and the engine took), `[pdf] refused` (with the refusal's name), `[pdf] limit-refused` (with the
-  limit's name).
+- Fingerprints, each with the document and tab ids and never content or names: `[pdf] arrived` (bytes, whether
+  they were held already), `[pdf] opened` (pages, bytes, whether read by range, how long the read and the engine
+  took), `[pdf] surface` (each state the surface shows, a refusal with its name), `[pdf] refused` (with the
+  refusal's name), `[pdf] limit-refused` (with the limit's name), `[pdf] drop failed` (a drop the Explorer could not
+  open).
 
 ## Non-goals
 

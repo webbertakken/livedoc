@@ -538,16 +538,25 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
   `UI · Used · PdfDocumentFollow` when a press on a person goes to their page; nothing else of its own: each area's
   spec fires for what a person did.
 - Fingerprints with the document and tab ids, never content: `[pdf] state-read bytes=<n>`,
-  `[pdf] update-stored bytes=<n> roots=<names>`, `[pdf] update-refused name=<name>`,
-  `[pdf] level-refused level=<level> asks=<level>`, `[pdf] caught-up`, `[pdf] compacted`,
+  `[pdf] update-refused name=<name>` (the door's), `[pdf] caught-up`,
   `[pdf] stored-file-replaced` ([Saving](saving.md#telemetry-and-observability)),
-  `[pdf] replacement-refused name=<name>`, `[pdf] save-kept-stored-file`, `[pdf] digest pages=<n> marks=<n>`,
+  `[pdf] replacement-refused name=<name>`, `[pdf] save-kept-stored-file`,
   `[pdf] server-made what=<thumbnail|text|preview|bake> ms=<n>`, `[pdf] server-declined what=<what> reason=<reason>`,
   `[pdf] browser-upload what=<thumbnail|text> bytes=<n>`, `[pdf] browser-upload-refused name=<name>`,
+  `[pdf] browser-thumbnail unreadable` (a stored picture that is no JPEG, never drawn),
   `[pdf] thumbnail-sent bytes=<n> quality=<q>`, `[pdf] thumbnail-skipped reason=<reason>`,
-  `[pdf] local-store refused=<reason>`,
   `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`,
   `[pdf] presence-refused`.
+- The room's shared live state logs its own under this kind's tag
+  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#live-state)): `[pdf] persisted bytes=<n>`
+  (with `via=door` for a posted update), `[pdf] compacted`, `[pdf] update-refused reason=<reason>`,
+  `[pdf] edit-refused limit=<limit>`, `[pdf] level-refused level=<level> asks=<level>` and
+  `[pdf] digest pages=<n> marks=<n>`.
+- A surface replacing the stored file for the budget: `[pdf] replace-asked reason=<reason> stored=<bool> bytes=<n>`,
+  `[pdf] replace-skipped reason=<reason>`, `[pdf] replace-store-failed`, `[pdf] replace-refused name=<name>`.
+- A copy's live changes: `[pdf] copied bytes=<n>` for each tab seeded, `[pdf] seed-refused name=<name>`.
+- A browser that will not keep a PDF's bytes is logged where it is said: `[pdf] refused name=<name>` for a PDF
+  arriving ([Opening](opening.md#telemetry-and-observability)), `[pdf] take-offline-refused name=<name>` below.
 - In This Browser: `[pdf] saved in this browser bytes=<n>`, `[pdf] save in this browser failed`,
   `[pdf] arrived bytes=<n> where=this-browser`, `[pdf] sync-sent tabs=<n> bytes=<n> held=<n>`,
   `[pdf] sync-refused name=<name>`, `[pdf] taken-offline tabs=<n> bytes=<n> local=<n>`,

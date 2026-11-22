@@ -94,6 +94,23 @@ describe('openPdfFile', () => {
     expect(read).not.toHaveBeenCalled();
   });
 
+  // opening.md "Telemetry and observability": `[pdf] refused name=<name>`, whatever refused it.
+  it('logs every refusal by its name, the ones answered before a byte travels too', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const text = Uint8Array.from(new TextEncoder().encode('just words'));
+    await openPdfFile('ada', file(text));
+    const large = { name: 'big.pdf', size: FILE_TAB_MAX_BYTES + 1, arrayBuffer: vi.fn() };
+    await openPdfFile('ada', large);
+    api.apiHoldsBlob.mockRejectedValue(new ApiError('file held', 503, 'files_unavailable'));
+    await openPdfFile('ada', file(PDF));
+    expect(info.mock.calls.map(([message]) => message as string)).toEqual([
+      '[pdf] refused name=not_a_pdf',
+      '[pdf] refused name=file_too_large',
+      '[pdf] refused name=files_unavailable',
+    ]);
+    info.mockRestore();
+  });
+
   it.each([
     ['files_unavailable', 503, 'files_unavailable'],
     ['file_too_large', 413, 'file_too_large'],

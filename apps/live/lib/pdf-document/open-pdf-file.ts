@@ -57,6 +57,12 @@ const refusalOf = (error: unknown): PdfArrivalRefusal => {
   return 'not_stored';
 };
 
+// Every refusal is logged by its name, the ones answered before a byte travels too.
+const refused = (refusal: PdfArrivalRefusal): OpenedPdf => {
+  debugLog(`[pdf] refused name=${refusal}`);
+  return { ok: false, refusal };
+};
+
 // Keeps the file in this browser and names it by a new offline record. The bytes are kept first: a record never
 // names bytes this browser does not hold.
 async function keepHere(
@@ -89,9 +95,9 @@ export async function openPdfFile(
   folderId?: string | null,
   where: SaveLocationId = 'livedoc',
 ): Promise<OpenedPdf> {
-  if (file.size > FILE_TAB_MAX_BYTES) return { ok: false, refusal: 'file_too_large' };
+  if (file.size > FILE_TAB_MAX_BYTES) return refused('file_too_large');
   const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!isPdfBytes(bytes)) return { ok: false, refusal: 'not_a_pdf' };
+  if (!isPdfBytes(bytes)) return refused('not_a_pdf');
   const { documentId, tabId } = createIdsFor(null);
   const name = pdfNameFromFile(file.name);
   const started = Date.now();
@@ -114,8 +120,6 @@ export async function openPdfFile(
     debugLog(`[pdf] arrived bytes=${bytes.byteLength} held=${held} ms=${Date.now() - started}`);
     return { ok: true, documentId, held };
   } catch (error) {
-    const refusal = refusalOf(error);
-    debugLog(`[pdf] refused name=${refusal}`);
-    return { ok: false, refusal };
+    return refused(refusalOf(error));
   }
 }
