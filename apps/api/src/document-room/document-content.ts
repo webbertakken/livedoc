@@ -5,7 +5,9 @@
 
 import { remapTabLinks, type Element } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
+import { keptBytes, type KeptContent, type StoredAt } from '@livedoc/sheets/files';
 import { workbookFromRow, WORKBOOK_COLUMNS, type WorkbookRow } from '../db/workbook';
+import { keptAddStatements, readKept } from '../db/workbook-kept';
 import { cellFormatSql, styleCellsStatements } from '../db/sheet-styles';
 import { itemIdsShownOnTab, type TabItemElement } from '@livedoc/items';
 import { redactTabDataAuthors } from '../comments';
@@ -112,6 +114,8 @@ export type DocumentCopy = {
   axes: Row[];
   // A spreadsheet's workbook row (docs/specs/029-sheets/sheet-store.md "Copies and exports"), or null.
   workbook: Row | null;
+  // A spreadsheet's kept content of the copied sheets and the workbook's own (sheet-store.md "Copies and exports").
+  kept?: KeptContent<StoredAt> | null;
   // Each copied live tab's whole state, by its source id (docs/specs/006-document/kinds-outside-the-canvas.md
   // "Live state").
   liveStates: { tabId: string; state: Uint8Array }[];
@@ -224,8 +228,10 @@ export async function exportDocumentCopy(
         : [];
     }),
   );
+  const copiedSheets = new Set(((sheets?.results ?? []) as Row[]).map((s) => String(s.id)));
   return {
     liveStates,
+    kept: keptOfSheets(await readKept(env, documentId), copiedSheets),
     itemTypes: doc?.item_types ?? null,
     itemsRev: doc?.items_rev ?? 0,
     itemsNextKey: doc?.items_next_key ?? 1,
@@ -236,6 +242,21 @@ export async function exportDocumentCopy(
     cells: (cells?.results ?? []) as Row[],
     axes: (axes?.results ?? []) as Row[],
     workbook: ((workbook?.results ?? [])[0] as Row | undefined) ?? null,
+  };
+}
+
+// Kept content as a copy takes it: the workbook's own, and its copied sheets'; null for none.
+function keptOfSheets(
+  kept: KeptContent<StoredAt> | undefined,
+  sheets: ReadonlySet<string>,
+): KeptContent<StoredAt> | null {
+  if (!kept) return null;
+  const copied = (entry: { at: StoredAt }) =>
+    entry.at.sheet === undefined || sheets.has(entry.at.sheet);
+  return {
+    ...kept,
+    items: kept.items.filter(copied),
+    relationships: kept.relationships.filter(copied),
   };
 }
 
@@ -375,6 +396,11 @@ export async function importDocumentCopy(
         )
         .bind(documentId, axis.sheet_id, axis.axis, axis.chunk, axis.ids),
     );
+  }
+  // A spreadsheet's kept content, after its workbook row and its sheets, which it names.
+  if (copy.workbook && copy.kept) {
+    const from = { items: 0, relationships: 0, parts: 0 };
+    stmts.push(...keptAddStatements(env, documentId, copy.kept, from, keptBytes(copy.kept)));
   }
   // A copy's cells carry their formats; in a spreadsheet copy they become its own styles.
   if (copy.cells.length > 0) stmts.push(...styleCellsStatements(env, documentId, null));

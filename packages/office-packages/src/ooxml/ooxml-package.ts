@@ -63,6 +63,13 @@ const DROPPED_TYPES = new Set<string>([
   RELATIONSHIP_TYPES.control,
 ]);
 
+/** Whether an OOXML part is one a read drops (what may run, signs bytes or stands for OLE), never to be kept. */
+export const isDroppedOoxmlPart = (name: string): boolean =>
+  DROPPED.some((pattern) => pattern.test(name));
+
+/** Whether a relationship's type is one a read drops with what it names, never to be kept. */
+export const isDroppedOoxmlRelationship = (type: string): boolean => DROPPED_TYPES.has(type);
+
 const CONTENT_TYPES = '[Content_Types].xml';
 
 /** The part a relationship target names, resolved against its source part's folder; undefined when it escapes. */

@@ -14,6 +14,7 @@ import type {
 import { WorkbookRecord } from '@livedoc/sheets';
 import { workbookConversion } from '@livedoc/sheets/files';
 import { convertWorkbookFormat, readWorkbook } from '../db/workbook';
+import { readKept } from '../db/workbook-kept';
 import { forbidden, json } from '../responses';
 import { relayWorkbook } from '../room-client';
 import { readBody, type DocumentRouteContext } from './context';
@@ -32,10 +33,15 @@ export async function conversionLosses(
   if (!record) return workbookRefused('workbook_not_found', 404);
   const to = ctx.url.searchParams.get('to');
   if (!WorkbookRecord.isFormat(to)) return workbookRefused('file_type_unknown', 400);
-  const sheets = WorkbookRecord.sameStandard(to, record.format)
-    ? []
-    : await loadSpreadsheetSheets(ctx.env, documentId);
-  const body: WorkbookConversionResponse = workbookConversion(sheets, record, to);
+  const same = WorkbookRecord.sameStandard(to, record.format);
+  const [sheets, kept] = same
+    ? [[], undefined]
+    : await Promise.all([
+        loadSpreadsheetSheets(ctx.env, documentId),
+        readKept(ctx.env, documentId),
+      ]);
+  // The kept content a file of `to` leaves behind is listed (files-and-print.md "Converting", D109).
+  const body: WorkbookConversionResponse = workbookConversion(sheets, record, to, kept);
   console.info(
     `[workbook] conversion listed document=${documentId} from=${record.format} to=${to} losses=${body.losses.map((l) => l.k).join(',') || 'none'} ms=${Date.now() - started}`,
   );

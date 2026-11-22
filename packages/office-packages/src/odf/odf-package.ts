@@ -25,6 +25,10 @@ export type OdfPackageRead = { ok: true; package: OdfPackage } | PackageRefusal;
 // Entries that may run or that sign bytes LiveDoc rewrites: dropped and reported, never kept (step 8).
 const DROPPED = [/^Basic\//, /^Scripts\//, /^META-INF\/documentsignatures\.xml$/, /^Thumbnails\//];
 
+/** Whether an ODF package entry is one a read drops (what may run or signs bytes), never to be kept. */
+export const isDroppedOdfEntry = (name: string): boolean =>
+  DROPPED.some((pattern) => pattern.test(name));
+
 /** Whether the bytes start as an ODF flat file would: an XML declaration or root, after an optional BOM. */
 export function looksLikeXml(bytes: Uint8Array): boolean {
   const head = new TextDecoder()

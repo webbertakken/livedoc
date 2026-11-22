@@ -67,6 +67,9 @@ const WRITTEN_ENTRIES: ReadonlySet<string> = new Set([
   'META-INF/manifest.xml',
 ]);
 
+/** Whether the ODF writer writes an entry of this name itself, so none is kept under it. */
+export const isWrittenOdfEntry = (name: string): boolean => WRITTEN_ENTRIES.has(name);
+
 /** Kept items as a reader gathers them, with the parsed entry their XML is sliced from. */
 export class OdsKeeper {
   readonly items: KeptItem<FileAt>[] = [];

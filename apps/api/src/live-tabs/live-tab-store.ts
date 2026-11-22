@@ -1,12 +1,9 @@
 // A live tab's state in its room (docs/specs/006-document/kinds-outside-the-canvas.md "Live state"): the room is the
 // one writer; every update is appended as it is applied, and compaction folds the log into chunks under the row cap.
 // Read as the chunks and the log, in order, merged by the kind.
+import { fromBlob, toBlob } from '../db/blob';
 import type { DocumentEnv } from '../types';
 import type { LiveTabKind } from './live-tab-kind';
-
-const toBlob = (bytes: Uint8Array): ArrayBuffer => bytes.slice().buffer;
-const fromBlob = (value: unknown): Uint8Array =>
-  value instanceof ArrayBuffer ? new Uint8Array(value) : new Uint8Array(value as ArrayLike<number>);
 
 /** The tab's body as stored, when the document holds the tab and it is of the kind; else null. */
 export async function storedLiveTab(

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { writeXlsx } from '@livedoc/sheets/files';
 import { ApiError, apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
 import { writeSheet } from '@/lib/api/sheets';
+import { sendKept } from '@/lib/api/workbook-kept';
 import { nameFromFile, openingNotice, openSpreadsheetFile } from './open-spreadsheet-file';
 
 vi.mock('@/lib/api-client', async (real) => ({
@@ -12,6 +13,7 @@ vi.mock('@/lib/api-client', async (real) => ({
   apiDeleteDocument: vi.fn(),
 }));
 vi.mock('@/lib/api/sheets', () => ({ writeSheet: vi.fn() }));
+vi.mock('@/lib/api/workbook-kept', () => ({ sendKept: vi.fn() }));
 
 afterEach(() => vi.clearAllMocks());
 
@@ -80,6 +82,51 @@ describe('openSpreadsheetFile', () => {
       ok: false,
       message: 'This file is damaged and could not be opened.',
     });
+  });
+});
+
+// standard-mapping.md "Unknown content": what the file holds that the model does not is sent after its parts.
+describe('a file’s kept content', () => {
+  const CALC = '<calcPr calcId="191029"/>';
+  const withKept = () =>
+    new File(
+      [
+        writeXlsx(
+          {
+            sheets: [{ name: 'Data', rows: 1, cols: 1, cells: [] }],
+            kept: {
+              standard: 'ooxml',
+              items: [{ place: 'workbook', xml: CALC, ns: {}, at: {} }],
+              parts: [],
+              relationships: [],
+            },
+          },
+          '',
+        ).data,
+      ],
+      'K.xlsx',
+    );
+
+  it('is sent after the create, its items as the file wrote them', async () => {
+    vi.mocked(apiCreateDocument).mockResolvedValue({} as never);
+    vi.mocked(sendKept).mockResolvedValue(1);
+    expect(await openSpreadsheetFile('me', withKept())).toMatchObject({ ok: true });
+    const [scope, kept] = vi.mocked(sendKept).mock.calls[0]!;
+    expect(scope).toMatchObject({ ownerId: 'me', shareCode: null });
+    expect(kept.items.map((item) => item.xml)).toContain(CALC);
+  });
+
+  it('bins the half-made spreadsheet when it is refused, and is not sent for a file keeping nothing', async () => {
+    vi.mocked(apiCreateDocument).mockResolvedValue({} as never);
+    vi.mocked(sendKept).mockRejectedValue(
+      new ApiError('keep file content', 400, 'kept_item_invalid'),
+    );
+    vi.mocked(apiDeleteDocument).mockResolvedValue(undefined);
+    expect(await openSpreadsheetFile('me', withKept())).toMatchObject({ ok: false });
+    expect(apiDeleteDocument).toHaveBeenCalled();
+    vi.mocked(sendKept).mockClear();
+    expect(await openSpreadsheetFile('me', xlsxFile('Plain.xlsx', 1))).toMatchObject({ ok: true });
+    expect(sendKept).not.toHaveBeenCalled();
   });
 });
 

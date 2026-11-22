@@ -16,6 +16,7 @@ import { apiSetDocumentTag } from '@/lib/api/tags';
 import { API_BASE, ApiError, apiDelete } from '@/lib/api/core';
 import { fetchCloudItems } from '../api/items';
 import { fetchCloudSheets, sheetAsCreate } from '../api/sheets';
+import { sendKept } from '../api/workbook-kept';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 import { uploadEmbeddedImages } from './offline-images';
 import {
@@ -107,6 +108,17 @@ async function upload(rec: OfflineDocumentRecord, ownerId: string): Promise<Map<
     if (code !== 'folder_not_found' && code !== 'folder_scope_mismatch') throw err;
     console.warn(`[offline-sync] placement refused reason=${code}, filed at root`);
     await create(null);
+  }
+  // A spreadsheet's kept content after its create (sheet-store.md "Offline documents"): a refusal takes the cloud
+  // copy back, the local one kept.
+  if (rec.kept) {
+    try {
+      await sendKept({ ownerId, documentId: rec.id, shareCode: null }, rec.kept);
+    } catch (err) {
+      console.warn('[offline-sync] kept content refused, local copy kept');
+      await takeBackCloudCopy(rec.id, ownerId);
+      throw err;
+    }
   }
   return imageIds;
 }

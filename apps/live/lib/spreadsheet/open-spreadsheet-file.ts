@@ -7,6 +7,7 @@ import type { PackageRejection } from '@livedoc/office-packages';
 import type { FileParts } from '@livedoc/sheets/files';
 import { ApiError, apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
 import { writeSheet, type SheetsScope } from '@/lib/api/sheets';
+import { sendKept } from '@/lib/api/workbook-kept';
 import { debugLog } from '@/lib/debug-log';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
 import { UNTITLED_SPREADSHEET } from './spreadsheet-name';
@@ -101,6 +102,10 @@ export async function openSpreadsheetFile(
     created = true;
     const scope: SheetsScope = { ownerId, documentId, shareCode: null, tabId: null };
     await sendParts(scope, parts, onProgress);
+    // Then what the file holds that the model does not (standard-mapping.md "Unknown content"); a refusal bins it too.
+    const left = sheetsMade.kept ? await sendKept(scope, sheetsMade.kept) : 0;
+    if (left > 0)
+      debugLog('[workbook] file read losses', { kinds: ['kept_too_large'], count: left });
     debugLog('[workbook] file read', {
       format: read.format,
       sheets: sheets.length,

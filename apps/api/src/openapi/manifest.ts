@@ -976,6 +976,32 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'WorkbookSettingsResponse',
     statuses: [200, 400, 401, 403, 404, 409, 410],
   },
+  // A spreadsheet's kept content (docs/specs/029-sheets/sheet-store.md "In a spreadsheet", Unknown content).
+  {
+    method: 'GET',
+    path: '/documents/{id}/workbook/kept',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "A spreadsheet's kept content whole: what the file it was opened from held that LiveDoc does not model, as the file's own XML by where it sat (items), its relationships, and its package entries with their bytes as base64; null when it keeps none. Written back into files of its standard. 404 workbook_not_found. Read access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: 'WorkbookKeptResponse',
+    statuses: [200, 401, 403, 404, 410],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/workbook/kept',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "Add one request's share of a file's kept content to a spreadsheet, as File › Open does after its create: up to 16 MB in all, an item up to 1 MB, an entry up to 5 MB. Each item one whole element or one attribute of its standard's places; entries' names safe, not LiveDoc's own, not what the office packages drop. 400 kept_invalid, kept_item_invalid, kept_part_invalid, kept_relationship_invalid or kept_anchor_invalid; 404 workbook_not_found; 409 kept_standard_mismatch; 413 kept_too_large. Nothing of a refused request is stored. Edit access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'WorkbookKeptDto',
+    responseSchema: 'WorkbookKeptStoredResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410, 413],
+  },
   // A spreadsheet's sheets and settings changed (docs/specs/029-sheets/sheet-store.md "Changing the workbook").
   {
     method: 'PUT',

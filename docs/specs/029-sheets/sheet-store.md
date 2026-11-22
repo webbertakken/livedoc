@@ -51,9 +51,9 @@ elements, its snapshots, its changesets or its room.
 
 ## In a spreadsheet
 
-**Status: specified; built but for objects, unknown content and names unique across the workbook** (each with its
+**Status: specified; built but for objects and names unique across the workbook** (each with its
 phase). Built in plan 0020 Phase 5: the workbook row with its format and settings, styles, the chunked order, loading
-by viewport, the limits, the workbook's doors, offline and copies. What the store becomes for the
+by viewport, the limits, the workbook's doors, offline and copies; in Phase 7, unknown content. What the store becomes for the
 [spreadsheet](spreadsheet.md); the rest of this page holds for both until the Plan Sheet retires.
 
 - **A workbook is a document's sheets.** Each sheet tab holds one sheet (its `tabId`); the document's tab order is
@@ -78,8 +78,26 @@ by viewport, the limits, the workbook's doors, offline and copies. What the stor
     layout write moves it into chunks.
 - **Named ranges** are the workbook's: each stays in the layout of the sheet its range lies on, its name unique
   across the workbook, and a formula on any sheet reads it (default).
-- **Unknown content** ([Standard mapping](standard-mapping.md#unknown-content)): a table of the file's own XML
-  fragments by part and anchor (a sheet id, a cell, a range by ids), written back to the same format.
+- **Unknown content** ([Standard mapping](standard-mapping.md#unknown-content)): what a file held that the model does
+  not, written back to files of its standard. Built:
+  - The workbook row names the standard of its kept content (`odf` or `ooxml`, none until a file's is stored) and
+    counts its bytes; converting leaves both as they are (D109).
+  - Kept items, each its place, XML, namespace bindings and anchor (a sheet id, and a cell's row and column ids), and
+    kept relationships, each its source (the package, the workbook or a sheet by id), id, type and target, in a table
+    each, in the file's order; a sheet's go when the sheet is deleted for good.
+  - Kept package entries by name, with their media or content type and their own relationships, their bytes in
+    chunks of 1 MB under the room's row cap (default, D114).
+  - **Keep a file's content**: File › Open sends a file's kept content right after its sheets' parts, and Sync to
+    cloud right after its create, in requests of up to 7 MB each, under the api's 8 MB body (default, D114); each
+    request adds to what is stored. Editors only, never on a tab-scoped link, as the workbook's other doors.
+  - What is kept is checked as it arrives, each refusal named, and nothing of a refused request is stored: a body
+    that is not kept content (`kept_invalid`); an item that is not one whole element or one attribute, or holds a
+    DOCTYPE, or a place of the other standard (`kept_item_invalid`); an entry whose name is unsafe, one LiveDoc
+    writes itself, one the office packages drop, or one stored already (`kept_part_invalid`); a relationship whose
+    target leaves the package, or of a type the office packages drop (`kept_relationship_invalid`); an anchor on a
+    sheet not the workbook's (`kept_anchor_invalid`); content of the other standard than what is stored
+    (`kept_standard_mismatch`); past D113's sizes (`kept_too_large`).
+  - Read whole by anyone who may read the spreadsheet (Take offline reads it), never on a tab-scoped link.
 - **Objects**: charts, pivot tables, images, drawings, slicers, filter views, tables and timelines, a row each by
   sheet, their model as JSON.
 - **Loading by viewport**: opening a workbook fetches its workbook row, sheet list, styles and the active sheet's
@@ -252,15 +270,20 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
 - An offline spreadsheet holds every rule of the api's: its sheets are its tabs', in tab order, named and limited as
   one workbook, and a sheet renamed renames its tab; it loads whole, from this browser.
 - An offline spreadsheet downloads as the same file the api writes, written in this browser.
+- Its record carries its kept content ([Standard mapping](standard-mapping.md#unknown-content)): **Take offline** reads
+  it, all or nothing, before the server copy goes; **Sync to cloud** sends it after the create, and a send refused
+  takes the cloud copy back, the local one kept; its downloads and conversion lists read it as the api's do.
 
 ## Copies and exports
 
 - **Duplicate** copies the sheet store with the document (same ids), and a spreadsheet's workbook row with it, so a
-  copy of a spreadsheet is a spreadsheet.
+  copy of a spreadsheet is a spreadsheet; its kept content comes too.
 - A `.livedoc` file (the Drive mirror's) carries the workbook row beside the sheets, optional and additive, and a
   copy imported from one is a spreadsheet.
 - **Duplicate Tab** copies the tab's sheets as new sheets on the new tab (new ids, `(copy)` titles kept unique
-  per tab), and the new tab's Sheet elements frame the copies.
+  per tab), and the new tab's Sheet elements frame the copies. A sheet's kept content stays with the sheet it came
+  from (default, D115).
+- The `.livedoc` file carries no kept content, so a spreadsheet brought back from one has none (default, D116).
 - **The `.livedoc` file** (the Google Drive mirror's document file) carries the sheets; the field is additive,
   so the file stays version 1.
 - Images, thumbnails, PDFs and api or MCP renders draw Sheet elements from the store.
@@ -368,3 +391,7 @@ The code cites each by its id.
 - **D8** Cells an agent reads at once: 5,000 (default).
 - **D23** How much one agent read answers: 100,000 characters (`SHEET_READ_CHARS_MAX`), with a note where to read on
   (default).
+- **D114** Kept content in the store: package entries in chunks of 1 MB; sent in requests of up to 7 MB each, entries' bytes as base64
+  (default).
+- **D115** Kept content of a sheet Duplicate Tab copies: Stays with the sheet it came from (default).
+- **D116** Kept content in a `.livedoc` file: Not carried (default).

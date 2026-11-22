@@ -9154,6 +9154,31 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       }
     ]
   },
+  "KeptItem<StoredAt>": {
+    "additionalProperties": false,
+    "description": "One kept element (or attribute, `name=\"value\"`) as the file wrote it, with the outer bindings it needs.",
+    "properties": {
+      "at": {
+        "$ref": "#/components/schemas/StoredAt"
+      },
+      "ns": {
+        "$ref": "#/components/schemas/XmlBindings"
+      },
+      "place": {
+        "$ref": "#/components/schemas/KeptPlace"
+      },
+      "xml": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "place",
+      "xml",
+      "ns",
+      "at"
+    ],
+    "type": "object"
+  },
   "KeptKind": {
     "description": "What a person is told a kept item is (files-and-print.md \"Converting\"); `support` items are never counted.",
     "enum": [
@@ -9172,6 +9197,123 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "column-widths",
       "view-settings",
       "other"
+    ],
+    "type": "string"
+  },
+  "KeptPartDto": {
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "rels": {
+        "items": {
+          "$ref": "#/components/schemas/KeptRelationshipLinkDto"
+        },
+        "type": "array"
+      },
+      "type": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "type",
+      "data",
+      "rels"
+    ],
+    "type": "object"
+  },
+  "KeptPlace": {
+    "enum": [
+      "scripts",
+      "styles",
+      "settings",
+      "spreadsheet-before",
+      "spreadsheet-after",
+      "table-before",
+      "table-after",
+      "table-attribute",
+      "cell",
+      "cell-after",
+      "cell-attribute",
+      "workbook",
+      "workbook-attribute",
+      "stylesheet",
+      "sheet-attribute",
+      "worksheet",
+      "worksheet-attribute"
+    ],
+    "type": "string"
+  },
+  "KeptRelationship<StoredAt>": {
+    "additionalProperties": false,
+    "description": "An XLSX relationship kept on the package's, the workbook's or a sheet's part (`at` names the sheet), with its id; an internal target is the part's name from the package's root, `/`-led.",
+    "properties": {
+      "at": {
+        "$ref": "#/components/schemas/StoredAt"
+      },
+      "external": {
+        "type": "boolean"
+      },
+      "from": {
+        "enum": [
+          "package",
+          "workbook",
+          "sheet"
+        ],
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "at",
+      "from",
+      "id",
+      "target",
+      "type"
+    ],
+    "type": "object"
+  },
+  "KeptRelationshipLinkDto": {
+    "additionalProperties": false,
+    "properties": {
+      "external": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "type",
+      "target"
+    ],
+    "type": "object"
+  },
+  "KeptStandard": {
+    "description": "The standard kept content belongs to: written back only to a file of it (D109).",
+    "enum": [
+      "odf",
+      "ooxml"
     ],
     "type": "string"
   },
@@ -15377,6 +15519,22 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "StoredAt": {
+    "additionalProperties": false,
+    "description": "An item's anchor in the model: its sheet's id, its cell's row and column ids.",
+    "properties": {
+      "c": {
+        "type": "string"
+      },
+      "r": {
+        "type": "string"
+      },
+      "sheet": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
   "StoredFormula": {
     "additionalProperties": false,
     "properties": {
@@ -18386,6 +18544,89 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "WorkbookKeptDto": {
+    "additionalProperties": false,
+    "description": "Kept content as it travels: the POST body, and GET's `kept`.",
+    "properties": {
+      "items": {
+        "items": {
+          "$ref": "#/components/schemas/KeptItem%3CStoredAt%3E"
+        },
+        "type": "array"
+      },
+      "parts": {
+        "items": {
+          "$ref": "#/components/schemas/KeptPartDto"
+        },
+        "type": "array"
+      },
+      "relationships": {
+        "items": {
+          "$ref": "#/components/schemas/KeptRelationship%3CStoredAt%3E"
+        },
+        "type": "array"
+      },
+      "standard": {
+        "$ref": "#/components/schemas/KeptStandard"
+      }
+    },
+    "required": [
+      "standard",
+      "items",
+      "relationships",
+      "parts"
+    ],
+    "type": "object"
+  },
+  "WorkbookKeptResponse": {
+    "additionalProperties": false,
+    "description": "GET /documents/:id/workbook/kept: the spreadsheet's kept content whole, or null when it keeps none.",
+    "properties": {
+      "kept": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/WorkbookKeptDto"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "kept"
+    ],
+    "type": "object"
+  },
+  "WorkbookKeptStoredResponse": {
+    "additionalProperties": false,
+    "description": "POST /documents/:id/workbook/kept: what the spreadsheet keeps now, counted.",
+    "properties": {
+      "bytes": {
+        "type": "number"
+      },
+      "items": {
+        "type": "number"
+      },
+      "parts": {
+        "type": "number"
+      },
+      "relationships": {
+        "type": "number"
+      },
+      "standard": {
+        "$ref": "#/components/schemas/KeptStandard"
+      }
+    },
+    "required": [
+      "standard",
+      "items",
+      "relationships",
+      "parts",
+      "bytes"
+    ],
+    "type": "object"
+  },
   "WorkbookRecalc": {
     "enum": [
       "change",
@@ -18654,6 +18895,13 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "name",
       "orderIndex"
     ],
+    "type": "object"
+  },
+  "XmlBindings": {
+    "additionalProperties": {
+      "type": "string"
+    },
+    "description": "Prefix to namespace URI; the empty prefix is the default namespace.",
     "type": "object"
   }
 };
