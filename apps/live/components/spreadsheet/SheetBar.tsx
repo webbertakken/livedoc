@@ -2,8 +2,8 @@
 
 // The sheet bar (docs/specs/029-sheets/surface.md "Sheet bar"): the spreadsheet's tabs, drawn at the foot of the grid
 // as Google Sheets draws its sheets, even with one sheet. A click opens a sheet; arrows move between them, as a tab
-// list's do. Each tab shows who else is on that sheet, in their colour (sheet-store.md "Live for everyone"). Add Sheet,
-// All Sheets, each tab's menu and the summary arrive with the grid surface (plan 0020 Phase 8).
+// list's do. Each tab shows who else is on that sheet, in their colour (sheet-store.md "Live for everyone"). Its end
+// keeps room for the selection's summary, drawn there by the open sheet (SheetBarSummary).
 import { useRef, type KeyboardEvent } from 'react';
 import { Tooltip } from '@livedoc/ui';
 
@@ -44,12 +44,15 @@ export function SheetBar({
   activeId,
   onSelect,
   peers = {},
+  summarySlot,
 }: {
   tabs: readonly SheetBarTab[];
   activeId: string;
   onSelect: (tabId: string) => void;
   // Who else is on each tab's sheet, by tab id.
   peers?: Readonly<Record<string, readonly SheetBarPeer[]>>;
+  // Where the open sheet draws the selection's summary.
+  summarySlot?: (element: HTMLDivElement | null) => void;
 }) {
   const list = useRef<HTMLDivElement | null>(null);
   const move = (e: KeyboardEvent, at: number) => {
@@ -97,6 +100,7 @@ export function SheetBar({
           );
         })}
       </div>
+      <div ref={summarySlot} data-sheet-summary className="ml-auto flex shrink-0 items-center" />
     </div>
   );
 }

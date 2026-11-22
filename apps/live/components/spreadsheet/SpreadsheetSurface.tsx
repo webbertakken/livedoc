@@ -31,6 +31,8 @@ import { ImportReportDialog } from './ImportReportDialog';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
 import { RangeAccessBar } from './RangeAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
+import { SheetBarSummary } from './SheetBarSummary';
+import { SummarySlotContext } from './summary-slot';
 import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { useGridMenuBindings } from './useGridMenuBindings';
@@ -67,6 +69,8 @@ export function SpreadsheetSurface({
   const root = useRef<HTMLElement | null>(null);
   // The open sheet's menu bindings, published up to the title row (surface.md "Menu bar").
   const [channel] = useState(createOfficeBindingsChannel);
+  // The sheet bar's room for the summary, filled from inside the open sheet (surface.md "Sheet bar").
+  const [summarySlot, setSummarySlot] = useState<HTMLElement | null>(null);
   return (
     <section
       ref={root}
@@ -88,13 +92,21 @@ export function SpreadsheetSurface({
         pushUndo={(step) => bridge?.pushUndo(step)}
       />
       <OfficeBindingsContext.Provider value={channel}>
-        {bridge ? (
-          <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
-        ) : (
-          <Status state="loading" />
-        )}
+        <SummarySlotContext.Provider value={summarySlot}>
+          {bridge ? (
+            <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
+          ) : (
+            <Status state="loading" />
+          )}
+        </SummarySlotContext.Provider>
       </OfficeBindingsContext.Provider>
-      <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} peers={sheetBarPeers} />
+      <SheetBar
+        tabs={tabs}
+        activeId={tabId}
+        onSelect={onSelectTab}
+        peers={sheetBarPeers}
+        summarySlot={setSummarySlot}
+      />
       <ImportReportDialog documentId={scope.documentId} />
     </section>
   );
@@ -289,6 +301,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
         zoom={1}
       />
       <SheetMenus actions={actions} />
+      <SheetBarSummary />
     </div>
   );
 }

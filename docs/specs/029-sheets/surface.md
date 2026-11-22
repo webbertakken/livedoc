@@ -86,12 +86,18 @@ Left to right, a hairline between the groups:
 ## Formula bar
 
 - **Name box** (96 px): the selection (`B4`, `B4:D9`) or its named range's name; typing a reference, a range or a
-  name and Enter selects it; its arrow lists the workbook's named ranges. Rules as today ([Sheet](sheet.md#formula-bar)).
+  name and Enter selects it; its arrow lists the named ranges, each with its range, and a pick selects it. Rules as
+  today ([Sheet](sheet.md#formula-bar)). A sheet's names are its own ([Named ranges](sheet.md#named-ranges)), so the
+  list is the open sheet's, and says "No named ranges" when it has none (default, D129).
 - **fx** then the **input**: the active cell's input as typed; editing there is editing the cell. It grows to show
-  a long input (a drag on its foot, as Google's), up to a third of the grid.
+  a long input, up to three lines, then scrolls; its foot is a handle (a `separator`, moved by a drag or Up and
+  Down) that sets its height in lines, from one to as many as a third of the grid holds, kept for the page; a
+  double-click on the handle gives the height back to the input (default, D130).
 - While a formula is typed, the bar and the cell colour each reference and its range alike, show the function help
   card (its syntax, the argument being typed in bold, a summary and an example) and offer autocomplete of
   function and named range names ([Grid and editing](grid-and-editing.md#formulas)).
+- **F1** while a formula is typed hides the help card, and shows it again; the choice is the person's, kept in their
+  browser, as Google's collapsed card stays collapsed (default, D131).
 
 ## Grid
 
@@ -111,6 +117,12 @@ Left to right:
 - **Summary**, at the right, for a selection of more than one cell: **Sum: 1,234** (numbers only), its arrow a menu
   of Sum, Average, Min, Max, Count and Count Numbers, each with its value; the pick is the person's, kept in their
   browser. It counts the cells a filter shows, and gives up past 100,000 cells ("Too many cells").
+  - Sum, Average, Min and Max read the numbers; Count the cells that hold anything; Count Numbers the numbers.
+  - With no number among the cells, it shows **Count** whatever the pick, as a sum of nothing says nothing
+    (default, D132).
+  - Its values are written in the workbook's locale with the active cell's number format, as Google's are.
+  - It is a menu button (`aria-haspopup="menu"`), its menu items radio items, the pick ticked; the shown value
+    is announced politely as the selection changes.
 
 ## Side panels
 
@@ -139,3 +151,9 @@ Version History (the shell's). Each is specified with its area.
 - **D126** A menu row naming Google: Matched by LiveDoc's own words, Sheets Help as **Help** (default).
 - **D127** The menus' telemetry: The shell's events with the kind's name, Spreadsheet, never one per item (default).
 - **D128** The toolbar's font size steps: One point a press, within 6 to 96 (default).
+- **D129** The name box's list: The open sheet's named ranges, each with its range, as names are a sheet's own
+  (default).
+- **D130** The formula bar's height: Up to three lines by its input; a drag on its foot from one line to a third of
+  the grid, kept for the page (default).
+- **D131** The function help card hidden by F1: Kept hidden for the person in their browser until F1 again (default).
+- **D132** The summary with no number selected: Count, whatever the pick (default).

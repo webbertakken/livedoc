@@ -23,6 +23,7 @@ import {
 } from './formula-assist';
 import { useSheetController } from './sheet-controller';
 import { dropdownMatches } from './rules/dropdown-assist';
+import { toggleFunctionHelp } from './function-help-pref';
 import type { SheetActions } from './useSheetActions';
 
 const ARROWS: Record<string, Dir> = {
@@ -108,6 +109,12 @@ export function useFormulaInput(actions: SheetActions): FormulaInput {
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     e.stopPropagation();
     if (!editing) return;
+    // F1 hides the function help card while a formula is typed, and shows it again (surface.md "Formula bar").
+    if (e.key === 'F1' && draft.startsWith('=')) {
+      e.preventDefault();
+      toggleFunctionHelp();
+      return;
+    }
     const el = e.currentTarget;
     const at = el.selectionStart ?? draft.length;
     if (options && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {

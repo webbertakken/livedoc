@@ -5,6 +5,7 @@ import {
   contextEntries,
   contextualEntries,
   visibleMenus,
+  noShortcuts,
   type OfficeCatalogue,
 } from './office-catalogue';
 import { findTools } from './tool-finder';
@@ -248,5 +249,11 @@ describe('contextEntries', () => {
       'rename',
     ]);
     expect(labels({})).toEqual(['copy-doc', 'separator', 'rename']);
+  });
+});
+
+describe('noShortcuts', () => {
+  it('names no shortcut for any item', () => {
+    expect(noShortcuts()).toBeNull();
   });
 });

@@ -7,51 +7,23 @@ import { useMemo, useState } from 'react';
 import { formatNumber } from '@livedoc/sheets';
 import { useSheetController, type SheetController } from './sheet-controller';
 import { STATS, toggleStatusPick, useStatusPick, type Stat } from './sheet-status-pick';
+import { countSelection, type SelectionStats } from './selection-stats';
 import { OptionRows } from '@/components/plan/OptionRows';
 import { AnchoredPopover } from '@/components/primitives/AnchoredPopover';
 
 const STATUS_BAR_PX = 24;
-const CELLS_MAX = 100_000;
 
 export { STATS, type Stat } from './sheet-status-pick';
-type SelectionStats = {
-  sum: number;
-  count: number;
-  numbers: number;
-  min: number;
-  max: number;
-};
-
 export function selectionStats(
   c: Pick<SheetController, 'selection' | 'workbook' | 'sheet' | 'geometry'>,
 ): SelectionStats | null {
-  let sum = 0;
-  let numbers = 0;
-  let count = 0;
-  let seen = 0;
-  let min = Infinity;
-  let max = -Infinity;
-  const ext = c.workbook.extent(c.sheet.id);
-  for (const g of c.selection.ranges) {
-    const r2 = Math.min(g.r2, ext.rows - 1);
-    const c2 = Math.min(g.c2, ext.cols - 1);
-    for (let r = g.r1; r <= r2; r++) {
-      if (c.geometry.hiddenRow(r)) continue;
-      for (let col = g.c1; col <= c2; col++) {
-        if (++seen > CELLS_MAX) return null;
-        const v = c.workbook.value(c.sheet.id, r, col);
-        if (v === null || v === '') continue;
-        count++;
-        if (typeof v === 'number') {
-          sum += v;
-          numbers++;
-          if (v < min) min = v;
-          if (v > max) max = v;
-        }
-      }
-    }
-  }
-  return numbers > 1 ? { sum, count, numbers, min, max } : null;
+  const counted = countSelection({
+    ranges: c.selection.ranges,
+    extent: c.workbook.extent(c.sheet.id),
+    value: (r, col) => c.workbook.value(c.sheet.id, r, col),
+    hiddenRow: (r) => c.geometry.hiddenRow(r),
+  });
+  return counted !== 'too-many' && counted.numbers > 1 ? counted : null;
 }
 
 export function statValue(stat: Stat, s: SelectionStats): number {

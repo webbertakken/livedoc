@@ -5,11 +5,9 @@
 import { useState, type KeyboardEvent, type RefObject } from 'react';
 import { ChevronDownIcon } from '@livedoc/ui';
 import type { HeaderFooterKind } from '@livedoc/text-documents';
-import type { OfficeActions, OfficeEntry } from '@/lib/office/office-catalogue';
+import { noShortcuts, type OfficeActions, type OfficeEntry } from '@/lib/office/office-catalogue';
 import { OfficeMenuPanel } from '@/components/office/OfficeMenuPanel';
 import { OfficePopup } from '@/components/office/OfficePopup';
-
-const NO_SHORTCUTS = () => null;
 
 /** The Options menu's entries. */
 export function headerOptionsEntries(kind: HeaderFooterKind): readonly OfficeEntry[] {
@@ -135,7 +133,7 @@ export function TextDocumentHeaderBar({
           <OfficeMenuPanel
             entries={headerOptionsEntries(kind)}
             actions={actions}
-            shortcutOf={NO_SHORTCUTS}
+            shortcutOf={noShortcuts}
             trigger={trigger}
             initialFocus="first"
             placement="popup"

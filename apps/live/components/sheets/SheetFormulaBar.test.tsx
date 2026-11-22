@@ -101,6 +101,39 @@ describe('the formula bar', () => {
     expect(h.store.sheet(h.ctl().sheet.id)!.layout.names).toHaveLength(1);
   });
 
+  // docs/specs/029-sheets/surface.md "Formula bar", D129: the name box's arrow lists the sheet's named ranges.
+  it('lists the sheet’s named ranges under the name box’s arrow, and a pick selects one', () => {
+    show(h);
+    withGrid();
+    const list = () => screen.getByRole('button', { name: 'Named ranges' });
+    fireEvent.click(list());
+    const none = screen.getByRole('menuitem', { name: /No named ranges/ });
+    expect(none.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(list());
+    expect(screen.queryByRole('menuitem', { name: /No named ranges/ })).toBeNull();
+    act(() => h.select('B1:B3'));
+    fireEvent.focus(nameBox());
+    fireEvent.change(nameBox(), { target: { value: 'Amounts' } });
+    fireEvent.keyDown(nameBox(), { key: 'Enter' });
+    act(() => h.select('D5'));
+    fireEvent.click(list());
+    const amounts = screen.getByRole('menuitem', { name: /Amounts/ });
+    expect(amounts.textContent).toContain('B1:B3');
+    fireEvent.click(amounts);
+    expect(h.ctl().selection.ranges).toEqual([{ r1: 0, c1: 1, r2: 2, c2: 1 }]);
+    expect(document.activeElement).toBe(grid);
+  });
+
+  it('has a handle on its foot that sets its height in lines (surface.md D130)', () => {
+    show(h);
+    const handle = screen.getByRole('separator', { name: 'Formula bar height' });
+    expect(handle.getAttribute('aria-valuenow')).toBe('1');
+    fireEvent.keyDown(handle, { key: 'ArrowDown' });
+    expect(Number(fx().getAttribute('rows'))).toBeLessThanOrEqual(2);
+    fireEvent.doubleClick(handle);
+    expect(fx().getAttribute('rows')).toBe('1');
+  });
+
   // docs/specs/029-sheets/sheet.md "Named ranges": naming is an Editor's; a Participant writes cells only, and still
   // goes to a name that is there.
   it('names nothing for a Participant, who still goes to an existing name', () => {
@@ -244,5 +277,23 @@ describe('the formula bar on a formatted number', () => {
     expect(fx().value).toMatch(/^0?8\/10\/2026$/);
     act(() => h.select('A2'));
     expect(fx().value).toBe('0.12');
+  });
+});
+
+describe('nameBoxMenu', () => {
+  it('leaves out a name whose range is gone, and runs nothing for an empty list', async () => {
+    const { nameBoxMenu } = await import('./NameBoxList');
+    const goTo = vi.fn();
+    const layout = {
+      rows: ['r1'],
+      cols: ['c1'],
+      names: [{ name: 'Gone', range: { r1: 'x', c1: 'x', r2: 'x', c2: 'x' } }],
+    };
+    const menu = nameBoxMenu(layout as never, goTo);
+    expect(menu.entries.map((e) => (e.kind === 'item' ? e.label : '-'))).toEqual([
+      'No named ranges',
+    ]);
+    menu.actions['no-named-ranges']!.run();
+    expect(goTo).not.toHaveBeenCalled();
   });
 });

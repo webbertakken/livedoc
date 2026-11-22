@@ -171,6 +171,9 @@ export function contextEntries(
   });
 }
 
+/** A menu drawn with no shortcuts beside its items (a toolbar's choice menu, a list of names). */
+export const noShortcuts = (): null => null;
+
 // What a kind's catalogue gets wrong: a built item nothing runs, a shortcut its registry lacks, an id used twice.
 export function catalogueFaults(
   catalogue: OfficeCatalogue,
