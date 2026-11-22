@@ -1,8 +1,8 @@
 # Tables
 
 **Status: in the model, the files and the editor.** Tables are read, written, converted, drawn, inserted, reshaped,
-sorted, typed in and set by their properties; across pages they break between rows, their header rows repeated.
-Rows breaking inside, templates and the resize and move handles are ahead.
+sorted, typed in and set by their properties; across pages they break between rows and inside rows allowed to, their
+header rows repeated. Templates and the resize and move handles are ahead.
 
 Tables in a [text document](text-document.md), as Google Docs has them, built on `prosemirror-tables`
 ([Adopt or build](../../research/docs-open-standard/adopt-or-build.md)).
@@ -73,7 +73,8 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
     holds header rows (ODF `table:table-header-rows`, OOXML `w:tblHeader`). Pinning every row is refused (a table
     keeps one row of its own). One undo step.
   - They repeat at the top of each page the table continues on ([Laying out across pages](#laying-out-across-pages)).
-- **Rows that do not break across pages** (Table properties > Row > Allow row to overflow across pages, off).
+- **Rows that do not break across pages**: Table properties' Rows > **Allow row to overflow across pages**, unchecked
+  ([Laying out across pages](#laying-out-across-pages)).
 
 ## Table properties
 
@@ -91,7 +92,8 @@ and width, cell background, by the one colour picker), **Cell** (padding).
 - **What it shows**: each field the value the cells it changes share, blank where they differ.
 - **Fields** (lengths in the person's unit, as indents are, from 0 to 22 in):
   - Rows: **Minimum row height** (a row grows past it with its writing; 0 or blank is none); **Pin header rows**
-    (None, then 1 up to the table's rows less one, at most 10), the whole table's.
+    (None, then 1 up to the table's rows less one, at most 10), the whole table's; **Allow row to overflow across
+    pages**, a checkbox over the rows it changes, checked by default, mixed where they differ.
   - Columns: **Column width**, at least 0.1 in; the table grows or shrinks by the change.
   - Alignment: **Cell vertical alignment** (Top, Middle, Bottom); **Table alignment** (Left, Center, Right); **Left
     indent** (Left only, dimmed otherwise).
@@ -101,7 +103,6 @@ and width, cell background, by the one colour picker), **Cell** (padding).
   - Cell: **Cell padding**, every side alike.
 - A choice from a list or a colour applies at once; a typed length applies on Enter or when the field is left, and an
   invalid one says so under the field and changes nothing. Each change is one undo step, its focus kept in the panel.
-- Allow row to overflow across pages joins Rows when rows breaking across pages are built (ahead).
 - Telemetry: `Element · Changed · TextDocumentTableProperties` per change. Logged
   `[text-document] table-properties` with the field.
 
@@ -195,8 +196,7 @@ its tallest cell; otherwise it moves whole, unless it is taller than a page, whe
 - **Built: between rows.** A table's rows are its lines ([Page layout](page-layout.md#laying-out)): a page that
   fills inside a table ends after its last row that fits, and the next page's text area starts with the next row.
 - Rows joined by a cell spanning them move together, as one line `(default)`: a page never cuts a merged cell.
-- A row, or rows joined so, taller than a page's text area starts a page and runs past its foot until rows break
-  inside (ahead).
+- Rows joined so, taller than a page's text area together, start a page and run past its foot `(default)`.
 - The page's foot, the ground between pages and the next page's head are drawn as a row across the table, the full
   width of the page, aria-hidden and never text; a cell keeps its own lines, so the row before the break draws its
   bottom line and the row after its top line, as each has them.
@@ -212,7 +212,16 @@ its tallest cell; otherwise it moves whole, unless it is taller than a page, whe
   - They repeat only while they take at most half a page's text area `(default)`, as Word stops repeating header rows
     that leave no room; a table whose cell spans from the header rows into the rows below repeats none.
   - A page starting inside the header rows themselves (header rows taller than a page) repeats none.
-- Ahead: a row breaking between its lines; a row that may not break.
+- **Built: a row breaks between its lines.** A row allowed to overflow, alone on its line, breaks where a page fills
+  at a place no cell's line crosses: each cell's writing up to there stays, the rest goes on at the next page's top.
+  - Cells whose lines stand level (the same size of writing) break between any two of their lines; a line of a cell
+    crossing another cell's break keeps both on one side; an image or a table in a cell is one line.
+  - The page's edge is drawn across the row, over its cells' sides and backgrounds, aria-hidden and never text.
+  - A cell aligned to the middle or bottom draws its writing from its top in a row that breaks, as Word does
+    `(default)`.
+- **Built: a row that may not break** (Allow row to overflow across pages, unchecked) moves to the next page whole when
+  it does not fit; taller than a page's text area, it breaks anyway, at the foot of the page it starts.
+- Header rows never break inside: they repeat whole.
 
 ## Share roles
 

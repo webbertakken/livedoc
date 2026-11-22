@@ -16,8 +16,7 @@ import type { BlockMetrics } from './pagination';
 import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
 import type { NoteMark } from './pagination-notes';
 import { measuringRange } from './pagination-range';
-import { headerRowsOf } from '../text-document-table-edits';
-import { measureTable } from './pagination-tables';
+import { measureTable, type TableLine } from './pagination-tables';
 
 /** A page spacer's class: between blocks, or inside a paragraph between two of its lines. */
 export const PAGE_GAP_CLASS = 'text-document-page-gap';
@@ -28,8 +27,8 @@ const COLUMN_BREAK_MARK = 'br[data-column-break]';
 // A footnote's mark (text-document-schema.ts), naming its note's story.
 const NOTE_MARK = 'sup[data-footnote]';
 
-/** A block's rules, and a table's header rows, which repeat on each page it continues on. */
-export type BlockRules = { readonly headerRows?: number } & Pick<
+/** A block's rules, and a table's node: its header rows repeat, and its rows may or may not break. */
+export type BlockRules = { readonly table?: PmNode } & Pick<
   BlockMetrics,
   | 'atom'
   | 'keepWithNext'
@@ -53,9 +52,7 @@ const SECTION_STARTS: readonly SectionStart[] = [
  */
 export function rulesOf(node: PmNode, formatting: TextFormatting, inColumns = false): BlockRules {
   if (node.type.name === TABLE) {
-    if (inColumns) return { atom: true };
-    const headerRows = headerRowsOf(node);
-    return headerRows > 0 ? { headerRows } : {};
+    return inColumns ? { atom: true } : { table: node };
   }
   if (node.type.name === SECTION_BREAK) {
     const start = (node.attrs as { start: unknown }).start;
@@ -86,7 +83,10 @@ const px = (value: string) => Number.parseFloat(value) || 0;
 
 // The page spacers inside an element, from its top, in CSS pixels.
 function spacersIn(element: HTMLElement, top: number, ratio: number): Span[] {
-  return [...element.querySelectorAll<HTMLElement>(`.${PAGE_GAP_CLASS}`)].map((spacer) => {
+  // A row breaking across pages has a gap in each cell going on; they stand level, so one is counted.
+  return [
+    ...element.querySelectorAll<HTMLElement>(`.${PAGE_GAP_CLASS}:not(.${PAGE_GAP_CLASS}-twin)`),
+  ].map((spacer) => {
     const r = spacer.getBoundingClientRect();
     return { top: (r.top - top) / ratio, bottom: (r.bottom - top) / ratio };
   });
@@ -101,8 +101,8 @@ export function measureBlock(
   rules: BlockRules,
   ratio: number,
   left: number,
-): { metrics: BlockMetrics; inset: number; marks: NoteMark[] } {
-  const { headerRows = 0, ...own } = rules;
+): { metrics: BlockMetrics; inset: number; marks: NoteMark[]; places?: TableLine[] } {
+  const { table, ...own } = rules;
   const box = element.getBoundingClientRect();
   const style = getComputedStyle(element);
   const spacers = spacersIn(element, box.top, ratio);
@@ -114,15 +114,17 @@ export function measureBlock(
   let columnBreakAfter = false;
   const marks: NoteMark[] = [];
   let repeat: BlockMetrics['repeat'];
+  let held: number[] = [];
+  let places: TableLine[] | undefined;
   if (!rules.atom && element instanceof HTMLTableElement) {
-    ({ lines, repeat } = measureTable(
+    ({ lines, repeat, held, places } = measureTable(
       element,
       box.top,
       ratio,
       spacers,
       height,
       PAGE_GAP_CLASS,
-      headerRows,
+      table,
     ));
     marks.push(...noteMarks(element, box.top, ratio, spacers, lines));
   } else if (!rules.atom) {
@@ -172,10 +174,12 @@ export function measureBlock(
       ...(columnForced.length > 0 ? { columnForced } : {}),
       ...(columnBreakAfter ? { columnBreakAfter } : {}),
       ...(repeat ? { repeat } : {}),
+      ...(held.length > 0 ? { held } : {}),
       ...own,
     },
     inset: (box.left - left) / ratio,
     marks,
+    ...(places ? { places } : {}),
   };
 }
 

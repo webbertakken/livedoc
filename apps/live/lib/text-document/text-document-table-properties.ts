@@ -26,6 +26,8 @@ export type TableAlignChoice = 'start' | 'center' | 'end';
 /** What the panel shows, in points; null where the cells it changes differ. */
 export type TableProperties = {
   readonly rowHeight: number | null;
+  // Whether the rows may break across pages; null where they differ.
+  readonly rowBreaks: boolean | null;
   // The table's pinned header rows, and the most it may pin.
   readonly headerRows: number;
   readonly mostHeaderRows: number;
@@ -46,6 +48,7 @@ export type TablePropertyChange =
       readonly value: number;
     }
   | { readonly field: 'headerRows'; readonly value: number }
+  | { readonly field: 'rowBreaks'; readonly value: boolean }
   | { readonly field: 'verticalAlign'; readonly value: CellVerticalAlign }
   | { readonly field: 'align'; readonly value: TableAlignChoice }
   | { readonly field: 'borderColor'; readonly value: string }
@@ -96,6 +99,7 @@ export function tablePropertiesAt(state: EditorState): TableProperties | null {
   const { align, indent } = rect.table.attrs as { align: unknown; indent: unknown };
   return {
     rowHeight: shared(rows.map(({ node }) => (node.attrs.height as number | null) ?? 0)),
+    rowBreaks: shared(rows.map(({ node }) => node.attrs.breaks !== false)),
     headerRows: headerRowsOf(rect.table),
     mostHeaderRows: Math.min(MOST_HEADER_ROWS, rect.table.childCount - 1),
     columnWidth: shared(widths),
@@ -189,6 +193,11 @@ export const setTableProperty =
             height: change.value > 0 ? round(change.value) : null,
             heightRule: null,
           });
+        break;
+      case 'rowBreaks':
+        // A row may break unless it says not (the model's `breaks`).
+        for (const { pos, node } of rows)
+          tr.setNodeMarkup(pos, null, { ...node.attrs, breaks: change.value ? null : false });
         break;
       case 'columnWidth': {
         const widths = columnWidths(rect.table).map((w, i) =>

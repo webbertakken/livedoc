@@ -2,15 +2,15 @@
 // docs/specs/034-text-documents/tables.md "Laying out across pages": a table's rows are its lines, rows joined by a
 // cell spanning them one line, the page's edge drawn as a row across the table, and a table in a section of columns
 // moving whole. jsdom draws nothing, so rows are drawn here by hand: each 30 px high, one under another.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { Styles, type PageSetup } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from '../text-document-schema';
 import { PAGE_GAP_CLASS, measureBlock, rulesOf } from './pagination-measure';
-import { headerCopy, rowGap } from './pagination-draw';
+import { cellGap, headerCopy, rowGap } from './pagination-draw';
 import { paginationPlugin, relayoutPages } from './pagination-plugin';
-import { tableLineRows, tableSplitOffset } from './pagination-tables';
+import { lineStarts, tableRowOffset } from './pagination-tables';
 
 const ROW = 30;
 const formatting = { styles: Styles.builtIn('odf'), defaults: Styles.defaults() };
@@ -37,55 +37,49 @@ const plainRows = (count: number) =>
 const rect = (top: number, height: number): DOMRect =>
   ({ top, bottom: top + height, left: 0, right: 600, height, width: 600, x: 0, y: top }) as DOMRect;
 
+// jsdom reads no text's rectangles: a cell's writing draws none unless a test says so.
+beforeEach(() => {
+  Object.defineProperty(Range.prototype, 'getClientRects', {
+    configurable: true,
+    value: () => [],
+  });
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
   document.body.replaceChildren();
+  delete (Range.prototype as { getClientRects?: unknown }).getClientRects;
 });
 
-describe('tableLineRows', () => {
+describe('lineStarts', () => {
   it('makes each row a line of its own', () => {
-    expect(tableLineRows(table(...plainRows(3)))).toEqual([0, 1, 2]);
+    expect(
+      lineStarts([
+        [1, 1],
+        [1, 1],
+        [1, 1],
+      ]),
+    ).toEqual([0, 1, 2]);
   });
 
   it('joins rows a cell spans into one line, so a page never cuts a merged cell', () => {
-    const merged = table(
-      row(cell('a', 2), cell('b')),
-      row(cell('c')),
-      row(cell('d'), cell('e', 3)),
-      row(cell('f')),
-      row(cell('g')),
-      row(cell('h'), cell('i')),
-    );
-    expect(tableLineRows(merged)).toEqual([0, 2, 5]);
+    expect(lineStarts([[2, 1], [1], [1, 3], [1], [1], [1, 1]])).toEqual([0, 2, 5]);
   });
 });
 
-describe('tableSplitOffset', () => {
-  it('finds a line start after the table opens and the rows before it', () => {
+describe('tableRowOffset', () => {
+  it('finds a row start after the table opens and the rows before it', () => {
     const t = table(...plainRows(3));
-    expect(tableSplitOffset(t, 0)).toBe(1);
-    expect(tableSplitOffset(t, 2)).toBe(1 + t.child(0).nodeSize + t.child(1).nodeSize);
-    const merged = table(row(cell('a', 2), cell('b')), row(cell('c')), row(cell('d'), cell('e')));
-    expect(tableSplitOffset(merged, 1)).toBe(
-      1 + merged.child(0).nodeSize + merged.child(1).nodeSize,
-    );
+    expect(tableRowOffset(t, 0)).toBe(1);
+    expect(tableRowOffset(t, 2)).toBe(1 + t.child(0).nodeSize + t.child(1).nodeSize);
   });
 });
 
 describe('rulesOf a table', () => {
   it('breaks a table between rows, and moves it whole in a section of columns', () => {
     const t = table(...plainRows(2));
-    expect(rulesOf(t, formatting)).toEqual({});
-    expect(rulesOf(t, formatting, true)).toEqual({ atom: true });
-  });
-
-  it('names its header rows, which repeat on each page it continues on', () => {
-    const header = row(
-      schema.nodes.table_header!.create(null, schema.nodes.paragraph!.create()),
-      schema.nodes.table_header!.create(null, schema.nodes.paragraph!.create()),
-    );
-    const t = table(header, ...plainRows(2));
-    expect(rulesOf(t, formatting)).toEqual({ headerRows: 1 });
+    // Its node goes with its rules: its header rows and the rows that may not break.
+    expect(rulesOf(t, formatting)).toEqual({ table: t });
     expect(rulesOf(t, formatting, true)).toEqual({ atom: true });
   });
 });
@@ -159,9 +153,10 @@ describe('measureBlock on a table', () => {
   });
 
   it('repeats its header rows by their lines and height, never naming them a rule', () => {
-    const metrics = measureBlock(drawTable([[1], [1], [1]]), { headerRows: 1 }, 1, 0).metrics;
+    const node = table(header('H'), ...plainRows(2));
+    const metrics = measureBlock(drawTable([[1], [1], [1]]), { table: node }, 1, 0).metrics;
     expect(metrics.repeat).toEqual({ lines: 1, height: 30 });
-    expect(metrics).not.toHaveProperty('headerRows');
+    expect(metrics).not.toHaveProperty('table');
   });
 
   it('reads no footnote mark in a copy of the header rows drawn at a page top', () => {
@@ -169,12 +164,99 @@ describe('measureBlock on a table', () => {
     const mark = document.createElement('sup');
     mark.dataset.footnote = 'note-1';
     element.tBodies[0]!.querySelector(`.${PAGE_GAP_CLASS}`)!.append(mark);
-    expect(measureBlock(element, { headerRows: 1 }, 1, 0).marks).toEqual([]);
+    const node = table(header('H'), ...plainRows(2));
+    expect(measureBlock(element, { table: node }, 1, 0).marks).toEqual([]);
   });
 
   it('moves whole when its rules say so', () => {
     const metrics = measureBlock(drawTable([[1], [1]]), { atom: true }, 1, 0).metrics;
     expect(metrics).toMatchObject({ atom: true, lines: [], height: 60 });
+  });
+});
+
+// A drawn table of a 30 px row, then a row whose cells hold lines of text (each line's rectangle, from the row's top).
+function drawBreakingTable(cells: readonly (readonly [number, number][])[], rowHeight: number) {
+  const element = document.createElement('table');
+  const body = element.createTBody();
+  body.insertRow().insertCell();
+  const tall = body.insertRow();
+  const lines = new Map<Node, DOMRect[]>();
+  for (const own of cells) {
+    const p = document.createElement('p');
+    tall.insertCell().append(p);
+    lines.set(
+      p,
+      own.map(([top, bottom]) => rect(ROW + top, bottom - top)),
+    );
+  }
+  document.body.append(element);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    if (this === element) return rect(0, ROW + rowHeight);
+    if (this === body.rows[0]) return rect(0, ROW);
+    if (this === tall) return rect(ROW, rowHeight);
+    return rect(0, 0);
+  });
+  Object.defineProperty(Range.prototype, 'getClientRects', {
+    configurable: true,
+    value(this: Range) {
+      return lines.get(this.startContainer) ?? [];
+    },
+  });
+  return element;
+}
+
+describe('measureBlock on a table whose row breaks', () => {
+  it("breaks a row between lines where its cells' lines stand level", () => {
+    // Cell A has three lines, cell B two, at the same places: the row breaks between each.
+    const element = drawBreakingTable(
+      [
+        [
+          [4, 24],
+          [34, 54],
+          [64, 84],
+        ],
+        [
+          [4, 24],
+          [34, 54],
+        ],
+      ],
+      90,
+    );
+    const { metrics, places } = measureBlock(element, {}, 1, 0);
+    expect(metrics.lines).toEqual([
+      { top: 0, bottom: 30 },
+      { top: 30, bottom: 59 },
+      { top: 59, bottom: 89 },
+      { top: 89, bottom: 120 },
+    ]);
+    expect(places).toEqual([
+      { row: 0, at: 0 },
+      { row: 1, at: 0 },
+      { row: 1, at: 29 },
+      { row: 1, at: 59 },
+    ]);
+    expect(metrics.held).toBeUndefined();
+  });
+
+  it('holds the lines of a row that may not break', () => {
+    const element = drawBreakingTable(
+      [
+        [
+          [4, 24],
+          [34, 54],
+        ],
+      ],
+      60,
+    );
+    const node = table(
+      row(cell('a')),
+      schema.nodes.table_row!.create({ breaks: false }, [cell('b')]),
+    );
+    const { metrics } = measureBlock(element, { table: node }, 1, 0);
+    expect(metrics.lines).toHaveLength(3);
+    expect(metrics.held).toEqual([2]);
   });
 });
 
@@ -195,6 +277,29 @@ describe('rowGap', () => {
     ]);
     expect(bands[0]!.style.marginLeft).toBe('-10px');
     expect(bands[0]!.style.width).toBe('600px');
+  });
+});
+
+describe('cellGap', () => {
+  it('draws the page edge and the header rows under it in one cell, and plain room in the others', () => {
+    const edge = cellGap(90, {
+      bands: { foot: 20, head: 18 },
+      across: { left: 140, width: 600 },
+      header: { table: table(header('Name')), left: 120 },
+    })();
+    expect(edge.getAttribute('aria-hidden')).toBe('true');
+    expect(edge.contentEditable).toBe('false');
+    expect(edge.style.height).toBe('90px');
+    const [foot, ground, head, copy] = [...edge.children] as HTMLElement[];
+    expect([foot, ground, head].map((b) => b!.style.height)).toEqual(['20px', '12px', '18px']);
+    expect(foot!.style.marginLeft).toBe('-140px');
+    expect(copy!.tagName).toBe('TABLE');
+    expect(copy!.style.marginLeft).toBe('-120px');
+    expect(copy!.textContent).toBe('Name');
+    const room = cellGap(90)();
+    expect(room.children).toHaveLength(0);
+    expect(room.classList.contains(`${PAGE_GAP_CLASS}-twin`)).toBe(true);
+    expect(edge.classList.contains(`${PAGE_GAP_CLASS}-twin`)).toBe(false);
   });
 });
 

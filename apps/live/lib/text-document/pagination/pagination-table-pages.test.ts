@@ -1,6 +1,7 @@
-// A table's header rows repeating at the top of each page it continues on (docs/specs/034-text-documents/tables.md
-// "Laying out across pages", "Built: header rows repeat"): the page's gap grows by their height and its writing starts
-// below them; header rows never end a page alone; too tall, or cut by a span, they repeat none.
+// A table laid onto pages (docs/specs/034-text-documents/tables.md "Laying out across pages"). Header rows repeat at the
+// top of each page it continues on: the page's gap grows by their height and its writing starts below them; they never
+// end a page alone; too tall, or cut by a span, they repeat none. A row that may not break moves on whole, unless it is
+// taller than a page.
 import { describe, expect, it } from 'vitest';
 import type { BlockMetrics } from './pagination';
 import { paginate } from './pagination-engine';
@@ -24,19 +25,25 @@ const starts = (blocks: readonly BlockMetrics[]) =>
 
 describe('tableRepeat', () => {
   const lines = [0, 1, 2, 3].map((k) => ({ top: k * ROW, bottom: (k + 1) * ROW }));
+  const rowsAt = (...rows: number[]) => rows.map((row) => ({ row, at: 0 }));
 
   it('repeats the header rows by their lines and height', () => {
-    expect(tableRepeat([0, 1, 2, 3], lines, 2)).toEqual({ lines: 2, height: 40 });
+    expect(tableRepeat(rowsAt(0, 1, 2, 3), lines, 2)).toEqual({ lines: 2, height: 40 });
   });
 
   it('repeats none without header rows, or when every row is one', () => {
-    expect(tableRepeat([0, 1, 2, 3], lines, 0)).toBeUndefined();
-    expect(tableRepeat([0, 1, 2, 3], lines, 4)).toBeUndefined();
+    expect(tableRepeat(rowsAt(0, 1, 2, 3), lines, 0)).toBeUndefined();
+    expect(tableRepeat(rowsAt(0, 1, 2, 3), lines, 4)).toBeUndefined();
   });
 
   it('repeats none when a cell spans from the header rows into the rows below', () => {
     // Rows 1 and 2 are one line: the header's last row is joined to the first body row.
-    expect(tableRepeat([0, 1, 3], lines.slice(0, 3), 2)).toBeUndefined();
+    expect(tableRepeat(rowsAt(0, 1, 3), lines.slice(0, 3), 2)).toBeUndefined();
+  });
+
+  it('counts the lines a body row breaks into after the header rows', () => {
+    const places = [...rowsAt(0, 1), { row: 1, at: 10 }, ...rowsAt(2)];
+    expect(tableRepeat(places, lines, 1)).toEqual({ lines: 1, height: 20 });
   });
 });
 
@@ -76,5 +83,27 @@ describe('paginate a table with header rows', () => {
     const since = paginate(blocks, frame, { previous, first: 2, last: 2, delta: 0 });
     expect(since.laidFrom).toBe(2);
     expect(since.starts).toEqual(previous.starts);
+  });
+});
+
+describe('paginate a table row that may not break', () => {
+  // Rows of one line each, then row 3 of four lines (lines 3 to 6), held inside.
+  const table = (count: number, held: number[]): BlockMetrics => ({ ...rows(count), held });
+
+  it('ends the page before it when it does not fit', () => {
+    // A paragraph a row high, then the table: lines 0 to 3 fit (to 100 px), line 4 does not, inside row 3.
+    expect(starts([rows(1), table(7, [4, 5, 6])]).map(([b, l]) => [b, l])).toEqual([
+      [0, 0],
+      [1, 3],
+    ]);
+  });
+
+  it('breaks it anyway when it is taller than a page, at the foot of the page it starts', () => {
+    // Lines 1 to 7 are one row held inside; on a page of its own it breaks after five lines.
+    expect(starts([rows(1), table(8, [2, 3, 4, 5, 6, 7])]).map(([b, l]) => [b, l])).toEqual([
+      [0, 0],
+      [1, 1],
+      [1, 6],
+    ]);
   });
 });

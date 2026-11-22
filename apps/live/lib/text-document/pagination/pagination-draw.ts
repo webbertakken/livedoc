@@ -128,6 +128,43 @@ export function rowGap(
   };
 }
 
+/** What a row breaking across pages draws in its first broken cell: the page's edge, and the header rows under it. */
+export type CellEdge = {
+  readonly bands: GapBands;
+  readonly across: GapAcross;
+  /** The table's header rows as a table, and how far its left edge is left of the cell's writing, in CSS pixels. */
+  readonly header?: { readonly table: PmNode; readonly left: number };
+};
+
+/**
+ * The spacer inside a cell of a row breaking across pages, `height` high (tables.md "Laying out across pages"): in one
+ * cell the page's edge across the page and the header rows repeated under it, raised over the row's cells; in the
+ * others plain room, so each cell's writing goes on at the next page's top.
+ */
+export function cellGap(height: number, edge?: CellEdge): () => HTMLElement {
+  return () => {
+    const gap = document.createElement('span');
+    gap.className = `${PAGE_GAP_CLASS} ${PAGE_GAP_CLASS}-inside ${PAGE_GAP_CLASS}-cell`;
+    gap.setAttribute('aria-hidden', 'true');
+    gap.contentEditable = 'false';
+    gap.style.height = `${height}px`;
+    // Room beside the edge, at the same place: the layout counts the edge's alone.
+    if (!edge) gap.classList.add(`${PAGE_GAP_CLASS}-twin`);
+    if (edge) {
+      appendBands(gap, edge.bands, edge.across);
+      if (edge.header) {
+        const copy = DOMSerializer.fromSchema(edge.header.table.type.schema).serializeNode(
+          edge.header.table,
+        ) as HTMLElement;
+        copy.classList.add(`${PAGE_GAP_CLASS}-header`);
+        copy.style.marginLeft = `${-edge.header.left}px`;
+        gap.append(copy);
+      }
+    }
+    return gap;
+  };
+}
+
 /**
  * A table's header row drawn again at the top of a page the table continues on, after its page edge (tables.md
  * "Laying out across pages"): a row of the table as the schema draws it, hidden from reading and never text.
