@@ -22,6 +22,8 @@ import { Columns, type PageSetup, type Section } from '../model/sections';
 import { Styles, type Style } from '../model/styles';
 import { TextDocument, type OdfSource } from '../model/text-document';
 import { shortHash } from '../hash';
+import { Pictures, type Picture } from '../model/pictures';
+import { odfMediaEntry, odfPictureStyle, odfPictureXml } from './odf-pictures';
 import { WRITTEN_NS } from './odf-names';
 import { listStyleXml } from './odf-lists';
 import { withPageless } from './odf-settings';
@@ -104,12 +106,16 @@ class OdfWriter {
   readonly #layoutClaims = new Map<string, string>();
 
   readonly document: TextDocument;
+  /** Whether it writes the flat file, which holds pictures' bytes as base64. */
+  readonly flat: boolean;
+  #pictures = 0;
   /** Whether tab positions are written from the indent: as the arriving file counted them; never for a new one. */
   readonly tabsFromIndent: boolean;
   readonly tabs: TabContext;
 
-  constructor(document: TextDocument) {
+  constructor(document: TextDocument, flat: boolean) {
     this.document = document;
+    this.flat = flat;
     this.noteNumbers = Notes.numbers(document.body);
     const source = document.source?.format === 'odf' ? document.source : undefined;
     this.source = source;
@@ -174,6 +180,24 @@ class OdfWriter {
     this.fontFaces.push(
       `<style:font-face${attr('style:name', props.font)}${attr('svg:font-family', family)}${attr('style:font-family-generic', known?.generic)}${attr('style:font-pitch', known?.pitch)}/>`,
     );
+  }
+
+  /** A picture in line as its frame, its graphic style generated (objects.md "In the formats"); none without media. */
+  pictureXml(picture: Picture): string {
+    const media = this.document.media?.[picture.media];
+    if (!media) return '';
+    const props = odfPictureStyle(picture, media);
+    const style = this.generated(
+      'LDfr',
+      (name) =>
+        `<style:style${attr('style:name', name)} style:family="graphic">${props}</style:style>`,
+    );
+    this.#pictures += 1;
+    return odfPictureXml(picture, media, {
+      name: `Picture ${this.#pictures}`,
+      style,
+      flat: this.flat,
+    });
   }
 
   generated(prefix: string, body: (name: string) => string): string {
@@ -441,7 +465,9 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
                 w.noteNumbers.get(i) ?? w.noteNumbers.size + 1,
                 contentXml(w, i.blocks, true),
               )
-            : w.kept(i.xml);
+            : i.type === 'picture'
+              ? w.pictureXml(i)
+              : w.kept(i.xml);
       return { kind: 'kept', xml, ...compact({ span, link: i.link }) };
     });
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';
@@ -628,8 +654,8 @@ export type OdfWritten = {
   flat: string;
 };
 
-function writeParts(document: TextDocument, generator: string): OdfWritten {
-  const w = new OdfWriter(document);
+function writeParts(document: TextDocument, generator: string, asFlat: boolean): OdfWritten {
+  const w = new OdfWriter(document, asFlat);
   w.storyXml = (blocks) => storyContentXml(w, blocks);
   const text = bodyXml(w);
   const sections = [
@@ -685,19 +711,27 @@ const WRITTEN_ENTRIES = new Set([
 
 /** The text document as an ODF package (`.odt`) or flat file (`.fodt`). */
 export function writeOdf(document: TextDocument, { flat, generator }: OdfWriteOptions): Uint8Array {
-  const parts = writeParts(document, generator);
+  const parts = writeParts(document, generator, flat);
   const encode = (text: string) => new TextEncoder().encode(text);
   if (flat) return encode(parts.flat);
   const kept =
     document.source?.format === 'odf'
       ? document.source.entries.filter((e) => !WRITTEN_ENTRIES.has(e.name))
       : [];
+  // Each picture's media at its entry, once; one kept content still names is written as kept (objects.md "Written").
+  const media = Pictures.heldMedia(document)
+    .map(([key, m]) => ({
+      name: odfMediaEntry(key, m),
+      mediaType: m.mediaType as string,
+      data: m.bytes,
+    }))
+    .filter((m) => !kept.some((e) => e.name === m.name));
   return writeOdfPackage(ODF_MEDIA_TYPES.text, [
     { name: 'content.xml', mediaType: 'text/xml', data: encode(parts.content) },
     { name: 'styles.xml', mediaType: 'text/xml', data: encode(parts.styles) },
     { name: 'meta.xml', mediaType: 'text/xml', data: encode(parts.meta) },
     { name: 'settings.xml', mediaType: 'text/xml', data: encode(parts.settings) },
-    ...[...kept]
+    ...[...kept, ...media]
       .sort((a, b) => (a.name < b.name ? -1 : 1))
       .map((e) => ({ name: e.name, mediaType: e.mediaType, data: e.data })),
   ]);

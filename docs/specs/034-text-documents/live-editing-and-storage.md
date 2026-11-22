@@ -37,6 +37,8 @@ api, agents) reads and writes one shape (default):
   a `false` that overrides a style's `true` is kept; then `link` (`href`), `text_style` (`id`) and `run_kept`
   (`kept`). Two people formatting one stretch differently each win on their own property.
 - **A kept inline** is a `kept_inline` atom inside its paragraph: its name, XML, formatting and link.
+- **A picture** is a `picture` atom inside its paragraph: its media key, size, alternative text, title, whether it is
+  decorative, crop, formatting and link ([Objects](objects.md#in-the-editor)).
 - **A field** is a `field` atom (what it shows, its text last drawn, formatting and link); **a footnote's mark** is a
   `footnote` atom naming its note by `story`, with the mark's formatting and link; the note's writing is a
   `story:<id>` fragment, as a header's.
@@ -45,7 +47,8 @@ api, agents) reads and writes one shape (default):
   by id. Two people typing in one header merge by character, as in the body. A pasted section break naming a fragment
   shares it until one of them is made its own (default).
 - **Beside the body**: the root map `document` holds `metadata`, `defaults`, the first `section` and the `watermark` as
-  whole values;
+  whole values; `media` is a root map of the pictures' media by key, each `{ mediaType, bytes, part }`, written
+  when a file is opened or converted and when a picture arrives;
   `styles` and `lists` are root maps by id, so two people changing two styles never collide; `source` holds what a
   file brought around the model (`json`) and its package entries by name (`entries`, as bytes), written once when the
   file is opened and replaced only by a conversion.

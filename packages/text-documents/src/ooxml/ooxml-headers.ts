@@ -95,7 +95,7 @@ export type HeaderPartsSource = {
   readonly pkg: OoxmlPackage;
   readonly report: ReportBuilder;
   /** The part being read: a header's while its paragraphs are read. */
-  part: { parsed: XmlParsed; rels: readonly Relationship[] };
+  part: { parsed: XmlParsed; name: string; rels: readonly Relationship[] };
   readonly parsePart: (name: string) => XmlParsed | PackageRefusal | undefined;
   paragraph(p: XmlElement, endsWith: Section | undefined): Paragraph;
   /** The blocks an element holds (paragraphs, tables, kept elements), read in the current part. */
@@ -151,7 +151,7 @@ export class HeaderPartsReader {
     let story: HeaderFooter | null = null;
     if (parsed?.ok && isW(parsed.root, ROOT_OF[kind])) {
       const outer = source.part;
-      source.part = { parsed, rels: source.pkg.relationships.get(name) ?? [] };
+      source.part = { parsed, name, rels: source.pkg.relationships.get(name) ?? [] };
       const blocks = source.blocksOf(parsed.root);
       source.part = outer;
       story = { blocks, part: name };

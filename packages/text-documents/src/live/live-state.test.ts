@@ -15,6 +15,8 @@ import {
   DOCUMENT_MAP,
   FIELD,
   FOOTNOTE,
+  MEDIA_MAP,
+  PICTURE,
   KEPT_BLOCK,
   KEPT_INLINE,
   TABLE,
@@ -26,6 +28,7 @@ import {
 } from './live-names';
 import { liveNoteIds, liveStoryIds, storyFragment } from './live-stories';
 import { CONSTRUCTS } from '../testing/constructs';
+import { BLUE_PNG_SHA, GREEN_PNG_SHA } from '../testing/pictures';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
 const corpus = ['libreoffice', 'word', 'google'].flatMap((maker) =>
@@ -256,6 +259,31 @@ describe('the live layout', () => {
     expect(digest.searchText).toContain('n4');
     expect(digest.searchText).toContain('In a cell.');
   });
+
+  // objects.md "In the editor": a picture an atom of its own, its media once in the root map `media` by key; a body
+  // holding only a picture has content.
+  it.each(['odf', 'ooxml'] as const)(
+    'reads pictures and their media back as written (%s)',
+    (format) => {
+      const document = CONSTRUCTS.pictures!(format);
+      expect(wholeOf(live(document))).toBe(wholeOf(document));
+      const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+      const first = TextDocumentState.body(doc).get(0) as Y.XmlElement;
+      expect(first.toArray().map((n) => (n instanceof Y.XmlElement ? n.nodeName : 'text'))).toEqual(
+        ['text', PICTURE, 'text', PICTURE, 'text'],
+      );
+      expect([...doc.getMap(MEDIA_MAP).keys()].sort()).toEqual(
+        [BLUE_PNG_SHA, GREEN_PNG_SHA].sort(),
+      );
+      const only = {
+        ...document,
+        body: [document.body[1]!],
+        section: TextDocument.blank({ format }).section,
+      };
+      const alone = TextDocumentState.load([TextDocumentState.fromDocument(only)]);
+      expect(textDocumentDigest(alone)).toMatchObject({ characters: 0, hasContent: true });
+    },
+  );
 
   it('makes a table merged edits left uneven whole, drops one with no rows, and gives a column without a width one', () => {
     const doc = TextDocumentState.load([TextDocumentState.fromDocument(CONSTRUCTS.tables!('odf'))]);

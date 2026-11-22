@@ -2,9 +2,10 @@
 // (docs/specs/034-text-documents/live-editing-and-storage.md "The digest"): counts, whether it has content, and the
 // text content search reads: the body's, then its headers', footers' and notes'. Pure; built from a loaded state when the
 // outbox drains the tab.
-import type * as Y from 'yjs';
+import * as Y from 'yjs';
 import { TEXT_DOCUMENT_WORDS_PER_PAGE } from './limits';
 import { liveStoryIds } from './live/live-stories';
+import { PICTURE } from './live/live-names';
 import { TextDocumentState } from './text-document-state';
 
 export type TextDocumentDigest = {
@@ -19,6 +20,10 @@ export type TextDocumentDigest = {
 
 const WORD = /\S+/g;
 
+/** Whether the body holds a picture: an object is content (live-editing-and-storage.md "The digest"). */
+const holdsPicture = (body: Y.XmlFragment): boolean =>
+  !body.createTreeWalker((n) => n instanceof Y.XmlElement && n.nodeName === PICTURE).next().done;
+
 export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
   const texts = TextDocumentState.paragraphs(doc).map((p) => p.text);
   const characters = texts.reduce((n, text) => n + text.length, 0);
@@ -27,7 +32,7 @@ export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
     characters,
     words,
     pages: Math.max(1, Math.ceil(words / TEXT_DOCUMENT_WORDS_PER_PAGE)),
-    hasContent: characters > 0,
+    hasContent: characters > 0 || holdsPicture(TextDocumentState.body(doc)),
     searchText: [
       ...texts,
       ...liveStoryIds(doc).flatMap((id) =>

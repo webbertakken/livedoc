@@ -7,6 +7,7 @@ import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import type { Style } from '../model/styles';
 import type { ListDefinition } from '../model/lists';
 import type { Section } from '../model/sections';
+import { Pictures, type Picture, type PictureMedia } from '../model/pictures';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
@@ -14,6 +15,8 @@ import {
   FOOTNOTE,
   KEPT_INLINE,
   LINK_MARK,
+  MEDIA_MAP,
+  PICTURE,
   LISTS_MAP,
   PARAGRAPH,
   RUN_KEPT_MARK,
@@ -68,6 +71,10 @@ function inlineNodes(
       continue;
     }
     text = null;
+    if (inline.type === 'picture') {
+      nodes.push(pictureElement(inline));
+      continue;
+    }
     const element = new Y.XmlElement(
       inline.type === 'field' ? FIELD : inline.type === 'note' ? FOOTNOTE : KEPT_INLINE,
     );
@@ -85,6 +92,24 @@ function inlineNodes(
     nodes.push(element);
   }
   return nodes;
+}
+
+/** A picture as its atom: its values as attributes, its media by key. */
+export function pictureElement(picture: Picture): Y.XmlElement {
+  const element = new Y.XmlElement(PICTURE);
+  const { type: _, props, ...values } = picture;
+  setAttributes(element, { ...values, props: isEmpty(props) ? undefined : props });
+  return element;
+}
+
+/** Each media the document's pictures hold, into the state's `media` map by key. */
+export function writeLiveMedia(
+  map: Y.Map<unknown>,
+  media: readonly [string, PictureMedia][],
+): void {
+  for (const [key, m] of media)
+    if (!map.has(key))
+      map.set(key, { mediaType: m.mediaType, bytes: m.bytes, ...(m.part ? { part: m.part } : {}) });
 }
 
 function paragraphNode(paragraph: Paragraph, stories: StoryWriter): Y.XmlElement {
@@ -128,6 +153,7 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
   const styles = doc.getMap<unknown>(STYLES_MAP);
   const lists = doc.getMap<unknown>(LISTS_MAP);
   const source = doc.getMap<unknown>(SOURCE_MAP);
+  const media = doc.getMap<unknown>(MEDIA_MAP);
   doc.transact(() => {
     const stories: StoryWriter = new StoryWriter(doc, (block) => blockNode(block, stories));
     body.delete(0, body.length);
@@ -148,6 +174,8 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
     lists.clear();
     for (const [id, list] of Object.entries(document.lists)) lists.set(id, plain(list));
     writeSource(source, document.source);
+    media.clear();
+    writeLiveMedia(media, Pictures.heldMedia(document));
   });
 }
 

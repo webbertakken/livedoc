@@ -35,8 +35,8 @@ describe('conversion', () => {
       { kind: 'text-transform', name: 'text-transform', count: 2 },
     ]);
     expect(conversionLosses(await corpus('word/VariousPictures.docx'), 'odf')).toEqual([
-      { kind: 'kept', name: 'drawing', count: 5 },
-      { kind: 'kept', name: 'word', count: 9 },
+      { kind: 'kept', name: 'drawing', count: 3 },
+      { kind: 'kept', name: 'word', count: 7 },
     ]);
   });
 

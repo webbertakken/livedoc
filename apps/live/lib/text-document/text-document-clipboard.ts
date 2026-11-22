@@ -6,7 +6,13 @@
 import { Fragment, Slice, type Node as PmNode } from 'prosemirror-model';
 import { Plugin, type Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { ListDefinition, Styles, type ListPlace, type StyleRole } from '@livedoc/text-documents';
+import {
+  ListDefinition,
+  Styles,
+  type ListPlace,
+  type PictureMedia,
+  type StyleRole,
+} from '@livedoc/text-documents';
 import { parseInert } from '@livedoc/ui/trusted-types';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -51,6 +57,14 @@ export type ClipboardOptions = {
   markdown?: () => boolean;
   /** Footnotes' writing copied with their marks, and a note of its own for each mark pasted (page-layout.md "Footnotes"). */
   notes?: ClipboardNotes;
+  /** Pictures' media: read to copy with them, and written where a paste brings them (objects.md "In the editor"). */
+  media?: ClipboardMedia;
+};
+
+/** A document's pictures' media, as the clipboard reads and writes it. */
+export type ClipboardMedia = {
+  readonly read: (key: string) => PictureMedia | undefined;
+  readonly place: (media: Readonly<Record<string, PictureMedia>>) => void;
 };
 
 // What the paste being read found, from its parse to its insertion.
@@ -62,6 +76,8 @@ type Reading = {
   left: number;
   /** The footnotes' writing a fragment brought, placed, by its story. */
   notes?: Readonly<Record<string, NodeJson[]>>;
+  /** The media its pictures brought, by key. */
+  media?: Readonly<Record<string, PictureMedia>>;
 };
 
 /** A pasted list's definition: its first level's kind for every level, each level read drawn as it was. */
@@ -140,6 +156,7 @@ export function clipboardPlugin({
   onLeftOut,
   markdown = () => false,
   notes,
+  media,
 }: ClipboardOptions): Plugin {
   let reading: Reading | null = null;
   // The writing copied from, so the copy numbers its footnotes as the document does.
@@ -165,7 +182,11 @@ export function clipboardPlugin({
       dom.firstElementChild?.setAttribute(
         FRAGMENT_ATTRIBUTE,
         JSON.stringify(
-          makeFragment(slice, { ...context, ...(notes ? { readNote: notes.read } : {}) }),
+          makeFragment(slice, {
+            ...context,
+            ...(notes ? { readNote: notes.read } : {}),
+            ...(media ? { readMedia: media.read } : {}),
+          }),
         ),
       );
     event.preventDefault();
@@ -219,6 +240,7 @@ export function clipboardPlugin({
                 lists: { ...placed.lists },
                 left: placed.left,
                 notes: placed.notes,
+                media: placed.media,
               };
               // Nothing more to parse: the fragment is the paste.
               return '';
@@ -254,6 +276,9 @@ export function clipboardPlugin({
             ? placePasted(slice, reading, read())
             : slice;
         };
+        // The media its pictures brought are the document's before they land.
+        if (media && reading?.media && Object.keys(reading.media).length > 0)
+          media.place(reading.media);
         // Each footnote's mark pasted or dropped names a note of its own.
         return notes ? notes.place(pasted(), reading?.notes ?? {}) : pasted();
       },

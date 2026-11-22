@@ -1636,7 +1636,7 @@ exports[`the corpus > reads word/VariousPictures.docx and writes it back the sam
     ],
     "kept": [
       {
-        "count": 5,
+        "count": 3,
         "name": "drawing",
       },
     ],
@@ -1679,7 +1679,7 @@ exports[`the corpus > reads word/VariousPictures.docx and writes it back the sam
         "Standard",
         "",
         " ",
-        "drawing,drawing,drawing,drawing,drawing",
+        "drawing,picture 97.5×69 "tomcat.png",drawing,drawing,picture 144×132 "clock.jpg"",
       ],
       [
         "Standard",

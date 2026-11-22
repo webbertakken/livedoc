@@ -11,6 +11,7 @@ export {
   TEXT_DOCUMENT_LOG_BYTES,
   TEXT_DOCUMENT_LOG_UPDATES,
   TEXT_DOCUMENT_MAX_CHARS,
+  TEXT_DOCUMENT_MAX_OBJECTS,
   TEXT_DOCUMENT_MAX_STATE_BYTES,
   TEXT_DOCUMENT_UNDO_GROUP_MS,
   TEXT_DOCUMENT_UPDATE_MAX_BYTES,
@@ -49,6 +50,13 @@ export {
   type SectionBreak,
 } from './model/blocks';
 export { Notes } from './model/notes';
+export {
+  Pictures,
+  type DocumentMedia,
+  type Picture,
+  type PictureCrop,
+  type PictureMedia,
+} from './model/pictures';
 export {
   Blocks,
   CELL_SIDES,
@@ -199,7 +207,10 @@ export {
   TABLE_ROW_ATTRIBUTES,
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
+  MEDIA_MAP,
   PARAGRAPH_ATTRIBUTES,
+  PICTURE,
+  PICTURE_ATTRIBUTES,
   RUN_KEPT_MARK,
   RUN_MARKS,
   SECTION_BREAK,

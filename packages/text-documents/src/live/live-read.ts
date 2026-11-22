@@ -17,6 +17,8 @@ import type { ListDefinition } from '../model/lists';
 import type { TextProps } from '../model/props';
 import type { Section } from '../model/sections';
 import type { Table } from '../model/tables';
+import { isMappedPictureType } from '@livedoc/office-packages';
+import type { DocumentMedia, Picture, PictureMedia } from '../model/pictures';
 import { Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
@@ -26,6 +28,8 @@ import {
   FIELD,
   FOOTNOTE,
   KEPT_INLINE,
+  MEDIA_MAP,
+  PICTURE,
   LINK_MARK,
   LISTS_MAP,
   PARAGRAPH,
@@ -100,6 +104,26 @@ function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): I
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Note['kept'],
+        }),
+      );
+      continue;
+    }
+    if (child instanceof Y.XmlElement && child.nodeName === PICTURE) {
+      const a = child.getAttributes() as Attributes;
+      inlines.push(
+        defined<Picture>({
+          type: 'picture',
+          media: a.media as string,
+          width: a.width as number,
+          height: a.height as number,
+          alt: a.alt as string | undefined,
+          title: a.title as string | undefined,
+          decorative: a.decorative === true ? true : undefined,
+          crop: a.crop as Picture['crop'],
+          props: a.props ?? {},
+          style: a.style as string | undefined,
+          link: a.link as string | undefined,
+          kept: a.kept as Picture['kept'],
         }),
       );
       continue;
@@ -197,6 +221,32 @@ export function readLiveStyles(doc: Y.Doc, format: TextDocumentFormat): Style[] 
   return stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? [...TextDocument.blank({ format }).styles];
 }
 
+/** One media as the state holds it, when whole: a media type the model maps, and its bytes. */
+function mediaOf(value: unknown): PictureMedia | undefined {
+  const m = value as { mediaType?: unknown; bytes?: unknown; part?: unknown } | undefined;
+  if (!(m?.bytes instanceof Uint8Array) || typeof m.mediaType !== 'string') return undefined;
+  if (!isMappedPictureType(m.mediaType)) return undefined;
+  return {
+    mediaType: m.mediaType,
+    bytes: m.bytes,
+    ...(typeof m.part === 'string' ? { part: m.part } : {}),
+  };
+}
+
+/** A picture's media by its key, as the state's `media` map holds it (objects.md "In the editor"). */
+export const liveMediaOf = (doc: Y.Doc, key: string): PictureMedia | undefined =>
+  mediaOf(doc.getMap<unknown>(MEDIA_MAP).get(key));
+
+/** The state's media by key, each held whole; none when empty. */
+function readLiveMedia(map: Y.Map<unknown>): DocumentMedia | undefined {
+  const out: Record<string, PictureMedia> = {};
+  for (const [key, value] of map.entries()) {
+    const media = mediaOf(value);
+    if (media) out[key] = media;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /** The live state as the model, in the tab's format. */
 export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDocument {
   const blank = TextDocument.blank({ format });
@@ -214,6 +264,7 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
     });
   const held = meta.get('section') as LiveSection | undefined;
   const source = readSource(doc.getMap<unknown>(SOURCE_MAP));
+  const media = readLiveMedia(doc.getMap<unknown>(MEDIA_MAP));
   return defined({
     format,
     metadata: (meta.get('metadata') as TextDocument['metadata'] | undefined) ?? blank.metadata,
@@ -223,6 +274,7 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
     section: held ? sectionOf(held, stories) : blank.section,
     pageless: meta.get('pageless') === true ? true : undefined,
     watermark: (meta.get('watermark') as TextDocument['watermark'] | undefined) ?? undefined,
+    media,
     body,
     source,
   });

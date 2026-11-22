@@ -8,7 +8,7 @@ import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { storyFragment, TextDocumentState } from '@livedoc/text-documents';
+import { PICTURE, storyFragment, TextDocumentState } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
 import type { TextFormatting } from './text-document-formatting';
@@ -18,6 +18,7 @@ import { paragraphBoxesPlugin } from './text-document-paragraph-boxes';
 import { textDocumentSchema } from './text-document-schema';
 import { FIELD_NODE_VIEWS, fieldNumbersPlugin } from './text-document-fields';
 import { tableView } from './text-document-table-dom';
+import { pictureView } from './text-document-pictures';
 import { tabStopsPlugin } from './text-document-tab-layout';
 
 /** A drawn story's class, on its source and every copy. */
@@ -93,7 +94,11 @@ export class StorySource {
           changed,
         ],
       }),
-      nodeViews: { ...FIELD_NODE_VIEWS, table: tableView },
+      nodeViews: {
+        ...FIELD_NODE_VIEWS,
+        table: tableView,
+        [PICTURE]: pictureView((key) => TextDocumentState.media(doc, key)),
+      },
       editable: () => this.#editing,
       attributes: () => ({
         class: `${STORY_CLASS} whitespace-pre-wrap break-words outline-none`,

@@ -17,6 +17,8 @@ export const ODF_NS = {
   of: 'urn:oasis:names:tc:opendocument:xmlns:of:1.2',
   // LibreOffice's extension: `calcext:value-type="error"` marks a formula's cached error, read, never written.
   calcext: 'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0',
+  // LibreOffice's office extension: `loext:decorative` marks a picture decorative (a text document's objects).
+  loext: 'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
 } as const;
 
 /** The ODF version every file LiveDoc writes declares. */

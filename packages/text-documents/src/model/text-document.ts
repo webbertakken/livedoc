@@ -12,6 +12,7 @@ import type { ListDefinition } from './lists';
 import { PageSetup, type PaperName, type Section } from './sections';
 import { Styles, type Style, type StyleDefaults } from './styles';
 import type { Watermark } from './watermark';
+import type { DocumentMedia } from './pictures';
 
 export type TextDocumentFormat = 'odf' | 'ooxml';
 
@@ -84,6 +85,8 @@ export type TextDocument = {
   readonly pageless?: true;
   /** Drawn behind the writing on every page (page-layout.md "Watermark"). */
   readonly watermark?: Watermark;
+  /** Its pictures' bytes by key (objects.md "The model"). */
+  readonly media?: DocumentMedia;
   readonly body: readonly Block[];
   readonly source?: OdfSource | OoxmlSource;
 };

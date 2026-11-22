@@ -4,6 +4,8 @@
 import type { Block, Paragraph } from '../model/blocks';
 import type { BorderDash, BorderLine } from '../model/props';
 import type { Table, TableCell } from '../model/tables';
+import type { Picture } from '../model/pictures';
+import { BLUE_PNG, BLUE_PNG_SHA, GREEN_PNG, GREEN_PNG_SHA } from './pictures';
 import { ListDefinition } from '../model/lists';
 import { ListPresets } from '../model/list-presets';
 import { PageSetup } from '../model/sections';
@@ -542,4 +544,60 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       language: 'en-GB',
     },
   }),
+  // objects.md "The model": pictures in line, one cropped with alternative text and a title, one decorative sharing its
+  // media, one linked, one in a table cell and one in a header.
+  pictures: (format) => {
+    const picture = (
+      media: string,
+      width: number,
+      height: number,
+      extra: Partial<Picture> = {},
+    ): Picture => ({
+      type: 'picture',
+      media,
+      width,
+      height,
+      props: {},
+      ...extra,
+    });
+    const cropped = picture(GREEN_PNG_SHA, 60, 40, {
+      alt: 'A green field',
+      title: 'Field',
+      crop: { top: 0.2, right: 0.05, bottom: 0, left: 0.1 },
+    });
+    const media = {
+      [GREEN_PNG_SHA]: { mediaType: 'image/png' as const, bytes: GREEN_PNG },
+      [BLUE_PNG_SHA]: { mediaType: 'image/png' as const, bytes: BLUE_PNG },
+    };
+    const p = (inlines: Paragraph['inlines']) => paragraph(format, 'normal', inlines);
+    return base(
+      format,
+      [
+        p([
+          run('Before '),
+          cropped,
+          run(' between '),
+          picture(GREEN_PNG_SHA, 24, 17, { decorative: true }),
+          run('.'),
+        ]),
+        p([picture(BLUE_PNG_SHA, 30, 30, { link: 'https://docs.nu/', alt: 'Blue' })]),
+        {
+          type: 'table',
+          columns: [200],
+          headerRows: 0,
+          rows: [{ cells: [{ blocks: [p([picture(BLUE_PNG_SHA, 12, 12)])], props: {} }] }],
+        },
+        p([run('After.')]),
+      ],
+      {
+        media,
+        section: {
+          ...TextDocument.blank({ format }).section,
+          headers: {
+            header: { default: { blocks: [p([run('Logo '), picture(BLUE_PNG_SHA, 18, 18)])] } },
+          },
+        },
+      },
+    );
+  },
 };

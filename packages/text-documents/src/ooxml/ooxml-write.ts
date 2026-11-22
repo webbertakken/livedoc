@@ -21,6 +21,9 @@ import { keptStillHolds, type TextProps } from '../model/props';
 import type { Section } from '../model/sections';
 import { HeaderPartsWriter } from './ooxml-headers';
 import { RelationshipList, relativeTarget } from './ooxml-relationships';
+import { ooxmlMediaPart, ooxmlPictureXml } from './ooxml-pictures';
+import type { Picture, PictureMedia } from '../model/pictures';
+import { keptXmlTexts } from '../picture-media';
 import { Styles, type Style } from '../model/styles';
 import type { TabStop } from '../model/tab-stops';
 import { settingsWith, settingsXml } from './ooxml-settings';
@@ -77,6 +80,10 @@ class OoxmlWriter {
   readonly headerParts: HeaderPartsWriter;
   /** Each of the body's notes with its footnote's id (page-layout.md "Footnotes"). */
   readonly noteIds: Map<Note, string>;
+  /** The media the pictures written hold, by the part each is written at (objects.md "In the formats"). */
+  readonly mediaParts = new Map<string, PictureMedia>();
+  /** The last `wp:docPr` id given: numbered after those kept content holds. */
+  #pictureId: number;
   /** Each section's place among the sections, by the section itself. */
   readonly #sectionAt = new Map<Section, number>();
 
@@ -94,12 +101,16 @@ class OoxmlWriter {
     );
     const original = source?.relationships.get(this.mainPart) ?? [];
     // The styles and numbering relationships keep their ids when the file had them.
-    this.rels = new RelationshipList([
-      ...keptRels,
-      ...original.filter(
-        (r) => r.type === RELATIONSHIP_TYPES.styles || r.type === RELATIONSHIP_TYPES.numbering,
-      ),
-    ]);
+    this.rels = new RelationshipList(
+      [
+        ...keptRels,
+        ...original.filter(
+          (r) => r.type === RELATIONSHIP_TYPES.styles || r.type === RELATIONSHIP_TYPES.numbering,
+        ),
+      ],
+      this.mainPart,
+    );
+    this.#pictureId = keptDocPrIds(doc);
     this.partRels = this.rels;
     this.defaultStyle = doc.styles.find((s) => s.role === 'normal' && s.family === 'paragraph')?.id;
     const sections = [
@@ -235,6 +246,20 @@ class OoxmlWriter {
     return `<w:r>${rPr}${content}</w:r>`;
   }
 
+  /** A picture in line, its media written at its part and named by the part's relationships; none without media. */
+  pictureXml(picture: Picture): string {
+    const media = this.doc.media?.[picture.media];
+    if (!media) return '';
+    const part = ooxmlMediaPart(picture.media, media, this.mainPart);
+    this.mediaParts.set(part, media);
+    const embed = this.partRels.id(
+      RELATIONSHIP_TYPES.image,
+      relativeTarget(this.partRels.source, part),
+    );
+    this.#pictureId += 1;
+    return ooxmlPictureXml(picture, this.rPr(picture), embed, this.#pictureId);
+  }
+
   /** A paragraph; `lead`, a run before its content (a note's number). */
   paragraphXml(p: Paragraph, ends: Section | undefined, lead = ''): string {
     const pieces = p.inlines.map((i) => ({
@@ -246,7 +271,9 @@ class OoxmlWriter {
             ? ooxmlFieldXml(i.field, this.runXml({ ...i, type: 'run' }))
             : i.type === 'note'
               ? this.markXml(i)
-              : this.kept(i.xml),
+              : i.type === 'picture'
+                ? this.pictureXml(i)
+                : this.kept(i.xml),
     }));
     let content = '';
     for (let i = 0; i < pieces.length;) {
@@ -484,6 +511,7 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
       (source?.relationships.get(name) ?? []).filter(
         (r) => r.type !== RELATIONSHIP_TYPES.hyperlink,
       ),
+      name,
     );
     parts.push({
       name,
@@ -500,6 +528,7 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
       (source?.relationships.get(name) ?? []).filter(
         (r) => r.type !== RELATIONSHIP_TYPES.hyperlink,
       ),
+      name,
     );
     parts.push({
       name,
@@ -545,6 +574,10 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
   for (const part of source?.parts ?? [])
     if (!written.has(part.name) && !isStory(part.mediaType))
       parts.push({ name: part.name, contentType: part.mediaType, data: part.data });
+  // Each picture's media once, at its part; one kept content still names is written as kept.
+  for (const [name, media] of w.mediaParts)
+    if (!parts.some((p) => p.name === name))
+      parts.push({ name, contentType: media.mediaType, data: media.bytes });
   const output = new Set(parts.map((p) => p.name));
   const packageOriginal = source?.relationships.get('') ?? [];
   // Every id the package had is taken, so a relationship it lacked (Google Docs writes no core properties) gets a new one.
@@ -583,5 +616,19 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
   const defaults = new Map(
     [...(source?.defaults ?? [])].filter(([ext]) => ext !== 'rels' && ext !== 'xml'),
   );
+  // A Default per extension of the media written, as Word lists them.
+  for (const [name, media] of w.mediaParts) {
+    const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+    if (!defaults.has(ext)) defaults.set(ext, media.mediaType);
+  }
   return writeOoxmlPackage(parts, relationships, defaults);
+}
+
+/** The highest `wp:docPr` id kept content holds, so the pictures written are numbered after it. */
+function keptDocPrIds(document: TextDocument): number {
+  let most = 0;
+  for (const xml of keptXmlTexts(document))
+    for (const match of xml.matchAll(/docPr\b[^>]*?\sid="(\d+)"/g))
+      most = Math.max(most, Number(match[1]));
+  return most;
 }

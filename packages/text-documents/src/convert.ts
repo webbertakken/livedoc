@@ -1,6 +1,7 @@
 // Conversion (standard-mapping.md "Conversion"): a person's choice to move a text document to the other format. The
 // losses are listed first; converting drops what was kept from the old format and maps the built-in styles' ids.
 import type { Block, Inline, Paragraph } from './model/blocks';
+import { Pictures } from './model/pictures';
 import type { ListDefinition } from './model/lists';
 import { Notes } from './model/notes';
 import { restartLosses } from './odf/odf-lines';
@@ -315,6 +316,10 @@ export function convertTextDocument(
     ...(firstOwn ? { headers: firstOwn } : {}),
   };
   const { kept: _, ...metadata } = document.metadata;
+  // Pictures' media travel, the entries they arrived in being the other format's (objects.md "In the formats").
+  const media = Pictures.heldMedia(document).map(
+    ([key, m]) => [key, { mediaType: m.mediaType, bytes: m.bytes }] as const,
+  );
   return {
     document: {
       format: to,
@@ -325,6 +330,7 @@ export function convertTextDocument(
       section,
       ...(document.pageless ? { pageless: true as const } : {}),
       ...(document.watermark ? { watermark: document.watermark } : {}),
+      ...(media.length > 0 ? { media: Object.fromEntries(media) } : {}),
       body,
     },
     losses,

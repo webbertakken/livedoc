@@ -56,6 +56,10 @@ import {
 import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
 import { odfFieldKind, odfFieldText } from './odf-fields';
 import { odfFootnoteBody } from './odf-notes';
+import { readOdfPicture, type OdfPictureLookup } from './odf-pictures';
+import { keptXmlTexts, MediaTaken } from '../picture-media';
+import type { Picture } from '../model/pictures';
+import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import {
   isLineNumbering,
   paragraphLinesOf,
@@ -73,6 +77,10 @@ export type OdfParts = {
   meta?: XmlParsed;
   settings?: XmlParsed;
   entries: readonly KeptEntry[];
+  /** The media each `draw:image` may hold as a picture's (objects.md "In the formats"). */
+  pictures?: OdfPictureLookup;
+  /** The most pictures the document holds; past it, the rest stay kept. */
+  maxObjects?: number;
 };
 
 const is = (e: XmlNode, uri: string, local: string): boolean =>
@@ -131,12 +139,15 @@ class OdfReader {
 
   readonly parts: OdfParts;
   readonly report: ReportBuilder;
+  /** The media the pictures read hold. */
+  readonly taken: MediaTaken;
   /** Whether the file counts tab positions from the indent (standard-mapping.md "The model", tab stops). */
   readonly tabsFromIndent: boolean;
 
   constructor(parts: OdfParts, report: ReportBuilder) {
     this.parts = parts;
     this.report = report;
+    this.taken = new MediaTaken(parts.maxObjects ?? TEXT_DOCUMENT_MAX_OBJECTS);
     this.part = { parsed: parts.content, auto: this.auto };
     this.tabsFromIndent = tabsFromIndentIn(
       parts.settings && childElement(parts.settings.root, NS.office, 'settings'),
@@ -390,6 +401,22 @@ class OdfReader {
 }
 
 /** Reads a text document's parts (package or flat file) into the model. */
+/**
+ * The entries still kept: those pictures now hold leave, unless kept content still names them (objects.md "In the
+ * formats", read).
+ */
+function keptEntries(
+  entries: readonly KeptEntry[],
+  taken: MediaTaken,
+  kept: unknown,
+): readonly KeptEntry[] {
+  if (taken.parts.size === 0) return entries;
+  const named = keptXmlTexts(kept);
+  return entries.filter(
+    (e) => !taken.parts.has(e.name) || named.some((xml) => xml.includes(e.name)),
+  );
+}
+
 export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocument {
   const reader = new OdfReader(parts, report);
   const fontFaces: KeptXml[] = [];
@@ -426,7 +453,14 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
     masterStyles,
     ...(settingsRoot ? { settings: keptSettings(parts.settings!, settingsRoot) } : {}),
     tabsFromIndent: reader.tabsFromIndent,
-    entries: parts.entries,
+    entries: keptEntries(parts.entries, reader.taken, [
+      body.blocks,
+      body.section,
+      keptStyles,
+      automaticStyles,
+      pageStyles,
+      masterStyles,
+    ]),
   };
   return {
     format: 'odf',
@@ -437,6 +471,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
     section: body.section,
     ...(pagelessIn(settingsRoot) ? { pageless: true as const } : {}),
     body: body.blocks,
+    ...compact({ media: reader.taken.held() }),
     source,
   };
 }
@@ -829,6 +864,17 @@ class InlineReader {
       this.#afterSpace = false;
       return;
     }
+    const picture = this.picture(node);
+    if (picture) {
+      this.out.push({
+        type: 'picture',
+        ...picture,
+        props: ctx.props,
+        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+      } satisfies Picture);
+      this.#afterSpace = false;
+      return;
+    }
     const kept: KeptInline = {
       type: 'kept',
       name: node.local,
@@ -838,6 +884,20 @@ class InlineReader {
     };
     this.r.report.keep(node.local);
     this.out.push(kept);
+  }
+
+  /** A frame read as a picture in line, when it holds only what the model maps (objects.md "In the formats"). */
+  picture(node: XmlElement) {
+    const auto = this.r.part.auto;
+    return readOdfPicture(
+      node,
+      (name) => {
+        const style = auto.get(name);
+        return style?.family === 'graphic' ? style.element : undefined;
+      },
+      this.r.parts.pictures ?? new Map(),
+      this.r.taken,
+    );
   }
 
   span(node: XmlElement, ctx: Context): void {
