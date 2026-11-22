@@ -51,10 +51,10 @@ export function FolderRow({
           ariaLabel={`Rename ${folder.name}`}
           onCommit={onCommitRename}
           onCancel={onCancelRename}
-          className="rounded border border-brand-300 bg-white px-1 py-0 text-sm font-medium text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+          className="rounded-control border border-brand-300 bg-white px-1 py-0 text-body text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
         />
       ) : (
-        <span className="truncate text-sm font-medium text-slate-900 group-hover:text-brand-700 dark:text-slate-100 dark:group-hover:text-brand-300">
+        <span className="truncate text-body text-slate-900 group-hover:text-brand-700 dark:text-slate-100 dark:group-hover:text-brand-300">
           {folder.name}
         </span>
       )}
@@ -64,7 +64,7 @@ export function FolderRow({
   );
   return (
     <li
-      className={`group grid grid-cols-[1fr_140px_40px] sm:grid-cols-[1fr_90px_140px_40px] items-center gap-2 px-4 py-2 transition hover:bg-slate-50 dark:hover:bg-slate-700 ${drop.isDragOver ? DROP_TARGET_RING : ''}`}
+      className={`group grid grid-cols-[1fr_140px_40px] sm:grid-cols-[1fr_90px_140px_40px] min-h-row items-center gap-2 px-4 transition pointer-coarse:min-h-11 hover:bg-slate-50 dark:hover:bg-slate-700 ${drop.isDragOver ? DROP_TARGET_RING : ''}`}
       {...drop.handlers}
       // One of the reader's own folders drags to the sidebar's Trash (explorer-structure.md "Dragging to the Trash").
       {...folderDragProps(folder, renaming)}
@@ -89,7 +89,7 @@ export function FolderRow({
       {renaming ? (
         <span />
       ) : (
-        <EllipsisTriggerButton {...menu.triggerProps} label={`Menu for ${folder.name}`} />
+        <EllipsisTriggerButton {...menu.triggerProps} size="md" label={`Menu for ${folder.name}`} />
       )}
       {menu.open ? (
         <FolderActionsMenu

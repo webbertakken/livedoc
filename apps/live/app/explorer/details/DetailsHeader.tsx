@@ -41,7 +41,7 @@ export function DetailsHeader({
   onSort: (column: DetailsColumnId) => void;
 }) {
   return (
-    <thead className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+    <thead className="border-b border-slate-200 bg-slate-50/70 text-supporting text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
       <tr>
         {DETAILS_COLUMNS.map((c) => {
           const sorted = sort.column === c.id;
@@ -52,14 +52,14 @@ export function DetailsHeader({
               key={c.id}
               scope="col"
               aria-sort={sorted ? (ascending ? 'ascending' : 'descending') : undefined}
-              className={`${WIDTH[c.id]} ${SHOWN_FROM_CLASS[c.shownFrom]} px-1 py-1 font-semibold ${ALIGN[c.align]}`}
+              className={`${WIDTH[c.id]} ${SHOWN_FROM_CLASS[c.shownFrom]} px-1 py-0.5 font-normal ${ALIGN[c.align]}`}
             >
               <HeaderButton label={c.label} iconOnly={c.iconOnly}>
                 <button
                   type="button"
                   onClick={() => onSort(c.id)}
-                  className={`inline-flex items-center gap-1 rounded ${c.iconOnly ? 'px-1' : 'px-2'} py-1 uppercase tracking-wider transition hover:bg-slate-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${
-                    sorted ? 'text-slate-700 dark:text-slate-200' : ''
+                  className={`inline-flex min-h-chip items-center gap-1 rounded-control ${c.iconOnly ? 'px-1' : 'px-2'} transition hover:bg-slate-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${
+                    sorted ? 'font-medium text-slate-700 dark:text-slate-200' : ''
                   }`}
                 >
                   {HeaderIcon ? (

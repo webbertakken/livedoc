@@ -52,6 +52,8 @@ A surface names the token, never the number, so the scale changes in one place.
 | `prominent` | 36     | A primary action; the band around a toolbar of 28 px controls            |
 
 - A row is 28 px whatever it held before: a list of rows has one rhythm.
+- A picture in a row (a document's thumbnail) is the chip step's height, so the row keeps its 28 px.
+- A row's `⋯` is the chip step, so it sits inside the row with room around it.
 - **A canvas drawing tool is 32 px** (Webber, 2026-11-21), the one exception to the 28 px toolbar control.
 - The tools are the most pressed controls in the product, pressed mid-gesture and often with a pen that reports as
   a fine pointer, so they keep one step more.

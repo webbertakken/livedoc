@@ -43,7 +43,7 @@ const IDLE: State = { status: 'idle' };
 const UNDRAWN: State = { status: 'broken' };
 
 const DEFAULT_BOX =
-  'h-7 w-9 rounded border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40';
+  'h-chip w-8 rounded-control border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40';
 
 export function DocumentThumbnail({
   ownerId,

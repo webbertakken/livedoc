@@ -144,19 +144,56 @@ describe('DetailsView', () => {
     ).not.toContain('sr-only');
   });
 
-  it('draws rows at half height in power user mode', () => {
-    const { unmount } = render(<DetailsView {...view([doc('a')])} />);
-    const roomy = within(screen.getAllByRole('row')[1]!).getAllByRole('cell')[0]!.className;
-    expect(roomy).toContain('py-2');
+  // "Rows": the sizing scale's row for everyone, 44 px on touch; power user mode draws the same rows.
+  it('draws every row at the row step, in power user mode too', () => {
+    const rowClasses = () =>
+      screen
+        .getAllByRole('row')
+        .slice(1)
+        .map((row) => row.className);
+    const { unmount } = render(<DetailsView {...view([doc('a')], [folder])} />);
+    const everyone = rowClasses();
+    for (const className of everyone) {
+      expect(className).toMatch(/(^|\s)h-row(\s|$)/);
+      expect(className).toMatch(/(^|\s)pointer-coarse:h-11(\s|$)/);
+    }
     unmount();
     render(
       <ExplorerProvider value={{ prefs: { powerUserMode: true } } as unknown as ExplorerStateValue}>
-        <DetailsView {...view([doc('a')])} />
+        <DetailsView {...view([doc('a')], [folder])} />
       </ExplorerProvider>,
     );
-    const dense = within(screen.getAllByRole('row')[1]!).getAllByRole('cell')[0]!.className;
-    expect(dense).toContain('py-0');
-    expect(dense).not.toContain('py-2');
+    expect(rowClasses()).toEqual(everyone);
+  });
+
+  it('names a row by its regular-weight name, its menu at the chip step', () => {
+    render(<DetailsView {...view([doc('Plan')], [folder])} />);
+    const [folderRow, docRow] = screen.getAllByRole('row').slice(1);
+    for (const [row, name] of [
+      [folderRow!, 'Projects'],
+      [docRow!, 'Plan'],
+    ] as const) {
+      const named = within(row).getByText(name).closest('a, button')!;
+      expect(named.className).toMatch(/(^|\s)text-body(\s|$)/);
+      expect(named.className).not.toMatch(/font-(medium|semibold)/);
+      expect(within(row).getByRole('button', { name: /^Menu for/ }).className).toMatch(
+        /(^|\s)size-chip(\s|$)/,
+      );
+    }
+  });
+
+  it('heads the columns at the supporting step, in their own case, the sorted one medium', () => {
+    render(<DetailsView {...view([doc('a')])} />);
+    const head = screen.getAllByRole('rowgroup')[0]!;
+    expect(head.className).toMatch(/(^|\s)text-supporting(\s|$)/);
+    expect(head.className).not.toMatch(/uppercase|tracking-/);
+    const updated = within(screen.getByRole('columnheader', { name: /^Updated/ })).getByRole(
+      'button',
+    );
+    const name = within(screen.getByRole('columnheader', { name: /^Name/ })).getByRole('button');
+    expect(updated.className).toMatch(/(^|\s)font-medium(\s|$)/);
+    expect(name.className).not.toMatch(/font-medium/);
+    expect(name.className).toMatch(/(^|\s)min-h-chip(\s|$)/);
   });
 
   it('says what is not counted yet', () => {

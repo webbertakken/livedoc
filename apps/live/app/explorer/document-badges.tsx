@@ -22,7 +22,7 @@ export function useIconOnlyBadges(): boolean {
 
 const badgeBase =
   // Labels sit in text-optical-line + text-optical-caps (optical-alignment.md), so the base carries no case.
-  'optical-edges inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1';
+  'optical-edges inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-supporting ring-1';
 
 // The star a favourited document carries wherever it's listed (docs/specs/013-workspace/favourites.md),
 // so you can tell a starred document from an unstarred one without opening
@@ -70,9 +70,9 @@ export function FolderChip({ label, onOpen }: { label: string; onOpen: () => voi
           e.stopPropagation();
           onOpen();
         }}
-        className="inline-flex max-w-[10rem] items-center gap-1 rounded px-1 py-0.5 text-[11px] text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+        className="inline-flex max-w-[10rem] items-center gap-1 rounded-control px-1 py-0.5 text-supporting text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
       >
-        <span className="shrink-0 [&_svg]:h-3 [&_svg]:w-3">
+        <span className="shrink-0 [&_svg]:size-icon-row">
           <FolderOutlineIcon />
         </span>
         <span className="truncate">{label}</span>
