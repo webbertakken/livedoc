@@ -128,12 +128,11 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   const xlsxCsv = libreOfficeConvert(back, 'csv', { recalculate: true }).toString('utf8').trim();
   expect(xlsxCsv.split(/\r?\n/)).toEqual(['21,42', 'rent,']);
 
-  // files-and-print.md "Download": the other standard is a converted copy, what it cannot hold listed first.
+  // files-and-print.md "Download": the other standard is a converted copy, what it cannot hold listed first: the
+  // Excel file's kept content stays behind (standard-mapping.md "Unknown content", D109).
   await (await officeMenuItem(page, ['File', 'Download', 'OpenDocument (.ods)'])).click();
   const copyDialog = page.getByRole('dialog', { name: 'Download as OpenDocument?' });
-  await expect(copyDialog).toContainText(
-    'Everything in this spreadsheet fits the OpenDocument format.',
-  );
+  await expect(copyDialog).toContainText(/things? kept from the Excel file stays? behind/);
   const [copy] = await Promise.all([
     page.waitForEvent('download'),
     copyDialog.getByRole('button', { name: 'Download' }).click(),
