@@ -79,6 +79,9 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   // A PDF document: its live changes and the stored file it holds.
   'GET /documents/{id}/pdf-documents/{tabId}/state': 'allow',
   'POST /documents/{id}/pdf-documents/{tabId}/updates': 'allow',
+  // The first page's picture for the document's thumbnail is a person's own surface's to send, never a session's.
+  'GET /documents/{id}/pdf-documents/{tabId}/thumbnail': 'confined',
+  'PUT /documents/{id}/pdf-documents/{tabId}/thumbnail': 'confined',
   'GET /documents/{id}/files/{key}': 'allow',
   // An Event Storming board's domain export.
   'POST /documents/{id}/tabs/{tabId}/storm-export': 'allow',

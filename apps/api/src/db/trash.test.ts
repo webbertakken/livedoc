@@ -310,7 +310,13 @@ describe('purgeDocuments', () => {
     expect(await purgeDocuments(db.env, ['A'])).toBe(1);
 
     expect(count(db.sql, 'documents', 'id = ?', 'A')).toBe(0);
-    expect(del).toHaveBeenCalledWith(['thumb/A', 'thumb/A/light', 'thumb/A/dark', 'og/A']);
+    expect(del).toHaveBeenCalledWith([
+      'thumb/A',
+      'thumb/A/light',
+      'thumb/A/dark',
+      'og/A',
+      'thumb/A/browser',
+    ]);
     // Its room's storage: the content, and the ledger's comment and idea text (docs/specs/015-api/api.md "Purging a
     // room").
     expect(vi.mocked(purgeRooms)).toHaveBeenCalledWith(db.env, ['A'], {

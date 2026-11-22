@@ -32,6 +32,8 @@ export type PdfDocumentOpen =
       pages: readonly PageInfo[];
       storedFile: BlobKey;
       bytes: number;
+      /** Whether the file is protected: opened with a password, or its permissions limited (opening.md "Passwords"). */
+      protected: boolean;
       engine: PdfEngineClient;
       drawer: PdfPageDrawer;
       binding: PdfLiveBinding;
@@ -194,6 +196,7 @@ export function usePdfDocument(
           pages: opened.pages,
           storedFile,
           bytes: size,
+          protected: opened.document.encrypted,
           engine: client,
           drawer,
           binding: bound,

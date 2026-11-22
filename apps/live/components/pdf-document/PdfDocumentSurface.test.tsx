@@ -35,6 +35,9 @@ vi.mock('@/lib/pdf-document/usePdfDocument', () => ({
   },
 }));
 vi.mock('@/lib/download-blob', () => ({ downloadBlob: vi.fn() }));
+// Which surface sends a thumbnail is the hook's own test (usePdfThumbnail.test.tsx): here, that the surface asks it.
+const thumbnail = vi.hoisted(() => ({ usePdfThumbnail: vi.fn() }));
+vi.mock('@/lib/pdf-document/usePdfThumbnail', () => thumbnail);
 vi.mock('@/lib/pdf-document/pdf-budget-replacement', async (original) => {
   const actual = await original<typeof import('@/lib/pdf-document/pdf-budget-replacement')>();
   return { ...actual, watchPdfBudget: vi.fn(actual.watchPdfBudget) };
@@ -77,6 +80,7 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
     ],
     storedFile: KEY,
     bytes: 1_250_000,
+    protected: false,
     engine: {} as never,
     drawer: { draw: async () => null, forget: () => {} },
     binding,
@@ -225,6 +229,19 @@ describe('a PDF document’s surface', () => {
     here.unmount();
     show(await ready());
     expect(watchPdfBudget).toHaveBeenCalledTimes(1);
+  });
+
+  // live-editing-and-storage.md "A browser's thumbnail"
+  it('hands its PDF, its home and its level to what sends the thumbnail', async () => {
+    const now = await ready();
+    show(now, 'participate', true, 'this-browser');
+    expect(thumbnail.usePdfThumbnail).toHaveBeenLastCalledWith(
+      now,
+      expect.objectContaining({ get: expect.any(Function) }),
+      scope,
+      'this-browser',
+      'participate',
+    );
   });
 
   it('offers no Download where the bytes are not held', () => {

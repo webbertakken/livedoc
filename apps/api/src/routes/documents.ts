@@ -25,6 +25,7 @@ import { isAppearance } from '@livedoc/document';
 import { DOCUMENT_OPEN_HEADER, readDocumentOpen } from '@livedoc/api-schema';
 import { grantedTab, recordTabRead } from './granted-tab';
 import { documentImageSvg } from '../document-image';
+import { awaitsBrowserThumbnail } from '../pdf-documents/pdf-browser-thumbnail';
 import { redactDocumentForReader, redactDocumentForScope } from '../redact-document';
 import { answerOverview, parseViewQuery } from './document-views-route';
 import { handleDocumentDelete } from './document-delete-route';
@@ -264,9 +265,15 @@ export async function handleDocumentRequest(ctx: DocumentRouteContext): Promise<
       // cannot change until the document does, so let the browser keep it
       // instead of re-asking on every Explorer visit.
       if (svg == null) {
+        // But a PDF's picture comes from a browser, with no save of the document: that answer is never kept
+        // (docs/specs/006-document/document-snapshots.md).
+        const awaited = grant.tabScope === null && (await awaitsBrowserThumbnail(env, id));
         return json(
           { error: 'not_found' },
-          { status: 404, headers: { 'Cache-Control': 'private, max-age=86400' } },
+          {
+            status: 404,
+            headers: { 'Cache-Control': awaited ? 'no-store' : 'private, max-age=86400' },
+          },
         );
       }
       // The client cache-busts via a `?v=<savedAt>` query param, so a

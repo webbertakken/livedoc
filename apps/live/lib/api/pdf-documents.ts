@@ -1,9 +1,10 @@
 // A PDF document's doors (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage"): its live changes, with
-// the key of the stored file they are on, and one update too large for a frame.
+// the key of the stored file they are on, and one update too large for a frame; and its thumbnail's two ("A
+// browser's thumbnail").
 import { PDF_STORED_FILE_HEADER, TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
 import { isBlobKey, type BlobKey } from '@livedoc/document';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
-import { API_BASE, apiFetch, apiHeaders, expectOkVoid } from './core';
+import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
 export type PdfDocumentScope = {
   ownerId: string;
@@ -63,4 +64,29 @@ export async function apiPostPdfUpdate(
     body: update.slice().buffer,
   });
   await expectOkVoid(res, 'PDF update');
+}
+
+/** Whether LiveDoc wants a picture of the PDF's first page from this session ("A browser's thumbnail"). */
+export async function apiPdfThumbnailWanted(scope: PdfDocumentScope): Promise<boolean> {
+  const res = await apiFetch(door(scope, 'thumbnail'), {
+    headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
+    cache: 'no-store',
+  });
+  return (await expectOk<{ wanted?: unknown }>(res, 'PDF thumbnail wanted')).wanted === true;
+}
+
+/** Send the PDF's first page as a JPEG, for the document's thumbnail. Resolves once it is stored. */
+export async function apiSendPdfThumbnail(
+  scope: PdfDocumentScope,
+  jpeg: Uint8Array<ArrayBuffer>,
+): Promise<void> {
+  const res = await apiFetch(door(scope, 'thumbnail'), {
+    method: 'PUT',
+    headers: {
+      ...(await apiHeaders(scope.ownerId, { share: scope.shareCode })),
+      'Content-Type': 'image/jpeg',
+    },
+    body: jpeg.buffer,
+  });
+  await expectOkVoid(res, 'PDF thumbnail');
 }

@@ -104,6 +104,11 @@ const { getDocumentThumbnailSvg, getDocumentTabImageSvg } = vi.hoisted(() => ({
   getDocumentTabImageSvg: vi.fn(),
 }));
 vi.mock('../thumbnail', () => ({ getDocumentThumbnailSvg, getDocumentTabImageSvg }));
+// Whether a document's snapshot waits on a browser (a PDF's): its own tests are pdf-thumbnail-routes.test.ts.
+const { awaitsBrowserThumbnail } = vi.hoisted(() => ({
+  awaitsBrowserThumbnail: vi.fn(async () => false),
+}));
+vi.mock('../pdf-documents/pdf-browser-thumbnail', () => ({ awaitsBrowserThumbnail }));
 // The share password (docs/specs/013-workspace/share-password.md): met unless a case says otherwise.
 const { sharePasswordOk } = vi.hoisted(() => ({ sharePasswordOk: vi.fn(async () => true) }));
 vi.mock('../auth/share-access', () => ({ sharePasswordOk }));
@@ -255,6 +260,18 @@ describe('GET /documents/:id/thumbnail (docs/specs/006-document/document-snapsho
     // Past the gate and versioned by `?v=<savedAt>`, so the browser keeps it
     // rather than re-asking on every Explorer visit.
     expect(res.headers.get('Cache-Control')).toBe('private, max-age=86400');
+  });
+
+  // docs/specs/006-document/document-snapshots.md: a PDF's picture arrives from a browser with no save of the
+  // document, so "none yet" is never kept.
+  it('never lets the browser keep the 404 of a PDF that waits on a browser’s picture', async () => {
+    db.getDocumentThumbMeta.mockResolvedValue(fakeDocument('owner-1'));
+    canReadDocument.mockResolvedValue(true);
+    getDocumentThumbnailSvg.mockResolvedValue(null);
+    awaitsBrowserThumbnail.mockResolvedValueOnce(true);
+    const res = await handleDocuments(makeCtx('GET', '/api/documents/d1/thumbnail'));
+    expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('never marks an access-denied 404 cacheable', async () => {

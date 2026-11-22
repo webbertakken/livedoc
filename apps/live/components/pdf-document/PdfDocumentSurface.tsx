@@ -55,6 +55,7 @@ import {
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
 import { PDF_TOOLBAR } from '@/lib/pdf-document/pdf-toolbar';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
+import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
 import { PdfNotice, PdfNoticeButton } from './PdfNotice';
@@ -178,6 +179,8 @@ export function PdfDocumentSurface({
     });
     return watch.stop;
   }, [ready, home, ownerId, documentId, tabId, shareCode]);
+
+  usePdfThumbnail(ready, marks, scope, home, level);
 
   const onDropped = ready?.onDropped ?? null;
   useEffect(
