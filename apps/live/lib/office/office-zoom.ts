@@ -6,8 +6,10 @@ export type OfficeZoomValue = number | 'fit';
 export const ZOOM_MIN = 50;
 export const ZOOM_MAX = 200;
 export const ZOOM_DEFAULT: OfficeZoomValue = 100;
-/** Google's list. */
-export const ZOOM_PRESETS: readonly OfficeZoomValue[] = ['fit', 50, 75, 90, 100, 125, 150, 200];
+/** Google's levels, as a spreadsheet lists them. */
+export const ZOOM_PERCENTS: readonly number[] = [50, 75, 90, 100, 125, 150, 200];
+/** Google's list for a document's pages: Fit, then the levels. */
+export const ZOOM_PRESETS: readonly OfficeZoomValue[] = ['fit', ...ZOOM_PERCENTS];
 
 export const isZoomPercent = (n: number): boolean =>
   Number.isInteger(n) && n >= ZOOM_MIN && n <= ZOOM_MAX;

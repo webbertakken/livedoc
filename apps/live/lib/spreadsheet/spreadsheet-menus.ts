@@ -11,6 +11,7 @@ import type {
   OfficeItem,
   OfficeMenu,
 } from '@/lib/office/office-catalogue';
+import { ZOOM_ITEMS } from './spreadsheet-zoom';
 
 /** File › Download's native formats, in Google's order: each item's id, the format it writes, its words. */
 export const DOWNLOAD_ITEMS: readonly { id: string; format: WorkbookFormat; label: string }[] = [
@@ -197,7 +198,11 @@ const VIEW_MENU = menu('view', 'View', [
   ]),
   item('hidden-sheets', 'Hidden Sheets', 'view'),
   SEPARATOR,
-  item('zoom', 'Zoom', 'view'),
+  submenu(
+    'zoom',
+    'Zoom',
+    ZOOM_ITEMS.map(({ id, label }) => built(id, label, 'view', { checkable: 'radio' })),
+  ),
   item('full-screen', 'Full Screen', 'view'),
 ]);
 

@@ -36,6 +36,11 @@ import { SummarySlotContext } from './summary-slot';
 import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { useGridMenuBindings } from './useGridMenuBindings';
+import {
+  SpreadsheetZoomProvider,
+  useSpreadsheetZoom,
+  useSpreadsheetZoomScale,
+} from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
@@ -71,6 +76,8 @@ export function SpreadsheetSurface({
   const [channel] = useState(createOfficeBindingsChannel);
   // The sheet bar's room for the summary, filled from inside the open sheet (surface.md "Sheet bar").
   const [summarySlot, setSummarySlot] = useState<HTMLElement | null>(null);
+  // The person's zoom on the grid, kept as sheets are switched (surface.md "Grid", D133).
+  const { zoom, scale } = useSpreadsheetZoom();
   return (
     <section
       ref={root}
@@ -87,17 +94,20 @@ export function SpreadsheetSurface({
         }
         history={history}
         channel={channel}
+        zoom={zoom}
         keyScope={root}
         onWorkbook={onWorkbook}
         pushUndo={(step) => bridge?.pushUndo(step)}
       />
       <OfficeBindingsContext.Provider value={channel}>
         <SummarySlotContext.Provider value={summarySlot}>
-          {bridge ? (
-            <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
-          ) : (
-            <Status state="loading" />
-          )}
+          <SpreadsheetZoomProvider value={scale}>
+            {bridge ? (
+              <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
+            ) : (
+              <Status state="loading" />
+            )}
+          </SpreadsheetZoomProvider>
         </SummarySlotContext.Provider>
       </OfficeBindingsContext.Provider>
       <SheetBar
@@ -269,6 +279,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const input = useFormulaInput(actions);
   const c = useSheetController();
   const pointRef = useFormulaPointing(c, input);
+  const zoom = useSpreadsheetZoomScale();
   useGridMenuBindings(actions);
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
@@ -298,7 +309,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
         input={input}
         pointRef={pointRef}
         peers={bridge.peers}
-        zoom={1}
+        zoom={zoom}
       />
       <SheetMenus actions={actions} />
       <SheetBarSummary />

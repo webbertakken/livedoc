@@ -6,7 +6,8 @@ import { SPREADSHEET_SHORTCUTS } from './spreadsheet-shortcuts';
 import { SPREADSHEET_TOOLBAR } from './spreadsheet-toolbar';
 
 const controls = SPREADSHEET_TOOLBAR.flatMap((g) => g.controls);
-const NO_FIELDS = { zoom: false, fontSize: false, font: false, colour: false, choice: false };
+// A spreadsheet's title row always binds the zoom field (surface.md "Grid").
+const ZOOM_ONLY = { zoom: true, fontSize: false, font: false, colour: false, choice: false };
 
 // docs/specs/029-sheets/surface.md "Toolbar".
 describe('SPREADSHEET_TOOLBAR', () => {
@@ -76,12 +77,12 @@ describe('SPREADSHEET_TOOLBAR', () => {
     for (const c of controls) if (c.shortcut) expect(registry).toContain(c.shortcut);
   });
 
-  it('shows a Viewer Search the Menus and the dimmed Print, Zoom and Hide the Menus', () => {
+  it('shows a Viewer Search the Menus, Zoom and the dimmed Print and Hide the Menus', () => {
     const seen = visibleToolbar(
       SPREADSHEET_TOOLBAR,
       'view',
       { 'search-the-menus': { run: () => {} } },
-      NO_FIELDS,
+      ZOOM_ONLY,
     )
       .flatMap((g) => g.controls)
       .map((c) => c.label);
@@ -94,7 +95,7 @@ describe('SPREADSHEET_TOOLBAR', () => {
       SPREADSHEET_TOOLBAR,
       'participate',
       { 'search-the-menus': { run }, undo: { run }, redo: { run } },
-      NO_FIELDS,
+      ZOOM_ONLY,
     )
       .flatMap((g) => g.controls)
       .map((c) => c.label);
