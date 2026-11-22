@@ -4,8 +4,11 @@
 // property. A PDF nobody changed has no state at all.
 import * as Y from 'yjs';
 import { isBlobKey, type BlobKey } from '@livedoc/document';
-import { PDF_MAX_MARKS, PDF_MAX_PAGES } from './limits';
+import { FieldValue } from './field-value';
+import { PDF_MAX_PAGES } from './limits';
 import { Mark } from './mark';
+import { PageName } from './page-name';
+import { PdfChange, type RemovedKind } from './pdf-change';
 
 /** Every root of the layout, in the spec's order. */
 export const PDF_ROOTS = [
@@ -107,20 +110,41 @@ export const PdfLiveChanges = {
     return marks.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   },
   /** Adds a mark as one change, each property a whole value; refused whole past the limit. */
-  addMark: (doc: Y.Doc, mark: Mark, origin?: unknown): PdfLimitRefusal | null => {
-    const marks = marksOf(doc);
-    if (!marks.has(mark.id) && marks.size >= PDF_MAX_MARKS) return 'pdf_too_many_marks';
-    doc.transact(() => {
-      const entry = new Y.Map<unknown>();
-      for (const [key, value] of Object.entries(mark)) entry.set(key, value);
-      marks.set(mark.id, entry);
-    }, origin);
-    return null;
-  },
+  addMark: (doc: Y.Doc, mark: Mark, origin?: unknown): PdfLimitRefusal | null =>
+    PdfChange.apply(doc, PdfChange.addMark(mark), origin) === null ? null : 'pdf_too_many_marks',
   /** Removes a mark made in LiveDoc; a mark that is not there changes nothing. */
   removeMark: (doc: Y.Doc, id: string, origin?: unknown): void => {
-    const marks = marksOf(doc);
-    if (marks.has(id)) doc.transact(() => marks.delete(id), origin);
+    if (marksOf(doc).has(id)) PdfChange.apply(doc, PdfChange.removeMark(id), origin);
+  },
+
+  /** The field values people filled in, by field name; what does not hold a value is left out. */
+  fieldValues: (doc: Y.Doc): FieldValue[] => {
+    const values: FieldValue[] = [];
+    for (const entry of doc.getMap<Y.Map<unknown>>('fieldValues').values()) {
+      const value = FieldValue.parse(Object.fromEntries(entry.entries()));
+      if (value) values.push(value);
+    }
+    return values.sort((a, b) => (a.field < b.field ? -1 : a.field > b.field ? 1 : 0));
+  },
+  /** What of the stored file was deleted, by id. */
+  removed: (doc: Y.Doc): ReadonlyMap<string, RemovedKind> => {
+    const removed = new Map<string, RemovedKind>();
+    for (const [id, entry] of doc.getMap<Y.Map<unknown>>('removed').entries()) {
+      const kind = entry.get('kind');
+      if (kind === 'mark' || kind === 'field' || kind === 'object') removed.set(id, kind);
+    }
+    return removed;
+  },
+  /** How far each turned page stands turned, by page name; a page nobody turned is not named. */
+  pageTurns: (doc: Y.Doc): ReadonlyMap<PageName, 0 | 90 | 180 | 270> => {
+    const turns = new Map<PageName, 0 | 90 | 180 | 270>();
+    for (const [name, entry] of doc.getMap<Y.Map<unknown>>('pages').entries()) {
+      const page = PageName.parse(name);
+      const rotation = entry.get('rotation');
+      if (page && (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270))
+        turns.set(page, rotation);
+    }
+    return turns;
   },
 
   /** Every root's shared type: what one person's undo watches (live-editing-and-storage.md "Undo"). */

@@ -1,6 +1,10 @@
 # Fields
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the engine reads a page's fields as the file holds them: each
+place a field shows, with its full name, type, value, options, label and what the file says of it (read-only,
+required, hidden, multi-line, password, several choices, a value of one's own); a page drawn with its fields as the
+file drew them; a field value held in the live changes; and a bake that writes each value into its field with its appearance, as an addition. Filling on the
+surface, the fields panel, formats and everything a person sees are not built.
 
 A PDF's **fields** are the inputs it carries: text fields, tick boxes, radio groups, dropdowns, lists, buttons and
 signature fields. Filling them is Reviewing's ([Editing modes](editing-modes.md)); adding and changing them is
@@ -26,8 +30,13 @@ so a PDF's are always its fields. The research is [Fields](../../research/pdf-do
 - A field may show in several places (its **widgets**); filling one fills them all.
 - A field is named by its **full name** in the file's field tree ("applicant.address.city"); two fields with one
   full name are one field.
+- **A field is drawn on its page as the file drew it**: its value, its border, its tick and a button's face show
+  wherever the page shows, in every mode and before anyone fills it.
 - Read-only and hidden fields are as the file says: a read-only field shows its value and takes none; a hidden one
   is not shown.
+- **A password field's value is never read out of the file** `(default)`: the engine answers it empty, so it reaches
+  no screen, history, search text or log; a file that stores one keeps it untouched.
+- A field of a type LiveDoc does not know is shown as the file drew it, takes no value and is not listed.
 - A barcode field is shown as the file drew it and takes no value ([Parity matrix](parity-matrix.md#left-out)).
 
 ## Filling
@@ -133,17 +142,22 @@ A scanned or flat form has nothing to fill. Reviewing offers the **fill marks** 
   addition: a filled text field adds under a kilobyte ([Saving](saving.md#addition-or-rewrite)).
 - A value the field's font has no glyph for is drawn with a substitute and said so
   ([Editing text](editing-text.md#missing-glyphs)).
+- **A value the file's field does not take is not written**: the field is not in the stored file, is read-only, is a
+  signature field or a button, or the value is none of its options. It is counted in the bake's answer and stays in
+  the live changes.
+- A tick box is turned off by the value `Off` and on by any other; a list that takes several is given the options
+  chosen.
 - The form's "need appearances" flag is never relied on: every value LiveDoc writes has its appearance, so every
   reader shows it.
 
 ## Limits
 
-| Constant                    | Value     | Why                                                                                |
-| --------------------------- | --------- | ---------------------------------------------------------------------------------- |
-| `PDF_FIELD_VALUE_MAX_CHARS` | 100,000   | `(default)` One value, unless the field's own maximum is smaller                   |
-| `PDF_FIELD_IDLE_MS`         | 1,000     | `(default)` Typing rests this long before a value is sent; safe range 300 to 3,000 |
-| `PDF_MAX_FIELDS`            | 10,000    | `(default)` Fields read from one file; more are shown and not listed in the panel  |
-| `PDF_FIELD_DATA_MAX_BYTES`  | 8,000,000 | `(default)` An imported FDF or XFDF file; the api's body cap                       |
+| Constant                    | Value     | Why                                                                                               |
+| --------------------------- | --------- | ------------------------------------------------------------------------------------------------- |
+| `PDF_FIELD_VALUE_MAX_CHARS` | 100,000   | `(default)` One value, unless the field's own maximum is smaller                                  |
+| `PDF_FIELD_IDLE_MS`         | 1,000     | `(default)` Typing rests this long before a value is sent; safe range 300 to 3,000                |
+| `PDF_MAX_FIELDS`            | 10,000    | `(default)` Fields read from one file, and places read on one page; more are shown and not listed |
+| `PDF_FIELD_DATA_MAX_BYTES`  | 8,000,000 | `(default)` An imported FDF or XFDF file; the api's body cap                                      |
 
 ## Share roles
 

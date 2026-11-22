@@ -7,13 +7,39 @@ export const PDF_SNIFF_BYTES = 1_024;
 export const PDF_MAX_MARKS = 20_000;
 /** (default) A ceiling on a PDF document's pages; a file arriving with more opens and takes no insert. */
 export const PDF_MAX_PAGES = 100_000;
+/** (default) How long the engine may answer nothing while a call waits (an open, a draw, a bake) before whoever
+ *  started it ends it (opening.md "Limits"). Measured on a 93 MB file: 0.03 s, 0.7 s, 0.5 s. Safe range: 10,000 to
+ *  120,000. */
+export const PDF_ENGINE_TIMEOUT_MS = 30_000;
+/** (default) The most memory the engine's reader may hold in a browser before it is ended; a 100 MB file read whole
+ *  was measured at 724 MiB at most. Safe range: 2^29 to 2^31. */
+export const PDF_WORKER_MAX_BYTES = 1_073_741_824;
+/** (default) The same on a phone: a device that says it has 4 GB of memory or less, or says nothing and is touched. */
+export const PDF_WORKER_PHONE_MAX_BYTES = 268_435_456;
+/** (default) The most memory, in gigabytes, a device says it has and is still held to the phone's ceiling. */
+export const PDF_PHONE_MAX_DEVICE_GB = 4;
 /** (default) One draw of one page; a decompression bomb draws at most this. Safe range: 2^24 to 2^28. */
 export const PDF_MAX_PAGE_PIXELS = 268_435_456;
 /** (default) The whole-page picture a page is first drawn as (reading-surface.md "Limits"): sharper detail is the tiles'.
  *  Safe range: 2^21 to 2^25. */
 export const PDF_PAGE_PICTURE_MAX_PIXELS = 8_388_608;
+/** (default) One page's text read at once, twenty times a dense page; a page past it reads its first part. Safe
+ *  range: 20,000 to 2,000,000. */
+export const PDF_PAGE_TEXT_MAX_CHARS = 200_000;
 /** The most a PDF page measures on a side, in points: the standard's own 200 inches. */
 export const PDF_MAX_PAGE_POINTS = 14_400;
+/** (default) An address longer than this is shown cut and never opened (security.md "Limits"). */
+export const PDF_LINK_MAX_CHARS = 2_048;
+/** (default) Deeper than any honest outline, page tree or field tree: a walk stops there. */
+export const PDF_MAX_TREE_DEPTH = 256;
+/** (default) Bookmarks read from one file; past it the outline is cut and says so. Safe range: 1,000 to 100,000. */
+export const PDF_OUTLINE_MAX_ITEMS = 20_000;
+/** (default) Links read on one page. Safe range: 500 to 50,000. */
+export const PDF_PAGE_MAX_LINKS = 5_000;
+/** (default) A property of the file (title, author, subject, keywords, producer) is cut to it (security.md "Limits"). */
+export const PDF_PROPERTY_MAX_CHARS = 2_048;
+/** (default) A file's string shown as a name (a page label, a bookmark, an embedded file) is cut to it. */
+export const PDF_NAME_MAX_CHARS = 255;
 /** (default) A Text mark's or a note's words, and the text a text mark covered; longer belongs in a document. */
 export const PDF_MARK_TEXT_MAX_CHARS = 10_000;
 /** (default) The quadrilaterals of one text mark: a page of small type selected whole is a few hundred lines. */
@@ -33,3 +59,23 @@ export const PDF_LOG_UPDATES = 500;
 export const PDF_LOCAL_SAVE_MS = 500;
 /** The most base64 one `pdf` op carries: inside the room's 256 KB message cap with room for the envelope. */
 export const PDF_FRAME_CHARS = 200_000;
+/** (default) A coordinate read from a file is held within two pages' reach of the page's origin (security.md "Limits"). */
+export const PDF_MAX_COORDINATE = 28_800;
+/** (default) Marks read on one page; a page past it reads its first, and the rest still draw. Safe range: 500 to 50,000. */
+export const PDF_PAGE_MAX_MARKS = 5_000;
+/** (default) Fields read from one file, and places read on one page (fields.md "Limits"). */
+export const PDF_MAX_FIELDS = 10_000;
+/** (default) A field's full name (building-fields.md "Limits"). */
+export const PDF_FIELD_NAME_MAX_CHARS = 255;
+/** (default) One field value, unless the field's own maximum is smaller (fields.md "Limits"). */
+export const PDF_FIELD_VALUE_MAX_CHARS = 100_000;
+/** (default) Options of one dropdown or list (building-fields.md "Limits"). */
+export const PDF_FIELD_OPTIONS_MAX = 5_000;
+/** (default) Signatures read from one file; more are kept in the file and not listed (signing.md "Limits"). */
+export const PDF_MAX_SIGNATURES = 1_000;
+/** (default) One signature's bytes read; a signature with its certificates is tens of kilobytes. */
+export const PDF_SIGNATURE_MAX_BYTES = 1_048_576;
+/** (default) Embedded files listed and added here; a file with more keeps them all (document-tools.md "Limits"). */
+export const PDF_EMBEDDED_FILES_MAX = 500;
+/** (default) PDF layers read from one file; more are shown as the file sets them and not listed. */
+export const PDF_MAX_LAYERS = 1_000;

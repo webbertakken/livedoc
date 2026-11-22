@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./engine": "./src/engine/index.ts",
     "./engine/browser": "./src/engine/browser.ts",
+    "./pictures": "./src/engine/picture-pages.ts",
     "./testing": "./src/testing/fixtures.ts"
   },
   "scripts": {
@@ -17,12 +18,15 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
+    "validate:files": "vitest run --config vitest.validate.config.ts",
     "clean": "rm -rf node_modules .turbo coverage"
   },
   "dependencies": {
     "@embedpdf/pdfium": "^2.15.1",
     "@libpdf/core": "^0.5.3",
     "@livedoc/document": "workspace:*",
+    "asn1js": "^3.1.0",
+    "pkijs": "^3.4.3",
     "yjs": "^13.6.33"
   },
   "devDependencies": {
@@ -31,6 +35,7 @@
     "@types/node": "^26.6.4",
     "@vitest/coverage-v8": "^5.0.5",
     "oxlint": "^1.88.0",
+    "pixelmatch": "^8.0.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"
   }

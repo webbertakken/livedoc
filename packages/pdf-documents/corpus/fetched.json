@@ -1,0 +1,319 @@
+{
+  "about": "What is expected of each file of the wider corpus (scripts/fetch-pdf-corpus.sh, src/validation/corpus.validate.ts): its pages or the refusal it is met with, and where its first page stands apart from the second renderer's.",
+  "groups": {
+    "damaged": "Fuzzed files, a decompression bomb and a scan with broken streams",
+    "fields": "Text, choice and button fields, two tax forms, scripts on buttons, a reset button",
+    "marks": "Every text markup, notes, free text, ink, stamps, lines, shapes, file attachments, media, threads of comments",
+    "pdf20": "PDF 2.0: UTF-8 strings, page-level output intents, an incremental save, bytes before the header",
+    "pictures": "CMYK, JPEG 2000, CCITT, blend modes, shadings, PDF layers, the Brotli prototype",
+    "scans": "Bilevel and grey scans with no text",
+    "scripts": "Arabic, CJK, vertical writing, ligatures, Type 3 fonts",
+    "signed": "One signature, on which validators disagree",
+    "structure": "Outlines, an embedded file, an embedded file that alone is encrypted",
+    "tagged": "Structure trees",
+    "text": "A paper, a 352-page book, mixed and standard fonts",
+    "xfa": "XFA forms, one filled in",
+    "derived": "Made here from the paper with qpdf: linearised, AES-256 with an open password, AES-256 locked against changes, cut short, its cross-reference pointer spoiled, 1,008 pages"
+  },
+  "files": [
+    {
+      "file": "damaged/PDFBOX-3148-2-fuzzed.pdf",
+      "pages": 1,
+      "repaired": true
+    },
+    {
+      "file": "damaged/bomb_giant.pdf",
+      "pages": 1
+    },
+    {
+      "file": "damaged/poppler-90-0-fuzzed.pdf",
+      "pages": 16
+    },
+    {
+      "file": "damaged/scan-bad.pdf",
+      "pages": 1,
+      "repaired": true
+    },
+    {
+      "file": "fields/160F-2019.pdf",
+      "pages": 1,
+      "differs": {
+        "under": 2.5,
+        "why": "A form ruled with hairlines: the engine draws each as one whole pixel, PDF.js smooths each over two"
+      }
+    },
+    {
+      "file": "fields/annotation-button-widget.pdf",
+      "pages": 1
+    },
+    {
+      "file": "fields/annotation-choice-widget.pdf",
+      "pages": 1
+    },
+    {
+      "file": "fields/annotation-text-widget.pdf",
+      "pages": 1
+    },
+    {
+      "file": "fields/evaljs.pdf",
+      "pages": 2
+    },
+    {
+      "file": "fields/form_two_pages.pdf",
+      "pages": 2
+    },
+    {
+      "file": "fields/js-buttons.pdf",
+      "pages": 1
+    },
+    {
+      "file": "fields/prefilled_f1040.pdf",
+      "pages": 2
+    },
+    {
+      "file": "fields/resetform.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-caret-ink.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-fileattachment.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-freetext.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-highlight.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-line.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-link-text-popup.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-square-circle.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-squiggly.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-stamp.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-strikeout.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/annotation-underline.pdf",
+      "pages": 1
+    },
+    {
+      "file": "marks/comments.pdf",
+      "pages": 14
+    },
+    {
+      "file": "marks/highlights.pdf",
+      "pages": 14
+    },
+    {
+      "file": "marks/multimedia_annotations.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pdf20/PDF_2.0_UTF-8_string_and_annotation.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pdf20/PDF_2.0_via_incremental_save.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pdf20/PDF_2.0_with_offset_start.pdf",
+      "pages": 1,
+      "repaired": true
+    },
+    {
+      "file": "pdf20/PDF_2.0_with_page_level_output_intent.pdf",
+      "pages": 2
+    },
+    {
+      "file": "pdf20/Simple_PDF_2.0_file.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pdf20/pdf20-utf8-test.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pictures/Brotli-Prototype-FileA.pdf",
+      "refusal": "pdf_newer"
+    },
+    {
+      "file": "pictures/blendmode.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pictures/cmykjpeg.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pictures/perf_codecs_ccitt.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pictures/perf_codecs_jpx.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pictures/perf_shadings_axial_radial.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pictures/perf_structure_optional_content.pdf",
+      "pages": 1
+    },
+    {
+      "file": "pictures/perf_transparency_blend_modes.pdf",
+      "pages": 1
+    },
+    {
+      "file": "scans/perf_images_scan_bilevel.pdf",
+      "pages": 1
+    },
+    {
+      "file": "scans/perf_images_scan_gray.pdf",
+      "pages": 1
+    },
+    {
+      "file": "scripts/ArabicCIDTrueType.pdf",
+      "pages": 1
+    },
+    {
+      "file": "scripts/ThuluthFeatures.pdf",
+      "pages": 1
+    },
+    {
+      "file": "scripts/Type3WordSpacing.pdf",
+      "pages": 1,
+      "differs": {
+        "under": 1.1,
+        "why": "Type 3 glyphs that name no colour: the engine paints their outlines in the fill colour, as Chromium does, PDF.js in the stroke colour"
+      }
+    },
+    {
+      "file": "scripts/arial_unicode_ab_cidfont.pdf",
+      "pages": 1
+    },
+    {
+      "file": "scripts/copy_paste_ligatures.pdf",
+      "pages": 1,
+      "differs": {
+        "under": 3.5,
+        "why": "A page 142 by 14 pixels, all of it one line of text: the two smooth its edges differently, and its edges are the page"
+      }
+    },
+    {
+      "file": "scripts/vertical.pdf",
+      "pages": 3
+    },
+    {
+      "file": "signed/signed_verified.pdf",
+      "pages": 1
+    },
+    {
+      "file": "structure/attachment.pdf",
+      "pages": 1
+    },
+    {
+      "file": "structure/encrypted-attachment.pdf",
+      "pages": 1,
+      "repaired": true,
+      "undrawn": "PDF.js asks for a password: only the embedded file is encrypted, and the engine reads the pages without one"
+    },
+    {
+      "file": "structure/outlines_se.pdf",
+      "pages": 2
+    },
+    {
+      "file": "tagged/structure_simple.pdf",
+      "pages": 1
+    },
+    {
+      "file": "tagged/tracemonkey_a11y.pdf",
+      "pages": 1
+    },
+    {
+      "file": "text/TAMReview.pdf",
+      "pages": 23
+    },
+    {
+      "file": "text/alphatrans.pdf",
+      "pages": 1
+    },
+    {
+      "file": "text/freeculture.pdf",
+      "pages": 352
+    },
+    {
+      "file": "text/mixedfonts.pdf",
+      "pages": 1
+    },
+    {
+      "file": "text/pdfjs_wikipedia.pdf",
+      "pages": 1
+    },
+    {
+      "file": "text/standard_fonts.pdf",
+      "pages": 14
+    },
+    {
+      "file": "text/tracemonkey.pdf",
+      "pages": 14
+    },
+    {
+      "file": "xfa/xfa_filled_imm1344e.pdf",
+      "pages": 1
+    },
+    {
+      "file": "xfa/xfa_issue14315.pdf",
+      "pages": 1
+    },
+    {
+      "file": "derived/linearised.pdf",
+      "pages": 14
+    },
+    {
+      "file": "derived/aes256-open.pdf",
+      "pages": 14,
+      "password": "open"
+    },
+    {
+      "file": "derived/aes256-locked.pdf",
+      "pages": 14
+    },
+    {
+      "file": "derived/truncated.pdf",
+      "refusal": "pdf_damaged"
+    },
+    {
+      "file": "derived/spoiled-pointer.pdf",
+      "pages": 14,
+      "repaired": true
+    },
+    {
+      "file": "derived/pages-1008.pdf",
+      "pages": 1008
+    }
+  ]
+}

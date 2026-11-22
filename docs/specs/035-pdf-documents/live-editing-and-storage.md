@@ -1,6 +1,7 @@
 # Live editing and storage
 
-**Status: specified; a first slice is built.** Built: the layout's `stored` and `marks` roots, the room storing a PDF's
+**Status: specified; a first slice is built.** Built: the layout's `stored` and `marks` roots, a change and what takes
+it back for marks, field values, a page's turn and what was deleted of the stored file, the room storing a PDF's
 live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the digest's pages and marks, the stored
 file in the blob store, and the surface bound to the room: sending, reconnecting, the local copy of unconfirmed
 changes, the save status, a refused change undone. Presence, undo, This Browser, reading offline, replacing the stored
@@ -51,6 +52,27 @@ writes one shape `(default)`:
 - **Empty is the common case.** A PDF nobody changed has no state at all; nothing is written by reading
   ([Saving](saving.md#an-unchanged-file)).
 - Words never ride a room op as plain text: every change is a Yjs update, as a text document's is.
+
+### A change and what takes it back
+
+- **Every change is a change to one entry** of a root that is a map by id: the entry is **put** (it becomes exactly
+  what is given, new or not), some of its properties are **set** or unset, or it is **removed**. A mark made, a
+  mark's look changed, a field filled, a page turned and a mark of the stored file deleted are each one such change.
+- **Each change has the change that takes it back**, read from the state before it is made: a put is taken back by
+  removing the entry or putting what it held; a set by setting what the properties held and unsetting those that were
+  absent; a removal by putting the entry back. A change that changes nothing has none.
+- **A changeset is several changes as one step**: all are made in one transaction, or none where one is refused, and
+  what takes it back is the changes that take each back, last first. An agent's changeset is reverted so
+  ([Agents](agents.md#changesets)); a person's Undo is their own timeline ([Undo](#undo)).
+- A change is refused whole, writing nothing, by name: `pdf_change_target_missing` (properties set on an entry that
+  is not there) and the limits' own names (`pdf_too_many_marks`).
+- **A field value** is held by the field's full name: its value (text, or the options chosen of a list that takes
+  several), the display name of who set it and when. It is checked and bounded as a mark is, since it arrives from
+  other people's browsers.
+- **A mark, field or object of the stored file that was deleted** is held in `removed` by its id, with what it was
+  (`mark`, `field`, `object`); taking the deletion back removes that entry, and the stored file's own shows again.
+- **A page's own changes** are held by its page name; a turn is `rotation`: how far the page is turned, in degrees
+  (0, 90, 180 or 270), in place of the file's own.
 
 ### Concurrent changes
 

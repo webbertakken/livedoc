@@ -13,6 +13,11 @@ vi.mock('./page-motion-canvas', () => ({
   motionFrameHref: vi.fn(() => FRAME),
 }));
 
+// The PDF's own writing is export-tab-pdf's to prove: here it is stood in for.
+vi.mock('@livedoc/pdf-documents/pictures', () => ({
+  writePicturePages: vi.fn(async () => ({ ok: true, bytes: new Uint8Array() })),
+}));
+
 const { paintMotionFrame, motionFrameHref } = await import('./page-motion-canvas');
 const { renderTabToCanvas, renderTabToSvg } = await import('./export-tab');
 const { exportPagesAsPdf } = await import('./export-tab-pdf');
@@ -38,15 +43,9 @@ beforeEach(() => {
     }
   }
   vi.stubGlobal('Image', FakeImage);
-  // The PDF's deflate: jsdom's Blob has no stream, so an empty one stands in.
-  Object.defineProperty(Blob.prototype, 'stream', {
-    configurable: true,
-    value: () => ({ pipeThrough: () => new ReadableStream({ start: (c) => c.close() }) }),
-  });
 });
 
 afterEach(() => {
-  delete (Blob.prototype as { stream?: unknown }).stream;
   vi.clearAllMocks();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();

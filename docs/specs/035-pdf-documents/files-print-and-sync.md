@@ -1,7 +1,9 @@
 # Files, print and sync
 
 **Status: specified; a first slice is built.** Built: a PDF dropped on the Explorer (one or several) and File >
-Download > PDF. The bytes are sent before the document opens, in one request. Every other way in and out is not built.
+Download > PDF. The bytes are sent before the document opens, in one request. A canvas tab's and a Pages tab's
+Download as PDF are written by the one writer, with a guard that finds a second. Every other way in and out is not
+built.
 
 How a PDF arrives as a [PDF document](pdf-document.md), how it leaves by Download, print and email, how a repository
 link and the Drive mirror keep it as a file, and how the other kinds meet it. Every file that leaves is a bake
@@ -98,7 +100,13 @@ drawn.
   LiveDoc as a PDF document": the written PDF becomes a PDF document beside its source, linked back to it in
   Properties. It is a copy: later changes to the source do not reach it.
 - **One writer.** Every kind's Download as PDF and every bake are written by the repository's one PDF writer; a
-  second PDF writer anywhere in the codebase is a defect.
+  second PDF writer anywhere in the codebase is a defect, and a test finds one by the words no writer can do
+  without.
+- **A canvas tab's and a Pages tab's PDF** is a page a picture: the pixels packed without loss, never re-encoded,
+  each page the size in points its tab or sheet shows at. The writer loads when a PDF is asked for, never with the
+  editor, and refuses by name what is no PDF: no page (`no_pages`), a picture that is not its size
+  (`picture_size`), a page past the most a PDF page measures (`page_size`). The file is titled as its tab is named,
+  says LiveDoc made it and when, and names no author `(default)`.
 - **Opened as a text document**: File > Open as a text document runs the text document's own import of a PDF (text
   and pictures, reading order guessed) and makes a **copy** as a text document
   ([Files and print](../034-text-documents/files-and-print.md#opening)); the PDF document is unchanged.
