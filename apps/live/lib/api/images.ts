@@ -10,6 +10,7 @@ import {
   apiFetch,
   getWorkbenchConfinement,
 } from './core';
+import { reportServerError } from './error-report';
 import { blobToDataUrl } from '@/lib/blob-data-url';
 import { cachedDisplayCopy, displayEdge, releaseShownUrl, shownUrl } from '@/lib/image-display';
 
@@ -28,6 +29,7 @@ async function _apiListImages(ownerId: string): Promise<ImageSummary[] | null> {
   const res = await apiFetch(`${API_BASE}/images`, {
     headers: await apiHeaders(ownerId),
   });
+  await reportServerError(res, 'list images');
   if (res.status === 503) return null;
   return expectOk<{ images: ImageSummary[] }>(res, 'list images').then((b) => b.images);
 }
@@ -99,6 +101,7 @@ async function _apiImageUsage(
   const res = await apiFetch(`${API_BASE}/images/usage`, {
     headers: await apiHeaders(ownerId),
   });
+  await reportServerError(res, 'image usage');
   if (res.status === 503) return {};
   return expectOk<{ usage: Record<string, { id: string; name: string }[]> }>(
     res,
@@ -167,5 +170,6 @@ async function fetchImage(
   }`;
   const headers = new Headers(await apiHeaders(ownerId, { share: opts.shareCode ?? null }));
   const res = await apiFetch(url, { headers });
+  await reportServerError(res, 'read image');
   return res.ok ? res : null;
 }

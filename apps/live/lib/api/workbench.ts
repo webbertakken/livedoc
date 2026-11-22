@@ -9,6 +9,7 @@ import type {
   WorkbenchSessionResponse,
 } from '@livedoc/api-schema';
 import { API_BASE, apiDelete, apiFetch, apiHeaders, expectOk, expectOkOrNull } from './core';
+import { reportServerError } from './error-report';
 
 // How a redemption ended: a session, a refusal the page shows as such (the ticket was used, expired
 // or unknown, or its document is gone), or a failure it shows as a load error.
@@ -40,6 +41,7 @@ export async function apiRedeemWorkbenchTicket(ticket: string): Promise<Workbenc
   } catch {
     return { kind: 'failed', status: 0 };
   }
+  await reportServerError(res, 'redeem workbench ticket');
   if (res.status === 201) {
     return { kind: 'opened', session: (await res.json()) as WorkbenchSessionResponse };
   }
@@ -58,6 +60,7 @@ export async function apiEndWorkbenchSession(secret: string): Promise<void> {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${secret}` },
     });
+    await reportServerError(res, 'end workbench session');
     if (!res.ok) console.warn('[workbench] session-end-refused', { status: res.status });
   } catch {
     // apiFetch reported the network failure; the session expires on its own.
@@ -95,6 +98,7 @@ export async function apiAnswerPairingRequest(
     method: 'POST',
     headers: await apiHeaders(ownerId),
   });
+  await reportServerError(res, 'answer pairing request');
   if (res.ok) return answer === 'approve' ? 'approved' : 'declined';
   const refusal = ANSWER_REFUSALS[res.status];
   if (refusal) return refusal;

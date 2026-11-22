@@ -11,6 +11,7 @@ import {
   type ParticipantResponse,
   apiFetch,
 } from './core';
+import { reportServerError } from './error-report';
 import { participantRead } from './open-path-requests';
 
 // Deduped by id: the editor's hydration effect AND /live/new's
@@ -123,6 +124,7 @@ export async function apiDeleteAccount(): Promise<DeleteAccountOutcome> {
       method: 'DELETE',
       headers: await apiHeaders(''),
     });
+    await reportServerError(res, 'delete account');
     if (res.ok) return 'deleted';
     if (res.status === 403) {
       const body = (await res.json().catch(() => null)) as { code?: unknown } | null;
@@ -166,6 +168,7 @@ export async function apiMigrateGuestData(
     // upgrades legacy ids to signed ones before sign-up.
     body: JSON.stringify({ guestOwnerId, guestSignature }),
   });
+  await reportServerError(res, 'migrate guest data');
   if (!res.ok) return null;
   const body = (await res.json()) as {
     migrated: { documents: number; folders: number; shared: number; images: number };
@@ -189,6 +192,7 @@ export async function apiMintGuestId(): Promise<{
       headers: await apiHeaders('', { body: true }),
       body: '{}',
     });
+    await reportServerError(res, 'mint guest id');
     if (!res.ok) return null;
     const minted = (await res.json()) as { ownerId: string; ownerSig: string | null };
     mintedHere.add(minted.ownerId);
@@ -240,5 +244,6 @@ export async function apiSetProfilePicture(id: string, pictureUrl: string | null
     headers: await apiHeaders(id, { body: true }),
     body: JSON.stringify({ pictureUrl }),
   });
+  await reportServerError(res, 'set profile picture');
   return res.status;
 }

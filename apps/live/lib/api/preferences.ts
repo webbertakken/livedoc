@@ -10,12 +10,14 @@
 // authoritative type, and we marshal it as a plain Record so adding
 // a flag never needs an api-schema change.
 import { API_BASE, apiHeaders, apiFetch } from './core';
+import { reportServerError } from './error-report';
 
 export async function apiGetPreferences(ownerId: string): Promise<Record<string, unknown> | null> {
   try {
     const res = await apiFetch(`${API_BASE}/preferences`, {
       headers: await apiHeaders(ownerId),
     });
+    await reportServerError(res, 'read preferences');
     if (!res.ok) return null;
     const body = (await res.json()) as { prefs?: unknown };
     if (!body.prefs || typeof body.prefs !== 'object' || Array.isArray(body.prefs)) return null;
@@ -43,6 +45,7 @@ export async function apiPutPreferences(
     });
     // No toast for a settings-sync failure (more annoying than useful): the toggle has already
     // taken effect locally, and the caller logs and retries on the next load.
+    await reportServerError(res, 'save preferences');
     if (!res.ok) console.warn(`[preferences] save-refused status=${res.status}`);
     return res.ok;
   } catch {

@@ -48,6 +48,7 @@ import {
   apiUpdateFolder,
 } from '../api-client';
 import { apiFetch, apiHeaders, expectOk } from '../api/core';
+import { reportServerError } from '../api/error-report';
 import type { DocumentListResponse } from '@livedoc/api-schema';
 import { fetchAllSheets, sheetAsCreate } from '../api/sheets';
 import type { SheetJson, WorkbookRecord } from '@livedoc/sheets';
@@ -201,6 +202,7 @@ export function createApiLivedocPort(ownerId: string): LivedocPort {
       const res = await apiFetch(`${API_BASE}/documents/${encodeURIComponent(id)}/thumbnail`, {
         headers: await apiHeaders(ownerId),
       });
+      await reportServerError(res, 'read thumbnail');
       return res.ok ? res.text() : null;
     },
     async canOpenDocument(id) {

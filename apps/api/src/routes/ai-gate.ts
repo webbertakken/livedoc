@@ -1,3 +1,4 @@
+import { FEATURE_OFF_ERROR } from '@livedoc/api-schema';
 import {
   forbidden,
   json,
@@ -27,7 +28,7 @@ export async function aiGate(ctx: RouteContext, feature: AiFeature): Promise<Res
   // (ai-provider.ts logs which). Same answer either way: this deployment does
   // not do AI.
   if (!resolveAiProvider(env, feature))
-    return json({ error: 'ai_not_configured' }, { status: 503 });
+    return json({ error: FEATURE_OFF_ERROR.ai }, { status: 503 });
 
   // Origin allow-list (docs/specs/007-editor/ai-assistance.md). Optional: unset accepts any Origin, matching
   // the historical OSS self-host story. When set, the request's Origin must

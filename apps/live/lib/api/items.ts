@@ -130,12 +130,12 @@ async function postInChunks(
       headers: await apiHeaders(scope.ownerId, { share: scope.shareCode, body: true }),
       body: JSON.stringify(undoBody({ items }, undo)),
     });
-    const partial = res.ok ? null : await landedOf(res);
     try {
       const r = await expectOk<ItemsResponse>(res, action);
       answer.upserts.push(...r.items);
       answer.rev = r.rev;
     } catch (err) {
+      const partial = res.ok ? null : await landedOf(res);
       if (partial) {
         answer.upserts.push(...partial.items);
         answer.rev = partial.rev;

@@ -43,6 +43,7 @@ import {
   apiFetch,
   saveTimeoutSignal,
 } from './core';
+import { reportServerError } from './error-report';
 import { expectReaderFromOpen, participantOf } from './self';
 import { clientTabOf } from './tabs';
 import { documentRead } from './open-path-requests';
@@ -394,6 +395,7 @@ export async function apiFetchDocumentThumbnailSvg(
   const url = `${API_BASE}/documents/${encodeURIComponent(documentId)}/thumbnail${qs ? `?${qs}` : ''}`;
   const headers = new Headers(await apiHeaders(ownerId, { share: opts.shareCode ?? null }));
   const res = await apiFetch(url, { headers });
+  await reportServerError(res, 'read thumbnail');
   if (!res.ok) return null;
   return res.text();
 }
@@ -449,6 +451,7 @@ export async function apiCreateRoomTicket(
         method: 'POST',
         headers: await apiHeaders(ownerId, { share: shareCode }),
       });
+      await reportServerError(res, 'create room ticket');
       if (res.status >= 400 && res.status < 500 && res.status !== 429) return null;
       if (!res.ok) continue;
       const { ticket, adderKey } = (await res.json()) as Partial<RoomTicketResponse>;

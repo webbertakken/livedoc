@@ -13,6 +13,7 @@ import {
   DOCUMENT_OPEN_HEADER,
   PDF_STORED_FILE_HEADER,
   DOCUMENT_TRASHED_ERROR,
+  FEATURE_OFF_ERROR,
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
 } from '@livedoc/api-schema';
 
@@ -154,7 +155,7 @@ export function aiError(): Response {
 }
 
 export function imagesUnavailable(): Response {
-  return json({ error: 'images_unavailable' }, { status: 503 });
+  return json({ error: FEATURE_OFF_ERROR.images }, { status: 503 });
 }
 
 export function rateLimited(): Response {

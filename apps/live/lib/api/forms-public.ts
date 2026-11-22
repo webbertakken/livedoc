@@ -7,6 +7,7 @@ import type {
   PublicFormResponse,
 } from '@livedoc/api-schema';
 import { API_BASE } from './base';
+import { reportServerError } from './error-report';
 
 const formUrl = (code: string, door = '') =>
   `${API_BASE}/forms/${encodeURIComponent(code)}${door ? `/${door}` : ''}`;
@@ -20,6 +21,7 @@ export async function loadPublicForm(
 ): Promise<FormLoad> {
   try {
     const res = await fetcher(formUrl(code), { cache: 'no-store' });
+    await reportServerError(res, 'load public form');
     if (res.status === 404) return { kind: 'not_found' };
     if (!res.ok) return { kind: 'error' };
     return { kind: 'ok', data: (await res.json()) as PublicFormResponse };
@@ -44,6 +46,7 @@ export async function sendFormResponse(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    await reportServerError(res, 'send form response');
     if (res.status === 201)
       return { kind: 'sent', number: ((await res.json()) as FormResponseAccepted).number };
     if (res.status === 429 && !(await peekError(res)))
@@ -77,6 +80,7 @@ export async function reportForm(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(report),
     });
+    await reportServerError(res, 'report form');
     return res.ok;
   } catch {
     return false;

@@ -3,6 +3,7 @@
 // document model: every route asks this, and only the editor asks those.
 import type { CapabilitiesResponse } from '@livedoc/api-schema';
 import { API_BASE, apiFetch } from './core';
+import { reportServerError } from './error-report';
 
 // Fetch server capabilities. Returns everything fail-closed (false) on any
 // network error so callers degrade gracefully.
@@ -29,6 +30,7 @@ async function fetchCapabilities(): Promise<{ caps: CapabilitiesResponse; ok: bo
   const closed = { aiEnabled: false, emailEnabled: false };
   try {
     const res = await apiFetch(`${API_BASE}/capabilities`);
+    await reportServerError(res, 'read capabilities');
     if (!res.ok) return { caps: closed, ok: false };
     return { caps: (await res.json()) as CapabilitiesResponse, ok: true };
   } catch {

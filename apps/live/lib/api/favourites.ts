@@ -11,6 +11,7 @@
 // document list already applies.
 
 import { API_BASE, apiHeaders, apiFetch } from './core';
+import { reportServerError } from './error-report';
 import {
   isOfflineId,
   offlineListFavouriteIds,
@@ -39,6 +40,7 @@ export async function apiListFavourites(ownerId: string): Promise<string[]> {
 // rather than guess: a failed read taken as "not starred" would drop the star with the server row.
 export async function fetchCloudFavouriteIds(ownerId: string): Promise<string[]> {
   const res = await apiFetch(`${API_BASE}/favourites`, { headers: await apiHeaders(ownerId) });
+  await reportServerError(res, 'list favourites');
   if (!res.ok) throw new Error(`favourites failed: ${res.status}`);
   const body = (await res.json()) as { ids?: unknown };
   if (!Array.isArray(body.ids)) throw new Error('favourites failed: malformed');

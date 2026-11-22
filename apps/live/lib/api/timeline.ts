@@ -20,6 +20,7 @@
 import type { TimelineEvent, TimelineReadResult, TimelineScopeRef } from '@livedoc/api-schema';
 import { TIMELINE_PAGE_SIZE, formatScope } from '@livedoc/api-schema';
 import { API_BASE, apiDelete, apiHeaders, apiFetch, expectOkVoid } from './core';
+import { reportServerError } from './error-report';
 
 export type TimelinePage = {
   events: TimelineEvent[];
@@ -56,6 +57,7 @@ export async function apiListTimeline(
     const res = await apiFetch(`${API_BASE}/timeline?${params.toString()}`, {
       headers: await apiHeaders(ownerId),
     });
+    await reportServerError(res, 'list timeline');
     if (!res.ok) return null;
     const body = (await res.json()) as Partial<TimelineReadResult>;
     return {
@@ -81,6 +83,7 @@ export async function apiTimelineUnread(ownerId: string): Promise<number> {
     const res = await apiFetch(`${API_BASE}/timeline/unread`, {
       headers: await apiHeaders(ownerId),
     });
+    await reportServerError(res, 'timeline unread');
     if (!res.ok) return 0;
     const body = (await res.json()) as { count?: unknown };
     return typeof body.count === 'number' ? body.count : 0;

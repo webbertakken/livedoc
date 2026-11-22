@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { MAX_IMAGE_MB } from '@livedoc/api-schema';
+import { FEATURE_OFF_ERROR, MAX_IMAGE_MB } from '@livedoc/api-schema';
 import { MAX_BODY_BYTES, MAX_IMAGE_BYTES, bodyExceedsCap, declaredBodyBytes } from './limits';
 
 // The image cap is one number written in four places a reader will believe:
@@ -57,17 +57,22 @@ describe('docs/specs/007-editor/ai-assistance.md lists the AI route error tokens
     // responses.ts: a no-arg helper (`aiError()`) stands for the fixed token
     // its body returns, and `forbidden('x')` / `conflict('x')` carry theirs as
     // the argument. Reading only the inline literals would stop checking a
-    // token the moment its route switched to the helper.
+    // token the moment its route switched to the helper. A feature-off token
+    // (`FEATURE_OFF_ERROR.ai`) is read through the shared list it comes from.
+    const token = (literal: string | undefined, featureOff: string | undefined) =>
+      literal ?? FEATURE_OFF_ERROR[featureOff as keyof typeof FEATURE_OFF_ERROR];
     const responses = readFileSync(`${ROOT}/apps/api/src/responses.ts`, 'utf8');
     const helperTokens = new Map(
       [
         ...responses.matchAll(
-          /export function (\w+)\(\): Response \{\s*return json\(\{ error: '([a-z_]+)'/g,
+          /export function (\w+)\(\): Response \{\s*return json\(\{ error: (?:'([a-z_]+)'|FEATURE_OFF_ERROR\.(\w+))/g,
         ),
-      ].map((m) => [m[1]!, m[2]!]),
+      ].map((m) => [m[1]!, token(m[2], m[3])]),
     );
     const emitted = [
-      ...[...route.matchAll(/error: '([a-z_]+)'/g)].map((m) => m[1]!),
+      ...[...route.matchAll(/error: (?:'([a-z_]+)'|FEATURE_OFF_ERROR\.(\w+))/g)].map((m) =>
+        token(m[1], m[2]),
+      ),
       ...[...route.matchAll(/\b(?:forbidden|conflict)\('([a-z_]+)'\)/g)].map((m) => m[1]!),
       ...[...route.matchAll(/\b(\w+)\(\)/g)].flatMap((m) => helperTokens.get(m[1]!) ?? []),
     ];
