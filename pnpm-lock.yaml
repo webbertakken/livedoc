@@ -1567,8 +1567,8 @@ importers:
         specifier: workspace:*
         version: link:../document
       asn1js:
-        specifier: ^3.1.0
-        version: 3.1.0
+        specifier: ^4.0.0
+        version: 4.1.0
       pkijs:
         specifier: ^3.4.3
         version: 3.4.3
@@ -2949,6 +2949,10 @@ packages:
     resolution: {integrity: sha512-bKWQI1g9jn8bWUZsvhbOLfgva576Fbp1KwoTNSUCMdT9tlTAvQS2JkifX1UrhPPdyN4GHvM20HhvIMqqU1yotQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
+  '@peculiar/utils@4.1.1':
+    resolution: {integrity: sha512-Iw+pcp/fKEmKFhM3GCBXWBnfI/KvgZiAnquogvkQf+ExvrVSaj6H0Exa3nU0LgyNRpgnOFyFFpm4T2jAcvbJ0Q==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+
   '@playwright/test@1.65.1':
     resolution: {integrity: sha512-y+NCIRm2LvY4slUVWvGh1nujJ8RF/hEisIsq2mtUPgdQC4L701bq5hZGMhrpeXjACvwvO9tj5dJqhvM6TP9lbw==}
     engines: {node: '>=20'}
@@ -3580,6 +3584,10 @@ packages:
   asn1js@3.1.0:
     resolution: {integrity: sha512-HWYi1THkOqguCiO+vwj09ZkQFD2kKEsejYHAYCtX0D80WVdoDnvRc9IukXX/jeb0T9NRWJnRtqwdbHltnFjwXA==}
     engines: {node: '>=12.0.0'}
+
+  asn1js@4.1.0:
+    resolution: {integrity: sha512-kcL7adqQpfp+n+18Hh43X5bmN97JSULs26OpJSycfQA6pWXxxPUgMZc+SqfmB3im32zno+u2qxCd7fTJxVai+A==}
+    engines: {node: ^20.19.0 || >=22.12.0}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -5959,6 +5967,8 @@ snapshots:
 
   '@oxlint/plugins@1.93.0': {}
 
+  '@peculiar/utils@4.1.1': {}
+
   '@playwright/test@1.65.1':
     dependencies:
       playwright: 1.65.1
@@ -6455,6 +6465,10 @@ snapshots:
       pvtsutils: 1.3.6
       pvutils: 1.2.0
       tslib: 2.9.1
+
+  asn1js@4.1.0:
+    dependencies:
+      '@peculiar/utils': 4.1.1
 
   assertion-error@2.0.1: {}
 
