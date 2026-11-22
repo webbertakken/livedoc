@@ -704,6 +704,7 @@ export * from './drag-preview';
 export * from './article-caret';
 export * from './text-document-caret';
 export * from './pdf-document';
+export * from './pdf-presence';
 export * from './avatar-say';
 // Within reach: N most used plus N recent (docs/specs/004-interface-design/within-reach.md).
 export * from './within-reach';

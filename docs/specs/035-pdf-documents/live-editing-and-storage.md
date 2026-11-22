@@ -6,9 +6,12 @@ live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the diges
 file in the blob store, and the surface bound to the room: sending, reconnecting, the local copy of unconfirmed
 changes, the save status, a refused change dropped, a Participant's changes judged by what they touch, the stored file
 replaced in the room for the budget, with its previous versions held, the rows of "Concurrent changes" whose roots
-are built (marks, field values, a page's turn, a replacement), a change carried across a replacement, and one undo
-timeline a person. Presence, This Browser, reading offline, branches, copies, versions, what the servers make, the
-selection an undo puts back and the line a dimmed Undo says are not built.
+are built (marks, field values, a page's turn, a replacement), a change carried across a replacement, one undo
+timeline a person, and of presence the page a person is on: sent, said again to whoever joins, and reached by a press
+on their avatar in the title row. This Browser, reading offline, branches, copies, versions, what the servers make, the
+selection an undo puts back and the line a dimmed Undo says are not built; nor, of presence, a person's colour on a
+thumbnail, anything held (a text selection, a mark, an object, a text box typed in) and the mode in an avatar's
+tooltip, each drawn with the area that shows it.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The
@@ -144,14 +147,26 @@ writes one shape `(default)`:
 
 ## Presence
 
-- **On the wire**: `pdf-presence` with the tab, the page name in view, and at most one of: a text selection (page
-  name, first and last character), a selected mark or object (its name), a text box being typed in. Never stored or
-  replayed. Refused when a name is malformed or the op passes `PDF_PRESENCE_MAX_CHARS`.
+- **On the wire**: `pdf-presence` with the tab, the page name in view, the person's
+  [editing mode](editing-modes.md#what-the-others-see), and at most one of: a text selection (page name, first and
+  last character), a selected mark or object (its name), a text box being typed in (its name). A person who leaves
+  the tab says the tab with no page. Never stored or replayed.
+- **Refused** by whoever receives it, drawing nothing, when a name is malformed or the op passes
+  `PDF_PRESENCE_MAX_CHARS` as it was sent, logged `[pdf] presence-refused`. A name on the wire is 1 to
+  `PDF_PRESENCE_NAME_MAX_CHARS` letters, digits, `:`, `_` and `-` `(default)`; one the receiver's file does not hold
+  places nobody.
+- **The page in view** is the page under the middle of the view; between two pages, the one last under it
+  `(default)`.
 - **Drawn** as: the person's colour on their page's thumbnail; their text selection tinted in their colour with their
   name for `PDF_PRESENCE_FRESH_MS` after it moves and on hover; the mark or object they hold outlined in their colour;
   the title row's avatars, a press on one scrolling to that person's page.
-- **Sent** while the surface has focus, at the cursor's rate, the last place always following. A Viewer's page is
-  sent; a Viewer holds nothing. None go out while a hide-cursors vote is open.
+- **Sent** at the cursor's rate, the last place always following: the page in view while the tab is the one the
+  person is on, what is held while the surface has focus `(default)`. The other pane of a split says nothing: a person
+  is on one tab. None go out while a hide-cursors vote is open, and a place already shown is taken back.
+- **Whoever joins hears where everyone is.** The room keeps no presence, so each person says their place again when
+  someone joins, and when their own connection returns `(default)`.
+- **Every role is present**: an Editor's, a Participant's and a Viewer's page are each sent, and each may press an
+  avatar to go to that person's page. A Viewer holds nothing.
 
 ## Undo
 
@@ -348,18 +363,19 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 
 ## Limits
 
-| Constant                     | Value     | Why                                                                                    |
-| ---------------------------- | --------- | -------------------------------------------------------------------------------------- |
-| `PDF_LIVE_CHANGES_MAX_BYTES` | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))           |
-| `PDF_REPLACE_AT_BYTES`       | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself         |
-| `PDF_REPLACE_IDLE_MS`        | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s              |
-| `PDF_UPDATE_MAX_BYTES`       | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                |
-| `PDF_INLINE_MAX_BYTES`       | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                 |
-| `PDF_SEARCH_TEXT_MAX_CHARS`  | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only |
-| `PDF_PRESENCE_MAX_CHARS`     | 512       | `(default)` Three names and two numbers                                                |
-| `PDF_PRESENCE_FRESH_MS`      | 3,000     | `(default)` A text document's caret label                                              |
-| `PDF_UNDO_GROUP_MS`          | 500       | A text document's typing group                                                         |
-| `PDF_LOCAL_SAVE_MS`          | 500       | `(default)` A change the room has not confirmed by then is kept in this browser        |
+| Constant                      | Value     | Why                                                                                    |
+| ----------------------------- | --------- | -------------------------------------------------------------------------------------- |
+| `PDF_LIVE_CHANGES_MAX_BYTES`  | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))           |
+| `PDF_REPLACE_AT_BYTES`        | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself         |
+| `PDF_REPLACE_IDLE_MS`         | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s              |
+| `PDF_UPDATE_MAX_BYTES`        | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                |
+| `PDF_INLINE_MAX_BYTES`        | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                 |
+| `PDF_SEARCH_TEXT_MAX_CHARS`   | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only |
+| `PDF_PRESENCE_MAX_CHARS`      | 512       | `(default)` Three names and two numbers                                                |
+| `PDF_PRESENCE_NAME_MAX_CHARS` | 80        | `(default)` An inserted page's name is 66 at most, a mark's id 36                      |
+| `PDF_PRESENCE_FRESH_MS`       | 3,000     | `(default)` A text document's caret label                                              |
+| `PDF_UNDO_GROUP_MS`           | 500       | A text document's typing group                                                         |
+| `PDF_LOCAL_SAVE_MS`           | 500       | `(default)` A change the room has not confirmed by then is kept in this browser        |
 
 A change past a limit is refused whole and named: `pdf_too_many_marks`, `pdf_too_many_pages`, `update_too_large`,
 `live_changes_too_large` (when a replacement cannot be made, with "This PDF has more unsaved changes than fit. Ask
@@ -383,8 +399,9 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
 
 ## Telemetry and observability
 
-- `Pdf · Undone` and `Pdf · Redone` when a person takes a step back or makes it again; nothing else of its own:
-  each area's spec fires for what a person did.
+- `Pdf · Undone` and `Pdf · Redone` when a person takes a step back or makes it again, and
+  `UI · Used · PdfDocumentFollow` when a press on a person goes to their page; nothing else of its own: each area's
+  spec fires for what a person did.
 - Fingerprints with the document and tab ids, never content: `[pdf] state-read bytes=<n>`,
   `[pdf] update-stored bytes=<n> roots=<names>`, `[pdf] update-refused name=<name>`,
   `[pdf] level-refused level=<level> asks=<level>`, `[pdf] caught-up`, `[pdf] compacted`,
@@ -392,4 +409,5 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
   `[pdf] replacement-refused name=<name>`, `[pdf] save-kept-stored-file`, `[pdf] digest pages=<n> marks=<n>`,
   `[pdf] server-made what=<thumbnail|text|preview|bake> ms=<n>`, `[pdf] server-declined what=<what> reason=<reason>`,
   `[pdf] browser-upload what=<thumbnail|text>`, `[pdf] local-store refused=<reason>`,
-  `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`.
+  `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`,
+  `[pdf] presence-refused`.
