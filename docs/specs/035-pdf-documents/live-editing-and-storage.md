@@ -172,6 +172,9 @@ Explorer and search through the room's outbox ([Document storage](../006-documen
   protected, and whether any page is a scanned page without recognised text.
 - **Content summary**: a PDF document is never "empty": it has a stored file, so the
   [empty document clean-up](../013-workspace/empty-document-cleanup.md) never takes it.
+- **Tab stats**: a PDF tab's size is its stored file's bytes with its row's and its live changes' `(default)`, so
+  the Explorer's Details view says what the file weighs
+  ([Explorer details view](../013-workspace/explorer-details-view.md)).
 - **Search text**: the file's text by page, extracted once per stored file and again only for pages the live changes
   touched, with the words of Text marks, comments and recognised text; capped at `PDF_SEARCH_TEXT_MAX_CHARS`, the
   first pages first. A protected file has none `(default)`.
