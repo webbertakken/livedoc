@@ -1,5 +1,6 @@
-import type { Browser, BrowserContext, Page } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
+import { copiesKept, cuttableContext } from './live-tab-offline';
 
 // A text document across a lost connection (docs/specs/034-text-documents/live-editing-and-storage.md "Reconnecting",
 // "The local copy"): what one person types while their room is down reaches everyone once it is back, and what they
@@ -8,58 +9,8 @@ import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures'
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const READY = '[data-text-document-surface="ready"]';
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
-
-/** A context that can go offline: its network gone, and every socket to the room closed, also as one opens. */
-async function cuttableContext(browser: Browser, baseURL: string) {
-  const ctx = await browser.newContext({
-    baseURL,
-    colorScheme: 'dark',
-    viewport: { width: 1280, height: 860 },
-  });
-  const link = { down: false, cut: async () => {}, restore: async () => {} };
-  const sockets = new Set<{ close: () => Promise<void> }>();
-  await ctx.routeWebSocket(/\/documents\/[^/]+\/ws/, (ws) => {
-    if (link.down) {
-      void ws.close();
-      return;
-    }
-    ws.connectToServer();
-    sockets.add(ws);
-    ws.onClose(() => sockets.delete(ws));
-  });
-  link.cut = async () => {
-    link.down = true;
-    await ctx.setOffline(true);
-    for (const ws of sockets) await ws.close();
-  };
-  link.restore = async () => {
-    link.down = false;
-    await ctx.setOffline(false);
-  };
-  return { ctx, link };
-}
-
-// How many local copies this browser keeps (live-editing-and-storage.md "The local copy").
-function copiesKept(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('livedoc-text-documents');
-    request.onsuccess = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains('copies')) {
-        db.close();
-        resolve(0);
-        return;
-      }
-      const count = db.transaction('copies').objectStore('copies').count();
-      count.onsuccess = () => {
-        db.close();
-        resolve(count.result);
-      };
-      count.onerror = () => reject(count.error ?? new Error('count failed'));
-    };
-    request.onerror = () => reject(request.error ?? new Error('open failed'));
-  });
-}
+// The database a text document's local copies are kept in.
+const COPIES = 'livedoc-text-documents';
 
 async function joinShared(ctx: BrowserContext, code: string): Promise<Page> {
   const page = await ctx.newPage();
@@ -144,7 +95,7 @@ test('what is typed before closing the tab offline arrives when it is opened aga
   await peer.keyboard.press('End');
   await peer.keyboard.type(' Kept in this browser.');
   // The browser keeps what the room has not confirmed; closed before the room ever heard it, only that copy holds it.
-  await expect.poll(() => peer.evaluate(copiesKept)).toBe(1);
+  await expect.poll(() => peer.evaluate(copiesKept, COPIES)).toBe(1);
   await peer.close({ runBeforeUnload: true });
   await expect(page.locator(BODY)).toHaveText('Agenda.');
 

@@ -12,6 +12,12 @@ export const liveTabKindOfTab = (
   kinds: readonly LiveTabKind[] = LIVE_TAB_KINDS,
 ): LiveTabKind | null => kinds.find((k) => k.tabKind === body?.kind) ?? null;
 
+/** The live tab kind whose replacements are asked with this op kind, or null. */
+export const liveTabKindOfReplacement = (
+  opKind: unknown,
+  kinds: readonly LiveTabKind[] = LIVE_TAB_KINDS,
+): LiveTabKind | null => kinds.find((k) => k.replace?.op === opKind) ?? null;
+
 /** The live tab kind whose frames have this op kind, or null. */
 export const liveTabKindOfFrame = (
   opKind: unknown,

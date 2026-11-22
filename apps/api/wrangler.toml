@@ -371,6 +371,11 @@ name = "EMAIL"
 #   - IMAGE_MAX_BYTES_PER_OWNER: maximum total byte_size summed
 #     across one owner's images. Hosted: "104857600" (100 MB).
 #
+# The blob store's allowance (docs/specs/006-document/blob-store.md "Getting bytes in") is set the same way:
+#
+#   - FILE_MAX_BYTES_PER_OWNER: the most bytes one owner's blobs (PDF documents' files) may count. An upload
+#     that would pass it answers 403 { error: "usage_exceeded", leftBytes }. Hosted: "1073741824" (1 GiB).
+#
 # Plain vars; values are decimal strings parsed via parseInt at request time.
 # Unset, blank, "0", or non-numeric values all read as "no limit". A self-host
 # sets them in [vars] above, never only in the Cloudflare dashboard: every
@@ -418,10 +423,11 @@ name = "EMAIL"
 # Mcp·Used counts look flat.
 
 # Workers Logs (docs/specs/016-platform/worker-logs.md): the worker's own log lines are kept in this Cloudflare
-# account, so a failure nobody was tailing can still be read. Invocation logs stay off: one stores every request's
-# URL, and a URL carries document ids and share codes.
+# account, so a failure nobody was tailing can still be read. Invocation logs stay off (they store each request's
+# headers, address and location), and query strings are cut from the path every log line is stored with.
 [observability]
 enabled = true
+redact_query_string = true
 
 [observability.logs]
 enabled = true

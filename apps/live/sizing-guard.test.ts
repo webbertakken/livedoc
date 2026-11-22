@@ -6,6 +6,12 @@ import { checkSizing, formatSizingViolations } from '@livedoc/tailwind-config/si
 const SIZED_PATHS = [
   'components/primitives/PortalMenu.tsx',
   'components/primitives/MenuCheckRow.tsx',
+  'components/primitives/MovablePanelHeader.tsx',
+  'components/primitives/EllipsisTriggerButton.tsx',
+  'components/primitives/SettingsPopover.tsx',
+  'components/primitives/BackBar.tsx',
+  'components/primitives/SearchInput.tsx',
+  'components/primitives/FilterSearchBox.tsx',
 ];
 
 describe('live sizing', () => {

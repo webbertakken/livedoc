@@ -8,7 +8,11 @@
 // - a catch-up reads what the room holds beyond this browser and sends what the room lacks; Yjs makes both harmless
 //   to repeat, so nothing is lost or doubled;
 // - an edit the room has not confirmed in time is kept in this browser's local copy, deleted once the room holds it,
-//   and a copy left behind is merged and sent when the tab is opened again.
+//   and a copy left behind is merged and sent when the tab is opened again;
+// - a binding closed or discarded never sends again, whatever answer arrives late; a discarded one keeps no local
+//   copy, so a change the room refused is gone from this browser;
+// - for a kind that reads what lies beyond the room, what the room is known to hold is kept, that reading is kept
+//   with the local copy, and a copy made on something else than the state stands on is handed over, never merged.
 import * as Y from 'yjs';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 import { debugLog } from '@/lib/debug-log';
@@ -40,7 +44,13 @@ export type LiveTabClientKind<Frame extends string> = {
   readonly load: (updates: readonly Uint8Array[]) => Y.Doc;
 };
 
-export type LiveTabFrame<Frame extends string> = { kind: Frame; tabId: string; update: string };
+export type LiveTabFrame<Frame extends string> = {
+  kind: Frame;
+  tabId: string;
+  update: string;
+  /** What the change was made on, for a kind whose state stands on something its tab's row names. */
+  on?: string;
+};
 
 /** What a read of the state beyond a state vector answers: the update, and the state's own vector. */
 export type LiveTabStateSince = { update: Uint8Array; stateVector: Uint8Array };
@@ -50,6 +60,9 @@ export type LiveTabRoomDeps<Frame extends string> = {
   tabId: string;
   // Whether this session may change the writing; a viewer's document never sends.
   readonly canEdit: boolean;
+  // What the state read stands on (a PDF's stored file): every frame names it, and the room refuses one made on
+  // anything else. Absent for a kind whose state stands on nothing but itself.
+  readonly on?: string;
   // One frame to the room; true once the room has stored it.
   sequence: (op: LiveTabFrame<Frame>) => Promise<boolean>;
   // One update by the door; resolves once the room has stored it.
@@ -59,6 +72,10 @@ export type LiveTabRoomDeps<Frame extends string> = {
   // room relayed since is read at once.
   readonly stateReadEarlier?: boolean;
   loadSince: (stateVector: Uint8Array) => Promise<LiveTabStateSince>;
+  // For a kind whose state stands on something: how it reads, in its own terms, what `live` holds beyond `room`,
+  // the document of what the room is known to hold, so it can be made again on a state that stands on something
+  // else. The reading is kept with the local copy.
+  beyond?: (room: Y.Doc, live: Y.Doc) => unknown;
   copies: LiveTabCopyStore;
   saveDelayMs?: number;
 };
@@ -71,6 +88,19 @@ export type LiveTabRoomBinding = {
   settled: () => Promise<void>;
   /** What the save status reads (editing-surface.md "The title row"). */
   saveFacts: SaveFactsSource;
+};
+
+/** A binding to the room, which alone can refuse a change: it can be discarded. */
+export type LiveTabOpenRoomBinding = LiveTabRoomBinding & {
+  /**
+   * Stop for good and keep nothing: the local copy is removed, with whatever the room has not confirmed. For a
+   * surface whose change the room refused, which then binds the state again as the room holds it.
+   */
+  discard: () => Promise<void>;
+  /** What this document holds beyond the room, as the kind reads it; null for a kind that declares no reading. */
+  beyond: () => unknown;
+  /** The reading of a local copy that was made on something else than this state stands on; null when none. */
+  left: unknown;
 };
 
 const isEmpty = (update: Uint8Array) => update.byteLength <= EMPTY_UPDATE_BYTES;
@@ -91,18 +121,32 @@ async function readCopy(
 export async function openLiveTabRoom<Frame extends string>(
   kind: LiveTabClientKind<Frame>,
   deps: LiveTabRoomDeps<Frame>,
-): Promise<LiveTabRoomBinding> {
+): Promise<LiveTabOpenRoomBinding> {
   const { documentId, tabId } = deps;
   const { tag, bus } = kind;
   const key = { documentId, tabId };
   const saveDelay = deps.saveDelayMs ?? kind.localSaveMs;
+  const on = deps.on === undefined ? {} : { on: deps.on };
   let doc: Y.Doc | null = null;
   const early: Uint8Array[] = [];
   // Whether the room may have relayed something this surface never heard: it read the state with the room closed,
   // or the room closed since. The next open catches up.
   let missed = !bus.isConnected() || deps.stateReadEarlier === true;
   let resyncAsked = false;
+  // What the room is known to hold, for a kind that reads what lies beyond it: its updates as they are learnt, and
+  // the document they make, built when first asked for and kept up after.
+  const learnt: Uint8Array[] = [];
+  let room: Y.Doc | null = null;
+  const roomHolds = (update: Uint8Array) => {
+    if (deps.beyond) learnt.push(update);
+  };
+  const roomDocument = (): Y.Doc => {
+    room ??= kind.load([]);
+    for (const update of learnt.splice(0)) Y.applyUpdate(room, update);
+    return room;
+  };
   const offUpdate = bus.onUpdate(tabId, (update) => {
+    roomHolds(update);
     if (doc) Y.applyUpdate(doc, update, ROOM_ORIGIN);
     else early.push(update);
   });
@@ -133,6 +177,14 @@ export async function openLiveTabRoom<Frame extends string>(
     throw error;
   }
 
+  roomHolds(state);
+  // A copy made on something else than this state stands on is never merged: its updates follow others this state
+  // does not hold. A session that may send takes its reading and drops it; a viewer leaves it be.
+  const onAnother =
+    left !== null && left.on !== undefined && deps.on !== undefined && left.on !== deps.on;
+  const leftBeyond = onAnother && deps.canEdit ? (left?.beyond ?? null) : null;
+  if (onAnother) left = null;
+
   const live = kind.load([state]);
   doc = live;
   // What the room is known to hold: the local copy is what this browser has beyond it.
@@ -143,6 +195,8 @@ export async function openLiveTabRoom<Frame extends string>(
   let chain: Promise<void> = Promise.resolve();
   let catching = false;
   let catchAgain = false;
+  // Closed or discarded: nothing is sent or kept from here on, whatever answer arrives late.
+  let stopped = false;
   // Failed: the door refused an update, or this browser could not keep its copy; both last until the room holds
   // everything here (or, for the copy, until a write succeeds).
   const facts = liveTabSaveFacts(tag, tabId, debugLog);
@@ -161,8 +215,9 @@ export async function openLiveTabRoom<Frame extends string>(
     if (CopyLedger.isClean(ledger)) return;
     // Taken now: the document may be gone by the time the write runs.
     const update = Y.encodeStateAsUpdate(live, base);
+    const beyond = deps.beyond ? { beyond: deps.beyond(roomDocument(), live) } : {};
     chain = chain
-      .then(() => deps.copies.write({ ...key, update, savedAt: Date.now() }))
+      .then(() => deps.copies.write({ ...key, update, savedAt: Date.now(), ...on, ...beyond }))
       .then(() => {
         copyStored = true;
         copyFailed = false;
@@ -211,7 +266,7 @@ export async function openLiveTabRoom<Frame extends string>(
     let stored = false;
     const framed = encoded.length <= kind.frameChars;
     try {
-      if (framed) stored = await deps.sequence({ kind: kind.frame, tabId, update: encoded });
+      if (framed) stored = await deps.sequence({ kind: kind.frame, tabId, update: encoded, ...on });
       else {
         await deps.post(update);
         stored = true;
@@ -221,6 +276,7 @@ export async function openLiveTabRoom<Frame extends string>(
       refused = true;
       debugLog(`${tag} sent-by-door refused`, { tabId, error: String(error) });
     }
+    if (stored) roomHolds(update);
     ledger = CopyLedger.settled(ledger, stored);
     ledgerChanged();
     if (!stored && framed && edit && bus.isConnected()) void catchUp();
@@ -228,6 +284,7 @@ export async function openLiveTabRoom<Frame extends string>(
   };
 
   async function catchUp(): Promise<void> {
+    if (stopped) return;
     if (catching) {
       catchAgain = true;
       return;
@@ -236,7 +293,9 @@ export async function openLiveTabRoom<Frame extends string>(
     const generation = ledger.generation;
     try {
       const since = await deps.loadSince(Y.encodeStateVector(live));
+      if (stopped) return;
       Y.applyUpdate(live, since.update, ROOM_ORIGIN);
+      roomHolds(since.update);
       const missing = Y.encodeStateAsUpdate(live, since.stateVector);
       const stored = !deps.canEdit || isEmpty(missing) || (await send(missing, false));
       if (stored) {
@@ -270,6 +329,18 @@ export async function openLiveTabRoom<Frame extends string>(
   };
   live.on('update', onLocal);
 
+  if (onAnother && deps.canEdit) {
+    debugLog(`${tag} local-copy on-another`, { tabId });
+    chain = chain
+      .then(async () => {
+        await deps.copies.remove(key);
+        copyStored = false;
+      })
+      .catch((error: unknown) =>
+        debugLog(`${tag} local-copy-failed`, { tabId, error: String(error) }),
+      );
+  }
+
   // A copy left behind (a closed tab, a crash) merges now; what the room lacks of it goes with the catch-up.
   if (left) {
     Y.applyUpdate(live, left.update, COPY_ORIGIN);
@@ -294,16 +365,38 @@ export async function openLiveTabRoom<Frame extends string>(
   window.addEventListener('pagehide', writeCopy);
   document.addEventListener('visibilitychange', onHide);
 
+  const stop = () => {
+    stopped = true;
+    stopListening();
+    live.off('update', onLocal);
+    window.removeEventListener('pagehide', writeCopy);
+    document.removeEventListener('visibilitychange', onHide);
+  };
   return {
     doc: live,
     close: () => {
-      stopListening();
-      live.off('update', onLocal);
-      window.removeEventListener('pagehide', writeCopy);
-      document.removeEventListener('visibilitychange', onHide);
+      if (stopped) return;
+      stop();
       writeCopy();
+    },
+    discard: () => {
+      stop();
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      chain = chain
+        .then(async () => {
+          await deps.copies.remove(key);
+          copyStored = false;
+          debugLog(`${tag} local-copy discarded`, { tabId });
+        })
+        .catch((error: unknown) =>
+          debugLog(`${tag} local-copy-failed`, { tabId, error: String(error) }),
+        );
+      return chain;
     },
     settled: () => chain,
     saveFacts: { get: facts.get, subscribe: facts.subscribe },
+    beyond: () => (deps.beyond ? deps.beyond(roomDocument(), live) : null),
+    left: leftBeyond,
   };
 }

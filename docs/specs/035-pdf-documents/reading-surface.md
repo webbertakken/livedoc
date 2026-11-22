@@ -1,10 +1,10 @@
 # Reading surface
 
 **Status: specified; a first slice is built.** Built: the title row with its PDF pill, the menus and toolbar as data
-(File > Download > PDF, View > Mode, Tools, Help; zoom, Select, Highlight), and the pages: every page a box of its true
-size, a whole-page picture for pages near view, let go far from it. The accessible tree is not built: a page is a
-named region whose picture is hidden from assistive technology. Tiles, panels, find, text selection, the page bar and
-the phone layout are not built.
+(File > Download > PDF, Edit > Undo and Redo, View > Mode, Tools, Help; Undo, Redo, zoom, Select, Highlight), and the
+pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it. The accessible
+tree is not built: a page is a named region whose picture is hidden from assistive technology. Tiles, panels, find,
+text selection, the page bar and the phone layout are not built.
 
 The chrome of a [PDF document](pdf-document.md) and how its pages are read: the title row, menus, toolbar, the left
 panel, the pages, zoom, find and the phone layout, with final copy. It fills the
@@ -199,6 +199,8 @@ the choice is remembered per person per document.
 | **Signatures**     | [The signatures panel](signing.md#the-signatures-panel)                                                | Nothing                                                                               |
 | **Fields**         | Every field in tab order, with its type and whether it is filled; a press goes to it                   | The field list of [Building fields](building-fields.md)                               |
 
+- **Layers** lists the file's PDF layers by name in the file's order, each shown or hidden as the file sets it; a
+  layer the file locks shows its state and takes no change.
 - A panel with nothing to show says so in one line ("This PDF has no bookmarks.") and, in Editing, offers the first
   one ("Add a bookmark").
 - Thumbnails are drawn as the pages are scrolled to, light paper always, marks included.

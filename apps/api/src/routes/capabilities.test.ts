@@ -30,6 +30,13 @@ describe('driveMode (docs/specs/022-drive-mirror/drive-mirror.md)', () => {
   });
 });
 
+describe('filesEnabled (docs/specs/006-document/blob-store.md "Without object storage")', () => {
+  it('says whether the deployment has file storage', async () => {
+    expect((await capabilities({})).filesEnabled).toBe(false);
+    expect((await capabilities({ FILES: {} as R2Bucket })).filesEnabled).toBe(true);
+  });
+});
+
 describe('aiEnabled (docs/specs/007-editor/ai-assistance.md)', () => {
   it('is off with no model key', async () => {
     expect((await capabilities({})).aiEnabled).toBe(false);

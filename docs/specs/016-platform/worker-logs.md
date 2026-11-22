@@ -17,8 +17,13 @@ still be read: which route, which error, which stack.
 
 - **The workers' own lines**: everything written with `console.log`, `console.info`, `console.warn` and
   `console.error`, and the exception of an invocation that threw.
-- **Not the requests.** Invocation logs are off (`invocation_logs = false`): one would store every request's URL,
-  and a URL carries document ids, share codes and invite codes.
+- **Not the requests.** Invocation logs are off (`invocation_logs = false`): one stores every request's headers,
+  the caller's address and its location.
+- **The path of the request that wrote the line, and nothing else of it.** Cloudflare stores each log line with
+  the URL of its request, whatever the invocation log setting. Query strings are cut (`redact_query_string = true`):
+  they carry time zones, tickets and codes. Cloudflare replaces path segments it reads as ids with `REDACTED`
+  (measured: a participant id); that is its heuristic, not a guarantee, so a path must never be the only place a
+  secret is kept out of.
 - **Every invocation, unsampled.** A rare failure is the one worth reading; sampling would drop it.
 
 ## What a log line may carry
@@ -43,6 +48,7 @@ Each of `apps/api/wrangler.toml`, `apps/mcp/wrangler.toml` and `apps/router/wran
 ```toml
 [observability]
 enabled = true
+redact_query_string = true
 
 [observability.logs]
 enabled = true

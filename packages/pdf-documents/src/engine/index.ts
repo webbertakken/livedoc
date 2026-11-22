@@ -1,14 +1,15 @@
 // The engine (docs/specs/035-pdf-documents/security.md "The boundary"), for wherever a PDF is read: a worker thread in
 // a browser, the CLI, tests. The one entry that brings the reader and the writer with it.
-import type { PdfEngine } from '../engine-contract';
+import type { PdfEngine, PdfEngineLog } from '../engine-contract';
 import { pdfEngineOver } from './engine';
 import { startReader } from './reader';
 
 export { pdfDate } from './bake';
 
-/** Starts the engine from the reader's WebAssembly binary. */
+/** Starts the engine from the reader's WebAssembly binary; `log` takes what it decides, and is no one by default. */
 export async function createPdfEngine(options: {
   wasm: ArrayBuffer | Uint8Array;
+  log?: PdfEngineLog;
 }): Promise<PdfEngine> {
-  return pdfEngineOver(await startReader(options.wasm));
+  return pdfEngineOver(await startReader(options.wasm), undefined, options.log);
 }

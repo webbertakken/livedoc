@@ -56,7 +56,7 @@ What you do NOT need:
    pnpm exec wrangler r2 bucket create docs-nu-files
    ```
 
-   It is bound to `FILES`. Without it every file route answers `503 files_unavailable` and no PDF document can be made; remove its `[[r2_buckets]]` block from `apps/api/wrangler.toml` to deploy without it.
+   It is bound to `FILES`. Without it every file route answers `503 files_unavailable`, no PDF document can be made and the app offers none; remove its `[[r2_buckets]]` block from `apps/api/wrangler.toml` to deploy without it. `FILE_MAX_BYTES_PER_OWNER` (optional, a decimal byte count under `[vars]`) caps what one owner's files may count, as the image gallery caps below; unset, there is no cap. A file past 32 MiB is stored in parts and put together by a copy inside object storage, which needs no extra credential or bucket rule. The daily cron deletes files nothing has held for a day.
 
 5. **Get an API token + account id**:
    - Account id is at the bottom-right of any Cloudflare dashboard page.
@@ -367,7 +367,8 @@ The five downstream workers don't need their own domain; the router fans out via
 ## Worker logs
 
 The api, mcp and router workers keep their own log lines in Workers Logs, in your Cloudflare account: 3 days on
-Workers Free, 7 on Workers Paid. Request URLs are not kept. Read them in the dashboard under Workers & Pages, the
+Workers Free, 7 on Workers Paid. Each line is stored with its request's path, without the query string; headers and
+addresses are not kept. Read them in the dashboard under Workers & Pages, the
 worker, Observability. To keep none, set `enabled = false` under `[observability]` in the three `wrangler.toml`
 files. See [Worker logs](../specs/016-platform/worker-logs.md).
 

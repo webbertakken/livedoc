@@ -9,7 +9,8 @@ import {
   type Quad,
   type TextSelection,
 } from '@livedoc/pdf-documents';
-import { addHighlight, HIGHLIGHT_COLOUR, PDF_LOCAL_ORIGIN } from './pdf-highlight';
+import { addHighlight, HIGHLIGHT_COLOUR } from './pdf-highlight';
+import { PDF_LOCAL_ORIGIN } from './pdf-undo';
 import { marksOnPage, pdfMarksStore } from './pdf-marks-store';
 
 const QUAD: Quad = [72, 730, 300, 730, 72, 716, 300, 716];

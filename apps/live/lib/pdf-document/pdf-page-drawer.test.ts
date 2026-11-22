@@ -91,7 +91,13 @@ describe('the page drawer', () => {
 
 // "Limits": PDF_PAGE_PICTURE_MAX_PIXELS bounds the whole-page picture.
 describe('pictureScale', () => {
-  const letter: PageInfo = { name: PageName.ofObject(3), width: 612, height: 792 };
+  const letter: PageInfo = {
+    name: PageName.ofObject(3),
+    width: 612,
+    height: 792,
+    rotation: 0,
+    label: null,
+  };
 
   it('draws at what the screen asks while the picture fits', () => {
     expect(pictureScale(letter, 96 / 72, 2)).toBeCloseTo(2.667, 3);

@@ -5,7 +5,7 @@ import { catalogueFaults, catalogueItems, visibleMenus } from '@/lib/office/offi
 import { levelInMode, modesFor, startingMode } from '@/lib/office/office-mode';
 import { visibleToolbar } from '@/lib/office/office-toolbar';
 import { SHELL_BOUND_ITEMS } from '@/lib/office/office-catalogue';
-import { DOWNLOAD_PDF, PDF_MENUS, TOOL_HIGHLIGHT, TOOL_SELECT } from './pdf-menus';
+import { DOWNLOAD_PDF, PDF_MENUS, REDO, TOOL_HIGHLIGHT, TOOL_SELECT, UNDO } from './pdf-menus';
 import { PDF_MODES } from './pdf-modes';
 import { PDF_REFUSAL_COPY, pdfRefusalDownloads, pdfRefusalRetries } from './pdf-refusals';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
@@ -47,6 +47,8 @@ describe("a PDF document's menus and toolbar", () => {
   const BOUND = [
     ...SHELL_BOUND_ITEMS,
     DOWNLOAD_PDF,
+    UNDO,
+    REDO,
     TOOL_SELECT,
     TOOL_HIGHLIGHT,
     'mode-reviewing',
@@ -72,13 +74,16 @@ describe("a PDF document's menus and toolbar", () => {
     expect(seen('view')).toContain(DOWNLOAD_PDF);
     expect(seen('view')).not.toContain(TOOL_HIGHLIGHT);
     expect(seen('participate')).toContain(TOOL_HIGHLIGHT);
+    // Undo and Redo are the person's own changes: hidden from who can make none ("The toolbar": hidden in Viewing).
+    expect(seen('view')).not.toContain(UNDO);
+    expect(seen('participate')).toEqual(expect.arrayContaining([UNDO, REDO]));
     const fields = { zoom: true, fontSize: false, font: false, colour: false, choice: false };
     const controls = (level: 'view' | 'participate') =>
       visibleToolbar(PDF_TOOLBAR, level, actions, fields).flatMap((group) =>
         group.controls.map((control) => control.id),
       );
     expect(controls('view')).toEqual(['zoom', TOOL_SELECT]);
-    expect(controls('participate')).toEqual(['zoom', TOOL_SELECT, TOOL_HIGHLIGHT]);
+    expect(controls('participate')).toEqual([UNDO, REDO, 'zoom', TOOL_SELECT, TOOL_HIGHLIGHT]);
   });
 
   // keyboard-shortcuts.md "Tools": Select V, Highlight U; the modes' keys are a text document's for the same places.
@@ -88,6 +93,8 @@ describe("a PDF document's menus and toolbar", () => {
     expect(keys['switch-to-reviewing']).toBe('Ctrl+Alt+Shift+X');
     expect(keys['switch-to-editing']).toBe('Ctrl+Alt+Shift+Z');
     expect(keys['switch-to-viewing']).toBe('Ctrl+Alt+Shift+C');
+    // keyboard-shortcuts.md "Marks and comments": Undo and redo, a text document's keys.
+    expect([keys['undo'], keys['redo']]).toEqual(['Ctrl+Z', 'Ctrl+Shift+Z']);
     expect(new Set(PDF_SHORTCUTS.map((row) => row.id)).size).toBe(PDF_SHORTCUTS.length);
   });
 });

@@ -13,9 +13,7 @@ export function PanelTitle({ title }: { title: string }) {
   const minimalChrome = useMinimalChrome();
   if (minimalChrome) return <span className="sr-only">{title}</span>;
   return (
-    <span className="select-none text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-200">
-      {title}
-    </span>
+    <span className="select-none text-panel-title text-slate-700 dark:text-slate-200">{title}</span>
   );
 }
 
@@ -56,9 +54,9 @@ export function MovablePanelHeader({
     <div
       ref={headerRef}
       onPointerDown={beginDrag}
-      className={`flex items-center justify-between gap-2 rounded-t-lg border-b border-slate-200 px-2 pb-1.5 pt-2 dark:border-slate-800 ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`flex items-center justify-between gap-2 rounded-t-surface border-b border-slate-200 px-2 pb-1.5 pt-2 dark:border-slate-800 ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
     >
-      <span className="flex min-w-0 items-center gap-1.5">
+      <span className="flex min-w-0 items-center gap-2">
         <PanelTitle title={title} />
         {titleAdornment}
       </span>
@@ -96,7 +94,7 @@ export function MovablePanelHeader({
               onPointerDown={(e) => e.stopPropagation()}
               onClick={onReset}
               aria-label={`Reset ${title.toLowerCase()} position`}
-              className="relative hidden h-5 w-5 touch-target items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 sm:flex dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              className="relative hidden size-chip touch-target items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 sm:flex dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
             >
               {/* className="" so the glyph inherits the button's
                   currentColor (and its hover), not the fixed slate. */}
@@ -124,7 +122,7 @@ export function MovablePanelHeader({
                   ? `Expand ${title.toLowerCase()}`
                   : `Collapse ${title.toLowerCase()}`
               }
-              className="relative flex h-5 w-5 touch-target items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              className="relative flex size-chip touch-target items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
             >
               {effectiveCollapsed ? (
                 // Plus glyph: expand the body. Same 12 x 12 grid as

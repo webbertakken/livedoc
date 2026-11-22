@@ -98,7 +98,7 @@ export function DetailsFolderRow({
           <EllipsisTriggerButton
             {...menu.triggerProps}
             reveal
-            size={dense ? 'sm' : 'lg'}
+            size={dense ? 'md' : 'lg'}
             label={`Menu for folder ${folder.name}`}
           />
         )}

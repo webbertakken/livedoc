@@ -487,7 +487,16 @@ export {
   type TextDocumentFormat,
 } from './tab-kind';
 export { blobKeyOf, isBlobKey, type BlobKey } from './blob-key';
-export { FILE_SINGLE_UPLOAD_MAX_BYTES, FILE_TAB_MAX_BYTES } from './file-limits';
+export {
+  FILE_PART_BYTES,
+  FILE_PREVIOUS_VERSION_DAYS,
+  FILE_SINGLE_UPLOAD_MAX_BYTES,
+  FILE_TAB_MAX_BYTES,
+  FILE_UNHELD_GRACE_HOURS,
+  FILE_UPLOAD_ABANDON_HOURS,
+  filePartCount,
+  filePartSize,
+} from './file-limits';
 export { isPdfTab, pdfTabOf, type PdfTabFile } from './pdf-tab';
 export { tabMixRefusal, type TabMixRefusal } from './tab-mix';
 export { TAB_SURFACES, hasCanvasTab, surfaceOf, type TabSurface } from './tab-surface';

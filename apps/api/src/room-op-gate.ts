@@ -6,13 +6,17 @@ import {
   isSystemOpKind,
   parseAvatarSay,
   parseStoredLevel,
+  type AccessLevel,
 } from '@livedoc/api-schema';
 import { answersAsSelf } from './document-room-rules';
+import { liveTabKindOfFrame, liveTabKindOfReplacement } from './live-tabs/live-tab-kinds';
 import { scopedRenames, scopedSenderMayRelay } from './room-scope';
 
 type OpGate =
   /** Never relayed, never answered. */
   | { kind: 'drop' }
+  /** A live tab kind's frame or replacement, from any level: the room stores it or refuses it by what it changes. */
+  | { kind: 'live-tab'; level: AccessLevel }
   /** A Participant's `el` op: through the participant content rule, never relayed as sent. */
   | { kind: 'participant-content' }
   /** Relayed: unordered when `presence`; a Participant's answers also schedule their write. */
@@ -22,7 +26,9 @@ const DROP: OpGate = { kind: 'drop' };
 
 // The tab fields a `tab-meta` patch never carries (the editor's tabMetaPatch skips them, META_SKIP): the tab's id is
 // fixed, its elements travel on their own ops, and its articles' writing on `article` ops.
-const TAB_META_FIXED = ['id', 'elements', 'articles'] as const;
+// Nor a PDF tab's stored file, which only the room's replacement moves (live-editing-and-storage.md "Replacing the
+// stored file"): the room tells that patch itself.
+const TAB_META_FIXED = ['id', 'elements', 'articles', 'blob', 'size'] as const;
 
 // Whether a tab-content op keeps to the tab it names (docs/specs/013-workspace/tab-scoped-share-links.md "Realtime").
 // A receiver merges a `tab` op's payload over its own tab and spreads a `tab-meta` patch over it, so a payload naming
@@ -78,6 +84,10 @@ export function gateClientOp(op: unknown, sender: GateSender): OpGate {
   // responses and ideas relay like an Editor's; its `el` op goes through the participant content rule and
   // never relays as sent; everything else needs an Editor.
   const level = parseStoredLevel(sender.role);
+  // A live tab's frame is judged where it is stored (room-live-tabs.ts): an Editor's as it is, a Participant's by
+  // what it touches, and a Viewer's refused there, so its sender is told.
+  if (liveTabKindOfFrame(opKind) || liveTabKindOfReplacement(opKind))
+    return { kind: 'live-tab', level };
   // A Viewer only looks (docs/specs/013-workspace/share-roles.md): of the presence class, a poll answer and a
   // reaction are taking part, so they need a Participant.
   if (level === 'view' && (opKind === 'poll-answer' || opKind === 'reaction')) return DROP;

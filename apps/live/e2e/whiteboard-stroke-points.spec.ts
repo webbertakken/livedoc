@@ -53,7 +53,7 @@ async function savedElements(page: Page): Promise<SavedElement[]> {
 }
 
 // The tab through the Export dialog, as the file it downloads.
-async function exportTab(page: Page, format: 'SVG' | 'PNG'): Promise<Buffer> {
+async function exportTab(page: Page, format: 'SVG' | 'PNG' | 'PDF'): Promise<Buffer> {
   await page.getByRole('button', { name: 'Tab menu' }).click();
   // The Tab menu is a control menu: a named dialog (docs/specs/004-interface-design/menus.md).
   const tabMenu = page.getByRole('dialog', { name: 'Tab menu' });
@@ -143,6 +143,13 @@ test.describe('packed stroke points on a whiteboard', () => {
     const png = await exportTab(page, 'PNG');
     expect(png.subarray(1, 4).toString('ascii')).toBe('PNG');
     expect(png.length).toBeGreaterThan(2_000);
+    // The PDF is that picture as one page, written by the repository's one PDF writer, which loads only now
+    // (docs/specs/035-pdf-documents/files-print-and-sync.md "One writer").
+    const pdf = await exportTab(page, 'PDF');
+    expect(pdf.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    expect(pdf.subarray(-16).toString('latin1')).toContain('%%EOF');
+    expect(pdf.toString('latin1')).toContain('LiveDoc');
+    expect(pdf.length).toBeGreaterThan(2_000);
 
     expectNoPageErrors(pageErrors);
   });

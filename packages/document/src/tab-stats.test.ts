@@ -27,6 +27,21 @@ describe('tabStatsOf', () => {
     });
   });
 
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "The digest": a PDF tab's size is its stored file's.
+  it('counts a PDF tab’s stored file in its bytes', () => {
+    const body = { kind: 'pdf', elements: [], blob: 'a'.repeat(64), size: 2_500_000 };
+    const data = JSON.stringify(body);
+    expect(tabStatsOf(body, data)).toEqual({
+      mode: 'diagram',
+      elementCount: 0,
+      commentCount: 0,
+      dataBytes: data.length + 2_500_000,
+    });
+    // A tab that names no file a store could hold counts its row alone.
+    expect(tabStatsOf({ ...body, blob: 'nope' }, data).dataBytes).toBe(data.length);
+    expect(tabStatsOf({ ...body, kind: 'diagram' }, data).dataBytes).toBe(data.length);
+  });
+
   it('measures bytes, not characters', () => {
     const data = JSON.stringify({ elements: [], note: 'héé' });
     expect(tabStatsOf({ elements: [] }, data).dataBytes).toBe(data.length + 2);

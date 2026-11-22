@@ -152,7 +152,7 @@ and three presets, each saying what it does and what it will cost before it runs
 | `PDF_HEADER_MAX_CHARS`      | 500    | `(default)` One header or footer box                                              |
 | `PDF_MAX_BOOKMARKS`         | 20,000 | `(default)` Bookmarks shown and written; a file arriving with more keeps them all |
 | `PDF_BOOKMARK_MAX_DEPTH`    | 32     | `(default)` Nesting made here; deeper ones a file brings are shown                |
-| `PDF_EMBEDDED_FILES_MAX`    | 500    | `(default)` Embedded files added here                                             |
+| `PDF_EMBEDDED_FILES_MAX`    | 500    | `(default)` Embedded files listed and added here; a file with more keeps them all |
 | `PDF_CUSTOM_PROPERTIES_MAX` | 100    | `(default)` Custom properties                                                     |
 | `PDF_COMPARE_MAX_PAGES`     | 2,000  | `(default)` Pages a side in one compare; more asks for a page range               |
 

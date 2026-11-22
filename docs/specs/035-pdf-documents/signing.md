@@ -1,6 +1,9 @@
 # Signing
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the engine reads the certificate signatures a file arrives
+with: how each is encoded, its time by the signer's clock, its reason, whether it covers the whole file or the file
+before later changes, what a certifying one allows, and whom its certificate names. Checking a signature, signing and
+everything a person sees are not built.
 
 Two things are called a signature, and a [PDF document](pdf-document.md) has both (ruling C4): a **drawn signature**,
 a picture of a signature placed on a page, and a **certificate signature**, a cryptographic signature over the file's
@@ -75,6 +78,12 @@ The left panel's **Signatures** and the title row's signature chip. Each certifi
 | **Reason and place**             | As the signer gave them                                                                                                                                             |
 | **What LiveDoc has not checked** | "LiveDoc hasn't checked who issued this certificate." Always, plainly                                                                                               |
 
+- **What a signature covers is read from its byte range**: the whole file where the range ends at the file's end,
+  the file before later changes where it ends earlier. A range that is not two runs from the file's start, in order
+  and inside the file, covers nothing that can be said: the row reads "LiveDoc can't check this kind of signature."
+- **The signer is read from the signature's own bytes**: the certificate its signer names by issuer and serial
+  number. A signature whose bytes are not a readable signed-data structure, pass `PDF_SIGNATURE_MAX_BYTES`, or name
+  a certificate they do not carry has no signer to show; nothing is guessed from another certificate in it.
 - **A browser cannot say whether a signer is trusted**: that needs a list of trusted issuers no page can read. So
   LiveDoc says what it can prove and never shows a green tick that means "trusted"; the row's glyph is "intact",
   "changed" or "can't be checked", each with words.
@@ -132,6 +141,8 @@ those and marks.
 | `PDF_SIGNATURE_PICTURE_MAX_BYTES` | 1,048,576 | `(default)` An uploaded signature picture; larger is scaled down                                   |
 | `PDF_CERTIFICATE_FILE_MAX_BYTES`  | 1,048,576 | `(default)` A certificate file; real ones are a few kilobytes                                      |
 | `PDF_SIGNATURE_RESERVED_BYTES`    | 32,768    | `(default)` Room kept in the file for the signature's bytes; a B-B signature is about 25 KB in all |
+| `PDF_MAX_SIGNATURES`              | 1,000     | `(default)` Signatures read from one file; more are kept in the file and not listed                |
+| `PDF_SIGNATURE_MAX_BYTES`         | 1,048,576 | `(default)` One signature's bytes read; a signature with its certificates is tens of kilobytes     |
 | `PDF_MAX_SIGNATURES_CHECKED`      | 200       | `(default)` Signatures checked on open; more are checked when their row is opened                  |
 
 ## Share roles

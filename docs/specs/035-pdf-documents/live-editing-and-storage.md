@@ -1,10 +1,14 @@
 # Live editing and storage
 
-**Status: specified; a first slice is built.** Built: the layout's `stored` and `marks` roots, the room storing a PDF's
+**Status: specified; a first slice is built.** Built: the layout's `stored` and `marks` roots, a change and what takes
+it back for marks, field values, a page's turn and what was deleted of the stored file, the room storing a PDF's
 live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the digest's pages and marks, the stored
 file in the blob store, and the surface bound to the room: sending, reconnecting, the local copy of unconfirmed
-changes, the save status, a refused change undone. Presence, undo, This Browser, reading offline, replacing the stored
-file, branches, copies, versions and what the servers make are not built.
+changes, the save status, a refused change dropped, a Participant's changes judged by what they touch, the stored file
+replaced in the room for the budget, with its previous versions held, the rows of "Concurrent changes" whose roots
+are built (marks, field values, a page's turn, a replacement), a change carried across a replacement, and one undo
+timeline a person. Presence, This Browser, reading offline, branches, copies, versions, what the servers make, the
+selection an undo puts back and the line a dimmed Undo says are not built.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The
@@ -52,28 +56,91 @@ writes one shape `(default)`:
   ([Saving](saving.md#an-unchanged-file)).
 - Words never ride a room op as plain text: every change is a Yjs update, as a text document's is.
 
+### A change and what takes it back
+
+- **Every change is a change to one entry** of a root that is a map by id: the entry is **put** (it becomes exactly
+  what is given, new or not), some of its properties are **set** or unset, or it is **removed**. A mark made, a
+  mark's look changed, a field filled, a page turned and a mark of the stored file deleted are each one such change.
+- **Each change has the change that takes it back**, read from the state before it is made: a put is taken back by
+  removing the entry or putting what it held; a set by setting what the properties held and unsetting those that were
+  absent; a removal by putting the entry back. A change that changes nothing has none.
+- **A changeset is several changes as one step**: all are made in one transaction, or none where one is refused, and
+  what takes it back is the changes that take each back, last first. An agent's changeset is reverted so
+  ([Agents](agents.md#changesets)); a person's Undo is their own timeline ([Undo](#undo)).
+- A change is refused whole, writing nothing, by name: `pdf_change_target_missing` (properties set on an entry that
+  is not there) and the limits' own names (`pdf_too_many_marks`).
+- **A field value** is held by the field's full name: its value (text, or the options chosen of a list that takes
+  several), the display name of who set it and when. It is checked and bounded as a mark is, since it arrives from
+  other people's browsers.
+- **A mark, field or object of the stored file that was deleted** is held in `removed` by its id, with what it was
+  (`mark`, `field`, `object`); taking the deletion back removes that entry, and the stored file's own shows again.
+- **A page's own changes** are held by its page name; a turn is `rotation`: how far the page is turned, in degrees
+  (0, 90, 180 or 270), in place of the file's own.
+
 ### Concurrent changes
 
-| Two people at once                            | Result                                                                                                             |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Each adds a mark, on one page or two          | Both marks                                                                                                         |
-| Both change one mark                          | Per property, the later write wins; both typing in one Text mark keep every character                              |
-| Both reply in one thread                      | Both replies, in time order                                                                                        |
-| Both fill different fields                    | Both values                                                                                                        |
-| Both fill one field                           | The later write wins, as a spreadsheet's cell; the other value is in that person's undo                            |
-| One marks a page, another moves or rotates it | The mark stays on its page, wherever the page now is                                                               |
-| One marks a page, another deletes it          | The page is deleted; the mark and its thread are kept with it and return if the delete is undone                   |
-| Both move pages                               | Each move lands; two moves of one page, the later wins                                                             |
-| Both edit different objects of one page       | Both edits                                                                                                         |
-| Both edit one picture or shape                | Per property, the later write wins                                                                                 |
-| One types in a text box, another wants to     | The box is the first person's while they type ([Editing text](editing-text.md#together))                           |
-| A change lands as the stored file is replaced | Carried onto the new stored file by its anchor, or reported ([Saving](saving.md#when-the-stored-file-is-replaced)) |
+| Two people at once                            | Result                                                                                                            |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Each adds a mark, on one page or two          | Both marks                                                                                                        |
+| Both change one mark                          | Per property, the later write wins; both typing in one Text mark keep every character                             |
+| Both reply in one thread                      | Both replies, in time order                                                                                       |
+| Both fill different fields                    | Both values                                                                                                       |
+| Both fill one field                           | The later write wins, as a spreadsheet's cell; the other person's Undo never puts theirs back over it `(default)` |
+| One marks a page, another moves or rotates it | The mark stays on its page, wherever the page now is                                                              |
+| One marks a page, another deletes it          | The page is deleted; the mark and its thread are kept with it and return if the delete is undone                  |
+| Both move pages                               | Each move lands; two moves of one page, the later wins                                                            |
+| Both edit different objects of one page       | Both edits                                                                                                        |
+| Both edit one picture or shape                | Per property, the later write wins                                                                                |
+| One types in a text box, another wants to     | The box is the first person's while they type ([Editing text](editing-text.md#together))                          |
+| A change lands as the stored file is replaced | Carried onto the new stored file by its anchor, or reported ([below](#a-change-carried-across-a-replacement))     |
 
+- **Later** is the order the changes were made in, where one was made in sight of the other. Of two made at once,
+  neither having seen the other, one wins, the same one for everyone `(default)`.
+- **A removal wins over a change to what it removes**: one person changes a mark as another deletes it, and the mark
+  is deleted for both `(default)`.
 - **A stored file's replacement is one step for everyone**: the room swaps the tab's `blob` and the state in one
   transaction and tells every client with a `pdf-stored` op; a client finishes the frame it is drawing, fetches the
-  new file (often already held: the client that baked it has it), and redraws in place.
+  new file (often already held: the client that baked it has it), and redraws in place
+  ([Replacing the stored file](#replacing-the-stored-file)).
 - A change that arrives for a stored file the room no longer holds is answered `pdf-refused` with `stored_file_changed`;
-  the client re-reads the state and replays the change by its anchor.
+  the client re-reads the state and carries the change by its anchor.
+
+### A change carried across a replacement
+
+- **An unconfirmed change** is an entry this browser holds otherwise than the room is known to hold it: made,
+  changed or removed here, and not yet confirmed by the room. It is read entry by entry: the root, the id, what the
+  room held there and what stands here, so it can be made again on another state.
+- **What the room is known to hold** is the state this browser read, every update the room relayed to it, and every
+  update of its own the room confirmed
+  ([Live state](../006-document/kinds-outside-the-canvas.md#live-state)).
+- **When the stored file is replaced under an open surface**, however it learns of it, the surface reads its
+  unconfirmed changes before it lets its live changes go, opens the new file, and makes each again on the new state.
+  **A local copy made on an earlier stored file** (a tab closed offline, opened after a replacement) is carried the
+  same way, and never merged as it is: its updates follow others the new state does not hold.
+- A carried change is sent as any change is. It is no step of the person's Undo ([Undo](#undo)).
+- A change the room refused for a limit or a level is never carried ([Limits](#limits)).
+- **Each is carried by its anchor** `(default)`:
+
+| Unconfirmed                          | Carried as                                                                | Lost when                            |
+| ------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------ |
+| A mark made                          | The mark; nothing where the new file already holds it under its id        | The new file has no page of its name |
+| A mark changed                       | The properties that differ, on the mark; nothing where the mark is gone   | The mark is now the file's own       |
+| A mark removed                       | Its removal; a deletion of the file's mark where it is now the file's own | Never                                |
+| A field filled                       | The value, by the field's full name                                       | Never                                |
+| A field's value cleared              | Its removal, where the new state holds a value                            | The value is now in the file         |
+| A page turned                        | The turn                                                                  | The new file has no page of its name |
+| A page's turn taken back             | Its removal, where the new state holds a turn                             | The turn is now in the file          |
+| Something of the stored file deleted | The deletion, by its id                                                   | Never: an addition keeps every id    |
+| A deletion taken back                | Its removal, where the new state holds the deletion                       | The deletion is now in the file      |
+
+- **A mark that is now the file's own** is one the replacement wrote into the new file under its id; a change to its
+  look is lost until a file's own mark can be changed ([Marks](marks.md#changing-a-mark)).
+- **A lost change is said, never dropped in silence**: "1 change couldn't be placed on the new file." (or
+  "<n> changes couldn't be placed on the new file.") `(default)`, logged `[pdf] anchors-lost count=<n>`; what was
+  carried is logged `[pdf] changes-carried count=<n> already=<n>`.
+- A replacement that renumbers the file's objects (a rewrite) tells each page's new name by its place, so a change is
+  carried to the page it was made on; until a rewrite replaces a stored file, every replacement is an addition and
+  every name stands.
 
 ## Presence
 
@@ -93,8 +160,13 @@ writes one shape `(default)`:
 - One step is one act as the person saw it: a mark drawn, a drag ended, a field left, typing within
   `PDF_UNDO_GROUP_MS` (500 ms), a page operation however many pages it moved, a find and replace across the document.
 - Undoing puts the selection and the page back where the change was made.
+- **Every root of the layout but `stored` is on the timeline** `(default)`: naming the stored file is nobody's act, and
+  taking a first change back leaves it named.
+- **Another person's change is never taken back or written over**: a step whose change someone else has since
+  changed or removed is passed over, and the press takes back the step before it `(default)`.
 - **A replacement of the stored file ends the steps before it**: Undo is dimmed with "Changes before this point are in
   version history." Version history still reaches them ([Saving](saving.md#previous-versions-and-version-history)).
+  So does a change the room refused ([Limits](#limits)). A change carried across a replacement is on no timeline.
 - An agent's changeset is reverted as a changeset, never by a person's Undo ([Agents](agents.md#changesets)).
 
 ## Storage
@@ -111,6 +183,7 @@ writes one shape `(default)`:
 - **Reading it**: `GET /api/documents/:id/pdf-documents/:tabId/state` answers the whole state as one Yjs update, with
   the tab's `blob` in `X-Stored-File`; with `since` (a state vector) only what lies beyond it. `404 pdf_not_found`
   when the tab is absent or another kind; `400 state_vector_invalid`.
+- **Every change names the stored file it was made on**: a `pdf` op in `on`, a posted update in `X-Stored-File`.
 - **Sending**: a change goes to the room as one `pdf` op while the room is open and it fits a frame; a larger one (a
   pasted picture's reference, a catch-up after a long time offline) goes by
   `POST /api/documents/:id/pdf-documents/:tabId/updates`, which reaches the room through the shared door for a live
@@ -139,7 +212,60 @@ writes one shape `(default)`:
   `threads`, `fieldValues`, `recognised` and `removed` entries for marks; one touching `pageOrder`, `pages`,
   `objects`, `fields` or `document` is refused whole with `level_too_low`. The check reads the update's changed
   roots, never trusting a client's claim ([Editing modes](editing-modes.md#share-roles)).
-- A Participant's `pdf` op is in `PARTICIPATION_OP_KINDS`.
+- **What an update touches** `(default)`: every root in which it adds, sets or removes anything, however deep. A
+  root the layout does not name asks an Editor.
+- **`removed`**: a Participant's update may add or take back only entries that are a `mark`'s, before and after.
+- **`stored`**: a Participant's update may name the stored file once, where the state names none: its `blob` must
+  be the tab's own and its `pages` a page count; after that, `stored` must read as it did.
+- **An update that stands on changes the room lacks** (a change sent after one that was refused, before its sender
+  heard of the refusal) cannot be judged and is refused untold, logged `[pdf] update-refused reason=unreadable`.
+- A Participant's `pdf` op reaches the room as participation does, through the room's own check for a
+  [live tab kind](../006-document/kinds-outside-the-canvas.md#live-state), never relayed as sent; a Viewer's is
+  refused with `level_too_low`.
+- **The door** judges a posted update the same way: `403 level_too_low` for a Viewer's, and for a Participant's
+  that asks an Editor; `409 update_unreadable` `(default)` for a Participant's that cannot be judged.
+
+### Replacing the stored file
+
+When and why the stored file is replaced is [Saving](saving.md#when-the-stored-file-is-replaced)'s; this is how.
+
+- **A client replaces it**: it bakes the stored file with the live changes it holds, stores the result in the
+  [blob store](../006-document/blob-store.md), and sends the room
+  `{ kind: 'pdf-stored', tabId, from, blob, size, pages, reason, at }`: the key it replaces, the new file's key,
+  bytes and page count, why (`budget`; the other triggers join with their phases), and the **fingerprint** of the
+  live changes the new file holds.
+- **The fingerprint** `(default)` is the SHA-256 of what every root of the layout holds, written with its keys in
+  order: two states that show the same changes have the same fingerprint, whatever order their updates arrived in.
+- **The room refuses**, writing nothing and telling the sender alone, by name:
+
+| Name                  | When                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `level_too_low`       | The sender's level does not allow the reason ([Share roles](#share-roles))         |
+| `stored_file_changed` | The tab's `blob` is no longer `from`: someone replaced it first                    |
+| `live_changes_moved`  | The room holds changes the new file lacks: its fingerprint is not `at`. Bake again |
+| `blob_missing`        | The document's owner does not hold `blob` at `size`                                |
+| `files_unavailable`   | The server has no file storage                                                     |
+
+- **Otherwise, in one transaction**: the tab's row names the new `blob` and `size`, the live changes are emptied but
+  for `stored` naming the new file and its pages, and the replaced file becomes a **previous version**: its key,
+  size, when it was replaced and why, kept by the room beside the tab. Everyone, the sender too, then hears the
+  row's change and `{ kind: 'pdf-stored', tabId, from, blob, size, pages, reason }`.
+- **Because the room refuses a replacement that lacks anything it holds**, no stored change is ever lost to one: a
+  change stored before it is in the new file, and a change sent after it names the old file and is refused
+  `stored_file_changed`, to be carried by its sender.
+- **Each client, hearing it**, keeps showing the pages it has, fetches the new file, opens it in a fresh engine,
+  reads the live changes again and swaps both in at once, keeping its place; a reconnect that missed the op finds the
+  state naming another file than its own and does the same.
+- **A previous version's bytes stay readable** through the document for as long as they are held
+  ([Blob store](../006-document/blob-store.md#holds-and-retention)).
+- **A whole-tab save never changes a PDF tab's stored file** `(default)`: the save keeps the `blob` and `size` the
+  room holds, whatever it was sent, so a browser that has not heard of a replacement cannot undo it. Logged
+  `[pdf] save-kept-stored-file`.
+- **For the budget**, an Editor's surface replaces the stored file once its live changes pass `PDF_REPLACE_AT_BYTES`
+  and it has been idle for `PDF_REPLACE_IDLE_MS`: nothing changed here or arrived from the room in that time, and
+  everything made here is saved. It does so only when the bake is an addition, which keeps every page name and makes
+  each live mark the file's own under its id; a file that needs a rewrite waits for an Editor's own act. Refused
+  `live_changes_moved`, it waits to be idle again.
 
 ### The digest
 
@@ -150,6 +276,9 @@ Explorer and search through the room's outbox ([Document storage](../006-documen
   protected, and whether any page is a scanned page without recognised text.
 - **Content summary**: a PDF document is never "empty": it has a stored file, so the
   [empty document clean-up](../013-workspace/empty-document-cleanup.md) never takes it.
+- **Tab stats**: a PDF tab's size is its stored file's bytes with its row's and its live changes' `(default)`, so
+  the Explorer's Details view says what the file weighs
+  ([Explorer details view](../013-workspace/explorer-details-view.md)).
 - **Search text**: the file's text by page, extracted once per stored file and again only for pages the live changes
   touched, with the words of Text marks, comments and recognised text; capped at `PDF_SEARCH_TEXT_MAX_CHARS`, the
   first pages first. A protected file has none `(default)`.
@@ -222,6 +351,8 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 | Constant                     | Value     | Why                                                                                    |
 | ---------------------------- | --------- | -------------------------------------------------------------------------------------- |
 | `PDF_LIVE_CHANGES_MAX_BYTES` | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))           |
+| `PDF_REPLACE_AT_BYTES`       | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself         |
+| `PDF_REPLACE_IDLE_MS`        | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s              |
 | `PDF_UPDATE_MAX_BYTES`       | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                |
 | `PDF_INLINE_MAX_BYTES`       | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                 |
 | `PDF_SEARCH_TEXT_MAX_CHARS`  | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only |
@@ -234,9 +365,13 @@ A change past a limit is refused whole and named: `pdf_too_many_marks`, `pdf_too
 `live_changes_too_large` (when a replacement cannot be made, with "This PDF has more unsaved changes than fit. Ask
 someone who can edit it to open it." for a Participant on a file only an Editor's rewrite can replace).
 
-The room's refusal of a frame reaches its sender alone, as `pdf-refused` with the limit passed. The surface undoes
-that change, so what it shows is what everyone holds, and says "This PDF has more unsaved changes than fit."
-`(default)`, logging `[pdf] change-undone`.
+The room's refusal of a frame reaches its sender alone, as `pdf-refused` with the limit passed or the refusal's
+name. The surface then drops its live changes and reads them again from the room, in place: the pages stay drawn, and
+what it shows is what everyone holds `(default)`. Nothing of the refused change stays in this browser, so it is
+never sent again; a change made in the moment before the refusal was heard goes with it, as the room would have
+refused it too. It says "This PDF has more unsaved changes than fit." `(default)` for a limit, or the level's line
+of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Undo's steps before it end
+([Undo](#undo)).
 
 ## Share roles
 
@@ -248,9 +383,13 @@ that change, so what it shows is what everyone holds, and says "This PDF has mor
 
 ## Telemetry and observability
 
-- No telemetry of its own: each area's spec fires for what a person did.
-- Fingerprints with the document and tab ids, never content: `[pdf] state-read bytes=<n>`, `[pdf] update-stored
-bytes=<n> roots=<names>`, `[pdf] update-refused name=<name>`, `[pdf] caught-up`, `[pdf] compacted`,
-  `[pdf] stored-file-replaced` ([Saving](saving.md#telemetry-and-observability)), `[pdf] digest pages=<n> marks=<n>`,
+- `Pdf · Undone` and `Pdf · Redone` when a person takes a step back or makes it again; nothing else of its own:
+  each area's spec fires for what a person did.
+- Fingerprints with the document and tab ids, never content: `[pdf] state-read bytes=<n>`,
+  `[pdf] update-stored bytes=<n> roots=<names>`, `[pdf] update-refused name=<name>`,
+  `[pdf] level-refused level=<level> asks=<level>`, `[pdf] caught-up`, `[pdf] compacted`,
+  `[pdf] stored-file-replaced` ([Saving](saving.md#telemetry-and-observability)),
+  `[pdf] replacement-refused name=<name>`, `[pdf] save-kept-stored-file`, `[pdf] digest pages=<n> marks=<n>`,
   `[pdf] server-made what=<thumbnail|text|preview|bake> ms=<n>`, `[pdf] server-declined what=<what> reason=<reason>`,
-  `[pdf] browser-upload what=<thumbnail|text>`, `[pdf] local-store refused=<reason>`.
+  `[pdf] browser-upload what=<thumbnail|text>`, `[pdf] local-store refused=<reason>`,
+  `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`.

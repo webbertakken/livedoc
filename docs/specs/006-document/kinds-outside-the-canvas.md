@@ -100,7 +100,8 @@ kind**. The room stores each one the same way, the kind declaring only what is i
 - **The kind declares**: its tab kind, its frame's op kind (its refusal is `<op kind>-refused`), its log tag, its
   tables (updates, chunks, digest), how its updates merge and decode and how many characters one inserts, its sizes
   (a chunk's bytes, the log's bytes and updates before compaction, a frame's characters) and limits (characters,
-  stored bytes), and its digest (characters, words, pages, has content, search text) read from its state.
+  stored bytes), its digest (characters, words, pages, has content, search text) read from its state, and, where a
+  Participant may change some of it, the level an update asks.
 - **Its schema step**: its three tables and their outbox triggers, made by one shared step builder and appended to the
   room's schema as any step is; a shipped step is never edited, so the text document's own steps stay as written.
 - **Storing**: a frame from an Editor is checked (the tab is of the kind, in this document; the update decodes; no
@@ -108,6 +109,26 @@ kind**. The room stores each one the same way, the kind declaring only what is i
   the same, folded straight into chunks when no log row could hold it. Past the log's bytes or updates, compaction
   folds the log into chunks under the row cap, in one batch. Each is logged with the kind's tag and a fingerprint:
   `persisted`, `compacted`, `update-refused reason=`, `edit-refused limit=`.
+- **The level an update asks**: an Editor's update is stored as it is. Anyone else's is judged by what it changes,
+  never by what its sender claims: the kind reads the stored state and the update and answers the least level the
+  update needs (`participate` or `edit`), or that it cannot be read yet, because it stands on changes the room
+  lacks. A kind that declares no such reading (a text document) asks `edit` for every update. A Viewer's update is
+  never read.
+- **A refusal reaches its sender alone**, as `<op kind>-refused` naming the tab and why: `limit` (the limit
+  passed) or `name` (`level_too_low`). Nothing of a refused update is stored or relayed. An update that cannot be
+  read yet is refused untold: it follows one the room refused, whose sender has been told already. The door answers
+  a level too low `403 level_too_low`. Logged `level-refused level=<level> asks=<level>`.
+- **What a state stands on**: a kind whose state is changes to something its tab's row names (a PDF's stored file)
+  says what that is. Every frame then names what it was made on (`on`), and so does a posted update; one made on
+  anything else is refused whole, told to its sender as `stored_file_changed` (the door: `409`), since its items
+  follow others the state no longer holds.
+- **Replacing a state with its row**: such a kind may declare an op that replaces both in one step. The room, on its
+  write queue, has the kind judge the op against the stored tab, the stored state and the sender's level; then, in
+  one transaction, writes the tab's row at the revision it read, removes the state's log and chunks, writes the
+  state that stands on the new row and whatever rows the kind keeps of the old one. Only then is everyone told, the
+  sender too, in order: the row's change as a `tab-meta`, then the kind's own op. A refusal reaches the sender
+  alone, as `<op kind>-refused` with its `name` and `replacement: true`, and nothing is written. Logged
+  `state-replaced` and `replacement-refused name=`.
 - **The digest and summary**: every stored update queues the tab in the outbox; its drain rebuilds the kind's digest
   from the state, saving the document, and gives the search text to D1. A tab holds content when its digest says so,
   and its characters and stored bytes join the content summary.
@@ -132,6 +153,15 @@ with the text document):
   dropped once the room holds it; the save status reads the binding's facts (a change pending, saving failed).
 - A surface that read its state before it could bind (a PDF document opens its stored file in between) says so, and
   the binding catches up at once, so nothing relayed in between is lost.
+- **A binding can be discarded**: it stops for good, keeps nothing in this browser's local copy and removes the copy
+  it kept. A surface whose change the room refused discards its binding and binds the state again, read from the
+  room, so nothing of the refused change is sent a second time. A binding that was closed or discarded never sends.
+- **What lies beyond the room**: a kind whose state stands on something its tab's row names may declare how it reads,
+  in its own terms, what this browser holds beyond what the room is known to hold. The binding then keeps what the
+  room is known to hold (the state read, every update the room relayed, every update of this browser's the room
+  confirmed), answers that reading when asked, and keeps it in the local copy, beside what the copy was made on.
+- **A local copy made on something else** than the state now stands on is never merged: its updates follow others
+  the state no longer holds. The binding hands the kind the copy's reading, and removes the copy.
 
 ## The Explorer
 
@@ -164,5 +194,11 @@ with the text document):
 - Switching between a canvas tab and a surface tab restores each one's view.
 - A one-tab surface document hides the active tab segment; a two-tab one and a one-tab canvas document show it.
 - The add menu's Text document row adds a text document tab and selects it.
+- A Participant's update to a live tab is stored when its kind says it asks no more than `participate`, refused and
+  told to its sender alone when it asks `edit`, and refused untold when it cannot be read yet; a Viewer's and
+  every non-Editor's update to a kind that reads no level are refused and told the same way.
+- A frame made on anything but what the tab's row names is refused and told; a replacement writes the row, the
+  state and the kind's rows together or not at all, tells everyone in order, and a refused one writes nothing.
+- A discarded binding leaves no local copy, and neither it nor a closed one sends when a late answer arrives.
 - A live tab kind's bus delivers only its own tab's updates and refusals, every bus hears the one connection and the
   re-hydrate, and a binding given a state read earlier catches up at once.

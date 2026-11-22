@@ -1,6 +1,7 @@
 // Tab stats (docs/specs/013-workspace/explorer-details-view.md "Where the numbers come from"): what
 // the Explorer's Details view sums over a document, counted the same way by the api (every tab
 // write, the backfill) and by the browser (documents saved only in this browser).
+import { pdfTabOf } from './pdf-tab';
 import { tabOpeningOf, type TabOpening } from './tab-opening';
 
 export type TabStats = {
@@ -18,12 +19,15 @@ type TabStatsBody = {
   workshop?: unknown;
   layers?: unknown;
   elements?: unknown;
+  blob?: unknown;
+  size?: unknown;
 };
 
 const encoder = new TextEncoder();
 
 // One tab's stats from its body and the exact JSON stored for it (bytes as UTF-8, as D1 stores
-// them). Every comment counts, resolved threads included.
+// them). Every comment counts, resolved threads included. A PDF tab's stored file counts in its bytes
+// (docs/specs/035-pdf-documents/live-editing-and-storage.md "The digest"): its size is the file's.
 export function tabStatsOf(body: TabStatsBody, data: string): TabStats {
   const elements = Array.isArray(body.elements) ? (body.elements as unknown[]) : [];
   let commentCount = 0;
@@ -46,6 +50,6 @@ export function tabStatsOf(body: TabStatsBody, data: string): TabStats {
     mode: tabOpeningOf(body as Parameters<typeof tabOpeningOf>[0]),
     elementCount: elements.length,
     commentCount,
-    dataBytes: encoder.encode(data).length,
+    dataBytes: encoder.encode(data).length + (pdfTabOf(body)?.size ?? 0),
   };
 }

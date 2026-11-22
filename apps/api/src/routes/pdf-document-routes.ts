@@ -2,11 +2,17 @@
 //   GET  /api/documents/<id>/pdf-documents/<tabId>/state    the live changes as one Yjs update, the stored file's
 //                                                           key in X-Stored-File; with since, only what lies beyond
 //   POST /api/documents/<id>/pdf-documents/<tabId>/updates  one Yjs update too large for a frame
-// The read is gated as the tab is (a tab-scoped link on its own tab only), the update as an edit of the tab.
+// The read is gated as the tab is (a tab-scoped link on its own tab only). The update is an Editor's as it is, a
+// Participant's when the room finds it changes only what Reviewing changes ("The room's op kinds").
 // Answered inside the document's room. The stored file's bytes are the blob store's (blob-store-routes.ts).
 import { PDF_UPDATE_MAX_BYTES, PdfLiveChanges } from '@livedoc/pdf-documents';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents';
-import { PDF_STORED_FILE_HEADER, TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
+import {
+  parseStoredLevel,
+  PDF_STORED_FILE_HEADER,
+  TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+  type AccessLevel,
+} from '@livedoc/api-schema';
 import { getDocumentMeta } from '../db';
 import { readLiveTabState } from '../live-tabs/live-tab-store';
 import { storedPdfTab } from '../pdf-documents/pdf-document-store';
@@ -26,7 +32,7 @@ const notPdf = () => json({ error: 'pdf_not_found' }, { status: 404 });
 
 const refusedUpdate = (
   where: string,
-  error: 'update_invalid' | 'update_too_large',
+  error: 'update_invalid' | 'update_too_large' | 'update_unreadable' | 'stored_file_changed',
   status: number,
 ) => {
   console.warn(`[pdf] update-refused ${where} name=${error}`);
@@ -79,7 +85,8 @@ async function readState(ctx: DocumentRouteContext): Promise<Response> {
   });
 }
 
-// One update sent by the door: an edit of the tab, stored by the room on its write queue and relayed from there.
+// One update sent by the door: stored by the room on its write queue and relayed from there, when the caller's level
+// allows what it changes.
 async function postUpdate(ctx: DocumentRouteContext): Promise<Response> {
   const { segments, request, env } = ctx;
   const documentId = segments[2]!;
@@ -89,21 +96,35 @@ async function postUpdate(ctx: DocumentRouteContext): Promise<Response> {
   if (owner instanceof Response) return owner;
   const meta = await getDocumentMeta(env, documentId);
   if (!meta) return missingDocument(ctx, documentId);
+  const tooLow = (level: AccessLevel) => {
+    // Told by name (docs/specs/035-pdf-documents/editing-modes.md "Errors").
+    console.warn(`[pdf] mode-refused ${where} op=pdf level=${level}`);
+    return forbidden('level_too_low');
+  };
+  let level: AccessLevel = 'edit';
   if (!(await gateEdit(ctx, documentId, meta.ownerId, meta.teamId, tabId))) {
-    // A grant confined to another tab sees no such tab; a level below Editor is told so by name
-    // (docs/specs/035-pdf-documents/editing-modes.md "Errors"), a caller with no grant nothing more than refused.
+    // A grant confined to another tab sees no such tab; a caller with no grant is told nothing more than refused.
     const grant = await gateGrant(ctx, documentId, meta.ownerId, meta.teamId);
     if (!grant) return forbidden();
     if (grant.tabScope !== null && grant.tabScope !== tabId) return notPdf();
-    console.warn(`[pdf] mode-refused ${where} op=pdf level=${grant.role}`);
-    return forbidden('level_too_low');
+    level = parseStoredLevel(grant.role);
+    // A Participant's update goes on to the room, which reads what it changes; a Viewer's goes nowhere.
+    if (level !== 'participate') return tooLow(level);
   }
   const update = new Uint8Array(await request.arrayBuffer());
   if (update.byteLength > PDF_UPDATE_MAX_BYTES)
     return refusedUpdate(where, 'update_too_large', 413);
   if (!PdfLiveChanges.decodes(update)) return refusedUpdate(where, 'update_invalid', 400);
-  const { status, limit } = await postLiveTabUpdate(env, PDF_LIVE_TAB, documentId, tabId, update);
+  // The stored file the update was made on: the room refuses one made on another.
+  const on = request.headers.get(PDF_STORED_FILE_HEADER);
+  const { status, limit } = await postLiveTabUpdate(env, PDF_LIVE_TAB, documentId, tabId, update, {
+    level,
+    on,
+  });
   if (status === 204) return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (status === 403) return tooLow(level);
+  if (status === 409) return refusedUpdate(where, 'update_unreadable', 409);
+  if (status === 412) return refusedUpdate(where, 'stored_file_changed', 409);
   if (status === 413) return json({ error: 'live_changes_too_large', limit }, { status: 413 });
   if (status === 404) return notPdf();
   if (status === 400) return refusedUpdate(where, 'update_invalid', 400);

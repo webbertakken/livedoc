@@ -48,7 +48,8 @@ at most 2 MB in a row, so the cap stands.
   password, dates) with its **content summary**, opens, favourites, tags, hide from Recent.
 - **Sharing**: share links, shared-with rows, form links and their reads and reports.
 - **Cross-document indexes** the room's outbox feeds: the Inbox's comment threads and actions, the cards assigned to
-  someone, the images each document places, and content search ([Content search](../013-workspace/content-search.md)).
+  someone, the images each document places, the blobs each tab holds ([Blob store](blob-store.md#holds-and-retention)),
+  and content search ([Content search](../013-workspace/content-search.md)).
 - **The Timeline** and everything else not content: people, teams, folders, tokens, images and grants, the Google
   Drive mirror, shape libraries, the workbench, guest voters, telemetry.
 
@@ -95,8 +96,9 @@ A summary that is missing reads as unknown: never empty in the Explorer, and nev
 - **Retried.** A drain that fails keeps every key it did not push and tries again a minute later.
   A key written again during a drain stays for the next one.
 - **What a drain pushes**: the content summary and `saved_at` to `documents`; per changed tab, its comment threads and
-  actions for the Inbox, its cards assigned to someone, and its search text; the document's whole set of placed
-  images. A tab that has gone takes its rows and its tab-scoped share links with it.
+  actions for the Inbox, its cards assigned to someone, its search text, and the blobs it holds where its kind holds
+  any; the document's whole set of placed images. A tab that has gone takes its rows and its tab-scoped share
+  links with it.
 - **Lag.** The listing, the Inbox, image usage and search trail a write by up to about a minute; the editor and every
   read of one document's content never do.
 

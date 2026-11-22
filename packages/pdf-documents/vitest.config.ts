@@ -5,7 +5,7 @@ import { defineProject } from '@livedoc/vitest-config';
 export default defineProject({
   test: {
     coverage: {
-      exclude: ['src/testing/**', 'vitest.*.ts'],
+      exclude: ['src/testing/**', 'src/validation/**', 'vitest.*.ts'],
       thresholds: { lines: 95, branches: 90, functions: 95, statements: 95 },
     },
   },

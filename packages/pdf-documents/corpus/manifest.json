@@ -1,0 +1,303 @@
+{
+  "source": "https://pdfium.googlesource.com/pdfium/+/refs/heads/main/testing/resources/",
+  "licence": "BSD-3-Clause",
+  "folder": "pdfium",
+  "files": [
+    {
+      "file": "actions/annot_javascript.pdf",
+      "holds": "A field whose action is a script",
+      "sha256": "9d57762118d9073d053f7e55475f0fb703540696c19fa97a1a615d127b5e6676",
+      "bytes": 671,
+      "pages": 1
+    },
+    {
+      "file": "actions/goto_action.pdf",
+      "holds": "A go-to action on opening",
+      "sha256": "0c4afe3a95772526dc797816c9e7ea06aaede0590633637503fa8c7008e50a68",
+      "bytes": 696,
+      "pages": 1
+    },
+    {
+      "file": "actions/js.pdf",
+      "holds": "A script on opening",
+      "sha256": "27e6787a46420b28292965c21fe8ec76e1e86ddf17488a8d373d3c93aa6c0000",
+      "bytes": 1145,
+      "pages": 1,
+      "repaired": true
+    },
+    {
+      "file": "actions/launch_action.pdf",
+      "holds": "A link that launches a program",
+      "sha256": "5cdc6456e880fa657bfa3241fc939af8e5c1b468afbf1aae6858bba213193a29",
+      "bytes": 799,
+      "pages": 1
+    },
+    {
+      "file": "actions/uri_action.pdf",
+      "holds": "A link to an address",
+      "sha256": "9277fcad77b388975e86c0ee742f5fbed297b771ff6885b92635cfe85559cbe9",
+      "bytes": 721,
+      "pages": 1
+    },
+    {
+      "file": "actions/weblinks.pdf",
+      "holds": "Addresses written as text",
+      "sha256": "158f3335cb1f0b56b0b0873168267c89bf55c2b9a4f7ff1b6f1229b9859dc402",
+      "bytes": 1172,
+      "pages": 1
+    },
+    {
+      "file": "basics/about_blank.pdf",
+      "holds": "One empty page",
+      "sha256": "1bc7df117548f2557345722a5df24dfc0143cac5200662aed805bf2621b66d63",
+      "bytes": 735,
+      "pages": 1
+    },
+    {
+      "file": "basics/hello_world.pdf",
+      "holds": "Two lines of text",
+      "sha256": "1e06a6e12329f0c3760680a70baea126e040e66e0bf34d3b14a71863096ee1e3",
+      "bytes": 840,
+      "pages": 1
+    },
+    {
+      "file": "basics/rotated_text.pdf",
+      "holds": "Text turned on its page",
+      "sha256": "9b1356570d111afaed4c300da3479ac094d320a38f652729514c1064f0c17e5a",
+      "bytes": 1010,
+      "pages": 1
+    },
+    {
+      "file": "damaged/bad_annots_entry.pdf",
+      "holds": "A page whose list of marks holds what is no mark",
+      "sha256": "d7459617570e58458275d88622ec3b5afbb0623de2b8c54bfc5b026791ceb2bd",
+      "bytes": 826,
+      "pages": 1
+    },
+    {
+      "file": "damaged/bad_dict_keys.pdf",
+      "holds": "A dictionary whose keys are no names",
+      "sha256": "07f17d7ef9d53545c8ede782f701a297abc74d2b5912b8e9c922f7e44395ceea",
+      "bytes": 367,
+      "pages": 1
+    },
+    {
+      "file": "damaged/bad_page_type.pdf",
+      "holds": "A page tree holding what is no page",
+      "sha256": "f19583f988d4eb941e8f8178305cd40a3ad918d1d232a0e62fe4505204116466",
+      "bytes": 740,
+      "pages": 2
+    },
+    {
+      "file": "damaged/parser_rebuildxref_correct.pdf",
+      "holds": "A spoiled cross-reference a reader rebuilds",
+      "sha256": "fcd2ff9dc8bf0b154b1b23af80281da40fd395197e0e47e9a8a7503acaaa2648",
+      "bytes": 615,
+      "pages": 1,
+      "repaired": true
+    },
+    {
+      "file": "damaged/parser_rebuildxref_error_notrailer.pdf",
+      "holds": "A spoiled cross-reference and no trailer",
+      "sha256": "d47175f63d3734205e652c3640a42214b956062c299ce761d4c0353e69bac1f8",
+      "bytes": 577,
+      "refusal": "pdf_damaged"
+    },
+    {
+      "file": "damaged/trailer_as_hexstring.pdf",
+      "holds": "A trailer that is a string",
+      "sha256": "731e6dbf0ae78ce07193af43b7e00ebd1c7f3ed1120c7e0f3f555b25f21f02c2",
+      "bytes": 466,
+      "refusal": "pdf_damaged"
+    },
+    {
+      "file": "damaged/trailer_unterminated.pdf",
+      "holds": "A trailer cut short",
+      "sha256": "7c4227c1736a82775492c5341282394ce25d45c31f0876d9c7a9c2e17837bd93",
+      "bytes": 472,
+      "refusal": "pdf_damaged"
+    },
+    {
+      "file": "encrypted/encrypted.pdf",
+      "holds": "RC4 with an open password, and bookmarks",
+      "sha256": "cbbead7185d9cd46daecaf60165a9aa7b9f2daceb3623218c328cb015ae862d5",
+      "bytes": 10564,
+      "pages": 1,
+      "password": "1234"
+    },
+    {
+      "file": "encrypted/encrypted_hello_world_r2.pdf",
+      "holds": "The standard security handler, revision 2",
+      "sha256": "267945749086981b8727c4931cfc8a24973c3aa5819ea8a392fa8bd0d637ee84",
+      "bytes": 1021,
+      "pages": 1,
+      "password": "âge",
+      "unwritable": true
+    },
+    {
+      "file": "encrypted/encrypted_hello_world_r3.pdf",
+      "holds": "The standard security handler, revision 3",
+      "sha256": "cdbfd4f6728786dc70c7514bd5c669a38b03bba38be3e91ec46ccb02168b9ad3",
+      "bytes": 1033,
+      "pages": 1,
+      "password": "âge",
+      "unwritable": true
+    },
+    {
+      "file": "encrypted/encrypted_hello_world_r5.pdf",
+      "holds": "The standard security handler, revision 5",
+      "sha256": "9f2bdfbbd675fcaa40e89240f4f66be81621afa33114d24e8f568fb727ad37d9",
+      "bytes": 1496,
+      "pages": 1,
+      "password": "âge"
+    },
+    {
+      "file": "encrypted/encrypted_hello_world_r6.pdf",
+      "holds": "The standard security handler, revision 6 (AES-256)",
+      "sha256": "a5bcee67d2731547d8e6956cbb0d41eddeef4ca80c378c9dba8bc97961ece064",
+      "bytes": 1496,
+      "pages": 1,
+      "password": "âge"
+    },
+    {
+      "file": "fields/click_form.pdf",
+      "holds": "Tick boxes and radio buttons",
+      "sha256": "afbd6e340f4f8c35e97baad6f4459cae8a55aec109c5f242827974158dbbd417",
+      "bytes": 16250,
+      "pages": 1
+    },
+    {
+      "file": "fields/combobox_form.pdf",
+      "holds": "Dropdowns, one taking a value of one's own",
+      "sha256": "e96064f079baf65b1ebd23b152c2037eba68345a48e7b845a3c0bc3620cd7d26",
+      "bytes": 1738,
+      "pages": 1
+    },
+    {
+      "file": "fields/listbox_form.pdf",
+      "holds": "Lists, one taking several options",
+      "sha256": "4dd3b8b958eb56cb49afbb6b60b14b6d6ecba788181e088aa68be459fed10b49",
+      "bytes": 3012,
+      "pages": 1
+    },
+    {
+      "file": "fields/multiple_form_types.pdf",
+      "holds": "A field of each type and a link",
+      "sha256": "cdff8afa99ed38cf602f13877d5be8d5aa4c9ed56b85e799349fece2bfeda129",
+      "bytes": 2138,
+      "pages": 1
+    },
+    {
+      "file": "fields/text_form_multiline.pdf",
+      "holds": "A multi-line text field",
+      "sha256": "414dfebc2d5541659daaf65197e3bb02d4741487eba7680c184a7bbdffcf9814",
+      "bytes": 955,
+      "pages": 1
+    },
+    {
+      "file": "linearised/feature_linearized_loading.pdf",
+      "holds": "A linearised file with bookmarks",
+      "sha256": "cac0e426dda4b4cc710b41ef7ec8a50974b3016d52e273745ca5e57ac5de62a0",
+      "bytes": 11671,
+      "pages": 2
+    },
+    {
+      "file": "linearised/linearized.pdf",
+      "holds": "A linearised file of three pages",
+      "sha256": "ab49d0fa2790cecc932a2130a675058ff80aaedb453a7f9321e560d171f6cfff",
+      "bytes": 11384,
+      "pages": 3
+    },
+    {
+      "file": "marks/annots.pdf",
+      "holds": "Highlights, a note, links and a field",
+      "sha256": "e5e11af7437553924363d1a499b7671e1eb9cd72c13a41b9c9c8e40a931c2aa4",
+      "bytes": 5745,
+      "pages": 2
+    },
+    {
+      "file": "marks/ink_annot.pdf",
+      "holds": "Two drawings",
+      "sha256": "4295fb9a1f72274deadef94d85b84a5d96350a977b88d302bbd4ea9569d4d0e6",
+      "bytes": 780,
+      "pages": 1
+    },
+    {
+      "file": "marks/redact_annot.pdf",
+      "holds": "A redaction mark",
+      "sha256": "7f19f81bc6297eda2a607fa19d418088d594407f0fae2f0bd6531364d34f4c82",
+      "bytes": 683,
+      "pages": 1
+    },
+    {
+      "file": "signed/signature_reason.pdf",
+      "holds": "A signature field signed with a reason; its bytes are no real signature",
+      "sha256": "b22caeb7446eecffa019cd6514968be2091a1fe63baa685b381770757483d71c",
+      "bytes": 1764,
+      "pages": 1
+    },
+    {
+      "file": "signed/two_signatures.pdf",
+      "holds": "Two signature fields signed; their bytes are no real signatures",
+      "sha256": "47b9aa0d893f1f70a675a9d703fc072b0a435ad566ac789ff15b167e15443119",
+      "bytes": 2781,
+      "pages": 1
+    },
+    {
+      "file": "structure/bookmarks.pdf",
+      "holds": "An outline of six bookmarks",
+      "sha256": "209e12a35d2282091216f76993543b22f851343188d6570c1488b34f1ba4aa5e",
+      "bytes": 2239,
+      "pages": 2
+    },
+    {
+      "file": "structure/bookmarks_circular.pdf",
+      "holds": "An outline that names itself",
+      "sha256": "823d93ca64c41e79da176f03a5f583bc0ad667014c96f3b8e3bb36460b33dfb7",
+      "bytes": 1647,
+      "pages": 2
+    },
+    {
+      "file": "structure/embedded_attachments.pdf",
+      "holds": "Two embedded files",
+      "sha256": "a1a8de01f6201abcc3a5050fd5047336c6182305eedc3f8c10b49712296a968b",
+      "bytes": 10447,
+      "pages": 1
+    },
+    {
+      "file": "structure/named_dests.pdf",
+      "holds": "Named destinations",
+      "sha256": "817f8b5cd3071c5f3c8dc26a186ca4939ec0f954a877a4755f0083fa88d98856",
+      "bytes": 2010,
+      "pages": 2
+    },
+    {
+      "file": "tagged/tagged_alt_text.pdf",
+      "holds": "A structure tree with alternative text",
+      "sha256": "a5157d18d8498af0faaea6b376c65b0b77c38844adee46fb3bed2c5d816c79a9",
+      "bytes": 2433,
+      "pages": 1
+    },
+    {
+      "file": "tagged/tagged_table.pdf",
+      "holds": "A tagged table",
+      "sha256": "ebb88569b2f7dac985e57922501b9158d32a345c415d81cf5673c8823ee6fc15",
+      "bytes": 3205,
+      "pages": 1
+    },
+    {
+      "file": "xfa/email_recommended.pdf",
+      "holds": "A dynamic XFA form with static pages",
+      "sha256": "053ecab3c230f96f28d53fbc011e03f18b1cb667bc0e12eecb98e26a498534e4",
+      "bytes": 85581,
+      "pages": 1
+    },
+    {
+      "file": "xfa/simple_xfa.pdf",
+      "holds": "A small XFA form",
+      "sha256": "82e0af732b472b023b3c50940cac0d76b6a84c25dab2b4a8de79fd0a6b7cdb89",
+      "bytes": 5801,
+      "pages": 1
+    }
+  ]
+}

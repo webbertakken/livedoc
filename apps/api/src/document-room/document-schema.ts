@@ -11,6 +11,7 @@
 
 import { liveTabSchemaStep } from '../live-tabs/live-tab-schema';
 import { PDF_LIVE_TAB } from '../pdf-documents/pdf-live-tab';
+import { PDF_PREVIOUS_STEP } from '../pdf-documents/pdf-previous';
 import { outboxTrigger } from './outbox-trigger';
 
 const STEP_1 = `
@@ -533,6 +534,8 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   WORKBOOK_MEANING_STEP,
   // A PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage").
   liveTabSchemaStep(PDF_LIVE_TAB.tables),
+  // A PDF tab's previous versions ("Replacing the stored file").
+  PDF_PREVIOUS_STEP,
   WORKBOOK_KEPT_STEP,
 ];
 

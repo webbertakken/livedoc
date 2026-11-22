@@ -15,6 +15,7 @@ import { disconnectDrive } from '../drive/disconnect';
 import { deleteBugScreenshotsOf } from '../bug-reports/screenshots';
 import { uniqueLibraryName } from '@livedoc/api-schema';
 import type { Env } from '../types';
+import { forgetOwnerBlobs } from '../blob-store/blob-retention';
 
 // R2 batch delete takes at most 1000 keys per call. An owner has no hard
 // cap on document count, so chunk the snapshot-key deletes to stay under
@@ -65,6 +66,10 @@ export async function deleteAccount(
   const imagesRes = await env.DB.prepare('DELETE FROM images WHERE owner_id = ?')
     .bind(ownerId)
     .run();
+  // The blob store (docs/specs/006-document/blob-store.md): the owner's rows and uploads, and the objects no other
+  // owner's row names.
+  const blobs = await forgetOwnerBlobs(env, ownerId);
+  console.info(`[blob-store] account-closed blobs=${blobs}`);
   // Document SVG snapshots (docs/specs/006-document/document-snapshots.md) live in R2 under thumb/<documentId>,
   // keyed off the document id rather than carried on a D1 row, so — like
   // the images above — the cascade can't reach them. Enumerate the
@@ -327,6 +332,19 @@ export async function migrateOwnerId(
     // document that places them.
     images: move(
       'UPDATE OR IGNORE images SET owner_id = ? WHERE owner_id = ?',
+      toOwnerId,
+      fromOwnerId,
+    ),
+    // The blob store's rows (docs/specs/006-document/blob-store.md "Where the bytes live"): what the guest holds
+    // is the account's, the objects staying where they were stored. A key both hold stays the account's own row;
+    // the guest's is left, held by nothing, for the retention sweep. An unfinished upload moves the same way.
+    blobs: move(
+      'UPDATE OR IGNORE blobs SET owner_id = ? WHERE owner_id = ?',
+      toOwnerId,
+      fromOwnerId,
+    ),
+    blobUploads: move(
+      'UPDATE OR IGNORE blob_uploads SET owner_id = ? WHERE owner_id = ?',
       toOwnerId,
       fromOwnerId,
     ),

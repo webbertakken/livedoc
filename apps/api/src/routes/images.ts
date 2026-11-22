@@ -28,18 +28,9 @@ import {
 import { MAX_IMAGE_BYTES } from '../limits';
 import { recordImageUploaded } from '../timeline';
 import { gateGrant, requireOwner, type RouteContext } from './context';
+import { parsePositiveCap } from '../positive-cap';
 
-// Parse a positive-integer cap from a wrangler.toml [vars] entry.
-// Returns null when the string is missing, blank, non-numeric, or
-// not strictly positive, so callers treat "unset" and "0" and
-// "garbage" identically as "no cap" (the OSS self-host default per
-// docs/specs/009-elements/images.md).
-export function parsePositiveCap(raw: string | undefined): number | null {
-  if (!raw) return null;
-  const n = Number.parseInt(raw, 10);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return n;
-}
+export { parsePositiveCap };
 
 // The 403 a full gallery answers with, or null when the upload fits.
 function galleryFull(

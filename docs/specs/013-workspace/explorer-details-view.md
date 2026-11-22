@@ -117,6 +117,8 @@ by any column.
   as the tab, by every write (a save, a changeset, a seeded create, a participant or Q&A write, a
   duplicate's copied tab), so it never drifts from the tab it describes. It lives apart from the tab
   body so a list reads the numbers without reading any body.
+- **A PDF tab's size** counts its stored file with its row, so a PDF document's size is what its file weighs
+  ([Live editing and storage](../035-pdf-documents/live-editing-and-storage.md#the-digest)).
 - **A document's stats** are summed in its room over the tabs it holds and pushed to the listing's content summary
   ([Document storage](../006-document/document-storage.md#the-content-summary)), up to about a minute after a write: elements, comments and bytes added, the
   mode taken from the tab written last. `GET /api/documents` and each team library carry them on every

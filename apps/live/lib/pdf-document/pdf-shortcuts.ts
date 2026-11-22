@@ -6,6 +6,8 @@ import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
 
 const SHARED = new Set([
+  'undo',
+  'redo',
   'tool-finder',
   'show-common-keyboard-shortcuts',
   'file-menu',

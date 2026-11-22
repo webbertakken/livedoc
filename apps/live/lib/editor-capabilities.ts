@@ -35,8 +35,8 @@ export type EditorCapabilities = {
   textDocumentEdits: boolean;
   // A PDF document (docs/specs/035-pdf-documents/editing-modes.md "Share roles"): everything Reviewing changes (marks,
   // comments, field values, signatures) and everything Editing changes (the pages themselves). Reviewing is a
-  // Participant's by ruling F7; the room takes a PDF's changes from Editors alone until it checks what a Participant's
-  // update touches, so until then both are an Editor's.
+  // Participant's by ruling F7: the room checks what a Participant's update touches (live-editing-and-storage.md
+  // "The room's op kinds").
   pdfReviews: boolean;
   pdfEdits: boolean;
   // An event-storming board's suggestions (docs/specs/021-event-storming/suggestions.md "Share roles"): seen and
@@ -118,7 +118,7 @@ export function resolveEditorCapabilities(input: {
     planCards: true,
     sheetCells: true,
     textDocumentEdits: false,
-    pdfReviews: false,
+    pdfReviews: true,
     pdfEdits: false,
     suggestions: false,
     contexts: false,

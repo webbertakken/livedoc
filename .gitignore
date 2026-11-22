@@ -107,3 +107,5 @@ wrangler.preview.json
 /.office-schemas/
 # LibreOffice's .deb files the Office files job caches (scripts/ci-office-install.sh)
 /.office-debs/
+# The wider PDF corpus and the second renderer CI fetches and caches (packages/pdf-documents/scripts/fetch-pdf-corpus.sh)
+/.pdf-corpus/

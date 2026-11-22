@@ -2,9 +2,10 @@
 // live-editing-and-storage.md "The live model"): one Yjs document, bound to wherever its changes are kept. The
 // surface reads marks from it and makes changes in it; what binds it sends and receives.
 import type * as Y from 'yjs';
-import { PdfLiveChanges } from '@livedoc/pdf-documents';
+import { PdfLiveChanges, type UnconfirmedChange } from '@livedoc/pdf-documents';
 import type { OfficeSaveStatusSource } from '@/components/office/office-save-status';
 import type { PdfStateRead } from '@/lib/api/pdf-documents';
+import type { PdfDocumentRefusal } from './pdf-document-bus';
 
 export type PdfLiveBinding = {
   doc: Y.Doc;
@@ -12,8 +13,24 @@ export type PdfLiveBinding = {
   close: () => void;
   /** What the title row's save status reads; null for a session that saves nothing. */
   saveStatus: OfficeSaveStatusSource | null;
-  /** Listen for a change made here being refused where it is kept, once it has been taken back ("Limits"). */
-  onRefused: (listener: () => void) => () => void;
+  /** Stop for good, keeping nothing in this browser of what was not confirmed ("Limits"). */
+  discard: () => Promise<void>;
+  /** Listen for a change made here being refused where it is kept ("Limits"). */
+  onRefused: (listener: (refusal: PdfDocumentRefusal) => void) => () => void;
+  /**
+   * Listen for the stored file these changes are on being replaced ("Replacing the stored file"): the changes then
+   * stand on a file the tab no longer names, and the surface opens the new one.
+   */
+  onMoved: (listener: () => void) => () => void;
+  /** Whether where the changes are kept holds every change made here. */
+  isSaved: () => boolean;
+  /**
+   * What was made here and is not yet confirmed where the changes are kept ("A change carried across a
+   * replacement"): read before the binding is let go, and made again on the new stored file's changes.
+   */
+  unconfirmed: () => readonly UnconfirmedChange[];
+  /** The unconfirmed changes of a local copy left behind that was made on another stored file. */
+  left: readonly UnconfirmedChange[];
 };
 
 /** Binds the state a surface read to where its changes are kept. Rejects when it cannot. */
@@ -23,6 +40,11 @@ export type BindPdfLiveChanges = (read: PdfStateRead) => Promise<PdfLiveBinding>
 export const unboundPdfLiveChanges: BindPdfLiveChanges = async (read) => ({
   doc: PdfLiveChanges.load([read.update]),
   close: () => {},
+  discard: async () => {},
   saveStatus: null,
   onRefused: () => () => {},
+  onMoved: () => () => {},
+  isSaved: () => true,
+  unconfirmed: () => [],
+  left: [],
 });
