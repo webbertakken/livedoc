@@ -14,6 +14,12 @@ const POINTS_AN_INCH = 72;
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 
+/** A picture's own size: its pixels at the inserting resolution, in points. */
+export const ownPictureSize = (pixels: { width: number; height: number }) => ({
+  width: round3((pixels.width / PICTURE_INSERT_DPI) * POINTS_AN_INCH),
+  height: round3((pixels.height / PICTURE_INSERT_DPI) * POINTS_AN_INCH),
+});
+
 /** The size a picture of these pixels is placed at, in points, within the room (points) the text has. */
 export function insertedPictureSize(
   pixels: { width: number; height: number },
