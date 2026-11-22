@@ -25,8 +25,8 @@
     "@embedpdf/pdfium": "^2.15.1",
     "@libpdf/core": "^0.5.3",
     "@livedoc/document": "workspace:*",
-    "asn1js": "^3.1.0",
-    "pkijs": "^3.4.3",
+    "asn1js": "^4.0.0",
+    "pkijs": "^4.0.1",
     "yjs": "^13.6.33"
   },
   "devDependencies": {
