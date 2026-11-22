@@ -102,6 +102,19 @@ function remember(key: string, entry: ThumbnailEntry) {
   trim();
 }
 
+/**
+ * Forget every settled entry of a document: its picture changed without the document being saved again (a PDF's
+ * first page sent by this browser, docs/specs/035-pdf-documents/live-editing-and-storage.md "A browser's thumbnail").
+ * A thumbnail mounted now keeps what it shows; the next to mount asks again.
+ */
+export function forgetThumbnailsOf(documentId: string): void {
+  for (const [key, entry] of [...entries]) {
+    if ((JSON.parse(key) as unknown[])[1] !== documentId) continue;
+    entries.delete(key);
+    if (entry.status === 'ready' && !holds.has(key)) URL.revokeObjectURL(entry.src);
+  }
+}
+
 // Least recently used out first, skipping held entries while under the hard bound.
 function trim() {
   const bound = Math.min(THUMBNAIL_CACHE_HELD_MAX, Math.max(THUMBNAIL_CACHE_MAX, holds.size));
