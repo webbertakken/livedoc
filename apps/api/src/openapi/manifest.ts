@@ -1694,7 +1694,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'files',
     tag: 'Files',
     summary:
-      'Whether the owner already holds the bytes with this key, the question an upload begins with: 200 held, so nothing need be sent, or 404 blob_not_held. With document, asked of that document’s owner, for whoever may edit it. 400 key_invalid; 503 files_unavailable on a host without file storage.',
+      'Whether the owner already holds the bytes with this key, the question an upload begins with: held true, so nothing need be sent, or false. With document, asked of that document’s owner, for whoever may edit it. 400 key_invalid; 503 files_unavailable on a host without file storage.',
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [
@@ -1704,6 +1704,11 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
         description: 'The document the bytes are for; its owner is then asked.',
       },
     ],
+    responseSchema: {
+      type: 'object',
+      properties: { held: { type: 'boolean' } },
+      required: ['held'],
+    },
     statuses: [200, 400, 401, 403, 404, 503],
   },
   {

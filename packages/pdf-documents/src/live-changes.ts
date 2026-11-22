@@ -29,8 +29,10 @@ export type PdfStored = { readonly blob: BlobKey; readonly pages: number };
 /** Why a change to the live changes was refused whole ("Limits"). */
 export type PdfLimitRefusal = 'pdf_too_many_marks';
 
-// A state with nothing in it: what merging no updates answers.
-const EMPTY = Y.encodeStateAsUpdate(new Y.Doc());
+// A state with nothing in it, what merging no updates answers: an update of no structs and no deletions, two zero
+// counts. Written out, never made from a live document: making one draws random numbers, which a Worker refuses
+// while its modules load.
+const EMPTY = Uint8Array.of(0, 0);
 
 const marksOf = (doc: Y.Doc): Y.Map<Y.Map<unknown>> => doc.getMap<Y.Map<unknown>>('marks');
 

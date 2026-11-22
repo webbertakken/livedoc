@@ -1,16 +1,14 @@
 // The blob store's doors (docs/specs/006-document/blob-store.md "Getting bytes in", "Getting bytes out"): ask whether
 // bytes are held, send them when they are not, and read a blob a document holds.
 import type { BlobKey } from '@livedoc/document';
-import { API_BASE, apiFetch, apiHeaders, expectOkVoid } from './core';
+import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
 const files = (key: BlobKey) => `${API_BASE}/files/${key}`;
 
 /** Whether this person already holds the bytes with that key: the question an upload begins with. */
 export async function apiHoldsBlob(ownerId: string, key: BlobKey): Promise<boolean> {
   const res = await apiFetch(files(key), { headers: await apiHeaders(ownerId) });
-  if (res.status === 404) return false;
-  await expectOkVoid(res, 'file held');
-  return true;
+  return (await expectOk<{ held: boolean }>(res, 'file held')).held;
 }
 
 /** Stores the bytes under their key for this person, in one request. */

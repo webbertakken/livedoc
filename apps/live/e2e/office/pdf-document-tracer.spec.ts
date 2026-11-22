@@ -100,13 +100,19 @@ test('a PDF dropped on the Explorer is stored, read, highlighted together and le
   const headers = await pageOwnerHeaders(page, { Origin: new URL(baseURL!).origin });
   const liveDoc = (await (
     await page.request.get(`${apiBase}/documents/${id}`, { headers })
-  ).json()) as { document: { name: string; tabs: { id: string; kind: string; blob: string }[] } };
+  ).json()) as { document: { name: string; tabs: { id: string; kind: string }[] } };
   const [tab] = liveDoc.document.tabs;
   expect(liveDoc.document.name).toBe('Lease agreement');
-  expect(tab).toMatchObject({ kind: 'pdf', blob: sha256(stored) });
-  const held = await page.request.get(`${apiBase}/documents/${id}/files/${tab!.blob}`, { headers });
+  expect(tab?.kind).toBe('pdf');
+  const state = await page.request.get(
+    `${apiBase}/documents/${id}/pdf-documents/${tab!.id}/state`,
+    { headers },
+  );
+  const key = state.headers()['x-stored-file']!;
+  expect(key).toBe(sha256(stored));
+  const held = await page.request.get(`${apiBase}/documents/${id}/files/${key}`, { headers });
   expect(sha256(await held.body())).toBe(sha256(stored));
-  const range = await page.request.get(`${apiBase}/documents/${id}/files/${tab!.blob}`, {
+  const range = await page.request.get(`${apiBase}/documents/${id}/files/${key}`, {
     headers: { ...headers, Range: 'bytes=0-4' },
   });
   expect([range.status(), (await range.body()).toString()]).toEqual([206, '%PDF-']);
@@ -143,7 +149,7 @@ test('a PDF dropped on the Explorer is stored, read, highlighted together and le
   await page.mouse.move(box.x + (LINE.left + 2) * scale, y);
   await page.mouse.down();
   await page.mouse.move(box.x + (LINE.left + 120) * scale, y, { steps: 6 });
-  await page.mouse.move(box.x + (LINE.left + 260) * scale, y, { steps: 6 });
+  await page.mouse.move(box.x + (LINE.left + 200) * scale, y, { steps: 6 });
   await page.mouse.up();
   const mark = page.locator(`${PAGE_ONE} [data-pdf-mark]`);
   await expect(mark).toHaveCount(1);

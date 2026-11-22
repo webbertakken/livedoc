@@ -78,8 +78,8 @@ describe('getting bytes in', () => {
   // "An upload begins by asking": bytes already held for that owner are never sent again.
   it('answers what the owner already holds, and never reads those bytes again', async () => {
     const wanted = await files('GET', `/api/files/${key}`);
-    expect(wanted.status).toBe(404);
-    expect(await wanted.json()).toEqual({ error: 'blob_not_held' });
+    expect(wanted.status).toBe(200);
+    expect(await wanted.json()).toEqual({ held: false });
     await files('PUT', `/api/files/${key}`, { bytes: PDF });
     const held = await files('GET', `/api/files/${key}`);
     expect(held.status).toBe(200);
@@ -90,7 +90,9 @@ describe('getting bytes in', () => {
     expect(await again.json()).toEqual({ held: true });
     expect(put).not.toHaveBeenCalled();
     // Another owner's equal file is their own object: one person's key never tells another a file exists.
-    expect((await files('GET', `/api/files/${key}`, { owner: 'grace' })).status).toBe(404);
+    expect(await (await files('GET', `/api/files/${key}`, { owner: 'grace' })).json()).toEqual({
+      held: false,
+    });
   });
 
   it('refuses a key that is no SHA-256 in lower-case hex', async () => {

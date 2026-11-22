@@ -61,8 +61,8 @@ export async function handleBlobStoreRoutes(ctx: RouteContext): Promise<Response
   if (ownerId instanceof Response) return ownerId;
 
   const held = await heldBlobSize(env.FILES, ownerId, key);
-  if (request.method === 'GET')
-    return held === null ? refusedBlob('blob_not_held', { documentId, key }) : json({ held: true });
+  // Not holding the bytes is an answer, never an error: the upload that follows is the ordinary path.
+  if (request.method === 'GET') return json({ held: held !== null });
   // Bytes already held for that owner are never read again: the body is left unread.
   if (held !== null) {
     console.info(`[blob-store] held document=${documentId ?? '-'} key=${short(key)}`);

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 import type { BlobKey } from '@livedoc/document';
 import { pdfDigest } from './digest';
@@ -156,5 +156,17 @@ describe('pdfDigest', () => {
       searchText: 'trace trees\ntype maps',
       marks: 3,
     });
+  });
+});
+
+// The api Worker loads this module: nothing may draw random numbers while it loads (a live document does).
+describe('loading the module', () => {
+  it('draws no random numbers, and knows the empty state as Yjs writes it', async () => {
+    const random = vi.spyOn(crypto, 'getRandomValues');
+    vi.resetModules();
+    const fresh = await import('./live-changes');
+    expect(random).not.toHaveBeenCalled();
+    random.mockRestore();
+    expect(fresh.PdfLiveChanges.merge([])).toEqual(Y.encodeStateAsUpdate(new Y.Doc()));
   });
 });

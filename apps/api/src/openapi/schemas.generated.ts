@@ -16723,6 +16723,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "Plan",
       "Sheet",
       "Spreadsheet",
+      "Pdf",
       "Form",
       "Feedback",
       "Timing"
