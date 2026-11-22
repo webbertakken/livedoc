@@ -1,6 +1,10 @@
 # Reading surface
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the title row with its PDF pill, the menus and toolbar as data
+(File > Download > PDF, View > Mode, Tools, Help; zoom, Select, Highlight), and the pages: every page a box of its true
+size, a whole-page picture for pages near view, let go far from it. The accessible tree is not built: a page is a
+named region whose picture is hidden from assistive technology. Tiles, panels, find, text selection, the page bar and
+the phone layout are not built.
 
 The chrome of a [PDF document](pdf-document.md) and how its pages are read: the title row, menus, toolbar, the left
 panel, the pages, zoom, find and the phone layout, with final copy. It fills the
@@ -251,13 +255,14 @@ the choice is remembered per person per document.
 
 ## Limits
 
-| Constant                       | Value                 | Why                                                                     |
-| ------------------------------ | --------------------- | ----------------------------------------------------------------------- |
-| `PDF_TILE_PX`                  | 512                   | `(default)` CSS pixels a side; safe range 256 to 1,024                  |
-| `PDF_TILE_CACHE_BYTES`         | 134,217,728 (128 MiB) | `(default)` Desktop; 50,331,648 (48 MiB) on a phone. Set by measurement |
-| `PDF_PHONE_PIXEL_RATIO`        | 2                     | `(default)` Past it a phone's canvas limits bite                        |
-| `PDF_ZOOM_MIN`, `PDF_ZOOM_MAX` | 0.1, 64               | Acrobat's range, 10% to 6400%                                           |
-| `PDF_FIND_MAX_RESULTS`         | 10,000                | `(default)` Listed results; the count still says how many more          |
+| Constant                       | Value                 | Why                                                                                                           |
+| ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `PDF_PAGE_PICTURE_MAX_PIXELS`  | 8,388,608             | `(default)` A page's whole-page picture, drawn at the screen's scale up to this; sharper detail is the tiles' |
+| `PDF_TILE_PX`                  | 512                   | `(default)` CSS pixels a side; safe range 256 to 1,024                                                        |
+| `PDF_TILE_CACHE_BYTES`         | 134,217,728 (128 MiB) | `(default)` Desktop; 50,331,648 (48 MiB) on a phone. Set by measurement                                       |
+| `PDF_PHONE_PIXEL_RATIO`        | 2                     | `(default)` Past it a phone's canvas limits bite                                                              |
+| `PDF_ZOOM_MIN`, `PDF_ZOOM_MAX` | 0.1, 64               | Acrobat's range, 10% to 6400%                                                                                 |
+| `PDF_FIND_MAX_RESULTS`         | 10,000                | `(default)` Listed results; the count still says how many more                                                |
 
 ## Share roles
 

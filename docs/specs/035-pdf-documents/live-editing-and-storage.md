@@ -1,6 +1,8 @@
 # Live editing and storage
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the layout's `stored` and `marks` roots, the room storing a PDF's
+live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the digest's pages and marks, and the stored
+file in the blob store. Presence, undo, offline, branches, copies, versions and what the servers make are not built.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The

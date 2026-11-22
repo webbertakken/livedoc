@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# LibreOffice's Writer and Calc, Java and unzip for CI's Office files job (docs/specs/020-import-export/office-packages.md
-# "Validation"), installed from the .deb files kept in the cache folder given ($1). With the folder full, nothing is
+# LibreOffice's Writer and Calc, Java, unzip and qpdf for CI's Office files job (docs/specs/020-import-export/
+# office-packages.md "Validation"; docs/specs/035-pdf-documents/saving.md "The validators' claim"), installed from the .deb files kept in the cache folder given ($1). With the folder full, nothing is
 # fetched: the Ubuntu mirrors are reached only when the package list or the image changes and the cache is empty.
 # Every part prints its progress and how long it took, so a stall shows where it is.
 set -euo pipefail
 
 DEBS="${1:?usage: ci-office-install.sh <deb cache folder>}"
 # The list the cache key hashes (this file): change it, and the next run fetches afresh.
-PACKAGES=(libreoffice-writer-nogui libreoffice-calc-nogui default-jre-headless unzip)
+PACKAGES=(libreoffice-writer-nogui libreoffice-calc-nogui default-jre-headless unzip qpdf)
 # A stalled mirror connection is dropped after 30 s and tried again, rather than holding the job to its limit.
 APT=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Dpkg::Use-Pty=0)
 export DEBIAN_FRONTEND=noninteractive
@@ -34,4 +34,4 @@ fi
 
 # One dpkg call over every file unpacks them all before configuring any, so their order does not matter.
 part "Install the packages" dpkg -i "${DEBS}"/*.deb
-part "Check LibreOffice and Java" bash -c 'soffice --version && java -version'
+part "Check LibreOffice, Java and qpdf" bash -c 'soffice --version && java -version && qpdf --version'

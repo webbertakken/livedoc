@@ -1,6 +1,8 @@
 # Security
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the boundary (a PDF's bytes are parsed only in WebAssembly, in a
+worker thread with no script runtime, and only typed, bounded values leave it). Links, actions, embedded files and the
+abuse cases' tests are not built.
 
 A PDF is untrusted input: it can carry code, ask for the network, hide content, lie about its authors and exhaust a
 parser. This spec is the trust boundary of a [PDF document](pdf-document.md) and the rule for every abuse case; each

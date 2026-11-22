@@ -1,6 +1,8 @@
 # Blob store
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the `FILES` bucket, asking what is held, an upload in one
+request checked against its key, reads whole and by range gated by the document's access and its holds, and the named
+refusals of those. Uploads in parts, usage, retention, previous versions, purging and This Browser are not built.
 
 The **blob store** is where LiveDoc keeps a file's bytes, exactly: the bytes of a [file tab](file-tab.md), and a
 [PDF document](../035-pdf-documents/pdf-document.md)'s stored file, previous versions, pictures and embedded files. One

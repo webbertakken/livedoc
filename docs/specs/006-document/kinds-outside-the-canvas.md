@@ -12,7 +12,7 @@ How the editor, the tab strip, split view and the Explorer host a tab kind that 
 - Each kind outside the canvas has a **surface**: one component that fills the editor's area below the editor's lines
   and owns everything drawn there.
 - Which surface a tab has is one question, `surfaceOf(tab, inSpreadsheet)` in `@livedoc/document`: `text-document`
-  for a text document tab, `spreadsheet` for a sheet tab of a spreadsheet, `pdf` for a PDF tab (specified, not built),
+  for a text document tab, `spreadsheet` for a sheet tab of a spreadsheet, `pdf` for a PDF tab,
   and none for a canvas tab. A sheet tab in
   a document without a workbook is a Plan Sheet, drawn on the canvas, until stored Plan Sheets are migrated
   ([Sheet migration](../029-sheets/migration.md)).
@@ -112,7 +112,7 @@ kind**. The room stores each one the same way, the kind declaring only what is i
   from the state, saving the document, and gives the search text to D1. A tab holds content when its digest says so,
   and its characters and stored bytes join the content summary.
 - **Copies**: a copied document's live tabs carry their state, stored as chunks under the new tab ids.
-- Kinds: the text document (`text-document`, tables `text_document_*`).
+- Kinds: the text document (`text-document`, tables `text_document_*`) and the PDF document (`pdf`, tables `pdf_*`).
 
 ## The Explorer
 

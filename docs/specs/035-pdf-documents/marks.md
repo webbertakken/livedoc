@@ -1,6 +1,8 @@
 # Marks
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: a Highlight, made with the tool in hand by dragging across a
+line's text, live in the document's changes, drawn over the page, written into the file as a standard annotation
+under its own id and read back by it. Every other kind, changing a mark, and the room's own-marks check are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with

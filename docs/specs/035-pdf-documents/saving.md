@@ -1,6 +1,8 @@
 # Saving
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: a bake in the browser for Download: the stored file itself when
+nothing was changed, else the stored file with one addition holding the highlights, deterministic, reopened before it
+is handed out, and proven a prefix. Rewrites, replacing the stored file, previous versions and versions are not built.
 
 LiveDoc has no Save button. A [PDF document](pdf-document.md) is saved as it is worked on, live, for everyone on it.
 "Saved" means the document's file is always whole and current: every way a file leaves LiveDoc hands out a valid PDF

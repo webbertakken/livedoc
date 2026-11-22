@@ -1,6 +1,8 @@
 # Opening any PDF
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: a file read whole by the engine in a worker thread, every page's
+size read before any is drawn, the refusals shown by name with Download (a protected file among them, until its
+password screen is built). Reading by range, repair notices, passwords, the time and memory limits are not built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.
 "Any PDF" is every PDF a common reader opens: PDF 1.0 to 2.0, linearised, encrypted, with damaged cross-references,

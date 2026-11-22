@@ -1,6 +1,7 @@
 # Files, print and sync
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: a PDF dropped on the Explorer (one or several) and File >
+Download > PDF. The bytes are sent before the document opens, in one request. Every other way in and out is not built.
 
 How a PDF arrives as a [PDF document](pdf-document.md), how it leaves by Download, print and email, how a repository
 link and the Drive mirror keep it as a file, and how the other kinds meet it. Every file that leaves is a bake

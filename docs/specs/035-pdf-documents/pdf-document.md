@@ -1,6 +1,8 @@
 # PDF document
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the tab kind `pdf` and its surface, a PDF dropped on the Explorer
+becoming a PDF document, its stored file in the blob store, its pages read and drawn, a highlight, and Download as
+PDF. Everything else here is specified, not built.
 
 A **PDF document** is a tab of the `pdf` [tab kind](../006-document/document.md#domain-language): one PDF, read,
 reviewed and really edited by people together, live, and **always a PDF**. The file that leaves LiveDoc is a PDF any
