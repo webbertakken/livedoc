@@ -316,21 +316,28 @@ describe('DocumentGroup', () => {
 
   // docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip": a document whose one tab is outside the canvas
   // hides its active tab segment and keeps Add tab; two tabs, or one canvas tab, show it.
-  it('hides the active tab of a document whose one tab is a text document, keeping Add tab', () => {
-    const props = base();
-    props.tabs.tabs = [tab('t', 'Notes', { kind: 'text-document' })];
-    props.tabs.activeId = 't';
-    render(<DocumentGroup {...props} />);
-    expect(screen.queryByRole('button', { name: /all tabs/ })).toBeNull();
-    expect(screen.queryByText('Product discovery')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Add tab' })).toBeTruthy();
-  });
+  it.each([
+    ['a text document', 'text-document'],
+    ['a PDF', 'pdf'],
+  ] as const)(
+    'hides the active tab of a document whose one tab is %s, keeping Add tab',
+    (_, kind) => {
+      const props = base();
+      props.tabs.tabs = [tab('t', 'Notes', { kind })];
+      props.tabs.activeId = 't';
+      render(<DocumentGroup {...props} />);
+      expect(screen.queryByRole('button', { name: /all tabs/ })).toBeNull();
+      expect(screen.queryByText('Product discovery')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Add tab' })).toBeTruthy();
+    },
+  );
 
   it.each([
     [
       'two tabs, one a text document',
       [tab('t', 'Notes', { kind: 'text-document' }), tab('a', 'Overview')],
     ],
+    ['two tabs, one a PDF', [tab('p', 'Agreement', { kind: 'pdf' }), tab('a', 'Overview')]],
     ['one canvas tab', [tab('a', 'Overview')]],
   ])('shows the active tab of a document of %s', (_, tabs) => {
     const props = base();
