@@ -929,11 +929,11 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'PDF documents',
     summary:
-      "One Yjs update to a PDF document's live changes, its bytes as the body: for an update too large for a room frame. Stored by the room, then sent live to everyone on it. 400 update_invalid; 413 update_too_large or live_changes_too_large; 404 pdf_not_found; 503 room_unavailable. Edit access (a tab-scoped link on its own tab).",
+      "One Yjs update to a PDF document's live changes, its bytes as the body: for an update too large for a room frame. X-Stored-File names the stored file it was made on. Stored by the room, then sent live to everyone on it. An Editor's is stored as it is; a Participant's only when it changes what Reviewing changes. 400 update_invalid; 403 level_too_low; 409 update_unreadable (a Participant's that stands on changes the room lacks) or stored_file_changed (made on another stored file than the room holds); 413 update_too_large or live_changes_too_large; 404 pdf_not_found; 503 room_unavailable. A tab-scoped link on its own tab.",
     auth: 'guest-or-session',
     tokenUsable: true,
     requestSchema: { type: 'string', format: 'binary' },
-    statuses: [204, 400, 401, 403, 404, 410, 413, 503],
+    statuses: [204, 400, 401, 403, 404, 409, 410, 413, 503],
   },
   // A browser's thumbnail of a PDF document (docs/specs/035-pdf-documents/live-editing-and-storage.md "A browser's
   // thumbnail").

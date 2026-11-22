@@ -44,8 +44,13 @@ export async function refreshLiveTabDigest(
   // The tab's rows in the reference index follow its state in the same batch, so the index trails it by one drain.
   const refs = imageRefReplaceStatements(env, tabId, [...(digest.imageIds ?? [])]);
   await env.DOCUMENT_DB.batch([written, saved, ...refs]);
+  // Every count the kind's digest holds, a kind's own beside the shared ones (a PDF's marks).
+  const counts = Object.entries(digest)
+    .filter(([, count]) => typeof count === 'number')
+    .map(([name, count]) => `${name}=${count}`)
+    .join(' ');
   console.info(
-    `${kind.tag} digest document=${documentId} tab=${tabId} characters=${digest.characters} words=${digest.words} images=${digest.imageIds?.length ?? 0} bytes=${stateBytes} ms=${Date.now() - started}`,
+    `${kind.tag} digest document=${documentId} tab=${tabId} ${counts} images=${digest.imageIds?.length ?? 0} bytes=${stateBytes} ms=${Date.now() - started}`,
   );
   return digest;
 }
