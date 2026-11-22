@@ -13,6 +13,7 @@ import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
 import { tableEditing } from 'prosemirror-tables';
 import { tableResizePlugin } from '@/lib/text-document/text-document-table-resize-plugin';
+import { tableMovePlugin } from '@/lib/text-document/text-document-table-move-plugin';
 import { tableView } from '@/lib/text-document/text-document-table-dom';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
@@ -311,6 +312,8 @@ export function TextDocumentSurface({
               // Columns and rows resized by dragging their borders (tables.md "Working in a table"): before the cells'
               // selecting, so a press on a border selects no cells.
               tableResizePlugin(),
+              // Rows and columns moved by dragging their grips (tables.md "Working in a table").
+              tableMovePlugin(),
               // Cells selected together, tables kept whole as they are edited (tables.md "In the editor").
               tableEditing(),
               changes.plugin,

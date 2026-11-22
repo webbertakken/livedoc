@@ -625,3 +625,36 @@ div.text-document-kept {
   height: 2px;
   margin-top: -1px;
 }
+/* Moving a table's rows and columns by their grips (docs/specs/034-text-documents/tables.md "Working in a table"). */
+.text-document-table-grip {
+  position: fixed;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  translate: -50% -50%;
+  border-radius: 4px;
+  color: var(--office-muted);
+  background: var(--office-menu);
+  box-shadow: 0 0 0 1px var(--office-line);
+  cursor: grab;
+}
+.text-document-table-grip:hover {
+  color: var(--office-ink);
+  background: var(--office-hover);
+}
+.text-document-table-drop {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  background: var(--office-primary);
+}
+.text-document-table-drop[data-kind='row'] {
+  height: 2px;
+  margin-top: -1px;
+}
+.text-document-table-drop[data-kind='column'] {
+  width: 2px;
+  margin-left: -1px;
+}

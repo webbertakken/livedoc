@@ -2,7 +2,7 @@
 
 **Status: in the model, the files and the editor.** Tables are read, written, converted, drawn, inserted, reshaped,
 sorted, typed in and set by their properties; across pages they break between rows and inside rows allowed to, their
-header rows repeated; columns and rows resize by their borders. Templates and the move handles are ahead.
+header rows repeated; columns and rows resize by their borders and move by their grips. Templates are ahead.
 
 Tables in a [text document](text-document.md), as Google Docs has them, built on `prosemirror-tables`
 ([Adopt or build](../../research/docs-open-standard/adopt-or-build.md)).
@@ -55,7 +55,17 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
     its width the columns' it covers; dimmed (and left out of the context menu) without such a selection.
   - Unmerge cells splits the caret's merged cell back into one cell per place, the writing in the first; dimmed (and left
     out of the context menu) unless the caret's cell spans more than one place.
-- **Move** rows and columns by dragging their edge handle (Google's six-dot grip).
+- **Move** rows and columns by dragging their grip (Google's six dots), or from Format > Table.
+  - Hovering a row shows a grip left of the table beside it; hovering a column, a grip above the table over it. Pressing
+    a grip and dragging draws a line between the rows (or columns) it would go between; releasing moves it there, one
+    undo step. Escape cancels. The grip is the pointer's only: aria-hidden, never focused.
+  - Format > Table > **Move row up**, **Move row down**, **Move column left**, **Move column right** `(default)` move the
+    caret's row or column (the selected ones, as a block) past its neighbour: the way without a pointer or dragging
+    (WCAG 2.5.7). The caret stays in its cell.
+  - A row moves among the header rows or among the rows below them, never across; refused (dimmed, or a drag that
+    changes nothing) at the table's edge, or where a cell spans the rows or columns moved or the ones passed.
+  - A column's width goes with it. An Editor's only: a Viewer and a Participant see no grip, and the items are dimmed.
+  - Telemetry: `Element · Changed · TextDocumentTableMoveRow`, `TextDocumentTableMoveColumn`.
 - **Resize** columns and rows by dragging their borders.
   - Over a cell's right or bottom border (within 4 px `(default)`) the pointer becomes a resize cursor; pressing and
     dragging draws a guide line where the border would go, and releasing sets it, one undo step. Escape cancels.
@@ -120,7 +130,8 @@ and width, cell background, by the one colour picker), **Cell** (padding).
 ## Format > Table
 
 `(default)`, until Webber's capture: **Table properties**; Insert row above, Insert row below, Insert column left,
-Insert column right; Delete row, Delete column, Delete table; Distribute rows, Distribute columns; Merge cells,
+Insert column right; Delete row, Delete column, Delete table; Move row up, Move row down, Move column left, Move column
+right; Distribute rows, Distribute columns; Merge cells,
 Unmerge cells; Sort table (a submenu); Pin header rows (a submenu). Each dimmed outside a table, Merge and Unmerge as
 above, Sort as above.
 

@@ -20,6 +20,7 @@ import {
   unmergeTableCell,
 } from './text-document-table-edits';
 import { isInTable, selectedRect } from 'prosemirror-tables';
+import { moveColumns, moveRows } from './text-document-table-move';
 import { startUndoStep } from './text-document-undo';
 
 // CSS pixels to points.
@@ -61,6 +62,14 @@ export const TABLE_EDIT_ITEMS: readonly {
   { item: 'table-delete-row', telemetry: 'DeleteRow', command: () => deleteRows },
   { item: 'table-delete-column', telemetry: 'DeleteColumn', command: () => deleteColumns },
   { item: 'table-delete', telemetry: 'Delete', command: () => deleteWholeTable },
+  { item: 'table-move-row-up', telemetry: 'MoveRow', command: () => moveRows('up') },
+  { item: 'table-move-row-down', telemetry: 'MoveRow', command: () => moveRows('down') },
+  { item: 'table-move-column-left', telemetry: 'MoveColumn', command: () => moveColumns('left') },
+  {
+    item: 'table-move-column-right',
+    telemetry: 'MoveColumn',
+    command: () => moveColumns('right'),
+  },
   {
     item: 'table-distribute-rows',
     telemetry: 'DistributeRows',
