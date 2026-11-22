@@ -98,7 +98,7 @@ function derivedFolder(): string {
   );
   const bytes = readFileSync(paper);
   writeFileSync(join(folder, 'truncated.pdf'), bytes.subarray(0, TRUNCATED_BYTES));
-  writeFileSync(join(folder, 'no-startxref.pdf'), spoiled(bytes));
+  writeFileSync(join(folder, 'spoiled-pointer.pdf'), spoiled(bytes));
   return (derived = folder);
 }
 

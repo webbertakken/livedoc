@@ -307,7 +307,7 @@
       "refusal": "pdf_damaged"
     },
     {
-      "file": "derived/no-startxref.pdf",
+      "file": "derived/spoiled-pointer.pdf",
       "pages": 14,
       "repaired": true
     },

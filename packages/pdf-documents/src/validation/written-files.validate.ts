@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createPdfEngine } from '../engine/index';
+import { writePicturePages } from '../engine/picture-pages';
 import type { PageBitmap, PagePoint, PdfEngine } from '../engine-contract';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark, type Quad } from '../mark';
@@ -214,6 +215,17 @@ describe('every written PDF passes the validators', () => {
           differingOutside(untouched, (await engine.drawPage(last, COMPARE_SCALE))!, false),
         ).toBe(0);
     });
+  });
+
+  // files-print-and-sync.md "One writer": another kind's Download as PDF is a page a picture.
+  it('pages of pictures written as a PDF are clean in qpdf', async () => {
+    const picture = { width: 2, height: 2, rgb: new Uint8Array(12).fill(200) };
+    const result = await writePicturePages([
+      { ...picture, pageWidth: 595.5, pageHeight: 842.25 },
+      { ...picture, pageWidth: 842.25, pageHeight: 595.5 },
+    ]);
+    if (!result.ok) throw new Error(result.refusal);
+    expect(qpdfCheck(onDisk('pictures.pdf', result.bytes))).toBe(CLEAN);
   });
 
   it('an addition to a file signed here leaves pdfsig reading its signature as valid', async () => {

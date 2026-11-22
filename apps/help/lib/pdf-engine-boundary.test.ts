@@ -63,6 +63,13 @@ describe('the engine’s boundary', () => {
     expect(sourcesNaming('pkijs|asn1js')).toEqual([]);
   });
 
+  // files-print-and-sync.md "One writer": every kind's Download as PDF and every bake are written by the
+  // repository's one PDF writer; a second PDF writer anywhere in the codebase is a defect. A writer cannot help
+  // naming a PDF's own structure, so its words outside the engine are a second writer.
+  it('finds no second PDF writer outside the engine', () => {
+    expect(sourcesNaming('startxref|/Type */Catalog|/Type */Pages')).toEqual([]);
+  });
+
   it('finds a name where one is', () => {
     // The guard itself reads the tree: a pattern that matched nothing anywhere would pass for the wrong reason.
     const inside = execFileSync(
