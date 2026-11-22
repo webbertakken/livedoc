@@ -278,7 +278,7 @@ describe('a text document frame from a level too low', () => {
         op: { kind: 'text-document-refused', tabId: 't1', name: 'level_too_low' },
       });
       expect(
-        await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('y')), level),
+        await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('y')), { level }),
       ).toBe('level');
     },
   );

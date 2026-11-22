@@ -10,6 +10,7 @@ import {
   apiHoldsBlob,
   apiStoreBlob,
   apiStoreBlobPart,
+  type BlobDocument,
 } from '@/lib/api/files';
 import { debugLog } from '@/lib/debug-log';
 
@@ -20,7 +21,7 @@ export const FILE_SEND_RETRY_MS = 400;
 
 export type SendBlobOptions = {
   /** The document the bytes are for: they are then its owner's. Absent: the sender's own. */
-  readonly documentId?: string;
+  readonly document?: BlobDocument;
   /** Told as bytes are confirmed stored: how many of how many. */
   readonly onProgress?: (sent: number, of: number) => void;
   /** The wait between tries; tests pass none. */
@@ -53,10 +54,10 @@ async function sendInParts(
   ownerId: string,
   key: BlobKey,
   bytes: Uint8Array<ArrayBuffer>,
-  { documentId, onProgress, wait = sleep }: SendBlobOptions,
+  { document, onProgress, wait = sleep }: SendBlobOptions,
 ): Promise<{ held: boolean }> {
   const size = bytes.byteLength;
-  const begun = await apiBeginBlobUpload(ownerId, key, size, documentId);
+  const begun = await apiBeginBlobUpload(ownerId, key, size, document);
   if (begun.held) return { held: true };
   const { upload, partBytes } = begun;
   const stored = new Set(begun.parts);
@@ -67,14 +68,12 @@ async function sendInParts(
     if (!stored.has(n)) {
       const part = bytes.subarray((n - 1) * partBytes, end);
       await persistently(`part-${n}`, wait, () =>
-        apiStoreBlobPart(ownerId, key, upload, n, part, documentId),
+        apiStoreBlobPart(ownerId, key, upload, n, part, document),
       );
     }
     onProgress?.(end, size);
   }
-  await persistently('complete', wait, () =>
-    apiCompleteBlobUpload(ownerId, key, upload, documentId),
-  );
+  await persistently('complete', wait, () => apiCompleteBlobUpload(ownerId, key, upload, document));
   return { held: false };
 }
 
@@ -85,15 +84,15 @@ export async function sendBlob(
   bytes: Uint8Array<ArrayBuffer>,
   options: SendBlobOptions = {},
 ): Promise<{ held: boolean }> {
-  const { documentId, onProgress } = options;
+  const { document, onProgress } = options;
   const size = bytes.byteLength;
-  if (await apiHoldsBlob(ownerId, key, documentId)) return { held: true };
+  if (await apiHoldsBlob(ownerId, key, document)) return { held: true };
   if (size > FILE_SINGLE_UPLOAD_MAX_BYTES) {
     const sent = await sendInParts(ownerId, key, bytes, options);
     debugLog(`[blob-store] sent bytes=${size} parts=${filePartCount(size)} held=${sent.held}`);
     return sent;
   }
-  await apiStoreBlob(ownerId, key, bytes, documentId);
+  await apiStoreBlob(ownerId, key, bytes, document);
   onProgress?.(size, size);
   debugLog(`[blob-store] sent bytes=${size} parts=1 held=false`);
   return { held: false };

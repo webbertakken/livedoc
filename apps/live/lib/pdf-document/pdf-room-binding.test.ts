@@ -6,7 +6,7 @@ import { Mark, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
 import { LiveTabRoom } from '@/lib/live-tab/live-tab-bus';
 import type { CopyKey, LiveTabCopy } from '@/lib/live-tab/live-tab-copies';
-import { PdfDocumentBus } from './pdf-document-bus';
+import { PdfDocumentBus, PdfStoredFiles } from './pdf-document-bus';
 import type { PdfLiveBinding } from './pdf-live-binding';
 import { pdfRoomBinding, type PdfFrame } from './pdf-room-binding';
 
@@ -44,10 +44,14 @@ function harness(opts: { canChange?: boolean; confirm?: () => boolean } = {}) {
     stored.push(bytesOfBase64(op.update)!);
     return true;
   });
-  const loadSince = vi.fn(async (vector: Uint8Array) => ({
-    update: PdfLiveChanges.since(state(), vector),
-    stateVector: PdfLiveChanges.stateVectorOf(state()),
-  }));
+  const loadSince = vi.fn(
+    async (
+      vector: Uint8Array,
+    ): Promise<{ update: Uint8Array; stateVector: Uint8Array; storedFile?: BlobKey }> => ({
+      update: PdfLiveChanges.since(state(), vector),
+      stateVector: PdfLiveChanges.stateVectorOf(state()),
+    }),
+  );
   const post = vi.fn(async (update: Uint8Array) => void stored.push(update));
   const bind = pdfRoomBinding({
     scope: { ownerId: 'o', documentId: 'D', tabId: 't1', shareCode: null },
@@ -201,6 +205,76 @@ describe('pdfRoomBinding', () => {
     // The surface binds again from what the room holds.
     const again = await opened(h);
     expect(idsIn(again.doc)).toEqual(['kept']);
+  });
+
+  // live-editing-and-storage.md "Storage": every change names the stored file it was made on.
+  it('names the stored file on every frame, and to the door', async () => {
+    const h = harness();
+    const binding = await opened(h);
+    PdfLiveChanges.addMark(binding.doc, highlight('m1'));
+    await tick();
+    expect(h.sequence).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'pdf', on: BLOB }));
+  });
+
+  // "Replacing the stored file": however a replacement is learnt, the surface is told once.
+  it('tells the surface the stored file was replaced: by the room’s word, or a change refused for it', async () => {
+    const h = harness();
+    const told = await opened(h);
+    const moved = vi.fn();
+    const refused = vi.fn();
+    told.onMoved(moved);
+    told.onRefused(refused);
+    PdfStoredFiles.replaced('t2');
+    expect(moved).not.toHaveBeenCalled();
+    PdfStoredFiles.replaced('t1');
+    PdfStoredFiles.replaced('t1');
+    PdfDocumentBus.refused('t1', 'stored_file_changed');
+    expect(moved).toHaveBeenCalledTimes(1);
+    expect(refused).not.toHaveBeenCalled();
+
+    const byRefusal = await opened(harness());
+    const again = vi.fn();
+    const stop = byRefusal.onMoved(again);
+    stop();
+    byRefusal.onMoved(again);
+    PdfDocumentBus.refused('t1', 'stored_file_changed');
+    expect(again).toHaveBeenCalledTimes(1);
+  });
+
+  it('merges nothing of a catch-up that reads another stored file’s changes, and says the file was replaced', async () => {
+    const h = harness();
+    const binding = await opened(h);
+    await tick();
+    const moved = vi.fn();
+    binding.onMoved(moved);
+    const other = PdfLiveChanges.load();
+    PdfLiveChanges.addMark(other, highlight('theirs'));
+    h.loadSince.mockResolvedValueOnce({
+      update: PdfLiveChanges.encode(other),
+      stateVector: PdfLiveChanges.stateVectorOf(PdfLiveChanges.encode(other)),
+      storedFile: 'c'.repeat(64) as BlobKey,
+    });
+    PdfDocumentBus.resync('t1');
+    await tick();
+    expect(moved).toHaveBeenCalledTimes(1);
+    expect(idsIn(binding.doc)).toEqual([]);
+  });
+
+  it('says whether the room holds every change made here', async () => {
+    let confirms = false;
+    const h = harness({ confirm: () => confirms });
+    const binding = await opened(h);
+    await tick();
+    expect(binding.isSaved()).toBe(true);
+    PdfLiveChanges.addMark(binding.doc, highlight('m1'));
+    await tick();
+    expect(binding.isSaved()).toBe(false);
+    confirms = true;
+    PdfDocumentBus.resync('t1');
+    await tick();
+    expect(binding.isSaved()).toBe(true);
+    LiveTabRoom.disconnected();
+    expect(binding.isSaved()).toBe(false);
   });
 
   it('sends nothing once closed, whatever answer arrives late', async () => {

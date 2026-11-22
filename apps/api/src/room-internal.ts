@@ -27,7 +27,7 @@ export type InternalRoom = {
     documentId: string,
     tabId: string,
     update: Uint8Array,
-    level: AccessLevel,
+    sent: { level: AccessLevel; on?: string },
   ) => Promise<PostedOutcome>;
 };
 
@@ -39,6 +39,7 @@ const POSTED_STATUS: Record<PostedOutcome, number> = {
   'no-store': 503,
   level: 403,
   unreadable: 409,
+  'stands-elsewhere': 412,
   characters: 413,
   state: 413,
 };
@@ -122,7 +123,9 @@ export async function answerInternal(
     const update = new Uint8Array(await request.arrayBuffer());
     // The route says its caller's level; one this room does not know reads as the lowest.
     const level = parseStoredLevel(url.searchParams.get('level'));
-    const outcome = await room.acceptPostedLiveTab(frame, documentId, tabId, update, level);
+    const on = url.searchParams.get('on');
+    const sent = on === null ? { level } : { level, on };
+    const outcome = await room.acceptPostedLiveTab(frame, documentId, tabId, update, sent);
     // A refused edit names its limit ("Refused edits").
     if (outcome === 'characters' || outcome === 'state')
       return Response.json({ limit: outcome }, { status: POSTED_STATUS[outcome] });

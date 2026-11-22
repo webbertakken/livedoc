@@ -3,10 +3,11 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Browser, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { textPdf } from '@livedoc/pdf-documents/testing';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
+import { dragAcrossFirstLine, dropPdf, PAGE_ONE, pageOneDrawn, peerOn } from './pdf-document-pages';
 
 // A PDF document end to end (docs/specs/035-pdf-documents/files-print-and-sync.md "Opening", "Downloading";
 // saving.md "An unchanged file", "Addition or rewrite", "The validators' claim"; marks.md "Making a mark", "In the
@@ -16,37 +17,7 @@ import { officeMenuItem } from './office-menus';
 // dropped again and opened with its highlight.
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
-const READY = '[data-pdf-surface="ready"]';
-const PAGE_ONE = '[data-pdf-page="1"]';
-// The fixture's line of text sits 72 points in and 720 up a US Letter page, 12 points tall.
-const LETTER = { width: 612, height: 792 };
-const LINE = { left: 72, middle: LETTER.height - 720 - 4 };
-
 const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-
-/** Drops a PDF from the computer on the page, as a person drags a file onto the window. */
-async function dropPdf(page: Page, name: string, bytes: Uint8Array): Promise<void> {
-  const transfer = await page.evaluateHandle(
-    ({ fileName, base64 }) => {
-      const binary = atob(base64);
-      const data = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(new File([data], fileName, { type: 'application/pdf' }));
-      return dataTransfer;
-    },
-    { fileName: name, base64: Buffer.from(bytes).toString('base64') },
-  );
-  await page.dispatchEvent('body', 'dragover', { dataTransfer: transfer });
-  await page.dispatchEvent('body', 'drop', { dataTransfer: transfer });
-}
-
-/** Page one, once the engine has drawn it. */
-async function pageOneDrawn(page: Page) {
-  const first = page.locator(PAGE_ONE);
-  await expect(page.locator(READY)).toBeVisible({ timeout: 30_000 });
-  await expect(first).toHaveAttribute('data-pdf-page-drawn', 'true', { timeout: 30_000 });
-  return first;
-}
 
 /** What page one's picture holds: the colour of its top left corner, and whether anything is drawn on it. */
 function pictureOf(page: Page) {
@@ -60,21 +31,6 @@ function pictureOf(page: Page) {
 
 const groundOf = (page: Page) =>
   page.locator('[data-pdf-surface]').evaluate((el) => getComputedStyle(el).backgroundColor);
-
-async function peerOn(browser: Browser, baseURL: string, code: string): Promise<Page> {
-  const ctx = await browser.newContext({
-    baseURL,
-    colorScheme: 'dark',
-    viewport: { width: 1280, height: 860 },
-  });
-  const page = await ctx.newPage();
-  await page.goto(`/document/shared?s=${code}`);
-  // A visitor joins under a name when the welcome asks for one; the pages show either way.
-  const join = page.getByRole('button', { name: /^join$/i });
-  await expect(join.or(page.locator(READY))).toBeVisible({ timeout: 30_000 });
-  if (await join.isVisible()) await join.click();
-  return page;
-}
 
 test('a PDF dropped on the Explorer is stored, read, highlighted together and leaves as a valid PDF holding it', async ({
   page,
@@ -143,14 +99,7 @@ test('a PDF dropped on the Explorer is stored, read, highlighted together and le
   // One highlight, made with the Highlight tool by dragging across the first line.
   await page.getByRole('button', { name: 'Highlight', exact: true }).click();
   await expect(page.locator('[data-pdf-tool="highlight"]')).toBeVisible();
-  const box = (await first.boundingBox())!;
-  const scale = box.width / LETTER.width;
-  const y = box.y + LINE.middle * scale;
-  await page.mouse.move(box.x + (LINE.left + 2) * scale, y);
-  await page.mouse.down();
-  await page.mouse.move(box.x + (LINE.left + 120) * scale, y, { steps: 6 });
-  await page.mouse.move(box.x + (LINE.left + 200) * scale, y, { steps: 6 });
-  await page.mouse.up();
+  await dragAcrossFirstLine(page, first);
   const mark = page.locator(`${PAGE_ONE} [data-pdf-mark]`);
   await expect(mark).toHaveCount(1);
   await expect(mark).toHaveAttribute('data-pdf-mark-kind', 'highlight');

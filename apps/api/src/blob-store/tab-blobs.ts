@@ -3,6 +3,7 @@
 // bytes it names (docs/specs/006-document/blob-store.md "Holds and retention").
 import { pdfTabOf, type BlobKey } from '@livedoc/document';
 import { heldBlob } from '../db/blobs';
+import { previousVersionHeldUntil, type PreviousStoredFile } from '../pdf-documents/pdf-previous';
 import type { Env } from '../types';
 
 export type TabBlobRefusal = 'files_unavailable' | 'blob_missing';
@@ -43,15 +44,36 @@ export const TAB_BLOB_STATUS: Record<TabBlobRefusal, number> = {
 export type BlobHold = { readonly key: BlobKey; readonly until: number | null };
 
 /**
- * The keys a tab's body holds ("Each document tells what it holds"): a PDF tab's stored file, for as long as the tab
- * names it. Null for a tab of a kind that never holds a blob, which tells nothing.
+ * The keys a tab holds ("Each document tells what it holds"): a PDF tab's stored file, for as long as the tab names
+ * it, and each previous version until its day. A key held both ways is held as the tab's own. Null for a tab of a
+ * kind that never holds a blob, which tells nothing.
  */
-export function tabBlobHolds(body: {
-  kind?: unknown;
-  blob?: unknown;
-  size?: unknown;
-}): BlobHold[] | null {
+export function tabBlobHolds(
+  body: { kind?: unknown; blob?: unknown; size?: unknown },
+  previous: readonly PreviousStoredFile[] = [],
+): BlobHold[] | null {
   if (body.kind !== 'pdf') return null;
+  const holds = new Map<BlobKey, number | null>();
+  for (const version of previous) {
+    const until = previousVersionHeldUntil(version.replacedAt);
+    holds.set(version.blob, Math.max(holds.get(version.blob) ?? 0, until));
+  }
   const file = pdfTabOf(body);
-  return file ? [{ key: file.blob, until: null }] : [];
+  if (file) holds.set(file.blob, null);
+  return [...holds].map(([key, until]) => ({ key, until }));
+}
+
+/**
+ * A PDF tab's body with the stored file its row holds (docs/specs/035-pdf-documents/live-editing-and-storage.md
+ * "Replacing the stored file"): a whole-tab save never changes it, whatever it was sent, since only the room's
+ * replacement moves the live changes with the file. Any other body is answered as it came.
+ */
+export function keepStoredFile<Body extends { kind?: unknown; blob?: unknown; size?: unknown }>(
+  body: Body,
+  stored: { kind?: unknown; blob?: unknown; size?: unknown } | null,
+): Body {
+  const file = stored ? pdfTabOf(stored) : null;
+  if (!file || body.kind !== 'pdf') return body;
+  if (body.blob === file.blob && body.size === file.size) return body;
+  return { ...body, blob: file.blob, size: file.size };
 }

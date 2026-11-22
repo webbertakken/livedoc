@@ -184,6 +184,9 @@ export const MUTATION_OP_KINDS = [
   // One Yjs update to a PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "The
   // room's op kinds"): stored by the room before it is relayed, as a text document's.
   'pdf',
+  // The stored file of a PDF document replaced ("Replacing the stored file"): asked by the client that baked the new
+  // file, judged and written by the room, and only then told to everyone, from the room.
+  'pdf-stored',
   'poll-start',
   'poll-end',
 ] as const;
@@ -423,8 +426,23 @@ export type ClientMessage =
 
 /** The limit a live tab's refused update would pass (kinds-outside-the-canvas.md "Live state"). */
 export type LiveTabLimitName = 'characters' | 'state';
-/** Why the room refused a live tab's update that passed no limit: its sender's level does not allow what it changes. */
-export type LiveTabRefusalName = 'level_too_low';
+/**
+ * Why the room refused a live tab's update that passed no limit: its sender's level does not allow what it changes,
+ * or it was made on something the tab's row no longer names (a PDF's stored file, replaced since).
+ */
+export type LiveTabRefusalName = 'level_too_low' | 'stored_file_changed';
+
+/** Why a PDF document's stored file is replaced (docs/specs/035-pdf-documents/saving.md "When the stored file is replaced"). */
+export const PDF_STORED_REASONS = ['budget'] as const;
+export type PdfStoredReason = (typeof PDF_STORED_REASONS)[number];
+
+/** Why the room refused a replacement of a PDF document's stored file ("Replacing the stored file"). */
+export type PdfReplacementRefusalName =
+  | 'level_too_low'
+  | 'stored_file_changed'
+  | 'live_changes_moved'
+  | 'blob_missing'
+  | 'files_unavailable';
 
 // The set of `op` kinds the live editor knows how to send + receive
 // inside the room's `op` envelopes. The api worker's view
@@ -519,8 +537,22 @@ export type RoomOp =
   | { kind: 'text-document-refused'; tabId: string; name: LiveTabRefusalName }
   // One Yjs update to a PDF document's live changes, base64 (docs/specs/035-pdf-documents/live-editing-and-storage.md
   // "Storage"); `stale` when the door stored one too large for a frame, and the room's refusal to its sender alone.
-  | { kind: 'pdf'; tabId: string; update: string }
+  // `on`: the stored file the change was made on; the room refuses one made on another.
+  | { kind: 'pdf'; tabId: string; update: string; on?: string }
   | { kind: 'pdf'; tabId: string; stale: true }
+  // The stored file replaced ("Replacing the stored file"). `at` rides only a client's asking: the fingerprint of
+  // the live changes the new file holds.
+  | {
+      kind: 'pdf-stored';
+      tabId: string;
+      from: string;
+      blob: string;
+      size: number;
+      pages: number;
+      reason: PdfStoredReason;
+      at?: string;
+    }
+  | { kind: 'pdf-refused'; tabId: string; name: PdfReplacementRefusalName; replacement: true }
   | { kind: 'pdf-refused'; tabId: string; limit: LiveTabLimitName }
   | { kind: 'pdf-refused'; tabId: string; name: LiveTabRefusalName }
   | {

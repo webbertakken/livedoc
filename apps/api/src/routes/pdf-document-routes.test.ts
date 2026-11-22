@@ -51,6 +51,8 @@ function call(
       ...(bytes ? { rawBody: bytes as unknown as string } : {}),
       headers: {
         'Content-Type': 'application/octet-stream',
+        // Every change names the stored file it was made on ("Storage").
+        ...(bytes ? { [PDF_STORED_FILE_HEADER]: key } : {}),
         ...(code ? { 'X-Share-Code': code } : {}),
       },
     }),
@@ -107,6 +109,7 @@ function withRoom(caps?: { characters: number; stateBytes: number }) {
     'wrong-kind': 404,
     level: 403,
     unreadable: 409,
+    'stands-elsewhere': 412,
   };
   const binding = {
     idFromName: (name: string) => name,
@@ -119,7 +122,10 @@ function withRoom(caps?: { characters: number; stateBytes: number }) {
           url.searchParams.get('document')!,
           url.searchParams.get('tab')!,
           new Uint8Array(init!.body as ArrayBuffer),
-          parseStoredLevel(url.searchParams.get('level')),
+          {
+            level: parseStoredLevel(url.searchParams.get('level')),
+            ...(url.searchParams.has('on') ? { on: url.searchParams.get('on')! } : {}),
+          },
         );
         if (outcome === 'characters' || outcome === 'state')
           return Response.json({ limit: outcome }, { status: 413 });
@@ -393,6 +399,7 @@ describe('a frame from an Editor’s socket', () => {
       kind: 'pdf',
       tabId,
       update: base64OfBytes(highlightUpdate('m1')),
+      on: key,
     });
     expect(await room.accept(sender, frame('t1'))).toBe(true);
     expect(relayed).toHaveLength(1);
@@ -410,6 +417,7 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
     kind: 'pdf',
     tabId: 't1',
     update: base64OfBytes(update),
+    on: key,
   });
   const refusedLevel = {
     kind: 'op',
@@ -462,7 +470,9 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
     expect(relayed).toEqual([]);
     expect(told).toEqual([refusedLevel]);
     expect(asks).not.toHaveBeenCalled();
-    expect(await room.acceptPosted('D', 't1', highlightUpdate('m1'), 'view')).toBe('level');
+    expect(
+      await room.acceptPosted('D', 't1', highlightUpdate('m1'), { level: 'view', on: key }),
+    ).toBe('level');
   });
 
   it('never reads what an Editor’s change touches', async () => {

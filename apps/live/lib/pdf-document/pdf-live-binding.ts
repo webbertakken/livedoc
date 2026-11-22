@@ -17,6 +17,13 @@ export type PdfLiveBinding = {
   discard: () => Promise<void>;
   /** Listen for a change made here being refused where it is kept ("Limits"). */
   onRefused: (listener: (refusal: PdfDocumentRefusal) => void) => () => void;
+  /**
+   * Listen for the stored file these changes are on being replaced ("Replacing the stored file"): the changes then
+   * stand on a file the tab no longer names, and the surface opens the new one.
+   */
+  onMoved: (listener: () => void) => () => void;
+  /** Whether where the changes are kept holds every change made here. */
+  isSaved: () => boolean;
 };
 
 /** Binds the state a surface read to where its changes are kept. Rejects when it cannot. */
@@ -29,4 +36,6 @@ export const unboundPdfLiveChanges: BindPdfLiveChanges = async (read) => ({
   discard: async () => {},
   saveStatus: null,
   onRefused: () => () => {},
+  onMoved: () => () => {},
+  isSaved: () => true,
 });

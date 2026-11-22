@@ -67,14 +67,18 @@ const readyOf = (o: ReturnType<typeof opening>) => {
   return open;
 };
 
-/** A binding whose refusals the test fires, counting what was discarded and closed. */
+/** A binding whose refusals and moves the test fires, counting what was discarded and closed. */
 function refusable() {
-  const made: { refuse: (refusal: PdfDocumentRefusal) => void }[] = [];
+  const made: { refuse: (refusal: PdfDocumentRefusal) => void; move: () => void }[] = [];
   const discard = vi.fn(async () => {});
   const close = vi.fn();
   const bind: BindPdfLiveChanges = async (state) => {
     const listeners = new Set<(refusal: PdfDocumentRefusal) => void>();
-    made.push({ refuse: (refusal) => [...listeners].forEach((listener) => listener(refusal)) });
+    const movers = new Set<() => void>();
+    made.push({
+      refuse: (refusal) => [...listeners].forEach((listener) => listener(refusal)),
+      move: () => [...movers].forEach((listener) => listener()),
+    });
     return {
       ...(await unboundPdfLiveChanges(state)),
       discard,
@@ -82,6 +86,10 @@ function refusable() {
       onRefused: (listener) => {
         listeners.add(listener);
         return () => listeners.delete(listener);
+      },
+      onMoved: (listener) => {
+        movers.add(listener);
+        return () => movers.delete(listener);
       },
     };
   };
@@ -272,5 +280,115 @@ describe('usePdfDocument', () => {
     release(read());
     await new Promise((resolve) => setTimeout(resolve, 5));
     expect(live.made).toHaveLength(1);
+  });
+
+  // live-editing-and-storage.md "Replacing the stored file": each client keeps showing the pages it has, opens the
+  // new file in a fresh engine, reads the live changes again and swaps both in at once.
+  it('opens a replaced stored file in place: the pages shown stay until the new file’s are ready', async () => {
+    const live = refusable();
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    const first = readyOf(o);
+    const dropped = vi.fn();
+    first.onDropped(dropped);
+    const other = 'cd'.repeat(32) as BlobKey;
+    let arrive: (bytes: Uint8Array<ArrayBuffer>) => void = () => {};
+    vi.mocked(o.deps.loadState).mockResolvedValue({ ...read(), storedFile: other });
+    vi.mocked(o.deps.readBlob).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          arrive = resolve;
+        }),
+    );
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(o.deps.readBlob).toHaveBeenCalledTimes(2));
+    // Still the pages it had, while the new file is on its way.
+    expect(readyOf(o)).toBe(first);
+    expect(o.engine.terminate).not.toHaveBeenCalled();
+    arrive(new Uint8Array([37, 80, 68, 70]));
+    await waitFor(() => expect(readyOf(o).storedFile).toBe(other));
+    expect(live.discard).toHaveBeenCalledTimes(1);
+    expect(readyOf(o).binding).not.toBe(first.binding);
+    expect(o.engine.terminate).toHaveBeenCalledTimes(1);
+    // A replacement drops nothing the person is told of: no change of theirs was refused.
+    expect(dropped).not.toHaveBeenCalled();
+    // The binding of the file that went is no longer heard.
+    act(() => live.made[0]!.move());
+    expect(live.discard).toHaveBeenCalledTimes(1);
+  });
+
+  it('binds the same pages again when the state still names the file after a move was told', async () => {
+    const live = refusable();
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    const first = readyOf(o);
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(live.made).toHaveLength(2));
+    await waitFor(() => expect(readyOf(o).binding).not.toBe(first.binding));
+    expect(readyOf(o).engine).toBe(first.engine);
+    expect(o.deps.readBlob).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['its bytes cannot be read', { readBlob: new Error('offline') }, 'failed'],
+    [
+      'the store no longer holds it',
+      { readBlob: new ApiError('file read', 409, 'blob_missing') },
+      'refused',
+    ],
+    ['the engine refuses it', { opens: { ok: false, refusal: 'pdf_damaged' } }, 'refused'],
+    ['its changes cannot be bound', { bind: new Error('room') }, 'failed'],
+  ] as const)(
+    'ends the pages shown when a replaced file cannot be opened: %s',
+    async (_why, how, ends) => {
+      const live = refusable();
+      const bind: BindPdfLiveChanges = vi.fn(live.bind);
+      const o = opening({ bind });
+      await waitFor(() => expect(phase(o)).toBe('ready'));
+      vi.mocked(o.deps.loadState).mockResolvedValue({
+        ...read(),
+        storedFile: 'cd'.repeat(32) as BlobKey,
+      });
+      if ('readBlob' in how) vi.mocked(o.deps.readBlob).mockRejectedValueOnce(how.readBlob);
+      if ('opens' in how) vi.mocked(o.engine.open).mockResolvedValueOnce(how.opens);
+      if ('bind' in how) vi.mocked(o.bind).mockRejectedValueOnce(how.bind);
+      act(() => live.made[0]!.move());
+      await waitFor(() => expect(phase(o)).toBe(ends));
+      expect(o.engine.terminate).toHaveBeenCalled();
+    },
+  );
+
+  it('says the tab is gone when it is no PDF tab any more after a move', async () => {
+    const live = refusable();
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    vi.mocked(o.deps.loadState).mockRejectedValueOnce(
+      new ApiError('PDF state', 404, 'pdf_not_found'),
+    );
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(phase(o)).toBe('gone'));
+  });
+
+  it('opens nothing more once the surface has gone while a replaced file was on its way', async () => {
+    const live = refusable();
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    let arrive: (bytes: Uint8Array<ArrayBuffer>) => void = () => {};
+    vi.mocked(o.deps.loadState).mockResolvedValue({
+      ...read(),
+      storedFile: 'cd'.repeat(32) as BlobKey,
+    });
+    vi.mocked(o.deps.readBlob).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          arrive = resolve;
+        }),
+    );
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(o.deps.readBlob).toHaveBeenCalledTimes(2));
+    o.hook.unmount();
+    arrive(new Uint8Array([37, 80, 68, 70]));
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(o.engine.open).toHaveBeenCalledTimes(1);
   });
 });

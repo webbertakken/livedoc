@@ -43,6 +43,8 @@ function ready(): PdfDocumentOpen {
       discard: async () => {},
       saveStatus: null,
       onRefused: () => () => {},
+      onMoved: () => () => {},
+      isSaved: () => true,
     },
     onDropped: (listener) => {
       dropped.listeners.add(listener);

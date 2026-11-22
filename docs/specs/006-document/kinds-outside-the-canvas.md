@@ -118,6 +118,17 @@ kind**. The room stores each one the same way, the kind declaring only what is i
   passed) or `name` (`level_too_low`). Nothing of a refused update is stored or relayed. An update that cannot be
   read yet is refused untold: it follows one the room refused, whose sender has been told already. The door answers
   a level too low `403 level_too_low`. Logged `level-refused level=<level> asks=<level>`.
+- **What a state stands on**: a kind whose state is changes to something its tab's row names (a PDF's stored file)
+  says what that is. Every frame then names what it was made on (`on`), and so does a posted update; one made on
+  anything else is refused whole, told to its sender as `stored_file_changed` (the door: `409`), since its items
+  follow others the state no longer holds.
+- **Replacing a state with its row**: such a kind may declare an op that replaces both in one step. The room, on its
+  write queue, has the kind judge the op against the stored tab, the stored state and the sender's level; then, in
+  one transaction, writes the tab's row at the revision it read, removes the state's log and chunks, writes the
+  state that stands on the new row and whatever rows the kind keeps of the old one. Only then is everyone told, the
+  sender too, in order: the row's change as a `tab-meta`, then the kind's own op. A refusal reaches the sender
+  alone, as `<op kind>-refused` with its `name` and `replacement: true`, and nothing is written. Logged
+  `state-replaced` and `replacement-refused name=`.
 - **The digest and summary**: every stored update queues the tab in the outbox; its drain rebuilds the kind's digest
   from the state, saving the document, and gives the search text to D1. A tab holds content when its digest says so,
   and its characters and stored bytes join the content summary.
@@ -180,6 +191,8 @@ with the text document):
 - A Participant's update to a live tab is stored when its kind says it asks no more than `participate`, refused and
   told to its sender alone when it asks `edit`, and refused untold when it cannot be read yet; a Viewer's and
   every non-Editor's update to a kind that reads no level are refused and told the same way.
+- A frame made on anything but what the tab's row names is refused and told; a replacement writes the row, the
+  state and the kind's rows together or not at all, tells everyone in order, and a refused one writes nothing.
 - A discarded binding leaves no local copy, and neither it nor a closed one sends when a late answer arrives.
 - A live tab kind's bus delivers only its own tab's updates and refusals, every bus hears the one connection and the
   re-hydrate, and a binding given a state read earlier catches up at once.

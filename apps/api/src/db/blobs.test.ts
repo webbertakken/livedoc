@@ -4,7 +4,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { recordBlobUploadPart } from './blob-uploads';
-import { blobObjectName, blobUsage, claimBlob, heldBlob, markBlobStored } from './blobs';
+import {
+  blobObjectName,
+  blobUsage,
+  claimBlob,
+  documentOwnerBlobSize,
+  heldBlob,
+  markBlobStored,
+} from './blobs';
 
 const KEY = 'a'.repeat(64) as BlobKey;
 const OTHER = 'b'.repeat(64) as BlobKey;
@@ -34,6 +41,20 @@ describe('what an owner holds', () => {
     await markBlobStored(db.env, 'ada', KEY, 40, T0 + 5);
     expect(await heldBlob(db.env, 'ada', KEY)).toEqual({ size: 40, object });
     expect(await heldBlob(db.env, 'grace', KEY)).toBeNull();
+  });
+
+  it('says what a document’s owner holds under a key, once it is stored', async () => {
+    db.sql
+      .prepare(
+        "INSERT INTO documents (id, owner_id, name, saved_at, created_at, shareable) VALUES ('D', 'ada', 'D', 1, 1, 0)",
+      )
+      .run();
+    await claimBlob(db.env, 'ada', KEY, 40, T0);
+    expect(await documentOwnerBlobSize(db.env, 'D', KEY)).toBeNull();
+    await markBlobStored(db.env, 'ada', KEY, 40, T0 + 5);
+    expect(await documentOwnerBlobSize(db.env, 'D', KEY)).toBe(40);
+    expect(await documentOwnerBlobSize(db.env, 'D', OTHER)).toBeNull();
+    expect(await documentOwnerBlobSize(db.env, 'nope', KEY)).toBeNull();
   });
 
   it('renews a claim made again, with the size now said', async () => {

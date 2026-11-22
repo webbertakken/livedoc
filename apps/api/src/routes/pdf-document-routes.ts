@@ -32,7 +32,7 @@ const notPdf = () => json({ error: 'pdf_not_found' }, { status: 404 });
 
 const refusedUpdate = (
   where: string,
-  error: 'update_invalid' | 'update_too_large' | 'update_unreadable',
+  error: 'update_invalid' | 'update_too_large' | 'update_unreadable' | 'stored_file_changed',
   status: number,
 ) => {
   console.warn(`[pdf] update-refused ${where} name=${error}`);
@@ -115,17 +115,16 @@ async function postUpdate(ctx: DocumentRouteContext): Promise<Response> {
   if (update.byteLength > PDF_UPDATE_MAX_BYTES)
     return refusedUpdate(where, 'update_too_large', 413);
   if (!PdfLiveChanges.decodes(update)) return refusedUpdate(where, 'update_invalid', 400);
-  const { status, limit } = await postLiveTabUpdate(
-    env,
-    PDF_LIVE_TAB,
-    documentId,
-    tabId,
-    update,
+  // The stored file the update was made on: the room refuses one made on another.
+  const on = request.headers.get(PDF_STORED_FILE_HEADER);
+  const { status, limit } = await postLiveTabUpdate(env, PDF_LIVE_TAB, documentId, tabId, update, {
     level,
-  );
+    on,
+  });
   if (status === 204) return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (status === 403) return tooLow(level);
   if (status === 409) return refusedUpdate(where, 'update_unreadable', 409);
+  if (status === 412) return refusedUpdate(where, 'stored_file_changed', 409);
   if (status === 413) return json({ error: 'live_changes_too_large', limit }, { status: 413 });
   if (status === 404) return notPdf();
   if (status === 400) return refusedUpdate(where, 'update_invalid', 400);

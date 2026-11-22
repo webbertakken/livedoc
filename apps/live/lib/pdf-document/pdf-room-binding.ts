@@ -2,7 +2,9 @@
 // "Storage", "Offline and This Browser", "Limits"): the binding every live tab kind has (docs/specs/006-document/
 // kinds-outside-the-canvas.md "Live state"), with what the PDF document declares of its own. The surface reads the
 // state before it opens the stored file, so the binding catches up as it binds; a change the room refuses is told
-// to the surface, which discards this binding and binds the state again.
+// to the surface, which discards this binding and binds the state again; and so is the stored file's replacement,
+// however it is learnt: the room's op, a change refused for it, or a catch-up that reads another file's state.
+import type { BlobKey } from '@livedoc/document';
 import { PDF_FRAME_CHARS, PDF_LOCAL_SAVE_MS, PdfLiveChanges } from '@livedoc/pdf-documents';
 import { apiLoadPdfState, apiPostPdfUpdate, type PdfDocumentScope } from '@/lib/api/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
@@ -15,7 +17,7 @@ import {
   type LiveTabStateSince,
 } from '@/lib/live-tab/live-tab-room-binding';
 import { liveTabSaveStatusSource } from '@/lib/live-tab/live-tab-save-status';
-import { PdfDocumentBus, type PdfDocumentRefusal } from './pdf-document-bus';
+import { PdfDocumentBus, PdfStoredFiles, type PdfDocumentRefusal } from './pdf-document-bus';
 import type { BindPdfLiveChanges } from './pdf-live-binding';
 
 export type PdfFrame = LiveTabFrame<'pdf'>;
@@ -47,7 +49,7 @@ export type PdfRoomBindingDeps = {
   sequence: (op: PdfFrame) => Promise<boolean>;
   // The doors and the copies, the browser's own unless a test hands others.
   post?: (update: Uint8Array) => Promise<void>;
-  loadSince?: (stateVector: Uint8Array) => Promise<LiveTabStateSince>;
+  loadSince?: (stateVector: Uint8Array) => Promise<LiveTabStateSince & { storedFile?: BlobKey }>;
   copies?: LiveTabCopyStore;
   saveDelayMs?: number;
 };
@@ -58,6 +60,14 @@ export const pdfRoomBinding =
   async (read) => {
     const { scope } = deps;
     const { tabId } = scope;
+    const movedListeners = new Set<() => void>();
+    // Told once: every way of learning it ends in the surface opening the new file.
+    const moved = () => {
+      const hearing = [...movedListeners];
+      movedListeners.clear();
+      if (hearing.length > 0) debugLog(`${TAG} stored-file-moved`, { tabId });
+      for (const listener of hearing) listener();
+    };
     const binding = await openLiveTabRoom(PDF_LIVE_TAB, {
       documentId: scope.documentId,
       tabId,
@@ -65,10 +75,20 @@ export const pdfRoomBinding =
         return deps.canChange;
       },
       sequence: deps.sequence,
-      post: deps.post ?? ((update) => apiPostPdfUpdate(scope, update)),
+      on: read.storedFile,
+      post: deps.post ?? ((update) => apiPostPdfUpdate(scope, update, read.storedFile)),
       loadState: async () => read.update,
       stateReadEarlier: true,
-      loadSince: deps.loadSince ?? ((vector) => apiLoadPdfState(scope, vector)),
+      loadSince: async (vector) => {
+        const since = await (deps.loadSince ?? ((v) => apiLoadPdfState(scope, v)))(vector);
+        // A replacement this editor never heard of: what was read is another file's changes, and none of it is
+        // merged into these.
+        if (since.storedFile !== undefined && since.storedFile !== read.storedFile) {
+          moved();
+          throw new Error('the stored file was replaced');
+        }
+        return since;
+      },
       copies: deps.copies ?? liveTabCopies(PDF_DOCUMENT_COPIES_DB),
       ...(deps.saveDelayMs === undefined ? {} : { saveDelayMs: deps.saveDelayMs }),
     });
@@ -76,11 +96,16 @@ export const pdfRoomBinding =
     const listeners = new Set<(refusal: PdfDocumentRefusal) => void>();
     const offRefused = PdfDocumentBus.onRefused(tabId, (refusal) => {
       debugLog(`${TAG} change-refused`, { tabId, refusal });
-      for (const listener of [...listeners]) listener(refusal);
+      // Refused for the file it was made on: the file was replaced, which is told as that.
+      if (refusal === 'stored_file_changed') moved();
+      else for (const listener of [...listeners]) listener(refusal);
     });
+    const offReplaced = PdfStoredFiles.onReplaced(tabId, moved);
     const stop = () => {
       offRefused();
+      offReplaced();
       listeners.clear();
+      movedListeners.clear();
     };
     return {
       doc,
@@ -88,6 +113,14 @@ export const pdfRoomBinding =
       onRefused: (listener) => {
         listeners.add(listener);
         return () => listeners.delete(listener);
+      },
+      onMoved: (listener) => {
+        movedListeners.add(listener);
+        return () => movedListeners.delete(listener);
+      },
+      isSaved: () => {
+        const facts = saveFacts.get();
+        return !facts.pending && !facts.failed && LiveTabRoom.isConnected();
       },
       close: () => {
         stop();

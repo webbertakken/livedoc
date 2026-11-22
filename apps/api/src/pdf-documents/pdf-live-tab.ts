@@ -13,6 +13,7 @@ import {
   pdfLevelAsked,
 } from '@livedoc/pdf-documents';
 import { liveTabKind } from '../live-tabs/live-tab-kind';
+import { PDF_REPLACEMENT } from './pdf-replacement';
 
 export const PDF_LIVE_TAB = liveTabKind({
   tabKind: 'pdf',
@@ -35,4 +36,7 @@ export const PDF_LIVE_TAB = liveTabKind({
     frameChars: PDF_FRAME_CHARS,
   },
   caps: { characters: Number.MAX_SAFE_INTEGER, stateBytes: PDF_LIVE_CHANGES_MAX_BYTES },
+  // The live changes are changes to the stored file the tab names: one made on another file is refused.
+  standsOn: (tab) => pdfTabOf(tab)?.blob ?? null,
+  replace: PDF_REPLACEMENT,
 });

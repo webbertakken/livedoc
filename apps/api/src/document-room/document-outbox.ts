@@ -12,6 +12,7 @@ import { tabSearchText } from '@livedoc/document-views';
 import { itemsSearchText } from '@livedoc/items';
 import { sheetSearchInputs } from '@livedoc/sheets';
 import { tabBlobHolds } from '../blob-store/tab-blobs';
+import { previousStoredFiles, type PreviousStoredFile } from '../pdf-documents/pdf-previous';
 import { contentSearchStatements, ITEMS_SEARCH_KEY } from '../db/content-search';
 import { listItems } from '../db/items';
 import { listSheets } from '../db/sheets';
@@ -273,8 +274,10 @@ function blobHoldStatements(
   tabId: string,
   tab: StoredTab | null,
   body: Record<string, unknown>,
+  _storedTexts: readonly string[],
+  previous: readonly PreviousStoredFile[],
 ): D1PreparedStatement[] {
-  const holds = tab ? tabBlobHolds(body) : [];
+  const holds = tab ? tabBlobHolds(body, previous) : [];
   if (holds === null) return [];
   const stmts = [
     env.DB.prepare('DELETE FROM document_blobs WHERE document_id = ?1 AND tab_id = ?2').bind(
@@ -346,7 +349,11 @@ async function tabStatements(
   // One body at a time: a drain after a 200-tab import holds one tab in memory, never the document.
   const body = tab ? parseBody(tab.data) : {};
   const storedTexts = tab ? await storedTextsOf(env, documentId, tabId, body) : [];
-  return TAB_UNIT_PARTS.flatMap((part) => part(env, documentId, tabId, tab, body, storedTexts));
+  // A PDF tab's previous versions, whose bytes it holds until their day.
+  const previous = tab && body.kind === 'pdf' ? await previousStoredFiles(env, tabId) : [];
+  return TAB_UNIT_PARTS.flatMap((part) =>
+    part(env, documentId, tabId, tab, body, storedTexts, previous),
+  );
 }
 
 // What a tab holds outside its body, as text: a live tab's (a text document's writing), read through its digest

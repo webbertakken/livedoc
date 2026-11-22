@@ -59,12 +59,13 @@ export function roomOpIsWellFormed(op: unknown): op is RoomOp {
       return isText(op.tabId) && ('stale' in op ? op.stale === true : isText(op.update));
     case 'text-document-refused':
     case 'pdf-refused':
-      return (
-        isText(op.tabId) &&
-        ('limit' in op
-          ? op.limit === 'characters' || op.limit === 'state'
-          : op.name === 'level_too_low')
-      );
+      if (!isText(op.tabId)) return false;
+      if ('limit' in op) return op.limit === 'characters' || op.limit === 'state';
+      // A refused replacement names why in its own words; a refused change in one of two.
+      if ('replacement' in op) return op.replacement === true && isText(op.name);
+      return op.name === 'level_too_low' || op.name === 'stored_file_changed';
+    case 'pdf-stored':
+      return isText(op.tabId) && isText(op.from) && isText(op.blob);
     case 'document-meta':
       return (
         isText(op.name) &&

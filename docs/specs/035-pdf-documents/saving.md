@@ -109,7 +109,8 @@ everyone on the document; every client reloads the pages it shows, keeping its p
   content, the same text under a highlight) and report those that do not: "3 marks couldn't be placed on the new file.
   They are kept in the previous version." ([Files, print and sync](files-print-and-sync.md#repository-sync))
 - Replacing for the budget is done by the first client that is able and idle, as an ordinary change: undo history
-  before it is no longer steppable, and version history still reaches it.
+  before it is no longer steppable, and version history still reaches it. How a replacement is made, checked and
+  told is [Live editing and storage](live-editing-and-storage.md#replacing-the-stored-file).
 - Who may trigger each: [Share roles](#share-roles).
 
 ## Previous versions and version history

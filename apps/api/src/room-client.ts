@@ -511,14 +511,16 @@ export async function postLiveTabUpdate(
   documentId: string,
   tabId: string,
   update: Uint8Array,
-  // The caller's level as the route verified it; the room judges a Participant's update by what it changes.
-  level: AccessLevel = 'edit',
+  // `level`: the caller's as the route verified it; the room judges a Participant's update by what it changes.
+  // `on`: what the update was made on, for a kind whose state stands on something its tab's row names.
+  { level = 'edit', on }: { level?: AccessLevel; on?: string | null } = {},
 ): Promise<{ status: number; limit?: string }> {
   const query = new URLSearchParams({
     frame: kind.frame,
     document: documentId,
     tab: tabId,
     level,
+    ...(typeof on === 'string' ? { on } : {}),
   });
   try {
     const res = await roomFetch(

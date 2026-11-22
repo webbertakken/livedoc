@@ -81,6 +81,8 @@ and belong to an owner's gallery, never held exactly.
 - `GET /api/documents/:id/files/:key` streams a blob the document holds, gated as the document's content is: the
   owner, a share link's level, a token. A key the document does not hold answers `404 blob_not_held`, whoever asks,
   so a key alone opens nothing.
+- **A document holds** the key each of its tabs names and each previous version it keeps, until that version's
+  day.
 - **By range**: a `Range` request is passed through to storage and answered `206`; a reader fetches a large file in
   blocks, first page first ([Opening](../035-pdf-documents/opening.md#what-is-read)).
 - Responses carry the key as a strong `ETag`, are immutable, and never carry a type that a browser would run:

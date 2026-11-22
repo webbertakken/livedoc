@@ -20,6 +20,7 @@ vi.mock('@/lib/api/files', () => api);
 import { ApiError } from '@/lib/api/core';
 import { FILE_SEND_ATTEMPTS, FILE_SEND_RETRY_MS, sendBlob } from './send-blob';
 
+const DOC = { documentId: 'D', shareCode: null };
 const KEY = 'a'.repeat(64) as BlobKey;
 const SMALL = new Uint8Array(FILE_SINGLE_UPLOAD_MAX_BYTES);
 // One byte past what one request takes: five parts, the last of one byte.
@@ -39,8 +40,8 @@ beforeEach(() => {
 describe('sendBlob', () => {
   it('sends nothing the store already holds', async () => {
     api.apiHoldsBlob.mockResolvedValue(true);
-    expect(await sendBlob('ada', KEY, LARGE, { documentId: 'D' })).toEqual({ held: true });
-    expect(api.apiHoldsBlob).toHaveBeenCalledWith('ada', KEY, 'D');
+    expect(await sendBlob('ada', KEY, LARGE, { document: DOC })).toEqual({ held: true });
+    expect(api.apiHoldsBlob).toHaveBeenCalledWith('ada', KEY, DOC);
     expect(api.apiStoreBlob).not.toHaveBeenCalled();
     expect(api.apiBeginBlobUpload).not.toHaveBeenCalled();
   });
@@ -56,23 +57,23 @@ describe('sendBlob', () => {
 
   it('sends one byte more in parts, in order, then completes', async () => {
     const onProgress = vi.fn();
-    expect(await sendBlob('ada', KEY, LARGE, { documentId: 'D', onProgress })).toEqual({
+    expect(await sendBlob('ada', KEY, LARGE, { document: DOC, onProgress })).toEqual({
       held: false,
     });
     expect(api.apiStoreBlob).not.toHaveBeenCalled();
-    expect(api.apiBeginBlobUpload).toHaveBeenCalledWith('ada', KEY, LARGE.byteLength, 'D');
+    expect(api.apiBeginBlobUpload).toHaveBeenCalledWith('ada', KEY, LARGE.byteLength, DOC);
     type PartCall = [string, string, string, number, Uint8Array, string];
     const sent = (api.apiStoreBlobPart.mock.calls as PartCall[]).map(
       ([, , upload, n, bytes, document]) => [upload, n, bytes.byteLength, document],
     );
     expect(sent).toEqual([
-      ['u1', 1, FILE_PART_BYTES, 'D'],
-      ['u1', 2, FILE_PART_BYTES, 'D'],
-      ['u1', 3, FILE_PART_BYTES, 'D'],
-      ['u1', 4, FILE_PART_BYTES, 'D'],
-      ['u1', 5, 1, 'D'],
+      ['u1', 1, FILE_PART_BYTES, DOC],
+      ['u1', 2, FILE_PART_BYTES, DOC],
+      ['u1', 3, FILE_PART_BYTES, DOC],
+      ['u1', 4, FILE_PART_BYTES, DOC],
+      ['u1', 5, 1, DOC],
     ]);
-    expect(api.apiCompleteBlobUpload).toHaveBeenCalledWith('ada', KEY, 'u1', 'D');
+    expect(api.apiCompleteBlobUpload).toHaveBeenCalledWith('ada', KEY, 'u1', DOC);
     expect(onProgress.mock.calls.at(-1)).toEqual([LARGE.byteLength, LARGE.byteLength]);
     expect(onProgress).toHaveBeenCalledTimes(COUNT);
   });

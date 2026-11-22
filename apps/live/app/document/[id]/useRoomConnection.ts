@@ -1,6 +1,6 @@
 import type { RemoteApply } from '@/hooks/canvas/history-replay';
 import { LiveTabRoom } from '@/lib/live-tab/live-tab-bus';
-import { PdfDocumentBus } from '@/lib/pdf-document/pdf-document-bus';
+import { PdfDocumentBus, PdfStoredFiles } from '@/lib/pdf-document/pdf-document-bus';
 import { TextDocumentBus } from '@/lib/text-document/text-document-bus';
 import {
   useEffect,
@@ -518,8 +518,14 @@ export function useRoomConnection(opts: {
         // surface, when open, merges it; the room has already stored it, so a surface opened later loads it.
         PdfDocumentBus.deliver(op);
       } else if (op.kind === 'pdf-refused') {
-        // A change of ours the room refused whole ("Limits"): that tab's surface drops it and says so.
-        PdfDocumentBus.refused(op.tabId, 'limit' in op ? op.limit : op.name);
+        // A change of ours the room refused whole ("Limits"): that tab's surface drops it and says so. A refused
+        // replacement of the stored file is its asker's to hear ("Replacing the stored file").
+        if ('replacement' in op) PdfStoredFiles.refused(op.tabId, op.name);
+        else PdfDocumentBus.refused(op.tabId, 'limit' in op ? op.limit : op.name);
+      } else if (op.kind === 'pdf-stored') {
+        // The stored file was replaced, told by the room alone: that tab's surface opens the new file in place.
+        // The tab's own row follows by the `tab-meta` the room tells just before.
+        if (from === 'system') PdfStoredFiles.replaced(op.tabId);
       } else if (op.kind === 'text-document-caret') {
         // A collaborator's selection in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
         // "Presence"), checked field by field; drawn by that tab's surface, never written.

@@ -4,8 +4,9 @@
 it back for marks, field values, a page's turn and what was deleted of the stored file, the room storing a PDF's
 live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the digest's pages and marks, the stored
 file in the blob store, and the surface bound to the room: sending, reconnecting, the local copy of unconfirmed
-changes, the save status, a refused change dropped, a Participant's changes judged by what they touch. Presence, undo, This Browser, reading offline, replacing the stored
-file, branches, copies, versions and what the servers make are not built.
+changes, the save status, a refused change dropped, a Participant's changes judged by what they touch, the stored file
+replaced in the room for the budget, with its previous versions held. Presence, undo, This Browser, reading offline,
+carrying a change across a replacement, branches, copies, versions and what the servers make are not built.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The
@@ -93,7 +94,8 @@ writes one shape `(default)`:
 
 - **A stored file's replacement is one step for everyone**: the room swaps the tab's `blob` and the state in one
   transaction and tells every client with a `pdf-stored` op; a client finishes the frame it is drawing, fetches the
-  new file (often already held: the client that baked it has it), and redraws in place.
+  new file (often already held: the client that baked it has it), and redraws in place
+  ([Replacing the stored file](#replacing-the-stored-file)).
 - A change that arrives for a stored file the room no longer holds is answered `pdf-refused` with `stored_file_changed`;
   the client re-reads the state and replays the change by its anchor.
 
@@ -133,6 +135,7 @@ writes one shape `(default)`:
 - **Reading it**: `GET /api/documents/:id/pdf-documents/:tabId/state` answers the whole state as one Yjs update, with
   the tab's `blob` in `X-Stored-File`; with `since` (a state vector) only what lies beyond it. `404 pdf_not_found`
   when the tab is absent or another kind; `400 state_vector_invalid`.
+- **Every change names the stored file it was made on**: a `pdf` op in `on`, a posted update in `X-Stored-File`.
 - **Sending**: a change goes to the room as one `pdf` op while the room is open and it fits a frame; a larger one (a
   pasted picture's reference, a catch-up after a long time offline) goes by
   `POST /api/documents/:id/pdf-documents/:tabId/updates`, which reaches the room through the shared door for a live
@@ -173,6 +176,48 @@ writes one shape `(default)`:
   refused with `level_too_low`.
 - **The door** judges a posted update the same way: `403 level_too_low` for a Viewer's, and for a Participant's
   that asks an Editor; `409 update_unreadable` `(default)` for a Participant's that cannot be judged.
+
+### Replacing the stored file
+
+When and why the stored file is replaced is [Saving](saving.md#when-the-stored-file-is-replaced)'s; this is how.
+
+- **A client replaces it**: it bakes the stored file with the live changes it holds, stores the result in the
+  [blob store](../006-document/blob-store.md), and sends the room
+  `{ kind: 'pdf-stored', tabId, from, blob, size, pages, reason, at }`: the key it replaces, the new file's key,
+  bytes and page count, why (`budget`; the other triggers join with their phases), and the **fingerprint** of the
+  live changes the new file holds.
+- **The fingerprint** `(default)` is the SHA-256 of what every root of the layout holds, written with its keys in
+  order: two states that show the same changes have the same fingerprint, whatever order their updates arrived in.
+- **The room refuses**, writing nothing and telling the sender alone, by name:
+
+| Name                  | When                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `level_too_low`       | The sender's level does not allow the reason ([Share roles](#share-roles))         |
+| `stored_file_changed` | The tab's `blob` is no longer `from`: someone replaced it first                    |
+| `live_changes_moved`  | The room holds changes the new file lacks: its fingerprint is not `at`. Bake again |
+| `blob_missing`        | The document's owner does not hold `blob` at `size`                                |
+| `files_unavailable`   | The server has no file storage                                                     |
+
+- **Otherwise, in one transaction**: the tab's row names the new `blob` and `size`, the live changes are emptied but
+  for `stored` naming the new file and its pages, and the replaced file becomes a **previous version**: its key,
+  size, when it was replaced and why, kept by the room beside the tab. Everyone, the sender too, then hears the
+  row's change and `{ kind: 'pdf-stored', tabId, from, blob, size, pages, reason }`.
+- **Because the room refuses a replacement that lacks anything it holds**, no stored change is ever lost to one: a
+  change stored before it is in the new file, and a change sent after it names the old file and is refused
+  `stored_file_changed`, to be carried by its sender.
+- **Each client, hearing it**, keeps showing the pages it has, fetches the new file, opens it in a fresh engine,
+  reads the live changes again and swaps both in at once, keeping its place; a reconnect that missed the op finds the
+  state naming another file than its own and does the same.
+- **A previous version's bytes stay readable** through the document for as long as they are held
+  ([Blob store](../006-document/blob-store.md#holds-and-retention)).
+- **A whole-tab save never changes a PDF tab's stored file** `(default)`: the save keeps the `blob` and `size` the
+  room holds, whatever it was sent, so a browser that has not heard of a replacement cannot undo it. Logged
+  `[pdf] save-kept-stored-file`.
+- **For the budget**, an Editor's surface replaces the stored file once its live changes pass `PDF_REPLACE_AT_BYTES`
+  and it has been idle for `PDF_REPLACE_IDLE_MS`: nothing changed here or arrived from the room in that time, and
+  everything made here is saved. It does so only when the bake is an addition, which keeps every page name and makes
+  each live mark the file's own under its id; a file that needs a rewrite waits for an Editor's own act. Refused
+  `live_changes_moved`, it waits to be idle again.
 
 ### The digest
 
@@ -258,6 +303,8 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 | Constant                     | Value     | Why                                                                                    |
 | ---------------------------- | --------- | -------------------------------------------------------------------------------------- |
 | `PDF_LIVE_CHANGES_MAX_BYTES` | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))           |
+| `PDF_REPLACE_AT_BYTES`       | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself         |
+| `PDF_REPLACE_IDLE_MS`        | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s              |
 | `PDF_UPDATE_MAX_BYTES`       | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                |
 | `PDF_INLINE_MAX_BYTES`       | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                 |
 | `PDF_SEARCH_TEXT_MAX_CHARS`  | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only |
@@ -291,6 +338,7 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
 - No telemetry of its own: each area's spec fires for what a person did.
 - Fingerprints with the document and tab ids, never content: `[pdf] state-read bytes=<n>`, `[pdf] update-stored
 bytes=<n> roots=<names>`, `[pdf] update-refused name=<name>`, `[pdf] level-refused level=<level> asks=<level>`, `[pdf] caught-up`, `[pdf] compacted`,
-  `[pdf] stored-file-replaced` ([Saving](saving.md#telemetry-and-observability)), `[pdf] digest pages=<n> marks=<n>`,
+  `[pdf] stored-file-replaced` ([Saving](saving.md#telemetry-and-observability)), `[pdf] replacement-refused name=<name>`,
+  `[pdf] save-kept-stored-file`, `[pdf] digest pages=<n> marks=<n>`,
   `[pdf] server-made what=<thumbnail|text|preview|bake> ms=<n>`, `[pdf] server-declined what=<what> reason=<reason>`,
   `[pdf] browser-upload what=<thumbnail|text>`, `[pdf] local-store refused=<reason>`.

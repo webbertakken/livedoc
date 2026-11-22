@@ -28,6 +28,24 @@ export async function heldBlob(env: Db, ownerId: string, key: BlobKey): Promise<
 }
 
 /**
+ * The size of the blob a document's owner holds under the key, or null: what a tab of that document may name. One
+ * read, whoever the owner is by now (a guest who signed up took their rows with them).
+ */
+export async function documentOwnerBlobSize(
+  env: Db,
+  documentId: string,
+  key: BlobKey,
+): Promise<number | null> {
+  const row = await env.DB.prepare(
+    `SELECT b.size FROM documents d JOIN blobs b ON b.owner_id = d.owner_id
+      WHERE d.id = ? AND b.key = ? AND b.stored_at IS NOT NULL`,
+  )
+    .bind(documentId, key)
+    .first<{ size: number }>();
+  return row?.size ?? null;
+}
+
+/**
  * Claims the key for the owner before the first byte, and answers the object the bytes go to. A claim made again
  * (an upload tried again) is the same row, its day renewed; a key already held keeps its row untouched.
  */

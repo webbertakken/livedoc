@@ -220,6 +220,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   // A text document's edits: stored by the room before they are relayed (room-text-documents.ts).
   // Each live tab kind's edits, by its frame's op kind (kinds-outside-the-canvas.md "Live state").
   private readonly liveTabs: ReadonlyMap<string, RoomLiveTabs>;
+  // The same, by the op kind a kind's replacement is asked with.
+  private readonly liveTabReplacements: ReadonlyMap<string, RoomLiveTabs>;
   // The document's content in this room's SQLite (room-content.ts).
   private readonly content: RoomContent;
   // A tab-scoped session's structure check (docs/specs/013-workspace/tab-scoped-share-links.md "Structure").
@@ -255,6 +257,11 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
         }),
       ]),
     );
+    this.liveTabReplacements = new Map(
+      LIVE_TAB_KINDS.flatMap((kind) =>
+        kind.replace ? [[kind.replace.op, this.liveTabs.get(kind.frame)!] as const] : [],
+      ),
+    );
     this.poll = new RoomLivePoll(state.storage);
     this.internal = {
       broadcastSystemOp: (op) => this.broadcastSystemOp(op),
@@ -270,8 +277,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       readSelections: (tabId, person) => this.selections.read(tabId, this.liveSessions(), person),
       readLedger: (tabId) => this.ledger.read(tabId),
       epoch: () => this.epoch,
-      acceptPostedLiveTab: async (frame, documentId, tabId, update, level) =>
-        (await this.liveTabs.get(frame)?.acceptPosted(documentId, tabId, update, level)) ??
+      acceptPostedLiveTab: async (frame, documentId, tabId, update, sent) =>
+        (await this.liveTabs.get(frame)?.acceptPosted(documentId, tabId, update, sent)) ??
         'wrong-kind',
     };
     this.baton = new RoomFacilitator({
@@ -858,17 +865,17 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       if (gate.kind === 'live-tab') {
         // The room is a live tab's one writer: stored first, then relayed, or refused by the sender's level
         // (room-live-tabs.ts). The gate has kept a tab-scoped session to its own tab.
-        const frameKind = (msg.op as { kind: string }).kind;
-        void this.liveTabs.get(frameKind)!.accept(
-          {
-            ws,
-            presenceId: sender.id,
-            documentId: session.documentId ?? null,
-            level: gate.level,
-          },
-          msg.op,
-          msg.ref,
-        );
+        const opKind = (msg.op as { kind: string }).kind;
+        const from = {
+          ws,
+          presenceId: sender.id,
+          documentId: session.documentId ?? null,
+          level: gate.level,
+        };
+        const frames = this.liveTabs.get(opKind);
+        if (frames) void frames.accept(from, msg.op, msg.ref);
+        // Not a frame: the kind's replacement of a state with its row.
+        else void this.liveTabReplacements.get(opKind)!.replace(from, msg.op, msg.ref);
         return;
       }
       // A tab-scoped session keeps its tab's structure (room-scoped-structure.ts), judged against the stored tab.

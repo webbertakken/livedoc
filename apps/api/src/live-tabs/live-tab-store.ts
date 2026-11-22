@@ -8,6 +8,37 @@ const toBlob = (bytes: Uint8Array): ArrayBuffer => bytes.slice().buffer;
 const fromBlob = (value: unknown): Uint8Array =>
   value instanceof ArrayBuffer ? new Uint8Array(value) : new Uint8Array(value as ArrayLike<number>);
 
+/** A live tab's row as a replacement reads it: its body, and what a write of it at the revision read needs. */
+export type StoredLiveTabRow = {
+  body: Record<string, unknown>;
+  name: string;
+  rev: number;
+  orderIndex: number;
+};
+
+/** The tab's row, when the document holds the tab and it is of the kind; else null. */
+export async function storedLiveTabRow(
+  env: DocumentEnv,
+  kind: LiveTabKind,
+  documentId: string,
+  tabId: string,
+): Promise<StoredLiveTabRow | null> {
+  const row = await env.DOCUMENT_DB.prepare(
+    `SELECT t.data, t.name, t.rev, dt.order_index FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id
+      WHERE t.id = ? AND dt.document_id = ?`,
+  )
+    .bind(tabId, documentId)
+    .first<{ data: string; name: string; rev: number; order_index: number }>();
+  if (!row) return null;
+  try {
+    const body = JSON.parse(row.data) as Record<string, unknown>;
+    if (body.kind !== kind.tabKind) return null;
+    return { body, name: row.name, rev: row.rev, orderIndex: row.order_index };
+  } catch {
+    return null;
+  }
+}
+
 /** The tab's body as stored, when the document holds the tab and it is of the kind; else null. */
 export async function storedLiveTab(
   env: DocumentEnv,
@@ -15,19 +46,7 @@ export async function storedLiveTab(
   documentId: string,
   tabId: string,
 ): Promise<Record<string, unknown> | null> {
-  const row = await env.DOCUMENT_DB.prepare(
-    `SELECT t.data FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id
-      WHERE t.id = ? AND dt.document_id = ?`,
-  )
-    .bind(tabId, documentId)
-    .first<{ data: string }>();
-  if (!row) return null;
-  try {
-    const data = JSON.parse(row.data) as Record<string, unknown>;
-    return data.kind === kind.tabKind ? data : null;
-  } catch {
-    return null;
-  }
+  return (await storedLiveTabRow(env, kind, documentId, tabId))?.body ?? null;
 }
 
 /** The stored updates of a live tab, the chunks first, in order. */
@@ -120,6 +139,24 @@ export function chunkStatements(
   );
 }
 
+/**
+ * The statements that replace a tab's whole state ("Replacing a state with its row"): the log and the chunks go,
+ * and `state`, when there is one, is written as chunks. For a batch that writes the tab's row with them.
+ */
+export function replaceStateStatements(
+  env: DocumentEnv,
+  kind: LiveTabKind,
+  tabId: string,
+  state: Uint8Array | null,
+  rev: number,
+): D1PreparedStatement[] {
+  return [
+    env.DOCUMENT_DB.prepare(`DELETE FROM ${kind.tables.chunks} WHERE tab_id = ?`).bind(tabId),
+    env.DOCUMENT_DB.prepare(`DELETE FROM ${kind.tables.updates} WHERE tab_id = ?`).bind(tabId),
+    ...(state ? chunkStatements(env, kind, tabId, state, rev) : []),
+  ];
+}
+
 /** Store a whole state for a tab that holds none yet: one update in the log when a row holds it, else chunks. */
 export async function storeLiveTabState(
   env: DocumentEnv,
@@ -149,11 +186,8 @@ export async function compactLiveTab(
     ...(await storedUpdates(env, kind, tabId)),
     ...(extra ? [extra] : []),
   ]);
-  const statements = chunkStatements(env, kind, tabId, merged, Date.now());
-  await env.DOCUMENT_DB.batch([
-    env.DOCUMENT_DB.prepare(`DELETE FROM ${kind.tables.chunks} WHERE tab_id = ?`).bind(tabId),
-    env.DOCUMENT_DB.prepare(`DELETE FROM ${kind.tables.updates} WHERE tab_id = ?`).bind(tabId),
-    ...statements,
-  ]);
-  return statements.length;
+  const statements = replaceStateStatements(env, kind, tabId, merged, Date.now());
+  await env.DOCUMENT_DB.batch(statements);
+  // Two of them empty the tables; the rest are the chunks.
+  return statements.length - 2;
 }

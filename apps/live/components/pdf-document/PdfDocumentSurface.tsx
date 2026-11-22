@@ -28,7 +28,9 @@ import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
-import type { PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
+import { sendBlob } from '@/lib/blob-store/send-blob';
+import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-budget-replacement';
+import { PdfStoredFiles, type PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { DOWNLOAD_PDF, PDF_MENUS, TOOL_HIGHLIGHT, TOOL_SELECT } from '@/lib/pdf-document/pdf-menus';
@@ -89,8 +91,8 @@ export function PdfDocumentSurface({
   author: string;
   // The document's own parts in the title row; null where another pane shows them.
   chrome: OfficeChrome | null;
-  // One frame to the document's room; true once the room has stored it.
-  sequence: (op: PdfFrame) => Promise<boolean>;
+  // One frame, or one replacement of the stored file, to the document's room; true once the room has stored it.
+  sequence: (op: PdfFrame | PdfStoredAsking) => Promise<boolean>;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
@@ -122,6 +124,25 @@ export function PdfDocumentSurface({
   const marking = canReview && mode !== 'viewing' && ready !== null;
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
+
+  // "Replacing the stored file": an Editor's idle surface replaces it for the budget.
+  useEffect(() => {
+    if (!ready) return undefined;
+    const document = { documentId, shareCode };
+    const watch = watchPdfBudget({
+      tabId,
+      doc: ready.binding.doc,
+      storedFile: ready.storedFile,
+      pages: ready.pages.length,
+      engine: ready.engine,
+      canReplace: () => live.current.level === 'edit',
+      isSaved: ready.binding.isSaved,
+      store: (key, bytes) => sendBlob(ownerId, key, bytes, { document }),
+      ask: (asking) => live.current.sequence(asking),
+      onRefused: (listener) => PdfStoredFiles.onRefused(tabId, listener),
+    });
+    return watch.stop;
+  }, [ready, ownerId, documentId, tabId, shareCode]);
 
   const onDropped = ready?.onDropped ?? null;
   useEffect(

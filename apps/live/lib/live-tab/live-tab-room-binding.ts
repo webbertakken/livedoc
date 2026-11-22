@@ -42,7 +42,13 @@ export type LiveTabClientKind<Frame extends string> = {
   readonly load: (updates: readonly Uint8Array[]) => Y.Doc;
 };
 
-export type LiveTabFrame<Frame extends string> = { kind: Frame; tabId: string; update: string };
+export type LiveTabFrame<Frame extends string> = {
+  kind: Frame;
+  tabId: string;
+  update: string;
+  /** What the change was made on, for a kind whose state stands on something its tab's row names. */
+  on?: string;
+};
 
 /** What a read of the state beyond a state vector answers: the update, and the state's own vector. */
 export type LiveTabStateSince = { update: Uint8Array; stateVector: Uint8Array };
@@ -52,6 +58,9 @@ export type LiveTabRoomDeps<Frame extends string> = {
   tabId: string;
   // Whether this session may change the writing; a viewer's document never sends.
   readonly canEdit: boolean;
+  // What the state read stands on (a PDF's stored file): every frame names it, and the room refuses one made on
+  // anything else. Absent for a kind whose state stands on nothing but itself.
+  readonly on?: string;
   // One frame to the room; true once the room has stored it.
   sequence: (op: LiveTabFrame<Frame>) => Promise<boolean>;
   // One update by the door; resolves once the room has stored it.
@@ -107,6 +116,7 @@ export async function openLiveTabRoom<Frame extends string>(
   const { tag, bus } = kind;
   const key = { documentId, tabId };
   const saveDelay = deps.saveDelayMs ?? kind.localSaveMs;
+  const on = deps.on === undefined ? {} : { on: deps.on };
   let doc: Y.Doc | null = null;
   const early: Uint8Array[] = [];
   // Whether the room may have relayed something this surface never heard: it read the state with the room closed,
@@ -224,7 +234,7 @@ export async function openLiveTabRoom<Frame extends string>(
     let stored = false;
     const framed = encoded.length <= kind.frameChars;
     try {
-      if (framed) stored = await deps.sequence({ kind: kind.frame, tabId, update: encoded });
+      if (framed) stored = await deps.sequence({ kind: kind.frame, tabId, update: encoded, ...on });
       else {
         await deps.post(update);
         stored = true;

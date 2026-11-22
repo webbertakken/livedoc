@@ -3,6 +3,7 @@
 // never by what its sender says. Read by applying the update to the stored state and asking Yjs which roots it
 // landed in; `removed` and `stored` are judged by what they hold, before against after.
 import * as Y from 'yjs';
+import { canonical } from './canonical';
 import { PdfLiveChanges, type PdfRoot } from './live-changes';
 
 /** The least level an update needs, or that it stands on changes the stored state lacks and cannot be judged. */
@@ -18,14 +19,6 @@ export const PDF_REVIEWING_ROOTS = [
 ] as const satisfies readonly PdfRoot[];
 
 type Held = Record<string, unknown>;
-
-/** A value as text that reads the same whatever order its keys were set in; nothing for a value that is absent. */
-const canonical = (value: unknown): string | undefined =>
-  JSON.stringify(value, (_key, held: unknown) =>
-    typeof held === 'object' && held !== null && !Array.isArray(held)
-      ? Object.fromEntries(Object.entries(held).sort(([a], [b]) => (a < b ? -1 : 1)))
-      : held,
-  );
 
 /** A shared type as a transaction names the ones it changed. */
 type SharedType = Y.Transaction['changed'] extends Map<infer Type, unknown> ? Type : never;

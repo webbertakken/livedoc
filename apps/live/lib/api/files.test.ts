@@ -35,13 +35,13 @@ describe('the blob store’s doors', () => {
   it('asks whether bytes are held, of the caller or of a document’s owner', async () => {
     const calls = answering({ held: true });
     expect(await apiHoldsBlob('ada', KEY)).toBe(true);
-    expect(await apiHoldsBlob('ada', KEY, 'doc 1')).toBe(true);
+    expect(await apiHoldsBlob('ada', KEY, { documentId: 'doc 1', shareCode: 'CODE' })).toBe(true);
     expect(calls.map(pathOf)).toEqual([`/files/${KEY}`, `/files/${KEY}?document=doc%201`]);
   });
 
   it('stores bytes in one request', async () => {
     const calls = answering({ stored: true }, 201);
-    await apiStoreBlob('ada', KEY, BYTES, 'D');
+    await apiStoreBlob('ada', KEY, BYTES, { documentId: 'D', shareCode: null });
     expect(calls).toEqual([
       { url: expect.stringContaining(`/files/${KEY}?document=D`), method: 'PUT', body: BYTES },
     ]);
@@ -50,7 +50,9 @@ describe('the blob store’s doors', () => {
   it('begins an upload in parts, sends a part, and completes', async () => {
     const begun = { upload: 'u 1', partBytes: 8, parts: [1] };
     let calls = answering(begun, 201);
-    expect(await apiBeginBlobUpload('ada', KEY, 20, 'D')).toEqual(begun);
+    expect(await apiBeginBlobUpload('ada', KEY, 20, { documentId: 'D', shareCode: null })).toEqual(
+      begun,
+    );
     expect(pathOf(calls[0])).toBe(`/files/${KEY}/uploads?size=20&document=D`);
     expect(calls[0]!.method).toBe('POST');
 
@@ -60,7 +62,7 @@ describe('the blob store’s doors', () => {
     expect(calls[0]).toMatchObject({ method: 'PUT', body: BYTES });
 
     calls = answering({ stored: true }, 201);
-    await apiCompleteBlobUpload('ada', KEY, 'u 1', 'D');
+    await apiCompleteBlobUpload('ada', KEY, 'u 1', { documentId: 'D', shareCode: null });
     expect(pathOf(calls[0])).toBe(`/files/${KEY}/uploads/u%201/complete?document=D`);
     expect(calls[0]!.method).toBe('POST');
   });
