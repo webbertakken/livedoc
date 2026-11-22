@@ -161,7 +161,6 @@ function EntityMenu({
       {plain.map((item) => (
         <MenuActionRow
           key={item.label}
-          plain
           icon={item.icon}
           label={item.label}
           onClick={then(item.onClick)}
@@ -169,7 +168,6 @@ function EntityMenu({
       ))}
       {plain.length > 0 ? <MenuGroupSeparator /> : null}
       <MenuActionRow
-        plain
         icon={<CloseIcon size={11} />}
         label="Remove from Timeline"
         onClick={onRemove}
@@ -178,7 +176,6 @@ function EntityMenu({
       {destructive.map((item) => (
         <MenuActionRow
           key={item.label}
-          plain
           icon={item.icon}
           label={item.label}
           onClick={then(item.onClick)}

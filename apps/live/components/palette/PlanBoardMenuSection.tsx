@@ -349,7 +349,6 @@ export function PlanBoardMenuSections({
         <>
           <MenuGroupSeparator />
           <MenuActionRow
-            plain
             label="New Form"
             icon={<FormIcon aria-hidden />}
             onClick={() => {

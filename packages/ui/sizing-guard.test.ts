@@ -3,7 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { checkSizing, formatSizingViolations } from '@livedoc/tailwind-config/sizing-guard';
 
 // The shared parts that have moved to the sizing scale (docs/specs/004-interface-design/sizing.md "The guard").
-const SIZED_PATHS = ['src/Button.tsx', 'src/TextInput.tsx', 'src/Select.tsx'];
+const SIZED_PATHS = [
+  'src/Button.tsx',
+  'src/TextInput.tsx',
+  'src/Select.tsx',
+  'src/menu/menu-classes.ts',
+  'src/ModeFilterMenu.tsx',
+];
 
 describe('ui sizing', () => {
   it('draws every moved shared part from the sizing scale', () => {

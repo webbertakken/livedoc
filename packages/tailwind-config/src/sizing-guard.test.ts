@@ -51,9 +51,9 @@ describe('judgeClass', () => {
   });
 
   it('refuses tracked capitals', () => {
-    expect(judgeClass('uppercase')).toMatch(/sentence case/);
-    expect(judgeClass('tracking-wide')).toMatch(/sentence case/);
-    expect(judgeClass('tracking-[0.08em]')).toMatch(/sentence case/);
+    expect(judgeClass('uppercase')).toMatch(/no tracked capitals/);
+    expect(judgeClass('tracking-wide')).toMatch(/no tracked capitals/);
+    expect(judgeClass('tracking-[0.08em]')).toMatch(/no tracked capitals/);
     expect(judgeClass('tracking-tight')).toBeNull();
     expect(judgeClass('normal-case')).toBeNull();
   });

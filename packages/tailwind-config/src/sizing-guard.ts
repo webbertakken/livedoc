@@ -62,7 +62,7 @@ const OFF_SCALE_WEIGHTS = new Set([
   'extrabold',
   'black',
 ]);
-const SENTENCE_CASE = 'sentence case: write the copy as it reads, never tracked capitals';
+const NO_TRACKED_CAPITALS = 'no tracked capitals: the label reads as its copy is written';
 
 /** A `[...]` length in px, or null when the bracket holds anything else (a colour, a var, a calc, vh). */
 function bracketPx(value: string): number | null {
@@ -174,7 +174,7 @@ function judgeWeight(value: string): string | null {
 
 function judgeTracking(value: string): string | null {
   return /^(wide|wider|widest)$/.test(value) || /^\[\d*\.?\d+(em|px|rem)\]$/.test(value)
-    ? SENTENCE_CASE
+    ? NO_TRACKED_CAPITALS
     : null;
 }
 
@@ -187,7 +187,7 @@ export function judgeClass(className: string): string | null {
   if (variants.some(isCoarsePointer)) return null;
   const utility = raw.replace(/^!|!$/g, '');
 
-  if (utility === 'uppercase') return SENTENCE_CASE;
+  if (utility === 'uppercase') return NO_TRACKED_CAPITALS;
   if (utility === 'rounded') return judgeRadius(undefined, undefined);
   const side = RADIUS_SIDE.exec(utility);
   if (side) return judgeRadius(side[1], side[2]);

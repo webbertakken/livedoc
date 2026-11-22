@@ -94,7 +94,6 @@ export function ShareCopyMenu({
             {items.map((item) => (
               <MenuActionRow
                 key={item.label}
-                plain
                 icon={item.icon}
                 label={item.label}
                 onClick={() => void copy(item)}

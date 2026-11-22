@@ -58,25 +58,10 @@ export function useTagActionsMenu(
       {menu.open ? (
         <PortalMenu anchor={anchor} placement="below" onClose={menu.close}>
           <MenuHeader title={tag.name} />
-          <MenuActionRow
-            plain
-            icon={<PencilIcon size={12} />}
-            label="Rename"
-            onClick={then('rename')}
-          />
-          <MenuActionRow
-            plain
-            icon={<PaletteIcon />}
-            label="Change Colour"
-            onClick={then('colour')}
-          />
+          <MenuActionRow icon={<PencilIcon size={12} />} label="Rename" onClick={then('rename')} />
+          <MenuActionRow icon={<PaletteIcon />} label="Change Colour" onClick={then('colour')} />
           <MenuGroupSeparator />
-          <MenuActionRow
-            plain
-            icon={<TrashIcon size={12} />}
-            label="Delete"
-            onClick={then('delete')}
-          />
+          <MenuActionRow icon={<TrashIcon size={12} />} label="Delete" onClick={then('delete')} />
         </PortalMenu>
       ) : null}
       {open === 'rename' ? <LazyTagDialog tag={tag} onClose={() => setOpen(null)} /> : null}

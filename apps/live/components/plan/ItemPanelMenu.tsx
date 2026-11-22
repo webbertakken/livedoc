@@ -60,20 +60,17 @@ export function ItemPanelMenu({
           {canEdit ? (
             <>
               <MenuActionRow
-                plain
                 label="Duplicate"
                 icon={<DuplicateIcon />}
                 onClick={run(onDuplicate)}
               />
               <MenuActionRow
-                plain
                 label={flagged ? 'Remove Flag' : 'Flag'}
                 icon={<PlanTypeGlyph glyph="flag" size={14} />}
                 onClick={run(onFlag)}
               />
               {canRetire ? (
                 <MenuActionRow
-                  plain
                   label={archived ? 'Restore' : 'Archive'}
                   icon={<PlanBoardTileArt preset="archive" size={14} />}
                   onClick={run(onArchive)}
@@ -81,7 +78,6 @@ export function ItemPanelMenu({
               ) : null}
               {onEditType && canRetire ? (
                 <MenuActionRow
-                  plain
                   label="Edit Card Type"
                   icon={<PlanCardsIcon size={16} />}
                   onClick={run(onEditType)}
@@ -91,7 +87,6 @@ export function ItemPanelMenu({
             </>
           ) : null}
           <MenuActionRow
-            plain
             label="Help"
             icon={<HelpMarkIcon />}
             onClick={run(() => openHelpArticle('planCards'))}
@@ -100,7 +95,7 @@ export function ItemPanelMenu({
           {canRetire ? (
             <>
               <MenuGroupSeparator />
-              <MenuActionRow plain label="Trash" icon={<TrashIcon />} onClick={run(onTrash)} />
+              <MenuActionRow label="Trash" icon={<TrashIcon />} onClick={run(onTrash)} />
             </>
           ) : null}
         </PortalMenu>

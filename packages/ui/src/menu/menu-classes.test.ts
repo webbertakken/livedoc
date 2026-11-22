@@ -7,9 +7,15 @@ describe('menuRadioRowClass', () => {
     expect(menuRadioRowClass(false)).not.toContain('bg-brand-100');
   });
 
-  it('sets the label in medium always, or only on the checked row', () => {
-    expect(menuRadioRowClass(false)).toContain('font-medium');
-    expect(menuRadioRowClass(false, { weight: 'checked' })).not.toContain('font-medium');
-    expect(menuRadioRowClass(true, { weight: 'checked' })).toContain('font-medium');
+  // docs/specs/004-interface-design/sizing.md: medium marks the selected row and nothing else.
+  it('sets only the checked row in medium', () => {
+    expect(menuRadioRowClass(true)).toContain('font-medium');
+    expect(menuRadioRowClass(false)).not.toContain('font-medium');
+  });
+
+  it('draws a 28 px row at the reading size', () => {
+    expect(menuRadioRowClass(false)).toContain('min-h-row');
+    expect(menuRadioRowClass(false)).toContain('text-body');
+    expect(menuRadioRowClass(false)).toContain('pointer-coarse:min-h-11');
   });
 });

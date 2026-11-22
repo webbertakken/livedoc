@@ -71,7 +71,6 @@ export function FolderActionsMenu({
       {onShowInExplorer ? (
         <>
           <MenuActionRow
-            plain
             icon={<OpenIcon />}
             label="Show in Explorer"
             onClick={then(onShowInExplorer)}
@@ -80,33 +79,17 @@ export function FolderActionsMenu({
         </>
       ) : null}
       {onRename ? (
-        <MenuActionRow
-          plain
-          icon={<PencilIcon size={12} />}
-          label="Rename"
-          onClick={then(onRename)}
-        />
+        <MenuActionRow icon={<PencilIcon size={12} />} label="Rename" onClick={then(onRename)} />
       ) : null}
       {onNewSubfolder ? (
-        <MenuActionRow
-          plain
-          icon={<PlusIcon />}
-          label="New Subfolder"
-          onClick={then(onNewSubfolder)}
-        />
+        <MenuActionRow icon={<PlusIcon />} label="New Subfolder" onClick={then(onNewSubfolder)} />
       ) : null}
       {onMove ? (
-        <MenuActionRow
-          plain
-          icon={<FolderOutlineIcon />}
-          label="Change Folder"
-          onClick={then(onMove)}
-        />
+        <MenuActionRow icon={<FolderOutlineIcon />} label="Change Folder" onClick={then(onMove)} />
       ) : null}
       {defaults ? <UseAsDefaultMenu menu={defaults} /> : null}
       {onRemoveFromTimeline ? (
         <MenuActionRow
-          plain
           icon={<CloseIcon size={11} />}
           label="Remove from Timeline"
           onClick={then(onRemoveFromTimeline)}
@@ -115,12 +98,7 @@ export function FolderActionsMenu({
       {onDelete ? (
         <>
           {verbs ? <MenuGroupSeparator /> : null}
-          <MenuActionRow
-            plain
-            icon={<TrashIcon size={12} />}
-            label="Delete"
-            onClick={then(onDelete)}
-          />
+          <MenuActionRow icon={<TrashIcon size={12} />} label="Delete" onClick={then(onDelete)} />
         </>
       ) : null}
     </PortalMenu>
