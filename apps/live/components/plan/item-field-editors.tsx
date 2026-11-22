@@ -280,7 +280,6 @@ export function LabelsEditor({
   const offered = suggestions.filter((s) => !labels.includes(s));
   return (
     <ChipField
-      compact
       id={id}
       chips={labels}
       chipColour={labelColour}

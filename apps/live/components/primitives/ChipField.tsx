@@ -38,8 +38,6 @@ type ChipFieldProps = {
   // Everything is shown but off (a dialog busy submitting).
   disabled?: boolean;
   invalid?: boolean;
-  // The denser form rhythm (Plan's item panel), as TextInput's `compact`.
-  compact?: boolean;
   id?: string;
   placeholder?: string;
   ariaLabel?: string;
@@ -64,7 +62,6 @@ export const ChipField = forwardRef<ChipFieldHandle, ChipFieldProps>(function Ch
     readOnly = false,
     disabled = false,
     invalid = false,
-    compact = false,
     id,
     placeholder,
     ariaLabel,
@@ -93,21 +90,20 @@ export const ChipField = forwardRef<ChipFieldHandle, ChipFieldProps>(function Ch
     removers?.[removers.length - 1]?.focus();
   });
 
-  const box = compact
-    ? 'min-h-[34px] gap-1.5 px-1.5 py-1 text-[13px]'
-    : 'gap-1.5 px-2 py-1.5 text-sm';
-  const chipSize = compact ? 'pl-2 text-[12px]' : 'pl-2.5 text-xs';
+  // The sizing scale's field (docs/specs/004-interface-design/sizing.md): 32 px at the reading size, its chips 24 px.
+  const box = 'min-h-field gap-1 px-1 py-0.5 text-body';
+  const chipSize = 'min-h-chip pl-2 text-supporting';
   return (
     <div
       ref={boxRef}
-      className={`flex flex-wrap items-center rounded-md border bg-white transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 dark:bg-slate-900 ${box} ${
+      className={`flex flex-wrap items-center rounded-control border bg-white transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 dark:bg-slate-900 ${box} ${
         invalid ? FIELD_INVALID : 'border-slate-200 dark:border-slate-700'
       }`}
     >
       {chips.map((chip) => (
         <span
           key={chip}
-          className={`inline-flex items-center gap-1 rounded-full py-0.5 pr-1 font-medium ${chipSize} ${
+          className={`inline-flex items-center gap-0.5 rounded-full pr-0 ${chipSize} ${
             chipColour
               ? 'bg-[color-mix(in_srgb,var(--chip)_12%,transparent)] text-[color-mix(in_srgb,var(--chip)_70%,#0f172a)] dark:text-[color-mix(in_srgb,var(--chip)_70%,#ffffff)]'
               : 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200'
@@ -125,7 +121,7 @@ export const ChipField = forwardRef<ChipFieldHandle, ChipFieldProps>(function Ch
               }}
               data-remove-chip
               aria-label={removeLabel(chip)}
-              className={`flex h-4 w-4 items-center justify-center rounded-full transition ${
+              className={`flex size-chip items-center justify-center rounded-full transition ${
                 chipColour
                   ? 'hover:bg-black/10 dark:hover:bg-white/15'
                   : 'text-brand-700 hover:bg-brand-100 hover:text-brand-800 dark:text-brand-300 dark:hover:bg-brand-500/25 dark:hover:text-brand-100'
@@ -165,9 +161,7 @@ export const ChipField = forwardRef<ChipFieldHandle, ChipFieldProps>(function Ch
           aria-invalid={invalid || undefined}
           autoComplete="off"
           spellCheck={false}
-          className={`flex-1 bg-transparent px-1 text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed dark:text-slate-100 ${
-            compact ? 'min-w-20' : 'min-w-[8rem] py-0.5'
-          }`}
+          className="min-w-[8rem] flex-1 bg-transparent px-1 py-0.5 text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed dark:text-slate-100"
         />
       )}
       {children}

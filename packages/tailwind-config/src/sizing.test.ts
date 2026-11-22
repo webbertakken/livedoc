@@ -43,7 +43,7 @@ describe('sizing scale', () => {
 
   it('holds the gap and side padding steps in Tailwind spacing units', () => {
     expect(GAP_STEPS.map((step) => step * 4)).toEqual([0, 2, 4, 8, 12, 16, 24]);
-    expect(SIDE_PADDING_STEPS.map((step) => step * 4)).toEqual([0, 8, 12, 16, 24]);
+    expect(SIDE_PADDING_STEPS.map((step) => step * 4)).toEqual([0, 2, 4, 8, 12, 16, 24]);
   });
 
   it('writes a px size in rem at a 16 px root (D235)', () => {

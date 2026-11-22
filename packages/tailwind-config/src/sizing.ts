@@ -37,8 +37,9 @@ export const SIZING_SCALE = {
 /** Gap steps in Tailwind spacing units (4 px each): 2 inside a group, then 4, 8, 12, 16 and 24 px. */
 export const GAP_STEPS = [0, 0.5, 1, 2, 3, 4, 6] as const;
 
-/** Side padding steps in Tailwind spacing units: 8, 12, 16 and 24 px. */
-export const SIDE_PADDING_STEPS = [0, 2, 3, 4, 6] as const;
+/** Side padding steps in Tailwind spacing units: 8, 12, 16 and 24 px, and the 2 or 4 px a track or a band insets
+ * around its controls (a segmented track, a stepper, the toolbar band). */
+export const SIDE_PADDING_STEPS = [0, 0.5, 1, 2, 3, 4, 6] as const;
 
 /** The px of a 16 px root (D235). */
 export const ROOT_PX = 16;

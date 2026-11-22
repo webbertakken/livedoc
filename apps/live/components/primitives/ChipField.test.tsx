@@ -67,3 +67,16 @@ describe('ChipField', () => {
     expect(screen.queryByText('None')).toBeNull();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md: a chip field is a 32 px field; each chip is 24 px and its remove button
+// 24 px, since nothing pressable is drawn smaller on a mouse.
+describe('ChipField on the sizing scale', () => {
+  it('draws its chips and their remove buttons at the chip step', () => {
+    render(<Harness initial={['alpha']} />);
+
+    const remove = document.querySelector<HTMLElement>('[data-remove-chip]');
+    expect(remove?.className).toContain('size-chip');
+    expect(remove?.parentElement?.className).toContain('min-h-chip');
+    expect(remove?.parentElement?.className).toContain('text-supporting');
+  });
+});
