@@ -1,8 +1,8 @@
 # PDF document
 
 **Status: specified; a first slice is built.** Built: the tab kind `pdf` and its surface, a PDF dropped on the Explorer
-becoming a PDF document, its stored file in the blob store, its pages read and drawn, a highlight, and Download as
-PDF. Everything else here is specified, not built.
+becoming a PDF document, the add menu's PDF from a file, its stored file in the blob store, its pages read and
+drawn, a highlight, and Download as PDF. Everything else here is specified, not built.
 
 A **PDF document** is a tab of the `pdf` [tab kind](../006-document/document.md#domain-language): one PDF, read,
 reviewed and really edited by people together, live, and **always a PDF**. The file that leaves LiveDoc is a PDF any
@@ -129,7 +129,8 @@ diagram:
 
 ## The single-tab document
 
-- **A PDF arriving** makes a document with one PDF tab, named as the file is without its extension.
+- **A PDF arriving** makes a document with one PDF tab, named as the file is without its extension, within a name's
+  length ([Name length](../006-document/name-length.md)).
 - **Its name is the document's.** The title row's name field renames the document; the tab's name follows it while the
   document has one tab.
 - **The tab strip is hidden** while the document has one tab, and the canvas's chrome is not mounted
@@ -140,6 +141,31 @@ diagram:
 - A spreadsheet takes no PDF tab: a document holding sheets holds only sheets
   ([Spreadsheet](../029-sheets/spreadsheet.md)).
 
+## A PDF tab from a file
+
+The add menu's **PDF from a file**
+([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)):
+
+- **Offered** `(default)` in a document stored on LiveDoc, on a host that says it stores files (`filesEnabled` of
+  `GET /api/capabilities`); while the host's answer is not known, the row is not drawn.
+- **The chooser** takes one `.pdf`. Leaving it adds nothing and says nothing.
+- **In order**: the file is checked against `FILE_TAB_MAX_BYTES` and to be a PDF by its bytes, hashed, and sent to
+  the blob store for the document's owner ([Getting bytes in](../006-document/blob-store.md#getting-bytes-in)); then
+  the tab's row is stored; then the tab joins the document after the others, named as the file is without its
+  extension, and is selected. A tab never names bytes the store does not hold, and its surface never opens on a
+  row not stored.
+- **The bytes stay in this browser** as a cloud document's do
+  ([This Browser](live-editing-and-storage.md#this-browser)), so the tab opens without reading them back.
+- **A slow one is said** `(default)`: past `PDF_TAB_NOTICE_MS` with the tab not yet added, a toast says
+  "Uploading the PDF…".
+- **A refusal** adds nothing and is said by a toast, in [Opening](files-print-and-sync.md#opening)'s words for it: no
+  PDF, too large, no file storage, the allowance passed, not stored. A file that could not be taken at all says
+  "This PDF couldn't be added. Try again."
+- **Several at once** `(default)`: a second file chosen while the first is still sent is added on its own; each ends
+  by itself.
+- A session that may not add tabs is never offered it, and the act refuses the same session
+  ([Share roles](#share-roles)).
+
 ## Limits
 
 | Constant             | Value                | Why                                                                                                           |
@@ -148,6 +174,7 @@ diagram:
 | `PDF_SNIFF_BYTES`    | 1,024                | Where readers look for `%PDF-`: a file with leading junk still opens                                          |
 | `PDF_MAX_MARKS`      | 20,000               | `(default)` Marks in one PDF document: far past use, and a bound on what one open replays                     |
 | `PDF_MAX_PAGES`      | 100,000              | `(default)` A ceiling on inserted pages; a file arriving with more opens and takes no insert                  |
+| `PDF_TAB_NOTICE_MS`  | 1,000                | `(default)` How long adding a PDF tab may take before a toast says so: a quick add says nothing               |
 
 A change that would pass a limit is refused as a whole, with the limit named
 ([Live editing and storage](live-editing-and-storage.md#limits)).
@@ -182,7 +209,7 @@ role line.
   they were held already), `[pdf] opened` (pages, bytes, whether read by range, how long the read and the engine
   took), `[pdf] surface` (each state the surface shows, a refusal with its name), `[pdf] refused` (with the
   refusal's name), `[pdf] limit-refused` (with the limit's name), `[pdf] drop failed` (a drop the Explorer could not
-  open).
+  open), `[pdf] add failed` (a file the add menu could not take).
 
 ## Non-goals
 

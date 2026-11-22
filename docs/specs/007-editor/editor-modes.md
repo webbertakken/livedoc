@@ -146,10 +146,10 @@ whichever mode the tab is in.
   left in place and ignored.
 - **+ adds a tab or a Plan tab.** The document group's **+** opens the **add menu**: **Tab**, then **Board**,
   **Sheet** and **Dashboard** (each row its mark and name, styled as the mode menu), then, in a document stored on
-  LiveDoc, **Text document**, a tab outside the canvas worked in no mode
-  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)). The tab list's footer
-  offers the same rows as **New Tab**, **New Board**, **New Sheet**, **New Dashboard** and **New Text Document**,
-  and the command palette's **Create New Tab** is the first.
+  LiveDoc, **Text document**, a tab outside the canvas worked in no mode, and, where the host stores files, **PDF
+  from a file** ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)). The tab
+  list's footer offers the same rows as **New Tab**, **New Board**, **New Sheet**, **New Dashboard**, **New Text
+  Document** and **New PDF From a File**, and the command palette's **Create New Tab** is the first.
   - **Tab** makes a general tab straight away, after the others, in the mode of the tab its maker was on (the
     active tab's mode, for everyone on the new tab): made from a Pages tab it is a Pages tab, from a Sketch tab a
     Sketch tab, and from an event-storming board or a Plan tab a Structured tab. It carries the source's look
@@ -514,6 +514,7 @@ dashboard ([Telemetry](../017-telemetry/telemetry.md) "Retired features").
   a control (`Editor` · `Toggled` · `WorkshopOn` / `WorkshopOff`, [Workshop
   control](../012-collaboration/workshop-mode.md#telemetry)). Their stored history stays on the dashboard.
 - `Tab` · `Created` · `TextDocument`, fired by the add menu's Text document row.
+- `Tab` · `Created` · `Pdf`, fired once the add menu's PDF from a file row has added its tab.
 - `Tab` · `Created` · `Board` / `Sheet` / `Dashboard`, fired by the add menu's Plan rows (a plain **Tab** stays
   `Tab` · `Created` with no type), and `UI` · `Opened` · `AddTabMenu` when **+** opens the add menu.
 - `Tab` · `Changed` · `OpensInDiagram` / `OpensInDraw` / `OpensInPages` / `OpensInPlan` were

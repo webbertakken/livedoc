@@ -69,8 +69,12 @@ How the editor, the tab strip, split view and the Explorer host a tab kind that 
   ([Text document](../034-text-documents/text-document.md)), named **Text document**, selected at once.
   It is offered only in a document stored on LiveDoc: This Browser does not hold a text document yet
   ([Live editing and storage](../034-text-documents/live-editing-and-storage.md) "Offline").
-- The add menu offers **PDF from a file** once the PDF document is built: it opens the file chooser and adds the
-  chosen PDF as a PDF tab ([PDF document](../035-pdf-documents/pdf-document.md#the-single-tab-document)).
+- The add menu offers **PDF from a file** after Text document (the tab list's footer: **New PDF From a File**): it
+  opens the file chooser, which takes one `.pdf`, and adds the chosen PDF as a PDF tab after the others, named as the
+  file is without its extension, selected once its file and its row are stored
+  ([PDF document](../035-pdf-documents/pdf-document.md#a-pdf-tab-from-a-file)).
+  It is offered only in a document stored on LiveDoc, on a host that stores files `(default)`
+  ([Blob store](blob-store.md#without-object-storage)).
 - A spreadsheet is never a tab of another document: a spreadsheet's tabs are its sheet bar
   ([Spreadsheet](../029-sheets/spreadsheet.md)).
 
@@ -177,18 +181,21 @@ with the text document):
 ## Share roles
 
 - Hosting changes no role: each surface gates its own edits on the session's `can`.
-- **Add tab**'s Text document row is an Editor's, as every Add tab row; a Participant and a Viewer never see Add tab.
+- **Add tab**'s Text document and PDF from a file rows are an Editor's, as every Add tab row; a Participant and a
+  Viewer never see Add tab.
 - The other pane's read-only view is everyone's who may read the tab.
 
 ## Telemetry
 
 - `Tab · Created · TextDocument` when the add menu adds a text document tab.
+- `Tab · Created · Pdf` and `Pdf · Imported · Tab` when the add menu adds a PDF tab.
 
 ## Not yet
 
 - The editor's shared state (`useEditorState`) still holds the canvas's state and loads with every document: about
   1.3 MB of the document route's first load before compression is shared code a surface does not use.
 - The spreadsheet's read-only view for the other pane.
+- **PDF from a file** in a This Browser document, which holds a PDF document but takes no PDF tab from the add menu.
 
 ## Tests
 
@@ -198,6 +205,9 @@ with the text document):
 - Switching between a canvas tab and a surface tab restores each one's view.
 - A one-tab surface document hides the active tab segment; a two-tab one and a one-tab canvas document show it.
 - The add menu's Text document row adds a text document tab and selects it.
+- The add menu's PDF from a file row is offered only where the document is stored on LiveDoc and the host stores
+  files; a chosen PDF is sent for the document's owner, its tab stored, added after the others and selected; a
+  refusal adds nothing and is said; a chooser left adds nothing.
 - A Participant's update to a live tab is stored when its kind says it asks no more than `participate`, refused and
   told to its sender alone when it asks `edit`, and refused untold when it cannot be read yet; a Viewer's and
   every non-Editor's update to a kind that reads no level are refused and told the same way.
