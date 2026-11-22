@@ -368,13 +368,40 @@ A request that throws, at any step from resolving who is calling to the route's 
 answered by the worker, never left to the runtime's bare error page.
 
 - **The database is unavailable: `503 storage_unavailable`** with `Retry-After: 5`, logged as
-  `[d1] unavailable route=<route words>` with the error. It is D1 failing on its side (an internal
-  error, a lost connection, an overloaded or reset database, a storage timeout), not the request:
-  the same call succeeds once D1 recovers, so the caller retries.
+  `[d1] unavailable route=<route words>` with the error. It is D1 failing on its side, not the
+  request: the same call succeeds once D1 recovers, without us changing anything, so the caller
+  retries. The failures that are the database's (`isStorageUnavailable`, `request-failure.ts`):
+  - D1's own errors, `D1_ERROR: ` and then one of D1's documented messages
+    ([Debug D1](https://developers.cloudflare.com/d1/observability/debug-d1/#list-of-d1_errors)): an
+    internal error (`Internal error in D1 DB storage caused object to be reset.`, `Internal error
+while starting up D1 DB storage ...`), `Network connection lost.`, `Replica disconnected from
+primary.`, `Cannot resolve D1 DB due to transient issue on remote node.`, `D1 DB reset because
+its code was updated.`, `D1 DB is overloaded. ...` (a queue or a 10-second resource window that
+    lifts), and the free plan's daily row read or write limit (lifts at midnight UTC).
+  - SQLite running out of memory inside D1, `SQLITE_NOMEM`: during Cloudflare's D1 incident of
+    29 October D1's analytics recorded `out of memory: SQLITE_NOMEM` on a one-row `INSERT INTO
+events`, a small `DELETE` and the Home read, so it was the database's state, not the query's
+    size.
+  - D1 answering something other than its JSON, `D1_ERROR: Failed to parse body as JSON`
+    (workerd's `d1-api.ts`, `toJson`): D1's service sent an error page.
+  - The transport to D1 failing before D1 answers. The binding's `_send` (workerd's `d1-api.ts`,
+    without the experimental `d1_binding_jsrpc` flag the api does not set) awaits its fetch outside
+    its `try`, so the runtime's own error reaches the worker with no `D1_ERROR: ` prefix:
+    `Network connection lost.` or `internal error; reference = <id>`. Either is the platform's, from
+    whichever binding it came, and a retry can succeed. A bare `internal error` with no reference is
+    not the runtime's shape and stays a 500.
 - **Anything else: `500 internal_error`**, logged as `api error route=<route words>` with the
   error, and counted as an `Error·Api·Internal.<Route words>` telemetry row when
-  `TELEMETRY_ENABLED` is on. A D1 error that names the query (a constraint, a type, SQL) is a
-  bug, so it lands here too.
+  `TELEMETRY_ENABLED` is on. A D1 error that names the query (a constraint, a type, SQL, a missing
+  column) is a bug, so it lands here too, and so does every D1 failure that follows from the query
+  itself, because retrying it repeats it and the crash report is how we learn which query it was:
+  - `D1 DB exceeded its CPU time limit and was reset.`, `D1 DB's isolate exceeded its memory limit
+and was reset.` and `D1 DB storage operation exceeded timeout which caused object to be reset.`:
+    D1's documentation traces each to a query doing too much (a scan, a load, a large write). When
+    a light query is the one killed by a heavy neighbour, the neighbour is still a query of ours
+    that must be found, so a 503 that hides it from Server Crashes would be the wrong answer.
+  - The size limits (`Exceeded maximum DB size.`, the account's storage limit, a result past the
+    maximum response size): a retry fails the same way until we act.
 - Neither body echoes the error's text. The route words never carry an id.
 - Both log lines, error and stack included, are kept in Workers Logs
   ([Worker logs](../016-platform/worker-logs.md)), so a failure nobody was tailing can still be read.
