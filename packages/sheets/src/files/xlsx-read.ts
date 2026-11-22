@@ -22,6 +22,7 @@ import { fromExcelFormula } from './excel-formula';
 import { shiftFormulaText } from './formula-text-shift';
 import { isoDateSerial } from './ods-read';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
+import { WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { dateStyles, readCellStyles, type XlsxCellStyle } from './xlsx-styles';
 import {
   DATE1904_OFFSET,
@@ -41,6 +42,10 @@ const {
 } = SheetLimits.spreadsheet;
 
 const STRICT_NS = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
+
+// A Strict file's children the reader does not read are named, not kept (D108).
+const unreadChildren = (root: XmlElement, read: ReadonlySet<string>) =>
+  childElements(root).filter((child) => !read.has(child.local)).length;
 const STRICT_RELATIONSHIPS_NS = 'http://purl.oclc.org/ooxml/officeDocument/relationships';
 const ERRORS: readonly string[] = ERROR_CODES;
 // The formula a wrapped block's other cells hold (S5): they only cache its values.
@@ -262,7 +267,11 @@ export async function readXlsx(
   };
   const listed = children(childElement(parsed.root, ns, 'sheets'), ns, 'sheet');
   const sheets: FileSheet[] = [];
-  for (const sheet of listed) {
+  // A Strict file's content is not kept, but named (D108); a Transitional one's is, each sheet's by its place here.
+  const keeper = ns === STRICT_NS ? null : new XlsxKeeper(pkg);
+  let strictUnread = ns === STRICT_NS ? unreadChildren(parsed.root, WORKBOOK_READ) : 0;
+  const placed = new Map<number, number>();
+  for (const [at, sheet] of listed.entries()) {
     const name = attributeOf(sheet, '', 'name') ?? '';
     const rel = rels.find((r) => r.id === attributeOf(sheet, relsNs, 'id'));
     // A chart sheet or a dialog sheet holds no cells: named, not read.
@@ -279,7 +288,17 @@ export async function readXlsx(
       book.losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: listed.length });
       break;
     }
+    placed.set(at, sheets.length);
+    keeper?.sheetEntry(sheet, sheets.length);
+    keeper?.worksheet(worksheet, part!, sheets.length);
+    strictUnread += keeper ? 0 : unreadChildren(worksheet.root, WORKSHEET_READ);
     sheets.push(readSheet(name, worksheet.root, book));
   }
-  return { ok: true, file: { sheets }, losses: book.losses };
+  keeper?.workbook(parsed, pkg.mainPart, listed, placed);
+  keeper?.styles(text(pkg, partOf(RELATIONSHIP_TYPES.styles)));
+  const unread = strictUnread + (keeper?.unread ?? 0);
+  if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
+  if (pkg.dropped.length > 0) book.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });
+  const kept = keeper?.content();
+  return { ok: true, file: kept ? { sheets, kept } : { sheets }, losses: book.losses };
 }

@@ -327,11 +327,8 @@ function readBody(
   // A file that keeps nothing reads as the model alone.
   if (keeper.items.length === 0 && parts.length === 0)
     return { ok: true, file: { sheets }, losses };
-  return {
-    ok: true,
-    file: { sheets, kept: { standard: 'odf', items: keeper.items, parts } },
-    losses,
-  };
+  const kept = { standard: 'odf' as const, items: keeper.items, parts, relationships: [] };
+  return { ok: true, file: { sheets, kept }, losses };
 }
 
 /** An `.ods` or `.fods` file's sheets, or the package's named rejection. */

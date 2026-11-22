@@ -45,6 +45,7 @@ describe('kept anchors', () => {
       standard: 'odf',
       items: [note({}), note({ sheet: 1 }, 'table-before'), note({ sheet: 0, r: 2, c: 1 })],
       parts: [],
+      relationships: [],
     };
     const stored = storedKept(kept, [one, two]);
     expect(stored.dropped).toBe(0);
@@ -68,6 +69,7 @@ describe('kept anchors', () => {
       standard: 'odf',
       items: [note({}), note({ sheet: 3 }), note({ sheet: 0, r: 9, c: 0 })],
       parts: [],
+      relationships: [],
     };
     expect(storedKept(kept, [one]).dropped).toBe(2);
     const stored: KeptContent<StoredAt> = {
@@ -78,6 +80,7 @@ describe('kept anchors', () => {
         note({ sheet: 'one', r: one.layout.rows[0]!, c: one.layout.cols[0]! }),
       ],
       parts: [],
+      relationships: [],
     };
     const placed = fileKept(stored, [one]);
     expect(placed.dropped).toBe(2);
@@ -94,6 +97,7 @@ describe('kept anchors', () => {
         note<StoredAt>({ sheet: 'gone', r: 'r', c: 'c' }),
       ],
       parts: [],
+      relationships: [],
     };
     const written = writeWorkbook([one], record, 'T', 'ods', kept);
     expect(written.losses).toEqual([{ k: 'kept_dropped', count: 1 }]);
@@ -120,6 +124,7 @@ describe('kept anchors', () => {
         note({ sheet: 'gone' }),
       ],
       parts: [],
+      relationships: [],
     };
     const odsRecord = WorkbookRecord.opened(record, 'ods');
     expect(workbookConversion([one], odsRecord, 'xlsx', kept).losses).toEqual([
@@ -170,7 +175,7 @@ describe('kept content', () => {
   });
 
   it('names each item’s kind, an attribute’s by its name, one that serves others by none', () => {
-    const item = (place: 'cell' | 'cell-attribute' | 'relationship', xml: string) => ({
+    const item = (place: 'cell' | 'cell-attribute' | 'styles', xml: string) => ({
       place,
       xml,
       ns: {},
@@ -181,7 +186,7 @@ describe('kept content', () => {
     expect(keptKindOf(item('cell', '<mergeCells count="1"/>'))).toBe('merges');
     expect(keptKindOf(item('cell', '<x:unknown/>'))).toBe('other');
     expect(keptKindOf(item('cell', ''))).toBe('other');
-    expect(keptKindOf(item('relationship', '<Relationship/>'))).toBeNull();
+    expect(keptKindOf(item('styles', '<style:style/>'))).toBeNull();
     expect(keptKinds([])).toEqual({ count: 0, kinds: [] });
     expect(keptStandardOf('fods')).toBe('odf');
     expect(keptStandardOf('xlsx')).toBe('ooxml');

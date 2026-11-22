@@ -174,13 +174,13 @@ export function keptOdfParts(pkg: OdfPackage): KeptPart[] {
   const parts: KeptPart[] = [];
   for (const [name, data] of pkg.entries) {
     if (WRITTEN_ENTRIES.has(name)) continue;
-    parts.push({ name, type: pkg.mediaTypes.get(name) ?? '', data });
+    parts.push({ name, type: pkg.mediaTypes.get(name) ?? '', data, rels: [] });
   }
   // A folder the manifest types (an embedded object's), kept while an entry of it is.
   for (const [name, type] of pkg.mediaTypes) {
     if (name === '/' || !name.endsWith('/') || !parts.some((p) => p.name.startsWith(name)))
       continue;
-    parts.push({ name, type, data: new Uint8Array() });
+    parts.push({ name, type, data: new Uint8Array(), rels: [] });
   }
   return parts;
 }

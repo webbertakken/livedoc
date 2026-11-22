@@ -4,6 +4,7 @@
 // column as cells do.
 import {
   escapeXmlAttribute,
+  type Relationship,
   type XmlAttribute,
   type XmlBindings,
   type XmlElement,
@@ -15,8 +16,9 @@ export type KeptStandard = 'odf' | 'ooxml';
 /**
  * Where a kept item sat. ODF: `scripts`, `styles` (an automatic style kept drawings and notes name), `settings`,
  * `spreadsheet-before` / `-after` (the tables), `table-before` / `-after` (its columns and rows), `table-attribute`,
- * `cell` / `cell-after` (its paragraphs), `cell-attribute`. OOXML: `workbook`, `stylesheet` (`dxfs`, `tableStyles`), `sheet-attribute`, `worksheet`,
- * `relationship` (one of the package's, the workbook's or a sheet's, by its anchor).
+ * `cell` / `cell-after` (its paragraphs), `cell-attribute`. OOXML: `workbook` and `workbook-attribute` (its root's),
+ * `stylesheet` (`dxfs`, `tableStyles`), `sheet-attribute` (its `sheet` element's), `worksheet` and
+ * `worksheet-attribute` (its root's).
  */
 export type KeptPlace =
   | 'scripts'
@@ -31,11 +33,11 @@ export type KeptPlace =
   | 'cell-after'
   | 'cell-attribute'
   | 'workbook'
+  | 'workbook-attribute'
   | 'stylesheet'
   | 'sheet-attribute'
   | 'worksheet'
-  | 'relationship'
-  | 'package-relationship';
+  | 'worksheet-attribute';
 
 /** An item's anchor in a file: its sheet's index, its cell's zero-based row and column. */
 export type FileAt = { sheet?: number; r?: number; c?: number };
@@ -46,13 +48,26 @@ export type StoredAt = { sheet?: string; r?: string; c?: string };
 /** One kept element (or attribute, `name="value"`) as the file wrote it, with the outer bindings it needs. */
 export type KeptItem<At> = { place: KeptPlace; xml: string; ns: XmlBindings; at: At };
 
-/** A package entry kept whole: ODF's by path, XLSX's part by name, with its media or content type. */
-export type KeptPart = { name: string; type: string; data: Uint8Array };
+/**
+ * A package entry kept whole: ODF's by path, XLSX's part by name, with its media or content type, and (XLSX) its own
+ * relationships, targets as the file wrote them.
+ */
+export type KeptPart = { name: string; type: string; data: Uint8Array; rels: Relationship[] };
+
+/**
+ * An XLSX relationship kept on the package's, the workbook's or a sheet's part (`at` names the sheet), with its id;
+ * an internal target is the part's name from the package's root, `/`-led.
+ */
+export type KeptRelationship<At> = Relationship & {
+  from: 'package' | 'workbook' | 'sheet';
+  at: At;
+};
 
 export type KeptContent<At = FileAt> = {
   standard: KeptStandard;
   items: KeptItem<At>[];
   parts: KeptPart[];
+  relationships: KeptRelationship<At>[];
 };
 
 /** The standard a format's files are of. */
@@ -147,8 +162,8 @@ const KINDS: Readonly<Record<string, KeptKind>> = {
 const SUPPORT: ReadonlySet<KeptPlace> = new Set([
   'styles',
   'stylesheet',
-  'relationship',
-  'package-relationship',
+  'workbook-attribute',
+  'worksheet-attribute',
 ]);
 
 /** The local name of a kept element (`<p:name …`) or attribute (`p:name="…"`); empty for neither. */

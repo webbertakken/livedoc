@@ -3,7 +3,7 @@
 // when one is written; an anchor whose sheet, row or column is gone drops its item, counted, never silently.
 import { layoutIndex } from '../layout';
 import type { SheetLayout } from '../sheet';
-import type { FileAt, KeptContent, KeptItem, StoredAt } from './kept-content';
+import type { FileAt, KeptContent, KeptItem, KeptRelationship, StoredAt } from './kept-content';
 
 /** A sheet as kept content is anchored to it: its id and its layout's rows' and columns' ids in order. */
 export type KeptSheet = { id: string; layout: SheetLayout };
@@ -12,14 +12,16 @@ export type KeptMapped<At> = { kept: KeptContent<At>; dropped: number };
 
 // An item mapped to another anchor, or null when what it is anchored to is not there.
 function mapped<A, B>(kept: KeptContent<A>, map: (at: A) => B | null): KeptMapped<B> {
-  const items: KeptItem<B>[] = [];
   let dropped = 0;
-  for (const item of kept.items) {
-    const at = map(item.at);
-    if (at === null) dropped++;
-    else items.push({ ...item, at });
-  }
-  return { kept: { standard: kept.standard, items, parts: kept.parts }, dropped };
+  const each = <T extends { at: A }>(list: readonly T[]): (Omit<T, 'at'> & { at: B })[] =>
+    list.flatMap((entry) => {
+      const at = map(entry.at);
+      if (at === null) dropped++;
+      return at === null ? [] : [{ ...entry, at }];
+    });
+  const items: KeptItem<B>[] = each(kept.items);
+  const relationships: KeptRelationship<B>[] = each(kept.relationships);
+  return { kept: { standard: kept.standard, items, parts: kept.parts, relationships }, dropped };
 }
 
 /** A file's kept content anchored by id to the sheets it made (in the file's order; fewer when some were cut). */

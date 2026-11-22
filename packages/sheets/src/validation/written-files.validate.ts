@@ -25,9 +25,17 @@ import {
   type WorkbookFile,
 } from '../files';
 import { FILE_LAST_COL } from '../files/a1-text';
+import { excelFileWithKept, odfFlatWithKept } from '../testing/kept-files';
+import { readOds } from '../files/ods-read';
+import { readXlsx } from '../files/xlsx-read';
 import { WRITTEN_CONSTRUCTS } from './written-constructs';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-sheets-written-'));
+// LibreOffice's extensions, kept from its files: extended conformance leaves them out of the check.
+const ODF_FOREIGN = new Set([
+  'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0',
+  'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
+]);
 fetchOfficeSchemas();
 
 // Within every format's bounds (standard-mapping.md "Excel's grammar in detail"): what both files carry as it is.
@@ -57,6 +65,26 @@ function literalsIn(read: WorkbookFile, wrote: WorkbookFile) {
     })),
   }));
 }
+
+// standard-mapping.md "Unknown content", "Conformance claimed": a file written with what it kept still conforms; the
+// kept parts themselves are the file's own, written back as they came.
+describe('a written spreadsheet with kept content validates against its format’s schema', () => {
+  it('kept.ods and kept.fods against ODF 1.4, extended', async () => {
+    const read = await readOds(new TextEncoder().encode(odfFlatWithKept()));
+    if (!read.ok) throw new Error(read.rejection);
+    await validateOdfPackage(writeOds(read.file, 'kept').data, join(OUT, 'kept-ods'), ODF_FOREIGN);
+    validateFlatOdf(writeFlatOds(read.file, 'kept').data, join(OUT, 'kept-fods'), ODF_FOREIGN);
+  });
+
+  it('kept.xlsx against ISO/IEC 29500 Transitional', async () => {
+    const read = await readXlsx(excelFileWithKept());
+    if (!read.ok) throw new Error(read.rejection);
+    const kept = new Set(read.file.kept?.parts.map((p) => p.name));
+    await validateOoxmlPackage(writeXlsx(read.file, 'kept').data, join(OUT, 'kept-xlsx'), (part) =>
+      kept.has(part),
+    );
+  });
+});
 
 describe('every written spreadsheet validates against its format’s schema', () => {
   for (const [name, file] of Object.entries(WRITTEN_CONSTRUCTS)) {

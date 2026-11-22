@@ -5,48 +5,22 @@ import { KEPT_REPEAT_MAX, type FileAt, type KeptItem } from './kept-content';
 import { readOds } from './ods-read';
 import { writeFlatOds, writeOds } from './ods-write';
 import type { FileRead, WorkbookFile } from './workbook-file';
+import {
+  CONFIG,
+  FORMATS,
+  GRAPHIC,
+  NAMES,
+  NOTE,
+  odfFlatWithKept,
+  PARAGRAPH,
+  SCRIPTS,
+  SETTINGS,
+  SHAPES,
+  TRACKED,
+  VALIDATIONS,
+} from '../testing/kept-files';
 
 const encode = (text: string) => new TextEncoder().encode(text);
-
-const CONFIG = 'urn:oasis:names:tc:opendocument:xmlns:config:1.0';
-
-const VALIDATIONS =
-  '<table:content-validations><table:content-validation table:name="val1" table:condition="of:cell-content-is-whole-number()"/></table:content-validations>';
-const TRACKED = '<table:tracked-changes table:track-changes="false"/>';
-const NAMES =
-  '<table:named-expressions><table:named-range table:name="Total" table:base-cell-address="$Sheet1.$A$1" table:cell-range-address="$Sheet1.$A$1"/></table:named-expressions>';
-const SHAPES =
-  '<table:shapes><draw:frame draw:style-name="gr1" svg:width="2cm" svg:height="1cm" svg:x="1cm" svg:y="1cm"><draw:image xlink:href="Pictures/cat.png"/></draw:frame></table:shapes>';
-const FORMATS =
-  '<calcext:conditional-formats><calcext:conditional-format calcext:target-range-address="Sheet1.A1:Sheet1.A2"/></calcext:conditional-formats>';
-const NOTE =
-  '<office:annotation><dc:creator>Ann</dc:creator><text:p text:style-name="P1">Check</text:p></office:annotation>';
-const GRAPHIC =
-  '<style:style style:name="gr1" style:family="graphic"><style:graphic-properties draw:stroke="none"/></style:style>';
-const PARAGRAPH = '<style:style style:name="P1" style:family="paragraph"/>';
-const CELL_STYLE =
-  '<style:style style:name="ce9" style:family="table-cell"/><style:style style:name="none"/>';
-const SCRIPTS = '<office:scripts/>';
-const SETTINGS =
-  '<office:settings><config:config-item-set config:name="ooo:view-settings"/></office:settings>';
-
-// A flat document as LibreOffice writes one, with what the model does not hold around a sheet's cells.
-function flat(cells = ''): string {
-  const ns = Object.entries({ ...ODF_NS, config: CONFIG })
-    .map(([p, uri]) => `xmlns:${p}="${uri}"`)
-    .join(' ');
-  return (
-    `<?xml version="1.0"?><office:document ${ns} office:version="1.4" ` +
-    `office:mimetype="application/vnd.oasis.opendocument.spreadsheet">${SETTINGS}${SCRIPTS}` +
-    `<office:automatic-styles>${GRAPHIC}${PARAGRAPH}${CELL_STYLE}</office:automatic-styles>` +
-    `<office:body><office:spreadsheet>${TRACKED}<table:calculation-settings/>${VALIDATIONS}` +
-    `<table:table table:name="Sheet1" table:style-name="ta1" table:protected="true">${SHAPES}` +
-    '<table:table-column table:number-columns-repeated="3"/><text:soft-page-break/>' +
-    `<table:table-row><table:table-cell table:number-columns-spanned="2" table:content-validation-name="val1" office:value-type="float" office:value="1">${NOTE}<text:p>1</text:p><draw:frame draw:name="after"/></table:table-cell>` +
-    `<table:covered-table-cell/><table:table-cell calcext:value-type="float" office:value-type="float" office:value="2"><text:p>2</text:p></table:table-cell></table:table-row>` +
-    `${cells}${FORMATS}</table:table>${NAMES}</office:spreadsheet></office:body></office:document>`
-  );
-}
 
 async function readOk(bytes: Uint8Array<ArrayBuffer>): Promise<Extract<FileRead, { ok: true }>> {
   const read = await readOds(bytes);
@@ -62,7 +36,7 @@ const placed = (items: readonly KeptItem<FileAt>[]) =>
 describe('ODF kept content', () => {
   // standard-mapping.md "Unknown content", Grains: each element and attribute the reader does not read, where it sat.
   it('keeps what the reader does not read, by where it sat', async () => {
-    const read = await readOk(encode(flat()));
+    const read = await readOk(encode(odfFlatWithKept()));
     expect(read.file.kept?.standard).toBe('odf');
     expect(placed(read.file.kept!.items)).toEqual(
       [
@@ -94,7 +68,7 @@ describe('ODF kept content', () => {
   // standard-mapping.md "Unknown content", "Written back in place": a flat file read, written and read again keeps
   // every item byte-equal, where it sat.
   it('writes every kept item back where it sat, byte-equal', async () => {
-    const read = await readOk(encode(flat()));
+    const read = await readOk(encode(odfFlatWithKept()));
     const again = await readOk(encode(writeFlatOds(read.file, 'T').data));
     expect(placed(again.file.kept!.items)).toEqual(placed(read.file.kept!.items));
     const fromPackage = await readOk(writeOds(read.file, 'T').data);
@@ -103,7 +77,7 @@ describe('ODF kept content', () => {
   });
 
   it('writes the calculation settings after tracked changes and before validations, as ODF orders them', async () => {
-    const read = await readOk(encode(flat()));
+    const read = await readOk(encode(odfFlatWithKept()));
     const data = writeFlatOds(read.file, 'T').data;
     const at = (text: string) => data.indexOf(text);
     expect(at(TRACKED)).toBeLessThan(at('<table:calculation-settings'));
@@ -120,7 +94,7 @@ describe('ODF kept content', () => {
   it('keeps a repeated cell’s content on each cell, or names the cut past the most it keeps', async () => {
     const few =
       '<table:table-row table:number-rows-repeated="2"><table:table-cell table:number-columns-repeated="3" table:content-validation-name="val1"/></table:table-row>';
-    const read = await readOk(encode(flat(few)));
+    const read = await readOk(encode(odfFlatWithKept(few)));
     const validated = read.file.kept!.items.filter(
       (i) => i.place === 'cell-attribute' && i.at.r !== 0,
     );
@@ -138,7 +112,7 @@ describe('ODF kept content', () => {
     expect(placed(again.file.kept!.items)).toEqual(placed(read.file.kept!.items));
 
     const many = `<table:table-row table:number-rows-repeated="${KEPT_REPEAT_MAX}"><table:table-cell table:number-columns-repeated="2" table:content-validation-name="val1"/></table:table-row>`;
-    const cut = await readOk(encode(flat(many)));
+    const cut = await readOk(encode(odfFlatWithKept(many)));
     expect(cut.losses).toContainEqual({
       k: 'kept_cut',
       sheet: 'Sheet1',
@@ -159,7 +133,8 @@ describe('ODF kept content', () => {
       kept: {
         standard: 'ooxml',
         items: [{ place: 'worksheet', xml: '<mergeCells/>', ns: {}, at: { sheet: 0 } }],
-        parts: [{ name: 'xl/media/a.png', type: 'image/png', data: new Uint8Array([1]) }],
+        parts: [{ name: 'xl/media/a.png', type: 'image/png', data: new Uint8Array([1]), rels: [] }],
+        relationships: [],
       },
     };
     expect(writeFlatOds(file, 'T').data).not.toContain('mergeCells');
@@ -167,7 +142,7 @@ describe('ODF kept content', () => {
 
   // standard-mapping.md "Written back in place": a kept entry while it is still reached; D111 for a flat file.
   it('keeps the package’s other entries while kept content still names them', async () => {
-    const content = flat()
+    const content = odfFlatWithKept()
       .replace('<?xml version="1.0"?>', '')
       .replace(/office:document /, 'office:document-content ')
       .replace(/<\/office:document>$/, '</office:document-content>')
@@ -218,7 +193,7 @@ describe('ODF kept content', () => {
       { name: 'META-INF/manifest.xml', data: manifest },
       {
         name: 'content.xml',
-        data: flat()
+        data: odfFlatWithKept()
           .replace(/office:document /, 'office:document-content ')
           .replace(/<\/office:document>$/, '</office:document-content>')
           .replace('<?xml version="1.0"?>', ''),
@@ -250,6 +225,7 @@ describe('ODF kept content', () => {
           { place: 'cell-attribute', xml: 'plain="y"', ns: {}, at: { sheet: 0, r: 0, c: 0 } },
         ],
         parts: [],
+        relationships: [],
       },
     };
     const data = writeFlatOds(file, 'T').data;

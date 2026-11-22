@@ -137,7 +137,8 @@ export class XlsxStyles {
   }
 
   /** `xl/styles.xml`: Google Sheets' default font, no fill, no border, and each number format's cell style. */
-  xml(): string {
+  /** The styles part, LiveDoc's styles and then `kept`: the file's differential formats and table styles (D110). */
+  xml(kept = ''): string {
     const own = [...this.own].map(
       ([code, id]) => `<numFmt numFmtId="${id}" formatCode="${escapeXmlAttribute(code)}"/>`,
     );
@@ -154,6 +155,7 @@ export class XlsxStyles {
       '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
       `<cellXfs count="${xfs.length + 1}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>${xfs.join('')}</cellXfs>` +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      kept +
       '</styleSheet>'
     );
   }
