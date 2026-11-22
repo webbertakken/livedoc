@@ -186,6 +186,9 @@ whenever the app runs rather than by a server cron: listing documents, or
 opening the Trash, purges any local record past its 30 days first. A browser that is not opened for months
 keeps its trashed records until it is.
 
+A purge takes the record's file bytes with it: each key of a PDF tab that no other document in this browser names is
+forgotten from this browser's blob store ([Blob store](../006-document/blob-store.md#this-browser)).
+
 ## The API
 
 `DELETE /api/documents/:id` moves the document to the Trash and answers `204`.

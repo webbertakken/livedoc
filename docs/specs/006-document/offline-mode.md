@@ -57,6 +57,11 @@ have cloud documents and offline documents side by side.
   ([This Browser](../034-text-documents/live-editing-and-storage.md#this-browser)).
 - A cloud text document's edits the room has not confirmed are kept apart, in the `livedoc-text-documents`
   database ([Live editing and storage](../034-text-documents/live-editing-and-storage.md#the-local-copy)).
+- A PDF document's live changes ride its record too (`pdfDocuments`); its file's bytes do not: the tab names them by
+  key and size, and they live in this browser's blob store ([Blob store](blob-store.md#this-browser);
+  [This Browser](../035-pdf-documents/live-editing-and-storage.md#this-browser)).
+  Sync Document sends the file before the create, Take Offline keeps it here before the server copy goes, and a
+  purge from the local Trash forgets it.
 - The app keeps a small **local index** of offline document ids (also in
   IndexedDB) so the Explorer can list them and the persistence layer knows which
   ids resolve locally vs to the API.

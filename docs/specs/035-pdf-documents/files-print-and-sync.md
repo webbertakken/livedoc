@@ -1,7 +1,8 @@
 # Files, print and sync
 
-**Status: specified; a first slice is built.** Built: a PDF dropped on the Explorer (one or several) and File >
-Download > PDF. The bytes are sent before the document opens, in one request. A canvas tab's and a Pages tab's
+**Status: specified; a first slice is built.** Built: a PDF dropped on the Explorer (one or several), kept in This
+Browser for a guest where sign-in is offered, and File > Download > PDF. A file sent to LiveDoc is sent before the
+document opens. A canvas tab's and a Pages tab's
 Download as PDF are written by the one writer, with a guard that finds a second. Every other way in and out is not
 built.
 
@@ -24,6 +25,13 @@ A file whose bytes are a PDF ([What becomes a PDF document](pdf-document.md#what
 | The Drive mirror                             | A PDF in the mirrored folder is adopted as a PDF document ([The Drive mirror](#the-drive-mirror))    |
 | An agent                                     | `pdf.import` with bytes ([Agents](agents.md))                                                        |
 
+- **Where it is kept is where a new document is** `(default)`
+  ([Save Locations](../006-document/save-locations.md#the-default-depends-on-who-is-creating)): LiveDoc for a
+  signed-in person, for anyone on a guest-only deployment, and for a drop on a folder or a team's place; **This
+  Browser** for a guest where sign-in is offered, whose file is kept in this browser and sent nowhere
+  ([Live editing and storage](live-editing-and-storage.md#this-browser)).
+  - A browser that will not keep the file says so by name and makes nothing
+    ([Errors in This Browser](live-editing-and-storage.md#errors-in-this-browser)).
 - **The pages show before the upload ends**: the browser hashes the file, opens it from its local bytes, and sends it
   to the [blob store](../006-document/blob-store.md) meanwhile; the save status reads "Uploading 42%". Changes made
   meanwhile are live changes, sent once the stored file is confirmed.
