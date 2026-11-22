@@ -110,7 +110,8 @@ second, explicit approval, never an existing pairing widened in silence.
   owner's own access now: a view token gives a read-only frame.
 - **Only what the editor of one document needs.** The document, its tabs, comments, changesets, items and room;
   every tab kind's own content and actions, as the editor works them in the app: a Sheet's sheets, a spreadsheet's
-  workbook (its file, settings, conversion and sheets), a text document's state, file and updates, a Form tab's link
+  workbook (its file, settings, conversion, kept content and sheets), a text document's state, file and updates, a
+  Form tab's link
   (read, publish, open, close, delete), its responses seen and its Preview, and an Event Storming board's domain
   export; uploading images into it (always with the bytes: the hash-only dedupe shortcut is not theirs, so the session
   cannot probe the owner's gallery, [Images](../009-elements/images.md) "Size cap") and reading its images;
