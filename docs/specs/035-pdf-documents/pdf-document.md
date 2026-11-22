@@ -179,7 +179,7 @@ role line.
   `Document · Loaded`, counted once.
 - A type is a preset token: never a name, a password, a field value or any text of the file.
 - Fingerprints, each with the document and tab ids and never content or names: `[pdf] stored`, `[pdf] opened`
-  (pages, bytes, whether read by range), `[pdf] refused` (with the refusal's name), `[pdf] limit-refused` (with the
+  (pages, bytes, whether read by range, how long the read and the engine took), `[pdf] refused` (with the refusal's name), `[pdf] limit-refused` (with the
   limit's name).
 
 ## Non-goals

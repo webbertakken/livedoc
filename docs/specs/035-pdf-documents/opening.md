@@ -124,7 +124,7 @@ as for any document.
 | `PDF_OPEN_TIMEOUT_MS`       | 30,000               | `(default)` Reading the structure of the slowest corpus file takes under a second; safe range 10 to 120 s                                    |
 | `PDF_OPEN_NOTICE_MS`        | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                         |
 | `PDF_MAX_PAGE_PIXELS`       | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                    |
-| `PDF_WORKER_MAX_BYTES`      | 1,073,741,824        | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Set by measurement                                           |
+| `PDF_WORKER_MAX_BYTES`      | 1,073,741,824        | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Measured: 724 MiB at most                                    |
 
 ## Share roles
 
@@ -148,6 +148,7 @@ as for any document.
 - `Pdf · Opened · <Outcome>`, once per open: `Read`, `Repaired`, `Partial`, `PasswordGiven`, or
   `Refused.<Name>` (`Damaged`, `Newer`, `CertificateProtected`, `RightsProtected`, `Stopped`, `TooLarge`,
   `NoFileStorage`, `BlobMissing`). Never the password or a name.
-- Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool> repaired=<bool>`,
+- Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool> repaired=<bool>`
+  (with `ms`, `read` and `engine`: how long the open, the read and the engine took),
   `[pdf] refused name=<name>`, `[pdf] password-asked`, `[pdf] password-wrong`, `[pdf] page-refused reason=<reason>`,
   `[pdf] worker-restarted reason=<trap|timeout|memory>`.

@@ -1,4 +1,4 @@
-// Measures a PDF document's surface in Chromium (docs/specs/035-pdf-documents/reading-surface.md "Budgets";
+// Measures a PDF document's surface in Chromium (docs/specs/035-pdf-documents/performance.md "Budgets";
 // docs/specs/016-platform/web-performance.md "Measuring"): a PDF dropped on the Explorer, then opened cold (a new
 // browser, nothing cached) and warm (a reload), scrolled through, and jumped to its end. For each: when the surface
 // was ready and page one drawn, what the engine weighed on the wire, every main-thread task over 50 ms, the frames,
@@ -30,6 +30,8 @@ const SCROLL_FAST_STEP_PX = 600;
 const SCROLL_STEP_MS = 100;
 const SCROLL_STEPS = 80;
 const OPEN_TIMEOUT_MS = 180_000;
+// The run of one file stops when the page's process holds more than this: the machine is shared.
+const MEMORY_STOP_BYTES = 4 * 1024 ** 3;
 
 /** Runs in the page before anything else: the marks this script reads back. */
 function watchPage() {
@@ -221,13 +223,18 @@ async function measure(file) {
   const box = await reader.locator(SCROLLER).boundingBox();
   await reader.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   const scroll = async (stepPx) => {
+    memory.length = 0;
     await reader.evaluate(() => (window.__pdf.longTasks = []));
     await reader.evaluate(watchFrames);
     let peak = 0;
     for (let step = 0; step < SCROLL_STEPS; step += 1) {
       await reader.mouse.wheel(0, stepPx);
       await reader.waitForTimeout(SCROLL_STEP_MS);
-      if (step % 10 === 9) peak = Math.max(peak, await rendererMemory(browser));
+      if (step % 5 !== 4) continue;
+      const now = await rendererMemory(browser);
+      memory.push(mib(now));
+      peak = Math.max(peak, now);
+      if (now > MEMORY_STOP_BYTES) throw new Error(`memory past ${mib(MEMORY_STOP_BYTES)} MiB`);
     }
     // Stopped: how long until the page under the middle of the view is drawn.
     const stopped = Date.now();
@@ -262,8 +269,16 @@ async function measure(file) {
       peakMemoryMiB: mib(peak),
     };
   };
-  result.scroll = await scroll(SCROLL_STEP_PX);
-  result.fastScroll = await scroll(SCROLL_FAST_STEP_PX);
+  // A page that crashes, or a process that grows without end, is a result too: where, and the memory until then.
+  const memory = [];
+  try {
+    result.scroll = await scroll(SCROLL_STEP_PX);
+    result.fastScroll = await scroll(SCROLL_FAST_STEP_PX);
+  } catch (error) {
+    result.stoppedWhileScrolling = { why: String(error).split('\n')[0], memoryMiB: memory };
+    await browser.close();
+    return result;
+  }
 
   // 5. Jumped to the end: how long until the last page shows.
   await reader.evaluate(() => (window.__pdf.longTasks = []));

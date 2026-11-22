@@ -132,7 +132,7 @@ everyone on the document; every client reloads the pages it shows, keeping its p
 
 | Constant                     | Value               | Why                                                                                           |
 | ---------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
-| `PDF_LIVE_CHANGES_MAX_BYTES` | 4,194,304 (4 MiB)   | `(default)` Past it the stored file is replaced; set by measurement on the tracer bullet      |
+| `PDF_LIVE_CHANGES_MAX_BYTES` | 4,194,304 (4 MiB)   | `(default)` Past it the stored file is replaced; measured: about 6,200 three-line highlights  |
 | `PDF_SERVER_BAKE_MAX_BYTES`  | 33,554,432 (32 MiB) | `(default)` What a Worker's 128 MB holds whole beside the engine                              |
 | `PDF_BAKE_TIMEOUT_MS`        | 120,000             | `(default)` A bake past it stops with "This PDF couldn't be written."; safe range 30 to 600 s |
 | Previous versions            | 30 days             | The file tab's own, as the Trash keeps a deleted document                                     |
