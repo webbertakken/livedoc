@@ -356,6 +356,13 @@ Add a custom-domain route to the router worker (`apps/router/wrangler.toml`) and
 
 The five downstream workers don't need their own domain; the router fans out via service bindings.
 
+## Worker logs
+
+The api, mcp and router workers keep their own log lines in Workers Logs, in your Cloudflare account: 3 days on
+Workers Free, 7 on Workers Paid. Request URLs are not kept. Read them in the dashboard under Workers & Pages, the
+worker, Observability. To keep none, set `enabled = false` under `[observability]` in the three `wrangler.toml`
+files. See [Worker logs](../specs/016-platform/worker-logs.md).
+
 ## What can break, and how to debug
 
 - **`account not authorized` from wrangler**: the API token is missing a scope. See the token list above; most often it's missing **Account → Account Settings: Read**, which wrangler uses to look up your account.

@@ -409,3 +409,13 @@ name = "EMAIL"
 # The two sides MUST match: a mismatch is silent (the caller simply lands
 # back in the shared bucket), so check `wrangler secret list` on both if
 # Mcp·Used counts look flat.
+
+# Workers Logs (docs/specs/016-platform/worker-logs.md): the worker's own log lines are kept in this Cloudflare
+# account, so a failure nobody was tailing can still be read. Invocation logs stay off: one stores every request's
+# URL, and a URL carries document ids and share codes.
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false
