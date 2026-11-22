@@ -100,7 +100,7 @@ kind**. The room stores each one the same way, the kind declaring only what is i
 - **The kind declares**: its tab kind, its frame's op kind (its refusal is `<op kind>-refused`), its log tag, its
   tables (updates, chunks, digest), how its updates merge and decode and how many characters one inserts, its sizes
   (a chunk's bytes, the log's bytes and updates before compaction, a frame's characters) and limits (characters,
-  stored bytes), its digest (characters, words, pages, has content, search text) read from its state, and, where a
+  stored bytes), its digest (characters, words, pages, has content, search text, the gallery images it places) read from its state, and, where a
   Participant may change some of it, the level an update asks.
 - **Its schema step**: its three tables and their outbox triggers, made by one shared step builder and appended to the
   room's schema as any step is; a shipped step is never edited, so the text document's own steps stay as written.
@@ -130,7 +130,9 @@ kind**. The room stores each one the same way, the kind declaring only what is i
   alone, as `<op kind>-refused` with its `name` and `replacement: true`, and nothing is written. Logged
   `state-replaced` and `replacement-refused name=`.
 - **The digest and summary**: every stored update queues the tab in the outbox; its drain rebuilds the kind's digest
-  from the state, saving the document, and gives the search text to D1. A tab holds content when its digest says so,
+  from the state, saving the document, and gives the search text to D1; in the same batch it replaces the tab's rows
+  in the [reference index](../009-elements/images.md#reference-index) with the images the digest names, so the
+  index trails a live tab by one drain. A tab holds content when its digest says so,
   and its characters and stored bytes join the content summary.
 - **Copies**: a copied document's live tabs carry their state, stored as chunks under the new tab ids.
 - Kinds: the text document (`text-document`, tables `text_document_*`) and the PDF document (`pdf`, tables `pdf_*`).

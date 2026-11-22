@@ -47,8 +47,9 @@ api, agents) reads and writes one shape (default):
   by id. Two people typing in one header merge by character, as in the body. A pasted section break naming a fragment
   shares it until one of them is made its own (default).
 - **Beside the body**: the root map `document` holds `metadata`, `defaults`, the first `section` and the `watermark` as
-  whole values; `media` is a root map of the pictures' media by key, each `{ mediaType, bytes, part }`, written
-  when a file is opened or converted and when a picture arrives;
+  whole values; `media` is a root map of the pictures' media by key, each `{ mediaType, part, image }` (a gallery
+  image) or `{ mediaType, part, bytes }` ([Objects](objects.md#where-the-bytes-live)), written when a file is opened or
+  converted and when a picture arrives;
   `styles` and `lists` are root maps by id, so two people changing two styles never collide; `source` holds what a
   file brought around the model (`json`) and its package entries by name (`entries`, as bytes), written once when the
   file is opened and replaced only by a conversion.
