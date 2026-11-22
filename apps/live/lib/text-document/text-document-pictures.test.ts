@@ -6,7 +6,12 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { PICTURE, type PictureMedia } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
-import { pictureBox, pictureView, type PictureSource } from './text-document-pictures';
+import {
+  PICTURE_DRAWN_EVENT,
+  pictureBox,
+  pictureView,
+  type PictureSource,
+} from './text-document-pictures';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
 const picture = (attrs: Record<string, unknown>) =>
@@ -138,6 +143,95 @@ describe('a picture drawn', () => {
       await settled();
       expect(asked).toHaveBeenCalledTimes(1);
       expect(view.dom.style.width).toBe('90pt');
+    });
+  });
+
+  // objects.md "Working with a picture": its own size is its pixels, noted once its image is drawn.
+  it('notes its own pixels once its image is drawn, and says so', () => {
+    const dom = draw({});
+    const told = vi.fn();
+    dom.addEventListener(PICTURE_DRAWN_EVENT, told);
+    const img = dom.querySelector('img')!;
+    Object.defineProperties(img, { naturalWidth: { value: 320 }, naturalHeight: { value: 160 } });
+    img.dispatchEvent(new Event('load'));
+    expect(dom.dataset).toMatchObject({ ownWidth: '320', ownHeight: '160' });
+    expect(told).toHaveBeenCalledOnce();
+  });
+
+  // objects.md "Working with a picture", Sizing by its handles: eight handles on a selected picture; the box follows the
+  // pointer, the size written once on release; Escape leaves it as it was.
+  describe('its handles', () => {
+    const room = { width: 468, height: 648 };
+    const sized = (can = true) => {
+      const resize = vi.fn<(pos: number, size: { width: number; height: number }) => void>();
+      const view = pictureView(sourceOf(held(true)), { can: () => can, room: () => room, resize })(
+        picture({}),
+        {} as EditorView,
+        () => 3,
+        [],
+        undefined as never,
+      );
+      return { view, resize };
+    };
+    const handle = (dom: HTMLElement, which: string) =>
+      dom.querySelector<HTMLElement>(`[data-picture-handle="${which}"]`)!;
+    // jsdom lays nothing out: a point is drawn as 4/3 of a pixel.
+    const drag = (from: HTMLElement, dx: number, dy: number) => {
+      from.dispatchEvent(
+        new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 10, clientY: 10 }),
+      );
+      window.dispatchEvent(new MouseEvent('pointermove', { clientX: 10 + dx, clientY: 10 + dy }));
+    };
+
+    it('draws eight on a selected picture, and none once deselected', () => {
+      const { view } = sized();
+      view.selectNode!();
+      expect(view.dom.classList.contains('ProseMirror-selectednode')).toBe(true);
+      expect(
+        [...view.dom.querySelectorAll('[data-picture-handle]')].map((h) =>
+          h.getAttribute('data-picture-handle'),
+        ),
+      ).toEqual(['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']);
+      view.deselectNode!();
+      expect(view.dom.querySelector('[data-picture-handle]')).toBeNull();
+      expect(view.dom.classList.contains('ProseMirror-selectednode')).toBe(false);
+    });
+
+    it('draws none for anyone who may not size it', () => {
+      const { view } = sized(false);
+      view.selectNode!();
+      expect(view.dom.querySelector('[data-picture-handle]')).toBeNull();
+    });
+
+    it('follows the pointer, writing the size once on release', () => {
+      const { view, resize } = sized();
+      view.selectNode!();
+      drag(handle(view.dom, 'se'), 52, 0);
+      expect(view.dom.style.width).toBe('87pt');
+      expect(resize).not.toHaveBeenCalled();
+      window.dispatchEvent(new MouseEvent('pointerup', {}));
+      expect(resize).toHaveBeenCalledExactlyOnceWith(3, { width: 87, height: 58 });
+    });
+
+    it('leaves the picture as it was on Escape', () => {
+      const { view, resize } = sized();
+      view.selectNode!();
+      drag(handle(view.dom, 'e'), 40, 0);
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      window.dispatchEvent(new MouseEvent('pointerup', {}));
+      expect(view.dom.style.width).toBe('60pt');
+      expect(resize).not.toHaveBeenCalled();
+    });
+
+    it('keeps the editor away from its handles', () => {
+      const { view } = sized();
+      view.selectNode!();
+      const event = new MouseEvent('mousedown', { bubbles: true });
+      Object.defineProperty(event, 'target', { value: handle(view.dom, 'n') });
+      expect(view.stopEvent!(event)).toBe(true);
+      const elsewhere = new MouseEvent('mousedown');
+      Object.defineProperty(elsewhere, 'target', { value: view.dom });
+      expect(view.stopEvent!(elsewhere)).toBe(false);
     });
   });
   it('is one atom of the paragraph, read as no text', () => {

@@ -1,6 +1,7 @@
 // The text document's side panels (docs/specs/034-text-documents/editing-surface.md "Layout, top to bottom"): the
 // outline on the left (links-and-navigation.md "The outline"); on the right Line numbers (page-layout.md "Line
-// numbers"), Watermark (page-layout.md "Watermark") and Table properties (tables.md), an Editor's all. Comments and version history join with review.
+// numbers"), Watermark (page-layout.md "Watermark"), Table properties (tables.md) and Image options (objects.md
+// "Working with a picture"), an Editor's all. Comments and version history join with review.
 import type { OfficePanelSpec } from '@/lib/office/office-panels';
 
 export const OUTLINE_PANEL: OfficePanelSpec = {
@@ -35,9 +36,19 @@ export const TABLE_PROPERTIES_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+// Format > Image > Image options (objects.md "Working with a picture").
+export const IMAGE_OPTIONS_PANEL: OfficePanelSpec = {
+  id: 'image-options',
+  title: 'Image options',
+  side: 'right',
+  item: 'image-options',
+  editorsOnly: true,
+};
+
 export const TEXT_DOCUMENT_PANELS: readonly OfficePanelSpec[] = [
   OUTLINE_PANEL,
   LINE_NUMBERS_PANEL,
   WATERMARK_PANEL,
   TABLE_PROPERTIES_PANEL,
+  IMAGE_OPTIONS_PANEL,
 ];

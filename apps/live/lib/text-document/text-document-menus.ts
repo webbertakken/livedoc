@@ -355,14 +355,14 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       submenu('format-image', 'Image', [
         item('image-crop', 'Crop image', 'edit'),
-        item('image-options', 'Image options', 'edit'),
+        item('image-options', 'Image options', 'edit', BUILT),
         item('image-alt-text', 'Alt text', 'edit', { shortcut: 'alt-text', ...BUILT }),
         submenu('image-replace', 'Replace image', [
           item('image-replace-upload', 'Upload from computer', 'edit', BUILT),
           item('image-replace-search', 'Search the web', 'edit', BUILT),
           item('image-replace-gallery', 'LiveDoc gallery', 'edit', BUILT),
         ]),
-        item('image-reset', 'Reset image', 'edit'),
+        item('image-reset', 'Reset image', 'edit', BUILT),
       ]),
       item('borders-and-lines', 'Borders & lines', 'edit', { keywords: ['shading'] }),
       SEPARATOR,
