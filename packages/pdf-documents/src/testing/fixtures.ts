@@ -281,7 +281,7 @@ export function formPdf(options = 3): Uint8Array<ArrayBuffer> {
   return rawPdf([
     '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R 6 0 R 7 0 R 8 0 R 9 0 R 12 0 R 13 0 R 14 0 R 15 0 R 16 0 R] >> >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [5 0 R 6 0 R 7 0 R 8 0 R 10 0 R 11 0 R 12 0 R 13 0 R 14 0 R 15 0 R 16 0 R] >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Annots [5 0 R 6 0 R 7 0 R 8 0 R 10 0 R 11 0 R 12 0 R 13 0 R 14 0 R 15 0 R 16 0 R] >>',
     '<< /T (applicant) /Kids [5 0 R] >>',
     widget(700, '/Parent 4 0 R /FT /Tx /T (city) /V (Delft) /TU (The city you live in)'),
     widget(660, '/FT /Tx /T (notes) /Ff 4099 /V (Line one)'),

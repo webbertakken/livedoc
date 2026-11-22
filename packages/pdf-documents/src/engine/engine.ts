@@ -1,32 +1,34 @@
 // The engine over a started reader (docs/specs/035-pdf-documents/security.md "The boundary"): one reader and one
 // writer behind the one interface. It holds one open stored file.
-import type { BakeResult, PdfEngine, PdfLayer, PdfOpened } from '../engine-contract';
+import type { PDF } from '@libpdf/core';
+import type { BakeResult, PageInfo, PdfEngine, PdfOpened } from '../engine-contract';
 import { FileSignature } from '../file-signature';
 import { PdfLiveChanges } from '../live-changes';
-import { bakeAddition } from './bake';
+import { bakeChanges } from './bake';
 import { PdfReader, type Pdfium } from './reader';
 import { signerOf } from './signer';
-import { layersOf } from './writer';
+import { layersOf, openWriter } from './writer';
 
 /** The engine over a started reader; `write` is the writer, the engine's own unless a test hands another. */
-export function pdfEngineOver(
-  pdfium: Pdfium,
-  write: typeof bakeAddition = bakeAddition,
-): PdfEngine {
+export function pdfEngineOver(pdfium: Pdfium, write: typeof bakeChanges = bakeChanges): PdfEngine {
   const reader = new PdfReader(pdfium);
   let stored: Uint8Array<ArrayBuffer> | null = null;
   // The file held while its password is asked, and the password it opened with: both the engine's alone.
   let waiting: Uint8Array<ArrayBuffer> | null = null;
   let password: string | null = null;
-  // The layers of the open file, read once: the writer reads the whole file to answer them.
-  let layers: Promise<readonly PdfLayer[]> | null = null;
+  let pages: readonly PageInfo[] = [];
+  // The open file as the writer reads it, read once and only when asked: it reads the whole file a second time.
+  let written: Promise<PDF | null> | null = null;
+  const writer = (): Promise<PDF | null> =>
+    stored ? (written ??= openWriter(stored, password)) : Promise.resolve(null);
 
   const opening = (bytes: Uint8Array<ArrayBuffer>, given: string | null): PdfOpened => {
     const opened = reader.open(bytes, given ?? '');
     stored = opened.ok ? bytes : null;
     password = opened.ok ? given : null;
     waiting = !opened.ok && opened.needsPassword ? bytes : null;
-    layers = null;
+    written = null;
+    pages = opened.ok ? opened.pages : [];
     return opened;
   };
 
@@ -36,16 +38,31 @@ export function pdfEngineOver(
     const changes = PdfLiveChanges.load([liveChanges]);
     // Empty live changes are never baked: the stored file itself is handed out (saving.md "An unchanged file").
     if (PdfLiveChanges.isEmpty(changes))
-      return { ok: true, bytes: stored, kind: 'unchanged', anchorsLost: 0 };
-    const added = await write(stored, PdfLiveChanges.marks(changes), password);
-    if (!added.ok) return added;
-    // Handed out only once the reader has opened it again with the pages it had (saving.md "The validators' claim").
+      return { ok: true, bytes: stored, kind: 'unchanged', anchorsLost: 0, fieldsLost: 0 };
+    const turns = PdfLiveChanges.pageTurns(changes);
+    const baked = await write(
+      stored,
+      {
+        marks: PdfLiveChanges.marks(changes),
+        fieldValues: PdfLiveChanges.fieldValues(changes),
+        removed: PdfLiveChanges.removed(changes),
+        turns,
+      },
+      password,
+    );
+    if (!baked.ok) return baked;
+    // Handed out only once the reader has opened it again with the pages it had, each turned page standing as it
+    // was turned (saving.md "The validators' claim").
     const check = new PdfReader(pdfium);
-    const reopened = check.open(added.bytes, password ?? '');
-    const pages = check.pageCount();
+    const reopened = check.open(baked.bytes, password ?? '');
     check.close();
-    if (!reopened.ok || pages !== reader.pageCount()) return { ok: false, refusal: 'reopen' };
-    return { ok: true, bytes: added.bytes, kind: 'addition', anchorsLost: added.anchorsLost };
+    const stands =
+      reopened.ok &&
+      reopened.pages.length === pages.length &&
+      pages.every(
+        ({ name }, at) => !turns.has(name) || reopened.pages[at]!.rotation === turns.get(name),
+      );
+    return stands ? baked : { ok: false, refusal: 'reopen' };
   }
 
   return {
@@ -76,11 +93,13 @@ export function pdfEngineOver(
         );
     },
     embeddedFiles: async () => reader.embeddedFiles(),
-    layers: async () => (stored ? (layers ??= layersOf(stored, password)) : []),
+    layers: async () => layersOf(await writer()),
+    canAppend: async () => (await writer())?.canSaveIncrementally() === null,
     bake,
     close: async () => {
       reader.close();
-      stored = waiting = password = layers = null;
+      stored = waiting = password = written = null;
+      pages = [];
     },
   };
 }

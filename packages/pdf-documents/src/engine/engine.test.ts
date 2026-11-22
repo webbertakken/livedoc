@@ -29,7 +29,7 @@ import {
   textPdf,
   xfaPdf,
 } from '../testing/fixtures';
-import { bakeAddition } from './bake';
+import { bakeChanges } from './bake';
 import { pdfEngineOver } from './engine';
 import { createPdfEngine, pdfDate } from './index';
 import { PdfReader, startReader } from './reader';
@@ -554,13 +554,16 @@ describe('baking', () => {
     expect(pages).toHaveLength(2);
   });
 
-  // saving.md "Addition or rewrite": the writer is asked first; a silent fall back to a rewrite is a defect.
-  it('refuses to append to a file opened only by rebuilding its cross-reference', async () => {
+  // saving.md "Addition or rewrite": the writer is asked first; a file that cannot take an addition is rewritten.
+  it('never appends to a file opened only by rebuilding its cross-reference', async () => {
     const changes = await changesWithHighlight(0);
     const broken = spoiled(stored);
     opened(await engine.open(broken));
-    expect(await engine.bake(changes)).toEqual({ ok: false, refusal: 'cannot-append' });
-    expect(await bakeAddition(new TextEncoder().encode('no pdf'), [])).toMatchObject({ ok: false });
+    expect(await engine.bake(changes)).toMatchObject({ ok: true, kind: 'rewrite' });
+    const nothing = { marks: [], fieldValues: [], removed: new Map(), turns: new Map() };
+    expect(await bakeChanges(new TextEncoder().encode('no pdf'), nothing)).toMatchObject({
+      ok: false,
+    });
   });
 
   // saving.md "The validators' claim": a bake that fails its reopen check is not handed out.
@@ -571,14 +574,18 @@ describe('baking', () => {
     const wrongPages = pdfEngineOver(pdfium, async () => ({
       ok: true,
       bytes: onePage,
+      kind: 'addition',
       anchorsLost: 0,
+      fieldsLost: 0,
     }));
     await wrongPages.open(stored);
     expect(await wrongPages.bake(changes)).toEqual({ ok: false, refusal: 'reopen' });
     const garbage = pdfEngineOver(pdfium, async () => ({
       ok: true,
       bytes: new Uint8Array([1, 2, 3]),
+      kind: 'addition',
       anchorsLost: 0,
+      fieldsLost: 0,
     }));
     await garbage.open(stored);
     expect(await garbage.bake(changes)).toEqual({ ok: false, refusal: 'reopen' });

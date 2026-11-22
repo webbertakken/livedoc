@@ -75,6 +75,7 @@ describe('the engine over a worker thread', () => {
     expect(await engine.signatures()).toEqual([]);
     expect(await engine.embeddedFiles()).toEqual({ files: [], cut: false });
     expect(await engine.layers()).toEqual([]);
+    expect(await engine.canAppend()).toBe(true);
     // No changes: the stored file itself, and still there to bake again.
     const empty = Uint8Array.of(0, 0);
     for (const _ of [1, 2]) {
@@ -141,6 +142,7 @@ describe('the engine over a worker thread', () => {
     expect(await engine.signatures()).toEqual([]);
     expect(await engine.embeddedFiles()).toEqual({ files: [], cut: false });
     expect(await engine.layers()).toEqual([]);
+    expect(await engine.canAppend()).toBe(false);
     expect(await engine.bake(Uint8Array.of(0, 0))).toEqual({ ok: false, refusal: 'unreadable' });
     expect(stopped).toHaveBeenCalledTimes(1);
     expect(stopped.mock.calls[0]![0]).toContain('out of memory');

@@ -24,7 +24,7 @@ import {
 import { createPdfEngine } from './index';
 import { PdfReader, startReader } from './reader';
 import { signerOf } from './signer';
-import { layersOf } from './writer';
+import { layersOf, openWriter } from './writer';
 
 let engine: PdfEngine;
 let reader: PdfReader;
@@ -448,7 +448,7 @@ describe('PDF layers', () => {
   });
 
   it('answers none where the writer cannot read the file, or with no file open', async () => {
-    expect(await layersOf(new Uint8Array([1, 2, 3]), null)).toEqual([]);
+    expect(layersOf(await openWriter(new Uint8Array([1, 2, 3]), null))).toEqual([]);
     await engine.close();
     expect(await engine.layers()).toEqual([]);
   });

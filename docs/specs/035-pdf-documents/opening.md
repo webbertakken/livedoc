@@ -61,6 +61,8 @@ Damage is ordinary: a broken trailer, a spoiled cross-reference, a file cut shor
   the file itself is unchanged." **Details** names what was rebuilt.
 - A repaired file's changes are written as a **rewritten file**, never as an addition, and the notice says so before
   the first change: "Changes to this PDF are saved as a repaired copy." ([Saving](saving.md#addition-or-rewrite))
+  Whether a file can take an addition is the writer's answer, asked once the first page shows: asking reads the whole
+  file a second time `(default)`.
 - A file opened with pages missing (cut short after page 12 of 40) shows the pages it has and the notice "Only 12 of
   this PDF's pages could be read."; it is read-only, since a bake would write the loss into the file.
 - **A file the engine cannot rebuild** is refused as damaged, below.

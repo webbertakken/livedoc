@@ -155,10 +155,15 @@ export type BakeResult =
   | {
       readonly ok: true;
       readonly bytes: Uint8Array<ArrayBuffer>;
-      /** `unchanged`: the stored file itself; `addition`: the stored file with one incremental update. */
-      readonly kind: 'unchanged' | 'addition';
-      /** Marks whose page the stored file does not hold. */
+      /**
+       * `unchanged`: the stored file itself; `addition`: the stored file with one incremental update; `rewrite`:
+       * the stored file written anew, with what Reviewing added appended to it.
+       */
+      readonly kind: 'unchanged' | 'addition' | 'rewrite';
+      /** Marks and page turns whose page the stored file does not hold. */
       readonly anchorsLost: number;
+      /** Field values the stored file's fields do not take. */
+      readonly fieldsLost: number;
     }
   | { readonly ok: false; readonly refusal: BakeRefusal };
 
@@ -191,6 +196,11 @@ export type PdfEngine = {
   embeddedFiles(): Promise<EmbeddedFiles>;
   /** The file's PDF layers, in the file's order; none where it has none. */
   layers(): Promise<readonly PdfLayer[]>;
+  /**
+   * Whether the open file can take an addition; a file opened only by rebuilding it cannot, and its changes are
+   * written as a rewritten file (opening.md "Damaged files"). Asking reads the whole file a second time.
+   */
+  canAppend(): Promise<boolean>;
   /** The open stored file with the live changes (one Yjs update) written in. */
   bake(liveChanges: Uint8Array): Promise<BakeResult>;
   close(): Promise<void>;

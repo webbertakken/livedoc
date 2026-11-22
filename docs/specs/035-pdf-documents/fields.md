@@ -2,8 +2,9 @@
 
 **Status: specified; a first slice is built.** Built: the engine reads a page's fields as the file holds them: each
 place a field shows, with its full name, type, value, options, label and what the file says of it (read-only,
-required, hidden, multi-line, password, several choices, a value of one's own). Filling, the fields panel, formats
-and everything a person sees are not built.
+required, hidden, multi-line, password, several choices, a value of one's own); a field value held in the live
+changes; and a bake that writes each value into its field with its appearance, as an addition. Filling on the
+surface, the fields panel, formats and everything a person sees are not built.
 
 A PDF's **fields** are the inputs it carries: text fields, tick boxes, radio groups, dropdowns, lists, buttons and
 signature fields. Filling them is Reviewing's ([Editing modes](editing-modes.md)); adding and changing them is
@@ -139,6 +140,11 @@ A scanned or flat form has nothing to fill. Reviewing offers the **fill marks** 
   addition: a filled text field adds under a kilobyte ([Saving](saving.md#addition-or-rewrite)).
 - A value the field's font has no glyph for is drawn with a substitute and said so
   ([Editing text](editing-text.md#missing-glyphs)).
+- **A value the file's field does not take is not written**: the field is not in the stored file, is read-only, is a
+  signature field or a button, or the value is none of its options. It is counted in the bake's answer and stays in
+  the live changes.
+- A tick box is turned off by the value `Off` and on by any other; a list that takes several is given the options
+  chosen.
 - The form's "need appearances" flag is never relied on: every value LiveDoc writes has its appearance, so every
   reader shows it.
 

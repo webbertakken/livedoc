@@ -8,7 +8,12 @@ import { debugLog } from '@/lib/debug-log';
 import { UNTITLED_PDF } from './open-pdf-file';
 
 export type PdfDownload =
-  | { ok: true; kind: 'unchanged' | 'addition'; bytes: Uint8Array<ArrayBuffer>; fileName: string }
+  | {
+      ok: true;
+      kind: 'unchanged' | 'addition' | 'rewrite';
+      bytes: Uint8Array<ArrayBuffer>;
+      fileName: string;
+    }
   | { ok: false; refusal: BakeRefusal };
 
 /** "This PDF couldn't be written. Your changes are safe." (saving.md "Errors"). */
@@ -37,5 +42,8 @@ export async function bakeForDownload(deps: {
   debugLog(
     `[pdf] baked kind=${baked.kind} bytes=${baked.bytes.byteLength} ms=${Date.now() - started} where=browser`,
   );
+  // What an addition could not place is counted, never dropped silently (saving.md "Addition or rewrite").
+  if (baked.anchorsLost > 0) debugLog(`[pdf] anchors-lost count=${baked.anchorsLost}`);
+  if (baked.fieldsLost > 0) debugLog(`[pdf] fields-lost count=${baked.fieldsLost}`);
   return { ok: true, kind: baked.kind, bytes: baked.bytes, fileName };
 }

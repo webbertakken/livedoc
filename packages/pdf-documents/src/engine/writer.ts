@@ -1,5 +1,5 @@
 // The stored file as the writer reads it (docs/specs/035-pdf-documents/saving.md "Addition or rewrite"). With
-// bake.ts, the only files that drive the writer.
+// bake.ts, the only files that drive the writer. What is answered here is read only: a bake opens its own copy.
 import { PDF } from '@libpdf/core';
 import type { PdfLayer } from '../engine-contract';
 import { PDF_MAX_LAYERS, PDF_NAME_MAX_CHARS } from '../limits';
@@ -19,13 +19,8 @@ export async function openWriter(stored: Uint8Array, password: string | null): P
   }
 }
 
-/** The file's PDF layers in the file's order, at most `most`; none where the writer cannot read the file. */
-export async function layersOf(
-  stored: Uint8Array,
-  password: string | null,
-  most = PDF_MAX_LAYERS,
-): Promise<readonly PdfLayer[]> {
-  const pdf = await openWriter(stored, password);
+/** The file's PDF layers in the file's order, at most `most`; none where the writer could not read the file. */
+export function layersOf(pdf: PDF | null, most = PDF_MAX_LAYERS): readonly PdfLayer[] {
   if (!pdf) return [];
   return pdf
     .getLayers()

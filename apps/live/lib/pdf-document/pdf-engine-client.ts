@@ -49,6 +49,7 @@ const STOPPED = {
   signatures: [] as readonly FileSignature[],
   embeddedFiles: { files: [], cut: false } satisfies EmbeddedFiles,
   layers: [] as readonly PdfLayer[],
+  canAppend: false,
   bake: { ok: false, refusal: 'unreadable' } satisfies BakeResult,
   close: undefined,
 } as const;
@@ -108,6 +109,7 @@ export function pdfEngineClient(
     signatures: () => ask<readonly FileSignature[]>({ method: 'signatures', args: [] }),
     embeddedFiles: () => ask<EmbeddedFiles>({ method: 'embeddedFiles', args: [] }),
     layers: () => ask<readonly PdfLayer[]>({ method: 'layers', args: [] }),
+    canAppend: () => ask<boolean>({ method: 'canAppend', args: [] }),
     bake: (liveChanges) => ask<BakeResult>({ method: 'bake', args: [liveChanges] }),
     close: () => ask<void>({ method: 'close', args: [] }),
     terminate: () => stop('closed', false),

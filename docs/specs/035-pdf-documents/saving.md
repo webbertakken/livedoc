@@ -1,8 +1,10 @@
 # Saving
 
 **Status: specified; a first slice is built.** Built: a bake in the browser for Download: the stored file itself when
-nothing was changed, else the stored file with one addition holding the highlights, deterministic, reopened before it
-is handed out, and proven a prefix. Rewrites, replacing the stored file, previous versions and versions are not built.
+nothing was changed, else the stored file with one addition holding the highlights, the field values and the removal
+of the file's own marks that were deleted, deterministic, reopened before it is handed out, and proven a prefix; and
+a rewrite, for a page turned and for a file that cannot take an addition, with what Reviewing added appended to it.
+The guard on a rewrite's untouched pages, replacing the stored file, previous versions and versions are not built.
 
 LiveDoc has no Save button. A [PDF document](pdf-document.md) is saved as it is worked on, live, for everyone on it.
 "Saved" means the document's file is always whole and current: every way a file leaves LiveDoc hands out a valid PDF
@@ -61,6 +63,11 @@ A change is written one of two ways, by its kind, never by the engine's convenie
   append; a silent fall back to a rewrite is a defect.
 - **The first rewriting change on a file that carries certificate signatures** is where a person is told, before it is
   made, how many signatures it invalidates ([Signing](signing.md#changes-after-a-signature), fork F8).
+- **A rewrite keeps the names the live changes use**: its pages stand in the stored file's order, so a mark is
+  appended to the page it was made on, and a protected file is rewritten protected, opening with the same password.
+- **What an addition could not place is counted, never dropped silently**: a mark whose page the stored file does not
+  hold, and a field value whose field it does not hold or that the field does not take
+  ([Fields](fields.md#in-the-file)). The bake says how many of each.
 - **The file's version** is its own: a bake writes the version the file came in, raising it only when a change needs a
   newer feature, and File > Properties says when it was raised.
 - **A linearised file** stays linearised only while unchanged; a baked one is not, and a rewrite is written
@@ -119,7 +126,7 @@ everyone on the document; every client reloads the pages it shows, keeping its p
 ## The validators' claim
 
 - A baked file is handed out only after the engine has **reopened it**: its page count, and each changed page's draw,
-  are checked against what was meant. A bake that fails the check is not handed out: "This PDF couldn't be written.
+  are checked against what was meant; a turned page is checked to stand as it was turned. A bake that fails the check is not handed out: "This PDF couldn't be written.
   Your changes are safe." with **Try again**, and the stored file and live changes stay as they were.
 - In tests, every baked file also passes `qpdf --check`, has its stored file as a prefix where the bake was an
   addition, keeps every earlier signature valid by poppler's `pdfsig`, and draws the same outside what changed
@@ -151,10 +158,10 @@ Every role downloads the same bake: the file holds every live change, whoever ma
 
 - `Pdf · Changed · StoredFile.<Signed|Redacted|Protected|Arrived|Budget|Restored>` when the stored file is
   replaced; `Pdf · Exported · <As>` carries no size.
-- Fingerprints with the document and tab ids: `[pdf] baked kind=<addition|rewrite|both> bytes=<n> ms=<n>
+- Fingerprints with the document and tab ids: `[pdf] baked kind=<unchanged|addition|rewrite> bytes=<n> ms=<n>
 where=<browser|api|cli>`, `[pdf] bake-refused reason=<reopen|timeout|cannot-append>`,
   `[pdf] stored-file-replaced reason=<reason> from=<key prefix> to=<key prefix>`, `[pdf] unchanged-streamed`,
-  `[pdf] anchors-lost count=<n>`.
+  `[pdf] anchors-lost count=<n>`, `[pdf] fields-lost count=<n>`.
 
 ## Errors
 
