@@ -13,6 +13,8 @@ const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track }));
 
 const { useTextDocumentPictureEditing } = await import('./useTextDocumentPictureEditing');
+import type { Bringing } from './useTextDocumentPictures';
+import type { ImagePickerTab } from '@/components/panels/ImagePicker';
 
 function setup({ pictureSelected = true, canEdit = true } = {}) {
   const picture = schema.nodes[PICTURE]!.create({
@@ -28,7 +30,10 @@ function setup({ pictureSelected = true, canEdit = true } = {}) {
       selection: pictureSelected ? NodeSelection.create(doc, 1) : TextSelection.create(doc, 1),
     }),
   });
-  const bring = { chooseFile: vi.fn(), openPicker: vi.fn() };
+  const bring = {
+    chooseFile: vi.fn<(bringing: Bringing) => void>(),
+    openPicker: vi.fn<(tab: ImagePickerTab, bringing: Bringing) => void>(),
+  };
   const hook = renderHook(() =>
     useTextDocumentPictureEditing({ view, canEdit, subscribe: () => () => {}, bring }),
   );
@@ -52,7 +57,7 @@ describe('useTextDocumentPictureEditing', () => {
     const { hook, view } = setup();
     act(() => hook.result.current.actions['image-alt-text']!.run());
     const { unmount } = render(<>{hook.result.current.dialog}</>);
-    const field = screen.getByLabelText('Description') as HTMLTextAreaElement;
+    const field = screen.getByLabelText<HTMLTextAreaElement>('Description');
     expect(field.value).toBe('Sky');
     fireEvent.change(field, { target: { value: 'A clear sky' } });
     fireEvent.click(screen.getByRole('button', { name: 'OK' }));
@@ -66,7 +71,7 @@ describe('useTextDocumentPictureEditing', () => {
     act(() => hook.result.current.actions['image-alt-text']!.run());
     const { unmount } = render(<>{hook.result.current.dialog}</>);
     fireEvent.click(screen.getByLabelText('Mark as decorative'));
-    const field = screen.getByLabelText('Description') as HTMLTextAreaElement;
+    const field = screen.getByLabelText<HTMLTextAreaElement>('Description');
     expect(field.disabled).toBe(true);
     expect(field.value).toBe('');
     fireEvent.click(screen.getByRole('button', { name: 'OK' }));
