@@ -113,12 +113,20 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 
 ### Inserting
 
-- **Insert > Image** opens the shared image picker (Upload, LiveDoc gallery, Search); By URL and Camera wait for their
-  rulings (fetching a URL needs the api's own fetcher). The picture chosen is placed in line at the caret.
+- **Insert > Image**, in Google's order: **Upload from computer** opens the computer's file chooser, as Google's does;
+  **Search the web** and **LiveDoc gallery** open the shared image picker on its Search or Gallery tab (its Upload tab
+  there too). By URL and Camera wait for their rulings (fetching a URL needs the api's own fetcher); Drive and Photos
+  are Google's own and left out. The toolbar's Insert image opens the same list.
+- The picture chosen is placed in line at the caret, replacing a selection, and left selected, as Google leaves it;
+  one insert is one undo step.
 - **Its size** is its pixels at 96 an inch, scaled down to fit the text width and the page's text height, keeping its
   ratio, as Google places one (default).
 - **Paste and drop** of picture files (PNG, JPEG, GIF, WebP) upload each and place it at the caret or the drop point;
   other files are refused as the picker refuses them, with its message.
+- **Upload from computer, paste and drop** keep a picture's bytes in the state where the gallery cannot hold them: in
+  This Browser, without image storage (`images_unavailable`); any other refusal (`gallery_full`, `file_too_large`, a
+  type the model does not map) places nothing and says why in a note under the toolbar for 10 seconds (default), in
+  the picker's words. The picker's own tabs answer in the picker.
 - Copying a picture into another text document carries its media: a gallery media by its id, served there under the
   placement rules; state bytes as they are.
 - Share roles: an Editor inserts, pastes and drops pictures; a Participant only as suggestions (D7); a Viewer copies.
