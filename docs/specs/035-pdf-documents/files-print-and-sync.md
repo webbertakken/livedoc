@@ -185,7 +185,7 @@ CommentsSummary|Print|Email|KeptFromTextDocument|KeptFromSpreadsheet|KeptFromCan
 - `Document · Created · <Offline|Cloud>` beside `Pdf · Imported` for a PDF that arrives as a new document, by where it
   is kept.
 - Fingerprints: `[pdf] arrived way=<way> bytes=<n> held=<bool>`, `[pdf] upload ms=<n> parts=<n>`,
-  `[pdf] download as=<as> ms=<n>`, `[pdf] sync wrote=<bake|stored> lacking=<n>`,
+  `[pdf] download as=<as> ms=<n>`, `[pdf] download failed`, `[pdf] sync wrote=<bake|stored> lacking=<n>`,
   `[pdf] sync folded anchors-lost=<n>`, `[pdf] drive wrote=<bake|stored>`.
 
 ## Errors
