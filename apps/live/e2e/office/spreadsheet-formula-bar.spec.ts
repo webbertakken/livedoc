@@ -33,19 +33,19 @@ test('the sheet bar sums a selection, and the formula bar names and helps', asyn
   await typeInto(page, 'A2', '34');
   await typeInto(page, 'A3', 'note');
 
-  // One cell: no summary. Three: the sum of the numbers.
+  // One cell: no summary. Three: the sum of the numbers, written as the active cell writes a number (automatic).
   const summary = page.locator('[data-sheet-summary]');
   await select(page, 'A1');
   await expect(summary).toBeEmpty();
   await select(page, 'A1:A3');
   const button = summary.getByRole('button', { name: /^Selection Summary/ });
-  await expect(button).toContainText('Sum: 1,234');
+  await expect(button).toContainText('Sum: 1234');
   await button.click();
   await expect(page.getByRole('menuitemradio')).toHaveText([
-    'Sum: 1,234',
+    'Sum: 1234',
     'Average: 617',
     'Min: 34',
-    'Max: 1,200',
+    'Max: 1200',
     'Count: 3',
     'Count Numbers: 2',
   ]);
