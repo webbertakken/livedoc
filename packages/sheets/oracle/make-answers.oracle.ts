@@ -13,9 +13,8 @@ import { writeFlatOds } from '../src/files/ods-write';
 import { OracleCorpus, type OracleAnswers, type OracleCategory } from '../src/oracle/corpus';
 import { answersOf, oracleFile, type FileAnswers } from '../src/oracle/oracle-file';
 import { googleAnswers } from './google-answers.ts';
-import { oracleDrive, type OracleDrive } from './google-drive.ts';
-import { accessTokenOf, readOAuthClient } from './google-oauth.ts';
-import { oracleSecretPaths, readSecret } from './secrets.ts';
+import { googleDrive } from './google-access.ts';
+import type { OracleDrive } from './google-drive.ts';
 
 const ROOT = import.meta.dirname;
 const SOURCE = process.env.ORACLE_SOURCE === 'google' ? 'google' : 'libreoffice';
@@ -39,23 +38,6 @@ function libreOfficeVersion(): string {
     .split(' ')
     .slice(0, 2)
     .join(' ');
-}
-
-// The oracle's Drive, with an hour's access token from the refresh token the consent saved; never says either.
-async function googleDrive(): Promise<OracleDrive> {
-  const paths = oracleSecretPaths();
-  const file = readSecret(paths.client);
-  if (file === null)
-    throw new Error(`oracle:google needs the OAuth client file at ${paths.client}`);
-  const client = readOAuthClient(JSON.parse(file));
-  if (!client.ok) throw new Error(client.problem);
-  const refreshToken = readSecret(paths.refreshToken);
-  if (refreshToken === null)
-    throw new Error(`no refresh token at ${paths.refreshToken}: run oracle:google:consent first`);
-  const access = await accessTokenOf(globalThis.fetch, client.client, refreshToken);
-  if (!access.ok) throw new Error(access.problem);
-  const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-  return oracleDrive(globalThis.fetch, access.token, sleep, (line) => console.info(line));
 }
 
 async function libreOfficeAnswers(category: OracleCategory): Promise<FileAnswers> {

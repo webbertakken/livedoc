@@ -81,6 +81,9 @@ The table is the contract the readers and writers are tested against, one test p
   (`{A1:A3, B1:B3}`) (default, D83).
 - Reading undoes each: the prefixes go, `ANCHORARRAY` is a spill again, and `IFERROR(__xludf.DUMMYFUNCTION("…"), …)`
   is the formula it wraps, as Google Sheets reads its own downloads.
+- A string literal holds 255 characters in Excel's grammar: a longer one is written as pieces of 255 joined by `&`,
+  bracketed as one value (`("…"&"…")`), and so is the text `DUMMYFUNCTION` wraps, as Google Sheets writes it
+  (measured in the corpus); reading joins the pieces again.
 - A shared formula (`f@t="shared"`) is unfolded: each cell of its block holds the first cell's formula moved as a
   copy moves it (relative parts move, absolute parts stay).
 - What Excel's grammar holds and Google's does not (a structured reference `Table1[Col]`, another workbook's
@@ -218,6 +221,25 @@ The table is the contract the readers and writers are tested against, one test p
   entry up to 5 MB; what is past them is left out, entries the first, with the relationships naming them, and the
   read names it (`kept_too_large`) (default, D113).
 
+## The corpus
+
+Files other suites wrote, kept in `packages/sheets/corpus/` with each one's maker, source and licence, so every read
+and write is measured against what arrives in practice, not only against LiveDoc's own files.
+
+- **Excel**: workbooks Microsoft Excel 2007 to 2016 saved on Windows and macOS, from Apache POI's test data (Apache
+  License 2.0, pinned to one commit), each holding what the readers keep or read (formulas, shared formulas, number
+  and date formats, tables, comments, drawings, validation and format rules) (default, D119).
+- **LibreOffice**: each Excel workbook saved by LibreOffice as `.ods`, and some as `.xlsx` (default, D119).
+- **Google Sheets**: some Excel workbooks and a workbook of Google-only functions uploaded to Google Sheets and
+  exported as `.xlsx` and `.ods` through the oracle's Drive (default, D119).
+- Each file is read, made into sheets, written in its own format and read again, and written in the other standard:
+  - The second read holds every sheet, cell value, formula (in the model's own text), number format and kept item the
+    first made (the round trip loses nothing it did not name).
+  - Every loss each step names is recorded per file (`corpus/losses.json`): a loss that appears or goes fails the
+    run, so none is silent and none is fixed unnoticed.
+- The corpus is made again by `pnpm --filter @livedoc/sheets corpus:make` (LibreOffice and Google by hand, as the
+  oracle is); the round trips run in the unit run.
+
 ## Conformance claimed
 
 - **ODF**: every `.ods` and `.fods` written is a conforming OpenDocument 1.4 spreadsheet document, valid against the
@@ -284,3 +306,5 @@ The code cites each by its id.
   last sheet becomes the first (default).
 - **D113** Kept content a spreadsheet stores: Up to 16 MB, an item up to 1 MB, a package entry up to 5 MB; past them
   left out, entries first, with the relationships naming them, and named (`kept_too_large`) (default).
+- **D119** The corpus's files: Excel's from Apache POI's test data, saved again by LibreOffice 26.8 and by Google
+  Sheets (default).

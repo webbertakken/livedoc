@@ -81,6 +81,9 @@ export function toExcelFormula(
     if (tok.k === 'ident' && parameters.has(tok.v.toUpperCase()))
       out += `${XLSX_PARAMETER_PREFIX}${tok.v}`;
     else if (called) out += xlsxFunctionName(tok.v);
+    // Excel holds 255 characters a string literal: a longer one is joined from pieces, bracketed as one value.
+    else if (tok.k === 'str' && tok.v.length > EXCEL_STRING_LITERAL_MAX)
+      out += `(${stringLiterals(tok.v)})`;
     else out += formula.slice(tok.start, tok.end);
   }
   return out;
@@ -97,18 +100,34 @@ function literal(cached: CachedLiteral | undefined): string {
   return cached.e;
 }
 
+/** The most characters an Excel formula's string literal holds (ECMA-376 Part 1, §18.17.2.4 "str"). */
+export const EXCEL_STRING_LITERAL_MAX = 255;
+
+// A text as Excel string literals: one, or several joined by `&` past 255 characters, as Google Sheets writes them.
+function stringLiterals(text: string): string {
+  const pieces: string[] = [];
+  for (let at = 0; at < text.length || pieces.length === 0; at += EXCEL_STRING_LITERAL_MAX)
+    pieces.push(`"${text.slice(at, at + EXCEL_STRING_LITERAL_MAX).replace(/"/g, '""')}"`);
+  return pieces.join('&');
+}
+
 /** S5's convention in XLSX: the whole formula kept as text, Excel shown the value it last gave. */
 export function dummyFunction(formula: string, cached: CachedLiteral | undefined): string {
   const text = formula.startsWith('=') ? formula.slice(1) : formula;
-  return `IFERROR(__xludf.DUMMYFUNCTION("${text.replace(/"/g, '""')}"),${literal(cached)})`;
+  return `IFERROR(__xludf.DUMMYFUNCTION(${stringLiterals(text)}),${literal(cached)})`;
 }
 
-const DUMMY = /^\s*IFERROR\(\s*__xludf\.DUMMYFUNCTION\(\s*"((?:[^"]|"")*)"\s*\)\s*,/i;
+// The wrapped text: one string literal, or several joined by `&` (Google's past 255 characters, measured 2026-11-22).
+const DUMMY =
+  /^\s*IFERROR\(\s*__xludf\.DUMMYFUNCTION\(\s*((?:"(?:[^"]|"")*"\s*&\s*)*"(?:[^"]|"")*")\s*\)\s*,/i;
+const LITERAL = /"((?:[^"]|"")*)"/g;
 
 /** The formula S5's convention wraps, as typed (`=QUERY(…)`); null when the text is not that convention. */
 export function unwrapDummyFunction(text: string): string | null {
   const m = DUMMY.exec(text);
-  return m ? `=${m[1]!.replace(/""/g, '"')}` : null;
+  if (!m) return null;
+  const pieces = [...m[1]!.matchAll(LITERAL)].map((piece) => piece[1]!.replace(/""/g, '"'));
+  return `=${pieces.join('')}`;
 }
 
 // The text between a function's brackets, from the token after its name; null when they never close.

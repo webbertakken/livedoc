@@ -19,6 +19,7 @@
     "oracle:libreoffice": "ORACLE_SOURCE=libreoffice vitest run --config vitest.oracle.config.ts",
     "oracle:google": "ORACLE_SOURCE=google vitest run --config vitest.oracle.config.ts",
     "oracle:google:consent": "node oracle/google-consent.ts",
+    "corpus:make": "vitest run --config vitest.corpus.config.ts",
     "validate:files": "vitest run --config vitest.validate.config.ts"
   },
   "dependencies": {

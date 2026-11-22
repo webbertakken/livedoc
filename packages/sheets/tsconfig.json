@@ -8,6 +8,6 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "oracle/**/*.ts", "*.config.ts"],
+  "include": ["src/**/*.ts", "oracle/**/*.ts", "corpus/**/*.ts", "*.config.ts"],
   "exclude": ["node_modules"]
 }
