@@ -3256,6 +3256,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "functions"
         ],
         "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
+            "const": "kept",
+            "type": "string"
+          },
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/KeptKind"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "kinds"
+        ],
+        "type": "object"
       }
     ],
     "description": "A loss of converting, one a kind, counted (D88)."
@@ -9129,6 +9153,27 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "object"
       }
     ]
+  },
+  "KeptKind": {
+    "description": "What a person is told a kept item is (files-and-print.md \"Converting\"); `support` items are never counted.",
+    "enum": [
+      "drawings",
+      "notes",
+      "named-ranges",
+      "validation",
+      "format-rules",
+      "filters",
+      "merges",
+      "pivot-tables",
+      "tables",
+      "links",
+      "print-settings",
+      "protection",
+      "column-widths",
+      "view-settings",
+      "other"
+    ],
+    "type": "string"
   },
   "KeyRow": {
     "additionalProperties": false,

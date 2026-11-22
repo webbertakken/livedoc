@@ -1,7 +1,7 @@
 // The conversion dialog's words (docs/specs/029-sheets/files-and-print.md "Converting", D88): its title, and one line
 // a loss, counted, naming up to three sheets or functions. Pure, so every line is tested without React.
 import type { WorkbookFormat } from '@livedoc/sheets';
-import type { ConversionLoss } from '@livedoc/sheets/files';
+import type { ConversionLoss, KeptKind } from '@livedoc/sheets/files';
 
 /** The names a line shows before it counts the rest. */
 export const CONVERSION_NAMES_SHOWN = 3;
@@ -44,6 +44,25 @@ function named(names: readonly string[], word: 'and' | 'or'): string {
 
 const quoted = (text: string) => `“${text}”`;
 
+// What a person calls each kind of kept content (standard-mapping.md "Unknown content").
+const KEPT_KIND: Record<KeptKind, string> = {
+  drawings: 'drawings',
+  notes: 'notes',
+  'named-ranges': 'named ranges',
+  validation: 'data validation',
+  'format-rules': 'conditional formatting',
+  filters: 'filters',
+  merges: 'merged cells',
+  'pivot-tables': 'pivot tables',
+  tables: 'tables',
+  links: 'links',
+  'print-settings': 'print settings',
+  protection: 'protection',
+  'column-widths': 'column widths',
+  'view-settings': 'view settings',
+  other: 'other content',
+};
+
 /** One loss as the dialog lists it. */
 export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string {
   const one = loss.count === 1;
@@ -72,6 +91,16 @@ export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string
     case 'answers_differ': {
       const what = one ? '1 formula may answer' : `${loss.count} formulas may answer`;
       return `${what} differently in ${FORMAT_NAME[to]}: ${named(loss.functions, 'and')}`;
+    }
+    // The kept content stays with the spreadsheet in its own format, so it is the other format's file's (D109).
+    case 'kept': {
+      const from = to === 'xlsx' ? 'OpenDocument' : 'Excel';
+      const what = one ? '1 thing' : `${loss.count} things`;
+      const stay = one ? 'stays' : 'stay';
+      return `${what} kept from the ${from} file ${stay} behind: ${named(
+        loss.kinds.map((k) => KEPT_KIND[k]),
+        'and',
+      )}`;
     }
   }
 }

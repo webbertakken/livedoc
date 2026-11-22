@@ -90,8 +90,18 @@ describe('the conversion dialog’s words', () => {
     expect(
       conversionLine({ k: 'answers_differ', count: 2, functions: ['CEILING', 'SORT'] }, 'ods'),
     ).toBe('2 formulas may answer differently in OpenDocument: CEILING and SORT');
-    expect(conversionLine({ k: 'answers_differ', count: 1, functions: ['SORT'] }, 'xlsx')).toBe(
+        expect(conversionLine({ k: 'answers_differ', count: 1, functions: ['SORT'] }, 'xlsx')).toBe(
       '1 formula may answer differently in Excel: SORT',
+    );
+  });
+
+  // files-and-print.md "Converting": the kept content left behind, counted, by kind, the most common first.
+  it('lists what was kept from the file and stays behind, by kind', () => {
+    expect(
+      conversionLine({ k: 'kept', count: 4, kinds: ['drawings', 'notes', 'named-ranges'] }, 'xlsx'),
+    ).toBe('4 things kept from the OpenDocument file stay behind: drawings, notes and named ranges');
+    expect(conversionLine({ k: 'kept', count: 1, kinds: ['merges'] }, 'ods')).toBe(
+      '1 thing kept from the Excel file stays behind: merged cells',
     );
   });
 });
