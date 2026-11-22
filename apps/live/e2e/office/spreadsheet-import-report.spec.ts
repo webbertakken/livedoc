@@ -36,10 +36,7 @@ test('a file that left something behind opens with the import report, once', asy
   await expect(report.getByRole('listitem')).toHaveText([
     '1 cell’s text is cut to 50,000 characters',
   ]);
-  await test.info().attach('import-report', {
-    body: await page.screenshot(),
-    contentType: 'image/png',
-  });
+  await page.screenshot({ path: test.info().outputPath('import-report.png') });
   await report.getByRole('button', { name: 'OK' }).click();
   await expect(report).toBeHidden();
 
