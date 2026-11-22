@@ -55,7 +55,7 @@ export function MenuToolButton({
         // h-8 w-8 + forced 16px icons to match the canvas element toolbar
         // (SelectionPopover); the `[&_svg]` override beats each glyph's
         // intrinsic width/height attribute.
-        className={`flex h-8 w-8 items-center justify-center rounded transition [&_svg]:h-4 [&_svg]:w-4 ${tone}`}
+        className={`flex size-field items-center justify-center rounded-control transition [&_svg]:size-icon-row ${tone}`}
       >
         {icon}
       </button>
@@ -113,7 +113,7 @@ export function MenuTile({
       onPointerLeave={onPointerLeave}
       disabled={inCommandMenu ? undefined : disabled}
       aria-pressed={inCommandMenu ? undefined : active}
-      className={`flex cursor-pointer flex-col items-center justify-start gap-1.5 rounded-md px-1.5 py-2 text-center text-[11px] font-medium leading-tight transition disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:opacity-40 ${
+      className={`flex cursor-pointer flex-col items-center justify-start gap-1 rounded-control px-2 py-2 text-center text-supporting transition disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:opacity-40 ${
         active
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
           : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'

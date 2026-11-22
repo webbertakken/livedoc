@@ -37,6 +37,10 @@ describe('sizing scale', () => {
     expect(SIZING_SCALE.radius).toEqual({ control: 6, menu: 8, surface: 12 });
   });
 
+  it('holds one size for a drawn pointer, the arrow of a popover', () => {
+    expect(SIZING_SCALE.shape).toEqual({ arrow: 12 });
+  });
+
   it('holds the gap and side padding steps in Tailwind spacing units', () => {
     expect(GAP_STEPS.map((step) => step * 4)).toEqual([0, 2, 4, 8, 12, 16, 24]);
     expect(SIDE_PADDING_STEPS.map((step) => step * 4)).toEqual([0, 8, 12, 16, 24]);
@@ -56,7 +60,11 @@ describe('sizing scale', () => {
   });
 
   it('declares every height and icon step in theme.css as spacing', () => {
-    for (const [step, px] of Object.entries({ ...SIZING_SCALE.height, ...SIZING_SCALE.icon })) {
+    for (const [step, px] of Object.entries({
+      ...SIZING_SCALE.height,
+      ...SIZING_SCALE.icon,
+      ...SIZING_SCALE.shape,
+    })) {
       expect(themeValue(`--spacing-${step}`), step).toBe(rem(px));
     }
   });

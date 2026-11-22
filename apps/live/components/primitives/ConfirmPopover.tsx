@@ -29,18 +29,16 @@ export function splitConfirmMessage(message: string): { title: string; detail: s
 function ConfirmText({ message, warning }: { message: string; warning?: string | undefined }) {
   const { title, detail } = splitConfirmMessage(message);
   return (
-    <div className="flex flex-col gap-1.5">
-      <p className="text-[13px] font-semibold leading-snug text-slate-900 dark:text-slate-50">
-        {title}
-      </p>
+    <div className="flex flex-col gap-2">
+      <p className="text-body text-slate-900 dark:text-slate-50">{title}</p>
       {warning ? (
-        <p className="flex items-start gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs leading-snug text-amber-900 dark:bg-amber-500/10 dark:text-amber-100">
+        <p className="flex items-start gap-2 rounded-control bg-amber-50 px-2 py-1.5 text-supporting text-amber-900 dark:bg-amber-500/10 dark:text-amber-100">
           <WarningIcon aria-hidden className="mt-px shrink-0" />
           {warning}
         </p>
       ) : null}
       {detail ? (
-        <p className="whitespace-pre-line text-xs leading-snug text-slate-500 dark:text-slate-400">
+        <p className="whitespace-pre-line text-supporting text-slate-500 dark:text-slate-400">
           {detail}
         </p>
       ) : null}
@@ -130,14 +128,14 @@ export function ConfirmPopover({
         aria-label={message}
         data-confirm-popover
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-modal)] flex animate-fade-in flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
+        className="fixed z-[var(--z-modal)] flex animate-fade-in flex-col gap-2 rounded-menu border border-slate-200 bg-white p-3 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
         style={{ left: layout?.left ?? -9999, top: layout?.top ?? -9999, width: WIDTH }}
       >
         {/* Arrow: a rotated square poking out of the side facing the anchor. */}
         {layout ? (
           <span
             aria-hidden
-            className={`absolute h-3 w-3 rotate-45 bg-white dark:bg-slate-900 ${
+            className={`absolute size-arrow rotate-45 bg-white dark:bg-slate-900 ${
               layout.side === 'left' ? 'border-r border-t' : 'border-b border-l'
             } border-slate-200 dark:border-slate-700`}
             style={{
@@ -150,7 +148,7 @@ export function ConfirmPopover({
         <div className="flex justify-end gap-2">
           {/* py-1 keeps the popover's tighter rhythm; the classes append
               after the size scale, so they win. */}
-          <Button variant="secondary" size="xs" onClick={onCancel} className="px-2.5 py-1">
+          <Button variant="secondary" size="xs" onClick={onCancel}>
             {cancelLabel}
           </Button>
           <Button
@@ -159,7 +157,7 @@ export function ConfirmPopover({
             size="xs"
             autoFocus
             onClick={onConfirm}
-            className="px-2.5 py-1 shadow-sm"
+            className="shadow-sm"
           >
             {confirmLabel}
           </Button>
