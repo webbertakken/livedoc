@@ -8,10 +8,11 @@ changes, the save status, a refused change dropped, a Participant's changes judg
 replaced in the room for the budget, with its previous versions held, the rows of "Concurrent changes" whose roots
 are built (marks, field values, a page's turn, a replacement), a change carried across a replacement, one undo
 timeline a person, and of presence the page a person is on: sent, said again to whoever joins, and reached by a press
-on their avatar in the title row. This Browser, reading offline, branches, copies, versions, what the servers make, the
-selection an undo puts back and the line a dimmed Undo says are not built; nor, of presence, a person's colour on a
-thumbnail, anything held (a text selection, a mark, an object, a text box typed in) and the mode in an avatar's
-tooltip, each drawn with the area that shows it.
+on their avatar in the title row, a copy with its live changes (one's own and someone else's), a document passing to
+another owner, a PDF tab never shared between documents, and the Trash. This Browser, reading offline, branches, the
+copy dialog, versions, what the servers make, the selection an undo puts back and the line a dimmed Undo says are not
+built; nor, of presence, a person's colour on a thumbnail, anything held (a text selection, a mark, an object, a text
+box typed in) and the mode in an avatar's tooltip, each drawn with the area that shows it.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The
