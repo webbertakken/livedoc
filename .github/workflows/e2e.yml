@@ -161,8 +161,9 @@ jobs:
 
   # Office files (docs/specs/020-import-export/office-packages.md "Validation"): the specs that hand a file LiveDoc
   # wrote to LibreOffice and open what LibreOffice saved. The same build as the shards; LibreOffice's Writer and Calc come
-  # from apt, cached as .deb files, so this job runs the image as root, which installing needs. First, every file the text document package
-  # writes is checked against the ODF and OOXML schemas with Jing (Java from apt) and reopened by LibreOffice.
+  # from apt, cached as .deb files, so this job runs the image as root, which installing needs. First, every file the text document
+  # and the sheets packages write is checked against the ODF and OOXML schemas with Jing (Java from apt) and reopened by
+  # LibreOffice.
   office:
     name: Office files
     runs-on: ubuntu-latest
@@ -205,11 +206,15 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .office-schemas
-          key: office-schemas-${{ hashFiles('packages/text-documents/scripts/fetch-office-schemas.sh') }}
+          key: office-schemas-${{ hashFiles('packages/office-packages/scripts/fetch-office-schemas.sh') }}
 
       - name: Validate written files against the ODF and OOXML schemas
         shell: bash
         run: OFFICE_SCHEMAS_DIR="$GITHUB_WORKSPACE/.office-schemas" pnpm --filter @livedoc/text-documents validate:files
+
+      - name: Validate written spreadsheets against the ODF and OOXML schemas
+        shell: bash
+        run: OFFICE_SCHEMAS_DIR="$GITHUB_WORKSPACE/.office-schemas" pnpm --filter @livedoc/sheets validate:files
 
       # Saved once fetched and checked, whatever the validation found, so no failing step costs the next run its cache.
       - name: Save the office schemas

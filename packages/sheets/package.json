@@ -18,7 +18,8 @@
     "clean": "rm -rf node_modules .turbo coverage",
     "oracle:libreoffice": "ORACLE_SOURCE=libreoffice vitest run --config vitest.oracle.config.ts",
     "oracle:google": "ORACLE_SOURCE=google vitest run --config vitest.oracle.config.ts",
-    "oracle:google:consent": "node oracle/google-consent.ts"
+    "oracle:google:consent": "node oracle/google-consent.ts",
+    "validate:files": "vitest run --config vitest.validate.config.ts"
   },
   "dependencies": {
     "@livedoc/office-packages": "workspace:*"

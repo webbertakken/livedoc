@@ -175,6 +175,10 @@ The table is the contract the readers and writers are tested against, one test p
   (OpenFormula Part 4 §2.3), measured by the oracle corpus ([Formulas](formulas.md#the-oracle)).
 - **XLSX**: every `.xlsx` written validates against ECMA-376 Transitional's schemas, checked in CI, and opens in
   Excel, LibreOffice and Google Sheets with the same values.
+- Built: `pnpm --filter @livedoc/sheets validate:files` writes one workbook per construct group (values, formulas,
+  arrays, number formats, Excel's bounds) in all three files, validates each against its schema with Jing, and has
+  LibreOffice open and save each again with the same values ([Office packages](../020-import-export/office-packages.md#validation));
+  CI's Office files job runs it.
 
 ## The flat form
 
