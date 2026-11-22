@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { deflateSync } from 'node:zlib';
 import { Pictures, readTextDocumentFile } from '@livedoc/text-documents';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
@@ -92,5 +93,98 @@ test('a Word file’s pictures are drawn, and leave as they came', async ({ page
       ]);
     expect(parts(left.document)).toEqual(parts(arrived.document));
   }
+  expectNoPageErrors(pageErrors);
+});
+
+/** A solid PNG `width` by `height` (zlib through node), so a test hands the editor a real picture file. */
+function solidPng(width: number, height: number, rgb: readonly [number, number, number]): Buffer {
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (bytes: Buffer) => {
+    let c = 0xffffffff;
+    for (const b of bytes) c = crcTable[(c ^ b) & 0xff]! ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer) => {
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+    const out = Buffer.alloc(12 + data.length);
+    out.writeUInt32BE(data.length, 0);
+    body.copy(out, 4);
+    out.writeUInt32BE(crc(body), 8 + data.length);
+    return out;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header.set([8, 2, 0, 0, 0], 8);
+  const row = Buffer.concat([Buffer.from([0]), Buffer.from(Array(width).fill(rgb).flat())]);
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', header),
+    chunk('IDAT', deflateSync(Buffer.concat(Array(height).fill(row)))),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
+// objects.md "Inserting": Insert > Image > Upload from computer opens the file chooser, and the picture lands at the
+// caret, at its pixels at 96 an inch, stored in the gallery; a picture file pasted lands at the caret too.
+test('a picture is inserted from the computer, and pasted as a file', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('A picture: ');
+
+  await page
+    .getByRole('menubar', { name: 'Menu bar' })
+    .getByRole('menuitem', { name: 'Insert' })
+    .click();
+  await page.getByRole('menuitem', { name: 'Image', exact: true }).click();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('insert-image-menu.png') });
+  const [chooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.getByRole('menuitem', { name: 'Upload from computer', exact: true }).click(),
+  ]);
+  await chooser.setFiles({
+    name: 'teal.png',
+    mimeType: 'image/png',
+    buffer: solidPng(240, 120, [0, 128, 128]),
+  });
+  const pictures = body.locator('.text-document-picture img');
+  await expect(pictures).toHaveCount(1);
+  // 240 × 120 pixels at 96 an inch: 180 × 90 points, 240 × 120 CSS pixels at 100%.
+  const box = await body.locator('.text-document-picture').first().boundingBox();
+  expect(Math.round(box!.width / box!.height)).toBe(2);
+  await expect(body.locator('.ProseMirror-selectednode.text-document-picture')).toHaveCount(1);
+  expect(await pictures.first().evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBe(240);
+
+  const headers = await pageOwnerHeaders(page);
+  const gallery = await page.evaluate(async (headers) => {
+    const res = await fetch('/api/images', { headers });
+    return ((await res.json()) as { images: { width: number }[] }).images;
+  }, headers);
+  expect(gallery.map((i) => i.width)).toEqual([240]);
+
+  // A picture file pasted lands at the caret.
+  await page.keyboard.press('End');
+  const pasted = solidPng(60, 60, [200, 80, 0]).toString('base64');
+  await body.evaluate((target, base64) => {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const data = new DataTransfer();
+    data.items.add(new File([bytes], 'orange.png', { type: 'image/png' }));
+    target.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true }));
+  }, pasted);
+  await expect(pictures).toHaveCount(2);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('pictures-inserted.png') });
   expectNoPageErrors(pageErrors);
 });

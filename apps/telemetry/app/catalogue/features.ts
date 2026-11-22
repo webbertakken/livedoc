@@ -1261,6 +1261,19 @@ export const TEXT_DOCUMENT_FOOTNOTES = chart(
   { types: ['TextDocumentFootnote'] },
 );
 
+// A picture put in a text document (docs/specs/034-text-documents/objects.md "Inserting"): by where it came from.
+export const TEXT_DOCUMENT_PICTURES = chart(
+  'Element',
+  'Added',
+  'Text Document Pictures',
+  'A picture put in a text document: uploaded, from the gallery or a web search, pasted or dropped.',
+  {
+    types: ['Upload', 'Gallery', 'Search', 'Paste', 'Drop'].map(
+      (from) => `TextDocumentImage${from}`,
+    ),
+  },
+);
+
 // A table put in a text document (docs/specs/034-text-documents/tables.md "Telemetry"): Insert > Table's grid, the
 // tool finder's Table, or a template.
 export const TEXT_DOCUMENT_TABLES = chart(

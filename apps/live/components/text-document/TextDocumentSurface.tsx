@@ -143,6 +143,12 @@ import { footnoteNumbersPlugin } from '@/lib/text-document/text-document-footnot
 import { TextDocumentEndNotes } from './TextDocumentEndNotes';
 import { TextDocumentPageNotes } from './TextDocumentPageNotes';
 import { useTextDocumentEndNotes } from './useTextDocumentEndNotes';
+import { useTextDocumentPictures } from './useTextDocumentPictures';
+import {
+  picturePastePlugin,
+  type TakePictureFiles,
+} from '@/lib/text-document/text-document-picture-paste';
+import { pictureRoom } from '@/lib/text-document/text-document-picture-insert';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -195,6 +201,8 @@ export function TextDocumentSurface({
   const [attempt, setAttempt] = useState(0);
   const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
   const clipboardLeftOut = useRef<(count: number) => void>(() => {});
+  // Picture files pasted or dropped, taken by Insert > Image's placing (objects.md "Inserting") once it is made.
+  const takePictureFiles = useRef<TakePictureFiles>(() => false);
   // What the layout lays the writing onto (page-layout.md "Laying out"), read as it lays out; and the pages it made.
   const layout = useRef<{ setup: PageSetup; pages: boolean } | null>(null);
   const [pageList, setPageList] = useState<readonly PageGeometry[]>([]);
@@ -335,6 +343,8 @@ export function TextDocumentSurface({
                 lists: listsAccess,
                 readStyles: () => readFormatting().styles,
               }),
+              // Picture files pasted or dropped, before the clipboard reads the rest (objects.md "Inserting").
+              picturePastePlugin((files, source) => takePictureFiles.current(files, source)),
               // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
               clipboardPlugin({
                 read: () => ({
@@ -629,6 +639,18 @@ export function TextDocumentSurface({
     writes && headers.editing === null && headers.note === null,
     Columns.width(page.caret.section.setup),
   );
+  // Insert > Image, and picture files pasted or dropped, in the room the caret's text has (objects.md "Inserting").
+  const pictures = useTextDocumentPictures({
+    view: editorView,
+    liveDoc,
+    ownerId,
+    documentId,
+    canEdit: writes && headers.editing === null && headers.note === null,
+    room: pictureRoom(page.caret.section.setup),
+  });
+  useLayoutEffect(() => {
+    takePictureFiles.current = pictures.take;
+  });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -652,12 +674,14 @@ export function TextDocumentSurface({
       ...columns.actions,
       ...breakActions,
       ...tableActions,
+      ...pictures.actions,
       ...tableProperties.actions,
       ...headers.actions,
     }),
     [
       breakActions,
       tableActions,
+      pictures.actions,
       tableProperties.actions,
       columns.actions,
       headers.actions,
@@ -679,13 +703,18 @@ export function TextDocumentSurface({
       preferences.actions,
     ],
   );
-  // The toolbar's choice controls: Styles, Align and spacing, and the list buttons' grids.
+  // The toolbar's choice controls: Styles, Align and spacing, the list buttons' grids and Insert image's list.
   const choices = useMemo(
     () =>
       paragraphStyles.choices || paragraphs.choices
-        ? { ...paragraphStyles.choices, ...paragraphs.choices, ...lists.choices }
+        ? {
+            ...paragraphStyles.choices,
+            ...paragraphs.choices,
+            ...lists.choices,
+            ...pictures.choices,
+          }
         : null,
-    [paragraphStyles.choices, paragraphs.choices, lists.choices],
+    [paragraphStyles.choices, paragraphs.choices, lists.choices, pictures.choices],
   );
   // The caret, for the context menu on text.
   const caret = useMemo(
@@ -745,6 +774,7 @@ export function TextDocumentSurface({
       />
       {paragraphs.dialog}
       {clipboard.dialog}
+      {pictures.dialog}
       {preferences.dialog}
       {page.dialog}
       {columns.dialog}
@@ -760,6 +790,7 @@ export function TextDocumentSurface({
         </p>
       ) : null}
       {clipboard.notice}
+      {pictures.notice}
       <OfficePanelLayout
         left={
           panels.open.left === 'outline' ? (
