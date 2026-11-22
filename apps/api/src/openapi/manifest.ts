@@ -979,15 +979,17 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      "A spreadsheet as a file, written from its sheets with every formula's value cached beside it and named after the document: ods, fods or xlsx; in the other standard than the workbook's, a converted copy (the workbook keeps its format). 404 workbook_not_found when the document is no spreadsheet; 400 file_type_unknown. Read access; never on a tab-scoped link.",
+      "A spreadsheet as a file, written from its sheets with every formula's value cached beside it and named after the document: ods, fods or xlsx; in the other standard than the workbook's, a converted copy (the workbook keeps its format). csv or tsv write the sheet on the tab named (tab) as its values as shown, injection-safe, named '<spreadsheet> - <sheet>'. 404 workbook_not_found when the document is no spreadsheet, sheet_not_found when no sheet is on that tab; 400 file_type_unknown. Read access; never on a tab-scoped link.",
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [
       {
         name: 'format',
         required: false,
-        description: "The workbook's own format (the default), or another: ods, fods, xlsx.",
+        description:
+          "The workbook's own format (the default), or another: ods, fods, xlsx; csv or tsv for one sheet.",
       },
+      { name: 'tab', required: false, description: 'csv and tsv: the tab of the sheet to write.' },
     ],
     responseMediaType: 'application/vnd.oasis.opendocument.spreadsheet',
     statuses: [200, 400, 401, 403, 404, 410],

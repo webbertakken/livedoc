@@ -1,6 +1,6 @@
 // The spreadsheet's menus in the office shell (docs/specs/004-interface-design/office-shell.md "Menus as data";
-// docs/specs/029-sheets/files-and-print.md): File with Open, Download in the three native formats and Convert to the
-// other standard, until plan 0020 declares the rest.
+// docs/specs/029-sheets/files-and-print.md): File with Open, Download in the three native formats and the open sheet
+// as CSV or TSV, and Convert to the other standard, until plan 0020 declares the rest.
 import type { WorkbookFormat } from '@livedoc/sheets';
 import { convertedFormat } from '@livedoc/sheets/files';
 import type { OfficeCatalogue } from '@/lib/office/office-catalogue';
@@ -11,6 +11,13 @@ export const DOWNLOAD_ITEMS: readonly { id: string; format: WorkbookFormat; labe
   { id: 'download-ods', format: 'ods', label: 'OpenDocument (.ods)' },
   { id: 'download-fods', format: 'fods', label: 'Flat OpenDocument (.fods)' },
 ];
+
+/** File › Download's text formats, the open sheet alone (files-and-print.md "Download", D118). */
+export const SHEET_DOWNLOAD_ITEMS: readonly { id: string; format: 'csv' | 'tsv'; label: string }[] =
+  [
+    { id: 'download-csv', format: 'csv', label: 'Comma-separated values (.csv, current sheet)' },
+    { id: 'download-tsv', format: 'tsv', label: 'Tab-separated values (.tsv, current sheet)' },
+  ];
 
 /** The id File › Convert is bound by; its words name the format it goes to. */
 export const CONVERT_ITEM_ID = 'convert';
@@ -32,7 +39,7 @@ export function spreadsheetMenus(format: WorkbookFormat): OfficeCatalogue {
           kind: 'submenu',
           id: 'download',
           label: 'Download',
-          entries: DOWNLOAD_ITEMS.map(({ id, label }) => ({
+          entries: [...DOWNLOAD_ITEMS, ...SHEET_DOWNLOAD_ITEMS].map(({ id, label }) => ({
             kind: 'item',
             id,
             label,

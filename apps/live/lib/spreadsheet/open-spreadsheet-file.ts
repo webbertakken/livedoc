@@ -1,10 +1,12 @@
 // File › Open (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"): an `.ods`, `.fods`, `.xlsx` or `.xlsm`
-// from the computer becomes a new spreadsheet in the format its bytes are in (fork C1), named after the file. The file is read here, under the office packages'
-// guards, into sheets the api's create stores as it stores any seed sheets; a named rejection is worded for the person.
+// from the computer becomes a new spreadsheet in the format its bytes are in (fork C1), named after the file; a `.csv`,
+// `.tsv` or `.txt` one sheet of it in a new spreadsheet's format (files-and-print.md "Import", D117). The file is read
+// here, under the office packages' guards, into sheets the api's create stores as it stores any seed sheets; a named
+// rejection is worded for the person.
 import type { SheetCreateRequest } from '@livedoc/api-schema';
 import { NOBODY, WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
 import type { PackageRejection } from '@livedoc/office-packages';
-import type { FileParts } from '@livedoc/sheets/files';
+import type { FileParts, SheetsFromFile } from '@livedoc/sheets/files';
 import { ApiError, apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
 import { writeSheet, type SheetsScope } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
@@ -12,8 +14,12 @@ import { debugLog } from '@/lib/debug-log';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
 import { UNTITLED_SPREADSHEET } from './spreadsheet-name';
 
+/** What was opened: a native format, or a CSV or TSV (files-and-print.md "Import"). */
+export type ImportedFormat = WorkbookFormat | 'csv' | 'tsv';
+
 export type OpenedSpreadsheet =
-  { ok: true; documentId: string; format: WorkbookFormat } | { ok: false; message: string };
+  | { ok: true; documentId: string; format: WorkbookFormat; imported: ImportedFormat }
+  | { ok: false; message: string };
 
 // What each named rejection says (docs/specs/020-import-export/office-packages.md "Named rejections").
 const REJECTION_COPY: Record<PackageRejection, string> = {
@@ -64,22 +70,42 @@ export async function openSpreadsheetFile(
   file: File,
   onProgress: OpenProgress = () => {},
 ): Promise<OpenedSpreadsheet> {
-  const { fileParts, readWorkbookFile, sheetsFromFile } = await import('@livedoc/sheets/files');
+  const files = await import('@livedoc/sheets/files');
   // The workbook it opens into: its locale reads the formats a file leaves to the reader's (Excel's short date).
   const made = workbookMadeHere();
-  const read = await readWorkbookFile(
-    new Uint8Array(await file.arrayBuffer()),
-    made.settings.locale,
-  );
-  if (!read.ok) {
-    debugLog('[workbook] refused', { rejection: read.rejection, entry: read.entry });
-    return { ok: false, message: REJECTION_COPY[read.rejection] };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const split = files.textFileSplitOf(file.name);
+  let opened: { record: WorkbookRecord; imported: ImportedFormat; sheetsMade: SheetsFromFile };
+  if (split) {
+    // A CSV or TSV: one sheet, its values read as typed, in a new spreadsheet's format with Google's meaning (D117).
+    const sheetsMade = files.sheetsFromText(
+      bytes,
+      split,
+      nameFromFile(file.name),
+      made.settings.locale,
+    );
+    debugLog('[workbook] text file read', { encoding: sheetsMade.encoding, split });
+    opened = { record: made, imported: split === 'tab' ? 'tsv' : 'csv', sheetsMade };
+  } else {
+    const read = await files.readWorkbookFile(bytes, made.settings.locale);
+    if (!read.ok) {
+      debugLog('[workbook] refused', { rejection: read.rejection, entry: read.entry });
+      return { ok: false, message: REJECTION_COPY[read.rejection] };
+    }
+    // A spreadsheet holds at least one sheet (spreadsheet.md "Sheets in the sheet bar").
+    if (read.file.sheets.length === 0) return { ok: false, message: NO_SHEETS };
+    const sheetsMade = files.sheetsFromFile(read.file, made.settings.locale);
+    sheetsMade.losses.unshift(...read.losses);
+    opened = {
+      record: WorkbookRecord.opened(made, read.format),
+      imported: read.format,
+      sheetsMade,
+    };
   }
-  // A spreadsheet holds at least one sheet (spreadsheet.md "Sheets in the sheet bar").
-  if (read.file.sheets.length === 0) return { ok: false, message: NO_SHEETS };
-  const sheetsMade = sheetsFromFile(read.file, made.settings.locale);
-  const losses = [...read.losses, ...sheetsMade.losses];
+  const { sheetsMade } = opened;
+  const losses = sheetsMade.losses;
   if (losses.length > 0) debugLog('[workbook] file read losses', { kinds: losses.map((l) => l.k) });
+  const fileParts = files.fileParts;
   const parts = fileParts(sheetsMade.sheets);
   const documentId = crypto.randomUUID();
   const tabs = parts.seeds.map((sheet) => newSheetTab(crypto.randomUUID(), sheet.title));
@@ -97,7 +123,7 @@ export async function openSpreadsheetFile(
       name: nameFromFile(file.name),
       tabs,
       sheets,
-      workbook: WorkbookRecord.opened(made, read.format),
+      workbook: opened.record,
     });
     created = true;
     const scope: SheetsScope = { ownerId, documentId, shareCode: null, tabId: null };
@@ -107,12 +133,12 @@ export async function openSpreadsheetFile(
     if (left > 0)
       debugLog('[workbook] file read losses', { kinds: ['kept_too_large'], count: left });
     debugLog('[workbook] file read', {
-      format: read.format,
+      format: opened.imported,
       sheets: sheets.length,
       cells: sheetsMade.sheets.reduce((n, s) => n + s.cells.length, 0),
       parts: parts.parts.length,
     });
-    return { ok: true, documentId, format: read.format };
+    return { ok: true, documentId, format: opened.record.format, imported: opened.imported };
   } catch (error) {
     const code = error instanceof ApiError ? error.code : null;
     debugLog('[workbook] open refused', { code, created });

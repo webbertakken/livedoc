@@ -6,7 +6,7 @@
 // its own chunk, with the engine, only when a spreadsheet opens.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { planPalette } from '@livedoc/document';
-import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
+import { WorkbookRecord } from '@livedoc/sheets';
 import { convertedFormat } from '@livedoc/sheets/files';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
@@ -29,7 +29,7 @@ import { useSheetActions } from '@/components/sheets/useSheetActions';
 import { SheetImagesContext, useSheetImageLoader } from '@/components/sheets/sheet-images-context';
 import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import type { WorkbookScope } from '@/lib/api/workbook';
-import { apiDownloadWorkbook } from '@/lib/api/workbook';
+import { apiDownloadWorkbook, type DownloadFormat } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import {
@@ -41,6 +41,7 @@ import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import {
   CONVERT_ITEM_ID,
   DOWNLOAD_ITEMS,
+  SHEET_DOWNLOAD_ITEMS,
   spreadsheetMenus,
 } from '@/lib/spreadsheet/spreadsheet-menus';
 import { track } from '@/lib/telemetry';
@@ -59,14 +60,26 @@ const FORMAT_TITLE = {
   fods: 'OpenDocument format, flat',
   xlsx: 'Excel format',
 } as const;
-const TELEMETRY_FORMAT = { ods: 'Ods', fods: 'Fods', xlsx: 'Xlsx' } as const;
+const TELEMETRY_FORMAT = {
+  ods: 'Ods',
+  fods: 'Fods',
+  xlsx: 'Xlsx',
+  csv: 'Csv',
+  tsv: 'Tsv',
+} as const;
 const OPEN_ACCEPT = [
   '.ods',
   '.fods',
   '.xlsx',
   '.xlsm',
+  '.csv',
+  '.tsv',
+  '.txt',
   'application/vnd.oasis.opendocument.spreadsheet',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/csv',
+  'text/tab-separated-values',
+  'text/plain',
 ].join(',');
 
 export function SpreadsheetSurface({
@@ -99,10 +112,10 @@ export function SpreadsheetSurface({
   const format = workbook.format;
   const root = useRef<HTMLElement | null>(null);
   const catalogue = useMemo(() => spreadsheetMenus(format), [format]);
-  const download = async (asked: WorkbookFormat) => {
+  const download = async (asked: DownloadFormat) => {
     setProblem(null);
     try {
-      const { blob, fileName } = await apiDownloadWorkbook(scope, asked);
+      const { blob, fileName } = await apiDownloadWorkbook(scope, asked, tabId);
       downloadBlob(blob, fileName);
       track('Spreadsheet', 'Exported', TELEMETRY_FORMAT[asked]);
     } catch (error) {
@@ -133,6 +146,10 @@ export function SpreadsheetSurface({
         },
       ]),
     ),
+    // The open sheet as CSV or TSV: no conversion, its values as shown (files-and-print.md "Download").
+    ...Object.fromEntries(
+      SHEET_DOWNLOAD_ITEMS.map((item) => [item.id, { run: () => void download(item.format) }]),
+    ),
     ...(editor
       ? { [CONVERT_ITEM_ID]: { run: () => conversion.open('convert', convertedFormat(format)) } }
       : {}),
@@ -147,7 +164,7 @@ export function SpreadsheetSurface({
     setOpening(null);
     if (!opened.ok) return setProblem(opened.message);
     track('Spreadsheet', 'Created', 'Import');
-    track('Spreadsheet', 'Imported', TELEMETRY_FORMAT[opened.format]);
+    track('Spreadsheet', 'Imported', TELEMETRY_FORMAT[opened.imported]);
     window.location.assign(`/document/${opened.documentId}`);
   };
   return (

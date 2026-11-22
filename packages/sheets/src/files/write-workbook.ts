@@ -15,9 +15,9 @@ import { writeXlsx } from './xlsx-write';
 
 export type WrittenWorkbook = { data: Uint8Array<ArrayBuffer>; losses: FileLoss[] };
 
-/** The workbook as a file holds it, every value worked out by the engine with the workbook's settings. */
-export function workbookFileFor(sheets: readonly Sheet[], record: WorkbookRecord): WorkbookFile {
-  const engine = new Workbook({
+/** The engine a file is written from: the sheets with the workbook's settings and meaning. */
+export function workbookEngine(sheets: readonly Sheet[], record: WorkbookRecord): Workbook {
+  return new Workbook({
     sheets: [...sheets],
     locale: record.settings.locale,
     timeZone: record.settings.timeZone,
@@ -25,7 +25,11 @@ export function workbookFileFor(sheets: readonly Sheet[], record: WorkbookRecord
     limits: SheetLimits.spreadsheet,
     iteration: record.settings.iterate,
   });
-  return workbookFileOf(engine, sheets, record.settings.locale);
+}
+
+/** The workbook as a file holds it, every value worked out by the engine with the workbook's settings. */
+export function workbookFileFor(sheets: readonly Sheet[], record: WorkbookRecord): WorkbookFile {
+  return workbookFileOf(workbookEngine(sheets, record), sheets, record.settings.locale);
 }
 
 /** The formulas of a file. */
