@@ -24,6 +24,7 @@ import {
 } from '@livedoc/document';
 import type { FlowchartMenuHandlers } from '@/components/flowchart/FlowchartMenuSections';
 import { track } from '@/lib/telemetry';
+import { mindSelectionMenu } from './mind-selection-menu';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useColourPalette } from '@/hooks/ui/useColourPalette';
 import { getTheme, shapeColorPresets, tableColorPresets, themeChartPalette } from '@/lib/themes';
@@ -153,6 +154,7 @@ export function EditorContextMenuHost() {
     flowchartActions,
     selectMarquee,
     tidyMindMapSelected,
+    tidyMindBranchesSelected,
     mindOutline,
     setChecklistItemsSelected,
     toggleChecklistItem,
@@ -316,6 +318,19 @@ export function EditorContextMenuHost() {
     track('Element', 'Selected', 'MindBranch');
   };
   const menuMindRoot = menuMindNode ? mindRootOf(activeTab.elements, menuMindNode) : null;
+  // Several mind nodes, lines carried along: the multi-selection menu's Mind Map row (mind-selection-menu.ts).
+  const ctxSelection = activeTab.elements.filter((e) => ctxMemberSet.has(e.id));
+  const mindSelection =
+    contextMenu.mode === 'multi'
+      ? mindSelectionMenu({
+          elements: activeTab.elements,
+          selection: ctxSelection,
+          can,
+          selectMarquee,
+          mindOutline,
+          onTidyBranches: tidyMindBranchesSelected,
+        })
+      : undefined;
 
   // The selection's layer for the Layer section's move-to dropdown
   // (docs/specs/006-document/layers.md): the single resolved layer every member shares, or null
@@ -602,7 +617,8 @@ export function EditorContextMenuHost() {
       onAssignAction={openAssignAction}
       // In document order, the order a selection's reference member is read in
       // (docs/specs/008-canvas/selection-transforms.md "Terms").
-      selectionElements={activeTab.elements.filter((e) => ctxMemberSet.has(e.id))}
+      selectionElements={ctxSelection}
+      mindSelection={mindSelection}
       // An Event Storming board's selection menu is Text and New Context alone
       // (docs/specs/021-event-storming/candidate-contexts.md "The board's element menu").
       esBoard={esBoard}

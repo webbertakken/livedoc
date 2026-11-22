@@ -133,6 +133,16 @@ export const MIND_OUTLINE_ICON = {
       <path d="M8 12h3.5M11.5 5.25V18.75M11.5 5.25H15M11.5 12H15M11.5 18.75H15" {...LINE} />
     </>,
   ),
+  // Tidy Branches: the selected node stays (faint), its branch laid out tidily beside it (solid).
+  branches: glyph(
+    <>
+      <rect x="2" y="9.5" width="6" height="5" rx="1.2" {...FAINT} />
+      <rect x="15" y="3" width="7" height="4.5" rx="1.2" fill="currentColor" />
+      <rect x="15" y="9.75" width="7" height="4.5" rx="1.2" fill="currentColor" />
+      <rect x="15" y="16.5" width="7" height="4.5" rx="1.2" fill="currentColor" />
+      <path d="M8 12h3.5M11.5 5.25V18.75M11.5 5.25H15M11.5 12H15M11.5 18.75H15" {...LINE} />
+    </>,
+  ),
   branch: glyph(
     <>
       <rect x="2" y="9.5" width="6" height="5" rx="1.2" {...FAINT} />

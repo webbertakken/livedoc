@@ -72,6 +72,19 @@ export type EditorContextMenuState =
       canvasPoint?: { x: number; y: number } | null;
     };
 
+// What the multi-selection menu's Mind Map row offers for several selected mind nodes
+// (docs/specs/009-elements/mind-node.md "Several nodes selected").
+export type MindSelectionMenu = {
+  flowRows: readonly MindDirectionChoice[];
+  flow: MindDirectionChoice | null;
+  spacing: MindSpacing | null;
+  onTidyBranches: () => void;
+  // Absent unless every node is in one map that may be edited.
+  onEditOutline?: () => void;
+  onSelectBranch: () => void;
+  onSelectMap: () => void;
+};
+
 export type EditorContextMenuProps = {
   menu: EditorContextMenuState;
   // The active tab's elements — used to resolve the clicked element
@@ -239,6 +252,10 @@ export type EditorContextMenuProps = {
   // Select the node's branch, or its whole map (docs/specs/009-elements/mind-node.md "The Mind Map menu").
   onSelectMindBranch: () => void;
   onSelectMindMap: () => void;
+  // A selection of several mind nodes, lines carried along (docs/specs/009-elements/mind-node.md "Several nodes
+  // selected"): present only for an Editor, so the multi-selection menu shows its Mind Map row. Flow, spacing and
+  // Tidy Map go through the selection-wide setters above.
+  mindSelection?: MindSelectionMenu;
   // Checklist (docs/specs/009-elements/checklist.md): replace the selected checklist's rows.
   onSetChecklistItems: (items: ChecklistItem[]) => void;
   // Tick one row, as the on-canvas checkbox does: a delta the room merges,

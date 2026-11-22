@@ -2,8 +2,8 @@
 
 // The Mind Map menu category (docs/specs/009-elements/mind-node.md "The Mind Map menu"): a flyout row holding three
 // categories, Outline, Branching and Spacing, each a closed accordion around one of Plan mode's option lists (a
-// bordered box, one full-width row per choice, its icon at the left). Everything acts on the selected node's whole
-// MAP, through its root.
+// bordered box, one full-width row per choice, its icon at the left). Everything acts on the selected nodes' MAPS,
+// through their roots, but Branching (each node) and Tidy Branches (each node's branch).
 import type { ComponentProps } from 'react';
 import {
   MIND_DIRECTION_LABEL,
@@ -25,7 +25,7 @@ const OutlineGlyph = lucideGlyph(lucideListTree, MENU_ICON_PX);
 const BranchingGlyph = lucideGlyph(lucideNetwork, MENU_ICON_PX);
 const SpacingGlyph = lucideGlyph(lucideBetweenHorizontalStart, MENU_ICON_PX);
 
-type OutlineAction = 'outline' | 'tidy' | 'branch' | 'map';
+type OutlineAction = 'outline' | 'tidy' | 'branches' | 'branch' | 'map';
 type SectionProps = { open: boolean; onToggle: () => void; flush?: boolean };
 
 export function MindMapMenuSections({
@@ -35,18 +35,22 @@ export function MindMapMenuSections({
   onSetFlow,
   onSetSpacing,
   onTidy,
+  onTidyBranches,
   onEditOutline,
   onSelectBranch,
   onSelectMap,
   sectionProps,
   flyoutProps,
 }: {
-  flow: MindDirectionChoice;
+  // The row ticked; null when the selected nodes differ (docs/specs/009-elements/mind-node.md "Several nodes selected").
+  flow: MindDirectionChoice | null;
   flowRows: readonly MindDirectionChoice[];
-  spacing: MindSpacing;
+  spacing: MindSpacing | null;
   onSetFlow: (flow: MindDirectionChoice) => void;
   onSetSpacing: (spacing: MindSpacing) => void;
   onTidy: () => void;
+  // Tidy Branches, for several selected nodes only (docs/specs/009-elements/mind-node.md "Tidy Branches").
+  onTidyBranches?: () => void;
   // Absent while the outline cannot be edited (a locked tab, edits blocked).
   onEditOutline?: () => void;
   onSelectBranch: () => void;
@@ -58,12 +62,14 @@ export function MindMapMenuSections({
   const actions: Record<OutlineAction, (() => void) | undefined> = {
     outline: onEditOutline,
     tidy: onTidy,
+    branches: onTidyBranches,
     branch: onSelectBranch,
     map: onSelectMap,
   };
   const outlineRows: { id: OutlineAction; label: string }[] = [
     { id: 'outline', label: 'Edit Outline' },
     { id: 'tidy', label: 'Tidy Map' },
+    { id: 'branches', label: 'Tidy Branches' },
     { id: 'branch', label: 'Select Branch' },
     { id: 'map', label: 'Select Whole Map' },
   ];

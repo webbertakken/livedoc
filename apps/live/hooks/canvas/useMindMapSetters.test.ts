@@ -149,3 +149,39 @@ describe('Branching', () => {
     expect(commit).not.toHaveBeenCalled();
   });
 });
+
+// docs/specs/009-elements/mind-node.md "Tidy Branches": the selected nodes' branches, one commit, saying what it did.
+describe('Tidy Branches', () => {
+  // root -> a -> (a1, a2), laid out tidily.
+  const branchMap = (): Element[] => {
+    const els: Element[] = [
+      node('root'),
+      node('a', 'root'),
+      node('a1', 'a'),
+      node('a2', 'a'),
+      createPinnedArrow('root', 'e', 'a', 'w'),
+      createPinnedArrow('a', 'e', 'a1', 'w'),
+      createPinnedArrow('a', 'e', 'a2', 'w'),
+    ];
+    const plan = relayoutMindMap(els, 'root')!;
+    return applyMindMoves(els, plan.moves, plan.reanchored);
+  };
+
+  it('tidies the selected branches in one commit and says so', () => {
+    const messy = branchMap().map((e) =>
+      e.id === 'a2' ? { ...e, x: (e as ShapeElement).x + 500 } : e,
+    );
+    const { api, notify, committed } = setters(messy);
+    api.tidyMindBranchesSelected();
+    expect(notify).toHaveBeenCalledWith('success', 'Branches tidied');
+    const a2 = committed()!.find((e) => e.id === 'a2') as ShapeElement;
+    expect(a2.x).toBe((branchMap().find((e) => e.id === 'a2') as ShapeElement).x);
+  });
+
+  it('says tidy branches are already tidy, and commits nothing', () => {
+    const { api, notify, committed } = setters(branchMap());
+    api.tidyMindBranchesSelected();
+    expect(notify).toHaveBeenCalledWith('info', 'Branches already tidy');
+    expect(committed()).toBeNull();
+  });
+});

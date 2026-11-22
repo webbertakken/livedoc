@@ -69,6 +69,7 @@ import {
 } from './PresetSections';
 import { MultiPlacementSections } from './MultiPlacementSections';
 import { MultiStyleSections } from './MultiStyleSections';
+import { MindMapMenuSections } from './MindMapMenuSections';
 import { useContextMenuScaffold } from './useContextMenuScaffold';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { inkSwatch, shownColour } from '@/components/palette/ink-row';
@@ -214,6 +215,24 @@ export function MultiSelectionContextMenu({
                   onClose={onClose}
                 />
                 <MenuGroupSeparator />
+                {/* Mind Map (docs/specs/009-elements/mind-node.md "Several nodes selected"): several mind nodes, lines carried
+                  along, get the single node's row; it acts on the nodes. */}
+                {props.mindSelection ? (
+                  <MindMapMenuSections
+                    flow={props.mindSelection.flow}
+                    flowRows={props.mindSelection.flowRows}
+                    spacing={props.mindSelection.spacing}
+                    onSetFlow={props.onSetMindFlow}
+                    onSetSpacing={props.onSetMindSpacing}
+                    onTidy={props.onTidyMindMap}
+                    onTidyBranches={props.mindSelection.onTidyBranches}
+                    onEditOutline={props.mindSelection.onEditOutline}
+                    onSelectBranch={props.mindSelection.onSelectBranch}
+                    onSelectMap={props.mindSelection.onSelectMap}
+                    sectionProps={sectionProps}
+                    flyoutProps={flyoutProps('mind-map')}
+                  />
+                ) : null}
                 {/* ── Style band (docs/specs/008-canvas/canvas-and-palette.md): Presets + Colours + Border behind one
                   "Style" flyout row, matching the single-element menu. ── */}
                 {showStyleFlyout ? (
