@@ -58,6 +58,7 @@ describe('the keys a copied tab names', () => {
     expect(blobKeysOfTabData(JSON.stringify({ elements: [] }))).toEqual([]);
     expect(blobKeysOfTabData(JSON.stringify({ kind: 'pdf', blob: 'nope', size: 1 }))).toEqual([]);
     expect(blobKeysOfTabData('{"kind" nope')).toEqual([]);
+    expect(blobKeysOfTabData('null')).toEqual([]);
   });
 });
 
