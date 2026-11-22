@@ -6,6 +6,7 @@ import {
   type DomainLanguage,
 } from '@livedoc/storm-reading';
 import { API_BASE, apiFetch, apiHeaders } from '@/lib/api/core';
+import { reportServerError } from '@/lib/api/error-report';
 import { ByteBudget, listZip, readZipEntry, writeZip } from '@livedoc/office-packages';
 
 // The editor's half of the zip export (docs/specs/021-event-storming/domain-export.md "The zip"): it reads an
@@ -94,6 +95,7 @@ export async function requestDomainExport(input: {
       signal: input.signal,
     },
   );
+  await reportServerError(res, 'storm export');
   if (res.ok) return { ok: true, ...((await res.json()) as StormExportResponse) };
   const body = (await res.json().catch(() => null)) as { error?: unknown } | null;
   return { ok: false, error: typeof body?.error === 'string' ? body.error : 'export_failed' };

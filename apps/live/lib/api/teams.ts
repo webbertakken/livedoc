@@ -21,6 +21,7 @@ import type {
 } from '@livedoc/api-schema';
 import { dedupeInFlight } from '../dedupe';
 import { API_BASE, apiDelete, apiHeaders, expectOk, expectOkOrNull, apiFetch } from './core';
+import { reportServerError } from './error-report';
 
 type TeamResponse = { team: Team };
 export type TeamDetailResponse = {
@@ -160,6 +161,7 @@ export async function apiUpdateTeamMemberRole(
     headers: await apiHeaders(ownerId, { body: true }),
     body: JSON.stringify({ role }),
   });
+  await reportServerError(res, 'change team role');
   if (res.status === 409) return { ok: false, reason: 'last_admin' };
   if (!res.ok) throw new Error(`change team role failed: ${res.status}`);
   return { ok: true };
@@ -174,6 +176,7 @@ export async function apiRemoveTeamMember(
     method: 'DELETE',
     headers: await apiHeaders(ownerId),
   });
+  await reportServerError(res, 'remove team member');
   if (res.status === 409) return { ok: false, reason: 'last_admin' };
   if (!res.ok && res.status !== 404) throw new Error(`remove team member failed: ${res.status}`);
   return { ok: true };
@@ -196,6 +199,7 @@ export async function apiCheckAssigneeAccess(
     const res = await apiFetch(`${API_BASE}/teams/${teamId}/access-check?${params}`, {
       headers: await apiHeaders(ownerId),
     });
+    await reportServerError(res, 'check assignee access');
     if (!res.ok) return null;
     const { canAccess } = (await res.json()) as { canAccess?: boolean };
     return typeof canAccess === 'boolean' ? canAccess : null;

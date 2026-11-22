@@ -10,8 +10,13 @@
 
 import type { HomeResponse } from '@livedoc/api-schema';
 import { API_BASE, apiFetch, apiHeaders } from './core';
+import { reportServerError } from './error-report';
 
-async function read<T>(ownerId: string, path: string, isShape: (body: unknown) => boolean) {
+async function read<T>(
+  ownerId: string,
+  path: string,
+  reading: { action: string; isShape: (body: unknown) => boolean },
+) {
   let res: Response;
   try {
     res = await apiFetch(`${API_BASE}${path}`, { headers: await apiHeaders(ownerId) });
@@ -19,12 +24,13 @@ async function read<T>(ownerId: string, path: string, isShape: (body: unknown) =
     console.warn('[home] read failed status=thrown');
     return null;
   }
+  await reportServerError(res, reading.action);
   if (!res.ok) {
     console.warn(`[home] read failed status=${res.status}`);
     return null;
   }
   const body = (await res.json().catch(() => null)) as unknown;
-  if (!isShape(body)) {
+  if (!reading.isShape(body)) {
     console.warn('[home] read failed status=unparseable');
     return null;
   }
@@ -45,5 +51,8 @@ function isHome(body: unknown): boolean {
  *  IANA time zone). */
 export function apiReadHome(ownerId: string, opts: { tz: string }): Promise<HomeResponse | null> {
   const params = new URLSearchParams({ tz: opts.tz });
-  return read<HomeResponse>(ownerId, `/home?${params.toString()}`, isHome);
+  return read<HomeResponse>(ownerId, `/home?${params.toString()}`, {
+    action: 'read home',
+    isShape: isHome,
+  });
 }

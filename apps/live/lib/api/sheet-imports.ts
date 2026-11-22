@@ -10,6 +10,7 @@ import {
   type ImportAsk,
 } from '@livedoc/sheets';
 import { API_BASE, apiFetch, apiHeaders, expectOk } from './core';
+import { reportServerError } from './error-report';
 import type { SheetsScope } from './sheets';
 import { debugLog } from '@/lib/debug-log';
 
@@ -38,6 +39,7 @@ export async function fetchSheetImport(
     console.warn('[sheet imports] request failed', { reason: (e as Error).name });
     return notFetched;
   }
+  await reportServerError(res, 'sheet import');
   if (res.ok) return (await res.json()) as ImportAnswer;
   if (res.status === 429) return 'later';
   const code = ((await res.json().catch(() => null)) as { error?: string } | null)?.error;
@@ -55,6 +57,7 @@ export async function fetchSheetImage(scope: SheetsScope, url: string): Promise<
         headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
       },
     );
+    await reportServerError(res, 'sheet image');
     if (res.ok && res.headers.get('content-type')?.startsWith('image/')) return await res.blob();
     debugLog('[sheet images] not shown', { status: res.status });
   } catch (e) {

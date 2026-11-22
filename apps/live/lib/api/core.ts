@@ -42,11 +42,12 @@ export {
 // Every non-2xx the expectOk* helpers throw, and every fetch that rejects in
 // apiFetch, is reported through here (docs/specs/017-telemetry/telemetry.md 'Error').
 import {
+  currentPageLife,
   markReported,
-  reportApiError,
   reportApiWarning,
   reportNetworkError,
   reportNoSessionToken,
+  reportResponseFailure,
 } from './error-report';
 
 // `API_BASE` resolution:
@@ -128,13 +129,14 @@ export async function apiFetch(input: string, init?: RequestInit): Promise<Respo
     await whenDocumentCreated(held);
   }
   let res: Response;
+  const sentInLife = currentPageLife();
   try {
     // A read the open path asked while the editor's code downloaded (early-reads.ts), as this request would ask it.
     const early = takeEarlyRead(input, init);
     res = (early && (await early)) || (await fetch(input, init));
   } catch (err) {
     // The one place that sees a request fail before any response exists.
-    reportNetworkError(method, input, err);
+    reportNetworkError({ method, url: input, sentInLife }, err);
     throw err;
   }
   if (method !== 'GET' && res.ok && !isTimelinePath(input)) notifyApiWrite();
@@ -443,7 +445,7 @@ async function failedResponse(
   expected?: (code: string | null) => boolean,
 ): Promise<ApiError> {
   const code = await readErrorCode(res);
-  if (!expected?.(code)) reportApiError(res.status, action, code);
+  if (!expected?.(code)) reportResponseFailure(res, action, code);
   const err = new ApiError(action, res.status, code);
   markReported(err);
   return err;

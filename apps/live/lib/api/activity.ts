@@ -9,6 +9,7 @@
 
 import type { ActivityReadResult } from '@livedoc/api-schema';
 import { API_BASE, apiFetch, apiHeaders } from './core';
+import { reportServerError } from './error-report';
 
 // Null means the read FAILED (offline, a lapsed token, a worker 500),
 // as opposed to an empty result, which means nothing is outstanding.
@@ -19,6 +20,7 @@ export async function apiListActivity(ownerId: string): Promise<ActivityReadResu
     const res = await apiFetch(`${API_BASE}/activity`, {
       headers: await apiHeaders(ownerId),
     });
+    await reportServerError(res, 'list activity');
     if (!res.ok) return null;
     const body = (await res.json()) as Partial<ActivityReadResult>;
     return {

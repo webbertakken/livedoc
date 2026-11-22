@@ -7,6 +7,7 @@ import { debugLog } from '@/lib/debug-log';
 import { Brand } from '@livedoc/ui';
 import { useDeferredAuth } from '@/components/providers/deferred-auth';
 import { API_BASE, apiFetch, apiHeaders } from '@/lib/api/core';
+import { reportServerError } from '@/lib/api/error-report';
 import { getGuestSelfId } from '@/lib/local-identity';
 
 const KEY = /^(?:anonymous|[0-9a-f]{32})\/[0-9a-f-]{36}\.(?:webp|jpg|png)$/;
@@ -32,6 +33,7 @@ export function BugScreenshotPage() {
       try {
         const headers = (await apiHeaders(getGuestSelfId() ?? '')) as Record<string, string>;
         const res = await apiFetch(`${API_BASE}/bug-reports/screenshots/${key}`, { headers });
+        await reportServerError(res, 'read bug screenshot');
         if (!res.ok) throw new Error(`status ${res.status}`);
         url = URL.createObjectURL(await res.blob());
         if (live) setFetched({ kind: 'shown', url });

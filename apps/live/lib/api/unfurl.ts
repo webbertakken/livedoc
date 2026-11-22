@@ -6,10 +6,12 @@
 
 import type { UnfurlResult } from '@livedoc/api-schema';
 import { API_BASE, apiFetch } from './core';
+import { reportServerError } from './error-report';
 
 export async function apiUnfurl(url: string): Promise<UnfurlResult | null> {
   try {
     const res = await apiFetch(`${API_BASE}/unfurl?url=${encodeURIComponent(url)}`);
+    await reportServerError(res, 'unfurl');
     if (!res.ok) return null;
     return (await res.json()) as UnfurlResult;
   } catch {

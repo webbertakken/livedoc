@@ -11,6 +11,7 @@ import { isProfilePictureUrl } from '@livedoc/api-schema';
 import { elementThreads, type Element } from '@livedoc/document';
 import { useDeferredAuth } from '@/components/providers/deferred-auth';
 import { API_BASE, apiFetch, apiHeaders } from '@/lib/api/core';
+import { reportServerError } from '@/lib/api/error-report';
 import { createListeners } from '@/lib/listeners';
 
 const pictures = new Map<string, string>();
@@ -50,6 +51,7 @@ async function load(
       `${API_BASE}/documents/${documentId}/tabs/${tabId}/comment-pictures`,
       { headers: await apiHeaders(ownerId, { share: shareCode }) },
     );
+    await reportServerError(res, 'read comment pictures');
     if (!res.ok) return;
     const body = (await res.json()) as { pictures?: Record<string, unknown> };
     for (const [commentId, url] of Object.entries(body.pictures ?? {})) {

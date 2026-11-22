@@ -11,6 +11,7 @@ import type {
 import { READ_MAX_CROPS_PER_REQUEST } from '@livedoc/api-schema';
 import { isTextSize, isValidElement, type Element } from '@livedoc/document';
 import { API_BASE, apiHeaders, apiFetch } from './core';
+import { reportServerError } from './error-report';
 
 // Shape kinds the AI may emit and we render as-is. A SUPERSET of what the
 // server prompt lists (apps/api SCHEMA), because models routinely stray:
@@ -183,6 +184,7 @@ export async function apiAiStream(
     headers: await apiHeaders(ownerId, { body: true }),
     body: JSON.stringify(payload),
   });
+  await reportServerError(res, 'ai request');
   if (!res.ok) throw new Error(`ai request failed: ${res.status}`);
   const reader = res.body?.getReader();
   if (!reader) {
@@ -324,6 +326,7 @@ async function readBatch(
     body: JSON.stringify({ crops } satisfies ReadNotesRequest),
     ...(opts.signal ? { signal: opts.signal } : {}),
   });
+  await reportServerError(res, 'read notes');
   if (!res.ok) throw new Error(await errorToken(res));
   return (await res.json()) as ReadNotesResponse;
 }

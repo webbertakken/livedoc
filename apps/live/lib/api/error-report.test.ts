@@ -3,6 +3,7 @@ import { TELEMETRY_TYPE_PATTERN } from '@livedoc/api-schema';
 import { ERROR_EMIT_CAP_PER_TYPE } from '@livedoc/telemetry-client';
 import {
   apiErrorType,
+  NETWORK_REPORT_GRACE_MS,
   networkErrorType,
   reportApiError,
   reportLoadFailure,
@@ -94,6 +95,7 @@ describe('network failures', () => {
   afterEach(() => {
     setApiErrorReporter(null);
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it('labels the route without ids', () => {
@@ -103,17 +105,83 @@ describe('network failures', () => {
     expect(networkErrorType('GET', '/api/share/SEKRIT')).toBe('Network.Get.Share');
   });
 
-  it('reports a rejected fetch through apiFetch, then rethrows', async () => {
+  it('reports a rejected fetch through apiFetch once the grace period ends, then rethrows', async () => {
+    vi.useFakeTimers();
     const seen: string[] = [];
     setApiErrorReporter((t) => seen.push(t));
     vi.stubGlobal('fetch', () => Promise.reject(new TypeError('Failed to fetch')));
     await expect(apiFetch('/api/folders/f1', { method: 'DELETE' })).rejects.toThrow(
       'Failed to fetch',
     );
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS - 1);
+    expect(seen).toEqual([]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual(['Network.Delete.Folders']);
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS * 2);
     expect(seen).toEqual(['Network.Delete.Folders']);
   });
 
+  it('marks the failure reported at once, so the autosave catch-all never recounts it', async () => {
+    vi.useFakeTimers();
+    const seen: string[] = [];
+    setApiErrorReporter((t) => seen.push(t));
+    const dropped = new TypeError('Failed to fetch');
+    vi.stubGlobal('fetch', () => Promise.reject(dropped));
+    await expect(apiFetch('/api/documents/d1/tabs/t1', { method: 'PUT' })).rejects.toBe(dropped);
+    reportSaveFailure(dropped);
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS);
+    expect(seen).toEqual(['Network.Put.Documents.Tabs']);
+  });
+
+  // Firefox rejects every request in flight the moment a page starts to leave, and fires `pagehide` when the next
+  // page arrives: the leave is no fault (docs/specs/017-telemetry/telemetry.md `Network.*`).
+  it('reports nothing for a request rejected as the page leaves', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('window', new EventTarget());
+    const seen: string[] = [];
+    setApiErrorReporter((t) => seen.push(t));
+    vi.stubGlobal('fetch', () =>
+      Promise.reject(new TypeError('NetworkError when attempting to fetch resource.')),
+    );
+    await expect(apiFetch('/api/home')).rejects.toThrow();
+    await expect(apiFetch('/api/timeline')).rejects.toThrow();
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS / 2);
+    window.dispatchEvent(new Event('pagehide'));
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS * 2);
+    expect(seen).toEqual([]);
+  });
+
+  it('reports nothing a page restored from the back/forward cache lost on the way out', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('window', new EventTarget());
+    const seen: string[] = [];
+    setApiErrorReporter((t) => seen.push(t));
+    let rejectInFlight: (err: unknown) => void = () => {};
+    vi.stubGlobal('fetch', () => new Promise((_, reject) => (rejectInFlight = reject)));
+    const inFlight = apiFetch('/api/activity');
+    window.dispatchEvent(new Event('pagehide'));
+    window.dispatchEvent(new Event('pageshow'));
+    rejectInFlight(new TypeError('NetworkError when attempting to fetch resource.'));
+    await expect(inFlight).rejects.toThrow();
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS * 2);
+    expect(seen).toEqual([]);
+  });
+
+  it('still reports a drop on a page that came back from the back/forward cache', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('window', new EventTarget());
+    const seen: string[] = [];
+    setApiErrorReporter((t) => seen.push(t));
+    window.dispatchEvent(new Event('pagehide'));
+    window.dispatchEvent(new Event('pageshow'));
+    vi.stubGlobal('fetch', () => Promise.reject(new TypeError('Failed to fetch')));
+    await expect(apiFetch('/api/activity')).rejects.toThrow();
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS);
+    expect(seen).toEqual(['Network.Get.Activity']);
+  });
+
   it('ignores an abort and a browser that knows it is offline', async () => {
+    vi.useFakeTimers();
     const seen: string[] = [];
     setApiErrorReporter((t) => seen.push(t));
     const abort = new Error('aborted');
@@ -123,6 +191,7 @@ describe('network failures', () => {
     vi.stubGlobal('navigator', { onLine: false });
     vi.stubGlobal('fetch', () => Promise.reject(new TypeError('Failed to fetch')));
     await expect(apiFetch('/api/timeline')).rejects.toThrow();
+    vi.advanceTimersByTime(NETWORK_REPORT_GRACE_MS);
     expect(seen).toEqual([]);
   });
 });
