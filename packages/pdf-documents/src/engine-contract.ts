@@ -29,6 +29,8 @@ export type PageInfo = {
   /** The page as shown, its rotation applied, in points. */
   readonly width: number;
   readonly height: number;
+  /** How far the file turns the page, clockwise, in degrees: 0, 90, 180 or 270. */
+  readonly rotation: 0 | 90 | 180 | 270;
   /** The label the file gives the page ("iv", "A-3"), or null where it gives none. */
   readonly label: string | null;
 };

@@ -6,6 +6,9 @@ import { PdfPermissions } from '../permissions';
 import { PDF_NAME_MAX_CHARS, PDF_PROPERTY_MAX_CHARS } from '../limits';
 import { FORM_FIELDS, FORM_NONE, clampSide, type ReaderFile } from './reader-file';
 
+// The reader's count of quarter turns, as degrees; a file that names no quarter turn turns the page by none.
+const QUARTER_TURNS: Readonly<Record<number, 90 | 180 | 270>> = { 1: 90, 2: 180, 3: 270 };
+
 export function readPages(file: ReaderFile): PageInfo[] {
   const { p } = file;
   const size = file.alloc(8);
@@ -18,6 +21,7 @@ export function readPages(file: ReaderFile): PageInfo[] {
       name: PageName.ofObject(p.EPDFDoc_GetPageObjectNumberByIndex(file.doc, index)),
       width: clampSide(sized ? file.runtime.getValue(size, 'float') : 0),
       height: clampSide(sized ? file.runtime.getValue(size + 4, 'float') : 0),
+      rotation: QUARTER_TURNS[p.EPDF_GetPageRotationByIndex(file.doc, index)] ?? 0,
       label: labelled ? labelOf(file, index) : null,
     });
   }

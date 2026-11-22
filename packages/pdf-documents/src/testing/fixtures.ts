@@ -81,6 +81,16 @@ export const labelledPdf = (): Uint8Array<ArrayBuffer> =>
     PAGE,
   ]);
 
+/** Five pages turned as the file says: by a quarter, a half, three quarters, not at all, and by no quarter turn. */
+export const rotatedPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R 6 0 R 7 0 R] /Count 5 >>',
+    ...[90, 180, 270, 0, 45].map(
+      (turn) => `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Rotate ${turn} >>`,
+    ),
+  ]);
+
 /** One page with one text field named "name", valued "Ada": an interactive form. */
 export const fieldsPdf = (): Uint8Array<ArrayBuffer> =>
   rawPdf([

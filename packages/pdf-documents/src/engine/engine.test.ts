@@ -24,6 +24,7 @@ import {
   noPagesPdf,
   protectedPdf,
   readerWasm,
+  rotatedPdf,
   spoiled,
   textPdf,
   xfaPdf,
@@ -207,6 +208,18 @@ describe('a protected file', () => {
 
 // opening.md "What is read": pages with their labels, the metadata, the form, the structure tree.
 describe('what a file says of itself', () => {
+  it('reads how far each page is turned, and its size as it shows turned', async () => {
+    const pages = opened(await engine.open(rotatedPdf()));
+    expect(pages.map((page) => page.rotation)).toEqual([90, 180, 270, 0, 0]);
+    expect(pages.map((page) => [page.width, page.height])).toEqual([
+      [792, 612],
+      [612, 792],
+      [792, 612],
+      [612, 792],
+      [612, 792],
+    ]);
+  });
+
   it('reads its version, and asks nothing of a file with no protection', async () => {
     const read = documentOf(await engine.open(stored));
     expect(read.version).toBe('1.7');

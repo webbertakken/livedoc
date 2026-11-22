@@ -27,8 +27,8 @@ function ready(): PdfDocumentOpen {
   return {
     phase: 'ready',
     pages: [
-      { name: PageName.ofObject(3), width: 612, height: 792, label: null },
-      { name: PageName.ofObject(5), width: 612, height: 792, label: null },
+      { name: PageName.ofObject(3), width: 612, height: 792, rotation: 0, label: null },
+      { name: PageName.ofObject(5), width: 612, height: 792, rotation: 0, label: null },
     ],
     storedFile: KEY,
     bytes: 1_250_000,

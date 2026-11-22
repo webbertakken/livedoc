@@ -4,7 +4,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
-import { PageName, PdfLiveChanges, type PdfOpened } from '@livedoc/pdf-documents';
+import { PageName, PdfLiveChanges, type PageInfo, type PdfOpened } from '@livedoc/pdf-documents';
 import { plainDocument } from '@livedoc/pdf-documents/testing';
 import { ApiError } from '@/lib/api/core';
 import type { PdfEngineClient } from './pdf-engine-client';
@@ -13,7 +13,9 @@ import { usePdfDocument, type PdfDocumentDeps } from './usePdfDocument';
 
 const KEY = 'ab'.repeat(32) as BlobKey;
 const scope = { ownerId: 'ada', documentId: 'D', tabId: 't1', shareCode: null };
-const PAGES = [{ name: PageName.ofObject(3), width: 612, height: 792, label: null }];
+const PAGES: readonly PageInfo[] = [
+  { name: PageName.ofObject(3), width: 612, height: 792, rotation: 0, label: null },
+];
 const read = () => ({
   update: PdfLiveChanges.merge([]),
   stateVector: new Uint8Array(),
