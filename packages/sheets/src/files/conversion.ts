@@ -11,6 +11,14 @@ import { FILE_LAST_COL } from './a1-text';
 import { GOOGLE_ONLY_FUNCTIONS } from './odf-function-names';
 import { toOpenFormula } from './open-formula';
 import type { FileCell, WorkbookFile } from './workbook-file';
+import { fileKept } from './kept-anchors';
+import {
+  keptKinds,
+  keptStandardOf,
+  type KeptContent,
+  type KeptKind,
+  type StoredAt,
+} from './kept-content';
 import { answersDiffering, workbookFileFor } from './write-workbook';
 import { XLSX_TEXT_MAX, xlsxFormula } from './xlsx-bounds';
 import { xlsxLacks } from './xlsx-function-names';
@@ -30,7 +38,10 @@ export type ConversionLoss =
   | { k: 'text_cut'; count: number }
   | { k: 'columns_cut'; count: number; sheets: string[] }
   // Formulas calling a function the spreadsheet's meaning and the new format's standard answer differently (D100).
-  | { k: 'answers_differ'; count: number; functions: string[] };
+  | { k: 'answers_differ'; count: number; functions: string[] }
+  // What was kept from the file, which a file of the other standard leaves behind (standard-mapping.md "Unknown
+  // content"): counted, its kinds the most common first.
+  | { k: 'kept'; count: number; kinds: KeptKind[] };
 
 export type ConversionLossKind = ConversionLoss['k'];
 
@@ -121,17 +132,23 @@ export function conversionLosses(
   if (wide.length > 0) losses.push({ k: 'columns_cut', count: wide.length, sheets: wide });
   const differ = answersDiffering(file, meaning, to);
   if (differ.count > 0) losses.push({ k: 'answers_differ', ...differ });
+  const kept =
+    file.kept && file.kept.standard !== keptStandardOf(to) ? keptKinds(file.kept.items) : null;
+  if (kept && kept.count > 0) losses.push({ k: 'kept', ...kept });
   return losses;
 }
 
-/** What converting a workbook to `to` loses, its values worked out as a download's are. */
+/** What converting a workbook to `to` loses, its values worked out as a download's are, its kept content listed. */
 export function workbookConversion(
   sheets: readonly Sheet[],
   record: WorkbookRecord,
   to: WorkbookFormat,
+  kept?: KeptContent<StoredAt>,
 ): WorkbookConversion {
   const from = record.format;
   if (WorkbookRecord.sameStandard(from, to)) return { from, to, losses: [] };
   const file = workbookFileFor(sheets, record);
+  // Only what is still anchored would be written, so only that is left behind.
+  if (kept) file.kept = fileKept(kept, sheets).kept;
   return { from, to, losses: conversionLosses(file, from, to, record.meaning ?? 'google') };
 }

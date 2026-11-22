@@ -73,6 +73,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     each formula calling a function the spreadsheet's meaning (Google's for one made in LiveDoc) and the new format's
     standard answer differently ([The file's meaning](formulas.md#function-catalogue), D100). Converting gives a
     spreadsheet with a file's meaning the new format's; one with Google's keeps it.
+  - **Kept from the file**: "4 things kept from the .ods file stay behind: drawings, notes and named ranges", the
+    kept content ([Standard mapping](standard-mapping.md#unknown-content)) counted by element, named by kind, the
+    three most common first; it stays with the spreadsheet, and converting back writes it again (D109).
   - When there is none: "Everything in this spreadsheet fits the Excel format."
 - While it checks, the dialog says **Checking what the .xlsx file can hold…** with **Convert** off; a check that fails
   says "This spreadsheet could not be checked. Try again." with **Try Again** and **Cancel**, and nothing changes.

@@ -14,10 +14,13 @@ import {
   refuse,
   type XmlElement,
   type XmlNode,
+  type XmlParsed,
 } from '@livedoc/office-packages';
 import { serialFromParts } from '../dates';
 import { SheetLimits } from '../sheet-limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
+import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
+import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsCellFormats, type OdsCellFormats } from './ods-styles';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
@@ -184,13 +187,46 @@ function columnStyles(table: XmlElement): (string | undefined)[] {
   return out;
 }
 
+// A cell's kept content on each cell it repeats over, up to the most a cell keeps it on (D105).
+type RowKept = { items: KeptItem<FileAt>[]; c: number; n: number };
+
+// The kept cells of a row, on each of its repeats; `extent` grows to hold them.
+function keepRow(
+  row: readonly RowKept[],
+  r: number,
+  rowRepeat: number,
+  sheet: number,
+  keeper: OdsKeeper,
+  extent: { rows: number; cols: number },
+) {
+  for (const { items, c, n } of row) {
+    if (n * rowRepeat > KEPT_REPEAT_MAX) {
+      keeper.cut += n * rowRepeat;
+      continue;
+    }
+    const at: Required<FileAt>[] = [];
+    for (let dr = 0; dr < rowRepeat && r + dr < ROWS_MAX; dr++)
+      for (let dc = 0; dc < n && c + dc < COLS_MAX; dc++) {
+        at.push({ sheet, r: r + dr, c: c + dc });
+        extent.rows = Math.max(extent.rows, r + dr + 1);
+        extent.cols = Math.max(extent.cols, c + dc + 1);
+      }
+    keeper.place(items, at);
+  }
+}
+
 function readTable(
   table: XmlElement,
+  index: number,
   losses: FileLoss[],
   budget: Budget,
   formats: OdsCellFormats,
+  keeper: OdsKeeper,
 ): FileSheet {
   const name = attributeOf(table, TABLE, 'name') ?? '';
+  keeper.table(table, index);
+  const cutBefore = keeper.cut;
+  const extent = { rows: 0, cols: 0 };
   const sheet: Sheet = { name, losses, formats, approximated: new Set(), cut: { formats: false } };
   const columns = columnStyles(table);
   const cells: FileCell[] = [];
@@ -201,10 +237,13 @@ function readTable(
     const rowStyle = attributeOf(row, TABLE, 'default-cell-style-name');
     let c = 0;
     const rowCells: FileCell[] = [];
+    const rowKept: RowKept[] = [];
     for (const cell of childElements(row)) {
       const isCell = is(cell, TABLE, 'table-cell') || is(cell, TABLE, 'covered-table-cell');
       if (!isCell) continue;
       const colRepeat = repeatOf(cell, 'columns');
+      const kept = keeper.cell(cell);
+      if (kept.length > 0) rowKept.push({ items: kept, c, n: colRepeat });
       const formulaText = attributeOf(cell, TABLE, 'formula');
       const value = cellValue(cell);
       const own = attributeOf(cell, TABLE, 'style-name');
@@ -247,18 +286,27 @@ function readTable(
         for (const cell of rowCells) cells.push({ ...cell, r: r + k });
       }
     }
+    keepRow(rowKept, r, rowRepeat, index, keeper, extent);
     r += rowRepeat;
   }
-  // The sheet is as big as what it holds: ODF repeats empty rows and columns to its grid's end.
-  const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
-  const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), 0);
+  // The sheet is as big as what it holds, its kept cells too: ODF repeats empty rows and columns to its grid's end.
+  const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), extent.rows);
+  const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), extent.cols);
   if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
+  if (keeper.cut > cutBefore)
+    losses.push({ k: 'kept_cut', sheet: name, cells: keeper.cut - cutBefore });
   if (sheet.cut.formats || columns.some((style) => formatOf(style, sheet) !== undefined))
     losses.push({ k: 'formats_cut', sheet: name });
   return { name, rows, cols, cells };
 }
 
-function readBody(root: XmlElement, styleRoots: readonly XmlElement[]): FileRead {
+function readBody(
+  parsed: XmlParsed,
+  styleRoots: readonly XmlElement[],
+  keeper: OdsKeeper,
+  parts: KeptPart[],
+): FileRead {
+  const root = parsed.root;
   const formats = odsCellFormats([root, ...styleRoots]);
   const spreadsheet = childElement(
     childElement(root, OFFICE, 'body') ?? root,
@@ -269,10 +317,21 @@ function readBody(root: XmlElement, styleRoots: readonly XmlElement[]): FileRead
   const tables = childElements(spreadsheet).filter((e) => is(e, TABLE, 'table'));
   const losses: FileLoss[] = [];
   const budget: Budget = { cells: 0 };
-  const sheets = tables.slice(0, SHEETS_MAX).map((t) => readTable(t, losses, budget, formats));
+  keeper.root(root);
+  keeper.spreadsheet(spreadsheet);
+  const sheets = tables
+    .slice(0, SHEETS_MAX)
+    .map((t, i) => readTable(t, i, losses, budget, formats, keeper));
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
-  return { ok: true, file: { sheets }, losses };
+  // A file that keeps nothing reads as the model alone.
+  if (keeper.items.length === 0 && parts.length === 0)
+    return { ok: true, file: { sheets }, losses };
+  return {
+    ok: true,
+    file: { sheets, kept: { standard: 'odf', items: keeper.items, parts } },
+    losses,
+  };
 }
 
 /** An `.ods` or `.fods` file's sheets, or the package's named rejection. */
@@ -283,17 +342,29 @@ export async function readOds(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead>
     const mediaType = attributeOf(parsed.root, OFFICE, 'mimetype');
     if (!is(parsed.root, OFFICE, 'document') || mediaType !== ODF_MEDIA_TYPES.spreadsheet)
       return refuse('package_wrong_type');
-    return readBody(parsed.root, []);
+    return readBody(parsed, [], new OdsKeeper(parsed), []);
   }
-  const read = await readOdfPackage(bytes);
-  if (!read.ok) return read;
-  if (read.package.mediaType !== ODF_MEDIA_TYPES.spreadsheet) return refuse('package_wrong_type');
-  const content = read.package.entries.get('content.xml');
+  const opened = await readOdfPackage(bytes);
+  if (!opened.ok) return opened;
+  const pkg = opened.package;
+  if (pkg.mediaType !== ODF_MEDIA_TYPES.spreadsheet) return refuse('package_wrong_type');
+  const content = pkg.entries.get('content.xml');
   if (!content) return refuse('package_damaged', { entry: 'content.xml' });
   const parsed = parseXml(new TextDecoder().decode(content), 'content.xml');
   if (!parsed.ok) return parsed;
   // Common styles (a named cell style and its data style) live in styles.xml; an unreadable one gives none.
-  const stylesEntry = read.package.entries.get('styles.xml');
+  const stylesEntry = pkg.entries.get('styles.xml');
   const styles = stylesEntry && parseXml(new TextDecoder().decode(stylesEntry), 'styles.xml');
-  return readBody(parsed.root, styles && styles.ok ? [styles.root] : []);
+  const keeper = new OdsKeeper(parsed);
+  keeper.items.push(...keptSettings(pkg));
+  const read = readBody(
+    parsed,
+    styles && styles.ok ? [styles.root] : [],
+    keeper,
+    keptOdfParts(pkg),
+  );
+  // What the package dropped, as what may run or signs bytes LiveDoc rewrites, is named (D106).
+  if (read.ok && pkg.dropped.length > 0)
+    read.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });
+  return read;
 }
