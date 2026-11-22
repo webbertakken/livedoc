@@ -1,6 +1,8 @@
 # Opening any PDF
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: a file read whole by the engine in a worker thread, every page's
+size read before any is drawn, the refusals shown by name with Download (a protected file among them, until its
+password screen is built). Reading by range, repair notices, passwords, the time and memory limits are not built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.
 "Any PDF" is every PDF a common reader opens: PDF 1.0 to 2.0, linearised, encrypted, with damaged cross-references,
@@ -122,7 +124,7 @@ as for any document.
 | `PDF_OPEN_TIMEOUT_MS`       | 30,000               | `(default)` Reading the structure of the slowest corpus file takes under a second; safe range 10 to 120 s                                    |
 | `PDF_OPEN_NOTICE_MS`        | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                         |
 | `PDF_MAX_PAGE_PIXELS`       | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                    |
-| `PDF_WORKER_MAX_BYTES`      | 1,073,741,824        | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Set by measurement                                           |
+| `PDF_WORKER_MAX_BYTES`      | 1,073,741,824        | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Measured: 724 MiB at most                                    |
 
 ## Share roles
 
@@ -146,6 +148,7 @@ as for any document.
 - `Pdf · Opened · <Outcome>`, once per open: `Read`, `Repaired`, `Partial`, `PasswordGiven`, or
   `Refused.<Name>` (`Damaged`, `Newer`, `CertificateProtected`, `RightsProtected`, `Stopped`, `TooLarge`,
   `NoFileStorage`, `BlobMissing`). Never the password or a name.
-- Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool> repaired=<bool>`,
+- Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool> repaired=<bool>`
+  (with `ms`, `read` and `engine`: how long the open, the read and the engine took),
   `[pdf] refused name=<name>`, `[pdf] password-asked`, `[pdf] password-wrong`, `[pdf] page-refused reason=<reason>`,
   `[pdf] worker-restarted reason=<trap|timeout|memory>`.

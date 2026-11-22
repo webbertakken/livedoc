@@ -1696,6 +1696,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "BlobKey": {
+    "type": "string"
+  },
   "BoardSortDir": {
     "enum": [
       "asc",
@@ -15853,6 +15856,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "backgroundPatternScale": {
         "type": "number"
       },
+      "blob": {
+        "$ref": "#/components/schemas/BlobKey"
+      },
       "customColours": {
         "items": {
           "type": "string"
@@ -15931,6 +15937,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "patternColor": {
         "type": "string"
       },
+      "size": {
+        "type": "number"
+      },
       "tagColours": {
         "items": {
           "$ref": "#/components/schemas/TagColour"
@@ -15972,7 +15981,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "sheet",
       "dashboard",
       "form",
-      "text-document"
+      "text-document",
+      "pdf"
     ],
     "type": "string"
   },
@@ -16009,6 +16019,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "backgroundPatternScale": {
         "type": "number"
+      },
+      "blob": {
+        "$ref": "#/components/schemas/BlobKey"
       },
       "customColours": {
         "items": {
@@ -16095,6 +16108,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "string"
       },
       "rev": {
+        "type": "number"
+      },
+      "size": {
         "type": "number"
       },
       "tagColours": {
@@ -16865,6 +16881,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "Plan",
       "Sheet",
       "Spreadsheet",
+      "Pdf",
       "Form",
       "Feedback",
       "Timing"

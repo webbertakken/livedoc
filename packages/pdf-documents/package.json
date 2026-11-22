@@ -1,0 +1,37 @@
+{
+  "name": "@livedoc/pdf-documents",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./engine": "./src/engine/index.ts",
+    "./engine/browser": "./src/engine/browser.ts",
+    "./testing": "./src/testing/fixtures.ts"
+  },
+  "scripts": {
+    "lint": "oxlint",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules .turbo coverage"
+  },
+  "dependencies": {
+    "@embedpdf/pdfium": "^2.15.1",
+    "@libpdf/core": "^0.5.3",
+    "@livedoc/document": "workspace:*",
+    "yjs": "^13.6.33"
+  },
+  "devDependencies": {
+    "@livedoc/oxlint-config": "workspace:*",
+    "@livedoc/vitest-config": "workspace:*",
+    "@types/node": "^26.6.4",
+    "@vitest/coverage-v8": "^5.0.5",
+    "oxlint": "^1.88.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

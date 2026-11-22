@@ -1,4 +1,6 @@
 import type { RemoteApply } from '@/hooks/canvas/history-replay';
+import { LiveTabRoom } from '@/lib/live-tab/live-tab-bus';
+import { PdfDocumentBus } from '@/lib/pdf-document/pdf-document-bus';
 import { TextDocumentBus } from '@/lib/text-document/text-document-bus';
 import {
   useEffect,
@@ -509,6 +511,13 @@ export function useRoomConnection(opts: {
       } else if (op.kind === 'text-document-refused') {
         // An edit of ours the room refused whole ("Refused edits"): that tab's surface says which limit.
         TextDocumentBus.refused(op.tabId, op.limit);
+      } else if (op.kind === 'pdf') {
+        // A PDF document's live change (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage"): its
+        // surface, when open, merges it; the room has already stored it, so a surface opened later loads it.
+        PdfDocumentBus.deliver(op);
+      } else if (op.kind === 'pdf-refused') {
+        // A change of ours the room refused whole ("Limits"): that tab's surface takes it back and says so.
+        PdfDocumentBus.refused(op.tabId, op.limit);
       } else if (op.kind === 'text-document-caret') {
         // A collaborator's selection in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
         // "Presence"), checked field by field; drawn by that tab's surface, never written.
@@ -683,8 +692,8 @@ export function useRoomConnection(opts: {
     // telemetry said otherwise, and a reload also destroyed the
     // viewport, selection, and undo history to fix stale content.
     void resyncFromServer();
-    // A text document's surface merges the stored state again, and sends what the room is missing.
-    TextDocumentBus.resync(null);
+    // Every live tab kind's open surface merges the stored state again, and sends what the room is missing.
+    LiveTabRoom.resyncAll();
   });
 
   useEffect(() => {
@@ -742,8 +751,8 @@ export function useRoomConnection(opts: {
       onResync: () => roomResync(),
       // A text document's surface sends only while the room is open, and catches up when it opens again
       // (docs/specs/034-text-documents/live-editing-and-storage.md "Reconnecting").
-      onOpen: () => TextDocumentBus.connected(),
-      onClose: () => TextDocumentBus.disconnected(),
+      onOpen: () => LiveTabRoom.connected(),
+      onClose: () => LiveTabRoom.disconnected(),
     };
     // Every session joins through a one-time room ticket (docs/specs/015-api/api.md "Realtime model"),
     // minted over REST, where the access gates already read the guest signature, the share code and its
@@ -782,7 +791,7 @@ export function useRoomConnection(opts: {
       // Nobody's words outlive the room they were said in.
       resetSpeechBubbles();
       openedRoom.close();
-      TextDocumentBus.disconnected();
+      LiveTabRoom.disconnected();
       roomRef.current = null;
     };
   }, [

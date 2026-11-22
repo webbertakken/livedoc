@@ -156,7 +156,7 @@ describe('a live tab kind of its own', () => {
 
 describe('the live tab kinds', () => {
   it('hold the text document, found by its tab and its frame', () => {
-    expect(LIVE_TAB_KINDS).toEqual([TEXT_DOCUMENT_LIVE_TAB]);
+    expect(LIVE_TAB_KINDS).toContain(TEXT_DOCUMENT_LIVE_TAB);
     expect(liveTabKindOfTab({ kind: 'text-document' })).toBe(TEXT_DOCUMENT_LIVE_TAB);
     expect(liveTabKindOfTab({ kind: 'board' })).toBeNull();
     expect(liveTabKindOfTab(undefined)).toBeNull();

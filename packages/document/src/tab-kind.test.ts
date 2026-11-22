@@ -11,6 +11,8 @@ describe('tabKindOf', () => {
 
   it('reads a specialised kind', () => {
     expect(tabKindOf(tab({ kind: 'event-storming' }))).toBe('event-storming');
+    // docs/specs/035-pdf-documents/pdf-document.md "Why a tab kind".
+    expect(tabKindOf({ kind: 'pdf' })).toBe('pdf');
   });
 
   // Whiteboarding is an editor mode, not a kind (docs/specs/007-editor/editor-modes.md): a stored

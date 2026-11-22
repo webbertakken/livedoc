@@ -50,6 +50,14 @@ What you do NOT need:
 
    The bucket name is bound to `IMAGES` in `apps/api/wrangler.toml`.
 
+   A second bucket holds files' bytes (optional, for PDF documents):
+
+   ```sh
+   pnpm exec wrangler r2 bucket create docs-nu-files
+   ```
+
+   It is bound to `FILES`. Without it every file route answers `503 files_unavailable` and no PDF document can be made; remove its `[[r2_buckets]]` block from `apps/api/wrangler.toml` to deploy without it.
+
 5. **Get an API token + account id**:
    - Account id is at the bottom-right of any Cloudflare dashboard page.
    - API token: create one with **Workers Scripts: Edit**, **D1: Edit**, **R2: Edit** (only if using images), **Workers KV: Edit** (for Durable Objects), and **Account → Account Settings: Read** on your account. Save it.
@@ -355,6 +363,13 @@ Add a custom-domain route to the router worker (`apps/router/wrangler.toml`) and
 - `/api/*` → api worker
 
 The five downstream workers don't need their own domain; the router fans out via service bindings.
+
+## Worker logs
+
+The api, mcp and router workers keep their own log lines in Workers Logs, in your Cloudflare account: 3 days on
+Workers Free, 7 on Workers Paid. Request URLs are not kept. Read them in the dashboard under Workers & Pages, the
+worker, Observability. To keep none, set `enabled = false` under `[observability]` in the three `wrangler.toml`
+files. See [Worker logs](../specs/016-platform/worker-logs.md).
 
 ## What can break, and how to debug
 

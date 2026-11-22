@@ -13,6 +13,7 @@ measured against Acrobat's. The research is in `docs/research/pdf-documents/`.
 - ./saving.md - when working on what a handed-out file holds: the stored file and its live changes, additions and rewrites, byte fidelity, previous versions
 - ./live-editing-and-storage.md - when working on the live changes, presence, undo, the room's storage, the blob store, offline, branches, copies, versions, what the servers make
 - ./security.md - when a file could hurt: the boundary, scripts, links and actions, embedded files, every abuse case and its rule
+- ./performance.md - when changing what a PDF document loads, how fast it opens or scrolls, or what it holds in memory: the budgets and how they are measured
 - ./reading-surface.md - when working on the PDF document's chrome: title row, menus, toolbar, the left panel, the pages, zoom, find, phone and tablet
 - ./dark-pages.md - when working on pages shown dark: the recolouring, its setting, the first-time question
 - ./keyboard-shortcuts.md - when binding, listing or checking a keyboard shortcut of a PDF document

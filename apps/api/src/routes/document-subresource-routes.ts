@@ -24,6 +24,8 @@ import { handleTabRender } from './tab-render-route';
 import { handleItemRoutes } from './item-routes';
 import { handleSheetRoutes } from './sheet-routes';
 import { handleTextDocumentRoutes } from './text-document-routes';
+import { handlePdfDocumentRoutes } from './pdf-document-routes';
+import { handleDocumentFileRoutes } from './document-file-routes';
 import { handleWorkbookRoutes } from './workbook-routes';
 import { handleItemTypeRoutes } from './item-type-routes';
 import { handlePlanRoute } from './plan-route';
@@ -189,6 +191,12 @@ export async function handleDocumentSubresources(
   // A text document's live state and file (docs/specs/034-text-documents/live-editing-and-storage.md).
   const textDocument = await handleTextDocumentRoutes(ctx);
   if (textDocument) return textDocument;
+  // A PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage").
+  const pdfDocument = await handlePdfDocumentRoutes(ctx);
+  if (pdfDocument) return pdfDocument;
+  // A blob the document holds (docs/specs/006-document/blob-store.md "Getting bytes out").
+  const file = await handleDocumentFileRoutes(ctx);
+  if (file) return file;
   // A spreadsheet's workbook and its file (docs/specs/029-sheets/files-and-print.md).
   const workbook = await handleWorkbookRoutes(ctx);
   if (workbook) return workbook;

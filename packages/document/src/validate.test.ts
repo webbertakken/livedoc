@@ -377,6 +377,26 @@ describe('isValidTab', () => {
     expect(isValidTab({ id: 't', name: 'x', elements: els })).toBe(false);
   });
 
+  // docs/specs/035-pdf-documents/pdf-document.md "What it holds": no elements, a stored file named by key and size.
+  describe('a PDF tab', () => {
+    const pdf = { id: 't', name: 'x', kind: 'pdf', elements: [], blob: 'ab'.repeat(32), size: 9 };
+
+    it('accepts one naming its stored file and holding no element', () => {
+      expect(isValidTab(pdf)).toBe(true);
+    });
+
+    it('refuses one holding an element', () => {
+      const el = { id: 'a', type: 'shape', shape: 'square', ...box };
+      expect(isValidTab({ ...pdf, elements: [el] })).toBe(false);
+    });
+
+    it('refuses one naming no stored file, or one no blob store could hold', () => {
+      expect(isValidTab({ ...pdf, blob: undefined })).toBe(false);
+      expect(isValidTab({ ...pdf, blob: 'not-a-key' })).toBe(false);
+      expect(isValidTab({ ...pdf, size: 0 })).toBe(false);
+    });
+  });
+
   // docs/specs/034-text-documents/text-document.md "What it holds": elements always empty, format odf or ooxml.
   describe('a text document tab', () => {
     const textDocument = { id: 't', name: 'x', kind: 'text-document', elements: [] };

@@ -903,6 +903,51 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     requestSchema: { type: 'string', format: 'binary' },
     statuses: [204, 400, 401, 403, 404, 410, 413, 503],
   },
+  // A PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage").
+  {
+    method: 'GET',
+    path: '/documents/{id}/pdf-documents/{tabId}/state',
+    segment: 'documents',
+    tag: 'PDF documents',
+    summary:
+      "A PDF document's live changes as one Yjs update: everything changed since its stored file, whose key rides X-Stored-File (fetch it from /documents/{id}/files/{key}); with since, only what lies beyond that state vector. The state's own vector rides X-State-Vector (base64). 400 state_vector_invalid; 404 pdf_not_found when the tab is absent or another kind. Read access.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'since',
+        required: false,
+        description: 'A state vector, base64: answer only what the state holds beyond it.',
+      },
+    ],
+    responseMediaType: 'application/octet-stream',
+    statuses: [200, 400, 401, 403, 404, 410],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/pdf-documents/{tabId}/updates',
+    segment: 'documents',
+    tag: 'PDF documents',
+    summary:
+      "One Yjs update to a PDF document's live changes, its bytes as the body: for an update too large for a room frame. Stored by the room, then sent live to everyone on it. 400 update_invalid; 413 update_too_large or live_changes_too_large; 404 pdf_not_found; 503 room_unavailable. Edit access (a tab-scoped link on its own tab).",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: { type: 'string', format: 'binary' },
+    statuses: [204, 400, 401, 403, 404, 410, 413, 503],
+  },
+  // The blob store's read (docs/specs/006-document/blob-store.md "Getting bytes out").
+  {
+    method: 'GET',
+    path: '/documents/{id}/files/{key}',
+    segment: 'documents',
+    tag: 'Files',
+    summary:
+      "A blob the document holds (a PDF tab's stored file), its bytes exactly; a Range request is answered 206 with only those bytes. The key is its strong ETag, and the answer is immutable. 400 key_invalid; 404 blob_not_held when the document holds no such key, blob_missing when its bytes are gone; 416 range_not_satisfiable; 503 files_unavailable on a host without file storage. Read access (a tab-scoped link: its own tab's file).",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseMediaType: 'application/octet-stream',
+    statuses: [200, 206, 304, 400, 401, 403, 404, 410, 416, 503],
+  },
   // A spreadsheet's file (docs/specs/029-sheets/files-and-print.md, standard-mapping.md).
   {
     method: 'GET',
@@ -1668,6 +1713,49 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
   },
 
   // ---- Images ----
+  // The blob store's upload (docs/specs/006-document/blob-store.md "Getting bytes in").
+  {
+    method: 'GET',
+    path: '/files/{key}',
+    segment: 'files',
+    tag: 'Files',
+    summary:
+      'Whether the owner already holds the bytes with this key, the question an upload begins with: held true, so nothing need be sent, or false. With document, asked of that document’s owner, for whoever may edit it. 400 key_invalid; 503 files_unavailable on a host without file storage.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'document',
+        required: false,
+        description: 'The document the bytes are for; its owner is then asked.',
+      },
+    ],
+    responseSchema: {
+      type: 'object',
+      properties: { held: { type: 'boolean' } },
+      required: ['held'],
+    },
+    statuses: [200, 400, 401, 403, 404, 503],
+  },
+  {
+    method: 'PUT',
+    path: '/files/{key}',
+    segment: 'files',
+    tag: 'Files',
+    summary:
+      "Store a file's bytes under their key, the bytes' SHA-256 as 64 lower-case hex characters: the body is the bytes, with Content-Length. 200 held when the owner already holds the key (GET on this path asks first), else 201 stored. With document, the bytes are stored for that document's owner and edit access to it is asked; without, for the caller, who is about to make a document with them. 400 key_invalid; 411 length_required; 413 file_too_large (limitBytes); 422 key_mismatch when the bytes do not hash to the key; 502 store_failed; 503 files_unavailable on a host without file storage.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'document',
+        required: false,
+        description: 'The document the bytes are for; they are then its owner’s.',
+      },
+    ],
+    requestSchema: { type: 'string', format: 'binary' },
+    statuses: [201, 200, 400, 401, 403, 404, 411, 413, 422, 502, 503],
+  },
   {
     method: 'GET',
     path: '/images',

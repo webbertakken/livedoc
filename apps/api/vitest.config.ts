@@ -33,6 +33,14 @@ const GATE_KEEPERS = [
   'src/db/image-grants.ts',
   'src/db/image-retention.ts',
   'src/db/document-removal.ts',
+  // The blob store and a PDF document's doors: who may read a file's bytes, and which bytes a tab may name
+  // (docs/specs/006-document/blob-store.md).
+  'src/blob-store/blob-store.ts',
+  'src/blob-store/tab-blobs.ts',
+  'src/pdf-documents/**',
+  'src/routes/blob-store-routes.ts',
+  'src/routes/document-file-routes.ts',
+  'src/routes/pdf-document-routes.ts',
 ];
 
 export default defineProject({

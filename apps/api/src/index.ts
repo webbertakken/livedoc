@@ -66,6 +66,7 @@ import { handleBugReports } from './bug-reports/route';
 import { isBugReportRefileMinute, runBugReportRefile } from './bug-reports/refile';
 import { deleteOldBugReportWindows } from './db/bug-reports';
 import { handleImages } from './routes/images';
+import { handleBlobStoreRoutes } from './routes/blob-store-routes';
 import { handleMigrate } from './routes/migrate';
 import { handleGuestId } from './routes/guest-id';
 import { handleParticipants } from './routes/participants';
@@ -291,7 +292,10 @@ async function routeApiRequest(
     // Image uploads carry raw bytes with their own, larger cap (docs/specs/009-elements/images.md);
     // the route re-checks it and answers with file_too_large + limitBytes.
     const cap = segments[1] === 'images' ? MAX_IMAGE_BYTES : MAX_BODY_BYTES;
-    if (Number.isFinite(len) && len > cap) {
+    // A file for the blob store is refused by its own route, by name, before any byte is read
+    // (docs/specs/006-document/blob-store.md "Refusals").
+    const isFileUpload = segments[1] === 'files';
+    if (!isFileUpload && Number.isFinite(len) && len > cap) {
       return payloadTooLarge();
     }
   }
@@ -420,6 +424,8 @@ async function routeApiRequest(
       return await handleShared(ctx);
     case 'images':
       return await handleImages(ctx);
+    case 'files':
+      return await handleBlobStoreRoutes(ctx);
     case 'documents':
       return await handleDocuments(ctx);
     case 'folders':

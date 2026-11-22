@@ -1,6 +1,8 @@
 # Saving
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: a bake in the browser for Download: the stored file itself when
+nothing was changed, else the stored file with one addition holding the highlights, deterministic, reopened before it
+is handed out, and proven a prefix. Rewrites, replacing the stored file, previous versions and versions are not built.
 
 LiveDoc has no Save button. A [PDF document](pdf-document.md) is saved as it is worked on, live, for everyone on it.
 "Saved" means the document's file is always whole and current: every way a file leaves LiveDoc hands out a valid PDF
@@ -130,7 +132,7 @@ everyone on the document; every client reloads the pages it shows, keeping its p
 
 | Constant                     | Value               | Why                                                                                           |
 | ---------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
-| `PDF_LIVE_CHANGES_MAX_BYTES` | 4,194,304 (4 MiB)   | `(default)` Past it the stored file is replaced; set by measurement on the tracer bullet      |
+| `PDF_LIVE_CHANGES_MAX_BYTES` | 4,194,304 (4 MiB)   | `(default)` Past it the stored file is replaced; measured: about 6,200 three-line highlights  |
 | `PDF_SERVER_BAKE_MAX_BYTES`  | 33,554,432 (32 MiB) | `(default)` What a Worker's 128 MB holds whole beside the engine                              |
 | `PDF_BAKE_TIMEOUT_MS`        | 120,000             | `(default)` A bake past it stops with "This PDF couldn't be written."; safe range 30 to 600 s |
 | Previous versions            | 30 days             | The file tab's own, as the Trash keeps a deleted document                                     |

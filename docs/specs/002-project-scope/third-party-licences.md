@@ -37,7 +37,8 @@ reach a deployed artefact, and nothing else.
   one entry of the reviewed **embedded-works table**, which names the libraries inside it with their
   own licence texts: XNNPACK and its helpers plus the Emscripten runtime inside the TensorFlow.js
   WASM backend, ONNX Runtime's third-party notices inside its WASM, libwebp inside `@jsquash/webp`,
-  resvg and tiny-skia inside `@resvg/resvg-wasm`, the Inter font inside the mcp worker, the Caveat
+  resvg and tiny-skia inside `@resvg/resvg-wasm`, PDFium and the ten works its build links (FreeType, OpenJPEG,
+  libjpeg-turbo, libpng, zlib, Little CMS, Anti-Grain Geometry, ICU, Abseil and fast_float) inside `@embedpdf/pdfium`, the Inter font inside the mcp worker, the Caveat
   subset the marketing hero writes in, and the document fonts the editor serves from their Fontsource
   packages (`document-font-works.ts`, one row and licence text per family). The same
   table covers material vendored into our own source (Lucide and Feather icon geometry, draw.io's
@@ -139,8 +140,10 @@ The code cites each by its id.
   resolves to `https:` (default).
 - **D9** Opening the page from the editor: A new tab, as the neighbouring GitHub row does, so an open document stays put
   (default).
-- **D10** What "permissive and weak-copyleft" admits: The sixteen ids in `LICENCE_ALLOWLIST`: today's shipped licences
-  plus common permissive peers (default).
+- **D10** What "permissive and weak-copyleft" admits: The twenty ids in `LICENCE_ALLOWLIST`: today's shipped licences
+  plus common permissive peers (default). Four joined with the PDF engine's reader, each permissive and each the
+  licence of a work compiled into it: `FTL` (FreeType), `IJG` (libjpeg-turbo), `libpng-2.0` (libpng) and
+  `Unicode-3.0` (ICU) (default).
 - **D11** Parallel or sequential analysis: Sequential: deterministic logs, bounded memory beside turbo's own parallel
   builds (default).
 - **D12** Footer placement: In the footer's Legal column, last (default).

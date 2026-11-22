@@ -3,7 +3,7 @@
 // the canvas's code is needed at all.
 import { tabKindOf } from './tab-kind';
 
-export const TAB_SURFACES = ['text-document', 'spreadsheet'] as const;
+export const TAB_SURFACES = ['text-document', 'spreadsheet', 'pdf'] as const;
 export type TabSurface = (typeof TAB_SURFACES)[number];
 
 // `inSpreadsheet`: the document holds a workbook. Until stored Plan Sheets are migrated
@@ -15,6 +15,8 @@ export function surfaceOf(
   switch (tabKindOf(tab)) {
     case 'text-document':
       return 'text-document';
+    case 'pdf':
+      return 'pdf';
     case 'sheet':
       return inSpreadsheet ? 'spreadsheet' : null;
     case 'diagram':

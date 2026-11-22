@@ -57,3 +57,13 @@ service = "docs-nu-api"
 [[kv_namespaces]]
 binding = "OAUTH_KV"
 id = "f19dbd83b22d45058cf2dcfcce3f4eb7"
+
+# Workers Logs (docs/specs/016-platform/worker-logs.md): the worker's own log lines are kept in this Cloudflare
+# account, so a failure nobody was tailing can still be read. Invocation logs stay off: one stores every request's
+# URL, and a URL carries document ids and share codes.
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false

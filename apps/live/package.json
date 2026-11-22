@@ -68,6 +68,7 @@
     "@livedoc/icons": "workspace:*",
     "@livedoc/items": "workspace:*",
     "@livedoc/office-packages": "workspace:*",
+    "@livedoc/pdf-documents": "workspace:*",
     "@livedoc/plan-art": "workspace:*",
     "@livedoc/sheets": "workspace:*",
     "@livedoc/sticky-model": "workspace:*",

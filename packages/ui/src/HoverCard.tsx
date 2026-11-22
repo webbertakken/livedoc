@@ -77,9 +77,9 @@ export function HoverCard({
       </span>
       {open && !disabled ? (
         <HintSurface kind="hover-card" anchor={anchor} surfaceProps={surfaceProps}>
-          <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{title}</p>
+          <p className="text-body text-slate-900 dark:text-slate-100">{title}</p>
           {description ? (
-            <p className="mt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-0.5 text-supporting text-slate-600 dark:text-slate-300">
               {description}
             </p>
           ) : null}

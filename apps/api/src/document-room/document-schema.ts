@@ -9,6 +9,8 @@
 // Made on first write, never on construction (document-db.ts `ensureSchema`): a room a stray id wakes stores
 // nothing. Versioned by `_document_schema`; a change appends a step and never edits one that has shipped.
 
+import { liveTabSchemaStep } from '../live-tabs/live-tab-schema';
+import { PDF_LIVE_TAB } from '../pdf-documents/pdf-live-tab';
 import { outboxTrigger } from './outbox-trigger';
 
 const STEP_1 = `
@@ -529,6 +531,8 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   WORKBOOK_IMPORTS_STEP,
   WORKBOOK_RANGE_SOURCES_STEP,
   WORKBOOK_MEANING_STEP,
+  // A PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage").
+  liveTabSchemaStep(PDF_LIVE_TAB.tables),
   WORKBOOK_KEPT_STEP,
 ];
 

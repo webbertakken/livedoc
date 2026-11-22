@@ -1,6 +1,9 @@
 # Editing modes
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: the three modes declared to the shell's switch, a person starting
+in Reviewing or Viewing, the switch and its keys for Reviewing and Viewing. Editing is listed as coming soon. Until the
+room checks what a Participant's update touches, it takes a PDF's changes from Editors alone, so a Participant is
+drawn Viewing; the ruling (F7: a Participant does all of Reviewing) stands.
 
 How one person works on a [PDF document](pdf-document.md) right now. Webber asked for "a mode where you read, mark
 text, fill forms, place comments and sign, but also a mode for real editing"; ruling C2 names them **Reviewing** and

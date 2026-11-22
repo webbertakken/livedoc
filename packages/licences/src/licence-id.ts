@@ -67,12 +67,19 @@ const LICENCE_ALLOWLIST: ReadonlySet<string> = new Set([
   'BSL-1.0',
   'CC-BY-4.0',
   'CC0-1.0',
+  // FreeType's own licence: BSD-style with an attribution clause.
+  'FTL',
+  // The Independent JPEG Group's: permissive, with an acknowledgement in the documentation of a binary.
+  'IJG',
   'ISC',
+  'libpng-2.0',
   'MIT',
   'MIT-0',
   'MPL-2.0',
   'OFL-1.1',
   'Python-2.0',
+  // ICU's since version 74: permissive, notice kept.
+  'Unicode-3.0',
   'Unlicense',
   'Zlib',
 ]);

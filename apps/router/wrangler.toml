@@ -32,6 +32,16 @@ service = "docs-nu-telemetry"
 binding = "HELP"
 service = "docs-nu-help"
 
+# Workers Logs (docs/specs/016-platform/worker-logs.md): the worker's own log lines are kept in this Cloudflare
+# account, so a failure nobody was tailing can still be read. Invocation logs stay off: one stores every request's
+# URL, and a URL carries document ids and share codes.
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false
+
 # Local dev (`wrangler dev --env local --port 4000`, the workspace `dev`
 # script): service bindings can't reach the local Next dev servers, so this
 # environment defines none and sets plain HTTP origins instead. The worker

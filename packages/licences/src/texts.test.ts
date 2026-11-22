@@ -85,6 +85,10 @@ describe('EMBEDDED_WORKS', () => {
     ['ort-wasm-simd-threaded.jsep.1d4fxnu9gfd3p.wasm', ['onnxruntime', 'emscripten']],
     ['webp_enc_simd.0abc.wasm', ['libwebp', 'emscripten']],
     ['webp_dec.0abc.wasm', ['libwebp']],
+    [
+      'pdfium.0s1gx2wq4n3rd.wasm',
+      ['pdfium', 'pdfium-freetype', 'pdfium-libjpeg-turbo', 'pdfium-icu', 'emscripten'],
+    ],
     ['dd4dd8881e2df4e64203b5c0ae65e1648ab55207-index_bg.wasm', ['resvg', 'tiny-skia']],
     ['7237d9cf55f177702066a28a4dde1e4c7e8ab576-Inter-Regular.ttf', ['inter']],
     ['0f3a9c2e5d71b8a4c6e2f0d9b3a7c5e1f8d2b6a4-Inter-Bold.otf', ['inter']],

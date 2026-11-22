@@ -9,6 +9,9 @@ const SIZED_PATHS = [
   'src/Select.tsx',
   'src/menu/menu-classes.ts',
   'src/ModeFilterMenu.tsx',
+  'src/dialog',
+  'src/hint/HintSurface.tsx',
+  'src/HoverCard.tsx',
 ];
 
 describe('ui sizing', () => {

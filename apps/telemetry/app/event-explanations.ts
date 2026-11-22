@@ -929,6 +929,13 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An editor connected the spreadsheets a spreadsheet’s IMPORTRANGE formulas read, for good.',
   'Spreadsheet|Unlocked|ImportAccess':
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
+  'Pdf|Imported|Explorer':
+    'Someone dropped a PDF on the Explorer, which opened it as a new PDF document.',
+  'Pdf|Added|Mark.Highlight': 'Someone highlighted text on a PDF page.',
+  'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',
+  'Pdf|Exported|Pdf':
+    'Someone downloaded a PDF document as a PDF, with every change made in LiveDoc written into the file.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
   'Sheet|Searched|Function':
     'Someone searched the functions a Sheet formula can use, from the toolbar’s function picker.',
@@ -2818,6 +2825,11 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
     'Someone opened a file as a new spreadsheet (the value says which file format).',
   'Spreadsheet|Unlocked':
     'An editor allowed something on a spreadsheet for good (the value says what).',
+  'Pdf|Imported':
+    'Someone opened a PDF from their computer as a new PDF document (the value says the way it arrived).',
+  'Pdf|Added': 'Someone made a mark on a PDF page (the value says which kind).',
+  'Pdf|Selected': 'Someone took a tool in hand on a PDF document (the value says which).',
+  'Pdf|Exported': 'Someone downloaded a PDF document (the value says as what).',
   'Sheet|Searched': 'Someone searched a list on a Sheet (the value says which: the functions).',
   'Plan|Imported': "Someone read a file into a board's cards (the value says which kind: Csv).",
   'Plan|Exported': "Someone downloaded a board's cards as a file (the value says which kind: Csv).",

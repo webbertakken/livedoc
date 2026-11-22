@@ -376,6 +376,8 @@ answered by the worker, never left to the runtime's bare error page.
   `TELEMETRY_ENABLED` is on. A D1 error that names the query (a constraint, a type, SQL) is a
   bug, so it lands here too.
 - Neither body echoes the error's text. The route words never carry an id.
+- Both log lines, error and stack included, are kept in Workers Logs
+  ([Worker logs](../016-platform/worker-logs.md)), so a failure nobody was tailing can still be read.
 
 ## Rate limiting
 

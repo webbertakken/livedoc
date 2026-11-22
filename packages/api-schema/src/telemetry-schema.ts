@@ -179,6 +179,10 @@ export const TELEMETRY_CATEGORIES = [
   // 'Import'), 'Opened', 'Imported' and 'Exported' with the file format ('Ods', 'Fods', 'Xlsx', 'Csv', ...), and
   // 'Converted' with the format it went to ('Xlsx', 'Ods'). Never content.
   'Spreadsheet',
+  // PDF documents (docs/specs/035-pdf-documents/pdf-document.md "Telemetry and observability"): a PDF arriving
+  // ('Imported', `type` the way: 'Explorer'), a mark made ('Added', 'Mark.Highlight'), a tool taken in hand
+  // ('Selected', 'Tool.Highlight') and a download ('Exported', 'Pdf'). Never a name, a password or any text of a file.
+  'Pdf',
   // Forms (docs/specs/030-forms/forms.md "Telemetry"): a form started (its starter), a question added (its type),
   // published ('Link'), opened or closed, and a response sent ('Response', or 'Dropped' for the hidden field, written
   // server-side; 'Preview' for a builder Preview's card) or reported (its reason). Never a form's words.

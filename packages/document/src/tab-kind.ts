@@ -22,6 +22,9 @@ export const TAB_KINDS = [
   // A text document (docs/specs/034-text-documents/text-document.md): pages of writing on an open standard, worked
   // on its own surface outside the canvas, in no editor mode.
   'text-document',
+  // A PDF document (docs/specs/035-pdf-documents/pdf-document.md): one PDF, always a PDF, worked on its own surface
+  // outside the canvas, in no editor mode.
+  'pdf',
 ] as const;
 export type TabKind = (typeof TAB_KINDS)[number];
 
@@ -48,6 +51,7 @@ export function tabKindOf(tab: { kind?: string } | undefined): TabKind {
     case 'dashboard':
     case 'form':
     case 'text-document':
+    case 'pdf':
       return tab.kind;
     default:
       return DEFAULT_TAB_KIND;

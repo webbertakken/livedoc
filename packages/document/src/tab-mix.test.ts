@@ -11,6 +11,8 @@ describe('tabMixRefusal', () => {
   it('refuses any other kind in a spreadsheet', () => {
     expect(tabMixRefusal(true, [{ kind: 'sheet' }, { kind: 'board' }])).toBe('tab_kind_mixed');
     expect(tabMixRefusal(true, [{ kind: 'text-document' }])).toBe('tab_kind_mixed');
+    // docs/specs/035-pdf-documents/pdf-document.md "The single-tab document": a spreadsheet takes no PDF tab.
+    expect(tabMixRefusal(true, [{ kind: 'pdf' }])).toBe('tab_kind_mixed');
   });
 
   it('refuses a tab with no kind in a spreadsheet, since it reads as a diagram', () => {
