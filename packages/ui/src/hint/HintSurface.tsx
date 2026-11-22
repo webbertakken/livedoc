@@ -31,14 +31,14 @@ import type { HintSurfaceProps } from './useHint';
 const LOOK: Record<HintKind, { surface: string; arrow: string; gap: number; arrowPx: number }> = {
   tooltip: {
     surface:
-      'max-w-xs rounded-md bg-slate-900 px-2 py-1 text-xs font-medium leading-snug text-white shadow-md shadow-slate-900/20 dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40',
+      'max-w-xs rounded-control bg-slate-900 px-2 py-1 text-supporting text-white shadow-md shadow-slate-900/20 dark:border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40',
     arrow: 'bg-slate-900 dark:border-slate-700 dark:bg-slate-900',
     gap: TOOLTIP_GAP_PX,
     arrowPx: TOOLTIP_ARROW_PX,
   },
   'hover-card': {
     surface:
-      'w-56 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-950/40',
+      'w-56 rounded-menu border border-slate-200 bg-white px-3 py-2 text-left shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-950/40',
     arrow: 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800',
     gap: HOVER_CARD_GAP_PX,
     arrowPx: HOVER_CARD_ARROW_PX,
@@ -46,7 +46,7 @@ const LOOK: Record<HintKind, { surface: string; arrow: string; gap: number; arro
   // The hover card's surface, wider and with a small inset, so a picture sits in a frame.
   preview: {
     surface:
-      'w-80 rounded-lg border border-slate-200 bg-white p-2 text-left shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-950/40',
+      'w-80 rounded-menu border border-slate-200 bg-white p-2 text-left shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-950/40',
     arrow: 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800',
     gap: HOVER_CARD_GAP_PX,
     arrowPx: HOVER_CARD_ARROW_PX,

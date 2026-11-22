@@ -25,6 +25,21 @@ describe('HoverCard', () => {
     expect(card.className).toContain('pointer-events-auto');
   });
 
+  // docs/specs/004-interface-design/sizing.md: the title reads at 14 px regular, the description at 12.
+  it('sets its title at the reading size and its description as supporting text', () => {
+    render(
+      <HoverCard title="Zoom in" description="Zoom in by 10%.">
+        <button type="button" aria-label="Zoom in" />
+      </HoverCard>,
+    );
+    fireEvent.pointerEnter(screen.getByRole('button'), { pointerType: 'mouse' });
+    fireEvent.pointerMove(screen.getByRole('button'), { pointerType: 'mouse' });
+    const [title, description] = [...screen.getByRole('tooltip').querySelectorAll('p')];
+    expect(title?.className).toContain('text-body');
+    expect(title?.className).not.toContain('font-semibold');
+    expect(description?.className).toContain('text-supporting');
+  });
+
   it('shows nothing while disabled, keeping the same control so it keeps its focus', () => {
     const { rerender } = render(
       <HoverCard title="Explorer">
