@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
+    "validate:files": "vitest run --config vitest.validate.config.ts",
     "clean": "rm -rf node_modules .turbo coverage"
   },
   "dependencies": {

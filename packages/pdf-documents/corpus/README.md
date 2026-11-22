@@ -9,7 +9,8 @@ Each opens with the pages `manifest.json` says, or is refused by the name it say
 | `pdfium/` | PDFium's `testing/resources`, as they are: the smallest file of each thing a reader meets in a PDF | BSD-3-Clause, its notice in `pdfium/LICENSE` |
 
 - `manifest.json` names each file with what it holds, its SHA-256 and size, its pages or the refusal it is met with,
-  its open password where it has one, and whether it opens only by being repaired.
+  its open password where it has one, whether it opens only by being repaired, and whether the writer cannot open
+  it (a password outside ASCII under the older security handlers: it is read, and a bake of it is refused by name).
 - Only files under a permissive licence, or made by LiveDoc's own scripts, live here
   ([The corpus and the validators](../../../docs/research/pdf-documents/corpus-and-validators.md#licences-and-what-may-live-in-the-repository)).
   Files tests make themselves are in `src/testing/fixtures.ts`, never committed as files.

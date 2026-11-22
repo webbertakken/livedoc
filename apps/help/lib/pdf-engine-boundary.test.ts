@@ -14,6 +14,8 @@ const ALLOWED = [
   'packages/pdf-documents/src/engine/',
   'packages/pdf-documents/src/testing/',
   'packages/pdf-documents/package.json',
+  // The corpus names where its files came from: other software's test files, never code (corpus/README.md).
+  'packages/pdf-documents/corpus/',
   // The licences page names every work that ships, and the texts it shows (third-party-licences.md).
   'packages/licences/',
   // The measure reads the engine's binary by its file's name in the export (performance.md "How it is measured").

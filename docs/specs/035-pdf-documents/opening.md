@@ -92,6 +92,10 @@ Fork F9 `(default)`.
 - **Inside LiveDoc, sharing decides who reads.** The password guards the file wherever it travels; marks and comments
   people make are LiveDoc's own content, guarded by the document's share roles. The surface loads no live change until
   the engine has opened the file.
+- **A file the writer cannot open with its password is read and never written**: one protected by the older security
+  handlers (revisions 2 to 4) with a password outside ASCII. It opens, draws and takes marks; a bake of it is refused
+  by name (`unreadable`), and Download says "This PDF couldn't be written. Your changes are safe." A known gap of
+  the writer, pinned by two files of the corpus.
 - A protected PDF is baked only where its password is: in a browser that was given it, or the CLI. LiveDoc's servers
   never bake it, draw it or read its text: it has no thumbnail but a lock, and no search text
   ([Live editing and storage](live-editing-and-storage.md#what-the-servers-make)).

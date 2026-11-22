@@ -216,6 +216,12 @@ jobs:
         shell: bash
         run: OFFICE_SCHEMAS_DIR="$GITHUB_WORKSPACE/.office-schemas" pnpm --filter @livedoc/sheets validate:files
 
+      # docs/specs/035-pdf-documents/saving.md "The validators' claim": every file of the PDF corpus written as an
+      # addition and as a rewrite, through qpdf and poppler's pdfsig; a missing tool fails the step.
+      - name: Validate written PDFs with qpdf and pdfsig
+        shell: bash
+        run: pnpm --filter @livedoc/pdf-documents validate:files
+
       # Saved once fetched and checked, whatever the validation found, so no failing step costs the next run its cache.
       - name: Save the office schemas
         if: always() && steps.office-schemas.outputs.cache-hit != 'true' && hashFiles('.office-schemas/ooxml/wml.rnc') != ''

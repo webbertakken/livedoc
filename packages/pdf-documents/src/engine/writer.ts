@@ -6,14 +6,17 @@ import { PDF_MAX_LAYERS, PDF_NAME_MAX_CHARS } from '../limits';
 
 /**
  * A copy of the stored file opened by the writer, with the password the file was opened with; null where the writer
- * cannot read it. The stored bytes are never touched.
+ * cannot read it, or cannot use its password. The stored bytes are never touched.
  */
 export async function openWriter(stored: Uint8Array, password: string | null): Promise<PDF | null> {
   try {
-    return await PDF.load(
+    const pdf = await PDF.load(
       stored.slice(),
       password === null ? undefined : { credentials: password },
     );
+    // The writer opens a protected file whatever password it is given, and says afterwards whether that password
+    // was the file's: one it could not use reads nothing, so there is no writer for the file.
+    return pdf.isAuthenticated ? pdf : null;
   } catch {
     return null;
   }

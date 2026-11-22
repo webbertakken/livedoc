@@ -16,6 +16,8 @@ export type CorpusFile = {
   readonly password?: string;
   /** Whether it opens only by being repaired, so its changes are written as a rewritten file. */
   readonly repaired?: boolean;
+  /** Whether the reader opens it and the writer does not: it is read, and a bake of it is refused by name. */
+  readonly unwritable?: boolean;
 };
 
 type Manifest = { readonly folder: string; readonly files: readonly CorpusFile[] };

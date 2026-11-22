@@ -131,7 +131,8 @@
       "sha256": "267945749086981b8727c4931cfc8a24973c3aa5819ea8a392fa8bd0d637ee84",
       "bytes": 1021,
       "pages": 1,
-      "password": "âge"
+      "password": "âge",
+      "unwritable": true
     },
     {
       "file": "encrypted/encrypted_hello_world_r3.pdf",
@@ -139,7 +140,8 @@
       "sha256": "cdbfd4f6728786dc70c7514bd5c669a38b03bba38be3e91ec46ccb02168b9ad3",
       "bytes": 1033,
       "pages": 1,
-      "password": "âge"
+      "password": "âge",
+      "unwritable": true
     },
     {
       "file": "encrypted/encrypted_hello_world_r5.pdf",

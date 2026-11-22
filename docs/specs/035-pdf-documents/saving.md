@@ -131,6 +131,11 @@ everyone on the document; every client reloads the pages it shows, keeping its p
 - In tests, every baked file also passes `qpdf --check`, has its stored file as a prefix where the bake was an
   addition, keeps every earlier signature valid by poppler's `pdfsig`, and draws the same outside what changed
   ([The corpus and the validators](../../research/pdf-documents/corpus-and-validators.md#validators-and-oracles)).
+- **Built**: `pnpm --filter @livedoc/pdf-documents validate:files` writes every file of the repository's corpus
+  (`packages/pdf-documents/corpus`) as an addition and as a rewrite, in CI's Office files job, where a missing tool
+  fails the run. A written file is clean in `qpdf --check` wherever the file it came from is, and never holds an
+  error where that one holds none: a flaw a file arrived with is kept, never mended in passing. The render
+  comparison against a second renderer, and the wider corpus fetched in CI, are not built.
 - A bake LiveDoc's servers make is the same code as a browser's; a file past `PDF_SERVER_BAKE_MAX_BYTES`, or a
   protected one, is baked only where a person or the CLI is
   ([Live editing and storage](live-editing-and-storage.md#what-the-servers-make)).

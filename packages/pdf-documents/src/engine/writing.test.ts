@@ -7,6 +7,7 @@ import type { BakeResult, PdfEngine, PdfOpened } from '../engine-contract';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark } from '../mark';
 import { PdfChange, PdfChangeset } from '../pdf-change';
+import { corpusBytes, corpusFiles } from '../testing/corpus';
 import {
   embeddedFilesPdf,
   formPdf,
@@ -314,6 +315,24 @@ describe('an addition to a signed file', () => {
     const said = execFileSync('pdfsig', ['-nocert', file], { encoding: 'utf8' });
     expect(said).toContain('Signature is Valid');
     expect(said).not.toContain('Total document signed');
+  });
+});
+
+// opening.md "Passwords": a protected file the writer cannot open with its password is read and never written.
+describe('a protected file the writer cannot open', () => {
+  it('is refused a bake by name, never trapped, and is read as before', async () => {
+    const file = corpusFiles().find((held) => held.unwritable)!;
+    await engine.open(corpusBytes(file));
+    const pages = opened(await engine.unlock(file.password!));
+    const doc = PdfLiveChanges.load();
+    PdfChangeset.apply(doc, [PdfChange.turnPage(pages[0]!.name, 90)]);
+    expect(await engine.bake(PdfLiveChanges.encode(doc))).toEqual({
+      ok: false,
+      refusal: 'unreadable',
+    });
+    expect(await engine.canAppend()).toBe(false);
+    expect(await engine.layers()).toEqual([]);
+    expect((await engine.pageText(0))!.text).toContain('Hello');
   });
 });
 
