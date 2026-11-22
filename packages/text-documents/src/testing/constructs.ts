@@ -5,7 +5,7 @@ import type { Block, Paragraph } from '../model/blocks';
 import type { BorderDash, BorderLine } from '../model/props';
 import type { Table, TableCell } from '../model/tables';
 import type { Picture } from '../model/pictures';
-import { BLUE_PNG, BLUE_PNG_KEY, GREEN_PNG, GREEN_PNG_KEY } from './pictures';
+import { BLUE_PNG, BLUE_PNG_SHA, GREEN_PNG, GREEN_PNG_SHA } from './pictures';
 import { ListDefinition } from '../model/lists';
 import { ListPresets } from '../model/list-presets';
 import { PageSetup } from '../model/sections';
@@ -560,14 +560,14 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       props: {},
       ...extra,
     });
-    const cropped = picture(GREEN_PNG_KEY, 60, 40, {
+    const cropped = picture(GREEN_PNG_SHA, 60, 40, {
       alt: 'A green field',
       title: 'Field',
       crop: { top: 0.2, right: 0.05, bottom: 0, left: 0.1 },
     });
     const media = {
-      [GREEN_PNG_KEY]: { mediaType: 'image/png' as const, bytes: GREEN_PNG },
-      [BLUE_PNG_KEY]: { mediaType: 'image/png' as const, bytes: BLUE_PNG },
+      [GREEN_PNG_SHA]: { mediaType: 'image/png' as const, bytes: GREEN_PNG },
+      [BLUE_PNG_SHA]: { mediaType: 'image/png' as const, bytes: BLUE_PNG },
     };
     const p = (inlines: Paragraph['inlines']) => paragraph(format, 'normal', inlines);
     return base(
@@ -577,15 +577,15 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
           run('Before '),
           cropped,
           run(' between '),
-          picture(GREEN_PNG_KEY, 24, 17, { decorative: true }),
+          picture(GREEN_PNG_SHA, 24, 17, { decorative: true }),
           run('.'),
         ]),
-        p([picture(BLUE_PNG_KEY, 30, 30, { link: 'https://docs.nu/', alt: 'Blue' })]),
+        p([picture(BLUE_PNG_SHA, 30, 30, { link: 'https://docs.nu/', alt: 'Blue' })]),
         {
           type: 'table',
           columns: [200],
           headerRows: 0,
-          rows: [{ cells: [{ blocks: [p([picture(BLUE_PNG_KEY, 12, 12)])], props: {} }] }],
+          rows: [{ cells: [{ blocks: [p([picture(BLUE_PNG_SHA, 12, 12)])], props: {} }] }],
         },
         p([run('After.')]),
       ],
@@ -594,7 +594,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         section: {
           ...TextDocument.blank({ format }).section,
           headers: {
-            header: { default: { blocks: [p([run('Logo '), picture(BLUE_PNG_KEY, 18, 18)])] } },
+            header: { default: { blocks: [p([run('Logo '), picture(BLUE_PNG_SHA, 18, 18)])] } },
           },
         },
       },

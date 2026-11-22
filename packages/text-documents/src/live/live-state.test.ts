@@ -28,7 +28,7 @@ import {
 } from './live-names';
 import { liveNoteIds, liveStoryIds, storyFragment } from './live-stories';
 import { CONSTRUCTS } from '../testing/constructs';
-import { BLUE_PNG_KEY, GREEN_PNG_KEY } from '../testing/pictures';
+import { BLUE_PNG_SHA, GREEN_PNG_SHA } from '../testing/pictures';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
 const corpus = ['libreoffice', 'word', 'google'].flatMap((maker) =>
@@ -273,7 +273,7 @@ describe('the live layout', () => {
         ['text', PICTURE, 'text', PICTURE, 'text'],
       );
       expect([...doc.getMap(MEDIA_MAP).keys()].sort()).toEqual(
-        [BLUE_PNG_KEY, GREEN_PNG_KEY].sort(),
+        [BLUE_PNG_SHA, GREEN_PNG_SHA].sort(),
       );
       const only = {
         ...document,

@@ -14,7 +14,7 @@ import type { TextDocument } from './model/text-document';
 import { modelOf } from './testing/compare';
 import { CONSTRUCTS } from './testing/constructs';
 import { docx, fodt, odt, W_P } from './testing/packages';
-import { BLUE_PNG, BLUE_PNG_KEY, GREEN_PNG, GREEN_PNG_KEY, solidPng } from './testing/pictures';
+import { BLUE_PNG, BLUE_PNG_SHA, GREEN_PNG, GREEN_PNG_SHA, solidPng } from './testing/pictures';
 
 const decoder = new TextDecoder();
 const read = async (bytes: Uint8Array, limits?: ReadLimits) => {
@@ -104,7 +104,7 @@ const loOdt = (frames: string, graphic = LO_GRAPHIC(), bytes = GREEN_PNG) =>
 
 const TOM: Omit<Picture, 'width' | 'height' | 'crop'> = {
   type: 'picture',
-  media: GREEN_PNG_KEY,
+  media: GREEN_PNG_SHA,
   alt: 'A cat',
   title: 'Tom',
   props: {},
@@ -123,7 +123,7 @@ describe('a picture read from a file', () => {
       },
     ]);
     expect(document.media).toEqual({
-      [GREEN_PNG_KEY]: { mediaType: 'image/png', bytes: GREEN_PNG, part: 'word/media/image2.png' },
+      [GREEN_PNG_SHA]: { mediaType: 'image/png', bytes: GREEN_PNG, part: 'word/media/image2.png' },
     });
     // Its entry and relationship are the model's now, no longer kept.
     const source = document.source?.format === 'ooxml' ? document.source : undefined;
@@ -142,7 +142,7 @@ describe('a picture read from a file', () => {
         crop: { top: 0.2, right: 0.0503, bottom: 0, left: 0.1 },
       },
     ]);
-    expect(document.media?.[GREEN_PNG_KEY]?.part).toBe(
+    expect(document.media?.[GREEN_PNG_SHA]?.part).toBe(
       'Pictures/10000000000000820000005CDC6B3555.png',
     );
     const source = document.source?.format === 'odf' ? document.source : undefined;
@@ -172,9 +172,9 @@ describe('a picture read from a file', () => {
       ),
     );
     expect(picturesOf(document)).toEqual([
-      { type: 'picture', media: GREEN_PNG_KEY, width: 10, height: 5, props: {} },
+      { type: 'picture', media: GREEN_PNG_SHA, width: 10, height: 5, props: {} },
     ]);
-    expect(document.media?.[GREEN_PNG_KEY]).toEqual({ mediaType: 'image/png', bytes: GREEN_PNG });
+    expect(document.media?.[GREEN_PNG_SHA]).toEqual({ mediaType: 'image/png', bytes: GREEN_PNG });
   });
 
   it("refuses a flat file whose picture's header claims too many pixels", async () => {
@@ -203,8 +203,8 @@ describe('a picture read from a file', () => {
         },
       ),
     );
-    expect(picturesOf(document).map((p) => p.media)).toEqual([GREEN_PNG_KEY, GREEN_PNG_KEY]);
-    expect(Object.keys(document.media ?? {})).toEqual([GREEN_PNG_KEY]);
+    expect(picturesOf(document).map((p) => p.media)).toEqual([GREEN_PNG_SHA, GREEN_PNG_SHA]);
+    expect(Object.keys(document.media ?? {})).toEqual([GREEN_PNG_SHA]);
   });
 
   it.each([
@@ -339,10 +339,10 @@ describe('pictures written', () => {
     const odf = await readOdfPackage(new Uint8Array(odtBytes));
     if (!odf.ok) throw new Error(odf.rejection);
     expect([...odf.package.entries.keys()].filter((n) => n.startsWith('Pictures/'))).toEqual([
-      `Pictures/${GREEN_PNG_KEY}.png`,
-      `Pictures/${BLUE_PNG_KEY}.png`,
+      `Pictures/${GREEN_PNG_SHA}.png`,
+      `Pictures/${BLUE_PNG_SHA}.png`,
     ]);
-    expect(odf.package.mediaTypes.get(`Pictures/${GREEN_PNG_KEY}.png`)).toBe('image/png');
+    expect(odf.package.mediaTypes.get(`Pictures/${GREEN_PNG_SHA}.png`)).toBe('image/png');
     const content = decoder.decode(odf.package.entries.get('content.xml'));
     const styles = decoder.decode(odf.package.entries.get('styles.xml'));
     const names = [...(content + styles).matchAll(/draw:name="([^"]*)"/g)].map((m) => m[1]).sort();
@@ -354,8 +354,8 @@ describe('pictures written', () => {
     );
     if (!ooxml.ok) throw new Error(ooxml.rejection);
     expect([...ooxml.package.parts.keys()].filter((n) => n.startsWith('word/media/'))).toEqual([
-      `word/media/${GREEN_PNG_KEY}.png`,
-      `word/media/${BLUE_PNG_KEY}.png`,
+      `word/media/${GREEN_PNG_SHA}.png`,
+      `word/media/${BLUE_PNG_SHA}.png`,
     ]);
     const main = decoder.decode(ooxml.package.parts.get('word/document.xml'));
     expect(main).toContain(
@@ -373,7 +373,7 @@ describe('pictures written', () => {
     const odf = await readOdfPackage(new Uint8Array(write(withoutBlue, 'odt')));
     if (!odf.ok) throw new Error(odf.rejection);
     expect([...odf.package.entries.keys()].filter((n) => n.startsWith('Pictures/'))).toEqual([
-      `Pictures/${GREEN_PNG_KEY}.png`,
+      `Pictures/${GREEN_PNG_SHA}.png`,
     ]);
   });
 
@@ -398,7 +398,7 @@ describe('pictures converted', () => {
   it("names the converted media anew, the arriving entry's name being the other format's", async () => {
     const word = await read(wordDocx(wordPicture()));
     const { document } = convertTextDocument(word, 'odf');
-    expect(document.media?.[GREEN_PNG_KEY]).toEqual({ mediaType: 'image/png', bytes: GREEN_PNG });
+    expect(document.media?.[GREEN_PNG_SHA]).toEqual({ mediaType: 'image/png', bytes: GREEN_PNG });
   });
 });
 
