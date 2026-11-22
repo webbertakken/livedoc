@@ -4,6 +4,8 @@ LiveDoc's chrome is drawn on **one sizing scale**: one compact set of type sizes
 and icon sizes, the same on every surface of every app.
 It is taken from the [office shell](office-shell.md)'s measured sizes, one step lower in height (Webber, 2026-11-21).
 There is no density setting and no second scale: everyone sees the same sizes.
+Power user mode keeps no denser rows of its own: a denser row for some people would be a density setting.
+So the Explorer's half-height Details rows retired with that ruling (director, 2026-11-22).
 
 Chrome is everything that is not content: toolbars, menus, rows, fields, buttons, dialogs, panels and pages' own text.
 Content is never on the scale: elements and text on the canvas, a text document's page, a sheet's cells, a form's

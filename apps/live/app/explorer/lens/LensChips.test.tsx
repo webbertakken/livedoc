@@ -119,3 +119,24 @@ describe('LensChips', () => {
     expect(screen.getByText('“colour:red” isn’t a filter, so it’s searched as text.')).toBeTruthy();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md: a chip is the chip step at the body type, 44 px on touch; weight marks only
+// the values a set chip holds.
+describe('LensChips on the sizing scale', () => {
+  const has = (className: string, token: string) => className.split(/\s+/).includes(token);
+
+  it('draws each chip and Clear at the chip step, 44 px on touch, at the body step', () => {
+    renderChips('template:kanban');
+    for (const chip of [
+      screen.getByRole('button', { name: 'Space, any' }),
+      screen.getByRole('button', { name: 'Clear' }),
+    ]) {
+      expect(has(chip.className, 'h-chip')).toBe(true);
+      expect(has(chip.className, 'pointer-coarse:h-11')).toBe(true);
+      expect(has(chip.className, 'text-body')).toBe(true);
+      expect(chip.className).not.toMatch(/font-(medium|semibold)/);
+    }
+    const set = screen.getByRole('button', { name: 'Template: Kanban' });
+    expect(set.querySelector('.font-medium')?.textContent).toBe('Kanban');
+  });
+});

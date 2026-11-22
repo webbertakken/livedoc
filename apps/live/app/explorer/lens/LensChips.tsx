@@ -12,7 +12,7 @@ import { LensIssues } from './LensStates';
 // multi-select listbox; Made by AI, a dimension of one value, is a toggle. Clear empties the lens.
 
 const CHIP =
-  'optical-edges inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-medium ring-1 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
+  'optical-edges inline-flex h-chip shrink-0 items-center gap-2 rounded-full px-3 text-body ring-1 transition pointer-coarse:h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
 const CHIP_UNSET =
   'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800';
 const CHIP_SET =
@@ -37,7 +37,7 @@ export function LensChips({
       <div
         role="group"
         aria-label="Filters"
-        className="-mx-1 flex items-center gap-1.5 overflow-x-auto px-1 py-1"
+        className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 py-1"
       >
         {chips.map((chip) =>
           chip.control === 'toggle' ? (
@@ -50,7 +50,7 @@ export function LensChips({
           type="button"
           onClick={onClear}
           // Always laid out, so showing it moves nothing (D85).
-          className={`${active ? '' : 'invisible '}ml-1 inline-flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-600 underline-offset-2 hover:text-slate-900 hover:underline focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-300 dark:hover:text-white`}
+          className={`${active ? '' : 'invisible '}ml-1 inline-flex h-chip shrink-0 items-center rounded-control px-2 text-body text-slate-600 pointer-coarse:h-11 underline-offset-2 hover:text-slate-900 hover:underline focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-300 dark:hover:text-white`}
           aria-hidden={!active}
           tabIndex={active ? undefined : -1}
         >
@@ -115,9 +115,7 @@ function MultipleChip({
       >
         <span>{chip.label}</span>
         {set ? (
-          <span className="max-w-[12rem] truncate font-semibold">
-            {chip.valueLabels.join(', ')}
-          </span>
+          <span className="max-w-[12rem] truncate font-medium">{chip.valueLabels.join(', ')}</span>
         ) : null}
         <ChevronDownIcon size={10} />
       </button>
@@ -220,7 +218,7 @@ function ChipListbox({
         aria-activedescendant={optionId(active)}
         tabIndex={0}
         onKeyDown={onKeyDown}
-        className="fixed z-[var(--z-popover)] w-56 rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
+        className="fixed z-[var(--z-popover)] w-56 rounded-menu border border-slate-200 bg-white py-1 text-body shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
         style={{ left: pos.left, top: pos.top }}
       >
         {chip.options.map((option, index) => (
@@ -235,11 +233,11 @@ function ChipListbox({
               onChoose(option.value);
             }}
             onMouseEnter={() => setActive(index)}
-            className={`flex min-h-8 cursor-pointer items-center gap-2 px-3 py-1.5 text-slate-700 dark:text-slate-200 ${
+            className={`flex min-h-row cursor-pointer items-center gap-2 px-3 text-slate-700 pointer-coarse:min-h-11 dark:text-slate-200 ${
               index === active ? 'bg-slate-100 dark:bg-slate-800' : ''
             } ${index === 0 ? 'border-b border-slate-100 dark:border-slate-800' : ''}`}
           >
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center text-brand-700 dark:text-brand-300">
+            <span className="flex size-icon-row shrink-0 items-center justify-center text-brand-700 dark:text-brand-300">
               {option.selected ? <CheckIcon size={12} /> : null}
             </span>
             <span className="truncate">{option.label}</span>

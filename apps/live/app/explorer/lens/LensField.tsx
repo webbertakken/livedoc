@@ -30,9 +30,9 @@ const FIELD_PLACEHOLDER = 'Search or filter documents';
 
 const LOOK = {
   wrap: 'relative w-full sm:w-64 lg:w-[22rem]',
-  box: 'h-9 gap-1.5 rounded-lg border border-slate-300 bg-white pl-2.5 pr-1 text-sm focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/40 dark:border-slate-600 dark:bg-slate-900',
-  glyph: 14,
-  input: 'text-sm',
+  box: 'h-field gap-2 rounded-control border border-slate-300 bg-white pl-2 pr-1 text-body focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/40 dark:border-slate-600 dark:bg-slate-900',
+  glyph: 16,
+  input: 'text-body',
 } as const;
 
 export function LensField({
@@ -175,7 +175,7 @@ export function LensField({
             <span
               key={pill.dimension}
               data-lens-pill={pill.dimension}
-              className={`inline-flex h-6 shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full pl-2 text-[11px] font-medium ${
+              className={`inline-flex h-chip shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full pl-2 text-supporting ${
                 muted
                   ? 'border border-dashed border-slate-400 bg-slate-50 text-slate-600 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-300'
                   : 'bg-brand-50 text-brand-800 ring-1 ring-brand-300 dark:bg-brand-500/15 dark:text-brand-100 dark:ring-brand-400/50'
@@ -204,7 +204,7 @@ export function LensField({
                   // Back to the words once the pill is gone: focusing now would read the old string.
                   requestAnimationFrame(() => field.current?.focus());
                 }}
-                className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="ml-0.5 flex size-chip items-center justify-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:outline-2 focus-visible:outline-brand-500"
               >
                 <CloseIcon size={10} />
               </button>
@@ -242,7 +242,7 @@ export function LensField({
         role="listbox"
         aria-label="Suggestions"
         hidden={!listOpen}
-        className="absolute left-0 right-0 top-full z-[var(--z-popover)] mt-1 max-h-72 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
+        className="absolute left-0 right-0 top-full z-[var(--z-popover)] mt-1 max-h-72 overflow-y-auto rounded-menu border border-slate-200 bg-white py-1 text-body shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
       >
         {listOpen
           ? suggestions.map((s, index) => (
@@ -255,18 +255,18 @@ export function LensField({
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => accept(s)}
                 onMouseEnter={() => setActive(index)}
-                className={`flex min-h-8 cursor-pointer items-center gap-2 px-3 py-1.5 ${
+                className={`flex min-h-row cursor-pointer items-center gap-2 px-3 pointer-coarse:min-h-11 ${
                   index === active ? 'bg-slate-100 dark:bg-slate-800' : ''
                 }`}
               >
                 <span className="truncate text-slate-900 dark:text-slate-100">{s.label}</span>
                 {s.kind === 'value' ? (
-                  <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
                     {s.dimensionLabel}
                   </span>
                 ) : null}
                 {s.matchesNothing ? (
-                  <span className="ml-auto shrink-0 text-xs text-amber-800 dark:text-amber-200">
+                  <span className="ml-auto shrink-0 text-supporting text-amber-800 dark:text-amber-200">
                     No matches
                   </span>
                 ) : null}
