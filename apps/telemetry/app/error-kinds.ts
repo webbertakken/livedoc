@@ -18,14 +18,46 @@ export const kindOf = (type: string | null) => (type ?? '').split('.')[0] ?? '';
 export const RECOVERY_TYPES: readonly string[] = ['RealtimeResync', 'StaleChunkReload'];
 export const isRecovery = (type: string | null) => RECOVERY_TYPES.includes(kindOf(type));
 
-// The api worker's own crash report: `Internal.<Method>.<Route>`, where the
-// second part is an HTTP method (apiRouteLabel). The MCP worker also reports
-// `Internal.<Tool>` when its call to the api never completed; that is a
-// request a caller saw fail, like the editor's Network kind, so it stays with
-// the failed requests. A bare `Internal` predates #112 and is counted as a
-// server crash, the api worker having been its main source.
+// Where a request a caller saw fail (`Error·Api`) is counted: exactly one card each, so the cards partition the
+// category and none counts a row twice (docs/specs/017-telemetry/telemetry.md, Health › Exceptions).
+//
+//   - ServerFault: the caller saw the server fail. Every `Http5xx` (editor, CLI, MCP, email sends) and an email
+//     provider's own error code (`<Code>.SendEmail`).
+//   - Refusal: the api said no, correctly: every other `Http<status>`, and the editor refusing a request before
+//     sending it (`Auth.NoSessionToken`, `Confined.<Method>.<Route>`).
+//   - DroppedConnection: the request never got an answer. `Network.*`, and the CLI's and MCP worker's
+//     `Internal.<Verb|Tool>`, whose second part is a verb or a tool rather than an HTTP method.
+//   - ServerCrash: the api worker's own `Internal.<Method>.<Route>`. A bare `Internal` predates #112 and is counted
+//     here, the api worker having been its main source.
+//   - ClientException: the editor's own throw on a request path, never answered by the server
+//     (`SaveFailed.<Kind>`, `LoadFailed.<Surface>.<Kind>`).
+//
+// A kind this does not know lands in ServerFault, where someone looks; a test walks every kind the code emits.
+export type ApiFailureCard =
+  'ServerFault' | 'Refusal' | 'DroppedConnection' | 'ServerCrash' | 'ClientException';
+
 const HTTP_METHODS = new Set(['Get', 'Post', 'Put', 'Patch', 'Delete', 'Head', 'Options']);
-export function isServerCrash(type: string | null): boolean {
-  const [kind, second] = (type ?? '').split('.');
-  return kind === 'Internal' && (second === undefined || HTTP_METHODS.has(second));
+const HTTP_STATUS = /^Http(\d{3})$/;
+const REFUSED_BEFORE_SENDING = new Set(['Auth', 'Confined']);
+const CLIENT_THROWS = new Set(['SaveFailed', 'LoadFailed']);
+
+export function apiFailureCard(type: string | null): ApiFailureCard {
+  const [kind = '', second] = (type ?? '').split('.');
+  const status = HTTP_STATUS.exec(kind);
+  if (status) return Number(status[1]) >= 500 ? 'ServerFault' : 'Refusal';
+  if (kind === 'Internal') {
+    return second === undefined || HTTP_METHODS.has(second) ? 'ServerCrash' : 'DroppedConnection';
+  }
+  if (kind === 'Network') return 'DroppedConnection';
+  if (REFUSED_BEFORE_SENDING.has(kind)) return 'Refusal';
+  if (CLIENT_THROWS.has(kind)) return 'ClientException';
+  return 'ServerFault';
 }
+
+export const isServerFault = (type: string | null) => apiFailureCard(type) === 'ServerFault';
+export const isRefusal = (type: string | null) => apiFailureCard(type) === 'Refusal';
+export const isDroppedConnection = (type: string | null) =>
+  apiFailureCard(type) === 'DroppedConnection';
+export const isServerCrash = (type: string | null) => apiFailureCard(type) === 'ServerCrash';
+export const isApiClientException = (type: string | null) =>
+  apiFailureCard(type) === 'ClientException';

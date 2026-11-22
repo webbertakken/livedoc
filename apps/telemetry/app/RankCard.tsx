@@ -41,6 +41,8 @@ export function RankCard({
 
 type RankListProps = {
   category: string;
+  // The ranking's action. Each row draws its line from its own category and action, so a ranking that gathers
+  // rows of two actions (Client Exceptions: Error·Client plus the editor's own Error·Api throws) reads each right.
   action: string;
   items: TelemetryCount[];
   daily: TelemetryDaily | undefined;
@@ -62,7 +64,6 @@ type RankListProps = {
 // The ranked rows, inside RankCard's frame.
 function RankList({
   category,
-  action,
   items,
   daily,
   emptyLabel,
@@ -95,7 +96,7 @@ function RankList({
         // among those that have any data.
         const isTop = !ordered && items.length > 1 && i === 0;
         const series = daily
-          ? aliasedSeries(daily.byMetric, category, action, row.type, aliases)
+          ? aliasedSeries(daily.byMetric, row.category, row.action, row.type, aliases)
           : undefined;
         return (
           <li key={row.type} className="flex items-center gap-3">

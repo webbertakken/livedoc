@@ -23,7 +23,8 @@ export type Metric = {
   allTypes?: boolean; // sum across every type of category·action
   // Sum across the types this picks (e.g. the page paths one app serves,
   // docs/specs/017-telemetry/page-view-telemetry.md). Takes precedence over `type` / `allTypes`.
-  typeIn?: (type: string | null) => boolean;
+  // The action is passed for a metric that spans several (`actionIn`) and picks different types from each.
+  typeIn?: (type: string | null, action?: string) => boolean;
   title: string;
   blurb?: string; // overrides eventExplanation (needed for aggregates)
   rising?: Rising;
@@ -119,7 +120,7 @@ export const metricKey = (m: Metric): string =>
 export function matches(m: Metric, category: string, action: string, type: string | null): boolean {
   if (category !== m.category) return false;
   if (action !== m.action && !m.actionIn?.includes(action)) return false;
-  if (m.typeIn) return m.typeIn(type);
+  if (m.typeIn) return m.typeIn(type, action);
   return m.allTypes ? true : type === (m.type ?? null);
 }
 

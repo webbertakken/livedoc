@@ -1,22 +1,50 @@
 // Error health and the help centre (docs/specs/017-telemetry/telemetry.md).
 // Part of the metric catalogue: import from ../metric-catalogue.
 
-import { isRecovery, isServerCrash, kindOf } from '../error-kinds';
+import {
+  isApiClientException,
+  isDroppedConnection,
+  isRecovery,
+  isRefusal,
+  isServerCrash,
+  isServerFault,
+  kindOf,
+} from '../error-kinds';
 import type { Metric, MetricStack } from '../metric-series';
 import { chart } from './helpers';
 
-// Error health (Exceptions tab). One side of each failure only: a server crash
-// is reported twice, the api worker's Internal.<Method>.<Route> and the Http500
-// its caller saw, so Failed Requests and Server Crashes are read side by side,
-// never added.
-export const FAILED_REQUESTS: Metric = {
+// Error health (Exceptions tab). Every request a caller saw fail (`Error·Api`) lands in exactly one card
+// (apiFailureCard in error-kinds.ts). One side of each failure only: a server crash is reported twice, the api
+// worker's Internal.<Method>.<Route> and the Http500 its caller saw, so Server Faults and Server Crashes are read
+// side by side, never added.
+export const SERVER_FAULTS: Metric = {
   rising: 'bad',
   category: 'Error',
   action: 'Api',
-  typeIn: (type) => !isServerCrash(type),
-  title: 'Failed Requests',
+  typeIn: isServerFault,
+  title: 'Server Faults',
   blurb:
-    'Requests a caller saw fail: non-2xx responses and dropped requests in the editor, failed api calls inside MCP tools, and failed email sends. A server crash appears here as the Http500 its caller saw.',
+    'Requests the LiveDoc server failed: a 5xx answer seen by the editor, the CLI or an MCP tool, and email sends that failed. Zero is the goal. A server crash appears here as the Http500 its caller saw.',
+};
+
+export const REFUSALS: Metric = {
+  rising: 'neutral',
+  category: 'Error',
+  action: 'Api',
+  typeIn: isRefusal,
+  title: 'Refusals',
+  blurb:
+    'Requests the server said no to, correctly: a session that ran out, access that was removed, a document in the Trash. Also the editor holding back a request it knew would be refused. These grow with use, so watch for a sudden jump rather than the level.',
+};
+
+export const DROPPED_CONNECTIONS: Metric = {
+  rising: 'bad',
+  category: 'Error',
+  action: 'Api',
+  typeIn: isDroppedConnection,
+  title: 'Dropped Connections',
+  blurb:
+    'Requests that never got an answer: the connection dropped, or the CLI or an MCP tool gave up waiting. Mostly the network between the person and us, rarely a fault of ours.',
 };
 
 export const SERVER_CRASHES: Metric = {
@@ -26,17 +54,20 @@ export const SERVER_CRASHES: Metric = {
   typeIn: isServerCrash,
   title: 'Server Crashes',
   blurb:
-    'Crashes the LiveDoc server reported about itself, by endpoint. Most also appear as an Http500 in Failed Requests, so read the two side by side rather than adding them.',
+    'Crashes the LiveDoc server reported about itself, by endpoint. Most also appear as an Http500 in Server Faults, so read the two side by side rather than adding them.',
 };
 
+// Error·Client minus the recoveries, plus the editor's own throws on a save or load path, which the server never
+// answered (SaveFailed, LoadFailed): Error·Api rows, but no request the server failed, refused or dropped.
 export const CLIENT_EXCEPTIONS: Metric = {
   rising: 'bad',
   category: 'Error',
   action: 'Client',
-  typeIn: (type) => !isRecovery(type),
+  actionIn: ['Api'],
+  typeIn: (type, action) => (action === 'Api' ? isApiClientException(type) : !isRecovery(type)),
   title: 'Client Exceptions',
   blurb:
-    'Uncaught exceptions, unhandled promise rejections, and editor areas that failed to render, in the editor and help centre.',
+    'Uncaught exceptions, unhandled promise rejections, and editor areas that failed to render, in the editor and help centre, and saves or loads the editor itself broke before the server could answer.',
 };
 
 export const REALTIME_RESYNCS: Metric = {
@@ -70,24 +101,26 @@ export const WARNINGS: Metric = {
     'Not a failure: a degradation the author was carried through, such as a spent AI budget reading the photo on the device instead. A rising line means a fallback is doing more of the work.',
 };
 
-// Headed by the errors someone actually hit, each once: failed requests plus
-// client exceptions. Server crashes would count those failures a second time
-// and resyncs are recoveries, so neither joins the headline.
+// Headed by the faults someone actually hit, each once: server faults plus client exceptions. Server crashes would
+// count those faults a second time, refusals are the api answering correctly, dropped connections never reached us,
+// and resyncs are recoveries, so none of them joins the headline.
 export const EXCEPTIONS: MetricStack = {
   rising: 'bad',
   stack: true,
   title: 'Exceptions',
   blurb:
-    'Errors people hit, from failed requests and client exceptions, beside the server crashes behind them, the realtime resyncs and stale build reloads that recovered, and the warnings the author was carried through. Zero is the goal.',
+    'Faults people hit, from the server and in the editor, beside the server crashes behind them, the refusals and dropped connections that were not faults, the realtime resyncs and stale build reloads that recovered, and the warnings the author was carried through. Zero is the goal.',
   members: [
-    FAILED_REQUESTS,
+    SERVER_FAULTS,
     SERVER_CRASHES,
+    REFUSALS,
+    DROPPED_CONNECTIONS,
     CLIENT_EXCEPTIONS,
     REALTIME_RESYNCS,
     STALE_CHUNK_RELOADS,
     WARNINGS,
   ],
-  headline: [FAILED_REQUESTS, CLIENT_EXCEPTIONS],
+  headline: [SERVER_FAULTS, CLIENT_EXCEPTIONS],
   seeAlso: { section: 'exceptions', label: 'See Each Error in Health' },
 };
 

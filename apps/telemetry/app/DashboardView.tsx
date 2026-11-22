@@ -13,7 +13,7 @@ import {
   ELEMENTS_ADDED,
   EMAILS_SENT,
   EXCEPTIONS,
-  FAILED_REQUESTS,
+  SERVER_FAULTS,
   FORMS,
   HELP_CENTRE,
   BUG_REPORTS,
@@ -69,7 +69,7 @@ export const GROUPS: MetricGroup[] = [
       SIGN_UPS,
       DOCUMENTS_CREATED,
       MULTIPLAYER_SESSIONS,
-      FAILED_REQUESTS,
+      SERVER_FAULTS,
     ],
   },
   {
