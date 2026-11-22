@@ -3,7 +3,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createPdfEngine } from '@livedoc/pdf-documents/engine';
 import type { PdfEngine } from '@livedoc/pdf-documents';
-import { FIXTURE_LINE, protectedPdf, readerWasm, textPdf } from '@livedoc/pdf-documents/testing';
+import {
+  FIXTURE_LINE,
+  linksPdf,
+  outlinePdf,
+  protectedPdf,
+  readerWasm,
+  textPdf,
+} from '@livedoc/pdf-documents/testing';
 import { pdfEngineClient, type PdfEngineWorker } from './pdf-engine-client';
 import type { PdfEngineAnswer, PdfEnginePort, PdfEngineRequest } from './pdf-engine-protocol';
 import { servePdfEngine } from './pdf-engine-server';
@@ -85,6 +92,21 @@ describe('the engine over a worker thread', () => {
     expect(opened.ok && opened.document.encrypted).toBe(true);
   });
 
+  // security.md "Links and actions": what crosses is where a link leads, as plain values; nothing is followed.
+  it('reads the outline and a page’s links across the worker', async () => {
+    const engine = pdfEngineClient(joined(() => createPdfEngine({ wasm: wasm() })).worker);
+    await engine.open(outlinePdf());
+    expect((await engine.outline()).items.map((item) => item.title)).toContain('Website');
+    await engine.open(linksPdf());
+    expect((await engine.links(0)).map((link) => link.target.kind)).toEqual([
+      'place',
+      'address',
+      'refused',
+      'file',
+      'action',
+    ]);
+  });
+
   it('starts the engine once, on the first call', async () => {
     const start = vi.fn(() => createPdfEngine({ wasm: wasm() }));
     const engine = pdfEngineClient(joined(start).worker);
@@ -106,6 +128,8 @@ describe('the engine over a worker thread', () => {
     expect(await engine.unlock('a password')).toEqual({ ok: false, refusal: 'pdf_stopped' });
     expect(await engine.drawPage(0, 1)).toBeNull();
     expect(await engine.pageText(0)).toBeNull();
+    expect(await engine.outline()).toEqual({ items: [], cut: false });
+    expect(await engine.links(0)).toEqual([]);
     expect(await engine.selectText(0, { x: 0, y: 0 }, { x: 1, y: 1 })).toBeNull();
     expect(await engine.fileMarks(0)).toEqual([]);
     expect(await engine.bake(Uint8Array.of(0, 0))).toEqual({ ok: false, refusal: 'unreadable' });

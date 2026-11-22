@@ -115,3 +115,118 @@ export async function protectedPdf(
   pdf.setProtection(protection);
   return (await pdf.save()) as Uint8Array<ArrayBuffer>;
 }
+
+/**
+ * Two pages and an outline: "Chapter 1" (to a point on page one) holding "Section 1.1" (to page two), then
+ * "Website" (an address), "Run it" (a launch) and "Elsewhere" (another file).
+ */
+export const outlinePdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 5 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
+    PAGE,
+    PAGE,
+    '<< /Type /Outlines /First 6 0 R /Last 10 0 R /Count 5 >>',
+    '<< /Title (Chapter 1) /Parent 5 0 R /Next 8 0 R /First 7 0 R /Last 7 0 R /Count 1 /Dest [3 0 R /XYZ 72 720 0] >>',
+    '<< /Title (Section 1.1) /Parent 6 0 R /Dest [4 0 R /Fit] >>',
+    '<< /Title (Website) /Parent 5 0 R /Prev 6 0 R /Next 9 0 R /A << /S /URI /URI (https://example.com/a) >> >>',
+    '<< /Title (Run it) /Parent 5 0 R /Prev 8 0 R /Next 10 0 R /A << /S /Launch /F (calc.exe) >> >>',
+    '<< /Title (Elsewhere) /Parent 5 0 R /Prev 9 0 R /A << /S /GoToR /F (other.pdf) /D [0 /Fit] >> >>',
+  ]);
+
+/** An outline whose second bookmark names itself as the one after it, and whose third holds its own parent. */
+export const circularOutlinePdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 4 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    '<< /Type /Outlines /First 5 0 R /Last 6 0 R /Count 2 >>',
+    '<< /Title (One) /Parent 4 0 R /Next 6 0 R /First 5 0 R /Dest [3 0 R /Fit] >>',
+    '<< /Title (Two) /Parent 4 0 R /Prev 5 0 R /Next 6 0 R /Dest [3 0 R /Fit] >>',
+  ]);
+
+/** An outline of `count` bookmarks in a row, each to the one page. */
+export function longOutlinePdf(count: number): Uint8Array<ArrayBuffer> {
+  const first = 5;
+  const items = Array.from({ length: count }, (_, at) => {
+    const next = at + 1 < count ? `/Next ${first + at + 1} 0 R` : '';
+    return `<< /Title (Bookmark ${at + 1}) /Parent 4 0 R ${next} /Dest [3 0 R /Fit] >>`;
+  });
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 4 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    `<< /Type /Outlines /First ${first} 0 R /Last ${first + count - 1} 0 R /Count ${count} >>`,
+    ...items,
+  ]);
+}
+
+const link = (bottom: number, rest: string): string =>
+  `<< /Type /Annot /Subtype /Link /Rect [72 ${bottom} 172 ${bottom + 20}] ${rest} >>`;
+
+/**
+ * Two pages; on the first, five links one under the other: to a point on page two, to an address, to a script, to
+ * another file, and a launch.
+ */
+export const linksPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [5 0 R 6 0 R 7 0 R 8 0 R 9 0 R] >>',
+    PAGE,
+    link(700, '/Dest [4 0 R /XYZ 10 20 0]'),
+    link(660, '/A << /S /URI /URI (https://example.com/a) >>'),
+    link(620, '/A << /S /URI /URI (javascript:alert\\(1\\)) >>'),
+    link(580, '/A << /S /GoToR /F (other.pdf) /D [0 /Fit] >>'),
+    link(540, '/A << /S /Launch /F (calc.exe) >>'),
+  ]);
+
+/**
+ * An outline of every other way a bookmark leads: a go-to action with a place, one with none, a script, a go-to into
+ * an embedded file, nothing at all, a page that is not in the file, and an address that is empty. And one page with
+ * a link that leads nowhere, and a highlight the file gives no name.
+ */
+export const actionsPdf = (): Uint8Array<ArrayBuffer> => {
+  const item = (n: number, title: string, rest: string, last = false): string =>
+    `<< /Title (${title}) /Parent 4 0 R ${last ? '' : `/Next ${n + 1} 0 R`} ${rest} >>`;
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 4 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [12 0 R 13 0 R] >>',
+    '<< /Type /Outlines /First 5 0 R /Last 11 0 R /Count 7 >>',
+    item(5, 'Go to', '/A << /S /GoTo /D [3 0 R /XYZ 5 6 0] >>'),
+    item(6, 'Go nowhere', '/A << /S /GoTo >>'),
+    item(7, 'Script', '/A << /S /JavaScript /JS (app.alert\\(1\\)) >>'),
+    item(8, 'Embedded', '/A << /S /GoToE /F (inner.pdf) /D [0 /Fit] >>'),
+    item(9, 'Nothing', ''),
+    item(10, 'Missing page', '/Dest [99 /Fit]'),
+    item(11, 'Empty address', '/A << /S /URI /URI () >>', true),
+    link(700, ''),
+    '<< /Type /Annot /Subtype /Highlight /Rect [72 700 172 720] /QuadPoints [72 720 172 720 72 700 172 700] >>',
+  ]);
+};
+
+/** An outline `depth` bookmarks deep, each the only child of the one before. */
+export function deepOutlinePdf(depth: number): Uint8Array<ArrayBuffer> {
+  const first = 5;
+  const items = Array.from({ length: depth }, (_, at) => {
+    const child = at + 1 < depth ? `/First ${first + at + 1} 0 R /Last ${first + at + 1} 0 R` : '';
+    return `<< /Title (Level ${at + 1}) /Parent ${at === 0 ? 4 : first + at - 1} 0 R ${child} >>`;
+  });
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 4 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    `<< /Type /Outlines /First ${first} 0 R /Last ${first} 0 R /Count 1 >>`,
+    ...items,
+  ]);
+}
+
+/** One page whose interactive form is an XFA form. */
+export const xfaPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [] /XFA 4 0 R >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    '<< /Length 0 >>\nstream\n\nendstream',
+  ]);

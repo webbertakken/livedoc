@@ -4,8 +4,11 @@
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import type {
   FileMark,
+  Outline,
+  OutlineItem,
   PageBitmap,
   PageInfo,
+  PageLink,
   PageMatrix,
   PagePoint,
   PdfDocumentInfo,
@@ -14,14 +17,19 @@ import type {
   TextSelection,
 } from '../engine-contract';
 import {
+  PDF_LINK_MAX_CHARS,
   PDF_MARK_MAX_QUADS,
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MAX_PAGE_PIXELS,
   PDF_MAX_PAGE_POINTS,
+  PDF_MAX_TREE_DEPTH,
   PDF_NAME_MAX_CHARS,
+  PDF_OUTLINE_MAX_ITEMS,
+  PDF_PAGE_MAX_LINKS,
   PDF_PAGE_TEXT_MAX_CHARS,
   PDF_PROPERTY_MAX_CHARS,
 } from '../limits';
+import { LinkTarget, type PdfActionKind } from '../link-target';
 import type { Quad } from '../mark';
 import { PageName } from '../page-name';
 import { PageText } from '../page-text';
@@ -40,6 +48,12 @@ type Runtime = {
 // FPDF_GetFormType's answers; every other is an XFA form.
 const FORM_NONE = 0;
 const FORM_FIELDS = 1;
+// FPDFAction_GetType's answers: a place here, another file, an address; the rest are named and never performed.
+const ACTION_GO_TO = 1;
+const ACTION_OTHER_FILE = 2;
+const ACTION_ADDRESS = 3;
+const ACTIONS: Readonly<Record<number, PdfActionKind>> = { 4: 'launch', 5: 'embedded-file' };
+const BYTES = new TextDecoder();
 // FPDF_GetLastError's answers.
 const ERROR_PASSWORD = 4;
 const ERROR_SECURITY = 5;
@@ -296,6 +310,142 @@ export class PdfReader {
       p.FPDFBitmap_Destroy(bitmap);
       return { width, height, rgba, toView: this.matrixOf(page, pageWidth, pageHeight) };
     });
+  }
+
+  /** A text the reader writes as bytes into a buffer it is handed, cut to `most`. */
+  private writtenBytes(most: number, ask: (buffer: number, size: number) => number): string {
+    const size = ask(0, 0);
+    // One byte is the terminator alone: no text.
+    if (size <= 1) return '';
+    const buffer = this.alloc(size);
+    ask(buffer, size);
+    const read = BYTES.decode(this.heap.slice(buffer, buffer + size - 1));
+    this.free(buffer);
+    return read.slice(0, most);
+  }
+
+  /** The place in this document a destination names, or null where it names none that is here. */
+  private placeOf(destination: number): LinkTarget | null {
+    const { p } = this;
+    const index = p.FPDFDest_GetDestPageIndex(this.doc, destination);
+    if (index < 0 || index >= this.count) return null;
+    // Three flags (whether x, y and zoom are named), then the three numbers.
+    const out = this.alloc(24);
+    const located = p.FPDFDest_GetLocationInPage(
+      destination,
+      out,
+      out + 4,
+      out + 8,
+      out + 12,
+      out + 16,
+      out + 20,
+    );
+    const named = (flag: number, value: number): number | null => {
+      const read = this.runtime.getValue(value, 'float');
+      return located && this.runtime.getValue(flag, 'i32') !== 0 && Number.isFinite(read)
+        ? read
+        : null;
+    };
+    const place: LinkTarget = {
+      kind: 'place',
+      page: PageName.ofObject(p.EPDFDoc_GetPageObjectNumberByIndex(this.doc, index)),
+      x: named(out, out + 12),
+      y: named(out + 4, out + 16),
+    };
+    this.free(out);
+    return place;
+  }
+
+  /**
+   * What an action of the file asks: read and named, never performed (security.md "Links and actions"). An action is
+   * read before any destination: the reader answers the place another file's link names as a place in this one.
+   */
+  private targetOf(action: number): LinkTarget | null {
+    const { p } = this;
+    const kind = p.FPDFAction_GetType(action);
+    if (kind === ACTION_GO_TO) {
+      const destination = p.FPDFAction_GetDest(this.doc, action);
+      return destination ? this.placeOf(destination) : null;
+    }
+    if (kind === ACTION_ADDRESS) {
+      // One past the limit, so an address too long is seen to be.
+      return LinkTarget.ofAddress(
+        this.writtenBytes(PDF_LINK_MAX_CHARS + 1, (buffer, size) =>
+          p.FPDFAction_GetURIPath(this.doc, action, buffer, size),
+        ),
+      );
+    }
+    if (kind === ACTION_OTHER_FILE) {
+      const path = this.writtenBytes(PDF_NAME_MAX_CHARS, (buffer, size) =>
+        p.FPDFAction_GetFilePath(action, buffer, size),
+      );
+      return { kind: 'file', path };
+    }
+    return { kind: 'action', action: ACTIONS[kind] ?? 'other' };
+  }
+
+  /** The bookmarks in reading order, at most `most`; a walk never reads a bookmark twice, nor past the depth limit. */
+  outline(most = PDF_OUTLINE_MAX_ITEMS): Outline {
+    const { p } = this;
+    const items: OutlineItem[] = [];
+    if (!this.doc) return { items, cut: false };
+    const read = new Set<number>();
+    let cut = false;
+    const walk = (parent: number, depth: number): void => {
+      if (depth >= PDF_MAX_TREE_DEPTH) return;
+      for (
+        let item = p.FPDFBookmark_GetFirstChild(this.doc, parent);
+        item !== 0 && !read.has(item) && !cut;
+        item = p.FPDFBookmark_GetNextSibling(this.doc, item)
+      ) {
+        if (items.length >= most) {
+          cut = true;
+          return;
+        }
+        read.add(item);
+        const action = p.FPDFBookmark_GetAction(item);
+        const destination = action ? 0 : p.FPDFBookmark_GetDest(this.doc, item);
+        items.push({
+          title: this.written(PDF_NAME_MAX_CHARS, (buffer, size) =>
+            p.FPDFBookmark_GetTitle(item, buffer, size),
+          ),
+          depth,
+          target: action ? this.targetOf(action) : destination ? this.placeOf(destination) : null,
+        });
+        walk(item, depth + 1);
+      }
+    };
+    walk(0, 0);
+    return { items, cut };
+  }
+
+  /** The links on a page, at most `most`, each with its box and where it leads. */
+  links(index: number, most = PDF_PAGE_MAX_LINKS): readonly PageLink[] {
+    const { p } = this;
+    const links: PageLink[] = [];
+    this.withPage(index, (page) => {
+      // Where the walk is, the link it found, then the link's box: left, top, right, bottom.
+      const out = this.alloc(24);
+      this.heap.fill(0, out, out + 24);
+      while (links.length < most && p.FPDFLink_Enumerate(page, out, out + 4)) {
+        const link = this.runtime.getValue(out + 4, 'i32');
+        if (!p.FPDFLink_GetAnnotRect(link, out + 8)) continue;
+        const side = (at: number): number => {
+          const read = this.runtime.getValue(out + 8 + at * 4, 'float');
+          return Number.isFinite(read) ? read : 0;
+        };
+        const action = p.FPDFLink_GetAction(link);
+        const destination = action ? 0 : p.FPDFLink_GetDest(this.doc, link);
+        const target = destination
+          ? this.placeOf(destination)
+          : action
+            ? this.targetOf(action)
+            : null;
+        if (target) links.push({ rect: [side(0), side(3), side(2), side(1)], target });
+      }
+      this.free(out);
+    });
+    return links;
   }
 
   /** The page's text, at most `most` characters of it, each with its box. */

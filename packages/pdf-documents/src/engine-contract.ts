@@ -1,6 +1,7 @@
 // The one interface a PDF is read, drawn and written through (docs/specs/035-pdf-documents/security.md "The
 // boundary", opening.md "What is read", saving.md): the surface, the api and the CLI speak only this, never the
 // library beneath it. Every value that crosses it is typed and bounded; nothing of a file crosses as markup.
+import type { LinkTarget } from './link-target';
 import type { Quad } from './mark';
 import type { PageName } from './page-name';
 import type { PageText } from './page-text';
@@ -75,6 +76,27 @@ export type PageBitmap = {
   readonly toView: PageMatrix;
 };
 
+/** A bookmark: an entry of the file's outline (document-tools.md "Bookmarks"). */
+export type OutlineItem = {
+  readonly title: string;
+  /** How deep it is nested: 0 at the top. The outline is a list in reading order. */
+  readonly depth: number;
+  /** Where it leads; null where the file names nowhere a reader can go. */
+  readonly target: LinkTarget | null;
+};
+
+export type Outline = {
+  readonly items: readonly OutlineItem[];
+  /** Whether the file holds more bookmarks than were read (`PDF_OUTLINE_MAX_ITEMS`). */
+  readonly cut: boolean;
+};
+
+/** A link on a page: its box in page space as left, bottom, right, top, and where it leads. */
+export type PageLink = {
+  readonly rect: readonly [number, number, number, number];
+  readonly target: LinkTarget;
+};
+
 /** A point in page space. */
 export type PagePoint = { readonly x: number; readonly y: number };
 
@@ -115,6 +137,10 @@ export type PdfEngine = {
   unlock(password: string): Promise<PdfOpened>;
   /** The page at that place in the order, drawn at `scale` (1 is 72 dpi), the file's own marks included. */
   drawPage(index: number, scale: number): Promise<PageBitmap | null>;
+  /** The file's bookmarks, in reading order; none where it has no outline. */
+  outline(): Promise<Outline>;
+  /** The links on a page, none of them followed. */
+  links(index: number): Promise<readonly PageLink[]>;
   /** A page's text with each character's box, or null where there is no such page. */
   pageText(index: number): Promise<PageText | null>;
   /** The text between two points of a page, or null where there is none. */

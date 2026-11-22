@@ -5,21 +5,28 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { PDF } from '@libpdf/core';
 import type { PdfEngine, PdfOpened } from '../engine-contract';
-import { PDF_MAX_PAGE_PIXELS, PDF_PROPERTY_MAX_CHARS } from '../limits';
+import { PDF_MAX_PAGE_PIXELS, PDF_MAX_TREE_DEPTH, PDF_PROPERTY_MAX_CHARS } from '../limits';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark } from '../mark';
 import { PageView } from '../page-view';
 import { PdfPermissions } from '../permissions';
 import {
   FIXTURE_LINE,
+  actionsPdf,
+  circularOutlinePdf,
+  deepOutlinePdf,
   fieldsPdf,
   labelledPdf,
+  linksPdf,
+  longOutlinePdf,
+  outlinePdf,
   lockedPdf,
   noPagesPdf,
   protectedPdf,
   readerWasm,
   spoiled,
   textPdf,
+  xfaPdf,
 } from '../testing/fixtures';
 import { bakeAddition } from './bake';
 import { pdfEngineOver } from './engine';
@@ -241,8 +248,9 @@ describe('what a file says of itself', () => {
     expect(labelled.map((page) => page.label)).toEqual(['i', 'ii', 'A-1']);
   });
 
-  it('says a file has fields where it holds an interactive form', async () => {
+  it('says a file has fields where it holds an interactive form, and when that form is an XFA form', async () => {
     expect(documentOf(await engine.open(fieldsPdf())).form).toBe('fields');
+    expect(documentOf(await engine.open(xfaPdf())).form).toBe('xfa');
   });
 });
 
@@ -276,6 +284,122 @@ describe('drawing', () => {
     expect(bitmap.width * bitmap.height).toBeLessThanOrEqual(PDF_MAX_PAGE_PIXELS);
     const asked = (await engine.drawPage(0, Number.NaN))!;
     expect([asked.width, asked.height]).toEqual([8, 8]);
+  });
+});
+
+// opening.md "What is read": the outline; security.md "Links and actions", "Abuse cases" (circular structure).
+describe('the outline', () => {
+  it('reads the bookmarks nested as the file has them, each with where it leads', async () => {
+    const pages = opened(await engine.open(outlinePdf()));
+    expect(await engine.outline()).toEqual({
+      cut: false,
+      items: [
+        {
+          title: 'Chapter 1',
+          depth: 0,
+          target: { kind: 'place', page: pages[0]!.name, x: 72, y: 720 },
+        },
+        {
+          title: 'Section 1.1',
+          depth: 1,
+          target: { kind: 'place', page: pages[1]!.name, x: null, y: null },
+        },
+        {
+          title: 'Website',
+          depth: 0,
+          target: { kind: 'address', address: 'https://example.com/a' },
+        },
+        { title: 'Run it', depth: 0, target: { kind: 'action', action: 'launch' } },
+        { title: 'Elsewhere', depth: 0, target: { kind: 'file', path: 'other.pdf' } },
+      ],
+    });
+  });
+
+  it('names every other action and performs none; a bookmark that leads nowhere keeps its title', async () => {
+    const pages = opened(await engine.open(actionsPdf()));
+    expect((await engine.outline()).items.map((item) => [item.title, item.target])).toEqual([
+      ['Go to', { kind: 'place', page: pages[0]!.name, x: 5, y: 6 }],
+      ['Go nowhere', null],
+      ['Script', { kind: 'action', action: 'other' }],
+      ['Embedded', { kind: 'action', action: 'embedded-file' }],
+      ['Nothing', null],
+      ['Missing page', null],
+      ['Empty address', { kind: 'refused', reason: 'link_scheme_refused', address: '' }],
+    ]);
+    // A link that leads nowhere is no link.
+    expect(await engine.links(0)).toEqual([]);
+    // A mark the file gives no name is named by its object.
+    expect(await engine.fileMarks(0)).toEqual([
+      { id: 'o:13', subtype: 'highlight', quads: [[72, 720, 172, 720, 72, 700, 172, 700]] },
+    ]);
+  });
+
+  it('reads an outline no deeper than the depth limit', async () => {
+    opened(await engine.open(deepOutlinePdf(PDF_MAX_TREE_DEPTH + 4)));
+    const outline = await engine.outline();
+    expect(outline.items).toHaveLength(PDF_MAX_TREE_DEPTH);
+    expect(outline.items.at(-1)).toMatchObject({ depth: PDF_MAX_TREE_DEPTH - 1 });
+  });
+
+  it('answers no bookmarks for a file with no outline, or with no file open', async () => {
+    opened(await engine.open(stored));
+    expect(await engine.outline()).toEqual({ items: [], cut: false });
+    await engine.close();
+    expect(await engine.outline()).toEqual({ items: [], cut: false });
+  });
+
+  it('stops a walk that comes round to a bookmark it has read, and shows what it read', async () => {
+    opened(await engine.open(circularOutlinePdf()));
+    const outline = await engine.outline();
+    expect(outline.items.map((item) => [item.title, item.depth])).toEqual([
+      ['One', 0],
+      ['Two', 0],
+    ]);
+  });
+
+  it('cuts an outline past the limit, and says so', async () => {
+    const reader = new PdfReader(await startReader(readerWasm()));
+    reader.open(longOutlinePdf(12));
+    expect(reader.outline(12)).toMatchObject({ cut: false });
+    const outline = reader.outline(5);
+    expect(outline.items.map((item) => item.title)).toEqual([
+      'Bookmark 1',
+      'Bookmark 2',
+      'Bookmark 3',
+      'Bookmark 4',
+      'Bookmark 5',
+    ]);
+    expect(outline.cut).toBe(true);
+    reader.close();
+  });
+});
+
+describe("a page's links", () => {
+  it('reads each link with its box and where it leads, following none', async () => {
+    const pages = opened(await engine.open(linksPdf()));
+    expect(await engine.links(0)).toEqual([
+      { rect: [72, 700, 172, 720], target: { kind: 'place', page: pages[1]!.name, x: 10, y: 20 } },
+      { rect: [72, 660, 172, 680], target: { kind: 'address', address: 'https://example.com/a' } },
+      {
+        rect: [72, 620, 172, 640],
+        target: { kind: 'refused', reason: 'link_scheme_refused', address: 'javascript:alert(1)' },
+      },
+      { rect: [72, 580, 172, 600], target: { kind: 'file', path: 'other.pdf' } },
+      { rect: [72, 540, 172, 560], target: { kind: 'action', action: 'launch' } },
+    ]);
+  });
+
+  it('answers no links for a page with none, or a page that is not there', async () => {
+    opened(await engine.open(linksPdf()));
+    expect(await engine.links(1)).toEqual([]);
+    expect(await engine.links(9)).toEqual([]);
+  });
+
+  it('reads no more links on a page than the limit', async () => {
+    const reader = new PdfReader(await startReader(readerWasm()));
+    reader.open(linksPdf());
+    expect(reader.links(0, 2)).toHaveLength(2);
+    reader.close();
   });
 });
 

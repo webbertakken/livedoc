@@ -55,6 +55,8 @@ export function pdfEngineOver(
       return { ...opened, wrong: true };
     },
     drawPage: async (index, scale) => reader.drawPage(index, scale),
+    outline: async () => reader.outline(),
+    links: async (index) => reader.links(index),
     pageText: async (index) => reader.pageText(index),
     selectText: async (index, from, to) => reader.selectText(index, from, to),
     fileMarks: async (index) => reader.fileMarks(index),

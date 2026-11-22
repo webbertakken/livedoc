@@ -29,6 +29,14 @@ describe('PageText', () => {
     expect(page.cut).toBe(true);
   });
 
+  it('gives a character with no box an empty one, and drops a mark past the last character', () => {
+    const page = PageText.of([0x41, 0x42], [1, 2, 3, 4], { unmapped: [0, 7] });
+    expect(page.boxes).toEqual(new Float32Array([1, 2, 3, 4, 0, 0, 0, 0]));
+    expect(page.unmapped).toEqual([0]);
+    expect(PageText.boxAt(page, -1)).toBeNull();
+    expect(PageText.boxAt(page, 0.5)).toBeNull();
+  });
+
   it('points an unmapped character at its place in the text, past wider characters before it', () => {
     const page = PageText.of([0x1f3e0, 0x41], new Array<number>(8).fill(0), { unmapped: [1] });
     expect(page.unmapped).toEqual([2]);

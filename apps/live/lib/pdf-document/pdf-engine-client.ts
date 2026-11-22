@@ -5,7 +5,9 @@
 import type {
   BakeResult,
   FileMark,
+  Outline,
   PageBitmap,
+  PageLink,
   PageText,
   PdfEngine,
   PdfOpened,
@@ -34,6 +36,8 @@ const STOPPED = {
   open: { ok: false, refusal: 'pdf_stopped' } satisfies PdfOpened,
   unlock: { ok: false, refusal: 'pdf_stopped' } satisfies PdfOpened,
   drawPage: null,
+  outline: { items: [], cut: false } satisfies Outline,
+  links: [] as readonly PageLink[],
   pageText: null,
   selectText: null,
   fileMarks: [] as readonly FileMark[],
@@ -86,6 +90,8 @@ export function pdfEngineClient(
     unlock: (password) => ask<PdfOpened>({ method: 'unlock', args: [password] }),
     drawPage: (index, scale) =>
       ask<PageBitmap | null>({ method: 'drawPage', args: [index, scale] }),
+    outline: () => ask<Outline>({ method: 'outline', args: [] }),
+    links: (index) => ask<readonly PageLink[]>({ method: 'links', args: [index] }),
     pageText: (index) => ask<PageText | null>({ method: 'pageText', args: [index] }),
     selectText: (index, from, to) =>
       ask<TextSelection | null>({ method: 'selectText', args: [index, from, to] }),

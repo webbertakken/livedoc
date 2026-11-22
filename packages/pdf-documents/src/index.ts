@@ -16,8 +16,11 @@ export type {
   BakeRefusal,
   BakeResult,
   FileMark,
+  Outline,
+  OutlineItem,
   PageBitmap,
   PageInfo,
+  PageLink,
   PageMatrix,
   PagePoint,
   PdfEngine,
@@ -29,4 +32,5 @@ export type {
 } from './engine-contract';
 export { PageView } from './page-view';
 export { PdfPermissions } from './permissions';
+export { LinkTarget, type PdfActionKind } from './link-target';
 export { PageText, type TextBox } from './page-text';

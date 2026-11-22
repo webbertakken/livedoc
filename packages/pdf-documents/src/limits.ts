@@ -17,6 +17,14 @@ export const PDF_PAGE_PICTURE_MAX_PIXELS = 8_388_608;
 export const PDF_PAGE_TEXT_MAX_CHARS = 200_000;
 /** The most a PDF page measures on a side, in points: the standard's own 200 inches. */
 export const PDF_MAX_PAGE_POINTS = 14_400;
+/** (default) An address longer than this is shown cut and never opened (security.md "Limits"). */
+export const PDF_LINK_MAX_CHARS = 2_048;
+/** (default) Deeper than any honest outline, page tree or field tree: a walk stops there. */
+export const PDF_MAX_TREE_DEPTH = 256;
+/** (default) Bookmarks read from one file; past it the outline is cut and says so. Safe range: 1,000 to 100,000. */
+export const PDF_OUTLINE_MAX_ITEMS = 20_000;
+/** (default) Links read on one page. Safe range: 500 to 50,000. */
+export const PDF_PAGE_MAX_LINKS = 5_000;
 /** (default) A property of the file (title, author, subject, keywords, producer) is cut to it (security.md "Limits"). */
 export const PDF_PROPERTY_MAX_CHARS = 2_048;
 /** (default) A file's string shown as a name (a page label, a bookmark, an embedded file) is cut to it. */

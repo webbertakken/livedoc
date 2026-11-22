@@ -1,8 +1,10 @@
 # Security
 
 **Status: specified; a first slice is built.** Built: the boundary (a PDF's bytes are parsed only in WebAssembly, in a
-worker thread with no script runtime, and only typed, bounded values leave it). Links, actions, embedded files and the
-abuse cases' tests are not built.
+worker thread with no script runtime, and only typed, bounded values leave it), guarded by a test that no code outside
+the engine names the libraries beneath it; and what the engine answers of links, bookmarks and actions: a place in
+the document, an address of an opened scheme, or a named refusal, with circular and over-deep outlines stopped. The
+surface's handling of links, embedded files and the remaining abuse cases' tests are not built.
 
 A PDF is untrusted input: it can carry code, ask for the network, hide content, lie about its authors and exhaust a
 parser. This spec is the trust boundary of a [PDF document](pdf-document.md) and the rule for every abuse case; each
@@ -41,6 +43,7 @@ rule is a test with a named rejection. The research is [Security](../../research
 | A link to a place in the document                                                                                 | Followed                                                                                                                     |
 | A link to `http`, `https` or `mailto`                                                                             | The address is shown first ("Open example.com/path?"), then opened in a new tab with no opener and no referrer               |
 | A link to any other scheme (`javascript:`, `file:`, `data:`, an app's)                                            | Never opened: "This link can't be opened here." with the address as text to copy                                             |
+| A link with no scheme (an address relative to where the file once was)                                            | `(default)` Never opened: it leads nowhere from here; the address is shown as text to copy                                   |
 | A link to another file by path (remote go-to)                                                                     | Never followed; the path is shown as text                                                                                    |
 | Launch (start a program), submit or import form data, play media, run a script, set a PDF layer's state by action | Never performed; listed in File > Properties > Security as "This file wanted to …"                                           |
 | A button that resets fields                                                                                       | Performed when a person presses it, as one undoable change to the field values ([Fields](fields.md#what-a-files-fields-are)) |
@@ -102,6 +105,8 @@ rule is a test with a named rejection. The research is [Security](../../research
 | `PDF_LINK_MAX_CHARS`     | 2,048       | `(default)` A longer address is shown cut and never opened                                        |
 | `PDF_NAME_MAX_CHARS`     | 255         | `(default)` A file's strings shown as names (embedded files, PDF layers, bookmarks) are cut to it |
 | `PDF_PROPERTY_MAX_CHARS` | 2,048       | `(default)` A property of the file (title, author, subject, keywords, producer) is cut to it      |
+| `PDF_OUTLINE_MAX_ITEMS`  | 20,000      | `(default)` Bookmarks read from one file; past it the outline is cut and says so                  |
+| `PDF_PAGE_MAX_LINKS`     | 5,000       | `(default)` Links read on one page                                                                |
 
 ## Share roles
 
