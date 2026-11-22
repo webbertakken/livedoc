@@ -4,7 +4,15 @@
 // shell's title row, menus and toolbar filled for a PDF, and under them the pages, or what is said when there are
 // none to show. The pages are the engine's pictures, drawn in a worker; the chrome is the shell's tokens in both
 // schemes, and a page is as its file says.
-import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
@@ -20,13 +28,11 @@ import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
-import {
-  unboundPdfLiveChanges,
-  type BindPdfLiveChanges,
-} from '@/lib/pdf-document/pdf-live-binding';
+import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { DOWNLOAD_PDF, PDF_MENUS, TOOL_HIGHLIGHT, TOOL_SELECT } from '@/lib/pdf-document/pdf-menus';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
+import { pdfRoomBinding, type PdfFrame } from '@/lib/pdf-document/pdf-room-binding';
 import {
   PDF_REFUSAL_COPY,
   pdfRefusalDownloads,
@@ -42,6 +48,8 @@ import { PdfPages } from './PdfPages';
 
 /** "This PDF holds the most marks LiveDoc keeps for one file (20,000)." (marks.md "Errors"). */
 const TOO_MANY_MARKS_COPY = 'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
+/** Said once a change the room refused has been taken back (live-editing-and-storage.md "Limits"). */
+const CHANGES_DO_NOT_FIT_COPY = 'This PDF has more unsaved changes than fit.';
 
 const megabytes = (bytes: number): string =>
   bytes < 1_000_000
@@ -59,7 +67,7 @@ export function PdfDocumentSurface({
   canReview,
   author,
   chrome,
-  bind = unboundPdfLiveChanges,
+  sequence,
 }: {
   scope: PdfDocumentScope;
   documentName: string;
@@ -71,12 +79,29 @@ export function PdfDocumentSurface({
   author: string;
   // The document's own parts in the title row; null where another pane shows them.
   chrome: OfficeChrome | null;
-  // Where the live changes are kept and sent; the surface's own unless a test hands another.
-  bind?: BindPdfLiveChanges;
+  // One frame to the document's room; true once the room has stored it.
+  sequence: (op: PdfFrame) => Promise<boolean>;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const { ownerId, documentId, tabId, shareCode } = scope;
+  // Read as the binding sends: a level that changes, or a room that reconnects, never binds again.
+  const live = useRef({ canReview, sequence });
+  useLayoutEffect(() => {
+    live.current = { canReview, sequence };
+  });
+  const bind = useCallback<BindPdfLiveChanges>(
+    (read) =>
+      pdfRoomBinding({
+        scope: { ownerId, documentId, tabId, shareCode },
+        get canChange() {
+          return live.current.canReview;
+        },
+        sequence: (op) => live.current.sequence(op),
+      })(read),
+    [ownerId, documentId, tabId, shareCode],
+  );
   const open = usePdfDocument(scope, bind, attempt);
   const { mode, choice, actions: modeActions } = useOfficeMode(level, PDF_MODES, 'PdfDocumentMode');
   const [tool, setTool] = useState<PdfPageTool>('select');
@@ -88,7 +113,9 @@ export function PdfDocumentSurface({
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
 
-  const { ownerId, documentId, tabId, shareCode } = scope;
+  const binding = ready?.binding ?? null;
+  useEffect(() => binding?.onRefused(() => setProblem(CHANGES_DO_NOT_FIT_COPY)), [binding]);
+
   const storedFile = open.phase === 'ready' || open.phase === 'refused' ? open.storedFile : null;
   const download = useCallback(async () => {
     if (!storedFile) return;

@@ -12,6 +12,8 @@ export type PdfLiveBinding = {
   close: () => void;
   /** What the title row's save status reads; null for a session that saves nothing. */
   saveStatus: OfficeSaveStatusSource | null;
+  /** Listen for a change made here being refused where it is kept, once it has been taken back ("Limits"). */
+  onRefused: (listener: () => void) => () => void;
 };
 
 /** Binds the state a surface read to where its changes are kept. Rejects when it cannot. */
@@ -22,4 +24,5 @@ export const unboundPdfLiveChanges: BindPdfLiveChanges = async (read) => ({
   doc: PdfLiveChanges.load([read.update]),
   close: () => {},
   saveStatus: null,
+  onRefused: () => () => {},
 });

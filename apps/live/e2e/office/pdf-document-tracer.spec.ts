@@ -161,6 +161,13 @@ test('a PDF dropped on the Explorer is stored, read, highlighted together and le
   await expect(peer.locator(`${PAGE_ONE} [data-pdf-mark="${markId}"]`)).toHaveCount(1);
   await peer.screenshot({ path: test.info().outputPath('pdf-document-highlight-peer.png') });
 
+  // The room stored it before it relayed it (live-editing-and-storage.md "Storage"): the state now holds a change.
+  const changed = await page.request.get(
+    `${apiBase}/documents/${id}/pdf-documents/${tab!.id}/state`,
+    { headers },
+  );
+  expect((await changed.body()).length).toBeGreaterThan(2);
+
   // Downloaded: a valid PDF whose first bytes are the stored file, untouched, with the highlight appended.
   const downloadItem = await officeMenuItem(page, ['File', 'Download', 'PDF']);
   const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);

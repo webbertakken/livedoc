@@ -123,6 +123,10 @@ export const PdfLiveChanges = {
     if (marks.has(id)) doc.transact(() => marks.delete(id), origin);
   },
 
+  /** Every root's shared type: what one person's undo watches (live-editing-and-storage.md "Undo"). */
+  roots: (doc: Y.Doc): readonly (Y.Array<unknown> | Y.Map<unknown>)[] =>
+    PDF_ROOTS.map((root) => (root === 'pageOrder' ? doc.getArray(root) : doc.getMap(root))),
+
   /** Whether nothing was changed since the stored file: such a state is never baked (saving.md "An unchanged file"). */
   isEmpty: (doc: Y.Doc): boolean =>
     PDF_ROOTS.every((root) => root === 'stored' || holdsNothing(doc, root)),

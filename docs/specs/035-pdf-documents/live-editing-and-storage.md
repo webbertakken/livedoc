@@ -1,8 +1,10 @@
 # Live editing and storage
 
 **Status: specified; a first slice is built.** Built: the layout's `stored` and `marks` roots, the room storing a PDF's
-live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the digest's pages and marks, and the stored
-file in the blob store. Presence, undo, offline, branches, copies, versions and what the servers make are not built.
+live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the digest's pages and marks, the stored
+file in the blob store, and the surface bound to the room: sending, reconnecting, the local copy of unconfirmed
+changes, the save status, a refused change undone. Presence, undo, This Browser, reading offline, replacing the stored
+file, branches, copies, versions and what the servers make are not built.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The
@@ -226,10 +228,15 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 | `PDF_PRESENCE_MAX_CHARS`     | 512       | `(default)` Three names and two numbers                                                |
 | `PDF_PRESENCE_FRESH_MS`      | 3,000     | `(default)` A text document's caret label                                              |
 | `PDF_UNDO_GROUP_MS`          | 500       | A text document's typing group                                                         |
+| `PDF_LOCAL_SAVE_MS`          | 500       | `(default)` A change the room has not confirmed by then is kept in this browser        |
 
 A change past a limit is refused whole and named: `pdf_too_many_marks`, `pdf_too_many_pages`, `update_too_large`,
 `live_changes_too_large` (when a replacement cannot be made, with "This PDF has more unsaved changes than fit. Ask
 someone who can edit it to open it." for a Participant on a file only an Editor's rewrite can replace).
+
+The room's refusal of a frame reaches its sender alone, as `pdf-refused` with the limit passed. The surface undoes
+that change, so what it shows is what everyone holds, and says "This PDF has more unsaved changes than fit."
+`(default)`, logging `[pdf] change-undone`.
 
 ## Share roles
 

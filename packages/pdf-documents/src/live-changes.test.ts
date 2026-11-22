@@ -3,7 +3,7 @@ import * as Y from 'yjs';
 import type { BlobKey } from '@livedoc/document';
 import { pdfDigest } from './digest';
 import { PDF_MAX_MARKS } from './limits';
-import { PdfLiveChanges } from './live-changes';
+import { PDF_ROOTS, PdfLiveChanges } from './live-changes';
 import { Mark, type Quad } from './mark';
 
 const BLOB = 'a'.repeat(64) as BlobKey;
@@ -34,6 +34,17 @@ describe('PdfLiveChanges', () => {
     expect(PdfLiveChanges.isEmpty(doc)).toBe(true);
     expect(PdfLiveChanges.marks(doc)).toEqual([]);
     expect(PdfLiveChanges.stored(doc)).toBeNull();
+  });
+
+  it("gives every root's shared type, so one person's changes to any of them are taken back", () => {
+    // live-editing-and-storage.md "Undo": the person's own changes only, newest first.
+    const doc = PdfLiveChanges.load();
+    expect(PdfLiveChanges.roots(doc)).toHaveLength(PDF_ROOTS.length);
+    const undo = new Y.UndoManager([...PdfLiveChanges.roots(doc)], { captureTimeout: 0 });
+    PdfLiveChanges.addMark(doc, highlight('a'));
+    PdfLiveChanges.addMark(doc, highlight('b'));
+    undo.undo();
+    expect(PdfLiveChanges.marks(doc).map((m) => m.id)).toEqual(['a']);
   });
 
   it('names its stored file, which alone is no change', () => {

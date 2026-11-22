@@ -16,7 +16,7 @@ const PdfDocumentSurface = dynamic(
 
 export function PdfDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly?: boolean }) {
   const ctx = useEditorContext();
-  const { documentId, selfParticipant, sessionShareCode, can, documentName } = ctx;
+  const { documentId, selfParticipant, sessionShareCode, can, documentName, roomRef } = ctx;
   // The document's own parts in the title row, for the editor's pane alone.
   const office = useEditorLines()?.office ?? null;
   if (!documentId) return null;
@@ -36,6 +36,7 @@ export function PdfDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly?
       canReview={canReview}
       author={selfParticipant.name}
       chrome={readOnly ? null : office}
+      sequence={(op) => roomRef.current?.sequence(op) ?? Promise.resolve(false)}
     />
   );
 }
