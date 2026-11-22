@@ -88,7 +88,7 @@ const DEFAULT_SURFACE = 'border-slate-200 bg-white dark:border-slate-700 dark:bg
 
 // A phone sheet's panel below sm: the BottomSheet's shape, taller (a dialog holds a form).
 const PHONE_SHEET =
-  ' max-sm:max-h-[85dvh] max-sm:w-full max-sm:max-w-none max-sm:animate-sheet-up max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:border-b-0';
+  ' max-sm:max-h-[85dvh] max-sm:w-full max-sm:max-w-none max-sm:animate-sheet-up max-sm:rounded-b-none max-sm:rounded-t-surface max-sm:border-b-0';
 
 const BACKDROPS: Record<NonNullable<DialogProps['backdrop']>, string> = {
   dim: 'bg-slate-900/40 backdrop-blur-sm dark:bg-slate-950/60',
@@ -235,7 +235,7 @@ export function Dialog({
           // a short/landscape screen never pushes its footer off the bottom.
           // Dialogs that set their own max-h (e.g. ShareDialog, Export) opt out
           // of the default and manage their own scroll region.
-          className={`flex ${WIDTHS[size]} max-w-[92%] animate-dialog-in flex-col rounded-xl border ${surface} shadow-2xl shadow-slate-900/10 outline-none dark:shadow-slate-950/40${
+          className={`flex ${WIDTHS[size]} max-w-[92%] animate-dialog-in flex-col rounded-surface border ${surface} shadow-2xl shadow-slate-900/10 outline-none dark:shadow-slate-950/40${
             phoneSheet
               ? PHONE_SHEET
               : EDGE_TO_EDGE_SIZES.has(size)
