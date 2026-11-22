@@ -8,7 +8,9 @@ import {
   cellKey,
   emptyLayout,
   posRangeOf,
+  rowHeights,
   type Sheet,
+  type SheetWrite,
   CellMap,
   SheetLimits,
 } from '@livedoc/sheets';
@@ -31,20 +33,16 @@ function book() {
     updatedBy: NOBODY,
   };
   const wb = new Workbook({ sheets: [sheet], locale: 'en-GB' });
+  const write = (w: SheetWrite) =>
+    wb.updateSheet(applySheetWrite(wb.sheet(sheet.id)!, w, { now: 1, by: NOBODY }).sheet);
   const run = (change: SheetChange) => {
     const built = buildSheetChange(wb, sheet.id, change, [], rand);
     if (!built.ok) return built;
-    for (const w of built.writes) {
-      const next = applySheetWrite(wb.sheet(sheet.id)!, w, {
-        now: 1,
-        by: NOBODY,
-      }).sheet;
-      wb.updateSheet(next);
-    }
+    for (const w of built.writes) write(w);
     return built;
   };
   const at = () => wb.sheet(sheet.id)!;
-  return { wb, at, run };
+  return { wb, at, run, write };
 }
 
 const code = (b: ReturnType<typeof book>, change: SheetChange) => {
@@ -83,14 +81,106 @@ describe('sizes', () => {
     expect(code(b, { op: 'resize', cols: 'A', rows: '1', px: 100 })).toBe('write_invalid');
     expect(code(b, { op: 'resize', cols: 'A', px: 4 })).toBe('write_invalid');
     expect(b.run({ op: 'resize', rows: '1', px: 4 })).toMatchObject({
-      message: 'Give px, 18 to 2000.',
+      message: 'Give px, 18 to 2000, or fit: true.',
     });
-    expect(code(b, { op: 'resize', cols: 'A' })).toBe('write_invalid');
-    expect(code(b, { op: 'resize', rows: '2', fit: true })).toBe('write_invalid');
+    expect(b.run({ op: 'resize', cols: 'A' })).toMatchObject({
+      code: 'write_invalid',
+      message: 'Give px, 24 to 2000, or fit: true.',
+    });
+    expect(code(b, { op: 'resize', rows: '2', fit: false })).toBe('write_invalid');
+    // px and fit say two things: neither wins.
+    expect(b.run({ op: 'resize', rows: '2', px: 40, fit: true })).toMatchObject({
+      code: 'write_invalid',
+      message: 'Resize takes px or fit: true, one of them.',
+    });
+    expect(code(b, { op: 'resize', cols: 'A', px: 100, fit: true })).toBe('write_invalid');
+    expect(b.at().layout.rowSize).toBeUndefined();
+    expect(b.at().layout.colSize).toBeUndefined();
     expect(code(b, { op: 'resize', cols: '9', px: 100 })).toBe('range_invalid');
     expect(code(b, { op: 'resize', rows: 'x', px: 100 })).toBe('range_invalid');
     expect(code(b, { op: 'resize', rows: '1:2:3', px: 100 })).toBe('range_invalid');
     expect(code(b, { op: 'resize', rows: '900', px: 100 })).toBe('range_invalid');
+    expect(code(b, { op: 'resize', rows: '900', fit: true })).toBe('range_invalid');
+  });
+});
+
+// docs/specs/029-sheets/sheet.md "Row height", **Back to automatic**; sheet-store.md "Shaping a sheet".
+describe('rows handed back to automatic', () => {
+  it('takes the size off every sized row among the rows named, in one write, and says how many held one', () => {
+    const b = book();
+    b.run({ op: 'resize', rows: '2:4', px: 60 });
+    b.run({ op: 'resize', rows: '7', px: 44 });
+    const { rows } = b.at().layout;
+    const fitted = b.run({ op: 'resize', rows: '3:8', fit: true });
+    expect(fitted).toMatchObject({
+      line: 'fitted rows 3:8 to their text, 3 of them sized before',
+      writes: [
+        {
+          kind: 'layout',
+          changes: [{ k: 'size', axis: 'r', ids: [rows[2], rows[3], rows[6]], px: null }],
+        },
+      ],
+    });
+    // Row 2 was not named: it keeps its size.
+    expect(b.at().layout.rowSize).toEqual({ [rows[1]!]: 60 });
+    expect(b.run({ op: 'resize', rows: '2', fit: true })).toMatchObject({
+      line: 'fitted row 2 to its text',
+    });
+    expect(b.at().layout.rowSize).toBeUndefined();
+  });
+
+  it('writes nothing when no row named is sized, and says so', () => {
+    const b = book();
+    expect(b.run({ op: 'resize', rows: '3:8', fit: true })).toEqual({
+      ok: true,
+      writes: [],
+      line: 'rows 3:8 already fit their text',
+    });
+    expect(b.run({ op: 'resize', rows: '9', fit: true })).toMatchObject({
+      writes: [],
+      line: 'row 9 already fits its text',
+    });
+  });
+
+  it('lets a row whose text was cut off grow to its text', () => {
+    const b = book();
+    b.run({
+      op: 'set',
+      at: 'A2',
+      rows: [['The quarterly review moved to Thursday because two leads are travelling.']],
+    });
+    b.run({ op: 'format', range: 'A2', format: { wrap: 'wrap' } });
+    const [, second] = b.at().layout.rows;
+    const fit = rowHeights(b.wb, b.at().id)(second!);
+    expect(fit).toBeGreaterThan(28 * 2);
+    b.run({ op: 'resize', rows: '2', px: 28 });
+    expect(rowHeights(b.wb, b.at().id)(second!)).toBe(28);
+    b.run({ op: 'resize', rows: '1:20', fit: true });
+    expect(rowHeights(b.wb, b.at().id)(second!)).toBe(fit);
+  });
+
+  it('takes a hidden row with the rest, and leaves it hidden', () => {
+    const b = book();
+    b.run({ op: 'resize', rows: '2:3', px: 60 });
+    const { rows } = b.at().layout;
+    b.write({ kind: 'layout', changes: [{ k: 'hide', axis: 'r', ids: [rows[2]!], hidden: true }] });
+    expect(b.run({ op: 'resize', rows: '2:3', fit: true })).toMatchObject({
+      line: 'fitted rows 2:3 to their text, 2 of them sized before',
+    });
+    expect(b.at().layout.rowSize).toBeUndefined();
+    expect(b.at().layout.hiddenRows).toEqual([rows[2]]);
+  });
+
+  it('cuts a range off at the last row, and leaves a merge over the rows as it is', () => {
+    const b = book();
+    b.run({ op: 'merge', range: 'A19:B20' });
+    b.run({ op: 'resize', rows: '20', px: 90 });
+    expect(b.run({ op: 'resize', rows: '19:900', fit: true })).toMatchObject({
+      line: 'fitted rows 19:20 to their text, 1 of them sized before',
+    });
+    const { layout } = b.at();
+    expect(layout.rowSize).toBeUndefined();
+    expect(posRangeOf(layout, layout.merges![0]!)).toEqual({ r1: 18, c1: 0, r2: 19, c2: 1 });
   });
 });
 

@@ -340,6 +340,24 @@ describe('a Participant (docs/specs/013-workspace/share-roles.md)', () => {
         )
       ).status,
     ).toBe(403);
+    // A row's size is the Sheet's shape too, given or taken away (docs/specs/029-sheets/sheet.md "Row height"): an
+    // agent's resize, px or fit, sends these, so it is refused for a Participant and a Viewer as theirs is.
+    for (const px of [40, null])
+      for (const who of [as, { owner: 'v', code: 'VIEW' }])
+        expect(
+          (
+            await write(
+              'sheetA00',
+              { kind: 'layout', changes: [{ k: 'size', axis: 'r', ids: [r0!], px }] },
+              {},
+              who,
+            )
+          ).status,
+        ).toBe(403);
+    expect(
+      (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!.layout
+        .rowSize,
+    ).toBeUndefined();
     expect((await write('sheetA00', { kind: 'title', title: 'Mine' }, {}, as)).status).toBe(403);
     expect((await call({ ...as, path: '/sheets', body: { tabId: 't1', title: 'Q' } })).status).toBe(
       403,

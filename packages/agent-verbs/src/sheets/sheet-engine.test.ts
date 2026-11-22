@@ -441,6 +441,26 @@ describe('changing a sheet', () => {
     expect(partly.refusal?.code).toBe('range_invalid');
   });
 
+  // sheet.md "Row height": an agent acting for a Participant or a Viewer is refused, as that person is.
+  it('answers the api’s refusal of a fit of rows to a token that may not edit, with nothing applied', async () => {
+    const sheet = costs();
+    const [first] = sheet.layout.rows;
+    const sized = { ...sheet, layout: { ...sheet.layout, rowSize: { [first!]: 60 } } };
+    const { api, server } = setup([sized], { refuse: 'forbidden', status: 403 });
+    const result = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Costs', changes: [{ op: 'resize', rows: '1:4', fit: true }] },
+      'mcp',
+    );
+    expect(result.applied).toEqual([]);
+    expect(result.refusal).toEqual({
+      code: 'forbidden',
+      message: expect.stringContaining('you may view this document but not change it'),
+    });
+    expect(server.sheets[0]!.layout.rowSize).toEqual({ [first!]: 60 });
+  });
+
   it('lets an api failure that is not a refusal throw', async () => {
     const { api } = setup(undefined, { refuse: 'boom', status: 500 });
     await expect(
