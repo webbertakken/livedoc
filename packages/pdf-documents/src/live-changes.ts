@@ -148,9 +148,15 @@ export const PdfLiveChanges = {
     return turns;
   },
 
-  /** Every root's shared type: what one person's undo watches (live-editing-and-storage.md "Undo"). */
+  /** Every root's shared type, in the layout's order. */
   roots: (doc: Y.Doc): readonly (Y.Array<unknown> | Y.Map<unknown>)[] =>
     PDF_ROOTS.map((root) => (root === 'pageOrder' ? doc.getArray(root) : doc.getMap(root))),
+  /**
+   * What one person's undo watches (live-editing-and-storage.md "Undo"): every root but `stored`. Naming the stored
+   * file is nobody's act, so taking a first change back leaves it named.
+   */
+  undoScope: (doc: Y.Doc): (Y.Array<unknown> | Y.Map<unknown>)[] =>
+    PdfLiveChanges.roots(doc).filter((_root, at) => PDF_ROOTS[at] !== 'stored'),
 
   /**
    * The fingerprint of what the changes show ("Replacing the stored file"): the SHA-256 of what every root holds,

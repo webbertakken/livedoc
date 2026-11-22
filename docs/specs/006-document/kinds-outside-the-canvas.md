@@ -156,6 +156,12 @@ with the text document):
 - **A binding can be discarded**: it stops for good, keeps nothing in this browser's local copy and removes the copy
   it kept. A surface whose change the room refused discards its binding and binds the state again, read from the
   room, so nothing of the refused change is sent a second time. A binding that was closed or discarded never sends.
+- **What lies beyond the room**: a kind whose state stands on something its tab's row names may declare how it reads,
+  in its own terms, what this browser holds beyond what the room is known to hold. The binding then keeps what the
+  room is known to hold (the state read, every update the room relayed, every update of this browser's the room
+  confirmed), answers that reading when asked, and keeps it in the local copy, beside what the copy was made on.
+- **A local copy made on something else** than the state now stands on is never merged: its updates follow others
+  the state no longer holds. The binding hands the kind the copy's reading, and removes the copy.
 
 ## The Explorer
 

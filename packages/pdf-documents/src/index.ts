@@ -52,6 +52,12 @@ export {
   type PdfEntry,
   type RemovedKind,
 } from './pdf-change';
+export {
+  PdfUnconfirmed,
+  type PdfAnchors,
+  type PdfCarried,
+  type UnconfirmedChange,
+} from './unconfirmed';
 export { PageView } from './page-view';
 export { PdfPermissions } from './permissions';
 export { LinkTarget, type PdfActionKind } from './link-target';

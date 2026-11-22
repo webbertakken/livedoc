@@ -1,10 +1,10 @@
 # Reading surface
 
 **Status: specified; a first slice is built.** Built: the title row with its PDF pill, the menus and toolbar as data
-(File > Download > PDF, View > Mode, Tools, Help; zoom, Select, Highlight), and the pages: every page a box of its true
-size, a whole-page picture for pages near view, let go far from it. The accessible tree is not built: a page is a
-named region whose picture is hidden from assistive technology. Tiles, panels, find, text selection, the page bar and
-the phone layout are not built.
+(File > Download > PDF, Edit > Undo and Redo, View > Mode, Tools, Help; Undo, Redo, zoom, Select, Highlight), and the
+pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it. The accessible
+tree is not built: a page is a named region whose picture is hidden from assistive technology. Tiles, panels, find,
+text selection, the page bar and the phone layout are not built.
 
 The chrome of a [PDF document](pdf-document.md) and how its pages are read: the title row, menus, toolbar, the left
 panel, the pages, zoom, find and the phone layout, with final copy. It fills the

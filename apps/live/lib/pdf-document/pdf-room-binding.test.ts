@@ -12,9 +12,11 @@ import { pdfRoomBinding, type PdfFrame } from './pdf-room-binding';
 
 // docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage" (sending, reconnecting), "Offline and This
 // Browser" (the local copy), "Limits" (a refused change); docs/specs/006-document/kinds-outside-the-canvas.md "Live
-// state" (a state read earlier is caught up at once).
+// state" (a state read earlier is caught up at once; what lies beyond the room; a local copy made on something
+// else); live-editing-and-storage.md "A change carried across a replacement" (an unconfirmed change).
 
 const BLOB = 'a'.repeat(64) as BlobKey;
+const OTHER_BLOB = 'b'.repeat(64) as BlobKey;
 const QUAD: Quad = [72, 716, 300, 716, 72, 700, 300, 700];
 const highlight = (id: string) =>
   Mark.highlight({
@@ -159,6 +161,119 @@ describe('pdfRoomBinding', () => {
     await tick();
     expect(idsIn(binding.doc)).toEqual(['left']);
     expect(h.roomMarks()).toEqual(['left']);
+  });
+
+  it('reads as unconfirmed only what the room has not confirmed of what was made here', async () => {
+    let confirms = true;
+    const h = harness({ confirm: () => confirms });
+    const binding = await opened(h);
+    await tick();
+    expect(binding.unconfirmed()).toEqual([]);
+    PdfLiveChanges.addMark(binding.doc, highlight('confirmed'));
+    await tick();
+    const other = PdfLiveChanges.load();
+    PdfLiveChanges.addMark(other, highlight('theirs'));
+    PdfDocumentBus.deliver({ tabId: 't1', update: base64OfBytes(PdfLiveChanges.encode(other)) });
+    expect(binding.unconfirmed()).toEqual([]);
+    confirms = false;
+    PdfLiveChanges.addMark(binding.doc, highlight('waiting'));
+    PdfLiveChanges.removeMark(binding.doc, 'confirmed');
+    await tick();
+    expect(binding.unconfirmed()).toEqual([
+      { root: 'marks', id: 'confirmed', held: highlight('confirmed'), made: null },
+      { root: 'marks', id: 'waiting', held: null, made: highlight('waiting') },
+    ]);
+  });
+
+  it('reads a change made with the room closed as unconfirmed, until a catch-up stores it', async () => {
+    const h = harness();
+    const binding = await opened(h);
+    await tick();
+    LiveTabRoom.disconnected();
+    PdfLiveChanges.addMark(binding.doc, highlight('offline'));
+    expect(binding.unconfirmed().map((change) => change.id)).toEqual(['offline']);
+    LiveTabRoom.connected();
+    await tick();
+    expect(binding.unconfirmed()).toEqual([]);
+  });
+
+  it('reads as confirmed what a catch-up found the room holding', async () => {
+    const h = harness();
+    const read = h.read();
+    const other = PdfLiveChanges.load();
+    PdfLiveChanges.addMark(other, highlight('between'));
+    h.stored.push(PdfLiveChanges.encode(other));
+    const binding = await opened(h, read);
+    await tick();
+    expect(idsIn(binding.doc)).toEqual(['between']);
+    expect(binding.unconfirmed()).toEqual([]);
+  });
+
+  it('keeps with the local copy what it was made on and its unconfirmed changes', async () => {
+    const h = harness();
+    const binding = await opened(h);
+    await tick();
+    LiveTabRoom.disconnected();
+    PdfLiveChanges.addMark(binding.doc, highlight('offline'));
+    await tick();
+    expect(h.copies.get('D/t1')).toMatchObject({
+      on: BLOB,
+      beyond: [{ root: 'marks', id: 'offline', held: null, made: highlight('offline') }],
+    });
+  });
+
+  it('never merges a copy made on another stored file: its changes are handed over, and the copy goes', async () => {
+    const h = harness();
+    const left = PdfLiveChanges.load();
+    PdfLiveChanges.addMark(left, highlight('left'));
+    const beyond = [{ root: 'marks', id: 'left', held: null, made: highlight('left') }];
+    h.copies.set('D/t1', {
+      documentId: 'D',
+      tabId: 't1',
+      update: PdfLiveChanges.encode(left),
+      savedAt: 1,
+      on: OTHER_BLOB,
+      beyond: [...beyond, { root: 'nowhere', id: 'x', held: null, made: {} }],
+    });
+    const binding = await opened(h);
+    await tick();
+    expect(idsIn(binding.doc)).toEqual([]);
+    expect(binding.left).toEqual(beyond);
+    expect(h.roomMarks()).toEqual([]);
+    expect(h.copies.size).toBe(0);
+  });
+
+  it("leaves a copy made on another stored file alone on a Viewer's surface", async () => {
+    const h = harness({ canChange: false });
+    h.copies.set('D/t1', {
+      documentId: 'D',
+      tabId: 't1',
+      update: PdfLiveChanges.encode(PdfLiveChanges.load()),
+      savedAt: 1,
+      on: OTHER_BLOB,
+      beyond: [{ root: 'marks', id: 'left', held: null, made: highlight('left') }],
+    });
+    const binding = await opened(h);
+    await tick();
+    expect(binding.left).toEqual([]);
+    expect(binding.unconfirmed()).toEqual([]);
+    expect(h.copies.size).toBe(1);
+  });
+
+  it('says so when a copy made on another stored file cannot be dropped', async () => {
+    const h = harness();
+    h.failRemove();
+    h.copies.set('D/t1', {
+      documentId: 'D',
+      tabId: 't1',
+      update: PdfLiveChanges.encode(PdfLiveChanges.load()),
+      savedAt: 1,
+      on: OTHER_BLOB,
+    });
+    const binding = await opened(h);
+    await tick();
+    expect(binding.left).toEqual([]);
+    expect(h.copies.size).toBe(1);
   });
 
   it("never sends a Viewer's surface's changes", async () => {

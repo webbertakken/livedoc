@@ -192,4 +192,4 @@ where=<browser|api|cli>`, `[pdf] bake-refused reason=<reopen|timeout|cannot-appe
 | A bake fails its reopen check or passes its time             | "This PDF couldn't be written. Your changes are safe." **Try again**              |
 | A change would turn a signed file into a rewrite             | The warning of [Signing](signing.md#changes-after-a-signature), before the change |
 | The blob store refuses the new stored file (full, too large) | "This PDF couldn't be stored: <reason>. Your changes are still live."             |
-| A replacement arrives while a person is mid-change           | The change is carried onto the new stored file, or reported as an anchor lost     |
+| A replacement arrives while a person is mid-change           | The change is carried onto the new stored file, or said to be lost `(default)`    |

@@ -2,6 +2,7 @@
 // as one mark in the live changes, in one change. The state names its stored file the first time anything is changed
 // (live-editing-and-storage.md "The layout").
 import type * as Y from 'yjs';
+import { PDF_LOCAL_ORIGIN } from './pdf-undo';
 import { standardColours, type BlobKey } from '@livedoc/document';
 import {
   Mark,
@@ -10,9 +11,6 @@ import {
   type PdfLimitRefusal,
   type TextSelection,
 } from '@livedoc/pdf-documents';
-
-/** The origin a person's own change is made with. */
-export const PDF_LOCAL_ORIGIN = 'pdf-local';
 
 /** (default) A highlight's first look: the colour picker's soft Yellow for light paper, at full opacity. */
 export const HIGHLIGHT_COLOUR =

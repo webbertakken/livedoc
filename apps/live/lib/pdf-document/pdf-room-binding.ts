@@ -3,9 +3,16 @@
 // kinds-outside-the-canvas.md "Live state"), with what the PDF document declares of its own. The surface reads the
 // state before it opens the stored file, so the binding catches up as it binds; a change the room refuses is told
 // to the surface, which discards this binding and binds the state again; and so is the stored file's replacement,
-// however it is learnt: the room's op, a change refused for it, or a catch-up that reads another file's state.
+// however it is learnt: the room's op, a change refused for it, or a catch-up that reads another file's state. What
+// the room has not confirmed is read entry by entry ("A change carried across a replacement"), from the binding and
+// from a local copy left behind on another stored file, for the surface to make again on the new one.
 import type { BlobKey } from '@livedoc/document';
-import { PDF_FRAME_CHARS, PDF_LOCAL_SAVE_MS, PdfLiveChanges } from '@livedoc/pdf-documents';
+import {
+  PDF_FRAME_CHARS,
+  PDF_LOCAL_SAVE_MS,
+  PdfLiveChanges,
+  PdfUnconfirmed,
+} from '@livedoc/pdf-documents';
 import { apiLoadPdfState, apiPostPdfUpdate, type PdfDocumentScope } from '@/lib/api/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { LiveTabRoom } from '@/lib/live-tab/live-tab-bus';
@@ -89,6 +96,7 @@ export const pdfRoomBinding =
         }
         return since;
       },
+      beyond: (room, live) => PdfUnconfirmed.read(room, live),
       copies: deps.copies ?? liveTabCopies(PDF_DOCUMENT_COPIES_DB),
       ...(deps.saveDelayMs === undefined ? {} : { saveDelayMs: deps.saveDelayMs }),
     });
@@ -122,6 +130,9 @@ export const pdfRoomBinding =
         const facts = saveFacts.get();
         return !facts.pending && !facts.failed && LiveTabRoom.isConnected();
       },
+      // A Viewer's surface sends nothing, so it has nothing to carry.
+      unconfirmed: () => (deps.canChange ? PdfUnconfirmed.parse(binding.beyond()) : []),
+      left: PdfUnconfirmed.parse(binding.left),
       close: () => {
         stop();
         binding.close();

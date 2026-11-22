@@ -1,10 +1,19 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/opening.md "While it opens", "Refusals"; live-editing-and-storage.md "The layout": the
-// state names its stored file, that file is fetched and opened, and only then are the live changes loaded and bound.
+// state names its stored file, that file is fetched and opened, and only then are the live changes loaded and bound;
+// "A change carried across a replacement": what the room had not confirmed is made again on the new stored file.
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
-import { PageName, PdfLiveChanges, type PageInfo, type PdfOpened } from '@livedoc/pdf-documents';
+import {
+  Mark,
+  PageName,
+  PdfLiveChanges,
+  type FileMark,
+  type PageInfo,
+  type PdfOpened,
+  type UnconfirmedChange,
+} from '@livedoc/pdf-documents';
 import { plainDocument } from '@livedoc/pdf-documents/testing';
 import { ApiError } from '@/lib/api/core';
 import type { PdfEngineClient, PdfEngineStop } from './pdf-engine-client';
@@ -67,12 +76,40 @@ const readyOf = (o: ReturnType<typeof opening>) => {
   return open;
 };
 
-/** A binding whose refusals and moves the test fires, counting what was discarded and closed. */
-function refusable() {
+const OTHER = 'cd'.repeat(32) as BlobKey;
+const highlight = (id: string, page: PageName = PAGES[0]!.name) =>
+  Mark.highlight({
+    id,
+    page,
+    quads: [[72, 720, 172, 720, 72, 700, 172, 700]],
+    text: 'The quick',
+    colour: '#fdf1a9',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+  })!;
+const madeHere = (id: string, page?: PageName): UnconfirmedChange => ({
+  root: 'marks',
+  id,
+  held: null,
+  made: highlight(id, page),
+});
+const marksOf = (o: ReturnType<typeof opening>) =>
+  PdfLiveChanges.marks(readyOf(o).binding.doc).map((mark) => mark.id);
+
+/**
+ * A binding whose refusals and moves the test fires, counting what was discarded and closed. `carried`: what each
+ * binding holds unconfirmed, and what a local copy left behind on another stored file held, by the order they bind.
+ */
+function refusable(
+  carried: { unconfirmed?: UnconfirmedChange[]; left?: UnconfirmedChange[] }[] = [],
+) {
   const made: { refuse: (refusal: PdfDocumentRefusal) => void; move: () => void }[] = [];
   const discard = vi.fn(async () => {});
   const close = vi.fn();
+  const unconfirmed = vi.fn((at: number) => carried[at]?.unconfirmed ?? []);
   const bind: BindPdfLiveChanges = async (state) => {
+    const at = made.length;
     const listeners = new Set<(refusal: PdfDocumentRefusal) => void>();
     const movers = new Set<() => void>();
     made.push({
@@ -83,6 +120,8 @@ function refusable() {
       ...(await unboundPdfLiveChanges(state)),
       discard,
       close,
+      unconfirmed: () => unconfirmed(at),
+      left: carried[at]?.left ?? [],
       onRefused: (listener) => {
         listeners.add(listener);
         return () => listeners.delete(listener);
@@ -93,7 +132,7 @@ function refusable() {
       },
     };
   };
-  return { bind, made, discard, close };
+  return { bind, made, discard, close, unconfirmed };
 }
 
 describe('usePdfDocument', () => {
@@ -235,7 +274,7 @@ describe('usePdfDocument', () => {
     const live = refusable();
     const o = opening({ bind: live.bind });
     await waitFor(() => expect(phase(o)).toBe('ready'));
-    const other = 'cd'.repeat(32) as BlobKey;
+    const other = OTHER;
     vi.mocked(o.deps.loadState).mockResolvedValue({ ...read(), storedFile: other });
     act(() => live.made[0]!.refuse('state'));
     await waitFor(() => expect(o.deps.readBlob).toHaveBeenCalledTimes(2));
@@ -291,7 +330,7 @@ describe('usePdfDocument', () => {
     const first = readyOf(o);
     const dropped = vi.fn();
     first.onDropped(dropped);
-    const other = 'cd'.repeat(32) as BlobKey;
+    const other = OTHER;
     let arrive: (bytes: Uint8Array<ArrayBuffer>) => void = () => {};
     vi.mocked(o.deps.loadState).mockResolvedValue({ ...read(), storedFile: other });
     vi.mocked(o.deps.readBlob).mockImplementationOnce(
@@ -315,6 +354,122 @@ describe('usePdfDocument', () => {
     // The binding of the file that went is no longer heard.
     act(() => live.made[0]!.move());
     expect(live.discard).toHaveBeenCalledTimes(1);
+  });
+
+  it('carries what the room had not confirmed onto a replaced stored file, read before the binding goes', async () => {
+    const live = refusable([{ unconfirmed: [madeHere('mine')] }]);
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    const lost = vi.fn();
+    readyOf(o).onLost(lost);
+    vi.mocked(o.deps.loadState).mockResolvedValue({ ...read(), storedFile: OTHER });
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(readyOf(o).storedFile).toBe(OTHER));
+    expect(marksOf(o)).toEqual(['mine']);
+    expect(lost).not.toHaveBeenCalled();
+    expect(live.unconfirmed.mock.invocationCallOrder[0]).toBeLessThan(
+      live.discard.mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it('passes over a carried mark the new stored file holds as its own', async () => {
+    const live = refusable([{ unconfirmed: [madeHere('baked'), madeHere('mine')] }]);
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    vi.mocked(o.deps.loadState).mockResolvedValue({ ...read(), storedFile: OTHER });
+    vi.mocked(o.engine.fileMarks).mockResolvedValue([{ id: 'baked' } as FileMark]);
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(readyOf(o).storedFile).toBe(OTHER));
+    expect(o.engine.fileMarks).toHaveBeenCalledWith(0);
+    expect(marksOf(o)).toEqual(['mine']);
+  });
+
+  it('counts the changes that could not be placed on the new stored file', async () => {
+    const live = refusable([
+      { unconfirmed: [madeHere('mine'), madeHere('nowhere', PageName.ofObject(41))] },
+    ]);
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    const lost = vi.fn();
+    const off = readyOf(o).onLost(lost);
+    vi.mocked(o.deps.loadState).mockResolvedValue({ ...read(), storedFile: OTHER });
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(readyOf(o).storedFile).toBe(OTHER));
+    expect(marksOf(o)).toEqual(['mine']);
+    expect(lost.mock.calls).toEqual([[1]]);
+    off();
+  });
+
+  it('carries a local copy left behind on another stored file as the PDF opens', async () => {
+    const live = refusable([
+      { left: [madeHere('left'), madeHere('nowhere', PageName.ofObject(41))] },
+    ]);
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    expect(marksOf(o)).toEqual(['left']);
+    // Nobody was listening as the PDF opened: the first to listen hears it, once.
+    const lost = vi.fn();
+    readyOf(o).onLost(lost);
+    readyOf(o).onLost(lost);
+    expect(lost.mock.calls).toEqual([[1]]);
+  });
+
+  it('carries nothing of a change the room refused', async () => {
+    const live = refusable([{ unconfirmed: [madeHere('refused')] }]);
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    const first = readyOf(o);
+    act(() => live.made[0]!.refuse('level_too_low'));
+    await waitFor(() => expect(readyOf(o).binding).not.toBe(first.binding));
+    expect(live.unconfirmed).not.toHaveBeenCalled();
+    expect(marksOf(o)).toEqual([]);
+  });
+
+  it('carries onto the same pages when the state still names the file after a move was told', async () => {
+    const live = refusable([{ unconfirmed: [madeHere('mine')] }]);
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    const first = readyOf(o);
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(readyOf(o).binding).not.toBe(first.binding));
+    expect(marksOf(o)).toEqual(['mine']);
+  });
+
+  it('closes a binding whose carried changes were still being placed when the surface went', async () => {
+    const live = refusable([{ unconfirmed: [madeHere('mine')] }]);
+    const o = opening({ bind: live.bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    let read: (marks: FileMark[]) => void = () => {};
+    vi.mocked(o.engine.fileMarks).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          read = resolve;
+        }),
+    );
+    act(() => live.made[0]!.move());
+    await waitFor(() => expect(o.engine.fileMarks).toHaveBeenCalledTimes(1));
+    o.hook.unmount();
+    read([]);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(live.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes a binding whose left copy was still being placed when the surface went', async () => {
+    const live = refusable([{ left: [madeHere('left')] }]);
+    let read: (marks: FileMark[]) => void = () => {};
+    const o = opening({ bind: live.bind });
+    vi.mocked(o.engine.fileMarks).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          read = resolve;
+        }),
+    );
+    await waitFor(() => expect(o.engine.fileMarks).toHaveBeenCalledTimes(1));
+    o.hook.unmount();
+    read([]);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(live.close).toHaveBeenCalledTimes(1);
+    expect(o.engine.terminate).toHaveBeenCalled();
   });
 
   it('binds the same pages again when the state still names the file after a move was told', async () => {
@@ -347,7 +502,7 @@ describe('usePdfDocument', () => {
       await waitFor(() => expect(phase(o)).toBe('ready'));
       vi.mocked(o.deps.loadState).mockResolvedValue({
         ...read(),
-        storedFile: 'cd'.repeat(32) as BlobKey,
+        storedFile: OTHER,
       });
       if ('readBlob' in how) vi.mocked(o.deps.readBlob).mockRejectedValueOnce(how.readBlob);
       if ('opens' in how) vi.mocked(o.engine.open).mockResolvedValueOnce(how.opens);
@@ -376,7 +531,7 @@ describe('usePdfDocument', () => {
     let arrive: (bytes: Uint8Array<ArrayBuffer>) => void = () => {};
     vi.mocked(o.deps.loadState).mockResolvedValue({
       ...read(),
-      storedFile: 'cd'.repeat(32) as BlobKey,
+      storedFile: OTHER,
     });
     vi.mocked(o.deps.readBlob).mockImplementationOnce(
       () =>

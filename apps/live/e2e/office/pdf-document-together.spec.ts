@@ -1,13 +1,20 @@
-import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Page } from '@playwright/test';
 import { PdfLiveChanges } from '@livedoc/pdf-documents';
 import { textPdf } from '@livedoc/pdf-documents/testing';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
-import { dragAcrossFirstLine, dropPdf, PAGE_ONE, pageOneDrawn, peerOn } from './pdf-document-pages';
+import {
+  askReplacement,
+  dragAcrossFirstLine,
+  dropPdf,
+  PAGE_ONE,
+  pageOneDrawn,
+  peerOn,
+  roomSocketUrl,
+  sha256,
+} from './pdf-document-pages';
 
 // A PDF document worked on together (docs/specs/035-pdf-documents/editing-modes.md "Share roles";
 // live-editing-and-storage.md "The room's op kinds", "Replacing the stored file"; docs/specs/006-document/
@@ -17,36 +24,6 @@ import { dragAcrossFirstLine, dropPdf, PAGE_ONE, pageOneDrawn, peerOn } from './
 // stands on the new file.
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
-const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-
-/**
- * Asks the document's room to replace a PDF tab's stored file, as an editor's surface does, over a socket of the
- * page's own: answers once the room has told this socket of the replacement, or of its refusal.
- */
-function askReplacement(page: Page, where: { url: string; asking: Record<string, unknown> }) {
-  return page.evaluate(
-    ({ url, asking }) =>
-      new Promise<unknown>((resolve, reject) => {
-        const socket = new WebSocket(url);
-        const giveUp = setTimeout(() => reject(new Error('the room did not answer')), 20_000);
-        socket.onopen = () => {
-          const participant = { id: 'replacer', name: 'Replacer', color: '#8ab4f8' };
-          socket.send(JSON.stringify({ kind: 'hello', participant }));
-          socket.send(JSON.stringify({ kind: 'op', op: asking, ref: 1 }));
-        };
-        socket.onmessage = ({ data }) => {
-          const message = JSON.parse(String(data)) as { kind?: string; op?: { kind?: string } };
-          const heard = message.kind === 'op' ? message.op?.kind : null;
-          if (heard !== 'pdf-stored' && heard !== 'pdf-refused') return;
-          clearTimeout(giveUp);
-          socket.close();
-          resolve(message.op);
-        };
-        socket.onerror = () => reject(new Error('the room refused the socket'));
-      }),
-    where,
-  );
-}
 
 test('a Participant reviews a PDF, and its stored file is replaced in one step for everyone on it', async ({
   page,
@@ -106,10 +83,7 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   const state = await page.request.get(stateUrl, { headers });
   expect(state.headers()['x-stored-file']).toBe(firstKey);
   const held = PdfLiveChanges.load([new Uint8Array(await state.body())]);
-  const ticket = (await (
-    await page.request.post(`${apiBase}/documents/${id}/room-ticket`, { headers })
-  ).json()) as { ticket: string };
-  const socketUrl = `${origin.replace(/^http/, 'ws')}${apiBase}/documents/${id}/ws?t=${encodeURIComponent(ticket.ticket)}`;
+  const socketUrl = await roomSocketUrl(page, { origin, id, headers });
   const asking = {
     kind: 'pdf-stored',
     tabId,
@@ -131,11 +105,8 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   expect((await page.request.get(stateUrl, { headers })).headers()['x-stored-file']).toBe(firstKey);
 
   // Asked with the fingerprint of what the room holds, it is made the stored file, in one step.
-  const again = (await (
-    await page.request.post(`${apiBase}/documents/${id}/room-ticket`, { headers })
-  ).json()) as { ticket: string };
   const told = await askReplacement(page, {
-    url: socketUrl.replace(/t=.*$/, `t=${encodeURIComponent(again.ticket)}`),
+    url: await roomSocketUrl(page, { origin, id, headers }),
     asking: { ...asking, at: await PdfLiveChanges.fingerprint(held) },
   });
   expect(told).toEqual(asking);

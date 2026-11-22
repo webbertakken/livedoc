@@ -2,7 +2,7 @@
 // live-editing-and-storage.md "The live model"): one Yjs document, bound to wherever its changes are kept. The
 // surface reads marks from it and makes changes in it; what binds it sends and receives.
 import type * as Y from 'yjs';
-import { PdfLiveChanges } from '@livedoc/pdf-documents';
+import { PdfLiveChanges, type UnconfirmedChange } from '@livedoc/pdf-documents';
 import type { OfficeSaveStatusSource } from '@/components/office/office-save-status';
 import type { PdfStateRead } from '@/lib/api/pdf-documents';
 import type { PdfDocumentRefusal } from './pdf-document-bus';
@@ -24,6 +24,13 @@ export type PdfLiveBinding = {
   onMoved: (listener: () => void) => () => void;
   /** Whether where the changes are kept holds every change made here. */
   isSaved: () => boolean;
+  /**
+   * What was made here and is not yet confirmed where the changes are kept ("A change carried across a
+   * replacement"): read before the binding is let go, and made again on the new stored file's changes.
+   */
+  unconfirmed: () => readonly UnconfirmedChange[];
+  /** The unconfirmed changes of a local copy left behind that was made on another stored file. */
+  left: readonly UnconfirmedChange[];
 };
 
 /** Binds the state a surface read to where its changes are kept. Rejects when it cannot. */
@@ -38,4 +45,6 @@ export const unboundPdfLiveChanges: BindPdfLiveChanges = async (read) => ({
   onRefused: () => () => {},
   onMoved: () => () => {},
   isSaved: () => true,
+  unconfirmed: () => [],
+  left: [],
 });

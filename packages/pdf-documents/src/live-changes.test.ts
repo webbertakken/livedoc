@@ -64,15 +64,23 @@ describe('PdfLiveChanges', () => {
     expect(PdfLiveChanges.stored(doc)).toBeNull();
   });
 
-  it("gives every root's shared type, so one person's changes to any of them are taken back", () => {
-    // live-editing-and-storage.md "Undo": the person's own changes only, newest first.
+  it("gives every root's shared type but `stored` to undo, so a change to any is taken back and the stored file stays named", () => {
+    // live-editing-and-storage.md "Undo": the person's own changes only, newest first; every root but `stored`.
     const doc = PdfLiveChanges.load();
     expect(PdfLiveChanges.roots(doc)).toHaveLength(PDF_ROOTS.length);
-    const undo = new Y.UndoManager([...PdfLiveChanges.roots(doc)], { captureTimeout: 0 });
-    PdfLiveChanges.addMark(doc, highlight('a'));
+    expect(PdfLiveChanges.undoScope(doc)).toHaveLength(PDF_ROOTS.length - 1);
+    const undo = new Y.UndoManager(PdfLiveChanges.undoScope(doc), { captureTimeout: 0 });
+    doc.transact(() => {
+      PdfLiveChanges.setStored(doc, { blob: BLOB, pages: 2 });
+      PdfLiveChanges.addMark(doc, highlight('a'));
+    });
     PdfLiveChanges.addMark(doc, highlight('b'));
     undo.undo();
     expect(PdfLiveChanges.marks(doc).map((m) => m.id)).toEqual(['a']);
+    undo.undo();
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    expect(PdfLiveChanges.stored(doc)).toEqual({ blob: BLOB, pages: 2 });
+    expect(undo.canUndo()).toBe(false);
   });
 
   it('names its stored file, which alone is no change', () => {

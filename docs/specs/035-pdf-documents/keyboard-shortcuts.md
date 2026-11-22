@@ -1,6 +1,6 @@
 # Keyboard shortcuts
 
-**Status: specified.** Nothing is built. Every row reads `specified` until its test names it.
+**Status: specified; a first slice is built.** A row reads `specified` until its test names it, then `built`.
 
 Every keyboard shortcut of a [PDF document](pdf-document.md), in one registry the office shell's
 [shortcut layer](../004-interface-design/office-shell.md) reads for its menus, tooltips and shortcuts dialog. The
@@ -93,7 +93,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Move the selected mark or object                     | Arrow keys; ⇧ by 10              | Arrow keys               | specified |
 | Resize it                                            | ⌥ with arrow keys `(default)`    | None                     | specified |
 | Delete it                                            | Delete or Backspace              | The same                 | specified |
-| Undo, redo                                           | ⌘Z, ⌘⇧Z                          | The same †               | specified |
+| Undo, redo                                           | ⌘Z, ⌘⇧Z                          | The same †               | built     |
 | The comments panel                                   | ⌘⌥⇧A                             | None (a text document's) | specified |
 
 ## Fields

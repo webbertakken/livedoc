@@ -63,6 +63,8 @@ export const PDF_LOG_UPDATES = 500;
 /** (default) How long a change the room has not confirmed waits before this browser keeps it, as a text document's.
  *  Safe range: 100 to 2,000. */
 export const PDF_LOCAL_SAVE_MS = 500;
+/** Changes typed within this long of each other are one step of a person's undo, as a text document's. */
+export const PDF_UNDO_GROUP_MS = 500;
 /** The most base64 one `pdf` op carries: inside the room's 256 KB message cap with room for the envelope. */
 export const PDF_FRAME_CHARS = 200_000;
 /** (default) A coordinate read from a file is held within two pages' reach of the page's origin (security.md "Limits"). */
