@@ -8,7 +8,9 @@
 // - a catch-up reads what the room holds beyond this browser and sends what the room lacks; Yjs makes both harmless
 //   to repeat, so nothing is lost or doubled;
 // - an edit the room has not confirmed in time is kept in this browser's local copy, deleted once the room holds it,
-//   and a copy left behind is merged and sent when the tab is opened again.
+//   and a copy left behind is merged and sent when the tab is opened again;
+// - a binding closed or discarded never sends again, whatever answer arrives late; a discarded one keeps no local
+//   copy, so a change the room refused is gone from this browser.
 import * as Y from 'yjs';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 import { debugLog } from '@/lib/debug-log';
@@ -73,6 +75,15 @@ export type LiveTabRoomBinding = {
   saveFacts: SaveFactsSource;
 };
 
+/** A binding to the room, which alone can refuse a change: it can be discarded. */
+export type LiveTabOpenRoomBinding = LiveTabRoomBinding & {
+  /**
+   * Stop for good and keep nothing: the local copy is removed, with whatever the room has not confirmed. For a
+   * surface whose change the room refused, which then binds the state again as the room holds it.
+   */
+  discard: () => Promise<void>;
+};
+
 const isEmpty = (update: Uint8Array) => update.byteLength <= EMPTY_UPDATE_BYTES;
 
 async function readCopy(
@@ -91,7 +102,7 @@ async function readCopy(
 export async function openLiveTabRoom<Frame extends string>(
   kind: LiveTabClientKind<Frame>,
   deps: LiveTabRoomDeps<Frame>,
-): Promise<LiveTabRoomBinding> {
+): Promise<LiveTabOpenRoomBinding> {
   const { documentId, tabId } = deps;
   const { tag, bus } = kind;
   const key = { documentId, tabId };
@@ -143,6 +154,8 @@ export async function openLiveTabRoom<Frame extends string>(
   let chain: Promise<void> = Promise.resolve();
   let catching = false;
   let catchAgain = false;
+  // Closed or discarded: nothing is sent or kept from here on, whatever answer arrives late.
+  let stopped = false;
   // Failed: the door refused an update, or this browser could not keep its copy; both last until the room holds
   // everything here (or, for the copy, until a write succeeds).
   const facts = liveTabSaveFacts(tag, tabId, debugLog);
@@ -228,6 +241,7 @@ export async function openLiveTabRoom<Frame extends string>(
   };
 
   async function catchUp(): Promise<void> {
+    if (stopped) return;
     if (catching) {
       catchAgain = true;
       return;
@@ -236,6 +250,7 @@ export async function openLiveTabRoom<Frame extends string>(
     const generation = ledger.generation;
     try {
       const since = await deps.loadSince(Y.encodeStateVector(live));
+      if (stopped) return;
       Y.applyUpdate(live, since.update, ROOM_ORIGIN);
       const missing = Y.encodeStateAsUpdate(live, since.stateVector);
       const stored = !deps.canEdit || isEmpty(missing) || (await send(missing, false));
@@ -294,14 +309,34 @@ export async function openLiveTabRoom<Frame extends string>(
   window.addEventListener('pagehide', writeCopy);
   document.addEventListener('visibilitychange', onHide);
 
+  const stop = () => {
+    stopped = true;
+    stopListening();
+    live.off('update', onLocal);
+    window.removeEventListener('pagehide', writeCopy);
+    document.removeEventListener('visibilitychange', onHide);
+  };
   return {
     doc: live,
     close: () => {
-      stopListening();
-      live.off('update', onLocal);
-      window.removeEventListener('pagehide', writeCopy);
-      document.removeEventListener('visibilitychange', onHide);
+      if (stopped) return;
+      stop();
       writeCopy();
+    },
+    discard: () => {
+      stop();
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      chain = chain
+        .then(async () => {
+          await deps.copies.remove(key);
+          copyStored = false;
+          debugLog(`${tag} local-copy discarded`, { tabId });
+        })
+        .catch((error: unknown) =>
+          debugLog(`${tag} local-copy-failed`, { tabId, error: String(error) }),
+        );
+      return chain;
     },
     settled: () => chain,
     saveFacts: { get: facts.get, subscribe: facts.subscribe },

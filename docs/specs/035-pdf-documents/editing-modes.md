@@ -119,7 +119,8 @@ The modes line up with the access levels (F7, ruled: a Participant does all of R
 
 ## Errors
 
-- A change refused for the level is undone locally with the toast "You can view this PDF, but not change it." (a
+- A change refused for the level is dropped where it was made
+  ([Live editing and storage](live-editing-and-storage.md#limits)) with the toast "You can view this PDF, but not change it." (a
   Viewer) or "You can review this PDF, but not edit its pages." (a Participant).
 - A level lowered while a person is in a mode it no longer reaches moves them to their starting mode, as the shell
   does for every kind, with the same toast.

@@ -11,6 +11,12 @@ export type LiveTabDigest = {
   readonly searchText: string;
 };
 
+/**
+ * The least level an update needs ("The level an update asks"), or `unreadable`: it stands on changes the stored
+ * state lacks, so what it touches cannot be judged.
+ */
+export type LevelAsked = 'participate' | 'edit' | 'unreadable';
+
 /** The kind's three tables in the room's SQLite: the updates log, the chunks it folds into, and the digest. */
 export type LiveTabTables = {
   readonly updates: string;
@@ -35,6 +41,15 @@ export type LiveTabKind = {
     readonly insertedCharacters: (update: Uint8Array) => number;
     /** The digest of the state the updates make. */
     readonly digest: (updates: readonly Uint8Array[]) => LiveTabDigest;
+    /**
+     * The level `update` asks on the state `stored` makes, for the tab whose body is `tab`. Read for a
+     * Participant's update only; a kind that declares none asks an Editor for every update.
+     */
+    readonly asks?: (
+      stored: readonly Uint8Array[],
+      update: Uint8Array,
+      tab: Readonly<Record<string, unknown>>,
+    ) => LevelAsked;
   };
   readonly sizes: {
     /** A chunk row's bytes, under the room's row cap. */

@@ -37,6 +37,8 @@ const WELL_FORMED: Record<string, unknown>[] = [
   { kind: 'text-document', tabId: 't1', update: 'AAA=' },
   { kind: 'text-document', tabId: 't1', stale: true },
   { kind: 'text-document-refused', tabId: 't1', limit: 'characters' },
+  { kind: 'pdf-refused', tabId: 't1', limit: 'state' },
+  { kind: 'pdf-refused', tabId: 't1', name: 'level_too_low' },
   // Presence, and a kind this build does not know, pass as they always have.
   { kind: 'cursor', x: 1, y: 2 },
   { kind: 'from-a-newer-build', anything: true },
@@ -74,6 +76,11 @@ describe('roomOpIsWellFormed', () => {
     ['a text-document op without its update', { kind: 'text-document', tabId: 't1' }],
     ['a text-document stale that is not true', { kind: 'text-document', tabId: 't1', stale: 1 }],
     ['a refusal naming no limit', { kind: 'text-document-refused', tabId: 't1', limit: 'x' }],
+    [
+      'a refusal by a name this build does not know',
+      { kind: 'pdf-refused', tabId: 't1', name: 'x' },
+    ],
+    ['a refusal that says neither', { kind: 'pdf-refused', tabId: 't1' }],
     ['no kind at all', { tabId: 't1' }],
     ['not an object', 'el'],
   ])('refuses %s', (_why, op) => {

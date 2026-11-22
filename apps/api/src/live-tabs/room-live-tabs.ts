@@ -2,7 +2,8 @@
 // the one writer. Each frame of the kind is checked (its tab is of the kind and in this document, its update decodes,
 // no limit is passed), appended to the tab's log on the room's write queue, and only then sequenced to everyone else,
 // so nothing relayed is unstored. Updates commute, so the order the queue keeps is for storage, not for merging.
-import { isRoomOpRef, type ServerMessage } from '@livedoc/api-schema';
+// An Editor's update is stored as it is; anyone else's is judged by what it changes ("The level an update asks").
+import { isRoomOpRef, type AccessLevel, type ServerMessage } from '@livedoc/api-schema';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents';
 import type { DocumentEnv } from '../types';
 import type { LiveTabCaps, LiveTabKind, LiveTabLimit } from './live-tab-kind';
@@ -12,6 +13,7 @@ import {
   compactionDue,
   compactLiveTab,
   storedLiveTab,
+  storedUpdates,
 } from './live-tab-store';
 
 export type RoomLiveTabHooks = {
@@ -24,15 +26,24 @@ export type RoomLiveTabHooks = {
   caps?: LiveTabCaps;
 };
 
-export type LiveTabSender = { ws: WebSocket; presenceId: string; documentId: string | null };
+export type LiveTabSender = {
+  ws: WebSocket;
+  presenceId: string;
+  documentId: string | null;
+  // The sender's server-verified level, never what a frame claims.
+  level: AccessLevel;
+};
 
 type LiveTabFrame = { kind: string; tabId: string; update: string };
 
 /** Why a frame was refused, for the log's fingerprint. */
-export type LiveTabRefusal = 'shape' | 'decode' | 'wrong-kind' | 'no-store';
+export type LiveTabRefusal = 'shape' | 'decode' | 'wrong-kind' | 'no-store' | 'unreadable';
+
+/** Why a sender's level kept an update out: it asks more, or it cannot be read yet. */
+type LevelRefusal = 'level' | 'unreadable';
 
 /** What became of an update sent by the door: stored (and relayed), or why it was refused. */
-export type PostedOutcome = 'stored' | Exclude<LiveTabRefusal, 'shape'> | LiveTabLimit;
+export type PostedOutcome = 'stored' | 'level' | Exclude<LiveTabRefusal, 'shape'> | LiveTabLimit;
 
 /** The frame, when the op is one of the kind's; else null. */
 export function liveTabFrameOf(kind: LiveTabKind, op: unknown): LiveTabFrame | null {
@@ -64,7 +75,33 @@ export class RoomLiveTabs {
     );
   }
 
-  /** One frame of the kind from an Editor's socket: stored, then relayed; refused and logged otherwise. */
+  /**
+   * Whether the sender's level keeps this update out. An Editor's is never read; a Viewer's is refused unread; a
+   * Participant's is judged by what the kind says it asks.
+   */
+  private async levelRefusal(
+    env: DocumentEnv,
+    where: { documentId: string; tabId: string; tab: Record<string, unknown> },
+    update: Uint8Array,
+    level: AccessLevel,
+  ): Promise<LevelRefusal | null> {
+    if (level === 'edit') return null;
+    const { kind } = this;
+    const { documentId, tabId, tab } = where;
+    const reads = level === 'participate' ? kind.state.asks : undefined;
+    const asks = reads ? reads(await storedUpdates(env, kind, tabId), update, tab) : 'edit';
+    if (asks === 'participate') return null;
+    if (asks === 'unreadable') {
+      this.refused(documentId, tabId, 'unreadable');
+      return 'unreadable';
+    }
+    console.warn(
+      `${kind.tag} level-refused document=${documentId} tab=${tabId} level=${level} asks=${asks}`,
+    );
+    return 'level';
+  }
+
+  /** One frame of the kind from a socket: stored, then relayed; refused and logged otherwise. */
   async accept(sender: LiveTabSender, op: unknown, ref?: unknown): Promise<boolean> {
     const { kind } = this;
     const frame = liveTabFrameOf(kind, op);
@@ -84,8 +121,22 @@ export class RoomLiveTabs {
       return false;
     }
     return this.hooks.enqueue(async () => {
-      if (!(await storedLiveTab(env, kind, documentId, frame.tabId))) {
+      const tab = await storedLiveTab(env, kind, documentId, frame.tabId);
+      if (!tab) {
         this.refused(documentId, frame.tabId, 'wrong-kind');
+        return false;
+      }
+      const where = { documentId, tabId: frame.tabId, tab };
+      const level = await this.levelRefusal(env, where, update, sender.level);
+      if (level) {
+        // Refused whole. A level too low is told to the sender alone; an update that cannot be read follows one
+        // the sender has been told of already.
+        if (level === 'level')
+          this.hooks.sendTo(sender.ws, {
+            kind: 'op',
+            from: 'system',
+            op: { kind: `${kind.frame}-refused`, tabId: frame.tabId, name: 'level_too_low' },
+          });
         return false;
       }
       const limit = await liveTabLimitOf(env, kind, frame.tabId, update, this.hooks.caps);
@@ -123,14 +174,16 @@ export class RoomLiveTabs {
   }
 
   /**
-   * One update sent by the door, already gated by the route: stored on the same write queue as the frames, then
-   * relayed from the system, as an op when it fits a frame, else as the tab's `stale`. An update no row of the log
-   * could hold is folded into the chunks at once.
+   * One update sent by the door, whose route says the sender's level: stored on the same write queue as the frames,
+   * then relayed from the system, as an op when it fits a frame, else as the tab's `stale`. An update no row of the
+   * log could hold is folded into the chunks at once.
    */
   async acceptPosted(
     documentId: string,
     tabId: string,
     update: Uint8Array,
+    // An Editor's unless the route says otherwise: every route gates an edit of the tab before it posts.
+    level: AccessLevel = 'edit',
   ): Promise<PostedOutcome> {
     const { kind } = this;
     if (!kind.state.decodes(update)) {
@@ -143,10 +196,13 @@ export class RoomLiveTabs {
       return 'no-store';
     }
     return this.hooks.enqueue(async () => {
-      if (!(await storedLiveTab(env, kind, documentId, tabId))) {
+      const tab = await storedLiveTab(env, kind, documentId, tabId);
+      if (!tab) {
         this.refused(documentId, tabId, 'wrong-kind');
         return 'wrong-kind';
       }
+      const refusal = await this.levelRefusal(env, { documentId, tabId, tab }, update, level);
+      if (refusal) return refusal;
       const limit = await liveTabLimitOf(env, kind, tabId, update, this.hooks.caps);
       if (limit) {
         this.refusedEdit(documentId, tabId, limit);

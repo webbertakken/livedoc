@@ -67,7 +67,9 @@ describe('RoomLiveTabs, for a text document', () => {
     const db = sqliteD1();
     const { room, sequence, sendTo } = await roomWith(db);
     const op = frame('t1', 'Typed');
-    expect(await room.accept({ ws, presenceId: 'p1', documentId: 'D' }, op, 4)).toBe(true);
+    expect(
+      await room.accept({ ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const }, op, 4),
+    ).toBe(true);
     expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
     expect(sequence).toHaveBeenCalledWith('p1', op, ws);
     expect(sendTo).toHaveBeenCalledWith(ws, { kind: 'cursor', epoch: 'e', seq: 7, ref: 4 });
@@ -76,7 +78,7 @@ describe('RoomLiveTabs, for a text document', () => {
   it('refuses a frame that is malformed, does not decode, or is not for a text document', async () => {
     const db = sqliteD1();
     const { room, sequence } = await roomWith(db);
-    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
     expect(await room.accept(sender, { kind: 'text-document', tabId: 't1' })).toBe(false);
     expect(
       await room.accept(sender, {
@@ -94,7 +96,7 @@ describe('RoomLiveTabs, for a text document', () => {
   it('compacts the log once it passes its size', async () => {
     const db = sqliteD1();
     const { room } = await roomWith(db, ROOMY);
-    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
     // Text that does not compress in an update: one big paragraph past the log's size.
     const big = Array.from({ length: TEXT_DOCUMENT_LOG_BYTES / 6 }, (_, i) =>
       (i * 7919).toString(36).padStart(6, '0'),
@@ -179,7 +181,7 @@ describe('RoomLiveTabs, for a text document', () => {
   it('compacts the log once it holds its count of updates', async () => {
     const db = sqliteD1();
     const { room } = await roomWith(db);
-    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
     const doc = TextDocumentState.load();
     const updates: Uint8Array[] = [];
     doc.on('update', (u: Uint8Array) => updates.push(u));
@@ -208,7 +210,7 @@ describe('RoomLiveTabs, for a text document', () => {
          VALUES ('t1', ?, 0, 1, 1, 0, 1)`,
       )
       .run(TEXT_DOCUMENT_MAX_CHARS);
-    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
     expect(await room.accept(sender, frame('t1', 'x'))).toBe(false);
     expect(await storedUpdates(db.env, 't1')).toEqual([]);
     expect(sequence).not.toHaveBeenCalled();
@@ -222,6 +224,34 @@ describe('RoomLiveTabs, for a text document', () => {
     );
   });
 
+  it('compacts the log when the door’s updates fill it', async () => {
+    const db = sqliteD1();
+    const { room } = await roomWith(db);
+    const doc = TextDocumentState.load();
+    const updates: Uint8Array[] = [];
+    doc.on('update', (u: Uint8Array) => updates.push(u));
+    for (let i = 0; i < TEXT_DOCUMENT_LOG_UPDATES + 1; i++)
+      TextDocumentState.replaceBody(doc, Body.of('x'.repeat(i + 1)));
+    for (const update of updates) expect(await room.acceptPosted('D', 't1', update)).toBe('stored');
+    const rows = db.sql.prepare('SELECT COUNT(*) AS n FROM text_document_updates').get() as {
+      n: number;
+    };
+    expect(rows.n).toBeLessThan(TEXT_DOCUMENT_LOG_UPDATES);
+  });
+
+  it('stores nothing sent by the door where the room has no storage', async () => {
+    const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
+      env: undefined,
+      enqueue: (step) => step(),
+      sequence: () => 0,
+      sendTo: () => {},
+      position: () => ({ epoch: 'e' }),
+    });
+    expect(await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('y')))).toBe(
+      'no-store',
+    );
+  });
+
   it('reads only a whole frame', () => {
     expect(liveTabFrameOf(TEXT_DOCUMENT_LIVE_TAB, null)).toBeNull();
     expect(liveTabFrameOf(TEXT_DOCUMENT_LIVE_TAB, { kind: 'el' })).toBeNull();
@@ -231,19 +261,47 @@ describe('RoomLiveTabs, for a text document', () => {
   });
 });
 
+// kinds-outside-the-canvas.md "Live state", "The level an update asks": a kind that reads no level asks an Editor.
+describe('a text document frame from a level too low', () => {
+  it.each(['participate', 'view'] as const)(
+    'refuses a frame from %s whole, telling the sender alone',
+    async (level) => {
+      const db = sqliteD1();
+      const { room, sequence, sendTo } = await roomWith(db);
+      const sender = { ws, presenceId: 'p1', documentId: 'D', level };
+      expect(await room.accept(sender, frame('t1', 'x'))).toBe(false);
+      expect(await storedUpdates(db.env, 't1')).toEqual([]);
+      expect(sequence).not.toHaveBeenCalled();
+      expect(sendTo).toHaveBeenCalledWith(ws, {
+        kind: 'op',
+        from: 'system',
+        op: { kind: 'text-document-refused', tabId: 't1', name: 'level_too_low' },
+      });
+      expect(
+        await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('y')), level),
+      ).toBe('level');
+    },
+  );
+});
+
 describe('the role gate on text document edits', () => {
   const op = frame('t1', 'x');
-  it('relays an Editor’s and drops a Participant’s and a Viewer’s', () => {
+  it('hands a live tab’s frame to the room’s own check, with the sender’s level', () => {
     expect(gateClientOp(op, { role: 'edit', tabScope: null, key: undefined })).toEqual({
-      kind: 'relay',
-      presence: false,
-      participantAnswers: false,
+      kind: 'live-tab',
+      level: 'edit',
     });
     expect(gateClientOp(op, { role: 'participate', tabScope: null, key: 'k' })).toEqual({
-      kind: 'drop',
+      kind: 'live-tab',
+      level: 'participate',
     });
     expect(gateClientOp(op, { role: 'view', tabScope: null, key: undefined })).toEqual({
-      kind: 'drop',
+      kind: 'live-tab',
+      level: 'view',
+    });
+    expect(gateClientOp(op, { role: 'nonsense', tabScope: null, key: undefined })).toEqual({
+      kind: 'live-tab',
+      level: 'view',
     });
   });
 

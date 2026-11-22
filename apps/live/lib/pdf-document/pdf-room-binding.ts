@@ -1,8 +1,8 @@
 // Binds a PDF document's live changes to the room (docs/specs/035-pdf-documents/live-editing-and-storage.md
 // "Storage", "Offline and This Browser", "Limits"): the binding every live tab kind has (docs/specs/006-document/
 // kinds-outside-the-canvas.md "Live state"), with what the PDF document declares of its own. The surface reads the
-// state before it opens the stored file, so the binding catches up as it binds; a change the room refuses is taken
-// back.
+// state before it opens the stored file, so the binding catches up as it binds; a change the room refuses is told
+// to the surface, which discards this binding and binds the state again.
 import { PDF_FRAME_CHARS, PDF_LOCAL_SAVE_MS, PdfLiveChanges } from '@livedoc/pdf-documents';
 import { apiLoadPdfState, apiPostPdfUpdate, type PdfDocumentScope } from '@/lib/api/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
@@ -15,9 +15,8 @@ import {
   type LiveTabStateSince,
 } from '@/lib/live-tab/live-tab-room-binding';
 import { liveTabSaveStatusSource } from '@/lib/live-tab/live-tab-save-status';
-import { PdfDocumentBus } from './pdf-document-bus';
+import { PdfDocumentBus, type PdfDocumentRefusal } from './pdf-document-bus';
 import type { BindPdfLiveChanges } from './pdf-live-binding';
-import { unconfirmedPdfChanges } from './pdf-unconfirmed-changes';
 
 export type PdfFrame = LiveTabFrame<'pdf'>;
 
@@ -74,16 +73,15 @@ export const pdfRoomBinding =
       ...(deps.saveDelayMs === undefined ? {} : { saveDelayMs: deps.saveDelayMs }),
     });
     const { doc, saveFacts } = binding;
-    const unconfirmed = unconfirmedPdfChanges(doc);
-    const offFacts = saveFacts.subscribe(() => {
-      if (!saveFacts.get().pending) unconfirmed.confirmed();
+    const listeners = new Set<(refusal: PdfDocumentRefusal) => void>();
+    const offRefused = PdfDocumentBus.onRefused(tabId, (refusal) => {
+      debugLog(`${TAG} change-refused`, { tabId, refusal });
+      for (const listener of [...listeners]) listener(refusal);
     });
-    const listeners = new Set<() => void>();
-    const offRefused = PdfDocumentBus.onRefused(tabId, (limit) => {
-      const undone = unconfirmed.undoNewest();
-      debugLog(`${TAG} change-undone`, { tabId, limit, undone });
-      for (const listener of listeners) listener();
-    });
+    const stop = () => {
+      offRefused();
+      listeners.clear();
+    };
     return {
       doc,
       saveStatus: liveTabSaveStatusSource(TAG, saveFacts, false, CONNECTION, debugLog),
@@ -92,11 +90,12 @@ export const pdfRoomBinding =
         return () => listeners.delete(listener);
       },
       close: () => {
-        offRefused();
-        offFacts();
-        unconfirmed.close();
-        listeners.clear();
+        stop();
         binding.close();
+      },
+      discard: () => {
+        stop();
+        return binding.discard();
       },
     };
   };

@@ -509,15 +509,17 @@ export function useRoomConnection(opts: {
         // open, merges it; the room has already stored it, so a surface opened later loads it.
         TextDocumentBus.deliver(op);
       } else if (op.kind === 'text-document-refused') {
-        // An edit of ours the room refused whole ("Refused edits"): that tab's surface says which limit.
-        TextDocumentBus.refused(op.tabId, op.limit);
+        // An edit of ours the room refused whole ("Refused edits"): that tab's surface says which limit. A refusal
+        // for the level reaches no surface: a text document's sends nothing below an Editor.
+        if ('limit' in op) TextDocumentBus.refused(op.tabId, op.limit);
+        else debugLog('[text-document] edit-refused', { tabId: op.tabId, name: op.name });
       } else if (op.kind === 'pdf') {
         // A PDF document's live change (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage"): its
         // surface, when open, merges it; the room has already stored it, so a surface opened later loads it.
         PdfDocumentBus.deliver(op);
       } else if (op.kind === 'pdf-refused') {
-        // A change of ours the room refused whole ("Limits"): that tab's surface takes it back and says so.
-        PdfDocumentBus.refused(op.tabId, op.limit);
+        // A change of ours the room refused whole ("Limits"): that tab's surface drops it and says so.
+        PdfDocumentBus.refused(op.tabId, 'limit' in op ? op.limit : op.name);
       } else if (op.kind === 'text-document-caret') {
         // A collaborator's selection in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
         // "Presence"), checked field by field; drawn by that tab's surface, never written.

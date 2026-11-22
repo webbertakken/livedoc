@@ -4,7 +4,7 @@
 it back for marks, field values, a page's turn and what was deleted of the stored file, the room storing a PDF's
 live changes as a live tab kind (`pdf`, `pdf-refused`), its two doors, the digest's pages and marks, the stored
 file in the blob store, and the surface bound to the room: sending, reconnecting, the local copy of unconfirmed
-changes, the save status, a refused change undone. Presence, undo, This Browser, reading offline, replacing the stored
+changes, the save status, a refused change dropped, a Participant's changes judged by what they touch. Presence, undo, This Browser, reading offline, replacing the stored
 file, branches, copies, versions and what the servers make are not built.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
@@ -161,7 +161,18 @@ writes one shape `(default)`:
   `threads`, `fieldValues`, `recognised` and `removed` entries for marks; one touching `pageOrder`, `pages`,
   `objects`, `fields` or `document` is refused whole with `level_too_low`. The check reads the update's changed
   roots, never trusting a client's claim ([Editing modes](editing-modes.md#share-roles)).
-- A Participant's `pdf` op is in `PARTICIPATION_OP_KINDS`.
+- **What an update touches** `(default)`: every root in which it adds, sets or removes anything, however deep. A
+  root the layout does not name asks an Editor.
+- **`removed`**: a Participant's update may add or take back only entries that are a `mark`'s, before and after.
+- **`stored`**: a Participant's update may name the stored file once, where the state names none: its `blob` must
+  be the tab's own and its `pages` a page count; after that, `stored` must read as it did.
+- **An update that stands on changes the room lacks** (a change sent after one that was refused, before its sender
+  heard of the refusal) cannot be judged and is refused untold, logged `[pdf] update-refused reason=unreadable`.
+- A Participant's `pdf` op reaches the room as participation does, through the room's own check for a
+  [live tab kind](../006-document/kinds-outside-the-canvas.md#live-state), never relayed as sent; a Viewer's is
+  refused with `level_too_low`.
+- **The door** judges a posted update the same way: `403 level_too_low` for a Viewer's, and for a Participant's
+  that asks an Editor; `409 update_unreadable` `(default)` for a Participant's that cannot be judged.
 
 ### The digest
 
@@ -259,9 +270,13 @@ A change past a limit is refused whole and named: `pdf_too_many_marks`, `pdf_too
 `live_changes_too_large` (when a replacement cannot be made, with "This PDF has more unsaved changes than fit. Ask
 someone who can edit it to open it." for a Participant on a file only an Editor's rewrite can replace).
 
-The room's refusal of a frame reaches its sender alone, as `pdf-refused` with the limit passed. The surface undoes
-that change, so what it shows is what everyone holds, and says "This PDF has more unsaved changes than fit."
-`(default)`, logging `[pdf] change-undone`.
+The room's refusal of a frame reaches its sender alone, as `pdf-refused` with the limit passed or the refusal's
+name. The surface then drops its live changes and reads them again from the room, in place: the pages stay drawn, and
+what it shows is what everyone holds `(default)`. Nothing of the refused change stays in this browser, so it is
+never sent again; a change made in the moment before the refusal was heard goes with it, as the room would have
+refused it too. It says "This PDF has more unsaved changes than fit." `(default)` for a limit, or the level's line
+of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Undo's steps before it end
+([Undo](#undo)).
 
 ## Share roles
 
@@ -275,7 +290,7 @@ that change, so what it shows is what everyone holds, and says "This PDF has mor
 
 - No telemetry of its own: each area's spec fires for what a person did.
 - Fingerprints with the document and tab ids, never content: `[pdf] state-read bytes=<n>`, `[pdf] update-stored
-bytes=<n> roots=<names>`, `[pdf] update-refused name=<name>`, `[pdf] caught-up`, `[pdf] compacted`,
+bytes=<n> roots=<names>`, `[pdf] update-refused name=<name>`, `[pdf] level-refused level=<level> asks=<level>`, `[pdf] caught-up`, `[pdf] compacted`,
   `[pdf] stored-file-replaced` ([Saving](saving.md#telemetry-and-observability)), `[pdf] digest pages=<n> marks=<n>`,
   `[pdf] server-made what=<thumbnail|text|preview|bake> ms=<n>`, `[pdf] server-declined what=<what> reason=<reason>`,
   `[pdf] browser-upload what=<thumbnail|text>`, `[pdf] local-store refused=<reason>`.

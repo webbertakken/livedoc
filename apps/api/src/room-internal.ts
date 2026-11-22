@@ -2,6 +2,7 @@
 // Durable Object after a privileged action. Not exposed publicly: the worker stubs the DO via
 // `env.DOCUMENT_ROOM.get(...).fetch(...)`, which never traverses Cloudflare's edge, so these paths are implicitly
 // internal and their bodies trusted. Every other request is a WebSocket upgrade, which the room answers itself.
+import { parseStoredLevel, type AccessLevel } from '@livedoc/api-schema';
 import { opForTheWire } from '@livedoc/document';
 import { parseAccessCloseMatch, type AccessCloseMatch } from './room-access';
 import type { PostedOutcome } from './live-tabs/room-live-tabs';
@@ -26,6 +27,7 @@ export type InternalRoom = {
     documentId: string,
     tabId: string,
     update: Uint8Array,
+    level: AccessLevel,
   ) => Promise<PostedOutcome>;
 };
 
@@ -35,6 +37,8 @@ const POSTED_STATUS: Record<PostedOutcome, number> = {
   decode: 400,
   'wrong-kind': 404,
   'no-store': 503,
+  level: 403,
+  unreadable: 409,
   characters: 413,
   state: 413,
 };
@@ -116,7 +120,9 @@ export async function answerInternal(
     const tabId = url.searchParams.get('tab');
     if (!frame || !documentId || !tabId) return new Response('bad update', { status: 400 });
     const update = new Uint8Array(await request.arrayBuffer());
-    const outcome = await room.acceptPostedLiveTab(frame, documentId, tabId, update);
+    // The route says its caller's level; one this room does not know reads as the lowest.
+    const level = parseStoredLevel(url.searchParams.get('level'));
+    const outcome = await room.acceptPostedLiveTab(frame, documentId, tabId, update, level);
     // A refused edit names its limit ("Refused edits").
     if (outcome === 'characters' || outcome === 'state')
       return Response.json({ limit: outcome }, { status: POSTED_STATUS[outcome] });

@@ -28,6 +28,7 @@ import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
+import type { PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { DOWNLOAD_PDF, PDF_MENUS, TOOL_HIGHLIGHT, TOOL_SELECT } from '@/lib/pdf-document/pdf-menus';
@@ -48,8 +49,17 @@ import { PdfPages } from './PdfPages';
 
 /** "This PDF holds the most marks LiveDoc keeps for one file (20,000)." (marks.md "Errors"). */
 const TOO_MANY_MARKS_COPY = 'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
-/** Said once a change the room refused has been taken back (live-editing-and-storage.md "Limits"). */
+/** Said once a change the room refused for a limit has been dropped (live-editing-and-storage.md "Limits"). */
 const CHANGES_DO_NOT_FIT_COPY = 'This PDF has more unsaved changes than fit.';
+/** Said once a change refused for the level has been dropped (editing-modes.md "Errors"). */
+const VIEW_ONLY_COPY = 'You can view this PDF, but not change it.';
+const REVIEW_ONLY_COPY = 'You can review this PDF, but not edit its pages.';
+
+/** What a person is told once a change the room refused has been dropped. */
+export const droppedChangeCopy = (refusal: PdfDocumentRefusal, level: AccessLevel): string => {
+  if (refusal !== 'level_too_low') return CHANGES_DO_NOT_FIT_COPY;
+  return level === 'view' ? VIEW_ONLY_COPY : REVIEW_ONLY_COPY;
+};
 
 const megabytes = (bytes: number): string =>
   bytes < 1_000_000
@@ -87,9 +97,9 @@ export function PdfDocumentSurface({
   const [attempt, setAttempt] = useState(0);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // Read as the binding sends: a level that changes, or a room that reconnects, never binds again.
-  const live = useRef({ canReview, sequence });
+  const live = useRef({ canReview, sequence, level });
   useLayoutEffect(() => {
-    live.current = { canReview, sequence };
+    live.current = { canReview, sequence, level };
   });
   const bind = useCallback<BindPdfLiveChanges>(
     (read) =>
@@ -113,8 +123,11 @@ export function PdfDocumentSurface({
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
 
-  const binding = ready?.binding ?? null;
-  useEffect(() => binding?.onRefused(() => setProblem(CHANGES_DO_NOT_FIT_COPY)), [binding]);
+  const onDropped = ready?.onDropped ?? null;
+  useEffect(
+    () => onDropped?.((refusal) => setProblem(droppedChangeCopy(refusal, live.current.level))),
+    [onDropped],
+  );
 
   const storedFile = open.phase === 'ready' || open.phase === 'refused' ? open.storedFile : null;
   const download = useCallback(async () => {

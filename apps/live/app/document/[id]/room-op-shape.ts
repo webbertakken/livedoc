@@ -59,7 +59,12 @@ export function roomOpIsWellFormed(op: unknown): op is RoomOp {
       return isText(op.tabId) && ('stale' in op ? op.stale === true : isText(op.update));
     case 'text-document-refused':
     case 'pdf-refused':
-      return isText(op.tabId) && (op.limit === 'characters' || op.limit === 'state');
+      return (
+        isText(op.tabId) &&
+        ('limit' in op
+          ? op.limit === 'characters' || op.limit === 'state'
+          : op.name === 'level_too_low')
+      );
     case 'document-meta':
       return (
         isText(op.name) &&

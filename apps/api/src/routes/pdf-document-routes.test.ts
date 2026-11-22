@@ -1,12 +1,17 @@
 // docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage", "The digest"; the room's side is every live tab
 // kind's (docs/specs/006-document/kinds-outside-the-canvas.md "Live state").
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PDF_STORED_FILE_HEADER, TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
+import {
+  parseStoredLevel,
+  PDF_STORED_FILE_HEADER,
+  TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+} from '@livedoc/api-schema';
 import { blobKeyOf, type BlobKey } from '@livedoc/document';
 import {
   Mark,
   PageName,
   PDF_UPDATE_MAX_BYTES,
+  PdfChange,
   PdfLiveChanges,
   type Quad,
 } from '@livedoc/pdf-documents';
@@ -74,21 +79,35 @@ function highlightUpdate(id: string, text = 'The quick brown fox'): Uint8Array {
   return PdfLiveChanges.encode(doc);
 }
 
+/** A page turned: a change only Editing makes. */
+function turnUpdate(): Uint8Array {
+  const doc = PdfLiveChanges.load();
+  PdfChange.apply(doc, PdfChange.turnPage(PageName.ofObject(4), 90));
+  return PdfLiveChanges.encode(doc);
+}
+
 const marksOf = async (res: Response) =>
   PdfLiveChanges.marks(PdfLiveChanges.load([new Uint8Array(await res.arrayBuffer())]));
 
 // A room whose internal door runs the real room side over the test's database.
 function withRoom(caps?: { characters: number; stateBytes: number }) {
   const relayed: unknown[] = [];
+  const told: unknown[] = [];
   const room = new RoomLiveTabs(PDF_LIVE_TAB, {
     env: db.env,
     enqueue: (step) => step(),
     sequence: (_from, op) => relayed.push(op),
-    sendTo: () => {},
+    sendTo: (_ws, payload) => void told.push(payload),
     position: () => ({ epoch: 'e' }),
     ...(caps ? { caps } : {}),
   });
-  const statuses: Record<string, number> = { stored: 204, decode: 400, 'wrong-kind': 404 };
+  const statuses: Record<string, number> = {
+    stored: 204,
+    decode: 400,
+    'wrong-kind': 404,
+    level: 403,
+    unreadable: 409,
+  };
   const binding = {
     idFromName: (name: string) => name,
     get: () => ({
@@ -100,6 +119,7 @@ function withRoom(caps?: { characters: number; stateBytes: number }) {
           url.searchParams.get('document')!,
           url.searchParams.get('tab')!,
           new Uint8Array(init!.body as ArrayBuffer),
+          parseStoredLevel(url.searchParams.get('level')),
         );
         if (outcome === 'characters' || outcome === 'state')
           return Response.json({ limit: outcome }, { status: 413 });
@@ -108,7 +128,7 @@ function withRoom(caps?: { characters: number; stateBytes: number }) {
     }),
   };
   (db.env as unknown as { DOCUMENT_ROOM: unknown }).DOCUMENT_ROOM = binding;
-  return { relayed, room };
+  return { relayed, told, room };
 }
 
 beforeEach(async () => {
@@ -294,7 +314,8 @@ describe('sending a change by the door', () => {
 });
 
 // docs/specs/035-pdf-documents/pdf-document.md "Share roles", editing-modes.md "Share roles": every role reads; the
-// room takes changes from Editors alone until a Participant's frames are checked by what they touch.
+// room takes an Editor's changes as they are and a Participant's by what they touch
+// (live-editing-and-storage.md "The room's op kinds").
 describe('share roles', () => {
   beforeEach(async () => {
     await createShareLink(db.env, 'D', 'EDITCODE', 'edit');
@@ -319,13 +340,30 @@ describe('share roles', () => {
   it.each([
     ['EDITCODE', 204, null],
     ['SCOPED01', 204, null],
-    ['PARTCODE', 403, 'level_too_low'],
+    ['PARTCODE', 204, null],
     ['VIEWCODE', 403, 'level_too_low'],
     ['SCOPED02', 404, 'pdf_not_found'],
   ])('answers a change sent on %s with %i', async (code, status, error) => {
     const res = await call('POST', UPDATES, 'guest', highlightUpdate('m1'), code);
     expect(res.status).toBe(status);
     if (error) expect(await res.json()).toEqual({ error });
+  });
+
+  it('refuses a Participant’s posted change that asks an Editor, and one the room cannot read', async () => {
+    const turned = await call('POST', UPDATES, 'guest', turnUpdate(), 'PARTCODE');
+    expect(turned.status).toBe(403);
+    expect(await turned.json()).toEqual({ error: 'level_too_low' });
+    expect((await call('POST', UPDATES, 'guest', turnUpdate(), 'EDITCODE')).status).toBe(204);
+    // A change that follows one the room never stored.
+    const doc = PdfLiveChanges.load();
+    const sent: Uint8Array[] = [];
+    doc.on('update', (update: Uint8Array) => sent.push(update));
+    doc.getMap('marks').set('a', 1);
+    doc.getMap('marks').set('b', 2);
+    const unreadable = await call('POST', UPDATES, 'guest', sent[1], 'PARTCODE');
+    expect(unreadable.status).toBe(409);
+    expect(await unreadable.json()).toEqual({ error: 'update_unreadable' });
+    expect(await storedUpdates(db.env, PDF_LIVE_TAB, 't1')).toHaveLength(1);
   });
 
   // docs/specs/006-document/blob-store.md "Getting bytes in": a tab-scoped link serves its own tab only.
@@ -350,7 +388,7 @@ describe('a frame from an Editor’s socket', () => {
   it('is stored before it is relayed, and refused for a tab of another kind', async () => {
     const { room, relayed } = withRoom();
     const ws = {} as WebSocket;
-    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
     const frame = (tabId: string) => ({
       kind: 'pdf',
       tabId,
@@ -365,6 +403,93 @@ describe('a frame from an Editor’s socket', () => {
 });
 
 // "The digest": pages from the stored file, never empty, the words under marks its search text.
+// live-editing-and-storage.md "The room's op kinds": the room checks what an update touches, not only who sent it.
+describe('a frame from a Participant’s or a Viewer’s socket', () => {
+  const ws = {} as WebSocket;
+  const frame = (update: Uint8Array) => ({
+    kind: 'pdf',
+    tabId: 't1',
+    update: base64OfBytes(update),
+  });
+  const refusedLevel = {
+    kind: 'op',
+    from: 'system',
+    op: { kind: 'pdf-refused', tabId: 't1', name: 'level_too_low' },
+  };
+
+  it('stores and relays a Participant’s mark as an Editor’s', async () => {
+    const { room, relayed, told } = withRoom();
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    expect(await room.accept(sender, frame(highlightUpdate('m1')), 3)).toBe(true);
+    expect(relayed).toHaveLength(1);
+    expect(told).toEqual([{ kind: 'cursor', epoch: 'e', seq: 1, ref: 3 }]);
+    expect(await storedUpdates(db.env, PDF_LIVE_TAB, 't1')).toHaveLength(1);
+  });
+
+  it('refuses a Participant’s change to a page whole, telling the sender alone', async () => {
+    const { room, relayed, told } = withRoom();
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    expect(await room.accept(sender, frame(turnUpdate()))).toBe(false);
+    expect(relayed).toEqual([]);
+    expect(told).toEqual([refusedLevel]);
+    expect(await storedUpdates(db.env, PDF_LIVE_TAB, 't1')).toEqual([]);
+    expect(console.warn).toHaveBeenCalledWith(
+      '[pdf] level-refused document=D tab=t1 level=participate asks=edit',
+    );
+  });
+
+  it('refuses a Participant’s change it cannot read yet, untold', async () => {
+    const { room, relayed, told } = withRoom();
+    const doc = PdfLiveChanges.load();
+    const sent: Uint8Array[] = [];
+    doc.on('update', (update: Uint8Array) => sent.push(update));
+    doc.getMap('marks').set('a', 1);
+    doc.getMap('marks').set('b', 2);
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    expect(await room.accept(sender, frame(sent[1]!))).toBe(false);
+    expect(relayed).toEqual([]);
+    expect(told).toEqual([]);
+    expect(console.warn).toHaveBeenCalledWith(
+      '[pdf] update-refused document=D tab=t1 reason=unreadable',
+    );
+  });
+
+  it('refuses a Viewer’s change without reading it', async () => {
+    const { room, relayed, told } = withRoom();
+    const asks = vi.spyOn(PDF_LIVE_TAB.state, 'asks');
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'view' as const };
+    expect(await room.accept(sender, frame(highlightUpdate('m1')))).toBe(false);
+    expect(relayed).toEqual([]);
+    expect(told).toEqual([refusedLevel]);
+    expect(asks).not.toHaveBeenCalled();
+    expect(await room.acceptPosted('D', 't1', highlightUpdate('m1'), 'view')).toBe('level');
+  });
+
+  it('never reads what an Editor’s change touches', async () => {
+    const { room } = withRoom();
+    const asks = vi.spyOn(PDF_LIVE_TAB.state, 'asks');
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    expect(await room.accept(sender, frame(turnUpdate()))).toBe(true);
+    expect(asks).not.toHaveBeenCalled();
+  });
+
+  it('lets no Participant name a stored file for a tab that names none', () => {
+    const named = PdfLiveChanges.load();
+    PdfLiveChanges.setStored(named, { blob: key, pages: 2 });
+    expect(PDF_LIVE_TAB.state.asks!([], PdfLiveChanges.encode(named), { kind: 'pdf' })).toBe(
+      'edit',
+    );
+  });
+
+  it('holds a Participant to the stored file the tab names', async () => {
+    const { room } = withRoom();
+    const other = PdfLiveChanges.load();
+    PdfLiveChanges.setStored(other, { blob: 'e'.repeat(64) as BlobKey, pages: 2 });
+    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    expect(await room.accept(sender, frame(PdfLiveChanges.encode(other)))).toBe(false);
+  });
+});
+
 describe('the digest', () => {
   it('counts the stored file’s pages and never reads as empty', async () => {
     withRoom();

@@ -421,6 +421,11 @@ export type ClientMessage =
 // Realtime room — op vocabulary (client view)
 // ---------------------------------------------------------------------
 
+/** The limit a live tab's refused update would pass (kinds-outside-the-canvas.md "Live state"). */
+export type LiveTabLimitName = 'characters' | 'state';
+/** Why the room refused a live tab's update that passed no limit: its sender's level does not allow what it changes. */
+export type LiveTabRefusalName = 'level_too_low';
+
 // The set of `op` kinds the live editor knows how to send + receive
 // inside the room's `op` envelopes. The api worker's view
 // (`ClientMessage` / `ServerMessage` above) keeps `op` as `unknown`
@@ -508,13 +513,16 @@ export type RoomOp =
   // An update too large for a frame was stored by the door ("Sending"): every surface on the tab re-reads its state.
   // Only the room sends it; a client's `stale` is refused as no update.
   | { kind: 'text-document'; tabId: string; stale: true }
-  // An update the room refused whole, to its sender alone ("Refused edits"): the limit it would pass.
-  | { kind: 'text-document-refused'; tabId: string; limit: 'characters' | 'state' }
+  // An update the room refused whole, to its sender alone ("Refused edits"): the limit it would pass, or the name
+  // of another refusal (docs/specs/006-document/kinds-outside-the-canvas.md "Live state").
+  | { kind: 'text-document-refused'; tabId: string; limit: LiveTabLimitName }
+  | { kind: 'text-document-refused'; tabId: string; name: LiveTabRefusalName }
   // One Yjs update to a PDF document's live changes, base64 (docs/specs/035-pdf-documents/live-editing-and-storage.md
   // "Storage"); `stale` when the door stored one too large for a frame, and the room's refusal to its sender alone.
   | { kind: 'pdf'; tabId: string; update: string }
   | { kind: 'pdf'; tabId: string; stale: true }
-  | { kind: 'pdf-refused'; tabId: string; limit: 'characters' | 'state' }
+  | { kind: 'pdf-refused'; tabId: string; limit: LiveTabLimitName }
+  | { kind: 'pdf-refused'; tabId: string; name: LiveTabRefusalName }
   | {
       kind: 'vote';
       tabId: string;

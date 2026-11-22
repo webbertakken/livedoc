@@ -33,6 +33,10 @@ const idsIn = (doc: Y.Doc) => PdfLiveChanges.marks(doc).map((mark) => mark.id);
 function harness(opts: { canChange?: boolean; confirm?: () => boolean } = {}) {
   const stored: Uint8Array[] = [];
   const copies = new Map<string, LiveTabCopy>();
+  let removeFails = false;
+  const failRemove = () => {
+    removeFails = true;
+  };
   const id = (key: CopyKey) => `${key.documentId}/${key.tabId}`;
   const state = () => PdfLiveChanges.merge(stored);
   const sequence = vi.fn(async (op: PdfFrame) => {
@@ -54,7 +58,10 @@ function harness(opts: { canChange?: boolean; confirm?: () => boolean } = {}) {
     copies: {
       read: async (key) => copies.get(id(key)) ?? null,
       write: async (copy) => void copies.set(id(copy), copy),
-      remove: async (key) => void copies.delete(id(key)),
+      remove: async (key) => {
+        if (removeFails) throw new Error('blocked');
+        copies.delete(id(key));
+      },
     },
     saveDelayMs: 0,
   });
@@ -65,7 +72,7 @@ function harness(opts: { canChange?: boolean; confirm?: () => boolean } = {}) {
     storedFile: BLOB,
   });
   const roomMarks = () => idsIn(PdfLiveChanges.load([state()]));
-  return { bind, read, stored, copies, sequence, post, loadSince, roomMarks };
+  return { bind, read, stored, copies, sequence, post, loadSince, roomMarks, failRemove };
 }
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
@@ -159,29 +166,67 @@ describe('pdfRoomBinding', () => {
     expect(h.post).not.toHaveBeenCalled();
   });
 
-  it('takes back a change the room refuses, and tells the surface', async () => {
+  // live-editing-and-storage.md "Limits": a refused change is dropped where it was made, never sent again.
+  it('tells the surface of a change the room refuses, and once discarded keeps nothing of it', async () => {
     let confirms = true;
     const h = harness({ confirm: () => confirms });
     const binding = await opened(h);
     PdfLiveChanges.addMark(binding.doc, highlight('kept'));
     await tick();
     const refused = vi.fn();
-    const stop = binding.onRefused(refused);
+    binding.onRefused(refused);
     confirms = false;
     PdfLiveChanges.addMark(binding.doc, highlight('refused'));
-    PdfDocumentBus.refused('t1', 'state');
-    expect(idsIn(binding.doc)).toEqual(['kept']);
-    expect(refused).toHaveBeenCalledTimes(1);
-    // A refusal with nothing unconfirmed left takes nothing more back: what the room holds stays.
-    PdfDocumentBus.refused('t1', 'state');
     PdfDocumentBus.refused('t2', 'state');
-    expect(idsIn(binding.doc)).toEqual(['kept']);
-    expect(refused).toHaveBeenCalledTimes(2);
-    stop();
-    PdfDocumentBus.refused('t1', 'state');
-    expect(refused).toHaveBeenCalledTimes(2);
+    expect(refused).not.toHaveBeenCalled();
+    PdfDocumentBus.refused('t1', 'level_too_low');
+    expect(refused).toHaveBeenCalledWith('level_too_low');
     await tick();
-    expect(h.roomMarks()).toEqual(['kept']);
+    expect(h.copies.size).toBe(1);
+    await binding.discard();
+    expect(h.copies.size).toBe(0);
+    // Nothing more is heard, sent or kept: not a late change, not the room opening again, not a close.
+    const sent = h.sequence.mock.calls.length;
+    const read = h.loadSince.mock.calls.length;
+    PdfLiveChanges.addMark(binding.doc, highlight('late'));
+    LiveTabRoom.disconnected();
+    LiveTabRoom.connected();
+    PdfDocumentBus.refused('t1', 'state');
+    binding.close();
+    await tick();
+    expect(h.sequence).toHaveBeenCalledTimes(sent);
+    expect(h.loadSince).toHaveBeenCalledTimes(read);
+    expect(h.copies.size).toBe(0);
+    expect(refused).toHaveBeenCalledTimes(1);
+    // The surface binds again from what the room holds.
+    const again = await opened(h);
+    expect(idsIn(again.doc)).toEqual(['kept']);
+  });
+
+  it('sends nothing once closed, whatever answer arrives late', async () => {
+    let answer: (stored: boolean) => void = () => {};
+    const h = harness();
+    const binding = await opened(h);
+    await tick();
+    h.sequence.mockImplementationOnce(
+      () =>
+        new Promise<boolean>((resolve) => {
+          answer = resolve;
+        }),
+    );
+    PdfLiveChanges.addMark(binding.doc, highlight('m1'));
+    binding.close();
+    const read = h.loadSince.mock.calls.length;
+    answer(false);
+    await tick();
+    expect(h.loadSince).toHaveBeenCalledTimes(read);
+  });
+
+  it('says so when this browser cannot drop its copy', async () => {
+    const h = harness();
+    const binding = await opened(h);
+    h.failRemove();
+    await expect(binding.discard()).resolves.toBeUndefined();
   });
 
   it('says Saving while a change is on its way, saved once the room holds it, offline with the room closed', async () => {

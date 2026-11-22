@@ -3,7 +3,8 @@
 // Opening a PDF document on its surface (docs/specs/035-pdf-documents/opening.md "While it opens";
 // live-editing-and-storage.md "The layout"): read the live changes, which name the stored file; fetch that file; open
 // it in the engine's worker; only then load the live changes and bind them. Each state is logged, and a refusal is
-// named.
+// named. A change the room refuses is dropped (live-editing-and-storage.md "Limits"): the binding is discarded and
+// the live changes are read and bound again, the pages staying as drawn.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { BlobKey } from '@livedoc/document';
 import type { PageInfo } from '@livedoc/pdf-documents';
@@ -16,6 +17,7 @@ import {
   type PdfEngineClient,
   type PdfEngineStop,
 } from './pdf-engine-client';
+import type { PdfDocumentRefusal } from './pdf-document-bus';
 import type { BindPdfLiveChanges, PdfLiveBinding } from './pdf-live-binding';
 import { pdfPageDrawer, type PdfPageDrawer } from './pdf-page-drawer';
 import type { PdfSurfaceRefusal } from './pdf-refusals';
@@ -30,6 +32,8 @@ export type PdfDocumentOpen =
       engine: PdfEngineClient;
       drawer: PdfPageDrawer;
       binding: PdfLiveBinding;
+      /** Listen for a change made here being dropped because the room refused it; the same across bindings. */
+      onDropped: (listener: (refusal: PdfDocumentRefusal) => void) => () => void;
     }
   // `storedFile`: the bytes are held and can be downloaded as they came.
   | { phase: 'refused'; refusal: PdfSurfaceRefusal; storedFile: BlobKey | null }
@@ -76,6 +80,11 @@ export function usePdfDocument(
     let cancelled = false;
     let engine: PdfEngineClient | null = null;
     let binding: PdfLiveBinding | null = null;
+    const dropped = new Set<(refusal: PdfDocumentRefusal) => void>();
+    const onDropped = (listener: (refusal: PdfDocumentRefusal) => void) => {
+      dropped.add(listener);
+      return () => dropped.delete(listener);
+    };
     const show = (next: PdfDocumentOpen) => {
       if (cancelled) return;
       const name = next.phase === 'refused' ? `refused name=${next.refusal}` : next.phase;
@@ -117,28 +126,64 @@ export function usePdfDocument(
       debugLog(
         `[pdf] opened pages=${opened.pages.length} bytes=${size} ranged=false ms=${Date.now() - started} read=${fetched - started} engine=${Date.now() - fetched}`,
       );
+      const drawer = pdfPageDrawer(client);
+      // The live changes bound to the pages that are open; a refusal of one of this binding's changes binds anew.
+      const showBound = (bound: PdfLiveBinding) => {
+        binding = bound;
+        const off = bound.onRefused((refusal) => {
+          off();
+          void rebind(bound, refusal);
+        });
+        show({
+          phase: 'ready',
+          pages: opened.pages,
+          storedFile,
+          bytes: size,
+          engine: client,
+          drawer,
+          binding: bound,
+          onDropped,
+        });
+      };
+      const rebind = async (refused: PdfLiveBinding, refusal: PdfDocumentRefusal) => {
+        debugLog(`[pdf] change-dropped tab=${tabId} name=${refusal}`);
+        binding = null;
+        await refused.discard();
+        if (cancelled) return;
+        let next: PdfLiveBinding;
+        try {
+          const again = await from.loadState(where);
+          if (cancelled) return;
+          if (again.storedFile !== storedFile) {
+            // The stored file was replaced meanwhile: the pages are another file's, so everything opens again.
+            client.terminate();
+            show({ phase: 'opening' });
+            return void run();
+          }
+          next = await bindLive(again);
+        } catch {
+          return show({ phase: 'failed' });
+        }
+        if (cancelled) return next.close();
+        showBound(next);
+        for (const listener of [...dropped]) listener(refusal);
+      };
       // No live change is loaded until the engine has opened the file (opening.md "Passwords").
+      let bound: PdfLiveBinding;
       try {
-        binding = await bindLive(read);
+        bound = await bindLive(read);
       } catch {
         return show({ phase: 'failed' });
       }
-      if (cancelled) return binding.close();
-      show({
-        phase: 'ready',
-        pages: opened.pages,
-        storedFile,
-        bytes: size,
-        engine: client,
-        drawer: pdfPageDrawer(client),
-        binding,
-      });
+      if (cancelled) return bound.close();
+      showBound(bound);
     };
     void run();
     return () => {
       cancelled = true;
       binding?.close();
       engine?.terminate();
+      dropped.clear();
     };
   }, [ownerId, documentId, tabId, shareCode, opening]);
 

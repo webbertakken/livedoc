@@ -207,7 +207,10 @@ differently, main's stands and the branch's is kept as a comment, "Not merged fr
 
 The room relays a text document's mutation ops only from an `edit` session, and its suggestion and comment ops from a
 `participate` session as participation (`PARTICIPATION_OP_KINDS`), refusing a Participant's op that is not a
-suggestion or comment (fork D7); a Viewer's are dropped. Tests: the room refuses each forbidden op for each level.
+suggestion or comment (fork D7). A mutation op from a level too low is refused as every live tab kind's is
+([Live state](../006-document/kinds-outside-the-canvas.md#live-state)): its sender alone hears
+`{ kind: 'text-document-refused', tabId, name: 'level_too_low' }`. Tests: the room refuses each forbidden op for each
+level.
 
 ## Limits
 

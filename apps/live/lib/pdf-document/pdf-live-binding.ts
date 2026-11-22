@@ -5,6 +5,7 @@ import type * as Y from 'yjs';
 import { PdfLiveChanges } from '@livedoc/pdf-documents';
 import type { OfficeSaveStatusSource } from '@/components/office/office-save-status';
 import type { PdfStateRead } from '@/lib/api/pdf-documents';
+import type { PdfDocumentRefusal } from './pdf-document-bus';
 
 export type PdfLiveBinding = {
   doc: Y.Doc;
@@ -12,8 +13,10 @@ export type PdfLiveBinding = {
   close: () => void;
   /** What the title row's save status reads; null for a session that saves nothing. */
   saveStatus: OfficeSaveStatusSource | null;
-  /** Listen for a change made here being refused where it is kept, once it has been taken back ("Limits"). */
-  onRefused: (listener: () => void) => () => void;
+  /** Stop for good, keeping nothing in this browser of what was not confirmed ("Limits"). */
+  discard: () => Promise<void>;
+  /** Listen for a change made here being refused where it is kept ("Limits"). */
+  onRefused: (listener: (refusal: PdfDocumentRefusal) => void) => () => void;
 };
 
 /** Binds the state a surface read to where its changes are kept. Rejects when it cannot. */
@@ -23,6 +26,7 @@ export type BindPdfLiveChanges = (read: PdfStateRead) => Promise<PdfLiveBinding>
 export const unboundPdfLiveChanges: BindPdfLiveChanges = async (read) => ({
   doc: PdfLiveChanges.load([read.update]),
   close: () => {},
+  discard: async () => {},
   saveStatus: null,
   onRefused: () => () => {},
 });

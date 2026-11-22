@@ -10,6 +10,7 @@ import {
   AGENT_PRESENCE_TTL_MS,
   ROOM_RELAY_TIMEOUT_MS,
   ROOM_SELECTIONS_TIMEOUT_MS,
+  type AccessLevel,
   type ChangesetRoomOp,
   type RoomOp,
 } from '@livedoc/api-schema';
@@ -510,8 +511,15 @@ export async function postLiveTabUpdate(
   documentId: string,
   tabId: string,
   update: Uint8Array,
+  // The caller's level as the route verified it; the room judges a Participant's update by what it changes.
+  level: AccessLevel = 'edit',
 ): Promise<{ status: number; limit?: string }> {
-  const query = new URLSearchParams({ frame: kind.frame, document: documentId, tab: tabId });
+  const query = new URLSearchParams({
+    frame: kind.frame,
+    document: documentId,
+    tab: tabId,
+    level,
+  });
   try {
     const res = await roomFetch(
       env,

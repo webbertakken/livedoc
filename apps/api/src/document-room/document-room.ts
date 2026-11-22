@@ -43,7 +43,7 @@ import { followerIdsOf, followTargetOf } from '../room-follows';
 import { opForScope } from '../room-scope';
 import { recheckAdmittedLink } from '../room-link-recheck';
 import { gateClientOp } from '../room-op-gate';
-import { LIVE_TAB_KINDS, liveTabKindOfFrame } from '../live-tabs/live-tab-kinds';
+import { LIVE_TAB_KINDS } from '../live-tabs/live-tab-kinds';
 import { RoomLiveTabs } from '../live-tabs/room-live-tabs';
 import { getTab } from '../db/tabs';
 import { tabShowsEveryCard } from '@livedoc/items';
@@ -270,8 +270,9 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       readSelections: (tabId, person) => this.selections.read(tabId, this.liveSessions(), person),
       readLedger: (tabId) => this.ledger.read(tabId),
       epoch: () => this.epoch,
-      acceptPostedLiveTab: async (frame, documentId, tabId, update) =>
-        (await this.liveTabs.get(frame)?.acceptPosted(documentId, tabId, update)) ?? 'wrong-kind',
+      acceptPostedLiveTab: async (frame, documentId, tabId, update, level) =>
+        (await this.liveTabs.get(frame)?.acceptPosted(documentId, tabId, update, level)) ??
+        'wrong-kind',
     };
     this.baton = new RoomFacilitator({
       storage: state.storage,
@@ -854,6 +855,22 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
         );
         return;
       }
+      if (gate.kind === 'live-tab') {
+        // The room is a live tab's one writer: stored first, then relayed, or refused by the sender's level
+        // (room-live-tabs.ts). The gate has kept a tab-scoped session to its own tab.
+        const frameKind = (msg.op as { kind: string }).kind;
+        void this.liveTabs.get(frameKind)!.accept(
+          {
+            ws,
+            presenceId: sender.id,
+            documentId: session.documentId ?? null,
+            level: gate.level,
+          },
+          msg.op,
+          msg.ref,
+        );
+        return;
+      }
       // A tab-scoped session keeps its tab's structure (room-scoped-structure.ts), judged against the stored tab.
       const admitted = session.tabScope
         ? this.scopedStructure.admit(msg.op, {
@@ -942,15 +959,6 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
           return;
         }
         this.broadcast({ kind: 'op', from: sender.id, op: clientOp }, ws);
-      } else if (liveTabKindOfFrame(opKind)) {
-        // The room is a live tab's one writer: stored first, then relayed (room-live-tabs.ts).
-        void this.liveTabs
-          .get(opKind as string)!
-          .accept(
-            { ws, presenceId: sender.id, documentId: session.documentId ?? null },
-            clientOp,
-            msg.ref,
-          );
       } else {
         // No comment author id leaves the room, whatever a client sent: it is
         // the author's owner id, a guest's credential. And a posted comment

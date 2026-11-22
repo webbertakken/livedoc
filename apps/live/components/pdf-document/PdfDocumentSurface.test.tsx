@@ -2,11 +2,12 @@
 // docs/specs/035-pdf-documents/opening.md "Refusals", "Keyboard and accessibility"; editing-modes.md "Share roles";
 // reading-surface.md "The toolbar", "Share roles"; keyboard-shortcuts.md "Tools": what the surface shows for each
 // state of an open, and which tools each role is offered; live-editing-and-storage.md "Limits": what it says once a
-// change the room refused was taken back.
+// change the room refused was dropped.
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import { PageName, PdfLiveChanges } from '@livedoc/pdf-documents';
+import type { PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
 import type { PdfDocumentOpen } from '@/lib/pdf-document/usePdfDocument';
 import { PdfDocumentSurface } from './PdfDocumentSurface';
 
@@ -17,7 +18,9 @@ vi.mock('@/lib/pdf-document/usePdfDocument', () => ({
     return open.now;
   },
 }));
-const refused = vi.hoisted(() => ({ listeners: new Set<() => void>() }));
+const dropped = vi.hoisted(() => ({
+  listeners: new Set<(refusal: PdfDocumentRefusal) => void>(),
+}));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
 const KEY = 'ab'.repeat(32) as BlobKey;
@@ -37,23 +40,25 @@ function ready(): PdfDocumentOpen {
     binding: {
       doc: PdfLiveChanges.load(),
       close: () => {},
+      discard: async () => {},
       saveStatus: null,
-      onRefused: (listener) => {
-        refused.listeners.add(listener);
-        return () => refused.listeners.delete(listener);
-      },
+      onRefused: () => () => {},
+    },
+    onDropped: (listener) => {
+      dropped.listeners.add(listener);
+      return () => dropped.listeners.delete(listener);
     },
   };
 }
 
-function show(now: PdfDocumentOpen, role: 'edit' | 'view' = 'edit') {
+function show(now: PdfDocumentOpen, role: 'edit' | 'participate' | 'view' = 'edit') {
   open.now = now;
   return render(
     <PdfDocumentSurface
       scope={scope}
       documentName="Lease"
       level={role}
-      canReview={role === 'edit'}
+      canReview={role !== 'view'}
       author="Ada"
       chrome={null}
       sequence={async () => true}
@@ -140,17 +145,36 @@ describe('a PDF document’s surface', () => {
     expect(surface(container).getAttribute('data-pdf-tool')).toBe('select');
   });
 
-  it('says so once a change the room refused was taken back, and stops listening when it goes', () => {
+  it('says so once a change the room refused was dropped, and stops listening when it goes', () => {
     const { unmount } = show(ready());
     expect(screen.queryByRole('alert')).toBeNull();
     act(() => {
-      for (const listener of refused.listeners) listener();
+      for (const listener of dropped.listeners) listener('state');
     });
     expect(screen.getByRole('alert').textContent).toBe(
       'This PDF has more unsaved changes than fit.',
     );
     unmount();
-    expect(refused.listeners.size).toBe(0);
+    expect(dropped.listeners.size).toBe(0);
+  });
+
+  // editing-modes.md "Errors": a change refused for the level is dropped with the level's own line.
+  it.each([
+    ['participate', 'You can review this PDF, but not edit its pages.'],
+    ['view', 'You can view this PDF, but not change it.'],
+  ] as const)('tells a session at %s why its change was dropped', (role, sentence) => {
+    const { unmount } = show(ready(), role);
+    act(() => {
+      for (const listener of dropped.listeners) listener('level_too_low');
+    });
+    expect(screen.getByRole('alert').textContent).toBe(sentence);
+    unmount();
+  });
+
+  // editing-modes.md "Share roles": a Participant does all of Reviewing (F7).
+  it('offers a Participant the tools that mark', () => {
+    show(ready(), 'participate');
+    expect(screen.getByRole('button', { name: 'Highlight' })).toBeTruthy();
   });
 
   // "A Viewer has the Viewing toolbar": a control above the session's level is not drawn.

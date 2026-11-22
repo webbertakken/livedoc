@@ -11,6 +11,7 @@ export {
   type PdfRoot,
   type PdfStored,
 } from './live-changes';
+export { PDF_REVIEWING_ROOTS, pdfLevelAsked, type PdfLevelAsked } from './level-asked';
 export { pdfDigest, type PdfDigest } from './digest';
 export type {
   BakeRefusal,
