@@ -23,11 +23,21 @@ vi.mock('./offline/offline-store', () => ({
   offlinePutRecord: vi.fn(async () => {}),
 }));
 
+vi.mock('./offline/offline-partings', () => ({
+  offlineRecordWithPartings: vi.fn(async (rec: unknown) => rec),
+}));
+
 import { apiCreateDocument, apiDeleteDocument, apiLoadDocument, apiLoadTab } from './api-client';
+import { offlineRecordWithPartings } from './offline/offline-partings';
 import { apiLoadPdfState } from './api/pdf-documents';
 import { fetchKept, sendKept } from './api/workbook-kept';
 import { apiLoadTextDocumentState } from './api/text-documents';
-import { isOfflineId, offlineGetRecord, offlinePutRecord } from './offline/offline-store';
+import {
+  isOfflineId,
+  offlineCreateDocument,
+  offlineGetRecord,
+  offlinePutRecord,
+} from './offline/offline-store';
 import { ApiError } from './api/core';
 import { duplicateDocument } from './duplicate-document';
 
@@ -185,6 +195,57 @@ describe('duplicateDocument', () => {
     expect(written.textDocuments![0]!.tabId).not.toBe('t1');
     expect(written.textDocuments![0]!.state).toEqual(Uint8Array.of(4));
     expect(mCreate).not.toHaveBeenCalled();
+    vi.mocked(isOfflineId).mockImplementation(async () => false);
+  });
+
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "Duplicate of a This Browser PDF copies each tab's
+  // live changes under its new id; the copy names the same key, so no byte is copied."
+  it("copies an offline PDF's live changes onto the copy's record, its tab naming the same file", async () => {
+    vi.mocked(isOfflineId).mockImplementation(async (id) => id === 'src');
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    const key = 'c'.repeat(64);
+    mLoadTab.mockResolvedValue({ ...tab('t1'), kind: 'pdf', blob: key, size: 9 } as never);
+    const state = { tabId: 't1', state: Uint8Array.of(8), savedAt: 2 };
+    vi.mocked(offlineGetRecord).mockImplementation(async (id) =>
+      id === 'src'
+        ? ({ id: 'src', pdfDocuments: [state, { ...state, tabId: 'not-copied' }] } as never)
+        : ({ id, name: 'Flow copy', tabs: [] } as never),
+    );
+    const newId = await duplicateDocument('owner', 'src');
+    const made = vi.mocked(offlineCreateDocument).mock.calls.at(-1)![0];
+    expect(made.tabs).toMatchObject([{ kind: 'pdf', blob: key, size: 9 }]);
+    const written = vi.mocked(offlinePutRecord).mock.calls.at(-1)![0];
+    expect(written.id).toBe(newId);
+    expect(written.pdfDocuments).toEqual([{ ...state, tabId: made.tabs![0]!.id }]);
+    expect(mCreate).not.toHaveBeenCalled();
+    vi.mocked(isOfflineId).mockImplementation(async () => false);
+  });
+
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "A page's last moment": one left behind joins the
+  // record before Duplicate reads it.
+  it('copies an offline source as it reads with what a closing page left', async () => {
+    vi.mocked(isOfflineId).mockImplementation(async (id) => id === 'src');
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    mLoadTab.mockResolvedValue({
+      ...tab('t1'),
+      kind: 'pdf',
+      blob: 'c'.repeat(64),
+      size: 9,
+    } as never);
+    const read = { id: 'src', pdfDocuments: [] };
+    const late = { tabId: 't1', state: Uint8Array.of(9), savedAt: 3 };
+    vi.mocked(offlineGetRecord).mockImplementation(async (id) =>
+      id === 'src' ? (read as never) : ({ id, name: 'Flow copy', tabs: [] } as never),
+    );
+    vi.mocked(offlineRecordWithPartings).mockResolvedValueOnce({
+      ...read,
+      pdfDocuments: [late],
+    } as never);
+    await duplicateDocument('owner', 'src');
+    expect(vi.mocked(offlineRecordWithPartings)).toHaveBeenCalledWith(read);
+    const made = vi.mocked(offlineCreateDocument).mock.calls.at(-1)![0];
+    const written = vi.mocked(offlinePutRecord).mock.calls.at(-1)![0];
+    expect(written.pdfDocuments).toEqual([{ ...late, tabId: made.tabs![0]!.id }]);
     vi.mocked(isOfflineId).mockImplementation(async () => false);
   });
 

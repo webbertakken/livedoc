@@ -3,7 +3,8 @@
 **Status: specified; built on LiveDoc's servers.** Built: the `FILES` bucket, what an owner holds, an upload in one
 request and in parts, each checked against its key, resuming, usage and the allowance, reads whole and by range gated
 by the document's access and its holds, the holds each document tells, the retention sweep, a row given with a copy
-or a change of owner, and the named refusals of those. A Participant's upload, purging and This Browser are not built.
+or a change of owner, the named refusals of those, and This Browser's own store (kept, read whole, forgotten, with
+its two refusals). A Participant's upload, purging and a read by range from This Browser's store are not built.
 
 The **blob store** is where LiveDoc keeps a file's bytes, exactly: the bytes of a [file tab](file-tab.md), and a
 [PDF document](../035-pdf-documents/pdf-document.md)'s stored file, previous versions, pictures and embedded files. One
@@ -123,15 +124,34 @@ and belong to an owner's gallery, never held exactly.
 
 ## This Browser
 
-- A [This Browser](offline-mode.md) document's bytes live in the **origin private file system**, one file per key, so
-  the engine's worker reads any range of them synchronously and no list ever reads them; the offline record holds the
-  key and the size only.
-- Where the origin private file system is missing, the bytes are an IndexedDB Blob in a store of their own, read
-  whole into memory before use.
-- `navigator.storage.persist()` is asked for when the first blob is kept, as offline documents ask. A browser that
-  refuses the bytes says so by name (`local_store_full`, `local_store_unavailable`).
-- A cloud document's bytes, once read whole, are kept in the same local store for offline opens, the least recently
-  opened forgotten first past `FILE_LOCAL_CACHE_MAX_BYTES`; bytes of This Browser documents are never forgotten.
+A browser keeps bytes of its own, in the **local blob store**: every [This Browser](offline-mode.md) document's, and
+a cloud document's once they were read whole.
+
+- The bytes live in the **origin private file system**, one file per key in a `blobs` directory, so no list ever
+  reads them; the offline record holds the key and the size only, on the tab that names them.
+- Where the origin private file system is missing or cannot be written from a page, the bytes are held whole
+  in an IndexedDB store of their own (`bytes`, in the `livedoc-blobs` database), read into memory before use.
+- **An index** beside them (`index`, in the same database) names each key held, its size and when it was last used
+  `(default)`. A key is held once its bytes are written whole; bytes whose size is not the index's are not there.
+- **Read whole** `(default)`: the engine is handed every byte, as from LiveDoc's servers. A read by range from the
+  engine's worker joins when the engine reads by range at all ([Opening](../035-pdf-documents/opening.md#what-is-read)).
+- `navigator.storage.persist()` is asked for when the first blob of a This Browser document is kept, as offline
+  documents ask.
+- **A browser that refuses the bytes says so by name**: `local_store_full` (its quota is met, after every forgettable
+  blob was forgotten) and `local_store_unavailable` (no origin private file system and no IndexedDB, or one that
+  fails). Nothing is half kept.
+- **A cloud document's bytes**, once read whole, are kept in the same store, and the next open of that file reads
+  them from this browser with no request for the bytes. The least recently used are forgotten first past
+  `FILE_LOCAL_CACHE_MAX_BYTES`; a browser that refuses them changes nothing, and logs it.
+  - A document is still opened by asking LiveDoc, which says what the person may read; the kept bytes answer the
+    read of the file alone, so a key in this browser opens nothing by itself.
+  - **Signing out forgets them** `(default)`, so a shared browser keeps no file of an account that left it.
+- **Bytes of This Browser documents are never forgotten**: a key any offline record names, in the local Trash too, is
+  kept whatever the store weighs. Nor is a key kept within `FILE_LOCAL_FRESH_MS`, so bytes kept a moment before
+  their document is written are still there for it.
+- **A key no record names any more** (its document purged from the local Trash, or deleted for good) is forgotten
+  with it, unless another This Browser document names it. A document synced to LiveDoc leaves its bytes as a cloud
+  document's.
 
 ## Without object storage
 
@@ -154,6 +174,7 @@ A self-host without the `FILES` bucket has no blob store. Everything else works:
 | `FILE_SWEEP_TRIPWIRE_MIN`      | 20                    | `(default)` The images' sweep's own: fewer than that is never a gap in the index                         |
 | `FILE_SWEEP_TRIPPED_MAX`       | 100                   | `(default)` A day of a tripped sweep costs at most this many blobs before its error is read              |
 | `FILE_LOCAL_CACHE_MAX_BYTES`   | 536,870,912 (512 MiB) | `(default)` A browser's own quota bites first on a phone                                                 |
+| `FILE_LOCAL_FRESH_MS`          | 600,000 (10 minutes)  | `(default)` Longer than hashing and writing a file at the cap; safe range 1 to 60 minutes                |
 
 A file at the cap travels as 12 parts, each streamed through the api and never held whole, so the api's memory is
 untouched by a file's size.
@@ -173,6 +194,9 @@ untouched by a file's size.
   versions.
 - An upload that ends after its claim became a given row leaves no object behind.
 - Without the bucket every route answers `503 files_unavailable`.
+- This Browser's store keeps bytes and reads the same bytes back, in the origin private file system and in
+  IndexedDB; a full store is `local_store_full`, a missing one `local_store_unavailable`; past the cache's limit the
+  least recently used go first, and never a key an offline record names or one kept a moment ago.
 
 ## Refusals
 
@@ -191,6 +215,13 @@ untouched by a file's size.
 | `range_not_satisfiable` | 416    | A range past the blob's end                                   |
 | `length_required`       | 411    | `(default)` An upload that does not say how many bytes it is  |
 | `store_failed`          | 502    | `(default)` Object storage did not take the bytes             |
+
+This Browser's store refuses by name too, with no status, being no request:
+
+| Name                      | When                                                                      |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `local_store_full`        | The browser's quota is met, with every forgettable blob already forgotten |
+| `local_store_unavailable` | The browser has nowhere to keep bytes, or its storage fails               |
 
 ## Share roles
 
@@ -212,6 +243,12 @@ bytes=<n> ranged=<bool>`, `[blob-store] upload-begun parts=<n>`, `[blob-store] u
 `[blob-store] sweep-tripwire`, `[blob-store] purged`, `[blob-store] unavailable`, `[blob-store] given count=<n>
 reason=<copy|owner>` (with the receiving document, never a key), `[blob-store] upload-superseded` (an upload's bytes
 deleted because its claim became a given row).
+
+This Browser's store logs in the browser, with a key's first 8 characters: `[blob-store] local-kept bytes=<n>
+where=<opfs|indexeddb>`, `[blob-store] local-read bytes=<n>`, `[blob-store] local-miss`, `[blob-store] local-refused
+name=<name>`, `[blob-store] local-forgotten count=<n> bytes=<n> why=<cache|document|sign-out>`,
+`[blob-store] local-persist granted=<bool>`, `[blob-store] local-keep-skipped` (a cloud document's bytes not kept),
+`[blob-store] local-forget-failed why=sign-out`.
 
 ## Non-goals
 

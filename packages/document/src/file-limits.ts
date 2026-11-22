@@ -14,6 +14,13 @@ export const FILE_PREVIOUS_VERSION_DAYS = 30;
 /** (default) A blob nothing holds is deleted after this long: longer than any upload. Safe range: 1 to 168 hours. */
 export const FILE_UNHELD_GRACE_HOURS = 24;
 
+/** (default) Past it a browser forgets the least recently used bytes it kept of cloud documents: its own quota bites
+ *  first on a phone. Safe range: 64 MiB to 4 GiB. */
+export const FILE_LOCAL_CACHE_MAX_BYTES = 536_870_912;
+/** (default) Bytes a browser kept this recently are never forgotten: longer than hashing and writing a file at the
+ *  cap, so bytes kept a moment before their document is written are still there. Safe range: 1 to 60 minutes. */
+export const FILE_LOCAL_FRESH_MS = 600_000;
+
 /** How many parts a file of that size travels in. */
 export const filePartCount = (size: number): number => Math.ceil(size / FILE_PART_BYTES);
 

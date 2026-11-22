@@ -32,6 +32,7 @@ import { publishSignInAvailability } from '@/lib/auth-config';
 import { sessionReadFetch, WORKBENCH_ROUTE } from '@/lib/boot-session-read';
 import { publishFirstSession } from '@/lib/first-session';
 import { debugLog } from '@/lib/debug-log';
+import { forgetCloudBlobs } from '@/lib/blob-store/forget-cloud-blobs';
 import { forgetRecentDiagrams } from '@/lib/recent-diagrams-snapshot';
 import {
   DEFERRED_AUTH_DEFAULT,
@@ -134,6 +135,9 @@ export function AuthBridge({ children }: { children: ReactNode }) {
       // The landing page sign-out returns to must not show the account's recent diagrams
       // (docs/specs/019-marketing/returning-visitor.md); nor may it after the account is deleted.
       await forgetRecentDiagrams();
+      // Nor does this browser keep a file of an account that left it (docs/specs/006-document/blob-store.md "This
+      // Browser").
+      await forgetCloudBlobs();
     };
     return {
       authLoaded: true,

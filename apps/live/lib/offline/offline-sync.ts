@@ -9,6 +9,7 @@
 // And the cloud copy must hold every card and sheet before the local one goes: a create that
 // resolves to an existing row (a retry after a half-finished sync) never re-seeds those stores.
 
+import { pdfTabOf } from '@livedoc/document';
 import { storeAsCreates } from '@livedoc/items';
 import { DOCUMENT_CONVERSION_HEADER } from '@livedoc/api-schema';
 import { apiCreateDocument, apiSetFavourite } from '@/lib/api-client';
@@ -19,6 +20,7 @@ import { fetchCloudSheets, sheetAsCreate } from '../api/sheets';
 import { sendKept } from '../api/workbook-kept';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 import { uploadEmbeddedImages } from './offline-images';
+import { offlineRecordWithPartings } from './offline-partings';
 import {
   offlineDeleteIfUnchanged,
   offlineGetRecord,
@@ -63,6 +65,11 @@ async function upload(rec: OfflineDocumentRecord, ownerId: string): Promise<Map<
   // copy gets real gallery images instead of bloated tab JSON. Best-effort
   // per image; a kept data URI still renders.
   const { tabs, imageIds } = await uploadEmbeddedImages(ownerId, rec.tabs);
+  // Each PDF tab's stored file goes to the blob store before the create names it (docs/specs/035-pdf-documents/
+  // live-editing-and-storage.md "Sync Document"); a refusal stops the sync here, with nothing made.
+  const pdfDocuments = rec.tabs.some((tab) => pdfTabOf(tab))
+    ? await (await import('./offline-pdf-conversion')).sendOfflinePdfFiles(rec, ownerId)
+    : [];
   // Declare the conversion so the feed says "Synced to the Cloud" rather than
   // reporting a brand-new document (docs/specs/006-document/offline-mode.md + docs/specs/013-workspace/timeline.md).
   // Everything the record holds besides tabs travels too: the local copy is
@@ -95,6 +102,8 @@ async function upload(rec: OfflineDocumentRecord, ownerId: string): Promise<Map<
               })),
             }
           : {}),
+        // Each PDF tab's live changes, on the stored file sent above; a save during the upload moves savedAt too.
+        ...(pdfDocuments.length ? { pdfDocuments } : {}),
       },
       { conversion: 'sync' },
     );
@@ -155,8 +164,9 @@ export async function syncOfflineDocument(
   offlineId: string,
   ownerId: string,
 ): Promise<OfflineSyncResult> {
-  let rec = await offlineGetRecord(offlineId);
-  if (!rec) throw new Error('offline document not found');
+  const read = await offlineGetRecord(offlineId);
+  if (!read) throw new Error('offline document not found');
+  let rec = await offlineRecordWithPartings(read);
   const imageIds = new Map<string, string>();
   for (let attempt = 1; ; attempt++) {
     for (const [dataUrl, id] of await upload(rec, ownerId)) imageIds.set(dataUrl, id);

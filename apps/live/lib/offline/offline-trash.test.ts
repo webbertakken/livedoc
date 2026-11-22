@@ -19,6 +19,10 @@ import {
   offlineTrashDocument,
 } from './offline-trash';
 import { DocumentTrashedError } from '../document-trashed';
+import { memoryBlobStore } from '../blob-store/local-blob-testing';
+import { localBlobs } from '../blob-store/local-blobs';
+import { __setThisBrowserBlobs, offlineNamedBlobKeys } from './offline-blobs';
+import { OTHER_PDF_BLOB, PDF_BLOB, pdfTab } from './offline-pdf-testing';
 import { memBackend, testRecord as rec, testTab as tab } from './offline-test-utils';
 
 // The local Trash (docs/specs/013-workspace/trash.md, "The local Trash"): an
@@ -27,7 +31,24 @@ import { memBackend, testRecord as rec, testTab as tab } from './offline-test-ut
 
 const T0 = 1_700_000_000_000;
 
-afterEach(() => __setOfflineBackend(null));
+afterEach(() => {
+  __setOfflineBackend(null);
+  __setThisBrowserBlobs(null);
+});
+
+// This browser's blob store in memory, holding the two files the PDF tabs below name.
+async function blobsHolding() {
+  const memory = memoryBlobStore();
+  const blobs = localBlobs({
+    store: memory.store,
+    named: offlineNamedBlobKeys,
+    persist: async () => true,
+  });
+  __setThisBrowserBlobs(blobs);
+  await blobs.keepForDocument(PDF_BLOB, Uint8Array.of(1, 2, 3));
+  await blobs.keepForDocument(OTHER_PDF_BLOB, Uint8Array.of(4, 5));
+  return { ...memory, held: () => [...memory.bytes.held.keys()].sort() };
+}
 
 async function seeded(...recs: Parameters<typeof rec>[0][]) {
   __setOfflineBackend(memBackend());
@@ -132,6 +153,33 @@ describe('offlinePurgeDocument', () => {
     expect(await offlinePurgeDocument('d1')).toBe(false);
     expect(await offlineGetRecord('d1')).not.toBeNull();
   });
+
+  // "A purge takes the record's file bytes with it: each key of a PDF tab that no other document in this browser
+  // names is forgotten"
+  it('forgets a purged PDF document’s bytes, but not those another document names', async () => {
+    const blobs = await blobsHolding();
+    await seeded(
+      { id: 'gone', tabs: [pdfTab('t1', PDF_BLOB), pdfTab('t2', OTHER_PDF_BLOB)] },
+      { id: 'stays', tabs: [pdfTab('t1', OTHER_PDF_BLOB)] },
+    );
+    await offlineTrashDocument('gone', T0);
+    // The Trash keeps the bytes: a restore finds every one.
+    expect(blobs.held()).toEqual([PDF_BLOB, OTHER_PDF_BLOB]);
+    expect(await offlinePurgeDocument('gone')).toBe(true);
+    expect(blobs.held()).toEqual([OTHER_PDF_BLOB]);
+  });
+
+  it('still purges the record when this browser’s store will not forget', async () => {
+    __setThisBrowserBlobs({
+      forgetUnnamed: async () => {
+        throw new Error('the store failed');
+      },
+    } as never);
+    await seeded({ id: 'd1', tabs: [pdfTab('t1')] });
+    await offlineTrashDocument('d1', T0);
+    expect(await offlinePurgeDocument('d1')).toBe(true);
+    expect(await offlineGetRecord('d1')).toBeNull();
+  });
 });
 
 describe('offlinePurgeExpiredTrash', () => {
@@ -146,5 +194,13 @@ describe('offlinePurgeExpiredTrash', () => {
     expect(await offlineGetRecord('old')).toBeNull();
     expect(await offlineGetRecord('young')).not.toBeNull();
     expect(await offlineGetRecord('live')).not.toBeNull();
+  });
+
+  it('forgets the bytes of a PDF document purged on its day', async () => {
+    const blobs = await blobsHolding();
+    await seeded({ id: 'old', tabs: [pdfTab('t1', PDF_BLOB)] });
+    await offlineTrashDocument('old', T0);
+    expect(await offlinePurgeExpiredTrash(T0 + TRASH_RETENTION_MS)).toBe(1);
+    expect(blobs.held()).toEqual([OTHER_PDF_BLOB]);
   });
 });

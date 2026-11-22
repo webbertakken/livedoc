@@ -18,7 +18,6 @@ import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
-import { apiReadBlob } from '@/lib/api/files';
 import type { PdfDocumentScope } from '@/lib/api/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
@@ -32,7 +31,10 @@ import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
 import { sendBlob } from '@/lib/blob-store/send-blob';
 import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-budget-replacement';
 import { PdfStoredFiles, type PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
+import { startPdfEngineWorker } from '@/lib/pdf-document/pdf-engine-client';
+import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
+import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
@@ -53,7 +55,7 @@ import {
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
 import { PDF_TOOLBAR } from '@/lib/pdf-document/pdf-toolbar';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
-import { usePdfDocument } from '@/lib/pdf-document/usePdfDocument';
+import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
 import { PdfNotice, PdfNoticeButton } from './PdfNotice';
 import type { PdfPageTool } from './PdfPage';
@@ -101,6 +103,7 @@ export function PdfDocumentSurface({
   chrome,
   present,
   sequence,
+  home = 'room',
 }: {
   scope: PdfDocumentScope;
   documentName: string;
@@ -116,6 +119,8 @@ export function PdfDocumentSurface({
   present: boolean;
   // One frame, or one replacement of the stored file, to the document's room; true once the room has stored it.
   sequence: (op: PdfFrame | PdfStoredAsking) => Promise<boolean>;
+  // Where the PDF is: its document's room, or This Browser ("Offline and This Browser"). A surface is keyed by it.
+  home?: PdfHome;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
@@ -128,16 +133,22 @@ export function PdfDocumentSurface({
   });
   const bind = useCallback<BindPdfLiveChanges>(
     (read) =>
-      pdfRoomBinding({
-        scope: { ownerId, documentId, tabId, shareCode },
-        get canChange() {
-          return live.current.canReview;
-        },
-        sequence: (op) => live.current.sequence(op),
-      })(read),
-    [ownerId, documentId, tabId, shareCode],
+      home === 'this-browser'
+        ? pdfLocalBinding({ documentId, tabId })(read)
+        : pdfRoomBinding({
+            scope: { ownerId, documentId, tabId, shareCode },
+            get canChange() {
+              return live.current.canReview;
+            },
+            sequence: (op) => live.current.sequence(op),
+          })(read),
+    [home, ownerId, documentId, tabId, shareCode],
   );
-  const open = usePdfDocument(scope, bind, attempt);
+  const deps = useMemo<PdfDocumentDeps>(
+    () => ({ ...pdfReadsOf(home), startEngine: startPdfEngineWorker }),
+    [home],
+  );
+  const open = usePdfDocument(scope, bind, attempt, deps);
   const { mode, choice, actions: modeActions } = useOfficeMode(level, PDF_MODES, 'PdfDocumentMode');
   const [tool, setTool] = useState<PdfPageTool>('select');
   const [zoom, setZoom] = useState<OfficeZoomValue>('fit');
@@ -148,9 +159,10 @@ export function PdfDocumentSurface({
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
 
-  // "Replacing the stored file": an Editor's idle surface replaces it for the budget.
+  // "Replacing the stored file": an Editor's idle surface replaces it for the budget. The room's alone: in This
+  // Browser the stored file is not replaced.
   useEffect(() => {
-    if (!ready) return undefined;
+    if (!ready || home !== 'room') return undefined;
     const document = { documentId, shareCode };
     const watch = watchPdfBudget({
       tabId,
@@ -165,7 +177,7 @@ export function PdfDocumentSurface({
       onRefused: (listener) => PdfStoredFiles.onRefused(tabId, listener),
     });
     return watch.stop;
-  }, [ready, ownerId, documentId, tabId, shareCode]);
+  }, [ready, home, ownerId, documentId, tabId, shareCode]);
 
   const onDropped = ready?.onDropped ?? null;
   useEffect(
@@ -236,7 +248,7 @@ export function PdfDocumentSurface({
         engine: ready?.engine ?? { bake: async () => ({ ok: false, refusal: 'unreadable' }) },
         doc: ready?.binding.doc ?? null,
         documentName,
-        readStored: () => apiReadBlob(where, storedFile),
+        readStored: () => deps.readBlob(where, storedFile),
       });
       if (!baked.ok) return setProblem(BAKE_FAILED_COPY);
       downloadBlob(new Blob([baked.bytes], { type: 'application/pdf' }), baked.fileName);
@@ -245,7 +257,7 @@ export function PdfDocumentSurface({
       debugLog('[pdf] download failed', String(error));
       setProblem(BAKE_FAILED_COPY);
     }
-  }, [ready, storedFile, documentName, ownerId, documentId, tabId, shareCode]);
+  }, [ready, storedFile, documentName, deps, ownerId, documentId, tabId, shareCode]);
 
   const pickTool = useCallback((next: PdfPageTool) => {
     setTool(next);

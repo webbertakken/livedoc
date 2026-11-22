@@ -12,6 +12,12 @@ import { fetchCloudTags } from '@/lib/api/tags';
 import { DOCUMENT_CONVERSION_HEADER } from '@livedoc/api-schema';
 import { tabKindOf } from '@livedoc/document';
 import { API_BASE, ApiError, apiDelete } from '@/lib/api/core';
+import { LocalBlobRefused } from '@/lib/blob-store/local-blob-store';
+import {
+  isPdfSyncRefusal,
+  LOCAL_STORE_COPY,
+  PDF_SYNC_REFUSAL_COPY,
+} from '@/lib/pdf-document/pdf-this-browser-copy';
 import { embedTabImages, isDataImageId, tabImageIds } from './offline-images';
 import {
   offlineCreateDocument,
@@ -125,7 +131,16 @@ async function downloadAndRemoveCloudCopy(
   // once the document row is gone, its images count as unused and the api's
   // 30-day retention reaper would delete the bytes the offline document still
   // points at (docs/specs/009-elements/images.md + /76).
-  const tabs = await embedTabImages(fetchedTabs, { ownerId, documentId, shareCode });
+  // And every PDF tab's live changes and stored file, all or nothing (docs/specs/035-pdf-documents/
+  // live-editing-and-storage.md "Take Offline"): the bytes are kept in this browser before the server copy, the only
+  // other place they are, goes. A browser that refuses them aborts here.
+  const pdfTabs = fetchedTabs.some((t) => tabKindOf(t) === 'pdf')
+    ? await (
+        await import('./offline-pdf-conversion')
+      ).takePdfTabsOffline(fetchedTabs, { ownerId, documentId, shareCode }, now)
+    : null;
+  const embedded = await embedTabImages(fetchedTabs, { ownerId, documentId, shareCode });
+  const tabs = embedded.map((t) => pdfTabs?.tabs.get(t.id) ?? t);
   // Embedding is best-effort per image, but the DELETE below is not: if any
   // image failed to embed, aborting here keeps the server copy (and its
   // images) alive instead of quietly signing the stragglers up for the
@@ -164,6 +179,7 @@ async function downloadAndRemoveCloudCopy(
     ...(liveDoc.workbook ? { workbook: liveDoc.workbook } : {}),
     ...(kept ? { kept } : {}),
     ...(textDocuments.length ? { textDocuments } : {}),
+    ...(pdfTabs?.states.length ? { pdfDocuments: pdfTabs.states } : {}),
   };
   await offlinePutRecord(rec);
   // Raw server delete — the id is now in the offline index, so the dispatching
@@ -204,6 +220,9 @@ export class SyncStillSavingError extends Error {
 // either way, and a retry is the fix.
 export function syncFailureMessage(e: unknown): string {
   if (e instanceof SyncStillSavingError) return e.message;
+  // A PDF's own refusals, by name (docs/specs/035-pdf-documents/live-editing-and-storage.md "Errors in This Browser").
+  const code = e instanceof ApiError ? e.code : null;
+  if (isPdfSyncRefusal(code)) return PDF_SYNC_REFUSAL_COPY[code];
   if (e instanceof OfflineSyncIncompleteError)
     return e.reason === 'kept_changing'
       ? 'This document kept changing while syncing. Your copy is safe: try again soon.'
@@ -211,6 +230,14 @@ export function syncFailureMessage(e: unknown): string {
   return e instanceof ApiError && e.status === 413
     ? 'Too large to sync, usually a big image on a tab. Shrink it and try again.'
     : 'Could not sync this document. Check your connection and try again.';
+}
+
+// What a failed Take Offline says: the document stays on the server either way. A browser that will not keep a
+// PDF's bytes is named (docs/specs/035-pdf-documents/live-editing-and-storage.md "Errors in This Browser").
+export function takeOfflineFailureMessage(e: unknown): string {
+  if (e instanceof SyncStillSavingError) return e.message;
+  if (e instanceof LocalBlobRefused) return LOCAL_STORE_COPY[e.code];
+  return 'Couldn’t take this offline. It stays safe on the server.';
 }
 
 // Re-exported for callers that only need to create an offline document from

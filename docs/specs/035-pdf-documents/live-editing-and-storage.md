@@ -9,10 +9,12 @@ replaced in the room for the budget, with its previous versions held, the rows o
 are built (marks, field values, a page's turn, a replacement), a change carried across a replacement, one undo
 timeline a person, and of presence the page a person is on: sent, said again to whoever joins, and reached by a press
 on their avatar in the title row, a copy with its live changes (one's own and someone else's), a document passing to
-another owner, a PDF tab never shared between documents, and the Trash. This Browser, reading offline, branches, the
-copy dialog, versions, what the servers make, the selection an undo puts back and the line a dimmed Undo says are not
-built; nor, of presence, a person's colour on a thumbnail, anything held (a text selection, a mark, an object, a text
-box typed in) and the mode in an avatar's tooltip, each drawn with the area that shows it.
+another owner, a PDF tab never shared between documents, the Trash, and This Browser: a PDF kept and changed there,
+arriving there, synced, taken offline, copied and purged, and a cloud PDF's file kept once read. Opening a cloud PDF
+without a connection, the stored file replaced for the budget in This Browser, branches, the copy dialog, versions,
+what the servers make, the selection an undo puts back and the line a dimmed Undo says are not built; nor, of
+presence, a person's colour on a thumbnail, anything held (a text selection, a mark, an object, a text box typed in)
+and the mode in an avatar's tooltip, each drawn with the area that shows it.
 
 How a [PDF document](pdf-document.md) is changed by people and agents at once, stored, kept offline, branched,
 copied, versioned, searched and listed, when the thing they share is a file of bytes only an engine reads. The
@@ -323,19 +325,77 @@ A thumbnail, search text, an agent's preview and a baked file for a sync each ne
 
 ## Offline and This Browser
 
-- **A PDF document in This Browser** keeps its stored file in the origin private file system under its SHA-256, read
-  by range from the engine's worker; the offline record holds the key and the size only, so the Explorer's lists
-  never read a PDF's bytes ([Blob store](../006-document/blob-store.md#this-browser)). Its live changes are in the
-  offline record, as a text document's are.
+- <a id="this-browser"></a>**A PDF document in This Browser** keeps its stored file in this browser's own store
+  under its key ([Blob store](../006-document/blob-store.md#this-browser)); the offline record holds the key and the
+  size only, on its tab, so the Explorer's lists never read a PDF's bytes. Its live changes are in the offline
+  record, as a text document's are, and it works fully, with no room
+  ([Offline Mode](../006-document/offline-mode.md)):
+  - The record's `pdfDocuments` holds, per PDF tab, its whole live changes and when they were saved; a tab with none
+    reads as its stored file unchanged.
+  - A change is saved `PDF_LOCAL_SAVE_MS` after it, and at once when the page is hidden or the tab closes; each save
+    merges into what is stored in one transaction, so another browser tab's saves are never undone.
+  - **A page's last moment**: a browser does not finish a save begun as its page
+    goes. So when the page is hidden, left or the tab closed, what is not saved yet is first written to the browser's
+    synchronous storage (`localStorage`), all at once: a **parting copy**, one a browser tab on the PDF. It is
+    removed when its save lands.
+    - One left behind joins the record when the PDF is next opened here, and before Sync Document or Duplicate reads
+      the record; it goes with a record that is deleted.
+    - One that cannot be read is removed and logged, never merged.
+    - Past `LIVE_TAB_PARTING_MAX_CHARS`, or where the browser refuses it, none is written, which is logged
+      `(default)`: a change that large made in a page's last half second is lost.
+  - Browser tabs open on the same PDF pass each change to each other on the `livedoc-pdf-document` BroadcastChannel,
+    so both stay live.
+  - It has one person, its owner, who reviews and edits it as an Editor; no presence is said and nothing is refused
+    for a level.
+  - **Download** bakes in this browser from the bytes kept here, as any Download does.
+  - In the Explorer's lists it always has content: a PDF tab holds a file `(default)`.
+  - **A stored file this browser no longer holds** (its storage was cleared or taken back) is said as a file missing
+    from storage is: "This PDF's file is missing from storage." Its live changes stay in the record.
+  - The stored file is not replaced for the budget here, so the live changes may pass `PDF_REPLACE_AT_BYTES`.
+- **A PDF that arrives** for someone whose new documents start in This Browser
+  ([Opening](files-print-and-sync.md#opening)) is hashed, kept in this browser's store and named by a new offline
+  record; no request carries its bytes or its name.
+- **Sync Document** (signing up, the Share gate, the Explorer's menu) sends each stored file to the
+  [blob store](../006-document/blob-store.md#getting-bytes-in) first, then the create with each PDF tab and its
+  live changes (`pdfDocuments: [{ tabId, state }]`). Until the create is answered the document stays in This Browser.
+  - A stored file this browser no longer holds, a server without file storage, an allowance that would be passed and
+    live changes past `PDF_LIVE_CHANGES_MAX_BYTES` each stop the sync by name, with the document kept here
+    ([Errors](#errors-in-this-browser)).
+  - A change saved during the upload counts as a change, as a tab's does: the sync uploads again.
+  - Once synced, the bytes stay in this browser as a cloud document's.
+- **Take Offline** reads each PDF tab's live changes, which name its stored file, and that file's bytes, from this
+  browser when it holds them and from LiveDoc when not; it keeps the bytes here and writes the record, all or
+  nothing, before the server copy goes.
+  - Previous versions and version history stay behind and go with the server copy `(default)`: This Browser keeps one
+    stored file a tab.
+  - A browser that refuses the bytes stops it by name and the document stays on LiveDoc.
+- **Duplicate** of a This Browser PDF copies each tab's live changes under its new id; the copy names the same key,
+  so no byte is copied.
+- **The local Trash** keeps the record, its live changes and its bytes; a purge removes the record and forgets each
+  key no other This Browser document names.
 - **A cloud PDF document** keeps a local copy of its unconfirmed live changes, as a text document does, and its
-  stored file in the same local store once read whole; opened offline it shows from those, and every change waits and
-  merges on return.
+  stored file in the same local store once read whole: the next open reads the file from this browser.
+  - Opened offline it would show from those, and every change waits and merges on return. A cloud document does not
+    open without a connection yet ([Offline Mode](../006-document/offline-mode.md#non-goals)), so only the kept
+    bytes and the kept changes are built.
 - A cloud PDF whose stored file was only read in part shows the pages it has offline, and "Go online to read the
   rest of this PDF." on the others.
-- **Moving to LiveDoc** (signing up, or Move to My Documents) uploads the stored file, then the live changes; until
-  the bytes are confirmed the document stays in This Browser.
-- Local storage that refuses the bytes (full, or evicted) is said, never hidden: "This browser has no room to keep
-  this PDF." with **Download**.
+
+### Errors in This Browser
+
+A browser that will not keep a PDF's bytes is said, never hidden, and nothing is half made:
+
+| Name                      | Said                                                                                  | Where                           |
+| ------------------------- | ------------------------------------------------------------------------------------- | ------------------------------- |
+| `local_store_full`        | "This browser has no room to keep this PDF."                                          | A PDF arriving; Take Offline    |
+| `local_store_unavailable` | `(default)` "This browser can't keep files, so this PDF can't be kept here."          | A PDF arriving; Take Offline    |
+| `blob_missing`            | "This PDF's file is missing from storage."                                            | The pages' place; Sync Document |
+| `files_unavailable`       | "This server has no file storage."                                                    | Sync Document                   |
+| `usage_exceeded`          | "This document doesn't fit in the file storage that is left."                         | Sync Document                   |
+| `live_changes_too_large`  | `(default)` "This PDF has more changes than fit. Download it, then add the download." | Sync Document                   |
+
+Each leaves the document where it was: a refused arrival makes nothing (the file is still on the person's computer),
+a refused Take Offline leaves it on LiveDoc, where **Download** hands it out, and a refused sync keeps it here.
 
 ## Branches
 
@@ -384,19 +444,21 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 
 ## Limits
 
-| Constant                      | Value     | Why                                                                                    |
-| ----------------------------- | --------- | -------------------------------------------------------------------------------------- |
-| `PDF_LIVE_CHANGES_MAX_BYTES`  | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))           |
-| `PDF_REPLACE_AT_BYTES`        | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself         |
-| `PDF_REPLACE_IDLE_MS`         | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s              |
-| `PDF_UPDATE_MAX_BYTES`        | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                |
-| `PDF_INLINE_MAX_BYTES`        | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                 |
-| `PDF_SEARCH_TEXT_MAX_CHARS`   | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only |
-| `PDF_PRESENCE_MAX_CHARS`      | 512       | `(default)` Three names and two numbers                                                |
-| `PDF_PRESENCE_NAME_MAX_CHARS` | 80        | `(default)` An inserted page's name is 66 at most, a mark's id 36                      |
-| `PDF_PRESENCE_FRESH_MS`       | 3,000     | `(default)` A text document's caret label                                              |
-| `PDF_UNDO_GROUP_MS`           | 500       | A text document's typing group                                                         |
-| `PDF_LOCAL_SAVE_MS`           | 500       | `(default)` A change the room has not confirmed by then is kept in this browser        |
+| Constant                      | Value     | Why                                                                                        |
+| ----------------------------- | --------- | ------------------------------------------------------------------------------------------ |
+| `PDF_LIVE_CHANGES_MAX_BYTES`  | 4,194,304 | `(default)` Past it the stored file is replaced ([Saving](saving.md#limits))               |
+| `PDF_REPLACE_AT_BYTES`        | 3,145,728 | `(default)` Three quarters of it, so ordinary use never meets the limit itself             |
+| `PDF_REPLACE_IDLE_MS`         | 20,000    | `(default)` Long enough that nobody is mid-thought; safe range 5 to 120 s                  |
+| `PDF_UPDATE_MAX_BYTES`        | 8,000,000 | `(default)` One posted update: the api's body cap, as a text document's                    |
+| `PDF_INLINE_MAX_BYTES`        | 16,384    | `(default)` A picture past it is a blob; under it, it rides the change                     |
+| `PDF_SEARCH_TEXT_MAX_CHARS`   | 2,000,000 | `(default)` About a 1,000-page book's text; more is searched in the open document only     |
+| `PDF_PRESENCE_MAX_CHARS`      | 512       | `(default)` Three names and two numbers                                                    |
+| `PDF_PRESENCE_NAME_MAX_CHARS` | 80        | `(default)` An inserted page's name is 66 at most, a mark's id 36                          |
+| `PDF_PRESENCE_FRESH_MS`       | 3,000     | `(default)` A text document's caret label                                                  |
+| `PDF_UNDO_GROUP_MS`           | 500       | A text document's typing group                                                             |
+| `PDF_LOCAL_SAVE_MS`           | 500       | `(default)` A change the room has not confirmed by then is kept in this browser            |
+| `PDF_LOCAL_SAVE_RETRY_MS`     | 5,000     | `(default)` A failed save in This Browser is written again by itself, as a text document's |
+| `LIVE_TAB_PARTING_MAX_CHARS`  | 1,000,000 | `(default)` A parting copy as base64: a fifth of the 5 MB a browser gives `localStorage`   |
 
 A change past a limit is refused whole and named: `pdf_too_many_marks`, `pdf_too_many_pages`, `update_too_large`,
 `live_changes_too_large` (when a replacement cannot be made, with "This PDF has more unsaved changes than fit. Ask
@@ -432,3 +494,10 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
   `[pdf] browser-upload what=<thumbnail|text>`, `[pdf] local-store refused=<reason>`,
   `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`,
   `[pdf] presence-refused`.
+- In This Browser: `[pdf] saved in this browser bytes=<n>`, `[pdf] save in this browser failed`,
+  `[pdf] arrived bytes=<n> where=this-browser`, `[pdf] sync-sent tabs=<n> bytes=<n> held=<n>`,
+  `[pdf] sync-refused name=<name>`, `[pdf] taken-offline tabs=<n> bytes=<n> local=<n>`,
+  `[pdf] take-offline-refused name=<name>`, `[pdf] kept-read bytes=<n>` (a cloud PDF's file read from this browser).
+- A parting copy: `[pdf] parting-copy written chars=<n>`, `[pdf] parting-copy skipped reason=<too_large|refused>`,
+  `[pdf] parting-copy joined count=<n>`, `[pdf] parting-copy unreadable`, `[pdf] parting-copy kept error=<error>`
+  (one whose save failed, left for the next open).

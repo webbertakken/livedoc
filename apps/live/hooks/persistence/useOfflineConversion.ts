@@ -8,11 +8,11 @@ import { fetchSharedTabsNotice } from '@/lib/shared-tabs-notice';
 import { track } from '@/lib/telemetry';
 import {
   ConversionInProgressError,
-  SyncStillSavingError,
   conversionInProgress,
   saveOfflineToCloud,
   syncFailureMessage,
   takeCloudOffline,
+  takeOfflineFailureMessage,
 } from '@/lib/offline/offline-convert';
 
 // Shared Offline Mode conversion handlers (docs/specs/006-document/offline-mode.md) for the Explorer's row and
@@ -83,11 +83,7 @@ export function useOfflineConversion(
       // Stays on the server (aborts roll the local copy back). A conversion already running
       // reports for itself.
       if (e instanceof ConversionInProgressError) return;
-      toast.error(
-        e instanceof SyncStillSavingError
-          ? e.message
-          : 'Couldn’t take this offline. It stays safe on the server.',
-      );
+      toast.error(takeOfflineFailureMessage(e));
     }
   };
 

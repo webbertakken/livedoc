@@ -23,7 +23,9 @@ import {
   type Item,
   type ItemTypeCatalogue,
 } from '@livedoc/items';
+import { debugLog } from '../debug-log';
 import { DocumentTrashedError } from '../document-trashed';
+import { forgetPartingCopies, partingStorage } from '../live-tab/live-tab-parting-keys';
 import {
   offlineBackend,
   setOfflineBackend,
@@ -92,9 +94,17 @@ export type OfflineDocumentRecord = {
   // Each text document tab's whole live state and when it was saved (docs/specs/034-text-documents/
   // live-editing-and-storage.md "A text document in This Browser"). Optional: a tab without one reads as the seed.
   textDocuments?: OfflineTextDocumentState[];
+  // Each PDF tab's whole live changes and when they were saved (docs/specs/035-pdf-documents/
+  // live-editing-and-storage.md "A PDF document in This Browser"). Optional: a tab without one reads as its stored
+  // file unchanged.
+  pdfDocuments?: OfflinePdfDocumentState[];
 };
 
 export type OfflineTextDocumentState = { tabId: string; state: Uint8Array; savedAt: number };
+
+// One PDF tab's whole live changes and when they were saved. The file itself is not here: the tab names it by key and
+// size, and its bytes are in this browser's blob store.
+export type OfflinePdfDocumentState = { tabId: string; state: Uint8Array; savedAt: number };
 
 // A local document's opens, counted like the server's (docs/specs/013-workspace/explorer-home.md
 // "Opens"): the UTC days (`YYYY-MM-DD`, newest first) with an open inside the 90-day use window,
@@ -164,6 +174,8 @@ export function recordToDocument(rec: OfflineDocumentRecord): LiveDoc {
 // reading its state.
 function firstTabEmpty(rec: OfflineDocumentRecord): boolean {
   const first = rec.tabs[0];
+  // A PDF tab holds a file (docs/specs/035-pdf-documents/live-editing-and-storage.md "A PDF document in This Browser").
+  if (first && tabKindOf(first) === 'pdf') return false;
   if (first && tabKindOf(first) === 'text-document')
     return !rec.textDocuments?.some((t) => t.tabId === first.id);
   return drawnCount(first ?? {}) === 0;
@@ -327,11 +339,19 @@ async function writeLive(
   });
 }
 
+// What goes with a record besides its row: its id, and what a closing page left of its live tabs
+// (docs/specs/035-pdf-documents/live-editing-and-storage.md "A page's last moment").
+function forgetRecord(id: string): void {
+  forgetOfflineId(id);
+  const parted = forgetPartingCopies(partingStorage(), id);
+  if (parted > 0) debugLog(`[offline-store] parting-copies-forgotten count=${parted}`);
+}
+
 // A write that found no record: a quiet no-op when this tab has already forgotten the id, otherwise
 // the id is forgotten and the write fails out loud.
 function failOnMissing(id: string): void {
   if (!isOfflineIdSync(id)) return;
-  forgetOfflineId(id);
+  forgetRecord(id);
   console.warn('[offline-store] write-to-missing-record, id forgotten');
   throw new OfflineDocumentMissingError(id);
 }
@@ -499,7 +519,7 @@ export async function offlineDeleteDocument(id: string): Promise<void> {
   // with (or observe a half-applied) delete.
   await serializeOfflineWrite(async () => {
     await offlineBackend().delete(id);
-    forgetOfflineId(id);
+    forgetRecord(id);
   });
 }
 
@@ -522,7 +542,7 @@ export async function offlineDeleteIfUnchanged(
       found = { outcome: same ? 'deleted' : 'changed', rec };
       return same ? 'delete' : undefined;
     });
-    if (found.outcome !== 'changed') forgetOfflineId(id);
+    if (found.outcome !== 'changed') forgetRecord(id);
     return found;
   });
 }

@@ -4,11 +4,15 @@
 // state of an open, and which tools each role is offered; live-editing-and-storage.md "Limits": what it says once a
 // change the room refused was dropped; "A change carried across a replacement": what it says of changes that could
 // not be placed; "Undo": the person's own steps, from the menu's keys and the toolbar; "Presence": the page in view
-// and the mode, said for the tab the person is on, and a press on a person going to their page.
+// and the mode, said for the tab the person is on, and a press on a person going to their page; "Offline and This
+// Browser": a PDF kept here is read from this browser, and its stored file is not replaced for the budget.
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import { Mark, PageName, PdfChange, PdfLiveChanges } from '@livedoc/pdf-documents';
+import { downloadBlob } from '@/lib/download-blob';
+import { __setThisBrowserBlobs } from '@/lib/offline/offline-blobs';
+import { watchPdfBudget } from '@/lib/pdf-document/pdf-budget-replacement';
 import type { PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
 import { unboundPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import {
@@ -30,6 +34,11 @@ vi.mock('@/lib/pdf-document/usePdfDocument', () => ({
     return open.now;
   },
 }));
+vi.mock('@/lib/download-blob', () => ({ downloadBlob: vi.fn() }));
+vi.mock('@/lib/pdf-document/pdf-budget-replacement', async (original) => {
+  const actual = await original<typeof import('@/lib/pdf-document/pdf-budget-replacement')>();
+  return { ...actual, watchPdfBudget: vi.fn(actual.watchPdfBudget) };
+});
 const dropped = vi.hoisted(() => ({
   listeners: new Set<(refusal: PdfDocumentRefusal) => void>(),
   lost: new Set<(count: number) => void>(),
@@ -87,6 +96,7 @@ function show(
   now: PdfDocumentOpen,
   role: 'edit' | 'participate' | 'view' = 'edit',
   present = true,
+  home: 'room' | 'this-browser' = 'room',
 ) {
   open.now = now;
   return render(
@@ -99,6 +109,7 @@ function show(
       chrome={null}
       present={present}
       sequence={async () => true}
+      home={home}
     />,
   );
 }
@@ -185,6 +196,35 @@ describe('a PDF document’s surface', () => {
     expect(region).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Download' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
+  // "Download bakes in this browser from the bytes kept here"
+  it('downloads a PDF kept in This Browser from this browser’s own bytes', async () => {
+    const bytes = new TextEncoder().encode('%PDF-1.7 kept here');
+    const read = vi.fn(async () => bytes);
+    __setThisBrowserBlobs({ read } as never);
+    show(
+      { phase: 'refused', refusal: 'pdf_damaged', storedFile: KEY },
+      'edit',
+      true,
+      'this-browser',
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+    });
+    expect(read).toHaveBeenCalledWith(KEY);
+    expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith(expect.any(Blob), 'Lease.pdf');
+    __setThisBrowserBlobs(null);
+  });
+
+  // "The stored file is not replaced for the budget here"
+  it('watches the budget for a PDF in its room, and never for one in This Browser', async () => {
+    vi.mocked(watchPdfBudget).mockClear();
+    const here = show(await ready(), 'edit', true, 'this-browser');
+    expect(watchPdfBudget).not.toHaveBeenCalled();
+    here.unmount();
+    show(await ready());
+    expect(watchPdfBudget).toHaveBeenCalledTimes(1);
   });
 
   it('offers no Download where the bytes are not held', () => {

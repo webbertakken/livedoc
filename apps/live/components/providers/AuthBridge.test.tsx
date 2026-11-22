@@ -12,6 +12,8 @@ const route = vi.hoisted(() => ({ pathname: '/explorer/recent' }));
 vi.mock('next/navigation', () => ({ usePathname: () => route.pathname }));
 const forgetRecentDiagrams = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock('@/lib/recent-diagrams-snapshot', () => ({ forgetRecentDiagrams }));
+const forgetCloudBlobs = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock('@/lib/blob-store/forget-cloud-blobs', () => ({ forgetCloudBlobs }));
 const apiDeleteAccount = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/api/self', () => ({ apiDeleteAccount }));
 
@@ -85,6 +87,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   apiDeleteAccount.mockReset();
   forgetRecentDiagrams.mockClear();
+  forgetCloudBlobs.mockClear();
 });
 
 describe('AuthBridge', () => {
@@ -278,6 +281,8 @@ describe('AuthBridge', () => {
     expect(probe.state!.isSignedIn).toBe(false);
     expect(localStorage.getItem(SIGNED_IN_HINT_KEY)).toBe('0');
     expect(forgetRecentDiagrams).toHaveBeenCalledOnce();
+    // blob-store.md "Signing out forgets them": the files this browser kept of the account's cloud documents.
+    expect(forgetCloudBlobs).toHaveBeenCalledOnce();
     expect(assign).toHaveBeenCalledWith('/');
     expect(probe.state!.sessionEnded).toBeFalsy();
     await waitFor(() => expect(nudges).toEqual([{ signedIn: false, from: expect.any(String) }]));
@@ -311,6 +316,7 @@ describe('AuthBridge', () => {
     expect(localStorage.getItem(SIGNED_IN_HINT_KEY)).toBe('0');
     expect(probe.state!.isSignedIn).toBe(false);
     expect(forgetRecentDiagrams).toHaveBeenCalledOnce();
+    expect(forgetCloudBlobs).toHaveBeenCalledOnce();
   });
 
   it('keeps the session when the api asks to verify again first', async () => {
