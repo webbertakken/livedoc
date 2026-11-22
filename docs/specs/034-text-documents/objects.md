@@ -136,7 +136,7 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 
 - **Format > Image**, with a picture selected (default order, until a capture): Crop image, Image options, Alt text,
   Replace image (Upload from computer, Search the web, LiveDoc gallery, as Insert > Image), Reset image. Each is
-  dimmed while no picture is selected; Crop, Image options and Reset wait for their parts.
+  dimmed while no picture is selected; Crop waits for its part.
 - **The context menu** on a selected picture adds, after the text items: Crop image, Replace image (the image picker,
   its Upload tab holding the computer's files), Image options, Alt text, each only while a picture is selected.
 - **Alt text** (Format > Image, the context menu, ⌘⌥Y): a dialog titled "Alt text" with a Description field and "Mark
@@ -147,12 +147,17 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   step; it is chosen, stored and refused as an inserted picture is.
 - **Sizing by its handles**: a selected picture draws a box with eight square handles; a corner keeps its ratio, an
   edge stretches one side (Shift keeps the ratio), as Google's; the box follows the pointer while dragging and the
-  size is written once, on release, as one undo step. A picture is never smaller than 4.5 pt a side (default) nor
-  larger than the room the text has (the caret's column width and the page's text height), its crop scaling with it.
+  size is written once, on release, as one undo step; Escape while dragging leaves it as it was (default). The handles
+  answer the pointer alone (the panel sizes from the keyboard). A picture is never smaller than 4.5 pt a side
+  (default) nor larger than the room the text has (the caret's column width and the page's text height), its crop
+  scaling with it.
 - **Image options** (Format > Image, the context menu) opens the right side panel with its sections in Google's order;
   **Size & rotation** holds Width and Height in the document's length unit, Scale width and Scale height in percent of
   its own size, and Lock aspect ratio (on by default, as Google's); each change is one undo step. Rotation, Text
   wrapping, Position, Recolour and Adjustments wait for their parts.
+- A field applies on Enter or when left; Scale takes 1 to 1000 percent (default). Its **own size** is its pixels at 96
+  an inch, read from its bytes, or from the gallery image once drawn; until then Scale and Reset are dimmed.
+  Without a selected picture the panel reads "Select an image to see its options." (default).
 - **Reset image** (Format > Image, the panel's Reset): back to its own size fitted to the room, its crop dropped.
 - Share roles: an Editor alone; a Viewer and a Participant see the items dimmed (a Participant's suggestions wait for
   D7).
