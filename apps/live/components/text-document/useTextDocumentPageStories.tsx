@@ -25,6 +25,7 @@ import { useTextDocumentNoteEditing } from './useTextDocumentNoteEditing';
 import { useTextDocumentPageNumbers } from './useTextDocumentPageNumbers';
 import { useTextDocumentStories } from './useTextDocumentStories';
 import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
+import type { GalleryPictures } from '@/lib/text-document/text-document-gallery-pictures';
 
 const NO_NOTES: readonly PageNote[] = [];
 
@@ -42,8 +43,10 @@ export function useTextDocumentPageStories(input: {
   readonly caret: Plugin;
   /** The section the body's caret is in: Headers and footers options opens on it. */
   readonly caretSection: number;
+  /** Where its stories' pictures' gallery images are read from. */
+  readonly gallery: GalleryPictures;
 }) {
-  const { view, liveDoc, format, pages, writes, heights, caret, caretSection } = input;
+  const { view, liveDoc, format, pages, writes, heights, caret, caretSection, gallery } = input;
   const endNotes = input.endNotes ?? NO_NOTES;
   const leave = useRef(() => {});
   const toolbar = useRef<HTMLDivElement | null>(null);
@@ -68,6 +71,7 @@ export function useTextDocumentPageStories(input: {
     heights,
     plugins,
     endNotes,
+    gallery,
   });
   const leaveNote = useRef(() => {});
   const editing = useTextDocumentHeaderEditing({

@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { Slice } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
-import { ListDefinition, Styles, type Style } from '@livedoc/text-documents';
+import { ListDefinition, Styles, type PictureMedia, type Style } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
   FRAGMENT_MAX_CHARS,
@@ -233,7 +233,7 @@ describe('pictures in the fragment', () => {
       schema.nodes.picture!.create({ media: 'k1', width: 20, height: 10, alt: 'Field' }),
     ]),
   ]);
-  const copy = (media: Record<string, { mediaType: 'image/png'; bytes: Uint8Array }>) => {
+  const copy = (media: Record<string, PictureMedia>) => {
     const state = EditorState.create({
       doc: pictured,
       selection: TextSelection.create(pictured, 1, pictured.content.size - 1),
@@ -269,6 +269,34 @@ describe('pictures in the fragment', () => {
     expect(placed.media).toEqual({});
   });
 
+  // objects.md "Inserting": a gallery media travels by its id, served in the target under the placement rules.
+  it('carries a gallery media by its image, and places it so', () => {
+    const fragment = copy({ k1: { mediaType: 'image/png', image: 'img-1' } });
+    expect(fragment.media).toEqual({ k1: { mediaType: 'image/png', image: 'img-1' } });
+    const read = readFragment(JSON.stringify(fragment));
+    expect(read).toMatchObject({ ok: true });
+    const placed = placeFragment(fragment, ooxml);
+    expect(placed.media).toEqual({ k1: { mediaType: 'image/png', image: 'img-1' } });
+    expect(placed.left).toBe(0);
+  });
+
+  it('refuses media holding both bytes and an image', () => {
+    const fragment = {
+      ...copy({}),
+      media: { k1: { mediaType: 'image/png', image: 'img-1', data: 'AA==' } },
+    };
+    expect(readFragment(JSON.stringify(fragment))).toEqual({ ok: false, reason: 'shape' });
+  });
+
+  it('leaves out a picture whose image is no id, or of a type the model does not map', () => {
+    for (const media of [
+      { mediaType: 'image/png', image: '../../etc' },
+      { mediaType: 'image/svg+xml', image: 'img-1' },
+    ]) {
+      const placed = placeFragment({ ...copy({}), media: { k1: media } }, ooxml);
+      expect(placed).toMatchObject({ left: 1, media: {} });
+    }
+  });
   it('leaves out a picture whose media did not come, or is no picture, and counts it', () => {
     expect(placeFragment(copy({}), ooxml)).toMatchObject({ left: 1, media: {} });
     const text = copy({

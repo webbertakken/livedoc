@@ -98,12 +98,15 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   and media the gallery refuses (`gallery_full`, `file_too_large`) keep their bytes in the entry (`bytes`), so such a
   document works whole, offline and self-hosted.
 - **Opening a file** uploads each picture's media to the opener's gallery, once per key, before the state is written;
-  an upload refused keeps that media's bytes in the state, and the import report counts them (default).
+  an upload refused keeps that media's bytes in the state, logged with its reason, and the import report counts them
+  (default).
+  A JPEG is kept as the gallery keeps every JPEG, its metadata stripped, so it leaves a file without it.
 - **Drawn** from the gallery through `/api/images/<id>?d=<document>` under its placement rules, or from the state's
   bytes; a picture the reader may not be served shows as missing.
 - **Written to a file** (download, export, conversion, sync): the room reads each gallery media's bytes from image
-  storage under the same placement rules as the byte endpoint; a media it cannot read leaves its picture out of the
-  file, listed in the download's report (`picture-unavailable`), never silently.
+  storage under the same placement rules as the byte endpoint, and a file written in this browser reads them through
+  that endpoint; a media it cannot read leaves its picture out of the file, logged (`picture-unavailable`) and counted
+  (`X-Pictures-Left-Out`), and the title row says how many pictures the download left out, never silently.
 - **Referenced.** The gallery images a text document's pictures hold are its references in the
   [reference index](../009-elements/images.md#reference-index), so retention never sweeps them; media no picture
   holds is no reference.

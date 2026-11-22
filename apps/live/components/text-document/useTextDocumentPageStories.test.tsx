@@ -104,6 +104,7 @@ function Harness({
     heights,
     caret: new Plugin({}),
     caretSection: 0,
+    gallery: { gallery: async () => null, release: () => {} },
   });
   useLayoutEffect(() => seen(headers));
   return (

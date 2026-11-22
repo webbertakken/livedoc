@@ -152,6 +152,16 @@ export async function apiFetchImageDataUrl(
   return blobToDataUrl(await res.blob());
 }
 
+/** One image's original bytes, as a file written here holds them; none on 404 / 403 / 503. */
+export async function apiFetchImageBytes(
+  ownerId: string,
+  imageId: string,
+  opts: { documentId?: string; shareCode?: string | null } = {},
+): Promise<Uint8Array | undefined> {
+  const res = await fetchImage(ownerId, imageId, opts);
+  return res ? new Uint8Array(await res.arrayBuffer()) : undefined;
+}
+
 // Shared authenticated GET for one image's bytes. Returns the ok Response, or
 // null on any non-ok status (the callers map that to a broken / placeholder
 // state). Native `<img src>` can't send auth headers, so every read goes

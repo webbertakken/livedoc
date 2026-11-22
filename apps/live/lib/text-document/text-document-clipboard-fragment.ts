@@ -67,8 +67,16 @@ export type FragmentContext = FragmentPlace & {
   readonly readMedia?: (key: string) => PictureMedia | undefined;
 };
 
-/** A picture's media as the fragment carries it: its media type and its bytes in base64. */
-export type FragmentMedia = { readonly mediaType: string; readonly data: string };
+/**
+ * A picture's media as the fragment carries it: its media type, and its bytes in base64 or the gallery image it is
+ * (objects.md "Inserting": a gallery media by its id, served in the target under the placement rules).
+ */
+export type FragmentMedia =
+  | { readonly mediaType: string; readonly data: string }
+  | { readonly mediaType: string; readonly image: string };
+
+// A gallery image's id as the api makes them; anything else a fragment names is no image.
+const IMAGE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 export type ClipboardFragment = {
   readonly v: typeof FRAGMENT_VERSION;
@@ -87,12 +95,17 @@ export type FragmentRead =
   | { readonly ok: true; readonly fragment: ClipboardFragment }
   | { readonly ok: false; readonly reason: 'too-long' | 'not-json' | 'shape' };
 
-/** The media a fragment brings, each only when its bytes are a whole picture of the type it names and the model maps. */
+/** The media a fragment brings: bytes only when a whole picture of the type it names, an image only by a real id. */
 function broughtMedia(
   media: Readonly<Record<string, FragmentMedia>>,
 ): Record<string, PictureMedia> {
   const out: Record<string, PictureMedia> = {};
   for (const [key, m] of Object.entries(media)) {
+    if ('image' in m) {
+      if (IMAGE_ID.test(m.image) && isMappedPictureType(m.mediaType))
+        out[key] = { mediaType: m.mediaType, image: m.image };
+      continue;
+    }
     const bytes = bytesOfBase64(m.data);
     const type = bytes && pictureHeader(bytes)?.mediaType;
     if (bytes && type === m.mediaType && isMappedPictureType(type))
@@ -152,7 +165,10 @@ export function makeFragment(slice: Slice, context: FragmentContext): ClipboardF
     const key = attrsOf(node).media;
     if (node.type !== PICTURE || typeof key !== 'string' || Object.hasOwn(media, key)) return;
     const held = context.readMedia?.(key);
-    if (held) media[key] = { mediaType: held.mediaType, data: base64OfBytes(held.bytes) };
+    if (held)
+      media[key] = held.bytes
+        ? { mediaType: held.mediaType, data: base64OfBytes(held.bytes) }
+        : { mediaType: held.mediaType, image: held.image };
   });
   walk(all, (node) => {
     const style = attrsOf(node).style;
@@ -210,7 +226,10 @@ function isFragment(value: unknown): value is ClipboardFragment {
     (media === undefined ||
       (isRecord(media) &&
         Object.values(media).every(
-          (m) => isRecord(m) && typeof m.mediaType === 'string' && typeof m.data === 'string',
+          (m) =>
+            isRecord(m) &&
+            typeof m.mediaType === 'string' &&
+            (typeof m.data === 'string') !== (typeof m.image === 'string'),
         )))
   );
 }

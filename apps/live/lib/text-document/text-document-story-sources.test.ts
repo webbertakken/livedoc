@@ -33,6 +33,7 @@ function source(doc: Y.Doc, onLaid = vi.fn(), drawsEmpty = false) {
     label: 'Header',
     onLaid,
     drawsEmpty,
+    gallery: { gallery: async () => null, release: () => {} },
   });
   return { made, container, onLaid };
 }

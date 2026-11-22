@@ -2,6 +2,7 @@
 // "Opening a file"): each media its pictures hold is stored as the opener's gallery image, once per key, before the
 // state is written, and its entry names the image instead of holding the bytes. A media the gallery refuses keeps its
 // bytes, so the document still opens whole; each refusal is counted by its reason.
+import { FEATURE_OFF_ERROR } from '@livedoc/api-schema';
 import { pictureHeader } from '@livedoc/office-packages';
 import { Pictures, type PictureMedia, type TextDocument } from '@livedoc/text-documents';
 import { servableImageIds } from '../db/image-grants';
@@ -32,7 +33,7 @@ export async function mediaIntoGallery(
     kept[reason] = (kept[reason] ?? 0) + 1;
   };
   if (!hasImageStore(env)) {
-    for (const _ of held) keep('images_unavailable');
+    for (const _ of held) keep(FEATURE_OFF_ERROR.images);
     return { document, gallery: 0, kept };
   }
   const media: Record<string, PictureMedia> = { ...document.media };
