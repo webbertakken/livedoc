@@ -6,6 +6,7 @@ import type { Body, Paragraph } from './body';
 import type { Style, StyleDefaults } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
 import {
+  liveMediaOf,
   readLiveDefaults,
   readLiveDocument,
   readLiveSection,
@@ -13,7 +14,8 @@ import {
 } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
 import { storyFragment, type LiveHeaders } from './live/live-stories';
-import { DOCUMENT_MAP, LISTS_MAP, STYLES_MAP } from './live/live-names';
+import { DOCUMENT_MAP, LISTS_MAP, MEDIA_MAP, STYLES_MAP } from './live/live-names';
+import type { PictureMedia } from './model/pictures';
 import type { Section } from './model/sections';
 import type { Watermark } from './model/watermark';
 import type { ListDefinition } from './model/lists';
@@ -25,6 +27,7 @@ import {
   setLiveSection,
   setLiveStyles,
   writeLiveDocument,
+  writeLiveMedia,
 } from './live/live-write';
 
 export { BODY_FRAGMENT };
@@ -203,6 +206,11 @@ export const TextDocumentState = {
   /** Sets a list's definition, as one transaction with `origin` (lists.md "Making a list"). */
   setList: (doc: Y.Doc, id: string, list: ListDefinition, origin?: unknown): void =>
     setLiveList(doc, id, list, origin),
+  /** A picture's media by its key, as the state holds it (objects.md "In the editor"). */
+  media: (doc: Y.Doc, key: string): PictureMedia | undefined => liveMediaOf(doc, key),
+  /** Media a paste brought, each written once by its key; a key the state holds keeps its own bytes. */
+  addMedia: (doc: Y.Doc, media: Readonly<Record<string, PictureMedia>>): void =>
+    doc.transact(() => writeLiveMedia(doc.getMap<unknown>(MEDIA_MAP), Object.entries(media))),
   /** The live state's lists map, which the editor's undo also tracks. */
   listsType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(LISTS_MAP),
   /** The live state's styles map, which the editor's undo also tracks (live-editing-and-storage.md "Undo"). */

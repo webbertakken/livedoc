@@ -4,10 +4,13 @@ import type { Relationship } from '@livedoc/office-packages';
 /** Relationships of one source part: kept ones first with their ids, new ones numbered after the highest kept id. */
 export class RelationshipList {
   readonly list: Relationship[];
+  /** The part whose relationships these are, which targets are relative to. */
+  readonly source: string;
   #next: number;
 
-  constructor(kept: readonly Relationship[]) {
+  constructor(kept: readonly Relationship[], source = '') {
     this.list = [...kept];
+    this.source = source;
     const numbers = kept.map((r) => Number(r.id.match(/^rId(\d+)$/)?.[1] ?? 0));
     this.#next = Math.max(0, ...numbers) + 1;
   }

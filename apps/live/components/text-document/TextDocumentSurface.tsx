@@ -15,11 +15,13 @@ import { tableEditing } from 'prosemirror-tables';
 import { tableResizePlugin } from '@/lib/text-document/text-document-table-resize-plugin';
 import { tableMovePlugin } from '@/lib/text-document/text-document-table-move-plugin';
 import { tableView } from '@/lib/text-document/text-document-table-dom';
+import { pictureView } from '@/lib/text-document/text-document-pictures';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
   Columns,
   liveFirstHeaders,
+  PICTURE,
   TextDocumentState,
   type ListDefinition,
   type PageSetup,
@@ -344,6 +346,11 @@ export function TextDocumentSurface({
                   () => live.current.format,
                   () => editor.current?.state.doc ?? null,
                 ),
+                // A copied picture's media goes with it (objects.md "In the editor").
+                media: {
+                  read: (key) => TextDocumentState.media(doc, key),
+                  place: (media) => TextDocumentState.addMedia(doc, media),
+                },
                 onLeftOut: (count) => clipboardLeftOut.current(count),
               }),
               // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
@@ -407,8 +414,12 @@ export function TextDocumentSurface({
           }),
           editable: () => live.current.writes,
           // Page numbers and page counts drawn as their page's (page-layout.md "Page numbers"); a table's columns drawn
-          // again as its cells' widths change (tables.md "In the editor").
-          nodeViews: { ...FIELD_NODE_VIEWS, table: tableView },
+          // again as its cells' widths change (tables.md "In the editor"); pictures from the state's media (objects.md).
+          nodeViews: {
+            ...FIELD_NODE_VIEWS,
+            table: tableView,
+            [PICTURE]: pictureView((key) => TextDocumentState.media(doc, key)),
+          },
           // Read only in Viewing (or for a Viewer), yet still focusable: the keyboard reads it, and its shortcuts work.
           attributes: () => ({
             role: 'textbox',

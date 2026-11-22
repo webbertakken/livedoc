@@ -1483,6 +1483,9 @@ importers:
 
   packages/office-packages:
     dependencies:
+      '@livedoc/items':
+        specifier: workspace:*
+        version: link:../items
       saxes:
         specifier: ^6.0.0
         version: 6.0.0

@@ -19,10 +19,11 @@ import {
 import { readTextDocumentFile, writeTextDocumentFile } from '../files';
 import { TextDocument } from '../model/text-document';
 import { CONSTRUCTS } from '../testing/constructs';
-import { LIVEDOC_NS } from '../odf/odf-names';
+import { LIVEDOC_NS, NS } from '../odf/odf-names';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-written-'));
-const FOREIGN = new Set([LIVEDOC_NS]);
+// LiveDoc's own namespace, and LibreOffice's extension a decorative picture is marked in (objects.md "In the formats").
+const FOREIGN = new Set([LIVEDOC_NS, NS.loext]);
 fetchOfficeSchemas();
 
 const written: { file: string; texts: string[] }[] = [];

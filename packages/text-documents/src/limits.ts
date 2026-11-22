@@ -26,3 +26,6 @@ export const TEXT_DOCUMENT_UNDO_GROUP_MS = 500;
 export const TEXT_DOCUMENT_LOG_UPDATES = 500;
 /** (default) A text document's stored state, history included: past it, edits are refused with the limit named. */
 export const TEXT_DOCUMENT_MAX_STATE_BYTES = 64 * 1024 * 1024;
+
+/** (default) Pictures and drawings a text document holds (text-document.md "Limits"); past it, a picture read stays kept. */
+export const TEXT_DOCUMENT_MAX_OBJECTS = 2000;

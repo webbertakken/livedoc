@@ -65,7 +65,13 @@ function withinKeptLimit(
   return { ...document, body };
 }
 
-export type ReadLimits = { budgets?: PackageBudgets; maxChars?: number; keptBytes?: number };
+/** `maxObjects`: the most pictures a text document holds (objects.md "In the formats"); past it, the rest stay kept. */
+export type ReadLimits = {
+  budgets?: PackageBudgets;
+  maxChars?: number;
+  keptBytes?: number;
+  maxObjects?: number;
+};
 
 /** A text document file read into the model, in the format it arrived in. */
 export async function readTextDocumentFile(
@@ -78,12 +84,12 @@ export async function readTextDocumentFile(
   let document: TextDocument;
   let fileType: TextDocumentFileType;
   if (packageKind(bytes) === 'ooxml') {
-    const read = await readOoxmlFile(bytes, report, limits.budgets);
+    const read = await readOoxmlFile(bytes, report, limits.budgets, limits.maxObjects);
     if (!read.ok) return read;
     document = read.document;
     fileType = 'docx';
   } else {
-    const read = await readOdfFile(bytes, report, limits.budgets);
+    const read = await readOdfFile(bytes, report, limits.budgets, limits.maxObjects);
     if (!read.ok) return read;
     document = read.document;
     fileType = read.flat ? 'fodt' : 'odt';

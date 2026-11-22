@@ -45,6 +45,10 @@ import { sortedBindings } from '../odf/odf-read';
 import { LIVEDOC_NS } from '../odf/odf-names';
 import { MC_NS, R_NS, W_NS, W_STRICT_NS, WRITTEN_W_NS } from './ooxml-names';
 import { ooxmlFieldKind } from './ooxml-fields';
+import { adoptOoxmlMedia, ooxmlPictureLookup, readOoxmlPicture } from './ooxml-pictures';
+import { MediaTaken, type FoundMedia } from '../picture-media';
+import type { Picture } from '../model/pictures';
+import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import { FootnotesReader, markProps } from './ooxml-notes';
 import { overLines, readOoxmlTable, tableLinesOf, type TableLines } from './ooxml-tables';
 import {
@@ -100,6 +104,7 @@ export async function readOoxmlFile(
   bytes: Uint8Array<ArrayBuffer>,
   report: ReportBuilder,
   budgets?: PackageBudgets,
+  maxObjects?: number,
 ): Promise<OoxmlFileRead> {
   const read = await readOoxmlPackage(bytes, budgets);
   if (!read.ok) return read;
@@ -162,6 +167,8 @@ export async function readOoxmlFile(
     pkg,
     report,
     parse,
+    await ooxmlPictureLookup(pkg),
+    maxObjects,
   );
   return {
     ok: true,
@@ -205,7 +212,11 @@ class OoxmlReader {
   readonly report: ReportBuilder;
   readonly rels: readonly Relationship[];
   /** The part being read (the main part, or a header's): where kept XML and links come from. */
-  part: { parsed: XmlParsed; rels: readonly Relationship[] };
+  part: { parsed: XmlParsed; name: string; rels: readonly Relationship[] };
+  /** The media each image part holds, by part name, for the pictures read (objects.md "In the formats"). */
+  readonly pictures: ReadonlyMap<string, FoundMedia>;
+  /** The media the pictures read hold. */
+  readonly taken: MediaTaken;
   /** The header and footer parts the sections name, each read once. */
   readonly headerParts = new HeaderPartsReader(this);
   /** The footnotes part, read once (page-layout.md "Footnotes"). */
@@ -231,12 +242,16 @@ class OoxmlReader {
     pkg: OoxmlPackage,
     report: ReportBuilder,
     parsePart: (name: string) => XmlParsed | PackageRefusal | undefined = () => undefined,
+    pictures: ReadonlyMap<string, FoundMedia> = new Map(),
+    maxObjects = TEXT_DOCUMENT_MAX_OBJECTS,
   ) {
+    this.pictures = pictures;
+    this.taken = new MediaTaken(maxObjects);
     this.parts = parts;
     this.pkg = pkg;
     this.report = report;
     this.rels = pkg.relationships.get(pkg.mainPart) ?? [];
-    this.part = { parsed: parts.document, rels: this.rels };
+    this.part = { parsed: parts.document, name: pkg.mainPart, rels: this.rels };
     this.parsePart = parsePart;
   }
 
@@ -537,7 +552,7 @@ class OoxmlReader {
           .sort(([a], [b]) => (a < b ? -1 : 1)),
       ),
     };
-    return {
+    const document: TextDocument = {
       format: 'ooxml',
       metadata: names.metadata,
       defaults,
@@ -546,8 +561,10 @@ class OoxmlReader {
       section: first,
       ...(readPageless(this.parts.settings?.root) ? { pageless: true as const } : {}),
       body: blocks,
+      ...compact({ media: this.taken.held() }),
       source,
     };
+    return adoptOoxmlMedia(document, this.taken);
   }
 
   paragraph(p: XmlElement, endsWith: Section | undefined): Paragraph {
@@ -856,6 +873,10 @@ class RunReader {
       switch (c.local) {
         case 'rPr':
           break;
+        case 'drawing':
+          if (!this.picture(c, ctx, props, style, kept))
+            this.keepWhole(r, rPr, c, ctx, props, style);
+          break;
         case 't':
           this.push(textContent(c), style, props, ctx.link, kept);
           break;
@@ -941,6 +962,35 @@ class RunReader {
       props,
       ...compact({ style, link: ctx.link, kept }),
     } satisfies Field);
+  }
+
+  /** A drawing read as a picture in line, when it holds only what the model maps (objects.md "In the formats"). */
+  picture(
+    drawing: XmlElement,
+    ctx: RunContext,
+    props: TextProps,
+    style: string | undefined,
+    kept: KeptProperties | undefined,
+  ): boolean {
+    const part = this.r.part;
+    const read = readOoxmlPicture(
+      drawing,
+      (id) => {
+        const rel = part.rels.find((r) => r.id === id);
+        if (!rel || rel.external || rel.type !== RELATIONSHIP_TYPES.image) return undefined;
+        const name = resolvePartName(part.name, rel.target);
+        return name === undefined ? undefined : this.r.pictures.get(name);
+      },
+      this.r.taken,
+    );
+    if (!read) return false;
+    this.out.push({
+      type: 'picture',
+      ...read,
+      props,
+      ...compact({ style, link: ctx.link, kept }),
+    } satisfies Picture);
+    return true;
   }
 
   /** A run's unmapped child kept as a run of its own, with the run's formatting inside it. */

@@ -9,6 +9,7 @@ import {
   KEPT_BLOCK,
   KEPT_INLINE,
   ListDefinition,
+  PICTURE,
   RUN_KEPT_MARK,
   SECTION_BREAK,
   TABLE,
@@ -20,11 +21,14 @@ import {
   TEXT_STYLE_MARK,
   type ListPlace,
   type ParagraphProps,
+  type PictureMedia,
   type Style,
   type StyleDefaults,
   type TextDocumentFormat,
   type TextProps,
 } from '@livedoc/text-documents';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { isMappedPictureType, pictureHeader } from '@livedoc/office-packages';
 import type { Lists } from './text-document-lists';
 
 const TABLE_NODES: ReadonlySet<string> = new Set([TABLE, TABLE_ROW, TABLE_CELL, TABLE_HEADER]);
@@ -59,7 +63,12 @@ export type FragmentContext = FragmentPlace & {
   readonly lists: Lists;
   /** A footnote's writing by its story, as the document holds it (page-layout.md "Footnotes"). */
   readonly readNote?: (story: string) => NodeJson[] | null;
+  /** A picture's media by its key, as the document holds it (objects.md "In the editor"). */
+  readonly readMedia?: (key: string) => PictureMedia | undefined;
 };
+
+/** A picture's media as the fragment carries it: its media type and its bytes in base64. */
+export type FragmentMedia = { readonly mediaType: string; readonly data: string };
 
 export type ClipboardFragment = {
   readonly v: typeof FRAGMENT_VERSION;
@@ -70,11 +79,27 @@ export type ClipboardFragment = {
   readonly lists: Lists;
   /** The writing of each footnote whose mark is copied, by its story. */
   readonly notes?: Readonly<Record<string, NodeJson[]>>;
+  /** The media of each copied picture, by its key. */
+  readonly media?: Readonly<Record<string, FragmentMedia>>;
 };
 
 export type FragmentRead =
   | { readonly ok: true; readonly fragment: ClipboardFragment }
   | { readonly ok: false; readonly reason: 'too-long' | 'not-json' | 'shape' };
+
+/** The media a fragment brings, each only when its bytes are a whole picture of the type it names and the model maps. */
+function broughtMedia(
+  media: Readonly<Record<string, FragmentMedia>>,
+): Record<string, PictureMedia> {
+  const out: Record<string, PictureMedia> = {};
+  for (const [key, m] of Object.entries(media)) {
+    const bytes = bytesOfBase64(m.data);
+    const type = bytes && pictureHeader(bytes)?.mediaType;
+    if (bytes && type === m.mediaType && isMappedPictureType(type))
+      out[key] = { mediaType: type, bytes };
+  }
+  return out;
+}
 
 /** The fragment placed in a document: its slice, the lists it brings (by their new ids), and kept items left out. */
 export type PlacedFragment = {
@@ -83,6 +108,8 @@ export type PlacedFragment = {
   readonly left: number;
   /** The copied footnotes' writing, placed as the slice is. */
   readonly notes: Readonly<Record<string, NodeJson[]>>;
+  /** The media its pictures bring into another document, by key: whole pictures of a type the model maps. */
+  readonly media: Readonly<Record<string, PictureMedia>>;
 };
 
 function walk(nodes: readonly NodeJson[] | undefined, visit: (node: NodeJson) => void): void {
@@ -120,6 +147,13 @@ export function makeFragment(slice: Slice, context: FragmentContext): ClipboardF
       notes[story] = context.readNote?.(story) ?? [];
   });
   const all = [...(json.content ?? []), ...Object.values(notes).flat()];
+  const media: Record<string, FragmentMedia> = {};
+  walk(all, (node) => {
+    const key = attrsOf(node).media;
+    if (node.type !== PICTURE || typeof key !== 'string' || Object.hasOwn(media, key)) return;
+    const held = context.readMedia?.(key);
+    if (held) media[key] = { mediaType: held.mediaType, data: base64OfBytes(held.bytes) };
+  });
   walk(all, (node) => {
     const style = attrsOf(node).style;
     if (node.type === 'paragraph' && typeof style === 'string') styleIds.add(style);
@@ -140,6 +174,7 @@ export function makeFragment(slice: Slice, context: FragmentContext): ClipboardF
       [...listIds].filter((id) => context.lists[id]).map((id) => [id, context.lists[id]!]),
     ),
     ...(Object.keys(notes).length > 0 ? { notes } : {}),
+    ...(Object.keys(media).length > 0 ? { media } : {}),
   };
 }
 
@@ -156,7 +191,7 @@ const isStyle = (value: unknown): boolean =>
 
 function isFragment(value: unknown): value is ClipboardFragment {
   if (!isRecord(value) || value.v !== FRAGMENT_VERSION) return false;
-  const { source, slice, styles, defaults, lists, notes } = value;
+  const { source, slice, styles, defaults, lists, notes, media } = value;
   return (
     isRecord(source) &&
     typeof source.documentId === 'string' &&
@@ -171,7 +206,12 @@ function isFragment(value: unknown): value is ClipboardFragment {
     isRecord(defaults.text) &&
     isRecord(lists) &&
     Object.values(lists).every((list) => isRecord(list) && Array.isArray(list.levels)) &&
-    (notes === undefined || (isRecord(notes) && Object.values(notes).every(Array.isArray)))
+    (notes === undefined || (isRecord(notes) && Object.values(notes).every(Array.isArray))) &&
+    (media === undefined ||
+      (isRecord(media) &&
+        Object.values(media).every(
+          (m) => isRecord(m) && typeof m.mediaType === 'string' && typeof m.data === 'string',
+        )))
   );
 }
 
@@ -258,7 +298,8 @@ export function placeFragment(
 ): PlacedFragment {
   const { source } = fragment;
   if (source.documentId === target.documentId && source.tabId === target.tabId)
-    return { slice: fragment.slice, lists: {}, left: 0, notes: fragment.notes ?? {} };
+    return { slice: fragment.slice, lists: {}, left: 0, notes: fragment.notes ?? {}, media: {} };
+  const media = broughtMedia(fragment.media ?? {});
   const style = styleMapper(fragment, target);
   const taken = new Set([...Object.keys(target.lists), ...(target.listIds ?? [])]);
   const listIds = new Map<string, string>();
@@ -297,6 +338,13 @@ export function placeFragment(
         return [];
       }
       const attrs = attrsOf(node);
+      // A picture comes with its media, else it is left out (objects.md "In the editor").
+      if (node.type === PICTURE) {
+        if (typeof attrs.media === 'string' && Object.hasOwn(media, attrs.media))
+          return [{ ...node, attrs: { ...attrs, kept: null } }];
+        left += 1;
+        return [];
+      }
       if (node.type === SECTION_BREAK)
         return [{ ...node, attrs: { ...attrs, kept: null, region: null } }];
       // A table's rows and cells placed whole, what the other file kept left behind; a cell left empty holds a paragraph.
@@ -344,5 +392,5 @@ export function placeFragment(
   const notes = Object.fromEntries(
     Object.entries(fragment.notes ?? {}).map(([story, blocks]) => [story, placeNodes(blocks)]),
   );
-  return { slice: { ...fragment.slice, content }, lists, left, notes };
+  return { slice: { ...fragment.slice, content }, lists, left, notes, media };
 }

@@ -36,7 +36,7 @@ are no others. A text document only changes format when a person converts it ([C
 | Fields               | `text:page-number`, `text:page-count`, `text:date`, `text:title`, `text:bookmark-ref`                                                                                                                                                                          | `w:fldSimple`, `w:fldChar` with `PAGE`, `NUMPAGES`, `DATE`, `TITLE`, `REF`                                                                           | Page number, page count, date, title, heading links                                                                       |
 | Footnotes            | `text:note` `text:note-class="footnote"` / `"endnote"`                                                                                                                                                                                                         | `w:footnoteReference`, `w:endnoteReference` into `footnotes.xml`, `endnotes.xml`                                                                     | Footnotes; endnotes kept and shown at the end                                                                             |
 | Tables               | `table:table`, columns, rows, cells, spans, `table:covered-table-cell`, `table:table-header-rows`, `style:may-break-between-rows`                                                                                                                              | `w:tbl`, `w:tblGrid`, `w:tr`, `w:tc`, `w:gridSpan`, `w:vMerge`, `w:tblHeader`, `w:cantSplit`                                                         | Tables with merged cells, header rows, borders, shading, padding, alignment                                               |
-| Pictures             | `draw:frame` with `draw:image`, size, `text:anchor-type`, `style:wrap`, `fo:clip`, `draw:transform`, `svg:title`, `svg:desc`                                                                                                                                   | `w:drawing` with `wp:inline` / `wp:anchor`, `pic:pic`, `a:blip` (relationship), `a:srcRect`, `a:xfrm` `rot`, `wp:docPr` `descr`                      | Pictures in line, wrapped or fixed; size, crop, rotation, alt text                                                        |
+| Pictures             | `draw:frame` with `draw:image`, size, `text:anchor-type`, `style:wrap`, `fo:clip`, `draw:transform`, `svg:title`, `svg:desc`                                                                                                                                   | `w:drawing` with `wp:inline` / `wp:anchor`, `pic:pic`, `a:blip` (relationship), `a:srcRect`, `a:xfrm` `rot`, `wp:docPr` `descr`                      | Pictures in line: size, crop, alt text ([Objects](objects.md#in-the-formats)); the rest kept                              |
 | Drawings             | `draw:image` (SVG, PNG fallback) and `livedoc:drawing`                                                                                                                                                                                                         | `a:blip` (PNG, `asvg:svgBlip` SVG) and `livedoc:drawing` in an `mc:AlternateContent` choice                                                          | A LiveDoc canvas drawing ([Objects](objects.md#drawings))                                                                 |
 | Equations            | `draw:object` holding MathML                                                                                                                                                                                                                                   | `m:oMath`, `m:oMathPara` (OMML)                                                                                                                      | Equations                                                                                                                 |
 | Links, bookmarks     | `text:a`, `text:bookmark`, `-start`, `-end`                                                                                                                                                                                                                    | `w:hyperlink` (relationship or `w:anchor`), `w:bookmarkStart`, `w:bookmarkEnd`                                                                       | Links, bookmarks, heading links                                                                                           |
@@ -51,14 +51,14 @@ are no others. A text document only changes format when a person converts it ([C
 The model is plain values in `@livedoc/text-documents`, each a namespace of pure functions over immutable data.
 
 - **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, its watermark
-  ([Watermark](page-layout.md#watermark)) and its kept parts.
+  ([Watermark](page-layout.md#watermark)), its pictures' media ([Objects](objects.md#the-model)) and its kept parts.
 - **Body**: blocks in order, each a **paragraph**, a **table**, a **section break** or a **kept block**.
 - **`Table`**: column widths, rows of cells with their spans, header rows, alignment and indent; each cell holds blocks
   as the body does ([Tables](tables.md#the-model)).
 - **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
   and inlines: **runs** (characters with direct text formatting and an optional link), **fields** (a page number or
   the page count, with the formatting of a run and the text last drawn), **notes** (a footnote's mark with its
-  formatting, holding the note's blocks) and **kept inlines**.
+  formatting, holding the note's blocks), **pictures** in line ([Objects](objects.md#the-model)) and **kept inlines**.
 - **`Style`**: a named paragraph or text style, its parent and next style, its formatting; the built-in styles are
   known by role (Normal text, Title, Subtitle, Heading 1 to 6) in either format's names.
 - **`ListDefinition`**: nine levels, each bullet (with its character), numbered (with its format, its label pattern
@@ -116,7 +116,7 @@ mail-merge fields, indexes other than the table of contents, smart chips, embedd
 shapes and text boxes, and constructs of newer versions of either standard.
 
 - **Four grains of keeping.** A **kept block** is a body-level element the model does not map (a table until tables
-  are built, a table of contents); a **kept inline** is one inside a paragraph (a bookmark, another field, an endnote, a picture),
+  are built, a table of contents); a **kept inline** is one inside a paragraph (a bookmark, another field, an endnote, an anchored picture),
   with the formatting of the run it sat in; **kept properties** are the file's own formatting element of a paragraph,
   run, style, list or section, written back as it was while the model's values read from it are unchanged, and
   rebuilt from the model, its unmapped children kept, once they change; **kept parts** are the package's other
@@ -198,6 +198,7 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`             |
 | Either format, converted | A table's kept table style (`table:template-name`, `w:tblStyle`, `w:tblLook`), each a `table-style` loss                |
 | Either format            | A malformed table repaired on read (short and long rows, spans past an edge), reported `table-repaired`                 |
+| Either format            | A picture's name and ids (`draw:name`, `wp:docPr` `name`, `id`) are written anew, and Word's `wp:effectExtent` as none  |
 | Google Docs files        | A heading gains a bookmark (its link id) and is numbered as an outline list item, level 0                               |
 | Google Docs files        | Empty paragraphs beside a section break move or go, as Google lays sections out                                         |
 | Google Docs `.odt`       | Its fonts embedded (Liberation, `Fonts/`), a layout cache and `manifest.rdf`, kept as entries                           |

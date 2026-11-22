@@ -117,6 +117,7 @@ describe('placeFragment', () => {
       lists: {},
       left: 0,
       notes: {},
+      media: {},
     });
   });
 
@@ -217,5 +218,64 @@ describe('footnotes in the fragment', () => {
     expect(note!.attrs!.style).toBe('Normal');
     expect(note!.attrs!.list).toEqual({ id: 'L2', level: 0 });
     expect(placed.lists).toEqual({ L2: ListDefinition.of('number') });
+  });
+});
+
+// objects.md "In the editor": a copied picture brings its media, so it pastes whole into another text document.
+describe('pictures in the fragment', () => {
+  const PNG = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0, 2,
+    0, 0, 0, 1, 8, 2, 0, 0, 0,
+  ]);
+  const pictured = schema.node('doc', null, [
+    schema.nodes.paragraph!.create({ style: 'Standard' }, [
+      schema.text('a'),
+      schema.nodes.picture!.create({ media: 'k1', width: 20, height: 10, alt: 'Field' }),
+    ]),
+  ]);
+  const copy = (media: Record<string, { mediaType: 'image/png'; bytes: Uint8Array }>) => {
+    const state = EditorState.create({
+      doc: pictured,
+      selection: TextSelection.create(pictured, 1, pictured.content.size - 1),
+    });
+    return makeFragment(state.selection.content(), { ...odf, readMedia: (key) => media[key] });
+  };
+  const pictures = (content: NodeJson[] | undefined) =>
+    paragraphs(content).flatMap((p) => (p.content ?? []).filter((n) => n.type === 'picture'));
+
+  it('carries the media of each copied picture as base64', () => {
+    const fragment = copy({ k1: { mediaType: 'image/png', bytes: PNG } });
+    expect(fragment.media).toEqual({
+      k1: { mediaType: 'image/png', data: btoa(String.fromCharCode(...PNG)) },
+    });
+    expect(readFragment(JSON.stringify(fragment))).toMatchObject({ ok: true });
+  });
+
+  it('refuses media of the wrong shape', () => {
+    const fragment = { ...copy({}), media: { k1: { mediaType: 'image/png' } } };
+    expect(readFragment(JSON.stringify(fragment))).toEqual({ ok: false, reason: 'shape' });
+  });
+
+  it('places the picture whole in another document, bringing its media', () => {
+    const placed = placeFragment(copy({ k1: { mediaType: 'image/png', bytes: PNG } }), ooxml);
+    expect(pictures(placed.slice.content)).toHaveLength(1);
+    expect(placed.media).toEqual({ k1: { mediaType: 'image/png', bytes: PNG } });
+    expect(placed.left).toBe(0);
+  });
+
+  it('places it as copied in the tab it came from, which holds its media', () => {
+    const placed = placeFragment(copy({ k1: { mediaType: 'image/png', bytes: PNG } }), odf);
+    expect(pictures(placed.slice.content)).toHaveLength(1);
+    expect(placed.media).toEqual({});
+  });
+
+  it('leaves out a picture whose media did not come, or is no picture, and counts it', () => {
+    expect(placeFragment(copy({}), ooxml)).toMatchObject({ left: 1, media: {} });
+    const text = copy({
+      k1: { mediaType: 'image/png', bytes: new TextEncoder().encode('<svg/>') },
+    });
+    const placed = placeFragment(text, ooxml);
+    expect(pictures(placed.slice.content)).toEqual([]);
+    expect(placed.left).toBe(1);
   });
 });

@@ -49,6 +49,21 @@ export const TABLE_CELL_ATTRIBUTES = [
   'kept',
   'tag',
 ] as const;
+/** A picture in line (objects.md "In the editor"): an atom inside its paragraph, its media by key. */
+export const PICTURE = 'picture';
+export const PICTURE_ATTRIBUTES = [
+  'media',
+  'width',
+  'height',
+  'alt',
+  'title',
+  'decorative',
+  'crop',
+  'props',
+  'style',
+  'link',
+  'kept',
+] as const;
 export const KEPT_INLINE_ATTRIBUTES = ['name', 'xml', 'props', 'style', 'link', 'kept'] as const;
 export const FIELD_ATTRIBUTES = ['field', 'text', 'props', 'style', 'link', 'kept'] as const;
 export const FOOTNOTE_ATTRIBUTES = ['story', 'props', 'style', 'link', 'kept'] as const;
@@ -87,3 +102,5 @@ export const DOCUMENT_MAP = 'document';
 export const STYLES_MAP = 'styles';
 export const LISTS_MAP = 'lists';
 export const SOURCE_MAP = 'source';
+/** The pictures' media by key, each `{ mediaType, bytes, part }` (live-editing-and-storage.md "The layout"). */
+export const MEDIA_MAP = 'media';

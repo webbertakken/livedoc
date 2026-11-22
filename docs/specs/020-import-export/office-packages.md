@@ -79,8 +79,8 @@ bytes.
   inheritance resolved by parent (ODF `style:parent-style-name`, OOXML `w:basedOn`).
 - **Embedded files**: pictures (PNG, JPEG, GIF, SVG, WebP, EMF and WMF kept as bytes with their fallback picture),
   equations, embedded fonts (ODF `svg:font-face-uri`; OOXML obfuscated `w:embedRegular` fonts, de-obfuscated) handed
-  only to the browser's font loader. Pictures' media types and pixel sizes are read from their headers (PNG, JPEG,
-  GIF, WebP).
+  only to the browser's font loader. Pictures' media types, pixel sizes and resolutions are read from their headers
+  (PNG, JPEG, GIF, WebP; resolution from PNG `pHYs` and JPEG JFIF).
 
 ## Validation
 

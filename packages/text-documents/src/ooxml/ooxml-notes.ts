@@ -48,7 +48,7 @@ export type FootnotesSource = {
   readonly rels: readonly Relationship[];
   readonly pkg: OoxmlPackage;
   readonly report: ReportBuilder;
-  part: { parsed: XmlParsed; rels: readonly Relationship[] };
+  part: { parsed: XmlParsed; name: string; rels: readonly Relationship[] };
   readonly parsePart: (name: string) => XmlParsed | PackageRefusal | undefined;
   /** While a note's paragraphs are read: its number run is dropped, a mark in it kept. */
   readingNote: boolean;
@@ -75,7 +75,11 @@ export class FootnotesReader {
     if (!part || !footnote || attributeOf(footnote, W_NS, 'type') !== undefined) return undefined;
     const source = this.#source;
     const outer = source.part;
-    source.part = { parsed: part.parsed, rels: source.pkg.relationships.get(part.name) ?? [] };
+    source.part = {
+      parsed: part.parsed,
+      name: part.name,
+      rels: source.pkg.relationships.get(part.name) ?? [],
+    };
     source.readingNote = true;
     const blocks = source.blocksOf(footnote);
     source.readingNote = false;
