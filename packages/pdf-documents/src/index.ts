@@ -29,3 +29,4 @@ export type {
 } from './engine-contract';
 export { PageView } from './page-view';
 export { PdfPermissions } from './permissions';
+export { PageText, type TextBox } from './page-text';

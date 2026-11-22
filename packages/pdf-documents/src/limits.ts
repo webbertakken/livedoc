@@ -12,6 +12,9 @@ export const PDF_MAX_PAGE_PIXELS = 268_435_456;
 /** (default) The whole-page picture a page is first drawn as (reading-surface.md "Limits"): sharper detail is the tiles'.
  *  Safe range: 2^21 to 2^25. */
 export const PDF_PAGE_PICTURE_MAX_PIXELS = 8_388_608;
+/** (default) One page's text read at once, twenty times a dense page; a page past it reads its first part. Safe
+ *  range: 20,000 to 2,000,000. */
+export const PDF_PAGE_TEXT_MAX_CHARS = 200_000;
 /** The most a PDF page measures on a side, in points: the standard's own 200 inches. */
 export const PDF_MAX_PAGE_POINTS = 14_400;
 /** (default) A property of the file (title, author, subject, keywords, producer) is cut to it (security.md "Limits"). */

@@ -54,6 +54,11 @@ describe('the engine over a worker thread', () => {
     // A page's pixels are handed over, never copied.
     expect(transfers.some((transfer) => transfer.length === 1)).toBe(true);
     expect(await engine.drawPage(9, 1)).toBeNull();
+    // A page's text crosses with a box a unit, its boxes handed over as its pixels are.
+    const text = await engine.pageText(0);
+    expect(text?.text.startsWith(FIXTURE_LINE)).toBe(true);
+    expect(text?.boxes).toHaveLength(text!.text.length * 4);
+    expect(transfers.filter((transfer) => transfer.length === 1)).toHaveLength(2);
     const selected = await engine.selectText(0, { x: 72, y: 725 }, { x: 200, y: 725 });
     expect(selected?.text).toBe(FIXTURE_LINE.slice(0, selected?.text.length));
     expect(selected?.text.length).toBeGreaterThan(3);
@@ -100,6 +105,7 @@ describe('the engine over a worker thread', () => {
     expect(worker.terminate).toHaveBeenCalledTimes(1);
     expect(await engine.unlock('a password')).toEqual({ ok: false, refusal: 'pdf_stopped' });
     expect(await engine.drawPage(0, 1)).toBeNull();
+    expect(await engine.pageText(0)).toBeNull();
     expect(await engine.selectText(0, { x: 0, y: 0 }, { x: 1, y: 1 })).toBeNull();
     expect(await engine.fileMarks(0)).toEqual([]);
     expect(await engine.bake(Uint8Array.of(0, 0))).toEqual({ ok: false, refusal: 'unreadable' });

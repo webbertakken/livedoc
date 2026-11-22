@@ -24,7 +24,7 @@ import {
 import { bakeAddition } from './bake';
 import { pdfEngineOver } from './engine';
 import { createPdfEngine, pdfDate } from './index';
-import { startReader } from './reader';
+import { PdfReader, startReader } from './reader';
 
 let engine: PdfEngine;
 let stored: Uint8Array<ArrayBuffer>;
@@ -276,6 +276,53 @@ describe('drawing', () => {
     expect(bitmap.width * bitmap.height).toBeLessThanOrEqual(PDF_MAX_PAGE_PIXELS);
     const asked = (await engine.drawPage(0, Number.NaN))!;
     expect([asked.width, asked.height]).toEqual([8, 8]);
+  });
+});
+
+// opening.md "What is read": Text, characters with positions, in the file's own order.
+describe("a page's text", () => {
+  it('reads the characters in the file’s order, each with its box on the page', async () => {
+    opened(await engine.open(stored));
+    const page = (await engine.pageText(0))!;
+    expect(page.text.startsWith(FIXTURE_LINE)).toBe(true);
+    expect(page.text).toContain('Page 1');
+    expect(page.boxes).toHaveLength(page.text.length * 4);
+    expect(page.cut).toBe(false);
+    expect(page.unmapped).toEqual([]);
+    // "T", the first character: 72 points in, on the line 720 up, about a 12 point capital.
+    const [left, bottom, right, top] = page.boxes.slice(0, 4);
+    expect(left).toBeGreaterThanOrEqual(71);
+    expect(left).toBeLessThan(74);
+    expect(bottom).toBeGreaterThanOrEqual(718);
+    expect(top).toBeGreaterThan(726);
+    expect(top).toBeLessThan(733);
+    expect(right).toBeGreaterThan(left!);
+    // Along the line each character starts to the right of the one before.
+    const lefts = [...FIXTURE_LINE].map((_, at) => page.boxes[at * 4]!);
+    const visible = lefts.filter((_, at) => FIXTURE_LINE[at] !== ' ');
+    expect([...visible].sort((a, b) => a - b)).toEqual(visible);
+  });
+
+  it('answers nothing for a page that is not there, and no characters for a page with none', async () => {
+    opened(await engine.open(stored));
+    expect(await engine.pageText(9)).toBeNull();
+    opened(await engine.open(labelledPdf()));
+    expect(await engine.pageText(0)).toEqual({
+      text: '',
+      boxes: new Float32Array(0),
+      unmapped: [],
+      cut: false,
+    });
+  });
+
+  it('reads only the first part of a page past the limit, and says so', async () => {
+    const reader = new PdfReader(await startReader(readerWasm()));
+    reader.open(stored);
+    const page = reader.pageText(0, 9)!;
+    expect(page.text).toBe(FIXTURE_LINE.slice(0, 9));
+    expect(page.boxes).toHaveLength(36);
+    expect(page.cut).toBe(true);
+    reader.close();
   });
 });
 

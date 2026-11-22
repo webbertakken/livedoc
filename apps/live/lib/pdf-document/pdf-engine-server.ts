@@ -4,12 +4,15 @@
 import type { PdfEngine } from '@livedoc/pdf-documents';
 import type { PdfEngineAnswer, PdfEnginePort, PdfEngineRequest } from './pdf-engine-protocol';
 
-// What an answer hands over rather than copies: a page's pixels. A baked file's bytes are copied, since a bake of no
-// changes answers the stored file the engine itself still reads from.
+// What an answer hands over rather than copies: a page's pixels, and the boxes of its text. A baked file's bytes are
+// copied, since a bake of no changes answers the stored file the engine itself still reads from.
 function transferOf(value: unknown): Transferable[] {
   if (typeof value !== 'object' || value === null) return [];
-  const { rgba } = value as { rgba?: { buffer: ArrayBuffer } };
-  return rgba ? [rgba.buffer] : [];
+  const { rgba, boxes } = value as {
+    rgba?: { buffer: ArrayBuffer };
+    boxes?: { buffer: ArrayBuffer };
+  };
+  return [rgba, boxes].flatMap((held) => (held ? [held.buffer] : []));
 }
 
 /** Answers the port's requests from the engine `start` makes, started on the first request. */

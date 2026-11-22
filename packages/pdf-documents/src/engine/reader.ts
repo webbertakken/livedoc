@@ -19,10 +19,12 @@ import {
   PDF_MAX_PAGE_PIXELS,
   PDF_MAX_PAGE_POINTS,
   PDF_NAME_MAX_CHARS,
+  PDF_PAGE_TEXT_MAX_CHARS,
   PDF_PROPERTY_MAX_CHARS,
 } from '../limits';
 import type { Quad } from '../mark';
 import { PageName } from '../page-name';
+import { PageText } from '../page-text';
 import { PdfPermissions } from '../permissions';
 
 export type Pdfium = WrappedPdfiumModule;
@@ -293,6 +295,37 @@ export class PdfReader {
         );
       p.FPDFBitmap_Destroy(bitmap);
       return { width, height, rgba, toView: this.matrixOf(page, pageWidth, pageHeight) };
+    });
+  }
+
+  /** The page's text, at most `most` characters of it, each with its box. */
+  pageText(index: number, most = PDF_PAGE_TEXT_MAX_CHARS): PageText | null {
+    const { p } = this;
+    return this.withPage(index, (page) => {
+      const text = p.FPDFText_LoadPage(page);
+      if (!text) return PageText.of([], []);
+      // Four doubles: left, right, bottom, top, as the reader writes a character's box.
+      const out = this.alloc(32);
+      try {
+        const held = Math.max(p.FPDFText_CountChars(text), 0);
+        const count = Math.min(held, most);
+        const codes = new Uint32Array(count);
+        const boxes = new Float32Array(count * 4);
+        const unmapped: number[] = [];
+        for (let at = 0; at < count; at += 1) {
+          codes[at] = p.FPDFText_GetUnicode(text, at);
+          if (p.FPDFText_HasUnicodeMapError(text, at) === 1) unmapped.push(at);
+          if (!p.FPDFText_GetCharBox(text, at, out, out + 8, out + 16, out + 24)) continue;
+          boxes[at * 4] = this.runtime.getValue(out, 'double');
+          boxes[at * 4 + 1] = this.runtime.getValue(out + 16, 'double');
+          boxes[at * 4 + 2] = this.runtime.getValue(out + 8, 'double');
+          boxes[at * 4 + 3] = this.runtime.getValue(out + 24, 'double');
+        }
+        return PageText.of(codes, boxes, { unmapped, cut: held > count });
+      } finally {
+        this.free(out);
+        p.FPDFText_ClosePage(text);
+      }
     });
   }
 

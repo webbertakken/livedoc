@@ -132,6 +132,7 @@ as for any document.
 | `PDF_OPEN_TIMEOUT_MS`       | 30,000               | `(default)` Reading the structure of the slowest corpus file takes under a second; safe range 10 to 120 s                                    |
 | `PDF_OPEN_NOTICE_MS`        | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                         |
 | `PDF_MAX_PAGE_PIXELS`       | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                    |
+| `PDF_PAGE_TEXT_MAX_CHARS`   | 200,000              | `(default)` One page's text read at once, twenty times a dense page; a page past it reads its first part and says so                         |
 | `PDF_WORKER_MAX_BYTES`      | 1,073,741,824        | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Measured: 724 MiB at most                                    |
 
 ## Share roles

@@ -3,6 +3,7 @@
 // library beneath it. Every value that crosses it is typed and bounded; nothing of a file crosses as markup.
 import type { Quad } from './mark';
 import type { PageName } from './page-name';
+import type { PageText } from './page-text';
 import type { PdfPermissions } from './permissions';
 
 /** A named reason a PDF is not opened (opening.md "Refusals"). */
@@ -114,6 +115,8 @@ export type PdfEngine = {
   unlock(password: string): Promise<PdfOpened>;
   /** The page at that place in the order, drawn at `scale` (1 is 72 dpi), the file's own marks included. */
   drawPage(index: number, scale: number): Promise<PageBitmap | null>;
+  /** A page's text with each character's box, or null where there is no such page. */
+  pageText(index: number): Promise<PageText | null>;
   /** The text between two points of a page, or null where there is none. */
   selectText(index: number, from: PagePoint, to: PagePoint): Promise<TextSelection | null>;
   /** The marks the file itself holds on a page. */
