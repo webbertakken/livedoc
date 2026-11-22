@@ -203,7 +203,7 @@ export function MenuAccordionSection({
         onClick={onToggle}
         onMouseDown={preserveFocus ? (e) => e.preventDefault() : undefined}
         aria-expanded={open}
-        className="flex min-h-row w-full cursor-pointer items-center justify-between px-3 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="flex min-h-row w-full cursor-pointer items-center pointer-coarse:min-h-11 justify-between px-3 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         <span className="flex items-center gap-2">
           {/* Fixed-width, centred icon slot so every category title starts at
@@ -275,7 +275,7 @@ export function MenuActionRow({
       <span
         aria-disabled
         {...itemProps}
-        className="flex min-h-row w-full cursor-not-allowed items-center gap-2 px-3 text-body text-slate-500"
+        className="flex min-h-row w-full cursor-not-allowed items-center pointer-coarse:min-h-11 gap-2 px-3 text-body text-slate-500"
       >
         {content}
       </span>
@@ -286,7 +286,7 @@ export function MenuActionRow({
       type="button"
       {...itemProps}
       onClick={onClick}
-      className="flex min-h-row w-full cursor-pointer items-center gap-2 px-3 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+      className="flex min-h-row w-full cursor-pointer items-center pointer-coarse:min-h-11 gap-2 px-3 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
     >
       {content}
     </button>
@@ -358,7 +358,7 @@ export function MenuActionButton({
       type="button"
       {...itemProps}
       onClick={onClick}
-      className="inline-flex min-h-row w-full cursor-pointer items-center justify-center gap-2 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+      className="inline-flex min-h-row w-full cursor-pointer items-center pointer-coarse:min-h-11 justify-center gap-2 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
     >
       {icon}
       {label}

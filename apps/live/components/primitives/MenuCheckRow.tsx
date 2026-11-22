@@ -31,7 +31,7 @@ export function MenuCheckRow({
       aria-disabled={disabled || undefined}
       {...itemProps}
       onClick={disabled ? undefined : onToggle}
-      className={`flex min-h-row w-full items-center gap-2 px-3 text-left text-body transition ${
+      className={`flex min-h-row w-full items-center gap-2 px-3 text-left text-body transition pointer-coarse:min-h-11 ${
         disabled
           ? 'cursor-default text-slate-500 dark:text-slate-400'
           : 'cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'

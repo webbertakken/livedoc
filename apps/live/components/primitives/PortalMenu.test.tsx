@@ -264,6 +264,8 @@ describe('PortalMenu rows on the sizing scale', () => {
       expect(row, name).toContain('min-h-row');
       expect(row, name).toContain('text-body');
       expect(row, name).not.toMatch(/\buppercase\b|tracking-wider|font-semibold/);
+      // A touch screen stacks them at 44 px (docs/specs/004-interface-design/touch-targets.md).
+      expect(row, name).toContain('pointer-coarse:min-h-11');
     }
   });
 });

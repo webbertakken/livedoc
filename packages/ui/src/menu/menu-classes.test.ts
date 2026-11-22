@@ -16,5 +16,6 @@ describe('menuRadioRowClass', () => {
   it('draws a 28 px row at the reading size', () => {
     expect(menuRadioRowClass(false)).toContain('min-h-row');
     expect(menuRadioRowClass(false)).toContain('text-body');
+    expect(menuRadioRowClass(false)).toContain('pointer-coarse:min-h-11');
   });
 });

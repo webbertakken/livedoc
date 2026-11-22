@@ -9,7 +9,7 @@ export const MENU_PANEL =
 // A menuitemradio row: tinted while checked, and medium while checked, so the choice stands out.
 export function menuRadioRowClass(checked: boolean): string {
   const medium = checked ? ' font-medium' : '';
-  return `flex min-h-row items-center gap-2 px-3 text-left text-body${medium} transition-colors duration-micro focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 ${
+  return `flex min-h-row items-center gap-2 px-3 text-left text-body pointer-coarse:min-h-11${medium} transition-colors duration-micro focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 ${
     checked
       ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
       : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
