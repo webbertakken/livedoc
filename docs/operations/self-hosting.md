@@ -367,7 +367,8 @@ The five downstream workers don't need their own domain; the router fans out via
 ## Worker logs
 
 The api, mcp and router workers keep their own log lines in Workers Logs, in your Cloudflare account: 3 days on
-Workers Free, 7 on Workers Paid. Request URLs are not kept. Read them in the dashboard under Workers & Pages, the
+Workers Free, 7 on Workers Paid. Each line is stored with its request's path, without the query string; headers and
+addresses are not kept. Read them in the dashboard under Workers & Pages, the
 worker, Observability. To keep none, set `enabled = false` under `[observability]` in the three `wrangler.toml`
 files. See [Worker logs](../specs/016-platform/worker-logs.md).
 
