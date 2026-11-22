@@ -99,6 +99,7 @@ export function usePdfDocument(
       }
       if (cancelled) return;
       const size = bytes.byteLength;
+      const fetched = Date.now();
       const client = from.startEngine(() =>
         show({ phase: 'refused', refusal: 'pdf_stopped', storedFile }),
       );
@@ -110,7 +111,7 @@ export function usePdfDocument(
         return show({ phase: 'refused', refusal, storedFile });
       }
       debugLog(
-        `[pdf] opened pages=${opened.pages.length} bytes=${size} ranged=false ms=${Date.now() - started}`,
+        `[pdf] opened pages=${opened.pages.length} bytes=${size} ranged=false ms=${Date.now() - started} read=${fetched - started} engine=${Date.now() - fetched}`,
       );
       // No live change is loaded until the engine has opened the file (opening.md "Passwords").
       try {
