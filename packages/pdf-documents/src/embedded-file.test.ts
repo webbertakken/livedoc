@@ -30,6 +30,9 @@ describe('an embedded file', () => {
     expect(EmbeddedFile.of({ ...said, name: 'photo.exe', type: 'image/png' }).runs).toBe(true);
     // A computer drops the dots and spaces a name ends with.
     expect(EmbeddedFile.of({ ...said, name: 'run.exe. . ' }).runs).toBe(true);
+    expect(EmbeddedFile.of({ ...said, name: `run.exe${' '.repeat(100_000)}` }).runs).toBe(true);
+    expect(EmbeddedFile.of({ ...said, name: `${' .'.repeat(50_000)}x` }).runs).toBe(false);
+    expect(EmbeddedFile.of({ ...said, name: '. . ' }).runs).toBe(false);
     // The direction marks are gone before the ending is read: the name shows as it is judged.
     const turned = EmbeddedFile.of({ ...said, name: 'invoice\u202Efdp.exe' });
     expect([turned.name, turned.runs]).toEqual(['invoicefdp.exe', true]);
