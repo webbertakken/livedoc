@@ -36,7 +36,7 @@ function bound(sheetLayout: object, roles = { canEdit: true, canShape: true }) {
     <OfficeBindingsContext.Provider value={channel}>{children}</OfficeBindingsContext.Provider>
   );
   renderHook(() => useGridMenuBindings(actions), { wrapper });
-  return channel.get();
+  return channel.get().actions;
 }
 
 // docs/specs/029-sheets/surface.md "Menu bar": the open sheet's items, from its selection and the active cell.

@@ -3,15 +3,19 @@ import { catalogueItems } from '@/lib/office/office-catalogue';
 import {
   bindingsSignature,
   gridMenuBindings,
+  gridOffice,
+  sheetFontSize,
   historyBindings,
   type GridMenuActions,
   type GridMenuPort,
 } from './spreadsheet-menu-bindings';
 import { spreadsheetMenus } from './spreadsheet-menus';
+import { SPREADSHEET_TOOLBAR } from './spreadsheet-toolbar';
 
 const actions = (): GridMenuActions => ({
   toggle: vi.fn(),
   numberFormat: vi.fn(),
+  decimals: vi.fn(),
   format: vi.fn(),
   clear: vi.fn(),
   insert: vi.fn(),
@@ -48,11 +52,12 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
 
 // docs/specs/029-sheets/surface.md "Menu bar"; grid-and-editing.md "Who may do what".
 describe('gridMenuBindings', () => {
-  it('binds every built grid item of the menus, and nothing the menus do not hold', () => {
+  it('binds every built grid item of the menus and the toolbar, and nothing they do not hold', () => {
     const bound = Object.keys(gridMenuBindings(port()));
     const built = catalogueItems(spreadsheetMenus('ods'))
       .filter(({ item }) => item.status === 'built')
-      .map(({ item }) => item.id);
+      .map(({ item }) => item.id)
+      .concat(SPREADSHEET_TOOLBAR.flatMap((g) => g.controls).map((c) => c.id));
     for (const id of bound) expect(built, id).toContain(id);
   });
 
@@ -266,6 +271,59 @@ describe('gridMenuBindings', () => {
     expect(gridMenuBindings(port({ filtered: true }))['create-a-filter']!.label).toBe(
       'Remove Filter',
     );
+  });
+});
+
+describe('the toolbar’s own bindings', () => {
+  it('steps decimals and the font size a point at a time, dimmed at the limits (D128)', () => {
+    const p = port({ format: { fs: 12 } });
+    const b = gridMenuBindings(p);
+    b['decrease-decimal-places']!.run();
+    b['increase-decimal-places']!.run();
+    expect(vi.mocked(p.act.decimals).mock.calls).toEqual([[-1], [1]]);
+    b['font-size-decrease']!.run();
+    b['font-size-increase']!.run();
+    expect(vi.mocked(p.act.format).mock.calls).toEqual([[{ fs: 11 }], [{ fs: 13 }]]);
+    const plain = port();
+    gridMenuBindings(plain)['font-size-increase']!.run();
+    expect(plain.act.format).toHaveBeenCalledWith({ fs: 11 });
+    expect(gridMenuBindings(port({ format: { fs: 6 } }))['font-size-decrease']!.disabled).toBe(
+      true,
+    );
+    expect(gridMenuBindings(port({ format: { fs: 96 } }))['font-size-increase']!.disabled).toBe(
+      true,
+    );
+    expect(b['font-size-increase']!.disabled).toBe(false);
+  });
+
+  it('presses Create a Filter while the sheet has one', () => {
+    expect(gridMenuBindings(port({ filtered: true }))['create-a-filter']!.checked).toBe(true);
+    expect(gridMenuBindings(port())['create-a-filter']!.checked).toBe(false);
+  });
+
+  it('keeps a typed size whole, within 6 to 96, the default clearing the cell’s own (D128)', () => {
+    expect(sheetFontSize(14)).toBe(14);
+    expect(sheetFontSize(13.6)).toBe(14);
+    expect(sheetFontSize(2)).toBe(6);
+    expect(sheetFontSize(400)).toBe(96);
+    expect(sheetFontSize(10)).toBeNull();
+  });
+});
+
+describe('gridOffice', () => {
+  it('gives an Editor the active cell’s size and sets it, and no one else either', () => {
+    const p = port({ format: { fs: 18 } });
+    const editor = gridOffice(p);
+    expect(editor.fontSize).toBe(18);
+    expect(Object.keys(editor.actions)).toContain('bold');
+    editor.setFontSize(24);
+    expect(p.act.format).toHaveBeenCalledWith({ fs: 24 });
+    expect(gridOffice(port()).fontSize).toBe(10);
+    const participant = port({ canShape: false });
+    const office = gridOffice(participant);
+    expect(office.fontSize).toBeNull();
+    office.setFontSize(24);
+    expect(participant.act.format).not.toHaveBeenCalled();
   });
 });
 
