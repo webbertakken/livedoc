@@ -23,7 +23,7 @@ import { shiftFormulaText } from './formula-text-shift';
 import { isoDateSerial } from './ods-read';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 import { WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
-import { dateStyles, readCellStyles, type XlsxCellStyle } from './xlsx-styles';
+import { dateStyles, readCellStyles, styledCellStyles, type XlsxCellStyle } from './xlsx-styles';
 import {
   DATE1904_OFFSET,
   fromXstring,
@@ -62,6 +62,7 @@ type Book = {
   strings: readonly string[];
   styles: readonly XlsxCellStyle[];
   dates: ReadonlySet<number>;
+  styled: ReadonlySet<number>;
   date1904: boolean;
   budget: { cells: number };
   losses: FileLoss[];
@@ -195,6 +196,7 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   const shared = new Map<string, Shared>();
   const cache = new Set<string>();
   let cut = false;
+  let styled = false;
   let nextRow = 0;
   for (const row of children(childElement(root, book.ns, 'sheetData'), book.ns, 'row')) {
     const r = Number(attributeOf(row, '', 'r') ?? nextRow + 1) - 1;
@@ -209,6 +211,7 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
         cut = true;
         continue;
       }
+      styled ||= book.styled.has(Number(attributeOf(cell, '', 's') ?? 0));
       const read = cellFormula(cell, at, shared, book, name);
       const value = cellValue(cell, book);
       const format = cellFormat(cell, book, name, at);
@@ -225,6 +228,8 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   }
   wrappedBlocks(cells, cache);
   if (cut) book.losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
+  // Formatting past the number format waits for Formatting's mapping: named (D104).
+  if (styled) book.losses.push({ k: 'styles_unread', sheet: name });
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), 0);
   return { name, rows, cols, cells };
@@ -261,6 +266,7 @@ export async function readXlsx(
     strings: sharedStrings(pkg, partOf(RELATIONSHIP_TYPES.sharedStrings), ns),
     styles,
     dates: dateStyles(styles),
+    styled: styledCellStyles(text(pkg, partOf(RELATIONSHIP_TYPES.styles))),
     date1904,
     budget: { cells: 0 },
     losses: [],

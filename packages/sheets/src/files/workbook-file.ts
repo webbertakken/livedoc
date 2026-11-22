@@ -67,6 +67,8 @@ export type FileLoss =
   // Kept content (standard-mapping.md "Unknown content"): a repeated cell's past D105, a construct not kept (D108),
   // a kept anchor gone at a write, what the package dropped (D106).
   | { k: 'kept_cut'; sheet: string; cells: number }
+  // A sheet's cells formatted past their number format (fonts, fills, borders, alignment): not read yet (D104).
+  | { k: 'styles_unread'; sheet: string }
   | { k: 'kept_unread'; count: number }
   | { k: 'kept_dropped'; count: number }
   | { k: 'entries_dropped'; entries: string[] }

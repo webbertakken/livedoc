@@ -108,6 +108,25 @@ export function readCellStyles(stylesXml: string | undefined, locale: string): X
   });
 }
 
+/**
+ * The cell styles (`cellXfs` indexes) that format more than the number: a font, fill or border other than the
+ * first, or an alignment or protection (standard-mapping.md "Unknown content", `styles_unread`, D104).
+ */
+export function styledCellStyles(stylesXml: string | undefined): Set<number> {
+  const out = new Set<number>();
+  const parsed = stylesXml === undefined ? undefined : parseXml(stylesXml, 'xl/styles.xml');
+  if (!parsed?.ok) return out;
+  const holder = childElements(parsed.root).find((e) => e.local === 'cellXfs');
+  const xfs = holder ? childElements(holder).filter((e) => e.local === 'xf') : [];
+  xfs.forEach((xf, i) => {
+    const own = ['fontId', 'fillId', 'borderId'].some(
+      (id) => (attributeOf(xf, '', id) ?? '0') !== '0',
+    );
+    if (own || childElements(xf).length > 0) out.add(i);
+  });
+  return out;
+}
+
 /** The cell styles whose number format shows a date. */
 export function dateStyles(styles: readonly XlsxCellStyle[]): Set<number> {
   const out = new Set<number>();

@@ -46,6 +46,24 @@ export class OdsStyles {
   }
 }
 
+/**
+ * The cell styles among a file's style containers that format more than the number: any properties of their own
+ * (a font, a fill, a border, an alignment) (standard-mapping.md "Unknown content", `styles_unread`, D104).
+ */
+export function odsStyledCellStyles(roots: readonly XmlElement[]): Set<string> {
+  const out = new Set<string>();
+  for (const root of roots)
+    for (const local of ['automatic-styles', 'styles']) {
+      const container = childElement(root, OFFICE, local);
+      for (const style of container ? childElements(container) : []) {
+        const name = attributeOf(style, STYLE, 'name');
+        const cell = attributeOf(style, STYLE, 'family') === 'table-cell';
+        if (cell && name !== undefined && childElements(style).length > 0) out.add(name);
+      }
+    }
+  return out;
+}
+
 /** A cell style's number format: its code read, none for a style with no data style. */
 export type OdsCellFormats = (styleName: string) => DataStyleRead | null;
 

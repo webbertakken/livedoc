@@ -164,8 +164,9 @@ The table is the contract the readers and writers are tested against, one test p
   and comments, merges, named ranges, validation and format rules, filters, protections; XLSX's print settings and
   column widths), as text documents keep theirs. Styles are not kept: a cell's, row's or column's style beyond its
   number format, and ODF's `styles.xml` (its page layouts, so its print settings, and the named styles a format rule
-  applies), wait for [Formatting](formatting.md) to map them, and until then a file's read names them
-  (`styles_unread`) (default, D104). XLSX's differential formats (`dxfs`) and table styles are kept in its styles part,
+  applies), wait for [Formatting](formatting.md) to map them. Until then a file's read names each sheet whose cells,
+  rows or columns name a cell style formatting more than the number (a font, fill, border or alignment:
+  `styles_unread`); ODF's row and column sizes are named by the import report (default, D104). XLSX's differential formats (`dxfs`) and table styles are kept in its styles part,
   as kept format rules, tables and pivot tables name them by index; a kept column's `style` index is left out, as it
   names a style LiveDoc does not write (default, D110).
 - **Grains**, each kept as the file's own XML with the namespace bindings it needs
@@ -187,6 +188,9 @@ The table is the contract the readers and writers are tested against, one test p
     what the office packages drop, as what may run or signs bytes LiveDoc rewrites (macros, scripts, signatures,
     thumbnails; [Office packages](../020-import-export/office-packages.md)), which the read names
     (`entries_dropped`), and XLSX's `calcChain.xml`, a cache of the cells' formulas Excel rebuilds (default, D106).
+- **Sheets by place** (XLSX): a kept defined name of one sheet (`localSheetId`) is kept on that sheet and written
+  with the sheet's place at the write, and goes with it; a kept workbook view's `activeTab` or `firstSheet` past the
+  last sheet is written as the first (default, D112).
 - **Anchors by id.** In the store a sheet's kept content follows its sheet id and a cell's its row and column ids, so
   it moves with its sheet, row and column, as the cells do; the kept XML itself is untouched, so a reference inside it
   (a named range's, a chart's) still names the cells it named in the file (default, D107).
@@ -270,3 +274,5 @@ The code cites each by its id.
 - **D110** XLSX kept content naming styles: `dxfs` and `tableStyles` kept in the styles part; a kept `col`'s `style`
   left out (default).
 - **D111** Kept package entries in a flat `.fods`: Left out, named (`parts_left`) (default).
+- **D112** XLSX kept content naming a sheet by its place: A defined name follows its sheet; a view's index past the
+  last sheet becomes the first (default).
