@@ -17,6 +17,9 @@ regexes = [
   '''^2b7a2b6e-3f1c-4d2a-8e9b-1a2b3c4d5e6f$''',
   '''^3f2b8c1e-9a4d-4e7f-8b21-0c5d6e7f8a9b$''',
   '''^4a2b8c1e-9a4d-4e7f-8b21-0c5d6e7f8a9b$''',
+  # The SHA-256 of the test pictures in packages/text-documents/src/testing/pictures.ts.
+  '''^81a78c276d8d4fdbeda7b323f4a367e5c47d8f08fef76dc91a7f250432bdd794$''',
+  '''^d75ad63062ac9dec8d36fbd1f1019962920af65945931704836efb1d782c2299$''',
 ]
 
 [[allowlists]]
