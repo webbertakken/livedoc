@@ -46,6 +46,15 @@ const menu = (id: string, label: string, entries: OfficeEntry[]): OfficeMenu => 
 
 const BUILT = { status: 'built' } as const;
 
+// Insert > Image, in Google's order, and the toolbar's Insert image list (objects.md "Inserting"); Drive and Photos are
+// Google's own.
+export const IMAGE_ENTRIES: readonly OfficeEntry[] = [
+  item('image-upload', 'Upload from computer', 'edit', BUILT),
+  item('image-search', 'Search the web', 'edit', { keywords: ['openverse', 'picture'], ...BUILT }),
+  item('image-gallery', 'LiveDoc gallery', 'edit', BUILT),
+  item('image-by-url', 'By URL', 'edit'),
+];
+
 // A text document downloads in its own format; the other format's file is a converted copy, built with conversion.
 function downloads(format: TextDocumentFormat): OfficeEntry[] {
   const odf = format === 'odf' ? BUILT : {};
@@ -167,11 +176,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('full-screen', 'Full screen', 'view'),
     ]),
     menu('insert', 'Insert', [
-      submenu('image', 'Image', [
-        item('image-upload', 'Upload from computer', 'edit'),
-        item('image-gallery', 'LiveDoc gallery', 'edit'),
-        item('image-by-url', 'By URL', 'edit'),
-      ]),
+      submenu('image', 'Image', [...IMAGE_ENTRIES]),
       submenu('table', 'Table', [
         item('table-grid', 'Table', 'edit', { sizeGrid: { columns: 20, rows: 20 }, ...BUILT }),
         item('table-templates', 'Table templates', 'edit'),

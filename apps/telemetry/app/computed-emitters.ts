@@ -462,6 +462,12 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     open: ELEMENT_WHY,
   },
   'apps/live/app/document/[id]/useSlideDeck.ts UI·Changed': { values: PRESENTATION_FIELDS },
+  // A picture put in a text document, by where it came from (docs/specs/034-text-documents/objects.md "Inserting").
+  'apps/live/components/text-document/useTextDocumentPictures.tsx Element·Added': {
+    values: ['Upload', 'Gallery', 'Search', 'Paste', 'Drop'].map(
+      (from) => `TextDocumentImage${from}`,
+    ),
+  },
   // A text document downloaded in the format it is held in (docs/specs/034-text-documents/text-document.md).
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {
     values: ['TextDocumentOdt', 'TextDocumentFodt', 'TextDocumentDocx'],

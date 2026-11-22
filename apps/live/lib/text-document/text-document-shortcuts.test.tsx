@@ -93,6 +93,10 @@ describe('the text document menus', () => {
         // Insert > Table (text-document-tables), bound by the surface.
         ...Object.keys(textDocumentTableActions(null, { canEdit: true, sectionWidth: 468 })),
         ...TABLE_EDIT_ITEMS.map((t) => t.item),
+        // Insert > Image (useTextDocumentPictures), bound by the surface.
+        'image-upload',
+        'image-search',
+        'image-gallery',
         // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
         PREFERENCES_ITEM,
         // File > Page setup, Format > Page orientation and Switch to pageless (useTextDocumentPageSetup), by the surface.

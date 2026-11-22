@@ -13,7 +13,7 @@ vi.mock('@/lib/api-client', async (importOriginal) => ({
 
 const { ImagePicker } = await import('./ImagePicker');
 
-function show(uploadOnly?: boolean) {
+function show(uploadOnly?: boolean, initialTab?: 'upload' | 'gallery' | 'search') {
   render(
     <ImagePicker
       ownerId="user_1"
@@ -22,6 +22,7 @@ function show(uploadOnly?: boolean) {
       onSelect={vi.fn()}
       onClose={vi.fn()}
       uploadOnly={uploadOnly}
+      initialTab={initialTab}
     />,
   );
 }
@@ -48,5 +49,19 @@ describe('ImagePicker', () => {
     expect(screen.queryByRole('button', { name: 'Search' })).toBeNull();
     expect(screen.getByText('Drop, paste, or click to choose an image')).toBeTruthy();
     expect(apiListImages).not.toHaveBeenCalled();
+  });
+});
+
+// docs/specs/034-text-documents/objects.md "Inserting": Insert > Image > LiveDoc gallery opens the picker on its gallery.
+describe('ImagePicker opened on a tab', () => {
+  it('shows the gallery first when asked', async () => {
+    show(false, 'gallery');
+    expect(await screen.findByText('No images yet')).toBeTruthy();
+    expect(screen.queryByText('Drop, paste, or click to choose an image')).toBeNull();
+  });
+
+  it('keeps a workbench on upload whatever tab is asked', () => {
+    show(true, 'gallery');
+    expect(screen.getByText('Drop, paste, or click to choose an image')).toBeTruthy();
   });
 });

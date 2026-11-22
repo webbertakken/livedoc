@@ -48,6 +48,8 @@ export type PickedImage = {
   height: number;
   originalName?: string;
   credit?: ImageCredit;
+  // The picker's tab it came from, for whoever counts where pictures come from (a text document's telemetry).
+  source?: 'upload' | 'gallery' | 'search';
 };
 
 // Thrown for any user-facing validation / upload failure. The
@@ -56,9 +58,13 @@ export type PickedImage = {
 // a friendlier message by the wrapping helper so the caller can
 // surface a single field.
 export class ImageUploadError extends Error {
-  constructor(message: string) {
+  // The api's error code when the server refused it (`images_unavailable`, `gallery_full`, ...); none for a local check.
+  readonly code: string | undefined;
+
+  constructor(message: string, code?: string) {
     super(message);
     this.name = 'ImageUploadError';
+    this.code = code;
   }
 }
 
@@ -104,9 +110,10 @@ export async function uploadImageFile(ownerId: string, file: File): Promise<Uplo
     });
   } catch (e) {
     const mapped = e instanceof ApiError && e.code ? UPLOAD_ERROR_MESSAGES[e.code] : undefined;
-    if (mapped) throw new ImageUploadError(mapped);
+    const code = e instanceof ApiError ? (e.code ?? undefined) : undefined;
+    if (mapped) throw new ImageUploadError(mapped, code);
     const raw = e instanceof Error ? e.message : 'Upload failed.';
-    throw new ImageUploadError(raw);
+    throw new ImageUploadError(raw, code);
   }
 }
 

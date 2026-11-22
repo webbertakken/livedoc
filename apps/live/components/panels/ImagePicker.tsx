@@ -46,7 +46,11 @@ type ImagePickerProps = {
   // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table)
   // uploads into its one document and never reads the person's gallery: no Gallery, no Search.
   uploadOnly?: boolean;
+  // The tab it opens on (a text document's Insert > Image opens Search the web or LiveDoc gallery); Upload by default.
+  initialTab?: ImagePickerTab;
 };
+
+export type ImagePickerTab = 'upload' | 'gallery' | 'search';
 
 export function ImagePicker({
   ownerId,
@@ -57,8 +61,9 @@ export function ImagePicker({
   onSelect,
   onClose,
   uploadOnly = false,
+  initialTab = 'upload',
 }: ImagePickerProps) {
-  const [tab, setTab] = useState<'upload' | 'gallery' | 'search'>('upload');
+  const [tab, setTab] = useState<ImagePickerTab>(uploadOnly ? 'upload' : initialTab);
   const {
     gallery,
     setGallery,
@@ -77,7 +82,7 @@ export function ImagePicker({
       // Cloud documents upload to the gallery; offline documents embed the
       // file locally as a data URI (docs/specs/006-document/offline-mode.md) so no server copy is created.
       const { image } = await addImageFileForDocument(ownerId, documentId, file);
-      onSelect(image);
+      onSelect({ ...image, source: 'upload' });
     } catch (e) {
       setUploadError(e instanceof ImageUploadError ? e.message : 'Upload failed.');
     } finally {
@@ -119,7 +124,7 @@ export function ImagePicker({
 
   const selectFromGallery = async (image: ImageSummary) => {
     const picked = await pick(image);
-    if (picked) onSelect(picked);
+    if (picked) onSelect({ ...picked, source: 'gallery' });
   };
 
   const handleDelete = async (image: ImageSummary) => {
@@ -175,7 +180,11 @@ export function ImagePicker({
             gapClass="gap-2"
           />
         ) : tab === 'search' ? (
-          <ImageSearchPane ownerId={ownerId} documentId={documentId} onPicked={onSelect} />
+          <ImageSearchPane
+            ownerId={ownerId}
+            documentId={documentId}
+            onPicked={(picked) => onSelect({ ...picked, source: 'search' })}
+          />
         ) : (
           <GalleryGrid
             ownerId={ownerId}

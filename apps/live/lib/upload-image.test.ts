@@ -173,6 +173,16 @@ describe('uploadImageFile, happy path', () => {
     const err = await uploadImageFile('owner-a', file).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ImageUploadError);
     expect((err as ImageUploadError).message).toContain('gallery is full');
+    expect((err as ImageUploadError).code).toBe('gallery_full');
+  });
+
+  // objects.md "Inserting": a text document keeps a picture's bytes where the server stores no images.
+  it("names the server's refusal, so a caller can tell images_unavailable apart", async () => {
+    apiUploadImageMock.mockRejectedValue(new ApiError('upload image', 503, 'images_unavailable'));
+    const err = await uploadImageFile('owner-a', makeFile([1, 2, 3, 4], 'image/png')).catch(
+      (e: unknown) => e,
+    );
+    expect((err as ImageUploadError).code).toBe('images_unavailable');
   });
 
   it('returns null-dimension failure as a friendly ImageUploadError, not as a thrown raw error', async () => {
