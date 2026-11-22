@@ -29,14 +29,20 @@ const pictureIn = (page: Page, svg: string) =>
     context.drawImage(image, 0, 0);
     const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
     let highlighted = 0;
+    let rows = 0;
     // A highlight multiplied onto white paper: red and green stay high, blue falls.
     for (let at = 0; at < data.length; at += 4)
-      if (data[at]! > 200 && data[at + 1]! > 200 && data[at + 2]! < 190) highlighted += 1;
+      if (data[at]! > 200 && data[at + 1]! > 200 && data[at + 2]! < 190) {
+        highlighted += 1;
+        rows += Math.floor(at / 4 / canvas.width);
+      }
     return {
       width: canvas.width,
       height: canvas.height,
       corner: [data[0]!, data[1]!, data[2]!],
       highlighted,
+      // The row the highlight is on, on average, in the picture's pixels.
+      highlightRow: highlighted > 0 ? rows / highlighted : null,
     };
   }, svg);
 
@@ -87,6 +93,9 @@ test('an Editor’s open PDF sends its first page, marks included, for the lists
   const picture = await pictureIn(page, await drawn.text());
   expect(picture).toMatchObject({ width: 480 });
   expect(picture!.highlighted).toBeGreaterThan(200);
+  // On the line it was dragged across (68 points from the top of a 612-point-wide page), at the picture's scale.
+  const line = (68 * 480) / 612;
+  expect(Math.abs(picture!.highlightRow! - line)).toBeLessThan(6);
   // Light paper, whatever the scheme: the page's corner is white.
   for (const channel of picture!.corner) expect(channel).toBeGreaterThan(240);
   expect(asked).toEqual(['GET', 'PUT']);
@@ -95,6 +104,8 @@ test('an Editor’s open PDF sends its first page, marks included, for the lists
   await page.goto('/explorer/all');
   const row = page.locator('img[src^="blob:"]').first();
   await expect(row).toBeVisible({ timeout: 30_000 });
+  // Shown whole: the picture fades in over the sketch that stood for it.
+  await expect(row).toHaveCSS('opacity', '1');
   await page.screenshot({ path: test.info().outputPath('pdf-thumbnail-dark.png') });
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(row).toBeVisible();

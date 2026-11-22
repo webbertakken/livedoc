@@ -20,8 +20,15 @@ import { debugLog } from '@/lib/debug-log';
 /** The qualities a picture is made at: the second only when the first is past the limit. */
 const QUALITIES = [0.85, 0.6] as const;
 
-/** What the picture is made of: the page as the engine drew it, and the live marks on it. */
-export type PdfThumbnailPicture = { bitmap: PageBitmap; marks: readonly Mark[] };
+/**
+ * What the picture is made of: the page as the engine drew it, the live marks on it, and the page's size in points,
+ * which is the space the marks are placed in (the bitmap's `toView` answers points, whatever scale it was drawn at).
+ */
+export type PdfThumbnailPicture = {
+  bitmap: PageBitmap;
+  marks: readonly Mark[];
+  page: Pick<PageInfo, 'width' | 'height'>;
+};
 
 export type PdfThumbnailDeps = {
   tabId: string;
@@ -85,7 +92,7 @@ export function watchPdfThumbnail(deps: PdfThumbnailDeps): PdfThumbnailWatch {
     const bitmap = await deps.engine.drawPage(0, thumbnailScale(deps.page));
     if (!bitmap) return (skipped('draw'), null);
     for (const quality of QUALITIES) {
-      const jpeg = await deps.encode({ bitmap, marks: deps.marks() }, quality);
+      const jpeg = await deps.encode({ bitmap, marks: deps.marks(), page: deps.page }, quality);
       if (!jpeg) return (skipped('encode'), null);
       if (jpeg.byteLength <= maxBytes) {
         debugLog(`[pdf] thumbnail-sent bytes=${jpeg.byteLength} quality=${quality}`, { tabId });

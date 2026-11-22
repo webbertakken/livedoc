@@ -10,7 +10,7 @@ import type { PdfThumbnailPicture } from './pdf-thumbnail';
 const AROUND = [0, 1, 3, 2] as const;
 
 export async function encodePdfThumbnail(
-  { bitmap, marks }: PdfThumbnailPicture,
+  { bitmap, marks, page: size }: PdfThumbnailPicture,
   quality: number,
 ): Promise<Uint8Array<ArrayBuffer> | null> {
   const page = document.createElement('canvas');
@@ -28,6 +28,9 @@ export async function encodePdfThumbnail(
   context.fillStyle = '#ffffff';
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(page, 0, 0);
+  // Marks are placed in the page's points, as the surface's own overlay is (its viewBox is the page's size): the
+  // picture's pixels are those points at the scale the page was drawn at.
+  context.scale(bitmap.width / size.width, bitmap.height / size.height);
   context.globalCompositeOperation = 'multiply';
   for (const mark of marks) {
     context.fillStyle = mark.colour;

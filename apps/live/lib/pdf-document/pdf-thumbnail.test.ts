@@ -84,7 +84,7 @@ describe('an Editor’s surface and its PDF’s thumbnail', () => {
     await s.watch.settled();
     expect(s.deps.wanted).toHaveBeenCalledTimes(1);
     expect(s.deps.engine.drawPage).toHaveBeenCalledWith(0, thumbnailScale(PAGE));
-    expect(s.deps.encode).toHaveBeenCalledWith({ bitmap: BITMAP, marks: [MARK] }, 0.85);
+    expect(s.deps.encode).toHaveBeenCalledWith({ bitmap: BITMAP, marks: [MARK], page: PAGE }, 0.85);
     expect(s.sent).toEqual([40_000]);
     expect(s.deps.onSent).toHaveBeenCalledTimes(1);
   });
