@@ -80,6 +80,30 @@ vi.mock('./offline-images', () => ({
     t.elements.flatMap((el) => (el.type === 'image' && el.imageId ? [el.imageId] : [])),
 }));
 
+// A PDF's own part of each conversion (./offline-pdf-conversion has its own tests): here, where it sits in the
+// sequence.
+vi.mock('./offline-pdf-conversion', () => ({
+  sendOfflinePdfFiles: vi.fn(async () => {
+    calls.push('sendOfflinePdfFiles');
+    return [{ tabId: 'p1', state: 'AQID' }];
+  }),
+  takePdfTabsOffline: vi.fn(async () => {
+    calls.push('takePdfTabsOffline');
+    return {
+      tabs: new Map([['t1', { ...PDF_TAB, blob: 'f'.repeat(64), size: 99 }]]),
+      states: [{ tabId: 't1', state: Uint8Array.of(5), savedAt: 1 }],
+    };
+  }),
+}));
+const PDF_TAB = {
+  id: 't1',
+  name: 'Lease',
+  kind: 'pdf',
+  elements: [],
+  blob: 'e'.repeat(64),
+  size: 10,
+};
+
 // The successive states the record is in when a sync goes to remove it (a write landing during
 // the upload); once used up, it is the record the sync read.
 const states: unknown[] = [];
@@ -112,12 +136,16 @@ const store = await import('./offline-store');
 const tagsApi = await import('@/lib/api/tags');
 const textDocuments = await import('../api/text-documents');
 const keptApi = await import('../api/workbook-kept');
+const pdfConversion = await import('./offline-pdf-conversion');
+const { LocalBlobRefused } = await import('../blob-store/local-blob-store');
 const {
   ConversionInProgressError,
+  SyncStillSavingError,
   conversionInProgress,
   saveOfflineToCloud,
   syncFailureMessage,
   takeCloudOffline,
+  takeOfflineFailureMessage,
 } = await import('./offline-convert');
 
 beforeEach(() => {
@@ -229,6 +257,42 @@ describe('saveOfflineToCloud (offline -> cloud)', () => {
     expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({
       textDocuments: [{ tabId: 't1', state: 'AQID' }],
     });
+  });
+
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "Sync Document": the stored file first, then the create
+  // with each PDF tab and its live changes; until the create is answered the document stays in This Browser.
+  it('sends a PDF’s stored file before the create, which carries its live changes', async () => {
+    const rec = { id: 'd1', name: 'Lease', tabs: [{ ...PDF_TAB, id: 'p1' }] };
+    vi.mocked(store.offlineGetRecord).mockResolvedValueOnce(rec as never);
+    await saveOfflineToCloud('d1', 'owner');
+    expect(calls).toEqual(['sendOfflinePdfFiles', 'apiCreateDocument', 'offlineDeleteDocument']);
+    expect(vi.mocked(pdfConversion.sendOfflinePdfFiles)).toHaveBeenCalledWith(rec, 'owner');
+    expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({
+      pdfDocuments: [{ tabId: 'p1', state: 'AQID' }],
+    });
+  });
+
+  it('keeps a PDF in This Browser, with nothing made, when its file is refused', async () => {
+    vi.mocked(store.offlineGetRecord).mockResolvedValueOnce({
+      id: 'd1',
+      name: 'Lease',
+      tabs: [PDF_TAB],
+    } as never);
+    vi.mocked(pdfConversion.sendOfflinePdfFiles).mockRejectedValueOnce(
+      new core.ApiError('PDF sync', 403, 'usage_exceeded'),
+    );
+    await expect(saveOfflineToCloud('d1', 'owner')).rejects.toMatchObject({
+      code: 'usage_exceeded',
+    });
+    expect(calls).toEqual([]);
+  });
+
+  it('loads nothing of a PDF for a document that holds none', async () => {
+    await saveOfflineToCloud('d1', 'owner');
+    expect(pdfConversion.sendOfflinePdfFiles).not.toHaveBeenCalled();
+    expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).not.toHaveProperty(
+      'pdfDocuments',
+    );
   });
 
   it.each(['folder_not_found', 'folder_scope_mismatch'])(
@@ -417,6 +481,41 @@ describe('takeCloudOffline (cloud -> offline)', () => {
     expect(calls).not.toContain('apiDelete');
   });
 
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "Take Offline": the live changes and the bytes are
+  // here, all or nothing, before the record is written and before the server copy goes.
+  it('keeps a PDF’s file and live changes here before the server copy goes', async () => {
+    vi.mocked(apiClient.apiLoadTab).mockResolvedValueOnce(PDF_TAB as never);
+    await takeCloudOffline('d1', 'owner', 'share');
+    expect(calls).toEqual(['takePdfTabsOffline', 'offlinePutRecord', 'apiDelete']);
+    expect(vi.mocked(pdfConversion.takePdfTabsOffline)).toHaveBeenCalledWith(
+      [PDF_TAB],
+      { ownerId: 'owner', documentId: 'd1', shareCode: 'share' },
+      expect.any(Number),
+    );
+    // The record's tab names the stored file the live changes are on, as read.
+    expect(vi.mocked(store.offlinePutRecord).mock.calls[0]![0]).toMatchObject({
+      tabs: [{ id: 't1', kind: 'pdf', blob: 'f'.repeat(64), size: 99 }],
+      pdfDocuments: [{ tabId: 't1', state: Uint8Array.of(5) }],
+    });
+  });
+
+  it('leaves a PDF on LiveDoc, with nothing written, when this browser will not keep its file', async () => {
+    vi.mocked(apiClient.apiLoadTab).mockResolvedValueOnce(PDF_TAB as never);
+    vi.mocked(pdfConversion.takePdfTabsOffline).mockRejectedValueOnce(
+      new LocalBlobRefused('local_store_full'),
+    );
+    await expect(takeCloudOffline('d1', 'owner')).rejects.toMatchObject({
+      code: 'local_store_full',
+    });
+    expect(calls).toEqual([]);
+  });
+
+  it('loads nothing of a PDF for a document that holds none', async () => {
+    await takeCloudOffline('d1', 'owner');
+    expect(pdfConversion.takePdfTabsOffline).not.toHaveBeenCalled();
+    expect(vi.mocked(store.offlinePutRecord).mock.calls[0]![0]).not.toHaveProperty('pdfDocuments');
+  });
+
   it('keeps a starred document starred on the offline record', async () => {
     vi.mocked(apiClient.fetchCloudFavouriteIds).mockResolvedValueOnce(['d1']);
     await takeCloudOffline('d1', 'owner');
@@ -574,6 +673,26 @@ describe('one conversion per document at a time', () => {
   });
 });
 
+// docs/specs/035-pdf-documents/live-editing-and-storage.md "Errors in This Browser": a refused Take Offline leaves
+// the document on LiveDoc, and a browser that will not keep the bytes is named.
+describe('takeOfflineFailureMessage', () => {
+  it('names a browser that will not keep a PDF’s bytes', () => {
+    expect(takeOfflineFailureMessage(new LocalBlobRefused('local_store_full'))).toBe(
+      'This browser has no room to keep this PDF.',
+    );
+    expect(takeOfflineFailureMessage(new LocalBlobRefused('local_store_unavailable'))).toBe(
+      "This browser can't keep files, so this PDF can't be kept here.",
+    );
+  });
+
+  it('says the document stays safe on the server for anything else, and a save still going as it is', () => {
+    expect(takeOfflineFailureMessage(new Error('down'))).toBe(
+      'Couldn’t take this offline. It stays safe on the server.',
+    );
+    expect(takeOfflineFailureMessage(new SyncStillSavingError())).toMatch(/still saving/i);
+  });
+});
+
 describe('syncFailureMessage', () => {
   it('names the size cap for a 413, so it does not read as a connection blip', () => {
     const e = new core.ApiError('sync', 413, null);
@@ -589,6 +708,20 @@ describe('syncFailureMessage', () => {
     expect(syncFailureMessage(new OfflineSyncIncompleteError('stores_short'))).toMatch(
       /yours was kept/i,
     );
+  });
+
+  // docs/specs/035-pdf-documents/live-editing-and-storage.md "Errors in This Browser".
+  it.each([
+    ['blob_missing', 404, "This PDF's file is missing from storage."],
+    ['files_unavailable', 503, 'This server has no file storage.'],
+    ['usage_exceeded', 403, "This document doesn't fit in the file storage that is left."],
+    [
+      'live_changes_too_large',
+      413,
+      'This PDF has more changes than fit. Download it, then add the download.',
+    ],
+  ] as const)('names what stopped a PDF’s sync: %s', (code, status, said) => {
+    expect(syncFailureMessage(new core.ApiError('PDF sync', status, code))).toBe(said);
   });
 
   it('falls back to the connection wording for anything else', () => {

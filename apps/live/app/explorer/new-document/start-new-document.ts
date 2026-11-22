@@ -11,7 +11,6 @@ import {
 } from '@livedoc/templates';
 import { apiLoadSelf } from '@/lib/api-client';
 import { assignAppLocation, interceptAppNavigation } from '@/lib/app-location';
-import { signInOfferedHere } from '@/lib/auth-config';
 import { debugLog } from '@/lib/debug-log';
 import { loadEditorPage } from '@/lib/editor-page-loader';
 import { loadCanvasCode } from '@/lib/canvas-code/canvas-code';
@@ -30,15 +29,12 @@ import {
   type NewDocumentPlace,
 } from '@/lib/new-document/pending-documents';
 import { loadNewDocumentContent } from '@/lib/new-document/new-document-content-loader';
+import { newDocumentLocationFor } from '@/lib/new-document/new-document-location';
 import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
 import type { NewDocumentContent } from '@/lib/new-document-content';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
-import {
-  defaultSaveLocationFor,
-  isOfflineLocation,
-  type SaveLocationId,
-} from '@/lib/save-locations';
+import { isOfflineLocation, type SaveLocationId } from '@/lib/save-locations';
 import {
   openInPlace,
   setStandbyInPlace,
@@ -62,16 +58,6 @@ export function newDocumentHref(request: NewDocumentRequest): string {
   if (request.place.folderId) params.set('folder', request.place.folderId);
   if (request.place.teamId) params.set('team', request.place.teamId);
   return `/new?${params.toString()}`;
-}
-
-// Where a new document is stored: LiveDoc when placed, else the default for who is creating
-// (docs/specs/006-document/save-locations.md "The default depends on who is creating").
-function locationFor(place: NewDocumentPlace, creator: NewDocumentCreator): SaveLocationId {
-  if (place.folderId || place.teamId) return 'livedoc';
-  return defaultSaveLocationFor({
-    signedIn: creator.signedIn,
-    signInOffered: signInOfferedHere() === true,
-  });
 }
 
 // What a new document opens with: the editor's code, the canvas's (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -192,7 +178,7 @@ export async function prepareStandbyDocument(lastBlank: NewDocumentBlankId): Pro
   const creator = newDocumentCreator();
   const blank = newDocumentBlankOf(lastBlank);
   if (!creator || !blank || preparing) return;
-  const location = locationFor({}, creator);
+  const location = newDocumentLocationFor({}, creator);
   if (
     standby &&
     standby.template === blank.blank &&
@@ -242,7 +228,7 @@ async function openNewDocument(
   startedAt: number,
 ): Promise<void> {
   const { choice, template, place } = request;
-  const location = locationFor(place, creator);
+  const location = newDocumentLocationFor(place, creator);
   const fromStandby = takeStandby(request, creator, location);
   debugLog(`[new-document] standby=${fromStandby ? 'used' : 'none'}`);
   const doc = fromStandby ?? (await prepareDocument(template, choice, creator, location));

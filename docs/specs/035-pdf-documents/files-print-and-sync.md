@@ -177,6 +177,8 @@ Making a PDF document in a folder asks what making any document there asks.
 - `Pdf · Imported · <Way>`; `Pdf · Exported · <Pdf|Flattened|WithoutComments|Pages|Pictures|Text|FieldData|
 CommentsSummary|Print|Email|KeptFromTextDocument|KeptFromSpreadsheet|KeptFromCanvas>`;
   `Pdf · Changed · StoredFile.Arrived` for a replace.
+- `Document · Created · <Offline|Cloud>` beside `Pdf · Imported` for a PDF that arrives as a new document, by where it
+  is kept.
 - Fingerprints: `[pdf] arrived way=<way> bytes=<n> held=<bool>`, `[pdf] upload ms=<n> parts=<n>`,
   `[pdf] download as=<as> ms=<n>`, `[pdf] sync wrote=<bake|stored> lacking=<n>`,
   `[pdf] sync folded anchors-lost=<n>`, `[pdf] drive wrote=<bake|stored>`.

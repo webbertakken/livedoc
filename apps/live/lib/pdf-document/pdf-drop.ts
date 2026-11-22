@@ -1,6 +1,7 @@
 // PDFs dropped on the Explorer (docs/specs/035-pdf-documents/files-print-and-sync.md "Opening"): each file becomes a
 // PDF document in the folder in view; several make several, said in one sentence, with the first opened. A refusal
 // is said by name, and nothing is made of that file.
+import type { SaveLocationId } from '@/lib/save-locations';
 import { openPdfFile, PDF_ARRIVAL_COPY, type OpenedPdf } from './open-pdf-file';
 
 export type DroppedPdfs = {
@@ -26,8 +27,11 @@ export async function openDroppedPdfs(files: readonly File[], open: Opener): Pro
   return { documentIds, made, refused };
 }
 
-/** Opens each dropped file as a PDF document for `ownerId`, in `folderId` (undefined: the person's default place). */
+/**
+ * Opens each dropped file as a PDF document for `ownerId`, in `folderId` (undefined: the person's default place),
+ * kept `where` a new document of theirs is.
+ */
 export const pdfOpenerFor =
-  (ownerId: string, folderId: string | undefined): Opener =>
+  (ownerId: string, folderId: string | undefined, where: SaveLocationId): Opener =>
   (file) =>
-    openPdfFile(ownerId, file, folderId);
+    openPdfFile(ownerId, file, folderId, where);

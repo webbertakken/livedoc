@@ -152,6 +152,11 @@ export async function duplicateDocument(
       const textDocuments = (source?.textDocuments ?? [])
         .filter((t) => tabIdMap.has(t.tabId))
         .map((t) => ({ ...t, tabId: tabIdMap.get(t.tabId)! }));
+      // Each PDF tab's live changes too (docs/specs/035-pdf-documents/live-editing-and-storage.md "Duplicate"): the
+      // copy's tab names the same key, so no byte is copied.
+      const pdfDocuments = (source?.pdfDocuments ?? [])
+        .filter((t) => tabIdMap.has(t.tabId))
+        .map((t) => ({ ...t, tabId: tabIdMap.get(t.tabId)! }));
       // A spreadsheet's kept content (sheet-store.md "Copies and exports"), anchored to the sheet ids the copy keeps.
       const kept = source?.kept;
       if (
@@ -159,6 +164,7 @@ export async function duplicateDocument(
         src.itemTypes ||
         sheets.length ||
         textDocuments.length ||
+        pdfDocuments.length ||
         kept
       ) {
         const rec = await offlineGetRecord(newId);
@@ -176,6 +182,7 @@ export async function duplicateDocument(
             ...(src.itemTypes ? { itemTypes: src.itemTypes } : {}),
             ...(sheets.length ? { sheets } : {}),
             ...(textDocuments.length ? { textDocuments } : {}),
+            ...(pdfDocuments.length ? { pdfDocuments } : {}),
             ...(kept ? { kept } : {}),
           });
         }

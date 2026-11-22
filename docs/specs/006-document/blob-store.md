@@ -247,7 +247,8 @@ deleted because its claim became a given row).
 This Browser's store logs in the browser, with a key's first 8 characters: `[blob-store] local-kept bytes=<n>
 where=<opfs|indexeddb>`, `[blob-store] local-read bytes=<n>`, `[blob-store] local-miss`, `[blob-store] local-refused
 name=<name>`, `[blob-store] local-forgotten count=<n> bytes=<n> why=<cache|document|sign-out>`,
-`[blob-store] local-persist granted=<bool>`.
+`[blob-store] local-persist granted=<bool>`, `[blob-store] local-keep-skipped` (a cloud document's bytes not kept),
+`[blob-store] local-forget-failed why=sign-out`.
 
 ## Non-goals
 

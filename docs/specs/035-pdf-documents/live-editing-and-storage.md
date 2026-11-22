@@ -485,6 +485,6 @@ of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Und
   `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`,
   `[pdf] presence-refused`.
 - In This Browser: `[pdf] saved in this browser bytes=<n>`, `[pdf] save in this browser failed`,
-  `[pdf] arrived bytes=<n> where=this-browser`, `[pdf] synced tabs=<n> bytes=<n> held=<n>`,
+  `[pdf] arrived bytes=<n> where=this-browser`, `[pdf] sync-sent tabs=<n> bytes=<n> held=<n>`,
   `[pdf] sync-refused name=<name>`, `[pdf] taken-offline tabs=<n> bytes=<n> local=<n>`,
   `[pdf] take-offline-refused name=<name>`, `[pdf] kept-read bytes=<n>` (a cloud PDF's file read from this browser).

@@ -5,6 +5,7 @@
 // lists documents instead of by a cron.
 
 import { isTrashExpired, trashPurgeDueAt, type TrashedDocument } from '@livedoc/api-schema';
+import { pdfTabOf } from '@livedoc/document';
 import {
   offlineBackend,
   offlineDeleteDocument,
@@ -57,11 +58,28 @@ export async function offlineRestoreDocument(id: string): Promise<boolean> {
   });
 }
 
+// A purge takes the record's file bytes with it (docs/specs/013-workspace/trash.md "The local Trash"): each key of
+// a PDF tab that no other document here names is forgotten from this browser's blob store. Only a record with a PDF
+// tab loads the store. A store that will not forget leaves bytes nothing names, which signing out or the cache's
+// limit takes; the purge itself stands.
+async function purgeRecord(rec: OfflineDocumentRecord): Promise<void> {
+  await offlineDeleteDocument(rec.id);
+  const keys = rec.tabs.flatMap((tab) => pdfTabOf(tab)?.blob ?? []);
+  if (keys.length === 0) return;
+  try {
+    const { thisBrowserBlobs } = await import('./offline-blobs');
+    await thisBrowserBlobs().forgetUnnamed(keys);
+  } catch (error) {
+    debugLog('[trash] purged local, bytes kept', String(error));
+  }
+}
+
 // Delete a trashed record for good. Never a live one: the local Trash can't
 // be skipped by naming an id.
 export async function offlinePurgeDocument(id: string): Promise<boolean> {
-  if (!isTrashed(await offlineBackend().get(id))) return false;
-  await offlineDeleteDocument(id);
+  const rec = await offlineBackend().get(id);
+  if (!isTrashed(rec)) return false;
+  await purgeRecord(rec);
   return true;
 }
 
@@ -79,7 +97,7 @@ export async function offlinePurgeExpiredTrash(now: number): Promise<number> {
   const expired = (await offlineBackend().all()).filter(
     (r) => isTrashed(r) && isTrashExpired(r.trashedAt, now),
   );
-  for (const rec of expired) await offlineDeleteDocument(rec.id);
+  for (const rec of expired) await purgeRecord(rec);
   if (expired.length > 0) debugLog('[trash] purged local', expired.length);
   return expired.length;
 }

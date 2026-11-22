@@ -1,6 +1,7 @@
 // docs/specs/035-pdf-documents/files-print-and-sync.md "Opening"; pdf-document.md "What becomes a PDF document";
-// docs/specs/006-document/blob-store.md "Getting bytes in": hash, ask, send only what is not held, then name it.
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+// docs/specs/006-document/blob-store.md "Getting bytes in": hash, ask, send only what is not held, then name it;
+// live-editing-and-storage.md "A PDF that arrives", "Errors in This Browser": kept in this browser, sent nowhere.
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeyOf, FILE_TAB_MAX_BYTES, isValidTab } from '@livedoc/document';
 
 const api = vi.hoisted(() => ({
@@ -18,6 +19,11 @@ vi.mock('@/lib/api-client', async () => {
 });
 
 import { ApiError } from '@/lib/api/core';
+import { memoryBlobStore } from '@/lib/blob-store/local-blob-testing';
+import { localBlobs } from '@/lib/blob-store/local-blobs';
+import { __setThisBrowserBlobs, offlineNamedBlobKeys } from '@/lib/offline/offline-blobs';
+import { __setOfflineBackend, offlineGetRecord, isOfflineId } from '@/lib/offline/offline-store';
+import { memBackend } from '@/lib/offline/offline-test-utils';
 import { openPdfFile, PDF_ARRIVAL_COPY, pdfNameFromFile } from './open-pdf-file';
 import { openDroppedPdfs } from './pdf-drop';
 
@@ -109,6 +115,92 @@ describe('openPdfFile', () => {
   it('names the document as the file is, without its extension', () => {
     expect(pdfNameFromFile('Q3 report.final.pdf')).toBe('Q3 report.final');
     expect(pdfNameFromFile('.pdf')).toBe('Untitled PDF');
+  });
+});
+
+// "A PDF that arrives for someone whose new documents start in This Browser is hashed, kept in this browser's store
+// and named by a new offline record; no request carries its bytes or its name."
+describe('openPdfFile in This Browser', () => {
+  const here = (quota?: number) => {
+    const memory = memoryBlobStore(quota);
+    const blobs = localBlobs({
+      store: memory.store,
+      named: offlineNamedBlobKeys,
+      persist: async () => true,
+    });
+    __setThisBrowserBlobs(blobs);
+    return { ...memory, blobs };
+  };
+  beforeEach(() => __setOfflineBackend(memBackend()));
+  afterEach(() => {
+    __setOfflineBackend(null);
+    __setThisBrowserBlobs(null);
+  });
+
+  it('keeps the file in this browser and names it by a new offline record, asking LiveDoc nothing', async () => {
+    const { blobs } = here();
+    const opened = await openPdfFile('guest', file(PDF), undefined, 'browser');
+    expect(opened).toMatchObject({ ok: true, held: false });
+    const id = opened.ok ? opened.documentId : '';
+    const key = await blobKeyOf(PDF);
+    const rec = await offlineGetRecord(id);
+    expect(rec).toMatchObject({ name: 'Lease 2026', folderId: null });
+    expect(rec?.tabs).toEqual([
+      {
+        id: expect.any(String),
+        name: 'Lease 2026',
+        kind: 'pdf',
+        elements: [],
+        blob: key,
+        size: PDF.byteLength,
+      },
+    ]);
+    expect(await isOfflineId(id)).toBe(true);
+    expect(await blobs.read(key)).toEqual(PDF);
+    for (const fn of Object.values(api)) expect(fn).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['local_store_full', 'This browser has no room to keep this PDF.'],
+    ['local_store_unavailable', "This browser can't keep files, so this PDF can't be kept here."],
+  ] as const)('says %s by name and makes nothing', async (refusal, said) => {
+    const { bytes: place } = here(refusal === 'local_store_full' ? 2 : undefined);
+    if (refusal === 'local_store_unavailable')
+      place.write = async () => {
+        throw new Error('no storage');
+      };
+    expect(await openPdfFile('guest', file(PDF), undefined, 'browser')).toEqual({
+      ok: false,
+      refusal,
+    });
+    expect(PDF_ARRIVAL_COPY[refusal]).toBe(said);
+    expect((await offlineNamedBlobKeys()).size).toBe(0);
+    for (const fn of Object.values(api)) expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('forgets the bytes again when the record cannot be written', async () => {
+    const { bytes: place } = here();
+    __setOfflineBackend({
+      ...memBackend(),
+      put: async () => {
+        throw new Error('IndexedDB refused');
+      },
+    });
+    expect(await openPdfFile('guest', file(PDF), undefined, 'browser')).toEqual({
+      ok: false,
+      refusal: 'not_stored',
+    });
+    expect(place.held.size).toBe(0);
+  });
+
+  it('still answers a file that is no PDF, or one past the cap, before anything is kept', async () => {
+    const { bytes: place } = here();
+    const text = Uint8Array.from(new TextEncoder().encode('just words'));
+    expect(await openPdfFile('guest', file(text), undefined, 'browser')).toEqual({
+      ok: false,
+      refusal: 'not_a_pdf',
+    });
+    expect(place.held.size).toBe(0);
   });
 });
 
