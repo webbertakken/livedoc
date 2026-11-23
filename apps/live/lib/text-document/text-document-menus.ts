@@ -196,7 +196,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       submenu('symbols', 'Symbols', [
         item('special-characters', 'Special characters', 'edit', BUILT),
-        item('equation', 'Equation', 'edit'),
+        item('equation', 'Equation', 'edit', BUILT),
       ]),
       SEPARATOR,
       item('tab', 'Tab', 'edit'),
