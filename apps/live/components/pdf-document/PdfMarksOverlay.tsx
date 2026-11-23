@@ -56,14 +56,14 @@ export function PdfMarksOverlay({
         </g>
       ))}
       {found && found.found.length > 0 ? (
-        <g data-pdf-found="true" className="fill-amber-300" opacity={0.6}>
+        <g data-pdf-found="true" className="fill-(--pdf-found)" opacity={0.6}>
           {found.found.map((quad, at) => (
             <polygon key={at} points={pointsOf(matrix, quad)} />
           ))}
         </g>
       ) : null}
       {found && found.current.length > 0 ? (
-        <g data-pdf-found-current="true" className="fill-orange-500" opacity={0.6}>
+        <g data-pdf-found-current="true" className="fill-(--pdf-found-current)" opacity={0.6}>
           {found.current.map((quad, at) => (
             <polygon key={at} points={pointsOf(matrix, quad)} />
           ))}
@@ -77,7 +77,7 @@ export function PdfMarksOverlay({
         </g>
       ) : null}
       {preview.length > 0 ? (
-        <g data-pdf-mark-preview="true" fill="#bae6fd">
+        <g data-pdf-mark-preview="true" className="fill-(--pdf-mark-preview)">
           {preview.map((quad, at) => (
             <polygon key={at} points={pointsOf(matrix, quad)} />
           ))}

@@ -13,6 +13,7 @@
 - Links on the pages, a link's and a bookmark's point on its page, Previous view and Next view.
 - Find, with its options and All results.
 - The page's context menu.
+- The chrome from the shell's tokens alone, and what LiveDoc draws on a page from the PDF's paper tokens, in both schemes.
 
 Bound today: Download as PDF, Undo, Redo, Copy, Select all, Find, the editing modes, Highlight, Select and Help; Page display, Zoom but for
 Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
@@ -599,6 +600,20 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 - The left rail is a toolbar of toggles; each panel is a region named for what it shows, its list a tree or list.
 - Focus is always visible in both schemes; the chrome reflows to 400% zoom, the pages scroll in two directions.
 - Every token pair meets 4.5:1 for text and 3:1 for outlines and focus, in light and dark.
+
+### Colours
+
+- **The chrome is the shell's tokens only** ([Office shell](../004-interface-design/office-shell.md)), in both
+  schemes: no colour of its own, so the chrome's contrast is the shell's, held by its test.
+- **What LiveDoc draws on a page** sits on the file's paper, not on the chrome, so its colours are the PDF's own
+  tokens, the same in both schemes (`apps/live/app/pdf-document.css`) `(default)`:
+  - `--pdf-paper`, the paper a page is shown on before and around its picture, and a thumbnail's;
+  - `--pdf-paper-ink`, words LiveDoc writes on a page ("This page couldn't be drawn.", a thumbnail's "+2"), at
+    4.5:1 on the paper;
+  - `--pdf-found` and `--pdf-found-current`, Find's tints, multiplied onto the page, the current one darker;
+  - `--pdf-mark-preview`, the text a Highlight drag would mark.
+- **Find's match in All results** is the chrome's: its row's own ink, bold, underlined in the focus colour.
+- A test holds the PDF's components to these tokens and the pairs to their contrast.
 
 ## Telemetry
 

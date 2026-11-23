@@ -1,0 +1,12 @@
+/*
+ * What LiveDoc draws on a PDF's page (docs/specs/035-pdf-documents/reading-surface.md "Colours"): it sits on the
+ * file's paper, not on the chrome, so these are the same in both schemes. The chrome is the office shell's tokens
+ * only (office-shell.css). Every pair holds its contrast (pdf-document-look.test.ts).
+ */
+.office-shell {
+  --pdf-paper: #ffffff;
+  --pdf-paper-ink: #334155;
+  --pdf-found: #fcd34d;
+  --pdf-found-current: #f97316;
+  --pdf-mark-preview: #bae6fd;
+}

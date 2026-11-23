@@ -458,7 +458,7 @@ export function PdfDocumentSurface({
         >
           <div
             role="status"
-            className="aspect-[612/792] w-full max-w-[816px] bg-white shadow-sm outline outline-1 outline-(--office-line)"
+            className="aspect-[612/792] w-full max-w-[816px] bg-(--pdf-paper) shadow-sm outline outline-1 outline-(--office-line)"
           >
             <span className="sr-only">Opening this PDF…</span>
           </div>
