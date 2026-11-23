@@ -76,6 +76,12 @@ The opt-out itself is the last signal your browser sends, so even leaving is rec
 
 A few counts only the server can make: a sign-up or sign-in, a share-link visitor's first visit, a document used by several people or an AI tool, an email sent, and a server error. The server records those itself, with the same three anonymous fields, so the browser switch does not turn them off.
 
+## When the server breaks
+
+Separate from these events, LiveDoc's servers keep their own log lines, so that when something fails the people who run docs.nu can find out why. A line says what the server did and with what result, such as "the database was unavailable", and is stored with the address of the page or api call it served, minus everything after the `?`. It never holds your request's headers, your IP address or your location, and never the content of a document.
+
+These lines stay in docs.nu's own Cloudflare account and are deleted after 3 to 7 days. When a new kind of error appears, Cloudflare groups its lines and LiveDoc files it as a card on a private bug board, so it gets fixed. The Settings switch above does not cover these lines, because they come from the server, not from your browser. A self-hosted deployment keeps them in its operator's own account, if at all.
+
 The switch is on until you turn it off. It is saved with your other preferences, so when you are signed in it follows you to your other browsers once the editor has loaded there; as a guest, set it in each browser you use.
 
 <Note>
