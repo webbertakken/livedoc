@@ -54,7 +54,8 @@ A picture is an inline of a paragraph, beside runs, fields and notes
     Google's most); Google sets one for all four, ⅛ in (9 pt) when wrapping is chosen (default as Google's);
   - `moves`: `with-text` (Move with text: it follows its anchor's paragraph) or `page` (Fix position on page);
   - `x`, `y`: its top left corner, in points, from the left edge of its anchor's column and the top of its anchor's
-    paragraph when it moves with text, else from the page's top left corner; turned, its box before the turn.
+    paragraph when it moves with text, else from the page's top left corner, each within 22 in (1584 pt, the widest
+    page Word allows) either way (default); turned, its box before the turn.
 - **Media**: the document's `media`, each picture's bytes by key, the SHA-256 of its bytes as 64 lower-case hex
   characters, with its media type and the package entry it arrived in, if any.
   Two pictures of the same bytes share one media.
@@ -125,15 +126,18 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   and ignores `a:alphaModFix` on a Writer picture; it draws a picture with `livedoc:duotone` uncoloured and keeps the
   attribute when it saves; it holds brightness and contrast in whole percents.
 - **Placement read** as LibreOffice 24.2 reads and writes it, one to one (the rows above). An anchor `paragraph` is read
-  as `char` at the paragraph's start; one to the page, a frame or a heading as `as-char` or `char` else keeps it.
+  as `char` where the frame stands (LibreOffice writes it first); one to the page or a frame keeps it.
   Kept (default): a position by alignment (`wp:align`, `style:*-pos` other than from the left or top), any other
   `relativeFrom` or `style:*-rel` (margin, character, line, page content), a wrap on one side or the larger side
   (`left`, `right`, `largest`; `left`, `right`, `dynamic`, `biggest`), a tight, through or contour wrap, a limit on
-  the paragraphs wrapped, `simplePos`. A placed picture in a table cell, a note, a header or a footer is kept too.
+  the paragraphs wrapped, `simplePos`, a hidden picture, Word's size relative to the page (`wp14:sizeRel*` other
+  than 0). A placed picture in a note, a header or a footer is kept too; one in a table cell is placed from its
+  cell's column and paragraph.
   The order placed pictures overlap in (`relativeHeight`, `draw:z-index`) is their reading order (default).
 - **Placement written** as LibreOffice writes it: ODF `char` with the frame's offsets and its graphic style's wrap,
-  margins and relations; OOXML `wp:anchor` (`simplePos="0"`, `locked="0"`, `layoutInCell="1"`,
-  `allowOverlap="1"`, `relativeHeight` in reading order) with its offsets, extent, effect extent, wrap and `docPr`.
+  margins and relations, its `draw:z-index` 0 (LibreOffice overlaps frames of one level in reading order); OOXML
+  `wp:anchor` (`simplePos="0"`, `locked="0"`, `layoutInCell="1"`, `allowOverlap="1"`, `relativeHeight` its
+  picture's number) with its offsets, extent, effect extent, wrap and `docPr`.
 - **Names and ids** (`draw:name`, `wp:docPr` `name` and `id`) are written anew: `Picture <n>` in reading order.
 - **Conversion** carries every picture and its media to the other format; a picture still kept is dropped and listed,
   as all kept content.
