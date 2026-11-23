@@ -148,6 +148,7 @@ test('the keyboard moves across the sheet and between sheets', async ({
   await nameBox.press('Enter');
   await page.keyboard.press('Shift+End');
   await expect(nameBox).toHaveValue('B2:Z2');
+  await page.screenshot({ path: test.info().outputPath('shift-end.png'), animations: 'disabled' });
   await page.keyboard.press('Control+Shift+Space');
   await expect(nameBox).toHaveValue('A1:Z1000');
 
