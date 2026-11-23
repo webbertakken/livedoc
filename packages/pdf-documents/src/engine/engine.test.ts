@@ -18,6 +18,7 @@ import {
   deepOutlinePdf,
   fieldsPdf,
   labelledPdf,
+  layeredDrawingPdf,
   linksPdf,
   longOutlinePdf,
   outlinePdf,
@@ -265,6 +266,64 @@ describe('what a file says of itself', () => {
   it('says a file has fields where it holds an interactive form, and when that form is an XFA form', async () => {
     expect(documentOf(await engine.open(fieldsPdf())).form).toBe('fields');
     expect(documentOf(await engine.open(xfaPdf())).form).toBe('xfa');
+  });
+});
+
+// reading-surface.md "Layers": a page drawn with a person's layers, from a copy; the file as it was for everyone else.
+describe("drawing with a person's layers", () => {
+  // The middle of each square at a scale of 0.5: "Plan" at (122, 122) points, "Notes" at (350, 350).
+  const red = (bitmap: { rgba: Uint8ClampedArray; width: number }, x: number, y: number) => [
+    ...bitmap.rgba.slice((y * bitmap.width + x) * 4, (y * bitmap.width + x) * 4 + 3),
+  ];
+  const plan = (bitmap: Parameters<typeof red>[0]) => red(bitmap, 61, 335);
+  const notes = (bitmap: Parameters<typeof red>[0]) => red(bitmap, 175, 221);
+  const WHITE = [255, 255, 255];
+
+  it('draws the layers as the file sets them unless asked otherwise', async () => {
+    await engine.open(layeredDrawingPdf());
+    const asFile = (await engine.drawPage(0, 0.5))!;
+    expect(plan(asFile)).toEqual([0, 0, 0]);
+    expect(notes(asFile)).toEqual(WHITE);
+  });
+
+  it('draws the layers a person shows and hides, and leaves the stored file as it was', async () => {
+    const bytes = layeredDrawingPdf();
+    await engine.open(bytes.slice());
+    const [planLayer, notesLayer] = await engine.layers();
+    const allShown = (await engine.drawPage(0, 0.5, 0, []))!;
+    expect(plan(allShown)).toEqual([0, 0, 0]);
+    expect(notes(allShown)).toEqual([255, 0, 0]);
+    const planHidden = (await engine.drawPage(0, 0.5, 0, [planLayer!.id, notesLayer!.id]))!;
+    expect(plan(planHidden)).toEqual(WHITE);
+    expect(notes(planHidden)).toEqual(WHITE);
+    const tile = (await engine.drawTile(0, 0.5, 0, { x: 0, y: 0, width: 306, height: 396 }, []))!;
+    expect(notes(tile)).toEqual([255, 0, 0]);
+    // Everyone else, and the file itself: as the file sets them.
+    expect(notes((await engine.drawPage(0, 0.5))!)).toEqual(WHITE);
+    const baked = await engine.bake(PdfLiveChanges.merge([]));
+    expect(baked.ok && baked.bytes).toEqual(bytes);
+  });
+
+  it("says whether a person's layers can be drawn, and logs the copy made", async () => {
+    const lines: string[] = [];
+    const logged = pdfEngineOver(await startReader(readerWasm()), undefined, (line) =>
+      lines.push(line),
+    );
+    await logged.open(layeredDrawingPdf());
+    const [planLayer] = await logged.layers();
+    expect(await logged.layerView([planLayer!.id])).toBe(true);
+    expect(await logged.layerView([planLayer!.id])).toBe(true);
+    expect(lines.filter((line) => line.startsWith('[pdf] layer-view'))).toEqual([
+      '[pdf] layer-view hidden=1',
+    ]);
+    await logged.open(stored);
+    expect(await logged.layerView([])).toBe(false);
+    await logged.close();
+  });
+
+  it('draws a file with no layers as it is, whatever is asked', async () => {
+    await engine.open(stored);
+    expect((await engine.drawPage(0, 0.5, 0, ['o:4']))?.width).toBe(306);
   });
 });
 

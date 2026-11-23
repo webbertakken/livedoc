@@ -964,6 +964,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Zoomed|Actual': 'Someone zoomed a PDF document to its actual size.',
   'Pdf|Zoomed|In': 'Someone zoomed in on a PDF document by a step.',
   'Pdf|Zoomed|Out': 'Someone zoomed out of a PDF document by a step.',
+  'Pdf|Toggled|Layer.Shown':
+    'Someone showed a PDF layer for themselves, in a PDF document’s Layers panel.',
+  'Pdf|Toggled|Layer.Hidden':
+    'Someone hid a PDF layer for themselves, in a PDF document’s Layers panel.',
   'Pdf|Zoomed|Custom':
     'Someone zoomed a PDF document to a percentage of their own: typed, chosen, or with the wheel or a pinch.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
@@ -2867,6 +2871,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Pdf|Changed':
     'Someone changed how a PDF document’s pages are laid out for them (the value says how).',
   'Pdf|Zoomed': 'Someone zoomed a PDF document (the value says how).',
+  'Pdf|Toggled':
+    'Someone turned something of their own view of a PDF document on or off (the value says what).',
   'Sheet|Searched': 'Someone searched a list on a Sheet (the value says which: the functions).',
   'Plan|Imported': "Someone read a file into a board's cards (the value says which kind: Csv).",
   'Plan|Exported': "Someone downloaded a board's cards as a file (the value says which kind: Csv).",

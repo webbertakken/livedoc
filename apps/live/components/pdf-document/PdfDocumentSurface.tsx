@@ -61,6 +61,7 @@ import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
 import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
 import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
 import { usePdfPagesInput } from '@/lib/pdf-document/usePdfPagesInput';
+import { usePdfLayerView } from '@/lib/pdf-document/usePdfLayerView';
 import { usePdfLinks } from '@/lib/pdf-document/usePdfLinks';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
@@ -165,6 +166,8 @@ export function PdfDocumentSurface({
   const marking = canReview && mode !== 'viewing' && ready !== null;
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
+  // "Layers": this person's, and the drawer their pages are drawn with.
+  const layerView = usePdfLayerView(ready?.engine ?? null, ready?.drawer ?? null);
 
   // "Replacing the stored file": an Editor's idle surface replaces it for the budget. The room's alone: in This
   // Browser the stored file is not replaced.
@@ -434,11 +437,12 @@ export function PdfDocumentSurface({
               pages={ready.pages}
               page={viewer.page}
               engine={ready.engine}
-              drawer={ready.drawer}
+              drawer={layerView.drawer ?? ready.drawer}
               marks={marks}
               onGoTo={goToPage}
               onFollow={links.follow}
               onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
+              layerView={layerView}
             />
           }
           right={null}
@@ -454,7 +458,7 @@ export function PdfDocumentSurface({
               onKeyDown={pagesInput.onKeyDown}
               pages={ready.pages}
               engine={ready.engine}
-              drawer={ready.drawer}
+              drawer={layerView.drawer ?? ready.drawer}
               marks={marks}
               tool={inHand}
               onHighlight={onHighlight}

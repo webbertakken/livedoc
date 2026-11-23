@@ -3,6 +3,7 @@ import {
   embeddedFilesPdf,
   embeddedPdfPdf,
   labelledPdf,
+  layeredDrawingPdf,
   outlinePdf,
   textPdf,
 } from '@livedoc/pdf-documents/testing';
@@ -158,6 +159,36 @@ test('a PDF’s thumbnails go to their pages, and the page bar takes a page’s 
   await held.getByRole('button', { name: 'Open inner.pdf' }).click();
   await expect(page).not.toHaveURL(before, { timeout: 30_000 });
   await pageOneDrawn(page);
+
+  // "Layers": as the file sets them, then shown and hidden for this person, the page drawn again with them.
+  await openPdf(page, 'Layered.pdf', layeredDrawingPdf());
+  await rail(page).getByRole('button', { name: 'Layers' }).click();
+  const layers = page.getByRole('list', { name: 'Layers' });
+  const notes = layers.getByRole('button', { name: 'Notes' });
+  await expect(notes).toHaveAttribute('aria-pressed', 'false');
+  // The red square of "Notes", 350 points in and up, and the black one of "Plan", 122.
+  const colourAt = (x: number, y: number) =>
+    page
+      .locator('[data-pdf-page="1"] canvas')
+      .first()
+      .evaluate(
+        (canvas: HTMLCanvasElement, at) => {
+          const px = Math.round((at.x / 612) * canvas.width);
+          const py = Math.round(((792 - at.y) / 792) * canvas.height);
+          return [...canvas.getContext('2d')!.getImageData(px, py, 1, 1).data.slice(0, 3)];
+        },
+        { x, y },
+      );
+  await expect.poll(() => colourAt(350, 350)).toEqual([255, 255, 255]);
+  await notes.click();
+  await expect(notes).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => colourAt(350, 350), { timeout: 15_000 }).toEqual([255, 0, 0]);
+  await layers.getByRole('button', { name: 'Plan' }).click();
+  await expect.poll(() => colourAt(122, 122), { timeout: 15_000 }).toEqual([255, 255, 255]);
+  await page.screenshot({ path: test.info().outputPath('pdf-layers-dark.png') });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: test.info().outputPath('pdf-layers-light.png') });
+  await page.emulateMedia({ colorScheme: 'dark' });
 
   expectNoPageErrors(pageErrors);
 });

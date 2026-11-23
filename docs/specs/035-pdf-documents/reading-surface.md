@@ -8,13 +8,13 @@
 - The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it, and
   sharp tiles over the part in view where that picture is softer than the screen.
 - Page display, zoom, Go to, the page bar and Rotate view.
-- The left panel's rail, Thumbnails, Outline and Embedded files; Go to page by a page's number or its label; following a bookmark.
+- The left panel's rail, Thumbnails, Outline, Embedded files and Layers; Go to page by a page's number or its label; following a bookmark.
 
 Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
-Zoom to selection, Go to but for Previous view and Next view, Rotate view, Thumbnails, Outline and Embedded files.
+Zoom to selection, Go to but for Previous view and Next view, Rotate view, Thumbnails, Outline, Embedded files and Layers.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-Layers, Signatures and Fields, a bookmark's point on its page, find, text selection, the accessible tree (a page is a named region whose picture is
+Signatures and Fields, a bookmark's point on its page, find, text selection, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -353,6 +353,23 @@ The files the PDF carries inside it, as [Security](security.md#embedded-files) l
 - Logged by the engine: `[pdf] embedded-read bytes=<n>`, `[pdf] embedded-refused reason=<reason>`; counted as
   `Pdf · Exported · EmbeddedFile` and `Pdf · Imported · EmbeddedFile`.
 
+### Layers
+
+- The file's PDF layers by name, in the file's order, each a toggle with an eye: pressed while the layer shows.
+- **A press shows or hides the layer for this person only**: their pages and thumbnails are drawn again without it
+  (or with it); the file, a download, a print, the browser's thumbnail and another person's view are as the file sets
+  them. The choice is kept while the surface is open, as the view is `(default)`.
+- A layer the file locks shows its state, says "Locked", and takes no press.
+- The engine draws a page with this person's layers from a copy of the file whose layers are set so, made when the
+  layers first differ from the file's and kept for as long as they stay the same `(default)`; the stored file is
+  never touched.
+- A file with none says "This PDF has no layers."; one with more than `PDF_MAX_LAYERS` lists that many and says
+  "This PDF has more layers than LiveDoc lists (1,000)."
+- A list that cannot be read says "The layers couldn't be read."; layers that cannot be set for the drawing say
+  "These layers can't be shown or hidden here." and the pages stay as the file sets them.
+- Logged: `[pdf] layer-view hidden=<n>`, `[pdf] layer-view-failed`, `[pdf] layers-failed`; counted as
+  `Pdf · Toggled · Layer.<Shown|Hidden>` `(default)`.
+
 ### Following a link
 
 A press on a bookmark, or on a link of a page ([Security](security.md#links-and-actions)):
@@ -521,7 +538,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 `Pdf · Changed · RotateView.<Clockwise|Counterclockwise>` `(default)`,
 `Pdf · Zoomed · <FitWidth|FitPage|Actual|In|Out|Custom>` (a wheel's or a pinch's zoom once, as `Custom`, when it settles),
 `Pdf · Searched · Find`,
-`Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
+`Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen|Layer.Shown|Layer.Hidden>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
 menu, tool finder and panel events (`UI · Opened · PdfDocumentPanel<Thumbnails|Outline|EmbeddedFiles|Layers>`).
 Never a query, a page's text or a name.
 

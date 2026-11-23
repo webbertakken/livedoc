@@ -2,7 +2,12 @@
 
 // A PDF document's left side (docs/specs/035-pdf-documents/reading-surface.md "The left panel"): the rail of left
 // panels and the one panel open, in the shell's frame, its body the panel's own.
-import type { LinkTarget, PageInfo, PdfEngine } from '@livedoc/pdf-documents';
+import {
+  PDF_MAX_LAYERS,
+  type LinkTarget,
+  type PageInfo,
+  type PdfEngine,
+} from '@livedoc/pdf-documents';
 import { OfficePanel } from '@/components/office/OfficePanel';
 import { OfficePanelRail } from '@/components/office/OfficePanelRail';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
@@ -10,11 +15,14 @@ import type { PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import {
   EMBEDDED_FILES_PANEL,
+  LAYERS_PANEL,
   OUTLINE_PANEL,
   PDF_RAIL,
   THUMBNAILS_PANEL,
 } from '@/lib/pdf-document/pdf-panels';
 import { PdfEmbeddedFilesPanel } from './PdfEmbeddedFilesPanel';
+import { PdfLayersPanel } from './PdfLayersPanel';
+import type { PdfLayerView } from '@/lib/pdf-document/usePdfLayerView';
 import { PdfOutlinePanel } from './PdfOutlinePanel';
 import { PdfThumbnails } from './PdfThumbnails';
 
@@ -29,13 +37,16 @@ export function PdfLeftPanel({
   onGoTo,
   onFollow,
   onOpenPdf,
+  layerView,
 }: {
   panels: OfficePanelsState;
   tabId: string;
   pages: readonly PageInfo[];
   /** The page in view, by its index. */
   page: number;
-  engine: Pick<PdfEngine, 'outline' | 'embeddedFiles' | 'embeddedFile'>;
+  engine: Pick<PdfEngine, 'outline' | 'embeddedFiles' | 'embeddedFile' | 'layers'>;
+  /** This person's layers (reading-surface.md "Layers"). */
+  layerView: Pick<PdfLayerView, 'hidden' | 'setLayer'>;
   drawer: PdfPageDrawer;
   marks: PdfMarksStore;
   onGoTo: (index: number) => void;
@@ -69,6 +80,14 @@ export function PdfLeftPanel({
           ) : null}
           {open.id === EMBEDDED_FILES_PANEL.id ? (
             <PdfEmbeddedFilesPanel engine={engine} onOpenPdf={onOpenPdf} />
+          ) : null}
+          {open.id === LAYERS_PANEL.id ? (
+            <PdfLayersPanel
+              engine={engine}
+              hidden={layerView.hidden}
+              onSet={layerView.setLayer}
+              most={PDF_MAX_LAYERS}
+            />
           ) : null}
         </OfficePanel>
       ) : null}

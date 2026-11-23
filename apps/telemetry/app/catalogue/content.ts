@@ -1366,6 +1366,14 @@ export const PDF_ZOOMS = chart(
   { types: ['FitWidth', 'FitPage', 'Actual', 'In', 'Out', 'Custom'], rising: 'neutral' },
 );
 
+export const PDF_LAYERS_TOGGLED = chart(
+  'Pdf',
+  'Toggled',
+  'PDF Layers Shown And Hidden',
+  'A PDF layer shown or hidden by a person for their own view, in the Layers panel.',
+  { types: ['Layer.Shown', 'Layer.Hidden'], rising: 'neutral' },
+);
+
 export const PDF_DOCUMENTS: MetricStack = {
   stack: true,
   title: 'PDF Documents',
@@ -1381,6 +1389,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_PAGE_DISPLAYS,
     PDF_VIEW_TURNS,
     PDF_ZOOMS,
+    PDF_LAYERS_TOGGLED,
   ],
 };
 

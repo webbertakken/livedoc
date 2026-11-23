@@ -79,6 +79,7 @@ const STOPPED = {
   embeddedFiles: { files: [], cut: false } satisfies EmbeddedFiles,
   embeddedFile: { ok: false, refusal: 'unreadable' } satisfies EmbeddedFileRead,
   layers: [] as readonly PdfLayer[],
+  layerView: false,
   canAppend: false,
   bake: { ok: false, refusal: 'unreadable' } satisfies BakeResult,
   heldBytes: 0,
@@ -157,10 +158,10 @@ export function pdfEngineClient(
     open: (bytes) => ask<PdfOpened>({ method: 'open', args: [bytes] }, [bytes.buffer]),
     // The password crosses once, to the worker that holds the file, and is kept nowhere on this side.
     unlock: (password) => ask<PdfOpened>({ method: 'unlock', args: [password] }),
-    drawPage: (index, scale, turns) =>
-      ask<PageBitmap | null>({ method: 'drawPage', args: [index, scale, turns] }),
-    drawTile: (index, scale, turns, rect) =>
-      ask<PageBitmap | null>({ method: 'drawTile', args: [index, scale, turns, rect] }),
+    drawPage: (index, scale, turns, hidden) =>
+      ask<PageBitmap | null>({ method: 'drawPage', args: [index, scale, turns, hidden] }),
+    drawTile: (index, scale, turns, rect, hidden) =>
+      ask<PageBitmap | null>({ method: 'drawTile', args: [index, scale, turns, rect, hidden] }),
     outline: () => ask<Outline>({ method: 'outline', args: [] }),
     links: (index) => ask<readonly PageLink[]>({ method: 'links', args: [index] }),
     pageText: (index) => ask<PageText | null>({ method: 'pageText', args: [index] }),
@@ -172,6 +173,7 @@ export function pdfEngineClient(
     embeddedFiles: () => ask<EmbeddedFiles>({ method: 'embeddedFiles', args: [] }),
     embeddedFile: (at) => ask<EmbeddedFileRead>({ method: 'embeddedFile', args: [at] }),
     layers: () => ask<readonly PdfLayer[]>({ method: 'layers', args: [] }),
+    layerView: (hidden) => ask<boolean>({ method: 'layerView', args: [hidden] }),
     canAppend: () => ask<boolean>({ method: 'canAppend', args: [] }),
     bake: (liveChanges) => ask<BakeResult>({ method: 'bake', args: [liveChanges] }),
     heldBytes: () => ask<number>({ method: 'heldBytes', args: [] }),

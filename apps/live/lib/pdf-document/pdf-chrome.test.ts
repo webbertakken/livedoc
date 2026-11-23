@@ -18,6 +18,7 @@ import {
   PAGE_DISPLAY_TWO,
   PAGE_DISPLAY_TWO_CONTINUOUS,
   PANEL_EMBEDDED_FILES,
+  PANEL_LAYERS,
   PANEL_OUTLINE,
   PANEL_THUMBNAILS,
   PDF_MENUS,
@@ -108,6 +109,7 @@ describe("a PDF document's menus and toolbar", () => {
     PANEL_THUMBNAILS,
     PANEL_OUTLINE,
     PANEL_EMBEDDED_FILES,
+    PANEL_LAYERS,
   ];
 
   it('has no built item nothing runs, no shortcut its registry lacks, no id twice', () => {
