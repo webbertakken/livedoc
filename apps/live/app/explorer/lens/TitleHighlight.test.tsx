@@ -63,6 +63,6 @@ describe('HighlightedTitle', () => {
     );
     const mark = container.querySelector('mark')!;
     expect(mark.className).toContain('underline');
-    expect(mark.className).toContain('font-semibold');
+    expect(mark.className).toContain('font-medium');
   });
 });

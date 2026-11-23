@@ -57,7 +57,10 @@ export function LensAnnouncer({
 export function LensIssues({ issues, id }: { issues: readonly LensIssue[]; id?: string }) {
   if (issues.length === 0) return null;
   return (
-    <ul id={id} className="mt-2 flex flex-col gap-0.5 text-xs text-amber-800 dark:text-amber-200">
+    <ul
+      id={id}
+      className="mt-2 flex flex-col gap-0.5 text-supporting text-amber-800 dark:text-amber-200"
+    >
       {issues.map((issue) => (
         <li key={`${issue.reason}:${issue.start}`}>{issueMessage(issue)}</li>
       ))}

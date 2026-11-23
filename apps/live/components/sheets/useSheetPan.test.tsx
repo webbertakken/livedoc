@@ -3,6 +3,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PAN_START_PX, useSheetPan } from './useSheetPan';
+import { keepScrollRoom } from './sheet-scroll-room';
 
 function scroller(tool?: string) {
   const host = document.createElement('main');
@@ -70,6 +71,17 @@ describe('panning a Sheet', () => {
     release();
     move(60, 60);
     expect(at).toEqual({ left: 70, top: 80 });
+  });
+
+  // grid-and-editing.md "The grid": a sheet past its scroll room still pans by the pixels dragged.
+  it('pans a sheet past its scroll room by sheet pixels', () => {
+    const { el, at } = scroller();
+    keepScrollRoom(el, { spacer: { width: 1, height: 1 }, ratio: { x: 2, y: 4 } });
+    const { result } = renderHook(() => useSheetPan(() => el));
+    result.current.begin(press({ button: 1 }), { maximised: false });
+    move(30, 20);
+    expect(at).toEqual({ left: 85, top: 95 });
+    release();
   });
 
   it('leaves a plain left press to the selection, even under the Hand tool, and pans one with Space held', () => {

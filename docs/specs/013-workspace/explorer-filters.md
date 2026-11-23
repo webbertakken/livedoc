@@ -134,8 +134,8 @@ general diagram tab's environment.
 
 ### Highlight
 
-- In every document view, the characters each word matched are **marked** in the name: tinted, bold and
-  underlined, never shown by colour alone.
+- In every document view, the characters each word matched are **marked** in the name: tinted, medium against the
+  regular name and underlined, never shown by colour alone.
 - A screen reader reads the plain name, once.
 
 ### Titles elsewhere
@@ -350,8 +350,8 @@ The code cites each by its id.
   for the weaker match within a tier); lower first (default).
 - **D174** Whether the Details view orders by match: No (decided by Webber): it keeps the column the reader sorted by;
   the lens only narrows it (default).
-- **D175** How a matched character looks: A light brand tint, semibold and a 2 px brand underline, the text keeping its
-  own colour (default).
+- **D175** How a matched character looks: A light brand tint, medium (the sizing scale's one heavier weight) and a
+  2 px brand underline, the text keeping its own colour (default).
 - **D176** What a typo is measured against: The starts of each title word, up to the word's length plus its typos, so a
   word still being typed is forgiven too (default).
 - **D177** What "word prefix" means beside "exact substring": The word spelled by the starts of successive title words,

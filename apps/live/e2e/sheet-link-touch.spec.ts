@@ -8,7 +8,7 @@ test.use({ hasTouch: true, colorScheme: 'dark' });
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
 // The grid's header strips (apps/live/components/sheets/sheet-geometry.ts): a tap just past them lands on A1.
 const ROW_HEADER_PX = 46;
-const COL_HEADER_PX = 22;
+const COL_HEADER_PX = 24;
 const ADDRESS = 'https://docs.nu/';
 
 const ids = (prefix: string, n: number) =>

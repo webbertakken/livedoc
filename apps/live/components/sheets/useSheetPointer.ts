@@ -17,13 +17,13 @@ import {
   displayValue,
   validationRuleAt,
   type GridRange,
-  SHEET_FREEZE_COLS_MAX,
-  SHEET_FREEZE_ROWS_MAX,
 } from '@livedoc/sheets';
 import { useAssignRef, useLatest } from '@/hooks/ui/useLatest';
 import { pointingTargetFor } from './sheet-pointing';
 import { useSheetController, type SheetController } from './sheet-controller';
 import { cellBox, hitTest, mergeAt, totalSize, type Hit } from './sheet-geometry';
+import { freezeLimit, nearestBoundary } from './sheet-freeze';
+import { roomPerSheetPx } from './sheet-scroll-room';
 import { fontPx } from './SheetCells';
 import { ruleHitAt } from './rules/sheet-rule-draw';
 import { FILL_HANDLE_PX, fillHandleAt } from './SheetSelectionLayer';
@@ -37,8 +37,6 @@ const DRAG_START_PX = 4;
 const AUTOSCROLL_EDGE_PX = 24;
 // How close to the frozen edge's bar a press grabs it.
 const FREEZE_GRAB_PX = 3;
-// The most lines a drag freezes (docs/specs/029-sheets/sheet.md D16).
-const FREEZE_MAX = { r: SHEET_FREEZE_ROWS_MAX, c: SHEET_FREEZE_COLS_MAX };
 
 type Drag =
   | { kind: 'select'; additive: boolean }
@@ -144,10 +142,7 @@ export function useSheetPointer(
     const p = axis === 'c' ? x - latest.current.geometry.headW : y - latest.current.geometry.headH;
     const frozen = axis === 'c' ? g.frozenWidth : g.frozenHeight;
     const at = p < frozen ? p : p + (axis === 'c' ? cc.scroll.left : cc.scroll.top);
-    let best = 0;
-    for (let i = 0; i < offs.length; i++)
-      if (Math.abs(offs[i]! - at) < Math.abs(offs[best]! - at)) best = i;
-    return Math.min(best, FREEZE_MAX[axis]);
+    return Math.min(nearestBoundary(offs, at), freezeLimit(g, cc.view, axis));
   };
 
   // What a press on a cell hits of its validation rule's drawing (a box, a chip, an arrow), if anything.
@@ -281,7 +276,9 @@ export function useSheetPointer(
           ? 1
           : 0;
     if (!dx && !dy) return;
-    el.scrollBy({ left: dx * 24, top: dy * 24 });
+    // A step of 24 sheet px, however large the sheet's scroll room makes a room px (sheet-scroll-room.ts).
+    const per = roomPerSheetPx(el);
+    el.scrollBy({ left: dx * 24 * per.x, top: dy * 24 * per.y });
     step();
   };
   const onTick = useRef<() => void>(() => {});

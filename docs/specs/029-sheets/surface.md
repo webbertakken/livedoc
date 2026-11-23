@@ -169,3 +169,5 @@ Version History (the shell's). Each is specified with its area.
 - **D132** The summary with no number selected: Count, whatever the pick (default).
 - **D133** The grid's zoom: Kept for the page across sheets, 100% each time the spreadsheet opens, as
   [Grid and editing](grid-and-editing.md#the-grid) keeps it never saved (default).
+- **D134** The grid's scroll room: 10,000,000 px an axis, well under Firefox's ceiling of about 17.9 million and
+  Chromium's of about 33.5 million (default).

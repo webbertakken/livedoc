@@ -8,6 +8,7 @@
 // right click opens the menu). A second finger ends the pan, so the canvas's pinch takes over.
 import { useEffect, useState } from 'react';
 import { useLatest } from '@/hooks/ui/useLatest';
+import { roomPerSheetPx } from './sheet-scroll-room';
 
 // How far a press moves before it is a pan rather than a click.
 export const PAN_START_PX = 4;
@@ -76,8 +77,10 @@ function createSheetPan(scroller: () => HTMLElement | null): SheetPan & { dispos
     if (space.down) space.used = true;
     // The grid is drawn at the canvas's zoom: a screen pixel moves it by 1 / zoom of its own.
     const scale = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1;
-    el.scrollLeft = p.left0 - dx / scale;
-    el.scrollTop = p.top0 - dy / scale;
+    // And a sheet larger than its scroll room moves by sheet pixels, not the room's (sheet-scroll-room.ts).
+    const per = roomPerSheetPx(el);
+    el.scrollLeft = p.left0 - (dx / scale) * per.x;
+    el.scrollTop = p.top0 - (dy / scale) * per.y;
     e.preventDefault();
   }
   function onUp(e: PointerEvent) {

@@ -60,3 +60,30 @@ test('the zoom scales the grid, and the grid works at it', async ({ page, pageEr
   });
   expectNoPageErrors(pageErrors);
 });
+
+test('a freeze leaves a third of the grid to scroll', async ({ page, pageErrors }) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  await nameBox.fill('A300');
+  await nameBox.press('Enter');
+  await (await officeMenuItem(page, ['View', 'Freeze', 'Up to Row 300'])).click();
+  await page.locator('[data-sheet-grid]').evaluate((grid) => grid.scrollTo({ top: 3_000 }));
+
+  // The rows still in place after a long scroll are the frozen ones: some, but no more than two thirds of the cells.
+  const grid = (await page.locator('[data-sheet-grid]').boundingBox())!;
+  const letters = (await page.locator('[role="columnheader"][aria-colindex="1"]').boundingBox())!;
+  const frozen = await page.locator('[role="rowheader"]').evaluateAll((headers) =>
+    headers
+      .map((h) => Number(h.getAttribute('aria-rowindex')))
+      .sort((a, b) => a - b)
+      .findIndex((n, i) => n !== i + 1),
+  );
+  expect(frozen).toBeGreaterThan(2);
+  expect(frozen * 21).toBeLessThanOrEqual(((grid.height - letters.height) * 2) / 3);
+  await page.screenshot({
+    path: test.info().outputPath('freeze-limit.png'),
+    animations: 'disabled',
+  });
+  expectNoPageErrors(pageErrors);
+});

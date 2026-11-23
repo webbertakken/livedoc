@@ -53,7 +53,8 @@ import {
   pdfRefusalRetries,
 } from '@/lib/pdf-document/pdf-refusals';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
-import { PDF_TOOLBAR } from '@/lib/pdf-document/pdf-toolbar';
+import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
+import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
@@ -85,11 +86,6 @@ export const droppedChangeCopy = (refusal: PdfDocumentRefusal, level: AccessLeve
   if (refusal !== 'level_too_low') return CHANGES_DO_NOT_FIT_COPY;
   return level === 'view' ? VIEW_ONLY_COPY : REVIEW_ONLY_COPY;
 };
-
-const megabytes = (bytes: number): string =>
-  bytes < 1_000_000
-    ? `${Math.max(1, Math.round(bytes / 1_000))} kB`
-    : `${(bytes / 1_000_000).toFixed(1)} MB`;
 
 const typesText = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
@@ -346,11 +342,14 @@ export function PdfDocumentSurface({
       <OfficeTitleRow
         name={documentName || UNTITLED_PDF}
         format="PDF"
-        formatTitle={
-          ready
-            ? `PDF, ${ready.pages.length} ${ready.pages.length === 1 ? 'page' : 'pages'}, ${megabytes(ready.bytes)}`
-            : 'PDF document'
-        }
+        formatTitle={pdfPillTitle(
+          ready && {
+            version: ready.version,
+            pages: ready.pages.length,
+            bytes: ready.bytes,
+            protected: ready.protected,
+          },
+        )}
         problem={problem}
         catalogue={PDF_MENUS}
         level={levelInMode(PDF_MODES, level, mode)}
@@ -361,7 +360,7 @@ export function PdfDocumentSurface({
         tabId={scope.tabId}
         onFollow={goToPerson}
         saveStatus={ready?.binding.saveStatus ?? null}
-        toolbar={PDF_TOOLBAR}
+        toolbar={pdfToolbar(mode)}
         zoom={ready ? { value: zoom, onChange: setZoom } : null}
         mode={open.phase === 'ready' ? choice : null}
       />
