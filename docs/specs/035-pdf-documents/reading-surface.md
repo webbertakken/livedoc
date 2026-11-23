@@ -270,7 +270,7 @@ they queue in this order:
 | ---------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------ |
 | "This PDF was damaged. LiveDoc repaired it to show it; the file itself is unchanged."    | A repaired file                     | **Details**                    |
 | "This PDF asks not to be changed."                                                       | Permissions forbid changes          | **Enter permissions password** |
-| "This PDF limits what can be done with it."                                               | Other permissions                   | **Enter permissions password** |
+| "This PDF limits what can be done with it."                                              | Other permissions                   | **Enter permissions password** |
 | "This PDF is signed. Reviewing keeps its signatures valid."                              | Certificate signatures, all intact  | **Signatures**                 |
 | "This PDF has changed since it was signed."                                              | A signature covers an earlier state | **Signatures**                 |
 | "This PDF has fields you can fill in."                                                   | Fields, opened in Viewing           | **Fill in** (enters Reviewing) |

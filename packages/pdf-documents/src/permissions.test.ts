@@ -54,7 +54,9 @@ describe('PdfPermissions', () => {
   it('forbids changes only where no kind of change is allowed', () => {
     const none = { changeContent: false, mark: false, fill: false, organise: false };
     expect(PdfPermissions.forbidsChanges({ ...PdfPermissions.all(), ...none })).toBe(true);
-    expect(PdfPermissions.forbidsChanges({ ...PdfPermissions.all(), ...none, fill: true })).toBe(false);
+    expect(PdfPermissions.forbidsChanges({ ...PdfPermissions.all(), ...none, fill: true })).toBe(
+      false,
+    );
     expect(PdfPermissions.forbidsChanges({ ...PdfPermissions.all(), copy: false })).toBe(false);
     expect(PdfPermissions.forbidsChanges(PdfPermissions.all())).toBe(false);
   });
