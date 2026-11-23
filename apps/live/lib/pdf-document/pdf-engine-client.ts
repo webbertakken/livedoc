@@ -20,6 +20,7 @@ import type {
   PageField,
   PageLink,
   PageMatrix,
+  PageTags,
   PageText,
   PdfEngine,
   PdfLayer,
@@ -74,6 +75,7 @@ const STOPPED = {
   outline: { items: [], cut: false } satisfies Outline,
   links: [] as readonly PageLink[],
   pageText: null,
+  pageTags: null,
   selectText: null,
   fileMarks: [] as readonly FileMark[],
   fields: [] as readonly PageField[],
@@ -170,6 +172,7 @@ export function pdfEngineClient(
       ask<PageMatrix | null>({ method: 'pageMatrix', args: [index, turns] }),
     links: (index) => ask<readonly PageLink[]>({ method: 'links', args: [index] }),
     pageText: (index) => ask<PageText | null>({ method: 'pageText', args: [index] }),
+    pageTags: (index) => ask<PageTags | null>({ method: 'pageTags', args: [index] }),
     selectText: (index, from, to) =>
       ask<TextSelection | null>({ method: 'selectText', args: [index, from, to] }),
     fileMarks: (index) => ask<readonly FileMark[]>({ method: 'fileMarks', args: [index] }),

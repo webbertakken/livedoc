@@ -12,15 +12,16 @@ function nameOf(error: unknown): string {
   return PLAIN_NAME.test(name) ? name : 'Error';
 }
 
-// What an answer hands over rather than copies: a page's pixels, and the boxes of its text. A baked file's bytes are
+// What an answer hands over rather than copies: a page's pixels, and the boxes and marked content of its text. A baked file's bytes are
 // copied, since a bake of no changes answers the stored file the engine itself still reads from.
 function transferOf(value: unknown): Transferable[] {
   if (typeof value !== 'object' || value === null) return [];
-  const { rgba, boxes } = value as {
+  const { rgba, boxes, marked } = value as {
     rgba?: { buffer: ArrayBuffer };
     boxes?: { buffer: ArrayBuffer };
+    marked?: { buffer: ArrayBuffer } | null;
   };
-  return [rgba, boxes].flatMap((held) => (held ? [held.buffer] : []));
+  return [rgba, boxes, marked].flatMap((held) => (held ? [held.buffer] : []));
 }
 
 /**

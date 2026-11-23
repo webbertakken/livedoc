@@ -1,8 +1,9 @@
 # Accessibility
 
-**Status: specified; a first slice is built.** Built: one landmark a page, named with its label, and each page near
-view reading its text as paragraphs rebuilt from the file's order, the same text Copy gives. Not built: the file's
-tags, a scanned page's words, marks in the tree, the tree's selection, unreadable text, the text caret.
+**Status: specified; partly built.** Built: one landmark a page, named with its label; each page near view reading
+the file's tags where they cover it, else its text as paragraphs rebuilt from the file's order, the same text Copy
+gives. Not built: a scanned page's words, fields and links in the tree, marks in the tree, the tree's selection,
+unreadable text, the text caret.
 
 A PDF page is a picture to a browser. This spec says what makes a [PDF document](pdf-document.md) readable by a
 screen reader and usable by keyboard alone, and what a written file keeps of its own accessibility. The bar is
@@ -27,8 +28,18 @@ Each page has real DOM behind its canvas, hidden from sight and exposed to assis
 - **Reading order rebuilt** is the page's text in the file's own order, joined into paragraphs exactly as Copy joins a
   whole page ([Reading surface](reading-surface.md#the-pages)): one paragraph element each, after the page's
   picture, visually hidden `(default)`.
-- Headings are headings at their level, lists are lists, tables are tables with their header cells, figures are
-  images with their alternative text, links are links with their target named, and **fields are real form controls**
+- **Tags cover a page** when the file is tagged, its structure tree reaches the page, and every drawn character of
+  the page sits either in content the tree reaches or in an artifact (a page number, a running header) `(default)`.
+  A page its tags do not wholly cover reads from geometry, so no text is ever left out.
+- **The file's tags** read in the tree's order, not the order the page draws them; a type the file maps to a
+  standard one (its role map) reads as that one; a type LiveDoc does not know reads as its content alone `(default)`.
+- An element's **replacement text** (`ActualText`) reads in place of its content; its language, where the file gives
+  one, is the element's own.
+- A tagged element's text is its content joined as Copy joins it, its line breaks read as spaces `(default)`.
+- Headings are headings at their level, a heading with no level (`H`) at level 2 `(default)`; lists are lists, tables
+  are tables with their header cells, a header cell a column's header where its row holds only header cells, else a
+  row's `(default)`; figures and formulas are images with their alternative text, a formula without it announced as
+  "Formula" `(default)`; links are links with their target named, and **fields are real form controls**
   with the field's name (its tooltip text where the file gives one, else its name) and its required and read-only
   state.
 - A figure without alternative text is announced as "Figure" and nothing more: LiveDoc never guesses a description.
@@ -116,6 +127,9 @@ none is pointer-only for one level and not another.
 | --------------------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
 | `PDF_TREE_MAX_NODES_A_PAGE` | 5,000 | `(default)` Past it the rest is joined into the last paragraph; a page of plans has tens of thousands of runs |
 
+- Tags with more elements on a page than `PDF_TREE_MAX_NODES_A_PAGE`, or nested deeper than `PDF_MAX_TREE_DEPTH`
+  ([Security](security.md#limits)), read from geometry `(default)`.
+
 ## Tests
 
 - Each corpus file with tags exposes its headings, lists, tables and figures as such; each untagged file exposes its
@@ -128,5 +142,8 @@ none is pointer-only for one level and not another.
 ## Telemetry and observability
 
 - No telemetry tells whether a person uses assistive technology.
-- Fingerprints: `[pdf] tree source=<tags|geometry|recognised|none> page=<n> nodes=<n>`, once a page's tree is built; `[pdf] claim-removed
-claim=<pdfua|pdfa> reason=<reason>`.
+- Fingerprints: `[pdf] tree source=<tags|geometry|recognised|none> page=<n> nodes=<n> tags=<used|absent|partial|cut>`,
+  once a page's tree is built (`tags` says why a page did or did not read from its tags);
+  `[pdf] page-tags-failed page=<n>` where the engine could not read a page's tags (the page reads from geometry);
+  `[pdf] claim-removed
+  claim=<pdfua|pdfa> reason=<reason>`.

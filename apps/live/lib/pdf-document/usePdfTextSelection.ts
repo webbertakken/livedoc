@@ -38,7 +38,7 @@ type Start = { page: number; anchor: number } | { page: number; corner: PagePoin
 const NO_SPANS: readonly TextSpan[] = [];
 
 export function usePdfTextSelection(
-  engine: Pick<PdfEngine, 'pageText'> | null,
+  engine: Pick<PdfEngine, 'pageText' | 'pageTags'> | null,
   pages: readonly PageInfo[] | null,
 ) {
   // A change of the pages reads them anew and clears what was selected on the old ones.

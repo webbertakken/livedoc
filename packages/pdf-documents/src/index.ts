@@ -64,6 +64,14 @@ export {
 export { PageView } from './page-view';
 export { PdfPermissions } from './permissions';
 export { LinkTarget, type PdfActionKind } from './link-target';
+export {
+  PageTags,
+  type TagElement,
+  type TagKid,
+  type TagNode,
+  type TagReading,
+  type TagsUnused,
+} from './page-tags';
 export { PageText, type TextBox } from './page-text';
 export { TextRange, type TextSpan } from './text-range';
 export { TextFind, type TextFindOptions } from './text-find';
