@@ -157,3 +157,21 @@ describe('LensField', () => {
     ).toBeTruthy();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md: the field is the field step at the body type; its pills the chip step at
+// the supporting type, regular.
+describe('LensField on the sizing scale', () => {
+  const has = (className: string, token: string) => className.split(/\s+/).includes(token);
+
+  it('draws the field at the field step and its pills at the chip step', () => {
+    const { container } = render(<Harness initial="template:kanban plan" />);
+    const input = screen.getByRole('combobox', { name: 'Filter documents' });
+    const box = input.parentElement!;
+    expect(has(box.className, 'h-field')).toBe(true);
+    expect(has(input.className, 'text-body')).toBe(true);
+    const pill = container.querySelector<HTMLElement>('[data-lens-pill]')!;
+    expect(has(pill.className, 'h-chip')).toBe(true);
+    expect(has(pill.className, 'text-supporting')).toBe(true);
+    expect(pill.className).not.toMatch(/font-(medium|semibold)/);
+  });
+});

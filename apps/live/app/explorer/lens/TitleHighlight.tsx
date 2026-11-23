@@ -27,7 +27,7 @@ export function TitleHighlightProvider({
 
 /** Underlined and bold as well as tinted, so a match never reads by colour alone. */
 const MARK_CLASS =
-  'rounded-[2px] bg-brand-100 font-semibold text-inherit underline decoration-brand-600 decoration-2 underline-offset-2 dark:bg-brand-500/25 dark:decoration-brand-300';
+  'rounded-none bg-brand-100 font-medium text-inherit underline decoration-brand-600 decoration-2 underline-offset-2 dark:bg-brand-500/25 dark:decoration-brand-300';
 
 /** A document's name with the matched characters marked. A screen reader reads the plain name once:
  *  the marked copy is hidden from it. */
