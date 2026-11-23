@@ -519,6 +519,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       'PdfDocumentPanelThumbnails',
       'PdfDocumentPanelOutline',
       'PdfDocumentPanelEmbeddedFiles',
+      'PdfDocumentPanelLayers',
     ],
   },
   // A text document's writing formatted (docs/specs/034-text-documents/text-and-paragraphs.md "Telemetry"), by the

@@ -705,3 +705,29 @@ describe('a PDF document’s embedded files', () => {
     expect(vi.mocked(downloadBlob).mock.calls.at(-1)![1]).toBe('notes.txt');
   });
 });
+
+// reading-surface.md "Layers".
+describe('a PDF document’s layers', () => {
+  afterEach(() => localStorage.clear());
+
+  it('opens from the rail and hides a layer for this person, for a Viewer too', async () => {
+    const now = await ready();
+    const layerView = vi.fn(async () => true);
+    const engine = {
+      layers: async () => [{ id: 'o:4', name: 'Plan', visible: true, locked: false }],
+      layerView,
+    };
+    show({ ...now, engine: engine as never }, 'view');
+    const rail = screen.getByRole('toolbar', { name: 'Panels' });
+    await act(async () => {
+      fireEvent.click(within(rail).getByRole('button', { name: 'Layers' }));
+    });
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentPanelLayers');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Plan' }));
+    });
+    expect(layerView).toHaveBeenCalledWith(['o:4']);
+    expect(track).toHaveBeenCalledWith('Pdf', 'Toggled', 'Layer.Hidden');
+    expect(screen.getByRole('button', { name: 'Plan' }).getAttribute('aria-pressed')).toBe('false');
+  });
+});

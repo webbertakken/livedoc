@@ -104,6 +104,8 @@ export const PANEL_THUMBNAILS = 'panel-thumbnails';
 export const PANEL_OUTLINE = 'panel-outline';
 /** View > Embedded files: the files the PDF carries (reading-surface.md "Embedded files"). */
 export const PANEL_EMBEDDED_FILES = 'panel-embedded-files';
+/** View > Layers: the file's PDF layers, shown or hidden for one person (reading-surface.md "Layers"). */
+export const PANEL_LAYERS = 'panel-layers';
 
 /** View > Zoom's percentages: Acrobat's own levels from 50% ("View"). */
 export const PDF_ZOOM_MENU_PERCENTS: readonly number[] = [
@@ -231,7 +233,7 @@ export const PDF_MENUS: OfficeCatalogue = [
       ...CHECK,
       keywords: ['attachments'],
     }),
-    item('panel-layers', 'Layers', 'view', CHECK),
+    item(PANEL_LAYERS, 'Layers', 'view', { ...BUILT, ...CHECK }),
     item('panel-signatures', 'Signatures', 'view', CHECK),
     item('panel-fields', 'Fields', 'view', { ...CHECK, keywords: ['form'] }),
     SEPARATOR,
