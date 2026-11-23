@@ -202,7 +202,7 @@ export function SequenceDialog({
 
       {/* The preview above the rows on a phone, beside them on a wide screen. By `order`, not a reversed column: a
           reversed column starts its scroll at the bottom, so the dialog would open on its last row. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overflow-x-hidden px-6 py-4 max-sm:px-4 md:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overflow-x-hidden px-6 py-4 max-sm:px-4 md:flex-row">
         <div className="order-2 min-w-0 flex-1 md:order-1">
           {tab === 'messages' ? (
             <div
@@ -233,7 +233,7 @@ export function SequenceDialog({
               data-tour-id="sequence-text"
             >
               <textarea
-                className="h-72 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-[13px] leading-relaxed text-slate-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-brand-500/30"
+                className="h-72 w-full resize-y rounded-control border border-slate-200 bg-white px-3 py-2 font-mono text-body text-slate-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-brand-500/30"
                 value={text}
                 spellCheck={false}
                 aria-label="The sequence, one line each"
@@ -246,7 +246,7 @@ export function SequenceDialog({
               />
               <p
                 id="sequence-text-help"
-                className="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400"
+                className="mt-1.5 text-supporting text-slate-500 dark:text-slate-400"
               >
                 One message per line: <code className="font-mono">From -&gt; To: words</code> for a
                 call, <code className="font-mono">~&gt;</code> for async,{' '}
@@ -256,7 +256,10 @@ export function SequenceDialog({
                 <code className="font-mono">//</code> are notes.
               </p>
               {unread.length > 0 || tooFew ? (
-                <p className="mt-1 text-xs text-amber-700 dark:text-amber-400" role="status">
+                <p
+                  className="mt-1 text-supporting text-amber-700 dark:text-amber-400"
+                  role="status"
+                >
                   {tooFew ? 'A diagram needs two participants. ' : ''}
                   {unread.length === 1
                     ? `Line ${unread[0]} was not read.`
@@ -274,12 +277,12 @@ export function SequenceDialog({
         >
           <div
             // Short on a phone, so the rows are in view under it.
-            className="relative mx-auto max-h-[360px] w-full max-w-[280px] overflow-hidden rounded-lg border border-slate-200 bg-white max-sm:max-h-40 dark:border-slate-700"
+            className="relative mx-auto max-h-[360px] w-full max-w-[280px] overflow-hidden rounded-menu border border-slate-200 bg-white max-sm:max-h-40 dark:border-slate-700"
             style={{ aspectRatio: preview.ratio }}
           >
             <SequenceFace element={preview.el} paper={PREVIEW_PAPER} />
           </div>
-          <figcaption className="mt-1.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
+          <figcaption className="mt-1.5 text-center text-supporting text-slate-500 dark:text-slate-400">
             Preview, as you type.
           </figcaption>
         </figure>
@@ -288,7 +291,7 @@ export function SequenceDialog({
       <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-6 py-4 max-sm:px-4 dark:border-slate-800">
         <label
           data-tour-id="sequence-numbered"
-          className="flex cursor-pointer items-center gap-2.5 text-[13px] text-slate-700 dark:text-slate-200"
+          className="flex cursor-pointer items-center gap-2 text-body text-slate-700 dark:text-slate-200"
         >
           <Switch
             size="sm"

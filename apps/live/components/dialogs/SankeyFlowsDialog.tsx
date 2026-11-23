@@ -206,7 +206,7 @@ export function SankeyFlowsDialog({
       >
         <label
           data-tour-id="sankey-import"
-          className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 focus-within:ring-2 focus-within:ring-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+          className="inline-flex min-h-row cursor-pointer items-center gap-1 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 focus-within:ring-2 focus-within:ring-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
         >
           Import CSV
           <input
@@ -224,12 +224,12 @@ export function SankeyFlowsDialog({
 
       {/* The preview above the rows on a phone, beside them on a wide screen. By `order`, not a reversed column: a
           reversed column starts its scroll at the bottom, so the dialog would open on its last row. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overflow-x-hidden px-6 py-4 md:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overflow-x-hidden px-6 py-4 md:flex-row">
         <div className="order-2 min-w-0 flex-1 md:order-1">
           {importNote ? (
             <p
               role="status"
-              className="mb-3 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300"
+              className="mb-3 rounded-control bg-slate-50 px-3 py-2 text-supporting text-slate-600 dark:bg-slate-800/60 dark:text-slate-300"
             >
               {importNote}
             </p>
@@ -269,7 +269,7 @@ export function SankeyFlowsDialog({
               data-tour-id="sankey-text"
             >
               <textarea
-                className="h-64 w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-[13px] leading-relaxed text-slate-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-brand-500/30"
+                className="h-64 w-full resize-y rounded-control border border-slate-200 bg-white px-3 py-2 font-mono text-body text-slate-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-brand-500/30"
                 value={text}
                 spellCheck={false}
                 aria-label="Flows, one per line"
@@ -280,14 +280,17 @@ export function SankeyFlowsDialog({
               />
               <p
                 id="sankey-text-help"
-                className="mt-1.5 text-xs text-slate-500 dark:text-slate-400"
+                className="mt-1.5 text-supporting text-slate-500 dark:text-slate-400"
               >
                 One flow per line: <code className="font-mono">From [amount] To</code>. Also reads{' '}
                 <code className="font-mono">From -&gt; To: amount</code> and spreadsheet rows (From,
                 To, Amount). Lines starting with <code className="font-mono">//</code> are notes.
               </p>
               {unread.length > 0 ? (
-                <p className="mt-1 text-xs text-amber-700 dark:text-amber-400" role="status">
+                <p
+                  className="mt-1 text-supporting text-amber-700 dark:text-amber-400"
+                  role="status"
+                >
                   {unread.length === 1
                     ? `Line ${unread[0]} was not read.`
                     : `Lines ${unread.slice(0, 6).join(', ')}${unread.length > 6 ? '…' : ''} were not read.`}{' '}
@@ -299,12 +302,10 @@ export function SankeyFlowsDialog({
           {notes.length > 0 ? (
             <div
               data-tour-id="sankey-balance"
-              className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10"
+              className="mt-4 rounded-control border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10"
             >
-              <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
-                In and out differ
-              </p>
-              <ul className="mt-1 list-disc pl-4 text-xs text-amber-800 dark:text-amber-300">
+              <p className="text-body text-amber-800 dark:text-amber-300">In and out differ</p>
+              <ul className="mt-1 list-disc pl-4 text-supporting text-amber-800 dark:text-amber-300">
                 {notes.slice(0, 6).map((n) => (
                   <li key={n}>{n}</li>
                 ))}
@@ -318,7 +319,7 @@ export function SankeyFlowsDialog({
         >
           <div
             // Paper in both appearances: the labels are drawn in one ink, so the preview keeps one ground.
-            className="relative mx-auto w-full max-w-[300px] rounded-lg border border-slate-200 bg-white dark:border-slate-700"
+            className="relative mx-auto w-full max-w-[300px] rounded-menu border border-slate-200 bg-white dark:border-slate-700"
             style={{ aspectRatio: `${preview.width} / ${preview.height}` }}
           >
             <SankeyView
@@ -328,7 +329,7 @@ export function SankeyFlowsDialog({
               editable={false}
             />
           </div>
-          <figcaption className="mt-1.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
+          <figcaption className="mt-1.5 text-center text-supporting text-slate-500 dark:text-slate-400">
             Preview. Hover a band or a node to read it.
           </figcaption>
         </figure>

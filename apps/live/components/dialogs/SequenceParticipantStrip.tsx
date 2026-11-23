@@ -31,7 +31,7 @@ function ParticipantGlyph({ actor }: { actor?: boolean }) {
     <svg
       aria-hidden
       viewBox="0 0 16 16"
-      className="h-3.5 w-3.5 shrink-0"
+      className="size-icon-row shrink-0"
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
@@ -50,13 +50,13 @@ function ParticipantGlyph({ actor }: { actor?: boolean }) {
 }
 
 const CHIP =
-  'inline-flex h-8 max-w-[13rem] cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[13px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400';
+  'inline-flex h-field max-w-[13rem] cursor-pointer items-center gap-1 rounded-full border px-3 text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400';
 const CHIP_IDLE =
   'border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15';
 const CHIP_OPEN =
   'border-brand-400 bg-brand-50 text-brand-800 ring-2 ring-brand-200 dark:border-brand-500/70 dark:bg-brand-500/15 dark:text-brand-100 dark:ring-brand-500/30';
 const TOOL =
-  'touch-target relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-500 transition enabled:hover:bg-white enabled:hover:text-slate-800 disabled:cursor-default disabled:opacity-35 dark:text-slate-400 dark:enabled:hover:bg-slate-700 dark:enabled:hover:text-slate-100';
+  'touch-target relative flex size-row cursor-pointer items-center justify-center rounded-control text-slate-500 transition enabled:hover:bg-white enabled:hover:text-slate-800 disabled:cursor-default disabled:opacity-35 dark:text-slate-400 dark:enabled:hover:bg-slate-700 dark:enabled:hover:text-slate-100';
 
 export function SequenceParticipantStrip({
   participants,
@@ -127,10 +127,10 @@ export function SequenceParticipantStrip({
   const uses = open ? messageCount(open.id) : 0;
   return (
     <section aria-label="Participants" className="mb-4" data-tour-id="sequence-participants">
-      <p className="mb-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+      <p className="mb-1.5 text-supporting text-slate-500 dark:text-slate-400">
         Participants <span className="font-normal">· left to right; click one to change it</span>
       </p>
-      <ul className="flex flex-wrap gap-1.5">
+      <ul className="flex flex-wrap gap-2">
         {participants.map((p) => (
           <li key={p.id}>
             <button
@@ -161,12 +161,12 @@ export function SequenceParticipantStrip({
         <div
           role="group"
           aria-label={`Change ${open.label || open.id}`}
-          className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/60"
+          className="mt-2 flex flex-wrap items-center gap-2 rounded-menu border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/60"
         >
           <input
             ref={nameRef}
             autoFocus
-            className="h-8 min-w-0 flex-1 basis-40 rounded-md border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-brand-500/30"
+            className="h-field min-w-0 flex-1 basis-40 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-800 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-brand-500/30"
             value={draft}
             maxLength={SEQ_PARTICIPANT_LABEL_MAX}
             aria-label="Participant name"
@@ -189,7 +189,7 @@ export function SequenceParticipantStrip({
           <div
             role="radiogroup"
             aria-label="Look"
-            className="flex rounded-md border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-800"
+            className="flex rounded-control border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-800"
           >
             {[false, true].map((actor) => {
               const on = !!open.actor === actor;
@@ -200,9 +200,9 @@ export function SequenceParticipantStrip({
                   role="radio"
                   aria-checked={on}
                   onClick={() => !on && patch((p) => ({ ...p, actor: actor || undefined }))}
-                  className={`flex h-7 cursor-pointer items-center gap-1.5 rounded px-2 text-xs font-medium transition ${
+                  className={`flex h-row cursor-pointer items-center gap-1 rounded-control px-2 text-body transition ${
                     on
-                      ? `bg-brand-700 text-white ${SOLID_BRAND_DARK}`
+                      ? `font-medium bg-brand-700 text-white ${SOLID_BRAND_DARK}`
                       : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >

@@ -37,7 +37,13 @@ const KIND_HINT: Record<SequenceMessageKindName, string> = {
 /** The arrow a kind draws: solid with a filled head, solid with an open head, dashed with an open head. */
 function KindArrow({ kind }: { kind: SequenceMessageKindName }) {
   return (
-    <svg aria-hidden viewBox="0 0 28 12" className="h-3 w-7" fill="none" stroke="currentColor">
+    <svg
+      aria-hidden
+      viewBox="0 0 28 12"
+      className="h-icon-chevron w-7"
+      fill="none"
+      stroke="currentColor"
+    >
       <path
         d="M2 6h21"
         strokeWidth={1.6}
@@ -54,15 +60,15 @@ function KindArrow({ kind }: { kind: SequenceMessageKindName }) {
 }
 
 const WORDS =
-  'h-9 w-full min-w-0 rounded-md border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:ring-brand-500/30';
+  'h-field w-full min-w-0 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:ring-brand-500/30';
 const ROW_TOOL =
-  'touch-target relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-400 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:cursor-default disabled:opacity-30 dark:enabled:hover:bg-slate-800 dark:enabled:hover:text-slate-200';
+  'touch-target relative flex size-row cursor-pointer items-center justify-center rounded-control text-slate-400 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:cursor-default disabled:opacity-30 dark:enabled:hover:bg-slate-800 dark:enabled:hover:text-slate-200';
 // Move Up and Move Down show on a row's hover or focus with a mouse, and always on a touch screen. On a phone the
 // words and these tools take a second line, so From and To share the first line at equal widths.
 const REVEAL =
   'opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100';
 const ADD_ROW =
-  'flex w-full items-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-white/60 px-3 py-2 text-left text-[13px] font-medium text-slate-600 transition enabled:cursor-pointer enabled:hover:border-brand-400 enabled:hover:bg-brand-50 enabled:hover:text-brand-700 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-300 dark:enabled:hover:border-brand-500/60 dark:enabled:hover:bg-brand-500/15 dark:enabled:hover:text-brand-200';
+  'flex min-h-field w-full items-center gap-1 rounded-control border border-dashed border-slate-300 bg-white/60 px-3 text-left text-body text-slate-600 transition enabled:cursor-pointer enabled:hover:border-brand-400 enabled:hover:bg-brand-50 enabled:hover:text-brand-700 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-300 dark:enabled:hover:border-brand-500/60 dark:enabled:hover:bg-brand-500/15 dark:enabled:hover:text-brand-200';
 
 export function SequenceMessageList({
   participants,
@@ -108,7 +114,7 @@ export function SequenceMessageList({
 
   return (
     <section aria-label="Messages" data-tour-id="sequence-messages">
-      <p className="mb-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+      <p className="mb-1.5 text-supporting text-slate-500 dark:text-slate-400">
         Messages <span className="font-normal">· top to bottom; Enter adds the next</span>
       </p>
       {messages.length === 0 ? (
@@ -117,10 +123,10 @@ export function SequenceMessageList({
           icon={<KindArrow kind="call" />}
           title="No messages yet"
           description="Add the first one: who calls whom, and what they say."
-          className="mb-2 rounded-lg border border-slate-100 dark:border-slate-800"
+          className="mb-2 rounded-menu border border-slate-100 dark:border-slate-800"
         />
       ) : (
-        <ol className="flex flex-col gap-1.5">
+        <ol className="flex flex-col gap-2">
           {messages.map((m, i) => {
             const n = i + 1;
             const next: SequenceMessageKindName =
@@ -128,11 +134,11 @@ export function SequenceMessageList({
             return (
               <li
                 key={i}
-                className="group grid grid-cols-[1.25rem_minmax(0,1fr)_2.5rem_minmax(0,1fr)] items-center gap-x-1.5 gap-y-1.5 rounded-lg px-1 py-1 transition hover:bg-slate-50 focus-within:bg-slate-50 sm:grid-cols-[1.25rem_6.5rem_2.5rem_6.5rem_minmax(0,1fr)_auto] dark:hover:bg-slate-800/50 dark:focus-within:bg-slate-800/50"
+                className="group grid grid-cols-[1.25rem_minmax(0,1fr)_2.5rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2 rounded-control px-1 py-1 transition hover:bg-slate-50 focus-within:bg-slate-50 sm:grid-cols-[1.25rem_6.5rem_2.5rem_6.5rem_minmax(0,1fr)_auto] dark:hover:bg-slate-800/50 dark:focus-within:bg-slate-800/50"
               >
                 <span
                   aria-hidden
-                  className="text-right text-xs font-medium tabular-nums text-slate-500 dark:text-slate-400"
+                  className="text-right text-supporting tabular-nums text-slate-500 dark:text-slate-400"
                 >
                   {n}
                 </span>
@@ -140,7 +146,7 @@ export function SequenceMessageList({
                   <Select
                     key={end}
                     className={`min-w-0 ${end === 'to' ? 'order-4' : 'order-2'}`}
-                    selectClassName="h-9 !text-sm"
+                    selectClassName="h-field"
                     aria-label={`Message ${n} ${end}`}
                     value={m[end]}
                     onChange={(e) => onCommit(set(i, { [end]: e.target.value }))}
@@ -159,7 +165,7 @@ export function SequenceMessageList({
                     // The first message's kind, where the Sequence tour points (docs/specs/007-editor/element-tours.md).
                     data-tour-id={i === 0 ? 'sequence-kind' : undefined}
                     onClick={() => onCommit(set(i, { kind: next }))}
-                    className={`order-3 flex h-9 cursor-pointer items-center justify-center rounded-md border transition ${
+                    className={`order-3 flex h-field cursor-pointer items-center justify-center rounded-control border transition ${
                       m.kind === 'reply'
                         ? 'border-slate-200 text-slate-500 hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:text-slate-400'
                         : 'border-brand-200 bg-brand-50 text-brand-700 hover:border-brand-400 dark:border-brand-500/40 dark:bg-brand-500/15 dark:text-brand-200'
@@ -241,7 +247,7 @@ export function SequenceMessageList({
       >
         <PlusIcon />
         Add Message
-        <span className="ml-auto text-[11px] font-normal tabular-nums text-slate-500 dark:text-slate-400">
+        <span className="ml-auto text-supporting tabular-nums text-slate-500 dark:text-slate-400">
           {messages.length} of {SEQ_MESSAGES_MAX}
         </span>
       </button>
