@@ -23,6 +23,8 @@ import type { TextDocument } from '../model/text-document';
 import type { PictureColouring } from '../model/picture-colours';
 import { R_NS } from './ooxml-names';
 import { ooxmlColouringOf, ooxmlColouringXml } from './ooxml-picture-colours';
+import { ooxmlAnchorParts, ooxmlPlacementOf } from './ooxml-picture-placement';
+import type { PicturePlacement } from '../model/picture-placement';
 
 export const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 export const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -158,7 +160,7 @@ function plainShape(spPr: XmlElement): { rotation: number | undefined } | undefi
 /** What a picture's drawing holds beyond the run around it. */
 export type OoxmlPictureRead = Pick<
   Picture,
-  'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop' | 'rotation'
+  'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop' | 'rotation' | 'placement'
 > &
   PictureColouring;
 
@@ -170,15 +172,28 @@ export function readOoxmlPicture(
   drawing: XmlElement,
   mediaOf: (relationshipId: string) => FoundMedia | undefined,
   taken: MediaTaken,
+  placeable = false,
 ): OoxmlPictureRead | undefined {
-  const [inline, ...rest] = childElements(drawing);
-  if (!inline || rest.length > 0 || !is(inline, WP_NS, 'inline')) return undefined;
-  if (!only(inline, (a) => unqualified('distT', 'distB', 'distL', 'distR')(a) || a.uri === WP14_NS))
-    return undefined;
+  const [frame, ...rest] = childElements(drawing);
+  if (!frame || rest.length > 0) return undefined;
+  let placement: PicturePlacement | undefined;
+  let children: XmlElement[];
+  if (is(frame, WP_NS, 'inline')) {
+    if (
+      !only(frame, (a) => unqualified('distT', 'distB', 'distL', 'distR')(a) || a.uri === WP14_NS)
+    )
+      return undefined;
+    children = childElements(frame);
+  } else if (placeable && is(frame, WP_NS, 'anchor')) {
+    const placed = ooxmlPlacementOf(frame);
+    if (!placed) return undefined;
+    placement = placed.placement;
+    children = placed.children;
+  } else return undefined;
   let size: { width: number; height: number } | undefined;
   let named: ReturnType<typeof docPrOf>;
   let pic: XmlElement | undefined;
-  for (const c of childElements(inline)) {
+  for (const c of children) {
     if (is(c, WP_NS, 'extent')) {
       const width = emuToPt(attributeOf(c, '', 'cx'));
       const height = emuToPt(attributeOf(c, '', 'cy'));
@@ -219,6 +234,7 @@ export function readOoxmlPicture(
     ...size,
     ...named,
     ...(fill!.crop ? { crop: fill!.crop } : {}),
+    ...(placement ? { placement } : {}),
     ...(fill!.recolour ? { recolour: fill!.recolour } : {}),
     ...(fill!.transparency ? { transparency: fill!.transparency } : {}),
     ...(fill!.brightness ? { brightness: fill!.brightness } : {}),
@@ -247,7 +263,10 @@ function effectExtentOf(picture: Picture): string {
   return `<wp:effectExtent l="${across}" t="${down}" r="${across}" b="${down}"/>`;
 }
 
-/** A picture in line as Word writes one: `rPr` the run's formatting, `embed` its media's relationship, `id` its number. */
+/**
+ * A picture in line, or placed, as Word writes one: `rPr` the run's formatting, `embed` its media's relationship, `id`
+ * its number (and the order a placed one overlaps others in).
+ */
 export function ooxmlPictureXml(picture: Picture, rPr: string, embed: string, id: number): string {
   const cx = ptToEmu(picture.width);
   const cy = ptToEmu(picture.height);
@@ -259,10 +278,18 @@ export function ooxmlPictureXml(picture: Picture, rPr: string, embed: string, id
   const crop = Pictures.crop(picture.crop);
   const rotation = Pictures.rotation(picture.rotation);
   const blipEffects = ooxmlColouringXml(picture);
+  const frame = picture.placement
+    ? { ...ooxmlAnchorParts(picture.placement, id), close: '</wp:anchor>' }
+    : {
+        open: `<wp:inline xmlns:wp="${WP_NS}" distT="0" distB="0" distL="0" distR="0">`,
+        position: '',
+        wrap: '',
+        close: '</wp:inline>',
+      };
   const srcRect = crop
     ? `<a:srcRect l="${thousandths(crop.left)}" t="${thousandths(crop.top)}" r="${thousandths(crop.right)}" b="${thousandths(crop.bottom)}"/>`
     : '';
-  return `<w:r>${rPr}<w:drawing><wp:inline xmlns:wp="${WP_NS}" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>${effectExtentOf(picture)}${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"${blipEffects ? `>${blipEffects}</a:blip>` : '/>'}${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rotation ? ` rot="${Math.round(rotation * ROTATION_UNITS)}"` : ''}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+  return `<w:r>${rPr}<w:drawing>${frame.open}${frame.position}<wp:extent cx="${cx}" cy="${cy}"/>${effectExtentOf(picture)}${frame.wrap}${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"${blipEffects ? `>${blipEffects}</a:blip>` : '/>'}${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rotation ? ` rot="${Math.round(rotation * ROTATION_UNITS)}"` : ''}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>${frame.close}</w:drawing></w:r>`;
 }
 
 const isImage = (r: Relationship) => r.type === RELATIONSHIP_TYPES.image && !r.external;

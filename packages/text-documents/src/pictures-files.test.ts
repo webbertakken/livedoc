@@ -17,6 +17,7 @@ import { docx, fodt, W_P } from './testing/packages';
 import { BLUE_PNG, BLUE_PNG_SHA, GREEN_PNG, GREEN_PNG_SHA, solidPng } from './testing/pictures';
 import {
   ADEC,
+  ALIGNED_ANCHOR,
   R_NS,
   IMAGE_REL,
   LO_FRAME,
@@ -143,7 +144,7 @@ describe('a picture read from a file', () => {
   });
 
   it.each([
-    ['anchored', wordPicture({ anchor: true })],
+    ['placed by alignment', wordPicture({ anchor: ALIGNED_ANCHOR })],
     ['flipped', wordPicture({ xfrm: ' flipH="1"' })],
     [
       'outlined',
@@ -205,7 +206,7 @@ describe('a picture read from a file', () => {
   });
 
   it.each([
-    ['anchored to the paragraph', LO_FRAME({ anchor: 'paragraph' })],
+    ['anchored to the page', LO_FRAME({ anchor: 'page' })],
     ['scaled', LO_FRAME({ attrs: ' draw:transform="scale (2 1) rotate (0.52)"' })],
     ['skewed', LO_FRAME({ attrs: ' draw:transform="skewX (0.2)"' })],
     ['transformed by a matrix', LO_FRAME({ attrs: ' draw:transform="matrix (1 0 0 1 0 0)"' })],
@@ -250,7 +251,7 @@ describe('a picture read from a file', () => {
 
 describe('an entry kept content still names', () => {
   it('stays kept in a Word file, written once, its picture held too', async () => {
-    const document = await read(wordDocx(wordPicture() + wordPicture({ anchor: true })));
+    const document = await read(wordDocx(wordPicture() + wordPicture({ anchor: ALIGNED_ANCHOR })));
     expect(inlinesOf(document).map((i) => i.type)).toEqual(['picture', 'kept']);
     const source = document.source?.format === 'ooxml' ? document.source : undefined;
     expect(source?.parts.map((p) => p.name)).toContain('word/media/image2.png');
@@ -266,7 +267,7 @@ describe('an entry kept content still names', () => {
   });
 
   it('stays kept in an OpenDocument file, written once, its picture held too', async () => {
-    const document = await read(loOdt(LO_FRAME() + LO_FRAME({ anchor: 'paragraph' })));
+    const document = await read(loOdt(LO_FRAME() + LO_FRAME({ anchor: 'page' })));
     expect(inlinesOf(document).map((i) => i.type)).toEqual(['picture', 'kept']);
     const bytes = write(document, 'odt');
     const pkg = await readOdfPackage(new Uint8Array(bytes));

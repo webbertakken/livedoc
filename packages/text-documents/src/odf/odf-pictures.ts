@@ -28,6 +28,14 @@ import {
 import type { PictureColouring } from '../model/picture-colours';
 import { NS } from './odf-names';
 import { isOdfColouring, odfColouringAttributes, odfColouringOf } from './odf-picture-colours';
+import {
+  isOdfPlacement,
+  ODF_PLACED_ANCHORS,
+  odfPlacementFrame,
+  odfPlacementOf,
+  odfPlacementProperties,
+} from './odf-picture-placement';
+import type { PicturePlacement } from '../model/picture-placement';
 
 /** The media of each `draw:image` a read may hold as a picture's, by element. */
 export type OdfPictureLookup = ReadonlyMap<XmlElement, FoundMedia>;
@@ -148,12 +156,27 @@ function clipOf(value: string): number[] | undefined {
 
 const round4 = (n: number) => Math.round(n * 10_000) / 10_000;
 
-type GraphicRead = ({ crop?: PictureCrop; decorative?: true } & PictureColouring) | undefined;
+type GraphicRead =
+  | ({ crop?: PictureCrop; decorative?: true; placement?: PicturePlacement } & PictureColouring)
+  | undefined;
 
-/** What the frame's automatic graphic style gives the picture, or undefined when it gives it any other look. */
-function graphicOf(style: XmlElement | undefined, own: FoundMedia['own']): GraphicRead {
-  if (!style) return {};
+/**
+ * What the frame's automatic graphic style gives the picture, or undefined when it gives it any other look; a placed
+ * frame's (`placed`) its placement too.
+ */
+function graphicOf(
+  style: XmlElement | undefined,
+  own: FoundMedia['own'],
+  placed?: XmlElement,
+): GraphicRead {
   const colouring = new Map<string, string>();
+  const placing = new Map<string, string>();
+  const placement = placed && (() => odfPlacementOf(placed, placing));
+  if (!style) {
+    if (!placement) return {};
+    const at = placement();
+    return at ? { placement: at } : undefined;
+  }
   let crop: PictureCrop | undefined;
   let decorative: true | undefined;
   for (const c of childElements(style)) {
@@ -173,6 +196,7 @@ function graphicOf(style: XmlElement | undefined, own: FoundMedia['own']): Graph
         if (!Pictures.isCrop(read)) return undefined;
         crop = Pictures.crop(read);
       } else if (isOdfColouring(a)) colouring.set(a.local, a.value);
+      else if (placed && isOdfPlacement(a)) placing.set(a.local, a.value);
       else if (a.uri === NS.loext && a.local === 'decorative') {
         if (a.value === 'true') decorative = true;
         else if (a.value !== 'false') return undefined;
@@ -182,13 +206,20 @@ function graphicOf(style: XmlElement | undefined, own: FoundMedia['own']): Graph
   }
   const coloured = odfColouringOf(colouring);
   if (!coloured) return undefined;
-  return { ...(crop ? { crop } : {}), ...(decorative ? { decorative } : {}), ...coloured };
+  const placedAt = placement?.();
+  if (placement && !placedAt) return undefined;
+  return {
+    ...(crop ? { crop } : {}),
+    ...(decorative ? { decorative } : {}),
+    ...coloured,
+    ...(placedAt ? { placement: placedAt } : {}),
+  };
 }
 
 /** What a picture's frame holds beyond the run around it. */
 export type OdfPictureRead = Pick<
   Picture,
-  'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop' | 'rotation'
+  'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop' | 'rotation' | 'placement'
 > &
   PictureColouring;
 
@@ -232,13 +263,17 @@ export function readOdfPicture(
   graphicStyle: (name: string) => XmlElement | undefined,
   lookup: OdfPictureLookup,
   taken: MediaTaken,
+  placeable = false,
 ): OdfPictureRead | undefined {
   if (frame.uri !== NS.draw || frame.local !== 'frame') return undefined;
-  if (attributeOf(frame, NS.text, 'anchor-type') !== 'as-char') return undefined;
+  const anchor = attributeOf(frame, NS.text, 'anchor-type') ?? '';
+  const placed = placeable && ODF_PLACED_ANCHORS.has(anchor);
+  if (anchor !== 'as-char' && !placed) return undefined;
   for (const a of frame.attributes) {
     const known =
       [NS.draw, NS.text, NS.svg, NS.xml].includes(a.uri as never) && FRAME_NEUTRAL.has(a.local);
-    const onBaseline = a.uri === NS.svg && (a.local === 'x' || a.local === 'y') && zero(a.value);
+    const offset = a.uri === NS.svg && (a.local === 'x' || a.local === 'y');
+    const onBaseline = offset && (placed || zero(a.value));
     const turn = a.uri === NS.draw && a.local === 'transform';
     if (!known && !onBaseline && !turn) return undefined;
   }
@@ -275,6 +310,7 @@ export function readOdfPicture(
   const graphic = graphicOf(
     styleName === undefined ? undefined : graphicStyle(styleName),
     found.own,
+    placed ? frame : undefined,
   );
   if (!graphic || !taken.take(found)) return undefined;
   return {
@@ -300,7 +336,10 @@ export function odfPictureStyle(picture: Picture, media: HeldPictureMedia): stri
       ? ` fo:clip="rect(${[crop.top * own.height, crop.right * own.width, crop.bottom * own.height, crop.left * own.width].map(ptToOdf).join(', ')})"`
       : '';
   const decorative = picture.decorative ? ` ${LOEXT} loext:decorative="true"` : '';
-  return `<style:graphic-properties style:vertical-pos="top" style:vertical-rel="baseline"${clip}${odfColouringAttributes(picture)}${decorative}/>`;
+  const placed = picture.placement
+    ? odfPlacementProperties(picture.placement)
+    : 'style:vertical-pos="top" style:vertical-rel="baseline"';
+  return `<style:graphic-properties ${placed}${clip}${odfColouringAttributes(picture)}${decorative}/>`;
 }
 
 /**
@@ -345,5 +384,5 @@ export function odfPictureXml(
     : ` xlink:href="${escapeXmlAttribute(odfMediaEntry(picture.media, media))}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"`;
   const title = picture.title ? `<svg:title>${escapeXmlText(picture.title)}</svg:title>` : '';
   const desc = picture.alt ? `<svg:desc>${escapeXmlText(picture.alt)}</svg:desc>` : '';
-  return `<draw:frame draw:style-name="${escapeXmlAttribute(style)}" draw:name="${escapeXmlAttribute(name)}" text:anchor-type="as-char" svg:width="${ptToOdf(picture.width)}" svg:height="${ptToOdf(picture.height)}" draw:z-index="0"${odfTransformOf(picture)}><draw:image${href} draw:mime-type="${media.mediaType}">${source}</draw:image>${title}${desc}</draw:frame>`;
+  return `<draw:frame draw:style-name="${escapeXmlAttribute(style)}" draw:name="${escapeXmlAttribute(name)}" ${picture.placement ? odfPlacementFrame(picture.placement) : 'text:anchor-type="as-char"'} svg:width="${ptToOdf(picture.width)}" svg:height="${ptToOdf(picture.height)}" draw:z-index="0"${odfTransformOf(picture)}><draw:image${href} draw:mime-type="${media.mediaType}">${source}</draw:image>${title}${desc}</draw:frame>`;
 }
