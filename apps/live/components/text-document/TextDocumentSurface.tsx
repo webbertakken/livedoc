@@ -335,6 +335,9 @@ export function TextDocumentSurface({
             schema: textDocumentSchema,
             plugins: [
               ySyncPlugin(TextDocumentState.body(doc)),
+              // A picture cropped after a double-click or Crop image (objects.md "Working with a picture"): before the
+              // keymaps, so Enter and Escape end cropping rather than reaching the writing.
+              pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
               // Columns and rows resized by dragging their borders (tables.md "Working in a table"): before the cells'
               // selecting, so a press on a border selects no cells.
               tableResizePlugin(),
@@ -355,8 +358,6 @@ export function TextDocumentSurface({
               }),
               // Picture files pasted or dropped, before the clipboard reads the rest (objects.md "Inserting").
               picturePastePlugin((files, source) => takePictureFiles.current(files, source)),
-              // A picture cropped after a double-click or Crop image (objects.md "Working with a picture").
-              pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
               // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
               clipboardPlugin({
                 read: () => ({
