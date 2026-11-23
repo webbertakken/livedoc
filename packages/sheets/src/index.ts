@@ -35,6 +35,8 @@ export * from './sheet-text';
 export * from './filter';
 export * from './find';
 export * from './clipboard';
+export * from './clipboard-html';
+export * from './clipboard-read';
 export * from './selection';
 export * from './commands';
 export * from './commands-axis';

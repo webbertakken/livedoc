@@ -13,6 +13,7 @@ import {
   pasteClip,
   pasteCut,
   pasteClipLayout,
+  pasteWithRules,
   pasteExternal,
   readPastedHtml,
   parsePastedText,
@@ -86,7 +87,14 @@ export function useSheetClipboard() {
 
     const pasteOwn = (clip: SheetClip, mode: PasteMode) => {
       const at = primary();
-      if (clip.cut && mode === 'all') {
+      // An Editor's plain paste carries the copied cells' rules (D155); a Participant's lands as values.
+      if (mode === 'all' && c.canShape) {
+        apply(c, pasteWithRules(c.workbook, c.sheet.id, at, clip));
+        if (clip.cut) {
+          lastClip = null;
+          c.setMarquee(null);
+        }
+      } else if (clip.cut && mode === 'all') {
         apply(c, pasteCut(c.workbook, c.sheet.id, { r: at.r1, c: at.c1 }, clip));
         lastClip = null;
         c.setMarquee(null);
@@ -115,7 +123,11 @@ export function useSheetClipboard() {
       if (clip && clip.v === 1) return pasteOwn(clip, mode);
       const fromHtml = html ? readPastedHtml(html) : null;
       if (fromHtml)
-        return apply(c, pasteExternal(c.workbook, c.sheet.id, primary(), fromHtml, mode));
+        return apply(
+          c,
+          // Google's and Excel's spanning cells merge for an Editor (D154).
+          pasteExternal(c.workbook, c.sheet.id, primary(), fromHtml, mode, { merges: c.canShape }),
+        );
       if (!text) return;
       const parsed = parsePastedText(text);
       apply(

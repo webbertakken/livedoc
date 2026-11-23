@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './testing/book';
 import { applySheetWrite, type SheetWrite } from './store';
-import { clipFromRange, clipToHtml, clipToTsv, readPastedHtml, readPastedText } from './clipboard';
+import { clipFromRange, clipToTsv, readPastedText } from './clipboard';
+import { clipToHtml } from './clipboard-html';
+import { readPastedHtml } from './clipboard-read';
 import { pasteClip, pasteCut, pasteExternal } from './commands-paste';
 import { readRange, writeRows } from './a1-io';
 import { findMatches, replaceAll } from './find';
@@ -59,7 +61,7 @@ describe('copy and paste', () => {
     ).toBe('a\t"b\tc"\n""""\t');
     const html = clipToHtml(clip);
     expect(html).toContain(
-      `<td style="font-weight:bold;font-style:italic;text-decoration:underline line-through;color:#ff0000;background-color:#00ff00;text-align:center;font-family:'Space Grotesk';font-size:14pt">2</td>`,
+      `<td data-sheets-formula="=R[0]C[-1]*2" style="font-weight:bold;font-style:italic;text-decoration:underline line-through;color:#ff0000;background-color:#00ff00;text-align:center;font-family:'Space Grotesk';font-size:14pt">2</td>`,
     );
     const p = pasteClip(b.wb, id, { r1: 4, c1: 0, r2: 4, c2: 0 }, clip, 'all', seeded())!;
     apply(b, id, p.edits[0]!.write);
@@ -97,7 +99,7 @@ describe('copy and paste', () => {
         ['4', '5', '6'],
       ],
       'all',
-      seeded(),
+      { rand: seeded() },
     )!;
     apply(b, id, big.edits[0]!.write);
     expect(b.sheets[0]!.layout.rows).toHaveLength(4);
@@ -109,7 +111,9 @@ describe('copy and paste', () => {
     const b = book({ A1: '7' }, { rows: 3, cols: 2 });
     const id = b.sheets[0]!.id;
     const rows = Array.from({ length: 150_000 }, (_, i) => [String(i)]);
-    const pasted = pasteExternal(b.wb, id, { r1: 0, c1: 0, r2: 0, c2: 0 }, rows, 'all', seeded());
+    const pasted = pasteExternal(b.wb, id, { r1: 0, c1: 0, r2: 0, c2: 0 }, rows, 'all', {
+      rand: seeded(),
+    });
     expect(pasted?.truncated).toBe(true);
   });
   it('moves cut cells, and formulas follow them', () => {

@@ -108,8 +108,8 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
   - The offer shows each text in grey in its empty cell, and a card by the edited cell: **Smart Fill**, "Fill N
     cells with the pattern", **Accept** (Ctrl+Enter) and **Dismiss** (Escape); any other key in the grid, a press on
     its cells or another edit ends it (default, D150).
-  - Accepting writes the texts as if typed into the cells still empty, one undo step; an Editor and a Participant get offers, a Viewer never
-    (default, D150).
+  - Accepting writes the texts as if typed into the cells still empty, one undo step; an Editor and a Participant
+    get offers, a Viewer never (default, D150).
 - Dragging a selection's border moves its cells (references to them follow); Ctrl (⌥ on Apple devices) while
   dropping copies them, formulas shifting as a paste shifts them.
   - A mouse grabs one range by its edge, never at the fill handle, under a hand; the drag outlines where the block
@@ -123,8 +123,17 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 
 - Cut, copy and paste within and between spreadsheets keep inputs, formats, validation and format rules; references
   shift as Google's do, absolute parts stay.
+  - A paste sets the copied cells' rules again over the pasted cells as Paste Special's rule items do (D143); a cut's
+    rules lying wholly over the cut cells leave their old place, others stay; an Editor's paste only (default, D155).
 - Paste from Google Sheets and Excel reads their HTML clipboard (formats, merges) and TSV; paste to them writes the
-  same, so values, formats and formulas cross both ways (formulas as text in TSV).
+  same, so values, formats and formulas cross both ways.
+  - Formulas travel in Google's `data-sheets-formula` attribute, relative to their cell, so a copy into Google Sheets
+    and back keeps them; the tab-separated text holds the values as shown, as Google's and Excel's do (default, D152).
+  - The HTML carries bold, italic, underline, strikethrough, text and fill colours, horizontal and vertical
+    alignment, font size and borders, inline as Google writes them; a paste reads them inline or from Excel's class
+    rules, and Excel's `mso-number-format` as the cell's number format (default, D153).
+  - A copied merge is written as one cell spanning its rows and columns; a pasted spanning cell becomes a merge when
+    an Editor pastes and it crosses no merge already there (default, D154).
 - **Paste Special** (Edit › Paste Special, Ctrl+Shift+V values only), each from the last copy or cut:
   - **Values Only**: the values as they show, typed; no formulas, no formats.
   - **Format Only**: the formats alone.

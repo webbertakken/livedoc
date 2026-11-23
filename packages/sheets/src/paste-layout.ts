@@ -10,7 +10,7 @@ import type { FormatRule, IdRange, SheetLayout, ValidationRule } from './sheet';
 import type { LayoutChange } from './store';
 import type { Workbook } from './engine/workbook';
 import type { SheetClip } from './clipboard';
-import type { PasteMode, PasteResult } from './commands-paste';
+import { pasteClip, pasteCut, type PasteMode, type PasteResult } from './commands-paste';
 
 type Place = { i1: number; j1: number; i2: number; j2: number };
 
@@ -133,4 +133,56 @@ export function pasteClipLayout(
     },
     truncated: false,
   };
+}
+
+/** The rules lying wholly over a cut range, taken from their old place as the cut moves (D155). */
+export function cutRuleRemovals(layout: SheetLayout, range: GridRange): LayoutChange[] {
+  const inside = (rule: IdRange) => {
+    const pos = posRangeOf(layout, rule);
+    return (
+      !!pos && pos.r1 >= range.r1 && pos.r2 <= range.r2 && pos.c1 >= range.c1 && pos.c2 <= range.c2
+    );
+  };
+  return [
+    ...(layout.formatRules ?? [])
+      .filter(inside)
+      .map((x) => ({ k: 'frule' as const, id: x.id, rule: null })),
+    ...(layout.rules ?? [])
+      .filter(inside)
+      .map((x) => ({ k: 'vrule' as const, id: x.id, rule: null })),
+  ];
+}
+
+/** A plain paste of the sheet's own cells with their rules (D155): the cells moved (a cut) or copied, the copied
+ *  rules set again over them, and a cut's rules wholly over its cells taken from their old place; one change. */
+export function pasteWithRules(
+  wb: Workbook,
+  sheetId: string,
+  sel: GridRange,
+  clip: SheetClip,
+  rand: Rand = Math.random,
+): PasteResult | null {
+  const cells = clip.cut
+    ? pasteCut(wb, sheetId, { r: sel.r1, c: sel.c1 }, clip, rand)
+    : pasteClip(wb, sheetId, sel, clip, 'all', rand);
+  if (!cells) return null;
+  const at = { r: sel.r1, c: sel.c1 };
+  const rules = (['formatRules', 'validation'] as const).flatMap(
+    (mode) => pasteClipLayout(wb, sheetId, at, clip, mode, rand)?.edits ?? [],
+  );
+  const source = wb.sheet(clip.from.sheetId);
+  const removals =
+    clip.cut && source
+      ? cutRuleRemovals(source.layout, {
+          r1: clip.from.r,
+          c1: clip.from.c,
+          r2: clip.from.r + clip.rows - 1,
+          c2: clip.from.c + clip.cols - 1,
+        })
+      : [];
+  // Removals first, so a rule set again where it was is the one kept.
+  const removing = removals.length
+    ? [{ sheetId: clip.from.sheetId, write: { kind: 'layout' as const, changes: removals } }]
+    : [];
+  return { ...cells, edits: [...removing, ...cells.edits, ...rules] };
 }

@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './testing/book';
 import { applySheetWrite, type SheetWrite } from './store';
-import { clipFromRange, type PastedCell } from './clipboard';
+import { clipFromRange } from './clipboard';
+import type { PastedCell } from './clipboard-read';
 import { pasteClip, pasteExternal, turnRows } from './commands-paste';
 import { pasteClipLayout } from './paste-layout';
 import { compileFormula } from './formula/stored';

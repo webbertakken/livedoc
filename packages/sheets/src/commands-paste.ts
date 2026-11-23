@@ -4,11 +4,21 @@
 import type { GridRange } from './address';
 import type { Rand } from './ids';
 import { makeAxisIds } from './ids';
-import { cellKey, type CellFormat, type Sheet, type StoredRef } from './sheet';
+import {
+  cellKey,
+  type CellFormat,
+  type IdRange,
+  type Sheet,
+  type SheetLayout,
+  type StoredRef,
+} from './sheet';
+import { posRangeOf } from './layout';
+import { r1c1ToA1 } from './formula/r1c1-text';
 import { mapFormulaRefs, shiftForCopy } from './formula/stored';
 import { readTypedInput } from './typed-input';
 import { FORMAT_KEYS, type FormatPatch } from './format';
-import type { PastedCell, SheetClip } from './clipboard';
+import type { SheetClip } from './clipboard';
+import type { PastedCell } from './clipboard-read';
 import type { CellChange, LayoutChange, SheetWrite } from './store';
 import type { Workbook } from './engine/workbook';
 import type { Edit } from './commands';
@@ -233,14 +243,15 @@ export function pasteCut(
 }
 
 // HTML or text from elsewhere (Google Sheets, Excel, a web page): each value read as if typed, with the formats
-// the HTML carried.
+// the HTML carried; Google's formulas read from where each lands (D152), and with `merges` (an Editor's paste) each
+// spanning cell merged unless it crosses a merge (D154).
 export function pasteExternal(
   wb: Workbook,
   sheetId: string,
   sel: GridRange,
   pasted: readonly (readonly (PastedCell | string)[])[],
   mode: PasteMode,
-  rand: Rand = Math.random,
+  opts: { merges?: boolean; rand?: Rand } = {},
 ): PasteResult | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet || pasted.length === 0) return null;
@@ -249,7 +260,14 @@ export function pasteExternal(
   // A loop, not a spread: a pasted file can have more rows than a spread call takes.
   const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
   const size = turned ? { rows: rows.length, cols: width } : tiles(sel, rows.length, width);
-  const g = grow(wb, sheet, { r: sel.r1, c: sel.c1 }, size.rows, size.cols, rand);
+  const g = grow(
+    wb,
+    sheet,
+    { r: sel.r1, c: sel.c1 },
+    size.rows,
+    size.cols,
+    opts.rand ?? Math.random,
+  );
   const ctx = wb.ctxFor(sheetId);
   const toCtx = g.changes.length
     ? { ...ctx, own: { ...ctx.own, layout: { ...ctx.own.layout, rows: g.rowIds, cols: g.colIds } } }
@@ -265,7 +283,17 @@ export function pasteExternal(
       const ch: CellChange = { r: rowId, c: colId };
       if (mode !== 'formats') {
         const current = sheet.cells.get(cellKey(rowId, colId))?.format;
-        const read = readTypedInput(cell.text, wb.locale, toCtx, current?.nf === 'text');
+        const asText = current?.nf === 'text';
+        // Google's formula, read where it lands; one that cannot be read pastes its value.
+        const a1 =
+          cell.formula && FORMULA_MODES.has(mode)
+            ? r1c1ToA1(cell.formula, { r: sel.r1 + i, c: sel.c1 + j })
+            : null;
+        const asFormula = a1 ? readTypedInput(a1, wb.locale, toCtx, asText) : null;
+        const read =
+          asFormula?.kind === 'value'
+            ? asFormula
+            : readTypedInput(cell.text, wb.locale, toCtx, asText);
         ch.i =
           read.kind === 'value' ? read.input : read.kind === 'invalid' ? { s: cell.text } : null;
         // A formula's hint never overrides the copied cell's own format.
@@ -280,11 +308,61 @@ export function pasteExternal(
       }
       cells.push(ch);
     }
+  const spans =
+    opts.merges && MERGE_MODES.has(mode)
+      ? pastedMerges(sheet.layout, g, sel, size, rows, width)
+      : null;
+  const changes = spans ? [...g.changes, spans] : g.changes;
   return {
-    edits: [{ sheetId, write: write(g.changes, cells) }],
+    edits: [{ sheetId, write: write(changes, cells) }],
     range: { r1: sel.r1, c1: sel.c1, r2: sel.r1 + size.rows - 1, c2: sel.c1 + size.cols - 1 },
     truncated: g.truncated,
   };
+}
+
+// The modes that paste Google's formulas, and those that paste its merges (with the formats).
+const FORMULA_MODES: ReadonlySet<PasteMode> = new Set(['all', 'formulas', 'noBorders']);
+const MERGE_MODES: ReadonlySet<PasteMode> = new Set(['all', 'formats', 'noBorders']);
+
+// The pasted spanning cells as merges (D154), each cut to the pasted box; one crossing a merge already there, or one
+// before it, is left out. Null when none is added.
+function pastedMerges(
+  layout: SheetLayout,
+  g: { rowIds: readonly string[]; colIds: readonly string[] },
+  sel: GridRange,
+  size: { rows: number; cols: number },
+  rows: readonly (readonly (PastedCell | string)[])[],
+  width: number,
+): LayoutChange | null {
+  const boxes: GridRange[] = [];
+  for (const m of layout.merges ?? []) {
+    const b = posRangeOf(layout, m);
+    if (b) boxes.push(b);
+  }
+  const added: IdRange[] = [];
+  const crosses = (a: GridRange) =>
+    boxes.some((b) => a.r1 <= b.r2 && b.r1 <= a.r2 && a.c1 <= b.c2 && b.c1 <= a.c2);
+  for (let i = 0; i < size.rows; i++)
+    for (let j = 0; j < size.cols; j++) {
+      const raw = rows[i % rows.length]![j % width];
+      const span = typeof raw === 'object' ? raw.span : undefined;
+      if (!span) continue;
+      const box = {
+        r1: sel.r1 + i,
+        c1: sel.c1 + j,
+        r2: Math.min(sel.r1 + i + span.rows, sel.r1 + size.rows, g.rowIds.length) - 1,
+        c2: Math.min(sel.c1 + j + span.cols, sel.c1 + size.cols, g.colIds.length) - 1,
+      };
+      if ((box.r1 === box.r2 && box.c1 === box.c2) || crosses(box)) continue;
+      boxes.push(box);
+      added.push({
+        r1: g.rowIds[box.r1]!,
+        c1: g.colIds[box.c1]!,
+        r2: g.rowIds[box.r2]!,
+        c2: g.colIds[box.c2]!,
+      });
+    }
+  return added.length ? { k: 'merges', merges: [...(layout.merges ?? []), ...added] } : null;
 }
 
 function hintFormat(
