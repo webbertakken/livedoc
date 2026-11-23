@@ -112,8 +112,9 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
     a formula shifts by where its cell lands (default, D142).
   - **Column Widths Only**: each pasted column takes its copied column's width.
   - **All Except Borders**: a paste with the borders left as they were.
-- Formula Only, Transposed and All Except Borders also take text copied elsewhere, read as typed; the other items
-  need cells copied in a spreadsheet, and say so when there are none (default, D144).
+- Values Only, Formula Only, Transposed and All Except Borders also take text copied elsewhere, read as typed; the
+  other items need cells copied in a spreadsheet, and say so ("Copy cells in this spreadsheet first"), as they say
+  when the copied cells hold none of what they paste (default, D144).
 - A paste of more than the write limit is split into parts as one undo step.
 
 ## Rows, columns and cells

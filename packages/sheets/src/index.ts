@@ -40,6 +40,7 @@ export * from './commands';
 export * from './commands-axis';
 export * from './merge-guards';
 export * from './commands-paste';
+export * from './paste-layout';
 export * from './commands-shift';
 export * from './store';
 export * from './store-layout';

@@ -7,13 +7,37 @@ import { makeAxisIds } from './ids';
 import { cellKey, type CellFormat, type Sheet, type StoredRef } from './sheet';
 import { mapFormulaRefs, shiftForCopy } from './formula/stored';
 import { readTypedInput } from './typed-input';
-import type { FormatPatch } from './format';
+import { FORMAT_KEYS, type FormatPatch } from './format';
 import type { PastedCell, SheetClip } from './clipboard';
 import type { CellChange, LayoutChange, SheetWrite } from './store';
 import type { Workbook } from './engine/workbook';
 import type { Edit } from './commands';
 
-export type PasteMode = 'all' | 'values' | 'formats';
+// The cells' paste modes (grid-and-editing.md "Clipboard"): everything, Values Only, Format Only, Formula Only,
+// Transposed and All Except Borders. Column widths and rules are paste-layout.ts's.
+export type PasteMode = 'all' | 'values' | 'formats' | 'formulas' | 'transposed' | 'noBorders';
+
+const BORDERS = ['bt', 'br', 'bb', 'bl'] as const;
+
+// A pasted format in place of the cell's own, as a patch: every key the copy lacks is cleared (null for none).
+function replacing(format: CellFormat | FormatPatch | undefined): FormatPatch | null {
+  if (!format || Object.keys(format).length === 0) return null;
+  const patch: FormatPatch = Object.fromEntries(FORMAT_KEYS.map((k) => [k, null]));
+  return { ...patch, ...format };
+}
+
+// A copied format in place of the cell's own, the cell's borders kept (All Except Borders).
+function withoutBorders(
+  copied: CellFormat | undefined,
+  own: CellFormat | undefined,
+): FormatPatch | null {
+  const out: CellFormat = { ...copied };
+  for (const side of BORDERS) {
+    delete out[side];
+    if (own?.[side]) out[side] = own[side];
+  }
+  return replacing(out);
+}
 
 export type PasteResult = { edits: Edit[]; range: GridRange; truncated: boolean };
 
@@ -61,7 +85,8 @@ function write(changes: LayoutChange[], cells: CellChange[]): SheetWrite {
 }
 
 // The sheet's own cells, copied (not cut): formulas shift by the distance moved; Paste Values Only puts the
-// values as they show, typed; Paste Formatting Only, formats.
+// values as they show, typed; Paste Formatting Only, formats; Formula Only, the inputs; Transposed turns rows into
+// columns, once (D142); All Except Borders keeps the cells' own borders.
 export function pasteClip(
   wb: Workbook,
   sheetId: string,
@@ -72,7 +97,8 @@ export function pasteClip(
 ): PasteResult | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return null;
-  const size = tiles(sel, clip.rows, clip.cols);
+  const turned = mode === 'transposed';
+  const size = turned ? { rows: clip.cols, cols: clip.rows } : tiles(sel, clip.rows, clip.cols);
   const g = grow(wb, sheet, { r: sel.r1, c: sel.c1 }, size.rows, size.cols, rand);
   const from = wb.ctxFor(clip.from.sheetId);
   const to = wb.ctxFor(sheetId);
@@ -88,22 +114,26 @@ export function pasteClip(
       const rowId = g.rowIds[r];
       const colId = g.colIds[c];
       if (!rowId || !colId) continue;
-      const src = clip.cells[i % clip.rows]![j % clip.cols];
+      // The copied cell this one takes: the block repeated, or turned.
+      const si = turned ? j : i % clip.rows;
+      const sj = turned ? i : j % clip.cols;
+      const src = clip.cells[si]![sj];
       const ch: CellChange = { r: rowId, c: colId };
       if (mode === 'values') {
-        const text = clip.values[i % clip.rows]![j % clip.cols]!;
-        const read = readTypedInput(text, wb.locale, to, false);
+        const read = readTypedInput(clip.values[si]![sj]!, wb.locale, to, false);
         ch.i = read.kind === 'value' ? read.input : null;
-      } else if (mode === 'all') {
+      } else if (mode !== 'formats') {
         const input = src?.input;
-        const dr = r - (clip.from.r + (i % clip.rows));
-        const dc = c - (clip.from.c + (j % clip.cols));
+        const dr = r - (clip.from.r + si);
+        const dc = c - (clip.from.c + sj);
         ch.i =
           input && 'f' in input
             ? { f: shiftForCopy(input.f, dr, dc, from, toCtx) }
             : (input ?? null);
       }
-      if (mode !== 'values') ch.f = src?.format ?? null;
+      if (mode === 'noBorders')
+        ch.f = withoutBorders(src?.format, sheet.cells.get(cellKey(rowId, colId))?.format);
+      else if (mode !== 'values' && mode !== 'formulas') ch.f = replacing(src?.format);
       cells.push(ch);
     }
   return {
@@ -208,15 +238,17 @@ export function pasteExternal(
   wb: Workbook,
   sheetId: string,
   sel: GridRange,
-  rows: readonly (readonly (PastedCell | string)[])[],
+  pasted: readonly (readonly (PastedCell | string)[])[],
   mode: PasteMode,
   rand: Rand = Math.random,
 ): PasteResult | null {
   const sheet = wb.sheet(sheetId);
-  if (!sheet || rows.length === 0) return null;
+  if (!sheet || pasted.length === 0) return null;
+  const turned = mode === 'transposed';
+  const rows = turned ? turnRows(pasted) : pasted;
   // A loop, not a spread: a pasted file can have more rows than a spread call takes.
   const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
-  const size = tiles(sel, rows.length, width);
+  const size = turned ? { rows: rows.length, cols: width } : tiles(sel, rows.length, width);
   const g = grow(wb, sheet, { r: sel.r1, c: sel.c1 }, size.rows, size.cols, rand);
   const ctx = wb.ctxFor(sheetId);
   const toCtx = g.changes.length
@@ -238,11 +270,13 @@ export function pasteExternal(
           read.kind === 'value' ? read.input : read.kind === 'invalid' ? { s: cell.text } : null;
         // A formula's hint never overrides the copied cell's own format.
         const own = cell.format?.nf && cell.format.nf !== 'auto';
-        if (read.kind === 'value' && read.hint && mode === 'all' && !(read.hint.ifAutomatic && own))
-          ch.f = hintFormat(cell.format, read.hint);
-        else if (mode === 'all') ch.f = cell.format ?? null;
+        // Formula Only takes no formats; everything else from elsewhere pastes as everything.
+        const all = mode !== 'values' && mode !== 'formulas';
+        if (read.kind === 'value' && read.hint && all && !(read.hint.ifAutomatic && own))
+          ch.f = replacing(hintFormat(cell.format, read.hint));
+        else if (all) ch.f = replacing(cell.format);
       } else {
-        ch.f = cell.format ?? null;
+        ch.f = replacing(cell.format);
       }
       cells.push(ch);
     }
@@ -258,4 +292,16 @@ function hintFormat(
   hint: { nf: string; cur?: string },
 ): FormatPatch {
   return { ...(format ?? {}), nf: hint.nf, ...(hint.cur ? { cur: hint.cur } : {}) };
+}
+
+// Rows turned into columns (Paste Special › Transposed), a short row's missing cells empty.
+export function turnRows<T>(rows: readonly (readonly (T | string)[])[]): (T | string)[][] {
+  const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
+  const out: (T | string)[][] = [];
+  for (let j = 0; j < width; j++) {
+    const row: (T | string)[] = [];
+    for (const source of rows) row.push(source[j] ?? '');
+    out.push(row);
+  }
+  return out;
 }

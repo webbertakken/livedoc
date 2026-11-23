@@ -187,5 +187,5 @@ Version History (the shell's). Each is specified with its area.
   cell lands (default).
 - **D143** Pasting rules: Those over the copied cells, cut to them, as new rules; a custom formula shifts, a
   dropdown's source range stays (default).
-- **D144** Paste Special from elsewhere: Formula Only, Transposed and All Except Borders read text as typed; the
-  rest need cells copied in a spreadsheet and say so (default).
+- **D144** Paste Special from elsewhere: Values Only, Formula Only, Transposed and All Except Borders read text as
+  typed; the rest need cells copied in a spreadsheet and say so, as they do when the copy holds none (default).

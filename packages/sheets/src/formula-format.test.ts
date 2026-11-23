@@ -1,3 +1,4 @@
+import { mergeFormat } from './format';
 import { describe, expect, it } from 'vitest';
 import { book } from './testing/book';
 import { typeInto } from './commands';
@@ -17,8 +18,11 @@ const hintOf = (text: string) => {
 };
 
 /** The format a write gives A1. */
-const formatOf = (w: SheetWrite | undefined) =>
-  w && 'cells' in w ? (w.cells as { f?: unknown }[])[0]?.f : undefined;
+// The format a write leaves on an empty cell (a paste replaces the cell's format, clearing what it lacks).
+const formatOf = (w: SheetWrite | undefined) => {
+  const f = w && 'cells' in w ? w.cells?.[0]?.f : undefined;
+  return f === undefined ? undefined : mergeFormat(undefined, f);
+};
 
 describe('a formula’s format', () => {
   it.each([

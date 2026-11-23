@@ -7,6 +7,7 @@ import { cellKey, type Cell, type CellFormat } from './sheet';
 import { parseCsv, type ParsedCsv } from './csv';
 import { SHEET_ROWS_MAX } from './limits';
 import type { Workbook } from './engine/workbook';
+import { clipLayoutOf, type ClipLayout } from './paste-layout';
 
 export const SHEET_CLIP_TYPE = 'web application/x-livedoc-sheet+json';
 
@@ -20,6 +21,9 @@ export type SheetClip = {
   // Where it came from: a paste of the sheet's own cells shifts formulas by the distance moved.
   from: { sheetId: string; r: number; c: number; range: string };
   cut?: true;
+  // Paste Special's Column Widths Only and its rules items (paste-layout.ts); absent from a clip made before them.
+  widths?: number[];
+  rules?: ClipLayout['rules'];
 };
 
 export function clipFromRange(
@@ -53,6 +57,7 @@ export function clipFromRange(
     values,
     from: { sheetId, r: range.r1, c: range.c1, range: formatRange(range) },
     ...(cut ? { cut: true as const } : {}),
+    ...clipLayoutOf(sheet.layout, range),
   };
 }
 
