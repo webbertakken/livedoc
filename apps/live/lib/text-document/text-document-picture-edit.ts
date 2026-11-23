@@ -5,6 +5,7 @@ import { NodeSelection, type Command, type EditorState } from 'prosemirror-state
 import type { Node as PmNode } from 'prosemirror-model';
 import { PICTURE } from '@livedoc/text-documents';
 import { insertedPictureSize } from './text-document-picture-insert';
+import type { CroppedPicture } from './text-document-picture-crop';
 import { hasPictureSize, type PictureSize } from './text-document-picture-size';
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000 + 0;
@@ -88,6 +89,24 @@ export const resetPicture =
       ...insertedPictureSize(pixels, room),
       crop: null,
     });
+    tr.setSelection(NodeSelection.create(tr.doc, pos));
+    dispatch?.(tr);
+    return true;
+  };
+
+/** Writes what a crop leaves: the picture's box and its crop (none when nothing is cut); the picture stays selected. */
+export const setPictureCrop =
+  (pos: number, next: CroppedPicture): Command =>
+  (state, dispatch) => {
+    const node = pictureAt(state, pos);
+    if (!node || !hasPictureSize(next)) return false;
+    const was = {
+      width: node.attrs.width,
+      height: node.attrs.height,
+      crop: node.attrs.crop ?? null,
+    };
+    if (JSON.stringify(was) === JSON.stringify(next)) return false;
+    const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...next });
     tr.setSelection(NodeSelection.create(tr.doc, pos));
     dispatch?.(tr);
     return true;

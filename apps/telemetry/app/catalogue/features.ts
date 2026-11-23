@@ -1294,18 +1294,19 @@ export const TEXT_DOCUMENT_TABLES = chart(
 );
 
 // A text document's picture changed (docs/specs/034-text-documents/objects.md "Working with a picture"): its alt text
-// written, its picture replaced, its size set by its handles or Image options, or reset.
+// written, its picture replaced, its size set by its handles or Image options, reset, or cropped.
 export const TEXT_DOCUMENT_PICTURE_CHANGES = chart(
   'Element',
   'Changed',
   'Text Document Picture Changes',
-  "A text document's picture changed: its alt text written, its picture replaced, its size set or reset.",
+  "A text document's picture changed: its alt text written, its picture replaced, sized, reset or cropped.",
   {
     types: [
       'TextDocumentImageAltText',
       'TextDocumentImageReplace',
       'TextDocumentImageSize',
       'TextDocumentImageReset',
+      'TextDocumentImageCrop',
     ],
   },
 );

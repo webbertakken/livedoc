@@ -4,7 +4,8 @@
 // A gallery media is drawn from the gallery image it names (objects.md "Where the bytes live"). Selected, it is sized
 // by its handles (objects.md "Working with a picture").
 import type { Node as PmNode, NodeSpec } from 'prosemirror-model';
-import type { NodeView, NodeViewConstructor } from 'prosemirror-view';
+import type { Decoration, NodeView, NodeViewConstructor } from 'prosemirror-view';
+import { croppedPicture, type CroppedPicture } from './text-document-picture-crop';
 import { PICTURE_ATTRIBUTES, type PictureCrop, type PictureMedia } from '@livedoc/text-documents';
 import {
   PICTURE_HANDLES,
@@ -87,13 +88,14 @@ export type PictureSource = {
 };
 
 /**
- * How a selected picture is sized by its handles (objects.md "Working with a picture"): whether the reader may, the
- * room the text has (points), and the size written on release, at the picture's position then.
+ * How a selected picture is sized and cropped by its handles (objects.md "Working with a picture"): whether the reader
+ * may, the room the text has (points), and the size or the crop written on release, at the picture's position then.
  */
 export type PictureSizingHooks = {
   readonly can: () => boolean;
   readonly room: () => PictureSize;
   readonly resize: (pos: number, size: PictureSize) => void;
+  readonly crop: (pos: number, next: CroppedPicture) => void;
 };
 
 /** Told, bubbling from a picture, once its image is drawn and its own pixels noted. */
@@ -104,13 +106,14 @@ const PIXELS_A_POINT = 96 / 72;
 
 /**
  * The node view drawing each picture from its media: held bytes as an object URL, a gallery image as its URL, clipped
- * to its box; selected, its eight handles for whoever may size it (`sizing`). It notes the drawn image's own pixels.
+ * to its box; selected, its eight handles for whoever may size it (`sizing`), crop marks while it is being cropped
+ * (the whole picture drawn, what lies beyond its box dimmed). It notes the drawn image's own pixels.
  */
 export function pictureView(
   source: PictureSource,
   sizing?: PictureSizingHooks,
 ): NodeViewConstructor {
-  return (node: PmNode, _view, getPos): NodeView => {
+  return (node: PmNode, _view, getPos, decorations): NodeView => {
     const dom = document.createElement('span');
     dom.contentEditable = 'false';
     dom.className = 'text-document-picture';
@@ -122,6 +125,9 @@ export function pictureView(
     let current = node;
     let destroyed = false;
     let handles: HTMLElement | null = null;
+    let cropping = false;
+    // While cropping, what lies beyond the box, dimmed: a frame the size of the whole picture, its box cut out of it.
+    let shade: HTMLElement | null = null;
     // Ends a drag under way: written, or left as it was.
     let endDrag: ((write: boolean) => void) | null = null;
     const giveBack = () => {
@@ -140,7 +146,39 @@ export function pictureView(
       img.style.height = `${box.image.height}pt`;
       img.style.left = `${box.image.left}pt`;
       img.style.top = `${box.image.top}pt`;
+      if (shade) {
+        Object.assign(shade.style, {
+          left: `${box.image.left}pt`,
+          top: `${box.image.top}pt`,
+          width: `${box.image.width}pt`,
+          height: `${box.image.height}pt`,
+        });
+        Object.assign((shade.firstElementChild as HTMLElement).style, {
+          left: `${-box.image.left}pt`,
+          top: `${-box.image.top}pt`,
+          width: `${box.width}pt`,
+          height: `${box.height}pt`,
+        });
+      }
     };
+    const crop = (on: boolean) => {
+      if (on === cropping) return;
+      cropping = on;
+      endDrag?.(false);
+      dom.classList.toggle('text-document-picture-cropping', on);
+      shade?.remove();
+      shade = null;
+      if (on) {
+        shade = document.createElement('span');
+        shade.className = 'text-document-picture-shade';
+        shade.setAttribute('aria-hidden', 'true');
+        shade.append(document.createElement('span'));
+        dom.insertBefore(shade, handles);
+      }
+      fit(current.attrs);
+    };
+    const croppingIn = (marks: readonly Decoration[]) =>
+      marks.some((d) => (d.spec as { cropping?: boolean } | undefined)?.cropping === true);
     const showImage = (url: string) => {
       dom.classList.remove('text-document-picture-missing');
       const img = document.createElement('img');
@@ -209,19 +247,19 @@ export function pictureView(
       down.stopPropagation();
       const box = pictureBox(current.attrs);
       const start = { width: box.width, height: box.height };
+      const startCrop = { ...start, crop: (current.attrs.crop as PictureCrop | null) ?? null };
+      const byCropping = cropping;
       const drawn = dom.getBoundingClientRect().width;
       const pixelsAPoint = drawn > 0 && start.width > 0 ? drawn / start.width : PIXELS_A_POINT;
       const room = sizing.room();
-      let size = start;
+      let next: CroppedPicture = startCrop;
       const move = (e: PointerEvent) => {
-        size = resizedPicture(
-          start,
-          handle,
-          (e.clientX - down.clientX) / pixelsAPoint,
-          (e.clientY - down.clientY) / pixelsAPoint,
-          { shift: e.shiftKey, room },
-        );
-        fit({ ...current.attrs, ...size });
+        const dx = (e.clientX - down.clientX) / pixelsAPoint;
+        const dy = (e.clientY - down.clientY) / pixelsAPoint;
+        next = byCropping
+          ? croppedPicture(startCrop, handle, dx, dy)
+          : { ...startCrop, ...resizedPicture(start, handle, dx, dy, { shift: e.shiftKey, room }) };
+        fit({ ...current.attrs, ...next });
       };
       const up = () => endDrag?.(true);
       const cancel = () => endDrag?.(false);
@@ -239,9 +277,10 @@ export function pictureView(
         window.removeEventListener('keydown', key, true);
         dom.classList.remove('text-document-picture-sizing');
         const pos = getPos();
-        const moved = size.width !== start.width || size.height !== start.height;
-        if (write && moved && pos !== undefined && !destroyed) sizing.resize(pos, size);
-        else fit(current.attrs);
+        const moved = JSON.stringify(next) !== JSON.stringify(startCrop);
+        if (!write || !moved || pos === undefined || destroyed) fit(current.attrs);
+        else if (byCropping) sizing.crop(pos, next);
+        else sizing.resize(pos, { width: next.width, height: next.height });
       };
       window.addEventListener('pointermove', move);
       window.addEventListener('pointerup', up);
@@ -269,11 +308,13 @@ export function pictureView(
     };
 
     draw(node);
+    crop(croppingIn(decorations));
     return {
       dom,
-      update: (next) => {
+      update: (next, marks) => {
         if (next.type !== node.type) return false;
         draw(next);
+        crop(croppingIn(marks));
         return true;
       },
       selectNode: () => {

@@ -102,8 +102,9 @@ describe('the text document menus', () => {
         'image-replace-upload',
         'image-replace-search',
         'image-replace-gallery',
-        // Format > Image > Reset image (useTextDocumentPictureSize), bound by the surface.
+        // Format > Image > Reset image and Crop image (useTextDocumentPictureSize), bound by the surface.
         'image-reset',
+        'image-crop',
         // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
         PREFERENCES_ITEM,
         // File > Page setup, Format > Page orientation and Switch to pageless (useTextDocumentPageSetup), by the surface.

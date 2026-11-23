@@ -354,7 +354,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         ]),
       ]),
       submenu('format-image', 'Image', [
-        item('image-crop', 'Crop image', 'edit'),
+        item('image-crop', 'Crop image', 'edit', BUILT),
         item('image-options', 'Image options', 'edit', BUILT),
         item('image-alt-text', 'Alt text', 'edit', { shortcut: 'alt-text', ...BUILT }),
         submenu('image-replace', 'Replace image', [

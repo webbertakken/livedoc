@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/objects.md "In the editor": a picture in line drawn at its size, its crop cutting its
-// media; its alternative text read, a decorative one read as nothing; one without media a grey box reading so.
+// media; its alternative text read, a decorative one read as nothing; one without media a grey box reading so;
+// selected, its handles; while cropped, its crop marks.
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { EditorState } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import { Decoration, EditorView } from 'prosemirror-view';
+import { CROPPING_SPEC } from './text-document-picture-cropping-plugin';
+import type { CroppedPicture } from './text-document-picture-crop';
 import { PICTURE, type PictureMedia } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
 import {
@@ -162,16 +165,17 @@ describe('a picture drawn', () => {
   // pointer, the size written once on release; Escape leaves it as it was.
   describe('its handles', () => {
     const room = { width: 468, height: 648 };
-    const sized = (can = true) => {
+    const cropMark = [Decoration.node(0, 1, {}, CROPPING_SPEC)];
+    const sized = (can = true, marks: readonly Decoration[] = []) => {
       const resize = vi.fn<(pos: number, size: { width: number; height: number }) => void>();
-      const view = pictureView(sourceOf(held(true)), { can: () => can, room: () => room, resize })(
-        picture({}),
-        {} as EditorView,
-        () => 3,
-        [],
-        undefined as never,
-      );
-      return { view, resize };
+      const crop = vi.fn<(pos: number, next: CroppedPicture) => void>();
+      const view = pictureView(sourceOf(held(true)), {
+        can: () => can,
+        room: () => room,
+        resize,
+        crop,
+      })(picture({}), {} as EditorView, () => 3, marks, undefined as never);
+      return { view, resize, crop };
     };
     const handle = (dom: HTMLElement, which: string) =>
       dom.querySelector<HTMLElement>(`[data-picture-handle="${which}"]`)!;
@@ -220,6 +224,33 @@ describe('a picture drawn', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       window.dispatchEvent(new MouseEvent('pointerup', {}));
       expect(view.dom.style.width).toBe('60pt');
+      expect(resize).not.toHaveBeenCalled();
+    });
+
+    // Cropping: the whole picture drawn, what lies beyond its box dimmed, a mark's drag cutting rather than scaling.
+    it('draws the shade while cropping, and leaves it once done', () => {
+      const { view } = sized(true, cropMark);
+      view.selectNode!();
+      expect(view.dom.classList.contains('text-document-picture-cropping')).toBe(true);
+      expect(view.dom.querySelector('.text-document-picture-shade')).not.toBeNull();
+      view.update!(picture({}), [], undefined as never);
+      expect(view.dom.classList.contains('text-document-picture-cropping')).toBe(false);
+      expect(view.dom.querySelector('.text-document-picture-shade')).toBeNull();
+    });
+
+    it('cuts a side by its crop mark, writing the crop once on release', () => {
+      const { view, resize, crop } = sized(true, cropMark);
+      view.selectNode!();
+      // 20 pixels in: 15 of the 60 points cut from the right.
+      drag(handle(view.dom, 'e'), -20, 0);
+      expect(view.dom.style.width).toBe('45pt');
+      expect(view.dom.querySelector('img')!.style.width).toBe('60pt');
+      window.dispatchEvent(new MouseEvent('pointerup', {}));
+      expect(crop).toHaveBeenCalledExactlyOnceWith(3, {
+        width: 45,
+        height: 40,
+        crop: { top: 0, right: 0.25, bottom: 0, left: 0 },
+      });
       expect(resize).not.toHaveBeenCalled();
     });
 

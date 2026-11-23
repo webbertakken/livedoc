@@ -15,6 +15,7 @@ import { tableEditing } from 'prosemirror-tables';
 import { tableResizePlugin } from '@/lib/text-document/text-document-table-resize-plugin';
 import { tableMovePlugin } from '@/lib/text-document/text-document-table-move-plugin';
 import { tableView } from '@/lib/text-document/text-document-table-dom';
+import { pictureCroppingPlugin } from '@/lib/text-document/text-document-picture-cropping-plugin';
 import { pictureView, type PictureSizingHooks } from '@/lib/text-document/text-document-pictures';
 import { galleryPicturesOf } from '@/lib/text-document/text-document-gallery-pictures';
 import type { AccessLevel } from '@livedoc/api-schema';
@@ -210,6 +211,7 @@ export function TextDocumentSurface({
     can: () => false,
     room: () => ({ width: 0, height: 0 }),
     resize: () => {},
+    crop: () => {},
   });
   // What the layout lays the writing onto (page-layout.md "Laying out"), read as it lays out; and the pages it made.
   const layout = useRef<{ setup: PageSetup; pages: boolean } | null>(null);
@@ -353,6 +355,8 @@ export function TextDocumentSurface({
               }),
               // Picture files pasted or dropped, before the clipboard reads the rest (objects.md "Inserting").
               picturePastePlugin((files, source) => takePictureFiles.current(files, source)),
+              // A picture cropped after a double-click or Crop image (objects.md "Working with a picture").
+              pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
               // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
               clipboardPlugin({
                 read: () => ({
@@ -451,6 +455,7 @@ export function TextDocumentSurface({
                 can: () => pictureSizing.current.can(),
                 room: () => pictureSizing.current.room(),
                 resize: (pos, size) => pictureSizing.current.resize(pos, size),
+                crop: (pos, next) => pictureSizing.current.crop(pos, next),
               },
             ),
           },
@@ -693,6 +698,7 @@ export function TextDocumentSurface({
       can: () => bodyWrites,
       room: () => pictureRoom,
       resize: (pos, size) => pictureSize.resize(pos, size, 'handle'),
+      crop: pictureSize.crop,
     };
   });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).

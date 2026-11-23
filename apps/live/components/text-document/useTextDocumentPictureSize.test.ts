@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/objects.md "Working with a picture": Image options and Reset image are an Editor's,
 // dimmed while no picture is selected; its own size is its pixels (held bytes, else the image drawn); a size from the
-// panel or the handles, and Reset image, each written as one step and counted.
+// panel or the handles, Reset image and a crop, each written as one step and counted; Crop image begins cropping.
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
@@ -13,6 +13,10 @@ const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track }));
 
 import { PICTURE_DRAWN_EVENT } from '@/lib/text-document/text-document-pictures';
+import {
+  croppingAt,
+  pictureCroppingPlugin,
+} from '@/lib/text-document/text-document-picture-cropping-plugin';
 
 const { useTextDocumentPictureSize } = await import('./useTextDocumentPictureSize');
 
@@ -35,6 +39,7 @@ function setup({ selected = true, canEdit = true, held = true, drawn = false } =
     state: EditorState.create({
       doc,
       selection: selected ? NodeSelection.create(doc, 1) : TextSelection.create(doc, 2),
+      plugins: [pictureCroppingPlugin({ can: () => canEdit })],
     }),
   });
   const live = TextDocumentState.load();
@@ -132,10 +137,28 @@ describe('useTextDocumentPictureSize', () => {
     expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImageReset');
   });
 
+  it('begins cropping the selected picture, dimmed without one', () => {
+    const { hook, view } = setup();
+    act(() => hook.result.current.actions['image-crop']!.run());
+    expect(croppingAt(view.state)).toBe(1);
+    expect(setup({ selected: false }).hook.result.current.actions['image-crop']?.disabled).toBe(
+      true,
+    );
+  });
+
+  it('writes a crop, counted', () => {
+    const { hook, view } = setup();
+    const crop = { top: 0, right: 0.25, bottom: 0, left: 0 };
+    act(() => hook.result.current.crop(1, { width: 45, height: 30, crop }));
+    expect(attrs(view)).toMatchObject({ width: 45, height: 30, crop });
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImageCrop');
+  });
+
   it('writes nothing for anyone who may not edit', () => {
     const { hook, view } = setup({ canEdit: false });
     act(() => hook.result.current.resize(1, { width: 100, height: 20 }, 'handle'));
     act(() => hook.result.current.reset());
+    act(() => hook.result.current.crop(1, { width: 10, height: 10, crop: null }));
     expect(attrs(view)).toMatchObject({ width: 60, height: 30 });
   });
 });

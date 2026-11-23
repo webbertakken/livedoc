@@ -1,9 +1,10 @@
 'use client';
 
-// Sizing a selected picture (docs/specs/034-text-documents/objects.md "Working with a picture"): Format > Image > Image
-// options' panel and its Size & rotation fields, the handles' drag written once on release, and Reset image; each one
-// undo step, counted. The picture's own size is its pixels: its held bytes' header, or the gallery image as drawn. The
-// items are dimmed while no picture is selected (Reset also while its own size is not known); an Editor's alone.
+// Sizing and cropping a selected picture (docs/specs/034-text-documents/objects.md "Working with a picture"): Format >
+// Image > Image options' panel and its Size & rotation fields, the handles' drag written once on release, Reset image,
+// and Crop image (begun here, each crop mark's drag written); each one undo step, counted. The picture's own size is
+// its pixels: its held bytes' header, or the gallery image as drawn. The items are dimmed while no picture is selected
+// (Reset also while its own size is not known); an Editor's alone.
 import { useCallback, useEffect, useState } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
@@ -15,8 +16,11 @@ import { track } from '@/lib/telemetry';
 import {
   resetPicture,
   selectedPicture,
+  setPictureCrop,
   setPictureSize,
 } from '@/lib/text-document/text-document-picture-edit';
+import { beginCropping } from '@/lib/text-document/text-document-picture-cropping-plugin';
+import type { CroppedPicture } from '@/lib/text-document/text-document-picture-crop';
 import { PICTURE_DRAWN_EVENT } from '@/lib/text-document/text-document-pictures';
 import { ownPictureSize } from '@/lib/text-document/text-document-picture-insert';
 import {
@@ -27,9 +31,10 @@ import {
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
 import type { PictureSizing } from './TextDocumentImageOptionsPanel';
 
-/** The panel's item, and Reset image's. */
+/** The panel's item, Reset image's and Crop image's. */
 export const IMAGE_OPTIONS_ITEM = 'image-options';
 export const IMAGE_RESET_ITEM = 'image-reset';
+export const IMAGE_CROP_ITEM = 'image-crop';
 
 type Selected = PictureSizing & { pos: number; pixels: PictureSize | null };
 
@@ -114,6 +119,20 @@ export function useTextDocumentPictureSize({
     [canEdit, view],
   );
 
+  /** Writes a crop mark's drag as one undo step. */
+  const crop = useCallback(
+    (pos: number, next: CroppedPicture) => {
+      if (!canEdit || !view || view.isDestroyed) return;
+      startUndoStep(view);
+      const done = setPictureCrop(pos, next)(view.state, view.dispatch);
+      startUndoStep(view);
+      debugLog('[text-document] picture crop', { done, width: next.width, height: next.height });
+      if (done) track('Element', 'Changed', 'TextDocumentImageCrop');
+      view.focus();
+    },
+    [canEdit, view],
+  );
+
   const apply = useCallback(
     (change: PictureSizeChange, lock: boolean) => {
       const now = read();
@@ -138,6 +157,13 @@ export function useTextDocumentPictureSize({
     canEdit && view
       ? {
           ...(toggle ? { [IMAGE_OPTIONS_ITEM]: { ...toggle, disabled: selected === null } } : {}),
+          [IMAGE_CROP_ITEM]: {
+            run: () => {
+              if (selected) beginCropping(view, selected.pos);
+              view.focus();
+            },
+            disabled: selected === null,
+          },
           [IMAGE_RESET_ITEM]: {
             run: () => {
               reset();
@@ -147,5 +173,5 @@ export function useTextDocumentPictureSize({
           },
         }
       : {};
-  return { picture: selected, apply, reset, resize, actions };
+  return { picture: selected, apply, reset, resize, crop, actions };
 }
