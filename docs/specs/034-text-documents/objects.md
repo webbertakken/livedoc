@@ -76,7 +76,8 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   `word/media/<key>.<ext>` (OOXML); media no picture holds is not written.
   The ODF flat file holds the bytes as `office:binary-data`.
   ODF writes the frame's graphic style as an automatic style named by a hash of its properties, positioned on the
-  baseline; OOXML writes Word's inline picture, its `wp:docPr` ids numbered in reading order.
+  baseline, its parent the `Graphics` style (written, empty, when the file holds none), as LibreOffice writes a
+  picture: LibreOffice opens a frame whose automatic style has no parent as a drawing shape. OOXML writes Word's inline picture, its `wp:docPr` ids numbered in reading order.
 - **Rotation read**: ODF's `draw:transform` of `rotate` and `translate` steps alone gives the sum of its rotations,
   turned to clockwise; its translations are where LibreOffice put the centre it turns about, which a picture in line
   takes from its line, as LibreOffice reads it. A `scale`, `skewX`, `skewY` or `matrix` step keeps it. OOXML's `rot`
