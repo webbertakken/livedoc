@@ -7,6 +7,7 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView, type Decoration, type DecorationSet } from 'prosemirror-view';
 import { PICTURE } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
+import { setPictureCrop } from './text-document-picture-edit';
 import {
   beginCropping,
   croppingAt,
@@ -83,6 +84,17 @@ describe('pictureCroppingPlugin', () => {
     beginCropping(view, PICTURE_AT);
     view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)));
     expect(croppingAt(view.state)).toBeNull();
+  });
+
+  it('lasts while the picture itself is written, a crop kept selected', () => {
+    const view = setup();
+    beginCropping(view, PICTURE_AT);
+    setPictureCrop(PICTURE_AT, {
+      width: 45,
+      height: 30,
+      crop: { top: 0, right: 0.25, bottom: 0, left: 0 },
+    })(view.state, view.dispatch);
+    expect(croppingAt(view.state)).toBe(PICTURE_AT);
   });
 
   it('follows the picture as the writing before it changes', () => {

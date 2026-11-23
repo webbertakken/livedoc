@@ -44,13 +44,15 @@ export function pictureCroppingPlugin({ can }: { can: () => boolean }): Plugin<n
       init: () => null,
       apply: (tr, was, _before, state) => {
         const meta = tr.getMeta(croppingKey) as Meta | undefined;
-        let pos = meta ? meta.cropping : was;
-        if (!meta && pos !== null) {
-          const mapped = tr.mapping.mapResult(pos, 1);
-          pos = mapped.deleted ? null : mapped.pos;
-        }
-        // Cropping lasts as long as the picture stays selected.
-        return pos !== null && selectedPicture(state)?.pos === pos ? pos : null;
+        if (meta) return meta.cropping;
+        // Cropping lasts as long as the picture stays selected: moved by writing before it, or itself rewritten (a crop
+        // written replaces its node, so its start maps either side).
+        const selected = selectedPicture(state)?.pos;
+        return was !== null &&
+          selected !== undefined &&
+          (tr.mapping.map(was, 1) === selected || tr.mapping.map(was, -1) === selected)
+          ? selected
+          : null;
       },
     },
     props: {
