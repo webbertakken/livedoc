@@ -46,6 +46,15 @@ A picture is an inline of a paragraph, beside runs, fields and notes
 - **Adjustments**: `transparency` from 0 to 100 percent, `brightness` and `contrast` from -100 to 100 percent, each
   to three decimals (OOXML's step); none is 0. Brightness and contrast are Word's: the contrast's slope is
   1 / (1 - c) above 0 and 1 + c below, about the middle grey, half the brightness added before it and half after.
+- **Placement** (`placement`): none is in line. A placed picture stands where it is placed, away from the line of
+  its anchor, the character it follows; its placement holds:
+  - `wrap`: `wrap` (Wrap text: the text runs around it), `break` (Break text: the text above and below only),
+    `front` (In front of text) or `behind` (Behind text);
+  - `margin`: the space kept clear around it, `top`, `right`, `bottom` and `left` in points, each 0 to 72 (one inch,
+    Google's most); Google sets one for all four, ⅛ in (9 pt) when wrapping is chosen (default as Google's);
+  - `moves`: `with-text` (Move with text: it follows its anchor's paragraph) or `page` (Fix position on page);
+  - `x`, `y`: its top left corner, in points, from the left edge of its anchor's column and the top of its anchor's
+    paragraph when it moves with text, else from the page's top left corner; turned, its box before the turn.
 - **Media**: the document's `media`, each picture's bytes by key, the SHA-256 of its bytes as 64 lower-case hex
   characters, with its media type and the package entry it arrived in, if any.
   Two pictures of the same bytes share one media.
@@ -70,10 +79,18 @@ A picture is an inline of a paragraph, beside runs, fields and notes
 | Transparency     | `draw:image-opacity`, 100% less the transparency                                            | `a:alphaModFix` `amt`, the opacity in thousandths of a percent    |
 | Brightness       | `draw:luminance` in percent                                                                 | `a:lum` `bright` in thousandths of a percent                      |
 | Contrast         | `draw:contrast` in percent                                                                  | `a:lum` `contrast` in thousandths of a percent                    |
+| Placed           | `text:anchor-type="char"`, `svg:x` / `svg:y`, from the left and top (`style:*-pos`)         | `wp:anchor` with `wp:positionH` / `wp:positionV` `wp:posOffset`   |
+| Moves with text  | `style:horizontal-rel="paragraph"`, `style:vertical-rel="paragraph"`                        | `relativeFrom="column"`, `relativeFrom="paragraph"`               |
+| Fixed on page    | `style:horizontal-rel="page"`, `style:vertical-rel="page"`                                  | `relativeFrom="page"` both                                        |
+| Wrap text        | `style:wrap="parallel"`, no contour                                                         | `wp:wrapSquare wrapText="bothSides"`                              |
+| Break text       | `style:wrap="none"`                                                                         | `wp:wrapTopAndBottom`                                             |
+| In front of text | `style:wrap="run-through"`, `style:run-through="foreground"`                                | `wp:wrapNone`, `behindDoc="0"`                                    |
+| Behind text      | `style:wrap="run-through"`, `style:run-through="background"`                                | `wp:wrapNone`, `behindDoc="1"`                                    |
+| Margin           | `fo:margin-top`, `-right`, `-bottom`, `-left`                                               | `distT`, `distR`, `distB`, `distL` (EMU)                          |
 
 - **Held whole, or kept.** A picture is the model's when everything it holds is: in line, one picture of a mapped
   media type, its size, crop, rotation, recolour, adjustments, alternative text, title and whether it is decorative.
-  Anything else keeps it a kept inline, as the file has it: anchored (wrapped, in front, behind), flipped, recoloured
+  Anything else keeps it a kept inline, as the file has it: placed in any other way (below), flipped, recoloured
   or adjusted in any other way (below), an outline or effects, a shape other than a rectangle, a link on the picture
   itself, a picture with a fallback (SVG, EMF, WMF), a linked or missing picture, a frame with a caption or text.
 - **No look of its own beyond those.** ODF: the frame's graphic style may hold only margins, padding and borders of
@@ -107,6 +124,16 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   LibreOffice draws a duotone in neither format: it reads `a:duotone`, and `a:lum` holding both values, into new bytes,
   and ignores `a:alphaModFix` on a Writer picture; it draws a picture with `livedoc:duotone` uncoloured and keeps the
   attribute when it saves; it holds brightness and contrast in whole percents.
+- **Placement read** as LibreOffice 24.2 reads and writes it, one to one (the rows above). An anchor `paragraph` is read
+  as `char` at the paragraph's start; one to the page, a frame or a heading as `as-char` or `char` else keeps it.
+  Kept (default): a position by alignment (`wp:align`, `style:*-pos` other than from the left or top), any other
+  `relativeFrom` or `style:*-rel` (margin, character, line, page content), a wrap on one side or the larger side
+  (`left`, `right`, `largest`; `left`, `right`, `dynamic`, `biggest`), a tight, through or contour wrap, a limit on
+  the paragraphs wrapped, `simplePos`. A placed picture in a table cell, a note, a header or a footer is kept too.
+  The order placed pictures overlap in (`relativeHeight`, `draw:z-index`) is their reading order (default).
+- **Placement written** as LibreOffice writes it: ODF `char` with the frame's offsets and its graphic style's wrap,
+  margins and relations; OOXML `wp:anchor` (`simplePos="0"`, `locked="0"`, `layoutInCell="1"`,
+  `allowOverlap="1"`, `relativeHeight` in reading order) with its offsets, extent, effect extent, wrap and `docPr`.
 - **Names and ids** (`draw:name`, `wp:docPr` `name` and `id`) are written anew: `Picture <n>` in reading order.
 - **Conversion** carries every picture and its media to the other format; a picture still kept is dropped and listed,
   as all kept content.
@@ -121,6 +148,11 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
 - A turned picture is drawn turned about its centre, and its line makes room for the turned picture's bounds
   (width × |cos| + height × |sin| across, width × |sin| + height × |cos| high), as Word, LibreOffice and Google lay it
   out; the bounds sit on the baseline.
+- A placed picture is drawn at its place, out of its line: its anchor is a mark of no width where it stands in the
+  text. Break text keeps its height and margins clear across its column; Wrap text runs the text beside it, on the
+  side of the column with more room, the other side left clear (default, until ruled; Google's runs it both sides);
+  In front of text is drawn over the text and Behind text under it, neither moving it. A picture moving with text
+  goes with its paragraph from page to page; one fixed on the page stays on its anchor's page.
 - A recoloured or adjusted picture is drawn so: its recolour and brightness and contrast as one colour filter over its
   pixels, in sRGB, its transparency as its opacity.
 - A screen reader reads its alternative text; a decorative picture reads as nothing (an empty `alt`).
