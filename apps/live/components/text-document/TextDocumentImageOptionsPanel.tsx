@@ -33,7 +33,9 @@ export type PictureTurn = { angle: number } | { by: number };
 const QUARTER_TURN = 90;
 const TurnLeftGlyph = lucideGlyph(lucideRotateCcwSquare, 18);
 const TurnRightGlyph = lucideGlyph(lucideRotateCwSquare, 18);
-const ICON_BUTTON = `${PANEL_CONTROL} inline-flex size-9 cursor-pointer items-center justify-center p-0 hover:bg-(--office-hover)`;
+// A square control of the panel's height, its glyph at full size.
+const ICON_BUTTON =
+  'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded border border-(--office-line) text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 export function TextDocumentImageOptionsPanel({
   picture,
@@ -108,7 +110,7 @@ export function TextDocumentImageOptionsPanel({
           Lock aspect ratio
         </label>
         <div role="group" aria-labelledby={rotateLabel} className="flex flex-col">
-          <span id={rotateLabel} className={PANEL_LABEL}>
+          <span id={rotateLabel} className={`${PANEL_LABEL} font-medium`}>
             Rotate
           </span>
           <div className="flex items-end gap-2">

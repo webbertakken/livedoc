@@ -341,8 +341,10 @@ test('a picture is turned by Image options, the keys and its rotation handle', a
     /^matrix\(0, 1, -1, 0/,
   );
 
-  // The keys turn the selected picture, focus back in the writing.
-  await picture.click();
+  // The keys turn the selected picture once the writing has the focus back from the panel (by the keyboard: a click
+  // on a picture already selected races ProseMirror's own selection sync).
+  await body.focus();
+  await expect(body).toBeFocused();
   await expect(body.locator('.ProseMirror-selectednode.text-document-picture')).toHaveCount(1);
   await page.keyboard.press('Alt+ArrowRight');
   await expect(angle).toHaveValue('105');

@@ -208,6 +208,7 @@ export function useTextDocumentPictureSize({
                     // Read as the key is pressed: a key held turns on from the turn just written.
                     run: () => {
                       const now = read();
+                      debugLog('[text-document] picture turn key', { id, at: now?.pos ?? null });
                       if (now) rotate(now.pos, turnedBy(now.rotation, by), 'keys');
                     },
                   },
