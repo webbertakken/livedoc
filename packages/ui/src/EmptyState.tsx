@@ -28,18 +28,18 @@ export function EmptyState({
       className={`relative flex flex-col items-center justify-center overflow-hidden text-center ${
         compact
           ? 'px-4 py-10'
-          : 'rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/70 px-6 py-16 dark:border-slate-700 dark:from-slate-900 dark:to-slate-900/60'
+          : 'rounded-surface border border-slate-200 bg-gradient-to-b from-white to-slate-50/70 px-6 py-16 dark:border-slate-700 dark:from-slate-900 dark:to-slate-900/60'
       }`}
     >
       <EmptyStateArt icon={icon} compact={compact} spaced />
 
       <h2
-        className={`relative font-semibold text-slate-900 dark:text-slate-100 ${compact ? 'text-sm' : 'text-base'}`}
+        className={`relative text-slate-900 dark:text-slate-100 ${compact ? 'text-body' : 'text-panel-title'}`}
       >
         {title}
       </h2>
       <p
-        className={`relative mt-1.5 max-w-sm leading-relaxed text-slate-500 dark:text-slate-400 ${compact ? 'text-xs' : 'text-sm'}`}
+        className={`relative mt-1.5 max-w-sm text-slate-500 dark:text-slate-400 ${compact ? 'text-supporting' : 'text-body'}`}
       >
         {description}
       </p>
@@ -85,17 +85,17 @@ export function EmptyStateArt({
       >
         <span
           aria-hidden
-          className={`animate-empty-ring absolute inset-0 bg-brand-400/30 ${compact ? 'rounded-2xl' : 'rounded-3xl'}`}
+          className="animate-empty-ring absolute inset-0 rounded-surface bg-brand-400/30"
         />
         <span
           aria-hidden
-          className={`animate-empty-ring absolute inset-0 bg-brand-400/20 [animation-delay:1.3s] ${compact ? 'rounded-2xl' : 'rounded-3xl'}`}
+          className="animate-empty-ring absolute inset-0 rounded-surface bg-brand-400/20 [animation-delay:1.3s]"
         />
         <span
           className={`animate-empty-float relative flex items-center justify-center bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 ${
             compact
-              ? 'h-11 w-11 rounded-xl [&_svg]:h-5 [&_svg]:w-5'
-              : 'h-16 w-16 rounded-2xl [&_svg]:h-7 [&_svg]:w-7'
+              ? 'h-11 w-11 rounded-surface [&_svg]:size-icon-title'
+              : 'h-16 w-16 rounded-surface [&_svg]:size-row'
           }`}
         >
           {icon}

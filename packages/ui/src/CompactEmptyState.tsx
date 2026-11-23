@@ -21,16 +21,16 @@ const SIZES: Record<
 > = {
   regular: {
     box: 'gap-2 p-4',
-    badge: 'h-10 w-10 rounded-xl shadow-md [&_svg]:h-[18px] [&_svg]:w-[18px]',
-    title: 'text-[13px]',
-    line: 'max-w-[18rem] text-[12px]',
+    badge: 'h-10 w-10 rounded-surface shadow-md [&_svg]:size-icon-toolbar',
+    title: 'text-body',
+    line: 'max-w-[18rem] text-supporting',
     action: 'mt-1',
   },
   small: {
-    box: 'gap-1.5 px-3 py-3',
-    badge: 'h-7 w-7 rounded-lg shadow-sm [&_svg]:h-3.5 [&_svg]:w-3.5',
-    title: 'text-[12px]',
-    line: 'max-w-[16rem] text-[11px]',
+    box: 'gap-1 px-3 py-3',
+    badge: 'size-row rounded-menu shadow-sm [&_svg]:size-icon-row',
+    title: 'text-body',
+    line: 'max-w-[16rem] text-supporting',
     action: 'mt-0.5',
   },
 };
@@ -75,7 +75,7 @@ export function CompactEmptyState({
       </span>
       <span
         aria-hidden={live || undefined}
-        className={`max-w-full font-semibold text-slate-800 [overflow-wrap:anywhere] dark:text-slate-100 ${s.title}`}
+        className={`max-w-full text-slate-800 [overflow-wrap:anywhere] dark:text-slate-100 ${s.title}`}
         style={ink ? { color: ink.text } : undefined}
       >
         {title}
