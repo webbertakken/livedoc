@@ -974,6 +974,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone hid a PDF layer for themselves, in a PDF document’s Layers panel.',
   'Pdf|Opened|Read': 'A PDF document opened, its pages read as they came.',
   'Pdf|Opened|PasswordGiven': 'A protected PDF document opened with the password someone gave it.',
+  'Pdf|Opened|Repaired':
+    'A PDF document opened only by rebuilding its damaged file, found once its first page showed.',
   'Pdf|Opened|Refused.Damaged': 'A PDF document could not be opened because its file is damaged.',
   'Pdf|Opened|Refused.Newer':
     'A PDF document could not be opened because it uses a newer kind of PDF than LiveDoc reads.',

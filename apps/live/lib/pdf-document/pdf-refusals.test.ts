@@ -69,6 +69,7 @@ describe('pdfOpenedType', () => {
   it('names each outcome as the telemetry spec does', () => {
     expect(pdfOpenedType('read')).toBe('Read');
     expect(pdfOpenedType('password')).toBe('PasswordGiven');
+    expect(pdfOpenedType('repaired')).toBe('Repaired');
     expect(
       [
         'pdf_damaged',

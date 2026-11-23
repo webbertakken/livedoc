@@ -68,8 +68,8 @@ export const pdfRefusalDownloads = (refusal: PdfSurfaceRefusal): boolean =>
 /** Whether reading may be tried once more ("Try again"). */
 export const pdfRefusalRetries = (refusal: PdfSurfaceRefusal): boolean => refusal === 'pdf_stopped';
 
-/** How an open came out: read as it came, opened with a password, or refused by name. */
-export type PdfOpenOutcome = 'read' | 'password' | PdfSurfaceRefusal;
+/** How an open came out: read as it came, opened with a password, found repaired, or refused by name. */
+export type PdfOpenOutcome = 'read' | 'password' | 'repaired' | PdfSurfaceRefusal;
 
 const REFUSED_TYPE: Record<PdfSurfaceRefusal, string> = {
   pdf_damaged: 'Damaged',
@@ -88,4 +88,6 @@ export const pdfOpenedType = (outcome: PdfOpenOutcome): string =>
     ? 'Read'
     : outcome === 'password'
       ? 'PasswordGiven'
-      : `Refused.${REFUSED_TYPE[outcome]}`;
+      : outcome === 'repaired'
+        ? 'Repaired'
+        : `Refused.${REFUSED_TYPE[outcome]}`;

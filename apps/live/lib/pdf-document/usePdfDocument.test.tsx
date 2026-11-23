@@ -45,6 +45,7 @@ function engineThat(opens: PdfOpened, unlocks: PdfOpened[] = []) {
   const engine = {
     open: vi.fn(async () => opens),
     unlock: vi.fn(async () => unlocks.shift()!),
+    repaired: vi.fn(async () => false),
     drawPage: vi.fn(async () => null),
     selectText: vi.fn(async () => null),
     fileMarks: vi.fn(async () => []),
@@ -308,6 +309,62 @@ describe('usePdfDocument', () => {
       expect(lifted).toBe(false);
       expect(readyOf(o).permissions).toEqual(LIMITED.permissions);
       expect(logged()).toContain('[pdf] limits-wrong tab=t1');
+    });
+  });
+
+  // opening.md "Damaged files": whether the file was repaired is the writer's answer, asked once the first page shows.
+  describe('a file the engine repaired', () => {
+    const drawn = {
+      width: 1,
+      height: 1,
+      rgba: new Uint8ClampedArray(4),
+      toView: [1, 0, 0, 1, 0, 0],
+    } as const;
+
+    const drawFirst = async (o: ReturnType<typeof opening>) => {
+      vi.mocked(o.engine.drawPage).mockResolvedValue(drawn);
+      await act(async () => {
+        await readyOf(o).drawer.draw(0, 1);
+      });
+    };
+
+    it('is said repaired once its first page shows, and counted so after its read', async () => {
+      const o = opening();
+      vi.mocked(o.engine.repaired).mockResolvedValue(true);
+      await waitFor(() => expect(phase(o)).toBe('ready'));
+      expect(readyOf(o).repaired).toBe(false);
+      expect(o.engine.repaired).not.toHaveBeenCalled();
+      const binding = readyOf(o).binding;
+      await drawFirst(o);
+      await waitFor(() => expect(readyOf(o).repaired).toBe(true));
+      expect(readyOf(o).binding).toBe(binding);
+      expect(o.engine.repaired).toHaveBeenCalledTimes(1);
+      expect(logged()).toContain('[pdf] repaired tab=t1');
+      expect(opens()).toEqual([
+        ['Pdf', 'Opened', 'Read'],
+        ['Pdf', 'Opened', 'Repaired'],
+      ]);
+    });
+
+    it('says nothing of a file read whole', async () => {
+      const o = opening();
+      await waitFor(() => expect(phase(o)).toBe('ready'));
+      await drawFirst(o);
+      await waitFor(() => expect(o.engine.repaired).toHaveBeenCalled());
+      expect(readyOf(o).repaired).toBe(false);
+      expect(logged()).not.toContain('[pdf] repaired tab=t1');
+    });
+
+    it('says nothing once the surface has gone', async () => {
+      const o = opening();
+      let answer: (repaired: boolean) => void = () => {};
+      vi.mocked(o.engine.repaired).mockReturnValue(new Promise((resolve) => (answer = resolve)));
+      await waitFor(() => expect(phase(o)).toBe('ready'));
+      await drawFirst(o);
+      await waitFor(() => expect(o.engine.repaired).toHaveBeenCalled());
+      o.hook.unmount();
+      await act(async () => answer(true));
+      expect(logged()).not.toContain('[pdf] repaired tab=t1');
     });
   });
 

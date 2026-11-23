@@ -66,7 +66,7 @@ import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
-import { PdfLimits } from './PdfLimits';
+import { PdfFileNotices } from './PdfFileNotices';
 import { PdfOpenNotices } from './PdfOpenNotices';
 import { PdfPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
@@ -453,7 +453,14 @@ export function PdfDocumentSurface({
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
       />
-      {ready ? <PdfLimits permissions={ready.permissions} liftLimits={ready.liftLimits} /> : null}
+      {ready ? (
+        <PdfFileNotices
+          permissions={ready.permissions}
+          liftLimits={ready.liftLimits}
+          repaired={ready.repaired}
+          canChange={marking}
+        />
+      ) : null}
       {open.phase === 'opening' ? (
         // A page-shaped placeholder on the surface's ground, so nothing shifts when page one arrives.
         <div

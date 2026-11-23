@@ -2,12 +2,12 @@
 
 **Status: specified; a first slice is built.** Built: a file read whole by the engine in a worker thread, every page's
 size read before any is drawn, the refusals shown by name with their glyph and Download, the open password's screen,
-the permissions password's notice and dialog. The engine reads a file's version, properties, page labels, what its permissions ask, and
-whether it has fields or a structure tree, a page's text with each character's box, the outline and a page's links
-(none followed), a page's marks and fields as the file holds them, its certificate signatures, embedded files and
+the permissions password's notice and dialog, the repaired notice and its Details. The engine reads a file's
+version, properties, page labels, what its permissions ask, and whether it has fields or a structure tree, a page's
+text with each character's box, the outline and a page's links (none followed), a page's marks and fields as the file holds them, its certificate signatures, embedded files and
 PDF layers, and opens and writes a protected file given its password; the engine is ended when it answers nothing
-for too long or holds too much memory, and the PDF then shows as stopped. Reading by range and repair notices are not
-built.
+for too long or holds too much memory, and the PDF then shows as stopped. Reading by range and the notice for pages
+missing are not built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.
 "Any PDF" is every PDF a common reader opens: PDF 1.0 to 2.0, linearised, encrypted, with damaged cross-references,
@@ -64,8 +64,16 @@ Damage is ordinary: a broken trailer, a spoiled cross-reference, a file cut shor
   the first change: "Changes to this PDF are saved as a repaired copy." ([Saving](saving.md#addition-or-rewrite))
   Whether a file can take an addition is the writer's answer, asked once the first page shows: asking reads the whole
   file a second time `(default)`.
+- **Repaired** is the writer's answer too, asked at the same time: it read the file only by rebuilding where each of
+  its parts lies. A file the writer cannot read at all is not called repaired: its bake is refused by name.
+- The notice's second sentence, "Changes to this PDF are saved as a repaired copy.", shows to a person whose mode
+  can change the PDF; Viewing shows the first alone `(default)`.
+- **Details** opens the shell's dialog "Repaired PDF": "LiveDoc rebuilt this PDF's index of where each part of the
+  file lies, to show it. The file itself is unchanged.", and where the person's mode can change it, "Changes are
+  saved as a repaired copy: the whole file written anew, never added to its end." `(default)`
 - A file opened with pages missing (cut short after page 12 of 40) shows the pages it has and the notice "Only 12 of
   this PDF's pages could be read."; it is read-only, since a bake would write the loss into the file.
+  Not built: neither reader says how many pages a file cut short had.
 - **A file the engine cannot rebuild** is refused as damaged, below.
 
 ## Passwords
@@ -182,10 +190,11 @@ as for any document.
 
 ## Telemetry and observability
 
-- `Pdf · Opened · <Outcome>`, once per open (a password screen answered counts once, when the file opens): `Read`, `Repaired`, `Partial`, `PasswordGiven`, or
+- `Pdf · Opened · <Outcome>`, once per open (a password screen answered counts once, when the file opens; a file
+  found repaired after its first page shows sends `Repaired` then, after its `Read` `(default)`): `Read`, `Repaired`, `Partial`, `PasswordGiven`, or
   `Refused.<Name>` (`Damaged`, `Newer`, `CertificateProtected`, `RightsProtected`, `Stopped`, `TooLarge`,
   `NoFileStorage`, `BlobMissing`). Never the password or a name.
-- Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool> repaired=<bool>`
+- Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool>`, `[pdf] repaired`
   (with `ms`, `read` and `engine`: how long the open, the read and the engine took),
   `[pdf] refused name=<name>`, `[pdf] password-asked`, `[pdf] password-wrong`,
   `[pdf] limits-lifted`, `[pdf] limits-wrong`, `[pdf] page-refused reason=<reason>`,

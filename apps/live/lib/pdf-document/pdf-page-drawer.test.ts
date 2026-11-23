@@ -41,6 +41,32 @@ function engine() {
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve));
 
 describe('the page drawer', () => {
+  // opening.md "Damaged files": what waits for the first page to show is told once its picture is drawn.
+  it('settles firstDrawn on the first page picture drawn, never a thumbnail, a tile or a page not drawn', async () => {
+    const pdf = engine();
+    const drawer = pdfPageDrawer(pdf);
+    let told = false;
+    void drawer.firstDrawn().then(() => (told = true));
+    const thumbnail = drawer.drawThumbnail(4, 0.2);
+    pdf.finish();
+    await thumbnail;
+    const tile = drawer.drawTile('t', 2, 1, 0, { x: 0, y: 0, width: 1, height: 1 });
+    pdf.finish();
+    await tile;
+    const notDrawn = drawer.draw(13, 1);
+    pdf.finish();
+    await notDrawn;
+    await tick();
+    expect(told).toBe(false);
+    const page = drawer.draw(1, 1);
+    pdf.finish();
+    await page;
+    await tick();
+    expect(told).toBe(true);
+    // Asked after it, it is already settled.
+    await drawer.firstDrawn();
+  });
+
   // reading-surface.md "Thumbnails": drawn on the one line, behind every page and tile.
   it('draws a thumbnail only once no page or tile waits, the latest asked first', async () => {
     const pdf = engine();

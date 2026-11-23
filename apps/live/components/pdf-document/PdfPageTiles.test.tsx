@@ -39,6 +39,7 @@ function source(
       forgetTile: vi.fn(),
       drawThumbnail: async () => null,
       forgetThumbnail: () => {},
+      firstDrawn: () => new Promise<void>(() => {}),
     },
     cache: pdfTileCache(1_000_000),
     view: store,

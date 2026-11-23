@@ -49,6 +49,8 @@ export type PdfDocumentOpen =
        * session; false, the limits kept, where it does not.
        */
       liftLimits: (password: string) => Promise<boolean>;
+      /** Whether the file was read only by rebuilding it, known once the first page shows (opening.md "Damaged files"). */
+      repaired: boolean;
       engine: PdfEngineClient;
       drawer: PdfPageDrawer;
       binding: PdfLiveBinding;
@@ -236,6 +238,7 @@ export function usePdfDocument(
       // What the file asks, lifted by its permissions password; and the pages as last shown, to show again lifted.
       let permissions = opened.document.permissions;
       let current: Extract<PdfDocumentOpen, { phase: 'ready' }> | null = null;
+      let repaired = false;
       const liftLimits = async (password: string): Promise<boolean> => {
         const answer = await client.unlock(password);
         if (!answer.ok || !PdfPermissions.asksNothing(answer.document.permissions)) {
@@ -275,6 +278,7 @@ export function usePdfDocument(
           protected: opened.document.encrypted,
           permissions,
           liftLimits,
+          repaired,
           engine: client,
           drawer,
           binding: bound,
@@ -334,6 +338,13 @@ export function usePdfDocument(
       shown?.terminate();
       showBound(bound);
       tellLost(lost);
+      // Asked once the first page shows: asking reads the whole file a second time (opening.md "Damaged files").
+      await drawer.firstDrawn();
+      if (!(await client.repaired()) || cancelled || engine !== client) return;
+      debugLog(`[pdf] repaired tab=${tabId}`);
+      counted('repaired');
+      repaired = true;
+      show((current = { ...current!, repaired }));
     };
 
     const run = async () => {

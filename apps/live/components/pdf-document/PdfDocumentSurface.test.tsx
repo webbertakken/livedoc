@@ -92,6 +92,7 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
     protected: false,
     permissions: PdfPermissions.all(),
     liftLimits: async () => false,
+    repaired: false,
     engine: {} as never,
     drawer: {
       draw: async () => null,
@@ -100,6 +101,7 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
       forgetTile: () => {},
       drawThumbnail: async () => null,
       forgetThumbnail: () => {},
+      firstDrawn: () => new Promise<void>(() => {}),
     },
     binding,
     undo: pdfUndo(binding.doc),
@@ -477,6 +479,17 @@ describe('a PDF document’s surface', () => {
       show({ ...forbidding, permissions: PdfPermissions.all() }, 'edit');
       expect(screen.getByRole('button', { name: 'Mode: Reviewing' })).toBeTruthy();
       expect(screen.queryByText('This PDF asks not to be changed.')).toBeNull();
+    });
+
+    // opening.md "Damaged files": the repaired notice says how changes are saved while the mode can change the PDF.
+    it('says a repaired PDF is saved as a repaired copy in Reviewing, and not in Viewing', async () => {
+      show({ ...(await ready()), repaired: true }, 'edit');
+      expect(screen.getByText(/This PDF was damaged/).textContent).toContain(
+        'saved as a repaired copy',
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Mode: Reviewing' }));
+      fireEvent.click(screen.getByRole('menuitemradio', { name: /Viewing/ }));
+      expect(screen.getByText(/This PDF was damaged/).textContent).not.toContain('repaired copy');
     });
 
     it('takes the tools that mark away in Viewing, and hands them back in Reviewing', async () => {

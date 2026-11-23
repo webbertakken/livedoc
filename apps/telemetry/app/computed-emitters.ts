@@ -494,6 +494,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     values: [
       'Read',
       'PasswordGiven',
+      'Repaired',
       ...tokensAfter(PDF_REFUSALS, 'const REFUSED_TYPE', '};').map((name) => `Refused.${name}`),
     ],
   },

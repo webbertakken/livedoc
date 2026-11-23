@@ -1,4 +1,4 @@
-import { lockedPdf, protectedPdf } from '@livedoc/pdf-documents/testing';
+import { lockedPdf, protectedPdf, spoiled, textPdf } from '@livedoc/pdf-documents/testing';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { dropPdf, pageOneDrawn } from './pdf-document-pages';
 
@@ -119,6 +119,36 @@ test('a PDF that asks not to be changed opens in Viewing until its permissions p
   await expect(dialog).toBeHidden();
   await expect(page.getByText('This PDF asks not to be changed.')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Mode: Reviewing' })).toBeVisible();
+
+  expectNoPageErrors(pageErrors);
+});
+
+// "Damaged files": a file the engine rebuilds opens, and once its first page shows the notice says it was repaired;
+// Details names what was rebuilt and how changes are saved.
+test('a damaged PDF opens repaired, and says so with its Details', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Damaged.pdf', spoiled(await textPdf(2)));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  await pageOneDrawn(page);
+
+  const notice = page.getByRole('status').filter({ hasText: 'This PDF was damaged.' });
+  await expect(notice).toContainText('Changes to this PDF are saved as a repaired copy.');
+  await page.screenshot({ path: test.info().outputPath('pdf-repaired-dark.png') });
+  await notice.getByRole('button', { name: 'Details' }).click();
+  const details = page.getByRole('dialog', { name: 'Repaired PDF' });
+  await expect(details).toContainText(
+    "LiveDoc rebuilt this PDF's index of where each part of the file lies",
+  );
+  // The dialog's entrance has played out before it is pictured.
+  await page.evaluate(() => Promise.all(document.getAnimations().map((motion) => motion.finished)));
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: test.info().outputPath('pdf-repaired-details-light.png') });
+  await details.getByRole('button', { name: 'Close' }).click();
+  await notice.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(notice).toBeHidden();
 
   expectNoPageErrors(pageErrors);
 });

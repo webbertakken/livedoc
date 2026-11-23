@@ -1,42 +1,13 @@
 'use client';
 
-// What a PDF's permissions ask, said and lifted (docs/specs/035-pdf-documents/opening.md "Passwords";
-// reading-surface.md "Notices"): the notice bar with Enter permissions password, dismissed for this open, and the
-// shell's dialog that gives the engine the permissions password. A password that lifts less than every limit is said
-// in the dialog, tied to its field, which keeps focus with what was typed selected. The password goes to the engine.
+// The permissions password's dialog (docs/specs/035-pdf-documents/opening.md "Passwords"): the shell's dialog that
+// gives the engine the permissions password. A password that lifts less than every limit is said in the dialog, tied to
+// its field, which keeps focus with what was typed selected. The password goes to the engine only.
 import { useEffect, useId, useRef, useState } from 'react';
-import type { PdfPermissions } from '@livedoc/pdf-documents';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
-import { PDF_LIMITS_COPY, pdfLimitsNotice } from '@/lib/pdf-document/pdf-limits';
-import { PdfNoticeBar } from './PdfNoticeBar';
+import { PDF_LIMITS_COPY } from '@/lib/pdf-document/pdf-limits';
 
-export function PdfLimits({
-  permissions,
-  liftLimits,
-}: {
-  permissions: PdfPermissions;
-  liftLimits: (password: string) => Promise<boolean>;
-}) {
-  const [dismissed, setDismissed] = useState(false);
-  const [asking, setAsking] = useState(false);
-  const notice = pdfLimitsNotice(permissions);
-  if (!notice) return null;
-  return (
-    <>
-      {dismissed ? null : (
-        <PdfNoticeBar
-          sentence={notice}
-          action={PDF_LIMITS_COPY.action}
-          onAction={() => setAsking(true)}
-          onDismiss={() => setDismissed(true)}
-        />
-      )}
-      {asking ? <PdfLimitsDialog liftLimits={liftLimits} onClose={() => setAsking(false)} /> : null}
-    </>
-  );
-}
-
-function PdfLimitsDialog({
+export function PdfLimitsDialog({
   liftLimits,
   onClose,
 }: {

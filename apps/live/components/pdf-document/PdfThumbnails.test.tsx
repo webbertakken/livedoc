@@ -64,6 +64,7 @@ function drawer(answer: PageBitmap | null = bitmap): PdfPageDrawer & { asked: un
       return answer;
     },
     forgetThumbnail: () => {},
+    firstDrawn: () => new Promise<void>(() => {}),
   };
 }
 
