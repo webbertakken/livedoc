@@ -133,7 +133,8 @@ describe('the spreadsheet shortcut layer', () => {
     const row = within(dialog).getByText('Select column').closest('div')!;
     expect(row.textContent).toContain('Ctrl+Space');
     expect(row.textContent).not.toMatch(/coming soon/i);
-    expect(within(dialog).getByText('Fill range').textContent).toMatch(/coming soon/i);
+    expect(within(dialog).getByText('Fill range').textContent).not.toMatch(/coming soon/i);
+    expect(within(dialog).getByText(/^Save/).textContent).toMatch(/coming soon/i);
   });
 
   it("leaves the surface's keys to the grid and the editor: nothing runs, nothing is prevented", () => {
