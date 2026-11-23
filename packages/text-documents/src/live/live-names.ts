@@ -64,6 +64,7 @@ export const PICTURE_ATTRIBUTES = [
   'transparency',
   'brightness',
   'contrast',
+  'placement',
   'props',
   'style',
   'link',

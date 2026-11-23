@@ -4,6 +4,7 @@
 // share one.
 import type { MappedPictureType } from '@livedoc/office-packages';
 import type { PictureColouring } from './picture-colours';
+import type { PicturePlacement } from './picture-placement';
 import type { KeptProperties, TextProps } from './props';
 import type { Block, Inline } from './blocks';
 import { HEADER_FOOTER_KINDS, HEADER_FOOTER_SLOTS, type SectionHeaders } from './headers';
@@ -32,6 +33,8 @@ export type Picture = PictureColouring & {
   readonly crop?: PictureCrop;
   /** The angle it is turned clockwise about its centre, in degrees from 0 to below 360; none is 0. */
   readonly rotation?: number;
+  /** Where it stands out of its line, and how the text meets it; none is in line. */
+  readonly placement?: PicturePlacement;
   /** The formatting of the run it sits in. */
   readonly props: TextProps;
   readonly style?: string;

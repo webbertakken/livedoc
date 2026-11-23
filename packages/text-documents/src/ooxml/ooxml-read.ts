@@ -964,7 +964,7 @@ class RunReader {
     } satisfies Field);
   }
 
-  /** A drawing read as a picture in line, when it holds only what the model maps (objects.md "In the formats"). */
+  /** A drawing read as a picture, in line or placed, when it holds only what the model maps (objects.md "In the formats"). */
   picture(
     drawing: XmlElement,
     ctx: RunContext,
@@ -982,6 +982,8 @@ class RunReader {
         return name === undefined ? undefined : this.r.pictures.get(name);
       },
       this.r.taken,
+      // A picture is placed only in the body (objects.md "Placement read"): never in a note, header or footer.
+      part.name === this.r.pkg.mainPart,
     );
     if (!read) return false;
     this.out.push({

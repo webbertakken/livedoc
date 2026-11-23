@@ -115,7 +115,8 @@ import { TextDocumentRuler } from './TextDocumentRuler';
 import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
 import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
-import { breaksPlugin } from '@/lib/text-document/text-document-breaks';
+import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
+import { placedPicturesPlugin } from '@/lib/text-document/text-document-picture-placed-plugin';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import {
   paginationPlugin,
@@ -339,6 +340,20 @@ export function TextDocumentSurface({
               // A picture cropped after a double-click or Crop image (objects.md "Working with a picture"): before the
               // keymaps, so Enter and Escape end cropping rather than reaching the writing.
               pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
+              // Pictures placed out of their line, and the room the text keeps clear of (objects.md "In the editor").
+              placedPicturesPlugin({
+                columnWidth: (body, pos) =>
+                  Columns.width(
+                    sectionSetupAt(
+                      body,
+                      pos,
+                      layout.current?.setup ??
+                        TextDocumentState.section(doc, live.current.format).setup,
+                    ),
+                  ),
+                sheetOf: (index) =>
+                  scroller.current?.querySelector(`[data-page-sheet="${index + 1}"]`) ?? null,
+              }),
               // Columns and rows resized by dragging their borders (tables.md "Working in a table"): before the cells'
               // selecting, so a press on a border selects no cells.
               tableResizePlugin(),

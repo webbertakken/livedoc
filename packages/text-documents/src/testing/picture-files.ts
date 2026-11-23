@@ -21,8 +21,23 @@ export type WordPicture = {
   blipFill?: string;
   spPr?: string;
   xfrm?: string;
-  anchor?: boolean;
+  anchor?: boolean | WordAnchor;
   embed?: string;
+};
+/** A `wp:anchor`'s parts a case changes: its distances, its other attributes, its position and its wrap. */
+export type WordAnchor = { dist?: string; attrs?: string; position?: string; wrap?: string };
+const WORD_ANCHOR: Required<WordAnchor> = {
+  dist: 'distT="0" distB="0" distL="0" distR="0"',
+  attrs:
+    ' simplePos="0" relativeHeight="1" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1"',
+  position:
+    '<wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>',
+  wrap: '<wp:wrapNone/>',
+};
+/** A Word anchor the model does not hold: centred on the margin by alignment. */
+export const ALIGNED_ANCHOR: WordAnchor = {
+  position:
+    '<wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="margin"><wp:align>center</wp:align></wp:positionH><wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>',
 };
 export const wordPicture = ({
   docPr = 'descr="A cat" title="Tom"',
@@ -35,13 +50,11 @@ export const wordPicture = ({
   embed = 'r:embed="rId5"',
 }: WordPicture = {}) => {
   const tag = anchor ? 'wp:anchor' : 'wp:inline';
-  const anchorExtra = anchor
-    ? '<wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>'
-    : '';
-  const anchorAttrs = anchor
-    ? ' simplePos="0" relativeHeight="1" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1"'
-    : '';
-  return `<w:r><w:drawing><${tag} distT="0" distB="0" distL="0" distR="0"${anchorAttrs} ${DML}>${anchorExtra}<wp:extent cx="1238250" cy="876300"/><wp:effectExtent l="19050" t="0" r="0" b="0"/>${anchor ? '<wp:wrapNone/>' : ''}<wp:docPr id="2" name="Bild 2" ${docPr}>${docPrChildren}</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="5" name="Picture 4"/><pic:cNvPicPr><a:picLocks noChangeAspect="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip ${embed} cstate="print">${blip}</a:blip>${blipFill}</pic:blipFill><pic:spPr><a:xfrm${xfrm}><a:off x="0" y="0"/><a:ext cx="1238250" cy="876300"/></a:xfrm>${spPr}</pic:spPr></pic:pic></a:graphicData></a:graphic></${tag}></w:drawing></w:r>`;
+  const placed = anchor ? { ...WORD_ANCHOR, ...(anchor === true ? {} : anchor) } : undefined;
+  const dist = placed?.dist ?? WORD_ANCHOR.dist;
+  const anchorExtra = placed?.position ?? '';
+  const anchorAttrs = placed?.attrs ?? '';
+  return `<w:r><w:drawing><${tag} ${dist}${anchorAttrs} ${DML}>${anchorExtra}<wp:extent cx="1238250" cy="876300"/><wp:effectExtent l="19050" t="0" r="0" b="0"/>${placed?.wrap ?? ''}<wp:docPr id="2" name="Bild 2" ${docPr}>${docPrChildren}</wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="5" name="Picture 4"/><pic:cNvPicPr><a:picLocks noChangeAspect="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip ${embed} cstate="print">${blip}</a:blip>${blipFill}</pic:blipFill><pic:spPr><a:xfrm${xfrm}><a:off x="0" y="0"/><a:ext cx="1238250" cy="876300"/></a:xfrm>${spPr}</pic:spPr></pic:pic></a:graphicData></a:graphic></${tag}></w:drawing></w:r>`;
 };
 export const IMAGE_REL = (id: string, target: string) =>
   `<Relationship Id="${id}" Type="${RELATIONSHIP_TYPES.image}" Target="${target}"/>`;

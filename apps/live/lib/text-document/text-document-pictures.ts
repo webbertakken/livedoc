@@ -7,6 +7,7 @@
 import type { Node as PmNode, NodeSpec } from 'prosemirror-model';
 import type { Decoration, NodeView, NodeViewConstructor } from 'prosemirror-view';
 import type { CroppedPicture } from './text-document-picture-crop';
+import { PLACED_PICTURE_CLASS, type PlacedLayout } from './text-document-picture-placed';
 import {
   PICTURE_ATTRIBUTES,
   Pictures,
@@ -158,15 +159,20 @@ export function pictureView(
     // The box and the picture in it at a size and turn: the picture's own, or a drag's. A turn being dragged keeps the
     // bounds it began with, so the line stays still under the pointer until the turn is written.
     let bounds = { width: 0, height: 0 };
+    // Placed out of its line (objects.md "In the editor"): its box from its paragraph's top left, its anchor of no width.
+    let placed: PlacedLayout | null = null;
     const fit = (attrs: Readonly<Record<string, unknown>>, keepBounds = false) => {
       const box = pictureBox(attrs);
       if (!keepBounds) bounds = box.bounds;
-      dom.style.width = `${bounds.width}pt`;
-      dom.style.height = `${bounds.height}pt`;
+      dom.classList.toggle(PLACED_PICTURE_CLASS, placed !== null);
+      if (placed) dom.dataset.placed = placed.layer;
+      else delete dom.dataset.placed;
+      dom.style.width = placed ? '0px' : `${bounds.width}pt`;
+      dom.style.height = placed ? '0px' : `${bounds.height}pt`;
       turn.style.width = `${box.width}pt`;
       turn.style.height = `${box.height}pt`;
-      turn.style.left = `${round3((bounds.width - box.width) / 2)}pt`;
-      turn.style.top = `${round3((bounds.height - box.height) / 2)}pt`;
+      turn.style.left = `${placed ? placed.picture.left : round3((bounds.width - box.width) / 2)}pt`;
+      turn.style.top = `${placed ? placed.picture.top : round3((bounds.height - box.height) / 2)}pt`;
       turn.style.transform = box.rotation ? `rotate(${box.rotation}deg)` : '';
       dom.dataset.rotation = String(box.rotation);
       const img = clip.querySelector('img');
@@ -210,6 +216,10 @@ export function pictureView(
     };
     const croppingIn = (marks: readonly Decoration[]) =>
       marks.some((d) => (d.spec as { cropping?: boolean } | undefined)?.cropping === true);
+    const placedIn = (marks: readonly Decoration[]): PlacedLayout | null =>
+      marks
+        .map((d) => (d.spec as { placed?: PlacedLayout } | undefined)?.placed)
+        .find((layout) => layout !== undefined) ?? null;
     const showImage = (url: string) => {
       dom.classList.remove('text-document-picture-missing');
       const img = document.createElement('img');
@@ -315,12 +325,14 @@ export function pictureView(
       handles = null;
     };
 
+    placed = placedIn(decorations);
     draw(node);
     crop(croppingIn(decorations));
     return {
       dom,
       update: (next, marks) => {
         if (next.type !== node.type) return false;
+        placed = placedIn(marks);
         draw(next);
         crop(croppingIn(marks));
         return true;

@@ -619,4 +619,57 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     );
   },
+  // objects.md "The model", Placement: one picture wrapped, moving with its text, with LibreOffice's margins; one
+  // behind the text, fixed on the page.
+  placedPictures: (format) => {
+    const placed = (
+      media: string,
+      size: number,
+      placement: Picture['placement'],
+      alt?: string,
+    ): Picture => ({
+      type: 'picture',
+      media,
+      width: size,
+      height: size,
+      props: {},
+      placement,
+      ...(alt ? { alt } : {}),
+    });
+    return base(
+      format,
+      [
+        paragraph(format, 'normal', [
+          run('Placed '),
+          placed(
+            GREEN_PNG_SHA,
+            40,
+            {
+              wrap: 'wrap',
+              margin: { top: 3.6, right: 7.2, bottom: 3.6, left: 7.2 },
+              moves: 'with-text',
+              x: 72,
+              y: 36,
+            },
+            'Wrapped',
+          ),
+          run(' and '),
+          placed(BLUE_PNG_SHA, 20, {
+            wrap: 'behind',
+            margin: { top: 0, right: 0, bottom: 0, left: 0 },
+            moves: 'page',
+            x: 100,
+            y: 200,
+          }),
+          run('.'),
+        ]),
+      ],
+      {
+        media: {
+          [GREEN_PNG_SHA]: { mediaType: 'image/png' as const, bytes: GREEN_PNG },
+          [BLUE_PNG_SHA]: { mediaType: 'image/png' as const, bytes: BLUE_PNG },
+        },
+      },
+    );
+  },
 };

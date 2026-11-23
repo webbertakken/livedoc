@@ -70,6 +70,17 @@ export {
   type PictureRecolour,
 } from './model/picture-colours';
 export {
+  PICTURE_MARGIN_MAX,
+  PICTURE_OFFSET_MAX,
+  PICTURE_WRAP_MARGIN,
+  PICTURE_WRAPS,
+  PicturePlacements,
+  type PictureMargin,
+  type PictureMoves,
+  type PicturePlacement,
+  type PictureWrap,
+} from './model/picture-placement';
+export {
   Blocks,
   CELL_SIDES,
   TABLE_COLUMN_FALLBACK_PT,

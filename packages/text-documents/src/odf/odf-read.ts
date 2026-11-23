@@ -886,7 +886,7 @@ class InlineReader {
     this.out.push(kept);
   }
 
-  /** A frame read as a picture in line, when it holds only what the model maps (objects.md "In the formats"). */
+  /** A frame read as a picture, in line or placed, when it holds only what the model maps (objects.md "In the formats"). */
   picture(node: XmlElement) {
     const auto = this.r.part.auto;
     return readOdfPicture(
@@ -897,6 +897,8 @@ class InlineReader {
       },
       this.r.parts.pictures ?? new Map(),
       this.r.taken,
+      // A picture is placed only in the body (objects.md "Placement read"): never in a note, header or footer.
+      this.notes && this.r.part.parsed === this.r.parts.content,
     );
   }
 
