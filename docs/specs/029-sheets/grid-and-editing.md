@@ -89,7 +89,8 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 ## Fill and move
 
 - **Fill handle**: dragging it copies the cells, or continues a series (numbers by their step, dates by day, month
-  or year, `Item 1` → `Item 2`, weekday and month names); Ctrl while dragging switches between copy and series.
+  or year, `Item 1` → `Item 2`, weekday and month names); one date continues by the day (default, D156); Ctrl
+  while dragging switches between copy and series.
 - Ctrl+D fills down, Ctrl+R right, Ctrl+Enter the range: in an edit it saves the input into every selected cell;
   outside one it accepts a Smart Fill offer, and otherwise does nothing (default, D151).
 - **Smart Fill**: when a column's typed values follow a pattern of a neighbour, the grid offers to fill the rest

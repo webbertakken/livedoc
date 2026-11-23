@@ -216,3 +216,5 @@ Version History (the shell's). Each is specified with its area.
   merge there (default).
 - **D155** Rules in a plain paste: Set again over the pasted cells as D143 sets them; a cut takes the rules wholly over
   its cells from their old place; an Editor's paste only (default).
+- **D156** One date dragged by the fill handle: Continues by the day, as Google's and Excel's do; Ctrl copies it
+  (default).

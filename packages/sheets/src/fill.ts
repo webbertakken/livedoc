@@ -107,11 +107,12 @@ export function fillSeries(
     ? source.map((x) => (x as { s: string }).s)
     : null;
   let series: Series | null = null;
-  if (copy) {
-    if (nums && nums.length === 1) series = (k) => ({ n: nums[0]! + one * (k + 1) });
-  } else if (nums) {
+  // One date continues by the day and one number is copied; Ctrl swaps them (D156).
+  const only = nums?.length === 1 ? nums[0] : undefined;
+  if (only !== undefined && dateLike !== copy) series = (k) => ({ n: only + one * (k + 1) });
+  else if (!copy && nums) {
     series = (dateLike ? monthly(nums) : null) ?? arith(nums);
-  } else if (texts) {
+  } else if (!copy && texts) {
     series =
       cyclic(texts, MONTH_NAMES, one) ?? cyclic(texts, DAY_NAMES, one) ?? textNumbers(texts, one);
   }
