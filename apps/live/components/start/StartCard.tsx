@@ -45,24 +45,24 @@ function StartCard({
         onClick={onChoose}
         aria-label={`${card.name}${card.ariaKind ? ` ${card.ariaKind}` : ''}: ${card.line}`}
         // On a phone a row: the picture small at the left, the words beside it, so a screen holds several.
-        className="group flex w-full cursor-pointer flex-col rounded-2xl border p-2 text-left max-sm:flex-row max-sm:items-center max-sm:gap-1 max-sm:rounded-xl transition duration-micro ease-out hover:-translate-y-0.5 hover:border-[var(--start-accent)] hover:shadow-lg focus-visible:-translate-y-0.5 focus-visible:border-[var(--start-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--start-accent)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+        className="group flex w-full cursor-pointer flex-col rounded-surface border p-2 text-left max-sm:flex-row max-sm:items-center max-sm:gap-1 transition duration-micro ease-out hover:-translate-y-0.5 hover:border-[var(--start-accent)] hover:shadow-lg focus-visible:-translate-y-0.5 focus-visible:border-[var(--start-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--start-accent)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
         style={{ borderColor: palette.border, backgroundColor: palette.surface }}
       >
         {/* The picture, larger than it draws elsewhere, on a soft panel of the board's column colour. */}
         <span
-          className="flex h-28 w-full items-center justify-center overflow-hidden rounded-xl p-3 max-sm:h-[4.5rem] max-sm:w-24 max-sm:shrink-0 max-sm:rounded-lg max-sm:p-1.5 [&>*]:!h-full"
+          className="flex h-28 w-full items-center justify-center overflow-hidden rounded-menu p-3 max-sm:h-[4.5rem] max-sm:w-24 max-sm:shrink-0 max-sm:p-1 [&>*]:!h-full"
           style={{ backgroundColor: palette.column }}
         >
           {card.picture}
         </span>
-        <span className="flex min-w-0 flex-col gap-1 px-1.5 pb-1 pt-2.5 max-sm:flex-1 max-sm:py-0.5">
+        <span className="flex min-w-0 flex-col gap-1 px-2 pb-1 pt-2.5 max-sm:flex-1 max-sm:py-0.5">
           <span className="flex min-w-0 items-center gap-2">
-            <span className="truncate text-[14px] font-semibold" style={{ color: palette.text }}>
+            <span className="truncate text-body" style={{ color: palette.text }}>
               {card.name}
             </span>
             {card.badge ? (
               <span
-                className="shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide"
+                className="shrink-0 rounded-full px-2 py-px text-supporting"
                 style={{ backgroundColor: startTint(palette, 14), color: palette.focus }}
               >
                 {card.badge}
@@ -70,7 +70,7 @@ function StartCard({
             ) : null}
             {card.tag ? (
               <span
-                className="ml-auto shrink-0 rounded-full border px-1.5 py-px text-[10px] font-semibold tabular-nums"
+                className="ml-auto shrink-0 rounded-full border px-1 py-px text-glyph tabular-nums"
                 style={{ borderColor: palette.border, color: palette.muted }}
               >
                 {card.tag}
@@ -79,7 +79,7 @@ function StartCard({
           </span>
           <span
             // In full, on a phone too: a card's line is short, and cut it misleads.
-            className="text-[12.5px] leading-snug"
+            className="text-supporting"
             style={{ color: palette.muted }}
           >
             {card.line}

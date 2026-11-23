@@ -10,7 +10,7 @@ import type { StartPanelCard } from './StartCard';
 
 export function TemplatePicture({ kind }: { kind: TemplateKind }) {
   return (
-    <span className="preview-art-tile flex h-full w-full items-center justify-center rounded-lg bg-slate-50 [&>svg]:h-full [&>svg]:w-auto">
+    <span className="preview-art-tile flex h-full w-full items-center justify-center rounded-control bg-slate-50 [&>svg]:h-full [&>svg]:w-auto">
       <TemplatePreview kind={kind} />
     </span>
   );

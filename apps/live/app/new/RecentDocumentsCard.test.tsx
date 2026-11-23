@@ -35,3 +35,17 @@ describe('RecentDocumentsCard', () => {
     expect(mine!.textContent).not.toContain('team:');
   });
 });
+
+// docs/specs/004-interface-design/sizing.md: names at the body step, regular; the heading in its own case.
+describe('RecentDocumentsCard on the sizing scale', () => {
+  it('names each document at the body step and heads the card without tracked capitals', async () => {
+    listing.current = { documents: [summary('mine', 1)], teamRecent: [] };
+    const { container } = render(<RecentDocumentsCard ownerId="owner" />);
+    await waitFor(() => expect(screen.getAllByRole('link')).toHaveLength(2));
+    const name = screen.getByText('Doc mine').parentElement!;
+    expect(name.className.split(/\s+/)).toContain('text-body');
+    expect(name.className).not.toMatch(/font-(medium|semibold)/);
+    expect(container.querySelector('.uppercase')).toBeNull();
+    expect(container.firstElementChild!.className.split(/\s+/)).toContain('rounded-surface');
+  });
+});

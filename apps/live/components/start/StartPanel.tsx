@@ -167,7 +167,7 @@ export function StartPanel<C extends string>({
         data-rail={c.id}
         aria-current={on ? 'true' : undefined}
         onClick={() => pick(c.id)}
-        className="flex shrink-0 cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-medium transition duration-micro hover:bg-[var(--start-hover)] motion-reduce:transition-none"
+        className={`flex min-h-row shrink-0 cursor-pointer items-center gap-2 rounded-control px-3 py-1 text-left text-body ${on ? 'font-medium' : ''} transition duration-micro hover:bg-[var(--start-hover)] motion-reduce:transition-none`}
         style={
           {
             backgroundColor: on ? startTint(palette, 14) : undefined,
@@ -228,10 +228,7 @@ export function StartPanel<C extends string>({
   };
   const section = (key: string, name: string, list: readonly StartPanelCard[]) => (
     <section key={key} aria-label={name} className="mb-6 last:mb-0">
-      <h3
-        className="mb-3 text-[12px] font-semibold uppercase tracking-wider"
-        style={{ color: palette.muted }}
-      >
+      <h3 className="mb-3 text-supporting" style={{ color: palette.muted }}>
         {name}
       </h3>
       {cards(list)}
@@ -265,7 +262,7 @@ export function StartPanel<C extends string>({
           onClose();
         }}
         // One height whatever the category shows, so the panel never jumps as it changes.
-        className={`pointer-events-auto flex h-full max-h-[46rem] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border shadow-2xl max-sm:max-h-none max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:border-b-0 short-window:pb-[var(--start-inset)] ${
+        className={`pointer-events-auto flex h-full max-h-[46rem] w-full max-w-5xl flex-col overflow-hidden rounded-surface border shadow-2xl max-sm:max-h-none max-sm:rounded-b-none max-sm:rounded-t-surface max-sm:border-b-0 short-window:pb-[var(--start-inset)] ${
           swapped ? '' : 'animate-dialog-in max-sm:animate-sheet-up'
         }`}
         style={
@@ -289,24 +286,21 @@ export function StartPanel<C extends string>({
         <header
           // Room on the right for the help and × pinned in the corner. On a phone only the title's row needs it: the
           // search below runs the full width, so a long placeholder ("Find a board, sheet, form or layout") fits.
-          className="relative flex flex-wrap items-center gap-x-4 gap-y-3 border-b py-4 pl-5 pr-24 sm:pl-6 max-sm:pr-5 max-sm:pt-1"
+          className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b py-4 pl-4 pr-3 sm:pl-6 max-sm:pt-1"
           style={{ borderColor: palette.border }}
         >
-          <div className="min-w-0 flex-1 max-sm:pr-20">
-            <h2
-              id={titleId}
-              className="text-[20px] font-semibold tracking-tight max-sm:text-[18px]"
-            >
+          <div className="min-w-0 flex-1">
+            <h2 id={titleId} className="text-dialog-title max-sm:text-name">
               {title}
             </h2>
             {/* On a phone the line is left out, for room. */}
-            <p className="mt-0.5 text-[13px] max-sm:hidden" style={{ color: palette.muted }}>
+            <p className="mt-0.5 text-body max-sm:hidden" style={{ color: palette.muted }}>
               {line}
             </p>
           </div>
           <label
             // On a phone the search takes its own row under the title, the help and × staying beside the title.
-            className="flex h-9 w-full items-center gap-2 rounded-xl border px-3 transition focus-within:ring-2 focus-within:ring-[var(--start-accent)] max-sm:order-last sm:w-68"
+            className="flex h-field w-full items-center gap-2 rounded-control border px-3 transition focus-within:ring-2 focus-within:ring-[var(--start-accent)] max-sm:order-last sm:w-68"
             style={{
               borderColor: palette.border,
               backgroundColor: palette.surface,
@@ -339,7 +333,7 @@ export function StartPanel<C extends string>({
                   }
                 }
               }}
-              className="min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+              className="min-w-0 flex-1 bg-transparent text-body outline-none"
               style={{ color: palette.text }}
             />
             {query ? (
@@ -347,14 +341,14 @@ export function StartPanel<C extends string>({
                 type="button"
                 aria-label="Clear search"
                 onClick={() => setQuery('')}
-                className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full"
+                className="flex size-chip cursor-pointer items-center justify-center rounded-full"
               >
                 <ClearGlyph />
               </button>
             ) : null}
           </label>
-          {/* Help and ×, pinned to the panel's top right corner. */}
-          <div className="absolute right-3 top-3 flex items-center gap-1 max-sm:top-0">
+          {/* Help and ×, at the header's end, beside the title on a phone (the search wraps under them). */}
+          <div className="flex shrink-0 items-center gap-1 self-start">
             <HelpArticleLink article={helpArticle} variant="icon" />
             {onClose ? (
               <Tooltip label="Close">
@@ -362,7 +356,7 @@ export function StartPanel<C extends string>({
                   type="button"
                   aria-label="Close"
                   onClick={onClose}
-                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition hover:bg-[var(--start-hover)]"
+                  className="flex size-row cursor-pointer items-center justify-center rounded-control transition hover:bg-[var(--start-hover)]"
                   style={
                     {
                       color: palette.muted,
@@ -436,14 +430,14 @@ export function StartPanel<C extends string>({
                     // Nothing of this mode, something of another's: one line, then the other modes' blocks.
                     <p
                       role="status"
-                      className="mb-5 flex items-start gap-2.5 rounded-xl px-3 py-2.5 text-[13px]"
+                      className="mb-5 flex items-start gap-2 rounded-menu px-3 py-2.5 text-body"
                       style={{ backgroundColor: palette.column }}
                     >
                       <span aria-hidden className="mt-px shrink-0" style={{ color: palette.muted }}>
                         <SearchGlyph />
                       </span>
                       <span>
-                        <span className="font-semibold">{noMatchTitle(noMatchNoun, query)}.</span>{' '}
+                        <span className="font-medium">{noMatchTitle(noMatchNoun, query)}.</span>{' '}
                         <span style={{ color: palette.muted }}>Found elsewhere.</span>
                       </span>
                     </p>
@@ -468,8 +462,8 @@ export function StartPanel<C extends string>({
               )
             ) : (
               <section key={shown.id} aria-label={shown.name}>
-                <h3 className="text-[16px] font-semibold">{shown.name}</h3>
-                <p className="mb-4 mt-0.5 text-[13px] max-sm:mb-3" style={{ color: palette.muted }}>
+                <h3 className="text-panel-title">{shown.name}</h3>
+                <p className="mb-4 mt-0.5 text-body max-sm:mb-3" style={{ color: palette.muted }}>
                   {shown.line}
                 </p>
                 {cards(cardsIn(shown.id))}
