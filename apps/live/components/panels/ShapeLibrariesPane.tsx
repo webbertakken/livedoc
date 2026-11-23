@@ -28,7 +28,7 @@ const titleOf = (item: ShapeLibraryItem, index: number) =>
 const ShapesBadge = lucideGlyph(lucideShapes, 28);
 
 const BUTTON =
-  'rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 transition hover:border-brand-300 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:text-slate-300';
+  'inline-flex min-h-row items-center rounded-control border border-slate-200 px-2 text-body text-slate-600 transition hover:border-brand-300 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:text-slate-300';
 
 // `compact`: inside the editor's Explorer pane: the small empty state and four shapes to a row.
 export function ShapeLibrariesPane({ compact = false }: { compact?: boolean } = {}) {
@@ -39,7 +39,7 @@ export function ShapeLibrariesPane({ compact = false }: { compact?: boolean } = 
         {[0, 1].map((i) => (
           <div
             key={i}
-            className="h-32 rounded-xl border border-slate-200 bg-slate-50 motion-safe:animate-pulse dark:border-slate-700 dark:bg-slate-900/40"
+            className="h-32 rounded-surface border border-slate-200 bg-slate-50 motion-safe:animate-pulse dark:border-slate-700 dark:bg-slate-900/40"
           />
         ))}
       </div>
@@ -47,7 +47,7 @@ export function ShapeLibrariesPane({ compact = false }: { compact?: boolean } = 
   }
   if (status === 'error') {
     return (
-      <div className="px-1 py-8 text-sm text-slate-600 dark:text-slate-300">
+      <div className="px-1 py-8 text-body text-slate-600 dark:text-slate-300">
         <p>Couldn&apos;t load your shape libraries.</p>
         <button type="button" onClick={() => void reload()} className={`mt-2 ${BUTTON}`}>
           Try again
@@ -98,7 +98,7 @@ function LibraryCard({ library, compact = false }: { library: ShapeLibrary; comp
   return (
     <article
       aria-labelledby={headingId}
-      className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+      className="rounded-surface border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
     >
       <div className="flex flex-wrap items-center gap-2">
         {renaming ? (
@@ -110,11 +110,11 @@ function LibraryCard({ library, compact = false }: { library: ShapeLibrary; comp
         ) : null}
         <h3
           id={headingId}
-          className={`min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100 ${renaming ? 'sr-only' : ''}`}
+          className={`min-w-0 flex-1 truncate text-body font-medium text-slate-800 dark:text-slate-100 ${renaming ? 'sr-only' : ''}`}
         >
           {library.name}
         </h3>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           {pluralGrouped(library.items.length, 'shape', 'shapes')}
         </span>
       </div>
@@ -124,7 +124,7 @@ function LibraryCard({ library, compact = false }: { library: ShapeLibrary; comp
             <li key={item.id} data-testid="library-preview">
               <LibraryItemThumbnail
                 item={item}
-                className="h-10 w-14 rounded bg-white ring-1 ring-slate-200 dark:ring-slate-700"
+                className="h-10 w-14 rounded-control bg-white ring-1 ring-slate-200 dark:ring-slate-700"
               />
             </li>
           ))}
@@ -166,13 +166,13 @@ function LibraryCard({ library, compact = false }: { library: ShapeLibrary; comp
           {library.items.map((item, i) => (
             <li
               key={item.id}
-              className="flex flex-col items-center gap-1 rounded-lg border border-slate-100 p-2 dark:border-slate-800"
+              className="flex flex-col items-center gap-1 rounded-menu border border-slate-100 p-2 dark:border-slate-800"
             >
               <LibraryItemThumbnail
                 item={item}
-                className="h-12 w-full rounded bg-white ring-1 ring-slate-200 dark:ring-slate-700"
+                className="h-12 w-full rounded-control bg-white ring-1 ring-slate-200 dark:ring-slate-700"
               />
-              <span className="w-full truncate text-center text-xs text-slate-600 dark:text-slate-300">
+              <span className="w-full truncate text-center text-body text-slate-600 dark:text-slate-300">
                 {titleOf(item, i)}
               </span>
               <button
@@ -234,10 +234,10 @@ function RenameInput({
         onBlur={() => {
           if (!saving && !error) onDone();
         }}
-        className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        className="h-field w-full rounded-control border border-slate-300 px-2 text-body text-slate-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
       />
       {error ? (
-        <p role="alert" className="mt-1 text-xs text-rose-700 dark:text-rose-300">
+        <p role="alert" className="mt-1 text-supporting text-rose-700 dark:text-rose-300">
           {error}
         </p>
       ) : null}

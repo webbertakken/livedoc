@@ -28,14 +28,14 @@ export function TrashPane({ trash }: { trash: TrashController }) {
   const groups = trash.listing ? trashGroups(trash.listing) : null;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <InfoNote>
         Deleted documents wait here for {TRASH_RETENTION_DAYS} days, then they are removed for good.
         Restoring one puts it back where it was.
       </InfoNote>
 
       {groups === null ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400" role="status">
+        <p className="text-body text-slate-500 dark:text-slate-400" role="status">
           Loading…
         </p>
       ) : groups.length === 0 ? (
@@ -51,12 +51,12 @@ export function TrashPane({ trash }: { trash: TrashController }) {
               <div className="min-w-0">
                 <h2
                   id={`trash-${group.key}`}
-                  className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100"
+                  className="truncate text-panel-title text-slate-800 dark:text-slate-100"
                 >
                   {group.title}
                 </h2>
                 {group.scope.kind === 'local' ? (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-supporting text-slate-500 dark:text-slate-400">
                     Documents in This Browser, kept only here.
                   </p>
                 ) : null}
@@ -64,7 +64,7 @@ export function TrashPane({ trash }: { trash: TrashController }) {
               <button
                 type="button"
                 onClick={(e) => setConfirming({ kind: 'empty', group, anchor: e.currentTarget })}
-                className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="inline-flex min-h-row shrink-0 items-center rounded-control px-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 Empty Trash
               </button>
@@ -72,22 +72,22 @@ export function TrashPane({ trash }: { trash: TrashController }) {
             <ul className="divide-y divide-slate-100 dark:divide-slate-700/60">
               {group.rows.map((row) => (
                 <li key={row.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                  <span className="flex size-row shrink-0 items-center justify-center rounded-control bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
                     <DocumentIcon size={14} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                      <span className="truncate text-body text-slate-800 dark:text-slate-100">
                         {row.name || 'Untitled document'}
                       </span>
                       {/* This Browser's Trash (docs/specs/006-document/offline-mode.md#this-browser-pill). */}
                       {group.scope.kind === 'local' ? <ThisBrowserPill /> : null}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-supporting text-slate-500 dark:text-slate-400">
                       {trashedOnLabel(row)} · {daysLeftLabel(row.trashedAt, now)}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1">
                     <Button
                       variant="secondary"
                       size="xs"
@@ -108,7 +108,7 @@ export function TrashPane({ trash }: { trash: TrashController }) {
                           anchor: e.currentTarget,
                         })
                       }
-                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                      className="inline-flex min-h-row items-center rounded-control px-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                     >
                       Delete permanently
                     </button>

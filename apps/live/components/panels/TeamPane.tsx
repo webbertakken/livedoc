@@ -141,9 +141,9 @@ export function TeamPane({
         <ul className="divide-y divide-slate-100 dark:divide-slate-700/60">
           {Array.from({ length: 3 }).map((_, i) => (
             <li key={i} className="flex items-center gap-3 px-4 py-3">
-              <span className="h-8 w-8 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
-              <span className="h-4 flex-1 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-              <span className="h-4 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+              <span className="size-row shrink-0 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+              <span className="h-2.5 flex-1 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+              <span className="h-2.5 w-16 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
             </li>
           ))}
         </ul>
@@ -157,17 +157,15 @@ export function TeamPane({
     // "couldn't load" line, with a way back to the user's own work.
     return (
       <div className="flex items-center justify-center px-6 py-16">
-        <div className="flex max-w-md animate-pop-in flex-col items-center rounded-xl border border-slate-200 bg-white px-8 py-10 text-center shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-800 dark:shadow-black/30">
+        <div className="flex max-w-md animate-pop-in flex-col items-center rounded-surface border border-slate-200 bg-white px-6 py-10 text-center shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-800 dark:shadow-black/30">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300">
             <CircleXIcon />
           </div>
-          <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-rose-600">
-            404
-          </p>
-          <h1 className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+          <p className="mt-4 text-supporting text-rose-600">404</p>
+          <h1 className="mt-1 text-dialog-title text-slate-900 dark:text-slate-100">
             Team not found
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-body text-slate-600 dark:text-slate-300">
             This team doesn&apos;t exist, or you&apos;re not a member of it. Ask an admin for an
             invite, or head back to your own documents.
           </p>
@@ -207,16 +205,18 @@ export function TeamPane({
       <div className={LIST_CARD}>
         {/* ---------- Header: context line + overflow menu ---------- */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/70 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-900/40">
-          <p className="min-w-0 truncate text-xs text-slate-500 dark:text-slate-400">{headline}</p>
+          <p className="min-w-0 truncate text-supporting text-slate-500 dark:text-slate-400">
+            {headline}
+          </p>
           <div className="flex shrink-0 items-center gap-1">
             {isAdmin ? (
               <button
                 type="button"
                 onClick={() => setLinkOpen(true)}
                 aria-label="Invite by Link"
-                // Its glyph alone on a phone, 23px tall: padded to 44px on a touch screen, upward and downward only,
+                // Its glyph alone on a phone, 28px tall: padded to 44px on a touch screen, upward and downward only,
                 // so the Team actions ⋯ beside it keeps its own taps.
-                className="relative touch-target-y inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
+                className="relative touch-target-y inline-flex min-h-row items-center gap-1 rounded-control px-2 text-body text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
               >
                 <LinkIcon />
                 <span className="hidden sm:inline">Invite by Link</span>
@@ -244,7 +244,7 @@ export function TeamPane({
                 {isAdmin ? (
                   <MenuTile
                     icon={
-                      <span className="[&_svg]:h-5 [&_svg]:w-5">
+                      <span className="[&_svg]:size-icon-title">
                         <PencilIcon />
                       </span>
                     }
@@ -258,7 +258,7 @@ export function TeamPane({
                 {canLeave ? (
                   <MenuTile
                     icon={
-                      <span className="[&_svg]:h-5 [&_svg]:w-5">
+                      <span className="[&_svg]:size-icon-title">
                         <SignInIcon />
                       </span>
                     }
@@ -272,7 +272,7 @@ export function TeamPane({
                 {isAdmin ? (
                   <MenuTile
                     icon={
-                      <span className="[&_svg]:h-5 [&_svg]:w-5">
+                      <span className="[&_svg]:size-icon-title">
                         <TrashIcon />
                       </span>
                     }
@@ -306,7 +306,7 @@ export function TeamPane({
 
         {/* ---------- Notice + invite footer ---------- */}
         {notice ? (
-          <p className="border-t border-amber-100 bg-amber-50 px-4 py-2 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+          <p className="border-t border-amber-100 bg-amber-50 px-4 py-2 text-supporting text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
             {notice}
           </p>
         ) : null}
@@ -327,7 +327,7 @@ export function TeamPane({
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="Add your team by email address, they will receive an invite."
               aria-label="Invite by email address"
-              className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400"
+              className="min-w-0 flex-1 bg-transparent text-body text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400"
             />
             <Button
               type="submit"

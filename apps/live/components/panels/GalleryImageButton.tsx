@@ -48,7 +48,7 @@ export function GalleryImageButton({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
-      className="block aspect-square w-full overflow-hidden rounded-md border border-slate-200 bg-white transition hover:border-brand-400 dark:border-slate-700 dark:hover:border-brand-500/60"
+      className="block aspect-square w-full overflow-hidden rounded-control border border-slate-200 bg-white transition hover:border-brand-400 dark:border-slate-700 dark:hover:border-brand-500/60"
     >
       {state.status === 'ready' ? (
         <img
