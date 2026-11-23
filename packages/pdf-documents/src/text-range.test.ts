@@ -7,7 +7,7 @@ import { TextRange } from './text-range';
 type Line = { text: string; x: number; y: number; height?: number; width?: number };
 
 // A page of lines, each character `width` wide and `height` tall from its line's bottom `y`; a space is generated
-// (a box of no size), and lines are joined by a generated \r\n, as PDFium's text is.
+// (a box of no size), and lines are joined by a generated \r\n, as the engine's reader writes them.
 function pageOf(lines: readonly Line[]): PageText {
   const codes: number[] = [];
   const boxes: number[] = [];
