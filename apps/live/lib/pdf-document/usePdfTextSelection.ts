@@ -13,7 +13,7 @@ import {
   type Quad,
   type TextSpan,
 } from '@livedoc/pdf-documents';
-import { pdfPageTexts } from './pdf-page-texts';
+import { pdfPageTexts, type PdfPageTexts } from './pdf-page-texts';
 
 /** What a page hands over while Select is in hand, its points in page space. */
 export type PdfTextGesture =
@@ -43,13 +43,21 @@ export function usePdfTextSelection(
 ) {
   // A change of the pages reads them anew and clears what was selected on the old ones.
   const texts = useMemo(() => (engine && pages ? pdfPageTexts(engine) : null), [engine, pages]);
-  const [selected, setSelected] = useState<PdfTextSelected | null>(null);
+  // What is selected, on the pages it was selected on: on other pages nothing is.
+  const [held, setHeld] = useState<{ on: PdfPageTexts | null; selected: PdfTextSelected | null }>({
+    on: null,
+    selected: null,
+  });
+  const selected = held.on === texts ? held.selected : null;
+  const setSelected = useCallback(
+    (next: PdfTextSelected | null) => setHeld({ on: texts, selected: next }),
+    [texts],
+  );
   const start = useRef<Start | null>(null);
   const current = useRef(texts);
   useEffect(() => {
     current.current = texts;
     start.current = null;
-    setSelected(null);
   }, [texts]);
 
   // Runs `pick` on the page's text once it is read, unless the pages changed meanwhile.
@@ -63,19 +71,22 @@ export function usePdfTextSelection(
     [texts],
   );
 
-  const show = useCallback((page: number, text: PageText, spans: readonly TextSpan[]) => {
-    const kept = spans.filter(([from, to]) => to > from);
-    setSelected(
-      kept.length === 0
-        ? null
-        : {
-            page,
-            spans: kept,
-            quads: TextRange.quads(text, kept),
-            text: TextRange.copied(text, kept),
-          },
-    );
-  }, []);
+  const show = useCallback(
+    (page: number, text: PageText, spans: readonly TextSpan[]) => {
+      const kept = spans.filter(([from, to]) => to > from);
+      setSelected(
+        kept.length === 0
+          ? null
+          : {
+              page,
+              spans: kept,
+              quads: TextRange.quads(text, kept),
+              text: TextRange.copied(text, kept),
+            },
+      );
+    },
+    [setSelected],
+  );
 
   const gesture = useCallback(
     (page: number, done: PdfTextGesture) => {
@@ -123,7 +134,7 @@ export function usePdfTextSelection(
   const clear = useCallback(() => {
     start.current = null;
     setSelected(null);
-  }, []);
+  }, [setSelected]);
 
   return { selected, gesture, selectAll, clear };
 }

@@ -20,7 +20,10 @@ vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
 const SELECTED: PdfTextSelected = { page: 0, spans: [[0, 5]], quads: [], text: 'Hello' };
 
-function actions({ selected = SELECTED as PdfTextSelected | null, mayCopy = true } = {}) {
+function actions({
+  selected = SELECTED,
+  mayCopy = true,
+}: { selected?: PdfTextSelected | null; mayCopy?: boolean } = {}) {
   const onProblem = vi.fn();
   const selectAll = vi.fn();
   const hook = renderHook(() =>
@@ -43,7 +46,9 @@ describe('copying the selected text', () => {
   });
 
   it('says so when the browser refuses the clipboard', async () => {
-    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => Promise.reject()) } });
+    Object.assign(navigator, {
+      clipboard: { writeText: vi.fn(async () => Promise.reject(new Error('refused'))) },
+    });
     const { hook, onProblem } = actions();
     await act(async () => hook.result.current.actions[COPY]!.run());
     expect(debugLog).toHaveBeenCalledWith('[pdf] text-copy-failed');

@@ -15,7 +15,8 @@ export type TextSpan = readonly [start: number, end: number];
 const BROKEN_WORD = '\u0002';
 const isBreak = (unit: string | undefined): boolean => unit === '\r' || unit === '\n';
 // A word's units: letters, marks, digits, either half of a character past the first plane, and the broken-word mark.
-const WORD_UNIT = /[\p{L}\p{M}\p{N}\uD800-\uDFFF\u0002]/u;
+const LETTER_OR_DIGIT = /[\p{L}\p{M}\p{N}\uD800-\uDFFF]/u;
+const inWord = (unit: string): boolean => unit === BROKEN_WORD || LETTER_OR_DIGIT.test(unit);
 
 // How far a point beside a line weighs against one along it: a line is picked before a character on it.
 const ACROSS_WEIGHT = 1_000;
@@ -137,10 +138,10 @@ export const TextRange = {
   word: (page: PageText, index: number): TextSpan => {
     const { text } = page;
     if (index < 0 || index >= text.length) return [index, index];
-    if (!WORD_UNIT.test(text[index]!)) return [index, index + 1];
+    if (!inWord(text[index]!)) return [index, index + 1];
     let [start, end] = [index, index + 1];
-    while (start > 0 && WORD_UNIT.test(text[start - 1]!)) start -= 1;
-    while (end < text.length && WORD_UNIT.test(text[end]!)) end += 1;
+    while (start > 0 && inWord(text[start - 1]!)) start -= 1;
+    while (end < text.length && inWord(text[end]!)) end += 1;
     return [start, end];
   },
   /** The file's line around the unit at `index`: between two of its breaks. */
