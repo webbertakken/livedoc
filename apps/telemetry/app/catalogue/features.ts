@@ -1643,6 +1643,14 @@ export const TEXT_DOCUMENT_PANELS_OPENED = opened(
   (t) => (t ?? '').startsWith('TextDocumentPanel'),
 );
 
+// A PDF document's left panel opened (docs/specs/035-pdf-documents/reading-surface.md "The left panel"): its rail, its
+// View item or its key.
+export const PDF_DOCUMENT_PANELS_OPENED = opened(
+  'PDF Document Panels',
+  'A left panel of a PDF document opened from its rail, its View item or its key: the thumbnails.',
+  (t) => (t ?? '').startsWith('PdfDocumentPanel'),
+);
+
 // A text document's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").
 export const TEXT_DOCUMENT_CONTEXT_MENU_OPENED = opened(
   'Text Document Context Menu',
@@ -1681,6 +1689,7 @@ export const PANELS_OPENED: MetricStack = {
     TEXT_DOCUMENT_MENUS_OPENED,
     SPREADSHEET_MENUS_OPENED,
     TEXT_DOCUMENT_PANELS_OPENED,
+    PDF_DOCUMENT_PANELS_OPENED,
     TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
     TEXT_DOCUMENT_MORE_FONTS_OPENED,
     OTHER_OPENED,

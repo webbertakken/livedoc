@@ -59,6 +59,20 @@ const READING: readonly ShortcutRow[] = [
   ),
 ];
 
+/** Not a menu item's: the surface binds it under this id (keyboard-shortcuts.md "Panels"). */
+export const OPEN_LEFT_PANEL = 'open-left-panel';
+
+/** The panels' keys (keyboard-shortcuts.md "Panels"); ⌘⇧F5, Acrobat's, is the browser's reload. */
+const PANELS: readonly ShortcutRow[] = [
+  {
+    id: OPEN_LEFT_PANEL,
+    group: 'Panels',
+    action: 'Open the left panel and focus it',
+    keys: { pc: 'Ctrl+Alt+Shift+T', mac: '⌘+Option+Shift+T', chromeos: 'Ctrl+Alt+Shift+T' },
+    status: 'built',
+  },
+];
+
 export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
   ...TEXT_DOCUMENT_SHORTCUTS.filter((row) => SHARED.has(row.id)).map((row) =>
     row.id.startsWith('switch-to-') ? { ...row, group: MODES } : row,
@@ -87,6 +101,7 @@ export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
     status: 'built',
   },
   ...READING,
+  ...PANELS,
 ];
 
 /** The tools' own keys, heard on the pages and never in a text field ("Tools"). */

@@ -8,7 +8,7 @@ import { PdfPageBar, noPageCopy, type PdfPageBarProps } from './PdfPageBar';
 function bar(over: Partial<PdfPageBarProps> = {}) {
   const props: PdfPageBarProps = {
     page: 2,
-    count: 14,
+    labels: Array.from({ length: 14 }, () => null),
     atFirst: false,
     atLast: false,
     zoom: 'fit-width',
@@ -55,6 +55,23 @@ describe('the page bar', () => {
     fireEvent.change(pageField(), { target: { value: '9' } });
     fireEvent.keyDown(pageField(), { key: 'Enter' });
     expect(props.onGoTo).toHaveBeenCalledWith(8);
+  });
+
+  // reading-surface.md "Go to page": the field takes a page's label too, and a label is typed, not only digits.
+  it('goes to the page a typed label names, and says a label that names none', () => {
+    const props = bar({ labels: ['i', 'ii', 'iii', 'iv', '1', '2'] });
+    expect(pageField().getAttribute('inputmode')).toBe('text');
+    fireEvent.change(pageField(), { target: { value: 'iv' } });
+    fireEvent.keyDown(pageField(), { key: 'Enter' });
+    expect(props.onGoTo).toHaveBeenCalledWith(3);
+    fireEvent.change(pageField(), { target: { value: 'ix' } });
+    fireEvent.keyDown(pageField(), { key: 'Enter' });
+    expect(screen.getByRole('status').textContent).toBe('There is no page ix.');
+  });
+
+  it('asks for digits where no page has a label', () => {
+    bar();
+    expect(pageField().getAttribute('inputmode')).toBe('numeric');
   });
 
   it('puts a typed page that is none back and says so until the next key', () => {

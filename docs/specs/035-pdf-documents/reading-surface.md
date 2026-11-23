@@ -8,11 +8,13 @@
 - The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it, and
   sharp tiles over the part in view where that picture is softer than the screen.
 - Page display, zoom, Go to, the page bar and Rotate view.
+- The left panel's rail and Thumbnails; Go to page by a page's number or its label.
 
 Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
-Zoom to selection, Go to but for Previous view and Next view, and Rotate view.
+Zoom to selection, Go to but for Previous view and Next view, Rotate view, and Thumbnails.
 
-Not built: a tile redrawn alone when a change touches it (a change draws its page again), the panels, find, text selection, page labels in the page bar, the accessible tree (a page is a named region whose picture is
+Not built: a tile redrawn alone when a change touches it (a change draws its page again),
+the panels but Thumbnails, find, text selection, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -268,8 +270,16 @@ they queue in this order:
 
 ## The left panel
 
-One panel at a time, chosen from a rail of glyph buttons at the far left (each a toggle with its name as tooltip);
-the choice is remembered per person per document.
+One panel at a time, chosen from a rail of glyph buttons at the far left (each a toggle with its name as tooltip),
+or from its View item; the shell's left panel ([Side panels](../004-interface-design/office-shell.md#side-panels)).
+
+- **The rail** is a toolbar of toggles named "Panels", one glyph button a panel, in the table's order; a button is
+  pressed while its panel is open, and pressing it again closes the panel. Only built panels are on the rail
+  `(default)`; their View items are the rest, dimmed "Coming soon". On a phone the rail is not drawn and View opens
+  the panels `(default)`.
+- **Which panel is open is remembered as the shell remembers it**: per person, in this browser, for every PDF
+  `(default)`, so a person who keeps the thumbnails open finds them open in the next PDF.
+- ⌘⌥⇧T puts focus in the left panel open, or opens Thumbnails and puts focus there `(default)`.
 
 | Panel              | Shows                                                                                                  | Editing adds                                                                          |
 | ------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
@@ -285,8 +295,32 @@ the choice is remembered per person per document.
 - A panel with nothing to show says so in one line ("This PDF has no bookmarks.") and, in Editing, offers the first
   one ("Add a bookmark").
 - Thumbnails are drawn as the pages are scrolled to, light paper always, marks included.
-- **Go to page**: the page bar's field takes a page number or a page label ("iv", "A-3"); Enter goes; a value that
-  names no page shakes the field and says "There is no page iv."
+
+### Thumbnails
+
+- Every page in a column, each fitted into a box of `PDF_THUMBNAIL_BOX_PX` and centred in it, upright as the file
+  has it: Rotate view never turns a thumbnail.
+- Under each, its caption: the page's label where the file gives one, else its number `(default)`.
+- **A thumbnail is a button** named "Page 3", or "Page 3, iv" where the label is not the number; a press goes to
+  the page, as the page bar's field does. The thumbnail of the page in view is outlined in the shell's focus colour,
+  marked as the current page, and scrolled into the panel's view whenever the page in view changes.
+- **Keys**: the list takes one Tab stop, on the thumbnail of the page in view; ↓ and ↑ move to the next and the one
+  before, Home and End to the first and the last, and Enter or Space goes to the page.
+- **Drawn on the engine's one line**, behind every page and tile: a thumbnail waits while a page or a tile is asked
+  for `(default)`. Only thumbnails within one panel height of view are drawn; a picture three panel heights away is
+  let go, as a page's is `(default)`.
+- Drawn at the screen's pixel ratio, never turned, the file's own marks in the picture and LiveDoc's live marks over
+  it as on the page; a thumbnail that cannot be drawn shows its box and caption alone.
+- **Presence**: a person on a page shows on its thumbnail as a dot in their colour, at most three, then "+2"; the
+  thumbnail's description names them ("Ada and Ben are here").
+
+### Go to page
+
+- The page bar's field takes a page number or a page label ("iv", "A-3"); Enter goes.
+- A number from 1 to the page count is that page; any other value is the page whose label it is, the label written
+  as the file writes it first, then in any case `(default)`. The field shows the page's number, so a number typed
+  means the number shown.
+- A value that names no page puts the number back and says "There is no page iv." over the bar.
 
 ## The pages
 
@@ -361,7 +395,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 - **Zoom**'s list is Fit width, Fit page, Actual size and View > Zoom's percentages, the zoom in force marked.
 - A typed page that is no page of the file puts the number back and says "There is no page 99." over the bar, until
   the next key or press; a typed zoom that is none puts the zoom back, as every value field of the shell does.
-- A page label typed in the field is the left panel's [Go to page](#the-left-panel).
+- A page label typed in the field is the left panel's [Go to page](#go-to-page).
 - The bar is never under the document group: where the two would meet, the bar sits above it `(default)`.
 
 ## Find
@@ -403,6 +437,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 | `PDF_WHEEL_ZOOM_RATE`          | 0.002                                                                                                  | `(default)` ⌘ with the wheel multiplies the zoom by e to this times the pixels wheeled: a notch of 100 is 22%; safe range 0.001 to 0.005 |
 | `PDF_WHEEL_TURN_MS`            | 300                                                                                                    | `(default)` How long a wheel rests before it turns another row; safe range 150 to 600                                                    |
 | `PDF_ZOOM_SETTLE_MS`           | 400                                                                                                    | `(default)` How long a wheel's or a pinch's zoom rests before it is told to telemetry; safe range 200 to 1,000                           |
+| `PDF_THUMBNAIL_BOX_PX`         | 160                                                                                                    | `(default)` CSS pixels a side of the square a thumbnail is fitted into; safe range 96 to 224                                             |
 | `PDF_FIND_MAX_RESULTS`         | 10,000                                                                                                 | `(default)` Listed results; the count still says how many more                                                                           |
 
 ## Share roles
@@ -427,12 +462,14 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 `Pdf · Changed · PageDisplay.<Single|Continuous|Two|TwoContinuous|CoverShown|CoverHidden>`,
 `Pdf · Changed · RotateView.<Clockwise|Counterclockwise>` `(default)`,
 `Pdf · Zoomed · <FitWidth|FitPage|Actual|In|Out|Custom>` (a wheel's or a pinch's zoom once, as `Custom`, when it settles),
-`Pdf · Opened · Panel.<Thumbnails|Outline|EmbeddedFiles|Layers|Signatures|Fields>`, `Pdf · Searched · Find`,
+`Pdf · Searched · Find`,
 `Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
-menu and tool finder events. Never a query, a page's text or a name.
+menu, tool finder and panel events (`UI · Opened · PdfDocumentPanel<Thumbnails|Outline|EmbeddedFiles|Layers>`).
+Never a query, a page's text or a name.
 
 Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom> way=<way>`,
-`[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`.
+`[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`,
+`[pdf] thumbnail-failed page=<n>`.
 
 ## Errors
 

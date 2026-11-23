@@ -123,11 +123,30 @@ describe("a person's view of a PDF document", () => {
   });
 
   // "The page bar": a typed page that is no page of the file.
+  const UNLABELLED: readonly (string | null)[] = Array.from({ length: 14 }, () => null);
+
   it('reads a typed page number as a page of the file, or as none', () => {
-    expect(PdfView.parsePage('3', 14)).toBe(2);
-    expect(PdfView.parsePage(' 14 ', 14)).toBe(13);
-    expect(PdfView.parsePage('1', 14)).toBe(0);
+    expect(PdfView.parsePage('3', UNLABELLED)).toBe(2);
+    expect(PdfView.parsePage(' 14 ', UNLABELLED)).toBe(13);
+    expect(PdfView.parsePage('1', UNLABELLED)).toBe(0);
     for (const text of ['0', '15', '', 'iv', '2.5', '-1', '1e1'])
-      expect(PdfView.parsePage(text, 14), text).toBeNull();
+      expect(PdfView.parsePage(text, UNLABELLED), text).toBeNull();
+  });
+
+  // reading-surface.md "Go to page": a number is the page of that number; any other value the page it labels, as
+  // written first, then in any case.
+  it('reads a typed page label as the page it labels', () => {
+    const labels = ['i', 'ii', 'iii', 'iv', '1', '2', 'A-3', 'a-3', null];
+    expect(PdfView.parsePage('iv', labels)).toBe(3);
+    expect(PdfView.parsePage(' IV ', labels)).toBe(3);
+    expect(PdfView.parsePage('A-3', labels)).toBe(6);
+    expect(PdfView.parsePage('a-3', labels)).toBe(7);
+    // The field shows numbers, so a number typed is the number shown, never a label that reads the same.
+    expect(PdfView.parsePage('1', labels)).toBe(0);
+    expect(PdfView.parsePage('2', labels)).toBe(1);
+    // A number past the last page may still be a label.
+    expect(PdfView.parsePage('15', ['13', '14', '15'])).toBe(2);
+    for (const text of ['v', '', '  ', 'B-3'])
+      expect(PdfView.parsePage(text, labels), text).toBeNull();
   });
 });

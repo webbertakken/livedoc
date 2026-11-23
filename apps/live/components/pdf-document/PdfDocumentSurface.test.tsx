@@ -7,7 +7,7 @@
 // and the mode, said for the tab the person is on, and a press on a person going to their page; "Offline and This
 // Browser": a PDF kept here is read from this browser, and its stored file is not replaced for the budget.
 import type { OfficeChrome } from '@/components/office/office-chrome';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import { Mark, PageName, PdfChange, PdfLiveChanges } from '@livedoc/pdf-documents';
@@ -89,6 +89,8 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
       forget: () => {},
       drawTile: async () => null,
       forgetTile: () => {},
+      drawThumbnail: async () => null,
+      forgetThumbnail: () => {},
     },
     binding,
     undo: pdfUndo(binding.doc),
@@ -576,5 +578,61 @@ describe('a PDF document’s surface', () => {
       expect(scrollerOf(container).scrollTop).toBe(0);
       expect(track).not.toHaveBeenCalledWith('UI', 'Used', 'PdfDocumentFollow');
     });
+  });
+});
+
+// reading-surface.md "The left panel", "Thumbnails"; keyboard-shortcuts.md "Panels".
+describe('a PDF document’s left panel', () => {
+  afterEach(() => localStorage.clear());
+
+  const rail = () => screen.getByRole('toolbar', { name: 'Panels' });
+  const thumbnailsButton = () => within(rail()).getByRole('button', { name: 'Thumbnails' });
+
+  it('opens Thumbnails from its rail, for a Viewer too, and closes it from there again', async () => {
+    show(await ready(), 'view');
+    expect(thumbnailsButton().getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(thumbnailsButton());
+    const panel = screen.getByRole('complementary', { name: 'Thumbnails' });
+    expect(within(panel).getAllByRole('button', { name: /^Page \d$/ }).length).toBe(2);
+    expect(thumbnailsButton().getAttribute('aria-pressed')).toBe('true');
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentPanelThumbnails');
+    fireEvent.click(thumbnailsButton());
+    expect(screen.queryByRole('complementary', { name: 'Thumbnails' })).toBeNull();
+  });
+
+  it('opens where this browser left it, in the next PDF', async () => {
+    const first = show(await ready());
+    fireEvent.click(thumbnailsButton());
+    first.unmount();
+    show(await ready());
+    expect(screen.getByRole('complementary', { name: 'Thumbnails' })).toBeTruthy();
+  });
+
+  it('goes to a page when its thumbnail is pressed', async () => {
+    laidOut();
+    const { container } = show(await ready(), 'view');
+    fireEvent.click(thumbnailsButton());
+    fireEvent.click(screen.getByRole('button', { name: 'Page 2' }));
+    expect(scrollerOf(container).scrollTop).toBeCloseTo(topOf(container, 2), 1);
+  });
+
+  it('opens Thumbnails by its key and puts focus on the page in view, then focus back in the panel open', async () => {
+    const { container } = show(await ready());
+    const key = { key: 'T', code: 'KeyT', ctrlKey: true, altKey: true, shiftKey: true };
+    fireEvent.keyDown(surface(container), key);
+    const current = screen.getByRole('button', { name: 'Page 1' });
+    expect(current.getAttribute('aria-current')).toBe('page');
+    expect(document.activeElement).toBe(current);
+    act(() => scrollerOf(container).focus());
+    fireEvent.keyDown(surface(container), key);
+    expect(document.activeElement).toBe(current);
+  });
+
+  it('gives the pages the keys back when the panel is closed with Escape', async () => {
+    const { container } = show(await ready());
+    fireEvent.click(thumbnailsButton());
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Page 1' }), { key: 'Escape' });
+    expect(screen.queryByRole('complementary', { name: 'Thumbnails' })).toBeNull();
+    expect(document.activeElement).toBe(scrollerOf(container));
   });
 });

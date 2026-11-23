@@ -83,9 +83,9 @@ function BarButton({
 }
 
 export type PdfPageBarProps = {
-  /** The page in view, by its index, and how many there are. */
+  /** The page in view, by its index, and each page's label: null where the file gives none. */
   page: number;
-  count: number;
+  labels: readonly (string | null)[];
   atFirst: boolean;
   atLast: boolean;
   zoom: PdfZoom;
@@ -101,7 +101,7 @@ export type PdfPageBarProps = {
 
 export function PdfPageBar({
   page,
-  count,
+  labels,
   atFirst,
   atLast,
   zoom,
@@ -114,10 +114,13 @@ export function PdfPageBar({
 }: PdfPageBarProps) {
   const [draft, setDraft] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const count = labels.length;
+  // A file whose pages have labels is typed to in letters too (reading-surface.md "Go to page").
+  const labelled = labels.some((label) => label !== null);
 
   const goTo = () => {
     const typed = draft ?? '';
-    const index = PdfView.parsePage(typed, count);
+    const index = PdfView.parsePage(typed, labels);
     setDraft(null);
     if (index === null) {
       if (typed.trim() !== '') setProblem(noPageCopy(typed));
@@ -157,11 +160,13 @@ export function PdfPageBar({
           <input
             ref={pageField}
             aria-label="Page"
-            inputMode="numeric"
+            inputMode={labelled ? 'text' : 'numeric'}
             data-pdf-page-field
             value={draft ?? String(page + 1)}
-            // As wide as the file's last page number, and a caret.
-            style={{ width: `calc(${Math.max(2, String(count).length)}ch + 0.75rem)` }}
+            // As wide as the file's last page number, or a short label, and a caret.
+            style={{
+              width: `calc(${Math.max(labelled ? 4 : 2, String(count).length)}ch + 0.75rem)`,
+            }}
             onChange={(event) => setDraft(event.target.value)}
             onFocus={(event) => event.currentTarget.select()}
             onBlur={() => setDraft(null)}

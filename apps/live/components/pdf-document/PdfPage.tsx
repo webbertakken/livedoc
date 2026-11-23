@@ -17,6 +17,7 @@ import {
   type TextSelection,
 } from '@livedoc/pdf-documents';
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
+import { PdfMarksOverlay } from './PdfMarksOverlay';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
 import { PdfView } from '@/lib/pdf-document/pdf-view';
@@ -32,13 +33,6 @@ type Drawn = {
   fileMarks: readonly string[];
   by: PdfPageDrawer;
 };
-
-const pointsOf = (matrix: PageMatrix, quad: Quad): string =>
-  // The standard orders a quad upper left, upper right, lower left, lower right: around its edge is 0, 1, 3, 2.
-  [0, 1, 3, 2]
-    .map((corner) => PageView.quadToView(matrix, quad)[corner]!)
-    .map(({ x, y }) => `${x},${y}`)
-    .join(' ');
 
 export const PdfPage = memo(function PdfPage({
   index,
@@ -230,34 +224,13 @@ export const PdfPage = memo(function PdfPage({
         />
       ) : null}
       {matrix ? (
-        // Multiplied onto the page, so the words under a highlight keep their own colour (marks.md).
-        <svg
-          aria-hidden="true"
-          viewBox={`0 0 ${shown.width} ${shown.height}`}
-          preserveAspectRatio="none"
-          className="pointer-events-none absolute inset-0 h-full w-full mix-blend-multiply"
-        >
-          {marks.map((mark) => (
-            <g
-              key={mark.id}
-              data-pdf-mark={mark.id}
-              data-pdf-mark-kind={mark.kind}
-              fill={mark.colour}
-              opacity={mark.opacity}
-            >
-              {mark.quads.map((quad, at) => (
-                <polygon key={at} points={pointsOf(matrix, quad)} />
-              ))}
-            </g>
-          ))}
-          {preview.length > 0 ? (
-            <g data-pdf-mark-preview="true" fill="#bae6fd">
-              {preview.map((quad, at) => (
-                <polygon key={at} points={pointsOf(matrix, quad)} />
-              ))}
-            </g>
-          ) : null}
-        </svg>
+        <PdfMarksOverlay
+          matrix={matrix}
+          width={shown.width}
+          height={shown.height}
+          marks={marks}
+          preview={preview}
+        />
       ) : null}
       {failed ? (
         <p className="absolute inset-0 flex items-center justify-center text-sm text-slate-600">

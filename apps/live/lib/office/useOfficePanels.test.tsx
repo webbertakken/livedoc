@@ -43,6 +43,34 @@ describe('useOfficePanels', () => {
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'TextDocumentPanelOutline');
   });
 
+  // "Side panels": a panel's telemetry name is its title's words joined, each capitalised.
+  it('names a panel of several words to telemetry in capitalised words', () => {
+    const { hook } = panels();
+    act(() => hook.result.current.actions['line-numbers']!.run());
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'TextDocumentPanelLineNumbers');
+  });
+
+  it("keeps a PDF document's panels apart from a text document's", () => {
+    const hook = renderHook(() =>
+      useOfficePanels({ kind: 'PdfDocument', panels: PANELS, onFocusDocument: vi.fn() }),
+    );
+    act(() => hook.result.current.actions['show-outline']!.run());
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentPanelOutline');
+    expect(readOpenPanels('PdfDocument', PANELS).left).toBe('outline');
+    expect(readOpenPanels('TextDocument', PANELS).left).toBeNull();
+  });
+
+  // A shortcut that puts focus in a panel: the one open, else the one it names, opened.
+  it('reveals a panel: opened where it is closed, focused either way', () => {
+    const { hook } = panels();
+    act(() => hook.result.current.reveal(PANELS[0]!));
+    expect(hook.result.current.open.left).toBe('outline');
+    expect(hook.result.current.focusNonce).toBe(1);
+    act(() => hook.result.current.reveal(PANELS[0]!));
+    expect(hook.result.current.open.left).toBe('outline');
+    expect(hook.result.current.focusNonce).toBe(2);
+  });
+
   it('closes it from its item again, giving the document the keyboard back', () => {
     const { hook, onFocusDocument } = panels();
     act(() => hook.result.current.actions['show-outline']!.run());

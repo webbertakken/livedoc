@@ -126,14 +126,14 @@ horizontally ⇧H, vertically ⇧V; show tab order ⇧N; preview P. They apply o
 
 ## Panels
 
-| Action                                  | Keys                     | Acrobat's | Status    |
-| --------------------------------------- | ------------------------ | --------- | --------- |
-| Move between the regions of the surface | F6, ⇧F6                  | The same  | specified |
-| Open the left panel and focus it        | ⌘⇧F5 or ⌘⌥⇧T `(default)` | ⌘⇧F5      | specified |
-| Next, previous item of a panel          | ↓, ↑                     | The same  | specified |
-| Expand, collapse a bookmark             | →, ←                     | The same  | specified |
-| Expand every bookmark                   | ⇧\*                      | The same  | specified |
-| Select a range of thumbnails            | ⇧ with arrow keys        | The same  | specified |
+| Action                                  | Keys              | Acrobat's | Status    |
+| --------------------------------------- | ----------------- | --------- | --------- |
+| Move between the regions of the surface | F6, ⇧F6           | The same  | specified |
+| Open the left panel and focus it        | ⌘⌥⇧T `(default)`  | ⌘⇧F5      | built     |
+| Next, previous item of a panel          | ↓, ↑              | The same  | built     |
+| Expand, collapse a bookmark             | →, ←              | The same  | specified |
+| Expand every bookmark                   | ⇧\*               | The same  | specified |
+| Select a range of thumbnails            | ⇧ with arrow keys | The same  | specified |
 
 ## Left out
 

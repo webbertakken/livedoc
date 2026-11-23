@@ -17,6 +17,7 @@ import {
   PAGE_DISPLAY_SINGLE,
   PAGE_DISPLAY_TWO,
   PAGE_DISPLAY_TWO_CONTINUOUS,
+  PANEL_THUMBNAILS,
   PDF_MENUS,
   PDF_ZOOM_MENU_PERCENTS,
   REDO,
@@ -101,6 +102,8 @@ describe("a PDF document's menus and toolbar", () => {
     GO_TO_PAGE,
     ROTATE_VIEW_CLOCKWISE,
     ROTATE_VIEW_COUNTERCLOCKWISE,
+    // pdf-panels.ts: the left panels built (reading-surface.md "The left panel").
+    PANEL_THUMBNAILS,
   ];
 
   it('has no built item nothing runs, no shortcut its registry lacks, no id twice', () => {
