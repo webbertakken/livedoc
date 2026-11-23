@@ -39,6 +39,11 @@ const SIZED_PATHS = [
   'components/panels/session-studio',
   'components/panels/home',
   'components/panels/inbox',
+  'components/panels/document-history',
+  'components/panels/DocumentHistoryDialog.tsx',
+  'components/panels/comment-thread-parts.tsx',
+  'components/panels/CommentThreadPopover.tsx',
+  'components/panels/ActionPopover.tsx',
 ];
 
 describe('live sizing', () => {

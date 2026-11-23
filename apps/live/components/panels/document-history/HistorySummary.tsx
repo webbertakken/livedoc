@@ -16,8 +16,8 @@ const fullDate = (at: number) =>
   new Date(at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const STAT = 'flex min-w-0 flex-col gap-0.5';
-const TERM = `text-[10px] font-semibold tracking-wider uppercase ${MUTED}`;
-const VALUE = 'truncate text-sm font-medium text-slate-800 dark:text-slate-100';
+const TERM = `text-supporting ${MUTED}`;
+const VALUE = 'truncate text-body text-slate-800 dark:text-slate-100';
 
 export function HistorySummary({
   createdAt,
@@ -59,7 +59,7 @@ export function HistorySummary({
       ) : null}
       <div className={STAT}>
         <dt className={TERM}>People</dt>
-        <dd className={`flex items-center gap-1.5 ${VALUE}`}>
+        <dd className={`flex items-center gap-1 ${VALUE}`}>
           {people.length > 0 ? (
             <span className="flex -space-x-1" aria-hidden>
               {people.slice(0, AVATARS_SHOWN).map((e) => (

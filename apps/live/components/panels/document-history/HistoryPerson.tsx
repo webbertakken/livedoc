@@ -39,7 +39,7 @@ export function HistoryPerson({
           ...(mine ? null : identityVars(colorForKey(colourKey))),
           fontSize: Math.round(size * 0.42),
         }}
-        className={`font-semibold text-white [&_svg]:h-[60%] [&_svg]:w-[60%] ${
+        className={`text-white [&_svg]:h-[60%] [&_svg]:w-[60%] ${
           mine ? 'bg-brand-700 dark:bg-brand-600' : IDENTITY_FILL
         }`}
       >

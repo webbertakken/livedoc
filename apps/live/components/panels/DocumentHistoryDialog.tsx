@@ -148,7 +148,7 @@ function DocumentHistory({
     body = (
       <>
         {days.length === 0 && active ? (
-          <p className={`py-10 text-center text-sm ${INSET} ${MUTED}`}>
+          <p className={`py-10 text-center text-body ${INSET} ${MUTED}`}>
             No {CATEGORY_LABELS[active].toLowerCase()} in the {events.length} events loaded.{' '}
             <button type="button" onClick={() => choose(null)} className={HISTORY_LINK}>
               Show all
