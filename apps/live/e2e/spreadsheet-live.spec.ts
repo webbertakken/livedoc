@@ -146,7 +146,9 @@ test('a This Browser spreadsheet keeps its edits across a reload', async ({ page
   await expect(page.locator(READY)).toBeVisible();
   await typeInto(page, 'A1', 'kept');
   await typeInto(page, 'B1', '=LEN(A1)');
-  await expect(page.getByRole('grid', { name: 'Sheet1 grid' })).toContainText('4');
+  await expect(
+    page.getByRole('grid', { name: 'Sheet1 grid' }).locator('[data-sheet-cells]'),
+  ).toContainText('4');
 
   // Stored in this browser before the reload: the record holds both cells.
   await expect
@@ -172,7 +174,9 @@ test('a This Browser spreadsheet keeps its edits across a reload', async ({ page
 
   await page.reload();
   await expect(page.locator(READY)).toBeVisible();
-  await expect(page.getByRole('grid', { name: 'Sheet1 grid' })).toContainText('4');
+  await expect(
+    page.getByRole('grid', { name: 'Sheet1 grid' }).locator('[data-sheet-cells]'),
+  ).toContainText('4');
   expect(await inputOf(page, 'A1')).toBe('kept');
   expect(await inputOf(page, 'B1')).toBe('=LEN(A1)');
   expectNoPageErrors(pageErrors);
@@ -245,7 +249,7 @@ test('a long chain worked out again never holds up typing', async ({ page, pageE
   await expect(page.locator(READY)).toBeVisible();
   const grid = page.getByRole('grid', { name: 'Sheet1 grid' });
   // Its first workout in: the third link is 1 + 2 × 400.
-  await expect(grid).toContainText('801');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('801');
 
   // Every task the page's main thread runs past 50 ms, from the change on.
   await page.evaluate(() => {
@@ -258,13 +262,15 @@ test('a long chain worked out again never holds up typing', async ({ page, pageE
   await typeInto(page, 'A1', '2');
   // Typed while the Worker works the chain out again: it shows straight away.
   await typeInto(page, 'D1', 'typed');
-  await expect(grid).toContainText('typed');
-  await expect(grid).toContainText('802');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('typed');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('802');
   // The chain's last link, once the Worker is done.
   const nameBox = page.getByRole('textbox', { name: 'Name box' });
   await nameBox.fill(`A${LINKS}`);
   await nameBox.press('Enter');
-  await expect(grid).toContainText(String(2 + (LINKS - 1) * SUMMED), { timeout: 30_000 });
+  await expect(grid.locator('[data-sheet-cells]')).toContainText(String(2 + (LINKS - 1) * SUMMED), {
+    timeout: 30_000,
+  });
   const longest = await page.evaluate(() =>
     Math.max(0, ...(window as unknown as { longTasks: number[] }).longTasks),
   );

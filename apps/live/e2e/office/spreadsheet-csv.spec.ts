@@ -42,8 +42,8 @@ test('a CSV opens as a spreadsheet and its sheet leaves as CSV and TSV', async (
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Prices');
   await expect(page.getByRole('tab', { name: 'Prices', selected: true })).toBeVisible();
   const grid = page.getByRole('grid', { name: 'Prices grid' });
-  await expect(grid).toContainText('Café');
-  await expect(grid).toContainText('6');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('Café');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('6');
   expect(await inputOf(page, 'B3')).toBe('=B2*2');
 
   for (const [format, label, body] of [

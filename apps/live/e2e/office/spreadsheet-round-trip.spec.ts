@@ -76,8 +76,8 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   await typeInto(page, 'A2', 'rent');
   for (const p of [page, peer]) {
     const grid = p.getByRole('grid', { name: 'Sheet1 grid' });
-    await expect(grid).toContainText('42');
-    await expect(grid).toContainText('rent');
+    await expect(grid.locator('[data-sheet-cells]')).toContainText('42');
+    await expect(grid.locator('[data-sheet-cells]')).toContainText('rent');
   }
 
   // Downloaded as ODF, in the format it was born in (C5).
@@ -101,7 +101,9 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   await page.waitForURL((url) => !url.pathname.includes(id));
   await expect(page.locator(READY)).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Budget from LibreOffice');
-  await expect(page.getByRole('grid', { name: 'Sheet1 grid' })).toContainText('42');
+  await expect(
+    page.getByRole('grid', { name: 'Sheet1 grid' }).locator('[data-sheet-cells]'),
+  ).toContainText('42');
   expect(await inputOf(page, 'A1')).toBe('21');
   expect(await inputOf(page, 'B1')).toBe('=A1*2');
   expect(await inputOf(page, 'A2')).toBe('rent');

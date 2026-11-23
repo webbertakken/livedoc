@@ -91,7 +91,7 @@ test('a link in a Sheet opens on a touch screen, with Ctrl and a tap or from its
   await page.setViewportSize({ width: 1317, height: 752 });
   await page.goto(`/document/${id}`);
   const grid = page.getByRole('grid', { name: 'Links grid' });
-  await expect(grid).toContainText('LiveDoc');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('LiveDoc');
   const box = (await grid.boundingBox())!;
   const a1 = { x: box.x + ROW_HEADER_PX + 20, y: box.y + COL_HEADER_PX + 8 };
   const opened = () => page.evaluate(() => (window as unknown as { __opened: string[] }).__opened);

@@ -217,7 +217,7 @@ test('rows fit their text, a sized row keeps its height, and Fit to Data hands i
   await page.mouse.click(sized.x, sized.y);
   await page.keyboard.type(`${REVIEW} ${SUPPLIER}`);
   await page.keyboard.press('Enter');
-  await expect(grid).toContainText('Wednesday night. Follow');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('Wednesday night. Follow');
   expect(await rowHeight(page, 2)).toBe(SIZED_PX);
 
   // Fit to Data, in the row header's menu, hands the row back: it fits its text again and its size is gone.

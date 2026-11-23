@@ -97,3 +97,32 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     expect(sheetKey(k('3', { altKey: true, code: 'Digit3' }))).toBeNull();
   });
 });
+
+// grid-and-editing.md "Accessibility": Read Row and Read Column, by the key's place, as Option+Shift types a symbol.
+describe('Read Row and Read Column', () => {
+  it('reads with Ctrl+Alt+Shift, or Option+Shift on a Mac, R a row and C a column', () => {
+    const mods = { ctrlKey: true, altKey: true, shiftKey: true };
+    expect(sheetKey({ ...k('R', mods), code: 'KeyR' })).toEqual({ kind: 'read', axis: 'r' });
+    expect(sheetKey({ ...k('Ç', { altKey: true, shiftKey: true }), code: 'KeyC' })).toEqual({
+      kind: 'read',
+      axis: 'c',
+    });
+  });
+
+  it('leaves AltGr, Cmd and other keys alone', () => {
+    const altGr = { getModifierState: (m: 'AltGraph') => m === 'AltGraph' };
+    expect(
+      sheetKey({
+        ...k('®', { ctrlKey: true, altKey: true, shiftKey: true }),
+        code: 'KeyR',
+        ...altGr,
+      }),
+    ).not.toEqual({ kind: 'read', axis: 'r' });
+    expect(
+      sheetKey({ ...k('r', { metaKey: true, altKey: true, shiftKey: true }), code: 'KeyR' }),
+    ).toBeNull();
+    expect(sheetKey({ ...k('X', { altKey: true, shiftKey: true }), code: 'KeyX' })?.kind).not.toBe(
+      'read',
+    );
+  });
+});

@@ -1,6 +1,7 @@
 // A SPARKLINE's chart in its cell (docs/specs/029-sheets/charts.md "Sparklines"): the engine's shapes, drawn as an
 // SVG over the cell's box, the paint tokens in the sheet's accent and muted ink.
 import { sparklineShapes, SPARK_ACCENT, SPARK_MUTED, type Sparkline } from '@livedoc/sheets';
+import { sparklineLabel } from './sheet-cell-speech';
 
 type Props = {
   chart: Sparkline;
@@ -13,8 +14,6 @@ type Props = {
   waitingOpacity?: number;
 };
 
-const KIND_LABELS = { line: 'Line', column: 'Column', winloss: 'Win/loss', bar: 'Bar' } as const;
-
 export function SheetSparkline({ chart, box, ink, accent, muted, waitingOpacity }: Props) {
   const shapes = sparklineShapes(chart, box.w, box.h, ink);
   const paint = (token: string) =>
@@ -23,7 +22,7 @@ export function SheetSparkline({ chart, box, ink, accent, muted, waitingOpacity 
     <svg
       data-sheet-sparkline={chart.kind}
       role="img"
-      aria-label={`${KIND_LABELS[chart.kind]} sparkline of ${chart.values.length} values`}
+      aria-label={sparklineLabel(chart)}
       className="pointer-events-none absolute"
       width={box.w}
       height={box.h}
