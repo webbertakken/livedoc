@@ -966,6 +966,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Zoomed|Out': 'Someone zoomed out of a PDF document by a step.',
   'Pdf|Toggled|Layer.Shown':
     'Someone showed a PDF layer for themselves, in a PDF document’s Layers panel.',
+  'Pdf|Copied|Text':
+    'Someone copied text they selected on a PDF document’s pages, from Edit or by its key.',
   'Pdf|Toggled|Layer.Hidden':
     'Someone hid a PDF layer for themselves, in a PDF document’s Layers panel.',
   'Pdf|Zoomed|Custom':
@@ -2871,6 +2873,7 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Pdf|Changed':
     'Someone changed how a PDF document’s pages are laid out for them (the value says how).',
   'Pdf|Zoomed': 'Someone zoomed a PDF document (the value says how).',
+  'Pdf|Copied': 'Someone copied something from a PDF document (the value says what).',
   'Pdf|Toggled':
     'Someone turned something of their own view of a PDF document on or off (the value says what).',
   'Sheet|Searched': 'Someone searched a list on a Sheet (the value says which: the functions).',

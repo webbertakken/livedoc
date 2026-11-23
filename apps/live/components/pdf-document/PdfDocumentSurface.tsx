@@ -63,6 +63,8 @@ import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
 import { usePdfPagesInput } from '@/lib/pdf-document/usePdfPagesInput';
 import { usePdfLayerView } from '@/lib/pdf-document/usePdfLayerView';
 import { usePdfLinks } from '@/lib/pdf-document/usePdfLinks';
+import { usePdfTextActions } from '@/lib/pdf-document/usePdfTextActions';
+import { usePdfTextSelection } from '@/lib/pdf-document/usePdfTextSelection';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
@@ -224,6 +226,15 @@ export function PdfDocumentSurface({
     onFocusDocument: () => pagesElement?.focus(),
   });
   const links = usePdfLinks(pages ?? NO_PAGES, goToPage);
+  // "Selecting text", "Copy": the person's own selection on the pages.
+  const textSelection = usePdfTextSelection(ready?.engine ?? null, pages);
+  const textActions = usePdfTextActions({
+    selected: textSelection.selected,
+    selectAll: textSelection.selectAll,
+    page: viewer.page,
+    mayCopy: ready?.permissions.copy ?? false,
+    onProblem: setProblem,
+  });
   const { reveal } = panels;
   const leftOpen = panels.open.left;
   // ⌘⌥⇧T: focus in the left panel open, or Thumbnails opened.
@@ -327,6 +338,7 @@ export function PdfDocumentSurface({
         ? {
             ...viewChrome.actions,
             ...panels.actions,
+            ...textActions.actions,
             [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -359,6 +371,7 @@ export function PdfDocumentSurface({
       ready,
       viewChrome,
       panels.actions,
+      textActions.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -371,8 +384,16 @@ export function PdfDocumentSurface({
 
   // The tools' own keys, heard anywhere on the surface but a text field (keyboard-shortcuts.md "Tools").
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.ctrlKey || event.metaKey || event.altKey || typesText(event.target)) return;
+    if (typesText(event.target)) return;
     const key = event.key.toLowerCase();
+    // ⌘A on the pages selects the page in view's text ("Selecting text"); elsewhere it is the browser's.
+    const onPages = event.target === pagesElement;
+    if (ready && onPages && key === 'a' && (event.ctrlKey || event.metaKey) && !event.altKey) {
+      event.preventDefault();
+      return textSelection.selectAll(viewer.page);
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (key === 'escape' && textSelection.selected) textSelection.clear();
     if (key === PDF_TOOL_KEYS.highlight && marking) pickTool('highlight');
     else if ((key === PDF_TOOL_KEYS.select || key === 'escape') && inHand !== 'select')
       pickTool('select');
@@ -388,6 +409,7 @@ export function PdfDocumentSurface({
       data-pdf-surface={state}
       data-pdf-tool={inHand}
       onKeyDown={onKeyDown}
+      onCopy={textActions.onCopy}
     >
       <OfficeTitleRow
         name={documentName || UNTITLED_PDF}
@@ -462,6 +484,8 @@ export function PdfDocumentSurface({
               marks={marks}
               tool={inHand}
               onHighlight={onHighlight}
+              selection={textSelection.selected}
+              onText={textSelection.gesture}
             />
             <PdfPageBar
               page={viewer.page}

@@ -63,6 +63,9 @@ export const DOWNLOAD_PDF = 'download-pdf';
 export const UNDO = 'undo';
 export const REDO = 'redo';
 export const PRINT = 'print';
+/** Edit > Copy and Select all: the text selected on the pages (reading-surface.md "The pages"). */
+export const COPY = 'copy';
+export const SELECT_ALL = 'select-all';
 export const FIND = 'find';
 export const TOOL_SELECT = 'tool-select';
 export const TOOL_HAND = 'tool-hand';
@@ -164,11 +167,11 @@ export const PDF_MENUS: OfficeCatalogue = [
     item(REDO, 'Redo', 'participate', { shortcut: 'redo', status: 'built' }),
     SEPARATOR,
     item('cut', 'Cut', 'participate'),
-    item('copy', 'Copy', 'view'),
+    item(COPY, 'Copy', 'view', { shortcut: COPY, status: 'built' }),
     item('paste', 'Paste', 'participate'),
     item('delete', 'Delete', 'participate'),
     SEPARATOR,
-    item('select-all', 'Select all', 'view'),
+    item(SELECT_ALL, 'Select all', 'view', { shortcut: SELECT_ALL, status: 'built' }),
     SEPARATOR,
     item(FIND, 'Find', 'view', { keywords: ['search'] }),
     item('find-and-replace', 'Find and replace', 'edit', { keywords: ['search'] }),

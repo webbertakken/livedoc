@@ -5,7 +5,7 @@
 // drawn, so the scrollbar is true from the first frame; only pages near view hold a picture, and a page far from view
 // lets its picture go.
 import { useCallback, useMemo, useRef, useSyncExternalStore, type KeyboardEvent } from 'react';
-import type { PageInfo, PageTurns, PdfEngine, TextSelection } from '@livedoc/pdf-documents';
+import type { PageInfo, PageTurns, PdfEngine, Quad, TextSelection } from '@livedoc/pdf-documents';
 import { CSS_PER_POINT, type PdfPageLayout } from '@/lib/pdf-document/pdf-page-layout';
 import { marksOnPage, type PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
@@ -15,6 +15,9 @@ import type { PdfViewStore } from '@/lib/pdf-document/usePdfView';
 import { HELD_MARGIN, NEAR_MARGIN, useWithin } from '@/lib/pdf-document/useWithin';
 import type { PdfTileSource } from './PdfPageTiles';
 import { PdfPage, type PdfPageTool } from './PdfPage';
+import type { PdfTextGesture, PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
+
+const NOTHING_SELECTED: readonly Quad[] = [];
 
 export function PdfPages({
   attach,
@@ -30,6 +33,8 @@ export function PdfPages({
   marks,
   tool,
   onHighlight,
+  selection,
+  onText,
 }: {
   // Hands the scroller to the view that lays the pages out and scrolls them.
   attach: (element: HTMLDivElement | null) => void;
@@ -50,6 +55,9 @@ export function PdfPages({
   marks: PdfMarksStore;
   tool: PdfPageTool;
   onHighlight: (index: number, selection: TextSelection) => void;
+  // The person's text selection, and where a page's gestures go (usePdfTextSelection.ts).
+  selection: PdfTextSelected | null;
+  onText: (index: number, gesture: PdfTextGesture) => void;
 }) {
   const scroller = useRef<HTMLDivElement | null>(null);
   const ref = useCallback(
@@ -116,6 +124,8 @@ export function PdfPages({
                   marks={marksOnPage(byPage, page.name)}
                   tool={tool}
                   onHighlight={onHighlight}
+                  selected={selection?.page === box.index ? selection.quads : NOTHING_SELECTED}
+                  onText={onText}
                   register={register}
                 />
               );

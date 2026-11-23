@@ -18,6 +18,7 @@ export function PdfMarksOverlay({
   height,
   marks,
   preview = [],
+  selected = [],
 }: {
   // Page space to view space, as the picture under it was drawn.
   matrix: PageMatrix;
@@ -27,6 +28,8 @@ export function PdfMarksOverlay({
   marks: readonly Mark[];
   // The text a drag would mark, drawn while the drag lasts.
   preview?: readonly Quad[];
+  // The text selected on the page, in the shell's focus colour (reading-surface.md "The pages": Selecting text).
+  selected?: readonly Quad[];
 }) {
   return (
     <svg
@@ -48,6 +51,13 @@ export function PdfMarksOverlay({
           ))}
         </g>
       ))}
+      {selected.length > 0 ? (
+        <g data-pdf-text-selection="true" className="fill-(--office-focus)" opacity={0.35}>
+          {selected.map((quad, at) => (
+            <polygon key={at} points={pointsOf(matrix, quad)} />
+          ))}
+        </g>
+      ) : null}
       {preview.length > 0 ? (
         <g data-pdf-mark-preview="true" fill="#bae6fd">
           {preview.map((quad, at) => (

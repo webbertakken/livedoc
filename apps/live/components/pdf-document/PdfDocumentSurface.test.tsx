@@ -10,7 +10,14 @@ import type { OfficeChrome } from '@/components/office/office-chrome';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
-import { Mark, PageName, PdfChange, PdfLiveChanges } from '@livedoc/pdf-documents';
+import {
+  Mark,
+  PageName,
+  PageText,
+  PdfChange,
+  PdfLiveChanges,
+  PdfPermissions,
+} from '@livedoc/pdf-documents';
 import { downloadBlob } from '@/lib/download-blob';
 import { __setThisBrowserBlobs } from '@/lib/offline/offline-blobs';
 import { watchPdfBudget } from '@/lib/pdf-document/pdf-budget-replacement';
@@ -83,6 +90,7 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
     bytes: 1_250_000,
     version: '1.7',
     protected: false,
+    permissions: PdfPermissions.all(),
     engine: {} as never,
     drawer: {
       draw: async () => null,
@@ -729,5 +737,69 @@ describe('a PDF document’s layers', () => {
     expect(layerView).toHaveBeenCalledWith(['o:4']);
     expect(track).toHaveBeenCalledWith('Pdf', 'Toggled', 'Layer.Hidden');
     expect(screen.getByRole('button', { name: 'Plan' }).getAttribute('aria-pressed')).toBe('false');
+  });
+});
+
+// reading-surface.md "The pages": Selecting text, Copy; keyboard-shortcuts.md "Selections, marks and comments".
+describe('a PDF document’s text', () => {
+  const HELLO = PageText.of(
+    [...'Hello'].map((c) => c.codePointAt(0)!),
+    [...Array.from({ length: 5 }, (_, at) => [72 + at * 6, 700, 78 + at * 6, 708]).flat()],
+  );
+  const withText = async (copy = true) => {
+    const now = await ready();
+    return {
+      ...now,
+      permissions: { ...PdfPermissions.all(), copy },
+      engine: { pageText: async () => HELLO } as never,
+    };
+  };
+  const pagesOf = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>('[data-pdf-pages]')!;
+  const copyOn = (element: HTMLElement) => {
+    const setData = vi.fn();
+    fireEvent.copy(element, { clipboardData: { setData } });
+    return setData;
+  };
+
+  it('selects the page in view’s text by its key, copies it, and clears it with Escape', async () => {
+    const { container } = show(await withText(), 'view');
+    const pages = pagesOf(container);
+    await act(async () => {
+      fireEvent.keyDown(pages, { key: 'a', ctrlKey: true });
+    });
+    expect(copyOn(pages)).toHaveBeenCalledWith('text/plain', 'Hello');
+    expect(track).toHaveBeenCalledWith('Pdf', 'Copied', 'Text');
+    fireEvent.keyDown(pages, { key: 'Escape' });
+    expect(copyOn(pages)).not.toHaveBeenCalled();
+  });
+
+  it('binds Copy and Select all in Edit, Copy dimmed with the reason where the file asks', async () => {
+    show(await withText(false), 'view');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+    expect(
+      screen.getByRole('menuitem', { name: /Select all/ }).getAttribute('aria-disabled'),
+    ).not.toBe('true');
+    const copy = screen.getByRole('menuitem', { name: /Copy \(this PDF asks not to be copied\)/ });
+    expect(copy.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('says the file asks not to be copied on its key', async () => {
+    const { container } = show(await withText(false), 'view');
+    const pages = pagesOf(container);
+    await act(async () => {
+      fireEvent.keyDown(pages, { key: 'a', metaKey: true });
+    });
+    expect(copyOn(pages)).not.toHaveBeenCalled();
+    expect(screen.getByText('This PDF asks not to be copied.')).toBeTruthy();
+  });
+
+  it('leaves ⌘A off the pages to the browser', async () => {
+    const { container } = show(await withText(), 'view');
+    const pages = pagesOf(container);
+    await act(async () => {
+      fireEvent.keyDown(container.firstElementChild!, { key: 'a', ctrlKey: true });
+    });
+    expect(copyOn(pages)).not.toHaveBeenCalled();
   });
 });

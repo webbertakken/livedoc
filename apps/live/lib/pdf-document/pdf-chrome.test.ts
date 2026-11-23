@@ -6,6 +6,7 @@ import { levelInMode, modesFor, startingMode } from '@/lib/office/office-mode';
 import { visibleToolbar } from '@/lib/office/office-toolbar';
 import { SHELL_BOUND_ITEMS } from '@/lib/office/office-catalogue';
 import {
+  COPY,
   DOWNLOAD_PDF,
   GO_TO_FIRST_PAGE,
   GO_TO_LAST_PAGE,
@@ -26,6 +27,7 @@ import {
   REDO,
   ROTATE_VIEW_CLOCKWISE,
   ROTATE_VIEW_COUNTERCLOCKWISE,
+  SELECT_ALL,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
   UNDO,
@@ -84,6 +86,8 @@ describe("a PDF document's menus and toolbar", () => {
     REDO,
     TOOL_SELECT,
     TOOL_HIGHLIGHT,
+    COPY,
+    SELECT_ALL,
     'mode-reviewing',
     'mode-viewing',
     // pdf-view-actions.ts: View > Page display, Zoom and Go to.

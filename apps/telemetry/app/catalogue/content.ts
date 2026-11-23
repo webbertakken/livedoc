@@ -1374,6 +1374,14 @@ export const PDF_LAYERS_TOGGLED = chart(
   { types: ['Layer.Shown', 'Layer.Hidden'], rising: 'neutral' },
 );
 
+export const PDF_TEXT_COPIED = chart(
+  'Pdf',
+  'Copied',
+  'PDF Text Copied',
+  'Text selected on a PDF document’s pages and copied, from Edit or by its key.',
+  { types: ['Text'] },
+);
+
 export const PDF_DOCUMENTS: MetricStack = {
   stack: true,
   title: 'PDF Documents',
@@ -1390,6 +1398,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_VIEW_TURNS,
     PDF_ZOOMS,
     PDF_LAYERS_TOGGLED,
+    PDF_TEXT_COPIED,
   ],
 };
 
