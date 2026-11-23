@@ -183,3 +183,9 @@ Version History (the shell's). Each is specified with its area.
   any other draft is saved as Ctrl+Enter saves it (default).
 - **D141** Show › Formulas: The person's own view, across the sheets while the page is open, never saved; formula
   cells only, left-aligned (default).
+- **D142** Paste Special › Transposed: Once, never repeated over a larger selection; formulas shift by where each
+  cell lands (default).
+- **D143** Pasting rules: Those over the copied cells, cut to them, as new rules; a custom formula shifts, a
+  dropdown's source range stays (default).
+- **D144** Paste Special from elsewhere: Formula Only, Transposed and All Except Borders read text as typed; the
+  rest need cells copied in a spreadsheet and say so (default).

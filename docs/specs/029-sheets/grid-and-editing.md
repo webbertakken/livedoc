@@ -101,8 +101,19 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
   shift as Google's do, absolute parts stay.
 - Paste from Google Sheets and Excel reads their HTML clipboard (formats, merges) and TSV; paste to them writes the
   same, so values, formats and formulas cross both ways (formulas as text in TSV).
-- **Paste Special** (Edit › Paste Special, Ctrl+Shift+V values only): Values Only, Format Only, Formula Only,
-  Conditional Formatting Only, Data Validation Only, Transposed, Column Widths Only, All Except Borders.
+- **Paste Special** (Edit › Paste Special, Ctrl+Shift+V values only), each from the last copy or cut:
+  - **Values Only**: the values as they show, typed; no formulas, no formats.
+  - **Format Only**: the formats alone.
+  - **Formula Only**: the inputs, formulas shifted as a paste shifts them; no formats.
+  - **Conditional Formatting Only** and **Data Validation Only**: the rules over the copied cells, cut to them, set
+    again over the pasted cells as new rules; a custom formula shifts with them, a dropdown's source range stays
+    (default, D143).
+  - **Transposed**: inputs and formats with rows turned into columns, once, never repeated over a larger selection;
+    a formula shifts by where its cell lands (default, D142).
+  - **Column Widths Only**: each pasted column takes its copied column's width.
+  - **All Except Borders**: a paste with the borders left as they were.
+- Formula Only, Transposed and All Except Borders also take text copied elsewhere, read as typed; the other items
+  need cells copied in a spreadsheet, and say so when there are none (default, D144).
 - A paste of more than the write limit is split into parts as one undo step.
 
 ## Rows, columns and cells
