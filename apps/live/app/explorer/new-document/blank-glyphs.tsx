@@ -46,7 +46,7 @@ export function BlankGlyph({ id }: { id: NewDocumentBlankId }) {
   return (
     <span
       aria-hidden
-      className={`flex h-4 w-4 shrink-0 items-center justify-center ${BLANK_TINTS[id]}`}
+      className={`flex size-icon-row shrink-0 items-center justify-center ${BLANK_TINTS[id]}`}
     >
       <Glyph />
     </span>

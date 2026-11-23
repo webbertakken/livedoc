@@ -85,7 +85,11 @@ export function NewDocumentButton({
 
   const Menu = phone ? NewDocumentSheet : NewDocumentMenu;
   return (
-    <div className="inline-flex rounded-md shadow-sm" onPointerEnter={prefetch} onFocus={prefetch}>
+    <div
+      className="inline-flex rounded-control shadow-sm"
+      onPointerEnter={prefetch}
+      onFocus={prefetch}
+    >
       <Button
         size="xs"
         aria-label={`New ${lastBlank.name}`}
@@ -96,7 +100,7 @@ export function NewDocumentButton({
             openMenu();
           }
         }}
-        className="gap-1.5 rounded-r-none pr-2.5"
+        className="gap-2 rounded-r-none pr-3"
       >
         <PlusIcon />
         {/* On a phone the name hides behind the blank's glyph; aria-label carries it. */}
@@ -112,7 +116,7 @@ export function NewDocumentButton({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={openMenu}
-        className="rounded-l-none border-l border-white/25 px-1.5!"
+        className="rounded-l-none border-l border-white/25 px-2!"
       >
         <CaretDownIcon />
       </Button>

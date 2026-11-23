@@ -131,7 +131,7 @@ export default function NewDocumentMenu({
         onKeyDownCapture={onKeyDownCapture}
         className="flex flex-row-reverse items-start"
       >
-        <div className="w-[14.5rem] shrink-0 px-1.5 py-0.5">
+        <div className="w-[14.5rem] shrink-0 px-1 py-0.5">
           {NEW_DOCUMENT_BLANKS.map((b, row) => {
             const isSelected = b.id === selected;
             return (
@@ -147,7 +147,7 @@ export default function NewDocumentMenu({
                 onPointerMove={(e) => aim.onRowPointerMove(b.id, e)}
                 onFocus={() => setSelected(b.id)}
                 onClick={() => onChoose(b.id, 'blank', b.blank)}
-                className={`flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-left outline-none transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:focus-visible:outline-brand-400 ${
+                className={`flex min-h-row w-full items-center gap-2 rounded-control px-2 text-left outline-none transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:focus-visible:outline-brand-400 ${
                   isSelected
                     ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
                     : 'text-slate-700 dark:text-slate-300'
@@ -157,10 +157,10 @@ export default function NewDocumentMenu({
                   {isSelected ? <ChevronLeftIcon /> : null}
                 </span>
                 <BlankGlyph id={b.id} />
-                <span className="flex-1 text-[13px] font-medium">{b.name}</span>
+                <span className="flex-1 text-body">{b.name}</span>
                 <span
                   aria-hidden
-                  className="rounded border border-slate-300 px-1.5 py-0.5 text-[10px] leading-none text-slate-500 dark:border-slate-600 dark:text-slate-400"
+                  className="rounded-control border border-slate-300 px-1 py-0.5 text-glyph leading-none text-slate-500 dark:border-slate-600 dark:text-slate-400"
                 >
                   {row + 1}
                 </span>
@@ -178,7 +178,7 @@ export default function NewDocumentMenu({
                 role="menuitem"
                 tabIndex={-1}
                 onClick={onCreateFolder}
-                className="flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-left text-[13px] text-slate-700 outline-none transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400 [&_svg]:h-4 [&_svg]:w-4"
+                className="flex min-h-row w-full items-center gap-2 rounded-control px-2 text-left text-body text-slate-700 outline-none transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:outline-brand-400 [&_svg]:size-icon-row"
               >
                 <span aria-hidden className="w-3" />
                 <span aria-hidden className="text-slate-500 dark:text-slate-400">
