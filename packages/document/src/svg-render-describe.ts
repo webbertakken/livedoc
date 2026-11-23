@@ -191,11 +191,14 @@ export function exportFontIds(
   }[],
   tabFont?: string,
   // The Sheet windows drawn (docs/specs/029-sheets/sheet.md "Formatting"): a cell's own font is painted too.
-  sheets?: ReadonlyMap<string, { cells: readonly { font?: string }[] }>,
+  sheets?: ReadonlyMap<string, { font?: string; cells: readonly { font?: string }[] }>,
   tabFinish?: Finish,
 ): string[] {
   const boxed = elements.filter((el) => el.type !== 'arrow') as BoxedElement[];
-  const cellFonts = [...(sheets?.values() ?? [])].flatMap((m) => m.cells.map((c) => c.font));
+  const cellFonts = [...(sheets?.values() ?? [])].flatMap((m) => [
+    m.font,
+    ...m.cells.map((c) => c.font),
+  ]);
   // What each element letters in when it has no face of its own: the handwriting font under Sketch.
   const finishFonts = elements.map((el) =>
     el.font ? undefined : elementFontId(el, undefined, tabFinish),

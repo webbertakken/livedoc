@@ -70,6 +70,8 @@ export {
   fontPx,
   lineHeightPx,
   MEASURED_FONTS,
+  measuredFont,
+  SHEET_TEXT_FONT,
   textWidth,
   TEXT_BASE_PX,
   type TextFace,

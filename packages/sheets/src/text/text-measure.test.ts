@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { ADVANCE_FIRST, FONT_ADVANCES } from './font-advances';
-import { fontPx, lineHeightPx, textWidth, TEXT_BASE_PX, type TextFace } from './text-measure';
+import {
+  fontPx,
+  lineHeightPx,
+  measuredFont,
+  SHEET_TEXT_FONT,
+  textWidth,
+  TEXT_BASE_PX,
+  type TextFace,
+} from './text-measure';
 
 const INTER: TextFace = { font: 'inter' };
 const inter = FONT_ADVANCES.inter!.regular;
@@ -37,8 +45,12 @@ describe('textWidth', () => {
     );
   });
 
-  // A text with no font is drawn in the device's own font, which no table holds (D99).
+  // A text with no font is measured and drawn in Inter (D99).
   it('measures a text with no font, or a font it has no table for, as Inter', () => {
+    expect(SHEET_TEXT_FONT).toBe('inter');
+    expect(measuredFont(undefined)).toBe('inter');
+    expect(measuredFont('lora')).toBe('lora');
+    expect(measuredFont('gone')).toBe('inter');
     expect(textWidth('Budget review', 13)).toBe(textWidth('Budget review', 13, INTER));
     expect(textWidth('Budget', 13, { bold: true })).toBe(
       textWidth('Budget', 13, { ...INTER, bold: true }),

@@ -84,6 +84,12 @@ describe('the static render', () => {
     expect(svg).toContain('font-family="&#39;Lora&#39;');
     expect(svg.match(/font-family="&#39;/g)).toHaveLength(1);
   });
+  // docs/specs/029-sheets/sheet.md "Row height", D99: a cell with no font is drawn in the font it was measured in.
+  it("draws a cell with no font of its own in the sheet's measured font", () => {
+    const svg = svgPlanSheet(sheet, { ...MODEL, font: 'inter' }, 'light');
+    expect(svg.match(/font-family="&#39;Inter&#39;/g)).toHaveLength(MODEL.cells.length - 1);
+    expect(svg).toContain('font-family="&#39;Lora&#39;');
+  });
   it('draws a dropdown chip as a pill in its option’s colour, inked to read, and an arrow dropdown’s chevron', () => {
     const cells = (extra: SheetRenderModel['cells']) =>
       svgPlanSheet(sheet, { ...MODEL, cells: extra }, 'light');
@@ -172,8 +178,14 @@ describe('the static render', () => {
       sheets: new Map([['sheet0001', MODEL]]),
     });
     expect(svg).toContain('Total');
-    // The export declares the cells' fonts with the rest.
+    // The export declares the cells' fonts with the rest, the font a cell with none is drawn in too.
     expect(svg).toContain('family=Lora');
+    expect(svg).not.toContain('family=Inter');
+    expect(
+      renderElementsToSvg({ elements: [sheet] } as never, {
+        sheets: new Map([['sheet0001', { ...MODEL, font: 'inter' }]]),
+      }),
+    ).toContain('family=Inter');
     expect(renderElementsToSvg({ elements: [sheet] } as never)).toContain('>Sheet<');
   });
 });

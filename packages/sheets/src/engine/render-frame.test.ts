@@ -91,4 +91,14 @@ describe('renderWindow rows and lines', () => {
     const mono = renderFrameWindow(b.wb, frame, 'roboto-mono')!;
     expect(mono.rowHeights[0]).toBeGreaterThan(inter.rowHeights[0]!);
   });
+
+  // docs/specs/029-sheets/sheet.md "Row height", D99: cells are drawn in the font they were measured in.
+  it("names the font its cells were measured in: the tab's, else Inter", () => {
+    const b = book({ A1: 'x' });
+    const frame = { sheetId: b.sheets[0]!.id, width: 400, height: 300 };
+    expect(renderFrameWindow(b.wb, frame)!.font).toBe('inter');
+    expect(renderFrameWindow(b.wb, frame, 'lora')!.font).toBe('lora');
+    // A font with no table of widths is measured as Inter, so it is drawn so.
+    expect(renderFrameWindow(b.wb, frame, 'gone-font')!.font).toBe('inter');
+  });
 });

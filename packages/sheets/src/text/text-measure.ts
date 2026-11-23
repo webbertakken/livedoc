@@ -1,15 +1,15 @@
 // How wide a cell's text is, with no DOM to ask (docs/specs/029-sheets/sheet.md "Row height"): each character's
 // advance from a table of its font's own (font-advances.ts), so every browser, the api, an agent's write and an
 // export measure the same line. A character outside the table is measured by its kind (D98). Text with no font of
-// its own is drawn in the device's own font, which no table holds: it is measured as Inter (D99), as wide as or
-// wider than the fonts most devices name. Pure.
+// its own is measured, and drawn, in Inter (D99). Pure.
 import { ADVANCE_FIRST, FONT_ADVANCES } from './font-advances';
 
 // A cell's text with no font size of its own, in px (sheet.md "The grid"), and a line's height in font sizes.
 export const TEXT_BASE_PX = 13;
 const LINE_HEIGHT_EM = 1.3;
-// The font a text is measured in when neither its cell nor its tab names one, or names one with no table (D99).
-const DEFAULT_FONT = 'inter';
+// The font a cell's text is measured and drawn in when neither the cell nor its tab names one (sheet.md "Row height",
+// D99): Inter, the same on every device.
+export const SHEET_TEXT_FONT = 'inter';
 const ADVANCE_LAST = 0x7e;
 
 // The fonts with a table of their own, by id: the editor's fonts, kept in step with its catalogue by a test.
@@ -37,8 +37,13 @@ function mean(units: readonly number[], from: string, to: string): number {
   return sum / (to.charCodeAt(0) - from.charCodeAt(0) + 1);
 }
 
+// The font a text is measured in: the one named when it has a table of widths, else Inter.
+export function measuredFont(font: string | undefined): string {
+  return font && Object.hasOwn(FONT_ADVANCES, font) ? font : SHEET_TEXT_FONT;
+}
+
 function tableOf(face: TextFace): Table {
-  const font = face.font && Object.hasOwn(FONT_ADVANCES, face.font) ? face.font : DEFAULT_FONT;
+  const font = measuredFont(face.font);
   const key = face.bold ? `${font}*` : font;
   let table = TABLES.get(key);
   if (!table) {

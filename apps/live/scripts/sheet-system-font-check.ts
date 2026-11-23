@@ -1,6 +1,6 @@
-// Reports how the fonts installed on this machine draw text that was measured with no font (docs/specs/029-sheets/
-// sheet.md "Row height", D99): a tab with no font draws its cells in the device's own font, and its lines are broken
-// as Inter's. For the page's own font stack and each system font found here, it wraps the corpus below as the engine
+// Reports how the fonts installed on this machine would draw text that was measured with no font (docs/specs/029-sheets/
+// sheet.md "Row height", D99) where Inter cannot load: such cells are drawn in Inter, and fall back to the device's
+// own font only when it does not arrive. For the page's own font stack and each system font found here, it wraps the corpus below as the engine
 // does, draws every line as the grid does, and counts the lines drawn past their room, and past their cell (cut off).
 // A report, never a test: it depends on the machine. Run: pnpm --filter live fonts:system
 import { chromium } from '@playwright/test';
