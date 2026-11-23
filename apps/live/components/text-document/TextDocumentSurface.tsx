@@ -63,6 +63,7 @@ import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
 import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
+import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
@@ -224,6 +225,9 @@ export function TextDocumentSurface({
   const storyHeights = useRef(new Map<string, number>());
   // The person's typing aids, as the writing reads them (text-and-paragraphs.md "Typing aids").
   const typingAids = useRef<() => TypingAids>(TypingAids.defaults);
+  // Insert emoji using the colon character (objects.md "Emoji"): the list under the caret, while the preference is on.
+  const emojiColonList = useTextDocumentEmojiColon(() => typingAids.current().emojiColon);
+  const emojiColonPlugin = emojiColonList.plugin;
   // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
   const [changes] = useState(createTextDocumentChanges);
   // What the title row's save status reads (editing-surface.md "The title row"), once the writing is bound.
@@ -339,6 +343,8 @@ export function TextDocumentSurface({
             schema: textDocumentSchema,
             plugins: [
               ySyncPlugin(TextDocumentState.body(doc)),
+              // The emoji colon list takes Up, Down, Enter, Tab and Escape while it is shown, before any keymap.
+              emojiColonPlugin,
               // A picture cropped after a double-click or Crop image (objects.md "Working with a picture"): before the
               // keymaps, so Enter and Escape end cropping rather than reaching the writing.
               pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
@@ -522,7 +528,7 @@ export function TextDocumentSurface({
       cancelled = true;
       teardown();
     };
-  }, [ownerId, documentId, tabId, shareCode, attempt, local, changes]);
+  }, [ownerId, documentId, tabId, shareCode, attempt, local, changes, emojiColonPlugin]);
 
   useEffect(() => {
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
@@ -869,6 +875,7 @@ export function TextDocumentSurface({
       {headers.pageNumbersDialog}
       {lists.dialog}
       {characterDialogs.dialog}
+      <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />
       {limitReached ? (
         <p
           role="status"

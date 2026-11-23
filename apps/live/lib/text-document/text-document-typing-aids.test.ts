@@ -46,6 +46,7 @@ describe('TypingAids', () => {
       links: true,
       lists: true,
       markdown: false,
+      emojiColon: true,
       substitution: true,
     });
     expect(aids.pairs).toHaveLength(DEFAULT_SUBSTITUTIONS.length);
@@ -59,6 +60,7 @@ describe('TypingAids', () => {
       ...base,
       capitalise: false,
       markdown: true,
+      emojiColon: false,
       substitution: false,
       pairs: [
         { replace: 'brb', with: 'be right back', on: true },
@@ -70,7 +72,7 @@ describe('TypingAids', () => {
     };
     const stored = TypingAids.stored(aids);
     expect(stored).toEqual({
-      off: ['capitalise'],
+      off: ['capitalise', 'emojiColon'],
       on: ['markdown'],
       substitution: false,
       defaultsOff: ['--'],
