@@ -156,6 +156,7 @@ export function pdfEngineOver(
     },
     layerView: async (hidden) => (await drawerFor(hidden)) !== reader,
     canAppend: async () => (await writer())?.canSaveIncrementally() === null,
+    repaired: async () => (await writer())?.recoveredViaBruteForce ?? false,
     bake,
     heldBytes: async () => reader.heldBytes(),
     close: async () => {

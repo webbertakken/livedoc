@@ -262,6 +262,11 @@ export type PdfEngine = {
    * written as a rewritten file (opening.md "Damaged files"). Asking reads the whole file a second time.
    */
   canAppend(): Promise<boolean>;
+  /**
+   * Whether the writer read the open file only by rebuilding where each of its parts lies (opening.md "Damaged
+   * files"); false where it read it whole, or cannot read it at all. Asking reads the whole file a second time.
+   */
+  repaired(): Promise<boolean>;
   /** The open stored file with the live changes (one Yjs update) written in. */
   bake(liveChanges: Uint8Array): Promise<BakeResult>;
   /**

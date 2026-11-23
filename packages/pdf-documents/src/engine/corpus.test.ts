@@ -58,6 +58,8 @@ describe('the corpus', () => {
       }
       // opening.md "Damaged files": a file opened only by being repaired takes no addition.
       expect(await engine.canAppend()).toBe(!file.repaired && !file.unwritable);
+      // The writer says it rebuilt the file, where it can read it at all.
+      expect(await engine.repaired()).toBe(!!file.repaired && !file.unwritable);
       // saving.md "An unchanged file": reading changed nothing, and what nobody changed leaves as it came.
       const baked = await engine.bake(PdfLiveChanges.merge([]));
       expect(baked.ok && baked.kind).toBe('unchanged');

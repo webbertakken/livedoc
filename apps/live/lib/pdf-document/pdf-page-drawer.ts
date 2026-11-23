@@ -40,6 +40,8 @@ export type PdfPageDrawer = {
   drawThumbnail: (index: number, scale: number) => Promise<PageBitmap | null>;
   /** Gives up a thumbnail still waiting its turn. */
   forgetThumbnail: (index: number) => void;
+  /** Settles once a page's picture has been drawn: what waits for the first page to show (opening.md). */
+  firstDrawn: () => Promise<void>;
 };
 
 /**
@@ -54,10 +56,15 @@ export function pictureScale(page: PageInfo, cssScale: number, pixelRatio: numbe
     : wanted * Math.sqrt(PDF_PAGE_PICTURE_MAX_PIXELS / pixels);
 }
 
+const PAGE_KEY = 'page:';
+
 export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage' | 'drawTile'>): PdfPageDrawer {
   const waiting: Waiting[] = [];
   const thumbnails: Waiting[] = [];
   let drawing = false;
+  // Set as the promise is made, before anything can be drawn.
+  let pictureDrawn!: () => void;
+  const firstPicture = new Promise<void>((resolve) => (pictureDrawn = resolve));
 
   const next = async (): Promise<void> => {
     if (drawing) return;
@@ -67,6 +74,7 @@ export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage' | 'drawTile'>):
     const bitmap = await turn.run();
     drawing = false;
     turn.settle(bitmap);
+    if (bitmap && turn.key.startsWith(PAGE_KEY)) pictureDrawn();
     void next();
   };
 
@@ -86,7 +94,7 @@ export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage' | 'drawTile'>):
       void next();
     });
   const ask = (key: string, run: Waiting['run']) => askIn(waiting, key, run);
-  const pageKey = (index: number) => `page:${index}`;
+  const pageKey = (index: number) => `${PAGE_KEY}${index}`;
   const thumbnailKey = (index: number) => `thumbnail:${index}`;
 
   return {
@@ -99,5 +107,6 @@ export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage' | 'drawTile'>):
     drawThumbnail: (index, scale) =>
       askIn(thumbnails, thumbnailKey(index), () => engine.drawPage(index, scale, 0)),
     forgetThumbnail: (index) => forgetIn(thumbnails, thumbnailKey(index)),
+    firstDrawn: () => firstPicture,
   };
 }

@@ -1394,11 +1394,12 @@ export const PDF_OPENS = chart(
   'Pdf',
   'Opened',
   'PDF Opens',
-  'A PDF document opened on its surface, by how it came out: read, opened with its password, or refused by name.',
+  'A PDF document opened on its surface, by how it came out: read, opened with its password, found repaired, or refused by name.',
   {
     types: [
       'Read',
       'PasswordGiven',
+      'Repaired',
       'Refused.Damaged',
       'Refused.Newer',
       'Refused.CertificateProtected',

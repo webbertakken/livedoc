@@ -38,6 +38,7 @@ const drawer: PdfPageDrawer = {
   forgetTile: () => {},
   drawThumbnail: async () => null,
   forgetThumbnail: () => {},
+  firstDrawn: () => new Promise<void>(() => {}),
 };
 
 async function page(

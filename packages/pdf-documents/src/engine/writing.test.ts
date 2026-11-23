@@ -284,10 +284,12 @@ describe('a rewrite', () => {
     const damaged = spoiled(stored);
     const pages = opened(await engine.open(damaged));
     expect(await engine.canAppend()).toBe(false);
+    expect(await engine.repaired()).toBe(true);
     const result = await bakeWith([await highlightOn(0, pages)]);
     expect(result.kind).toBe('rewrite');
     opened(await engine.open(result.bytes));
     expect(await engine.canAppend()).toBe(true);
+    expect(await engine.repaired()).toBe(false);
     expect((await engine.fileMarks(0)).map((mark) => mark.id)).toEqual(['mark-1']);
     expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
   });
