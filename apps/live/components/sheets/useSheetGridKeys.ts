@@ -178,6 +178,16 @@ export function useSheetGridKeys({
       }
       case 'hide':
         return c.canShape ? actions.hide(cmd.axis, cmd.hidden) : undefined;
+      // Whole lines group at once; cells open the rows and the columns at the active cell (D160).
+      case 'group': {
+        if (!c.canShape) return;
+        const whole = wholeLines(sel, c.grid);
+        if (whole) return cmd.op === 'group' ? actions.group(whole) : actions.ungroup(whole);
+        return c.setMenu({ kind: 'group', op: cmd.op, ...activeCellPoint() });
+      }
+      // Anyone folds: an Editor for everyone, anyone else for themselves (D163).
+      case 'fold':
+        return actions.foldAtActive(cmd.collapse);
       case 'read': {
         // Emptied first, so a second press on the same cell is said again.
         const said = readSheetLine(c, cmd.axis, sel.active);

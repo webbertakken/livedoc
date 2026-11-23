@@ -110,9 +110,32 @@ export function outlineOf(layout: SheetLayout, axis: OutlineAxis): AxisOutline {
 export const controlsAfter = (layout: SheetLayout, axis: OutlineAxis): boolean =>
   layout.controlsAfter?.[axis] === true;
 
-/** The line a group's control sits on: just before it, or just after when it starts the sheet or the sheet asks. */
-export function controlLine(group: LineGroup, after: boolean): number {
-  return after || group.from === 0 ? group.to + 1 : group.from - 1;
+/**
+ * The line a group's control sits on: just before it, or just after when it starts the sheet or the sheet asks; the
+ * other side when its own is off the sheet, and none for a group of every line (D165). `count`: the axis's lines.
+ */
+export function controlLine(group: LineGroup, after: boolean, count: number): number | null {
+  const next = group.to + 1 < count ? group.to + 1 : null;
+  const prev = group.from > 0 ? group.from - 1 : null;
+  return after || prev === null ? (next ?? prev) : prev;
+}
+
+/** Whether any of the lines from..to is in a group: what Ungroup acts on. */
+export function groupedWithin(
+  layout: SheetLayout,
+  axis: OutlineAxis,
+  from: number,
+  to: number,
+): boolean {
+  for (const p of outlineOf(layout, axis).depths.keys()) if (p >= from && p <= to) return true;
+  return false;
+}
+
+/** How deep the deepest group on an axis runs: 0 without groups. */
+export function deepestOf(layout: SheetLayout, axis: OutlineAxis): number {
+  let deepest = 0;
+  for (const g of outlineOf(layout, axis).groups) deepest = Math.max(deepest, g.depth);
+  return deepest;
 }
 
 /**
@@ -129,10 +152,11 @@ export function foldTargets(
   const open = holding.filter((g) => !g.collapsed);
   const closed = holding.filter((g) => g.collapsed);
   const after = controlsAfter(layout, axis);
+  const count = linesOf(layout, axis).length;
   return {
     collapse: open.length ? open[open.length - 1]! : null,
     expand: closed.length
       ? closed
-      : groups.filter((g) => g.collapsed && controlLine(g, after) === pos),
+      : groups.filter((g) => g.collapsed && controlLine(g, after, count) === pos),
   };
 }

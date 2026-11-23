@@ -49,6 +49,17 @@ export function applyOutlineChange(layout: SheetLayout, ch: OutlineChange): Shee
   return withField(layout, marksKey(ch.axis), next.length ? next : undefined);
 }
 
+/** A collapse or an expand of one group, as a layout change names it. */
+export type FoldChange = Extract<LayoutChange, { k: 'collapse' }>;
+
+/**
+ * The layout as one person sees it: the sheet's, with their own folds over it (D163), each passed over when its line
+ * is gone or it changes nothing. The same layout when there are none.
+ */
+export function withFolds(layout: SheetLayout, folds: readonly FoldChange[]): SheetLayout {
+  return folds.reduce(applyOutlineChange, layout);
+}
+
 /** The change that undoes `ch`, applied to `before`. */
 export function inverseOutline(before: SheetLayout, ch: OutlineChange): LayoutChange[] {
   if (ch.k === 'controls')

@@ -99,6 +99,22 @@ export function ungroupLines(
   return write(changes);
 }
 
+// The changes that collapse or expand one group: none when it already is so.
+function foldChanges(
+  sheet: Sheet,
+  axis: OutlineAxis,
+  group: LineGroup,
+  collapsed: boolean,
+): LayoutChange[] {
+  const list = linesOf(sheet.layout, axis);
+  if (collapsed)
+    return group.collapsed ? [] : [mark(axis, { at: list[group.from]!, depth: group.depth }, true)];
+  const inside = new Set(list.slice(group.from, group.to + 1));
+  return marksOf(sheet.layout, axis)
+    .filter((m) => m.depth === group.depth && inside.has(m.at))
+    .map((m) => mark(axis, m, false));
+}
+
 /** Collapse or expand one group; null when it already is so. */
 export function collapseGroup(
   sheet: Sheet,
@@ -106,17 +122,17 @@ export function collapseGroup(
   group: LineGroup,
   collapsed: boolean,
 ): SheetWrite | null {
-  const list = linesOf(sheet.layout, axis);
-  if (collapsed)
-    return group.collapsed
-      ? null
-      : write([mark(axis, { at: list[group.from]!, depth: group.depth }, true)]);
-  const inside = new Set(list.slice(group.from, group.to + 1));
-  return write(
-    marksOf(sheet.layout, axis)
-      .filter((m) => m.depth === group.depth && inside.has(m.at))
-      .map((m) => mark(axis, m, false)),
-  );
+  return write(foldChanges(sheet, axis, group, collapsed));
+}
+
+/** Collapse or expand several groups as one change (Alt+Shift+↓, D161); null when none changes. */
+export function collapseGroups(
+  sheet: Sheet,
+  axis: OutlineAxis,
+  groups: readonly LineGroup[],
+  collapsed: boolean,
+): SheetWrite | null {
+  return write(groups.flatMap((g) => foldChanges(sheet, axis, g, collapsed)));
 }
 
 /** Expand all or Collapse all on one axis; null when there is nothing to change. */

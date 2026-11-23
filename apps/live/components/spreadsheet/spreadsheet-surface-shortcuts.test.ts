@@ -127,6 +127,10 @@ const EXPECTED: Record<string, unknown[]> = {
   'unhide-row': [{ kind: 'hide', axis: 'r', hidden: false }],
   'hide-column': [{ kind: 'hide', axis: 'c', hidden: true }],
   'unhide-column': [{ kind: 'hide', axis: 'c', hidden: false }],
+  'group-rows-or-columns': [{ kind: 'group', op: 'group' }],
+  'ungroup-rows-or-columns': [{ kind: 'group', op: 'ungroup' }],
+  'expand-grouped': [{ kind: 'fold', collapse: false }],
+  'collapse-grouped': [{ kind: 'fold', collapse: true }],
   'read-row': [{ kind: 'read', axis: 'r' }],
 };
 

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { SheetLayout } from '@livedoc/sheets';
 import {
   COL_HEADER_PX,
+  OUTLINE_DEPTH_PX,
   ROW_HEADER_PX,
   cellBox,
   geometryOf,
@@ -263,5 +264,29 @@ describe('geometryOf with row heights', () => {
   it('falls back to the layout’s own sizes with no heights given', () => {
     const g = geometryOf(grid(3, 3, { rowSize: { r0: 40 }, rowHeight: 24 }));
     expect([...g.rows]).toEqual([0, 40, 64, 88]);
+  });
+});
+
+describe('the outline bands (D162, D165)', () => {
+  it('give no room without groups', () => {
+    const g = geometryOf(grid(10, 5));
+    expect([g.bandW, g.bandH, g.headW, g.headH]).toEqual([0, 0, ROW_HEADER_PX, COL_HEADER_PX]);
+  });
+
+  it('are 12 px a depth and 4 more, before the headers, kept when the sheet hides its headers', () => {
+    const groups = { rowDepth: { r2: 1, r3: 2 }, colDepth: { c1: 1 } };
+    const g = geometryOf(grid(10, 5, groups));
+    expect([g.bandW, g.bandH]).toEqual([OUTLINE_DEPTH_PX * 2 + 4, OUTLINE_DEPTH_PX + 4]);
+    expect([g.headW, g.headH]).toEqual([28 + ROW_HEADER_PX, 16 + COL_HEADER_PX]);
+    const bare = geometryOf(grid(10, 5, { ...groups, showHeaders: false }));
+    expect([bare.headW, bare.headH]).toEqual([28, 16]);
+  });
+
+  it('are hit as bands, the corner above them still the corner', () => {
+    const g = geometryOf(grid(10, 5, { rowDepth: { r2: 1 }, colDepth: { c1: 1 } }));
+    expect(hitTest(g, 5, 100, at0)).toEqual({ kind: 'band', axis: 'r' });
+    expect(hitTest(g, 200, 5, at0)).toEqual({ kind: 'band', axis: 'c' });
+    expect(hitTest(g, 5, 5, at0)).toEqual({ kind: 'corner' });
+    expect(hitTest(g, 20, 100, at0)).toEqual({ kind: 'row', r: 2, edge: false });
   });
 });

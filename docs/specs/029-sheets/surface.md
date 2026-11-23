@@ -233,3 +233,5 @@ Version History (the shell's). Each is specified with its area.
   (default).
 - **D164** Lines inserted inside a group: They join it at the lesser depth of their neighbours; groups stay at
   their places when lines move or are sorted (default).
+- **D165** The outline bar's edges: A control with no line on its side takes the other; a group of every line has
+  none; the bands stay when the sheet hides its headers (default).
