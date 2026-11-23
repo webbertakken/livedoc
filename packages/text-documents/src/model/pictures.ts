@@ -1,6 +1,6 @@
 // Pictures in line (docs/specs/034-text-documents/objects.md "The model"): an inline of a paragraph holding its media by
-// key, the size it shows at, its alternative text, title, whether it is decorative and its crop; the bytes are the
-// document's `media`, by the SHA-256 of their bytes, so two pictures of the same bytes share one.
+// key, the size it shows at, its alternative text, title, whether it is decorative, its crop and its turn; the bytes are
+// the document's `media`, by the SHA-256 of their bytes, so two pictures of the same bytes share one.
 import type { MappedPictureType } from '@livedoc/office-packages';
 import type { KeptProperties, TextProps } from './props';
 import type { Block, Inline } from './blocks';
@@ -27,6 +27,8 @@ export type Picture = {
   readonly title?: string;
   readonly decorative?: true;
   readonly crop?: PictureCrop;
+  /** The angle it is turned clockwise about its centre, in degrees from 0 to below 360; none is 0. */
+  readonly rotation?: number;
   /** The formatting of the run it sits in. */
   readonly props: TextProps;
   readonly style?: string;
@@ -67,6 +69,10 @@ function* headerInlines(headers: SectionHeaders | undefined): Generator<Inline> 
 }
 
 const sides = ['top', 'right', 'bottom', 'left'] as const;
+
+/** A turn is held to two decimals of a degree (default). */
+const ROTATION_PRECISION = 100;
+const round2 = (n: number) => Math.round(n * ROTATION_PRECISION) / ROTATION_PRECISION;
 
 /** Every inline of the blocks, in reading order: those in table cells and notes too. */
 function* inlinesOf(blocks: readonly Block[]): Generator<Inline> {
@@ -146,6 +152,25 @@ export const Pictures = {
   /** A crop that cuts nothing is no crop. */
   crop: (crop: PictureCrop | undefined): PictureCrop | undefined =>
     crop && sides.some((side) => crop[side] > 0) ? crop : undefined,
+  /** A turn as a picture holds it: clockwise from 0 to below 360, to two decimals; none for no turn or no number. */
+  rotation: (value: unknown): number | undefined => {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+    const turn = round2(((value % 360) + 360) % 360) % 360;
+    return turn === 0 ? undefined : turn;
+  },
+  /** The bounds of a picture of `size` turned by `rotation`: what its line makes room for, in points. */
+  turnedBounds: (
+    size: { readonly width: number; readonly height: number },
+    rotation: number | undefined,
+  ): { width: number; height: number } => {
+    const radians = ((rotation ?? 0) * Math.PI) / 180;
+    const cos = Math.abs(Math.cos(radians));
+    const sin = Math.abs(Math.sin(radians));
+    return {
+      width: size.width * cos + size.height * sin,
+      height: size.width * sin + size.height * cos,
+    };
+  },
   /** Whether a crop is one a picture can hold: each side from 0, and what is left of each axis more than nothing. */
   isCrop: (crop: PictureCrop): boolean =>
     sides.every((side) => Number.isFinite(crop[side]) && crop[side] >= 0) &&

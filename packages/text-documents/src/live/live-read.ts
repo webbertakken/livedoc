@@ -18,7 +18,7 @@ import type { TextProps } from '../model/props';
 import type { Section } from '../model/sections';
 import type { Table } from '../model/tables';
 import { isMappedPictureType } from '@livedoc/office-packages';
-import type { DocumentMedia, Picture, PictureMedia } from '../model/pictures';
+import { Pictures, type DocumentMedia, type Picture, type PictureMedia } from '../model/pictures';
 import { Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
@@ -120,6 +120,7 @@ function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): I
           title: a.title as string | undefined,
           decorative: a.decorative === true ? true : undefined,
           crop: a.crop as Picture['crop'],
+          rotation: Pictures.rotation(a.rotation),
           props: a.props ?? {},
           style: a.style as string | undefined,
           link: a.link as string | undefined,

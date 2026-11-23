@@ -59,6 +59,7 @@ export const PICTURE_ATTRIBUTES = [
   'title',
   'decorative',
   'crop',
+  'rotation',
   'props',
   'style',
   'link',

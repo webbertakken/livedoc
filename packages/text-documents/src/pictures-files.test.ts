@@ -209,7 +209,6 @@ describe('a picture read from a file', () => {
 
   it.each([
     ['anchored', wordPicture({ anchor: true })],
-    ['rotated', wordPicture({ xfrm: ' rot="1800000"' })],
     ['flipped', wordPicture({ xfrm: ' flipH="1"' })],
     [
       'outlined',
@@ -244,6 +243,27 @@ describe('a picture read from a file', () => {
     expect(keptNames(document)).toEqual(['drawing']);
   });
 
+  // objects.md "Rotation read": Word's clockwise rot; LibreOffice's counter-clockwise radians, its translations unread.
+  it("reads Word's turned picture, clockwise in 60,000ths of a degree", async () => {
+    const document = await read(wordDocx(wordPicture({ xfrm: ' rot="1800000"' })));
+    expect(picturesOf(document)[0]?.rotation).toBe(30);
+  });
+
+  it.each([
+    [
+      'a Writer picture, turned about its centre',
+      'translate (-0.67715in -0.47915in) rotate (0.523598775598299) translate (0.67715in 0.47915in)',
+      330,
+    ],
+    ['a drawing shape, turned and moved', 'rotate (-0.52) translate (0.47in -0.27in)', 29.79],
+    ['a whole turn and more', 'rotate (6.8067840827778845)', 330],
+    ['no turn at all', 'translate (1in 1in)', undefined],
+  ])("reads LibreOffice's turned picture: %s", async (_, transform, rotation) => {
+    const document = await read(loOdt(LO_FRAME({ attrs: ` draw:transform="${transform}"` })));
+    expect(picturesOf(document)).toHaveLength(1);
+    expect(picturesOf(document)[0]?.rotation).toBe(rotation);
+  });
+
   it("keeps Word's picture of a media type it does not map", async () => {
     const emf = new Uint8Array([1, 0, 0, 0, 108, 0, 0, 0]);
     const document = await read(wordDocx(wordPicture(), { bytes: emf, name: 'media/image1.emf' }));
@@ -252,7 +272,10 @@ describe('a picture read from a file', () => {
 
   it.each([
     ['anchored to the paragraph', LO_FRAME({ anchor: 'paragraph' })],
-    ['rotated', LO_FRAME({ attrs: ' draw:transform="rotate (-0.52) translate (0.47in -0.27in)"' })],
+    ['scaled', LO_FRAME({ attrs: ' draw:transform="scale (2 1) rotate (0.52)"' })],
+    ['skewed', LO_FRAME({ attrs: ' draw:transform="skewX (0.2)"' })],
+    ['transformed by a matrix', LO_FRAME({ attrs: ' draw:transform="matrix (1 0 0 1 0 0)"' })],
+    ['transformed by nonsense', LO_FRAME({ attrs: ' draw:transform="rotate (a)"' })],
     ['moved off the baseline', LO_FRAME({ attrs: ' svg:y="-0.2in"' })],
     [
       'with a fallback picture',
@@ -375,6 +398,74 @@ describe('pictures written', () => {
     expect([...odf.package.entries.keys()].filter((n) => n.startsWith('Pictures/'))).toEqual([
       `Pictures/${GREEN_PNG_SHA}.png`,
     ]);
+  });
+
+  // objects.md "Rotation written": as LibreOffice turns a Writer picture about its centre, and as Word makes room.
+  it('writes a turned picture as LibreOffice and Word do', async () => {
+    const odf = await readOdfPackage(new Uint8Array(write(CONSTRUCTS.pictures!('odf'), 'odt')));
+    if (!odf.ok) throw new Error(odf.rejection);
+    const content = decoder.decode(odf.package.entries.get('content.xml'));
+    expect(content).toContain(
+      'svg:width="24pt" svg:height="17pt" draw:z-index="0" draw:transform="translate (-12pt -8.5pt) rotate (0.514872129338327) translate (12pt 8.5pt)"',
+    );
+    const ooxml = await readOoxmlPackage(
+      new Uint8Array(write(CONSTRUCTS.pictures!('ooxml'), 'docx')),
+    );
+    if (!ooxml.ok) throw new Error(ooxml.rejection);
+    const main = decoder.decode(ooxml.package.parts.get('word/document.xml'));
+    expect(main).toContain(
+      '<wp:extent cx="304800" cy="215900"/><wp:effectExtent l="33399" t="61050" r="33399" b="61050"/>',
+    );
+    expect(main).toContain(
+      '<a:xfrm rot="19830000"><a:off x="0" y="0"/><a:ext cx="304800" cy="215900"/>',
+    );
+  });
+
+  // objects.md "Written": LibreOffice opens a frame whose automatic style has no parent as a drawing shape.
+  it("gives each picture's graphic style the Graphics style as its parent, written once", async () => {
+    const odf = await readOdfPackage(new Uint8Array(write(CONSTRUCTS.pictures!('odf'), 'odt')));
+    if (!odf.ok) throw new Error(odf.rejection);
+    const content = decoder.decode(odf.package.entries.get('content.xml'));
+    const styles = decoder.decode(odf.package.entries.get('styles.xml'));
+    const graphic = [
+      ...(content + styles).matchAll(/<style:style [^>]*style:family="graphic"[^>]*>/g),
+    ].map((m) => m[0]);
+    expect(graphic.length).toBeGreaterThan(1);
+    for (const style of graphic.filter((s) => !s.includes('style:name="Graphics"')))
+      expect(style).toContain('style:parent-style-name="Graphics"');
+    expect(
+      styles.match(/<style:style style:name="Graphics" style:family="graphic"\/>/g),
+    ).toHaveLength(1);
+    expect(content).not.toContain('style:name="Graphics"');
+  });
+
+  it("writes no Graphics style of its own where LibreOffice's is kept, nor one without pictures", async () => {
+    const lo = await read(loOdt(LO_FRAME(), LO_GRAPHIC(), GREEN_PNG));
+    const kept = {
+      ...lo,
+      source:
+        lo.source?.format === 'odf'
+          ? {
+              ...lo.source,
+              styles: [
+                ...lo.source.styles,
+                {
+                  xml: '<style:style style:name="Graphics" style:family="graphic"><style:graphic-properties svg:x="0in"/></style:style>',
+                  ns: {
+                    style: 'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                    svg: 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0',
+                  },
+                },
+              ],
+            }
+          : lo.source,
+    };
+    const styles = (document: TextDocument) =>
+      readOdfPackage(new Uint8Array(write(document, 'odt'))).then((r) =>
+        r.ok ? decoder.decode(r.package.entries.get('styles.xml')) : '',
+      );
+    expect((await styles(kept)).match(/style:name="Graphics"/g)).toHaveLength(1);
+    expect(await styles(CONSTRUCTS.paragraphs!('odf'))).not.toContain('style:name="Graphics"');
   });
 
   it("writes a flat file's pictures as base64", () => {

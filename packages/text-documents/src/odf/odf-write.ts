@@ -23,7 +23,13 @@ import { Styles, type Style } from '../model/styles';
 import { TextDocument, type OdfSource } from '../model/text-document';
 import { shortHash } from '../hash';
 import { Pictures, type Picture } from '../model/pictures';
-import { odfMediaEntry, odfPictureStyle, odfPictureXml } from './odf-pictures';
+import {
+  isPictureParentStyleXml,
+  odfMediaEntry,
+  odfPictureStyle,
+  odfPictureXml,
+  PICTURE_PARENT_STYLE,
+} from './odf-pictures';
 import { WRITTEN_NS } from './odf-names';
 import { listStyleXml } from './odf-lists';
 import { withPageless } from './odf-settings';
@@ -190,7 +196,7 @@ class OdfWriter {
     const style = this.generated(
       'LDfr',
       (name) =>
-        `<style:style${attr('style:name', name)} style:family="graphic">${props}</style:style>`,
+        `<style:style${attr('style:name', name)} style:family="graphic"${attr('style:parent-style-name', PICTURE_PARENT_STYLE)}>${props}</style:style>`,
     );
     this.#pictures += 1;
     return odfPictureXml(picture, media, {
@@ -672,6 +678,11 @@ function writeParts(document: TextDocument, generator: string, asFlat: boolean):
     (w.source?.styles ?? []).some((s) => isLineNumberingXml(s.xml))
       ? ''
       : lineNumberingXml(sections, undefined),
+    // The parent each picture's graphic style names (objects.md "Written"), where the file does not hold it.
+    Pictures.ofDocument(document).length > 0 &&
+    !(w.source?.styles ?? []).some((s) => isPictureParentStyleXml(s.xml))
+      ? `<style:style${attr('style:name', PICTURE_PARENT_STYLE)} style:family="graphic"/>`
+      : '',
   ].join('');
   const root = `${declarations(w.ns)} office:version="${ODF_VERSION}"`;
   const faces = `<office:font-face-decls>${w.fontFaces.join('')}</office:font-face-decls>`;
