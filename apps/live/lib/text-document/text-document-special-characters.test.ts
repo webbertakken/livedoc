@@ -1,16 +1,18 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/objects.md "Special characters" ("Inserting"): the character replaces the selection,
-// taking the caret's formatting, the caret after it; each press is one undo step, counted; for an Editor only.
+// taking the caret's formatting, the caret after it; each press is one undo step, counted; for an Editor only. "Emoji":
+// inserted, counted, the same way.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { track } from '@/lib/telemetry';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
+  EMOJI_ITEM,
   SPECIAL_CHARACTERS_ITEM,
+  characterDialogActions,
   insertCharacter,
-  insertSpecialCharacter,
-  specialCharacterActions,
+  insertPicked,
 } from './text-document-special-characters';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -51,22 +53,29 @@ describe('insertCharacter', () => {
   });
 });
 
-describe('specialCharacterActions and insertSpecialCharacter', () => {
-  it('opens the dialog for an Editor, and binds nothing for anyone else', () => {
+describe('characterDialogActions and insertPicked', () => {
+  it('opens either dialog for an Editor, and binds nothing for anyone else', () => {
     const open = vi.fn();
     view = new EditorView(document.createElement('div'), { state: stateOf(1) });
-    specialCharacterActions(view, true, open)[SPECIAL_CHARACTERS_ITEM]!.run();
-    expect(open).toHaveBeenCalledOnce();
-    expect(specialCharacterActions(view, false, open)).toEqual({});
+    const actions = characterDialogActions(view, true, open);
+    actions[SPECIAL_CHARACTERS_ITEM]!.run();
+    actions[EMOJI_ITEM]!.run();
+    expect(open.mock.calls).toEqual([['special-characters'], ['emoji']]);
+    expect(characterDialogActions(view, false, open)).toEqual({});
+    open.mockClear();
+    characterDialogActions(null, true, open)[EMOJI_ITEM]!.run();
+    expect(open).not.toHaveBeenCalled();
   });
 
   it('puts a pressed character in and counts it, nothing once the editor is gone', () => {
     view = new EditorView(document.createElement('div'), { state: stateOf(5) });
-    expect(insertSpecialCharacter(view, '😀')).toBe(true);
+    expect(insertPicked(view, '😀', 'emoji')).toBe(true);
     expect(view.state.doc.textContent).toBe('abcd😀');
+    expect(track).toHaveBeenCalledWith('Element', 'Added', 'TextDocumentEmoji');
+    expect(insertPicked(view, '→', 'special-characters')).toBe(true);
     expect(track).toHaveBeenCalledWith('Element', 'Added', 'TextDocumentSpecialCharacter');
     view.destroy();
-    expect(insertSpecialCharacter(view, '😀')).toBe(false);
+    expect(insertPicked(view, '😀', 'emoji')).toBe(false);
     view = null;
   });
 });

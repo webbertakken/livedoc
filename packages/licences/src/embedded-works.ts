@@ -335,6 +335,18 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     trigger: { sources: ['apps/live/lib/office/special-characters.json'] },
     texts: text('unicode-18.0.0-LICENSE.txt'),
   },
+  // Emojibase's English emoji data (names, tags, shortcodes, groups), generated into the emoji catalogue
+  // (docs/specs/034-text-documents/objects.md "Emoji") by apps/live/scripts/emoji-catalogue.ts.
+  {
+    id: 'emojibase-data',
+    name: 'emojibase-data',
+    version: '18.0.0',
+    licence: 'MIT',
+    carrier: 'LiveDoc source (emoji)',
+    homepage: 'https://emojibase.dev',
+    trigger: { sources: ['apps/live/lib/office/emoji.json'] },
+    texts: text('emojibase-data-18.0.0-LICENSE.txt'),
+  },
   // Icon geometry vendored into our own source (packages/icons).
   {
     id: 'lucide',

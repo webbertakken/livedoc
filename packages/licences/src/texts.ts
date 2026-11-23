@@ -135,6 +135,11 @@ export const TEXT_SOURCES: readonly TextSource[] = [
     sha256: 'b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57',
   },
   {
+    file: 'emojibase-data-18.0.0-LICENSE.txt',
+    sources: ['https://cdn.jsdelivr.net/npm/emojibase-data@18.0.0/LICENSE'],
+    sha256: '5c4e1582dcae9429a5d00ec0a64185c3a711f9757b2308fdf275d90b120f6149',
+  },
+  {
     file: 'unicode-18.0.0-LICENSE.txt',
     sources: ['https://www.unicode.org/license.txt'],
     sha256: 'e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96',

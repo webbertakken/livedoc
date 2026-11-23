@@ -121,6 +121,18 @@ Copyright © 1991-2026 Unicode, Inc.
 Licensed under the Unicode License v3: https://www.unicode.org/license.txt
 ```
 
+## emojibase-data
+
+- Source: <https://github.com/milesj/emojibase> (`emojibase-data` 18.0.0, served by jsDelivr).
+- Used for: the emoji, names, tags, shortcodes and groups of the emoji dialog, generated into
+  `apps/live/lib/office/emoji.json` by `pnpm chars:emoji`.
+- Licence: MIT, full text in
+  [`packages/licences/texts/emojibase-data-18.0.0-LICENSE.txt`](./packages/licences/texts/emojibase-data-18.0.0-LICENSE.txt).
+
+```text
+Copyright (c) 2017-2019 Miles Johnson
+```
+
 ## Caveat
 
 - Source: <https://github.com/googlefonts/caveat>, via Google Fonts
