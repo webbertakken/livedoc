@@ -9,12 +9,13 @@
   sharp tiles over the part in view where that picture is softer than the screen.
 - Page display, zoom, Go to, the page bar and Rotate view.
 - The left panel's rail, Thumbnails, Outline, Embedded files and Layers; Go to page by a page's number or its label; following a bookmark.
+- Selecting text and copying it.
 
-Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
+Bound today: Download as PDF, Undo, Redo, Copy, Select all, the editing modes, Highlight, Select and Help; Page display, Zoom but for
 Zoom to selection, Go to but for Previous view and Next view, Rotate view, Thumbnails, Outline, Embedded files and Layers.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-Signatures and Fields, a bookmark's point on its page, find, text selection, the accessible tree (a page is a named region whose picture is
+Signatures and Fields, a bookmark's point on its page, find, the page's context menu, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -440,9 +441,29 @@ A press on a bookmark, or on a link of a page ([Security](security.md#links-and-
     turned.
 - **Selecting text**: a drag selects in the file's own text order, by character; a double press a word, a triple a
   line; Shift extends; Alt with a drag selects a column. The selection is drawn by LiveDoc as rectangles over the
-  glyphs.
-- **Copy** puts the selected text on the clipboard as plain text, lines joined where the file broke them inside a
-  paragraph; a file that asks not to be copied dims Copy ([Opening](opening.md#passwords)).
+  glyphs, in the shell's focus colour.
+  - With **Select** in hand, a mouse or a pen selects; a finger scrolls ([Phone and tablet](#phone-and-tablet)).
+  - A drag's ends fall between characters: at the character nearest the point, a point beside a line picking that
+    line first, before it or after it by the character's middle `(default)`.
+  - A selection lies on one page `(default)`: a drag past the page's edge selects to the page's nearest character.
+  - A word is a run of letters, marks and digits; a press on anything else selects that character. A line is the
+    file's line, between two of its breaks.
+  - Shift with a press extends the selection on its page from where it started; Alt with a drag selects the
+    characters whose middles lie in the dragged rectangle, a run a line.
+  - A press without a drag, and Escape, clear the selection; a change of the pages clears it.
+  - **Select all** (⌘A on the pages, or Edit) selects the text of the page in view.
+- **Copy** (⌘C, or Edit) puts the selected text on the clipboard as plain text, lines joined where the file broke them
+  inside a paragraph; a file that asks not to be copied dims Copy ([Opening](opening.md#passwords)).
+  - Joined `(default)`: a word the file broke with a hyphen at a line's end is one word again; a break inside one line
+    (a superscript's) is dropped; a break to a line that starts within two line heights below a full line is a space;
+    every other break stays a line break. A full line ends within two line heights of the furthest right of it and the
+    lines either side of it, so a column beside it never counts.
+  - A column's runs are joined by line breaks.
+  - A file that asks not to be copied: Copy is dimmed as "Copy (this PDF asks not to be copied)", and ⌘C says
+    "This PDF asks not to be copied." `(default)`. A clipboard the browser refuses says "The text couldn't be
+    copied."
+  - Logged `[pdf] text-copied chars=<n>`, `[pdf] text-copy-refused`, `[pdf] text-copy-failed`; a page whose text
+    cannot be read `[pdf] page-text-failed page=<n>`, and selects nothing. Counted as `Pdf · Copied · Text`.
 - **Links**: the pointer shows a hand and the target as a tooltip; a press follows a place in the document at once,
   and asks first for an address ([Security](security.md#links-and-actions)).
 - **Previous view** and **Next view** step through the places a person jumped from and to, as a browser's history.
@@ -513,6 +534,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 | `PDF_ZOOM_SETTLE_MS`           | 400                                                                                                    | `(default)` How long a wheel's or a pinch's zoom rests before it is told to telemetry; safe range 200 to 1,000                           |
 | `PDF_EMBEDDED_FILE_MAX_BYTES`  | 100,000,000 (100 MB)                                                                                   | `(default)` The most of an embedded file read out to be saved or opened: a stored file's cap, `FILE_TAB_MAX_BYTES`                       |
 | `PDF_THUMBNAIL_BOX_PX`         | 160                                                                                                    | `(default)` CSS pixels a side of the square a thumbnail is fitted into; safe range 96 to 224                                             |
+| `PDF_PAGE_TEXTS_KEPT`          | 32                                                                                                     | `(default)` Pages whose text the surface keeps read for selecting, the least lately used let go first; safe range 8 to 256               |
 | `PDF_FIND_MAX_RESULTS`         | 10,000                                                                                                 | `(default)` Listed results; the count still says how many more                                                                           |
 
 ## Share roles
@@ -537,7 +559,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 `Pdf · Changed · PageDisplay.<Single|Continuous|Two|TwoContinuous|CoverShown|CoverHidden>`,
 `Pdf · Changed · RotateView.<Clockwise|Counterclockwise>` `(default)`,
 `Pdf · Zoomed · <FitWidth|FitPage|Actual|In|Out|Custom>` (a wheel's or a pinch's zoom once, as `Custom`, when it settles),
-`Pdf · Searched · Find`,
+`Pdf · Searched · Find`, `Pdf · Copied · Text`,
 `Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen|Layer.Shown|Layer.Hidden>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
 menu, tool finder and panel events (`UI · Opened · PdfDocumentPanel<Thumbnails|Outline|EmbeddedFiles|Layers>`).
 Never a query, a page's text or a name.
@@ -545,7 +567,8 @@ Never a query, a page's text or a name.
 Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom> way=<way>`,
 `[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`,
 `[pdf] thumbnail-failed page=<n>`, `[pdf] outline-failed`, `[pdf] link-opened scheme=<scheme>`,
-`[pdf] link-refused kind=<kind>`.
+`[pdf] link-refused kind=<kind>`, `[pdf] text-copied chars=<n>`, `[pdf] text-copy-refused`, `[pdf] text-copy-failed`,
+`[pdf] page-text-failed page=<n>`.
 
 ## Errors
 

@@ -90,7 +90,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | ---------------------------------------------------- | -------------------------------- | ------------------------ | --------- |
 | Move the text caret                                  | Arrow keys; ⌥ by word; ⌘ by line | Arrow keys               | specified |
 | Extend the text selection                            | ⇧ with the caret keys            | The same                 | specified |
-| Copy; select all                                     | ⌘C; ⌘A                           | The same                 | specified |
+| Copy; select all                                     | ⌘C; ⌘A                           | The same                 | built     |
 | Comment on the selection                             | ⌘⌥M                              | None (a text document's) | specified |
 | Next, previous mark, link or field                   | Tab, ⇧Tab                        | The same                 | specified |
 | Open the focused mark's comment                      | Enter                            | The same                 | specified |
