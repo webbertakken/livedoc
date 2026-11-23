@@ -42,8 +42,8 @@ export const setPictureAlt =
   };
 
 /**
- * The picture showing new media: its alternative text, title, mark and width kept, its height following the new
- * picture's ratio, its crop dropped (default); the picture stays selected.
+ * The picture showing new media: its alternative text, title, mark, width, turn, recolour and adjustments kept, its
+ * height following the new picture's ratio, its crop dropped (default); the picture stays selected.
  */
 export const replacePictureMedia =
   (pos: number, media: { key: string; pixels: { width: number; height: number } }): Command =>
@@ -78,7 +78,10 @@ export const setPictureSize =
     return true;
   };
 
-/** Reset image: its own size (of these pixels) fitted to the room, its crop and turn dropped; it stays selected. */
+/**
+ * Reset image: its own size (of these pixels) fitted to the room, its crop, turn, recolour and adjustments dropped; it
+ * stays selected.
+ */
 export const resetPicture =
   (pos: number, pixels: PictureSize, room: PictureSize): Command =>
   (state, dispatch) => {
@@ -89,6 +92,10 @@ export const resetPicture =
       ...insertedPictureSize(pixels, room),
       crop: null,
       rotation: null,
+      recolour: null,
+      transparency: null,
+      brightness: null,
+      contrast: null,
     });
     tr.setSelection(NodeSelection.create(tr.doc, pos));
     dispatch?.(tr);

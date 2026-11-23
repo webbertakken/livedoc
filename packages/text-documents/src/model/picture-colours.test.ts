@@ -8,7 +8,11 @@ import {
 } from './picture-colours';
 
 /** A channel value from 0 to 255 through one row of the matrix, the others 0, clamped as a filter clamps. */
-const through = (values: readonly number[], row: number, rgb: readonly [number, number, number]) => {
+const through = (
+  values: readonly number[],
+  row: number,
+  rgb: readonly [number, number, number],
+) => {
   const [r, g, b] = rgb.map((v) => v / 255) as [number, number, number];
   const at = row * 5;
   const out = values[at]! * r + values[at + 1]! * g + values[at + 2]! * b + values[at + 4]!;

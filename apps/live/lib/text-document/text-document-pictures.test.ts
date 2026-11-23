@@ -8,7 +8,7 @@ import { EditorState } from 'prosemirror-state';
 import { Decoration, EditorView } from 'prosemirror-view';
 import { CROPPING_SPEC } from './text-document-picture-cropping-plugin';
 import type { CroppedPicture } from './text-document-picture-crop';
-import { PICTURE, type PictureMedia } from '@livedoc/text-documents';
+import { PICTURE, PictureColours, type PictureMedia } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
 import {
   PICTURE_DRAWN_EVENT,
@@ -108,6 +108,40 @@ describe('a picture drawn', () => {
     expect(
       draw({}).querySelector<HTMLElement>('.text-document-picture-turn')!.style.transform,
     ).toBe('');
+  });
+
+  // objects.md "In the editor": a recoloured or adjusted picture is drawn through one colour filter, in sRGB, its
+  // transparency as its opacity.
+  it('draws its recolour, brightness and contrast through one colour filter, its transparency as its opacity', () => {
+    const colouring = {
+      recolour: { kind: 'greyscale' },
+      brightness: 20,
+      transparency: 40,
+    } as const;
+    const dom = draw(colouring);
+    const img = dom.querySelector('img')!;
+    const filter = dom.querySelector('filter')!;
+    expect(img.style.filter).toBe(`url("#${filter.id}")`);
+    expect(filter.getAttribute('color-interpolation-filters')).toBe('sRGB');
+    expect(filter.querySelector('feColorMatrix')!.getAttribute('values')).toBe(
+      PictureColours.matrix(colouring)!.join(' '),
+    );
+    expect(img.style.opacity).toBe('0.6');
+    expect(dom.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('draws a picture neither recoloured nor adjusted with no filter, and drops one undone', () => {
+    expect(draw({}).querySelector('svg')).toBeNull();
+    const view = viewOf({ contrast: 30 }, sourceOf(held(true)));
+    const first = view.dom.querySelector('filter')!.id;
+    expect(viewOf({ contrast: 30 }, sourceOf(held(true))).dom.querySelector('filter')!.id).not.toBe(
+      first,
+    );
+    view.update!(picture({}), [], undefined as never);
+    expect(view.dom.querySelector('svg')).toBeNull();
+    const img = view.dom.querySelector('img')!;
+    expect(img.style.filter).toBe('');
+    expect(img.style.opacity).toBe('');
   });
 
   it('reads a decorative picture as nothing', () => {

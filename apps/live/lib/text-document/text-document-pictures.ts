@@ -2,8 +2,8 @@
 // drawn at its size from its media in the live state's `media` map, its crop cutting the picture drawn larger behind a
 // box of that size; read by its alternative text, a decorative one as nothing; a grey box when its media is missing.
 // A gallery media is drawn from the gallery image it names (objects.md "Where the bytes live"). A turned picture is
-// drawn turned about its centre, its line making room for its bounds. Selected, it is sized, cropped and turned by its
-// handles (objects.md "Working with a picture").
+// drawn turned about its centre, its line making room for its bounds; a recoloured or adjusted one through its colour
+// filter. Selected, it is sized, cropped and turned by its handles (objects.md "Working with a picture").
 import type { Node as PmNode, NodeSpec } from 'prosemirror-model';
 import type { Decoration, NodeView, NodeViewConstructor } from 'prosemirror-view';
 import type { CroppedPicture } from './text-document-picture-crop';
@@ -13,6 +13,7 @@ import {
   type PictureCrop,
   type PictureMedia,
 } from '@livedoc/text-documents';
+import { pictureColourer } from './text-document-picture-colours';
 import { PICTURE_HANDLES, type PictureSize } from './text-document-picture-size';
 import {
   dragPicture,
@@ -139,6 +140,7 @@ export function pictureView(
     clip.className = 'text-document-picture-clip';
     turn.append(clip);
     dom.append(turn);
+    const colour = pictureColourer(dom);
     // What is shown, and how to give it back: an object URL is revoked, a gallery URL released.
     let shown: { key: string; url?: string; give?: () => void } | undefined;
     let current = node;
@@ -170,6 +172,7 @@ export function pictureView(
       const img = clip.querySelector('img');
       if (!img) return;
       img.alt = attrs.decorative === true ? '' : typeof attrs.alt === 'string' ? attrs.alt : '';
+      colour(img, attrs);
       img.style.width = `${box.image.width}pt`;
       img.style.height = `${box.image.height}pt`;
       img.style.left = `${box.image.left}pt`;

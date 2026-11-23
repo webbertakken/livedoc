@@ -14,6 +14,8 @@ const picture = schema.nodes[PICTURE]!.create({
   alt: 'A field',
   title: 'Field',
   crop: { top: 0.1, right: 0, bottom: 0, left: 0 },
+  recolour: { kind: 'greyscale' },
+  brightness: 20,
 });
 const doc = schema.node('doc', null, [
   schema.nodes.paragraph!.create(null, [schema.text('a'), picture, schema.text('b')]),
@@ -64,7 +66,7 @@ describe('setPictureAlt', () => {
 });
 
 describe('replacePictureMedia', () => {
-  it('keeps its text, title and width; its height follows the new ratio; its crop goes', () => {
+  it('keeps its text, title, width and colouring; its height follows the new ratio; its crop goes', () => {
     const { attrs } = run(
       selected(),
       replacePictureMedia(2, { key: 'new', pixels: { width: 300, height: 300 } }),
@@ -76,6 +78,8 @@ describe('replacePictureMedia', () => {
       alt: 'A field',
       title: 'Field',
       crop: null,
+      recolour: { kind: 'greyscale' },
+      brightness: 20,
     });
   });
 
