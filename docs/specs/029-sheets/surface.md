@@ -204,6 +204,15 @@ Version History (the shell's). Each is specified with its area.
   a mark, in four cases; the fewest pieces wins, sources before fixed text; rows it cannot give stay empty
   (default).
 - **D150** Smart Fill's offer: Grey texts and a card with Accept (Ctrl+Enter) and Dismiss (Escape), ended by any
-  other key, press or edit; accepted as typed into cells still empty, one undo step; an Editor's and a Participant's (default).
+  other key, press or edit; accepted as typed into cells still empty, one undo step; an Editor's and a
+  Participant's (default).
 - **D151** Ctrl+Enter outside an edit: Accepts a Smart Fill offer, else nothing; in an edit it fills the selection
   (default).
+- **D152** Formulas on the clipboard: In Google's `data-sheets-formula`, relative R1C1, read back from Google Sheets;
+  the text form holds values as shown (default).
+- **D153** Formats on the clipboard: Bold, italic, underline, strikethrough, colours, both alignments, font size and
+  borders inline; read inline or from Excel's class rules, with `mso-number-format` as the number format (default).
+- **D154** Merges on the clipboard: Written as spanning cells; a pasted span merges for an Editor when it crosses no
+  merge there (default).
+- **D155** Rules in a plain paste: Set again over the pasted cells as D143 sets them; a cut takes the rules wholly over
+  its cells from their old place; an Editor's paste only (default).
