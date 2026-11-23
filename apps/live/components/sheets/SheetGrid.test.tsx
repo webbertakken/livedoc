@@ -107,7 +107,9 @@ describe('the grid frame', () => {
     Object.defineProperty(h.grid, 'scrollLeft', { configurable: true, value: 0 });
     fireEvent.scroll(h.grid);
     expect(h.c().scroll).toEqual({ top: 480, left: 0 });
-    expect(screen.getAllByRole('rowheader', { hidden: true })[0]!.textContent).not.toBe('1');
+    // The drawn row numbers (a picture to a screen reader, beside the mirror's) start past row 1.
+    const drawn = h.grid.querySelectorAll('[aria-hidden="true"] [role="rowheader"]');
+    expect(drawn[0]!.textContent).not.toBe('1');
   });
 
   it('scrolls to keep the active cell in view', async () => {

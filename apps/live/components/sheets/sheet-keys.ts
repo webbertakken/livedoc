@@ -35,6 +35,8 @@ type SheetKeyCommand =
   | { kind: 'escape' }
   // Alt+Down: the active cell's dropdown (data-validation.md "Using a dropdown").
   | { kind: 'dropdown' }
+  // Read Row and Read Column (grid-and-editing.md "Accessibility"): Ctrl+Alt+Shift+R or C, Option+Shift on a Mac.
+  | { kind: 'read'; axis: 'r' | 'c' }
   | { kind: 'menu' };
 
 const ARROWS: Record<string, Dir> = {
@@ -59,6 +61,14 @@ export function sheetKey(e: KeyLike): SheetKeyCommand | null {
   if (e.key === 'Delete' || e.key === 'Backspace') return mod ? null : { kind: 'clear' };
   if (e.key === 'Escape') return { kind: 'escape' };
   if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) return { kind: 'menu' };
+  if (
+    e.altKey &&
+    e.shiftKey &&
+    !e.metaKey &&
+    !altGraphHeld(e) &&
+    (e.code === 'KeyR' || e.code === 'KeyC')
+  )
+    return { kind: 'read', axis: e.code === 'KeyR' ? 'r' : 'c' };
   if (e.key === ' ' && e.shiftKey && !mod) return { kind: 'selectRow' };
   if (e.key === ' ' && e.ctrlKey && !e.shiftKey) return { kind: 'selectCol' };
   if (mod && !e.altKey) {

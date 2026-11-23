@@ -171,3 +171,5 @@ Version History (the shell's). Each is specified with its area.
   [Grid and editing](grid-and-editing.md#the-grid) keeps it never saved (default).
 - **D134** The grid's scroll room: 10,000,000 px an axis, well under Firefox's ceiling of about 17.9 million and
   Chromium's of about 33.5 million (default).
+- **D135** What Read Row and Read Column say: The first 50 cells, then "and N more", as a header row or column
+  orients most and a long reading never ends (default).

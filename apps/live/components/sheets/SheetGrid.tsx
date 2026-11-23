@@ -17,11 +17,9 @@ import { previewFormatRules } from './rules/useSheetRulesState';
 import { SheetCellComments } from './SheetCellComments';
 import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import {
-  cellKey,
   cycleInRange,
   selectsSeveral,
   displayValue,
-  formatA1,
   homeEnd,
   isError,
   pageSelection,
@@ -43,6 +41,8 @@ import { ADD_ROWS_PX, SheetAddRows, roomFor } from './SheetAddRows';
 import { cellBox, pageRows, scrollToReveal, totalSize, visibleWindow } from './sheet-geometry';
 import { sheetKey } from './sheet-keys';
 import { domScrollOf, keepScrollRoom, scrollRoom, sheetScrollOf } from './sheet-scroll-room';
+import { readSheetLine } from './sheet-cell-speech';
+import { mirrorCellId, SheetGridMirror } from './SheetGridMirror';
 import { refSpans, spanRange } from './formula-assist';
 import { useSheetPointer, type PointRef } from './useSheetPointer';
 import { useSheetClipboard } from './useSheetClipboard';
@@ -368,6 +368,13 @@ export function SheetGrid({
           });
         return;
       }
+      case 'read': {
+        // Emptied first, so a second press on the same cell is said again.
+        const said = readSheetLine(c, cmd.axis, sel.active);
+        c.announce('');
+        requestAnimationFrame(() => c.announce(said));
+        return;
+      }
       case 'dropdown':
         actions.openDropdown();
         return;
@@ -402,7 +409,6 @@ export function SheetGrid({
       ? cellBox(c.geometry, hovered.r, hovered.c, c.scroll)
       : null;
 
-  const active = formatA1(c.selection.active.r, c.selection.active.c);
   // A callback ref of its own: a property of `c` passed as `ref` would make the whole controller read as a ref.
   const { setGridEl } = c;
   return (
@@ -430,7 +436,7 @@ export function SheetGrid({
         aria-rowcount={c.sheet.layout.rows.length}
         aria-colcount={c.sheet.layout.cols.length}
         aria-multiselectable
-        aria-activedescendant={`${elementId}-${active}`}
+        aria-activedescendant={mirrorCellId(elementId, c.selection.active.r, c.selection.active.c)}
         data-sheet-grid
         className={`absolute left-0 top-0 h-full w-full outline-none ${c.interactive ? (c.maximised ? 'overflow-auto' : 'overflow-auto touch-none') : 'overflow-hidden'}`}
         onScroll={(e) =>
@@ -520,31 +526,21 @@ export function SheetGrid({
                   onFilterButton={null}
                 />
               ) : null}
-              {/* The active cell, in its row: what the grid's aria-activedescendant names. */}
-              <span role="row" aria-rowindex={c.selection.active.r + 1} className="sr-only">
-                <span
-                  id={`${elementId}-${active}`}
-                  role="gridcell"
-                  aria-colindex={c.selection.active.c + 1}
-                  aria-selected
-                  className="sr-only"
-                >
-                  {active}{' '}
-                  {
-                    // As the cell draws it, in its own format: 12% and a date, never 0.12 and a serial number.
-                    displayValue(
-                      c.workbook.value(c.sheet.id, c.selection.active.r, c.selection.active.c),
-                      c.sheet.cells.get(
-                        cellKey(
-                          c.sheet.layout.rows[c.selection.active.r] ?? '',
-                          c.sheet.layout.cols[c.selection.active.c] ?? '',
-                        ),
-                      )?.format,
-                      c.locale,
-                    ).text
-                  }
-                </span>
-              </span>
+              {/* The cells in view for a screen reader, the active one among them: what aria-activedescendant names. */}
+              <SheetGridMirror
+                elementId={elementId}
+                sheet={c.sheet}
+                workbook={c.workbook}
+                version={c.version}
+                geometry={c.geometry}
+                locale={c.locale}
+                r1={window.r1}
+                r2={window.r2}
+                c1={window.c1}
+                c2={window.c2}
+                activeR={c.selection.active.r}
+                activeC={c.selection.active.c}
+              />
             </div>
             {/* The editor is the active cell's, so it sits in that cell's row: the grid owns only rows. */}
             <div

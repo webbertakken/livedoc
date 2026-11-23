@@ -73,7 +73,7 @@ test('a freeze leaves a third of the grid to scroll', async ({ page, pageErrors 
   // The rows still in place after a long scroll are the frozen ones: some, but no more than two thirds of the cells.
   const grid = (await page.locator('[data-sheet-grid]').boundingBox())!;
   const letters = (await page.locator('[role="columnheader"][aria-colindex="1"]').boundingBox())!;
-  const frozen = await page.locator('[role="rowheader"]').evaluateAll((headers) =>
+  const frozen = await page.locator('[aria-hidden] > [role="rowheader"]').evaluateAll((headers) =>
     headers
       .map((h) => Number(h.getAttribute('aria-rowindex')))
       .sort((a, b) => a - b)
@@ -85,5 +85,42 @@ test('a freeze leaves a third of the grid to scroll', async ({ page, pageErrors 
     path: test.info().outputPath('freeze-limit.png'),
     animations: 'disabled',
   });
+  expectNoPageErrors(pageErrors);
+});
+
+test('a screen reader reads the cells in view, and a row or column on request', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  await nameBox.fill('A1');
+  await nameBox.press('Enter');
+  await page.keyboard.type('Name');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('Price');
+  await page.keyboard.press('Enter');
+  await nameBox.fill('B3');
+  await nameBox.press('Enter');
+  await page.keyboard.type('12');
+  await page.keyboard.press('Enter');
+
+  // The grid's rows hold the cells in view, by address and value; the active cell is the one focus names.
+  const grid = page.getByRole('grid');
+  await expect(grid.getByRole('gridcell', { name: 'B1 Price' })).toHaveCount(1);
+  await expect(grid.getByRole('row').first().getByRole('rowheader')).toHaveText('1');
+  const named = await grid.evaluate(
+    (g) => document.getElementById(g.getAttribute('aria-activedescendant')!)?.textContent,
+  );
+  expect(named).toBe('B4 ');
+
+  await nameBox.fill('B3');
+  await nameBox.press('Enter');
+  const said = page.locator('p[aria-live="polite"]');
+  await page.keyboard.press('Control+Alt+Shift+KeyC');
+  await expect(said).toHaveText('Column B: B1 Price, B2 blank, B3 12');
+  await page.keyboard.press('Control+Alt+Shift+KeyR');
+  await expect(said).toHaveText('Row 3: A3 blank, B3 12');
   expectNoPageErrors(pageErrors);
 });

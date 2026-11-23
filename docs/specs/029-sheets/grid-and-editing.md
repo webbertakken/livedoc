@@ -1,6 +1,6 @@
 # Grid and editing
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** The grid at scale (headers, gridlines, frozen panes, zoom, the accessible mirror) is built.
 
 The grid of a [spreadsheet](spreadsheet.md) and how cells are selected, typed into, filled, moved and copied, as
 Google Sheets does. What the Plan Sheet already does carries over unless this page says otherwise
@@ -117,8 +117,15 @@ Ctrl+Shift+Z.
 ## Accessibility
 
 - The grid is a `role="grid"` with `aria-rowcount` and `aria-colcount` of the whole sheet, rows and cells carrying
-  their indexes; the active cell is focused and announced with its address, value and, on request (Ctrl+Alt+Shift+C
-  in Google's screen reader support), its formula, note and comment.
+  their indexes; the active cell is focused and announced with its address and its value as drawn (12%, a date).
+- The cells in view are mirrored for a screen reader: a row for each row in view (the frozen ones first), its number
+  as its row header, then a cell for each column in view holding its address and its value as drawn, a merge once.
+  The drawn letters, numbers and cells are a picture to it; the active cell is always in the mirror, scrolled away or
+  not, so focus never names a cell that is not there.
+- **Read Row** (Ctrl+Alt+Shift+R) says the active cell's row from its first column to the active cell, and
+  **Read Column** (Ctrl+Alt+Shift+C) its column from its first row, as Google's Verbalize to Screen Reader does
+  (Option+Shift+R and C on a Mac): each cell's address and value, an empty one as "blank", hidden lines left out.
+  It says at most the first 50 cells, then how many more (default, D135); said politely, again on a second press.
 - Every action is reachable by the keyboard; the fill handle's work by Ctrl+D, Ctrl+R and Edit's items.
 - Range colours in formulas pair with a dashed or dotted border pattern so colour is never the only cue.
 - Reduced motion: no animated scroll or selection transitions.

@@ -153,6 +153,8 @@ type MountedGrid = ReturnType<typeof render> & {
   sheetId: string;
   writes: SheetWrite[];
   toasts: string[];
+  // What the grid said to a screen reader, in order.
+  announced: string[];
   calls: ActionCall[];
   grid: HTMLElement;
   viewport: HTMLElement;
@@ -165,6 +167,7 @@ export async function mountGrid(o: MountOptions = {}): Promise<MountedGrid> {
   const by = { id: 'me', name: 'Me', color: '#000000' };
   const writes: SheetWrite[] = [];
   const toasts: string[] = [];
+  const announced: string[] = [];
   const sheetId = `sheet${String(++seq).padStart(4, '0')}`;
   const json = sheetToJson(initialSheet(sheetId, o));
   const store = new SheetStore({
@@ -240,7 +243,7 @@ export async function mountGrid(o: MountOptions = {}): Promise<MountedGrid> {
       canEdit: o.canEdit ?? true,
       maximised: o.maximised ?? false,
       locale: 'en-GB',
-      announce: () => {},
+      announce: (m) => announced.push(m),
       toast: (m) => toasts.push(m),
       notify: () => {},
     });
@@ -268,6 +271,7 @@ export async function mountGrid(o: MountOptions = {}): Promise<MountedGrid> {
     sheetId,
     writes,
     toasts,
+    announced,
     calls,
     grid,
     viewport,

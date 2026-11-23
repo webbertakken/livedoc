@@ -1,0 +1,73 @@
+// What a screen reader hears of the grid's cells (docs/specs/029-sheets/grid-and-editing.md "Accessibility"): a
+// cell's value as drawn, and Read Row and Read Column, Google's Verbalize to Screen Reader. Pure but for reading the
+// workbook, so the words are tested without a DOM.
+import {
+  cellKey,
+  columnLetters,
+  displayValue,
+  formatA1,
+  type Sheet,
+  type Workbook,
+} from '@livedoc/sheets';
+import { mergeAt, type Geometry } from './sheet-geometry';
+
+/** The most cells Read Row and Read Column say (D135). */
+export const READ_CELLS_MAX = 50;
+
+/** A cell's value as the grid draws it, in its own format: 12% and a date, never 0.12 and a serial number. */
+export function cellSpokenValue(
+  sheet: Sheet,
+  workbook: Workbook,
+  locale: string,
+  r: number,
+  c: number,
+): string {
+  const format = sheet.cells.get(cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!))?.format;
+  return displayValue(workbook.value(sheet.id, r, c), format, locale).text;
+}
+
+export type LineReading = {
+  axis: 'r' | 'c';
+  active: { r: number; c: number };
+  // Left out of the reading: a hidden line, or a cell a merge covers.
+  skipped: (r: number, c: number) => boolean;
+  value: (r: number, c: number) => string;
+};
+
+/** Read Row or Read Column: the active cell's line from its start to the active cell, each cell by address. */
+export function readLine({ axis, active, skipped, value }: LineReading): string {
+  const end = axis === 'r' ? active.c : active.r;
+  const said: string[] = [];
+  let more = 0;
+  for (let i = 0; i <= end; i++) {
+    const r = axis === 'r' ? active.r : i;
+    const c = axis === 'r' ? i : active.c;
+    if (skipped(r, c)) continue;
+    if (said.length === READ_CELLS_MAX) {
+      more++;
+      continue;
+    }
+    said.push(`${formatA1(r, c)} ${value(r, c) || 'blank'}`);
+  }
+  const head = axis === 'r' ? `Row ${active.r + 1}` : `Column ${columnLetters(active.c)}`;
+  return `${head}: ${said.join(', ')}${more ? `, and ${more.toLocaleString('en-GB')} more` : ''}`;
+}
+
+/** Read Row or Read Column of a sheet as drawn: hidden lines and the cells a merge covers left out. */
+export function readSheetLine(
+  view: { sheet: Sheet; workbook: Workbook; locale: string; geometry: Geometry },
+  axis: 'r' | 'c',
+  active: { r: number; c: number },
+): string {
+  const g = view.geometry;
+  return readLine({
+    axis,
+    active,
+    skipped: (r, c) => {
+      if (g.hiddenRow(r) || g.hiddenCol(c)) return true;
+      const merge = mergeAt(g, r, c);
+      return !!merge && (merge.r1 !== r || merge.c1 !== c);
+    },
+    value: (r, c) => cellSpokenValue(view.sheet, view.workbook, view.locale, r, c),
+  });
+}
