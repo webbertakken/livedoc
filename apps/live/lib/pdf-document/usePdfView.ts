@@ -1,0 +1,302 @@
+'use client';
+
+// A person's view of a PDF document's pages (docs/specs/035-pdf-documents/reading-surface.md "The pages", "The page
+// bar"): the page display, the zoom and the row shown, where every page then lies (pdf-page-layout.ts), the page in
+// view, and the moves between pages. The view is the person's own, kept while the surface is open and never stored.
+// A change that lays the pages out again keeps a place where it was: the page in view for a change of display, the
+// point under the pointer for a wheel's zoom, the middle of the view for any other.
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { PageInfo } from '@livedoc/pdf-documents';
+import { debugLog } from '@/lib/debug-log';
+import { track } from '@/lib/telemetry';
+import { PdfPageLayout, type PdfPoint, type PdfRow, type PdfViewport } from './pdf-page-layout';
+import { PdfView, type PdfPageDisplayName, type PdfZoom } from './pdf-view';
+
+/** How a zoom was asked for, as telemetry names it (reading-surface.md "Telemetry"). */
+export type PdfZoomWay = 'FitWidth' | 'FitPage' | 'Actual' | 'In' | 'Out' | 'Custom';
+
+const DISPLAY_TELEMETRY: Record<PdfPageDisplayName, string> = {
+  single: 'Single',
+  continuous: 'Continuous',
+  two: 'Two',
+  'two-continuous': 'TwoContinuous',
+};
+
+// What the next layout keeps in place: a point of the view (the place under it stays under it), a page (its top at
+// the view's top), or the shown row's end (a row turned back to, from its start).
+type Anchor =
+  { kind: 'focus'; focus: PdfPoint } | { kind: 'page'; index: number } | { kind: 'row-end' };
+
+type Scroll = { left: number; top: number };
+
+export type PdfViewer = ReturnType<typeof usePdfView>;
+
+const firstOf = (row: PdfRow | undefined): number | null =>
+  row?.find((index): index is number => index !== null) ?? null;
+
+export function usePdfView(pages: readonly PageInfo[]) {
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const [view, setView] = useState<PdfView>(PdfView.initial);
+  const [viewport, setViewport] = useState<PdfViewport>({ width: 0, height: 0 });
+  const [shownRow, setShownRow] = useState(0);
+  const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    if (!element) return;
+    // An observer reports the size it starts with, so the first size needs no read of its own.
+    const observer = new ResizeObserver(() =>
+      setViewport((before) =>
+        before.width === element.clientWidth && before.height === element.clientHeight
+          ? before
+          : { width: element.clientWidth, height: element.clientHeight },
+      ),
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
+
+  const rows = useMemo(
+    () => PdfPageLayout.rows(pages.length, view.display),
+    [pages.length, view.display],
+  );
+  const extent = useMemo(() => PdfPageLayout.extent(pages), [pages]);
+  const scale = PdfPageLayout.scale(view.zoom, extent, view.display.across, viewport);
+  const shown = view.display.continuous ? null : Math.min(shownRow, Math.max(0, rows.length - 1));
+  const layout = useMemo(
+    () => PdfPageLayout.lay({ pages, rows, scale, viewport, shown }),
+    [pages, rows, scale, viewport, shown],
+  );
+
+  // The scroller's offsets as last set or scrolled to: read before a layout changes, with no read of the page's layout.
+  const scroll = useRef<Scroll>({ left: 0, top: 0 });
+  const anchor = useRef<Anchor | null>(null);
+  // The layout last laid out at a size, and the latest of what the handlers read.
+  const laid = useRef<PdfPageLayout | null>(null);
+  const latest = useRef({ layout, viewport, rows, shown, page, extent, view });
+  useLayoutEffect(() => {
+    latest.current = { layout, viewport, rows, shown, page, extent, view };
+  });
+
+  const readPage = useCallback(() => {
+    const { layout: now, viewport: size } = latest.current;
+    if (size.width === 0) return;
+    const at = PdfPageLayout.pageInView(now, {
+      x: scroll.current.left + size.width / 2,
+      y: scroll.current.top + size.height / 2,
+    });
+    if (at !== null) setPage(at);
+  }, []);
+
+  // The scroller, as the moves set its offsets; `element` is the same, as state, for the effects that watch it.
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const scrollTo = useCallback((to: Scroll) => {
+    const node = scroller.current;
+    if (!node) return;
+    node.scrollLeft = to.left;
+    node.scrollTop = to.top;
+    scroll.current = to;
+  }, []);
+
+  useEffect(() => {
+    if (!element) return;
+    let frame = 0;
+    const onScroll = () => {
+      scroll.current = { left: element.scrollLeft, top: element.scrollTop };
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(readPage);
+    };
+    element.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      element.removeEventListener('scroll', onScroll);
+    };
+  }, [element, readPage]);
+
+  // Every commit: a new layout keeps its anchor's place; an anchor whose change laid nothing out again is spent.
+  useLayoutEffect(() => {
+    const before = laid.current;
+    const next = anchor.current;
+    anchor.current = null;
+    if (before === layout || viewport.width === 0) return;
+    laid.current = layout;
+    let to: Scroll | null = null;
+    if (next?.kind === 'page') to = PdfPageLayout.scrollToPage(layout, next.index, viewport);
+    else if (next?.kind === 'row-end')
+      to = { left: 0, top: Math.max(0, layout.height - viewport.height) };
+    else if (before) {
+      const focus = next?.focus ?? { x: viewport.width / 2, y: viewport.height / 2 };
+      const place = PdfPageLayout.placeAt(before, {
+        x: scroll.current.left + focus.x,
+        y: scroll.current.top + focus.y,
+      });
+      if (place) to = PdfPageLayout.scrollTo(layout, place, focus, viewport);
+    }
+    if (to) scrollTo(to);
+    readPage();
+  });
+
+  /** The scale a zoom is now. */
+  const scaleOf = useCallback((zoom: PdfZoom, across: 1 | 2): number => {
+    const { extent: now, viewport: size } = latest.current;
+    return PdfPageLayout.scale(zoom, now, across, size);
+  }, []);
+
+  /** A zoom from the menus, the keys or the page bar keeps the middle of the view; a wheel's, the pointer's place. */
+  const zoomTo = useCallback((zoom: PdfZoom, way: PdfZoomWay, focus?: PdfPoint) => {
+    track('Pdf', 'Zoomed', way);
+    debugLog(`[pdf] view-zoomed zoom=${zoom} way=${way}`);
+    if (focus) anchor.current = { kind: 'focus', focus };
+    setView((before) => PdfView.withZoom(before, zoom));
+  }, []);
+
+  /** A wheel's or a pinch's zoom, by a factor of the zoom shown, about the pointer; told to telemetry as it settles. */
+  const zoomBy = useCallback(
+    (factor: number, focus: PdfPoint) => {
+      anchor.current = { kind: 'focus', focus };
+      setView((before) =>
+        PdfView.withZoom(before, scaleOf(before.zoom, before.display.across) * factor),
+      );
+    },
+    [scaleOf],
+  );
+
+  /** A row by its index: scrolled to where every row is down the view, else shown alone. */
+  const goToRow = useCallback(
+    (row: number, end = false) => {
+      const now = latest.current;
+      const index = firstOf(now.rows[row]);
+      if (index === null) return;
+      if (now.shown === null || now.shown === row) {
+        const to = end
+          ? { left: 0, top: Math.max(0, now.layout.height - now.viewport.height) }
+          : PdfPageLayout.scrollToPage(now.layout, index, now.viewport);
+        if (to) scrollTo(to);
+        readPage();
+        return;
+      }
+      anchor.current = end ? { kind: 'row-end' } : { kind: 'page', index };
+      setShownRow(row);
+      setPage(index);
+    },
+    [scrollTo, readPage],
+  );
+
+  /** A page by its index: its top at the view's top, its row shown where one row is. */
+  const goToPage = useCallback(
+    (index: number) => {
+      const now = latest.current;
+      if (index < 0 || index >= pages.length) return;
+      debugLog(`[pdf] view-went-to page=${index + 1}`);
+      if (now.shown !== null) return goToRow(PdfPageLayout.rowOf(now.rows, index));
+      const to = PdfPageLayout.scrollToPage(now.layout, index, now.viewport);
+      if (to) scrollTo(to);
+      readPage();
+    },
+    [pages.length, goToRow, scrollTo, readPage],
+  );
+
+  /** The row before or after the one in view; a row turned back to from its start shows its end. */
+  const turn = useCallback(
+    (by: -1 | 1, end = false) => {
+      const now = latest.current;
+      goToRow(PdfPageLayout.rowOf(now.rows, now.page) + by, end);
+    },
+    [goToRow],
+  );
+
+  /** A page brought into view only where it is out of it (an undo's step, a person followed). */
+  const showPage = useCallback(
+    (index: number) => {
+      const now = latest.current;
+      const box = now.layout.boxes.find((candidate) => candidate.index === index);
+      const { left, top } = scroll.current;
+      const seen =
+        box &&
+        box.top < top + now.viewport.height &&
+        box.top + box.height > top &&
+        box.left < left + now.viewport.width &&
+        box.left + box.width > left;
+      if (!seen) goToPage(index);
+    },
+    [goToPage],
+  );
+
+  const setDisplay = useCallback(
+    (name: PdfPageDisplayName) => {
+      const now = latest.current;
+      if (PdfView.displayName(now.view.display) === name) return;
+      track('Pdf', 'Changed', `PageDisplay.${DISPLAY_TELEMETRY[name]}`);
+      debugLog(`[pdf] view-display display=${name}`);
+      const next = PdfView.withDisplay(now.view, name);
+      anchor.current = { kind: 'page', index: now.page };
+      setShownRow(PdfPageLayout.rowOf(PdfPageLayout.rows(pages.length, next.display), now.page));
+      setView(next);
+    },
+    [pages.length],
+  );
+
+  const setCover = useCallback(
+    (cover: boolean) => {
+      const now = latest.current;
+      if (now.view.display.cover === cover) return;
+      track('Pdf', 'Changed', cover ? 'PageDisplay.CoverShown' : 'PageDisplay.CoverHidden');
+      const next = PdfView.withCover(now.view, cover);
+      // A cover page changes nothing with one page across.
+      if (next.display.across === 2) anchor.current = { kind: 'page', index: now.page };
+      setShownRow(PdfPageLayout.rowOf(PdfPageLayout.rows(pages.length, next.display), now.page));
+      setView(next);
+    },
+    [pages.length],
+  );
+
+  const attach = useCallback((node: HTMLDivElement | null) => {
+    scroller.current = node;
+    setElement(node);
+  }, []);
+  const rowInView = PdfPageLayout.rowOf(rows, page);
+
+  const count = pages.length;
+  const atFirst = rowInView <= 0;
+  const atLast = rowInView >= rows.length - 1;
+  return useMemo(
+    () => ({
+      view,
+      scale,
+      layout,
+      viewport,
+      /** The page in view, by its index. */
+      page,
+      count,
+      atFirst,
+      atLast,
+      attach,
+      element,
+      zoomTo,
+      zoomBy,
+      goToPage,
+      showPage,
+      turn,
+      setDisplay,
+      setCover,
+    }),
+    [
+      view,
+      scale,
+      layout,
+      viewport,
+      page,
+      count,
+      atFirst,
+      atLast,
+      attach,
+      element,
+      zoomTo,
+      zoomBy,
+      goToPage,
+      showPage,
+      turn,
+      setDisplay,
+      setCover,
+    ],
+  );
+}

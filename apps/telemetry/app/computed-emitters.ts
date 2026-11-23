@@ -46,6 +46,9 @@ function tokensAfter(source: string, marker: string, close: string): string[] {
   return [...block.matchAll(/'([A-Za-z0-9-]+)'/g)].map((m) => m[1]!);
 }
 
+// A PDF document's view: its page displays and the ways a zoom is asked for.
+const PDF_VIEW = read('live/lib/pdf-document/usePdfView.ts');
+
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
 const TIMELINE_CATEGORIES = [
@@ -467,6 +470,20 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     values: ['Upload', 'Gallery', 'Search', 'Paste', 'Drop'].map(
       (from) => `TextDocumentImage${from}`,
     ),
+  },
+  // A person's view of a PDF document (docs/specs/035-pdf-documents/reading-surface.md "Telemetry"): the page display,
+  // read from the hook's own names, and how a zoom was asked for, from its `PdfZoomWay`.
+  'apps/live/lib/pdf-document/usePdfView.ts Pdf·Changed': {
+    values: [
+      ...tokensAfter(PDF_VIEW, 'const DISPLAY_TELEMETRY', '};')
+        .filter((token) => /^[A-Z]/.test(token))
+        .map((name) => `PageDisplay.${name}`),
+      'PageDisplay.CoverShown',
+      'PageDisplay.CoverHidden',
+    ],
+  },
+  'apps/live/lib/pdf-document/usePdfView.ts Pdf·Zoomed': {
+    values: tokensAfter(PDF_VIEW, 'export type PdfZoomWay =', ';'),
   },
   // A text document downloaded in the format it is held in (docs/specs/034-text-documents/text-document.md).
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {

@@ -1,48 +1,28 @@
 'use client';
 
-// The pages of a PDF document (docs/specs/035-pdf-documents/reading-surface.md "The pages"): every page a box of its
-// true size, read before anything is drawn, so the scrollbar is true from the first frame; only pages near view hold
-// a picture, and a page far from view lets its picture go.
+// The pages of a PDF document (docs/specs/035-pdf-documents/reading-surface.md "The pages"): every page laid out where
+// the person's view puts it (usePdfView.ts, pdf-page-layout.ts), a box of its true size read before anything is
+// drawn, so the scrollbar is true from the first frame; only pages near view hold a picture, and a page far from view
+// lets its picture go.
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
+  type KeyboardEvent,
   type RefObject,
 } from 'react';
 import type { PageInfo, PdfEngine, TextSelection } from '@livedoc/pdf-documents';
-import { zoomScale, type OfficeZoomValue } from '@/lib/office/office-zoom';
+import { CSS_PER_POINT, type PdfPageLayout } from '@/lib/pdf-document/pdf-page-layout';
 import { marksOnPage, type PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfPage, type PdfPageTool } from './PdfPage';
 
-// A point is 1/72 inch and a CSS pixel 1/96: at 100% a page shows at its true size.
-const CSS_PER_POINT = 96 / 72;
-// The ground left and right of the widest page at Fit, in CSS pixels.
-const GUTTER_PX = 24;
 // A page is drawn once it is within one viewport of view, and keeps its picture until it is three away
 // (reading-surface.md "The pages": memory is bounded). Safe ranges: 50% to 200%, and 200% to 600%.
 const NEAR_MARGIN = '100% 0px';
 const HELD_MARGIN = '300% 0px';
-// The page in view is the one under the middle of the view (live-editing-and-storage.md "Presence"): the view drawn
-// in to a line across its middle, so no scroll is listened to and no layout read.
-const MIDDLE_MARGIN = '-50% 0px';
-
-function useWidth(element: RefObject<HTMLElement | null>): number {
-  const [width, setWidth] = useState(0);
-  useEffect(() => {
-    const node = element.current;
-    if (!node) return;
-    // An observer reports the size it starts with, so the first width needs no read of its own.
-    const observer = new ResizeObserver(() => setWidth(node.clientWidth));
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [element]);
-  return width;
-}
-
 // Which pages lie within `margin` of the scroller's view.
 function usePagesWithin(
   scroller: RefObject<HTMLElement | null>,
@@ -82,79 +62,90 @@ function usePagesWithin(
 }
 
 export function PdfPages({
-  scroller,
+  attach,
+  layout,
+  scale,
+  sized,
+  onKeyDown,
   pages,
-  zoom,
   engine,
   drawer,
   marks,
   tool,
   onHighlight,
-  onPageInView,
 }: {
-  scroller: RefObject<HTMLDivElement | null>;
+  // Hands the scroller to the view that lays the pages out and scrolls them.
+  attach: (element: HTMLDivElement | null) => void;
+  // Where every page shown lies, at `scale` (1 is 100%).
+  layout: PdfPageLayout;
+  scale: number;
+  // The view has a size: until it has, no page is drawn at a scale fitted to nothing.
+  sized: boolean;
+  // The pages' own keys (usePdfPagesInput.ts).
+  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   pages: readonly PageInfo[];
-  zoom: OfficeZoomValue;
   engine: Pick<PdfEngine, 'selectText' | 'fileMarks'>;
   drawer: PdfPageDrawer;
   marks: PdfMarksStore;
   tool: PdfPageTool;
   onHighlight: (index: number, selection: TextSelection) => void;
-  // Told the page in view, by its index, as it changes.
-  onPageInView?: (index: number) => void;
 }) {
-  const width = useWidth(scroller);
-  const widest = useMemo(() => Math.max(...pages.map((page) => page.width), 1), [pages]);
-  const cssPerPoint =
-    zoomScale(zoom, Math.max(width - 2 * GUTTER_PX, 1), widest * CSS_PER_POINT) * CSS_PER_POINT;
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const ref = useCallback(
+    (element: HTMLDivElement | null) => {
+      scroller.current = element;
+      attach(element);
+    },
+    [attach],
+  );
+  const cssPerPoint = scale * CSS_PER_POINT;
   const near = usePagesWithin(scroller, NEAR_MARGIN);
   const held = usePagesWithin(scroller, HELD_MARGIN);
-  const middle = usePagesWithin(scroller, MIDDLE_MARGIN);
   const { watch: watchNear } = near;
   const { watch: watchHeld } = held;
-  const { watch: watchMiddle, within: underMiddle } = middle;
   const register = useCallback(
     (index: number, element: HTMLElement | null) => {
       watchNear(index, element);
       watchHeld(index, element);
-      watchMiddle(index, element);
     },
-    [watchNear, watchHeld, watchMiddle],
+    [watchNear, watchHeld],
   );
-  useEffect(() => {
-    // Between two pages nothing lies under the middle: the page last under it stands.
-    if (underMiddle.size > 0) onPageInView?.(Math.min(...underMiddle));
-  }, [underMiddle, onPageInView]);
   const byPage = useSyncExternalStore(marks.subscribe, marks.get, marks.get);
 
   return (
     <div
-      ref={scroller}
-      // The pages take the keys: the tools' own, and the arrows that scroll.
+      ref={ref}
+      // The pages take the keys: the tools' own, the arrows that scroll and the keys that turn a page.
       tabIndex={0}
       data-pdf-pages={pages.length}
+      onKeyDown={onKeyDown}
       className="min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset"
     >
-      {/* `w-max min-w-full`: a page wider than the window scrolls sideways instead of being cut on its left. */}
-      <div className="flex w-max min-w-full flex-col items-center gap-4 px-6 py-6">
-        {width > 0
-          ? pages.map((page, index) => (
-              <PdfPage
-                key={page.name}
-                index={index}
-                count={pages.length}
-                page={page}
-                cssPerPoint={cssPerPoint}
-                wanted={near.within.has(index)}
-                held={held.within.has(index)}
-                engine={engine}
-                drawer={drawer}
-                marks={marksOnPage(byPage, page.name)}
-                tool={tool}
-                onHighlight={onHighlight}
-                register={register}
-              />
-            ))
+      {/* The layout places every page itself, centred in a view wider or taller than the pages. */}
+      <div className="relative" style={{ width: layout.width, height: layout.height }}>
+        {sized
+          ? layout.boxes.map((box) => {
+              const page = pages[box.index]!;
+              return (
+                <PdfPage
+                  key={page.name}
+                  index={box.index}
+                  count={pages.length}
+                  page={page}
+                  cssPerPoint={cssPerPoint}
+                  left={box.left}
+                  top={box.top}
+                  wanted={near.within.has(box.index)}
+                  held={held.within.has(box.index)}
+                  engine={engine}
+                  drawer={drawer}
+                  marks={marksOnPage(byPage, page.name)}
+                  tool={tool}
+                  onHighlight={onHighlight}
+                  register={register}
+                />
+              );
+            })
           : null}
       </div>
     </div>

@@ -5,11 +5,38 @@ import { catalogueFaults, catalogueItems, visibleMenus } from '@/lib/office/offi
 import { levelInMode, modesFor, startingMode } from '@/lib/office/office-mode';
 import { visibleToolbar } from '@/lib/office/office-toolbar';
 import { SHELL_BOUND_ITEMS } from '@/lib/office/office-catalogue';
-import { DOWNLOAD_PDF, PDF_MENUS, REDO, TOOL_HIGHLIGHT, TOOL_SELECT, UNDO } from './pdf-menus';
+import {
+  DOWNLOAD_PDF,
+  GO_TO_FIRST_PAGE,
+  GO_TO_LAST_PAGE,
+  GO_TO_NEXT_PAGE,
+  GO_TO_PAGE,
+  GO_TO_PREVIOUS_PAGE,
+  PAGE_DISPLAY_CONTINUOUS,
+  PAGE_DISPLAY_COVER,
+  PAGE_DISPLAY_SINGLE,
+  PAGE_DISPLAY_TWO,
+  PAGE_DISPLAY_TWO_CONTINUOUS,
+  PDF_MENUS,
+  PDF_ZOOM_MENU_PERCENTS,
+  REDO,
+  TOOL_HIGHLIGHT,
+  TOOL_SELECT,
+  UNDO,
+  ZOOM_ACTUAL_SIZE,
+  ZOOM_FIT_PAGE,
+  ZOOM_FIT_WIDTH,
+  ZOOM_IN,
+  ZOOM_OUT,
+  zoomPercentId,
+} from './pdf-menus';
 import { PDF_MODES, type PdfMode } from './pdf-modes';
 import { PDF_REFUSAL_COPY, pdfRefusalDownloads, pdfRefusalRetries } from './pdf-refusals';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
-import { pdfToolbar } from './pdf-toolbar';
+import { PAGE_DISPLAY_CONTROL, pdfToolbar } from './pdf-toolbar';
+
+// The toolbar lists the surface binds (pdf-view-actions.ts).
+const CHOICES = [PAGE_DISPLAY_CONTROL];
 
 describe("a PDF document's editing modes", () => {
   it('declares Reviewing, Editing and Viewing, in that order', () => {
@@ -53,6 +80,23 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_HIGHLIGHT,
     'mode-reviewing',
     'mode-viewing',
+    // pdf-view-actions.ts: View > Page display, Zoom and Go to.
+    PAGE_DISPLAY_SINGLE,
+    PAGE_DISPLAY_CONTINUOUS,
+    PAGE_DISPLAY_TWO,
+    PAGE_DISPLAY_TWO_CONTINUOUS,
+    PAGE_DISPLAY_COVER,
+    ZOOM_IN,
+    ZOOM_OUT,
+    ZOOM_FIT_WIDTH,
+    ZOOM_FIT_PAGE,
+    ZOOM_ACTUAL_SIZE,
+    ...PDF_ZOOM_MENU_PERCENTS.map(zoomPercentId),
+    GO_TO_FIRST_PAGE,
+    GO_TO_LAST_PAGE,
+    GO_TO_PREVIOUS_PAGE,
+    GO_TO_NEXT_PAGE,
+    GO_TO_PAGE,
   ];
 
   it('has no built item nothing runs, no shortcut its registry lacks, no id twice', () => {
@@ -110,24 +154,19 @@ describe("a PDF document's menus and toolbar", () => {
     // Undo and Redo are the person's own changes: hidden from who can make none ("The toolbar": hidden in Viewing).
     expect(seen('view')).not.toContain(UNDO);
     expect(seen('participate')).toEqual(expect.arrayContaining([UNDO, REDO]));
-    const fields = { zoom: true, fontSize: false, font: false, colour: false, choice: false };
+    const fields = { zoom: false, fontSize: false, font: false, colour: false, choice: false };
     // What runs today; the controls beside them are drawn dimmed until their phases land.
     const controls = (mode: PdfMode, level: 'view' | 'participate') =>
-      visibleToolbar(pdfToolbar(mode), level, actions, fields)
+      visibleToolbar(pdfToolbar(mode), level, actions, fields, CHOICES)
         .flatMap((group) => group.controls)
         .filter((control) => control.status === 'built')
         .map((control) => control.id);
-    expect(controls('viewing', 'view')).toEqual(['zoom', TOOL_SELECT]);
-    expect(controls('reviewing', 'participate')).toEqual([
-      UNDO,
-      REDO,
-      'zoom',
-      TOOL_SELECT,
-      TOOL_HIGHLIGHT,
-    ]);
+    // The zoom is the page bar's, never the toolbar's ("The page bar").
+    expect(controls('viewing', 'view')).toEqual([TOOL_SELECT, PAGE_DISPLAY_CONTROL]);
+    expect(controls('reviewing', 'participate')).toEqual([UNDO, REDO, TOOL_SELECT, TOOL_HIGHLIGHT]);
     // "The toolbar": a mode's own tools are not another mode's.
     const labels = (mode: PdfMode) =>
-      visibleToolbar(pdfToolbar(mode), 'edit', actions, fields).flatMap((group) =>
+      visibleToolbar(pdfToolbar(mode), 'edit', actions, fields, CHOICES).flatMap((group) =>
         group.controls.map((control) => control.label),
       );
     expect(labels('viewing')).toContain('Page display');

@@ -104,3 +104,22 @@ export const PDF_THUMBNAIL_MAX_BYTES = 200_000;
 export const PDF_THUMBNAIL_IDLE_MS = 5_000;
 /** (default) The least time between two pictures one surface sends, as the room writes at most once a minute. */
 export const PDF_THUMBNAIL_MIN_INTERVAL_MS = 60_000;
+/** The least and the most a page is zoomed (reading-surface.md "Limits"), as scales: Acrobat's range, 10% to 6400%. */
+export const PDF_ZOOM_MIN = 0.1;
+export const PDF_ZOOM_MAX = 64;
+/** (default) Where Zoom in and Zoom out stop, as scales: Acrobat's own steps within the range. */
+export const PDF_ZOOM_STEPS: readonly number[] = [
+  0.1, 0.125, 0.25, 0.333, 0.5, 0.667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64,
+];
+/** (default) Fit width's ceiling, so a page on a wide window is not drawn larger than it reads well. Safe range: 1
+ *  to 4. */
+export const PDF_FIT_WIDTH_MAX = 2;
+/** (default) ⌘ with the wheel multiplies the zoom by e to this times the pixels wheeled: a notch of 100 is 22%.
+ *  Safe range: 0.001 to 0.005. */
+export const PDF_WHEEL_ZOOM_RATE = 0.002;
+/** (default) How long a wheel rests before it turns another row of a display that shows one row. Safe range: 150 to
+ *  600. */
+export const PDF_WHEEL_TURN_MS = 300;
+/** (default) How long a wheel's or a pinch's zoom rests before it is told to telemetry, once a gesture. Safe range:
+ *  200 to 1,000. */
+export const PDF_ZOOM_SETTLE_MS = 400;

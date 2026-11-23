@@ -121,34 +121,6 @@ function show(
   );
 }
 
-/** Observers that can be told what lies within them, kept by the margin each was made with. */
-const watching = new Map<string, WatchedObserver>();
-class WatchedObserver {
-  private readonly tell: IntersectionObserverCallback;
-  private readonly watched = new Set<Element>();
-  constructor(tell: IntersectionObserverCallback, options?: IntersectionObserverInit) {
-    this.tell = tell;
-    watching.set(options?.rootMargin ?? '', this);
-  }
-  observe(element: Element) {
-    this.watched.add(element);
-  }
-  unobserve(element: Element) {
-    this.watched.delete(element);
-  }
-  disconnect() {}
-  /** The pages now within this observer, by their numbers; every other page is outside it. */
-  holds(pageNumbers: readonly number[]) {
-    const entries = [...this.watched].map((target) => ({
-      target,
-      isIntersecting: pageNumbers.includes(Number((target as HTMLElement).dataset.pdfPage)),
-    }));
-    act(() => this.tell(entries as unknown as IntersectionObserverEntry[], this as never));
-  }
-}
-/** The line across the middle of the view (PdfPages' MIDDLE_MARGIN). */
-const underTheMiddle = () => watching.get('-50% 0px')!;
-
 class NoObserver {
   observe() {}
   unobserve() {}
@@ -169,11 +141,32 @@ class WidthObserver extends NoObserver {
 function laidOut() {
   vi.stubGlobal('ResizeObserver', WidthObserver);
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(900);
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(600);
+  // A frame comes at once: the page in view is read on the frame after a scroll.
+  vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => {
+    run(0);
+    return 0;
+  });
+}
+
+const scrollerOf = (container: HTMLElement) =>
+  container.querySelector<HTMLElement>('[data-pdf-pages]')!;
+/** Where a page's top is scrolled to by Go to: its top at the view's top, the ground over it showing. */
+const topOf = (container: HTMLElement, pageNumber: number) =>
+  Number.parseFloat(
+    container.querySelector<HTMLElement>(`[data-pdf-page="${pageNumber}"]`)!.style.top,
+  ) - 24;
+/** The pages scrolled to `top`, as a person scrolls them. */
+function scrollPagesTo(container: HTMLElement, top: number) {
+  const scroller = scrollerOf(container);
+  scroller.scrollTop = top;
+  act(() => {
+    fireEvent.scroll(scroller);
+  });
 }
 
 beforeEach(() => {
   open.attempts.length = 0;
-  watching.clear();
   titleRow.handed = null;
   resetPdfPresenceForTests();
   vi.stubGlobal('ResizeObserver', NoObserver);
@@ -350,8 +343,6 @@ describe('a PDF document’s surface', () => {
     })!;
     laidOut();
     const { container } = show(now, 'participate');
-    const shown = vi.fn();
-    Element.prototype.scrollIntoView = shown;
     const button = (name: string) => screen.getByRole('button', { name });
     expect(button('Undo').getAttribute('aria-disabled')).toBe('true');
     expect(button('Redo').getAttribute('aria-disabled')).toBe('true');
@@ -364,8 +355,8 @@ describe('a PDF document’s surface', () => {
     fireEvent.click(button('Undo'));
     expect(PdfLiveChanges.marks(now.binding.doc)).toEqual([]);
     expect(track).toHaveBeenCalledWith('Pdf', 'Undone');
-    // The step's page is shown again: page two of this file.
-    expect(shown.mock.contexts[0]).toBe(container.querySelector('[data-pdf-page="2"]'));
+    // The step's page is shown again: page two of this file, out of view until then.
+    expect(scrollerOf(container).scrollTop).toBeCloseTo(topOf(container, 2), 1);
     expect(button('Undo').getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(button('Redo'));
     expect(PdfLiveChanges.marks(now.binding.doc)).toEqual([mark]);
@@ -445,12 +436,17 @@ describe('a PDF document’s surface', () => {
       expect(screen.queryByRole('button', { name: 'Highlight' })).toBeNull();
       // "The toolbar": the rest are the mode's own, drawn dimmed until their phases land.
       expect(
-        screen.getByRole('button', { name: 'Page display' }).getAttribute('aria-disabled'),
+        screen
+          .getByRole('button', { name: 'Page display: Continuous' })
+          .getAttribute('aria-disabled'),
+      ).toBeNull();
+      expect(
+        screen.getByRole('button', { name: 'Rotate view' }).getAttribute('aria-disabled'),
       ).toBe('true');
       fireEvent.click(screen.getByRole('button', { name: 'Mode: Viewing' }));
       fireEvent.click(screen.getByRole('menuitemradio', { name: /Reviewing/ }));
       expect(screen.getByRole('button', { name: 'Highlight' })).toBeTruthy();
-      expect(screen.queryByRole('button', { name: 'Page display' })).toBeNull();
+      expect(screen.queryByRole('button', { name: /^Page display/ })).toBeNull();
     });
 
     it('offers a Participant Reviewing and Viewing, never Editing', async () => {
@@ -505,17 +501,19 @@ describe('a PDF document’s surface', () => {
       expect(getLocalPdfPresence()).toEqual({ tabId: 't1', page: 'p:3', mode, held: null });
     });
 
-    it('follows the page under the middle of the view, and keeps the last one between two pages', async () => {
+    // reading-surface.md "The page bar": the page in view is the one under the middle of the view.
+    it('follows the page under the middle of the view, and the nearer one between two pages', async () => {
       laidOut();
-      vi.stubGlobal('IntersectionObserver', WatchedObserver);
-      show(await ready());
-      underTheMiddle().holds([2]);
+      const { container } = show(await ready());
+      const second = topOf(container, 2) + 24;
+      // The middle of the view, 300 down it, on page two.
+      scrollPagesTo(container, second);
       expect(getLocalPdfPresence()?.page).toBe('p:5');
-      underTheMiddle().holds([]);
-      expect(getLocalPdfPresence()?.page).toBe('p:5');
-      // Two pages touch the line as one gives way to the next: the earlier one is the page in view.
-      underTheMiddle().holds([1, 2]);
+      // The middle 4 pixels under page one, 12 over page two.
+      scrollPagesTo(container, second - 16 + 4 - 300);
       expect(getLocalPdfPresence()?.page).toBe('p:3');
+      scrollPagesTo(container, second - 4 - 300);
+      expect(getLocalPdfPresence()?.page).toBe('p:5');
     });
 
     it('says the mode a person switches to', async () => {
@@ -547,8 +545,6 @@ describe('a PDF document’s surface', () => {
 
     it('goes to the page a person is on when they are pressed in the title row', async () => {
       laidOut();
-      const scrolled = vi.fn();
-      Element.prototype.scrollIntoView = scrolled;
       const { container } = show(await ready(), 'view');
       syncPdfPresencePeople([BOB]);
       receivePdfPresence('b', { tabId: 't1', page: 'p:5', mode: 'reviewing', held: null });
@@ -558,21 +554,18 @@ describe('a PDF document’s surface', () => {
         found = titleRow.handed!.onFollow!('b');
       });
       expect(found).toBe(true);
-      expect(scrolled.mock.contexts).toEqual([container.querySelector('[data-pdf-page="2"]')]);
-      expect(scrolled).toHaveBeenCalledWith({ block: 'start' });
+      expect(scrollerOf(container).scrollTop).toBeCloseTo(topOf(container, 2), 1);
       expect(track).toHaveBeenCalledWith('UI', 'Used', 'PdfDocumentFollow');
     });
 
     it('goes nowhere for a person on a page this file does not hold, on another tab, or unknown', async () => {
       laidOut();
-      const scrolled = vi.fn();
-      Element.prototype.scrollIntoView = scrolled;
-      show(await ready());
+      const { container } = show(await ready());
       syncPdfPresencePeople([BOB, { id: 'c', name: 'Cy', color: '#00f' }]);
       receivePdfPresence('b', { tabId: 't1', page: 'p:99', mode: 'reviewing', held: null });
       receivePdfPresence('c', { tabId: 't2', page: 'p:5', mode: 'reviewing', held: null });
       for (const id of ['b', 'c', 'nobody']) expect(titleRow.handed!.onFollow!(id)).toBe(false);
-      expect(scrolled).not.toHaveBeenCalled();
+      expect(scrollerOf(container).scrollTop).toBe(0);
       expect(track).not.toHaveBeenCalledWith('UI', 'Used', 'PdfDocumentFollow');
     });
   });

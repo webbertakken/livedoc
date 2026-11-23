@@ -121,8 +121,7 @@ describe("a PDF document's toolbar, held to the spec's table", () => {
       group: row.Group!,
       controls: listed(row.Controls!),
     }));
-  // The zoom field sits in the toolbar until the page bar is built (the spec's Status): no row of the table.
-  const groupsOf = (mode: PdfMode) => pdfToolbar(mode).filter((group) => group.id !== 'zoom');
+  const groupsOf = (mode: PdfMode) => pdfToolbar(mode);
 
   it.each(PDF_MODES.map((mode) => [mode.label, mode] as const))(
     'shows every mode’s groups, then %s’s own',

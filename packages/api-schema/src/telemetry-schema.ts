@@ -181,8 +181,9 @@ export const TELEMETRY_CATEGORIES = [
   'Spreadsheet',
   // PDF documents (docs/specs/035-pdf-documents/pdf-document.md "Telemetry and observability"): a PDF arriving
   // ('Imported', `type` the way: 'Explorer'), a mark made ('Added', 'Mark.Highlight'), a tool taken in hand
-  // ('Selected', 'Tool.Highlight'), a person's own change taken back or made again ('Undone', 'Redone') and a
-  // download ('Exported', 'Pdf'). Never a name, a password or any text of a file.
+  // ('Selected', 'Tool.Highlight'), a person's own change taken back or made again ('Undone', 'Redone'), a
+  // download ('Exported', 'Pdf'), and a person's view: its page display ('Changed', 'PageDisplay.Single') and how
+  // it was zoomed ('Zoomed', 'FitWidth'). Never a name, a password or any text of a file.
   'Pdf',
   // Forms (docs/specs/030-forms/forms.md "Telemetry"): a form started (its starter), a question added (its type),
   // published ('Link'), opened or closed, and a response sent ('Response', or 'Dropped' for the hidden field, written

@@ -111,14 +111,14 @@ const group = (id: string, label: string, controls: OfficeControl[]): OfficeTool
 
 const BUILT = { status: 'built' } as const;
 
-// "Every mode". The zoom field sits here until the page bar holds it ("Layout, top to bottom").
+/** The Viewing toolbar's Page display: a list of View > Page display's items. */
+export const PAGE_DISPLAY_CONTROL = 'page-display-control';
+
+// "Every mode".
 const EVERY_MODE: OfficeToolbar = [
   group('history', 'History', [
     button(UNDO, 'Undo', 'participate', lucideUndo2, { ...BUILT, shortcut: 'undo' }),
     button(REDO, 'Redo', 'participate', lucideRedo2, { ...BUILT, shortcut: 'redo' }),
-  ]),
-  group('zoom', 'Zoom', [
-    { id: 'zoom', label: 'Zoom', level: 'view', status: 'built', look: { kind: 'zoom' } },
   ]),
   group('file', 'File', [
     button(PRINT, 'Print', 'view', lucidePrinter),
@@ -134,7 +134,7 @@ const EVERY_MODE: OfficeToolbar = [
 const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
   viewing: [
     group('view', 'View', [
-      list('page-display-control', 'Page display', 'view', lucideBookOpen),
+      { ...list(PAGE_DISPLAY_CONTROL, 'Page display', 'view', lucideBookOpen), ...BUILT },
       button(ROTATE_VIEW_CLOCKWISE, 'Rotate view', 'view', lucideRotateCwSquare),
       toggle(DARK_PAGES, 'Dark pages', 'view', lucideMoon),
     ]),

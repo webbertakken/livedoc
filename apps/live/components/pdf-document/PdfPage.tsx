@@ -53,6 +53,8 @@ export const PdfPage = memo(function PdfPage({
   count,
   page,
   cssPerPoint,
+  left,
+  top,
   wanted,
   held,
   engine,
@@ -67,6 +69,9 @@ export const PdfPage = memo(function PdfPage({
   page: PageInfo;
   // CSS pixels a point, at the zoom shown.
   cssPerPoint: number;
+  // Where the page lies in the pages' layout, in CSS pixels (pdf-page-layout.ts).
+  left: number;
+  top: number;
   // Near view: its picture is drawn. Held: its picture is kept though it left view.
   wanted: boolean;
   held: boolean;
@@ -181,10 +186,10 @@ export const PdfPage = memo(function PdfPage({
       data-pdf-page-name={page.name}
       data-pdf-page-drawn={drawn ? 'true' : 'false'}
       data-pdf-file-marks={drawn?.fileMarks.join(' ') ?? ''}
-      className={`relative shrink-0 bg-white shadow-sm outline outline-1 outline-(--office-line) ${
+      className={`absolute bg-white shadow-sm outline outline-1 outline-(--office-line) ${
         marking ? 'cursor-text touch-none' : ''
       }`}
-      style={{ width: page.width * cssPerPoint, height: page.height * cssPerPoint }}
+      style={{ left, top, width: page.width * cssPerPoint, height: page.height * cssPerPoint }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => endDrag(event, true)}

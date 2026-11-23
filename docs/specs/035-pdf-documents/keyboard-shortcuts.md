@@ -16,7 +16,8 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 - A key of a tool the person's level does not allow does nothing and is not listed for them.
 - A tool key works in the editing mode that lists its tool; in another mode it does nothing
   ([Editing modes](editing-modes.md#switching)).
-- **Left out, because the browser owns them**: ⌘W, ⌘T, ⌘N, ⌘Tab and F5 keep the browser's meaning. Acrobat's
+- **Left out, because the browser owns them**: ⌘W, ⌘T, ⌘N, ⌘⇧N, ⌘Tab, ⌘Page Up, ⌘Page Down and F5 keep the
+  browser's meaning, so Go to page has a key of LiveDoc's and a page is turned by ← and → alone. Acrobat's
   window, portfolio, Help window and tools pane keys have nothing to act on here.
 - The shell's own keys (menus by access key, the tool finder, the shortcuts dialog, F6 between regions) are the
   shell's ([Office shell](../004-interface-design/office-shell.md)).
@@ -27,14 +28,14 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 
 | Action                                  | Keys                                  | Acrobat's                             | Status    |
 | --------------------------------------- | ------------------------------------- | ------------------------------------- | --------- |
-| Scroll up, down                         | ↑, ↓                                  | The same                              | specified |
-| Previous screen, next screen            | Page Up or ⇧Space, Page Down or Space | Page Up or ⇧Enter, Page Down or Enter | specified |
-| Previous page, next page                | ←, → (or ⌘Page Up, ⌘Page Down)        | The same                              | specified |
-| First page, last page                   | Home, End                             | The same                              | specified |
-| Go to page                              | ⌘⇧N                                   | The same                              | specified |
+| Scroll up, down                         | ↑, ↓                                  | The same                              | built     |
+| Previous screen, next screen            | Page Up or ⇧Space, Page Down or Space | Page Up or ⇧Enter, Page Down or Enter | built     |
+| Previous page, next page                | ←, →                                  | ←, → (or ⌘Page Up, ⌘Page Down)        | built     |
+| First page, last page                   | Home, End                             | The same                              | built     |
+| Go to page                              | ⌘⌥G `(default)`                       | ⌘⇧N                                   | built     |
 | Previous view, next view                | ⌥←, ⌥→                                | The same                              | specified |
-| Zoom in, zoom out                       | ⌘=, ⌘-                                | The same                              | specified |
-| Actual size, fit page, fit width        | ⌘1, ⌘0, ⌘2                            | The same †                            | specified |
+| Zoom in, zoom out                       | ⌘=, ⌘-                                | The same                              | built     |
+| Actual size, fit page, fit width        | ⌘1, ⌘0, ⌘2                            | The same †                            | built     |
 | Rotate view clockwise, counterclockwise | ⌘⇧+, ⌘⇧-                              | The same †                            | specified |
 | Read mode                               | ⌘⌥H                                   | Ctrl H †                              | specified |
 | Full screen                             | ⌘⌥L                                   | ⌘L †                                  | specified |
@@ -50,6 +51,12 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 - Enter and ⇧Enter turn screens in Acrobat; here Enter acts on what has focus, so Space and ⇧Space turn them, as in a
   browser's own reader.
 - ⌘L is the browser's address bar, so full screen is ⌘⌥L.
+- ↑, ↓, ←, →, Home, End, the Page keys and Space are heard while focus is on the pages, as a single-key tool is: in a
+  field or on a toolbar they keep their own meaning.
+- Where the pages are wider than the view, ← and → scroll them sideways, as a browser does; where they fit, ← and →
+  turn the page `(default)`.
+- In Single page and Two pages, a key that scrolls turns the row at the row's end
+  ([Reading surface](reading-surface.md#the-pages)).
 
 ## Tools
 

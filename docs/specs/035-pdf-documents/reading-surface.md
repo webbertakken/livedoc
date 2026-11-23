@@ -1,14 +1,20 @@
 # Reading surface
 
-**Status: specified; a first slice is built.** Built: the title row with its PDF pill and its tooltip, the menus and the
-toolbar declared whole as data and held to this page's tables by their test, with what is built bound (File > Download
+**Status: specified; the first slices of reading are built.** Built:
 
-> PDF, Edit > Undo and Redo, View > Mode, Insert > Highlight, Tools > Select, Help; Undo, Redo, zoom, Select,
-> Highlight) and the rest drawn dimmed, "Coming soon"; and the pages: every page a box of its true size, a whole-page
-> picture for pages near view, let go far from it. The zoom field sits in the toolbar until the page bar is built. The
-> pill's lock glyph waits on the shell, whose pill takes words alone: a protected file's pill says "Protected" in its
-> tooltip and name. The accessible tree is not built: a page is a named region whose picture is hidden from assistive
-> technology. Tiles, panels, find, text selection, the page bar and the phone layout are not built.
+- The title row with its PDF pill and its tooltip.
+- The menus and the toolbar, declared whole as data and held to this page's tables by their test: what is built is
+  bound, the rest drawn dimmed, "Coming soon".
+- The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it.
+- Page display, zoom, Go to and the page bar.
+
+Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
+Zoom to selection, and Go to but for Previous view and Next view.
+
+Not built: tiles (past `PDF_PAGE_PICTURE_MAX_PIXELS` a page is drawn softer than the screen), Rotate view, the panels,
+find, text selection, page labels in the page bar, the accessible tree (a page is a named region whose picture is
+hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
+words alone: a protected file's pill says "Protected" in its tooltip and name.
 
 The chrome of a [PDF document](pdf-document.md) and how its pages are read: the title row, menus, toolbar, the left
 panel, the pages, zoom, find and the phone layout, with final copy. It fills the
@@ -102,22 +108,23 @@ Editing. Shortcuts are in [Keyboard shortcuts](keyboard-shortcuts.md).
 
 ### View
 
-| Item                                                            | Does                                                                                                                                    | Level |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| Mode ▸                                                          | Reviewing; Editing; Viewing. The switch's own order ([Editing modes](editing-modes.md#switching))                                       | view  |
-| Page display ▸                                                  | Single page; Continuous (default); Two pages; Two pages, continuous; Show cover page                                                    | view  |
-| Zoom ▸                                                          | Fit width (default); Fit page; Actual size; 50%; 75%; 100%; 125%; 150%; 200%; 400%; 800%; 1600%; 2400%; 3200%; 6400%; Zoom to selection | view  |
-| Rotate view ▸                                                   | Clockwise; Counterclockwise. The person's view only, never the file                                                                     | view  |
-| Thumbnails, Outline, Embedded files, Layers, Signatures, Fields | Each opens its left panel                                                                                                               | view  |
-| Comments                                                        | The comments panel                                                                                                                      | view  |
-| Marks                                                           | Shows or hides every mark, for this person                                                                                              | view  |
-| Dark pages                                                      | A check, offered in the dark scheme only ([Dark pages](dark-pages.md))                                                                  | view  |
-| Read mode                                                       | Hides the menu bar, toolbar and panels; Escape leaves                                                                                   | view  |
-| Full screen                                                     | One page a screen, arrows to turn; Escape leaves                                                                                        | view  |
-| Go to ▸                                                         | First page; Last page; Previous page; Next page; Page…; Previous view; Next view                                                        | view  |
+| Item                                                            | Does                                                                                                                                                       | Level |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| Mode ▸                                                          | Reviewing; Editing; Viewing. The switch's own order ([Editing modes](editing-modes.md#switching))                                                          | view  |
+| Page display ▸                                                  | Single page; Continuous (default); Two pages; Two pages, continuous; Show cover page                                                                       | view  |
+| Zoom ▸                                                          | Zoom in; Zoom out; Fit width (default); Fit page; Actual size; 50%; 75%; 100%; 125%; 150%; 200%; 400%; 800%; 1600%; 2400%; 3200%; 6400%; Zoom to selection | view  |
+| Rotate view ▸                                                   | Clockwise; Counterclockwise. The person's view only, never the file                                                                                        | view  |
+| Thumbnails, Outline, Embedded files, Layers, Signatures, Fields | Each opens its left panel                                                                                                                                  | view  |
+| Comments                                                        | The comments panel                                                                                                                                         | view  |
+| Marks                                                           | Shows or hides every mark, for this person                                                                                                                 | view  |
+| Dark pages                                                      | A check, offered in the dark scheme only ([Dark pages](dark-pages.md))                                                                                     | view  |
+| Read mode                                                       | Hides the menu bar, toolbar and panels; Escape leaves                                                                                                      | view  |
+| Full screen                                                     | One page a screen, arrows to turn; Escape leaves                                                                                                           | view  |
+| Go to ▸                                                         | First page; Last page; Previous page; Next page; Page…; Previous view; Next view                                                                           | view  |
 
 - Every View item is seen by every level and changes one person's view only.
 - Zoom's percentages are Acrobat's own levels from 50% `(default)`; the zoom field takes any value from 10% to 6400%.
+- **Go to ▸ Page…** puts the caret in [the page bar](#the-page-bar)'s page field, its number selected.
 
 ### Insert
 
@@ -287,10 +294,27 @@ the choice is remembered per person per document.
   then sharp **tiles** of `PDF_TILE_PX` behind it; a tile is redrawn alone when a change touches it.
 - **Virtualised**: only pages near the viewport have canvases; the rest are boxes of their true size, read before
   anything is drawn.
-- **Page display**: continuous (default) or one page at a time; one or two pages across, with or without a cover
+- **Page display**: continuous (default) or one row at a time; one or two pages across, with or without a cover
   page; the gap between pages is the shell's.
+  - A **row** is the pages side by side: one, or two. With **Show cover page** the first page stands alone on the
+    right, as a book's cover, and the pairs start at the second; with one page across it changes nothing.
+  - Two pages across meet at the row's middle, each in a place as wide as the file's widest page, so the pairs line
+    up down the file `(default)`.
+  - **Single page** and **Two pages** show the row in view alone. A wheel, or a key that scrolls, pushed past the
+    row's end turns to the next row, and pushed past its start to the row before, at its end `(default)`. A wheel
+    turns one row, then none until it has rested `PDF_WHEEL_TURN_MS`, so a trackpad's glide turns one.
+  - A change of page display keeps the page in view.
 - **Zoom**: 10% to 6400%, Fit width (default), Fit page, Actual size; ⌘ with the wheel and a pinch zoom about the
   pointer. A zoom gesture scales the tiles already there at once and sharpens behind, so it never waits.
+  - **Fit width** fits the widest row to the view, never past `PDF_FIT_WIDTH_MAX` `(default)`, so a page on a wide
+    window is not drawn larger than it reads well. **Fit page** fits the widest and the tallest row, so every row
+    shows whole `(default)`. **Actual size** is 100%: a point is 1/72 inch and a CSS pixel 1/96.
+  - **Zoom in** and **Zoom out** go to the next of `PDF_ZOOM_STEPS` above or below the zoom shown, whichever zoom
+    that was.
+  - A zoom from the menus, the keys or the page bar keeps the middle of the view where it is; the wheel and a pinch
+    keep what is under the pointer.
+- **The view is the person's** `(default)`: page display, zoom and the turn of Rotate view are kept while the surface
+  is open, per tab, never stored and never another person's. A PDF opens in Continuous at Fit width.
 - **Rotate view** turns every page a quarter for this person only; rotating a page in the file is a page operation.
 - **Selecting text**: a drag selects in the file's own text order, by character; a double press a word, a triple a
   line; Shift extends; Alt with a drag selects a column. The selection is drawn by LiveDoc as rectangles over the
@@ -304,6 +328,27 @@ the choice is remembered per person per document.
   Go to ▸, Rotate view, and the items of whatever is under the pointer (a mark, a field, an object), each only for
   the level that may.
 - Memory is bounded: pages left behind are closed in the engine and tiles kept to `PDF_TILE_CACHE_BYTES`.
+
+## The page bar
+
+Bottom centre, floating over the pages, in the shell's tokens: a group named "Page and zoom".
+
+| Control           | Does                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| **Previous page** | Goes to the page before the one in view; dimmed on the first page                               |
+| **Page**          | The number of the page in view, with "/ 14" after it; takes a page number, and Enter goes to it |
+| **Next page**     | Goes to the page after the one in view; dimmed on the last page                                 |
+| **Zoom out**      | The step below the zoom shown; dimmed at 10%                                                    |
+| **Zoom**          | The zoom shown, as a percentage whichever zoom it is; takes 10 to 6400, with or without a "%"   |
+| **Zoom in**       | The step above the zoom shown; dimmed at 6400%                                                  |
+
+- **The page in view** is the one under the middle of the view; of a row of two, the left one `(default)`.
+- **Previous page** and **Next page** turn a row where two pages are across, as ← and → do.
+- **Zoom**'s list is Fit width, Fit page, Actual size and View > Zoom's percentages, the zoom in force marked.
+- A typed page that is no page of the file puts the number back and says "There is no page 99." over the bar, until
+  the next key or press; a typed zoom that is none puts the zoom back, as every value field of the shell does.
+- A page label typed in the field is the left panel's [Go to page](#the-left-panel).
+- The bar is never under the document group: where the two would meet, the bar sits above it `(default)`.
 
 ## Find
 
@@ -331,14 +376,19 @@ the choice is remembered per person per document.
 
 ## Limits
 
-| Constant                       | Value                 | Why                                                                                                           |
-| ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `PDF_PAGE_PICTURE_MAX_PIXELS`  | 8,388,608             | `(default)` A page's whole-page picture, drawn at the screen's scale up to this; sharper detail is the tiles' |
-| `PDF_TILE_PX`                  | 512                   | `(default)` CSS pixels a side; safe range 256 to 1,024                                                        |
-| `PDF_TILE_CACHE_BYTES`         | 134,217,728 (128 MiB) | `(default)` Desktop; 50,331,648 (48 MiB) on a phone. Set by measurement                                       |
-| `PDF_PHONE_PIXEL_RATIO`        | 2                     | `(default)` Past it a phone's canvas limits bite                                                              |
-| `PDF_ZOOM_MIN`, `PDF_ZOOM_MAX` | 0.1, 64               | Acrobat's range, 10% to 6400%                                                                                 |
-| `PDF_FIND_MAX_RESULTS`         | 10,000                | `(default)` Listed results; the count still says how many more                                                |
+| Constant                       | Value                                                                                                  | Why                                                                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `PDF_PAGE_PICTURE_MAX_PIXELS`  | 8,388,608                                                                                              | `(default)` A page's whole-page picture, drawn at the screen's scale up to this; sharper detail is the tiles'                            |
+| `PDF_TILE_PX`                  | 512                                                                                                    | `(default)` CSS pixels a side; safe range 256 to 1,024                                                                                   |
+| `PDF_TILE_CACHE_BYTES`         | 134,217,728 (128 MiB)                                                                                  | `(default)` Desktop; 50,331,648 (48 MiB) on a phone. Set by measurement                                                                  |
+| `PDF_PHONE_PIXEL_RATIO`        | 2                                                                                                      | `(default)` Past it a phone's canvas limits bite                                                                                         |
+| `PDF_ZOOM_MIN`, `PDF_ZOOM_MAX` | 0.1, 64                                                                                                | Acrobat's range, 10% to 6400%                                                                                                            |
+| `PDF_ZOOM_STEPS`               | 10, 12.5, 25, 33.3, 50, 66.7, 75, 100, 125, 150, 200, 300, 400, 600, 800, 1200, 1600, 2400, 3200, 6400 | `(default)` Per cent: where Zoom in and Zoom out stop, Acrobat's own steps within the range (assumed, from the product as known)         |
+| `PDF_FIT_WIDTH_MAX`            | 2                                                                                                      | `(default)` Fit width's ceiling, 200%; safe range 1 to 4                                                                                 |
+| `PDF_WHEEL_ZOOM_RATE`          | 0.002                                                                                                  | `(default)` ⌘ with the wheel multiplies the zoom by e to this times the pixels wheeled: a notch of 100 is 22%; safe range 0.001 to 0.005 |
+| `PDF_WHEEL_TURN_MS`            | 300                                                                                                    | `(default)` How long a wheel rests before it turns another row; safe range 150 to 600                                                    |
+| `PDF_ZOOM_SETTLE_MS`           | 400                                                                                                    | `(default)` How long a wheel's or a pinch's zoom rests before it is told to telemetry; safe range 200 to 1,000                           |
+| `PDF_FIND_MAX_RESULTS`         | 10,000                                                                                                 | `(default)` Listed results; the count still says how many more                                                                           |
 
 ## Share roles
 
@@ -359,10 +409,14 @@ the choice is remembered per person per document.
 
 ## Telemetry
 
-`Pdf · Changed · PageDisplay.<Single|Continuous|Two|TwoContinuous>`, `Pdf · Zoomed · <FitWidth|FitPage|Actual|Custom>`,
+`Pdf · Changed · PageDisplay.<Single|Continuous|Two|TwoContinuous|CoverShown|CoverHidden>`,
+`Pdf · Zoomed · <FitWidth|FitPage|Actual|In|Out|Custom>` (a wheel's or a pinch's zoom once, as `Custom`, when it settles),
 `Pdf · Opened · Panel.<Thumbnails|Outline|EmbeddedFiles|Layers|Signatures|Fields>`, `Pdf · Searched · Find`,
 `Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
 menu and tool finder events. Never a query, a page's text or a name.
+
+Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom> way=<way>`,
+`[pdf] view-went-to page=<n>`.
 
 ## Errors
 
