@@ -114,11 +114,11 @@ export function CollaboratorsDialog({
                   style={{ backgroundColor: legibleTabAccent(group.tab, isDark) }}
                 />
               ) : null}
-              <h3 className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <h3 className="truncate text-supporting text-slate-500 dark:text-slate-400">
                 {group.tab?.name ?? 'Another Tab'}
               </h3>
               {group.isActive ? (
-                <span className="shrink-0 rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+                <span className="flex h-icon-row min-w-icon-row shrink-0 items-center justify-center rounded-full bg-brand-50 px-1 text-glyph text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
                   You&apos;re Here
                 </span>
               ) : group.tab ? (
@@ -140,14 +140,14 @@ export function CollaboratorsDialog({
                   <li
                     key={p.id}
                     ref={p.id === focusId ? focusRef : undefined}
-                    className={`flex items-center gap-3 rounded-lg px-2 py-2 ${
+                    className={`flex min-h-row items-center gap-3 rounded-control px-2 py-1 ${
                       p.id === focusId ? 'bg-brand-50 dark:bg-brand-500/10' : ''
                     }`}
                   >
                     <ParticipantAvatar participant={p} size={28} />
                     <div className="min-w-0 flex-1 pl-1">
                       <div className="flex flex-wrap items-center gap-1">
-                        <span className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                        <span className="truncate text-body text-slate-800 dark:text-slate-100">
                           {p.name}
                         </span>
                         {participantBadges(p, selfId, selfRole, followingId, {
@@ -155,13 +155,13 @@ export function CollaboratorsDialog({
                         }).map((b) => (
                           <span
                             key={b}
-                            className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            className="rounded-full bg-slate-100 px-2 text-supporting text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                           >
                             {b}
                           </span>
                         ))}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-supporting text-slate-500 dark:text-slate-400">
                         {collaboratorRowDetail(p, isSelf, now)}
                       </p>
                     </div>
@@ -172,7 +172,7 @@ export function CollaboratorsDialog({
                         the person doing it is the honest place. */}
                     {/* An agent's row has no socket to follow and cannot hold the baton. */}
                     {p.agent ? null : (
-                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                         <FacilitatorButton
                           isSelf={isSelf}
                           name={p.name}

@@ -75,7 +75,7 @@ export function TeamFormModal({
           <div className="flex items-start justify-between gap-3">
             <h2
               id="team-form-title"
-              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+              className="text-dialog-title text-slate-900 dark:text-slate-50"
             >
               {title}
             </h2>
@@ -87,7 +87,7 @@ export function TeamFormModal({
                 type="button"
                 onClick={onCancel}
                 aria-label="Close"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                className="flex size-row items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
               >
                 <CloseIcon size={16} />
               </button>
@@ -95,14 +95,12 @@ export function TeamFormModal({
           </div>
           {/* Concise "what teams do" primer so first-time creators know what
               they're setting up before naming it. */}
-          <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+          <p className="mt-2 rounded-menu border border-slate-200 bg-slate-50 px-3 py-2.5 text-supporting text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
             Teams let you invite people by email and share a library of documents everyone can open.
             Members edit shared work; admins also manage who&rsquo;s in the team.
           </p>
           <label className="mt-4 block">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Team name
-            </span>
+            <span className="text-body text-slate-600 dark:text-slate-300">Team name</span>
             <TextInput
               ref={nameRef}
               value={name}
@@ -113,8 +111,8 @@ export function TeamFormModal({
             />
           </label>
           <label className="mt-3 block">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Organisation <span className="normal-case">(optional)</span>
+            <span className="text-body text-slate-600 dark:text-slate-300">
+              Organisation <span className="text-slate-500 dark:text-slate-400">(optional)</span>
             </span>
             <TextInput
               value={organisation}

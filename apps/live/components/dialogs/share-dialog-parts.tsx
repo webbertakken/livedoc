@@ -31,7 +31,7 @@ export const ClockIcon = lucideGlyph(lucideClock, 12);
 
 // A pass's delete button: bordered like its hand-over buttons beside it, rose on hover.
 export const PASS_BIN_CLASS =
-  'inline-flex items-center rounded-md border border-slate-200 px-1.5 py-1 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:border-rose-400/60 dark:hover:text-rose-300';
+  'inline-flex size-row items-center justify-center rounded-control border border-slate-200 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:border-rose-400/60 dark:hover:text-rose-300';
 
 // One entry per role. The band colour is the role at a glance, so the
 // composer's role card, the pass header band and nothing else use it: brand for
@@ -74,7 +74,7 @@ export const ROLE_PASS: Record<
     title: 'Participant',
     blurb: "Adds stickies, writes and votes. Can't reshape the board.",
     Icon: ParticipatePassIcon,
-    // teal-700 under the 10 px bold stamp: 5.47:1.
+    // teal-700 under the 14 px stamp: 5.47:1.
     solid: 'bg-teal-700 text-white dark:bg-teal-600/60',
     selected: 'border-teal-600 bg-teal-50/70 dark:border-teal-400 dark:bg-teal-500/10',
     text: 'text-teal-800 dark:text-teal-300',
@@ -140,6 +140,5 @@ export function ScopeOptions({ tabs }: { tabs: { id: string; name: string }[] })
   );
 }
 
-// The uppercase section caption the dialog's bands share.
-export const SECTION_LABEL =
-  'text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400';
+// The section caption the dialog's bands share, in its own case.
+export const SECTION_LABEL = 'text-supporting text-slate-500 dark:text-slate-400';

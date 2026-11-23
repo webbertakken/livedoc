@@ -55,7 +55,7 @@ export function ShareRolePicker({
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border-2 transition-[border-color,box-shadow] duration-200 motion-reduce:transition-none ${
+      className={`overflow-hidden rounded-surface border-2 transition-[border-color,box-shadow] duration-200 motion-reduce:transition-none ${
         open ? `${pass.selected} shadow-md` : `${pass.selected} shadow-sm`
       }`}
     >
@@ -77,15 +77,15 @@ export function ShareRolePicker({
         className="flex w-full items-center gap-3 px-3 py-2 text-left"
       >
         <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${pass.solid}`}
+          className={`flex size-row shrink-0 items-center justify-center rounded-control ${pass.solid}`}
         >
           <Icon />
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <span className="text-body font-medium text-slate-800 dark:text-slate-100">
             {pass.title}
           </span>
-          <span className="truncate text-[11px] leading-snug text-slate-600 dark:text-slate-400">
+          <span className="truncate text-supporting text-slate-600 dark:text-slate-400">
             {pass.blurb}
           </span>
         </span>
@@ -107,7 +107,7 @@ export function ShareRolePicker({
             id={listId}
             role="radiogroup"
             aria-label="What the pass lets people do"
-            className="flex flex-col gap-1 border-t border-slate-200/70 p-1.5 dark:border-slate-700/70"
+            className="flex flex-col gap-1 border-t border-slate-200/70 p-1 dark:border-slate-700/70"
           >
             {LEVEL_ORDER.map((r) => {
               const option = ROLE_PASS[r];
@@ -123,27 +123,27 @@ export function ShareRolePicker({
                   data-role={r}
                   onClick={() => choose(r)}
                   onKeyDown={onRoleKey}
-                  className={`flex items-center gap-3 rounded-lg bg-white/70 px-2 py-1.5 text-left transition-colors dark:bg-slate-900/40 ${
+                  className={`flex min-h-row items-center gap-3 rounded-control bg-white/70 px-2 py-1 text-left transition-colors dark:bg-slate-900/40 ${
                     active ? option.chosen : option.hover
                   }`}
                 >
                   <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${option.solid}`}
+                    className={`flex size-chip shrink-0 items-center justify-center rounded-control ${option.solid}`}
                   >
                     <OptionIcon />
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className={`text-[13px] font-semibold ${option.text}`}>
+                    <span className={`text-body ${active ? 'font-medium' : ''} ${option.text}`}>
                       {option.title}
                     </span>
-                    <span className="text-[11px] leading-snug text-slate-600 dark:text-slate-400">
+                    <span className="text-supporting text-slate-600 dark:text-slate-400">
                       {option.blurb}
                     </span>
                   </span>
                   {active ? (
                     <span
                       aria-hidden
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${option.solid}`}
+                      className={`flex size-icon-row shrink-0 items-center justify-center rounded-full ${option.solid}`}
                     >
                       <CheckIcon size={10} />
                     </span>

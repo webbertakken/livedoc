@@ -144,7 +144,7 @@ export function SharePasswordSection({
       />
       {switchOn && showSetLine ? (
         <div className={DETAIL_ROW}>
-          <p className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+          <p className="flex min-w-0 flex-1 items-center gap-2 text-body text-slate-700 dark:text-slate-200">
             <LockIcon size={13} className="shrink-0 text-slate-400" />
             {pwSaved ? 'Password Saved' : 'Password Set'}
           </p>
@@ -163,11 +163,8 @@ export function SharePasswordSection({
       ) : null}
       {switchOn && !showSetLine ? (
         <div className={DETAIL_ROW}>
-          <div className="relative min-w-0 flex-1">
-            <LockIcon
-              size={13}
-              className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400"
-            />
+          <div className="flex h-field min-w-0 flex-1 items-center gap-2 rounded-control border border-slate-200 bg-white px-2 transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 dark:border-slate-700 dark:bg-slate-800">
+            <LockIcon size={13} className="pointer-events-none shrink-0 text-slate-400" />
             <input
               ref={fieldRef}
               type="text"
@@ -186,7 +183,7 @@ export function SharePasswordSection({
               aria-describedby={tooShort ? HINT_ID : undefined}
               autoComplete="off"
               spellCheck={false}
-              className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pr-2 pl-8 font-mono text-sm text-slate-800 outline-none transition placeholder:font-sans placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className="min-w-0 flex-1 bg-transparent font-mono text-body text-slate-800 outline-none placeholder:font-sans placeholder:text-slate-400 dark:text-slate-100"
             />
           </div>
           <Button
@@ -207,7 +204,7 @@ export function SharePasswordSection({
       {switchOn && !showSetLine && tooShort ? (
         <p
           id={HINT_ID}
-          className="ml-3.5 border-l-2 border-slate-200 pl-3 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400"
+          className="ml-3.5 border-l-2 border-slate-200 pl-3 text-supporting text-slate-500 dark:border-slate-700 dark:text-slate-400"
         >
           At least {SHARE_PASSWORD_MIN} characters.
         </p>

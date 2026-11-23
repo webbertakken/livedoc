@@ -25,15 +25,12 @@ export function ShareIdentity({
         role="img"
         aria-label={`Your avatar colour: ${participant.color}`}
         style={identityVars(participant.color)}
-        className={`shrink-0 text-[11px] font-semibold text-white ${IDENTITY_FILL}`}
+        className={`shrink-0 text-supporting text-white ${IDENTITY_FILL}`}
       >
         {initialsOf(shown)}
       </GlyphDisc>
       <div className="flex min-w-0 flex-1 flex-col">
-        <label
-          htmlFor="share-name"
-          className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-        >
+        <label htmlFor="share-name" className="text-supporting text-slate-500 dark:text-slate-400">
           Sharing as
         </label>
         {/* Shuffle sits right against the name it changes, not out by Done. */}
@@ -43,7 +40,7 @@ export function ShareIdentity({
               type="button"
               onClick={() => onChange(randomName())}
               aria-label="Generate a different name"
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              className="flex size-chip shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
               <RefreshIcon size={13} />
             </button>
@@ -54,7 +51,7 @@ export function ShareIdentity({
             onChange={(e) => onChange(e.target.value)}
             placeholder={participant.name}
             aria-label="Your name"
-            className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 text-sm font-medium text-slate-800 outline-none transition hover:border-slate-200 focus:border-brand-400 dark:text-slate-100 dark:hover:border-slate-700"
+            className="min-w-0 flex-1 rounded-control border border-transparent bg-transparent px-1 text-body text-slate-800 outline-none transition hover:border-slate-200 focus:border-brand-400 dark:text-slate-100 dark:hover:border-slate-700"
           />
         </div>
       </div>
