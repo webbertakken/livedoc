@@ -41,7 +41,7 @@ export function HomeWelcome({
   }, []);
   const haveWork = offerSignIn || Boolean(importToolbar);
   return (
-    <div className="flex flex-col gap-7" data-home-welcome="">
+    <div className="flex flex-col gap-6" data-home-welcome="">
       <HomeSection id="start-blank" title={WELCOME_COPY.blanksTitle} busy={false}>
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
           {WELCOME_BLANKS.map((kind) => (
@@ -77,11 +77,11 @@ export function HomeWelcome({
           <div className="grid gap-3 sm:grid-cols-2">
             {offerSignIn ? <SignInCard /> : null}
             {importToolbar ? (
-              <div className={`flex flex-col gap-2 rounded-lg p-4 ${PANEL_SURFACE}`}>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <div className={`flex flex-col gap-2 rounded-surface p-4 ${PANEL_SURFACE}`}>
+                <h3 className="text-panel-title text-slate-900 dark:text-slate-100">
                   {WELCOME_COPY.importTitle}
                 </h3>
-                <p className={`text-xs leading-relaxed ${MUTED}`}>{WELCOME_COPY.importLine}</p>
+                <p className={`text-supporting ${MUTED}`}>{WELCOME_COPY.importLine}</p>
                 <div className="mt-auto pt-1">{importToolbar}</div>
               </div>
             ) : null}
@@ -101,18 +101,18 @@ function StartTile({ kind, blank }: { kind: TemplateKind; blank: boolean }) {
         href={welcomeStartHref(kind)}
         data-welcome-start={kind}
         onClick={() => track('Home', 'Selected', blank ? 'Welcome.Blank' : 'Welcome.Template')}
-        className={`group block min-w-0 rounded-md ${FOCUS_RING}`}
+        className={`group block min-w-0 rounded-control ${FOCUS_RING}`}
       >
         <span
           aria-hidden
-          className={`block overflow-hidden rounded-md p-1 ${GRID_THUMB} ${CARD_SURFACE}`}
+          className={`block overflow-hidden rounded-control p-1 ${GRID_THUMB} ${CARD_SURFACE}`}
         >
           <TemplatePicture kind={kind} />
         </span>
-        <span className="mt-1 block h-4 truncate text-xs leading-4 text-slate-700 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100">
+        <span className="mt-1 block truncate text-supporting text-slate-700 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100">
           {t.title}
         </span>
-        <span className={`block h-4 truncate text-[11px] leading-4 ${MUTED}`}>{t.description}</span>
+        <span className={`block truncate text-supporting ${MUTED}`}>{t.description}</span>
       </a>
     </Tooltip>
   );
@@ -122,15 +122,15 @@ function StartTile({ kind, blank }: { kind: TemplateKind; blank: boolean }) {
 function SignInCard() {
   const { signInHref } = useAuthHrefs();
   return (
-    <div className={`flex flex-col gap-2 rounded-lg p-4 ${PANEL_SURFACE}`}>
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+    <div className={`flex flex-col gap-2 rounded-surface p-4 ${PANEL_SURFACE}`}>
+      <h3 className="text-panel-title text-slate-900 dark:text-slate-100">
         {WELCOME_COPY.signInTitle}
       </h3>
-      <p className={`text-xs leading-relaxed ${MUTED}`}>{WELCOME_COPY.signInLine}</p>
+      <p className={`text-supporting ${MUTED}`}>{WELCOME_COPY.signInLine}</p>
       <Link
         href={signInHref}
         onClick={() => track('Home', 'Selected', 'Welcome.SignIn')}
-        className={`mt-auto inline-flex h-8 items-center self-start rounded-md bg-brand-700 px-3 text-xs font-semibold text-white transition hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700 ${FOCUS_RING}`}
+        className={`mt-auto inline-flex h-field items-center self-start rounded-control bg-brand-700 px-3 text-body font-medium text-white transition hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700 ${FOCUS_RING}`}
       >
         {WELCOME_COPY.signIn}
       </Link>

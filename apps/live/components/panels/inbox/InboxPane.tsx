@@ -211,13 +211,13 @@ export function InboxPane({
         <InboxFilterBar filter={filter} counts={counts} onChange={setFilter} stacked={stacked} />
         {visible.length === 0 ? (
           <div className="px-4 py-10 text-center">
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+            <p className="text-body text-slate-600 dark:text-slate-300">
               Nothing in {INBOX_FILTER_LABEL[filter]}
             </p>
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`mt-3 inline-flex min-h-9 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${SOLID_BRAND_DARK_CONTROL}`}
+              className={`mt-3 inline-flex min-h-prominent items-center rounded-control bg-brand-700 px-4 text-body font-medium text-white hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${SOLID_BRAND_DARK_CONTROL}`}
             >
               Show All
             </button>
@@ -278,7 +278,7 @@ export function InboxPane({
           <div className="flex min-h-0 flex-col border-r border-slate-200 dark:border-slate-700">
             {list}
           </div>
-          <div data-inbox-pane="beside" className="min-h-0 overflow-y-auto px-8 py-6">
+          <div data-inbox-pane="beside" className="min-h-0 overflow-y-auto px-6 py-6">
             {pane}
           </div>
         </div>

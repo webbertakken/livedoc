@@ -25,7 +25,7 @@ export function HomeAvatar({ person, size }: { person: HomePerson | undefined; s
         ...identityVars(person?.color ?? FALLBACK_COLOUR),
         fontSize: Math.round(size * 0.4),
       }}
-      className={`font-semibold text-white ${IDENTITY_FILL}`}
+      className={`text-white ${IDENTITY_FILL}`}
     >
       {initialsOf(personName(person))}
     </PictureDisc>
@@ -47,7 +47,7 @@ export function AvatarStack({ people, size }: { people: HomePerson[]; size: numb
       {rest > 0 ? (
         <span
           style={{ width: size, height: size }}
-          className={`${STACK_RING} -ml-2 flex items-center justify-center bg-slate-200 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200`}
+          className={`${STACK_RING} -ml-2 flex items-center justify-center bg-slate-200 text-glyph text-slate-700 dark:bg-slate-700 dark:text-slate-200`}
         >
           +{rest}
         </span>

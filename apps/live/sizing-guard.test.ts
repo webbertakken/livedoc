@@ -37,6 +37,8 @@ const SIZED_PATHS = [
   'components/panels/explorer-panel',
   'components/panels/explorer-tree',
   'components/panels/session-studio',
+  'components/panels/home',
+  'components/panels/inbox',
 ];
 
 describe('live sizing', () => {

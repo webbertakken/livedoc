@@ -18,7 +18,7 @@ import { FOCUS_RING, STRIP_THUMB } from './home-styles';
 import { JumpBackInMenu, JumpBackInRename } from './JumpBackInMenu';
 
 const THUMB_BOX =
-  'rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800';
+  'rounded-control border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800';
 
 export function JumpBackInTile({
   ownerId,
@@ -53,7 +53,7 @@ export function JumpBackInTile({
         </span>
         <JumpBackInRename
           entry={entry}
-          className="mt-1 block h-4 w-full min-w-0 rounded border border-brand-300 bg-white px-1 py-0 text-xs leading-[14px] text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+          className="mt-1 block w-full min-w-0 rounded-control border border-brand-300 bg-white px-1 py-0 text-supporting text-slate-900 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
     );
@@ -69,7 +69,7 @@ export function JumpBackInTile({
               ? track('Home', 'Selected', 'JumpBackIn.MostUsed')
               : track('Home', 'Selected', 'JumpBackIn.Recent')
           }
-          className={`group block min-w-0 rounded-md ${FOCUS_RING}`}
+          className={`group block min-w-0 rounded-control ${FOCUS_RING}`}
         >
           <span className="relative block">
             <DocumentThumbnail
@@ -87,7 +87,7 @@ export function JumpBackInTile({
               </span>
             ) : null}
           </span>
-          <span className="mt-1 block h-4 truncate text-xs leading-4 text-slate-700 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100">
+          <span className="mt-1 block truncate text-supporting text-slate-700 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100">
             {name}
           </span>
         </a>
@@ -103,10 +103,10 @@ export function SeeMoreTile({ href, onSeeMore }: { href: string; onSeeMore: () =
       href={href}
       onNavigate={onSeeMore}
       onActivate={() => track('Home', 'Selected', 'JumpBackIn.SeeMore')}
-      className={`group block shrink-0 rounded-md ${FOCUS_RING}`}
+      className={`group block shrink-0 rounded-control ${FOCUS_RING}`}
     >
       <span
-        className={`${STRIP_THUMB} flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-slate-300 text-xs font-medium text-brand-700 transition group-hover:border-slate-400 group-hover:bg-slate-100 dark:border-slate-600 dark:text-brand-300 dark:group-hover:border-slate-500 dark:group-hover:bg-slate-800/70`}
+        className={`${STRIP_THUMB} flex flex-col items-center justify-center gap-1 rounded-control border border-dashed border-slate-300 text-supporting text-brand-700 transition group-hover:border-slate-400 group-hover:bg-slate-100 dark:border-slate-600 dark:text-brand-300 dark:group-hover:border-slate-500 dark:group-hover:bg-slate-800/70`}
       >
         <ChevronRightIcon size={16} />
         {HOME_COPY.seeMore}

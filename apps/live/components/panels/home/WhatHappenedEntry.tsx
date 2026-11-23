@@ -28,9 +28,9 @@ import { SOLID_BRAND_DARK } from '@livedoc/ui';
 function NewPill() {
   return (
     <span
-      className={`mr-1.5 inline-flex items-center rounded bg-brand-700 px-1.5 py-px align-[1px] text-[9px] font-semibold text-white ${SOLID_BRAND_DARK}`}
+      className={`mr-1 inline-flex items-center rounded-full bg-brand-700 px-2 align-[1px] text-supporting text-white ${SOLID_BRAND_DARK}`}
     >
-      <span className="text-optical-line text-optical-caps">New</span>
+      <span className="text-optical-line">New</span>
     </span>
   );
 }
@@ -58,19 +58,17 @@ export function ActionEntry({
       >
         <HomeAvatar person={person} size={28} />
         <span className="min-w-0 flex-1">
-          <span className="block text-sm text-slate-700 dark:text-slate-300">
-            <strong className="font-semibold text-slate-900 dark:text-slate-100">
+          <span className="block text-body text-slate-700 dark:text-slate-300">
+            <strong className="font-normal text-slate-900 dark:text-slate-100">
               {personName(person)}
             </strong>{' '}
             {actionPhrase(action.verb)}{' '}
-            <strong className="font-semibold text-slate-900 dark:text-slate-100">
-              {group.name}
-            </strong>
+            <strong className="font-normal text-slate-900 dark:text-slate-100">{group.name}</strong>
           </span>
           {detail ? (
-            <span className={`mt-0.5 block truncate text-xs ${MUTED}`}>{detail}</span>
+            <span className={`mt-0.5 block truncate text-supporting ${MUTED}`}>{detail}</span>
           ) : null}
-          <span className={`mt-0.5 block text-xs ${MUTED}`}>
+          <span className={`mt-0.5 block text-supporting ${MUTED}`}>
             {isNew ? <NewPill /> : null}
             {locationLabel(group)} ·{' '}
             <time dateTime={new Date(action.occurredAt).toISOString()} className="tabular-nums">
@@ -102,17 +100,17 @@ export function SummaryEntry({ group, isNew }: { group: HomeGroup; isNew: boolea
       >
         <AvatarStack people={group.people} size={24} />
         <span className="min-w-0 flex-1">
-          <span className="block text-sm text-slate-700 dark:text-slate-300">
-            <strong className="font-semibold text-slate-900 dark:text-slate-100">
+          <span className="block text-body text-slate-700 dark:text-slate-300">
+            <strong className="font-normal text-slate-900 dark:text-slate-100">
               {sentence.people}
             </strong>{' '}
             {sentence.verbs}
             {sentence.preposition ? ` ${sentence.preposition}` : ''}{' '}
-            <strong className="font-semibold text-slate-900 dark:text-slate-100">
+            <strong className="font-normal text-slate-900 dark:text-slate-100">
               {sentence.document}
             </strong>
           </span>
-          <span className={`mt-0.5 block text-xs ${MUTED}`}>
+          <span className={`mt-0.5 block text-supporting ${MUTED}`}>
             {isNew ? <NewPill /> : null}
             {locationLabel(group)} · {updatesLabel(group.total)} ·{' '}
             <time dateTime={new Date(group.latestAt).toISOString()} className="tabular-nums">
@@ -137,11 +135,11 @@ export function SummaryEntry({ group, isNew }: { group: HomeGroup; isNew: boolea
                     href={homeDocumentHref(group)}
                     onClick={openFromFeed}
                     aria-label={`${personName(person)} ${VERB_PHRASES[action.verb]}, ${group.name}, ${clockTime(action.occurredAt)}`}
-                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition hover:bg-slate-100 dark:hover:bg-slate-800/70 ${FOCUS_RING}`}
+                    className={`flex min-h-row items-center gap-2 rounded-control px-2 py-1 text-body transition hover:bg-slate-100 dark:hover:bg-slate-800/70 ${FOCUS_RING}`}
                   >
                     <HomeAvatar person={person} size={20} />
                     <span className="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-300">
-                      <strong className="font-semibold text-slate-900 dark:text-slate-100">
+                      <strong className="font-normal text-slate-900 dark:text-slate-100">
                         {personName(person)}
                       </strong>{' '}
                       {VERB_PHRASES[action.verb]}
@@ -151,7 +149,7 @@ export function SummaryEntry({ group, isNew }: { group: HomeGroup; isNew: boolea
                     </span>
                     <time
                       dateTime={new Date(action.occurredAt).toISOString()}
-                      className={`shrink-0 text-xs tabular-nums ${MUTED}`}
+                      className={`shrink-0 text-supporting tabular-nums ${MUTED}`}
                     >
                       {clockTime(action.occurredAt)}
                     </time>

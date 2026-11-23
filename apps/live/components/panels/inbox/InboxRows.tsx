@@ -64,7 +64,7 @@ export function PersonDisc({ facts, size = 28 }: { facts: InboxFacts; size?: num
   return (
     <GlyphDisc
       size={size}
-      className={`text-[10px] font-semibold text-white ${
+      className={`text-glyph text-white ${
         p.color ? IDENTITY_FILL : p.self ? `bg-brand-700 ${SOLID_BRAND_DARK}` : 'bg-slate-500'
       }`}
       style={p.color ? identityVars(p.color) : undefined}
@@ -94,7 +94,7 @@ export function InboxFilterBar({
       role="group"
       aria-label="Inbox filters"
       data-inbox-filters=""
-      className={`flex min-w-0 shrink-0 gap-1.5 border-b border-slate-200 px-3 py-2 dark:border-slate-700 ${
+      className={`flex min-w-0 shrink-0 gap-1 border-b border-slate-200 px-3 py-2 dark:border-slate-700 ${
         stacked ? 'overflow-x-auto [scrollbar-width:none]' : 'flex-wrap'
       }`}
     >
@@ -107,11 +107,11 @@ export function InboxFilterBar({
             aria-pressed={on}
             data-inbox-filter={f}
             onClick={() => onChange(f)}
-            className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 motion-reduce:transition-none ${
-              stacked ? 'min-h-11' : 'min-h-8'
+            className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 text-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 motion-reduce:transition-none ${
+              stacked ? 'min-h-11' : 'min-h-row'
             } ${
               on
-                ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                ? 'bg-slate-900 font-medium text-white dark:bg-slate-100 dark:text-slate-900'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-50'
             }`}
           >
@@ -180,22 +180,22 @@ export const InboxRow = memo(function InboxRow({
         <span className="flex min-w-0 items-baseline gap-2">
           <span
             data-inbox-who=""
-            className={`min-w-0 flex-1 truncate text-[13px] leading-5 ${
+            className={`min-w-0 flex-1 truncate text-body ${
               f.needsYou
-                ? 'font-semibold text-slate-900 dark:text-slate-50'
+                ? 'font-medium text-slate-900 dark:text-slate-50'
                 : 'text-slate-600 dark:text-slate-300'
             }`}
           >
             {f.who}
           </span>
-          <span className="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+          <span className="shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
             {formatRelativeTimeShort(now - entry.at)}
           </span>
         </span>
-        <span className="block truncate text-sm leading-5 text-slate-900 dark:text-slate-100">
+        <span className="block truncate text-body text-slate-900 dark:text-slate-100">
           {f.title}
         </span>
-        <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+        <span className="mt-0.5 flex min-w-0 items-center gap-1 text-supporting text-slate-500 dark:text-slate-400">
           {f.reason ? (
             <span
               data-inbox-reason={f.reason.kind}
@@ -239,7 +239,7 @@ export function InboxRowList({
           key={`h:${b}`}
           role="presentation"
           data-inbox-bucket={b}
-          className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+          className="px-4 pb-1 pt-3 text-supporting text-slate-500 dark:text-slate-400"
         >
           {INBOX_BUCKET_LABEL[b]}
         </li>,
@@ -270,11 +270,11 @@ export function InboxSkeleton({ count = 4 }: { count?: number }) {
     >
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="flex items-start gap-3 px-4 py-2.5">
-          <span className="size-7 shrink-0 animate-pulse rounded-full bg-slate-200 motion-reduce:animate-none dark:bg-slate-700" />
-          <span className="flex min-w-0 flex-1 flex-col gap-1.5 py-0.5">
-            <span className="h-3 w-1/3 animate-pulse rounded bg-slate-200 motion-reduce:animate-none dark:bg-slate-700" />
-            <span className="h-3.5 w-2/3 animate-pulse rounded bg-slate-200 motion-reduce:animate-none dark:bg-slate-700" />
-            <span className="h-3 w-1/2 animate-pulse rounded bg-slate-100 motion-reduce:animate-none dark:bg-slate-700/60" />
+          <span className="size-row shrink-0 animate-pulse rounded-full bg-slate-200 motion-reduce:animate-none dark:bg-slate-700" />
+          <span className="flex min-w-0 flex-1 flex-col gap-2 py-0.5">
+            <span className="h-2.5 w-1/3 animate-pulse rounded-full bg-slate-200 motion-reduce:animate-none dark:bg-slate-700" />
+            <span className="h-2.5 w-2/3 animate-pulse rounded-full bg-slate-200 motion-reduce:animate-none dark:bg-slate-700" />
+            <span className="h-2.5 w-1/2 animate-pulse rounded-full bg-slate-100 motion-reduce:animate-none dark:bg-slate-700/60" />
           </span>
         </div>
       ))}
