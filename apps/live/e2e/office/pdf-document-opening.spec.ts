@@ -30,6 +30,10 @@ test('a protected PDF asks for its password, says a wrong one, and opens with th
   await expect(screen.getByRole('alert')).toHaveText("That password didn't open this PDF.");
   await expect(field).toBeFocused();
   await expect(field).toHaveAttribute('aria-invalid', 'true');
+  // The check is over: Open takes the next password.
+  const open = screen.getByRole('button', { name: 'Open' });
+  await expect(open).toBeEnabled();
+  await expect(open).toHaveCSS('opacity', '1');
   await page.screenshot({ path: test.info().outputPath('pdf-password-wrong-dark.png') });
   await page.emulateMedia({ colorScheme: 'light' });
   await page.screenshot({ path: test.info().outputPath('pdf-password-wrong-light.png') });
