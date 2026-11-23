@@ -10,7 +10,13 @@ import {
 } from '@livedoc/pdf-documents';
 
 export type PdfLinkOutcome =
-  | { readonly kind: 'go'; readonly index: number }
+  /** A place: its page, and its point in page space where the file names one. */
+  | {
+      readonly kind: 'go';
+      readonly index: number;
+      readonly x: number | null;
+      readonly y: number | null;
+    }
   | { readonly kind: 'nowhere' }
   | { readonly kind: 'ask'; readonly address: string }
   | { readonly kind: 'refused'; readonly address: string }
@@ -26,7 +32,7 @@ export function pdfLinkOutcome(
   switch (target.kind) {
     case 'place': {
       const index = pages.indexOf(target.page);
-      return index < 0 ? { kind: 'nowhere' } : { kind: 'go', index };
+      return index < 0 ? { kind: 'nowhere' } : { kind: 'go', index, x: target.x, y: target.y };
     }
     case 'address':
       return { kind: 'ask', address: target.address };

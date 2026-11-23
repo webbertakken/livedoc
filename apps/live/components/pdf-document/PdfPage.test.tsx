@@ -4,7 +4,13 @@
 // selection is drawn over the page in the shell's focus colour.
 import { act, fireEvent, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PageName, type PageBitmap, type PageInfo, type Quad } from '@livedoc/pdf-documents';
+import {
+  PageName,
+  type PageBitmap,
+  type PageInfo,
+  type PageLink,
+  type Quad,
+} from '@livedoc/pdf-documents';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfPage, type PdfPageTool } from './PdfPage';
 
@@ -34,8 +40,13 @@ const drawer: PdfPageDrawer = {
   forgetThumbnail: () => {},
 };
 
-async function page(tool: PdfPageTool = 'select', selected: readonly Quad[] = []) {
+async function page(
+  tool: PdfPageTool = 'select',
+  selected: readonly Quad[] = [],
+  links: readonly PageLink[] = [],
+) {
   const onText = vi.fn();
+  const onFollow = vi.fn();
   const view = render(
     <PdfPage
       index={1}
@@ -48,13 +59,15 @@ async function page(tool: PdfPageTool = 'select', selected: readonly Quad[] = []
       tiles={{} as never}
       wanted
       held
-      engine={{ selectText: async () => null, fileMarks: async () => [] }}
+      engine={{ selectText: async () => null, fileMarks: async () => [], links: async () => links }}
       drawer={drawer}
       marks={[]}
       tool={tool}
       onHighlight={vi.fn()}
       selected={selected}
       onText={onText}
+      linkName={(target) => ({ name: `Link to ${target.kind}`, tip: 'tip' })}
+      onFollow={onFollow}
       register={() => {}}
     />,
   );
@@ -64,7 +77,7 @@ async function page(tool: PdfPageTool = 'select', selected: readonly Quad[] = []
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
-  return { box, onText, view };
+  return { box, onText, onFollow, view };
 }
 
 describe('selecting text on a page', () => {
@@ -104,6 +117,20 @@ describe('selecting text on a page', () => {
     fireEvent.click(other.box, { detail: 2, clientX: 72, clientY: 92 });
     expect(onText).not.toHaveBeenCalled();
     expect(other.onText).not.toHaveBeenCalled();
+  });
+
+  // "Links": over the page with Select in hand, followed on a press; with a mark tool in hand a press marks.
+  it('lays the page’s links over it with Select in hand, and follows one on a press', async () => {
+    const link: PageLink = { rect: [72, 692, 272, 712], target: { kind: 'file', path: 'a.pdf' } };
+    const { view, onFollow, onText } = await page('select', [], [link]);
+    const button = await view.findByRole('button', { name: 'Link to file' });
+    fireEvent.pointerDown(button, { button: 0, pointerType: 'mouse' });
+    fireEvent.click(button, { detail: 2 });
+    expect(onFollow).toHaveBeenCalledWith(link.target);
+    expect(onText).not.toHaveBeenCalled();
+    const marking = await page('highlight', [], [link]);
+    await act(async () => {});
+    expect(marking.box.querySelector('[data-pdf-link]')).toBeNull();
   });
 
   it('draws the selection over the page', async () => {

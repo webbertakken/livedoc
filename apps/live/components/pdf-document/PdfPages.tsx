@@ -5,7 +5,15 @@
 // drawn, so the scrollbar is true from the first frame; only pages near view hold a picture, and a page far from view
 // lets its picture go.
 import { useCallback, useMemo, useRef, useSyncExternalStore, type KeyboardEvent } from 'react';
-import type { PageInfo, PageTurns, PdfEngine, Quad, TextSelection } from '@livedoc/pdf-documents';
+import type {
+  LinkTarget,
+  PageInfo,
+  PageTurns,
+  PdfEngine,
+  Quad,
+  TextSelection,
+} from '@livedoc/pdf-documents';
+import { pdfLinkName } from '@/lib/pdf-document/pdf-link';
 import { CSS_PER_POINT, type PdfPageLayout } from '@/lib/pdf-document/pdf-page-layout';
 import { marksOnPage, type PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
@@ -35,6 +43,7 @@ export function PdfPages({
   onHighlight,
   selection,
   onText,
+  onFollow,
 }: {
   // Hands the scroller to the view that lays the pages out and scrolls them.
   attach: (element: HTMLDivElement | null) => void;
@@ -50,7 +59,7 @@ export function PdfPages({
   // The pages' own keys (usePdfPagesInput.ts).
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   pages: readonly PageInfo[];
-  engine: Pick<PdfEngine, 'selectText' | 'fileMarks'>;
+  engine: Pick<PdfEngine, 'selectText' | 'fileMarks' | 'links'>;
   drawer: PdfPageDrawer;
   marks: PdfMarksStore;
   tool: PdfPageTool;
@@ -58,6 +67,8 @@ export function PdfPages({
   // The person's text selection, and where a page's gestures go (usePdfTextSelection.ts).
   selection: PdfTextSelected | null;
   onText: (index: number, gesture: PdfTextGesture) => void;
+  // Where a press on a page's link goes (usePdfLinks.ts).
+  onFollow: (target: LinkTarget) => void;
 }) {
   const scroller = useRef<HTMLDivElement | null>(null);
   const ref = useCallback(
@@ -90,6 +101,7 @@ export function PdfPages({
     };
   }, [drawer, viewStore]);
   const byPage = useSyncExternalStore(marks.subscribe, marks.get, marks.get);
+  const linkName = useCallback((target: LinkTarget) => pdfLinkName(target, pages), [pages]);
 
   return (
     <div
@@ -126,6 +138,8 @@ export function PdfPages({
                   onHighlight={onHighlight}
                   selected={selection?.page === box.index ? selection.quads : NOTHING_SELECTED}
                   onText={onText}
+                  linkName={linkName}
+                  onFollow={onFollow}
                   register={register}
                 />
               );

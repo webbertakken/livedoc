@@ -11,8 +11,10 @@ import {
   GO_TO_FIRST_PAGE,
   GO_TO_LAST_PAGE,
   GO_TO_NEXT_PAGE,
+  GO_TO_NEXT_VIEW,
   GO_TO_PAGE,
   GO_TO_PREVIOUS_PAGE,
+  GO_TO_PREVIOUS_VIEW,
   PAGE_DISPLAY_CONTINUOUS,
   PAGE_DISPLAY_COVER,
   PAGE_DISPLAY_SINGLE,
@@ -107,6 +109,9 @@ describe("a PDF document's menus and toolbar", () => {
     GO_TO_PREVIOUS_PAGE,
     GO_TO_NEXT_PAGE,
     GO_TO_PAGE,
+    // usePdfViewHistory.ts: Previous view and Next view.
+    GO_TO_PREVIOUS_VIEW,
+    GO_TO_NEXT_VIEW,
     ROTATE_VIEW_CLOCKWISE,
     ROTATE_VIEW_COUNTERCLOCKWISE,
     // pdf-panels.ts: the left panels built (reading-surface.md "The left panel").

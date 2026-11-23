@@ -66,6 +66,7 @@ import { usePdfLinks } from '@/lib/pdf-document/usePdfLinks';
 import { usePdfTextActions } from '@/lib/pdf-document/usePdfTextActions';
 import { usePdfTextSelection } from '@/lib/pdf-document/usePdfTextSelection';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
+import { usePdfViewHistory } from '@/lib/pdf-document/usePdfViewHistory';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
@@ -217,7 +218,10 @@ export function PdfDocumentSurface({
   const labels = useMemo(() => (pages ?? NO_PAGES).map((page) => page.label), [pages]);
   // Go to > Page… puts the caret in the page bar's page field.
   const focusPageField = useCallback(() => pageField.current?.focus(), []);
-  const viewChrome = useMemo(() => pdfViewActions(viewer), [viewer]);
+  // "Previous view", "Next view": every jump keeps where the view was.
+  const history = usePdfViewHistory(viewer);
+  const { jump } = history;
+  const viewChrome = useMemo(() => pdfViewActions({ ...viewer, goToPage: jump }), [viewer, jump]);
   const { showPage, goToPage, element: pagesElement } = viewer;
   // "The left panel": the shell's, one open at a time, remembered for every PDF; closing it gives the pages the keys.
   const panels = useOfficePanels({
@@ -225,7 +229,12 @@ export function PdfDocumentSurface({
     panels: PDF_PANELS,
     onFocusDocument: () => pagesElement?.focus(),
   });
-  const links = usePdfLinks(pages ?? NO_PAGES, goToPage);
+  const links = usePdfLinks({
+    pages: pages ?? NO_PAGES,
+    turns: viewer.view.turns,
+    engine: ready?.engine ?? null,
+    goTo: jump,
+  });
   // "Selecting text", "Copy": the person's own selection on the pages.
   const textSelection = usePdfTextSelection(ready?.engine ?? null, pages);
   const textActions = usePdfTextActions({
@@ -339,6 +348,7 @@ export function PdfDocumentSurface({
             ...viewChrome.actions,
             ...panels.actions,
             ...textActions.actions,
+            ...history.actions,
             [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -372,6 +382,7 @@ export function PdfDocumentSurface({
       viewChrome,
       panels.actions,
       textActions.actions,
+      history.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -395,6 +406,12 @@ export function PdfDocumentSurface({
     // ⌘C copies the text selected on the pages; with none selected it is the browser's ("Copy").
     const command = (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey;
     if (command && key === 'c' && textActions.copyKey()) return event.preventDefault();
+    // ⌥← and ⌥→: Previous view and Next view; with nowhere to go the keys stay the browser's.
+    const alone = !event.ctrlKey && !event.metaKey && !event.shiftKey;
+    if (event.altKey && alone && (key === 'arrowleft' || key === 'arrowright')) {
+      if (history.step(key === 'arrowleft' ? 'back' : 'forward')) event.preventDefault();
+      return;
+    }
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (key === 'escape' && textSelection.selected) textSelection.clear();
     if (key === PDF_TOOL_KEYS.highlight && marking) pickTool('highlight');
@@ -463,7 +480,7 @@ export function PdfDocumentSurface({
               engine={ready.engine}
               drawer={layerView.drawer ?? ready.drawer}
               marks={marks}
-              onGoTo={goToPage}
+              onGoTo={jump}
               onFollow={links.follow}
               onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
               layerView={layerView}
@@ -488,6 +505,7 @@ export function PdfDocumentSurface({
               onHighlight={onHighlight}
               selection={textSelection.selected}
               onText={textSelection.gesture}
+              onFollow={links.follow}
             />
             <PdfPageBar
               page={viewer.page}
@@ -498,7 +516,7 @@ export function PdfDocumentSurface({
               scale={viewer.scale}
               onPrevious={() => viewer.turn(-1)}
               onNext={() => viewer.turn(1)}
-              onGoTo={viewer.goToPage}
+              onGoTo={jump}
               onZoom={viewer.zoomTo}
               pageField={pageField}
             />

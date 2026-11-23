@@ -9,7 +9,7 @@ describe('following a link', () => {
   it('goes to a place in the document at once', () => {
     expect(
       pdfLinkOutcome({ kind: 'place', page: PageName.ofObject(5), x: null, y: 40 }, PAGES),
-    ).toEqual({ kind: 'go', index: 1 });
+    ).toEqual({ kind: 'go', index: 1, x: null, y: 40 });
   });
 
   it('goes nowhere for a page no longer in the document, or no target', () => {
