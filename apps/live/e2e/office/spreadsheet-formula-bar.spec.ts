@@ -100,6 +100,8 @@ test('array entry, shown formulas and F4 redo', async ({ page, pageErrors }) => 
   await page.waitForURL(/\/document\//);
   await expect(page.locator(READY)).toBeVisible();
   const bar = page.getByRole('textbox', { name: 'Formula bar' }).first();
+  // The cells as drawn, never the formula bar's text.
+  const grid = page.locator('[data-sheet-grid]');
 
   await typeInto(page, 'A1', '1');
   await typeInto(page, 'A2', '2');
@@ -109,11 +111,11 @@ test('array entry, shown formulas and F4 redo', async ({ page, pageErrors }) => 
   await expect(bar).toHaveValue('=ARRAYFORMULA(A1:A2*10)');
   await page.keyboard.press('Enter');
   await select(page, 'B2');
-  await expect(page.getByText('20', { exact: true }).first()).toBeVisible();
+  await expect(grid.getByText('20', { exact: true }).first()).toBeVisible();
 
   // Ctrl+`: the formula in its cell, the values elsewhere as before; View › Show › Formulas ticked.
   await page.keyboard.press('Control+Backquote');
-  await expect(page.getByText('=ARRAYFORMULA(A1:A2*10)', { exact: true }).first()).toBeVisible();
+  await expect(grid.getByText('=ARRAYFORMULA(A1:A2*10)', { exact: true }).first()).toBeVisible();
   await page.getByRole('menubar').getByRole('menuitem', { name: 'View' }).click();
   await page.getByRole('menuitem', { name: /^Show/ }).click();
   await expect(page.getByRole('menuitemcheckbox', { name: /^Formulas/ })).toHaveAttribute(
@@ -127,7 +129,7 @@ test('array entry, shown formulas and F4 redo', async ({ page, pageErrors }) => 
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Control+Backquote');
-  await expect(page.getByText('=ARRAYFORMULA(A1:A2*10)', { exact: true })).toHaveCount(0);
+  await expect(grid.getByText('=ARRAYFORMULA(A1:A2*10)', { exact: true })).toHaveCount(0);
 
   // F4 outside an edit puts back what Ctrl+Z took.
   await typeInto(page, 'C1', 'kept');
