@@ -312,6 +312,17 @@ Escape leaves the text as typed.
 
 Insert > Horizontal line: a paragraph whose bottom border runs across the text width.
 
+- **The line** is an empty paragraph of the caret's paragraph's style whose bottom border is a solid line 1 pt wide,
+  grey `#a6a6a6`, 1 pt below its text (default); both formats hold it as a paragraph border, so it opens as one in
+  Word, LibreOffice and Google Docs.
+- **Where it goes**: a selection is deleted first; at the caret the paragraph is split, the line goes between its two
+  halves, and the caret starts the paragraph after it (default). At a paragraph's start the line goes before it; at
+  its end, after it, with an empty paragraph after the line when none follows.
+- **Removing it** is removing that paragraph: Backspace at the start of the paragraph after it takes the line away, the
+  text after it keeping its own formatting, as any empty paragraph before it goes (default).
+- Two lines one under the other share one border, as their formats draw paragraphs of the same borders (default).
+- It is one undo step, for an Editor; it is dimmed for anyone else, and while a header, footer or note is edited.
+
 ## Building blocks
 
 Either way under C3 (asked with the matrix): Google's building blocks are mostly tables of chips. If kept, each is a

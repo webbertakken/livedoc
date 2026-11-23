@@ -63,8 +63,8 @@ function regionsIn(doc: PmNode): KeptXml[] {
   return regions;
 }
 
-// The selection replaced, then the paragraph the caret is in, where a break may go.
-function caretParagraph(state: EditorState): { tr: Transaction; paragraph: PmNode } | null {
+/** The caret's paragraph once a selection is deleted, in the transaction that deletes it; none for a node selected. */
+export function caretParagraph(state: EditorState): { tr: Transaction; paragraph: PmNode } | null {
   if (state.selection instanceof NodeSelection) return null;
   const tr = state.tr.deleteSelection();
   const paragraph = tr.selection.$from.parent;

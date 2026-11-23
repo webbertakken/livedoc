@@ -1338,6 +1338,16 @@ export const TEXT_DOCUMENT_BREAKS = chart(
   },
 );
 
+// A horizontal line, special character or emoji put in a text document (docs/specs/034-text-documents/objects.md
+// "Telemetry").
+export const TEXT_DOCUMENT_CHARACTERS_AND_LINES = chart(
+  'Element',
+  'Added',
+  'Text Document Lines and Characters',
+  'A horizontal line put in a text document from Insert > Horizontal line.',
+  { types: ['TextDocumentHorizontalLine'] },
+);
+
 // The ruler shown or hidden (docs/specs/034-text-documents/editing-surface.md "The ruler").
 export const TEXT_DOCUMENT_RULER_TOGGLED = chart(
   'UI',

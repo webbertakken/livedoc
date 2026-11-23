@@ -116,6 +116,7 @@ import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
 import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
+import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
 import { placedPicturesPlugin } from '@/lib/text-document/text-document-picture-placed-plugin';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import {
@@ -673,6 +674,11 @@ export function TextDocumentSurface({
   );
   // Writing in the body: not in a header, a footer or a note.
   const bodyWrites = writes && headers.editing === null && headers.note === null;
+  // Insert > Horizontal line (objects.md "Horizontal line").
+  const lineActions = useMemo(
+    () => horizontalLineActions(editorView, bodyWrites),
+    [editorView, bodyWrites],
+  );
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
   const tableActions = useTextDocumentTables(
     editorView,
@@ -742,6 +748,7 @@ export function TextDocumentSurface({
       ...page.actions,
       ...columns.actions,
       ...breakActions,
+      ...lineActions,
       ...tableActions,
       ...pictures.actions,
       ...pictureEditing.actions,
@@ -751,6 +758,7 @@ export function TextDocumentSurface({
     }),
     [
       breakActions,
+      lineActions,
       tableActions,
       pictures.actions,
       pictureEditing.actions,

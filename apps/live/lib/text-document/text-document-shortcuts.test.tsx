@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { textDocumentBreakActions } from './text-document-breaks';
+import { horizontalLineActions } from './text-document-horizontal-line';
 import { textDocumentTableActions } from './text-document-tables';
 import { TABLE_EDIT_ITEMS } from './text-document-table-actions';
 import { TABLE_NAVIGATION } from './text-document-table-navigation';
@@ -91,6 +92,8 @@ describe('the text document menus', () => {
         ...Object.keys(
           textDocumentBreakActions(null, { canEdit: true, liveDoc: { current: null }, format }),
         ),
+        // Insert > Horizontal line (text-document-horizontal-line), bound by the surface.
+        ...Object.keys(horizontalLineActions(null, true)),
         // Insert > Table (text-document-tables), bound by the surface.
         ...Object.keys(textDocumentTableActions(null, { canEdit: true, sectionWidth: 468 })),
         ...TABLE_EDIT_ITEMS.map((t) => t.item),
