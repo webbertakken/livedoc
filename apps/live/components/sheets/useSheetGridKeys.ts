@@ -19,7 +19,7 @@ import { focusOpenEdit } from './focus-open-edit';
 import { readSheetLine } from './sheet-cell-speech';
 import { useSheetController } from './sheet-controller';
 import { cellBox, pageCols, pageRows } from './sheet-geometry';
-import { sheetKey } from './sheet-keys';
+import { isClipboardChord, sheetKey } from './sheet-keys';
 import type { SheetActions } from './useSheetActions';
 import type { useSheetClipboard } from './useSheetClipboard';
 import type { useSheetPointer } from './useSheetPointer';
@@ -67,9 +67,11 @@ export function useSheetGridKeys({
     }
     // A bare Space is held for Space-drag panning; it types a space on release when no pan used it.
     if (pan.onKeyDown(e)) return;
+    // Copy, cut and paste arrive as clipboard events, the browser's: kept from the editor's own chords only.
+    if (isClipboardChord(e)) return e.stopPropagation();
     const cmd = sheetKey(e, currentOfficePlatform().platform);
     if (!cmd) return;
-    // Copy, cut and paste arrive as clipboard events; undo and redo reach the canvas.
+    // Undo and redo reach the editor.
     e.preventDefault();
     e.stopPropagation();
     const sel = c.selectionNow();

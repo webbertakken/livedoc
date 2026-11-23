@@ -83,6 +83,19 @@ describe('gridMenuBindings', () => {
     expect(p.act.paste).toHaveBeenCalled();
     expect(p.act.pasteSpecial).toHaveBeenNthCalledWith(1, 'values');
     expect(p.act.pasteSpecial).toHaveBeenNthCalledWith(2, 'formats');
+    // Paste Special's other items (grid-and-editing.md "Clipboard").
+    const more = {
+      'paste-formula-only': 'formulas',
+      'paste-conditional-formatting-only': 'formatRules',
+      'paste-data-validation-only': 'validation',
+      'paste-transposed': 'transposed',
+      'paste-column-widths-only': 'widths',
+      'paste-all-except-borders': 'noBorders',
+    } as const;
+    for (const [id, mode] of Object.entries(more)) {
+      b[id]!.run();
+      expect(p.act.pasteSpecial).toHaveBeenLastCalledWith(mode);
+    }
     expect(p.act.clear).toHaveBeenNthCalledWith(1, 'inputs');
     expect(p.act.clear).toHaveBeenNthCalledWith(2, 'formats');
   });

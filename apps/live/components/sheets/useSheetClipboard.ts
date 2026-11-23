@@ -12,17 +12,36 @@ import {
   clipToTsv,
   pasteClip,
   pasteCut,
+  pasteClipLayout,
   pasteExternal,
   readPastedHtml,
   parsePastedText,
+  type LayoutPasteMode,
   type PasteMode,
   type PasteResult,
+  type PasteSpecialMode,
   type SheetClip,
 } from '@livedoc/sheets';
+import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { useSheetController, type SheetController } from './sheet-controller';
 
 let lastClip: SheetClip | null = null;
+
+const LAYOUT_MODES: readonly string[] = [
+  'widths',
+  'formatRules',
+  'validation',
+] satisfies LayoutPasteMode[];
+
+// What a layout item says when the copy holds none of what it pastes (D144).
+const NONE_COPIED: Record<LayoutPasteMode, string> = {
+  widths: 'The copied cells hold no column widths',
+  formatRules: 'The copied cells hold no conditional formatting',
+  validation: 'The copied cells hold no data validation',
+};
+
+export const COPY_CELLS_FIRST = 'Copy cells in this spreadsheet first';
 
 export function lastSheetClip(): SheetClip | null {
   return lastClip;
@@ -126,17 +145,34 @@ export function useSheetClipboard() {
         if (lastClip)
           void navigator.clipboard?.writeText?.(clipToTsv(lastClip.values)).catch(() => {});
       },
-      // Paste Values Only (Ctrl/⌘+Shift+V, the cell menu) and Paste Formatting Only (the cell menu).
-      async pasteSpecial(mode: 'values' | 'formats') {
+      // Paste Special (Edit › Paste Special, Ctrl/⌘+Shift+V, the cell menu): from the last copy, or text copied
+      // elsewhere where the item reads it (D144).
+      async pasteSpecial(mode: PasteSpecialMode) {
         if (!c.canEdit) return;
         const text = await navigator.clipboard?.readText?.().catch(() => '');
-        if (lastClip && (!text || text === clipToTsv(lastClip.values)))
-          return pasteOwn(lastClip, mode);
-        if (mode === 'formats' || !text) return;
+        const own = lastClip && (!text || text === clipToTsv(lastClip.values)) ? lastClip : null;
+        if (LAYOUT_MODES.includes(mode)) {
+          const layoutMode = mode as LayoutPasteMode;
+          if (!own) return c.toast(COPY_CELLS_FIRST);
+          const at = primary();
+          const result = pasteClipLayout(
+            c.workbook,
+            c.sheet.id,
+            { r: at.r1, c: at.c1 },
+            own,
+            layoutMode,
+          );
+          debugLog('[sheet] paste special', { mode, pasted: !!result });
+          return result ? apply(c, result) : c.toast(NONE_COPIED[layoutMode]);
+        }
+        const cellMode = mode as Exclude<PasteMode, 'all'>;
+        if (own) return pasteOwn(own, cellMode);
+        if (cellMode === 'formats') return c.toast(COPY_CELLS_FIRST);
+        if (!text) return;
         const parsed = parsePastedText(text);
         apply(
           c,
-          pasteExternal(c.workbook, c.sheet.id, primary(), parsed.rows, 'values'),
+          pasteExternal(c.workbook, c.sheet.id, primary(), parsed.rows, cellMode),
           parsed.truncated,
         );
       },

@@ -266,6 +266,20 @@ describe('the keyboard map', () => {
     expect(h.c().sheet.cells.get('row0:col0')?.format).toBeUndefined();
   });
 
+  // sheet.md "Clipboard": copy, cut and paste are the browser's, so its clipboard events reach the grid; the editor's
+  // own chords (the canvas's copy) never take the keys from it.
+  it('keeps Ctrl+C, Ctrl+X and Ctrl+V from the editor, and leaves them to the browser', async () => {
+    const h = await mountGrid();
+    const heard = vi.fn();
+    window.addEventListener('keydown', heard);
+    for (const k of ['c', 'x', 'v']) {
+      expect(key(h, { key: k, ctrlKey: true })).toBe(true);
+      expect(key(h, { key: k.toUpperCase(), metaKey: true })).toBe(true);
+    }
+    window.removeEventListener('keydown', heard);
+    expect(heard).not.toHaveBeenCalled();
+  });
+
   it('Ctrl+Shift+V pastes values only', async () => {
     const h = await mountGrid();
     key(h, { key: 'V', ctrlKey: true, shiftKey: true });

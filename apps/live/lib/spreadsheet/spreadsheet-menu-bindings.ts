@@ -10,6 +10,7 @@ import {
   type FormatPatch,
   type GridRange,
   type NumberFormatKind,
+  type PasteSpecialMode,
 } from '@livedoc/sheets';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
 import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadsheet-menus';
@@ -36,7 +37,7 @@ export type GridMenuActions = {
   cut: () => void;
   copy: () => void;
   paste: () => void;
-  pasteSpecial: (mode: 'values' | 'formats') => void;
+  pasteSpecial: (mode: PasteSpecialMode) => void;
 };
 
 /** What the grid offers the menus: the role, the selection, the active cell's look, the sheet's layout. */
@@ -104,6 +105,12 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
   };
   const out: Record<string, OfficeAction> = {
     'paste-format-only': run(() => act.pasteSpecial('formats')),
+    'paste-formula-only': run(() => act.pasteSpecial('formulas')),
+    'paste-conditional-formatting-only': run(() => act.pasteSpecial('formatRules')),
+    'paste-data-validation-only': run(() => act.pasteSpecial('validation')),
+    'paste-transposed': run(() => act.pasteSpecial('transposed')),
+    'paste-column-widths-only': run(() => act.pasteSpecial('widths')),
+    'paste-all-except-borders': run(() => act.pasteSpecial('noBorders')),
     'move-row-up': run(() => move('r', -1), { disabled: g.r1 === 0 }),
     'move-row-down': run(() => move('r', 1), { disabled: g.r2 >= port.rows - 1 }),
     'move-column-left': run(() => move('c', -1), { disabled: g.c1 === 0 }),

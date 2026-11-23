@@ -17,7 +17,7 @@ import { track } from '@/lib/telemetry';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 import { SheetStore } from './sheet-store-client';
 import { useSheetControllerState } from './sheet-controller';
-import { lastSheetClip, useSheetClipboard } from './useSheetClipboard';
+import { COPY_CELLS_FIRST, lastSheetClip, useSheetClipboard } from './useSheetClipboard';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
@@ -434,5 +434,45 @@ describe('the menu and shortcut commands', () => {
     clipboard.readText.mockRejectedValueOnce(new Error('denied'));
     await act(() => h.view.result.current.clip.pasteSpecial('values'));
     expect(h.store.version).toBe(before);
+  });
+});
+
+// grid-and-editing.md "Clipboard": Paste Special's other items (D142, D143, D144).
+describe('Paste Special', () => {
+  it('Transposed turns the kept copy; Column Widths Only sizes the pasted columns', async () => {
+    const h = await harness();
+    h.type(ID, 0, 0, '1');
+    h.type(ID, 0, 1, '2');
+    h.select(range(0, 0, 0, 1));
+    act(() => h.view.result.current.clip.copyNow(false));
+    h.select(range(4, 0));
+    await act(() => h.view.result.current.clip.pasteSpecial('transposed'));
+    expect([h.input(4, 0), h.input(5, 0)]).toEqual([{ n: 1 }, { n: 2 }]);
+    h.select(range(0, 3));
+    await act(() => h.view.result.current.clip.pasteSpecial('widths'));
+    expect(h.toast).not.toHaveBeenCalled();
+    // The copy holds no rules: it says so, and nothing changes.
+    const before = h.store.version;
+    await act(() => h.view.result.current.clip.pasteSpecial('formatRules'));
+    expect(h.toast).toHaveBeenLastCalledWith('The copied cells hold no conditional formatting');
+    expect(h.store.version).toBe(before);
+  });
+
+  it('needs cells copied here for the layout items and Format Only; reads text for Formula Only', async () => {
+    const h = await harness();
+    // Forget any copy kept from before: a cut, pasted, is forgotten.
+    h.select(range(7, 4));
+    act(() => h.view.result.current.clip.copyNow(true));
+    await act(() => h.view.result.current.clip.pasteNow());
+    h.select(range(0, 0));
+    clipboard.readText.mockResolvedValueOnce('elsewhere');
+    await act(() => h.view.result.current.clip.pasteSpecial('validation'));
+    expect(h.toast).toHaveBeenLastCalledWith(COPY_CELLS_FIRST);
+    clipboard.readText.mockResolvedValueOnce('elsewhere');
+    await act(() => h.view.result.current.clip.pasteSpecial('formats'));
+    expect(h.toast).toHaveBeenCalledTimes(2);
+    clipboard.readText.mockResolvedValueOnce('=1+2');
+    await act(() => h.view.result.current.clip.pasteSpecial('formulas'));
+    expect(h.value(0, 0)).toBe(3);
   });
 });
