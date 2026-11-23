@@ -16,6 +16,7 @@ import type {
   ValidationRule,
 } from './sheet';
 import { sameName } from './range-names';
+import { applyOutlineChange, outlineAfterDelete, outlineInPlace } from './outline-store';
 
 export type Axis = 'r' | 'c';
 
@@ -26,6 +27,11 @@ export type LayoutChange =
   | { k: 'orderRows' | 'orderCols'; ids: string[] }
   | { k: 'size'; axis: Axis; ids: string[]; px: number | null }
   | { k: 'hide'; axis: Axis; ids: string[]; hidden: boolean }
+  // Groups (grid-and-editing.md "Groups and the outline"): lines' depths (0 takes a line out of every group), a
+  // group collapsed or expanded by its mark, and the side the controls sit on.
+  | { k: 'depth'; axis: Axis; depths: Record<string, number> }
+  | { k: 'collapse'; axis: Axis; at: string; depth: number; collapsed: boolean }
+  | { k: 'controls'; axis: Axis; after: boolean }
   | { k: 'freeze'; rows?: number; cols?: number }
   | { k: 'merge'; range: IdRange }
   | { k: 'unmerge'; range: IdRange }
@@ -214,6 +220,7 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
       const hiddenKey = rows ? 'hiddenRows' : 'hiddenCols';
       next[sizeKey] = dropKeys(layout[sizeKey], gone);
       next[hiddenKey] = withList(layout[hiddenKey]?.filter((id) => !gone.has(id)));
+      Object.assign(next, outlineAfterDelete(layout, rows ? 'r' : 'c', gone));
       if (rows) next.frozenRows = frozenAfterDelete(layout.frozenRows, layout.rows, gone);
       else next.frozenCols = frozenAfterDelete(layout.frozenCols, layout.cols, gone);
       next.merges = withList(
@@ -286,13 +293,25 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
       return clean(next);
     }
     case 'moveRows':
-      return { ...layout, rows: moveIds(layout.rows, ch.ids, ch.after) };
+      return outlineInPlace(
+        layout,
+        { ...layout, rows: moveIds(layout.rows, ch.ids, ch.after) },
+        'r',
+      );
     case 'moveCols':
-      return { ...layout, cols: moveIds(layout.cols, ch.ids, ch.after) };
+      return outlineInPlace(
+        layout,
+        { ...layout, cols: moveIds(layout.cols, ch.ids, ch.after) },
+        'c',
+      );
     case 'orderRows':
-      return { ...layout, rows: reorderSlots(layout.rows, ch.ids) };
+      return outlineInPlace(layout, { ...layout, rows: reorderSlots(layout.rows, ch.ids) }, 'r');
     case 'orderCols':
-      return { ...layout, cols: reorderSlots(layout.cols, ch.ids) };
+      return outlineInPlace(layout, { ...layout, cols: reorderSlots(layout.cols, ch.ids) }, 'c');
+    case 'depth':
+    case 'collapse':
+    case 'controls':
+      return applyOutlineChange(layout, ch);
     case 'size': {
       const key = ch.axis === 'r' ? 'rowSize' : 'colSize';
       const live = new Set(ch.axis === 'r' ? layout.rows : layout.cols);

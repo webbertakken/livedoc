@@ -27,12 +27,14 @@ export type Geometry = {
   // A merge by its top-left "r,c", and every covered position to its top-left.
   merges: Map<string, GridRange>;
   covered: Map<string, string>;
-  // Drawn at no height: hidden by someone, or left out by the filter.
+  // Drawn at no height: hidden by someone, collapsed in a group, or left out by the filter.
   hiddenRow: (r: number) => boolean;
   hiddenCol: (c: number) => boolean;
   // Hidden by someone (Hide Rows), so Show Rows brings it back. A row only the filter leaves out is not: its gap in
-  // the row numbers shows it, and the filter brings it back (sheet.md "Filter").
+  // the row numbers shows it, and the filter brings it back (sheet.md "Filter"). Nor is a collapsed group's: its
+  // control expands it (grid-and-editing.md "Groups and the outline").
   userHiddenRow: (r: number) => boolean;
+  userHiddenCol: (c: number) => boolean;
   // The row numbers' width and the column letters' height: ROW_HEADER_PX and COL_HEADER_PX, or 0 when the sheet
   // hides its headers (Sheet Settings).
   headW: number;
@@ -75,7 +77,8 @@ export function geometryOf(
     headH: layout.showHeaders === false ? 0 : COL_HEADER_PX,
     hiddenRow: (r) => hiddenRows.has(layout.rows[r]!),
     hiddenCol: (c) => ix.hiddenCols.has(layout.cols[c]!),
-    userHiddenRow: (r) => ix.hiddenRows.has(layout.rows[r]!),
+    userHiddenRow: (r) => ix.handHiddenRows.has(layout.rows[r]!),
+    userHiddenCol: (c) => ix.handHiddenCols.has(layout.cols[c]!),
   };
 }
 

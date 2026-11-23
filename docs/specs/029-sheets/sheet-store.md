@@ -155,7 +155,9 @@ Built in the api; the sheet bar and File › Settings call it with the grid surf
   title write, different flags (an undo, an unchecked write) or a write's caps start another. Each write stays its
   own undo step.
 - **Layout write**: insert rows or columns (new ids, made by the client, at a place given as "after this id"),
-  delete them, move them (after an id), resize them, hide or show them, set the freeze, merge or unmerge a range,
+  delete them, move them (after an id), resize them, hide or show them, set their group depths, collapse or expand a
+  group, put the groups' controls before or after them ([Groups](grid-and-editing.md#groups-and-the-outline)), set
+  the freeze, merge or unmerge a range,
   set or clear the filter and its conditions, set or remove a [validation rule](data-validation.md) or a
   [format rule](conditional-formatting.md), or reorder the format rules. A layout write naming an id that is gone does what still makes
   sense (deleting a deleted row is nothing; inserting after a deleted row inserts at its old neighbour, else the

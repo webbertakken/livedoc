@@ -199,6 +199,11 @@ describe('the setup starts', () => {
             },
           },
           { k: 'freeze', cols: 1 },
+          // Groups, collapsed, with their controls after them.
+          { k: 'depth', axis: 'r', depths: { [next.layout.rows[2]!]: 2 } },
+          { k: 'depth', axis: 'c', depths: { [next.layout.cols[1]!]: 1 } },
+          { k: 'collapse', axis: 'c', at: next.layout.cols[1]!, depth: 1, collapsed: true },
+          { k: 'controls', axis: 'r', after: true },
           {
             k: 'cardTable',
             id: 'tbl1',

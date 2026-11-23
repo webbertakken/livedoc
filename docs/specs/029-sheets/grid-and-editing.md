@@ -206,7 +206,8 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 - Collapsed lines are hidden lines in every way (moving the cursor passes them; charts and `SUBTOTAL`'s 101 to 111
   leave them out) but draw no double arrow: Show never expands a group, and Hide never collapses one.
 - Lines inserted between two lines of a group join it (the lesser depth of the two), deleted lines take their depth
-  with them, and moved lines keep theirs (default, D164).
+  with them, and groups stay where they stand when lines are moved or sorted, as Google's are ranges of places;
+  a collapsed group whose marked line is deleted stays collapsed (default, D164).
 - An Editor groups, ungroups, collapses and expands for everyone, each one change and one undo step. A Participant
   and a Viewer collapse and expand for themselves only, never saved or sent; Google's viewers cannot (default, D163).
 - A file carries the groups and their folds both ways ([Standard mapping](standard-mapping.md)).

@@ -1,6 +1,7 @@
 // Sheet writes (docs/specs/029-sheets/sheet-store.md "Changing a sheet"). One
 // pure apply, used by the api, the offline store and the editor's optimistic apply, so all converge; and its
 // inverse, for undo. A write lands on ids: what it names that is gone is skipped, never moved somewhere else.
+import { inverseOutline } from './outline-store';
 import { FORMAT_KEYS, mergeFormat, type FormatPatch } from './format';
 import { layoutIndex } from './layout';
 import { formulaReadsSheet, mapFormulaRefs } from './formula/stored';
@@ -287,6 +288,10 @@ function inverseLayout(before: SheetLayout, ch: LayoutChange, now: SheetLayout):
         ...(wasnt.length ? [{ k: 'hide' as const, axis: ch.axis, ids: wasnt, hidden: false }] : []),
       ];
     }
+    case 'depth':
+    case 'collapse':
+    case 'controls':
+      return inverseOutline(before, ch);
     case 'name': {
       const was = before.names?.find((x) => sameName(x.name, ch.name));
       return [

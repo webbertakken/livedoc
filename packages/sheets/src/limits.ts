@@ -62,6 +62,8 @@ export const ROW_HEIGHT_NEW = 28;
 export const COLUMN_WIDTH_MIN = 24;
 export const ROW_HEIGHT_MIN = 18;
 export const AXIS_SIZE_MAX = 2_000;
+// How deep groups of rows or columns nest (grid-and-editing.md "Groups and the outline", D159): XLSX's most.
+export const OUTLINE_DEPTH_MAX = 7;
 // Card tables (sheet.md "Card tables"): how many a sheet holds, and how many rows each links.
 export const CARD_TABLES_MAX = 8;
 // Named ranges (docs/specs/029-sheets/sheet.md "Named ranges"): a name's length and how many a sheet holds.

@@ -2,6 +2,7 @@
 // before storing, against the sheet as stored; the editor runs it before sending, so a refusal is said at once.
 import { validFormatPatch, validFormat } from './format';
 import { isAxisId, isSheetId } from './ids';
+import { OUTLINE_DEPTH_MAX } from './limits';
 import { storedAst } from './formula/stored';
 import { tokenize } from './formula/tokens';
 import {
@@ -325,10 +326,29 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
       return Array.isArray(ch.ids) && ch.ids.length <= FORMAT_RULES_MAX && ch.ids.every(isAxisId)
         ? OK
         : no('write_invalid');
+    // Groups (grid-and-editing.md "Groups and the outline"): depths 0 to OUTLINE_DEPTH_MAX on lines by id.
+    case 'depth': {
+      const entries = isAxis(ch.axis) && isRecord(ch.depths) ? Object.entries(ch.depths) : null;
+      if (!entries) return no('write_invalid');
+      if (!entries.every(([id]) => isAxisId(id))) return no('axis_id_invalid');
+      return entries.every(([, d]) => isDepth(d, 0)) ? OK : no('write_invalid');
+    }
+    case 'collapse':
+      if (!isAxis(ch.axis) || !isDepth(ch.depth, 1) || typeof ch.collapsed !== 'boolean')
+        return no('write_invalid');
+      return isAxisId(ch.at) ? OK : no('axis_id_invalid');
+    case 'controls':
+      return isAxis(ch.axis) && typeof ch.after === 'boolean' ? OK : no('write_invalid');
     default:
       return no('write_invalid');
   }
 }
+
+const isAxis = (x: unknown) => x === 'r' || x === 'c';
+const isRecord = (x: unknown): x is Record<string, unknown> =>
+  typeof x === 'object' && x !== null && !Array.isArray(x);
+const isDepth = (d: unknown, least: number) =>
+  Number.isInteger(d) && (d as number) >= least && (d as number) <= OUTLINE_DEPTH_MAX;
 
 function overlaps(a: { r1: number; c1: number; r2: number; c2: number }, b: typeof a): boolean {
   return a.r1 <= b.r2 && b.r1 <= a.r2 && a.c1 <= b.c2 && b.c1 <= a.c2;
