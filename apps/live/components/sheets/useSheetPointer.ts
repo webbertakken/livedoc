@@ -16,6 +16,7 @@ import {
   single,
   cellKey,
   displayValue,
+  landingOf,
   validationRuleAt,
   type GridRange,
   type Selection,
@@ -24,21 +25,21 @@ import { useAssignRef, useLatest } from '@/hooks/ui/useLatest';
 import { pointingTargetFor } from './sheet-pointing';
 import { useSheetController, type SheetController } from './sheet-controller';
 import { cellBox, hitTest, mergeAt, totalSize, type Hit } from './sheet-geometry';
-import { freezeLimit, nearestBoundary } from './sheet-freeze';
+import { freezeCountAt, freezeEdgeUnder, freezeLineAt } from './sheet-freeze';
 import { roomPerSheetPx } from './sheet-scroll-room';
 import { fontPx } from './SheetCells';
 import { ruleHitAt } from './rules/sheet-rule-draw';
 import { FILL_HANDLE_PX, fillHandleAt } from './SheetSelectionLayer';
+import { borderGrabAt, fillTargetFor } from './sheet-drag-targets';
 import type { SheetActions } from './useSheetActions';
 import { useSheetPan } from './useSheetPan';
 import { openHyperlink } from '@/lib/open-hyperlink';
 import { TOUCH_GRIP_HIT_PX, useSheetTouch } from './useSheetTouch';
 import { useSheetTouchLink } from './useSheetTouchLink';
+import { sheetPointerMenu } from './sheet-pointer-menu';
 
 const DRAG_START_PX = 4;
 const AUTOSCROLL_EDGE_PX = 24;
-// How close to the frozen edge's bar a press grabs it.
-const FREEZE_GRAB_PX = 3;
 
 type Drag =
   | { kind: 'select'; additive: boolean }
@@ -57,6 +58,17 @@ type Drag =
       y0: number;
     }
   | { kind: 'point'; from: { r: number; c: number }; sheet?: string }
+  // A selection moved by its border (D145): `grab` is the pressed cell's offset in it, `press` the cell itself.
+  | {
+      kind: 'cellMove';
+      source: GridRange;
+      grab: { r: number; c: number };
+      press: { r: number; c: number };
+      landing: GridRange;
+      armed: boolean;
+      x0: number;
+      y0: number;
+    }
   | { kind: 'freeze'; axis: 'r' | 'c'; count: number };
 
 // A cell or range pointed at while a formula is written; `sheet` names another sheet of the tab it is on.
@@ -76,9 +88,9 @@ export function useSheetPointer(
   const drag = useRef<Drag | null>(null);
   const pan = useSheetPan(() => latest.current.gridEl);
   const [cursor, setCursor] = useState<string>('cell');
-  // A preview of a drag in progress: the fill's target, a resize's line, a move's drop line.
+  // A preview of a drag in progress: the fill's target, a moved block's landing, a resize's line, a move's drop line.
   const [preview, setPreview] = useState<
-    | { kind: 'fill'; range: GridRange }
+    | { kind: 'fill' | 'block'; range: GridRange }
     | { kind: 'resize'; axis: 'r' | 'c'; at: number }
     | { kind: 'move'; axis: 'r' | 'c'; at: number }
     | null
@@ -124,29 +136,18 @@ export function useSheetPointer(
     );
   };
 
-  // The frozen edge's bar, on the headers (or the corner's edges when nothing is frozen): dragged to change the
-  // freeze (docs/specs/029-sheets/sheet.md "Freeze").
-  const freezeEdgeAt = (x: number, y: number): 'r' | 'c' | null => {
+  // The selection's border under a mouse, grabbed to move its cells (D145, D147): someone who may write cells,
+  // not while editing or painting formats.
+  const borderAt = (x: number, y: number): GridRange | null => {
     const cc = latest.current;
-    if (!cc.canEdit) return null;
+    if (cc.editing || !cc.canEdit || cc.rules.paint) return null;
     const g = cc.geometry;
-    const fx = latest.current.geometry.headW + g.frozenWidth;
-    const fy = latest.current.geometry.headH + g.frozenHeight;
-    if (y < latest.current.geometry.headH && Math.abs(x - fx) <= FREEZE_GRAB_PX) return 'c';
-    if (x < latest.current.geometry.headW && Math.abs(y - fy) <= FREEZE_GRAB_PX) return 'r';
-    return null;
+    return borderGrabAt(g, cc.selectionNow(), cc.grid, cc.scroll, x - g.headW, y - g.headH);
   };
 
-  // How many lines a freeze dropped at a point keeps: up to the line boundary nearest the point.
-  const freezeCountAt = (axis: 'r' | 'c', x: number, y: number): number => {
-    const cc = latest.current;
-    const g = cc.geometry;
-    const offs = axis === 'c' ? g.cols : g.rows;
-    const p = axis === 'c' ? x - latest.current.geometry.headW : y - latest.current.geometry.headH;
-    const frozen = axis === 'c' ? g.frozenWidth : g.frozenHeight;
-    const at = p < frozen ? p : p + (axis === 'c' ? cc.scroll.left : cc.scroll.top);
-    return Math.min(nearestBoundary(offs, at), freezeLimit(g, cc.view, axis));
-  };
+  // The frozen edge's bar (sheet-freeze.ts), for an Editor.
+  const freezeEdgeAt = (x: number, y: number) =>
+    latest.current.canEdit ? freezeEdgeUnder(latest.current.geometry, x, y) : null;
 
   // What a press on a cell hits of its validation rule's drawing (a box, a chip, an arrow), if anything.
   const ruleAtPress = (r: number, col: number, x: number, y: number) => {
@@ -200,38 +201,22 @@ export function useSheetPointer(
         else pointRef(d.from, at);
       } else cc.setSelection(extendTo(cc.selectionNow(), at, cc.grid));
     } else if (d.kind === 'fill') {
+      d.target = fillTargetFor(d.source, cellAt(x, y));
+      setPreview({ kind: 'fill', range: d.target });
+    } else if (d.kind === 'cellMove') {
+      if (!d.armed && Math.hypot(x - d.x0, y - d.y0) < DRAG_START_PX) return;
+      d.armed = true;
       const at = cellAt(x, y);
-      const s = d.source;
-      // The fill grows the source in the one direction the pointer has gone furthest from it.
-      const down = at.r - s.r2;
-      const up = s.r1 - at.r;
-      const right = at.c - s.c2;
-      const left = s.c1 - at.c;
-      const best = Math.max(down, up, right, left);
-      let target = s;
-      if (best > 0) {
-        if (best === down) target = { ...s, r2: at.r };
-        else if (best === up) target = { ...s, r1: at.r };
-        else if (best === right) target = { ...s, c2: at.c };
-        else target = { ...s, c1: at.c };
-      } else if (at.r >= s.r1 && at.r < s.r2 && at.c >= s.c1 && at.c <= s.c2)
-        target = { ...s, r2: at.r };
-      else if (at.c >= s.c1 && at.c < s.c2 && at.r >= s.r1 && at.r <= s.r2)
-        target = { ...s, c2: at.c };
-      d.target = target;
-      setPreview({ kind: 'fill', range: target });
+      const top = { r: at.r - d.grab.r, c: at.c - d.grab.c };
+      d.landing = landingOf(d.source, top, cc.grid.rows, cc.grid.cols);
+      setPreview({ kind: 'block', range: d.landing });
     } else if (d.kind === 'resize') {
       const delta = (d.axis === 'c' ? x : y) - d.start;
       d.px = Math.max(d.axis === 'c' ? 24 : 18, Math.round(d.size + delta));
       setPreview({ kind: 'resize', axis: d.axis, at: d.axis === 'c' ? x : y });
     } else if (d.kind === 'freeze') {
-      d.count = freezeCountAt(d.axis, x, y);
-      const g = cc.geometry;
-      const offs = d.axis === 'c' ? g.cols : g.rows;
-      const frozen = d.axis === 'c' ? g.frozenWidth : g.frozenHeight;
-      const line =
-        offs[d.count]! -
-        (offs[d.count]! < frozen ? 0 : d.axis === 'c' ? cc.scroll.left : cc.scroll.top);
+      d.count = freezeCountAt(cc.geometry, cc.view, cc.scroll, d.axis, x, y);
+      const line = freezeLineAt(cc.geometry, cc.scroll, d.axis, d.count);
       setPreview({ kind: 'move', axis: d.axis, at: line });
     } else if (d.kind === 'axisSelect') {
       const h = hitAt(
@@ -350,6 +335,11 @@ export function useSheetPointer(
         if (d.axis === 'c') actions.freeze(undefined, d.count);
         else actions.freeze(d.count);
       }
+    } else if (d.kind === 'cellMove') {
+      // Unmoved, the press was a click on the cell under it; moved, the block lands (Ctrl or ⌥ copies it).
+      if (!d.armed) cc.setSelection(single(d.press));
+      else if (d.landing.r1 !== d.source.r1 || d.landing.c1 !== d.source.c1)
+        actions.moveCells(d.source, d.landing, e.ctrlKey || e.altKey);
     } else if (d.kind === 'axisMove' && d.armed) {
       if (d.drop < d.from || d.drop > d.to + 1) actions.moveAxis(d.axis, d.from, d.to, d.drop);
     }
@@ -399,6 +389,30 @@ export function useSheetPointer(
       return;
     }
     const h = hitAt(x, y);
+    const grabbed = h.kind === 'cell' ? borderAt(x, y) : null;
+    if (grabbed && h.kind === 'cell') {
+      e.preventDefault();
+      cc.focusGrid();
+      const grab = {
+        r: Math.min(Math.max(h.r, grabbed.r1), grabbed.r2) - grabbed.r1,
+        c: Math.min(Math.max(h.c, grabbed.c1), grabbed.c2) - grabbed.c1,
+      };
+      setCursor('grabbing');
+      begin(
+        {
+          kind: 'cellMove',
+          source: grabbed,
+          grab,
+          press: { r: h.r, c: h.c },
+          landing: grabbed,
+          armed: false,
+          x0: x,
+          y0: y,
+        },
+        e,
+      );
+      return;
+    }
     if (h.kind === 'cell') {
       // Another sheet of the tab is writing a formula: this sheet's cell goes in it (the editor keeps the caret).
       const into = cc.editing ? null : pointingTargetFor(cc.sheet.id, cc.sheet.tabId);
@@ -511,6 +525,10 @@ export function useSheetPointer(
     const freezeAxis = freezeEdgeAt(x, y);
     if (freezeAxis) return setCursor(freezeAxis === 'c' ? 'ew-resize' : 'ns-resize');
     const h = hitAt(x, y);
+    if (h.kind === 'cell' && borderAt(x, y)) {
+      setHover({ r: h.r, c: h.c });
+      return setCursor('grab');
+    }
     setCursor(
       h.kind === 'col' && h.edge && latest.current.canEdit
         ? 'col-resize'
@@ -547,65 +565,11 @@ export function useSheetPointer(
     }
   };
 
-  const onContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
-    const cc = latest.current;
-    if (!cc.interactive) return;
-    e.preventDefault();
-    e.stopPropagation();
-    // A finger's long press opens the menu on its release, unmoved (useSheetTouch), not on the browser's own.
-    if ((e.nativeEvent as PointerEvent).pointerType === 'touch') return;
-    // A right drag that panned opens nothing; a right press still deciding (the menu arrives on press on a Mac)
-    // opens the menu when it is released unmoved.
-    if (pan.swallowContextMenu()) return;
-    const { clientX, clientY } = e;
-    if (pan.rightPending()) {
-      pan.afterRightClick(() => openMenu(clientX, clientY));
-      return;
-    }
-    openMenu(clientX, clientY);
-  };
-
-  // What a menu (or a held finger) acts on: the cell or header under it, unless the selection already holds it.
-  const selectFor = (h: Hit) => {
-    const cc = latest.current;
-    if (h.kind === 'cell') {
-      const inSel = cc
-        .selectionNow()
-        .ranges.some((g) => h.r >= g.r1 && h.r <= g.r2 && h.c >= g.c1 && h.c <= g.c2);
-      if (!inSel) cc.setSelection(single({ r: h.r, c: h.c }));
-    } else if (h.kind === 'col' || h.kind === 'row') {
-      const axis = h.kind === 'col' ? 'c' : 'r';
-      const index = h.kind === 'col' ? h.c : h.r;
-      const sel = cc.selectionNow().ranges[cc.selectionNow().ranges.length - 1]!;
-      const [a, b] = axis === 'c' ? [sel.c1, sel.c2] : [sel.r1, sel.r2];
-      // The selection stays only when it is whole lines of this axis holding the header (a column's cells are not
-      // rows: right-clicking row 3 with column D selected selects row 3).
-      const whole =
-        axis === 'c'
-          ? sel.r1 === 0 && sel.r2 >= cc.grid.rows - 1
-          : sel.c1 === 0 && sel.c2 >= cc.grid.cols - 1;
-      if (!whole || index < a || index > b)
-        cc.setSelection(
-          axis === 'c' ? selectCols(index, index, cc.grid) : selectRows(index, index, cc.grid),
-        );
-    }
-  };
-
-  const openMenu = (clientX: number, clientY: number) => {
-    const cc = latest.current;
-    const { x, y } = local(clientX, clientY);
-    const h = hitAt(x, y);
-    selectFor(h);
-    if (h.kind === 'cell') cc.setMenu({ kind: 'cell', x: clientX, y: clientY });
-    else if (h.kind === 'col' || h.kind === 'row')
-      cc.setMenu({
-        kind: 'header',
-        axis: h.kind === 'col' ? 'c' : 'r',
-        index: h.kind === 'col' ? h.c : h.r,
-        x: clientX,
-        y: clientY,
-      });
-  };
+  // The menus (sheet-pointer-menu.ts), built in the handlers that use them, reading this render's helpers.
+  const menu = () => sheetPointerMenu({ controller: latest, local, hitAt, pan });
+  const selectFor = (h: Hit) => menu().selectFor(h);
+  const openMenu = (clientX: number, clientY: number) => menu().openMenu(clientX, clientY);
+  const onContextMenu = (e: React.MouseEvent<HTMLDivElement>) => menu().onContextMenu(e);
 
   const touchLink = useSheetTouchLink();
   const touch = useSheetTouch({

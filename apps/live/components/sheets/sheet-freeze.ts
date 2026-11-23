@@ -55,3 +55,44 @@ export function nearestBoundary(offsets: Float64Array, at: number): number {
   const before = firstFrom(offsets, offsets[after - 1]!);
   return at - offsets[before]! <= offsets[after]! - at ? before : after;
 }
+
+// How close to the frozen edge's bar a press grabs it.
+const FREEZE_GRAB_PX = 3;
+
+/** The frozen edge's bar under a point of the grid's frame, on the headers (or the corner's edges when nothing is
+ *  frozen): dragged to change the freeze (sheet.md "Freeze"). */
+export function freezeEdgeUnder(g: Geometry, x: number, y: number): Axis | null {
+  const fx = g.headW + g.frozenWidth;
+  const fy = g.headH + g.frozenHeight;
+  if (y < g.headH && Math.abs(x - fx) <= FREEZE_GRAB_PX) return 'c';
+  if (x < g.headW && Math.abs(y - fy) <= FREEZE_GRAB_PX) return 'r';
+  return null;
+}
+
+/** How many lines a freeze dropped at a point of the grid's frame keeps: up to the boundary nearest it. */
+export function freezeCountAt(
+  g: Geometry,
+  view: { width: number; height: number },
+  scroll: { top: number; left: number },
+  axis: Axis,
+  x: number,
+  y: number,
+): number {
+  const offs = axis === 'c' ? g.cols : g.rows;
+  const p = axis === 'c' ? x - g.headW : y - g.headH;
+  const frozen = axis === 'c' ? g.frozenWidth : g.frozenHeight;
+  const at = p < frozen ? p : p + (axis === 'c' ? scroll.left : scroll.top);
+  return Math.min(nearestBoundary(offs, at), freezeLimit(g, view, axis));
+}
+
+/** Where a freeze of `count` lines draws its bar, in the grid area's own coordinates. */
+export function freezeLineAt(
+  g: Geometry,
+  scroll: { top: number; left: number },
+  axis: Axis,
+  count: number,
+): number {
+  const offs = axis === 'c' ? g.cols : g.rows;
+  const frozen = axis === 'c' ? g.frozenWidth : g.frozenHeight;
+  return offs[count]! - (offs[count]! < frozen ? 0 : axis === 'c' ? scroll.left : scroll.top);
+}

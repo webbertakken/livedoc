@@ -455,6 +455,8 @@ A finger has no hover and no right button, and its drag pans the cells, so selec
   - Holding Ctrl (⌥ on Apple devices) while dragging copies instead of continuing a series.
 - Double-clicking the fill handle fills down as far as the column beside it is filled.
 - Dragging the fill handle back into the selection clears the cells it leaves.
+- Dragging a selection's border moves its cells, or copies them with Ctrl (⌥ on Apple devices) held at the drop
+  ([Fill and move](grid-and-editing.md#fill-and-move)).
 
 ### Rows and columns
 
@@ -1016,9 +1018,8 @@ changeset onto one is refused. Its grid takes no input outside Plan, and a doubl
 - `Element · Added · PlanSheet` (placed from the palette or a CSV drop).
 - `Plan · Toggled · SheetMaximised` / `SheetRestored`, `SheetFillTabOn` / `SheetFillTabOff`, `SheetFocused`.
 - The `Sheet` category: `Changed` with the kind of change (`Cell`, `Formula`, `Format`, `Rows`, `Columns`, `Merge`,
-  `Freeze`, `Sort`, `Filter`, `Replace`, `Fill`, `Paste`, `Title`, `Clear`, `Shift`, `Settings`, `Setup`, `Validation`,
-  `ConditionalFormat`: the closed
-  `SHEET_CHANGE_KINDS`), sent once per change, never content; `Imported · Csv`, `Exported · Csv`; `Opened · Find`,
+  `Freeze`, `Sort`, `Filter`, `Replace`, `Fill`, `Paste`, `Title`, `Clear`, `Shift`, `Move`, `Settings`, `Setup`,
+  `Name`, `Validation`, `ConditionalFormat`: the closed `SHEET_CHANGE_KINDS`), sent once per change, never content; `Imported · Csv`, `Exported · Csv`; `Opened · Find`,
   `Opened · Settings`; `Searched · Function` (the toolbar's Search took someone to a function); `Created` with how a sheet was set up (`Blank`, `Cards`, `Csv`, or a
   template's name without spaces, Setup Sheet above) or `Chart` (Insert Chart only, never a template's chart);
   `Used` with a function's name when a formula using it is first saved (names from the closed function list only).

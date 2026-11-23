@@ -73,7 +73,7 @@ type Props = {
   onFilterButton: ((colId: string, at: { x: number; y: number }) => void) | null;
 };
 
-function rectOf(g: Geometry, range: GridRange, scroll: { top: number; left: number }) {
+export function rectOf(g: Geometry, range: GridRange, scroll: { top: number; left: number }) {
   const a = cellBox(g, range.r1, range.c1, scroll);
   const b = cellBox(g, range.r2, range.c2, scroll, mergeAt(g, range.r2, range.c2));
   return { x: a.x, y: a.y, w: b.x + b.w - a.x, h: b.y + b.h - a.y };

@@ -11,6 +11,9 @@ export const MERGE_SORT_REFUSAL = 'Unmerge the cells that span rows before sorti
 export const mergeMoveRefusal = (axis: 'r' | 'c') =>
   `Unmerge the cells first: moving these ${axis === 'r' ? 'rows' : 'columns'} would split merged cells.`;
 
+export const MERGE_CELLS_MOVE_REFUSAL =
+  'Unmerge the cells first: moving these cells would split merged cells.';
+
 type Box = { r1: number; c1: number; r2: number; c2: number };
 
 function boxes(layout: SheetLayout): Box[] {

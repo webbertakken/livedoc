@@ -409,7 +409,8 @@ export function SheetGrid({
               <SheetCellComments hover={pointer.hover} />
               {/* The charts that sit in this Sheet, over its cells (sheet.md "Charts"). */}
               <SheetChartsLayer fontFamily={fontFamily} />
-              {pointer.preview?.kind === 'fill' ? (
+              {/* A fill's target, or where a block dragged by its border lands (grid-and-editing.md "Fill and move"). */}
+              {pointer.preview?.kind === 'fill' || pointer.preview?.kind === 'block' ? (
                 <SheetSelectionLayer
                   geometry={c.geometry}
                   scroll={c.scroll}

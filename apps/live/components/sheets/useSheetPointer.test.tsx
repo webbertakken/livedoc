@@ -343,6 +343,105 @@ describe('the fill handle', () => {
   });
 });
 
+describe('moving cells by their border', () => {
+  // B2:C3's left edge, in the viewport (D145).
+  const edge = (r: number, c: number): Pt => ({
+    clientX: ROW_HEADER_PX + c * 100 + 1,
+    clientY: COL_HEADER_PX + r * 24 + 12,
+  });
+
+  it('shows a hand over the border, and a drag moves the cells, outlined where they land', async () => {
+    const h = await mountGrid({ cells: { B2: 'x', D1: '=B2' } });
+    select(h, 1, 1, 2, 2);
+    hover(h, edge(2, 1));
+    expect(h.viewport.style.cursor).toBe('grab');
+    down(h, edge(2, 1));
+    expect(h.viewport.style.cursor).toBe('grabbing');
+    move(cellPoint(6, 3));
+    expect(h.container.textContent).toBeDefined();
+    up(cellPoint(6, 3));
+    // Grabbed by its second row, the block keeps that row under the pointer.
+    expect(h.called('moveCells')).toEqual([
+      [{ r1: 1, c1: 1, r2: 2, c2: 2 }, { r1: 5, c1: 3, r2: 6, c2: 4 }, false],
+    ]);
+    expect(sel(h).ranges).toEqual([{ r1: 5, c1: 3, r2: 6, c2: 4 }]);
+    expect(h.c().workbook.value(h.sheetId, 5, 3)).toBe('x');
+    expect(h.c().workbook.value(h.sheetId, 0, 3)).toBe('x');
+  });
+
+  it('copies with Ctrl or Alt at the drop, and keeps the block inside the grid', async () => {
+    const h = await mountGrid({ rows: 10, cols: 5 });
+    select(h, 1, 1);
+    drag(h, edge(1, 1), cellPoint(3, 1), { ctrlKey: true });
+    expect(h.called('moveCells').at(-1)?.[2]).toBe(true);
+    select(h, 1, 1, 2, 1);
+    down(h, edge(1, 1));
+    move({ clientX: 5000, clientY: 5000 });
+    up({ clientX: 5000, clientY: 5000 }, { altKey: true });
+    expect(h.called('moveCells').at(-1)?.slice(1)).toEqual([{ r1: 8, c1: 4, r2: 9, c2: 4 }, true]);
+  });
+
+  it('a press on the border that never moves selects the cell under it; a drop in place moves nothing', async () => {
+    const h = await mountGrid();
+    select(h, 1, 1);
+    // Just left of B2: on its border, over A2.
+    const outside = { clientX: ROW_HEADER_PX + 100 - 2, clientY: COL_HEADER_PX + 24 + 12 };
+    drag(h, outside, outside);
+    expect(sel(h).ranges).toEqual([{ r1: 1, c1: 0, r2: 1, c2: 0 }]);
+    select(h, 1, 1);
+    drag(h, edge(1, 1), { clientX: edge(1, 1).clientX + 30, clientY: edge(1, 1).clientY });
+    expect(h.called('moveCells')).toEqual([]);
+  });
+
+  it('refuses a move that would split a merge, saying why', async () => {
+    const h = await mountGrid({
+      cells: { B2: 'x' },
+      layout: { merges: [{ r1: 'row1', c1: 'col1', r2: 'row1', c2: 'col2' }] },
+    });
+    select(h, 1, 1);
+    drag(h, edge(1, 1), cellPoint(5, 1));
+    expect(h.toasts).toEqual([
+      'Unmerge the cells first: moving these cells would split merged cells.',
+    ]);
+    expect(h.c().workbook.value(h.sheetId, 1, 1)).toBe('x');
+  });
+
+  it('a move carrying merges is an Editor’s, and a move to where it was does nothing', async () => {
+    const h = await mountGrid({
+      cells: { B2: 'x' },
+      layout: { merges: [{ r1: 'row1', c1: 'col1', r2: 'row1', c2: 'col2' }] },
+      canEdit: false,
+    });
+    select(h, 1, 1, 1, 2);
+    act(() =>
+      h.actions().moveCells({ r1: 1, c1: 1, r2: 1, c2: 2 }, { r1: 4, c1: 1, r2: 4, c2: 2 }, false),
+    );
+    expect(h.toasts).toEqual(["Only an editor can change a Sheet's rows, columns or settings."]);
+    expect(sel(h).ranges).toEqual([{ r1: 1, c1: 1, r2: 1, c2: 2 }]);
+    act(() =>
+      h.actions().moveCells({ r1: 1, c1: 1, r2: 1, c2: 2 }, { r1: 1, c1: 1, r2: 1, c2: 2 }, false),
+    );
+    expect(h.toasts).toHaveLength(1);
+  });
+
+  it('has no grab for a viewer, while editing, or in Paint Format', async () => {
+    const viewer = await mountGrid({ canEdit: false });
+    select(viewer, 1, 1);
+    hover(viewer, edge(1, 1));
+    expect(viewer.viewport.style.cursor).toBe('cell');
+    const h = await mountGrid();
+    select(h, 1, 1);
+    act(() => h.c().setEditing({ r: 1, c: 1, draft: '', origin: 'cell' }));
+    hover(h, edge(1, 1));
+    expect(h.viewport.style.cursor).toBe('cell');
+    const painting = await mountGrid();
+    select(painting, 1, 1);
+    act(() => painting.actions().paintStart(false));
+    hover(painting, edge(1, 1));
+    expect(painting.viewport.style.cursor).toBe('copy');
+  });
+});
+
 describe('the freeze edges', () => {
   it('a drag from the corner’s right edge freezes columns', async () => {
     const h = await mountGrid();

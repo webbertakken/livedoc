@@ -42,6 +42,7 @@ export * from './merge-guards';
 export * from './commands-paste';
 export * from './paste-layout';
 export * from './commands-shift';
+export * from './commands-move';
 export * from './store';
 export * from './store-layout';
 export * from './range-names';

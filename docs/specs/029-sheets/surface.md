@@ -189,3 +189,11 @@ Version History (the shell's). Each is specified with its area.
   dropdown's source range stays (default).
 - **D144** Paste Special from elsewhere: Values Only, Formula Only, Transposed and All Except Borders read text as
   typed; the rest need cells copied in a spreadsheet and say so, as they do when the copy holds none (default).
+- **D145** Dragging a selection's border: A mouse's, on one range, within 4 px of its edge and never at the fill
+  handle; the block keeps the cell it was grabbed by under the pointer and stays inside the grid; what it lands on
+  is replaced without asking, as Google's does, in one undo step (default).
+- **D146** Merges in a moved block: Those wholly inside move or copy with it, those wholly under where it lands go;
+  any other merge the block or its landing crosses refuses the move, as moving rows does (default).
+- **D147** Who moves cells by their border: An Editor and a Participant, a Participant's cells landing as their
+  values as a cut's do; a move carrying merges is an Editor's, a Participant told so; a Viewer has no grab
+  (default).
