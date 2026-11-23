@@ -10,6 +10,12 @@ import { dropPdf, pageOneDrawn } from './pdf-document-pages';
 const menuBar = (page: Page) => page.getByRole('menubar', { name: 'Menu bar' });
 const menuNames = (page: Page) => menuBar(page).getByRole('menuitem').allTextContents();
 const toolbar = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
+/** The open menu once its fade has ended, so a capture shows it whole. */
+const menuShown = (page: Page) =>
+  page
+    .getByRole('menu')
+    .last()
+    .evaluate((menu) => Promise.all(menu.getAnimations().map((fade) => fade.finished)));
 
 test('a PDF’s title row, menus and toolbar are its own, and follow the editing mode', async ({
   page,
@@ -49,6 +55,7 @@ test('a PDF’s title row, menus and toolbar are its own, and follow the editing
   await expect(underline).toHaveAccessibleDescription('Coming soon');
   // An `edit` item is Editing's: not in Reviewing's menus.
   await expect(page.getByRole('menuitem', { name: 'Text box', exact: true })).toHaveCount(0);
+  await menuShown(page);
   await page.screenshot({ path: test.info().outputPath('pdf-shell-insert-dark.png') });
   await page.emulateMedia({ colorScheme: 'light' });
   await page.screenshot({ path: test.info().outputPath('pdf-shell-insert-light.png') });
@@ -76,6 +83,7 @@ test('a PDF’s title row, menus and toolbar are its own, and follow the editing
   // View lists the whole of reading, in both schemes.
   await menuBar(page).getByRole('menuitem', { name: 'View' }).click();
   await expect(page.getByRole('menuitemcheckbox', { name: 'Dark pages' })).toBeVisible();
+  await menuShown(page);
   await page.screenshot({ path: test.info().outputPath('pdf-shell-view-dark.png') });
   await page.emulateMedia({ colorScheme: 'light' });
   await page.screenshot({ path: test.info().outputPath('pdf-shell-view-light.png') });
