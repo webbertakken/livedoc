@@ -78,7 +78,7 @@ export default function GifExportPanel({
           />
         </div>
         {/* The page as the GIF opens, still. White under it: a logo page's see-through paper exports white. */}
-        <div className="my-4 flex h-48 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900">
+        <div className="my-4 flex h-48 items-center justify-center overflow-hidden rounded-menu border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900">
           {gif.estimate ? (
             <img
               data-testid="export-preview"
@@ -87,11 +87,13 @@ export default function GifExportPanel({
               className="max-h-[176px] w-auto max-w-full bg-white object-contain"
             />
           ) : (
-            <span className="text-xs text-slate-500 dark:text-slate-400">Preparing preview…</span>
+            <span className="text-supporting text-slate-500 dark:text-slate-400">
+              Preparing preview…
+            </span>
           )}
         </div>
-        <div className="flex flex-col gap-3 rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-          <label className="flex items-center gap-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
+        <div className="flex flex-col gap-3 rounded-menu bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
+          <label className="flex items-center gap-3 text-body text-slate-700 dark:text-slate-200">
             <span className="w-28 shrink-0">Each page holds</span>
             <input
               type="range"
@@ -110,14 +112,14 @@ export default function GifExportPanel({
           <div className="flex items-center gap-3">
             <span
               id="gif-size-label"
-              className="w-28 shrink-0 text-xs font-semibold text-slate-700 dark:text-slate-200"
+              className="w-28 shrink-0 text-body text-slate-700 dark:text-slate-200"
             >
               Size
             </span>
             <div
               role="radiogroup"
               aria-labelledby="gif-size-label"
-              className={`relative grid w-56 grid-cols-3 rounded-lg p-0.5 ${SEGMENT_TRACK}`}
+              className={`relative grid w-56 grid-cols-3 rounded-menu p-0.5 ${SEGMENT_TRACK}`}
             >
               <SegmentSlider
                 count={GIF_SIZES.length}
@@ -131,9 +133,9 @@ export default function GifExportPanel({
                   role="radio"
                   aria-checked={gif.size === id}
                   onClick={() => gif.setSize(id)}
-                  className={`relative z-10 rounded-md py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
+                  className={`relative z-10 min-h-row rounded-control text-body transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
                     gif.size === id
-                      ? 'text-white'
+                      ? 'font-medium text-white'
                       : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
                 >
@@ -143,7 +145,7 @@ export default function GifExportPanel({
             </div>
           </div>
           {gif.loops ? (
-            <p className="text-xs text-slate-600 dark:text-slate-300">
+            <p className="text-supporting text-slate-600 dark:text-slate-300">
               Between pages:{' '}
               {gif.transition === 'none' ? transitionLabel : `${transitionLabel}, ${speedLabel}`},
               from the Slide Deck settings.
@@ -151,7 +153,10 @@ export default function GifExportPanel({
           ) : null}
         </div>
       </fieldset>
-      <div className="mt-3 min-h-5 text-xs text-slate-600 dark:text-slate-300" aria-live="polite">
+      <div
+        className="mt-3 min-h-icon-title text-supporting text-slate-600 dark:text-slate-300"
+        aria-live="polite"
+      >
         {gif.tooLong ? (
           <p className="text-amber-700 dark:text-amber-300">{GIF_TOO_LONG_COPY}</p>
         ) : gif.estimate ? (
@@ -164,7 +169,7 @@ export default function GifExportPanel({
       {gif.phase.kind === 'error' ? (
         <p
           role="alert"
-          className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+          className="mt-3 rounded-control border border-rose-200 bg-rose-50 px-3 py-2 text-supporting text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
         >
           {GIF_ERROR_COPY[gif.phase.code]}
         </p>

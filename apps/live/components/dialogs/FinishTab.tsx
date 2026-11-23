@@ -27,10 +27,8 @@ export function FinishTab({
   const current = finish ?? DEFAULT_FINISH;
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          Finish
-        </span>
+      <div className="flex flex-col gap-2">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">Finish</span>
         <div
           role="radiogroup"
           aria-label="Finish"
@@ -41,10 +39,8 @@ export function FinishTab({
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          Preview
-        </span>
+      <div className="flex flex-col gap-2">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">Preview</span>
         <TabStylePreview
           finish={current}
           canvasBackground={canvasBackground}
@@ -72,7 +68,7 @@ function FinishTile({
       role="radio"
       aria-checked={active}
       onClick={onPick}
-      className={`flex flex-col items-center gap-2 rounded-lg border px-2 pb-2.5 pt-3.5 transition ${
+      className={`flex flex-col items-center gap-2 rounded-menu border px-2 pb-2.5 pt-3.5 transition ${
         active
           ? 'border-brand-500 bg-brand-50 text-brand-800 dark:border-brand-400 dark:bg-brand-500/15 dark:text-brand-100'
           : 'border-slate-200 bg-white text-slate-700 hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60'
@@ -80,7 +76,7 @@ function FinishTile({
     >
       {/* Big enough to see the corner, line weight and wobble change between the four. */}
       <FinishSwatch finish={finish} size={40} />
-      <span className="text-[12px] font-semibold">{FINISH_LABELS[finish]}</span>
+      <span className={`text-body ${active ? 'font-medium' : ''}`}>{FINISH_LABELS[finish]}</span>
     </button>
   );
 }

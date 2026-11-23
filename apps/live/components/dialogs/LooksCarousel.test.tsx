@@ -26,16 +26,12 @@ const cards = () =>
   screen
     .getAllByRole('button')
     .filter((b) => b.hasAttribute('aria-pressed') && b.textContent !== 'Seasonal')
-    // The name, skipping a seasonal card's season line above it.
-    .map(
-      (b) =>
-        [...b.querySelectorAll('span > span')].find((s) => !s.className.includes('uppercase'))
-          ?.textContent,
-    );
+    // The name, not a seasonal card's season line above it.
+    .map((b) => b.querySelector('[data-look-name]')?.textContent);
 const seasonsShown = () =>
   screen
     .getAllByRole('button')
-    .map((b) => b.querySelector('span > span.uppercase')?.textContent)
+    .map((b) => b.querySelector('[data-look-season]')?.textContent)
     .filter(Boolean);
 
 // Renders the carousel as the dialog does: a pick re-renders it with the tab's new settings.
