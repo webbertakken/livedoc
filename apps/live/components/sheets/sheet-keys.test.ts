@@ -26,10 +26,22 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     [k('F2'), { kind: 'edit' }],
     // data-validation.md "Using a dropdown": Alt+Down opens the active cell's dropdown.
     [k('ArrowDown', { altKey: true }), { kind: 'dropdown' }],
-    [k('Home'), { kind: 'home', toSheet: false }],
-    [k('End', { ctrlKey: true }), { kind: 'end', toSheet: true }],
-    [k('PageUp'), { kind: 'page', up: true }],
-    [k('PageDown'), { kind: 'page', up: false }],
+    [k('Home'), { kind: 'home', toSheet: false, extend: false }],
+    [k('End', { ctrlKey: true }), { kind: 'end', toSheet: true, extend: false }],
+    // grid-and-editing.md "Moving around": Shift grows the selection to where the move lands.
+    [k('Home', { shiftKey: true }), { kind: 'home', toSheet: false, extend: true }],
+    [k('End', { ctrlKey: true, shiftKey: true }), { kind: 'end', toSheet: true, extend: true }],
+    [k('PageUp'), { kind: 'page', up: true, sideways: false, extend: false }],
+    [k('PageDown'), { kind: 'page', up: false, sideways: false, extend: false }],
+    [k('PageDown', { shiftKey: true }), { kind: 'page', up: false, sideways: false, extend: true }],
+    [k('PageUp', { altKey: true }), { kind: 'page', up: true, sideways: true, extend: false }],
+    [k('Backspace', { ctrlKey: true }), { kind: 'reveal' }],
+    [k('Backspace', { metaKey: true }), { kind: 'reveal' }],
+    [k('ArrowUp', { altKey: true }), { kind: 'sheet', step: -1 }],
+    [k('PageUp', { ctrlKey: true, shiftKey: true }), { kind: 'sheet', step: -1 }],
+    [k('PageDown', { ctrlKey: true, shiftKey: true }), { kind: 'sheet', step: 1 }],
+    [k('Q', { altKey: true, shiftKey: true, code: 'KeyQ' }), { kind: 'summary' }],
+    [k(' ', { ctrlKey: true, shiftKey: true }), { kind: 'selectAll' }],
     [k('a', { metaKey: true }), { kind: 'selectAll' }],
     [k(' ', { shiftKey: true }), { kind: 'selectRow' }],
     [k(' ', { ctrlKey: true }), { kind: 'selectCol' }],
@@ -70,7 +82,12 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     expect(sheetKey(k('z', { metaKey: true }))).toBeNull();
     expect(sheetKey(k('y', { ctrlKey: true }))).toBeNull();
     expect(sheetKey(k('c', { ctrlKey: true }))).toBeNull();
-    expect(sheetKey(k('Backspace', { metaKey: true }))).toBeNull();
+    expect(sheetKey(k('Backspace', { ctrlKey: true, shiftKey: true }))).toBeNull();
+    // The browser's own: switching its tabs.
+    expect(sheetKey(k('PageDown', { ctrlKey: true }))).toBeNull();
+    expect(
+      sheetKey(k('Q', { altKey: true, shiftKey: true, metaKey: true, code: 'KeyQ' })),
+    ).toBeNull();
     expect(sheetKey(k('Shift'))).toBeNull();
     expect(sheetKey(k('x', { altKey: true }))).toBeNull();
   });

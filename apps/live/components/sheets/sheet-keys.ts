@@ -20,9 +20,16 @@ type SheetKeyCommand =
   | { kind: 'enter'; back: boolean }
   | { kind: 'edit' }
   | { kind: 'type'; text: string }
-  | { kind: 'home'; toSheet: boolean }
-  | { kind: 'end'; toSheet: boolean }
-  | { kind: 'page'; up: boolean }
+  | { kind: 'home'; toSheet: boolean; extend: boolean }
+  | { kind: 'end'; toSheet: boolean; extend: boolean }
+  // Alt: a screen left or right (grid-and-editing.md "Moving around").
+  | { kind: 'page'; up: boolean; sideways: boolean; extend: boolean }
+  // Ctrl+Backspace: the active cell scrolled back into view.
+  | { kind: 'reveal' }
+  // Alt+Up, Ctrl+Shift+Page Up / Page Down: the previous or next sheet of a spreadsheet.
+  | { kind: 'sheet'; step: -1 | 1 }
+  // Alt+Shift+Q: focus to the selection's summary.
+  | { kind: 'summary' }
   | { kind: 'selectAll' }
   | { kind: 'selectRow' }
   | { kind: 'selectCol' }
@@ -33,7 +40,7 @@ type SheetKeyCommand =
   | { kind: 'fill'; dir: 'down' | 'right' }
   | { kind: 'numberFormat'; nf: 'number' | 'currency' | 'percent' }
   | { kind: 'escape' }
-  // Alt+Down: the active cell's dropdown (data-validation.md "Using a dropdown").
+  // Alt+Down: the active cell's dropdown (data-validation.md "Using a dropdown"), else the next sheet (D136).
   | { kind: 'dropdown' }
   // Read Row and Read Column (grid-and-editing.md "Accessibility"): Ctrl+Alt+Shift+R or C, Option+Shift on a Mac.
   | { kind: 'read'; axis: 'r' | 'c' }
@@ -52,12 +59,19 @@ export function sheetKey(e: KeyLike): SheetKeyCommand | null {
   const dir = ARROWS[e.key];
   if (dir && !e.altKey) return { kind: 'move', dir, jump: mod, extend: e.shiftKey };
   if (e.key === 'ArrowDown' && e.altKey && !mod && !e.shiftKey) return { kind: 'dropdown' };
+  if (e.key === 'ArrowUp' && e.altKey && !mod && !e.shiftKey) return { kind: 'sheet', step: -1 };
   if (e.key === 'Tab') return { kind: 'tab', back: e.shiftKey };
   if (e.key === 'Enter' && !mod && !e.altKey) return { kind: 'enter', back: e.shiftKey };
   if (e.key === 'F2') return { kind: 'edit' };
-  if (e.key === 'Home') return { kind: 'home', toSheet: mod };
-  if (e.key === 'End') return { kind: 'end', toSheet: mod };
-  if (e.key === 'PageUp' || e.key === 'PageDown') return { kind: 'page', up: e.key === 'PageUp' };
+  if (e.key === 'Home') return { kind: 'home', toSheet: mod, extend: e.shiftKey };
+  if (e.key === 'End') return { kind: 'end', toSheet: mod, extend: e.shiftKey };
+  if (e.key === 'PageUp' || e.key === 'PageDown') {
+    const up = e.key === 'PageUp';
+    // Ctrl+Page Up / Page Down switch the browser's tabs: left to it.
+    if (mod) return e.shiftKey ? { kind: 'sheet', step: up ? -1 : 1 } : null;
+    return { kind: 'page', up, sideways: e.altKey, extend: e.shiftKey };
+  }
+  if (e.key === 'Backspace' && mod && !e.altKey && !e.shiftKey) return { kind: 'reveal' };
   if (e.key === 'Delete' || e.key === 'Backspace') return mod ? null : { kind: 'clear' };
   if (e.key === 'Escape') return { kind: 'escape' };
   if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) return { kind: 'menu' };
@@ -69,7 +83,10 @@ export function sheetKey(e: KeyLike): SheetKeyCommand | null {
     (e.code === 'KeyR' || e.code === 'KeyC')
   )
     return { kind: 'read', axis: e.code === 'KeyR' ? 'r' : 'c' };
+  if (e.altKey && e.shiftKey && !mod && !altGraphHeld(e) && e.code === 'KeyQ')
+    return { kind: 'summary' };
   if (e.key === ' ' && e.shiftKey && !mod) return { kind: 'selectRow' };
+  if (e.key === ' ' && mod && e.shiftKey) return { kind: 'selectAll' };
   if (e.key === ' ' && e.ctrlKey && !e.shiftKey) return { kind: 'selectCol' };
   if (mod && !e.altKey) {
     const k = e.key.toLowerCase();

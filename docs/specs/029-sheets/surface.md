@@ -120,7 +120,7 @@ Everything about it is [Grid and editing](grid-and-editing.md).
 Left to right:
 
 - **Add Sheet** (+): adds "Sheet<n+1>" after the last sheet and opens it.
-- **All Sheets** (☰): a menu of every sheet, the active one ticked, hidden ones dimmed with "Hidden".
+- **All Sheets** (☰, Alt+Shift+K): a menu of every sheet, the active one ticked, hidden ones dimmed with "Hidden".
 - **Sheet tabs**: each the sheet's name on its colour's underline; the active one raised. A click opens it; a
   double-click renames it in place; a drag reorders; its arrow (and a right-click) opens its menu
   ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar)). Tabs past the bar's width scroll with arrows at its end.
@@ -173,3 +173,5 @@ Version History (the shell's). Each is specified with its area.
   Chromium's of about 33.5 million (default).
 - **D135** What Read Row and Read Column say: The first 50 cells, then "and N more", as a header row or column
   orients most and a long reading never ends (default).
+- **D136** Alt+Down on a cell with a dropdown: Opens it, as it always has; elsewhere the next sheet (default).
+- **D137** Where Ctrl+Alt+Shift+M moves focus: The toolbar, the first area always there after the grid (default).

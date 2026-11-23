@@ -216,9 +216,24 @@ export function scrollToReveal(
   return top === scroll.top && left === scroll.left ? null : { top, left };
 }
 
-// How many rows a page is, from the active row, for Page Up / Page Down.
-export function pageRows(g: Geometry, viewHeight: number): number {
+// How many lines a screen holds on one axis, by their average size past the frozen ones.
+function pageLines(
+  offsets: Float64Array,
+  frozen: number,
+  frozenSize: number,
+  view: number,
+): number {
   const avg =
-    (g.rows[g.rows.length - 1]! - g.frozenHeight) / Math.max(1, g.rows.length - 1 - g.frozenRows);
-  return Math.max(1, Math.floor((viewHeight - g.frozenHeight) / Math.max(1, avg)));
+    (offsets[offsets.length - 1]! - frozenSize) / Math.max(1, offsets.length - 1 - frozen);
+  return Math.max(1, Math.floor((view - frozenSize) / Math.max(1, avg)));
+}
+
+// How many rows a page is, for Page Up / Page Down.
+export function pageRows(g: Geometry, viewHeight: number): number {
+  return pageLines(g.rows, g.frozenRows, g.frozenHeight, viewHeight);
+}
+
+// How many columns a page is, for Alt + Page Up / Page Down.
+export function pageCols(g: Geometry, viewWidth: number): number {
+  return pageLines(g.cols, g.frozenCols, g.frozenWidth, viewWidth);
 }
