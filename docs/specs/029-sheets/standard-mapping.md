@@ -160,22 +160,49 @@ The table is the contract the readers and writers are tested against, one test p
 - A row's or column's default cell style formats the cells the file fills in it; over its empty cells it shows
   nothing, as Excel's column styles show nothing (D110), and is not named (default, D123).
 
+## Rows and columns in the file
+
+- A line's own size, whether it is hidden by hand, its group depth, the collapsed groups, the side their controls sit
+  on and the sheet's own line sizes are written and read both ways
+  ([Groups and the outline](grid-and-editing.md#groups-and-the-outline)).
+- **XLSX**: a row's `ht` in points with `customHeight="1"` when sized by hand; `hidden="1"` on a line hidden by hand
+  or inside a collapsed group; `outlineLevel` its depth; `collapsed="1"` on the line holding a collapsed group's
+  control. Columns alike in `cols/col`, runs of columns with the same `width`, `customWidth`, `hidden`,
+  `outlineLevel` and `collapsed`. `sheetFormatPr` holds the sheet's own `defaultRowHeight` and `defaultColWidth`,
+  and `outlineLevelRow` and `outlineLevelCol` the deepest group; `sheetPr/outlinePr`'s `summaryBelow` and
+  `summaryRight` the controls' side, 1 after and 0 before, written for a sheet with groups (absent, Excel's after).
+- **ODF**: `table:table-row-group` and `table:table-column-group` nest a line in its groups, `table:display="false"`
+  on a collapsed one; `table:visibility="collapse"` on a hidden line; a row's style its `style:row-height` with
+  `style:use-optimal-row-height="false"` when sized by hand, a column's its `style:column-width`. ODF says nothing of
+  the controls' side: a read sheet with groups puts them after, as LibreOffice draws them, and a written sheet's
+  before is not said (default, D167).
+- **Units**: a pixel is a 96th of an inch and a point 4/3 of a pixel; an XLSX column's width is Excel's, characters of
+  a 7 px digit with 5 px of padding; an ODF length in any of its units, written in inches (default, D166).
+- **The sheet's own sizes**: XLSX's `sheetFormatPr` defaults, and in ODF the size most of the lines carry within the
+  grid the sheet makes (Google sizes every row, and the run past it otherwise), are the sheet's own row height and
+  column width; a line at that size takes it, as does an XLSX row not
+  `customHeight` and an ODF row at its text's height, and any other size is the line's own, kept within the sizes the
+  Resize dialog allows (D158) (default, D124). LiveDoc writes a row without a size of its own at its text's height. A sheet
+  whose sized lines pass the most it holds keeps the first and names the rest (`sizes_cut`).
+- **Collapsed**: an XLSX group is collapsed when every line of it is hidden and its control's line says so (or it has
+  none); an ODF group when it says `table:display="false"`. Its lines are hidden by the group alone: a line hidden by
+  hand inside a collapsed group shows again with it, as the file cannot tell the two apart (default, D168).
+- Frozen lines are not in either mapping yet: XLSX's `sheetViews`, with its pane, is kept as the file's own and
+  written back as it came, and ODF's `settings.xml` is LiveDoc's; a freeze made in LiveDoc is not in its files.
+
 ## Unknown content
 
 - Whatever a file holds that the model does not (an embedded chart, a format's own setting, a smart chip, a filter
   view in XLSX that only ODF could hold) is kept with the workbook as the file's own XML, by where it sat, and written
   back untouched to the same format. Built in `@livedoc/sheets/files` (`KeptContent`).
 - Every construct the mappings above do not read yet is kept until its mapping is built (charts and pictures, notes
-  and comments, merges, named ranges, validation and format rules, filters, protections; XLSX's print settings and
-  column widths), as text documents keep theirs. Styles are not kept: a cell's, row's or column's style beyond its
-  number format, and ODF's `styles.xml` (its page layouts, so its print settings, and the named styles a format rule
-  applies), wait for [Formatting](formatting.md) to map them. Until then a file's read names each sheet whose cells,
-  rows or columns name a cell style formatting more than the number (a font, fill, border or alignment:
-  `styles_unread`); ODF's row and column sizes are not read yet either, and a sheet sized by hand is named
-  (`sizes_unread`) (default, D104): its columns of more than one width, or a row whose height is not its text's
-  (`style:use-optimal-row-height` other than true) (default, D124). XLSX's differential formats (`dxfs`) and table
-  styles are kept in its styles part, as kept format rules, tables and pivot tables name them by index; a kept
-  column's `style` index is left out, as it names a style LiveDoc does not write (default, D110).
+  and comments, merges, named ranges, validation and format rules, filters, protections; XLSX's print settings), as
+  text documents keep theirs. Styles are not kept: a cell's, row's or column's style beyond its number format, and
+  ODF's `styles.xml` (its page layouts, so its print settings, and the named styles a format rule applies), wait for
+  [Formatting](formatting.md) to map them. Until then a file's read names each sheet whose cells, rows or columns name
+  a cell style formatting more than the number (a font, fill, border or alignment: `styles_unread`) (default, D104).
+  XLSX's differential formats (`dxfs`) and table styles are kept in its styles part, as kept format rules, tables and
+  pivot tables name them by index (default, D110).
 - **Grains**, each kept as the file's own XML with the namespace bindings it needs
   ([Office packages](../020-import-export/office-packages.md), `keptXmlOf`), anchored where it sat:
   - **Workbook**: ODF's `office:spreadsheet` children but its tables and `table:calculation-settings` (which LiveDoc
@@ -183,8 +210,9 @@ The table is the contract the readers and writers are tested against, one test p
     cell, row, column or table names (`graphic`, `paragraph`, `text`, `chart`), which kept drawings and notes
     name. XLSX's `workbook` children but `workbookPr` and `sheets`.
   - **Sheet**: ODF's `table:table` children but its columns and rows, each before or after them, and its attributes
-    but `table:name` and `table:style-name`; XLSX's `worksheet` children but `dimension` and `sheetData`, and its
-    `sheet` element's attributes but `name`, `sheetId` and `r:id`.
+    but `table:name` and `table:style-name`; XLSX's `worksheet` children but `dimension`, `sheetFormatPr`, `cols` and
+    `sheetData`, its `sheetPr` but its `outlinePr`, and its `sheet` element's attributes but `name`, `sheetId` and
+    `r:id`.
   - **Cell** (ODF): a `table:table-cell`'s children but its paragraphs (a note, a drawing anchored to it) and its
     attributes but those the reader reads (its value, type, formula, style, repeats and array spans), so a merge or a
     validation stays on its cell. A repeated cell keeps them on each of its cells up to 1,000 cells; past that they
@@ -304,8 +332,7 @@ The code cites each by its id.
   (`kept_unread`) (default).
 - **D109** Kept content after a conversion: Stays with the workbook in its own format, left out of the other
   standard's files, written again once converted back (default).
-- **D110** XLSX kept content naming styles: `dxfs` and `tableStyles` kept in the styles part; a kept `col`'s `style`
-  left out (default).
+- **D110** XLSX kept content naming styles: `dxfs` and `tableStyles` kept in the styles part (default).
 - **D111** Kept package entries in a flat `.fods`: Left out, named (`parts_left`) (default).
 - **D112** XLSX kept content naming a sheet by its place: A defined name follows its sheet; a view's index past the
   last sheet becomes the first (default).
@@ -315,5 +342,9 @@ The code cites each by its id.
   Sheets (default).
 - **D123** A row's or column's default cell format in ODF: On the cells the file fills in it; not named over its empty
   cells (default).
-- **D124** An ODF sheet sized by hand: Columns of more than one width, or a row not at its text's height; named
-  (`sizes_unread`) (default).
+- **D124** The sheet's own sizes in a file: XLSX's `sheetFormatPr` defaults, ODF's size most lines carry within the
+  grid; a line at that size takes it, any other its own, within D158 (default).
+- **D166** Units: A pixel a 96th of an inch, a point 4/3 px; an XLSX column width in Excel's characters of a 7 px digit
+  and 5 px padding; ODF written in inches (default).
+- **D167** The controls' side in ODF: Not said by the format; read as after, as LibreOffice draws them (default).
+- **D168** A line hidden by hand inside a collapsed group in a file: Hidden by its group alone, shown with it (default).

@@ -48,13 +48,15 @@ export const isWrittenXlsxPart = (name: string): boolean =>
 
 // The workbook's and a worksheet's children the reader reads or the writer writes.
 export const WORKBOOK_READ: ReadonlySet<string> = new Set(['workbookPr', 'sheets']);
-export const WORKSHEET_READ: ReadonlySet<string> = new Set(['dimension', 'sheetData']);
+export const WORKSHEET_READ: ReadonlySet<string> = new Set([
+  'dimension',
+  'sheetFormatPr',
+  'cols',
+  'sheetData',
+]);
 const SHEET_READ: ReadonlySet<string> = new Set(['name', 'sheetId']);
 // The styles part's children a kept format rule, table or pivot table names by index (D110).
 const STYLESHEET_KEPT: ReadonlySet<string> = new Set(['dxfs', 'tableStyles']);
-
-// A kept column's `style` names a cell format LiveDoc does not write: left out (D110).
-const COLUMN_STYLE = /(<(?:[\w.-]+:)?col\b[^>]*?)\s+style="[^"]*"/g;
 
 // The relationship ids an element and its descendants name.
 function idsNamed(element: XmlElement, into: string[] = []): string[] {
@@ -62,6 +64,27 @@ function idsNamed(element: XmlElement, into: string[] = []): string[] {
   for (const child of childElements(element)) idsNamed(child, into);
   return into;
 }
+
+// A worksheet's `sheetPr` without its `outlinePr`, which LiveDoc reads and writes (standard-mapping.md "Rows and
+// columns in the file"); any other element as the file wrote it.
+function without(parsed: XmlParsed, element: XmlElement, xml: string): string {
+  const outline =
+    element.uri === SPREADSHEETML_NS && element.local === 'sheetPr'
+      ? childElements(element).find((e) => e.uri === SPREADSHEETML_NS && e.local === 'outlinePr')
+      : undefined;
+  if (!outline) return xml;
+  return (
+    parsed.source.slice(element.start, outline.start) +
+    parsed.source.slice(outline.end, element.end)
+  );
+}
+
+// A `sheetPr` holding nothing but its `outlinePr`: nothing left to keep.
+const onlyOutline = (element: XmlElement) =>
+  element.uri === SPREADSHEETML_NS &&
+  element.local === 'sheetPr' &&
+  element.attributes.length === 0 &&
+  childElements(element).every((e) => e.uri === SPREADSHEETML_NS && e.local === 'outlinePr');
 
 /** Kept content as the XLSX reader gathers it, part by part. */
 export class XlsxKeeper {
@@ -87,8 +110,7 @@ export class XlsxKeeper {
       return;
     }
     const kept = keptXmlOf(parsed, element);
-    const xml = element.local === 'cols' ? kept.xml.replace(COLUMN_STYLE, '$1') : kept.xml;
-    this.items.push({ place, xml, ns: kept.ns, at });
+    this.items.push({ place, xml: without(parsed, element, kept.xml), ns: kept.ns, at });
   }
 
   // A root's attributes but its namespace declarations; `mc:Ignorable` with the bindings of the prefixes it names.
@@ -174,7 +196,10 @@ export class XlsxKeeper {
     const ids = this.keepRelationships(part, 'sheet', { sheet }, new Set());
     this.rootAttributes('worksheet-attribute', parsed.root, { sheet });
     for (const child of childElements(parsed.root))
-      if (!(child.uri === SPREADSHEETML_NS && WORKSHEET_READ.has(child.local)))
+      if (
+        !(child.uri === SPREADSHEETML_NS && WORKSHEET_READ.has(child.local)) &&
+        !onlyOutline(child)
+      )
         this.element('worksheet', parsed, child, { sheet }, ids);
   }
 

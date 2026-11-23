@@ -72,8 +72,8 @@ describe('the import report’s copy', () => {
         'Fonts, fills, borders and alignment are not shown yet in 2 sheets: Data and Totals',
       ],
       [
-        { k: 'sizes_unread', count: 1, names: ['Data'] },
-        'Row heights and column widths are not read yet in 1 sheet: Data',
+        { k: 'sizes_cut', count: 1, names: ['Data'] },
+        'Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data',
       ],
       [
         {

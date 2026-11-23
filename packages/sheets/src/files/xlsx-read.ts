@@ -35,6 +35,7 @@ import {
   readCellAddress,
   SPREADSHEETML_NS,
 } from './xlsx-parts';
+import { readXlsxLines } from './xlsx-lines';
 
 // A file is read up to a workbook's limits (files-and-print.md "A file sent in parts"): past them it is cut, and said.
 const {
@@ -242,7 +243,8 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   if (styled) book.losses.push({ k: 'styles_unread', sheet: name });
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), 0);
-  return { name, rows, cols, cells };
+  const lines = readXlsxLines(root, book.ns);
+  return lines ? { name, rows, cols, cells, lines } : { name, rows, cols, cells };
 }
 
 /**

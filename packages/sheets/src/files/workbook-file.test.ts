@@ -4,6 +4,7 @@ import { renderFormula } from '../formula/stored';
 import { makeSheets } from '../testing/book';
 import { cellKey, type Sheet } from '../sheet';
 import { sheetsFromFile, workbookFileOf, type WorkbookFile } from './workbook-file';
+import { fileLinesOf } from './file-lines';
 
 function seeded(n = 7): () => number {
   let x = n;
@@ -64,6 +65,7 @@ describe('workbookFileOf', () => {
       sheets: [
         {
           name: 'Budget',
+          lines: fileLinesOf(sheets[0]!.layout),
           rows: 5,
           cols: 6,
           cells: [
@@ -75,7 +77,13 @@ describe('workbookFileOf', () => {
             { r: 1, c: 1, formula: '=Costs!A1+1', value: { k: 'n', v: 41 } },
           ],
         },
-        { name: 'Costs', rows: 5, cols: 6, cells: [{ r: 0, c: 0, value: { k: 'n', v: 40 } }] },
+        {
+          name: 'Costs',
+          rows: 5,
+          cols: 6,
+          cells: [{ r: 0, c: 0, value: { k: 'n', v: 40 } }],
+          lines: fileLinesOf(sheets[1]!.layout),
+        },
       ],
     });
   });

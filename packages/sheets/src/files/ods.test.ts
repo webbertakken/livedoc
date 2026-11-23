@@ -191,6 +191,17 @@ describe('readOds', () => {
         { r: 2, c: 0, value: { k: 'n', v: 7 } },
         { r: 2, c: 1, value: { k: 'n', v: 7 } },
       ],
+      // The row group's rows, one deep; ODF's controls sit after their groups (D167).
+      lines: {
+        r: {
+          lines: new Map([
+            [1, { depth: 1 }],
+            [2, { depth: 1 }],
+          ]),
+          collapsed: [],
+          after: true,
+        },
+      },
     });
     expect(read.losses).toEqual([]);
   });

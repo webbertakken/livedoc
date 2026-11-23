@@ -16,6 +16,7 @@ import {
 } from '@livedoc/office-packages';
 import { SheetName } from '../workbook/sheet-name';
 import { FILE_LAST_COL } from './a1-text';
+import { xlsxLinesOut } from './xlsx-lines';
 import { dummyFunction } from './excel-formula';
 import { ODS_GENERATOR } from './ods-write';
 import {
@@ -211,7 +212,12 @@ function worksheetXml(
     rows.set(cell.r, row);
   }
   if (ctx.cut > 0) losses.push({ k: 'text_cut', sheet: sheet.name, cells: ctx.cut });
-  const lines = [...rows].map(([r, cells]) => `<row r="${r + 1}">${cells.join('')}</row>`);
+  // Rows with attributes of their own (a size, hidden, a group) are written too, with or without cells.
+  const shape = sheet.lines ? xlsxLinesOut(sheet.lines, sheet.rows, sheet.cols) : null;
+  for (const r of shape?.rows.keys() ?? []) if (!rows.has(r)) rows.set(r, []);
+  const lines = [...rows]
+    .sort(([a], [b]) => a - b)
+    .map(([r, cells]) => `<row r="${r + 1}"${shape?.rows.get(r) ?? ''}>${cells.join('')}</row>`);
   const last = ordered.at(-1);
   const extent = last
     ? `A1:${cellAddress(
@@ -221,6 +227,8 @@ function worksheetXml(
     : 'A1';
   const own = [
     { name: 'dimension', xml: `<dimension ref="${extent}"/>` },
+    ...(shape ? [{ name: 'sheetFormatPr', xml: shape.sheetFormatPr }] : []),
+    ...(shape?.cols ? [{ name: 'cols', xml: shape.cols }] : []),
     {
       name: 'sheetData',
       xml: lines.length > 0 ? ['<sheetData>', ...lines, '</sheetData>'].join('\n') : '<sheetData/>',
@@ -230,7 +238,7 @@ function worksheetXml(
   const xml = [
     XML_DECLARATION,
     `<worksheet xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('worksheet', OWN_NS, index)}>`,
-    ...kept.worksheetChildren(index, own, rootNs),
+    ...kept.worksheetChildren(index, own, rootNs, shape?.outlinePr ?? null),
     '</worksheet>',
     '',
   ].join('\n');

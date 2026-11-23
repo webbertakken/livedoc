@@ -151,7 +151,6 @@
   "libreoffice/54034.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 1
     },
     "written": {},
@@ -163,7 +162,6 @@
   "libreoffice/55406_Conditional_formatting_sample.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 1
     },
     "written": {},
@@ -175,7 +173,6 @@
   "libreoffice/DataValidations-49244.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 1
     },
     "written": {},
@@ -197,7 +194,6 @@
   "libreoffice/DateFormatTests.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 2,
       "styles_unread": 2
     },
     "written": {},
@@ -209,7 +205,6 @@
   "libreoffice/ExcelTables.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 1
     },
     "written": {},
@@ -222,7 +217,6 @@
     "read": {
       "entries_dropped": 1,
       "format_approximated": 1,
-      "sizes_unread": 1,
       "styles_unread": 3
     },
     "written": {},
@@ -234,7 +228,6 @@
   "libreoffice/NumberFormatTests.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 2,
       "styles_unread": 2
     },
     "written": {},
@@ -267,7 +260,6 @@
   "libreoffice/WithConditionalFormatting.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 3
     },
     "written": {},
@@ -320,7 +312,6 @@
   "libreoffice/shared_formulas.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 1
     },
     "written": {},
@@ -353,7 +344,6 @@
   "google/DataValidations-49244.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 1
     },
     "written": {},
@@ -376,7 +366,6 @@
     "read": {
       "entries_dropped": 1,
       "formats_cut": 2,
-      "sizes_unread": 2,
       "styles_unread": 2
     },
     "written": {},
@@ -398,7 +387,6 @@
   "google/SampleSS.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 3,
       "styles_unread": 3
     },
     "written": {},
@@ -420,7 +408,6 @@
   "google/comments.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 3,
       "styles_unread": 3
     },
     "written": {},
@@ -442,7 +429,6 @@
   "google/google-functions.ods": {
     "read": {
       "entries_dropped": 1,
-      "sizes_unread": 1,
       "styles_unread": 1
     },
     "written": {},
