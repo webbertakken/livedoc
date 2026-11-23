@@ -252,9 +252,9 @@ test('a picture is sized by its handles and by Image options', async ({ page, pa
   // 240 × 120 pixels at 96 an inch: 180 × 90 points, 240 × 120 CSS pixels at 100%.
   expect(await size()).toEqual({ width: 240, height: 120 });
 
-  // Eight handles; the south-east one dragged along the diagonal: bigger, its ratio kept.
+  // Eight handles and the rotation handle; the south-east one dragged along the diagonal: bigger, its ratio kept.
   const handles = picture.locator('[data-picture-handle]');
-  await expect(handles).toHaveCount(8);
+  await expect(handles).toHaveCount(9);
   await page.waitForTimeout(400);
   await page.screenshot({ path: test.info().outputPath('picture-handles.png') });
   const se = (await picture.locator('[data-picture-handle="se"]').boundingBox())!;
@@ -318,5 +318,57 @@ test('a picture is cropped by its crop marks', async ({ page, pageErrors }) => {
   await page.screenshot({ path: test.info().outputPath('picture-cropped.png') });
   await page.keyboard.press('ControlOrMeta+z');
   await expect.poll(size).toEqual({ width: 240, height: 120 });
+  expectNoPageErrors(pageErrors);
+});
+
+// objects.md "Working with a picture", Turning: Image options' Angle turns it, its line making room for its turned
+// bounds; ⌥→ turns it 15° more, one undo step; the rotation handle dragged a quarter round, Shift held, turns it on.
+test('a picture is turned by Image options, the keys and its rotation handle', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  const { body, picture, size } = await documentWithPicture(page, 'Turned: ');
+  await (await officeMenuItem(page, ['Format', 'Image', 'Image options'])).click();
+  const panel = page.getByRole('complementary', { name: 'Image options' });
+  const angle = panel.getByRole('textbox', { name: 'Angle' });
+  await expect(angle).toHaveValue('0');
+  await angle.fill('90');
+  await angle.press('Enter');
+  await expect.poll(size).toEqual({ width: 120, height: 240 });
+  await expect(picture.locator('.text-document-picture-turn')).toHaveCSS(
+    'transform',
+    /^matrix\(0, 1, -1, 0/,
+  );
+
+  // The keys turn the selected picture, focus back in the writing.
+  await picture.click();
+  await expect(body.locator('.ProseMirror-selectednode.text-document-picture')).toHaveCount(1);
+  await page.keyboard.press('Alt+ArrowRight');
+  await expect(angle).toHaveValue('105');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(angle).toHaveValue('90');
+  await expect.poll(size).toEqual({ width: 120, height: 240 });
+
+  // The rotation handle, turned with the picture to face right, dragged round to below its centre: a quarter more.
+  const handle = picture.locator('[data-picture-handle="rotate"]');
+  await expect(handle).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('picture-turned-handles.png') });
+  const from = (await handle.boundingBox())!;
+  const box = (await picture.boundingBox())!;
+  const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const start = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
+  const reach = Math.hypot(start.x - centre.x, start.y - centre.y);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.keyboard.down('Shift');
+  await page.mouse.move(centre.x + 4, centre.y + reach, { steps: 8 });
+  await page.mouse.up();
+  await page.keyboard.up('Shift');
+  await expect(angle).toHaveValue('180');
+  await expect.poll(size).toEqual({ width: 240, height: 120 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('picture-turned.png') });
   expectNoPageErrors(pageErrors);
 });
