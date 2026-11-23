@@ -156,7 +156,8 @@ test('a column break starts the next column, dimmed in one column, one undo step
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 
-  await body.locator('> p').first().click();
+  // The caret into the first paragraph by the keyboard: a click where write() clicked moments ago is a double-click.
+  await page.keyboard.press('ControlOrMeta+Home');
   await (await officeMenuItem(page, ['Format', 'Columns', 'Two columns'])).click();
   // The caret at the second paragraph's start: the break moves it to the second column.
   await body.locator('> p').nth(1).click();
@@ -187,7 +188,8 @@ test("the ruler shows the caret's column: the gap grey, its indents at the colum
   await newDocument(page);
   await write(page, ['First column', 'Second column']);
   const body = page.locator(BODY);
-  await body.locator('> p').first().click();
+  // The caret into the first paragraph by the keyboard: a click where write() clicked moments ago is a double-click.
+  await page.keyboard.press('ControlOrMeta+Home');
   await (await officeMenuItem(page, ['Format', 'Columns', 'Two columns'])).click();
   await body.locator('> p').nth(1).click();
   await page.keyboard.press('Home');
