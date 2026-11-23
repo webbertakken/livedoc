@@ -57,11 +57,11 @@ export function LineDataDialog({
   useLayoutEffect(() => registerChartDataDialog({ close: () => closeRef.current() }), [closeRef]);
   const elementTourRunning = useActiveTour() === 'element';
   const cell =
-    'min-w-0 rounded border border-slate-200 bg-white px-1.5 py-1 text-sm text-slate-700 outline-none focus:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200';
+    'min-w-0 rounded-control border border-slate-200 bg-white px-1 py-1 text-body text-slate-700 outline-none focus:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200';
   const xBtn =
-    'flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800';
+    'flex size-chip shrink-0 items-center justify-center rounded-control text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800';
   const addBtn =
-    'inline-flex cursor-pointer items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15';
+    'inline-flex min-h-row cursor-pointer items-center justify-center gap-1 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15';
 
   const importCsv = (file: File) => {
     void file.text().then((text) => {
@@ -88,7 +88,7 @@ export function LineDataDialog({
           type="button"
           onClick={close}
           aria-label="Close"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="flex size-row shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <CloseIcon size={18} />
         </button>
@@ -156,7 +156,7 @@ export function LineDataDialog({
                       { name: `Series ${rows.length + 1}`, values: cats.map(() => 0) },
                     ])
                   }
-                  className={`${addBtn} h-8 w-8 !px-0`}
+                  className={`${addBtn} size-row !px-0`}
                 >
                   +
                 </button>
