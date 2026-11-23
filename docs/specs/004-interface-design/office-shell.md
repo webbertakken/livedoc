@@ -169,6 +169,8 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   editor untouched; a shortcut whose item is `comingSoon` or not bound is left alone too.
 - A shortcut left to the browser (Copy, Cut, Paste) is never bound, so the browser's own clipboard events reach the
   kind; the menu item still runs.
+- A shortcut the kind's surface hears itself (a spreadsheet's grid keys, Undo through the editor) is never run by the
+  layer, which cannot tell a field's keys from the document's: it is listed as built and shown beside its item.
 - A shortcut no item or control names (Copy text formatting) runs what the kind binds under the shortcut's own id;
   unbound for the session, its keys pass on.
 - A **sequence** ("holding Ctrl+Alt, press N then H") starts on its first key with its modifiers held and runs on its

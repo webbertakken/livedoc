@@ -12,6 +12,7 @@ XML, looking and working as Google Sheets does. It is specified and being built 
 - ./standard-mapping.md - when working on reading or writing `.ods`, `.fods` or `.xlsx`: the model's mapping to each format, formula syntax, unknown content, conformance
 - ./parity-matrix.md - when checking what a Google Sheets menu item, button, panel, dialog or shortcut does here, and its status
 - ./surface.md - when working on the screen of a workbook: layout, menu bar, toolbar, formula bar, sheet bar, side panels, phone
+- ./keyboard-shortcuts.md - when working on a spreadsheet's keyboard shortcuts: every one of Google's, per platform, and its status
 - ./grid-and-editing.md - when working on the grid, selection, moving around, editing, formulas as typed, fill, clipboard, rows and columns
 - ./formatting.md - when working on styles, number formats, fonts, colours, borders, alignment, merges, themes, alternating colours
 - ./data-tools.md - when working on sort, filters, filter views, slicers, validation, named ranges and functions, protection, tables, clean-up, find and replace

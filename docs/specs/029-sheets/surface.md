@@ -46,8 +46,9 @@ menu search (Alt+/, the shell's) finds every item by its name and its submenu's 
   Paste Special › Values Only and Delete › Values; an Editor everything.
 - Undo and Redo are the person's one timeline ([Undo](grid-and-editing.md#undo)); Cut, Copy and Paste the grid's
   clipboard, as its keys are.
-- Each menu opens with its Alt key, Google's (Alt+F for File in Chrome, Alt+Shift+F in other browsers); the
-  shortcuts the grid hears itself are listed beside their items once the grid's keys join the shell's registry.
+- Each menu opens with its Alt key, Google's (Alt+F for File in Chrome, Alt+Shift+F in other browsers); every item
+  with a shortcut shows its keys, the grid's own included, and Help › Keyboard Shortcuts (Ctrl+/) lists them all
+  ([Keyboard shortcuts](keyboard-shortcuts.md)).
 - The shell's events name the kind: `UI · Opened · SpreadsheetMenu<Name>` as a menu opens, `UI · Used ·
 SpreadsheetToolFinder`, never one per item (default, D127).
 
@@ -175,3 +176,6 @@ Version History (the shell's). Each is specified with its area.
   orients most and a long reading never ends (default).
 - **D136** Alt+Down on a cell with a dropdown: Opens it, as it always has; elsewhere the next sheet (default).
 - **D137** Where Ctrl+Alt+Shift+M moves focus: The toolbar, the first area always there after the grid (default).
+- **D138** A format key while a cell is edited: Runs its item on the cell, as Google's does (default).
+- **D139** Google's keys for Portugal, Italy, Germany and Spain: Not kept; one set of keys for every locale
+  (default).
