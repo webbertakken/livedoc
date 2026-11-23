@@ -20,6 +20,8 @@ import {
   PDF_MENUS,
   PDF_ZOOM_MENU_PERCENTS,
   REDO,
+  ROTATE_VIEW_CLOCKWISE,
+  ROTATE_VIEW_COUNTERCLOCKWISE,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
   UNDO,
@@ -97,6 +99,8 @@ describe("a PDF document's menus and toolbar", () => {
     GO_TO_PREVIOUS_PAGE,
     GO_TO_NEXT_PAGE,
     GO_TO_PAGE,
+    ROTATE_VIEW_CLOCKWISE,
+    ROTATE_VIEW_COUNTERCLOCKWISE,
   ];
 
   it('has no built item nothing runs, no shortcut its registry lacks, no id twice', () => {
@@ -162,7 +166,11 @@ describe("a PDF document's menus and toolbar", () => {
         .filter((control) => control.status === 'built')
         .map((control) => control.id);
     // The zoom is the page bar's, never the toolbar's ("The page bar").
-    expect(controls('viewing', 'view')).toEqual([TOOL_SELECT, PAGE_DISPLAY_CONTROL]);
+    expect(controls('viewing', 'view')).toEqual([
+      TOOL_SELECT,
+      PAGE_DISPLAY_CONTROL,
+      ROTATE_VIEW_CLOCKWISE,
+    ]);
     expect(controls('reviewing', 'participate')).toEqual([UNDO, REDO, TOOL_SELECT, TOOL_HIGHLIGHT]);
     // "The toolbar": a mode's own tools are not another mode's.
     const labels = (mode: PdfMode) =>

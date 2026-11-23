@@ -93,7 +93,7 @@ export function pdfEngineOver(
       if (before.stored) opening(before.stored, before.password);
       return { ...opened, wrong: true };
     },
-    drawPage: async (index, scale) => reader.drawPage(index, scale),
+    drawPage: async (index, scale, turns) => reader.drawPage(index, scale, undefined, turns),
     outline: async () => said(reader.outline()),
     links: async (index) => said(reader.links(index)),
     pageText: async (index) => said(reader.pageText(index)),

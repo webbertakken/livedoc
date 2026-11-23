@@ -6,6 +6,8 @@ import {
   GO_TO_LAST_PAGE,
   GO_TO_NEXT_PAGE,
   GO_TO_PREVIOUS_PAGE,
+  ROTATE_VIEW_CLOCKWISE,
+  ROTATE_VIEW_COUNTERCLOCKWISE,
   PAGE_DISPLAY_CONTINUOUS,
   PAGE_DISPLAY_COVER,
   PAGE_DISPLAY_SINGLE,
@@ -35,6 +37,7 @@ function viewer(over: { view?: View; scale?: number; atFirst?: boolean; atLast?:
     turn: vi.fn(),
     setDisplay: vi.fn(),
     setCover: vi.fn(),
+    rotate: vi.fn(),
   };
 }
 
@@ -117,6 +120,17 @@ describe('View > Zoom', () => {
     const actual = pdfViewActions(viewer({ view: PdfView.withZoom(PdfView.initial(), 1) }));
     expect(actual.actions[ZOOM_ACTUAL_SIZE]?.checked).toBe(true);
     expect(actual.actions[zoomPercentId(100)]?.checked).toBe(false);
+  });
+});
+
+// "Rotate view": Clockwise and Counterclockwise, a quarter each, for this person only.
+describe('View > Rotate view', () => {
+  it('turns every page a quarter clockwise or counterclockwise', () => {
+    const at = viewer();
+    const { actions } = pdfViewActions(at);
+    actions[ROTATE_VIEW_CLOCKWISE]!.run();
+    actions[ROTATE_VIEW_COUNTERCLOCKWISE]!.run();
+    expect(at.rotate.mock.calls).toEqual([[1], [-1]]);
   });
 });
 

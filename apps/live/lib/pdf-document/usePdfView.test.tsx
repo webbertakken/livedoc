@@ -162,6 +162,26 @@ describe("a person's view of the pages", () => {
   });
 });
 
+// "Rotate view": every page a quarter, drawn turned; a turn keeps the page in view, its top at the view's top.
+describe('Rotate view', () => {
+  it('lays every page on its side for a quarter turn, and keeps the page in view', () => {
+    const at = viewing();
+    act(() => at.now().goToPage(3));
+    act(() => at.now().rotate(1));
+    expect(at.now().view.turns).toBe(1);
+    const box = at.now().layout.boxes[3]!;
+    // US Letter turned: 1,056 wide by 816 tall at 100%, fitted to the view's width.
+    expect(box.width / box.height).toBeCloseTo(792 / 612, 6);
+    expect(at.now().scale).toBeCloseTo((1000 - 48) / 1056, 9);
+    expect(at.now().page).toBe(3);
+    expect(at.scroller.scrollTop).toBeCloseTo(box.top - 24, 6);
+    expect(track).toHaveBeenCalledWith('Pdf', 'Changed', 'RotateView.Clockwise');
+    act(() => at.now().rotate(-1));
+    expect(at.now().view.turns).toBe(0);
+    expect(track).toHaveBeenCalledWith('Pdf', 'Changed', 'RotateView.Counterclockwise');
+  });
+});
+
 describe('a display of one row at a time', () => {
   // "Single page and Two pages show the row in view alone."
   it('lays out the row in view alone, and turns rows', () => {

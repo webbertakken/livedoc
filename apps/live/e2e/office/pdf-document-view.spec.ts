@@ -138,6 +138,38 @@ test('a PDF’s pages are laid out, zoomed and turned as the person’s own view
   await page.keyboard.press('ControlOrMeta+Alt+KeyG');
   await expect(pageField(page)).toBeFocused();
 
+  // "Rotate view": every page a quarter, drawn turned; a mark is made where the turned picture shows the text.
+  await viewItem(page, 'Page display', 'Continuous');
+  await viewItem(page, 'Zoom', 'Fit width');
+  await viewItem(page, 'Rotate view', 'Clockwise');
+  const pageOne = page.locator('[data-pdf-page="1"]');
+  await pageOne.scrollIntoViewIfNeeded();
+  // The picture drawn turned, not the upright one stretched while the turned one is drawn.
+  await expect(pageOne).toHaveAttribute('data-pdf-page-turns', '1');
+  const turned = (await pageOne.boundingBox())!;
+  expect(turned.width / turned.height).toBeCloseTo(792 / 612, 2);
+  await page.screenshot({ path: test.info().outputPath('pdf-view-turned-dark.png') });
+  // The fixture's line, 72 points in and 68 down an upright page, runs down the turned page 68 points from its right.
+  await page.getByRole('button', { name: 'Highlight', exact: true }).click();
+  const scale = turned.height / 612;
+  const x = turned.x + (792 - 68) * scale;
+  await page.mouse.move(x, turned.y + 74 * scale);
+  await page.mouse.down();
+  await page.mouse.move(x, turned.y + 170 * scale, { steps: 6 });
+  await page.mouse.move(x, turned.y + 272 * scale, { steps: 6 });
+  await page.mouse.up();
+  const mark = pageOne.locator('[data-pdf-mark]');
+  await expect(mark).toHaveCount(1);
+  const along = (await mark.boundingBox())!;
+  expect(along.height).toBeGreaterThan(along.width * 3);
+  await page.locator(PAGES).focus();
+  await page.keyboard.press('ControlOrMeta+Shift+Minus');
+  await expect
+    .poll(async () => (await pageOne.boundingBox())!.height > (await pageOne.boundingBox())!.width)
+    .toBe(true);
+  const upright = (await mark.boundingBox())!;
+  expect(upright.width).toBeGreaterThan(upright.height * 3);
+
   // On a phone's width the bar stays clear of the document group at the bottom right.
   await page.setViewportSize({ width: 390, height: 780 });
   await expect(pageBar(page)).toBeInViewport();

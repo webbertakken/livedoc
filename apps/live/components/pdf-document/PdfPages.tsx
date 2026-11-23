@@ -13,7 +13,7 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from 'react';
-import type { PageInfo, PdfEngine, TextSelection } from '@livedoc/pdf-documents';
+import type { PageInfo, PageTurns, PdfEngine, TextSelection } from '@livedoc/pdf-documents';
 import { CSS_PER_POINT, type PdfPageLayout } from '@/lib/pdf-document/pdf-page-layout';
 import { marksOnPage, type PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
@@ -65,6 +65,7 @@ export function PdfPages({
   attach,
   layout,
   scale,
+  turns,
   sized,
   onKeyDown,
   pages,
@@ -79,6 +80,8 @@ export function PdfPages({
   // Where every page shown lies, at `scale` (1 is 100%).
   layout: PdfPageLayout;
   scale: number;
+  // Rotate view's turn, in quarters clockwise.
+  turns: PageTurns;
   // The view has a size: until it has, no page is drawn at a scale fitted to nothing.
   sized: boolean;
   // The pages' own keys (usePdfPagesInput.ts).
@@ -135,6 +138,7 @@ export function PdfPages({
                   cssPerPoint={cssPerPoint}
                   left={box.left}
                   top={box.top}
+                  turns={turns}
                   wanted={near.within.has(box.index)}
                   held={held.within.has(box.index)}
                   engine={engine}

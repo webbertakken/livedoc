@@ -1350,6 +1350,14 @@ export const PDF_PAGE_DISPLAYS = chart(
   },
 );
 
+export const PDF_VIEW_TURNS = chart(
+  'Pdf',
+  'Changed',
+  'PDF Views Turned',
+  'Every page of a PDF document turned a quarter for the person reading it, by which way.',
+  { types: ['RotateView.Clockwise', 'RotateView.Counterclockwise'], rising: 'neutral' },
+);
+
 export const PDF_ZOOMS = chart(
   'Pdf',
   'Zoomed',
@@ -1371,6 +1379,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_REDOS,
     PDFS_EXPORTED,
     PDF_PAGE_DISPLAYS,
+    PDF_VIEW_TURNS,
     PDF_ZOOMS,
   ],
 };

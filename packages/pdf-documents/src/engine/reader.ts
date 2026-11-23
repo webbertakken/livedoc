@@ -7,6 +7,7 @@ import type {
   FileMark,
   Outline,
   PageBitmap,
+  PageTurns,
   PageLink,
   PagePoint,
   PdfOpened,
@@ -85,8 +86,13 @@ export class PdfReader {
     }
   }
 
-  drawPage(index: number, scale: number, ceiling?: number): PageBitmap | null {
-    return drawPage(this.file, index, scale, ceiling);
+  drawPage(
+    index: number,
+    scale: number,
+    ceiling?: number,
+    turns: PageTurns = 0,
+  ): PageBitmap | null {
+    return drawPage(this.file, index, scale, ceiling, turns);
   }
 
   outline(most?: number): Outline {

@@ -5,14 +5,23 @@ import {
   PDF_PAGE_PICTURE_MAX_PIXELS,
   type PageBitmap,
   type PageInfo,
+  type PageTurns,
   type PdfEngine,
 } from '@livedoc/pdf-documents';
 
-type Waiting = { index: number; scale: number; settle: (bitmap: PageBitmap | null) => void };
+type Waiting = {
+  index: number;
+  scale: number;
+  turns: PageTurns;
+  settle: (bitmap: PageBitmap | null) => void;
+};
 
 export type PdfPageDrawer = {
-  /** The page drawn at `scale` (1 is 72 dpi); null when it cannot be drawn or was given up before its turn. */
-  draw: (index: number, scale: number) => Promise<PageBitmap | null>;
+  /**
+   * The page drawn at `scale` (1 is 72 dpi), turned `turns` quarters clockwise; null when it cannot be drawn or was
+   * given up before its turn.
+   */
+  draw: (index: number, scale: number, turns?: PageTurns) => Promise<PageBitmap | null>;
   /** Gives up a page still waiting its turn. */
   forget: (index: number) => void;
 };
@@ -38,7 +47,7 @@ export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage'>): PdfPageDrawe
     const turn = waiting.pop();
     if (!turn) return;
     drawing = true;
-    const bitmap = await engine.drawPage(turn.index, turn.scale);
+    const bitmap = await engine.drawPage(turn.index, turn.scale, turn.turns);
     drawing = false;
     turn.settle(bitmap);
     void next();
@@ -53,11 +62,11 @@ export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage'>): PdfPageDrawe
   };
 
   return {
-    draw: (index, scale) =>
+    draw: (index, scale, turns = 0) =>
       new Promise((settle) => {
         // A page asked for again takes its earlier ask's place.
         forget(index);
-        waiting.push({ index, scale, settle });
+        waiting.push({ index, scale, turns, settle });
         void next();
       }),
     forget,

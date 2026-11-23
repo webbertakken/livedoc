@@ -161,8 +161,8 @@ export function pdfEngineClient(
     open: (bytes) => ask<PdfOpened>({ method: 'open', args: [bytes] }, [bytes.buffer]),
     // The password crosses once, to the worker that holds the file, and is kept nowhere on this side.
     unlock: (password) => ask<PdfOpened>({ method: 'unlock', args: [password] }),
-    drawPage: (index, scale) =>
-      ask<PageBitmap | null>({ method: 'drawPage', args: [index, scale] }),
+    drawPage: (index, scale, turns) =>
+      ask<PageBitmap | null>({ method: 'drawPage', args: [index, scale, turns] }),
     outline: () => ask<Outline>({ method: 'outline', args: [] }),
     links: (index) => ask<readonly PageLink[]>({ method: 'links', args: [index] }),
     pageText: (index) => ask<PageText | null>({ method: 'pageText', args: [index] }),

@@ -24,6 +24,7 @@ export type {
   PageLink,
   PageMatrix,
   PagePoint,
+  PageTurns,
   PdfEngine,
   PdfEngineLog,
   PdfDocumentInfo,

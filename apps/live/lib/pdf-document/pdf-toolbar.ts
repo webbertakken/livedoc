@@ -135,7 +135,10 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
   viewing: [
     group('view', 'View', [
       { ...list(PAGE_DISPLAY_CONTROL, 'Page display', 'view', lucideBookOpen), ...BUILT },
-      button(ROTATE_VIEW_CLOCKWISE, 'Rotate view', 'view', lucideRotateCwSquare),
+      button(ROTATE_VIEW_CLOCKWISE, 'Rotate view', 'view', lucideRotateCwSquare, {
+        ...BUILT,
+        shortcut: ROTATE_VIEW_CLOCKWISE,
+      }),
       toggle(DARK_PAGES, 'Dark pages', 'view', lucideMoon),
     ]),
   ],

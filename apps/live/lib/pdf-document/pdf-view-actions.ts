@@ -16,6 +16,8 @@ import {
   PAGE_DISPLAY_TWO,
   PAGE_DISPLAY_TWO_CONTINUOUS,
   PDF_ZOOM_MENU_PERCENTS,
+  ROTATE_VIEW_CLOCKWISE,
+  ROTATE_VIEW_COUNTERCLOCKWISE,
   ZOOM_ACTUAL_SIZE,
   ZOOM_FIT_PAGE,
   ZOOM_FIT_WIDTH,
@@ -50,6 +52,7 @@ type Viewer = Pick<
   | 'turn'
   | 'setDisplay'
   | 'setCover'
+  | 'rotate'
 >;
 
 /** Every one but Go to > Page…, which is the page bar's field (the surface binds it). */
@@ -96,6 +99,8 @@ export function pdfViewActions(viewer: Viewer): { actions: OfficeActions; choice
         },
       ]),
     ),
+    [ROTATE_VIEW_CLOCKWISE]: { run: () => viewer.rotate(1) },
+    [ROTATE_VIEW_COUNTERCLOCKWISE]: { run: () => viewer.rotate(-1) },
     [GO_TO_FIRST_PAGE]: { run: () => viewer.goToPage(0), disabled: viewer.atFirst },
     [GO_TO_LAST_PAGE]: { run: () => viewer.goToPage(viewer.count - 1), disabled: viewer.atLast },
     [GO_TO_PREVIOUS_PAGE]: { run: () => viewer.turn(-1), disabled: viewer.atFirst },
