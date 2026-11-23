@@ -1,13 +1,13 @@
 # Opening any PDF
 
 **Status: specified; a first slice is built.** Built: a file read whole by the engine in a worker thread, every page's
-size read before any is drawn, the refusals shown by name with Download (a protected file among them, until its
-password screen is built). The engine reads a file's version, properties, page labels, what its permissions ask, and
+size read before any is drawn, the refusals shown by name with their glyph and Download, the open password's screen.
+The engine reads a file's version, properties, page labels, what its permissions ask, and
 whether it has fields or a structure tree, a page's text with each character's box, the outline and a page's links
 (none followed), a page's marks and fields as the file holds them, its certificate signatures, embedded files and
 PDF layers, and opens and writes a protected file given its password; the engine is ended when it answers nothing
-for too long or holds too much memory, and the PDF then shows as stopped. The password screen, reading by range and
-repair notices are not built.
+for too long or holds too much memory, and the PDF then shows as stopped. The permissions password's notice, reading
+by range and repair notices are not built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.
 "Any PDF" is every PDF a common reader opens: PDF 1.0 to 2.0, linearised, encrypted, with damaged cross-references,
@@ -75,6 +75,10 @@ Fork F9 `(default)`.
 - **An open password** is asked on the pages' place, never as a browser prompt: "This PDF is protected. Enter its
   password to open it.", a password field, **Open**. A wrong one answers "That password didn't open this PDF." and
   keeps focus in the field; nothing limits the tries, since the check is the person's own browser's.
+- The screen is a refusal's in its shape: a lock as its glyph, the sentence as its heading, then the field and
+  **Open**, then **Download** (the stored file as it came) wherever the bytes are held `(default)`.
+- **Open** is dimmed while the field is empty and while the engine checks a password; the field keeps what was typed
+  after a wrong one, selected, so typing again replaces it `(default)`.
 - The password is **one person's, held in the engine's worker for the session**: never stored, never logged, never
   sent to LiveDoc's servers. Each person on the document gives it themselves; a reload asks again.
 - **A PDF whose permissions forbid changes** opens for everyone with its password-free reading, in **Viewing**, with
@@ -121,6 +125,11 @@ as for any document.
 | `usage_exceeded`            | The owner's allowance for files would be passed; nothing is stored                             | `(default)` "This file doesn't fit in the file storage that is left."                            |
 | `blob_missing`              | The stored file's bytes are gone from the store                                                | "This PDF's file is missing from storage." with **Restore a previous version** where one is kept |
 
+- The copy's first sentence is the region's heading; what follows it is the second line.
+- The glyph says the kind of refusal at a glance `(default)`: a lock for `pdf_certificate_protected` and
+  `pdf_rights_protected`, a warning triangle for `pdf_damaged`, a question mark for `pdf_newer`, an hourglass for
+  `pdf_stopped`, a file for `file_too_large`, a cloud struck through for `files_unavailable` and a crossed circle for
+  `blob_missing`.
 - A refusal is told apart from damage: a PDF made by tomorrow's software is "newer", never "damaged"
   ([The standard](../../research/pdf-documents/the-standard.md#in-the-wild)).
 - After `pdf_stopped` the worker is ended and a fresh one started for the next file; **Try again** reads once more, and
@@ -165,7 +174,7 @@ as for any document.
 
 ## Telemetry and observability
 
-- `Pdf · Opened · <Outcome>`, once per open: `Read`, `Repaired`, `Partial`, `PasswordGiven`, or
+- `Pdf · Opened · <Outcome>`, once per open (a password screen answered counts once, when the file opens): `Read`, `Repaired`, `Partial`, `PasswordGiven`, or
   `Refused.<Name>` (`Damaged`, `Newer`, `CertificateProtected`, `RightsProtected`, `Stopped`, `TooLarge`,
   `NoFileStorage`, `BlobMissing`). Never the password or a name.
 - Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool> repaired=<bool>`

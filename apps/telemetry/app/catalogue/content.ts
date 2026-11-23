@@ -1390,6 +1390,28 @@ export const PDF_SEARCHES = chart(
   { types: ['Find'] },
 );
 
+export const PDF_OPENS = chart(
+  'Pdf',
+  'Opened',
+  'PDF Opens',
+  'A PDF document opened on its surface, by how it came out: read, opened with its password, or refused by name.',
+  {
+    types: [
+      'Read',
+      'PasswordGiven',
+      'Refused.Damaged',
+      'Refused.Newer',
+      'Refused.CertificateProtected',
+      'Refused.RightsProtected',
+      'Refused.Stopped',
+      'Refused.TooLarge',
+      'Refused.NoFileStorage',
+      'Refused.BlobMissing',
+    ],
+    rising: 'neutral',
+  },
+);
+
 export const PDF_DOCUMENTS: MetricStack = {
   stack: true,
   title: 'PDF Documents',
@@ -1408,6 +1430,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_LAYERS_TOGGLED,
     PDF_TEXT_COPIED,
     PDF_SEARCHES,
+    PDF_OPENS,
   ],
 };
 

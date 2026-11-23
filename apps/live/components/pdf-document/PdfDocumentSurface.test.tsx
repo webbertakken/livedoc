@@ -205,12 +205,22 @@ describe('a PDF document’s surface', () => {
   it('shows a refusal as a named region with its sentence, and Download while the file is held', () => {
     const { container } = show({ phase: 'refused', refusal: 'pdf_damaged', storedFile: KEY });
     expect(surface(container).getAttribute('data-pdf-surface')).toBe('refused:pdf_damaged');
-    const region = screen.getByRole('region', {
-      name: "This PDF is damaged and can't be opened. You can still download the file.",
-    });
-    expect(region).toBeTruthy();
+    const region = screen.getByRole('region', { name: "This PDF is damaged and can't be opened." });
+    expect(region.textContent).toContain('You can still download the file.');
     expect(screen.getByRole('button', { name: 'Download' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
+  // opening.md "Passwords": the open password is asked on the pages' place, the menus with nothing to act on.
+  it('asks for an open password on the pages’ place', () => {
+    const unlock = vi.fn(async () => {});
+    const { container } = show({ phase: 'locked', storedFile: KEY, tries: 0, unlock });
+    expect(surface(container).getAttribute('data-pdf-surface')).toBe('locked');
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'open sesame' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(unlock).toHaveBeenCalledWith('open sesame');
+    expect(screen.getByRole('button', { name: 'Download' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Mode: Reviewing' })).toBeNull();
   });
 
   // "Download bakes in this browser from the bytes kept here"

@@ -972,6 +972,23 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone copied text they selected on a PDF document’s pages, from Edit or by its key.',
   'Pdf|Toggled|Layer.Hidden':
     'Someone hid a PDF layer for themselves, in a PDF document’s Layers panel.',
+  'Pdf|Opened|Read': 'A PDF document opened, its pages read as they came.',
+  'Pdf|Opened|PasswordGiven': 'A protected PDF document opened with the password someone gave it.',
+  'Pdf|Opened|Refused.Damaged': 'A PDF document could not be opened because its file is damaged.',
+  'Pdf|Opened|Refused.Newer':
+    'A PDF document could not be opened because it uses a newer kind of PDF than LiveDoc reads.',
+  'Pdf|Opened|Refused.CertificateProtected':
+    'A PDF document was not opened because it is locked to specific people’s certificates.',
+  'Pdf|Opened|Refused.RightsProtected':
+    'A PDF document was not opened because it is protected by a rights service.',
+  'Pdf|Opened|Refused.Stopped':
+    'LiveDoc stopped reading a PDF document that asked for too much time or memory.',
+  'Pdf|Opened|Refused.TooLarge':
+    'A PDF document’s file was larger than LiveDoc holds for one file.',
+  'Pdf|Opened|Refused.NoFileStorage':
+    'A PDF document could not be opened because the server has no file storage.',
+  'Pdf|Opened|Refused.BlobMissing':
+    'A PDF document could not be opened because its file is missing from storage.',
   'Pdf|Zoomed|Custom':
     'Someone zoomed a PDF document to a percentage of their own: typed, chosen, or with the wheel or a pinch.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
@@ -2875,6 +2892,7 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Pdf|Changed':
     'Someone changed how a PDF document’s pages are laid out for them (the value says how).',
   'Pdf|Zoomed': 'Someone zoomed a PDF document (the value says how).',
+  'Pdf|Opened': 'A PDF document was opened or refused (the value says how it came out).',
   'Pdf|Copied': 'Someone copied something from a PDF document (the value says what).',
   'Pdf|Searched': 'Someone searched a PDF document (the value says how).',
   'Pdf|Toggled':
