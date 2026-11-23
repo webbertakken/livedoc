@@ -2,8 +2,8 @@
 
 **Status: specified; partly built.** Built: one landmark a page, named with its label; each page near view reading
 the file's tags where they cover it, else its text as paragraphs rebuilt from the file's order, the same text Copy
-gives. Not built: a scanned page's words, fields and links in the tree, marks in the tree, the tree's selection,
-unreadable text, the text caret.
+gives; reading by keyboard alone, F6 between the surface's regions included. Not built: a scanned page's words,
+fields and links in the tree, marks in the tree, the tree's selection, unreadable text, the text caret.
 
 A PDF page is a picture to a browser. This spec says what makes a [PDF document](pdf-document.md) readable by a
 screen reader and usable by keyboard alone, and what a written file keeps of its own accessibility. The bar is
@@ -59,7 +59,8 @@ Each page has real DOM behind its canvas, hidden from sight and exposed to assis
 Every function is reachable without a pointer ([Keyboard shortcuts](keyboard-shortcuts.md)):
 
 - **Reading**: arrow keys scroll, Page Up and Down turn screens, the page field and the thumbnails jump; F6 moves
-  between the surface's regions (menu bar, toolbar, notice, left panel, pages, side panel, page bar).
+  between the surface's regions in screen order (title row, menu bar, toolbar, notice, rail, left panel, pages, side
+  panel, page bar, the document group), ⇧F6 back.
 - **A text caret** lives in the pages: with Select in hand, pressing Enter on a page (or F7 `(default)`) places a
   caret at the start of the page's text; arrow keys move it by character and line, ⌥ by word; ⇧ extends a selection;
   the mark tools then act on the selection as they do on a dragged one.

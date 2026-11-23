@@ -146,6 +146,7 @@ export function PdfPageBar({
         role="group"
         aria-label="Page and zoom"
         data-pdf-page-bar
+        data-region="pagebar"
         onKeyDownCapture={() => setProblem(null)}
         onPointerDownCapture={() => setProblem(null)}
         className="pointer-events-auto flex h-10 items-center gap-0.5 rounded-3xl bg-(--office-toolbar) px-2 shadow-md outline outline-1 outline-(--office-line)"

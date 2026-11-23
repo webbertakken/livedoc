@@ -106,6 +106,7 @@
     "yjs": "^13.6.33"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@livedoc/fake-google": "workspace:*",
     "@livedoc/next-config": "workspace:*",
     "@livedoc/oxlint-config": "workspace:*",

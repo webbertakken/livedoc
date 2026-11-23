@@ -19,6 +19,7 @@ export function PdfNoticeBar({
   return (
     <div
       role="status"
+      data-region="notice"
       className="flex min-h-10 items-center gap-3 border-b border-(--office-line) bg-(--office-toolbar) px-4 py-1.5 text-sm text-(--office-ink)"
     >
       <Glyph size={16} units={24} aria-hidden="true" className="shrink-0 text-(--office-icon)">
