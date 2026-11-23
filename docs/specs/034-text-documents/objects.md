@@ -1,7 +1,8 @@
 # Objects
 
 **Status: in progress.** A picture in line is held, read and written in both formats, kept in the live state, drawn,
-inserted, pasted and dropped, its bytes in the gallery.
+inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
+media are changed.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -36,6 +37,8 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   its title, whether it is decorative, its crop, and the formatting and link of the run it sits in.
 - **Crop**: the share of the picture's own width or height cut from each side (`top`, `right`, `bottom`, `left`, each
   from 0 to below 1, to four decimals); the size is that of what is left.
+- **Rotation**: the angle it is turned clockwise about its centre, in degrees from 0 to below 360, to two decimals
+  (default); none is 0. Its size is that of the picture unturned, as Word's extent and LibreOffice's frame hold it.
 - **Media**: the document's `media`, each picture's bytes by key, the SHA-256 of its bytes as 64 lower-case hex
   characters, with its media type and the package entry it arrived in, if any.
   Two pictures of the same bytes share one media.
@@ -54,10 +57,11 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 | Title            | `svg:title`                                                                                 | `wp:docPr` `title`                                                |
 | Decorative       | `loext:decorative="true"` in the frame's graphic style                                      | `adec:decorative` `val="1"` in `wp:docPr`'s extension list        |
 | Crop             | `fo:clip="rect(top, right, bottom, left)"` in the graphic style, as lengths of the own size | `a:srcRect` `t`, `r`, `b`, `l` in thousandths of a percent        |
+| Rotation         | `draw:transform` on the frame, `rotate` in radians counter-clockwise                        | `a:xfrm` `rot` in 60,000ths of a degree clockwise                 |
 
 - **Held whole, or kept.** A picture is the model's when everything it holds is: in line, one picture of a mapped
   media type, its size, crop, alternative text, title and whether it is decorative.
-  Anything else keeps it a kept inline, as the file has it: anchored (wrapped, in front, behind), rotated or flipped,
+  Anything else keeps it a kept inline, as the file has it: anchored (wrapped, in front, behind), flipped,
   recoloured or adjusted, an outline or effects, a shape other than a rectangle, a link on the picture itself, a
   picture with a fallback (SVG, EMF, WMF), a linked or missing picture, a frame with a caption or text.
 - **No look of its own beyond those.** ODF: the frame's graphic style may hold only margins, padding and borders of
@@ -73,6 +77,13 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   The ODF flat file holds the bytes as `office:binary-data`.
   ODF writes the frame's graphic style as an automatic style named by a hash of its properties, positioned on the
   baseline; OOXML writes Word's inline picture, its `wp:docPr` ids numbered in reading order.
+- **Rotation read**: ODF's `draw:transform` of `rotate` and `translate` steps alone gives the sum of its rotations,
+  turned to clockwise; its translations are where LibreOffice put the centre it turns about, which a picture in line
+  takes from its line, as LibreOffice reads it. A `scale`, `skewX`, `skewY` or `matrix` step keeps it. OOXML's `rot`
+  is read as it is; a flip (`flipH`, `flipV`) keeps it.
+- **Rotation written** as LibreOffice and Word write a turned picture in line: ODF `translate (-w/2 -h/2) rotate (θ)
+translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot` on `a:xfrm`, with `wp:effectExtent`
+  holding how far the turned picture's bounds reach past its extent on each side, so its line makes room for them.
 - **Names and ids** (`draw:name`, `wp:docPr` `name` and `id`) are written anew: `Picture <n>` in reading order.
 - **Conversion** carries every picture and its media to the other format; a picture still kept is dropped and listed,
   as all kept content.
@@ -84,6 +95,9 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   the root map `media` by key ([Live editing and storage](live-editing-and-storage.md#the-layout)).
 - The editor draws a picture in line at its size, its crop cutting its media; it is one character to the caret, and
   can be selected, copied, moved and deleted, as a kept inline can.
+- A turned picture is drawn turned about its centre, and its line makes room for the turned picture's bounds
+  (width × |cos| + height × |sin| across, width × |sin| + height × |cos| high), as Word, LibreOffice and Google lay it
+  out; the bounds sit on the baseline.
 - A screen reader reads its alternative text; a decorative picture reads as nothing (an empty `alt`).
 - A picture whose media the state lacks shows as a grey box of its size reading "Picture, not loaded" (default).
 - Media no picture holds stays in `media`, so an undo brings its picture back whole; a file never carries it.
@@ -153,12 +167,24 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   scaling with it.
 - **Image options** (Format > Image, the context menu) opens the right side panel with its sections in Google's order;
   **Size & rotation** holds Width and Height in the document's length unit, Scale width and Scale height in percent of
-  its own size, and Lock aspect ratio (on by default, as Google's); each change is one undo step. Rotation, Text
-  wrapping, Position, Recolour and Adjustments wait for their parts.
-- A field applies on Enter or when left; Scale takes 1 to 1000 percent (default). Its **own size** is its pixels at 96
+  its own size, and Lock aspect ratio (on by default, as Google's), then **Rotate**: Angle in degrees, with Rotate
+  counter-clockwise 90° and Rotate clockwise 90° buttons, as Google's; each change is one undo step. Text wrapping,
+  Position, Recolour and Adjustments wait for their parts.
+- A field applies on Enter or when left; Scale takes 1 to 1000 percent (default); Angle takes any number, written
+  as its turn from 0 to below 360 (-90 is 270), to two decimals. Its **own size** is its pixels at 96
   an inch, read from its bytes, or from the gallery image once drawn; until then Scale and Reset are dimmed.
   Without a selected picture the panel reads "Select an image to see its options." (default).
-- **Reset image** (Format > Image, the panel's Reset): back to its own size fitted to the room, its crop dropped.
+- **Reset image** (Format > Image, the panel's Reset): back to its own size fitted to the room, its crop and
+  rotation dropped, as Google's.
+- **Turning by its handle**: a selected picture draws a round rotation handle above the middle of its top edge, on a
+  short stem, as Google's; dragging it turns the picture about its centre to follow the pointer, Shift snapping to
+  15° steps, as Google's. The picture follows the pointer while dragging and the rotation is written once, on
+  release, as one undo step; Escape while dragging leaves it as it was (default). The handle answers the pointer
+  alone; it is not drawn while cropping.
+- **Turning by the keyboard**, a picture selected: ⌥→ and ⌥← turn it 15° clockwise and counter-clockwise, ⌥⇧→ and
+  ⌥⇧← 1°, as Google's; each press is one undo step. With no picture selected the keys move the caret as ever.
+- A turned picture's handles and crop marks turn with it; a drag on one is read along the picture's own sides, so
+  sizing and cropping work as on a picture unturned.
 - **Cropping** begins with a double-click on a picture, Format > Image > Crop image or the context menu's, as Google's.
   While cropping, the picture is drawn whole at its scale, the parts cut off dimmed beyond its box (default), and its
   eight handles become crop marks: L-shaped at the corners, bars on the edges.
@@ -171,7 +197,8 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 - Share roles: an Editor alone; a Viewer and a Participant see the items dimmed (a Participant's suggestions wait for
   D7).
 - Telemetry: `Element · Changed · TextDocumentImageAltText`, `TextDocumentImageReplace`, `TextDocumentImageSize`
-  (handles and the panel), `TextDocumentImageReset`, `TextDocumentImageCrop` (each crop written).
+  (handles and the panel), `TextDocumentImageReset`, `TextDocumentImageCrop` (each crop written),
+  `TextDocumentImageRotate` (each rotation written: the handle, the panel, the keys).
 
 ## Drawings
 
