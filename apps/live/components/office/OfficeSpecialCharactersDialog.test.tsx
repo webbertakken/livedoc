@@ -37,6 +37,7 @@ function setup(catalogue: () => Promise<SpecialCharacters> = async () => CATALOG
 
 const cells = () =>
   within(screen.getByRole('group', { name: 'Characters' })).getAllByRole('button');
+const select = (name: string) => screen.getByRole<HTMLSelectElement>('combobox', { name });
 const names = () => cells().map((cell) => cell.getAttribute('aria-label'));
 
 describe('OfficeSpecialCharactersDialog', () => {
@@ -45,12 +46,8 @@ describe('OfficeSpecialCharactersDialog', () => {
     expect(screen.getByRole('dialog', { name: 'Insert special characters' })).toBeTruthy();
     expect(screen.getByRole('status').textContent).toBe('Loading characters…');
     await waitFor(() => expect(names()).toEqual(['Leftwards arrow', 'Rightwards arrow']));
-    expect((screen.getByRole('combobox', { name: 'Category' }) as HTMLSelectElement).value).toBe(
-      'Symbol',
-    );
-    expect((screen.getByRole('combobox', { name: 'Block' }) as HTMLSelectElement).value).toBe(
-      'Arrows',
-    );
+    expect(select('Category').value).toBe('Symbol');
+    expect(select('Block').value).toBe('Arrows');
     fireEvent.mouseEnter(cells()[1]!);
     const preview = document.querySelector('[data-special-character-preview]')!;
     expect(preview.textContent).toBe('→Rightwards arrowU+2192');
@@ -67,9 +64,7 @@ describe('OfficeSpecialCharactersDialog', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Category' }), {
       target: { value: 'Modifier' },
     });
-    expect((screen.getByRole('combobox', { name: 'Block' }) as HTMLSelectElement).value).toBe(
-      'Combining Diacritical Marks',
-    );
+    expect(select('Block').value).toBe('Combining Diacritical Marks');
     // A mark sits on a dotted circle.
     expect(cells()[0]!.textContent).toBe('◌\u0300');
     first.unmount();
@@ -92,9 +87,7 @@ describe('OfficeSpecialCharactersDialog', () => {
     fireEvent.change(search, { target: { value: 'rightwards' } });
     expect(names()).toEqual(['Rightwards arrow', 'Heavy wide-headed rightwards arrow']);
     expect(screen.getByRole('status').textContent).toBe('2 characters');
-    expect((screen.getByRole('combobox', { name: 'Category' }) as HTMLSelectElement).disabled).toBe(
-      true,
-    );
+    expect(select('Category').disabled).toBe(true);
     fireEvent.change(search, { target: { value: 'U+21' } });
     expect(names()).toEqual(['Exclamation mark']);
     fireEvent.change(search, { target: { value: 'nothing like it' } });
