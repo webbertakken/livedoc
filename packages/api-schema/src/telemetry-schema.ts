@@ -578,6 +578,7 @@ export const SHEET_CHANGE_KINDS = [
   'Filter',
   'Replace',
   'Fill',
+  'SmartFill',
   'Paste',
   'Title',
   'Clear',

@@ -46,6 +46,8 @@ type SheetKeyCommand =
   | { kind: 'now'; what: 'date' | 'time' }
   | { kind: 'find'; replace: boolean }
   | { kind: 'fill'; dir: 'down' | 'right' }
+  // Ctrl+Enter outside an edit: accepts a Smart Fill offer (D151).
+  | { kind: 'fillRange' }
   | { kind: 'numberFormat'; nf: 'number' | 'currency' | 'percent' }
   | { kind: 'escape' }
   // Alt+Down: the active cell's dropdown (data-validation.md "Using a dropdown"), else the next sheet (D136).
@@ -74,6 +76,7 @@ export function sheetKey(e: KeyLike, platform: OfficePlatform = 'pc'): SheetKeyC
     return { kind: 'sheet', step: dir === 'right' ? 1 : -1 };
   if (e.key === 'Tab') return { kind: 'tab', back: e.shiftKey };
   if (e.key === 'Enter' && !mod && !e.altKey) return { kind: 'enter', back: e.shiftKey };
+  if (e.key === 'Enter' && mod && !e.altKey && !e.shiftKey) return { kind: 'fillRange' };
   if (e.key === 'F2') return { kind: 'edit' };
   if (e.key === 'F4') return mod || e.altKey || e.shiftKey ? null : { kind: 'redo' };
   if (e.key === 'Home') return { kind: 'home', toSheet: mod, extend: e.shiftKey };

@@ -25,6 +25,10 @@ import type { useSheetClipboard } from './useSheetClipboard';
 import type { useSheetPointer } from './useSheetPointer';
 
 /** What a spreadsheet's surface does for the grid's workbook keys. */
+
+// Keys pressed on their way to a chord (Ctrl before Enter), which leave a Smart Fill offer standing.
+const MODIFIER_KEYS = new Set(['Control', 'Shift', 'Alt', 'Meta', 'AltGraph']);
+
 export type SheetSurfaceKeys = {
   // Alt+Up and Alt+Down, Ctrl+Shift+Page Up and Page Down: the previous or next sheet, none past either end.
   stepSheet: (step: -1 | 1) => void;
@@ -64,6 +68,15 @@ export function useSheetGridKeys({
         actions.cancelEdit();
       } else focusOpenEdit(c.sheet.id);
       return;
+    }
+    // A Smart Fill offer (D150): Escape dismisses it, Ctrl+Enter accepts it below, any other key ends it.
+    if (c.smartFill && !MODIFIER_KEYS.has(e.key)) {
+      const offered = sheetKey(e, currentOfficePlatform().platform)?.kind;
+      if (offered === 'escape') {
+        e.preventDefault();
+        return c.setSmartFill(null);
+      }
+      if (offered !== 'fillRange') c.setSmartFill(null);
     }
     // A bare Space is held for Space-drag panning; it types a space on release when no pan used it.
     if (pan.onKeyDown(e)) return;
@@ -134,6 +147,8 @@ export function useSheetGridKeys({
         return c.canEdit ? actions.toggle(cmd.flag) : undefined;
       case 'now':
         return c.canEdit ? actions.typeNow(cmd.what) : undefined;
+      case 'fillRange':
+        return c.canEdit ? void actions.acceptSmartFill() : undefined;
       case 'fill':
         return c.canEdit ? actions.fillEdge(cmd.dir) : undefined;
       case 'numberFormat':

@@ -14,6 +14,7 @@ import {
   single,
   valuesOnly,
   type GridRange,
+  type SmartFillOffer,
   type Selection,
   type Sheet,
   type SheetLayout,
@@ -84,6 +85,9 @@ export type SheetController = {
   // The copied (or cut) range's dashed outline.
   marquee: { range: GridRange; cut: boolean } | null;
   setMarquee: (m: { range: GridRange; cut: boolean } | null) => void;
+  // Smart Fill's offer after a typed text (grid-and-editing.md "Fill and move", D150), until a key, a press or an edit.
+  smartFill: SmartFillOffer | null;
+  setSmartFill: (offer: SmartFillOffer | null) => void;
   menu: OpenMenu;
   setMenu: (m: OpenMenu) => void;
   findOpen: 'find' | 'replace' | null;
@@ -206,6 +210,7 @@ export function useSheetControllerState(opts: {
   const [scroll, setScroll] = useState({ top: 0, left: 0 });
   const [view, setView] = useState({ width: 0, height: 0 });
   const [marquee, setMarquee] = useState<{ range: GridRange; cut: boolean } | null>(null);
+  const [smartFill, setSmartFill] = useState<SmartFillOffer | null>(null);
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [findOpen, setFindOpen] = useState<'find' | 'replace' | null>(null);
   const [findHits, setFindHits] = useState<readonly { r: number; c: number }[]>([]);
@@ -335,6 +340,8 @@ export function useSheetControllerState(opts: {
     setView,
     marquee,
     setMarquee,
+    smartFill,
+    setSmartFill,
     menu,
     setMenu,
     findOpen,

@@ -257,3 +257,51 @@ test('a selection dragged by its border moves its cells, Ctrl copies', async ({
   await expect(formulaBar).toHaveValue('3');
   expectNoPageErrors(pageErrors);
 });
+
+// Smart Fill (grid-and-editing.md "Fill and move", D148 to D151): two typed full names beside first and last names
+// offer the rest of the column in grey, and Ctrl+Enter fills it.
+test('Smart Fill offers a column’s pattern and Ctrl+Enter fills it', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  const formulaBar = page.getByRole('textbox', { name: 'Formula bar' }).first();
+  const go = async (ref: string) => {
+    await nameBox.fill(ref);
+    await nameBox.press('Enter');
+  };
+  const rows = [
+    ['First', 'Last', 'Full name'],
+    ['Ada', 'Lovelace', 'Ada Lovelace'],
+    ['Alan', 'Turing', ''],
+    ['Grace', 'Hopper', ''],
+    ['Charles', 'Babbage', ''],
+  ];
+  for (const [i, row] of rows.entries())
+    for (const [j, text] of row.entries()) {
+      if (!text) continue;
+      await go(`${'ABC'[j]}${i + 1}`);
+      await page.keyboard.type(text);
+      await page.keyboard.press('Enter');
+    }
+  await go('C3');
+  await page.keyboard.type('Alan Turing');
+  await page.keyboard.press('Enter');
+  const card = page.getByRole('dialog', { name: 'Smart Fill' });
+  await expect(card).toContainText('Fill 2 cells with the pattern');
+  await expect(page.locator('[data-smart-fill-preview]')).toHaveText([
+    'Grace Hopper',
+    'Charles Babbage',
+  ]);
+  await page.screenshot({
+    path: test.info().outputPath('smart-fill-offer.png'),
+    animations: 'disabled',
+  });
+  await page.keyboard.press('Control+Enter');
+  await expect(card).toHaveCount(0);
+  await go('C5');
+  await expect(formulaBar).toHaveValue('Charles Babbage');
+  expectNoPageErrors(pageErrors);
+});

@@ -40,7 +40,7 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Redo                           | `Ctrl+Y or Ctrl+Shift+Z or F4` | `⌘+Y or ⌘+Shift+Z or Fn+F4`  | `Ctrl+Y or Ctrl+Shift+Z` | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Find                           | `Ctrl+F`                       | `⌘+F`                        | `Ctrl+F`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Find and replace               | `Ctrl+H`                       | `⌘+Shift+H`                  | `Ctrl+H`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Fill range                     | `Ctrl+Enter`                   | `⌘+Enter`                    | `Ctrl+Enter`             | specified                                               |
+| Fill range                     | `Ctrl+Enter`                   | `⌘+Enter`                    | `Ctrl+Enter`             | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Fill down                      | `Ctrl+D`                       | `⌘+D`                        | `Ctrl+D`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Fill right                     | `Ctrl+R`                       | `⌘+R`                        | `Ctrl+R`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Save                           | `Ctrl+S`                       | `⌘+S`                        | `Ctrl+S`                 | specified                                               |
