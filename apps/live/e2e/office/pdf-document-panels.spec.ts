@@ -74,7 +74,7 @@ test('a PDF’s thumbnails go to their pages, and the page bar takes a page’s 
   await expect(thumbnails(page)).toBeVisible();
   await expect(
     thumbnails(page)
-      .getByRole('button')
+      .locator('[data-pdf-thumbnail]')
       .evaluateAll((buttons) => buttons.map((b) => b.getAttribute('aria-label'))),
   ).resolves.toEqual(['Page 1, i', 'Page 2, ii', 'Page 3, A-1']);
 

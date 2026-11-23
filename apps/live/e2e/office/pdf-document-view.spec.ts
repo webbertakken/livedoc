@@ -106,9 +106,22 @@ test('a PDF’s pages are laid out, zoomed and turned as the person’s own view
 
   // "The wheel and a pinch keep what is under the pointer."
   await viewItem(page, 'Zoom', 'Fit width');
+  await expect(zoomField(page)).not.toHaveValue('800%');
   const pages = page.locator(PAGES);
   const box = (await pages.boundingBox())!;
-  const pointer = { x: box.x + box.width * 0.3, y: box.y + box.height * 0.4 };
+  // A point on the page that shows most, never the ground between two pages: 30% across, the middle of what shows.
+  const pointer = await pages.evaluate((scroller) => {
+    const view = scroller.getBoundingClientRect();
+    const shown = [...scroller.querySelectorAll<HTMLElement>('[data-pdf-page]')]
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        const top = Math.max(rect.top, view.top);
+        const bottom = Math.min(rect.bottom, view.bottom);
+        return { rect, top, bottom, height: bottom - top };
+      })
+      .toSorted((a, b) => b.height - a.height)[0]!;
+    return { x: shown.rect.x + shown.rect.width * 0.3, y: (shown.top + shown.bottom) / 2 };
+  });
   const under = () =>
     page.evaluate(({ x, y }) => {
       const element = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-pdf-page]');
