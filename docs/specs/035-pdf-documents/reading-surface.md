@@ -467,8 +467,9 @@ A press on a bookmark, or on a link of a page ([Security](security.md#links-and-
     cannot be read `[pdf] page-text-failed page=<n>`, and selects nothing. Counted as `Pdf · Copied · Text`.
 - **Links**: the pointer shows a hand and the target as a tooltip; a press follows a place in the document at once,
   and asks first for an address ([Security](security.md#links-and-actions)).
-  - A link is a control over its rectangle on the page, named for where it leads ("Link to page 3", "Link to
-    example.com/path", "Link to another file", "Link to an action"), its tooltip the target alone, as plain text.
+  - A link is a control over its rectangle on the page, named for where it leads, as plain text: "Link to page 3",
+    "Link to https://example.com/path", "Link to another file, other.pdf", "Link to an action", "Link that goes
+    nowhere". Its tooltip is its name, as every control's is, so the target shows as the pointer rests `(default)`.
   - Links take presses while Select is in hand; with a mark tool in hand a press marks `(default)`. Tab reaches them
     in the file's order on each page.
   - A link's place is reckoned through the page's matrix, so it leads to the same point however the page is turned

@@ -45,7 +45,7 @@ describe('following a link', () => {
   });
 });
 
-// "Links": a link is named for where it leads, its tooltip the target alone, as plain text.
+// "Links": a link is named for where it leads, as plain text; its tooltip is its name.
 describe('what a link on a page is called', () => {
   const pages = [
     { name: PageName.ofObject(3), label: null },
@@ -59,34 +59,24 @@ describe('what a link on a page is called', () => {
   });
 
   it('names a place by its page’s label or number', () => {
-    expect(pdfLinkName(place(3), pages)).toEqual({ name: 'Link to page 1', tip: 'Page 1' });
-    expect(pdfLinkName(place(5), pages)).toEqual({ name: 'Link to page iv', tip: 'Page iv' });
-    expect(pdfLinkName(place(9), pages)).toEqual({
-      name: 'Link that goes nowhere',
-      tip: 'Goes nowhere',
-    });
+    expect(pdfLinkName(place(3), pages)).toBe('Link to page 1');
+    expect(pdfLinkName(place(5), pages)).toBe('Link to page iv');
+    expect(pdfLinkName(place(9), pages)).toBe('Link that goes nowhere');
   });
 
   it('names an address, a file and an action by what they are', () => {
     const address = 'https://example.com/a';
-    expect(pdfLinkName({ kind: 'address', address }, pages)).toEqual({
-      name: `Link to ${address}`,
-      tip: address,
-    });
+    expect(pdfLinkName({ kind: 'address', address }, pages)).toBe(`Link to ${address}`);
     expect(
       pdfLinkName(
         { kind: 'refused', reason: 'link_scheme_refused', address: 'javascript:x' },
         pages,
       ),
-    ).toEqual({ name: 'Link to javascript:x', tip: 'javascript:x' });
-    expect(pdfLinkName({ kind: 'file', path: 'other.pdf' }, pages)).toEqual({
-      name: 'Link to another file',
-      tip: 'other.pdf',
-    });
-    expect(pdfLinkName({ kind: 'action', action: 'launch' }, pages)).toEqual({
-      name: 'Link to an action',
-      tip: 'An action',
-    });
+    ).toBe('Link to javascript:x');
+    expect(pdfLinkName({ kind: 'file', path: 'other.pdf' }, pages)).toBe(
+      'Link to another file, other.pdf',
+    );
+    expect(pdfLinkName({ kind: 'action', action: 'launch' }, pages)).toBe('Link to an action');
   });
 });
 

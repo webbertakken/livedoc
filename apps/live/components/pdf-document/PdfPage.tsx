@@ -84,7 +84,7 @@ export const PdfPage = memo(function PdfPage({
   selected: readonly Quad[];
   onText: (index: number, gesture: PdfTextGesture) => void;
   // What a link of the page is called, and where a press on one goes (reading-surface.md "Following a link").
-  linkName: (target: LinkTarget) => { name: string; tip: string };
+  linkName: (target: LinkTarget) => string;
   onFollow: (target: LinkTarget) => void;
   // Hands the page's box to whoever watches which pages are near view.
   register: (index: number, element: HTMLElement | null) => void;

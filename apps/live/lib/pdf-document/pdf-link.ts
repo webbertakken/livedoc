@@ -48,25 +48,24 @@ export function pdfLinkOutcome(
 /** An address's scheme, the only part of it a log line names (`https`). */
 export const schemeOf = (address: string): string => address.slice(0, address.indexOf(':'));
 
-/** A link on a page as a person meets it: its control's name, and its tooltip, the target alone as plain text. */
+/** A link on a page as a person meets it: its control's name, and so its tooltip, saying where it leads as plain text. */
 export function pdfLinkName(
   target: LinkTarget,
   pages: readonly Pick<PageInfo, 'name' | 'label'>[],
-): { name: string; tip: string } {
+): string {
   switch (target.kind) {
     case 'place': {
       const at = pages.findIndex((page) => page.name === target.page);
-      if (at < 0) return { name: 'Link that goes nowhere', tip: 'Goes nowhere' };
-      const page = pages[at]!.label ?? String(at + 1);
-      return { name: `Link to page ${page}`, tip: `Page ${page}` };
+      if (at < 0) return 'Link that goes nowhere';
+      return `Link to page ${pages[at]!.label ?? String(at + 1)}`;
     }
     case 'address':
     case 'refused':
-      return { name: `Link to ${target.address}`, tip: target.address };
+      return `Link to ${target.address}`;
     case 'file':
-      return { name: 'Link to another file', tip: target.path };
+      return `Link to another file, ${target.path}`;
     case 'action':
-      return { name: 'Link to an action', tip: 'An action' };
+      return 'Link to an action';
   }
 }
 

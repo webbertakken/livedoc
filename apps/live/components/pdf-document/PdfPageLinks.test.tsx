@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/reading-surface.md "The pages": Links. A control over each link's rectangle, placed
-// through the page's matrix, named for where it leads with the target as its tooltip; a press follows it and starts
+// through the page's matrix, named for where it leads; a press follows it and starts
 // no selection on the page under it.
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -37,13 +37,12 @@ describe('the links of a page', () => {
           width={612}
           height={792}
           links={[ADDRESS]}
-          nameOf={(target) => ({ name: `Link to ${target.kind}`, tip: 'the tip' })}
+          nameOf={(target) => `Link to ${target.kind}`}
           onFollow={onFollow}
         />
       </div>,
     );
     const link = screen.getByRole('button', { name: 'Link to address' });
-    expect(link.getAttribute('title')).toBe('the tip');
     fireEvent.pointerDown(link);
     fireEvent.click(link);
     expect(onFollow).toHaveBeenCalledWith(ADDRESS.target);

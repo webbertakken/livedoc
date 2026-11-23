@@ -73,11 +73,10 @@ test('a PDF’s links go to their place and ask before an address, and Previous 
   const scroller = page.locator('[data-pdf-pages]');
 
   const toPage = first.getByRole('button', { name: 'Link to page 2' });
-  await expect(toPage).toHaveAttribute('title', 'Page 2');
-  await expect(
-    first.getByRole('button', { name: 'Link to https://example.com/a' }),
-  ).toHaveAttribute('title', 'https://example.com/a');
+  await expect(first.getByRole('button', { name: 'Link to https://example.com/a' })).toBeVisible();
+  // The tooltip is the link's name: where it leads, as plain text.
   await toPage.hover();
+  await expect(page.getByRole('tooltip')).toHaveText('Link to page 2');
   await page.screenshot({ path: test.info().outputPath('pdf-link-hover-dark.png') });
 
   // The place is 20 points up page two: far down it, so the view scrolls past page two's top.

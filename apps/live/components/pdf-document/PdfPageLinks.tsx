@@ -2,9 +2,10 @@
 
 // The links of a PDF page (docs/specs/035-pdf-documents/reading-surface.md "The pages": Links; security.md "Links and
 // actions"): a control over each link's rectangle, placed through the matrix the page was drawn with, named for where
-// it leads, its tooltip the target alone as plain text. A press follows it as a bookmark is followed: a place at once,
+// it leads as plain text, its tooltip its name. A press follows it as a bookmark is followed: a place at once,
 // anything else asked about or said first. Nothing of the file is drawn as markup: geometry and LiveDoc's own words.
 import { PageView, type LinkTarget, type PageLink, type PageMatrix } from '@livedoc/pdf-documents';
+import { Tooltip } from '@livedoc/ui';
 
 /** A link's rectangle in view space, as percentages of the page as it shows. */
 export function linkBox(
@@ -44,33 +45,33 @@ export function PdfPageLinks({
   width: number;
   height: number;
   links: readonly PageLink[];
-  nameOf: (target: LinkTarget) => { name: string; tip: string };
+  nameOf: (target: LinkTarget) => string;
   onFollow: (target: LinkTarget) => void;
 }) {
   return links.map((link, at) => {
     const box = linkBox(matrix, link.rect, width, height);
-    const { name, tip } = nameOf(link.target);
+    const name = nameOf(link.target);
     return (
-      <button
-        key={at}
-        type="button"
-        aria-label={name}
-        title={tip}
-        data-pdf-link={at + 1}
-        className="absolute cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
-        style={{
-          left: `${box.left}%`,
-          top: `${box.top}%`,
-          width: `${box.width}%`,
-          height: `${box.height}%`,
-        }}
-        // A press on a link is the link's: it starts no selection on the page under it.
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          onFollow(link.target);
-        }}
-      />
+      <Tooltip key={at} label={name}>
+        <button
+          type="button"
+          aria-label={name}
+          data-pdf-link={at + 1}
+          className="absolute cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+          style={{
+            left: `${box.left}%`,
+            top: `${box.top}%`,
+            width: `${box.width}%`,
+            height: `${box.height}%`,
+          }}
+          // A press on a link is the link's: it starts no selection on the page under it.
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onFollow(link.target);
+          }}
+        />
+      </Tooltip>
     );
   });
 }
