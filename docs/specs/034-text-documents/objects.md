@@ -136,7 +136,7 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 
 - **Format > Image**, with a picture selected (default order, until a capture): Crop image, Image options, Alt text,
   Replace image (Upload from computer, Search the web, LiveDoc gallery, as Insert > Image), Reset image. Each is
-  dimmed while no picture is selected; Crop waits for its part.
+  dimmed while no picture is selected.
 - **The context menu** on a selected picture adds, after the text items: Crop image, Replace image (the image picker,
   its Upload tab holding the computer's files), Image options, Alt text, each only while a picture is selected.
 - **Alt text** (Format > Image, the context menu, ⌘⌥Y): a dialog titled "Alt text" with a Description field and "Mark
@@ -159,10 +159,19 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   an inch, read from its bytes, or from the gallery image once drawn; until then Scale and Reset are dimmed.
   Without a selected picture the panel reads "Select an image to see its options." (default).
 - **Reset image** (Format > Image, the panel's Reset): back to its own size fitted to the room, its crop dropped.
+- **Cropping** begins with a double-click on a picture, Format > Image > Crop image or the context menu's, as Google's.
+  While cropping, the picture is drawn whole at its scale, the parts cut off dimmed beyond its box (default), and its
+  eight handles become crop marks: L-shaped at the corners, bars on the edges.
+- Dragging a mark moves its side (a corner its two sides) over the picture as drawn: inward to cut, outward back as
+  far as the picture's own edge; at least 4.5 pt is kept each way (default). The picture's scale never changes: its
+  box shrinks or grows with what is left. The box follows the pointer; the crop and the size are written once, on
+  release, as one undo step; Escape while dragging leaves it as it was.
+- Enter, Escape, a press outside the picture, or anything that moves the selection off it ends cropping. Cropping
+  answers the pointer alone; the marks are drawn only for whoever may edit.
 - Share roles: an Editor alone; a Viewer and a Participant see the items dimmed (a Participant's suggestions wait for
   D7).
 - Telemetry: `Element · Changed · TextDocumentImageAltText`, `TextDocumentImageReplace`, `TextDocumentImageSize`
-  (handles and the panel), `TextDocumentImageReset`.
+  (handles and the panel), `TextDocumentImageReset`, `TextDocumentImageCrop` (each crop written).
 
 ## Drawings
 
