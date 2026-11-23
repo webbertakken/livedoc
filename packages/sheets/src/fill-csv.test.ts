@@ -34,6 +34,12 @@ describe('fillSeries', () => {
     expect(fillSeries([s('Item 3')], 1, false, false, true)).toEqual([s('Item 2')]);
     expect(fillSeries([n(5)], 2, true, false, true)).toEqual([n(4), n(3)]);
   });
+  it('continues one date by the day, and copies it with Ctrl (D156)', () => {
+    const d = serialFromDate(2026, 3, 30);
+    expect(fillSeries([n(d)], 2, false, true)).toEqual([n(d + 1), n(d + 2)]);
+    expect(fillSeries([n(d)], 1, false, true, true)).toEqual([n(d - 1)]);
+    expect(fillSeries([n(d)], 2, true, true)).toEqual([n(d), n(d)]);
+  });
   it('continues dates by the month when they step by months', () => {
     const jan31 = serialFromDate(2026, 1, 31);
     const feb28 = serialFromDate(2026, 2, 28);

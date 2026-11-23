@@ -448,11 +448,12 @@ A finger has no hover and no right button, and its drag pans the cells, so selec
 ### Fill
 
 - Dragging the fill handle extends the selection down, up, left or right and fills the new cells:
-  - one number, text or formula is copied (a formula's relative references shift);
+  - one number, text or formula is copied (a formula's relative references shift); one date continues by the day,
+    as Google's and Excel's do (default, D156);
   - two or more numbers or dates are continued as a series by their step (`1, 2` → `3, 4`; Mondays → Mondays);
   - text ending in a number continues the number (`Item 1` → `Item 2`); month and day names continue (`Jan` →
     `Feb`).
-  - Holding Ctrl (⌥ on Apple devices) while dragging copies instead of continuing a series.
+  - Holding Ctrl (⌥ on Apple devices) while dragging switches: a series is copied, and one number counts up by one.
 - Double-clicking the fill handle fills down as far as the column beside it is filled.
 - Dragging the fill handle back into the selection clears the cells it leaves.
 - Dragging a selection's border moves its cells, or copies them with Ctrl (⌥ on Apple devices) held at the drop
