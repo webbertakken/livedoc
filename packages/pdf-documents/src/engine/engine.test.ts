@@ -282,6 +282,38 @@ describe('drawing', () => {
     expect(PageView.toView(bitmap.toView, { x: 72, y: 720 })).toEqual({ x: 72, y: 72 });
   });
 
+  // reading-surface.md "The pages": Rotate view turns every page a quarter, drawn turned by the engine, so a mark
+  // placed by the matrix meets the page where the turned picture shows it.
+  it('draws a page turned by quarters, with the matrix that places marks on the turned picture', async () => {
+    await engine.open(stored);
+    const upright = (await engine.drawPage(0, 0.5, 0))!;
+    const clockwise = (await engine.drawPage(0, 0.5, 1))!;
+    const upsideDown = (await engine.drawPage(0, 0.5, 2))!;
+    const counterclockwise = (await engine.drawPage(0, 0.5, 3))!;
+    expect([clockwise.width, clockwise.height]).toEqual([396, 306]);
+    expect([upsideDown.width, upsideDown.height]).toEqual([306, 396]);
+    expect([counterclockwise.width, counterclockwise.height]).toEqual([396, 306]);
+    // The line of text, 72 in and 72 down an upright page of 612 by 792 points.
+    const line = { x: 72, y: 720 };
+    expect(PageView.toView(upright.toView, line)).toEqual({ x: 72, y: 72 });
+    expect(PageView.toView(clockwise.toView, line)).toEqual({ x: 792 - 72, y: 72 });
+    expect(PageView.toView(upsideDown.toView, line)).toEqual({ x: 612 - 72, y: 792 - 72 });
+    expect(PageView.toView(counterclockwise.toView, line)).toEqual({ x: 72, y: 612 - 72 });
+    // The ink is where the matrix says: a pixel of the turned picture near the line's start is dark.
+    const inkNear = (bitmap: typeof clockwise, at: { x: number; y: number }) => {
+      for (let dy = -6; dy <= 6; dy += 1)
+        for (let dx = -6; dx <= 6; dx += 1) {
+          const x = Math.round(at.x / 2) + dx;
+          const y = Math.round(at.y / 2) + dy;
+          if (bitmap.rgba[(y * bitmap.width + x) * 4]! < 128) return true;
+        }
+      return false;
+    };
+    const start = { x: 80, y: 716 };
+    for (const bitmap of [upright, clockwise, upsideDown, counterclockwise])
+      expect(inkNear(bitmap, PageView.toView(bitmap.toView, start))).toBe(true);
+  });
+
   // fields.md "What a file's fields are": a field shows as the file drew it, on the page, before anyone fills it.
   it("draws a file's fields as the file drew them", async () => {
     await engine.open(drawnFieldPdf());

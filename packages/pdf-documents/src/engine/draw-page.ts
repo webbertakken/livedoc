@@ -1,6 +1,11 @@
 // Drawing a page (docs/specs/035-pdf-documents/reading-surface.md "The pages"): the page as the file says, the file's
 // own marks and its fields as the file drew them included, never past the pixel ceiling.
-import { type PageBitmap, type PageMatrix, type PagePoint } from '../engine-contract';
+import {
+  type PageBitmap,
+  type PageMatrix,
+  type PagePoint,
+  type PageTurns,
+} from '../engine-contract';
 import { PDF_MAX_PAGE_PIXELS } from '../limits';
 import { clampSide, type ReaderFile } from './reader-file';
 
@@ -12,23 +17,19 @@ const WHITE = 0xffffffff;
 const MATRIX_PRECISION = 1000;
 const MATRIX_PROBE = 1000;
 
-function toDevice(
-  file: ReaderFile,
-  page: number,
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-): PagePoint {
+// The picture a page is drawn into, in view points (the page's size, its sides swapped for an odd turn), and its turns.
+type Turned = { width: number; height: number; turns: PageTurns };
+
+function toDevice(file: ReaderFile, page: number, view: Turned, x: number, y: number): PagePoint {
   const { p } = file;
   const out = file.alloc(8);
   p.FPDF_PageToDevice(
     page,
     0,
     0,
-    Math.round(width * MATRIX_PRECISION),
-    Math.round(height * MATRIX_PRECISION),
-    0,
+    Math.round(view.width * MATRIX_PRECISION),
+    Math.round(view.height * MATRIX_PRECISION),
+    view.turns,
     x,
     y,
     out,
@@ -42,10 +43,10 @@ function toDevice(
   return point;
 }
 
-function matrixOf(file: ReaderFile, page: number, width: number, height: number): PageMatrix {
-  const origin = toDevice(file, page, width, height, 0, 0);
-  const alongX = toDevice(file, page, width, height, MATRIX_PROBE, 0);
-  const alongY = toDevice(file, page, width, height, 0, MATRIX_PROBE);
+function matrixOf(file: ReaderFile, page: number, view: Turned): PageMatrix {
+  const origin = toDevice(file, page, view, 0, 0);
+  const alongX = toDevice(file, page, view, MATRIX_PROBE, 0);
+  const alongY = toDevice(file, page, view, 0, MATRIX_PROBE);
   return [
     (alongX.x - origin.x) / MATRIX_PROBE,
     (alongX.y - origin.y) / MATRIX_PROBE,
@@ -74,24 +75,34 @@ export function drawnSize(
   };
 }
 
-/** Draws a page; `ceiling` is the most pixels its picture may hold, the limit's own unless a test hands a smaller. */
+/**
+ * Draws a page, turned `turns` quarters clockwise by the reader itself, so the matrix places a mark on the turned
+ * picture; `ceiling` is the most pixels its picture may hold, the limit's own unless a test hands a smaller.
+ */
 export function drawPage(
   file: ReaderFile,
   index: number,
   scale: number,
   ceiling?: number,
+  turns: PageTurns = 0,
 ): PageBitmap | null {
   const { p } = file;
   return file.withFormPage(index, (page, form) => {
     const pageWidth = clampSide(p.FPDF_GetPageWidthF(page));
     const pageHeight = clampSide(p.FPDF_GetPageHeightF(page));
-    const { width, height } = drawnSize(pageWidth, pageHeight, scale, ceiling);
+    const sideways = turns % 2 === 1;
+    const view: Turned = {
+      width: sideways ? pageHeight : pageWidth,
+      height: sideways ? pageWidth : pageHeight,
+      turns,
+    };
+    const { width, height } = drawnSize(view.width, view.height, scale, ceiling);
     const bitmap = p.FPDFBitmap_CreateEx(width, height, BITMAP_BGRA, 0, 0);
     if (!bitmap) return null;
     p.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, WHITE);
-    p.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, 0, RENDER_FLAGS);
+    p.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
     // The reader leaves a file's fields to its form: without this a filled form shows empty boxes.
-    if (form) p.FPDF_FFLDraw(form, bitmap, page, 0, 0, width, height, 0, RENDER_FLAGS);
+    if (form) p.FPDF_FFLDraw(form, bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
     const buffer = p.FPDFBitmap_GetBuffer(bitmap);
     const stride = p.FPDFBitmap_GetStride(bitmap);
     const rgba = new Uint8ClampedArray(width * height * 4);
@@ -101,6 +112,6 @@ export function drawPage(
         row * width * 4,
       );
     p.FPDFBitmap_Destroy(bitmap);
-    return { width, height, rgba, toView: matrixOf(file, page, pageWidth, pageHeight) };
+    return { width, height, rgba, toView: matrixOf(file, page, view) };
   });
 }

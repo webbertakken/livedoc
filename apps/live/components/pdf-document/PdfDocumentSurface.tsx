@@ -405,6 +405,7 @@ export function PdfDocumentSurface({
             attach={viewer.attach}
             layout={viewer.layout}
             scale={viewer.scale}
+            turns={viewer.view.turns}
             sized={viewer.viewport.width > 0}
             onKeyDown={pagesInput.onKeyDown}
             pages={ready.pages}

@@ -50,6 +50,13 @@ const READING: readonly ShortcutRow[] = [
   reading('zoom-actual-size', 'Actual size', 'Ctrl+1', '⌘+1'),
   reading('zoom-fit-page', 'Fit page', 'Ctrl+0', '⌘+0'),
   reading('zoom-fit-width', 'Fit width', 'Ctrl+2', '⌘+2'),
+  reading('rotate-view-clockwise', 'Rotate view clockwise', 'Ctrl+Shift+Plus', '⌘+Shift+Plus'),
+  reading(
+    'rotate-view-counterclockwise',
+    'Rotate view counterclockwise',
+    'Ctrl+Shift+-',
+    '⌘+Shift+-',
+  ),
 ];
 
 export const PDF_SHORTCUTS: readonly ShortcutRow[] = [

@@ -951,6 +951,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Changed|PageDisplay.CoverShown':
     'Someone showed a PDF document’s first page alone, as a book’s cover, beside the pairs.',
   'Pdf|Changed|PageDisplay.CoverHidden': 'Someone paired a PDF document’s first page again.',
+  'Pdf|Changed|RotateView.Clockwise':
+    'Someone turned every page of a PDF document a quarter clockwise, for their own view.',
+  'Pdf|Changed|RotateView.Counterclockwise':
+    'Someone turned every page of a PDF document a quarter counterclockwise, for their own view.',
   'Pdf|Zoomed|FitWidth': 'Someone zoomed a PDF document to fit the width of the view.',
   'Pdf|Zoomed|FitPage': 'Someone zoomed a PDF document so a whole page fits the view.',
   'Pdf|Zoomed|Actual': 'Someone zoomed a PDF document to its actual size.',

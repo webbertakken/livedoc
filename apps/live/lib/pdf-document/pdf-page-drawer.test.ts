@@ -49,6 +49,20 @@ describe('the page drawer', () => {
     expect(pdf.asked).toEqual([1, 3, 2]);
   });
 
+  // "Rotate view": the engine draws the page turned, upright unless asked.
+  it('asks the engine for the page turned as asked', async () => {
+    const turns: unknown[] = [];
+    const drawer = pdfPageDrawer({
+      drawPage: async (_index, _scale, turned) => {
+        turns.push(turned);
+        return null;
+      },
+    });
+    await drawer.draw(1, 1, 3);
+    await drawer.draw(1, 1);
+    expect(turns).toEqual([3, 0]);
+  });
+
   it('never draws a page given up before its turn', async () => {
     const pdf = engine();
     const drawer = pdfPageDrawer(pdf);

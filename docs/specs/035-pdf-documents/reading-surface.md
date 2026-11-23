@@ -6,12 +6,12 @@
 - The menus and the toolbar, declared whole as data and held to this page's tables by their test: what is built is
   bound, the rest drawn dimmed, "Coming soon".
 - The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it.
-- Page display, zoom, Go to and the page bar.
+- Page display, zoom, Go to, the page bar and Rotate view.
 
 Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
-Zoom to selection, and Go to but for Previous view and Next view.
+Zoom to selection, Go to but for Previous view and Next view, and Rotate view.
 
-Not built: tiles (past `PDF_PAGE_PICTURE_MAX_PIXELS` a page is drawn softer than the screen), Rotate view, the panels,
+Not built: tiles (past `PDF_PAGE_PICTURE_MAX_PIXELS` a page is drawn softer than the screen), the panels,
 find, text selection, page labels in the page bar, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
@@ -316,6 +316,11 @@ the choice is remembered per person per document.
 - **The view is the person's** `(default)`: page display, zoom and the turn of Rotate view are kept while the surface
   is open, per tab, never stored and never another person's. A PDF opens in Continuous at Fit width.
 - **Rotate view** turns every page a quarter for this person only; rotating a page in the file is a page operation.
+  - The engine draws each page turned, so a mark, a selection and a pointer meet the page where the turned picture
+    shows it; nothing is turned by the browser over an upright picture.
+  - A turn keeps the page in view, its top at the view's top `(default)`.
+  - Four turns are the page upright again. A thumbnail, a print, a download and another person's view are never
+    turned.
 - **Selecting text**: a drag selects in the file's own text order, by character; a double press a word, a triple a
   line; Shift extends; Alt with a drag selects a column. The selection is drawn by LiveDoc as rectangles over the
   glyphs.
@@ -410,13 +415,14 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 ## Telemetry
 
 `Pdf · Changed · PageDisplay.<Single|Continuous|Two|TwoContinuous|CoverShown|CoverHidden>`,
+`Pdf · Changed · RotateView.<Clockwise|Counterclockwise>` `(default)`,
 `Pdf · Zoomed · <FitWidth|FitPage|Actual|In|Out|Custom>` (a wheel's or a pinch's zoom once, as `Custom`, when it settles),
 `Pdf · Opened · Panel.<Thumbnails|Outline|EmbeddedFiles|Layers|Signatures|Fields>`, `Pdf · Searched · Find`,
 `Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
 menu and tool finder events. Never a query, a page's text or a name.
 
 Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom> way=<way>`,
-`[pdf] view-went-to page=<n>`.
+`[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`.
 
 ## Errors
 

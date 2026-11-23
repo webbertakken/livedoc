@@ -442,7 +442,10 @@ describe('a PDF document’s surface', () => {
       ).toBeNull();
       expect(
         screen.getByRole('button', { name: 'Rotate view' }).getAttribute('aria-disabled'),
-      ).toBe('true');
+      ).toBeNull();
+      expect(screen.getByRole('button', { name: 'Dark pages' }).getAttribute('aria-disabled')).toBe(
+        'true',
+      );
       fireEvent.click(screen.getByRole('button', { name: 'Mode: Viewing' }));
       fireEvent.click(screen.getByRole('menuitemradio', { name: /Reviewing/ }));
       expect(screen.getByRole('button', { name: 'Highlight' })).toBeTruthy();

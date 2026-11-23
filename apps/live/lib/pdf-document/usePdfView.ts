@@ -59,12 +59,18 @@ export function usePdfView(pages: readonly PageInfo[]) {
     () => PdfPageLayout.rows(pages.length, view.display),
     [pages.length, view.display],
   );
-  const extent = useMemo(() => PdfPageLayout.extent(pages), [pages]);
+  // The pages as drawn: each on its side for an odd turn of Rotate view.
+  const turns = view.turns;
+  const turned = useMemo(
+    () => (turns % 2 === 1 ? pages.map((page) => PdfView.sizeTurned(page, turns)) : pages),
+    [pages, turns],
+  );
+  const extent = useMemo(() => PdfPageLayout.extent(turned), [turned]);
   const scale = PdfPageLayout.scale(view.zoom, extent, view.display.across, viewport);
   const shown = view.display.continuous ? null : Math.min(shownRow, Math.max(0, rows.length - 1));
   const layout = useMemo(
-    () => PdfPageLayout.lay({ pages, rows, scale, viewport, shown }),
-    [pages, rows, scale, viewport, shown],
+    () => PdfPageLayout.lay({ pages: turned, rows, scale, viewport, shown }),
+    [turned, rows, scale, viewport, shown],
   );
 
   // The scroller's offsets as last set or scrolled to: read before a layout changes, with no read of the page's layout.
@@ -249,6 +255,16 @@ export function usePdfView(pages: readonly PageInfo[]) {
     [pages.length],
   );
 
+  /** Rotate view: every page a quarter more, for this person only; the page in view stays in view. */
+  const rotate = useCallback((by: 1 | -1) => {
+    const now = latest.current;
+    track('Pdf', 'Changed', by === 1 ? 'RotateView.Clockwise' : 'RotateView.Counterclockwise');
+    const next = PdfView.turned(now.view, by);
+    debugLog(`[pdf] view-turned turns=${next.turns}`);
+    anchor.current = { kind: 'page', index: now.page };
+    setView(next);
+  }, []);
+
   const attach = useCallback((node: HTMLDivElement | null) => {
     scroller.current = node;
     setElement(node);
@@ -278,6 +294,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       turn,
       setDisplay,
       setCover,
+      rotate,
     }),
     [
       view,
@@ -297,6 +314,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       turn,
       setDisplay,
       setCover,
+      rotate,
     ],
   );
 }

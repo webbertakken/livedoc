@@ -480,6 +480,8 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
         .map((name) => `PageDisplay.${name}`),
       'PageDisplay.CoverShown',
       'PageDisplay.CoverHidden',
+      'RotateView.Clockwise',
+      'RotateView.Counterclockwise',
     ],
   },
   'apps/live/lib/pdf-document/usePdfView.ts Pdf·Zoomed': {

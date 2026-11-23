@@ -36,7 +36,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Previous view, next view                | ⌥←, ⌥→                                | The same                              | specified |
 | Zoom in, zoom out                       | ⌘=, ⌘-                                | The same                              | built     |
 | Actual size, fit page, fit width        | ⌘1, ⌘0, ⌘2                            | The same †                            | built     |
-| Rotate view clockwise, counterclockwise | ⌘⇧+, ⌘⇧-                              | The same †                            | specified |
+| Rotate view clockwise, counterclockwise | ⌘⇧+, ⌘⇧-                              | The same †                            | built     |
 | Read mode                               | ⌘⌥H                                   | Ctrl H †                              | specified |
 | Full screen                             | ⌘⌥L                                   | ⌘L †                                  | specified |
 | Find                                    | ⌘F                                    | The same                              | specified |

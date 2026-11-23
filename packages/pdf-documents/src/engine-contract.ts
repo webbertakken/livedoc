@@ -74,12 +74,15 @@ export type PdfOpened =
   | { readonly ok: false; readonly needsPassword: true; readonly wrong?: true }
   | { readonly ok: false; readonly needsPassword?: false; readonly refusal: PdfRefusal };
 
+/** How far a page is drawn turned, in quarters clockwise: Rotate view (reading-surface.md "The pages"). */
+export type PageTurns = 0 | 1 | 2 | 3;
+
 /** A page drawn: RGBA, four bytes a pixel, row by row. */
 export type PageBitmap = {
   readonly width: number;
   readonly height: number;
   readonly rgba: Uint8ClampedArray<ArrayBuffer>;
-  /** Page space to view space for this page; marks are placed and drawn through it. */
+  /** Page space to view space for this page, as drawn (turned too); marks are placed and drawn through it. */
   readonly toView: PageMatrix;
 };
 
@@ -184,8 +187,11 @@ export type PdfEngine = {
    * is open, for a bake, and nowhere else (opening.md "Passwords").
    */
   unlock(password: string): Promise<PdfOpened>;
-  /** The page at that place in the order, drawn at `scale` (1 is 72 dpi), the file's own marks included. */
-  drawPage(index: number, scale: number): Promise<PageBitmap | null>;
+  /**
+   * The page at that place in the order, drawn at `scale` (1 is 72 dpi), the file's own marks included, turned
+   * `turns` quarters clockwise (none unless asked).
+   */
+  drawPage(index: number, scale: number, turns?: PageTurns): Promise<PageBitmap | null>;
   /** The file's bookmarks, in reading order; none where it has no outline. */
   outline(): Promise<Outline>;
   /** The links on a page, none of them followed. */

@@ -6,11 +6,30 @@ import { PdfView } from './pdf-view';
 
 describe("a person's view of a PDF document", () => {
   // "The view is the person's": a PDF opens in Continuous at Fit width.
-  it('opens in Continuous at Fit width, one page across, no cover page', () => {
+  it('opens in Continuous at Fit width, one page across, no cover page, upright', () => {
     expect(PdfView.initial()).toEqual({
       zoom: 'fit-width',
       display: { across: 1, continuous: true, cover: false },
+      turns: 0,
     });
+  });
+
+  // "Rotate view turns every page a quarter"; "Four turns are the page upright again."
+  it('turns a quarter either way, four turns upright again, keeping the rest', () => {
+    const zoomed = PdfView.withZoom(PdfView.initial(), 2);
+    expect(PdfView.turned(zoomed, 1)).toEqual({ ...zoomed, turns: 1 });
+    expect(PdfView.turned(zoomed, -1).turns).toBe(3);
+    let view = zoomed;
+    for (let quarter = 0; quarter < 4; quarter += 1) view = PdfView.turned(view, 1);
+    expect(view).toEqual(zoomed);
+  });
+
+  it('lays a page on its side for an odd turn', () => {
+    const page = { width: 612, height: 792 };
+    expect(PdfView.sizeTurned(page, 0)).toEqual(page);
+    expect(PdfView.sizeTurned(page, 1)).toEqual({ width: 792, height: 612 });
+    expect(PdfView.sizeTurned(page, 2)).toEqual(page);
+    expect(PdfView.sizeTurned(page, 3)).toEqual({ width: 792, height: 612 });
   });
 
   // "Page display": continuous or one row at a time; one or two pages across.
@@ -24,10 +43,15 @@ describe("a person's view of a PDF document", () => {
   });
 
   it('takes a page display by its name and keeps the cover page and the zoom', () => {
-    const before: PdfView = { zoom: 1.5, display: { across: 1, continuous: true, cover: true } };
+    const before: PdfView = {
+      zoom: 1.5,
+      display: { across: 1, continuous: true, cover: true },
+      turns: 0,
+    };
     expect(PdfView.withDisplay(before, 'two')).toEqual({
       zoom: 1.5,
       display: { across: 2, continuous: false, cover: true },
+      turns: 0,
     });
     expect(PdfView.displayName(PdfView.withDisplay(before, 'single').display)).toBe('single');
     expect(PdfView.withDisplay(before, 'two-continuous').display.continuous).toBe(true);

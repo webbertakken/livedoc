@@ -12,11 +12,13 @@ import {
   type PageInfo,
   type PageMatrix,
   type PagePoint,
+  type PageTurns,
   type PdfEngine,
   type Quad,
   type TextSelection,
 } from '@livedoc/pdf-documents';
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
+import { PdfView } from '@/lib/pdf-document/pdf-view';
 
 // How long a page waits after its size last changed before it is drawn again, so a zoom or a resize under way
 // redraws once. Safe range: 80 to 400 ms.
@@ -29,6 +31,7 @@ export type PdfPageTool = 'select' | 'highlight';
 type Drawn = {
   toView: PageMatrix;
   scale: number;
+  turns: PageTurns;
   fileMarks: readonly string[];
   by: PdfPageDrawer;
 };
@@ -55,6 +58,7 @@ export const PdfPage = memo(function PdfPage({
   cssPerPoint,
   left,
   top,
+  turns,
   wanted,
   held,
   engine,
@@ -72,6 +76,8 @@ export const PdfPage = memo(function PdfPage({
   // Where the page lies in the pages' layout, in CSS pixels (pdf-page-layout.ts).
   left: number;
   top: number;
+  // Rotate view's turn, in quarters clockwise: the engine draws the page turned.
+  turns: PageTurns;
   // Near view: its picture is drawn. Held: its picture is kept though it left view.
   wanted: boolean;
   held: boolean;
@@ -100,11 +106,17 @@ export const PdfPage = memo(function PdfPage({
     }
     if (!wanted) return;
     const scale = pictureScale(page, cssPerPoint, window.devicePixelRatio || 1);
-    if (drawn && drawn.by === drawer && Math.abs(drawn.scale - scale) < 0.01) return;
+    if (
+      drawn &&
+      drawn.by === drawer &&
+      drawn.turns === turns &&
+      Math.abs(drawn.scale - scale) < 0.01
+    )
+      return;
     let cancelled = false;
     const timer = setTimeout(
       () => {
-        void drawer.draw(index, scale).then(async (bitmap) => {
+        void drawer.draw(index, scale, turns).then(async (bitmap) => {
           if (cancelled) return;
           if (!bitmap) return setFailed(true);
           const fileMarks = await engine.fileMarks(index);
@@ -112,24 +124,31 @@ export const PdfPage = memo(function PdfPage({
           paint(canvas.current, bitmap);
           setFailed(false);
           const marks = fileMarks.map((mark) => mark.id);
-          setDrawn({ toView: bitmap.toView, scale, fileMarks: marks, by: drawer });
+          setDrawn({ toView: bitmap.toView, scale, turns, fileMarks: marks, by: drawer });
         });
       },
-      drawn ? REDRAW_SETTLE_MS : 0,
+      // A turn is drawn at once: the picture there is the page on its other side.
+      drawn && drawn.turns === turns ? REDRAW_SETTLE_MS : 0,
     );
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [wanted, held, cssPerPoint, page, index, drawer, engine, drawn]);
+  }, [wanted, held, cssPerPoint, page, turns, index, drawer, engine, drawn]);
+
+  // The page as it shows: on its side for an odd turn. The matrix's view space is this size, in points.
+  const shown = PdfView.sizeTurned(page, turns);
+  // The picture there as it is turned now; a picture of the page turned otherwise is hidden until it is drawn again,
+  // never stretched across the turned box with its marks misplaced.
+  const current = drawn?.turns === turns ? drawn : null;
 
   // A pointer's place on the page as the file has it (marks.md: a mark is made on the page as the file has it).
   const pagePoint = (event: PointerEvent<HTMLElement>): PagePoint | null => {
-    if (!drawn) return null;
+    if (!current) return null;
     const box = event.currentTarget.getBoundingClientRect();
-    return PageView.toPage(drawn.toView, {
-      x: ((event.clientX - box.left) / box.width) * page.width,
-      y: ((event.clientY - box.top) / box.height) * page.height,
+    return PageView.toPage(current.toView, {
+      x: ((event.clientX - box.left) / box.width) * shown.width,
+      y: ((event.clientY - box.top) / box.height) * shown.height,
     });
   };
 
@@ -152,7 +171,7 @@ export const PdfPage = memo(function PdfPage({
     });
   };
 
-  const marking = tool === 'highlight' && drawn !== null;
+  const marking = tool === 'highlight' && current !== null;
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     if (!marking || event.button !== 0) return;
     const from = pagePoint(event);
@@ -176,7 +195,7 @@ export const PdfPage = memo(function PdfPage({
     });
   };
 
-  const matrix = drawn?.toView;
+  const matrix = current?.toView;
   return (
     <div
       ref={(element) => register(index, element)}
@@ -185,22 +204,27 @@ export const PdfPage = memo(function PdfPage({
       data-pdf-page={index + 1}
       data-pdf-page-name={page.name}
       data-pdf-page-drawn={drawn ? 'true' : 'false'}
+      data-pdf-page-turns={drawn?.turns ?? ''}
       data-pdf-file-marks={drawn?.fileMarks.join(' ') ?? ''}
       className={`absolute bg-white shadow-sm outline outline-1 outline-(--office-line) ${
         marking ? 'cursor-text touch-none' : ''
       }`}
-      style={{ left, top, width: page.width * cssPerPoint, height: page.height * cssPerPoint }}
+      style={{ left, top, width: shown.width * cssPerPoint, height: shown.height * cssPerPoint }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => endDrag(event, true)}
       onPointerCancel={(event) => endDrag(event, false)}
     >
-      <canvas ref={canvas} aria-hidden="true" className="block h-full w-full" />
+      <canvas
+        ref={canvas}
+        aria-hidden="true"
+        className={`block h-full w-full ${drawn && !current ? 'invisible' : ''}`}
+      />
       {matrix ? (
         // Multiplied onto the page, so the words under a highlight keep their own colour (marks.md).
         <svg
           aria-hidden="true"
-          viewBox={`0 0 ${page.width} ${page.height}`}
+          viewBox={`0 0 ${shown.width} ${shown.height}`}
           preserveAspectRatio="none"
           className="pointer-events-none absolute inset-0 h-full w-full mix-blend-multiply"
         >

@@ -78,6 +78,7 @@ export const EDIT_TEXT = 'edit-text';
 export const EDIT_OBJECTS = 'edit-objects';
 export const ORGANISE_PAGES = 'organise-pages';
 export const ROTATE_VIEW_CLOCKWISE = 'rotate-view-clockwise';
+export const ROTATE_VIEW_COUNTERCLOCKWISE = 'rotate-view-counterclockwise';
 export const DARK_PAGES = 'dark-pages';
 /** View > Page display, Zoom and Go to: one person's view (reading-surface.md "The pages", "The page bar"). */
 export const PAGE_DISPLAY_SINGLE = 'page-display-single-page';
@@ -207,8 +208,14 @@ export const PDF_MENUS: OfficeCatalogue = [
       item('zoom-to-selection', 'Zoom to selection', 'view'),
     ]),
     submenu('rotate-view', 'Rotate view', [
-      item(ROTATE_VIEW_CLOCKWISE, 'Clockwise', 'view'),
-      item('rotate-view-counterclockwise', 'Counterclockwise', 'view'),
+      item(ROTATE_VIEW_CLOCKWISE, 'Clockwise', 'view', {
+        ...BUILT,
+        shortcut: ROTATE_VIEW_CLOCKWISE,
+      }),
+      item(ROTATE_VIEW_COUNTERCLOCKWISE, 'Counterclockwise', 'view', {
+        ...BUILT,
+        shortcut: ROTATE_VIEW_COUNTERCLOCKWISE,
+      }),
     ]),
     SEPARATOR,
     item('panel-thumbnails', 'Thumbnails', 'view', { ...CHECK, keywords: ['pages'] }),
