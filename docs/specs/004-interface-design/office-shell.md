@@ -207,6 +207,10 @@ and the menu item that opens it. The shell draws the panel's frame; the kind fil
   its value; Left and Right move it 16 px, Home and End to the narrowest and widest. The width is per person, remembered
   in this browser (`livedoc:v2:office-panel-width`) `(default)`.
 - **The left panel** sits at the left of the pages, 260 px wide, not resizable.
+- A kind with several left panels may give them a **rail**: a vertical toolbar of glyph toggles at the far left, one a
+  panel, each named and with its name as tooltip, pressed while its panel is open; the rail is a part of its own in
+  the F6 cycle, before the left panel, and is not drawn on a phone ([PDF document](../035-pdf-documents/reading-surface.md#the-left-panel)).
+- A panel's telemetry name is its title's words joined, each capitalised (`Line numbers` is `LineNumbers`).
 - One panel at a time on each side: opening a right panel closes the right panel open before it.
 - A panel's header holds its title and a × ("Close <title>"); the body under it scrolls on its own.
 - Each panel is a `complementary` landmark named by its title. Opening it from a menu item or a shortcut puts focus in
@@ -281,7 +285,8 @@ own) they appear without fading too ([Motion](motion.md#reduced-motion)).
 ## Behaviour
 
 - **Keyboard**: F6 moves focus to the next part, Shift+F6 to the one before, wrapping: the title row, the menu bar,
-  the toolbar, the left panel, the document, the right panel, then the editor's tab strip; a part not shown is skipped.
+  the toolbar, the rail, the left panel, the document, the right panel, then the editor's tab strip; a part not shown
+  is skipped.
   It is the editor's one region cycle ([F6 moves between regions](canvas-accessibility.md)), so the browser's own F6
   is not used on the page.
 - **Escape** backs out one layer per press, as everywhere ([Escape](escape.md)): a menu, then a dialog, then a panel,

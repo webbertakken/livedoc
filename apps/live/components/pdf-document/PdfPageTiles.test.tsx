@@ -37,6 +37,8 @@ function source(
       forget: () => {},
       drawTile,
       forgetTile: vi.fn(),
+      drawThumbnail: async () => null,
+      forgetThumbnail: () => {},
     },
     cache: pdfTileCache(1_000_000),
     view: store,

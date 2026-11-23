@@ -4,16 +4,7 @@
 // the person's view puts it (usePdfView.ts, pdf-page-layout.ts), a box of its true size read before anything is
 // drawn, so the scrollbar is true from the first frame; only pages near view hold a picture, and a page far from view
 // lets its picture go.
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type KeyboardEvent,
-  type RefObject,
-} from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore, type KeyboardEvent } from 'react';
 import type { PageInfo, PageTurns, PdfEngine, TextSelection } from '@livedoc/pdf-documents';
 import { CSS_PER_POINT, type PdfPageLayout } from '@/lib/pdf-document/pdf-page-layout';
 import { marksOnPage, type PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
@@ -21,50 +12,9 @@ import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfDevice } from '@/lib/pdf-document/pdf-device';
 import { pdfTileCache } from '@/lib/pdf-document/pdf-tile-cache';
 import type { PdfViewStore } from '@/lib/pdf-document/usePdfView';
+import { HELD_MARGIN, NEAR_MARGIN, useWithin } from '@/lib/pdf-document/useWithin';
 import type { PdfTileSource } from './PdfPageTiles';
 import { PdfPage, type PdfPageTool } from './PdfPage';
-
-// A page is drawn once it is within one viewport of view, and keeps its picture until it is three away
-// (reading-surface.md "The pages": memory is bounded). Safe ranges: 50% to 200%, and 200% to 600%.
-const NEAR_MARGIN = '100% 0px';
-const HELD_MARGIN = '300% 0px';
-// Which pages lie within `margin` of the scroller's view.
-function usePagesWithin(
-  scroller: RefObject<HTMLElement | null>,
-  margin: string,
-): { within: ReadonlySet<number>; watch: (index: number, element: HTMLElement | null) => void } {
-  const [within, setWithin] = useState<ReadonlySet<number>>(new Set());
-  const observer = useRef<IntersectionObserver | null>(null);
-  const elements = useRef(new Map<number, HTMLElement>());
-  useEffect(() => {
-    const made = new IntersectionObserver(
-      (entries) =>
-        setWithin((before) => {
-          const next = new Set(before);
-          for (const entry of entries) {
-            const index = Number((entry.target as HTMLElement).dataset.pdfPage) - 1;
-            if (entry.isIntersecting) next.add(index);
-            else next.delete(index);
-          }
-          return next;
-        }),
-      { root: scroller.current, rootMargin: margin },
-    );
-    observer.current = made;
-    for (const element of elements.current.values()) made.observe(element);
-    return () => made.disconnect();
-  }, [scroller, margin]);
-  const watch = useCallback((index: number, element: HTMLElement | null) => {
-    const before = elements.current.get(index);
-    if (before === element) return;
-    if (before) observer.current?.unobserve(before);
-    if (element) {
-      elements.current.set(index, element);
-      observer.current?.observe(element);
-    } else elements.current.delete(index);
-  }, []);
-  return { within, watch };
-}
 
 export function PdfPages({
   attach,
@@ -110,8 +60,8 @@ export function PdfPages({
     [attach],
   );
   const cssPerPoint = scale * CSS_PER_POINT;
-  const near = usePagesWithin(scroller, NEAR_MARGIN);
-  const held = usePagesWithin(scroller, HELD_MARGIN);
+  const near = useWithin(scroller, NEAR_MARGIN);
+  const held = useWithin(scroller, HELD_MARGIN);
   const { watch: watchNear } = near;
   const { watch: watchHeld } = held;
   const register = useCallback(
@@ -138,6 +88,7 @@ export function PdfPages({
       ref={ref}
       // The pages take the keys: the tools' own, the arrows that scroll and the keys that turn a page.
       tabIndex={0}
+      data-region="document"
       data-pdf-pages={pages.length}
       onKeyDown={onKeyDown}
       className="min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset"

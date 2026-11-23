@@ -17,6 +17,8 @@ import {
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { PageInfo, TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
+import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
+import { OfficePanelRail } from '@/components/office/OfficePanelRail';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { PdfDocumentScope } from '@/lib/api/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
@@ -24,6 +26,7 @@ import { downloadBlob } from '@/lib/download-blob';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
+import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
@@ -46,13 +49,14 @@ import {
   UNDO,
 } from '@/lib/pdf-document/pdf-menus';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
+import { PDF_PANELS, PDF_RAIL, THUMBNAILS_PANEL } from '@/lib/pdf-document/pdf-panels';
 import { pdfRoomBinding, type PdfFrame } from '@/lib/pdf-document/pdf-room-binding';
 import {
   PDF_REFUSAL_COPY,
   pdfRefusalDownloads,
   pdfRefusalRetries,
 } from '@/lib/pdf-document/pdf-refusals';
-import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
+import { OPEN_LEFT_PANEL, PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
 import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
 import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
 import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
@@ -66,6 +70,7 @@ import { PdfNotice, PdfNoticeButton } from './PdfNotice';
 import { PdfPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
+import { PdfThumbnails } from './PdfThumbnails';
 
 /** "This PDF holds the most marks LiveDoc keeps for one file (20,000)." (marks.md "Errors"). */
 const TOO_MANY_MARKS_COPY = 'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
@@ -202,10 +207,24 @@ export function PdfDocumentSurface({
   const viewer = usePdfView(pages ?? NO_PAGES);
   const pagesInput = usePdfPagesInput(viewer);
   const pageField = useRef<HTMLInputElement | null>(null);
+  const labels = useMemo(() => (pages ?? NO_PAGES).map((page) => page.label), [pages]);
   // Go to > Page… puts the caret in the page bar's page field.
   const focusPageField = useCallback(() => pageField.current?.focus(), []);
   const viewChrome = useMemo(() => pdfViewActions(viewer), [viewer]);
-  const { showPage, goToPage } = viewer;
+  const { showPage, goToPage, element: pagesElement } = viewer;
+  // "The left panel": the shell's, one open at a time, remembered for every PDF; closing it gives the pages the keys.
+  const panels = useOfficePanels({
+    kind: 'PdfDocument',
+    panels: PDF_PANELS,
+    onFocusDocument: () => pagesElement?.focus(),
+  });
+  const { reveal } = panels;
+  const leftOpen = panels.open.left;
+  // ⌘⌥⇧T: focus in the left panel open, or Thumbnails opened.
+  const revealLeft = useCallback(
+    () => reveal(PDF_PANELS.find((panel) => panel.id === leftOpen) ?? THUMBNAILS_PANEL),
+    [reveal, leftOpen],
+  );
   useEffect(
     () =>
       undo?.onReturn((place) => {
@@ -301,6 +320,8 @@ export function PdfDocumentSurface({
       ...(ready
         ? {
             ...viewChrome.actions,
+            ...panels.actions,
+            [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
           }
@@ -331,6 +352,8 @@ export function PdfDocumentSurface({
       download,
       ready,
       viewChrome,
+      panels.actions,
+      revealLeft,
       focusPageField,
       marking,
       undo,
@@ -400,36 +423,61 @@ export function PdfDocumentSurface({
         </div>
       ) : null}
       {ready && marks ? (
-        <div className="relative flex min-h-0 flex-1 flex-col">
-          <PdfPages
-            attach={viewer.attach}
-            layout={viewer.layout}
-            scale={viewer.scale}
-            turns={viewer.view.turns}
-            viewStore={viewer.viewStore}
-            sized={viewer.viewport.width > 0}
-            onKeyDown={pagesInput.onKeyDown}
-            pages={ready.pages}
-            engine={ready.engine}
-            drawer={ready.drawer}
-            marks={marks}
-            tool={inHand}
-            onHighlight={onHighlight}
-          />
-          <PdfPageBar
-            page={viewer.page}
-            count={viewer.count}
-            atFirst={viewer.atFirst}
-            atLast={viewer.atLast}
-            zoom={viewer.view.zoom}
-            scale={viewer.scale}
-            onPrevious={() => viewer.turn(-1)}
-            onNext={() => viewer.turn(1)}
-            onGoTo={viewer.goToPage}
-            onZoom={viewer.zoomTo}
-            pageField={pageField}
-          />
-        </div>
+        <OfficePanelLayout
+          left={
+            <>
+              <OfficePanelRail panels={PDF_RAIL} actions={panels.actions} />
+              {leftOpen === THUMBNAILS_PANEL.id ? (
+                <OfficePanel
+                  spec={THUMBNAILS_PANEL}
+                  onClose={() => panels.close('left')}
+                  focusNonce={panels.focusNonce}
+                >
+                  <PdfThumbnails
+                    tabId={tabId}
+                    pages={ready.pages}
+                    page={viewer.page}
+                    onGoTo={goToPage}
+                    drawer={ready.drawer}
+                    marks={marks}
+                  />
+                </OfficePanel>
+              ) : null}
+            </>
+          }
+          right={null}
+        >
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <PdfPages
+              attach={viewer.attach}
+              layout={viewer.layout}
+              scale={viewer.scale}
+              turns={viewer.view.turns}
+              viewStore={viewer.viewStore}
+              sized={viewer.viewport.width > 0}
+              onKeyDown={pagesInput.onKeyDown}
+              pages={ready.pages}
+              engine={ready.engine}
+              drawer={ready.drawer}
+              marks={marks}
+              tool={inHand}
+              onHighlight={onHighlight}
+            />
+            <PdfPageBar
+              page={viewer.page}
+              labels={labels}
+              atFirst={viewer.atFirst}
+              atLast={viewer.atLast}
+              zoom={viewer.view.zoom}
+              scale={viewer.scale}
+              onPrevious={() => viewer.turn(-1)}
+              onNext={() => viewer.turn(1)}
+              onGoTo={viewer.goToPage}
+              onZoom={viewer.zoomTo}
+              pageField={pageField}
+            />
+          </div>
+        </OfficePanelLayout>
       ) : null}
       {open.phase === 'refused' ? (
         <PdfNotice sentence={PDF_REFUSAL_COPY[open.refusal]}>

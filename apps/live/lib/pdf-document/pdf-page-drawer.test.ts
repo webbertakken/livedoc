@@ -41,6 +41,49 @@ function engine() {
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve));
 
 describe('the page drawer', () => {
+  // reading-surface.md "Thumbnails": drawn on the one line, behind every page and tile.
+  it('draws a thumbnail only once no page or tile waits, the latest asked first', async () => {
+    const pdf = engine();
+    const drawer = pdfPageDrawer(pdf);
+    const page = drawer.draw(1, 1);
+    const thumbnails = [5, 6].map((index) => drawer.drawThumbnail(index, 0.2));
+    const later = drawer.draw(2, 1);
+    expect(pdf.asked).toEqual([1]);
+    for (let step = 0; step < 4; step += 1) {
+      pdf.finish();
+      await tick();
+    }
+    expect(pdf.asked).toEqual([1, 2, 6, 5]);
+    expect((await Promise.all([page, later, ...thumbnails])).map((b) => b?.width)).toEqual([
+      1, 2, 5, 6,
+    ]);
+  });
+
+  it('draws a thumbnail upright, at once when nothing else is drawn', async () => {
+    const turns: unknown[] = [];
+    const drawer = pdfPageDrawer({
+      drawPage: async (index, scale, turn) => {
+        turns.push([index, scale, turn]);
+        return bitmap(index);
+      },
+      drawTile: async () => null,
+    });
+    await drawer.drawThumbnail(3, 0.25);
+    expect(turns).toEqual([[3, 0.25, 0]]);
+  });
+
+  it('gives up a thumbnail still waiting, never drawing it', async () => {
+    const pdf = engine();
+    const drawer = pdfPageDrawer(pdf);
+    void drawer.draw(1, 1);
+    const gone = drawer.drawThumbnail(5, 0.2);
+    drawer.forgetThumbnail(5);
+    expect(await gone).toBeNull();
+    pdf.finish();
+    await tick();
+    expect(pdf.asked).toEqual([1]);
+  });
+
   it('draws one page at a time, the latest asked first', async () => {
     const pdf = engine();
     const drawer = pdfPageDrawer(pdf);

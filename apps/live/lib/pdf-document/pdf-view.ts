@@ -95,10 +95,22 @@ export const PdfView = {
     return scale >= PDF_ZOOM_MIN && scale <= PDF_ZOOM_MAX ? scale : null;
   },
 
-  /** A typed page number as the page's index in a file of `count` pages; null when it is no page of it. */
-  parsePage: (text: string, count: number): number | null => {
-    if (!/^\s*\d{1,7}\s*$/.test(text)) return null;
-    const number = Number(text);
-    return number >= 1 && number <= count ? number - 1 : null;
+  /**
+   * A typed page as the page's index, given each page's label (null where the file gives none): a number from 1 to
+   * the page count is that page, any other value the page it labels, as written first, then in any case
+   * (reading-surface.md "Go to page"). Null when it names no page.
+   */
+  parsePage: (text: string, labels: readonly (string | null)[]): number | null => {
+    const typed = text.trim();
+    if (typed === '') return null;
+    if (/^\d{1,7}$/.test(typed)) {
+      const number = Number(typed);
+      if (number >= 1 && number <= labels.length) return number - 1;
+    }
+    const exact = labels.indexOf(typed);
+    if (exact >= 0) return exact;
+    const lower = typed.toLocaleLowerCase();
+    const anyCase = labels.findIndex((label) => label?.toLocaleLowerCase() === lower);
+    return anyCase >= 0 ? anyCase : null;
   },
 } as const;
