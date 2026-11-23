@@ -16,6 +16,7 @@ export { pdfDigest, type PdfDigest } from './digest';
 export type {
   BakeRefusal,
   BakeResult,
+  EmbeddedFileRead,
   FileMark,
   Outline,
   OutlineItem,

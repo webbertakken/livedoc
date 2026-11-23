@@ -678,3 +678,30 @@ describe('a PDF document’s outline', () => {
     expect(screen.queryByRole('dialog', { name: 'Link' })).toBeNull();
   });
 });
+
+// reading-surface.md "Embedded files".
+describe('a PDF document’s embedded files', () => {
+  afterEach(() => localStorage.clear());
+
+  it('opens from the rail and saves a file the PDF carries, for a Viewer too', async () => {
+    const now = await ready();
+    const notes = new TextEncoder().encode('hello');
+    const engine = {
+      embeddedFiles: async () => ({
+        files: [{ name: 'notes.txt', size: 5, type: 'text/plain', description: '', runs: false }],
+        cut: false,
+      }),
+      embeddedFile: async () => ({ ok: true as const, bytes: notes }),
+    };
+    show({ ...now, engine: engine as never }, 'view');
+    const rail = screen.getByRole('toolbar', { name: 'Panels' });
+    await act(async () => {
+      fireEvent.click(within(rail).getByRole('button', { name: 'Embedded files' }));
+    });
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentPanelEmbeddedFiles');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save notes.txt' }));
+    });
+    expect(vi.mocked(downloadBlob).mock.calls.at(-1)![1]).toBe('notes.txt');
+  });
+});

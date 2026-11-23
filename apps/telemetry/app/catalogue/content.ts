@@ -1288,8 +1288,8 @@ export const PDFS_IMPORTED = chart(
   'Pdf',
   'Imported',
   'PDFs Opened From Files',
-  'A PDF from the computer opened as a new PDF document or added as a PDF tab, by the way it arrived.',
-  { types: ['Explorer', 'Tab'] },
+  'A PDF from the computer, or one carried inside a PDF, opened as a new PDF document or added as a PDF tab, by the way it arrived.',
+  { types: ['Explorer', 'Tab', 'EmbeddedFile'] },
 );
 
 export const PDF_MARKS_ADDED = chart(
@@ -1312,8 +1312,8 @@ export const PDFS_EXPORTED = chart(
   'Pdf',
   'Exported',
   'PDFs Downloaded',
-  'A PDF document downloaded, by what was downloaded.',
-  { types: ['Pdf'] },
+  'A PDF document downloaded, or a file it carries saved, by what was downloaded.',
+  { types: ['Pdf', 'EmbeddedFile'] },
 );
 
 export const PDF_UNDOS = chart(

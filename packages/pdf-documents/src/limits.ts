@@ -88,6 +88,9 @@ export const PDF_MAX_SIGNATURES = 1_000;
 export const PDF_SIGNATURE_MAX_BYTES = 1_048_576;
 /** (default) Embedded files listed and added here; a file with more keeps them all (document-tools.md "Limits"). */
 export const PDF_EMBEDDED_FILES_MAX = 500;
+/** (default) The most of one embedded file read out to be saved or opened: a stored file's cap
+ *  (reading-surface.md "Embedded files"). */
+export const PDF_EMBEDDED_FILE_MAX_BYTES = 100_000_000;
 /** (default) PDF layers read from one file; more are shown as the file sets them and not listed. */
 export const PDF_MAX_LAYERS = 1_000;
 /** (default) How wide the first page's picture is that a browser sends for the thumbnail: twice the widest card a

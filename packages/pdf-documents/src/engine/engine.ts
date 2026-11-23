@@ -108,6 +108,15 @@ export function pdfEngineOver(
       );
     },
     embeddedFiles: async () => said(reader.embeddedFiles()),
+    embeddedFile: async (at) => {
+      const read = reader.embeddedFile(at);
+      log(
+        read.ok
+          ? `[pdf] embedded-read bytes=${read.bytes.length}`
+          : `[pdf] embedded-refused reason=${read.refusal}`,
+      );
+      return read;
+    },
     layers: async () => {
       const { layers, cut } = layersOf(await writer());
       if (cut) log('[pdf] value-clamped what=list count=1');

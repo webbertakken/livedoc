@@ -17,6 +17,7 @@ import {
   PAGE_DISPLAY_SINGLE,
   PAGE_DISPLAY_TWO,
   PAGE_DISPLAY_TWO_CONTINUOUS,
+  PANEL_EMBEDDED_FILES,
   PANEL_OUTLINE,
   PANEL_THUMBNAILS,
   PDF_MENUS,
@@ -106,6 +107,7 @@ describe("a PDF document's menus and toolbar", () => {
     // pdf-panels.ts: the left panels built (reading-surface.md "The left panel").
     PANEL_THUMBNAILS,
     PANEL_OUTLINE,
+    PANEL_EMBEDDED_FILES,
   ];
 
   it('has no built item nothing runs, no shortcut its registry lacks, no id twice', () => {

@@ -4,6 +4,7 @@
 // script of a file can run.
 import { init } from '@embedpdf/pdfium';
 import type {
+  EmbeddedFileRead,
   FileMark,
   Outline,
   PageBitmap,
@@ -20,7 +21,7 @@ import type { PageField } from '../file-field';
 import type { PageText } from '../page-text';
 import { drawPage, drawTile } from './draw-page';
 import { readDocument, readPages } from './read-document';
-import { readEmbeddedFiles } from './read-embedded-files';
+import { readEmbeddedFile, readEmbeddedFiles } from './read-embedded-files';
 import { readFields } from './read-fields';
 import { readMarks } from './read-marks';
 import { readLinks, readOutline } from './read-outline';
@@ -130,6 +131,10 @@ export class PdfReader {
 
   embeddedFiles(most?: number): EmbeddedFiles {
     return readEmbeddedFiles(this.file, most);
+  }
+
+  embeddedFile(at: number, most?: number): EmbeddedFileRead {
+    return readEmbeddedFile(this.file, at, most);
   }
 
   /** What was held back of the file since this was last asked (security.md "The boundary"). */

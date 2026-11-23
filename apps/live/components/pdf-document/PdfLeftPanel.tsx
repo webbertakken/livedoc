@@ -8,7 +8,13 @@ import { OfficePanelRail } from '@/components/office/OfficePanelRail';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
 import type { PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
-import { OUTLINE_PANEL, PDF_RAIL, THUMBNAILS_PANEL } from '@/lib/pdf-document/pdf-panels';
+import {
+  EMBEDDED_FILES_PANEL,
+  OUTLINE_PANEL,
+  PDF_RAIL,
+  THUMBNAILS_PANEL,
+} from '@/lib/pdf-document/pdf-panels';
+import { PdfEmbeddedFilesPanel } from './PdfEmbeddedFilesPanel';
 import { PdfOutlinePanel } from './PdfOutlinePanel';
 import { PdfThumbnails } from './PdfThumbnails';
 
@@ -22,18 +28,21 @@ export function PdfLeftPanel({
   marks,
   onGoTo,
   onFollow,
+  onOpenPdf,
 }: {
   panels: OfficePanelsState;
   tabId: string;
   pages: readonly PageInfo[];
   /** The page in view, by its index. */
   page: number;
-  engine: Pick<PdfEngine, 'outline'>;
+  engine: Pick<PdfEngine, 'outline' | 'embeddedFiles' | 'embeddedFile'>;
   drawer: PdfPageDrawer;
   marks: PdfMarksStore;
   onGoTo: (index: number) => void;
   /** A bookmark pressed: where it leads. */
   onFollow: (target: LinkTarget | null) => void;
+  /** An embedded PDF opened as a new PDF document; answers what to say where it could not be. */
+  onOpenPdf: (file: { name: string; bytes: Uint8Array<ArrayBuffer> }) => Promise<string | null>;
 }) {
   const open = PDF_RAIL.find(({ spec }) => spec.id === panels.open.left)?.spec ?? null;
   return (
@@ -57,6 +66,9 @@ export function PdfLeftPanel({
           ) : null}
           {open.id === OUTLINE_PANEL.id ? (
             <PdfOutlinePanel engine={engine} pages={pages} page={page} onFollow={onFollow} />
+          ) : null}
+          {open.id === EMBEDDED_FILES_PANEL.id ? (
+            <PdfEmbeddedFilesPanel engine={engine} onOpenPdf={onOpenPdf} />
           ) : null}
         </OfficePanel>
       ) : null}

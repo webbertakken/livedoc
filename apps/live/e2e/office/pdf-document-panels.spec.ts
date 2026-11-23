@@ -1,5 +1,11 @@
 import type { Page } from '@playwright/test';
-import { labelledPdf, outlinePdf, textPdf } from '@livedoc/pdf-documents/testing';
+import {
+  embeddedFilesPdf,
+  embeddedPdfPdf,
+  labelledPdf,
+  outlinePdf,
+  textPdf,
+} from '@livedoc/pdf-documents/testing';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { dropPdf, pageOneDrawn } from './pdf-document-pages';
 
@@ -124,6 +130,34 @@ test('a PDF’s thumbnails go to their pages, and the page bar takes a page’s 
   await expect(link).toContainText('This link asks for something LiveDoc never does.');
   await link.getByRole('button', { name: 'Close' }).click();
   await expect(link).toHaveCount(0);
+
+  // "Embedded files": listed as the PDF says, a warning before saving a file that runs, saved on Save.
+  await openPdf(page, 'Carrying.pdf', embeddedFilesPdf());
+  await rail(page).getByRole('button', { name: 'Embedded files' }).click();
+  const files = page.getByRole('list', { name: 'Embedded files' });
+  await expect(files.locator('[data-pdf-embedded-file]')).toHaveCount(2);
+  await expect(
+    files.locator('[data-pdf-embedded-file="1"] [data-pdf-embedded-runs]'),
+  ).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('pdf-embedded-dark.png') });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: test.info().outputPath('pdf-embedded-light.png') });
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const download = page.waitForEvent('download');
+  await files.getByRole('button', { name: 'Save notes.txt' }).click();
+  expect((await download).suggestedFilename()).toBe('notes.txt');
+
+  // An embedded PDF opens as a new PDF document; a file that only says it is one is refused on its row.
+  await openPdf(page, 'Holding a PDF.pdf', embeddedPdfPdf());
+  const held = page.getByRole('list', { name: 'Embedded files' });
+  await held.getByRole('button', { name: 'Open fake.pdf' }).click();
+  await expect(held.locator('[data-pdf-embedded-file="1"]')).toContainText(
+    'This file isn’t a PDF.',
+  );
+  const before = page.url();
+  await held.getByRole('button', { name: 'Open inner.pdf' }).click();
+  await expect(page).not.toHaveURL(before, { timeout: 30_000 });
+  await pageOneDrawn(page);
 
   expectNoPageErrors(pageErrors);
 });

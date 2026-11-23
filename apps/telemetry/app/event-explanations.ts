@@ -935,6 +935,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone dropped a PDF on the Explorer, which opened it as a new PDF document.',
   'Pdf|Imported|Tab':
     'Someone chose a PDF from their computer in the + menu, which added it to the document as a PDF tab.',
+  'Pdf|Imported|EmbeddedFile':
+    'Someone opened a PDF carried inside a PDF document as a new PDF document of its own.',
+  'Pdf|Exported|EmbeddedFile':
+    'Someone saved a file carried inside a PDF document to their computer.',
   'Pdf|Added|Mark.Highlight': 'Someone highlighted text on a PDF page.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',

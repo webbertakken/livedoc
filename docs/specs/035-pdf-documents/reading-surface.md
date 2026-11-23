@@ -8,13 +8,13 @@
 - The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it, and
   sharp tiles over the part in view where that picture is softer than the screen.
 - Page display, zoom, Go to, the page bar and Rotate view.
-- The left panel's rail, Thumbnails and Outline; Go to page by a page's number or its label; following a bookmark.
+- The left panel's rail, Thumbnails, Outline and Embedded files; Go to page by a page's number or its label; following a bookmark.
 
 Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
-Zoom to selection, Go to but for Previous view and Next view, Rotate view, Thumbnails and Outline.
+Zoom to selection, Go to but for Previous view and Next view, Rotate view, Thumbnails, Outline and Embedded files.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-the panels but Thumbnails and Outline, a bookmark's point on its page, find, text selection, the accessible tree (a page is a named region whose picture is
+Layers, Signatures and Fields, a bookmark's point on its page, find, text selection, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -330,6 +330,29 @@ or from its View item; the shell's left panel ([Side panels](../004-interface-de
 - While the outline is read the panel says "Reading bookmarks…"; one that cannot be read says "The bookmarks
   couldn't be read." and logs `[pdf] outline-failed`.
 
+### Embedded files
+
+The files the PDF carries inside it, as [Security](security.md#embedded-files) lists them, never opened unasked.
+
+- A list in the file's order; each row its name ("Embedded file" where the file gives none `(default)`), its size
+  as the pill writes one where the file says it, its type where named, and its description under it.
+- **Save** on a row reads the file out of the PDF and downloads it under its name; nothing is decoded before.
+- A file whose name's ending runs on a computer carries a warning line on its row, before Save: "This file can run
+  on a computer. Save it only if you trust where this PDF came from." `(default)`.
+- **Open** on a row whose name ends in `.pdf` or whose type is `application/pdf` makes it a new PDF document,
+  kept where this PDF is (on LiveDoc, or in This Browser), and opens it `(default)`; its bytes are checked to be a
+  PDF first, as any PDF that arrives; a refusal is said on its row by the arrival's own copy, but a file that is no PDF
+  says "This file isn't a PDF." `(default)`.
+- A file the PDF says, or turns out, to be larger than `PDF_EMBEDDED_FILE_MAX_BYTES` is not read: "This file is
+  larger than 100 MB, the most LiveDoc reads out of a PDF." One that cannot be read: "This file couldn't be read
+  out of the PDF." A list that cannot be read says "The embedded files couldn't be read." and logs
+  `[pdf] embedded-list-failed`.
+- A file with none says "This PDF has no embedded files."; one with more than `PDF_EMBEDDED_FILES_MAX` lists that
+  many and says "This PDF holds more embedded files than LiveDoc lists (500)."
+- Every role may save and open them, as a Download is everyone's ([Share roles](#share-roles)).
+- Logged by the engine: `[pdf] embedded-read bytes=<n>`, `[pdf] embedded-refused reason=<reason>`; counted as
+  `Pdf · Exported · EmbeddedFile` and `Pdf · Imported · EmbeddedFile`.
+
 ### Following a link
 
 A press on a bookmark, or on a link of a page ([Security](security.md#links-and-actions)):
@@ -471,6 +494,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 | `PDF_WHEEL_ZOOM_RATE`          | 0.002                                                                                                  | `(default)` ⌘ with the wheel multiplies the zoom by e to this times the pixels wheeled: a notch of 100 is 22%; safe range 0.001 to 0.005 |
 | `PDF_WHEEL_TURN_MS`            | 300                                                                                                    | `(default)` How long a wheel rests before it turns another row; safe range 150 to 600                                                    |
 | `PDF_ZOOM_SETTLE_MS`           | 400                                                                                                    | `(default)` How long a wheel's or a pinch's zoom rests before it is told to telemetry; safe range 200 to 1,000                           |
+| `PDF_EMBEDDED_FILE_MAX_BYTES`  | 100,000,000 (100 MB)                                                                                   | `(default)` The most of an embedded file read out to be saved or opened: a stored file's cap, `FILE_TAB_MAX_BYTES`                       |
 | `PDF_THUMBNAIL_BOX_PX`         | 160                                                                                                    | `(default)` CSS pixels a side of the square a thumbnail is fitted into; safe range 96 to 224                                             |
 | `PDF_FIND_MAX_RESULTS`         | 10,000                                                                                                 | `(default)` Listed results; the count still says how many more                                                                           |
 

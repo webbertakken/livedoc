@@ -340,6 +340,26 @@ export const embeddedFilesPdf = (): Uint8Array<ArrayBuffer> =>
     stream('/Type /EmbeddedFile', 'MZ'),
   ]);
 
+/** One page carrying a one-page PDF, "inner.pdf", and a file that only says it is one, "fake.pdf". */
+export const embeddedPdfPdf = (): Uint8Array<ArrayBuffer> => {
+  const inner = new TextDecoder().decode(
+    rawPdf([
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      PAGE,
+    ]),
+  );
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Names << /EmbeddedFiles << /Names [(inner.pdf) 4 0 R (fake.pdf) 6 0 R] >> >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    PAGE,
+    '<< /Type /Filespec /F (inner.pdf) /UF (inner.pdf) /EF << /F 5 0 R >> >>',
+    stream('/Type /EmbeddedFile /Subtype /application#2Fpdf', inner),
+    '<< /Type /Filespec /F (fake.pdf) /EF << /F 7 0 R >> >>',
+    stream('/Type /EmbeddedFile', 'not a pdf'),
+  ]);
+};
+
 /**
  * One page and three PDF layers: "Plan" shown, "Notes" hidden, "Border" shown and locked; then as many more, each
  * shown, as `more` says.
