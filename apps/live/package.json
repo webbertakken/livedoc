@@ -28,7 +28,8 @@
     "fonts:document": "node --import ../../scripts/ts-source-hooks.mjs scripts/document-fonts-css.ts",
     "fonts:advances": "node --import ../../scripts/ts-source-hooks.mjs scripts/sheet-font-advances.ts",
     "fonts:system": "node --import ../../scripts/ts-source-hooks.mjs scripts/sheet-system-font-check.ts",
-    "fonts:google": "node --import ../../scripts/ts-source-hooks.mjs scripts/google-fonts-catalogue.ts"
+    "fonts:google": "node --import ../../scripts/ts-source-hooks.mjs scripts/google-fonts-catalogue.ts",
+    "chars:special": "node --import ../../scripts/ts-source-hooks.mjs scripts/special-characters-catalogue.ts"
   },
   "dependencies": {
     "@fontsource/amatic-sc": "^5.3.0",

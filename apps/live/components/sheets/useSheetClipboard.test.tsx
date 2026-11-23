@@ -46,7 +46,7 @@ const json = (id: string, title: string): SheetJson => ({
   updatedBy: by,
 });
 
-async function harness(opts: { canEdit?: boolean } = {}) {
+async function harness(opts: { canEdit?: boolean; canShape?: boolean } = {}) {
   const sheets = [json(ID, 'Sheet 1'), json(OTHER, 'Other')];
   const store = new SheetStore({
     scope: { documentId: 'd1', ownerId: 'o', shareCode: null, tabId: null },
@@ -71,6 +71,7 @@ async function harness(opts: { canEdit?: boolean } = {}) {
       palette,
       interactive: true,
       canEdit: opts.canEdit ?? true,
+      ...(opts.canShape === undefined ? {} : { canShape: opts.canShape }),
       maximised: false,
       locale: 'en-GB',
       announce,
@@ -318,6 +319,73 @@ describe('paste', () => {
     expect(h.value(0, 0)).toBeNull();
     expect(clipboard.readText).not.toHaveBeenCalled();
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+describe('rules and merges in a paste (D154, D155)', () => {
+  const ruleOn = (h: Awaited<ReturnType<typeof harness>>, r: number) => {
+    const L = h.store.sheet(ID)!.layout;
+    const rule = {
+      id: `rule0${r}`,
+      r1: L.rows[r]!,
+      c1: L.cols[0]!,
+      r2: L.rows[r]!,
+      c2: L.cols[0]!,
+      is: 'check' as const,
+    };
+    act(
+      () =>
+        void h.store.write(ID, { kind: 'layout', changes: [{ k: 'vrule', id: rule.id, rule }] }),
+    );
+    h.view.rerender();
+  };
+  const rules = (h: Awaited<ReturnType<typeof harness>>) =>
+    h.store.sheet(ID)!.layout.rules?.length ?? 0;
+
+  it('an Editor’s paste carries the rules, and a cut takes them from their old place', async () => {
+    const h = await harness();
+    h.type(ID, 0, 0, 'TRUE');
+    ruleOn(h, 0);
+    h.select(range(0, 0));
+    const dt = transfer();
+    act(() => h.view.result.current.clip.onCopy(event(dt)));
+    h.select(range(2, 2));
+    act(() => h.view.result.current.clip.onPaste(event(dt)));
+    h.view.rerender();
+    expect(rules(h)).toBe(2);
+    h.select(range(0, 0));
+    const cut = transfer();
+    act(() => h.view.result.current.clip.onCut(event(cut)));
+    h.select(range(5, 3));
+    act(() => h.view.result.current.clip.onPaste(event(cut)));
+    h.view.rerender();
+    expect(rules(h)).toBe(2);
+    expect(h.value(5, 3)).toBe(true);
+    expect(h.view.result.current.c.marquee).toBeNull();
+  });
+
+  it('a Participant’s paste lands as values, its cut moving the cells alone', async () => {
+    const h = await harness({ canShape: false });
+    h.type(ID, 0, 0, '7');
+    ruleOn(h, 0);
+    h.select(range(0, 0));
+    const dt = transfer();
+    act(() => h.view.result.current.clip.onCut(event(dt)));
+    h.select(range(3, 1));
+    act(() => h.view.result.current.clip.onPaste(event(dt)));
+    h.view.rerender();
+    expect([h.value(0, 0), h.value(3, 1), rules(h)]).toEqual([null, 7, 1]);
+  });
+
+  it('merges a pasted spanning cell for an Editor, never for a Participant', async () => {
+    const html = '<table><tr><td colspan="2">wide</td></tr></table>';
+    const editor = await harness();
+    act(() => editor.view.result.current.clip.onPaste(event(transfer({ 'text/html': html }))));
+    expect(editor.store.sheet(ID)!.layout.merges).toHaveLength(1);
+    const participant = await harness({ canShape: false });
+    act(() => participant.view.result.current.clip.onPaste(event(transfer({ 'text/html': html }))));
+    expect(participant.store.sheet(ID)!.layout.merges).toBeUndefined();
+    expect(participant.value(0, 0)).toBe('wide');
   });
 });
 

@@ -186,3 +186,54 @@ test('Paste Special turns a copied row into a column', async ({ page, context, p
   await expect(page.getByText('The copied cells hold no conditional formatting')).toBeVisible();
   expectNoPageErrors(pageErrors);
 });
+
+// Google Sheets' clipboard both ways (grid-and-editing.md "Clipboard", D152, D154): a copy writes formulas as R1C1
+// in `data-sheets-formula` and merges as spans; Google's HTML pasted back keeps its formula.
+test('the clipboard speaks Google Sheets’ HTML both ways', async ({
+  page,
+  context,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  await select(page, 'A1');
+  await page.keyboard.type('3');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('=A1*2');
+  await page.keyboard.press('Enter');
+  await select(page, 'A1:B1');
+  await page.keyboard.press('ControlOrMeta+c');
+  const html = await page.evaluate(async () => {
+    const items = await navigator.clipboard.read();
+    const blob = await items[0]!.getType('text/html');
+    return blob.text();
+  });
+  expect(html).toContain('data-sheets-formula="=R[0]C[-1]*2"');
+
+  // As Google Sheets writes it: a value, a formula beside it, and a cell spanning two columns below.
+  const google =
+    '<meta charset="utf-8"><google-sheets-html-origin><table data-sheets-root="1"><tr><td>5</td>' +
+    '<td data-sheets-formula="=R[0]C[-1]+1" style="font-weight:bold">6</td></tr>' +
+    '<tr><td colspan="2">Notes</td></tr></table>';
+  await page.evaluate(async (text) => {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'text/html': new Blob([text], { type: 'text/html' }),
+        'text/plain': new Blob(['5\t6\nNotes'], { type: 'text/plain' }),
+      }),
+    ]);
+  }, google);
+  await select(page, 'D3');
+  await page.keyboard.press('ControlOrMeta+v');
+  await expect.poll(() => inputOf(page, 'E3')).toBe('=D3+1');
+  expect(await inputOf(page, 'D4')).toBe('Notes');
+  await page.screenshot({
+    path: test.info().outputPath('google-paste.png'),
+    animations: 'disabled',
+  });
+  expectNoPageErrors(pageErrors);
+});

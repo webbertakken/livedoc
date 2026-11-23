@@ -35,17 +35,24 @@ beforeEach(() => {
 afterEach(() => view.destroy());
 
 const openRestart = vi.fn();
+const openMoreBullets = vi.fn();
 const bind = (canEdit = true) =>
   textDocumentListActions(
     view,
     { read: () => lists, set: (id, list) => (lists[id] = list), startStep },
-    { canEdit, openRestart },
+    { canEdit, openRestart, openMoreBullets },
   );
 const place = () => (view.state.doc.firstChild!.attrs as { list: ListPlace | null }).list;
 
 describe('textDocumentListActions', () => {
   it('binds nothing for a session that does not write', () => {
-    expect(bind(false)).toEqual({ actions: {}, choices: {}, stepLevel: null, restart: null });
+    expect(bind(false)).toEqual({
+      actions: {},
+      choices: {},
+      stepLevel: null,
+      restart: null,
+      bullet: null,
+    });
   });
 
   it('makes a checklist on one undo step, reads it pressed, ticks it with ⌘⌥Enter, counts both', () => {
@@ -137,11 +144,25 @@ describe('textDocumentListActions', () => {
     expect(actions['continue-numbering']!.disabled).toBe(true);
   });
 
+  // lists.md "List options".
+  it('opens More bullets’ dialog, and makes a character pressed there the bullet on a step of its own', () => {
+    const { actions, bullet } = bind();
+    actions['more-bullets']!.run();
+    expect(openMoreBullets).toHaveBeenCalled();
+    startStep.mockClear();
+    expect(bullet!('★')).toBe(true);
+    expect(startStep).toHaveBeenCalledTimes(2);
+    expect(place()).toEqual({ id: 'L1', level: 0 });
+    expect(lists.L1!.levels[0]).toMatchObject({ kind: 'bullet', bullet: '★' });
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentListBullet');
+  });
+
   it('does nothing once the editor is gone', () => {
-    const { actions, stepLevel } = bind();
+    const { actions, stepLevel, bullet } = bind();
     view.destroy();
     actions['bulleted-list']!.run();
     expect(stepLevel!(1)).toBe(false);
+    expect(bullet!('★')).toBe(false);
     expect(actions['bulleted-list']!.checked).toBe(false);
     expect(actions['restart-numbering']!.disabled).toBe(true);
     expect(actions['continue-numbering']!.disabled).toBe(true);

@@ -3,6 +3,7 @@
 **Status: in progress.** A picture in line is held, read and written in both formats, kept in the live state, drawn,
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
+A horizontal line and special characters are inserted.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -297,8 +298,33 @@ matrix).
 
 ## Special characters
 
-Insert > Special characters: a dialog to search by name, browse by category (symbols, punctuation, emoji, scripts …),
-and **draw to find** a character; a press inserts it.
+Insert > Symbols > Special characters: the **Insert special characters** dialog; a press on a character inserts it.
+
+- **The characters** are Unicode's, from its Character Database (`UnicodeData.txt`, `Blocks.txt`, `NameAliases.txt`)
+  at the version the catalogue was generated from: every named character but controls, surrogates and private use.
+  Those Unicode names by range (CJK ideographs, Hangul syllables, Tangut …) are found by codepoint only (default).
+- **Browsing**: two menus pick a category and a Unicode block within it; the grid shows the block's characters of that
+  category in codepoint order. The categories, after Google's (default): Symbol (maths, currency and other symbols),
+  Punctuation, Number, Modifier (modifier letters and symbols, and the marks of the Combining blocks), Format &
+  whitespace (spaces, separators and format characters), and Scripts (letters and their marks). It opens on Symbol,
+  Arrows (default), and keeps the last pick while the document is open.
+- **Search**: by name words or codepoint (`arrow`, `U+2192`); every word typed starts a word of a character's name,
+  in any case. A codepoint (`U+` and 1 to 6 hex digits, or 4 to 6 hex digits alone) shows its character first, ranged
+  ones too. At most 600 results are shown (default); the menus are dimmed while a search is shown.
+- **A cell** shows its character; a combining mark sits on a dotted circle (◌), and a space or format character shows
+  its abbreviation (NBSP, ZWJ) in a dashed box. Each cell is named by the character's name; hovering or focusing one
+  shows it large beside the grid, with its name and codepoint.
+- **Keyboard**: the grid is one Tab stop; the arrows move by a cell and a row, Home and End to the first and last,
+  Enter or Space inserts.
+- **Inserting**: the character replaces the selection, taking the caret's formatting, and the caret goes after it;
+  each press is one undo step, and the dialog stays open for more (default). It inserts wherever the caret is: the
+  body, a header, a footer or a note.
+- **Loading**: the catalogue is fetched the first time the dialog opens, never with the editor; until then the grid
+  says "Loading characters…", and if the fetch fails, "The characters could not load." with Try again.
+- **Draw to find** is left out (default). If it is added later, the likely route is the handwriting reader Convert to
+  Text already uses ([Ink to text](../023-draw-mode/ink-to-text.md): the read-notes reader with an in-browser
+  fallback), so self-hosting still needs nothing outside.
+- For an Editor; dimmed for anyone else.
 
 ## Emoji
 

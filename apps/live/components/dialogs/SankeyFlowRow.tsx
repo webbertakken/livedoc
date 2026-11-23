@@ -16,7 +16,7 @@ const RemoveIcon = lucideGlyph(lucideX, 14);
 export type FlowField = 'from' | 'to' | 'value';
 
 const CELL =
-  'w-full min-w-0 rounded-md border bg-white px-2 py-1.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:ring-brand-500/30';
+  'h-field w-full min-w-0 rounded-control border bg-white px-2 text-body text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:ring-brand-500/30';
 const CELL_OK = 'border-slate-200 dark:border-slate-700';
 const CELL_WARN = 'border-amber-300 dark:border-amber-500/60';
 
@@ -57,10 +57,10 @@ export function SankeyFlowRow({
   return (
     <li>
       <div
-        className={`grid items-center gap-x-1.5 ${
+        className={`grid items-center gap-x-2 ${
           withFrom
             ? // A phone gives the From its own line, so From and To are never squeezed side by side.
-              'grid-cols-[minmax(0,1fr)_5rem_2rem] gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_6.5rem_2rem] sm:gap-y-0'
+              'grid-cols-[minmax(0,1fr)_5rem_2rem] gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_6.5rem_2rem] sm:gap-y-0'
             : 'grid-cols-[auto_minmax(0,1fr)_5rem_2rem_2rem] sm:grid-cols-[auto_minmax(0,1fr)_6.5rem_2rem_2rem]'
         }`}
       >
@@ -108,7 +108,7 @@ export function SankeyFlowRow({
               type="button"
               aria-label={`Send on from ${to.trim()}`}
               onClick={onCarryOn}
-              className="touch-target relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
+              className="touch-target relative flex size-row cursor-pointer items-center justify-center rounded-control text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
             >
               <PlusIcon />
             </button>
@@ -121,7 +121,7 @@ export function SankeyFlowRow({
             type="button"
             aria-label={`Remove flow ${n}`}
             onClick={onRemove}
-            className="touch-target relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="touch-target relative flex size-row cursor-pointer items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <RemoveIcon />
           </button>
@@ -130,7 +130,10 @@ export function SankeyFlowRow({
         )}
       </div>
       {reason ? (
-        <p id={reasonId} className="mt-0.5 px-0.5 text-[11px] text-amber-700 dark:text-amber-400">
+        <p
+          id={reasonId}
+          className="mt-0.5 px-0.5 text-supporting text-amber-700 dark:text-amber-400"
+        >
           {reason}
         </p>
       ) : null}

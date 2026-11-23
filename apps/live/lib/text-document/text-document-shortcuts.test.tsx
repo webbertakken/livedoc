@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { textDocumentBreakActions } from './text-document-breaks';
 import { horizontalLineActions } from './text-document-horizontal-line';
+import { specialCharacterActions } from './text-document-special-characters';
 import { textDocumentTableActions } from './text-document-tables';
 import { TABLE_EDIT_ITEMS } from './text-document-table-actions';
 import { TABLE_NAVIGATION } from './text-document-table-navigation';
@@ -43,6 +44,7 @@ import { paintFormatPlugin } from './text-document-paint-format';
 import {
   CONTINUE_NUMBERING,
   LIST_ITEMS,
+  MORE_BULLETS,
   RESTART_NUMBERING,
   TOGGLE_CHECKBOX,
 } from './text-document-list-actions';
@@ -94,6 +96,8 @@ describe('the text document menus', () => {
         ),
         // Insert > Horizontal line (text-document-horizontal-line), bound by the surface.
         ...Object.keys(horizontalLineActions(null, true)),
+        // Insert > Symbols > Special characters (text-document-special-characters), bound by the surface.
+        ...Object.keys(specialCharacterActions(null, true, () => {})),
         // Insert > Table (text-document-tables), bound by the surface.
         ...Object.keys(textDocumentTableActions(null, { canEdit: true, sectionWidth: 468 })),
         ...TABLE_EDIT_ITEMS.map((t) => t.item),
@@ -144,6 +148,7 @@ describe('the text document menus', () => {
         ...LIST_ITEMS.map((l) => l.item),
         RESTART_NUMBERING,
         CONTINUE_NUMBERING,
+        MORE_BULLETS,
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...TEXT_DOCUMENT_MODES.filter((m) => m.status === 'built').map((m) => m.item),
