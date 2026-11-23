@@ -195,7 +195,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('chart-from-spreadsheet', 'From a spreadsheet', 'edit'),
       ]),
       submenu('symbols', 'Symbols', [
-        item('special-characters', 'Special characters', 'edit'),
+        item('special-characters', 'Special characters', 'edit', BUILT),
         item('equation', 'Equation', 'edit'),
       ]),
       SEPARATOR,
@@ -311,7 +311,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         submenu('list-options', 'List options', [
           item('restart-numbering', 'Restart numbering', 'edit', BUILT),
           item('continue-numbering', 'Continue previous numbering', 'edit', BUILT),
-          item('more-bullets', 'More bullets', 'edit'),
+          item('more-bullets', 'More bullets', 'edit', BUILT),
         ]),
       ]),
       SEPARATOR,

@@ -1,7 +1,6 @@
 # Lists
 
-**Status: partly built.** Making lists, list styles, levels, numbering, restart and continue, and checklists are built;
-List options > More bullets is specified, built with the [special characters](objects.md#special-characters) dialog.
+**Status: built.** Making lists, list styles, levels, numbering, restart and continue, More bullets and checklists.
 
 Bulleted, numbered and checklist lists in a [text document](text-document.md), as Google Docs has them.
 
@@ -67,8 +66,10 @@ Bulleted, numbered and checklist lists in a [text document](text-document.md), a
 
 Format > Bullets & numbering > **List options**: Restart numbering, Continue previous numbering, and More bullets.
 
-- **More bullets**: any character from the [special characters](objects.md#special-characters) dialog as the bullet
-  of the caret's item's level; built with that dialog, dimmed until then.
+- **More bullets** opens the [special characters](objects.md#special-characters) dialog; a press makes its character
+  the bullet of the caret's item's level, for every item of that list at that level, a numbered or checklist level
+  becoming a bulleted one. Off a list, the selected paragraphs join a new bulleted list of Google's look with that
+  character at their level (default). Each press is one undo step, and the dialog stays open (default).
 
 ## Checklists
 
@@ -89,9 +90,11 @@ on its levels.
 
 ## Share roles
 
-Editors change lists, list styles and numbering, and tick checklist items; a Participant ticks only as a suggestion (D7); a Viewer reads.
+Editors change lists, list styles and numbering, and tick checklist items; a Participant ticks only as a suggestion
+(D7); a Viewer reads.
 
 ## Telemetry
 
 `Element · Changed · TextDocumentList<Kind>` (Bulleted, Numbered, Checklist), `TextDocumentListStyle<Kind>` (a preset
-taken), `TextDocumentListRestart`, `TextDocumentListContinue`, `TextDocumentChecklistTicked`. Never text.
+taken), `TextDocumentListRestart`, `TextDocumentListContinue`, `TextDocumentListBullet` (More bullets),
+`TextDocumentChecklistTicked`. Never text.

@@ -107,6 +107,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## Unicode Character Database
+
+- Source: <https://www.unicode.org/Public/UCD/latest/ucd/> (18.0.0): `UnicodeData.txt`, `Blocks.txt`,
+  `NameAliases.txt`.
+- Used for: the characters, names, blocks and abbreviations of the special characters dialog, generated into
+  `apps/live/lib/office/special-characters.json` by `pnpm chars:special`.
+- Licence: Unicode License v3, full text in
+  [`packages/licences/texts/unicode-18.0.0-LICENSE.txt`](./packages/licences/texts/unicode-18.0.0-LICENSE.txt).
+
+```text
+Copyright © 1991-2026 Unicode, Inc.
+Licensed under the Unicode License v3: https://www.unicode.org/license.txt
+```
+
 ## Caveat
 
 - Source: <https://github.com/googlefonts/caveat>, via Google Fonts

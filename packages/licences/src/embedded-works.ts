@@ -323,6 +323,18 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     },
     texts: text('drawio-31.7.0-LICENSE.txt'),
   },
+  // Unicode's Character Database (names, blocks and abbreviations), generated into the special characters catalogue
+  // (docs/specs/034-text-documents/objects.md "Special characters") by apps/live/scripts/special-characters-catalogue.ts.
+  {
+    id: 'unicode-ucd',
+    name: 'Unicode Character Database',
+    version: '18.0.0',
+    licence: 'Unicode-3.0',
+    carrier: 'LiveDoc source (special characters)',
+    homepage: 'https://www.unicode.org/ucd/',
+    trigger: { sources: ['apps/live/lib/office/special-characters.json'] },
+    texts: text('unicode-18.0.0-LICENSE.txt'),
+  },
   // Icon geometry vendored into our own source (packages/icons).
   {
     id: 'lucide',
