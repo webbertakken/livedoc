@@ -90,7 +90,7 @@ export function SettingsPresenceColourRow({ row }: { row: SettingsPresenceColour
           aria-label={`Colour: ${label}`}
           disabled={!base}
           onClick={() => setOpen(!open)}
-          className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-default disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700/60"
+          className="flex min-h-row shrink-0 cursor-pointer items-center gap-1 rounded-control border border-slate-200 px-2 text-body text-slate-700 transition hover:bg-slate-50 disabled:cursor-default disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700/60"
         >
           {colour ? <SwatchChip colour={colour} small /> : null}
           {label}
@@ -115,7 +115,7 @@ export function SettingsPresenceColourRow({ row }: { row: SettingsPresenceColour
         />
       ) : null}
       {failed ? (
-        <p role="status" className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+        <p role="status" className="mt-1 text-supporting text-slate-600 dark:text-slate-300">
           {COLOUR_FAILED}
         </p>
       ) : null}

@@ -30,8 +30,8 @@ const BAR: Record<TokenStatus, string> = {
 };
 const TEXT: Record<TokenStatus, string> = {
   active: 'text-slate-500 dark:text-slate-400',
-  expiring: 'font-semibold text-amber-700 dark:text-amber-400',
-  expired: 'font-semibold text-rose-600 dark:text-rose-400',
+  expiring: 'text-amber-700 dark:text-amber-400',
+  expired: 'text-rose-600 dark:text-rose-400',
 };
 
 export function SettingsTokenCard({
@@ -57,28 +57,26 @@ export function SettingsTokenCard({
       : `Expires ${relativeTime(token.expiresAt, now)}`;
 
   return (
-    <li className="group flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-slate-600">
-      <div className="flex items-start gap-2.5">
+    <li className="group flex flex-col gap-2 rounded-surface border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-slate-600">
+      <div className="flex items-start gap-2">
         <span
           aria-hidden
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${TILE[status]}`}
+          className={`flex size-row shrink-0 items-center justify-center rounded-control ${TILE[status]}`}
         >
           <KeyIcon />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <Tooltip label={name}>
-              <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {name}
-              </p>
+              <p className="truncate text-body text-slate-800 dark:text-slate-100">{name}</p>
             </Tooltip>
             {token.readOnly ? (
-              <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+              <span className="shrink-0 rounded-full bg-slate-100 px-2 text-supporting text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                 Read-only
               </span>
             ) : null}
           </div>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1 text-supporting text-slate-500 dark:text-slate-400">
             <span>Created {formatTokenDate(token.createdAt)}</span>
             <span aria-hidden>·</span>
             {token.lastUsedAt ? (
@@ -101,7 +99,7 @@ export function SettingsTokenCard({
             type="button"
             onClick={(e) => onRevoke(e.currentTarget)}
             aria-label={`Revoke ${name}`}
-            className="-mr-1 -mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="-mr-1 -mt-1 flex size-row shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <TrashIcon />
           </button>
@@ -123,7 +121,7 @@ export function SettingsTokenCard({
             style={{ width: `${Math.max(elapsed * 100, 2)}%` }}
           />
         </div>
-        <div className="flex items-center justify-between text-[10px]">
+        <div className="flex items-center justify-between text-supporting">
           <span className={TEXT[status]}>{STATUS_LABEL[status]}</span>
           <span className={TEXT[status]}>{timeLeft}</span>
         </div>

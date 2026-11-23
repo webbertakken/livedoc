@@ -37,7 +37,7 @@ export function SettingsTokenCreate({
   return (
     <form
       aria-label="New API token"
-      className="flex flex-col gap-3 rounded-xl border border-brand-200 bg-brand-50/40 p-3 dark:border-brand-500/30 dark:bg-brand-500/5"
+      className="flex flex-col gap-3 rounded-surface border border-brand-200 bg-brand-50/40 p-3 dark:border-brand-500/30 dark:bg-brand-500/5"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
@@ -50,10 +50,10 @@ export function SettingsTokenCreate({
         }
       }}
     >
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <label
           htmlFor="settings-token-name"
-          className="text-xs font-semibold text-slate-700 dark:text-slate-200"
+          className="text-body text-slate-700 dark:text-slate-200"
         >
           What Is It For?
         </label>
@@ -66,18 +66,18 @@ export function SettingsTokenCreate({
           autoFocus={!!onCancel}
           onChange={(e) => setName(e.target.value)}
           placeholder="Name your token"
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-brand-500/20"
+          className="h-field rounded-control border border-slate-200 bg-white px-3 text-body text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-brand-500/20"
         />
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Suggested names">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Suggested names">
           {NAME_SUGGESTIONS.map((suggestion) => (
             <button
               key={suggestion}
               type="button"
               aria-pressed={name === suggestion}
               onClick={() => setName(suggestion)}
-              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition ${
+              className={`min-h-chip rounded-full border px-2 text-supporting transition ${
                 name === suggestion
-                  ? `border-brand-700 bg-brand-700 text-white ${SOLID_BRAND_DARK_CONTROL}`
+                  ? `border-brand-700 bg-brand-700 font-medium text-white ${SOLID_BRAND_DARK_CONTROL}`
                   : 'border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-500/60 dark:hover:text-brand-300'
               }`}
             >
@@ -87,16 +87,13 @@ export function SettingsTokenCreate({
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">
         Full read and write access to your documents, until{' '}
-        <span className="font-semibold text-slate-700 dark:text-slate-200">
-          {formatTokenDate(expires)}
-        </span>
-        .
+        <span className="text-slate-700 dark:text-slate-200">{formatTokenDate(expires)}</span>.
       </p>
 
       {tokens.error ? (
-        <p role="alert" className="text-xs text-rose-600 dark:text-rose-400">
+        <p role="alert" className="text-supporting text-rose-600 dark:text-rose-400">
           {tokens.error}
         </p>
       ) : null}

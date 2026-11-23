@@ -46,7 +46,6 @@ function ShortcutGroup({
       title={section.heading}
       open={open}
       onToggle={onToggle}
-      titleClassName="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
       chevronClassName="text-slate-400 dark:text-slate-400"
       bodyClassName=""
     >
@@ -56,14 +55,14 @@ function ShortcutGroup({
         {section.rows.map((s, i) => (
           <li
             key={`${i}-${s.label}`}
-            className="flex items-center justify-between gap-3 py-1.5 text-xs"
+            className="flex min-h-row items-center justify-between gap-3 py-0.5 text-body"
           >
             <span className="text-slate-700 dark:text-slate-200">{s.label}</span>
             <span className="flex shrink-0 items-center gap-1">
               {s.keys.map((k, i) => (
                 <kbd
                   key={`${k}-${i}`}
-                  className="inline-flex min-w-[1.4rem] items-center justify-center rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
+                  className="inline-flex h-icon-toolbar min-w-icon-toolbar items-center justify-center rounded-control border border-slate-200 bg-slate-50 px-1 text-glyph text-slate-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
                 >
                   {k}
                 </kbd>

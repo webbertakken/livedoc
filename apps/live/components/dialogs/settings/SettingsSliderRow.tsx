@@ -62,7 +62,7 @@ export function SettingsSliderRow({
             onKeyUp={commit}
             className="h-1 w-28 cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700"
           />
-          <span className="w-9 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
+          <span className="w-9 text-right text-supporting tabular-nums text-slate-500 dark:text-slate-400">
             {row.format(draft)}
           </span>
         </span>

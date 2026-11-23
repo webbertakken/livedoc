@@ -5,7 +5,14 @@ import { checkSizing, formatSizingViolations } from '@livedoc/tailwind-config/si
 const root = fileURLToPath(new URL('.', import.meta.url));
 
 // The editor's parts that have moved to the sizing scale (docs/specs/004-interface-design/sizing.md "The guard").
-const SIZED_PATHS = ['components/primitives', 'app/explorer', 'app/new', 'components/start'];
+const SIZED_PATHS = [
+  'components/primitives',
+  'app/explorer',
+  'app/new',
+  'components/start',
+  'components/dialogs/SettingsDialog.tsx',
+  'components/dialogs/settings',
+];
 
 describe('live sizing', () => {
   it('draws every moved part from the sizing scale', () => {

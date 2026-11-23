@@ -56,7 +56,7 @@ export function SettingsProfileCard({ row }: { row: SettingsIdentityRowSpec }) {
   const card = (
     <div data-settings-cell={row.key} data-profile-card="" className="rounded-[inherit]">
       <ProfileBanner name={name} colour={colour} />
-      <div className="relative px-5 pb-5">
+      <div className="relative px-4 pb-4">
         <div className="-mt-9 flex flex-wrap items-end gap-x-4 gap-y-3">
           <span className="rounded-full ring-4 ring-white dark:ring-slate-800">
             <PictureDisc
@@ -64,7 +64,7 @@ export function SettingsProfileCard({ row }: { row: SettingsIdentityRowSpec }) {
               size={AVATAR_PX}
               aria-hidden
               style={colour ? identityVars(colour) : undefined}
-              className={`text-2xl font-semibold text-white shadow-md ${
+              className={`text-page-title text-white shadow-md ${
                 colour ? IDENTITY_FILL : 'bg-slate-400 dark:bg-slate-600'
               }`}
             >
@@ -74,11 +74,11 @@ export function SettingsProfileCard({ row }: { row: SettingsIdentityRowSpec }) {
           <div className="min-w-0 flex-1 pb-0.5">
             <h3
               id={`${row.key}-label`}
-              className="truncate text-lg font-semibold leading-tight text-slate-900 dark:text-white"
+              className="truncate text-name text-slate-900 dark:text-white"
             >
               {name}
             </h3>
-            <p className="mt-0.5 truncate text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-0.5 truncate text-body text-slate-600 dark:text-slate-300">
               {signedIn ? user?.email : 'Not signed in'}
             </p>
           </div>
@@ -116,7 +116,7 @@ export function SettingsProfileCard({ row }: { row: SettingsIdentityRowSpec }) {
 function Chip({ tone, children }: { tone: 'brand' | 'muted'; children: ReactNode }) {
   return (
     <li
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+      className={`inline-flex h-chip items-center gap-1 rounded-full px-2 text-supporting ${
         tone === 'brand'
           ? 'bg-brand-50 text-brand-800 ring-1 ring-brand-200 dark:bg-brand-500/15 dark:text-brand-200 dark:ring-brand-400/30'
           : 'bg-slate-100 text-slate-700 dark:bg-slate-700/60 dark:text-slate-200'
@@ -132,7 +132,7 @@ function AccountGlyph() {
     <svg
       viewBox="0 0 16 16"
       aria-hidden="true"
-      className="size-3.5"
+      className="size-icon-row"
       fill="none"
       stroke="currentColor"
     >
@@ -156,11 +156,9 @@ function GuestInvitation() {
   const signInAvailable = useSignInAvailable();
   if (!signInAvailable) return null;
   return (
-    <div className="mt-5 rounded-xl border border-brand-200 bg-brand-50/60 p-4 dark:border-brand-400/25 dark:bg-brand-500/10">
-      <p className="text-sm font-semibold text-slate-900 dark:text-white">
-        {GUEST_INVITATION_HEADING}
-      </p>
-      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+    <div className="mt-4 rounded-surface border border-brand-200 bg-brand-50/60 p-4 dark:border-brand-400/25 dark:bg-brand-500/10">
+      <p className="text-body text-slate-900 dark:text-white">{GUEST_INVITATION_HEADING}</p>
+      <ul className="mt-2 space-y-1 text-supporting text-slate-600 dark:text-slate-300">
         {GUEST_INVITATION_LINES.map((line) => (
           <li key={line}>{line}</li>
         ))}

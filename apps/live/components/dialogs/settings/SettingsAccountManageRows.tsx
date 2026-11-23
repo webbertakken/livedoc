@@ -34,7 +34,7 @@ export const LOAD_FAILED = "Couldn't load this. Try again.";
 export const NOT_FRESH = 'For your safety, sign in again first.';
 export const ACTION_FAILED = "That didn't work. Try again.";
 
-const STATUS = 'mt-1 text-xs text-slate-600 dark:text-slate-300';
+const STATUS = 'mt-1 text-supporting text-slate-600 dark:text-slate-300';
 const LINK = 'font-medium text-brand-700 underline-offset-2 hover:underline dark:text-brand-400';
 
 export function SettingsAccountNameRow({ row }: { row: SettingsAccountNameRowSpec }) {
@@ -150,7 +150,7 @@ export function SettingsSignInMethodsRow({ row }: { row: SettingsSignInMethodsRo
 
   return (
     <SettingsRowShell row={row}>
-      <ul className="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-200">
+      <ul className="mt-2 space-y-2 text-body text-slate-700 dark:text-slate-200">
         {emailOffered ? (
           <li className="flex items-center justify-between gap-3">
             <span>
@@ -167,7 +167,7 @@ export function SettingsSignInMethodsRow({ row }: { row: SettingsSignInMethodsRo
               ) : null}
             </span>
             {google.state === 'loading' ? (
-              <span className="text-xs text-slate-500 dark:text-slate-400">Loading…</span>
+              <span className="text-supporting text-slate-500 dark:text-slate-400">Loading…</span>
             ) : google.state === 'unreadable' ? (
               <button type="button" className={SETTINGS_ROW_BUTTON} onClick={() => void retry()}>
                 Try Again
@@ -280,12 +280,12 @@ export function SettingsSessionsRow({ row }: { row: SettingsSessionsRowSpec }) {
           </button>
         </p>
       ) : (
-        <ul className="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-200">
+        <ul className="mt-2 space-y-2 text-body text-slate-700 dark:text-slate-200">
           {sessions.map((session) => (
             <li key={session.token} className="flex items-center justify-between gap-3">
               <span>
                 {session.label}
-                <span className="block text-xs text-slate-500 dark:text-slate-400">
+                <span className="block text-supporting text-slate-500 dark:text-slate-400">
                   {session.current
                     ? 'This browser'
                     : `Last active ${session.lastActive.toLocaleDateString(undefined, {

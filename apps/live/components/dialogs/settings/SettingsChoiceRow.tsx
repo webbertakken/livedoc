@@ -48,7 +48,7 @@ export function SettingsChoiceRow({
           role="radiogroup"
           aria-label={row.label}
           aria-describedby={`${row.key}-description`}
-          className="flex shrink-0 gap-0.5 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-900"
+          className="flex shrink-0 gap-0.5 rounded-menu bg-slate-100 p-0.5 dark:bg-slate-900"
         >
           {options.map((option) => {
             const active = option.id === value;
@@ -60,9 +60,9 @@ export function SettingsChoiceRow({
                 aria-checked={active}
                 disabled={option.disabled}
                 onClick={() => onChange(option.id)}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`min-h-row rounded-control px-3 text-body transition disabled:cursor-not-allowed disabled:opacity-40 ${
                   active
-                    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-50'
+                    ? 'font-medium bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-50'
                     : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
                 }`}
               >

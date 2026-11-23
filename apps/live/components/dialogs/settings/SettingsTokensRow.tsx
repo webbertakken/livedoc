@@ -38,7 +38,7 @@ export function SettingsTokensRow({ row }: { row: SettingsTokensRowSpec }) {
         // The key tile heads the row: muted until signed in.
         <span
           aria-hidden
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-surface ${
             authLoaded && !enabled
               ? 'bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-400'
               : 'bg-gradient-to-br from-slate-600 to-slate-800 text-white shadow-sm shadow-slate-900/20 dark:from-slate-500 dark:to-slate-700'
@@ -77,7 +77,7 @@ export function SettingsTokensRow({ row }: { row: SettingsTokensRowSpec }) {
             />
           ) : null}
           {firstRun ? (
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               Connecting Claude or another AI tool? It creates its own token when you approve it.{' '}
               <HelpArticleLink article="connectAiTool" variant="text" label="Read the guide" />
             </p>

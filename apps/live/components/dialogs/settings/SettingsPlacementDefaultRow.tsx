@@ -148,7 +148,7 @@ function FolderMark() {
     <svg
       aria-hidden
       viewBox="0 0 16 16"
-      className="mr-1 inline-block h-3 w-3 -translate-y-px fill-none stroke-current"
+      className="mr-1 inline-block size-icon-chevron -translate-y-px fill-none stroke-current"
       strokeWidth={1.5}
       strokeLinejoin="round"
     >

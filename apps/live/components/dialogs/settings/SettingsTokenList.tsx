@@ -27,11 +27,11 @@ export function SettingsTokenList({
 
   if (tokens === null) {
     return (
-      <ul aria-busy className="flex flex-col gap-2.5" aria-label="Loading tokens">
+      <ul aria-busy className="flex flex-col gap-2" aria-label="Loading tokens">
         {[0, 1].map((i) => (
           <li
             key={i}
-            className="h-[5.5rem] rounded-xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40"
+            className="h-[5.5rem] rounded-surface border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40"
           />
         ))}
       </ul>
@@ -43,7 +43,7 @@ export function SettingsTokenList({
 
   return (
     <>
-      <ul className="flex flex-col gap-2.5" aria-label="Your API tokens">
+      <ul className="flex flex-col gap-2" aria-label="Your API tokens">
         {sortTokens(tokens).map((token) => (
           <SettingsTokenCard
             key={token.id}
