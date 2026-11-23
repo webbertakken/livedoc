@@ -76,10 +76,15 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 - `=` starts a formula. While typing: each reference and its range share a colour; clicking or arrowing in the grid
   inserts a reference (point mode) at the caret; F4 cycles `$` anchors; the function help card shows (F1 hides it);
   names autocomplete (Tab or Enter takes one).
-- Ctrl+Shift+Enter wraps the formula in `ARRAYFORMULA`.
+- Ctrl+Shift+Enter wraps the formula in `ARRAYFORMULA`: `=A1:A3*2` becomes `=ARRAYFORMULA(A1:A3*2)`, the edit kept
+  open with the caret at its end; one already wrapped is left as it is, and outside a formula the key fills as
+  Ctrl+Enter does (default, D140).
 - A formula that cannot be read is not saved: the cell keeps the edit open with the error under it ("There was a
   problem: missing `)`"), as Google's.
-- Ctrl+` shows every formula instead of its value.
+- Ctrl+` and View › Show › Formulas show every formula instead of its value: a formula cell draws its formula as
+  typed, left-aligned, and every other cell is drawn as before. It is the person's own view, kept across the sheets
+  while the page is open and never saved (default, D141).
+- F4 outside an edit redoes, as Google's does; in a formula it cycles the `$` anchors.
 
 ## Fill and move
 
