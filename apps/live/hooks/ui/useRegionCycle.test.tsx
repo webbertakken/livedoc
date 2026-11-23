@@ -122,7 +122,8 @@ function OfficeEditor({ outline = false, sheet = false }: { outline?: boolean; s
       </header>
       {sheet ? (
         <div data-region="formulabar">
-          <input aria-label="Name box" />
+          {/* The name box keeps its keys from the page, as the spreadsheet's does. */}
+          <input aria-label="Name box" onKeyDown={(e) => e.stopPropagation()} />
         </div>
       ) : null}
       {outline ? (
@@ -169,7 +170,7 @@ describe('the areas of a spreadsheet', () => {
     render(<OfficeEditor sheet />);
     renderHook(() => useRegionCycle());
     const ctrlAlt = (code: string) =>
-      fireEvent.keyDown(window, {
+      fireEvent.keyDown(document.activeElement ?? window, {
         key: code === 'Period' ? '.' : ',',
         code,
         ctrlKey: true,

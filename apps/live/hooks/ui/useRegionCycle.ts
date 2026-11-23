@@ -96,7 +96,8 @@ export function useRegionCycle(enabled = true): void {
         next = nextRegion(regions, next, back);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Heard first, on the way down: a field that keeps its keys to itself (the name box) still lets the cycle move on.
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [enabled]);
 }
