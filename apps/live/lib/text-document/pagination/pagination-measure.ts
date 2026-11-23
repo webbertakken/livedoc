@@ -13,7 +13,8 @@ import {
 } from '@livedoc/text-documents';
 import type { TextFormatting } from '../text-document-formatting';
 import type { BlockMetrics } from './pagination';
-import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
+import { PLACED_PICTURE_CLASS, PLACED_ROOM_CLASS } from '../text-document-picture-placed';
+import { groupLines, holdLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
 import type { NoteMark } from './pagination-notes';
 import { measuringRange } from './pagination-range';
 import { measureTable, type TableLine } from './pagination-tables';
@@ -81,6 +82,39 @@ export function rulesOf(node: PmNode, formatting: TextFormatting, inColumns = fa
 
 const px = (value: string) => Number.parseFloat(value) || 0;
 
+// What is drawn out of a paragraph's lines (objects.md "In the editor"): a placed picture and its room.
+const PLACED = `.${PLACED_PICTURE_CLASS}, .${PLACED_ROOM_CLASS}`;
+
+// The rectangles of a paragraph's lines: its contents, less what is placed out of them.
+function lineRects(element: HTMLElement): DOMRect[] {
+  const range = measuringRange(element.ownerDocument);
+  const placed = [...element.querySelectorAll(PLACED)].filter(
+    (e) => !e.parentElement?.closest(PLACED),
+  );
+  if (placed.length === 0) {
+    range.selectNodeContents(element);
+    return [...range.getClientRects()];
+  }
+  const rects: DOMRect[] = [];
+  range.setStart(element, 0);
+  for (const e of placed) {
+    range.setEndBefore(e);
+    rects.push(...range.getClientRects());
+    range.setStartAfter(e);
+  }
+  range.setEnd(element, element.childNodes.length);
+  rects.push(...range.getClientRects());
+  return rects;
+}
+
+// The foot of the lowest room a paragraph holds for its Wrap and Break pictures, from its top; 0 for none.
+function roomsFoot(element: HTMLElement, top: number, ratio: number, spacers: readonly Span[]) {
+  let foot = 0;
+  for (const room of element.querySelectorAll<HTMLElement>(`:scope > .${PLACED_ROOM_CLASS}`))
+    foot = Math.max(foot, naturalOf((room.getBoundingClientRect().bottom - top) / ratio, spacers));
+  return foot;
+}
+
 // The page spacers inside an element, from its top, in CSS pixels.
 function spacersIn(element: HTMLElement, top: number, ratio: number): Span[] {
   // A row breaking across pages has a gap in each cell going on; they stand level, so one is counted.
@@ -128,16 +162,17 @@ export function measureBlock(
     ));
     marks.push(...noteMarks(element, box.top, ratio, spacers, lines));
   } else if (!rules.atom) {
-    const range = measuringRange(element.ownerDocument);
-    range.selectNodeContents(element);
-    const rects = [...range.getClientRects()].map((r) => ({
+    const rects = lineRects(element).map((r) => ({
       top: (r.top - box.top) / ratio,
       bottom: (r.bottom - box.top) / ratio,
     }));
-    lines = groupLines(
-      withoutSpacers(rects, spacers),
-      px(style.borderTopWidth) + px(style.paddingTop),
-      height - px(style.borderBottomWidth) - px(style.paddingBottom),
+    lines = holdLines(
+      groupLines(
+        withoutSpacers(rects, spacers),
+        px(style.borderTopWidth) + px(style.paddingTop),
+        height - px(style.borderBottomWidth) - px(style.paddingBottom),
+      ),
+      roomsFoot(element, box.top, ratio, spacers),
     );
     // A Word page or column break starts the page or column at the line after its own, or the next block when it
     // ends the paragraph.

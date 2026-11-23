@@ -682,6 +682,31 @@ div.text-document-kept {
   position: absolute;
   max-width: none;
 }
+/*
+ * A placed picture (objects.md "In the editor"): its anchor of no width in the text, its box drawn from its paragraph's
+ * top left; In front of text over the text, Behind text under it. A paragraph holds the rooms its Wrap and Break
+ * pictures keep the text clear of, floated at its start, their empty part letting the pointer through to the text.
+ */
+.text-document-picture.text-document-picture-placed {
+  position: static;
+  display: inline;
+}
+.text-document-picture-placed[data-placed='front'] > .text-document-picture-turn {
+  z-index: 1;
+}
+.text-document-picture-placed[data-placed='behind'] > .text-document-picture-turn {
+  z-index: -1;
+}
+.text-document-body p:has(.text-document-picture-placed) {
+  position: relative;
+}
+.text-document-body p:has(> .text-document-placed-room) {
+  display: flow-root;
+}
+.text-document-placed-room {
+  pointer-events: none;
+  user-select: none;
+}
 /* The colour filter a recoloured or adjusted picture is drawn through: defined here, drawing nothing itself. */
 .text-document-picture-colours {
   position: absolute;

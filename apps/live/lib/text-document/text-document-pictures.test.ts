@@ -110,6 +110,31 @@ describe('a picture drawn', () => {
     ).toBe('');
   });
 
+  // objects.md "In the editor": a placed picture is drawn at its place, out of its line, its anchor a mark of no width;
+  // In front of text over the text, Behind text under it.
+  it('draws a placed picture at its place, its anchor of no width, and back in line once unplaced', () => {
+    const placedMark = (layer: string) =>
+      [{ spec: { placed: { picture: { left: 12, top: -8 }, layer } } }] as never;
+    const view = pictureView(sourceOf(held(true)))(
+      picture({}),
+      {} as EditorView,
+      () => 0,
+      placedMark('behind'),
+      undefined as never,
+    );
+    const turned = view.dom.querySelector<HTMLElement>('.text-document-picture-turn')!;
+    expect(view.dom.classList.contains('text-document-picture-placed')).toBe(true);
+    expect(view.dom.dataset.placed).toBe('behind');
+    expect([view.dom.style.width, view.dom.style.height]).toEqual(['0px', '0px']);
+    expect([turned.style.left, turned.style.top]).toEqual(['12pt', '-8pt']);
+    view.update!(picture({}), placedMark('flow'), undefined as never);
+    expect(view.dom.dataset.placed).toBe('flow');
+    view.update!(picture({}), [], undefined as never);
+    expect(view.dom.classList.contains('text-document-picture-placed')).toBe(false);
+    expect(view.dom.dataset.placed).toBeUndefined();
+    expect([view.dom.style.width, turned.style.left]).toEqual(['60pt', '0pt']);
+  });
+
   // objects.md "In the editor": a recoloured or adjusted picture is drawn through one colour filter, in sRGB, its
   // transparency as its opacity.
   it('draws its recolour, brightness and contrast through one colour filter, its transparency as its opacity', () => {

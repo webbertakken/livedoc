@@ -1,6 +1,6 @@
 // A block's lines read from its measured rectangles (docs/specs/034-text-documents/page-layout.md "A page fills").
 import { describe, expect, it } from 'vitest';
-import { groupLines, naturalOf, withoutSpacers } from './pagination-lines';
+import { groupLines, holdLines, naturalOf, withoutSpacers } from './pagination-lines';
 
 const rect = (top: number, bottom: number) => ({ top, bottom });
 
@@ -42,5 +42,20 @@ describe('withoutSpacers', () => {
     ).toEqual([rect(0, 20), rect(20, 40), rect(40, 60)]);
     expect(naturalOf(150, spacers)).toBe(50);
     expect(naturalOf(30, spacers)).toBe(30);
+  });
+});
+
+// objects.md "In the editor": a paragraph's lines down to its Wrap or Break picture's foot stay on one page.
+describe('holdLines', () => {
+  const lines = [rect(0, 20), rect(20, 40), rect(40, 60), rect(60, 80)];
+
+  it('makes one line of every line starting above a placed picture’s foot', () => {
+    expect(holdLines(lines, 45)).toEqual([rect(0, 60), rect(60, 80)]);
+    expect(holdLines(lines, 200)).toEqual([rect(0, 80)]);
+  });
+
+  it('leaves the lines as they are with nothing to hold', () => {
+    expect(holdLines(lines, 0)).toBe(lines);
+    expect(holdLines(lines, 15)).toBe(lines);
   });
 });

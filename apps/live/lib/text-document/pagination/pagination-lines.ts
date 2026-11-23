@@ -47,3 +47,13 @@ export function withoutSpacers(rects: readonly Span[], spacers: readonly Span[])
     .filter((r) => !inside(r))
     .map((r) => ({ top: naturalOf(r.top, spacers), bottom: naturalOf(r.bottom, spacers) }));
 }
+
+/**
+ * The lines with every one starting above `until` made one, so no page starts among them: a paragraph's lines down to
+ * its Wrap or Break picture's foot (objects.md "In the editor").
+ */
+export function holdLines(lines: readonly LineBox[], until: number): readonly LineBox[] {
+  const held = lines.filter((line) => line.top < until).length;
+  if (held < 2) return lines;
+  return [{ top: lines[0]!.top, bottom: lines[held - 1]!.bottom }, ...lines.slice(held)];
+}
