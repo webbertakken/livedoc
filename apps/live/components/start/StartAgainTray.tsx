@@ -64,7 +64,7 @@ export function StartAgainTray({
       >
         <TopCenterBanner
           tone="brand"
-          className="pointer-events-auto gap-3 py-1.5 pl-3 pr-1.5 text-sm"
+          className="pointer-events-auto gap-3 py-1.5 pl-3 pr-1 text-body"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <span role="status" className="flex items-center gap-2">
@@ -74,7 +74,7 @@ export function StartAgainTray({
           <button
             type="button"
             onClick={reopen}
-            className="cursor-pointer rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+            className="cursor-pointer rounded-full bg-white px-3 py-1 text-supporting font-medium text-slate-700 transition hover:bg-slate-50"
           >
             Show Templates
           </button>

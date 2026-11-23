@@ -180,3 +180,27 @@ describe('the start panel on a short window', () => {
     expect(wrapper.className).not.toContain('landscape-phone:');
   });
 });
+
+// docs/specs/004-interface-design/sizing.md: the start panel on the scale; its title a dialog title, regular, its
+// search a field, its rail and section labels in their own case, weight only on the rail row chosen.
+describe('the start panel on the sizing scale', () => {
+  const has = (className: string, token: string) => className.split(/\s+/).includes(token);
+
+  it('draws its title, search, rail and cards from the scale', () => {
+    const { search } = diagram();
+    const title = screen.getByRole('heading', { level: 2 });
+    expect(has(title.className, 'text-dialog-title')).toBe(true);
+    expect(title.className).not.toMatch(/font-semibold|tracking-/);
+    expect(has(search.parentElement!.className, 'h-field')).toBe(true);
+    const rail = [...document.querySelectorAll<HTMLElement>('[data-rail]')];
+    const chosen = rail.filter((r) => r.getAttribute('aria-current') === 'true');
+    expect(chosen).toHaveLength(1);
+    for (const r of rail) {
+      expect(has(r.className, 'text-body')).toBe(true);
+      expect(has(r.className, 'font-medium')).toBe(r === chosen[0]);
+    }
+    const card = document.querySelector<HTMLElement>('[data-start-card]')!;
+    expect(card.className).toMatch(/(^|\s)rounded-surface(\s|$)/);
+    expect(card.querySelector('.font-semibold')).toBeNull();
+  });
+});
