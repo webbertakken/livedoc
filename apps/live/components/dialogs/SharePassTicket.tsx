@@ -47,21 +47,21 @@ export function SharePassTicket({
     >
       <div className="min-h-0 overflow-hidden px-0.5 pt-0.5 pb-2">
         <div
-          className={`relative flex flex-col overflow-hidden rounded-xl border shadow-sm transition-[border-color,box-shadow] duration-long ${
+          className={`relative flex flex-col overflow-hidden rounded-surface border shadow-sm transition-[border-color,box-shadow] duration-long ${
             expired
               ? 'border-slate-200 bg-slate-50/70 dark:border-slate-700 dark:bg-slate-800/40'
               : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/70'
           }${highlight ? ' border-brand-300 ring-2 ring-brand-400/40 dark:border-brand-500/60' : ''}`}
         >
           <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 ${
+            className={`flex items-center gap-2 px-3 py-1 ${
               expired
                 ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
                 : pass.solid
             }`}
           >
             <Icon />
-            <span className="text-[10px] font-bold uppercase tracking-[0.12em]">{pass.stamp}</span>
+            <span className="text-body font-medium">{pass.stamp}</span>
           </div>
           <div className="flex min-w-0 flex-col gap-2 px-3 py-2.5">{children}</div>
         </div>

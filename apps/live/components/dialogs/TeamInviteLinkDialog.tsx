@@ -120,22 +120,17 @@ export function TeamInviteLinkDialog({
   return (
     <Dialog open={open} onClose={onClose} titleId="invite-link-title" size="sm">
       <div className="border-b border-slate-100 px-6 pt-6 pb-5 dark:border-slate-800">
-        <h2
-          id="invite-link-title"
-          className="text-lg font-semibold text-slate-900 dark:text-slate-50"
-        >
+        <h2 id="invite-link-title" className="text-dialog-title text-slate-900 dark:text-slate-50">
           Invite by Link
         </h2>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-1 text-body text-slate-500 dark:text-slate-400">
           Anyone signed in who opens this link can join the team as a member. The link expires after
           a week, and you can turn it off any time.
         </p>
 
         {inviteLink ? (
           <div className="mt-4">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Invite link
-            </span>
+            <span className="text-body text-slate-600 dark:text-slate-300">Invite link</span>
             {/* Stacks on narrow screens so the URL field keeps its
                     width on mobile and the Copy button drops below it. */}
             <div className="mt-1 flex flex-col gap-2 sm:flex-row">
@@ -145,13 +140,13 @@ export function TeamInviteLinkDialog({
                 readOnly
                 value={url}
                 onFocus={(e) => e.currentTarget.select()}
-                className="min-w-0 flex-1 truncate rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                className="h-field min-w-0 flex-1 truncate rounded-control border border-slate-200 bg-slate-50 px-3 text-body text-slate-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               />
               <Button size="md" onClick={() => void copy()} className="shrink-0 sm:py-1.5">
                 {copied ? 'Copied' : 'Copy link'}
               </Button>
             </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-supporting text-slate-500 dark:text-slate-400">
               {expiryLabel(inviteLink.expiresAt, now)}
             </p>
           </div>
@@ -164,7 +159,9 @@ export function TeamInviteLinkDialog({
           </div>
         )}
 
-        {error ? <p className="mt-3 text-xs text-rose-600 dark:text-rose-400">{error}</p> : null}
+        {error ? (
+          <p className="mt-3 text-supporting text-rose-600 dark:text-rose-400">{error}</p>
+        ) : null}
       </div>
 
       <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-6 py-4 dark:border-slate-800">
@@ -173,7 +170,7 @@ export function TeamInviteLinkDialog({
             type="button"
             onClick={() => void revoke()}
             disabled={busy}
-            className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            className="min-h-field rounded-control px-3 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             Turn off
           </button>

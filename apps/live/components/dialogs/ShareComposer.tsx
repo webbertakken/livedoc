@@ -44,12 +44,12 @@ export function ShareComposer({
   };
 
   return (
-    <section className="flex flex-col gap-2.5" aria-labelledby="share-issue-heading">
+    <section className="flex flex-col gap-2" aria-labelledby="share-issue-heading">
       <p id="share-issue-heading" className={SECTION_LABEL}>
         Issue a pass
       </p>
       {/* The role and the fine print share one tinted panel, so the pass being made reads as one thing. */}
-      <div className="flex flex-col gap-2.5 rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/50">
+      <div className="flex flex-col gap-2 rounded-surface bg-slate-50 p-3 dark:bg-slate-800/50">
         <div data-tour-id="share-role">
           <ShareRolePicker role={role} onChange={setRole} />
         </div>
@@ -58,12 +58,12 @@ export function ShareComposer({
           column so the terms read as a block rather than loose dropdowns.
           Create Pass ends the Valid row, the last choice before issuing, so
           the lifetime reads as part of making the pass. */}
-        <div className="grid grid-cols-1 items-center gap-x-3 gap-y-1.5 px-0.5 sm:grid-cols-[3.5rem_1fr_auto] sm:gap-y-2">
+        <div className="grid grid-cols-1 items-center gap-x-3 gap-y-2 px-0.5 sm:grid-cols-[3.5rem_1fr_auto]">
           {multiTab ? (
             <>
               <label
                 htmlFor="share-new-scope"
-                className="text-xs font-medium text-slate-600 dark:text-slate-300"
+                className="text-body text-slate-600 dark:text-slate-300"
               >
                 Opens
               </label>
@@ -79,7 +79,7 @@ export function ShareComposer({
               </Select>
             </>
           ) : null}
-          <span className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+          <span className="flex items-center gap-1 text-body text-slate-600 dark:text-slate-300">
             Valid
             <HelpArticleLink article="shareLinkExpiry" />
           </span>
@@ -88,7 +88,7 @@ export function ShareComposer({
             aria-label="Link lifetime"
             data-tour-id="share-valid"
             // A ring, not a border, so the selection fills the track: the same height as Create Pass beside it.
-            className="relative grid h-9 grid-cols-4 rounded-lg bg-white ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700"
+            className="relative grid h-field grid-cols-4 rounded-menu bg-white ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700"
           >
             {/* The selection slides to the picked lifetime, like the Explorer tabs. */}
             <SegmentSlider
@@ -109,9 +109,9 @@ export function ShareComposer({
                   data-lifetime={value}
                   onClick={() => setExpiry(value)}
                   onKeyDown={onLifetimeKey}
-                  className={`relative z-10 h-full rounded-md px-1 text-xs font-medium whitespace-nowrap transition-colors ${
+                  className={`relative z-10 h-full rounded-control px-1 text-body whitespace-nowrap transition-colors ${
                     active
-                      ? 'text-white'
+                      ? 'font-medium text-white'
                       : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
                   }`}
                 >
@@ -126,7 +126,7 @@ export function ShareComposer({
             // The same height as the Valid control beside it, so the row reads as one line.
             variant="solid"
             data-tour-id="share-create"
-            className={`h-9 shadow-sm whitespace-nowrap ${ROLE_PASS[role].button}`}
+            className={`h-field shadow-sm whitespace-nowrap ${ROLE_PASS[role].button}`}
           >
             Create Pass
           </Button>

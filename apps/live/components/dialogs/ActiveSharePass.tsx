@@ -85,8 +85,7 @@ export function ActiveSharePass({
   const [revokeAnchor, setRevokeAnchor] = useState<HTMLElement | null>(null);
   const exit = usePassExit(() => onRevoke(link.code));
   const imageTabParam = scoped ? undefined : liveImageTabParam;
-  const metaLabel =
-    'text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400';
+  const metaLabel = 'text-supporting text-slate-500 dark:text-slate-400';
   return (
     <SharePassTicket
       role={link.role}
@@ -97,20 +96,20 @@ export function ActiveSharePass({
     >
       {/* Line 1: the link, with its copy button inside the field's right
           edge: the field IS the thing being copied, so the action lives in it. */}
-      <div className="relative flex items-center">
+      <div className="flex h-field items-center gap-1 rounded-control border border-slate-200 bg-slate-50 pr-0.5 pl-2 focus-within:border-brand-400 dark:border-slate-700 dark:bg-slate-900/60">
         <input
           readOnly
           value={shareUrlFor(link.code)}
           onFocus={(e) => e.currentTarget.select()}
           aria-label={`${PASS_LINK_WORD[link.role]} pass link`}
-          className="min-w-0 flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 py-1.5 pr-10 pl-2.5 font-mono text-[11px] text-slate-700 outline-none focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300"
+          className="min-w-0 flex-1 truncate bg-transparent font-mono text-supporting text-slate-700 outline-none dark:text-slate-300"
         />
         <Tooltip label={copied ? 'Copied' : 'Copy link'}>
           <button
             type="button"
             onClick={() => onCopy(link.code)}
             aria-label={copied ? 'Copied' : 'Copy link'}
-            className={`absolute top-1/2 right-1 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md transition ${
+            className={`flex size-row shrink-0 items-center justify-center rounded-control transition ${
               copied
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-slate-400 hover:bg-slate-200/70 hover:text-brand-700 dark:hover:bg-slate-700 dark:hover:text-brand-300'
@@ -125,11 +124,11 @@ export function ActiveSharePass({
           it over. A phone stacks them. */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
         {/* Line 2: what the pass is printed with. */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-supporting text-slate-600 dark:text-slate-300">
           {/* Opens only when there is a choice to make: on a single-tab
             document every pass opens every tab, so saying so is noise. */}
           {onRescope ? (
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-2">
               <span className={metaLabel}>Opens</span>
               <HoverCard
                 title="Tabs"
@@ -151,7 +150,7 @@ export function ActiveSharePass({
               </HoverCard>
             </span>
           ) : null}
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-2">
             <span className={metaLabel}>Valid</span>
             {link.expiresAt !== null ? (
               <HoverCard
@@ -160,13 +159,13 @@ export function ActiveSharePass({
                   link.expiry === 'never' ? '' : EXPIRY_LABELS[link.expiry]
                 } lifetime. When it runs out the link stops working and moves to Expired, where you can extend it.`}
               >
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30">
+                <span className="inline-flex h-chip items-center gap-1 rounded-full bg-amber-50 px-2 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30">
                   <ClockIcon />
                   {formatTimeLeftCompact(link.expiresAt - now)}
                 </span>
               </HoverCard>
             ) : (
-              <span className="font-medium">{FOREVER_LABEL}</span>
+              <span>{FOREVER_LABEL}</span>
             )}
           </span>
           {sharePasswordSet ? (
@@ -178,7 +177,7 @@ export function ActiveSharePass({
         </div>
 
         {/* Line 3: the other ways to hand it over, then revoke, grouped at the right from sm up. */}
-        <div className="flex items-center gap-1.5 sm:flex-1 sm:justify-end">
+        <div className="flex items-center gap-2 sm:flex-1 sm:justify-end">
           {/* Embed (docs/specs/013-workspace/embeds.md): copy the embed as a raw URL or an
             <iframe> snippet. Embeds honour the link's role, so the hover card
             says which one this pass hands out. */}
@@ -221,7 +220,7 @@ export function ActiveSharePass({
                 // when there's more than one tab. Selecting the first tab
                 // clears back to the cached default (null → no `?tab=`).
                 tabs.length > 1 && !scoped ? (
-                  <label className="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  <label className="flex items-center gap-2 text-supporting text-slate-500 dark:text-slate-400">
                     Tab
                     <Select
                       size="sm"

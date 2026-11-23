@@ -178,7 +178,7 @@ export function ShareDialog({
         <DialogCloseButton onClick={close} />
       </DialogHeader>
 
-      <div className="flex flex-col gap-5 overflow-y-auto px-6 py-5">
+      <div className="flex flex-col gap-6 overflow-y-auto px-6 py-5">
         <ShareComposer
           tabs={tabs}
           busy={busy}
@@ -190,12 +190,12 @@ export function ShareDialog({
           aria-labelledby="share-passes-heading"
           data-tour-id="share-passes"
         >
-          <p id="share-passes-heading" className={`${SECTION_LABEL} flex items-center gap-1.5`}>
+          <p id="share-passes-heading" className={`${SECTION_LABEL} flex items-center gap-2`}>
             Passes
             {activeLinks.length > 0 ? <CountBadge count={activeLinks.length} /> : null}
           </p>
           {activeLinks.length === 0 ? (
-            <p className="rounded-xl border-2 border-dashed border-slate-200 px-4 py-5 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <p className="rounded-surface border-2 border-dashed border-slate-200 px-4 py-5 text-center text-supporting text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {links.length === 0
                 ? 'No passes yet. Only you can open this document.'
                 : 'Every pass has expired. Extend one below or issue a new one.'}
@@ -236,7 +236,7 @@ export function ShareDialog({
             something in it, so owners who never use expiry never see it. */}
         {inactiveLinks.length > 0 ? (
           <section className="flex flex-col gap-2" aria-labelledby="share-expired-heading">
-            <p id="share-expired-heading" className={`${SECTION_LABEL} flex items-center gap-1.5`}>
+            <p id="share-expired-heading" className={`${SECTION_LABEL} flex items-center gap-2`}>
               Expired
               <CountBadge count={inactiveLinks.length} />
             </p>

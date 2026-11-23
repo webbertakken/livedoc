@@ -42,16 +42,16 @@ export function SharePasswordGate({
           e.preventDefault();
           submit();
         }}
-        className="flex w-[26rem] max-w-full animate-fly-up-in flex-col items-center gap-4 rounded-xl border border-slate-200 bg-white px-6 py-8 text-center shadow-2xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900"
+        className="flex w-[26rem] max-w-full animate-fly-up-in flex-col items-center gap-4 rounded-surface border border-slate-200 bg-white px-6 py-8 text-center shadow-2xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900"
       >
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
           <LockIcon />
         </span>
         <div>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h1 className="text-dialog-title text-slate-900 dark:text-slate-100">
             This document is password-protected
           </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-1 text-body text-slate-600 dark:text-slate-400">
             {ownerName
               ? `Enter the password ${ownerName} set to open this document.`
               : 'Enter the password the owner set to open this document.'}
@@ -67,11 +67,11 @@ export function SharePasswordGate({
           aria-invalid={invalid}
         />
         {rateLimited ? (
-          <p role="alert" className="-mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
+          <p role="alert" className="-mt-2 text-supporting text-rose-600 dark:text-rose-400">
             Too many tries. Wait a minute, then try again.
           </p>
         ) : invalid ? (
-          <p className="-mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
+          <p className="-mt-2 text-supporting text-rose-600 dark:text-rose-400">
             That password didn&apos;t match. Try again.
           </p>
         ) : null}

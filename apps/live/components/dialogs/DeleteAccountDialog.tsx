@@ -139,16 +139,16 @@ export function DeleteAccountDialog({
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-account-title"
-          className="pointer-events-auto flex w-[28rem] max-w-[92%] animate-fly-up-in flex-col rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10 outline-none dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40"
+          className="pointer-events-auto flex w-[28rem] max-w-[92%] animate-fly-up-in flex-col rounded-surface border border-slate-200 bg-white shadow-2xl shadow-slate-900/10 outline-none dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40"
         >
           <div className="border-b border-slate-100 px-6 pt-6 pb-4 dark:border-slate-800">
             <h2
               id="delete-account-title"
-              className="text-lg font-semibold text-slate-900 dark:text-slate-100"
+              className="text-dialog-title text-slate-900 dark:text-slate-100"
             >
               Delete Account
             </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-body text-slate-600 dark:text-slate-400">
               This permanently removes your documents (including any in the Trash), folders, and
               participant record from the server, then deletes your account and signs you out. This
               cannot be undone.
@@ -157,7 +157,7 @@ export function DeleteAccountDialog({
 
           {phase === 'verify' ? (
             <div className="px-6 py-5">
-              <p className="mb-3 text-sm text-slate-700 dark:text-slate-300">
+              <p className="mb-3 text-body text-slate-700 dark:text-slate-300">
                 You signed in a while ago, so confirm it's you before anything is deleted.
               </p>
               <EmailCodeStep
@@ -175,7 +175,7 @@ export function DeleteAccountDialog({
                 <div
                   id="delete-account-error"
                   role="alert"
-                  className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+                  className="mt-3 rounded-control border border-rose-200 bg-rose-50 px-3 py-2 text-body text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
                 >
                   {errorMsg}
                 </div>
@@ -185,10 +185,10 @@ export function DeleteAccountDialog({
             <div className="px-6 py-5">
               <label
                 htmlFor="delete-confirm-email"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                className="block text-body text-slate-700 dark:text-slate-300"
               >
                 Type{' '}
-                <strong className="font-semibold text-slate-900 dark:text-slate-100">
+                <strong className="font-medium text-slate-900 dark:text-slate-100">
                   {expectedEmail || 'your email address'}
                 </strong>{' '}
                 to confirm
@@ -201,12 +201,12 @@ export function DeleteAccountDialog({
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 disabled={phase === 'submitting'}
-                className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-rose-500/20"
+                className="mt-2 h-field w-full rounded-control border border-slate-200 bg-white px-3 text-body text-slate-900 placeholder-slate-400 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-rose-500/20"
                 placeholder="you@example.com"
               />
 
               {phase === 'error' && errorMsg ? (
-                <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                <div className="mt-3 rounded-control border border-rose-200 bg-rose-50 px-3 py-2 text-body text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
                   {errorMsg}
                 </div>
               ) : null}

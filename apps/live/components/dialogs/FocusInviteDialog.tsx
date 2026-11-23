@@ -35,13 +35,11 @@ export function FocusInviteDialog({
     <Dialog open onClose={onDismiss} ariaLabel="Someone wants you to look at something" size="sm">
       <div className="flex flex-col gap-3 p-4">
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
-            Bring Focus
-          </span>
-          <h2 className="text-base font-semibold leading-snug text-slate-800 dark:text-slate-100">
+          <span className="text-supporting text-brand-700 dark:text-brand-300">Bring Focus</span>
+          <h2 className="text-panel-title text-slate-800 dark:text-slate-100">
             {from} wants you to look at something
           </h2>
-          <p className="text-[13px] leading-snug text-slate-500 dark:text-slate-400">
+          <p className="text-body text-slate-500 dark:text-slate-400">
             {toPage
               ? 'This will take you to the page they are pointing at, fitted to your screen.'
               : 'This will move your view to where they are pointing, keeping your zoom.'}{' '}
@@ -52,7 +50,7 @@ export function FocusInviteDialog({
           <button
             type="button"
             onClick={onDismiss}
-            className="cursor-pointer rounded-lg px-3 py-1.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="min-h-field cursor-pointer rounded-control px-3 text-body text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             Not now
           </button>
@@ -60,7 +58,7 @@ export function FocusInviteDialog({
             type="button"
             autoFocus
             onClick={onAccept}
-            className={`cursor-pointer rounded-lg bg-brand-700 px-4 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
+            className={`min-h-field cursor-pointer rounded-control bg-brand-700 px-4 text-body font-medium text-white transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
           >
             Take me there
           </button>
