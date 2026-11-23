@@ -228,13 +228,16 @@ export function OfficeTitleRow({
       out[accessKeyOf(menu.id)] = () => onOpenMenu({ id: menu.id, focus: 'first' });
     // A row of several items (`[1-6]`) runs the one its keys' argument names.
     const byArg: Record<string, Record<string, () => void>> = {};
-    // Keys left to the browser (Copy, Paste) are never bound: its own clipboard events reach the kind.
-    const browsers = new Set(
-      shortcuts.filter((row) => row.status === 'browser').map((row) => row.id),
+    // Keys left to the browser (Copy, Paste) are never bound: its own clipboard events reach the kind. Nor are keys the
+    // surface hears itself (the grid's), which knows when a field has them.
+    const passedOn = new Set(
+      shortcuts
+        .filter((row) => row.status === 'browser' || row.status === 'surface')
+        .map((row) => row.id),
     );
     for (const { item } of items) {
       const action = allActions[item.id];
-      if (!item.shortcut || browsers.has(item.shortcut)) continue;
+      if (!item.shortcut || passedOn.has(item.shortcut)) continue;
       if (item.status !== 'built' || !action || action.disabled) continue;
       if (item.shortcutArg === undefined) out[item.shortcut] ??= () => action.run();
       else (byArg[item.shortcut] ??= {})[item.shortcutArg] = () => action.run();
@@ -248,7 +251,8 @@ export function OfficeTitleRow({
     ]);
     for (const { id } of shortcuts) {
       const action = allActions[id];
-      if (!named.has(id) && action && !action.disabled) out[id] ??= () => action.run();
+      if (named.has(id) || passedOn.has(id)) continue;
+      if (action && !action.disabled) out[id] ??= () => action.run();
     }
     return out;
   }, [menus, items, allActions, onOpenMenu, openAtCaret, catalogue, toolbar, shortcuts]);

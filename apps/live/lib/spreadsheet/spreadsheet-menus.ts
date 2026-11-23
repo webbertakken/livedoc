@@ -36,23 +36,32 @@ const CONVERT_LABEL: Record<WorkbookFormat, string> = {
   fods: 'Convert to OpenDocument (.ods)',
 };
 
-/** Format › Number's kinds the grid formats with, by item id, in Google's order. */
-export const NUMBER_FORMAT_ITEMS: readonly { id: string; label: string; nf?: NumberFormatKind }[] =
-  [
-    { id: 'number-automatic', label: 'Automatic', nf: 'auto' },
-    { id: 'number-plain-text', label: 'Plain Text', nf: 'text' },
-    { id: 'number-number', label: 'Number', nf: 'number' },
-    { id: 'number-percent', label: 'Percent', nf: 'percent' },
-    { id: 'number-scientific', label: 'Scientific', nf: 'scientific' },
-    { id: 'number-accounting', label: 'Accounting', nf: 'accounting' },
-    { id: 'number-financial', label: 'Financial' },
-    { id: 'number-currency', label: 'Currency', nf: 'currency' },
-    { id: 'number-currency-rounded', label: 'Currency Rounded' },
-    { id: 'number-date', label: 'Date', nf: 'date' },
-    { id: 'number-time', label: 'Time', nf: 'time' },
-    { id: 'number-date-time', label: 'Date Time', nf: 'datetime' },
-    { id: 'number-duration', label: 'Duration', nf: 'duration' },
-  ];
+/** Format › Number's kinds the grid formats with, by item id, in Google's order, with their shortcut rows. */
+export const NUMBER_FORMAT_ITEMS: readonly {
+  id: string;
+  label: string;
+  nf?: NumberFormatKind;
+  shortcut?: string;
+}[] = [
+  { id: 'number-automatic', label: 'Automatic', nf: 'auto' },
+  { id: 'number-plain-text', label: 'Plain Text', nf: 'text' },
+  { id: 'number-number', label: 'Number', nf: 'number', shortcut: 'format-as-decimal' },
+  { id: 'number-percent', label: 'Percent', nf: 'percent', shortcut: 'format-as-percentage' },
+  {
+    id: 'number-scientific',
+    label: 'Scientific',
+    nf: 'scientific',
+    shortcut: 'format-as-exponent',
+  },
+  { id: 'number-accounting', label: 'Accounting', nf: 'accounting' },
+  { id: 'number-financial', label: 'Financial' },
+  { id: 'number-currency', label: 'Currency', nf: 'currency', shortcut: 'format-as-currency' },
+  { id: 'number-currency-rounded', label: 'Currency Rounded' },
+  { id: 'number-date', label: 'Date', nf: 'date', shortcut: 'format-as-date' },
+  { id: 'number-time', label: 'Time', nf: 'time', shortcut: 'format-as-time' },
+  { id: 'number-date-time', label: 'Date Time', nf: 'datetime' },
+  { id: 'number-duration', label: 'Duration', nf: 'duration' },
+];
 
 /** Format › Font Size's sizes, Google's list. */
 export const MENU_FONT_SIZES: readonly number[] = [6, 7, 8, 9, 10, 11, 12, 14, 18, 24, 36];
@@ -102,7 +111,7 @@ function fileMenu(format: WorkbookFormat): OfficeMenu {
       item('new-spreadsheet', 'Spreadsheet', 'view'),
       item('new-from-template', 'From Template Gallery', 'view'),
     ]),
-    built('open', 'Open', 'view'),
+    built('open', 'Open', 'view', { shortcut: 'open' }),
     item('import', 'Import', 'edit'),
     item('make-a-copy', 'Make a Copy', 'view'),
     SEPARATOR,
@@ -133,19 +142,21 @@ function fileMenu(format: WorkbookFormat): OfficeMenu {
     item('details', 'Details', 'view'),
     item('settings', 'Settings', 'edit', { keywords: ['locale', 'time zone', 'calculation'] }),
     SEPARATOR,
-    item('print', 'Print', 'view'),
+    item('print', 'Print', 'view', { shortcut: 'print' }),
   ]);
 }
 
 const EDIT_MENU = menu('edit', 'Edit', [
-  built('undo', 'Undo', 'participate'),
-  built('redo', 'Redo', 'participate'),
+  built('undo', 'Undo', 'participate', { shortcut: 'undo' }),
+  built('redo', 'Redo', 'participate', { shortcut: 'redo' }),
   SEPARATOR,
-  built('cut', 'Cut', 'participate'),
-  built('copy', 'Copy', 'view'),
-  built('paste', 'Paste', 'participate'),
+  built('cut', 'Cut', 'participate', { shortcut: 'cut' }),
+  built('copy', 'Copy', 'view', { shortcut: 'copy' }),
+  built('paste', 'Paste', 'participate', { shortcut: 'paste' }),
   submenu('paste-special', 'Paste Special', [
-    built('paste-values-only', 'Values Only', 'participate'),
+    built('paste-values-only', 'Values Only', 'participate', {
+      shortcut: 'paste-values-only',
+    }),
     built('paste-format-only', 'Format Only', 'edit'),
     item('paste-formula-only', 'Formula Only', 'edit'),
     item('paste-conditional-formatting-only', 'Conditional Formatting Only', 'edit'),
@@ -169,14 +180,20 @@ const EDIT_MENU = menu('edit', 'Edit', [
     built('delete-cells-shift-left', 'Cells and Shift Left', 'edit'),
   ]),
   SEPARATOR,
-  item('find-and-replace', 'Find and Replace', 'view', { keywords: ['search'] }),
+  item('find-and-replace', 'Find and Replace', 'view', {
+    keywords: ['search'],
+    shortcut: 'find-and-replace',
+  }),
 ]);
 
 const VIEW_MENU = menu('view', 'View', [
   submenu('show', 'Show', [
     built('show-gridlines', 'Gridlines', 'edit', { checkable: 'checkbox' }),
     item('show-formula-bar', 'Formula Bar', 'view', { checkable: 'checkbox' }),
-    item('show-formulas', 'Formulas', 'view', { checkable: 'checkbox' }),
+    item('show-formulas', 'Formulas', 'view', {
+      checkable: 'checkbox',
+      shortcut: 'show-all-formulas',
+    }),
     item('show-protected-ranges', 'Protected Ranges', 'view', { checkable: 'checkbox' }),
   ]),
   submenu('freeze', 'Freeze', [
@@ -230,7 +247,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
     built('insert-columns-left', 'Insert 1 Column Left', 'edit'),
     built('insert-columns-right', 'Insert 1 Column Right', 'edit'),
   ]),
-  item('insert-sheet', 'Sheet', 'edit'),
+  item('insert-sheet', 'Sheet', 'edit', { shortcut: 'insert-new-sheet' }),
   SEPARATOR,
   item('insert-table', 'Table', 'edit'),
   item('insert-timeline', 'Timeline', 'edit'),
@@ -243,22 +260,28 @@ const INSERT_MENU = menu('insert', 'Insert', [
   item('insert-drawing', 'Drawing', 'edit'),
   SEPARATOR,
   item('insert-function', 'Function', 'participate', { keywords: ['formula', 'sum'] }),
-  item('insert-link', 'Link', 'edit'),
+  item('insert-link', 'Link', 'edit', { shortcut: 'insert-link' }),
   SEPARATOR,
   item('insert-checkbox', 'Checkbox', 'edit', { keywords: ['tick box'] }),
   item('insert-dropdown', 'Dropdown', 'edit'),
   item('insert-emoji', 'Emoji', 'participate'),
   SEPARATOR,
-  item('insert-comment', 'Comment', 'participate'),
-  item('insert-note', 'Note', 'edit'),
+  item('insert-comment', 'Comment', 'participate', {
+    shortcut: 'insert-or-edit-comment',
+  }),
+  item('insert-note', 'Note', 'edit', { shortcut: 'insert-or-edit-note' }),
 ]);
 
 const FORMAT_MENU = menu('format', 'Format', [
   item('theme', 'Theme', 'edit'),
   SEPARATOR,
   submenu('number', 'Number', [
-    ...NUMBER_FORMAT_ITEMS.map(({ id, label, nf }) =>
-      item(id, label, 'edit', { checkable: 'radio', status: nf ? 'built' : 'comingSoon' }),
+    ...NUMBER_FORMAT_ITEMS.map(({ id, label, nf, shortcut }) =>
+      item(id, label, 'edit', {
+        checkable: 'radio',
+        status: nf ? 'built' : 'comingSoon',
+        ...(shortcut ? { shortcut } : {}),
+      }),
     ),
     SEPARATOR,
     item('custom-currency', 'Custom Currency', 'edit'),
@@ -266,15 +289,18 @@ const FORMAT_MENU = menu('format', 'Format', [
     item('custom-number-format', 'Custom Number Format', 'edit'),
   ]),
   submenu('text', 'Text', [
-    built('bold', 'Bold', 'edit', { checkable: 'checkbox' }),
-    built('italic', 'Italic', 'edit', { checkable: 'checkbox' }),
-    built('underline', 'Underline', 'edit', { checkable: 'checkbox' }),
-    built('strikethrough', 'Strikethrough', 'edit', { checkable: 'checkbox' }),
+    built('bold', 'Bold', 'edit', { checkable: 'checkbox', shortcut: 'bold' }),
+    built('italic', 'Italic', 'edit', { checkable: 'checkbox', shortcut: 'italic' }),
+    built('underline', 'Underline', 'edit', { checkable: 'checkbox', shortcut: 'underline' }),
+    built('strikethrough', 'Strikethrough', 'edit', {
+      checkable: 'checkbox',
+      shortcut: 'strikethrough',
+    }),
   ]),
   submenu('alignment', 'Alignment', [
-    built('align-left', 'Left', 'edit', { checkable: 'radio' }),
-    built('align-centre', 'Centre', 'edit', { checkable: 'radio' }),
-    built('align-right', 'Right', 'edit', { checkable: 'radio' }),
+    built('align-left', 'Left', 'edit', { checkable: 'radio', shortcut: 'left-align' }),
+    built('align-centre', 'Centre', 'edit', { checkable: 'radio', shortcut: 'center-align' }),
+    built('align-right', 'Right', 'edit', { checkable: 'radio', shortcut: 'right-align' }),
     SEPARATOR,
     built('align-top', 'Top', 'edit', { checkable: 'radio' }),
     built('align-middle', 'Middle', 'edit', { checkable: 'radio' }),
@@ -309,11 +335,13 @@ const FORMAT_MENU = menu('format', 'Format', [
     item('unmerge', 'Unmerge', 'edit'),
   ]),
   SEPARATOR,
-  item('convert-to-table', 'Convert to Table', 'edit'),
+  item('convert-to-table', 'Convert to Table', 'edit', {
+    shortcut: 'convert-range-to-table',
+  }),
   item('conditional-formatting', 'Conditional Formatting', 'edit'),
   item('alternating-colours', 'Alternating Colours', 'edit'),
   SEPARATOR,
-  built('clear-formatting', 'Clear Formatting', 'edit'),
+  built('clear-formatting', 'Clear Formatting', 'edit', { shortcut: 'clear-formatting' }),
 ]);
 
 const DATA_MENU = menu('data', 'Data', [
@@ -387,7 +415,9 @@ const HELP_MENU = menu('help', 'Help', [
   item('terms-of-service', 'Terms of Service', 'view'),
   SEPARATOR,
   item('function-list', 'Function List', 'view'),
-  item('keyboard-shortcuts', 'Keyboard Shortcuts', 'view'),
+  built('keyboard-shortcuts', 'Keyboard Shortcuts', 'view', {
+    shortcut: 'show-common-keyboard-shortcuts',
+  }),
 ]);
 
 export function spreadsheetMenus(format: WorkbookFormat): OfficeCatalogue {

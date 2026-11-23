@@ -5,8 +5,9 @@ import type { ShortcutKeys } from './shortcut-matcher';
 import { formatShortcut, parseShortcut, type OfficePlatform } from './shortcut-notation';
 import { everyWordStarts } from './word-match';
 
-// `browser`: the key is left to the browser, as Google leaves it. `leftOut`: its function is a Google service (C3).
-export type ShortcutStatus = 'specified' | 'built' | 'browser' | 'leftOut';
+// `browser`: the key is left to the browser, as Google leaves it. `surface`: the kind's surface hears the key itself,
+// so the layer never runs it. `leftOut`: its function is a Google service (C3).
+export type ShortcutStatus = 'specified' | 'built' | 'surface' | 'browser' | 'leftOut';
 
 export type ShortcutRow = {
   id: string;

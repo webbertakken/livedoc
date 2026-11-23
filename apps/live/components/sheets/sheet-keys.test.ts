@@ -74,6 +74,12 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     [k('Escape'), { kind: 'escape' }],
     [k('ContextMenu'), { kind: 'menu' }],
     [k('F10', { shiftKey: true }), { kind: 'menu' }],
+    // keyboard-shortcuts.md: Context menu, Paste values only, Move focus out on a Mac.
+    [k('|', { ctrlKey: true, shiftKey: true, code: 'Backslash' }), { kind: 'menu' }],
+    [k('|', { metaKey: true, shiftKey: true, code: 'Backslash' }), { kind: 'menu' }],
+    [k('V', { ctrlKey: true, shiftKey: true }), { kind: 'pasteValues' }],
+    [k('v', { metaKey: true, shiftKey: true }), { kind: 'pasteValues' }],
+    [k('M', { ctrlKey: true, metaKey: true, shiftKey: true, code: 'KeyM' }), { kind: 'leave' }],
     [k('x'), { kind: 'type', text: 'x' }],
     [k('='), { kind: 'type', text: '=' }],
   ])('%j', (e, cmd) => {
@@ -127,7 +133,13 @@ describe('Read Row and Read Column', () => {
     });
   });
 
-  it('leaves AltGr, Cmd and other keys alone', () => {
+  it('reads ⌘+Option+Shift on a Mac too, as Google gives it', () => {
+    expect(
+      sheetKey({ ...k('‰', { metaKey: true, altKey: true, shiftKey: true }), code: 'KeyR' }),
+    ).toEqual({ kind: 'read', axis: 'r' });
+  });
+
+  it('leaves AltGr and other keys alone', () => {
     const altGr = { getModifierState: (m: 'AltGraph') => m === 'AltGraph' };
     expect(
       sheetKey({
@@ -136,11 +148,21 @@ describe('Read Row and Read Column', () => {
         ...altGr,
       }),
     ).not.toEqual({ kind: 'read', axis: 'r' });
-    expect(
-      sheetKey({ ...k('r', { metaKey: true, altKey: true, shiftKey: true }), code: 'KeyR' }),
-    ).toBeNull();
     expect(sheetKey({ ...k('X', { altKey: true, shiftKey: true }), code: 'KeyX' })?.kind).not.toBe(
       'read',
     );
+  });
+});
+
+// keyboard-shortcuts.md "Navigate the spreadsheet": a MacBook's Option+Left and Option+Right step sheets; on a PC
+// Alt+Left and Alt+Right are the browser's Back and Forward, left to it.
+describe('Option+Left and Option+Right', () => {
+  it('step sheets on a Mac only', () => {
+    expect(sheetKey(k('ArrowRight', { altKey: true }), 'mac')).toEqual({ kind: 'sheet', step: 1 });
+    expect(sheetKey(k('ArrowLeft', { altKey: true }), 'mac')).toEqual({ kind: 'sheet', step: -1 });
+    expect(sheetKey(k('ArrowRight', { altKey: true }), 'pc')).toBeNull();
+    expect(sheetKey(k('ArrowRight', { altKey: true }))).toBeNull();
+    expect(sheetKey(k('ArrowLeft', { altKey: true, shiftKey: true }), 'mac')).toBeNull();
+    expect(sheetKey(k('ArrowLeft', { altKey: true, metaKey: true }), 'mac')).toBeNull();
   });
 });

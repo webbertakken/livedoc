@@ -178,7 +178,25 @@ describe('spreadsheetMenus', () => {
       'copy',
       ...ZOOM_ITEMS.map((i) => i.id),
       'search-the-menus',
+      'keyboard-shortcuts',
     ]);
+  });
+
+  // keyboard-shortcuts.md: each item Google gives keys to names its row; a built item's row runs or is heard.
+  it('names the shortcut rows of the items Google gives keys to', () => {
+    const shortcutOf = new Map(catalogueItems(menus).map(({ item }) => [item.id, item.shortcut]));
+    expect(shortcutOf.get('undo')).toBe('undo');
+    expect(shortcutOf.get('copy')).toBe('copy');
+    expect(shortcutOf.get('bold')).toBe('bold');
+    expect(shortcutOf.get('align-centre')).toBe('center-align');
+    expect(shortcutOf.get('number-time')).toBe('format-as-time');
+    expect(shortcutOf.get('keyboard-shortcuts')).toBe('show-common-keyboard-shortcuts');
+    const statusOf = new Map(SPREADSHEET_SHORTCUTS.map((r) => [r.id, r.status]));
+    const builtOnSpecified = catalogueItems(menus).filter(
+      ({ item }) =>
+        item.status === 'built' && item.shortcut && statusOf.get(item.shortcut) === 'specified',
+    );
+    expect(builtOnSpecified).toEqual([]);
   });
 
   it('leaves the shell’s own items to the shell', () => {

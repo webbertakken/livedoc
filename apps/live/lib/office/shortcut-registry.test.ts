@@ -18,6 +18,7 @@ const ROWS: ShortcutRow[] = [
   row('bold', 'Text formatting', 'Bold', 'Ctrl+B', '⌘+B', 'specified'),
   row('finder', 'Menus', 'Tool finder', 'Alt+/ or Alt+Z (Chrome)', 'Option+/'),
   row('repeat', 'Menus', 'Repeat last action', 'Ctrl+Y', '—'),
+  row('select-row', 'Grid', 'Select row', 'Shift+Space', 'Shift+Space', 'surface'),
   row('word', 'Text selection with the mouse', 'Select a word', 'Double-click', 'Double-click'),
 ];
 
@@ -31,10 +32,11 @@ describe('shortcutListing', () => {
       'Common actions',
       'Text formatting',
       'Menus',
+      'Grid',
       'Text selection with the mouse',
     ]);
     expect(groups[0]!.rows.map((r) => r.action)).toEqual(['Undo', 'Zoom in']);
-    expect(count).toBe(6);
+    expect(count).toBe(7);
   });
 
   it('shows every way on this platform and browser, in its notation', () => {
@@ -51,11 +53,12 @@ describe('shortcutListing', () => {
     expect(mac.groups.flatMap((g) => g.rows.map((r) => r.id))).not.toContain('repeat');
   });
 
-  it("marks a row not yet built as coming soon, and the browser's as working", () => {
+  it("marks a row not yet built as coming soon, and the browser's and the surface's as working", () => {
     const rows = shortcutListing(ROWS, PC_CHROME, '').groups.flatMap((g) => g.rows);
     expect(rows.find((r) => r.id === 'bold')!.comingSoon).toBe(true);
     expect(rows.find((r) => r.id === 'zoom-in')!.comingSoon).toBe(false);
     expect(rows.find((r) => r.id === 'undo')!.comingSoon).toBe(false);
+    expect(rows.find((r) => r.id === 'select-row')!.comingSoon).toBe(false);
   });
 
   it('shows a pointer gesture as written', () => {

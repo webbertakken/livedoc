@@ -1,7 +1,9 @@
 // The grid's keys when no cell is being edited (docs/specs/029-sheets/sheet.md "Keyboard"), as a pure map from a key
-// to a command, so every row of the spec's table is tested without a DOM. Undo and redo are left to the canvas.
+// to a command, so every row of the spec's table is tested without a DOM. Undo and redo are left to the canvas. Each
+// key holds as docs/specs/029-sheets/keyboard-shortcuts.md lists it for the platform.
 import type { Dir } from '@livedoc/sheets';
 import { altGraphHeld, composedWithAlt } from '@/lib/composed-key';
+import type { OfficePlatform } from '@/lib/office/shortcut-notation';
 
 export type KeyLike = {
   key: string;
@@ -26,7 +28,7 @@ type SheetKeyCommand =
   | { kind: 'page'; up: boolean; sideways: boolean; extend: boolean }
   // Ctrl+Backspace: the active cell scrolled back into view.
   | { kind: 'reveal' }
-  // Alt+Up, Ctrl+Shift+Page Up / Page Down: the previous or next sheet of a spreadsheet.
+  // Alt+Up, Ctrl+Shift+Page Up / Page Down, a Mac's Option+Left / Right: the previous or next sheet of a spreadsheet.
   | { kind: 'sheet'; step: -1 | 1 }
   // Alt+Shift+Q: focus to the selection's summary.
   | { kind: 'summary' }
@@ -36,6 +38,8 @@ type SheetKeyCommand =
   | { kind: 'selectRow' }
   | { kind: 'selectCol' }
   | { kind: 'clear' }
+  // Ctrl+Shift+V: the clipboard's values only.
+  | { kind: 'pasteValues' }
   | { kind: 'toggle'; flag: 'b' | 'i' | 'u' | 'st' }
   | { kind: 'now'; what: 'date' | 'time' }
   | { kind: 'find'; replace: boolean }
@@ -55,13 +59,17 @@ const ARROWS: Record<string, Dir> = {
   ArrowRight: 'right',
 };
 
-export function sheetKey(e: KeyLike): SheetKeyCommand | null {
+export function sheetKey(e: KeyLike, platform: OfficePlatform = 'pc'): SheetKeyCommand | null {
   // AltGr's Ctrl is not one the person pressed: AltGr+E types €, never a Ctrl shortcut.
   const mod = (e.ctrlKey && !altGraphHeld(e)) || e.metaKey;
   const dir = ARROWS[e.key];
   if (dir && !e.altKey) return { kind: 'move', dir, jump: mod, extend: e.shiftKey };
   if (e.key === 'ArrowDown' && e.altKey && !mod && !e.shiftKey) return { kind: 'dropdown' };
   if (e.key === 'ArrowUp' && e.altKey && !mod && !e.shiftKey) return { kind: 'sheet', step: -1 };
+  // A Mac's Option+Left and Option+Right; on a PC Alt+Left and Alt+Right are the browser's Back and Forward.
+  const sideways = dir === 'left' || dir === 'right';
+  if (platform === 'mac' && sideways && e.altKey && !mod && !e.shiftKey)
+    return { kind: 'sheet', step: dir === 'right' ? 1 : -1 };
   if (e.key === 'Tab') return { kind: 'tab', back: e.shiftKey };
   if (e.key === 'Enter' && !mod && !e.altKey) return { kind: 'enter', back: e.shiftKey };
   if (e.key === 'F2') return { kind: 'edit' };
@@ -77,15 +85,10 @@ export function sheetKey(e: KeyLike): SheetKeyCommand | null {
   if (e.key === 'Delete' || e.key === 'Backspace') return mod ? null : { kind: 'clear' };
   if (e.key === 'Escape') return { kind: 'escape' };
   if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) return { kind: 'menu' };
-  if (e.ctrlKey && e.altKey && e.shiftKey && !e.metaKey && e.code === 'KeyM')
+  // Ctrl+Alt+Shift+M, or Ctrl+⌘+Shift+M on a Mac.
+  if (e.ctrlKey && e.shiftKey && e.altKey !== e.metaKey && e.code === 'KeyM')
     return { kind: 'leave' };
-  if (
-    e.altKey &&
-    e.shiftKey &&
-    !e.metaKey &&
-    !altGraphHeld(e) &&
-    (e.code === 'KeyR' || e.code === 'KeyC')
-  )
+  if (e.altKey && e.shiftKey && !altGraphHeld(e) && (e.code === 'KeyR' || e.code === 'KeyC'))
     return { kind: 'read', axis: e.code === 'KeyR' ? 'r' : 'c' };
   if (e.altKey && e.shiftKey && !mod && !altGraphHeld(e) && e.code === 'KeyQ')
     return { kind: 'summary' };
@@ -101,6 +104,8 @@ export function sheetKey(e: KeyLike): SheetKeyCommand | null {
       return { kind: 'numberFormat', nf: 'currency' };
     if (e.shiftKey && (digit === '5' || e.key === '%'))
       return { kind: 'numberFormat', nf: 'percent' };
+    if (e.shiftKey && e.code === 'Backslash') return { kind: 'menu' };
+    if (k === 'v' && e.shiftKey) return { kind: 'pasteValues' };
     if (k === 'a' && !e.shiftKey) return { kind: 'selectAll' };
     if (k === 'b' && !e.shiftKey) return { kind: 'toggle', flag: 'b' };
     if (k === 'i' && !e.shiftKey) return { kind: 'toggle', flag: 'i' };

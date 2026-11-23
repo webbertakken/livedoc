@@ -14,6 +14,7 @@ import {
 } from '@livedoc/sheets';
 import { restorePlanElement } from '@/hooks/plan/maximised-plan';
 import { useSheetsBridgeContext } from '@/hooks/sheets/useSheetsBridge';
+import { currentOfficePlatform } from '@/lib/office/office-platform';
 import { focusOpenEdit } from './focus-open-edit';
 import { readSheetLine } from './sheet-cell-speech';
 import { useSheetController } from './sheet-controller';
@@ -64,12 +65,7 @@ export function useSheetGridKeys({
     }
     // A bare Space is held for Space-drag panning; it types a space on release when no pan used it.
     if (pan.onKeyDown(e)) return;
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'v') {
-      e.preventDefault();
-      void clipboard.pasteSpecial('values');
-      return;
-    }
-    const cmd = sheetKey(e);
+    const cmd = sheetKey(e, currentOfficePlatform().platform);
     if (!cmd) return;
     // Copy, cut and paste arrive as clipboard events; undo and redo reach the canvas.
     e.preventDefault();
@@ -124,6 +120,8 @@ export function useSheetGridKeys({
         return c.setSelection(selectRows(range.r1, range.r2, c.grid));
       case 'selectCol':
         return c.setSelection(selectCols(range.c1, range.c2, c.grid));
+      case 'pasteValues':
+        return void clipboard.pasteSpecial('values');
       case 'clear':
         return c.canEdit ? actions.clear('inputs') : undefined;
       case 'toggle':

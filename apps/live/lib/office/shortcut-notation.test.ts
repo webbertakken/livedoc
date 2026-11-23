@@ -66,6 +66,22 @@ describe('parseShortcut', () => {
     expect(code('Shift+F10')).toBe('F10');
     expect(code('Alt+Up')).toBe('ArrowUp');
     expect(code('Alt+Enter')).toBe('Enter');
+    expect(code('Ctrl+Backspace')).toBe('Backspace');
+    expect(code('Ctrl+Alt+=')).toBe('Equal');
+    for (const f of ['F1', 'F2', 'F4', 'F9', 'F11']) expect(code(`Shift+${f}`)).toBe(f);
+  });
+
+  it('keeps how = is written, on the key Plus names too', () => {
+    expect(parseShortcut('Ctrl+Alt+=')[0]?.steps[0]).toEqual({
+      mods: ['ctrl', 'alt'],
+      code: 'Equal',
+      label: '=',
+    });
+  });
+
+  it('reads Fn with an F-key a Mac row names', () => {
+    for (const f of ['F1', 'F4', 'F9', 'F11'])
+      expect(parseShortcut(`Shift+Fn+${f}`)[0]?.steps[0]).toEqual({ mods: ['shift'], code: f });
   });
 
   it('reads Fn with an arrow as the key it makes on a Mac', () => {
@@ -127,6 +143,10 @@ describe('formatShortcut', () => {
     expect(formatShortcut(parseShortcut('Ctrl+Enter')[0]!, 'pc')).toBe('Ctrl+Enter');
     expect(formatShortcut(parseShortcut('Ctrl+Shift+Up')[0]!, 'pc')).toBe('Ctrl+Shift+↑');
     expect(formatShortcut(parseShortcut('Ctrl+Plus')[0]!, 'pc')).toBe('Ctrl++');
+    expect(formatShortcut(parseShortcut('Ctrl+Alt+=')[0]!, 'pc')).toBe('Ctrl+Alt+=');
+    expect(formatShortcut(parseShortcut('⌘+Option+=')[0]!, 'mac')).toBe('⌥⌘=');
+    expect(formatShortcut(parseShortcut('Ctrl+Alt+N, =')[0]!, 'pc')).toBe('Ctrl+Alt+N =');
+    expect(formatShortcut(parseShortcut('Ctrl+Backspace')[0]!, 'pc')).toBe('Ctrl+Backspace');
     expect(formatShortcut(parseShortcut('Ctrl+Search+Left')[0]!, 'chromeos')).toBe('Ctrl+Search+←');
   });
 
@@ -152,12 +172,14 @@ describe('shortcutTextOf', () => {
     },
     { id: 'pc-only', keys: { pc: 'Ctrl+Shift+PgDn', mac: '—', chromeos: '—' } },
     { id: 'slash', keys: { pc: 'Ctrl+/', mac: '⌘+/', chromeos: 'Ctrl+/' } },
+    { id: 'insert', keys: { pc: 'Ctrl+Alt+=', mac: '⌘+Option+=', chromeos: 'Ctrl+Alt+=' } },
   ];
 
   it("shows the platform's first way and names it for assistive technology", () => {
     const pc = shortcutTextOf(rows, { platform: 'pc', chrome: true });
     expect(pc('redo')).toEqual({ shown: 'Ctrl+Shift+Z', aria: 'Control+Shift+Z' });
     expect(pc('slash')).toEqual({ shown: 'Ctrl+/', aria: 'Control+/' });
+    expect(pc('insert')).toEqual({ shown: 'Ctrl+Alt+=', aria: 'Control+Alt+=' });
     const mac = shortcutTextOf(rows, { platform: 'mac', chrome: true });
     expect(mac('redo')).toEqual({ shown: '⇧⌘Z', aria: 'Shift+Meta+Z' });
   });
