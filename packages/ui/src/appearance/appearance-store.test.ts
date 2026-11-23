@@ -31,16 +31,32 @@ let classes: Set<string>;
 let domCalls: string[] = [];
 /** The OS preference the matchMedia stub reports, and the listeners on it. */
 let osPrefersDark = false;
-let mediaListeners: (() => void)[] = [];
+/** Each MediaQueryList the stub made: the state it last read, and its listeners. */
+type StubList = { last: boolean; listeners: (() => void)[] };
+let mediaLists: StubList[] = [];
 /** Queries asked of matchMedia, so a test can assert it was never consulted. */
 let mediaQueries: string[] = [];
 /** The theme-color meta the boot script wrote, which the store keeps on the header colour. */
 let themeColor: { content: string };
 
-/** Flip the OS preference and fire the change the way a real MediaQueryList does. */
-function setOsPrefersDark(next: boolean): void {
+/**
+ * Flip the OS preference and report the change the way Chromium does: the preference changes at once, and at the next
+ * rendering step each list whose state changed since it was last read hears it. Reading a list's `matches` in between
+ * refreshes that list's state, so that list hears nothing.
+ */
+function changeOsPreference(next: boolean): () => void {
   osPrefersDark = next;
-  mediaListeners.forEach((l) => l());
+  return () => {
+    for (const list of mediaLists) {
+      if (list.last === osPrefersDark) continue;
+      list.last = osPrefersDark;
+      list.listeners.forEach((l) => l());
+    }
+  };
+}
+
+function setOsPrefersDark(next: boolean): void {
+  changeOsPreference(next)();
 }
 
 beforeEach(() => {
@@ -48,7 +64,7 @@ beforeEach(() => {
   classes = new Set<string>();
   domCalls = [];
   osPrefersDark = false;
-  mediaListeners = [];
+  mediaLists = [];
   mediaQueries = [];
   themeColor = { content: '' };
   const g = globalThis as Record<string, unknown>;
@@ -65,13 +81,16 @@ beforeEach(() => {
     },
     matchMedia: (query: string) => {
       mediaQueries.push(query);
+      const list: StubList = { last: osPrefersDark, listeners: [] };
+      mediaLists.push(list);
       return {
         get matches() {
+          list.last = osPrefersDark;
           return osPrefersDark;
         },
-        addEventListener: (_: string, l: () => void) => mediaListeners.push(l),
+        addEventListener: (_: string, l: () => void) => list.listeners.push(l),
         removeEventListener: (_: string, l: () => void) => {
-          mediaListeners = mediaListeners.filter((x) => x !== l);
+          list.listeners = list.listeners.filter((x) => x !== l);
         },
       };
     },
@@ -219,6 +238,16 @@ describe('the OS changing under a System setting', () => {
     setOsPrefersDark(false);
     expect(classes.has('dark')).toBe(false);
     expect(calls).toBe(3);
+  });
+
+  // appearance.md D76: a page that reads the appearance between the OS change and its report (a render, a theme
+  // applied) still hears the change: the list that is watched is never the one that is read.
+  it('repaints though the appearance was read before the change was reported', () => {
+    setAppearance('system');
+    const report = changeOsPreference(true);
+    expect(getResolvedAppearance()).toBe('dark');
+    report();
+    expect(classes.has('dark')).toBe(true);
   });
 
   // docs/specs/004-interface-design/appearance.md "The browser's chrome".

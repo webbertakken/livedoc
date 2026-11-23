@@ -59,22 +59,26 @@ export function readAppearanceSetting(): AppearanceSetting {
     : DEFAULT_APPEARANCE_SETTING;
 }
 
-// The live MediaQueryList, created once. Undefined on the server and in any
+// The OS preference, as a MediaQueryList. Undefined on the server and in any
 // browser too old to have matchMedia, where System simply reads as light.
-let mediaQuery: MediaQueryList | undefined;
-let mediaQueryChecked = false;
+function newDarkMedia(): MediaQueryList | undefined {
+  return typeof window === 'undefined' || typeof window.matchMedia !== 'function'
+    ? undefined
+    : window.matchMedia(DARK_MEDIA_QUERY);
+}
+
+// The list the preference is READ from, created once. It is never the one that
+// is watched (D76): a browser refreshes a list's state when its `matches` is
+// read, and reports a change only to the lists whose state changed since, so a
+// read between the OS change and its report (a render, a theme applied) would
+// swallow the report on a list that is both read and watched.
+let readList: MediaQueryList | undefined;
 
 function darkMedia(): MediaQueryList | undefined {
   // Re-check while nothing is cached: tests (and the server render) can reach
   // this before a window exists, and one early miss must not pin the answer.
-  if (!mediaQueryChecked || !mediaQuery) {
-    mediaQuery =
-      typeof window === 'undefined' || typeof window.matchMedia !== 'function'
-        ? undefined
-        : window.matchMedia(DARK_MEDIA_QUERY);
-    mediaQueryChecked = true;
-  }
-  return mediaQuery;
+  readList ??= newDarkMedia();
+  return readList;
 }
 
 /** Resolve a setting to the chrome it paints. Only System asks the OS. */
@@ -149,14 +153,13 @@ export function subscribeAppearance(listener: () => void): () => void {
 // Watch the OS preference for as long as the page lives. Attached lazily (the
 // first subscribe or write) rather than at import, so a server render and the
 // pre-hydration path never touch matchMedia; never detached, because the thing
-// it guards — the `dark` class on <html> — outlives any one subscriber.
-let watching = false;
+// it guards — the `dark` class on <html> — outlives any one subscriber. The
+// list watched is its own, held for as long as the page lives and never read.
+let watchedList: MediaQueryList | undefined;
 function watchSystem(): void {
-  if (watching) return;
-  const media = darkMedia();
-  if (!media) return;
-  watching = true;
-  media.addEventListener('change', () => {
+  if (watchedList) return;
+  watchedList = newDarkMedia();
+  watchedList?.addEventListener('change', () => {
     // An explicit Light / Dark ignores the OS entirely; only System repaints.
     if (effectiveSetting() !== 'system') return;
     applyAppearance(getResolvedAppearance());
@@ -179,8 +182,7 @@ export function setAppearance(next: AppearanceSetting): void {
 export function resetAppearanceForTests(): void {
   current = null;
   override = null;
-  mediaQuery = undefined;
-  mediaQueryChecked = false;
-  watching = false;
+  readList = undefined;
+  watchedList = undefined;
   listeners.clear();
 }
