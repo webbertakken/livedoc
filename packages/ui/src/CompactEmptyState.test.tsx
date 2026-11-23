@@ -75,7 +75,27 @@ describe('CompactEmptyState', () => {
     const { container } = render(<CompactEmptyState size="small" icon={null} title="No icons" />);
     const box = container.firstElementChild as HTMLElement;
     expect(box.dataset.emptyState).toBe('small');
-    expect(box.querySelector('span')!.className).toContain('h-7');
+    expect(box.querySelector('span')!.className).toContain('size-row');
+  });
+
+  // docs/specs/004-interface-design/empty-states.md "The look": one reading size, regular, in both sizes.
+  it('sets the heading at the reading size, regular, over a supporting line, in both sizes', () => {
+    for (const size of ['regular', 'small'] as const) {
+      render(
+        <CompactEmptyState
+          size={size}
+          icon={null}
+          title={`No ${size} icons`}
+          description="Try another word."
+        />,
+      );
+      const title = screen.getByText(`No ${size} icons`).className;
+      expect(title).toContain('text-body');
+      expect(title).not.toContain('font-semibold');
+      expect(screen.getAllByText('Try another word.').at(-1)!.className).toContain(
+        'text-supporting',
+      );
+    }
   });
 
   it('defaults to the regular size', () => {

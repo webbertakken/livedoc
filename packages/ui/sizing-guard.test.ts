@@ -13,6 +13,8 @@ const SIZED_PATHS = [
   'src/hint/HintSurface.tsx',
   'src/HoverCard.tsx',
   'src/CountBadge.tsx',
+  'src/EmptyState.tsx',
+  'src/CompactEmptyState.tsx',
 ];
 
 describe('ui sizing', () => {

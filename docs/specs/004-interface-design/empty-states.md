@@ -26,12 +26,14 @@ small grey text. Every empty state reads alike, wherever it is: an icon in the b
 
 ## The look
 
-- **Regular** (`size="regular"`): a panel, a dialog's list, a Dashboard slot. A 40px brand badge, a 13px semibold
-  heading, a 12px line, centred, with 16px of padding.
-- **Small** (`size="small"`): inside a popover, a menu, a dropdown list or a palette tab. A 28px brand badge, a 12px
-  semibold heading, an 11px line, centred, with 12px of padding.
+- The heading and the line follow the [sizing scale](sizing.md): regular weight, the heading at 14 px over a 12 px line.
+- **Regular** (`size="regular"`): a panel, a dialog's list, a Dashboard slot. A 40px brand badge, centred, with 16px
+  of padding.
+- **Small** (`size="small"`): inside a popover, a menu, a dropdown list or a palette tab. A 28px brand badge, centred,
+  with 12px of padding; only the badge and the padding are smaller.
 - **Page** (`EmptyState` in `@livedoc/ui`): a page-sized list (the Explorer's views, the Trash, the Card Finder's
-  list), with the floating badge and its rings. Same copy rules.
+  list), with the floating badge and its rings, its heading the 16 px panel title over a 14 px line. Same copy rules.
+- In a narrow pane (`compact`), a page empty state drops its frame and takes the 14 px heading over a 12 px line.
 - **In place of one item.** Where a list's items are cards or rows on a known surface (Home's Jump back in), the empty state takes the size and place of one item, so an empty list looks like a list with one thing
   in it rather than a large centred message.
 - The badge holds the surface's own glyph; a search's empty state defaults to the search glyph.
