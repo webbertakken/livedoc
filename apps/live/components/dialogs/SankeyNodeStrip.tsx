@@ -39,7 +39,7 @@ export function SankeyNodeStrip({
   };
   return (
     <div className="mb-3" data-tour-id="sankey-nodes">
-      <p className="mb-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+      <p className="mb-1 text-supporting text-slate-500 dark:text-slate-400">
         Nodes <span className="font-normal">· click one to rename it everywhere</span>
       </p>
       <ul className="flex flex-wrap gap-1" aria-label="Nodes">
@@ -50,7 +50,7 @@ export function SankeyNodeStrip({
               {editing === n.name ? (
                 <input
                   autoFocus
-                  className="h-7 w-36 rounded-full border border-brand-400 bg-white px-2.5 text-xs text-slate-800 outline-none ring-2 ring-brand-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-brand-500/30"
+                  className="h-row w-36 rounded-full border border-brand-400 bg-white px-2 text-body text-slate-800 outline-none ring-2 ring-brand-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-brand-500/30"
                   value={draft}
                   maxLength={SANKEY_NAME_MAX}
                   aria-label={`Rename ${n.name}`}
@@ -76,11 +76,11 @@ export function SankeyNodeStrip({
                     setEditing(n.name);
                   }}
                   aria-label={`Rename ${n.name}`}
-                  className="inline-flex h-7 max-w-[12rem] cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-xs text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+                  className="inline-flex h-row max-w-[12rem] cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
                 >
                   <span
                     aria-hidden
-                    className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+                    className="h-2.5 w-2.5 shrink-0 rounded-none"
                     style={{ backgroundColor: color }}
                   />
                   <span className="text-optical-line truncate">{n.name}</span>

@@ -51,7 +51,7 @@ const GROUPED_FIELDS: FlowField[] = ['to', 'value'];
 
 // A node's Add a Flow row: full width, dashed, so it reads as the place the next flow goes.
 const ADD_ROW =
-  'mt-1.5 flex w-full items-center gap-1.5 rounded-md border border-dashed border-slate-300 bg-white/60 px-2.5 py-1.5 text-left text-xs font-medium text-slate-600 transition enabled:cursor-pointer enabled:hover:border-brand-400 enabled:hover:bg-brand-50 enabled:hover:text-brand-700 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-300 dark:enabled:hover:border-brand-500/60 dark:enabled:hover:bg-brand-500/15 dark:enabled:hover:text-brand-200';
+  'mt-1.5 flex min-h-row w-full items-center gap-1 rounded-control border border-dashed border-slate-300 bg-white/60 px-2 text-left text-body text-slate-600 transition enabled:cursor-pointer enabled:hover:border-brand-400 enabled:hover:bg-brand-50 enabled:hover:text-brand-700 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-300 dark:enabled:hover:border-brand-500/60 dark:enabled:hover:bg-brand-500/15 dark:enabled:hover:text-brand-200';
 const PlusIcon = lucideGlyph(lucidePlus, 14);
 
 const keySet = (rows: readonly SankeyDraftRow[]) => rows.map((r) => r.key).join(',');
@@ -245,7 +245,7 @@ export function SankeyFlowsTable({
         ))}
       </datalist>
       {unit ? (
-        <p className="mb-1 text-right text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="mb-1 text-right text-supporting text-slate-500 dark:text-slate-400">
           Amounts in {unit}
         </p>
       ) : null}
@@ -255,7 +255,7 @@ export function SankeyFlowsTable({
             <section key={level.step} aria-labelledby={`${listId}-step-${level.step}`}>
               <h3
                 id={`${listId}-step-${level.step}`}
-                className="mb-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+                className="mb-1.5 text-supporting text-slate-500 dark:text-slate-400"
               >
                 Step {li + 1}
               </h3>
@@ -276,20 +276,20 @@ export function SankeyFlowsTable({
                       aria-label={`Flows from ${source.name}`}
                       // The tour rings the first node's group alone: a ring round whole steps would cover the dialog.
                       data-tour-id={li === 0 && si === 0 ? 'sankey-rows' : undefined}
-                      className="rounded-lg border border-slate-200 bg-slate-50/60 px-2.5 pb-1.5 pt-2 dark:border-slate-700 dark:bg-slate-800/40"
+                      className="rounded-menu border border-slate-200 bg-slate-50/60 px-2 pb-1.5 pt-2 dark:border-slate-700 dark:bg-slate-800/40"
                     >
                       <div className="mb-1.5 flex items-center gap-2">
                         <span
                           aria-hidden
-                          className="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-slate-300 dark:bg-slate-600"
+                          className="h-2.5 w-2.5 shrink-0 rounded-none bg-slate-300 dark:bg-slate-600"
                           style={{ backgroundColor: colors.get(source.name) }}
                         />
-                        <span className="text-optical-line min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                        <span className="text-optical-line min-w-0 flex-1 truncate text-body text-slate-800 dark:text-slate-100">
                           {source.name}
                         </span>
                         {t ? (
                           <span
-                            className={`shrink-0 text-[11px] tabular-nums ${
+                            className={`shrink-0 text-supporting tabular-nums ${
                               differs
                                 ? 'text-amber-700 dark:text-amber-400'
                                 : 'text-slate-500 dark:text-slate-400'
@@ -300,11 +300,11 @@ export function SankeyFlowsTable({
                           </span>
                         ) : null}
                       </div>
-                      <ul className="flex flex-col gap-1.5">
+                      <ul className="flex flex-col gap-2">
                         {source.rows.map(({ row: r }) => row(r.key, false))}
                         {kept > 0 ? (
                           <li
-                            className={`grid grid-cols-[auto_minmax(0,1fr)_5rem_4.375rem] items-center sm:grid-cols-[auto_minmax(0,1fr)_6.5rem_4.375rem] gap-x-1.5 text-sm transition ${
+                            className={`grid grid-cols-[auto_minmax(0,1fr)_5rem_4.375rem] items-center sm:grid-cols-[auto_minmax(0,1fr)_6.5rem_4.375rem] gap-x-2 text-body transition ${
                               keptOn
                                 ? 'text-slate-600 dark:text-slate-300'
                                 : 'text-slate-400 dark:text-slate-400'
@@ -334,7 +334,7 @@ export function SankeyFlowsTable({
                         ) : null}
                       </ul>
                       {/* On the rows' grid, so it lines up under their To and Amount boxes. */}
-                      <div className="grid grid-cols-[auto_minmax(0,1fr)_5rem_2rem_2rem] gap-x-1.5 sm:grid-cols-[auto_minmax(0,1fr)_6.5rem_2rem_2rem]">
+                      <div className="grid grid-cols-[auto_minmax(0,1fr)_5rem_2rem_2rem] gap-x-2 sm:grid-cols-[auto_minmax(0,1fr)_6.5rem_2rem_2rem]">
                         <span aria-hidden className="w-[15px]" />
                         <button
                           type="button"
@@ -359,29 +359,26 @@ export function SankeyFlowsTable({
       <section
         aria-labelledby={`${listId}-new`}
         data-tour-id="sankey-add-flow"
-        className={`rounded-lg border-2 border-dashed border-brand-200 bg-brand-50/40 px-3 pb-2.5 pt-2 dark:border-brand-500/30 dark:bg-brand-500/5 ${
+        className={`rounded-menu border-2 border-dashed border-brand-200 bg-brand-50/40 px-3 pb-2.5 pt-2 dark:border-brand-500/30 dark:bg-brand-500/5 ${
           layout.levels.length > 0 ? 'mt-4' : ''
         }`}
       >
         <div className="mb-1.5 flex items-baseline justify-between gap-2">
-          <h3
-            id={`${listId}-new`}
-            className="text-sm font-semibold text-brand-700 dark:text-brand-300"
-          >
+          <h3 id={`${listId}-new`} className="text-body text-brand-700 dark:text-brand-300">
             Add a Flow
           </h3>
-          <span className="text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
+          <span className="text-supporting text-slate-500 tabular-nums dark:text-slate-400">
             {filled} of {SANKEY_MAX_FLOWS}
           </span>
         </div>
-        <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+        <p className="mb-2 text-supporting text-slate-500 dark:text-slate-400">
           {full
             ? 'The diagram holds as many flows as it can.'
             : layout.levels.length > 0
               ? 'From a new starting node, or any node above. It moves to its step when you are done.'
               : 'Write the first flow: where it starts, where it goes, and how much. Or paste rows from a spreadsheet.'}
         </p>
-        <ul className="flex flex-col gap-1.5">
+        <ul className="flex flex-col gap-2">
           {layout.loose.map(({ row: r }) => row(r.key, true))}
         </ul>
       </section>
