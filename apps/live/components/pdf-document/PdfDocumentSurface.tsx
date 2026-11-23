@@ -27,6 +27,7 @@ import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
+import { openEmbeddedPdf } from '@/lib/pdf-document/open-embedded-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
 import { sendBlob } from '@/lib/blob-store/send-blob';
@@ -437,6 +438,7 @@ export function PdfDocumentSurface({
               marks={marks}
               onGoTo={goToPage}
               onFollow={links.follow}
+              onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
             />
           }
           right={null}

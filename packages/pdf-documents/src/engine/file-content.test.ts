@@ -415,8 +415,34 @@ describe('embedded files', () => {
     reader.close();
   });
 
+  // reading-surface.md "Embedded files": read out only when asked, by its place in the list, never past the limit.
+  it('reads a file out by its place in the list', async () => {
+    opened(await engine.open(embeddedFilesPdf()));
+    const text = async (at: number) => {
+      const read = await engine.embeddedFile(at);
+      return read.ok ? new TextDecoder().decode(read.bytes) : read.refusal;
+    };
+    expect(await text(0)).toBe('hello');
+    expect(await text(1)).toBe('MZ');
+    expect(await text(2)).toBe('unreadable');
+    expect(await text(-1)).toBe('unreadable');
+    expect(await text(0.5)).toBe('unreadable');
+  });
+
+  it('refuses a file past the limit, as the PDF says it or as it reads', () => {
+    reader.open(embeddedFilesPdf());
+    // "notes.txt" says 5 bytes: refused before it is read.
+    expect(reader.embeddedFile(0, 4)).toEqual({ ok: false, refusal: 'too_large' });
+    // "run.exe" says nothing, and reads 2.
+    expect(reader.embeddedFile(1, 1)).toEqual({ ok: false, refusal: 'too_large' });
+    expect(reader.embeddedFile(1, 2)).toMatchObject({ ok: true });
+    reader.close();
+    expect(reader.embeddedFile(0)).toEqual({ ok: false, refusal: 'unreadable' });
+  });
+
   it('answers none for a file that carries none, or no file', async () => {
     opened(await engine.open(plain));
+    expect(await engine.embeddedFile(0)).toEqual({ ok: false, refusal: 'unreadable' });
     expect(await engine.embeddedFiles()).toEqual({ files: [], cut: false });
     await engine.close();
     expect(await engine.embeddedFiles()).toEqual({ files: [], cut: false });

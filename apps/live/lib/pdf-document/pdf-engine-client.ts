@@ -11,6 +11,7 @@ import {
 } from '@livedoc/pdf-documents';
 import type {
   BakeResult,
+  EmbeddedFileRead,
   EmbeddedFiles,
   FileMark,
   FileSignature,
@@ -76,6 +77,7 @@ const STOPPED = {
   fields: [] as readonly PageField[],
   signatures: [] as readonly FileSignature[],
   embeddedFiles: { files: [], cut: false } satisfies EmbeddedFiles,
+  embeddedFile: { ok: false, refusal: 'unreadable' } satisfies EmbeddedFileRead,
   layers: [] as readonly PdfLayer[],
   canAppend: false,
   bake: { ok: false, refusal: 'unreadable' } satisfies BakeResult,
@@ -168,6 +170,7 @@ export function pdfEngineClient(
     fields: (index) => ask<readonly PageField[]>({ method: 'fields', args: [index] }),
     signatures: () => ask<readonly FileSignature[]>({ method: 'signatures', args: [] }),
     embeddedFiles: () => ask<EmbeddedFiles>({ method: 'embeddedFiles', args: [] }),
+    embeddedFile: (at) => ask<EmbeddedFileRead>({ method: 'embeddedFile', args: [at] }),
     layers: () => ask<readonly PdfLayer[]>({ method: 'layers', args: [] }),
     canAppend: () => ask<boolean>({ method: 'canAppend', args: [] }),
     bake: (liveChanges) => ask<BakeResult>({ method: 'bake', args: [liveChanges] }),

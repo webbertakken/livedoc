@@ -150,6 +150,12 @@ export type FileMark = {
   readonly state: { readonly model: string; readonly state: string } | null;
 };
 
+/** An embedded file read out of the PDF to be saved or opened (reading-surface.md "Embedded files"). */
+export type EmbeddedFileRead =
+  | { readonly ok: true; readonly bytes: Uint8Array<ArrayBuffer> }
+  /** `too_large`: past PDF_EMBEDDED_FILE_MAX_BYTES, as the PDF says or as read; `unreadable`: no such file, or none. */
+  | { readonly ok: false; readonly refusal: 'too_large' | 'unreadable' };
+
 /** A PDF layer: optional content a file shows or hides (reading-surface.md "The left panel"). */
 export type PdfLayer = {
   /** `o:<object number>`. */
@@ -226,6 +232,11 @@ export type PdfEngine = {
   signatures(): Promise<readonly FileSignature[]>;
   /** The files the PDF carries inside it, listed and never opened. */
   embeddedFiles(): Promise<EmbeddedFiles>;
+  /**
+   * An embedded file's bytes, by its place in `embeddedFiles()`'s list: read only when a person asks, and never past
+   * PDF_EMBEDDED_FILE_MAX_BYTES. Never opened or run here.
+   */
+  embeddedFile(at: number): Promise<EmbeddedFileRead>;
   /** The file's PDF layers, in the file's order; none where it has none. */
   layers(): Promise<readonly PdfLayer[]>;
   /**
