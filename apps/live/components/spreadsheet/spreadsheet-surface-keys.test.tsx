@@ -56,6 +56,18 @@ describe('useSpreadsheetSurfaceKeys', () => {
     expect(step).toHaveBeenCalledWith(-1);
     result.current.focusSummary();
     expect(document.activeElement).toBe(slot.querySelector('button'));
+    // D137: out of the grid, to the toolbar's tab stop.
+    const toolbar = document.createElement('div');
+    toolbar.dataset.region = 'toolbar';
+    toolbar.innerHTML = '<button tabindex="0">Undo</button>';
+    document.body.appendChild(toolbar);
+    vi.spyOn(HTMLElement.prototype, 'getClientRects').mockReturnValue([
+      {},
+    ] as unknown as DOMRectList);
+    result.current.leaveGrid();
+    expect(document.activeElement).toBe(toolbar.querySelector('button'));
+    vi.restoreAllMocks();
+    toolbar.remove();
     slot.remove();
   });
 
@@ -64,6 +76,7 @@ describe('useSpreadsheetSurfaceKeys', () => {
     expect(() => {
       result.current.stepSheet(1);
       result.current.focusSummary();
+      result.current.leaveGrid();
     }).not.toThrow();
   });
 });

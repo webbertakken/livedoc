@@ -12,6 +12,7 @@ export const EDITOR_REGIONS = [
   'header',
   'menubar',
   'toolbar',
+  'formulabar',
   'palette',
   'left',
   'canvas',
@@ -64,15 +65,26 @@ export function nextRegion(
   return regions[(at + (back ? -1 : 1) + regions.length) % regions.length]!;
 }
 
-/** F6 and Shift+F6 cycle focus through the regions on screen. Off inside a modal dialog, whose trap keeps focus. */
+/** The way a key moves between regions: F6 and Ctrl+Alt+. on, Shift+F6 and Ctrl+Alt+, back; null for any other key.
+ *  AltGr (Ctrl+Alt on Windows) types characters, so a key composed with it never moves. */
+export function regionStep(e: KeyboardEvent): 'on' | 'back' | null {
+  if (e.key === 'F6' && !e.altKey && !e.ctrlKey && !e.metaKey) return e.shiftKey ? 'back' : 'on';
+  if (!e.ctrlKey || !e.altKey || e.shiftKey || e.metaKey || e.getModifierState('AltGraph'))
+    return null;
+  return e.code === 'Period' ? 'on' : e.code === 'Comma' ? 'back' : null;
+}
+
+/** F6 and Shift+F6 (or Ctrl+Alt+. and ,) cycle focus through the regions on screen. Off inside a modal dialog. */
 export function useRegionCycle(enabled = true): void {
   useEffect(() => {
     if (!enabled) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'F6' || e.altKey || e.ctrlKey || e.metaKey) return;
+      const step = regionStep(e);
+      if (!step) return;
       if (document.activeElement?.closest('[aria-modal="true"]')) return;
+      const back = step === 'back';
       const regions = shownRegions(document);
-      let next = nextRegion(regions, document.activeElement, e.shiftKey);
+      let next = nextRegion(regions, document.activeElement, back);
       // A region with nothing to focus is passed over (at most once round).
       for (let i = 0; next && i < regions.length; i++) {
         const target = regionTarget(next);
@@ -81,7 +93,7 @@ export function useRegionCycle(enabled = true): void {
           target.focus();
           return;
         }
-        next = nextRegion(regions, next, e.shiftKey);
+        next = nextRegion(regions, next, back);
       }
     };
     window.addEventListener('keydown', onKey);

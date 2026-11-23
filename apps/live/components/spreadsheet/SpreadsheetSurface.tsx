@@ -312,16 +312,21 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
         c.setFocused(false);
       }}
     >
-      <SheetFormulaBar actions={actions} input={input} />
-      <SheetGrid
-        elementId={`sheet-${c.sheet.id}`}
-        actions={actions}
-        input={input}
-        pointRef={pointRef}
-        peers={bridge.peers}
-        zoom={zoom}
-        surfaceKeys={surfaceKeys}
-      />
+      {/* The surface's areas, for F6 and Ctrl+Alt+. (grid-and-editing.md "Moving around"). */}
+      <div data-region="formulabar">
+        <SheetFormulaBar actions={actions} input={input} />
+      </div>
+      <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
+        <SheetGrid
+          elementId={`sheet-${c.sheet.id}`}
+          actions={actions}
+          input={input}
+          pointRef={pointRef}
+          peers={bridge.peers}
+          zoom={zoom}
+          surfaceKeys={surfaceKeys}
+        />
+      </div>
       <SheetMenus actions={actions} />
       <SheetBarSummary />
     </div>

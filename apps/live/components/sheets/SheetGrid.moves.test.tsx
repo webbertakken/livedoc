@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // The grid's moves (docs/specs/029-sheets/grid-and-editing.md "Moving around", "Selection"; surface.md D136): Shift
 // grows Home, End and the pages, Alt pages sideways, Ctrl+Backspace brings the active cell back, Ctrl+Shift+Space
-// selects the sheet, and the workbook's keys reach the surface: the next and previous sheet, the summary.
+// selects the sheet, and the workbook's keys reach the surface: the next and previous sheet, the summary, the toolbar.
 import { act, fireEvent } from '@testing-library/react';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { gridScrolls, installGridDom, mountGrid } from './sheet-grid-test-utils';
@@ -31,12 +31,14 @@ const select = (h: Mounted, r: number, c: number): void => {
     }),
   );
 };
-const surface = (): SheetSurfaceKeys & { steps: number[]; summaries: number } => {
+const surface = (): SheetSurfaceKeys & { steps: number[]; summaries: number; leaves: number } => {
   const out = {
     steps: [] as number[],
     summaries: 0,
+    leaves: 0,
     stepSheet: (step: -1 | 1) => void out.steps.push(step),
     focusSummary: () => void (out.summaries += 1),
+    leaveGrid: () => void (out.leaves += 1),
   };
   return out;
 };
@@ -102,6 +104,9 @@ describe('the workbook keys', () => {
     expect(keys.steps).toEqual([-1, 1, -1, 1]);
     key(h, { key: 'Q', code: 'KeyQ', altKey: true, shiftKey: true });
     expect(keys.summaries).toBe(1);
+    // D137: Ctrl+Alt+Shift+M leaves the grid for the toolbar.
+    key(h, { key: 'M', code: 'KeyM', ctrlKey: true, altKey: true, shiftKey: true });
+    expect(keys.leaves).toBe(1);
   });
 
   it('open a dropdown before a sheet, and do nothing in a Plan Sheet', async () => {
@@ -127,6 +132,7 @@ describe('the workbook keys', () => {
     const plain = await mountGrid();
     key(plain, { key: 'ArrowUp', altKey: true });
     key(plain, { key: 'Q', code: 'KeyQ', altKey: true, shiftKey: true });
+    key(plain, { key: 'M', code: 'KeyM', ctrlKey: true, altKey: true, shiftKey: true });
     expect(plain.c().selection.active).toEqual({ r: 0, c: 0 });
   });
 });

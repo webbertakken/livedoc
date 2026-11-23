@@ -64,7 +64,10 @@ export function SheetBar({
     list.current?.querySelector<HTMLButtonElement>(`[data-sheet-tab="${next.id}"]`)?.focus();
   };
   return (
-    <div className="flex h-[38px] shrink-0 items-stretch border-t border-slate-200 bg-slate-50 px-2 dark:border-slate-700 dark:bg-slate-900">
+    <div
+      data-region="tabs"
+      className="flex h-[38px] shrink-0 items-stretch border-t border-slate-200 bg-slate-50 px-2 dark:border-slate-700 dark:bg-slate-900"
+    >
       <div
         ref={list}
         role="tablist"

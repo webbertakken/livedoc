@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { nextRegion, shownRegions, useRegionCycle } from './useRegionCycle';
+import { nextRegion, regionStep, shownRegions, useRegionCycle } from './useRegionCycle';
 
 // docs/specs/004-interface-design/canvas-accessibility.md "F6 moves between regions". jsdom lays nothing out, so a
 // region counts as on screen unless it is hidden.
@@ -107,7 +107,7 @@ describe('F6 between regions', () => {
 
 // A kind outside the canvas joins the cycle with the office shell's parts (canvas-accessibility.md, office-shell.md
 // "Behaviour").
-function OfficeEditor({ outline = false }: { outline?: boolean }) {
+function OfficeEditor({ outline = false, sheet = false }: { outline?: boolean; sheet?: boolean }) {
   return (
     <>
       <header data-region="header">
@@ -120,6 +120,11 @@ function OfficeEditor({ outline = false }: { outline?: boolean }) {
           <button tabIndex={0}>Undo</button>
         </div>
       </header>
+      {sheet ? (
+        <div data-region="formulabar">
+          <input aria-label="Name box" />
+        </div>
+      ) : null}
       {outline ? (
         <aside data-region="left">
           <button>Heading</button>
@@ -155,5 +160,74 @@ describe('F6 through the office shell', () => {
     press();
     press();
     expect(focused()).toBe('Document body');
+  });
+});
+
+// grid-and-editing.md "Moving around": a spreadsheet's formula bar is an area of its own; Ctrl+Alt+. and , move too.
+describe('the areas of a spreadsheet', () => {
+  it('walks the formula bar after the toolbar, and Ctrl+Alt+. and , move on and back', () => {
+    render(<OfficeEditor sheet />);
+    renderHook(() => useRegionCycle());
+    const ctrlAlt = (code: string) =>
+      fireEvent.keyDown(window, {
+        key: code === 'Period' ? '.' : ',',
+        code,
+        ctrlKey: true,
+        altKey: true,
+      });
+    for (let i = 0; i < 4; i++) ctrlAlt('Period');
+    expect(focused()).toBe('Name box');
+    ctrlAlt('Period');
+    expect(focused()).toBe('Document body');
+    ctrlAlt('Comma');
+    expect(focused()).toBe('Name box');
+    // Any other key, and a cycle turned off, leave focus where it is.
+    fireEvent.keyDown(window, { key: 'a' });
+    expect(focused()).toBe('Name box');
+  });
+
+  it('passes over a region with nothing to focus, and finds none among no regions', () => {
+    render(
+      <>
+        <div data-region="toolbar">
+          <button disabled>Undo</button>
+        </div>
+        <div data-region="formulabar">
+          <input aria-label="Name box" />
+        </div>
+      </>,
+    );
+    renderHook(() => useRegionCycle());
+    press();
+    expect(focused()).toBe('Name box');
+    expect(nextRegion([], null, false)).toBeNull();
+  });
+
+  it('does nothing while turned off', () => {
+    render(<OfficeEditor sheet />);
+    renderHook(() => useRegionCycle(false));
+    press();
+    expect(document.activeElement).toBe(document.body);
+  });
+});
+
+describe('regionStep', () => {
+  const key = (init: KeyboardEventInit, altGraph = false) => {
+    const e = new KeyboardEvent('keydown', init);
+    vi.spyOn(e, 'getModifierState').mockReturnValue(altGraph);
+    return e;
+  };
+  it('reads F6, Ctrl+Alt+. and Ctrl+Alt+, and leaves every other key', () => {
+    expect(regionStep(key({ key: 'F6' }))).toBe('on');
+    expect(regionStep(key({ key: 'F6', shiftKey: true }))).toBe('back');
+    expect(regionStep(key({ key: 'F6', ctrlKey: true }))).toBeNull();
+    expect(regionStep(key({ code: 'Period', ctrlKey: true, altKey: true }))).toBe('on');
+    expect(regionStep(key({ code: 'Comma', ctrlKey: true, altKey: true }))).toBe('back');
+    expect(regionStep(key({ code: 'KeyM', ctrlKey: true, altKey: true }))).toBeNull();
+    expect(regionStep(key({ code: 'Period', ctrlKey: true }))).toBeNull();
+    expect(
+      regionStep(key({ code: 'Period', ctrlKey: true, altKey: true, shiftKey: true })),
+    ).toBeNull();
+    expect(regionStep(key({ code: 'Period', ctrlKey: true, altKey: true }, true))).toBeNull();
   });
 });

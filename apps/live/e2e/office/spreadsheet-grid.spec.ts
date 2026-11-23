@@ -170,3 +170,23 @@ test('the keyboard moves across the sheet and between sheets', async ({
   await expect(page.getByRole('tab', { name: 'Sheet1', selected: true })).toBeVisible();
   expectNoPageErrors(pageErrors);
 });
+
+test("focus moves between the surface's areas", async ({ page, pageErrors }) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const grid = page.getByRole('grid');
+  await expect(grid).toBeFocused();
+  // On from the grid: the sheet bar's open sheet, then back past the grid: the formula bar's name box.
+  await page.keyboard.press('F6');
+  await expect(page.getByRole('tab', { name: 'Sheet1', selected: true })).toBeFocused();
+  await page.keyboard.press('Shift+F6');
+  await expect(grid).toBeFocused();
+  await page.keyboard.press('Control+Alt+Comma');
+  await expect(page.getByRole('textbox', { name: 'Name box' })).toBeFocused();
+  await page.keyboard.press('Control+Alt+Period');
+  await expect(grid).toBeFocused();
+  // D137: out of the grid to the toolbar.
+  await page.keyboard.press('Control+Alt+Shift+KeyM');
+  await expect(page.getByRole('toolbar').locator(':focus')).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});
