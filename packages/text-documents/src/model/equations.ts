@@ -196,26 +196,31 @@ function nodeOf(value: unknown): MathNode | undefined {
   }
 }
 
+/** The names of the rows a node holds, in reading order: the order the caret walks them. */
+const ROW_KEYS: Readonly<Record<string, readonly string[]>> = {
+  fraction: ['numerator', 'denominator'],
+  scripts: ['base', 'sub', 'sup'],
+  root: ['index', 'radicand'],
+  'large-operator': ['lower', 'upper', 'body'],
+  fence: ['body'],
+  accent: ['base'],
+  'under-over': ['base', 'under', 'over'],
+};
+
+/** The rows a node holds, by name, in reading order; a token holds none. */
+export function childRowKeys(node: MathNode): string[] {
+  const record = node as unknown as Record<string, unknown>;
+  return (ROW_KEYS[node.kind] ?? []).filter((key) => record[key] !== undefined);
+}
+
 /** The rows a node holds, in reading order. */
-export function childRows(node: MathNode): MathRow[] {
-  switch (node.kind) {
-    case 'fraction':
-      return [node.numerator, node.denominator];
-    case 'scripts':
-      return [node.base, node.sub, node.sup].filter((r): r is MathRow => r !== undefined);
-    case 'root':
-      return [node.index, node.radicand].filter((r): r is MathRow => r !== undefined);
-    case 'large-operator':
-      return [node.lower, node.upper, node.body];
-    case 'fence':
-      return [node.body];
-    case 'accent':
-      return [node.base];
-    case 'under-over':
-      return [node.base, node.under, node.over].filter((r): r is MathRow => r !== undefined);
-    default:
-      return [];
-  }
+export const childRows = (node: MathNode): MathRow[] =>
+  childRowKeys(node).map((key) => (node as unknown as Record<string, MathRow>)[key]!);
+
+/** The node with one of its rows, by its place in reading order, replaced. */
+export function withChildRow(node: MathNode, index: number, row: MathRow): MathNode {
+  const key = childRowKeys(node)[index];
+  return key === undefined ? node : { ...node, [key]: row };
 }
 
 function sizeOf(row: MathRow): { nodes: number; depth: number } {
@@ -286,6 +291,13 @@ export const Equations = {
     const { nodes, depth } = sizeOf(row);
     return nodes <= EQUATION_MAX_NODES && depth <= EQUATION_MAX_DEPTH;
   },
+  /** A typed character as its token: a digit a number, a letter an identifier, anything else an operator. */
+  token: (char: string): MathToken =>
+    /^\d$/u.test(char)
+      ? { kind: 'number', text: char }
+      : /^\p{L}$/u.test(char)
+        ? { kind: 'identifier', text: char }
+        : { kind: 'operator', text: char },
   /** The linear form, as copied text reads it: `a/b`, `x^2`, `√z`, after UnicodeMath. */
   linear,
   /**
@@ -311,3 +323,10 @@ export const Equations = {
     return out;
   },
 } as const;
+
+/** One step down into a structure: the node's place in its row, and which of its rows, in reading order. */
+export type MathStep = { readonly node: number; readonly row: number };
+
+/** A row's place as text: its steps from the equation's row, `node.row` each, joined by `/`; the equation's own is ''. */
+export const mathRowId = (path: readonly MathStep[]): string =>
+  path.map((s) => `${s.node}.${s.row}`).join('/');
