@@ -121,6 +121,11 @@ import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
 import { equationActions } from '@/lib/text-document/text-document-equation-insert';
+import {
+  newEquationFromToolbar,
+  writeFromEquationToolbar,
+} from '@/lib/text-document/text-document-equation-toolbar';
+import { TextDocumentEquationToolbar } from './TextDocumentEquationToolbar';
 import { placedPicturesPlugin } from '@/lib/text-document/text-document-picture-placed-plugin';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import {
@@ -134,7 +139,9 @@ import { useTextDocumentTextWidth } from '@/lib/text-document/useTextDocumentTex
 import {
   NON_PRINTING_TOGGLE,
   PRINT_LAYOUT_TOGGLE,
+  EQUATION_TOOLBAR_TOGGLE,
   RULER_TOGGLE,
+  showViewToggle,
   useTextDocumentViewToggle,
 } from '@/lib/text-document/useTextDocumentViewToggle';
 import { nonPrintingPlugin, setNonPrinting } from '@/lib/text-document/text-document-non-printing';
@@ -694,10 +701,15 @@ export function TextDocumentSurface({
     () => horizontalLineActions(editorView, bodyWrites),
     [editorView, bodyWrites],
   );
-  // Insert > Symbols > Equation (objects.md "Equations in the editor"), in the body.
+  // Insert > Symbols > Equation and View > Show equation toolbar (objects.md "Equations in the editor"), in the body;
+  // an equation put in turns the toolbar on.
+  const equationToolbar = useTextDocumentViewToggle(EQUATION_TOOLBAR_TOGGLE);
   const equationInsert = useMemo(
-    () => equationActions(editorView, bodyWrites),
-    [editorView, bodyWrites],
+    () => ({
+      ...equationActions(editorView, bodyWrites, () => showViewToggle(EQUATION_TOOLBAR_TOGGLE)),
+      ...(bodyWrites ? equationToolbar.actions : {}),
+    }),
+    [editorView, bodyWrites, equationToolbar.actions],
   );
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, writes);
@@ -901,6 +913,12 @@ export function TextDocumentSurface({
       ) : null}
       {clipboard.notice}
       {pictures.notice}
+      {equationToolbar.shown && bodyWrites && state === 'ready' && editorView ? (
+        <TextDocumentEquationToolbar
+          onNew={() => newEquationFromToolbar(editorView)}
+          onPick={(node) => writeFromEquationToolbar(editorView, node)}
+        />
+      ) : null}
       <OfficePanelLayout
         left={
           panels.open.left === 'outline' ? (

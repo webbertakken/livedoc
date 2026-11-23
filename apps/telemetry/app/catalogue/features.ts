@@ -1360,8 +1360,15 @@ export const TEXT_DOCUMENT_RULER_TOGGLED = chart(
   'UI',
   'Toggled',
   'Text Document View Switches',
-  "Someone showed or hid a text document's ruler, its non-printing characters or its print layout (View menu).",
-  { types: ['TextDocumentRuler', 'TextDocumentNonPrinting', 'TextDocumentPrintLayout'] },
+  "Someone showed or hid a text document's ruler, its non-printing characters, its print layout or its equation toolbar (View menu).",
+  {
+    types: [
+      'TextDocumentRuler',
+      'TextDocumentNonPrinting',
+      'TextDocumentPrintLayout',
+      'TextDocumentEquationToolbar',
+    ],
+  },
 );
 
 // A person's pageless text width chosen (docs/specs/034-text-documents/page-layout.md "Pageless"): View > Text width.

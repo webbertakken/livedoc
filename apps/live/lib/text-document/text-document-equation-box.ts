@@ -43,7 +43,7 @@ function leave(view: EditorView, pos: number, side: 'before' | 'after'): void {
 }
 
 /** Writes the equation's next maths and caret, its maths only when the step changed them; 'remove' takes it out. */
-function write(
+export function writeEquation(
   view: EditorView,
   pos: number,
   from: MathEdit,
@@ -75,18 +75,18 @@ function boxKey(view: EditorView, box: NonNullable<EquationBox>, event: Keyboard
     case 'ArrowRight': {
       const caret = EquationEditing.right(edit.math, edit.caret);
       if (caret === 'after') leave(view, box.pos, 'after');
-      else write(view, box.pos, edit, { ...edit, caret });
+      else writeEquation(view, box.pos, edit, { ...edit, caret });
       return true;
     }
     case 'ArrowLeft': {
       const caret = EquationEditing.left(edit.math, edit.caret);
       if (caret === 'before') leave(view, box.pos, 'before');
-      else write(view, box.pos, edit, { ...edit, caret });
+      else writeEquation(view, box.pos, edit, { ...edit, caret });
       return true;
     }
     case 'ArrowUp':
     case 'ArrowDown':
-      write(view, box.pos, edit, {
+      writeEquation(view, box.pos, edit, {
         ...edit,
         caret: EquationEditing.vertical(
           edit.math,
@@ -96,16 +96,16 @@ function boxKey(view: EditorView, box: NonNullable<EquationBox>, event: Keyboard
       });
       return true;
     case 'Backspace':
-      write(view, box.pos, edit, EquationEditing.backspace(edit));
+      writeEquation(view, box.pos, edit, EquationEditing.backspace(edit));
       return true;
     case 'Delete':
-      write(view, box.pos, edit, EquationEditing.delete(edit));
+      writeEquation(view, box.pos, edit, EquationEditing.delete(edit));
       return true;
     default:
       break;
   }
   if (event.ctrlKey || event.metaKey || event.altKey || [...event.key].length !== 1) return false;
-  write(view, box.pos, edit, EquationEditing.type(edit, event.key));
+  writeEquation(view, box.pos, edit, EquationEditing.type(edit, event.key));
   return true;
 }
 

@@ -28,8 +28,15 @@ export const insertEquation: Command = (state, dispatch) => {
   return true;
 };
 
-/** Insert > Symbols > Equation, for whoever may edit the body; nothing for anyone else (dimmed). */
-export function equationActions(view: EditorView | null, canEdit: boolean): OfficeActions {
+/**
+ * Insert > Symbols > Equation, for whoever may edit the body; nothing for anyone else (dimmed). `onInserted`: the
+ * equation toolbar turned on.
+ */
+export function equationActions(
+  view: EditorView | null,
+  canEdit: boolean,
+  onInserted: () => void = () => {},
+): OfficeActions {
   if (!canEdit) return {};
   return {
     [EQUATION_ITEM]: {
@@ -39,6 +46,7 @@ export function equationActions(view: EditorView | null, canEdit: boolean): Offi
         if (insertEquation(view.state, view.dispatch)) {
           track('Element', 'Added', 'TextDocumentEquation');
           debugLog('[text-document] equation inserted');
+          onInserted();
         }
         view.focus();
       },

@@ -159,3 +159,39 @@ test('an equation is inserted from the menu and written in its box', async ({
   await expect(equation).not.toHaveAttribute('data-editing', 'true');
   expectNoPageErrors(pageErrors);
 });
+
+// objects.md "Equations in the editor": Insert > Equation turns the equation toolbar on; a menu's symbol and a Math
+// operators structure write into the equation being written; New equation puts in another; the View switch hides it.
+test('the equation toolbar writes symbols and structures', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.focus();
+  await page.keyboard.type('Sum ');
+  const toolbar = page.getByRole('toolbar', { name: 'Equation toolbar' });
+  await expect(toolbar).toHaveCount(0);
+
+  await (await officeMenuItem(page, ['Insert', 'Symbols', 'Equation'])).click();
+  await expect(toolbar).toBeVisible();
+  const equation = body.locator('.text-document-equation').first();
+  await toolbar.getByRole('button', { name: 'Greek letters' }).click();
+  await page.getByRole('button', { name: 'theta', exact: true }).click();
+  await toolbar.getByRole('button', { name: 'Math operators' }).click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('equation-toolbar-operators.png') });
+  await page.getByRole('button', { name: 'frac', exact: true }).click();
+  // The writing kept its focus: typing goes into the fraction's numerator.
+  await page.keyboard.type('1');
+  await expect(equation.locator('mi', { hasText: 'θ' })).toHaveCount(1);
+  await expect(equation.locator('mfrac mn', { hasText: '1' })).toHaveCount(1);
+  await page.keyboard.press('Escape');
+
+  await toolbar.getByRole('button', { name: 'New equation' }).click();
+  await expect(body.locator('.text-document-equation')).toHaveCount(2);
+
+  await (await officeMenuItem(page, ['View', 'Show equation toolbar'])).click();
+  await expect(toolbar).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});
