@@ -28,6 +28,7 @@ import {
   insertAxis,
   mergeRange,
   moveAxis,
+  moveCells,
   moveSelection,
   parseFormula,
   resizeAxis,
@@ -332,6 +333,16 @@ export function useSheetActions() {
         const w = moveAxis(c.sheet, axis, from, to, before);
         if (w && 'refused' in w) c.toast(w.refused);
         return !!w && !('refused' in w) && c.write(w, axis === 'r' ? 'Rows' : 'Columns');
+      },
+      // A selection dragged by its border to `to` (grid-and-editing.md "Fill and move"): moved with every
+      // reference following, or copied; the landing is selected. A merge it would split refuses it (D146).
+      moveCells: (source: GridRange, to: GridRange, copy: boolean): void => {
+        const res = moveCells(c.workbook, c.sheet.id, source, { r: to.r1, c: to.c1 }, copy);
+        if (!res) return;
+        if ('refused' in res) return c.toast(res.refused);
+        if (!c.writeAll(res.edits, 'Move')) return;
+        const r = res.range;
+        c.setSelection({ ranges: [r], active: { r: r.r1, c: r.c1 }, anchor: { r: r.r1, c: r.c1 } });
       },
       // A line's size as drawn: a row's is its fit when it is automatic (sheet.md "Row height").
       sizeOf: (axis: 'r' | 'c', p: number) => {

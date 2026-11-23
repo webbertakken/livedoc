@@ -190,3 +190,70 @@ test("focus moves between the surface's areas", async ({ page, pageErrors }) => 
   await expect(page.getByRole('toolbar').locator(':focus')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
+
+// Moving cells by their border (grid-and-editing.md "Fill and move", D145): the hand over the edge, the landing
+// outlined, the cells moved with the formula reading them following, and Ctrl at the drop copying them.
+test('a selection dragged by its border moves its cells, Ctrl copies', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  const formulaBar = page.getByRole('textbox', { name: 'Formula bar' }).first();
+  const go = async (ref: string) => {
+    await nameBox.fill(ref);
+    await nameBox.press('Enter');
+  };
+  await go('A1');
+  for (const typed of ['2', '3']) {
+    await page.keyboard.type(typed);
+    await page.keyboard.press('Enter');
+  }
+  await go('C1');
+  await page.keyboard.type('=A1+A2');
+  await page.keyboard.press('Enter');
+  await go('A1:A2');
+
+  // A1's left edge, a pixel inside it; dropped on D3's middle, grabbed by its first row.
+  const a1 = await cellCentre(page, 1, 1);
+  const letterA = (await page.locator('[role="columnheader"][aria-colindex="1"]').boundingBox())!;
+  const edge = { x: letterA.x + 2, y: a1.y };
+  const d3 = await cellCentre(page, 4, 3);
+  await page.mouse.move(edge.x, edge.y);
+  await expect(page.locator('[data-sheet-grid] > div > div').first()).toHaveCSS('cursor', 'grab');
+  await page.mouse.down();
+  await page.mouse.move(d3.x - 20, d3.y, { steps: 4 });
+  await page.mouse.move(d3.x, d3.y, { steps: 2 });
+  await page.screenshot({ path: test.info().outputPath('move-drag.png'), animations: 'disabled' });
+  await page.mouse.up();
+  await expect(nameBox).toHaveValue('D3:D4');
+  await go('C1');
+  await expect(formulaBar).toHaveValue('=D3+D4');
+  await go('A1');
+  await expect(formulaBar).toHaveValue('');
+  await go('D3');
+  await expect(formulaBar).toHaveValue('2');
+
+  // Ctrl at the drop copies D3:D4 to F3:F4, leaving them where they are.
+  await go('D3:D4');
+  const d3Now = await cellCentre(page, 4, 3);
+  const letterD = (await page.locator('[role="columnheader"][aria-colindex="4"]').boundingBox())!;
+  const f3 = await cellCentre(page, 6, 3);
+  await page.mouse.move(letterD.x + 2, d3Now.y);
+  await page.mouse.down();
+  await page.mouse.move(f3.x, f3.y, { steps: 6 });
+  await page.keyboard.down('Control');
+  await page.mouse.up();
+  await page.keyboard.up('Control');
+  await expect(nameBox).toHaveValue('F3:F4');
+  await page.screenshot({
+    path: test.info().outputPath('move-copied.png'),
+    animations: 'disabled',
+  });
+  await go('D4');
+  await expect(formulaBar).toHaveValue('3');
+  await go('F4');
+  await expect(formulaBar).toHaveValue('3');
+  expectNoPageErrors(pageErrors);
+});

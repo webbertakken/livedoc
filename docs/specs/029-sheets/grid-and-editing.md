@@ -93,7 +93,14 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 - Ctrl+D fills down, Ctrl+R right, Ctrl+Enter the range.
 - **Smart Fill**: when a column's typed values follow a pattern of a neighbour, the grid offers to fill the rest
   (Ctrl+Enter accepts; a grey preview first).
-- Dragging a selection's border moves its cells (references to them follow); Ctrl while dropping copies.
+- Dragging a selection's border moves its cells (references to them follow); Ctrl (⌥ on Apple devices) while
+  dropping copies them, formulas shifting as a paste shifts them.
+  - A mouse grabs one range by its edge, never at the fill handle, under a hand; the drag outlines where the block
+    lands, kept inside the grid, and what it lands on is replaced without asking, one undo step (default, D145).
+  - Merges wholly inside the block go with it, merges wholly under where it lands go; a move that would split a
+    merge is refused with "Unmerge the cells first: moving these cells would split merged cells." (default, D146).
+  - An Editor and a Participant move cells, a Participant's landing as its values as a cut does; carrying merges
+    is an Editor's; a Viewer has no grab (default, D147).
 
 ## Clipboard
 

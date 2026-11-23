@@ -582,6 +582,7 @@ export const SHEET_CHANGE_KINDS = [
   'Title',
   'Clear',
   'Shift',
+  'Move',
   'Settings',
   'Setup',
   'Name',
