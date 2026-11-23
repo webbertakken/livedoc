@@ -96,6 +96,7 @@ const EXPECTED: Record<string, unknown[]> = {
   'absolute-relative-references': ['anchors'],
   find: [{ kind: 'find', replace: false }],
   'find-and-replace': [{ kind: 'find', replace: true }],
+  'fill-range': [{ kind: 'fillRange' }],
   'fill-down': [{ kind: 'fill', dir: 'down' }],
   'fill-right': [{ kind: 'fill', dir: 'right' }],
   'paste-values-only': [{ kind: 'pasteValues' }],

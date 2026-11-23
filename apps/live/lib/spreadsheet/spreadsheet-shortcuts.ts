@@ -81,7 +81,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Enter',
     '⌘+Enter',
     'Ctrl+Enter',
-    'specified',
+    'surface',
   ),
   row('fill-down', 'Common actions', 'Fill down', 'Ctrl+D', '⌘+D', 'Ctrl+D', 'surface'),
   row('fill-right', 'Common actions', 'Fill right', 'Ctrl+R', '⌘+R', 'Ctrl+R', 'surface'),

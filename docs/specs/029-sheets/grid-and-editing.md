@@ -90,9 +90,26 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 
 - **Fill handle**: dragging it copies the cells, or continues a series (numbers by their step, dates by day, month
   or year, `Item 1` → `Item 2`, weekday and month names); Ctrl while dragging switches between copy and series.
-- Ctrl+D fills down, Ctrl+R right, Ctrl+Enter the range.
+- Ctrl+D fills down, Ctrl+R right, Ctrl+Enter the range: in an edit it saves the input into every selected cell;
+  outside one it accepts a Smart Fill offer, and otherwise does nothing (default, D151).
 - **Smart Fill**: when a column's typed values follow a pattern of a neighbour, the grid offers to fill the rest
   (Ctrl+Enter accepts; a grey preview first).
+  - It looks when a typed text (no formula) is saved in a cell with text beside it: its **sources** are the filled
+    columns next to it on that row, up to three each side; its **block** is the run of rows around it with
+    anything in the sources, up to 5,000 (default, D148).
+  - The column's texts in the block are the **examples**, at least two; the block's first row is dropped as a
+    header when the rest fit only without it; a formula in the column's block offers nothing (default, D148).
+  - A **pattern** joins pieces of one row: fixed text, and a source's text whole, its first letter, a word split by
+    a space or one of `, . @ - _ / ; :` counted from either end, the first letter of a space-split word, or what
+    lies before or after the first or last such mark, each as is, in lower, upper or title case (default, D149).
+  - The pattern with the fewest pieces that gives every example is offered (pieces from sources before fixed text);
+    a row it cannot give (a missing word or mark) is left empty, and with no row to fill nothing is offered
+    (default, D149).
+  - The offer shows each text in grey in its empty cell, and a card by the edited cell: **Smart Fill**, "Fill N
+    cells with the pattern", **Accept** (Ctrl+Enter) and **Dismiss** (Escape); any other key in the grid, a press on
+    its cells or another edit ends it (default, D150).
+  - Accepting writes the texts as if typed into the cells still empty, one undo step; an Editor and a Participant get offers, a Viewer never
+    (default, D150).
 - Dragging a selection's border moves its cells (references to them follow); Ctrl (⌥ on Apple devices) while
   dropping copies them, formulas shifting as a paste shifts them.
   - A mouse grabs one range by its edge, never at the fill handle, under a hand; the drag outlines where the block

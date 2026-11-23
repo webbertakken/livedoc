@@ -5,6 +5,7 @@
 // through the controller's write. One place, so a toolbar button and its shortcut can never differ.
 import { chartRangeOf, chartSizeOf, newChartAnchor, NOTHING_TO_CHART } from './sheet-charts';
 import { useMemo } from 'react';
+import { acceptSmartFill, offerSmartFill } from './sheet-smart-fill';
 import type { ChartType } from '@livedoc/document';
 import {
   PARSE_FAILURE_COPY,
@@ -168,7 +169,11 @@ export function useSheetActions() {
           // An edit ends the copied range's marquee, as in Sheets and Excel (what the clipboard holds stays).
           c.setMarquee(null);
           const formula = e.draft.startsWith('=');
-          if (c.write(result.write, formula ? 'Formula' : 'Cell')) firstUse(e.draft);
+          const saved = c.write(result.write, formula ? 'Formula' : 'Cell');
+          if (saved) firstUse(e.draft);
+          // A typed text in one cell may start a Smart Fill offer (D148); any other edit ends one.
+          if (saved && !formula && !all) offerSmartFill(c, { r: e.r, c: e.c });
+          else c.setSmartFill(null);
         }
         c.setEditing(null);
         if (move !== 'none' && !all) {
@@ -344,6 +349,9 @@ export function useSheetActions() {
         const r = res.range;
         c.setSelection({ ranges: [r], active: { r: r.r1, c: r.c1 }, anchor: { r: r.r1, c: r.c1 } });
       },
+      // Smart Fill's offer taken (D150, D151); false when none stands.
+      acceptSmartFill: () => acceptSmartFill(c),
+      dismissSmartFill: () => c.setSmartFill(null),
       // A line's size as drawn: a row's is its fit when it is automatic (sheet.md "Row height").
       sizeOf: (axis: 'r' | 'c', p: number) => {
         return axis === 'r'

@@ -457,6 +457,8 @@ A finger has no hover and no right button, and its drag pans the cells, so selec
 - Dragging the fill handle back into the selection clears the cells it leaves.
 - Dragging a selection's border moves its cells, or copies them with Ctrl (⌥ on Apple devices) held at the drop
   ([Fill and move](grid-and-editing.md#fill-and-move)).
+- Smart Fill offers the rest of a column whose typed texts follow a pattern of the columns beside it; Ctrl+Enter
+  accepts ([Fill and move](grid-and-editing.md#fill-and-move)).
 
 ### Rows and columns
 
@@ -1018,7 +1020,7 @@ changeset onto one is refused. Its grid takes no input outside Plan, and a doubl
 - `Element · Added · PlanSheet` (placed from the palette or a CSV drop).
 - `Plan · Toggled · SheetMaximised` / `SheetRestored`, `SheetFillTabOn` / `SheetFillTabOff`, `SheetFocused`.
 - The `Sheet` category: `Changed` with the kind of change (`Cell`, `Formula`, `Format`, `Rows`, `Columns`, `Merge`,
-  `Freeze`, `Sort`, `Filter`, `Replace`, `Fill`, `Paste`, `Title`, `Clear`, `Shift`, `Move`, `Settings`, `Setup`,
+  `Freeze`, `Sort`, `Filter`, `Replace`, `Fill`, `SmartFill`, `Paste`, `Title`, `Clear`, `Shift`, `Move`, `Settings`, `Setup`,
   `Name`, `Validation`, `ConditionalFormat`: the closed `SHEET_CHANGE_KINDS`), sent once per change, never content; `Imported · Csv`, `Exported · Csv`; `Opened · Find`,
   `Opened · Settings`; `Searched · Function` (the toolbar's Search took someone to a function); `Created` with how a sheet was set up (`Blank`, `Cards`, `Csv`, or a
   template's name without spaces, Setup Sheet above) or `Chart` (Insert Chart only, never a template's chart);

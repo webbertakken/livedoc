@@ -375,6 +375,8 @@ export function useSheetPointer(
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const cc = latest.current;
     if (!cc.interactive) return;
+    // A press on the grid lets a Smart Fill offer go (D150); its card keeps its own presses.
+    if (cc.smartFill) cc.setSmartFill(null);
     // A finger pans, holds or drags the grip (useSheetTouch).
     if (e.pointerType === 'touch') return touch.onTouchDown(e);
     // Panning the cells (useSheetPan): the middle or right button, Space with the left.

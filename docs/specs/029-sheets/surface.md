@@ -197,3 +197,13 @@ Version History (the shell's). Each is specified with its area.
 - **D147** Who moves cells by their border: An Editor and a Participant, a Participant's cells landing as their
   values as a cut's do; a move carrying merges is an Editor's, a Participant told so; a Viewer has no grab
   (default).
+- **D148** Smart Fill's sources and block: Up to three filled columns each side of the typed cell, on its row; rows
+  around it with anything in them, up to 5,000; at least two typed texts, the first row a header when only the
+  rest fit; no offer over a formula (default).
+- **D149** Smart Fill's patterns: Fixed text and a source's whole text, first letter, word or text before or after
+  a mark, in four cases; the fewest pieces wins, sources before fixed text; rows it cannot give stay empty
+  (default).
+- **D150** Smart Fill's offer: Grey texts and a card with Accept (Ctrl+Enter) and Dismiss (Escape), ended by any
+  other key, press or edit; accepted as typed into cells still empty, one undo step; an Editor's and a Participant's (default).
+- **D151** Ctrl+Enter outside an edit: Accepts a Smart Fill offer, else nothing; in an edit it fills the selection
+  (default).
