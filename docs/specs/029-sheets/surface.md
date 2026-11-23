@@ -179,7 +179,7 @@ Version History (the shell's). Each is specified with its area.
 - **D138** A format key while a cell is edited: Runs its item on the cell, as Google's does (default).
 - **D139** Google's keys for Portugal, Italy, Germany and Spain: Not kept; one set of keys for every locale
   (default).
-- **D140** Ctrl+Shift+Enter: Wraps the formula in `ARRAYFORMULA` and keeps the edit open; once only; outside a
-  formula it fills as Ctrl+Enter (default).
+- **D140** Ctrl+Shift+Enter: Wraps the formula in `ARRAYFORMULA` and keeps the edit open; a wrapped formula or
+  any other draft is saved as Ctrl+Enter saves it (default).
 - **D141** Show › Formulas: The person's own view, across the sheets while the page is open, never saved; formula
   cells only, left-aligned (default).

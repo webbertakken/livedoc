@@ -1,10 +1,11 @@
 'use client';
 
 // The keys of a cell being edited, in place or in the formula bar (docs/specs/029-sheets/sheet.md "Editing",
-// "Writing formulas"): Enter, Tab and their Shift forms save and move, Alt+Enter breaks the line, Ctrl/⌘+Enter
-// fills the selection, Escape throws the edit away, F4 cycles a reference's $ parts, and the function list takes
-// the arrows, Tab and Enter while it is open. Typing over a cell, an arrow key ends the edit and moves (or, at a
-// place a reference can go in a formula, points at a cell).
+// "Writing formulas"; grid-and-editing.md "Formulas"): Enter, Tab and their Shift forms save and move, Alt+Enter
+// (Ctrl+Enter on a Mac) breaks the line, Ctrl/⌘+Enter fills the selection, Escape throws the edit away, F4 cycles a
+// reference's $ parts, Ctrl+Shift+Enter wraps the formula in ARRAYFORMULA, and the function list takes the arrows,
+// Tab and Enter while it is open. Typing over a cell, an arrow key ends the edit and moves (or, at a place a reference
+// can go in a formula, points at a cell).
 import { useCallback, useState } from 'react';
 import {
   formatA1,
@@ -14,13 +15,17 @@ import {
   single,
   type Dir,
 } from '@livedoc/sheets';
+import { debugLog } from '@/lib/debug-log';
+import { currentOfficePlatform } from '@/lib/office/office-platform';
 import {
   acceptFunction,
   cycleAbsolute,
   functionMatches,
   insertReference,
   referenceSlot,
+  wrapInArrayFormula,
 } from './formula-assist';
+import { formulaKey } from './formula-keys';
 import { useSheetController } from './sheet-controller';
 import { dropdownMatches } from './rules/dropdown-assist';
 import { toggleFunctionHelp } from './function-help-pref';
@@ -161,9 +166,17 @@ export function useFormulaInput(actions: SheetActions): FormulaInput {
       actions.cancelEdit();
       return;
     }
-    if (e.key === 'Enter' && e.altKey) {
+    const own = formulaKey(e, currentOfficePlatform().platform);
+    if (own === 'lineBreak') {
       e.preventDefault();
       setDraft(`${draft.slice(0, at)}\n${draft.slice(el.selectionEnd ?? at)}`, at + 1, el);
+      return;
+    }
+    const wrapped = own === 'arrayEntry' ? wrapInArrayFormula(draft) : null;
+    if (wrapped) {
+      e.preventDefault();
+      debugLog('[sheet] array entry', { r: editing.r, c: editing.c });
+      setDraft(wrapped.draft, wrapped.caret, el);
       return;
     }
     if (e.key === 'Enter') {
@@ -176,7 +189,7 @@ export function useFormulaInput(actions: SheetActions): FormulaInput {
       commit(e.shiftKey ? 'left' : 'right');
       return;
     }
-    if (e.key === 'F4') {
+    if (own === 'anchors') {
       e.preventDefault();
       const next = cycleAbsolute(draft, at);
       if (next) setDraft(next.draft, next.caret, el);

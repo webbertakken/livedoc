@@ -32,6 +32,8 @@ export type SheetSurfaceKeys = {
   focusSummary: () => void;
   // Ctrl+Alt+Shift+M: focus out of the grid, to the toolbar (D137).
   leaveGrid: () => void;
+  // F4 outside an edit: the person's timeline redoes (grid-and-editing.md "Formulas").
+  redo: () => void;
 };
 
 export function useSheetGridKeys({
@@ -114,6 +116,8 @@ export function useSheetGridKeys({
         return surface?.focusSummary();
       case 'leave':
         return surface?.leaveGrid();
+      case 'redo':
+        return c.canEdit ? surface?.redo() : undefined;
       case 'selectAll':
         return c.setSelection(selectAll(sel, c.grid));
       case 'selectRow':

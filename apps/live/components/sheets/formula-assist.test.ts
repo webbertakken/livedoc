@@ -9,6 +9,7 @@ import {
   referenceSlot,
   refSpans,
   spanRange,
+  wrapInArrayFormula,
 } from './formula-assist';
 
 describe('formula assist', () => {
@@ -101,5 +102,18 @@ describe('formula assist', () => {
     expect(functionMatches('="a su', 6)).toBeNull();
     // A function with no documented arguments has no slot.
     expect(argumentSlot('NOT_A_FUNCTION', 0)).toBe(-1);
+  });
+});
+
+// grid-and-editing.md "Formulas": Ctrl+Shift+Enter wraps the formula in ARRAYFORMULA (D140).
+describe('wrapInArrayFormula', () => {
+  it('wraps a formula once, the caret at its end', () => {
+    expect(wrapInArrayFormula('=A1:A3*2')).toEqual({ draft: '=ARRAYFORMULA(A1:A3*2)', caret: 22 });
+  });
+
+  it('leaves a draft that is no formula, or one wrapped already', () => {
+    expect(wrapInArrayFormula('12')).toBeNull();
+    expect(wrapInArrayFormula('=arrayformula(A1:A3)')).toBeNull();
+    expect(wrapInArrayFormula('= ARRAYFORMULA (A1)')).toBeNull();
   });
 });

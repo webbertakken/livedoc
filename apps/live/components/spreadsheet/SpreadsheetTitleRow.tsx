@@ -11,6 +11,7 @@ import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { OfficeZoom } from '@/components/office/OfficeZoomField';
+import type { ShowFormulas } from '@/components/sheets/show-formulas';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { apiDownloadWorkbook, type DownloadFormat } from '@/lib/api/workbook';
@@ -84,6 +85,7 @@ export function SpreadsheetTitleRow({
   history,
   channel,
   zoom,
+  formulas,
   keyScope,
   onWorkbook,
   pushUndo,
@@ -98,6 +100,8 @@ export function SpreadsheetTitleRow({
   channel: OfficeBindingsChannel;
   // The person's zoom on the grid (surface.md "Grid"): the toolbar's field and View › Zoom.
   zoom: OfficeZoom;
+  // View › Show › Formulas (grid-and-editing.md "Formulas").
+  formulas: ShowFormulas;
   keyScope: RefObject<HTMLElement | null>;
   onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
   pushUndo: (step: ItemUndoStep) => void;
@@ -135,6 +139,7 @@ export function SpreadsheetTitleRow({
     ...grid.actions,
     ...historyBindings(history, level !== 'view'),
     ...zoomBindings(zoom),
+    'show-formulas': { run: formulas.toggle, checked: formulas.shown },
     ...Object.fromEntries(
       DOWNLOAD_ITEMS.map((item) => [
         item.id,

@@ -176,6 +176,7 @@ describe('spreadsheetMenus', () => {
       ...DOWNLOAD_ITEMS.map((i) => i.id),
       ...SHEET_DOWNLOAD_ITEMS.map((i) => i.id),
       'copy',
+      'show-formulas',
       ...ZOOM_ITEMS.map((i) => i.id),
       'search-the-menus',
       'keyboard-shortcuts',

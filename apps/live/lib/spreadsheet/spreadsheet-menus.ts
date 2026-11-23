@@ -190,7 +190,7 @@ const VIEW_MENU = menu('view', 'View', [
   submenu('show', 'Show', [
     built('show-gridlines', 'Gridlines', 'edit', { checkable: 'checkbox' }),
     item('show-formula-bar', 'Formula Bar', 'view', { checkable: 'checkbox' }),
-    item('show-formulas', 'Formulas', 'view', {
+    built('show-formulas', 'Formulas', 'view', {
       checkable: 'checkbox',
       shortcut: 'show-all-formulas',
     }),

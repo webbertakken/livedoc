@@ -166,3 +166,13 @@ describe('Option+Left and Option+Right', () => {
     expect(sheetKey(k('ArrowLeft', { altKey: true, metaKey: true }), 'mac')).toBeNull();
   });
 });
+
+// grid-and-editing.md "Formulas": F4 outside an edit redoes, as Google's does; Alt+F4 is the window's.
+describe('F4', () => {
+  it('redoes, bare only', () => {
+    expect(sheetKey(k('F4'))).toEqual({ kind: 'redo' });
+    expect(sheetKey(k('F4', { altKey: true }))).toBeNull();
+    expect(sheetKey(k('F4', { ctrlKey: true }))).toBeNull();
+    expect(sheetKey(k('F4', { shiftKey: true }))).toBeNull();
+  });
+});

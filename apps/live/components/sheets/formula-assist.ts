@@ -206,3 +206,11 @@ export function argumentSlot(name: string, index: number): number {
   const rep = args.findIndex((a) => a.includes('…'));
   return rep >= 0 ? rep : args.length - 1;
 }
+
+// Ctrl+Shift+Enter (grid-and-editing.md "Formulas", D140): a formula wrapped in ARRAYFORMULA once, its caret at the
+// end; null for a draft that is no formula or is wrapped already.
+export function wrapInArrayFormula(draft: string): { draft: string; caret: number } | null {
+  if (!draft.startsWith('=') || /^=\s*ARRAYFORMULA\s*\(/i.test(draft)) return null;
+  const wrapped = `=ARRAYFORMULA(${draft.slice(1)})`;
+  return { draft: wrapped, caret: wrapped.length };
+}

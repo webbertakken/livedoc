@@ -9,6 +9,7 @@ import { parseShortcut, type KeyStep, type OfficePlatform } from '@/lib/office/s
 import { spreadsheetMenus } from '@/lib/spreadsheet/spreadsheet-menus';
 import { SPREADSHEET_SHORTCUTS } from '@/lib/spreadsheet/spreadsheet-shortcuts';
 import { createOfficeBindingsChannel } from './office-bindings-channel';
+import type { ShowFormulas } from '@/components/sheets/show-formulas';
 import { SpreadsheetTitleRow } from './SpreadsheetTitleRow';
 import { useSpreadsheetZoom } from './spreadsheet-zoom';
 
@@ -23,7 +24,13 @@ const NAVIGATOR_PLATFORM: Record<OfficePlatform, string> = {
 
 afterEach(() => vi.restoreAllMocks());
 
-function Row({ channel }: { channel: ReturnType<typeof createOfficeBindingsChannel> }) {
+function Row({
+  channel,
+  formulas,
+}: {
+  channel: ReturnType<typeof createOfficeBindingsChannel>;
+  formulas: ShowFormulas;
+}) {
   const root = useRef<HTMLDivElement | null>(null);
   const { zoom } = useSpreadsheetZoom();
   return (
@@ -37,6 +44,7 @@ function Row({ channel }: { channel: ReturnType<typeof createOfficeBindingsChann
         history={null}
         channel={channel}
         zoom={zoom}
+        formulas={formulas}
         keyScope={root}
         onWorkbook={undefined}
         pushUndo={vi.fn()}
@@ -53,7 +61,9 @@ function renderOn(platform: OfficePlatform) {
   const actions: OfficeActions = Object.fromEntries(
     items.filter((item) => item.shortcut).map((item) => [item.id, { run: vi.fn() }]),
   );
-  render(<Row channel={channel} />);
+  // Show › Formulas is the surface's own, bound in the title row: its toggle is the item's spy.
+  const toggle = actions['show-formulas']!.run;
+  render(<Row channel={channel} formulas={{ shown: false, toggle }} />);
   act(() => {
     channel.set({ actions, fontSize: 10, setFontSize: () => {} });
   });

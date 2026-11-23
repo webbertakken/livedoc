@@ -11,6 +11,7 @@ import {
   cellLines,
   displayValue,
   formatRuleStyle,
+  inputAsText,
   isPending,
   numberText,
   rangeOptions,
@@ -92,6 +93,8 @@ type CellsProps = {
   filterHead?: { r: number; cols: ReadonlySet<number> } | null;
   // The format rules as the person editing one sees them (its preview, conditional-formatting.md); else the sheet's.
   formatRules?: readonly FormatRule[];
+  // View › Show › Formulas (grid-and-editing.md "Formulas", D141): a formula cell draws its formula as typed.
+  showFormulas?: boolean | undefined;
 };
 
 // The room a dropdown column keeps at its cells' right, so its arrow never covers the value.
@@ -147,21 +150,30 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
       const cell = sheet.cells.get(key);
       const value = workbook.value(sheet.id, r, c);
       const box = cellBox(g, r, c, scroll, m);
-      const shown = displayValue(value, cell?.format, locale);
+      const input = cell?.input;
+      const formula =
+        p.showFormulas && input && 'f' in input
+          ? inputAsText(input, workbook.ctxFor(sheet.id), locale)
+          : null;
+      const shown =
+        formula === null
+          ? displayValue(value, cell?.format, locale)
+          : { text: formula, align: 'l' as const, kind: 'text' as const };
       // A met format rule's style draws over the cell's own.
       const met = fIndex
         ? formatRuleStyle(workbook, sheet.id, r, c, value, shown.text, rulesAt(fIndex, r, c))
         : null;
       const f: CellFormat | undefined = met ? { ...cell?.format, ...met } : cell?.format;
       const vRule = hasRules ? validationRuleAt(sheet.layout, r, c) : null;
-      const pending = shownValue(value);
+      const pending = formula === null ? shownValue(value) : { text: '', pending: false };
       // A value whose new one is on its way from the engine (formulas.md "Recalculation").
       const waiting = workbook.isStale(sheet.id, r, c);
       const px = fontPx(f);
       let text = pending.pending ? pending.text : shown.text;
       // A HYPERLINK draws as a link (formulas.md "Text"): underlined, in the sheet's accent unless the cell has its
       // own text colour, kept readable on the cell's fill like any ink. Ctrl/⌘ and a click opens it (useSheetPointer).
-      const link = text && !pending.pending ? workbook.hyperlinkOf(sheet.id, r, c) : null;
+      const link =
+        text && !pending.pending && formula === null ? workbook.hyperlinkOf(sheet.id, r, c) : null;
       const colours = cellColours(link && !f?.fc ? { ...f, fc: palette.focus } : f, surface);
       const deco = [f?.u || link ? 'underline' : '', f?.st ? 'line-through' : '']
         .filter(Boolean)

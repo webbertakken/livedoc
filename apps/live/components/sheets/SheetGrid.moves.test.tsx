@@ -31,11 +31,18 @@ const select = (h: Mounted, r: number, c: number): void => {
     }),
   );
 };
-const surface = (): SheetSurfaceKeys & { steps: number[]; summaries: number; leaves: number } => {
+const surface = (): SheetSurfaceKeys & {
+  steps: number[];
+  summaries: number;
+  leaves: number;
+  redos: number;
+} => {
   const out = {
     steps: [] as number[],
     summaries: 0,
     leaves: 0,
+    redos: 0,
+    redo: () => void (out.redos += 1),
     stepSheet: (step: -1 | 1) => void out.steps.push(step),
     focusSummary: () => void (out.summaries += 1),
     leaveGrid: () => void (out.leaves += 1),
@@ -107,6 +114,18 @@ describe('the workbook keys', () => {
     // D137: Ctrl+Alt+Shift+M leaves the grid for the toolbar.
     key(h, { key: 'M', code: 'KeyM', ctrlKey: true, altKey: true, shiftKey: true });
     expect(keys.leaves).toBe(1);
+  });
+
+  // grid-and-editing.md "Formulas": F4 outside an edit redoes, for whoever may write cells.
+  it('redo on F4, and not for a Viewer', async () => {
+    const keys = surface();
+    const h = await mountGrid({ surfaceKeys: keys });
+    key(h, { key: 'F4' });
+    expect(keys.redos).toBe(1);
+    const viewer = surface();
+    const v = await mountGrid({ surfaceKeys: viewer, canEdit: false });
+    key(v, { key: 'F4' });
+    expect(viewer.redos).toBe(0);
   });
 
   it('open a dropdown before a sheet, and do nothing in a Plan Sheet', async () => {

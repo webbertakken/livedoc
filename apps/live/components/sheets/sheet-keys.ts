@@ -1,5 +1,5 @@
 // The grid's keys when no cell is being edited (docs/specs/029-sheets/sheet.md "Keyboard"), as a pure map from a key
-// to a command, so every row of the spec's table is tested without a DOM. Undo and redo are left to the canvas. Each
+// to a command, so every row of the spec's table is tested without a DOM. Undo and Ctrl+Y are the editor's. Each
 // key holds as docs/specs/029-sheets/keyboard-shortcuts.md lists it for the platform.
 import type { Dir } from '@livedoc/sheets';
 import { altGraphHeld, composedWithAlt } from '@/lib/composed-key';
@@ -34,6 +34,8 @@ type SheetKeyCommand =
   | { kind: 'summary' }
   // Ctrl+Alt+Shift+M: focus out of the grid (D137).
   | { kind: 'leave' }
+  // F4: redo, as Google's; in an edit it cycles a reference's anchors (useFormulaInput).
+  | { kind: 'redo' }
   | { kind: 'selectAll' }
   | { kind: 'selectRow' }
   | { kind: 'selectCol' }
@@ -73,6 +75,7 @@ export function sheetKey(e: KeyLike, platform: OfficePlatform = 'pc'): SheetKeyC
   if (e.key === 'Tab') return { kind: 'tab', back: e.shiftKey };
   if (e.key === 'Enter' && !mod && !e.altKey) return { kind: 'enter', back: e.shiftKey };
   if (e.key === 'F2') return { kind: 'edit' };
+  if (e.key === 'F4') return mod || e.altKey || e.shiftKey ? null : { kind: 'redo' };
   if (e.key === 'Home') return { kind: 'home', toSheet: mod, extend: e.shiftKey };
   if (e.key === 'End') return { kind: 'end', toSheet: mod, extend: e.shiftKey };
   if (e.key === 'PageUp' || e.key === 'PageDown') {

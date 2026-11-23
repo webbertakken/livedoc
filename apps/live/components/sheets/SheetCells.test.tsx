@@ -91,6 +91,7 @@ function draw(
     fontFamily?: string;
     filterHead?: { r: number; cols: ReadonlySet<number> };
     geometry?: Geometry;
+    showFormulas?: boolean;
   } = {},
 ) {
   const geometry = opts.geometry ?? geometryOf(sheet.layout);
@@ -107,6 +108,7 @@ function draw(
       locale="en-GB"
       fontFamily={opts.fontFamily}
       filterHead={opts.filterHead}
+      showFormulas={opts.showFormulas}
     />,
   );
 }
@@ -131,6 +133,25 @@ describe('the helpers', () => {
     expect(fitNumber('0.000000000001234', 1.234e-12, { nf: 'auto' }, 70, 13)).toBe('1.23E-12');
     // A chosen number format is never rounded to fit: ####.
     expect(fitNumber('1,234,567.00', 1234567, { nf: 'number' }, 50, 13)).toMatch(/^#+$/);
+  });
+});
+
+// grid-and-editing.md "Formulas" (D141): Show › Formulas draws each formula as typed, other cells as before.
+describe('Show › Formulas', () => {
+  it('draws a formula cell’s formula, left-aligned, and leaves the rest', () => {
+    const sheet = sheetOf({ A1: '2', A2: '=A1*3' });
+    const { unmount } = draw(sheet);
+    expect(textBox('6')).toBeTruthy();
+    unmount();
+    draw(sheet, { showFormulas: true });
+    expect(screen.queryByText('6')).toBeNull();
+    expect(textBox('=A1*3').style.textAlign).toBe('left');
+    expect(textBox('2').style.textAlign).toBe('right');
+    // A HYPERLINK shows its formula, never drawn as a link.
+    const linked = sheetOf({ A1: '=HYPERLINK("https://example.com", "Site")' });
+    draw(linked, { showFormulas: true });
+    const link = textBox('=HYPERLINK("https://example.com", "Site")');
+    expect(link.style.textDecoration).toBe('');
   });
 });
 
