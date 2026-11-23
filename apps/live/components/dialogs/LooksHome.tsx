@@ -36,8 +36,7 @@ const SIZE_LABELS: Record<TextSizePreset, string> = {
 const sizeLabel = (size: TextSize | undefined): string =>
   typeof size === 'number' ? `${size}px` : SIZE_LABELS[size ?? 'md'];
 
-const sectionLabel =
-  'text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400';
+const sectionLabel = 'text-supporting text-slate-500 dark:text-slate-400';
 
 export function LooksHome({
   settings,
@@ -68,7 +67,7 @@ export function LooksHome({
   const fontLabel = FONTS.find((f) => f.id === font)?.label ?? 'Editor default';
   const patternLabel = labelOfPattern(pattern);
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <LooksCarousel
         settings={settings}
         activeLook={activeLook}
@@ -89,8 +88,8 @@ export function LooksHome({
             label="Colours"
             value={`${theme.label} theme`}
             icon={
-              <span className="block w-8 overflow-hidden rounded">
-                <ThemeSwatch theme={theme} heightClass="h-5" />
+              <span className="block w-8 overflow-hidden rounded-control">
+                <ThemeSwatch theme={theme} heightClass="h-icon-title" />
               </span>
             }
             onOpen={() => onOpenPanel('theme')}
@@ -104,7 +103,7 @@ export function LooksHome({
           <FineTuneRow
             label="Text"
             value={`${fontLabel}, ${sizeLabel(defaultTextSize)}`}
-            icon={<span className="text-[15px] font-semibold">Aa</span>}
+            icon={<span className="text-panel-title">Aa</span>}
             onOpen={() => onOpenPanel('font')}
           />
           <FineTuneRow
@@ -135,19 +134,17 @@ function FineTuneRow({
       type="button"
       onClick={onOpen}
       aria-label={`${label}: ${value}`}
-      className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
+      className="flex min-h-12 items-center gap-3 rounded-menu border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
     >
       <span
         aria-hidden
-        className="flex h-6 w-8 shrink-0 items-center justify-center text-slate-500 dark:text-slate-300"
+        className="flex h-chip w-8 shrink-0 items-center justify-center text-slate-500 dark:text-slate-300"
       >
         {icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-          {label}
-        </span>
-        <span className="truncate text-[11px] text-slate-500 dark:text-slate-400">{value}</span>
+        <span className="text-body text-slate-800 dark:text-slate-100">{label}</span>
+        <span className="truncate text-supporting text-slate-500 dark:text-slate-400">{value}</span>
       </span>
       <ChevronIcon />
     </button>

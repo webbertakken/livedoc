@@ -34,11 +34,11 @@ const MASHUP_CARD: Card = { kind: 'mashup' };
 
 // The Seasonal toggle: a quiet chip beside the Finish filter, brand-tinted while on.
 const SEASONAL_TOGGLE =
-  'cursor-pointer rounded-md border px-2 py-1 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300';
+  'min-h-row cursor-pointer rounded-control border px-2 text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300';
 const SEASONAL_OFF =
   'border-transparent text-slate-600 hover:border-slate-200 hover:bg-white dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700';
 const SEASONAL_ON =
-  'border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500/60 dark:bg-brand-500/15 dark:text-brand-200';
+  'font-medium border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500/60 dark:bg-brand-500/15 dark:text-brand-200';
 
 export function LooksCarousel({
   settings,
@@ -109,7 +109,7 @@ export function LooksCarousel({
             Looks
           </h3>
         }
-        gridClass="grid grid-cols-2 gap-2.5 sm:grid-cols-3"
+        gridClass="grid grid-cols-2 gap-2 sm:grid-cols-3"
         // Open on the page holding the tab's look (the first page when it has its own mix).
         initialIndex={cards.findIndex((c) => 'id' in c && c.id === activeLook)}
         controls={
@@ -207,7 +207,7 @@ function LookCard({
       aria-pressed={active}
       aria-label={ariaLabel}
       onClick={onPick}
-      className={`relative flex flex-col overflow-hidden rounded-lg text-left transition ${
+      className={`relative flex flex-col overflow-hidden rounded-menu text-left transition ${
         active
           ? 'border-2 border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/15'
           : 'border border-slate-200 bg-white hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60'
@@ -222,21 +222,21 @@ function LookCard({
       {badge ? (
         <span
           aria-hidden
-          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-white/90 text-slate-700 shadow-sm dark:bg-slate-900/85 dark:text-slate-200"
+          className="absolute right-1.5 top-1.5 flex size-chip items-center justify-center rounded-control bg-white/90 text-slate-700 shadow-sm dark:bg-slate-900/85 dark:text-slate-200"
         >
           {badge}
         </span>
       ) : null}
-      <span className="flex flex-col gap-0.5 px-2.5 pb-2.5 pt-2">
+      <span className="flex flex-col gap-0.5 px-2 pb-2.5 pt-2">
         {eyebrow ? (
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-300">
+          <span data-look-season="" className="text-supporting text-brand-700 dark:text-brand-300">
             {eyebrow}
           </span>
         ) : null}
-        <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+        <span data-look-name="" className="text-body text-slate-800 dark:text-slate-100">
           {look.label}
         </span>
-        <span className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           {look.description}
         </span>
       </span>

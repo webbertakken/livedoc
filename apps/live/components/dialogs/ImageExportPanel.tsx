@@ -80,7 +80,7 @@ export function ImageExportPanel({
       {/* Live preview — exactly what Download produces under the current
           options. The injected SVG is our own export output (no external
           content); CSS fits it inside the frame. */}
-      <div className="mb-4 flex h-48 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900">
+      <div className="mb-4 flex h-48 items-center justify-center overflow-hidden rounded-menu border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900">
         {previewSvg ? (
           <div
             data-testid="export-preview"
@@ -89,7 +89,9 @@ export function ImageExportPanel({
             dangerouslySetInnerHTML={{ __html: trustedHtml(previewSvg) }}
           />
         ) : (
-          <span className="text-xs text-slate-500 dark:text-slate-400">Preparing preview…</span>
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
+            Preparing preview…
+          </span>
         )}
       </div>
       {/* Isometric toggle. The help `?` sits beside the LABEL, not at the
@@ -106,7 +108,7 @@ export function ImageExportPanel({
           it, click-through except for the `?` itself. */}
       {pageExport ? null : (
         <>
-          <div className="relative flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10">
+          <div className="relative flex items-center justify-between gap-3 rounded-menu border border-slate-200 bg-white px-3 py-2.5 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10">
             <button
               type="button"
               onClick={() => {
@@ -118,14 +120,14 @@ export function ImageExportPanel({
               // The label lives outside this button (so the `?` can sit in it),
               // so the button names itself.
               aria-label="Isometric view"
-              className="absolute inset-0 cursor-pointer rounded-lg"
+              className="absolute inset-0 cursor-pointer rounded-menu"
             />
             <span className="pointer-events-none relative flex flex-col">
-              <span className="flex items-center gap-0.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+              <span className="flex items-center gap-0.5 text-body text-slate-900 dark:text-slate-100">
                 Isometric view
                 <HelpArticleLink article="isometricMode" className="pointer-events-auto" />
               </span>
-              <span className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+              <span className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
                 Tilt the export into the isometric projection.
               </span>
             </span>
@@ -141,13 +143,13 @@ export function ImageExportPanel({
               setPattern((v) => !v);
             }}
             aria-pressed={pattern}
-            className="mt-2 flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
+            className="mt-2 flex w-full cursor-pointer items-center justify-between gap-3 rounded-menu border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
           >
             <span className="flex flex-col">
-              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+              <span className="text-body text-slate-900 dark:text-slate-100">
                 Background pattern
               </span>
-              <span className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+              <span className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
                 Paint the tab's grid / dots / texture behind what's on the canvas.
               </span>
             </span>
@@ -165,13 +167,11 @@ export function ImageExportPanel({
             setHiddenLayers((v) => !v);
           }}
           aria-pressed={hiddenLayers}
-          className="mt-2 flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
+          className="mt-2 flex w-full cursor-pointer items-center justify-between gap-3 rounded-menu border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
         >
           <span className="flex flex-col">
-            <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-              Hidden layers
-            </span>
-            <span className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+            <span className="text-body text-slate-900 dark:text-slate-100">Hidden layers</span>
+            <span className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
               Include layers you've hidden in the Layers panel.
             </span>
           </span>
@@ -179,7 +179,7 @@ export function ImageExportPanel({
         </button>
       ) : null}
       {error ? (
-        <p className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+        <p className="mt-4 rounded-control border border-rose-200 bg-rose-50 px-3 py-2 text-supporting text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
           {error}
         </p>
       ) : null}

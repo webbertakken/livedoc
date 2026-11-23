@@ -129,18 +129,18 @@ export function DomainModelExportPanel({
       <BackBar label="All formats" current="Domain Model" onClick={onBack} disabled={running} />
       <p
         data-readiness
-        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
+        className="rounded-control border border-slate-200 px-3 py-2 text-body text-slate-700 dark:border-slate-700 dark:text-slate-200"
       >
         {readiness}
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-body text-slate-600 dark:text-slate-300">
         {aiEnabled
           ? 'A spec of the domain and its types, written from this board by the model, with the board reading beside them, in one .zip.'
           : 'The board reading and the brief that turns it into a spec and types, in one .zip. This deployment has no model: hand the brief to a coding agent working in your repository.'}
       </p>
       <label
         htmlFor={languageId}
-        className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+        className="flex items-center gap-2 text-body text-slate-700 dark:text-slate-200"
       >
         Types in
         <Select
@@ -158,7 +158,7 @@ export function DomainModelExportPanel({
           ))}
         </Select>
       </label>
-      <div className="flex flex-col gap-1 text-sm text-slate-700 dark:text-slate-200">
+      <div className="flex flex-col gap-1 text-body text-slate-700 dark:text-slate-200">
         <label htmlFor={fileId}>Update an earlier export (optional)</label>
         <input
           id={fileId}
@@ -166,23 +166,26 @@ export function DomainModelExportPanel({
           accept=".zip,application/zip"
           disabled={running}
           onChange={(e) => void pickEarlier(e.target.files?.[0])}
-          className="text-sm file:mr-3 file:rounded-md file:border file:border-slate-200 file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-slate-700 dark:file:border-slate-700 dark:file:bg-slate-900 dark:file:text-slate-200"
+          className="text-body file:mr-3 file:min-h-row file:rounded-control file:border file:border-slate-200 file:bg-white file:px-3 file:text-body file:text-slate-700 dark:file:border-slate-700 dark:file:bg-slate-900 dark:file:text-slate-200"
         />
-        <p className="text-xs text-slate-600 dark:text-slate-400">
+        <p className="text-supporting text-slate-600 dark:text-slate-400">
           {earlier
             ? `Changes the spec and types in ${earlier.name} to match the board, keeping what people wrote by hand.`
             : 'Without one, the export starts a new spec and types.'}
         </p>
       </div>
       {running ? (
-        <p role="status" className="text-sm text-slate-700 dark:text-slate-200">
+        <p role="status" className="text-body text-slate-700 dark:text-slate-200">
           {aiEnabled
             ? 'Writing the spec and the types… this can take a minute.'
             : 'Making the zip…'}
         </p>
       ) : null}
       {run.phase === 'failed' ? (
-        <div role="alert" className="flex flex-col gap-2 text-sm text-rose-700 dark:text-rose-400">
+        <div
+          role="alert"
+          className="flex flex-col gap-2 text-body text-rose-700 dark:text-rose-400"
+        >
           <p>{errorText(run.error)}</p>
           {run.error === 'ai_failed' ? (
             <div>

@@ -11,8 +11,7 @@ import { PagedCarousel } from '@/components/primitives/PagedCarousel';
 import { TextSizeControl } from '@/components/palette/TextSizeControl';
 import { TabStylePreview } from './TabStylePreview';
 
-const sectionLabel =
-  'text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400';
+const sectionLabel = 'text-supporting text-slate-500 dark:text-slate-400';
 
 /** How many typeface cards one carousel page holds: three to a row, two rows. */
 const FONTS_PER_PAGE = 6;
@@ -109,7 +108,7 @@ function TypefaceCard({
       aria-pressed={active}
       aria-label={option.label}
       onClick={onPick}
-      className={`flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2.5 text-left transition ${
+      className={`flex flex-col items-start gap-0.5 rounded-menu border px-3 py-2.5 text-left transition ${
         active
           ? 'border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/15'
           : 'border-slate-200 bg-white hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60'
@@ -117,18 +116,18 @@ function TypefaceCard({
     >
       <span
         aria-hidden
-        className="text-2xl leading-tight text-slate-800 dark:text-slate-100"
+        className="text-page-title text-slate-800 dark:text-slate-100"
         style={option.stack ? { fontFamily: option.stack } : undefined}
       >
         Aa
       </span>
       <span
-        className="w-full truncate text-[12px] font-semibold text-slate-800 dark:text-slate-100"
+        className="w-full truncate text-body text-slate-800 dark:text-slate-100"
         style={option.stack ? { fontFamily: option.stack } : undefined}
       >
         {option.label}
       </span>
-      <span className="text-[11px] text-slate-500 dark:text-slate-400">{option.kind}</span>
+      <span className="text-supporting text-slate-500 dark:text-slate-400">{option.kind}</span>
     </button>
   );
 }

@@ -35,7 +35,7 @@ export function ImportImageReport({
 
   return (
     <div role="status" data-testid="import-image-report">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Import complete</h3>
+      <h3 className="text-panel-title text-slate-900 dark:text-slate-100">Import complete</h3>
       {scene ? (
         <div className="mt-2">
           <BoardSceneReportList report={scene} showLanded />
@@ -68,32 +68,33 @@ export function ImportImageReport({
         />
       ) : null}
       {failures && failures.length > 0 ? (
-        <ul className="mt-3 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+        <ul className="mt-3 space-y-1 text-supporting text-slate-600 dark:text-slate-300">
           {failures.map((f, i) => (
             <li key={`${i}-${f.title}`} data-board-failure="">
-              <span className="font-semibold">{f.title}</span> · {f.message}
+              <span className="text-slate-900 dark:text-slate-100">{f.title}</span> · {f.message}
             </li>
           ))}
         </ul>
       ) : null}
       {images ? (
         <>
-          <ul className="mt-2 space-y-1 text-sm text-slate-700 dark:text-slate-200">
+          <ul className="mt-2 space-y-1 text-body text-slate-700 dark:text-slate-200">
             {images.lines.map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
           {images.failures.length > 0 ? (
-            <ul className="mt-3 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+            <ul className="mt-3 space-y-1 text-supporting text-slate-600 dark:text-slate-300">
               {images.failures.map((f) => (
                 <li key={f.failure} data-failure={f.failure}>
-                  <span className="font-semibold tabular-nums">{f.count}</span> · {f.sentence}
+                  <span className="tabular-nums text-slate-900 dark:text-slate-100">{f.count}</span>{' '}
+                  · {f.sentence}
                 </li>
               ))}
             </ul>
           ) : null}
           {images.hint ? (
-            <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">{images.hint}</p>
+            <p className="mt-3 text-supporting text-slate-600 dark:text-slate-300">{images.hint}</p>
           ) : null}
         </>
       ) : null}
@@ -118,8 +119,8 @@ function LinkList({
 }) {
   return (
     <div className="mt-3">
-      <p className="text-sm text-slate-700 dark:text-slate-200">{label}</p>
-      <ul className="mt-1 space-y-1 text-sm" data-testid={testId}>
+      <p className="text-body text-slate-700 dark:text-slate-200">{label}</p>
+      <ul className="mt-1 space-y-1 text-body" data-testid={testId}>
         {links.map((link) => (
           <li key={link.key}>
             <a
