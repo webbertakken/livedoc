@@ -56,3 +56,46 @@ test('emoji go in at the caret in the skin tone chosen, and come back as recentl
   await page.screenshot({ path: test.info().outputPath('emoji-recent.png') });
   expectNoPageErrors(pageErrors);
 });
+
+// Insert emoji using the colon character (objects.md "Emoji"): `:` and a name offers emoji under the caret; Enter puts
+// the chosen one in place of what was typed; switched off in Preferences, nothing is offered.
+test('the colon list offers emoji as a name is typed, until switched off', async ({
+  page,
+  pageErrors,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('Nice :thumbs');
+  const list = page.getByRole('listbox', { name: 'Emoji' });
+  await expect(list.getByRole('option')).toHaveCount(2);
+  await expect(list.getByRole('option').first()).toHaveAccessibleName('Thumbs up');
+  await expect(body).toHaveAttribute('aria-activedescendant', /.+/);
+  await page.screenshot({ path: test.info().outputPath('emoji-colon.png') });
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(list).toBeHidden();
+  await expect(body.locator(':scope > p').first()).toHaveText('Nice 👎');
+
+  // Escape keeps the text as typed.
+  await page.keyboard.type(' :smil');
+  await expect(list).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(list).toBeHidden();
+  await expect(body.locator(':scope > p').first()).toHaveText('Nice 👎 :smil');
+
+  await (await officeMenuItem(page, ['Tools', 'Preferences'])).click();
+  const preferences = page.getByRole('dialog', { name: 'Preferences' });
+  await preferences
+    .getByRole('checkbox', { name: 'Insert emoji using the colon character' })
+    .uncheck();
+  await preferences.getByRole('button', { name: 'OK' }).click();
+  await body.focus();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' :thumbs');
+  await expect(body.locator(':scope > p').first()).toHaveText('Nice 👎 :smil :thumbs');
+  await expect(list).toBeHidden();
+  expectNoPageErrors(pageErrors);
+});

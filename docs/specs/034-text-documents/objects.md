@@ -3,7 +3,7 @@
 **Status: in progress.** A picture in line is held, read and written in both formats, kept in the live state, drawn,
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
-A horizontal line, special characters and emoji are inserted; the colon list for emoji is specified.
+A horizontal line, special characters and emoji are inserted, emoji also from the colon list.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a

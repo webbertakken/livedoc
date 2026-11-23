@@ -44,6 +44,15 @@ describe('TextDocumentPreferencesDialog', () => {
     expect(onSave.mock.calls[0]![0]).toMatchObject({ smartQuotes: false, markdown: true });
   });
 
+  // objects.md "Emoji": the colon list, on by default.
+  it('switches Insert emoji using the colon character', () => {
+    const { onSave } = open();
+    expect(box('Insert emoji using the colon character').checked).toBe(true);
+    fireEvent.click(box('Insert emoji using the colon character'));
+    ok();
+    expect(onSave.mock.calls[0]![0]).toMatchObject({ emojiColon: false });
+  });
+
   // tools.md "Preferences": Google's General options in Google's order; Smart Reply left out (C3); an option whose
   // feature is not built yet dimmed, "Coming soon" under it.
   it("lists Google's General options in its order, those not built yet dimmed", () => {
@@ -62,11 +71,7 @@ describe('TextDocumentPreferencesDialog', () => {
       'Show link details',
       'Insert emoji using the colon character',
     ]);
-    for (const name of [
-      'Automatically correct spelling',
-      'Show link details',
-      'Insert emoji using the colon character',
-    ]) {
+    for (const name of ['Automatically correct spelling', 'Show link details']) {
       const soon = screen.getByRole<HTMLInputElement>('checkbox', { name: new RegExp(`^${name}`) });
       expect(soon.disabled).toBe(true);
       expect(soon.getAttribute('aria-describedby')).not.toBeNull();
