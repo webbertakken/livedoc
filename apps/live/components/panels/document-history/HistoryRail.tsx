@@ -25,7 +25,7 @@ export function HistoryRail({
           <li key={day.key} aria-labelledby={headingId}>
             <h3
               id={headingId}
-              className={`sticky top-0 z-10 flex items-baseline justify-between gap-2 border-b border-slate-100 bg-white/90 py-2 text-xs font-semibold text-slate-700 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-200 ${INSET}`}
+              className={`sticky top-0 z-10 flex items-baseline justify-between gap-2 border-b border-slate-100 bg-white/90 py-2 text-supporting text-slate-700 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-200 ${INSET}`}
             >
               <time dateTime={day.key}>{day.label}</time>
               <span className={`font-normal ${MUTED}`}>

@@ -4,7 +4,7 @@
 // read has a cursor, saying how many are shown; Try again after a later page failed, keeping what
 // is shown; and, at the end of a history longer than one page, that this is where it begins.
 
-import { HISTORY_BUTTON, MUTED } from './history-styles';
+import { HISTORY_BUTTON, INSET, MUTED } from './history-styles';
 
 export function HistoryPaging({
   shown,
@@ -23,15 +23,15 @@ export function HistoryPaging({
 }) {
   if (!hasMore) {
     return longerThanAPage ? (
-      <p className={`px-5 pt-2 pb-6 text-center text-[11px] ${MUTED}`}>
+      <p className={`pt-2 pb-6 text-center text-supporting ${INSET} ${MUTED}`}>
         The beginning of its history
       </p>
     ) : null;
   }
   return (
-    <div className="flex flex-col items-center gap-2 px-5 pt-2 pb-6">
+    <div className={`flex flex-col items-center gap-2 pt-2 pb-6 ${INSET}`}>
       {failed ? (
-        <p role="alert" className="text-xs text-red-700 dark:text-red-300">
+        <p role="alert" className="text-supporting text-red-700 dark:text-red-300">
           Couldn’t load older events.
         </p>
       ) : null}
@@ -44,7 +44,7 @@ export function HistoryPaging({
       >
         {loadingMore ? 'Loading…' : failed ? 'Try again' : 'Show older events'}
       </button>
-      <p className={`text-[11px] ${MUTED}`} aria-live="polite">
+      <p className={`text-supporting ${MUTED}`} aria-live="polite">
         {shown} shown
       </p>
     </div>

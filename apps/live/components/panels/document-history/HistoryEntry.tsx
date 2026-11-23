@@ -61,7 +61,7 @@ export const HistoryEntry = memo(function HistoryEntry({
       )}
       <span
         aria-hidden
-        className="relative z-[1] h-8 w-8 shrink-0 rounded-full bg-white ring-4 ring-white dark:bg-slate-900 dark:ring-slate-900"
+        className="relative z-[1] size-field shrink-0 rounded-full bg-white ring-4 ring-white dark:bg-slate-900 dark:ring-slate-900"
       >
         <span
           className="flex h-full w-full items-center justify-center rounded-full"
@@ -72,15 +72,15 @@ export const HistoryEntry = memo(function HistoryEntry({
       </span>
       <div className="min-w-0 flex-1 pt-1">
         <div className="flex items-baseline gap-2">
-          <p className="min-w-0 flex-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+          <p className="min-w-0 flex-1 text-body text-slate-900 dark:text-slate-100">
             {words.label}
             {many > 1 ? (
-              <span className="ml-1.5 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-px align-[1px] text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="ml-1 inline-flex items-center rounded-full bg-slate-100 px-2 align-[1px] text-supporting text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {many} times
               </span>
             ) : null}
           </p>
-          <span className={`shrink-0 text-xs tabular-nums ${MUTED}`}>
+          <span className={`shrink-0 text-supporting tabular-nums ${MUTED}`}>
             {many > 1 ? (
               <>
                 <Time at={run.events[many - 1]!.occurredAt} />
@@ -93,7 +93,7 @@ export const HistoryEntry = memo(function HistoryEntry({
           </span>
         </div>
         {words.who || detail ? (
-          <p className={`mt-0.5 flex min-w-0 items-center gap-1.5 text-xs ${MUTED}`}>
+          <p className={`mt-0.5 flex min-w-0 items-center gap-1 text-supporting ${MUTED}`}>
             {words.who ? (
               <HistoryPerson
                 name={words.who}
@@ -112,7 +112,7 @@ export const HistoryEntry = memo(function HistoryEntry({
           </p>
         ) : null}
         {quote ? (
-          <blockquote className="mt-1.5 line-clamp-3 rounded-lg border-l-2 border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
+          <blockquote className="mt-1.5 line-clamp-3 rounded-control border-l-2 border-slate-200 bg-slate-50 px-3 py-1.5 text-supporting text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
             {quote}
           </blockquote>
         ) : null}
@@ -152,7 +152,7 @@ export const HistoryEntry = memo(function HistoryEntry({
 function RunMember({ event, viewerId }: { event: TimelineEvent; viewerId: string }) {
   const { words } = wordsFor(event, viewerId);
   return (
-    <li className="flex items-baseline gap-2 text-xs">
+    <li className="flex items-baseline gap-2 text-supporting">
       <span className="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">
         {words.detail ?? words.quote ?? words.label}
       </span>

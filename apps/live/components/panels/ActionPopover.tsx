@@ -107,11 +107,11 @@ export function ActionPopover({
         ref={ref}
         role="dialog"
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-overlay)] flex animate-fade-in flex-col rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
+        className="fixed z-[var(--z-overlay)] flex animate-fade-in flex-col rounded-menu border border-slate-200 bg-white shadow-xl shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
         style={{ left: pos.left, top: pos.top, width: WIDTH }}
       >
         <header className="flex items-center justify-between border-b border-slate-100 px-3 py-2 dark:border-slate-800">
-          <h3 className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100">
+          <h3 className="flex items-center gap-1 text-body text-slate-800 dark:text-slate-100">
             <span className="text-slate-400">
               <ClipboardIcon />
             </span>
@@ -119,12 +119,12 @@ export function ActionPopover({
           </h3>
           <div className="flex items-center gap-1">
             {done ? (
-              <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+              <span className="inline-flex h-chip items-center gap-1 rounded-full bg-emerald-100 px-2 text-supporting text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
                 <CheckIcon size={9} />
                 Done
               </span>
             ) : wontDo ? (
-              <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-700/60 dark:text-slate-300">
+              <span className="inline-flex h-chip items-center gap-1 rounded-full bg-slate-100 px-2 text-supporting text-slate-600 dark:bg-slate-700/60 dark:text-slate-300">
                 Won’t Do
               </span>
             ) : null}
@@ -132,37 +132,35 @@ export function ActionPopover({
               type="button"
               aria-label="Close action"
               onClick={onClose}
-              className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              className="flex size-chip items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
               <CloseIcon size={12} />
             </button>
           </div>
         </header>
 
-        <div className={`flex flex-col gap-2.5 px-3 py-3 ${closed ? 'opacity-70' : ''}`}>
+        <div className={`flex flex-col gap-2 px-3 py-3 ${closed ? 'opacity-70' : ''}`}>
           <div>
-            <p className="text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">
-              {action.name}
-            </p>
+            <p className="text-body text-slate-800 dark:text-slate-100">{action.name}</p>
             {action.description ? (
-              <p className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              <p className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap text-supporting text-slate-500 dark:text-slate-400">
                 {action.description}
               </p>
             ) : null}
           </div>
-          <div className="flex items-center gap-2 rounded-md bg-slate-50 px-2.5 py-2 dark:bg-slate-800/60">
+          <div className="flex items-center gap-2 rounded-control bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
             <GlyphDisc
               size={28}
               aria-hidden
-              className={`bg-brand-700 text-[10px] font-semibold text-white ${SOLID_BRAND_DARK}`}
+              className={`bg-brand-700 text-glyph text-white ${SOLID_BRAND_DARK}`}
             >
               {initialsOf(assigneeName)}
             </GlyphDisc>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-medium text-slate-700 dark:text-slate-200">
+              <span className="block truncate text-body text-slate-700 dark:text-slate-200">
                 {mine ? 'Assigned to you' : `Assigned to ${assigneeName}`}
               </span>
-              <span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">
+              <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
                 {assignerName ? `by ${assignerName} · ` : ''}
                 {formatRelativeTimeCompact(now - action.createdAt)}
               </span>
@@ -172,7 +170,7 @@ export function ActionPopover({
             <button
               type="button"
               onClick={onOpenBoard}
-              className="inline-flex cursor-pointer items-center gap-1.5 self-start rounded-md px-1.5 py-1 text-[11px] font-medium text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
+              className="inline-flex min-h-row cursor-pointer items-center gap-1 self-start rounded-control px-2 text-body text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
             >
               <BoardIcon />
               View on Board
@@ -181,7 +179,7 @@ export function ActionPopover({
         </div>
 
         {!readOnly ? (
-          <footer className="flex items-center gap-1.5 border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+          <footer className="flex flex-wrap items-center gap-1 border-t border-slate-100 px-3 py-2 dark:border-slate-800">
             {closed ? (
               <FooterButton onClick={onReopen} icon={<ReopenIcon />} label="Reopen" />
             ) : (
@@ -189,7 +187,7 @@ export function ActionPopover({
                 <button
                   type="button"
                   onClick={onComplete}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-emerald-700"
+                  className="inline-flex min-h-row items-center gap-1 rounded-control bg-emerald-600 px-2 text-body font-medium text-white transition hover:bg-emerald-700"
                 >
                   <CheckIcon size={11} />
                   Complete
@@ -205,7 +203,7 @@ export function ActionPopover({
                 type="button"
                 aria-label="Edit action"
                 onClick={onEdit}
-                className="inline-flex items-center rounded-md border border-slate-200 px-2 py-1.5 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="inline-flex size-row items-center justify-center rounded-control border border-slate-200 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <PencilIcon />
               </button>
@@ -215,7 +213,7 @@ export function ActionPopover({
               <button
                 type="button"
                 onClick={onDelete}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="inline-flex min-h-row items-center gap-1 whitespace-nowrap rounded-control border border-slate-200 px-2 text-body text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <TrashIcon size={11} />
                 Confirm
@@ -225,7 +223,7 @@ export function ActionPopover({
                 type="button"
                 aria-label="Delete action"
                 onClick={() => setConfirmingDelete(true)}
-                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="inline-flex size-row items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 <TrashIcon size={11} />
               </button>
@@ -250,7 +248,7 @@ function FooterButton({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+      className="inline-flex min-h-row items-center gap-1 whitespace-nowrap rounded-control border border-slate-200 px-2 text-body text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
     >
       {icon}
       {label}

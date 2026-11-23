@@ -48,22 +48,22 @@ export function CommentResolveToggle({
       <button
         type="button"
         onClick={onResolve}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        className="inline-flex min-h-row cursor-pointer items-center gap-1 rounded-control px-2 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
       >
         <CheckIcon size={12} />
         Resolve
       </button>
     );
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+    <span className="inline-flex items-center gap-1">
+      <span className="inline-flex h-chip items-center gap-1 rounded-full bg-emerald-100 px-2 text-supporting text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
         <CheckIcon size={11} />
         Resolved
       </span>
       <button
         type="button"
         onClick={onUnresolve}
-        className="cursor-pointer rounded-md px-2 py-0.5 text-[11px] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        className="min-h-row cursor-pointer rounded-control px-2 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
       >
         Reopen
       </button>
@@ -97,7 +97,7 @@ export function CommentThreadList({
   if (comments.length === 0)
     return (
       <p
-        className={`${density === 'comfortable' ? 'py-1 text-[13px]' : 'px-3 py-3 text-xs'} text-slate-500 dark:text-slate-400`}
+        className={`${density === 'comfortable' ? 'py-1' : 'px-3 py-3'} text-body text-slate-500 dark:text-slate-400`}
       >
         {canComment ? 'No comments yet. Start the conversation.' : 'No comments yet.'}
       </p>
@@ -163,7 +163,7 @@ export function CommentComposer({
       className={
         className ??
         (comfortable
-          ? 'relative flex gap-2.5 pt-1'
+          ? 'relative flex gap-2 pt-1'
           : 'relative border-t border-slate-100 p-2 dark:border-slate-800')
       }
     >
@@ -179,7 +179,7 @@ export function CommentComposer({
         <span
           aria-hidden
           style={identityVars(self.color)}
-          className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${IDENTITY_FILL}`}
+          className={`mt-1 flex size-row shrink-0 items-center justify-center rounded-full text-glyph text-white ${IDENTITY_FILL}`}
         >
           <span className="text-optical-centre">{initialsOf(self.name)}</span>
         </span>
@@ -207,25 +207,19 @@ export function CommentComposer({
           aria-label="Add a comment"
           rows={comfortable ? 1 : 2}
           style={{ maxHeight: COMPOSER_MAX_PX }}
-          className={`block w-full resize-none rounded-lg border border-slate-200 bg-white text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30 motion-reduce:transition-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 ${
-            comfortable ? 'px-3 py-2 text-[13px] leading-relaxed' : 'px-2 py-1.5 text-xs'
+          className={`block w-full resize-none rounded-control border border-slate-200 bg-white text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30 motion-reduce:transition-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 ${
+            comfortable ? 'px-3 py-2 text-body' : 'px-2 py-1.5 text-body'
           }`}
         />
-        <div className="mt-1.5 flex min-h-6 items-center justify-between gap-2">
+        <div className="mt-1.5 flex min-h-chip items-center justify-between gap-2">
           {/* A key combination, so only where there is a keyboard to press it: a touch screen sends with Comment. */}
           <p
-            className="text-[11px] text-slate-500 pointer-coarse:invisible dark:text-slate-400"
+            className="text-supporting text-slate-500 pointer-coarse:invisible dark:text-slate-400"
             aria-live="polite"
           >
             {focused ? sendShortcutLabel() : ''}
           </p>
-          <Button
-            size="xs"
-            onClick={submit}
-            disabled={!draft.trim()}
-            // Keeps the compact density: overrides append after the size scale, so they win.
-            className="px-3 py-1 text-[11px]"
-          >
+          <Button size="xs" onClick={submit} disabled={!draft.trim()}>
             Comment
           </Button>
         </div>
@@ -254,7 +248,7 @@ function CommentRow({
   });
   return (
     <li
-      className={`group flex ${comfortable ? 'gap-2.5 py-2.5' : 'gap-2 py-2'} ${resolved ? 'opacity-60' : ''}`}
+      className={`group flex ${comfortable ? 'gap-2 py-2.5' : 'gap-2 py-2'} ${resolved ? 'opacity-60' : ''}`}
     >
       <span className="mt-0.5 inline-flex">
         <AuthorDisc
@@ -264,33 +258,27 @@ function CommentRow({
           as="div"
           aria-hidden
           style={identityVars(comment.authorColor)}
-          className={`text-[10px] font-semibold text-white ${IDENTITY_FILL}`}
+          className={`text-glyph text-white ${IDENTITY_FILL}`}
         >
           {initialsOf(comment.authorName)}
         </AuthorDisc>
       </span>
       <div className="min-w-0 flex-1">
-        <div
-          className={`flex items-baseline gap-1.5 ${comfortable ? 'text-[13px]' : 'text-[11px]'}`}
-        >
-          <span className="truncate font-medium text-slate-900 dark:text-slate-50">
-            {comment.authorName}
-          </span>
+        <div className="flex items-baseline gap-1 text-body">
+          <span className="truncate text-slate-900 dark:text-slate-50">{comment.authorName}</span>
           <Tooltip label={when}>
             <time
               dateTime={new Date(comment.createdAt).toISOString()}
               aria-label={when}
               tabIndex={0}
-              className="shrink-0 text-[11px] text-slate-500 outline-none focus-visible:underline dark:text-slate-400"
+              className="shrink-0 text-supporting text-slate-500 outline-none focus-visible:underline dark:text-slate-400"
             >
               {formatRelativeTimeCompact(now - comment.createdAt)}
             </time>
           </Tooltip>
         </div>
         <p
-          className={`mt-0.5 whitespace-pre-wrap break-words text-slate-700 dark:text-slate-200 ${
-            comfortable ? 'text-[13px] leading-relaxed' : 'text-xs'
-          }`}
+          className={`mt-0.5 whitespace-pre-wrap break-words text-slate-700 dark:text-slate-200 ${'text-body'}`}
         >
           <MentionText
             text={comment.text}
@@ -305,7 +293,7 @@ function CommentRow({
             type="button"
             aria-label="Delete comment"
             onClick={onDelete}
-            className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center self-start rounded-md text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:opacity-100 group-hover:opacity-100 motion-reduce:transition-none dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white [@media(hover:none)]:opacity-100"
+            className="flex size-chip shrink-0 cursor-pointer items-center justify-center self-start rounded-control text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:opacity-100 group-hover:opacity-100 motion-reduce:transition-none dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white [@media(hover:none)]:opacity-100"
           >
             <TrashIcon size={12} />
           </button>

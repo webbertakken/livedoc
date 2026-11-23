@@ -11,7 +11,7 @@ import type { PaneDocument } from '@/app/explorer/views';
 import { INSET, MUTED } from './history-styles';
 
 const THUMB_BOX =
-  'h-12 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800';
+  'h-12 w-14 shrink-0 overflow-hidden rounded-control border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800';
 
 export function HistoryHeader({
   titleId,
@@ -43,17 +43,15 @@ export function HistoryHeader({
         className={THUMB_BOX}
       />
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold tracking-wider text-brand-700 uppercase dark:text-brand-300">
-          History
-        </p>
+        <p className="text-supporting text-brand-700 dark:text-brand-300">History</p>
         <h2
           id={titleId}
-          className="line-clamp-2 text-base font-semibold break-words text-slate-900 dark:text-slate-100"
+          className="line-clamp-2 text-name break-words text-slate-900 dark:text-slate-100"
         >
           {name}
         </h2>
         {document ? (
-          <p className={`mt-0.5 truncate text-xs ${MUTED}`}>
+          <p className={`mt-0.5 truncate text-supporting ${MUTED}`}>
             <span className="sr-only">Owner: </span>
             {ownerLabelFor(document)}
           </p>
