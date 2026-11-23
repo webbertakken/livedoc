@@ -77,6 +77,14 @@ export type PdfOpened =
 /** How far a page is drawn turned, in quarters clockwise: Rotate view (reading-surface.md "The pages"). */
 export type PageTurns = 0 | 1 | 2 | 3;
 
+/** A part of a page in pixels of the whole page drawn at a scale and a turn: its left, its top and its size. */
+export type TileRect = {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+};
+
 /** A page drawn: RGBA, four bytes a pixel, row by row. */
 export type PageBitmap = {
   readonly width: number;
@@ -192,6 +200,16 @@ export type PdfEngine = {
    * `turns` quarters clockwise (none unless asked).
    */
   drawPage(index: number, scale: number, turns?: PageTurns): Promise<PageBitmap | null>;
+  /**
+   * A tile: the part `rect` of the page drawn at `scale` and turned `turns` quarters, as the same pixels of the
+   * whole page would be (reading-surface.md "The pages"). Null where there is no such page or part.
+   */
+  drawTile(
+    index: number,
+    scale: number,
+    turns: PageTurns,
+    rect: TileRect,
+  ): Promise<PageBitmap | null>;
   /** The file's bookmarks, in reading order; none where it has no outline. */
   outline(): Promise<Outline>;
   /** The links on a page, none of them followed. */

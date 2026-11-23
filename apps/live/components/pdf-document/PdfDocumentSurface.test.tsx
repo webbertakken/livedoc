@@ -84,7 +84,12 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
     version: '1.7',
     protected: false,
     engine: {} as never,
-    drawer: { draw: async () => null, forget: () => {} },
+    drawer: {
+      draw: async () => null,
+      forget: () => {},
+      drawTile: async () => null,
+      forgetTile: () => {},
+    },
     binding,
     undo: pdfUndo(binding.doc),
     onLost: (listener) => {

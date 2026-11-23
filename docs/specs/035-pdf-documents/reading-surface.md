@@ -5,14 +5,14 @@
 - The title row with its PDF pill and its tooltip.
 - The menus and the toolbar, declared whole as data and held to this page's tables by their test: what is built is
   bound, the rest drawn dimmed, "Coming soon".
-- The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it.
+- The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it, and
+  sharp tiles over the part in view where that picture is softer than the screen.
 - Page display, zoom, Go to, the page bar and Rotate view.
 
 Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
 Zoom to selection, Go to but for Previous view and Next view, and Rotate view.
 
-Not built: tiles (past `PDF_PAGE_PICTURE_MAX_PIXELS` a page is drawn softer than the screen), the panels,
-find, text selection, page labels in the page bar, the accessible tree (a page is a named region whose picture is
+Not built: a tile redrawn alone when a change touches it (a change draws its page again), the panels, find, text selection, page labels in the page bar, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -292,6 +292,15 @@ the choice is remembered per person per document.
 
 - **Drawn by the engine's worker**, never on the page's own thread: a whole-page picture first (within one draw),
   then sharp **tiles** of `PDF_TILE_PX` behind it; a tile is redrawn alone when a change touches it.
+  - A page has tiles only where its whole-page picture is softer than the screen: past
+    `PDF_PAGE_PICTURE_MAX_PIXELS`. They cover the part of the page in view and one tile around it `(default)`, so a
+    page zoomed to 6400% draws what shows, never the page.
+  - A tile is `PDF_TILE_PX` CSS pixels a side, cut at the page's edge, drawn at the screen's pixel ratio, turned as
+    the page is.
+  - Tiles are kept to `PDF_TILE_CACHE_BYTES`, the least lately shown let go first; a tile scrolled back to is shown
+    from there, not drawn again.
+  - During a zoom the tiles already there grow and shrink with the page at once; tiles at the new zoom are drawn once
+    it has rested `REDRAW_SETTLE_MS` and take their place `(default)`.
 - **Virtualised**: only pages near the viewport have canvases; the rest are boxes of their true size, read before
   anything is drawn.
 - **Page display**: continuous (default) or one row at a time; one or two pages across, with or without a cover
@@ -385,7 +394,8 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 | ------------------------------ | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `PDF_PAGE_PICTURE_MAX_PIXELS`  | 8,388,608                                                                                              | `(default)` A page's whole-page picture, drawn at the screen's scale up to this; sharper detail is the tiles'                            |
 | `PDF_TILE_PX`                  | 512                                                                                                    | `(default)` CSS pixels a side; safe range 256 to 1,024                                                                                   |
-| `PDF_TILE_CACHE_BYTES`         | 134,217,728 (128 MiB)                                                                                  | `(default)` Desktop; 50,331,648 (48 MiB) on a phone. Set by measurement                                                                  |
+| `PDF_TILE_CACHE_BYTES`         | 134,217,728 (128 MiB)                                                                                  | `(default)` Desktop. Set by measurement                                                                                                  |
+| `PDF_TILE_PHONE_CACHE_BYTES`   | 50,331,648 (48 MiB)                                                                                    | `(default)` A phone's tiles; a phone is a device that says it has 4 GB or less, or says nothing and is touched                           |
 | `PDF_PHONE_PIXEL_RATIO`        | 2                                                                                                      | `(default)` Past it a phone's canvas limits bite                                                                                         |
 | `PDF_ZOOM_MIN`, `PDF_ZOOM_MAX` | 0.1, 64                                                                                                | Acrobat's range, 10% to 6400%                                                                                                            |
 | `PDF_ZOOM_STEPS`               | 10, 12.5, 25, 33.3, 50, 66.7, 75, 100, 125, 150, 200, 300, 400, 600, 800, 1200, 1600, 2400, 3200, 6400 | `(default)` Per cent: where Zoom in and Zoom out stop, Acrobat's own steps within the range (assumed, from the product as known)         |
@@ -422,7 +432,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 menu and tool finder events. Never a query, a page's text or a name.
 
 Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom> way=<way>`,
-`[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`.
+`[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`.
 
 ## Errors
 

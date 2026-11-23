@@ -28,6 +28,13 @@ function engine() {
         waiting.push(() => resolve(index === 13 ? null : bitmap(index))),
       );
     },
+    // A tile is asked as its page plus a hundred.
+    drawTile: (index: number) => {
+      asked.push(100 + index);
+      return new Promise<PageBitmap | null>((resolve) =>
+        waiting.push(() => resolve(bitmap(100 + index))),
+      );
+    },
   };
 }
 
@@ -57,10 +64,28 @@ describe('the page drawer', () => {
         turns.push(turned);
         return null;
       },
+      drawTile: async () => null,
     });
     await drawer.draw(1, 1, 3);
     await drawer.draw(1, 1);
     expect(turns).toEqual([3, 0]);
+  });
+
+  // "Tiles": in the same line as the pages, the latest asked first; one given up is never drawn.
+  it('draws tiles in the same line as the pages, and never one given up', async () => {
+    const pdf = engine();
+    const drawer = pdfPageDrawer(pdf);
+    const rect = { x: 0, y: 0, width: 8, height: 8 };
+    void drawer.draw(1, 1);
+    const kept = drawer.drawTile('t1', 2, 4, 0, rect);
+    const dropped = drawer.drawTile('t2', 3, 4, 0, rect);
+    drawer.forgetTile('t2');
+    expect(await dropped).toBeNull();
+    pdf.finish();
+    await tick();
+    pdf.finish();
+    expect((await kept)?.width).toBe(102);
+    expect(pdf.asked).toEqual([1, 102]);
   });
 
   it('never draws a page given up before its turn', async () => {

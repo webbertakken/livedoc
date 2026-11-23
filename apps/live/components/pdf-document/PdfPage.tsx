@@ -8,7 +8,6 @@ import { memo, useEffect, useRef, useState, type PointerEvent } from 'react';
 import {
   PageView,
   type Mark,
-  type PageBitmap,
   type PageInfo,
   type PageMatrix,
   type PagePoint,
@@ -18,11 +17,9 @@ import {
   type TextSelection,
 } from '@livedoc/pdf-documents';
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
+import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
+import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
 import { PdfView } from '@/lib/pdf-document/pdf-view';
-
-// How long a page waits after its size last changed before it is drawn again, so a zoom or a resize under way
-// redraws once. Safe range: 80 to 400 ms.
-const REDRAW_SETTLE_MS = 150;
 
 export type PdfPageTool = 'select' | 'highlight';
 
@@ -43,14 +40,6 @@ const pointsOf = (matrix: PageMatrix, quad: Quad): string =>
     .map(({ x, y }) => `${x},${y}`)
     .join(' ');
 
-function paint(canvas: HTMLCanvasElement, bitmap: PageBitmap): void {
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  canvas
-    .getContext('2d')
-    ?.putImageData(new ImageData(bitmap.rgba, bitmap.width, bitmap.height), 0, 0);
-}
-
 export const PdfPage = memo(function PdfPage({
   index,
   count,
@@ -59,6 +48,7 @@ export const PdfPage = memo(function PdfPage({
   left,
   top,
   turns,
+  tiles,
   wanted,
   held,
   engine,
@@ -78,6 +68,8 @@ export const PdfPage = memo(function PdfPage({
   top: number;
   // Rotate view's turn, in quarters clockwise: the engine draws the page turned.
   turns: PageTurns;
+  // What its sharp tiles are drawn with (reading-surface.md "The pages").
+  tiles: PdfTileSource;
   // Near view: its picture is drawn. Held: its picture is kept though it left view.
   wanted: boolean;
   held: boolean;
@@ -121,7 +113,7 @@ export const PdfPage = memo(function PdfPage({
           if (!bitmap) return setFailed(true);
           const fileMarks = await engine.fileMarks(index);
           if (cancelled || !canvas.current) return;
-          paint(canvas.current, bitmap);
+          paintPicture(canvas.current, bitmap);
           setFailed(false);
           const marks = fileMarks.map((mark) => mark.id);
           setDrawn({ toView: bitmap.toView, scale, turns, fileMarks: marks, by: drawer });
@@ -220,6 +212,23 @@ export const PdfPage = memo(function PdfPage({
         aria-hidden="true"
         className={`block h-full w-full ${drawn && !current ? 'invisible' : ''}`}
       />
+      {current && wanted ? (
+        <PdfPageTiles
+          index={index}
+          width={shown.width}
+          height={shown.height}
+          cssPerPoint={cssPerPoint}
+          turns={turns}
+          pictureScale={current.scale}
+          box={{
+            left,
+            top,
+            width: shown.width * cssPerPoint,
+            height: shown.height * cssPerPoint,
+          }}
+          source={tiles}
+        />
+      ) : null}
       {matrix ? (
         // Multiplied onto the page, so the words under a highlight keep their own colour (marks.md).
         <svg
