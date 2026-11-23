@@ -19,7 +19,7 @@ const rowIndexes = (h: Mounted) =>
   within(mirror(h))
     .getAllByRole('row')
     .map((r) => Number(r.getAttribute('aria-rowindex')));
-const select = (h: Mounted, r: number, c: number) =>
+const select = (h: Mounted, r: number, c: number): void => {
   act(() =>
     h.c().setSelection({
       ranges: [{ r1: r, c1: c, r2: r, c2: c }],
@@ -27,6 +27,7 @@ const select = (h: Mounted, r: number, c: number) =>
       anchor: { r, c },
     }),
   );
+};
 const scrollTo = (h: Mounted, top: number) => {
   Object.defineProperty(h.grid, 'scrollTop', { configurable: true, value: top });
   Object.defineProperty(h.grid, 'scrollLeft', { configurable: true, value: 0 });
@@ -49,6 +50,18 @@ describe('the mirror', () => {
     const a1 = h.grid.ownerDocument.getElementById(h.grid.getAttribute('aria-activedescendant')!)!;
     expect(a1.textContent).toBe('A1 Total');
     expect(a1.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('names a picture and a sparkline by what they are, as their values are empty text', async () => {
+    const h = await mountGrid({
+      cells: {
+        A1: '=IMAGE("https://a.example/a.png")',
+        B1: '=SPARKLINE({1,2,3})',
+      },
+    });
+    const cells = within(within(mirror(h)).getAllByRole('row')[0]!).getAllByRole('gridcell');
+    expect(cells[0]!.textContent).toBe('A1 Image from a.example');
+    expect(cells[1]!.textContent).toBe('B1 Line sparkline of 3 values');
   });
 
   it('puts the frozen rows first and keeps the active cell when it is scrolled away', async () => {
@@ -91,11 +104,17 @@ describe('Read Row and Read Column', () => {
     const read = (code: string) =>
       fireEvent.keyDown(h.grid, { key: 'R', code, ctrlKey: true, altKey: true, shiftKey: true });
     read('KeyR');
-    act(() => vi.advanceTimersToNextFrame());
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
     read('KeyC');
-    act(() => vi.advanceTimersToNextFrame());
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
     read('KeyC');
-    act(() => vi.advanceTimersToNextFrame());
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
     vi.useRealTimers();
     expect(h.announced).toEqual([
       '',
@@ -124,7 +143,9 @@ describe('Read Row and Read Column', () => {
       altKey: true,
       shiftKey: true,
     });
-    act(() => vi.advanceTimersToNextFrame());
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
     vi.useRealTimers();
     expect(h.announced.at(-1)).toBe('Row 3: A3 Merged, D3 Here');
   });

@@ -385,8 +385,11 @@ function SheetCellsInner(props: CellsProps) {
       c2: fc - 1,
       clip: { left: 0, top: 0, width: g.frozenWidth, height: g.frozenHeight },
     });
+  // A picture to a screen reader: the grid's mirror holds the cells it reads (SheetGridMirror).
   return (
     <div
+      aria-hidden
+      data-sheet-cells
       className="absolute inset-0"
       style={props.fontFamily ? { fontFamily: props.fontFamily } : undefined}
     >

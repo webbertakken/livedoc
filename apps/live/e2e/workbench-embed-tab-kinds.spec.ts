@@ -321,7 +321,7 @@ async function typeFormula(page: Page, frame: FrameLocator) {
   await page.mouse.click(box.x + 66, box.y + 30);
   await page.keyboard.type('=6*7');
   await page.keyboard.press('Enter');
-  await expect(grid).toContainText('42');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('42');
 }
 
 // How many formulas the sheet store keeps for the document.

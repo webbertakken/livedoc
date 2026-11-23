@@ -409,6 +409,8 @@ describe('IMAGE in the grid', () => {
     expect(screen.queryByRole('img')).toBeNull();
     plain.unmount();
     render(<SheetImagesContext.Provider value={loader}>{cells}</SheetImagesContext.Provider>);
-    expect(await screen.findByRole('img', { name: 'Image from a.example' })).toBeTruthy();
+    expect(
+      await screen.findByRole('img', { name: 'Image from a.example', hidden: true }),
+    ).toBeTruthy();
   });
 });

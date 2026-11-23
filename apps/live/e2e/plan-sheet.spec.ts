@@ -86,7 +86,7 @@ test('a Sheet tab takes a formula, works it out, keeps it, and fills the tab', a
   await page.mouse.click(box.x + ROW_HEADER_PX + 20, box.y + COL_HEADER_PX + 8);
   await page.keyboard.type('=6*7');
   await page.keyboard.press('Enter');
-  await expect(grid).toContainText('42');
+  await expect(grid.locator('[data-sheet-cells]')).toContainText('42');
 
   // The sheet store keeps the formula as typed.
   await expect

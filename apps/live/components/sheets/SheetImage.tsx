@@ -4,7 +4,8 @@
 // loader and drawn in the cell's box by Google's modes: 1 fits it in proportion, 2 stretches it, 3 its own size, 4 the
 // size given (a missing side in proportion), centred and cut at the cell's edges. Nothing while it loads or failed.
 import { useEffect, useSyncExternalStore, type CSSProperties } from 'react';
-import { imageHost, type CellImage } from '@livedoc/sheets';
+import type { CellImage } from '@livedoc/sheets';
+import { imageLabel } from './sheet-cell-speech';
 import type { SheetImageLoader } from './sheet-image-loader';
 
 type Props = {
@@ -40,7 +41,7 @@ export function SheetImage({ image, loader, box, waitingOpacity }: Props) {
     <div
       data-sheet-image={image.mode}
       role="img"
-      aria-label={`Image from ${imageHost(image)}`}
+      aria-label={imageLabel(image)}
       className="pointer-events-none absolute flex items-center justify-center overflow-hidden"
       style={{
         left: box.x,

@@ -6,7 +6,10 @@ import {
   columnLetters,
   displayValue,
   formatA1,
+  imageHost,
+  type CellImage,
   type Sheet,
+  type Sparkline,
   type Workbook,
 } from '@livedoc/sheets';
 import { mergeAt, type Geometry } from './sheet-geometry';
@@ -14,7 +17,24 @@ import { mergeAt, type Geometry } from './sheet-geometry';
 /** The most cells Read Row and Read Column say (D135). */
 export const READ_CELLS_MAX = 50;
 
-/** A cell's value as the grid draws it, in its own format: 12% and a date, never 0.12 and a serial number. */
+const SPARKLINE_KINDS = {
+  line: 'Line',
+  column: 'Column',
+  winloss: 'Win/loss',
+  bar: 'Bar',
+} as const;
+
+/** What an IMAGE's picture is called, drawn or spoken. */
+export const imageLabel = (image: CellImage) => `Image from ${imageHost(image)}`;
+
+/** What a SPARKLINE's chart is called, drawn or spoken. */
+export const sparklineLabel = (chart: Sparkline) =>
+  `${SPARKLINE_KINDS[chart.kind]} sparkline of ${chart.values.length} values`;
+
+/**
+ * A cell's value as the grid draws it, in its own format: 12% and a date, never 0.12 and a serial number; a picture
+ * or a sparkline by what it is, as its value is empty text.
+ */
 export function cellSpokenValue(
   sheet: Sheet,
   workbook: Workbook,
@@ -22,6 +42,10 @@ export function cellSpokenValue(
   r: number,
   c: number,
 ): string {
+  const image = workbook.imageOf(sheet.id, r, c);
+  if (image) return imageLabel(image);
+  const chart = workbook.sparklineOf(sheet.id, r, c);
+  if (chart) return sparklineLabel(chart);
   const format = sheet.cells.get(cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!))?.format;
   return displayValue(workbook.value(sheet.id, r, c), format, locale).text;
 }
