@@ -127,3 +127,10 @@ export function sheetKey(e: KeyLike, platform: OfficePlatform = 'pc'): SheetKeyC
   if (e.key.length === 1 && (!e.altKey || composedWithAlt(e))) return { kind: 'type', text: e.key };
   return null;
 }
+
+// Copy, cut and paste: the browser's own, its clipboard events reaching the grid (sheet.md "Clipboard"). The grid
+// keeps them from the editor's chords (the canvas's copy), never from the browser.
+export function isClipboardChord(e: KeyLike): boolean {
+  const mod = (e.ctrlKey && !altGraphHeld(e)) || e.metaKey;
+  return mod && !e.altKey && !e.shiftKey && ['c', 'x', 'v'].includes(e.key.toLowerCase());
+}

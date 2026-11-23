@@ -155,8 +155,10 @@ test('the menus show their keys and Ctrl+/ lists the grid’s own', async ({ pag
 
 // grid-and-editing.md "Clipboard" (D142, D144): Paste Special › Transposed turns the copied row into a column, and
 // Conditional Formatting Only says when the copy holds none.
-test('Paste Special turns a copied row into a column', async ({ page, pageErrors }) => {
+test('Paste Special turns a copied row into a column', async ({ page, context, pageErrors }) => {
   test.setTimeout(120_000);
+  // Paste Special reads the system clipboard, as a menu item must: the browser asks first.
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.goto('/new?kind=spreadsheet');
   await page.waitForURL(/\/document\//);
@@ -175,7 +177,8 @@ test('Paste Special turns a copied row into a column', async ({ page, pageErrors
     animations: 'disabled',
   });
   await transposed.click();
-  expect(await inputOf(page, 'D1')).toBe('North');
+  // The paste lands once the clipboard is read.
+  await expect.poll(() => inputOf(page, 'D1')).toBe('North');
   expect(await inputOf(page, 'D2')).toBe('South');
   await (
     await officeMenuItem(page, ['Edit', 'Paste Special', 'Conditional Formatting Only'])

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sheetKey, type KeyLike } from './sheet-keys';
+import { isClipboardChord, sheetKey, type KeyLike } from './sheet-keys';
 
 const k = (key: string, mods: Partial<KeyLike> = {}): KeyLike => ({
   key,
@@ -174,5 +174,18 @@ describe('F4', () => {
     expect(sheetKey(k('F4', { altKey: true }))).toBeNull();
     expect(sheetKey(k('F4', { ctrlKey: true }))).toBeNull();
     expect(sheetKey(k('F4', { shiftKey: true }))).toBeNull();
+  });
+});
+
+// sheet.md "Clipboard": the browser's clipboard keys, kept from the editor's chords.
+describe('isClipboardChord', () => {
+  it('reads Ctrl or ⌘ with C, X or V, and nothing else', () => {
+    expect(isClipboardChord(k('c', { ctrlKey: true }))).toBe(true);
+    expect(isClipboardChord(k('X', { metaKey: true }))).toBe(true);
+    expect(isClipboardChord(k('v', { ctrlKey: true }))).toBe(true);
+    expect(isClipboardChord(k('v', { ctrlKey: true, shiftKey: true }))).toBe(false);
+    expect(isClipboardChord(k('c', { ctrlKey: true, altKey: true }))).toBe(false);
+    expect(isClipboardChord(k('c'))).toBe(false);
+    expect(isClipboardChord(k('b', { ctrlKey: true }))).toBe(false);
   });
 });
