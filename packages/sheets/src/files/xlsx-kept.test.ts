@@ -73,8 +73,6 @@ describe('XLSX kept content', () => {
         'worksheet-attribute@1:xr:uid="{00}"',
         ...[0, 1].flatMap((s) => [
           `worksheet@${s}:${SHEET_VIEWS}`,
-          // D110: a kept column's style index is left out.
-          `worksheet@${s}:<cols><col min="1" max="2" width="20" customWidth="1"/></cols>`,
           `worksheet@${s}:${MERGES}`,
           `worksheet@${s}:${MARGINS}`,
           `worksheet@${s}:${DRAWING}`,
@@ -87,6 +85,11 @@ describe('XLSX kept content', () => {
         'stylesheet@:<tableStyles count="0"/>',
       ].sort(),
     );
+    // Columns are LiveDoc's to read and write (standard-mapping.md "Rows and columns in the file"), never kept.
+    expect([...read.file.sheets[0]!.lines!.c!.lines]).toEqual([
+      [0, { size: 140 }],
+      [1, { size: 140 }],
+    ]);
     // The second sheet's link names rId3, which its part does not have: as damage would read, it is not kept (D108),
     // nor are the controls naming a relationship not there, nor the defined name of the chart sheet, never read.
     expect(read.losses).toContainEqual({ k: 'kept_unread', count: 3 });

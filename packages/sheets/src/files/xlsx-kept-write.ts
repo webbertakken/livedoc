@@ -16,6 +16,7 @@ import {
   type KeptItem,
   type KeptPart,
 } from './kept-content';
+import { withOutlinePr } from './xlsx-lines';
 
 // ECMA-376 Part 1's order of the workbook's and the worksheet's children (CT_Workbook, CT_Worksheet).
 const WORKBOOK_ORDER = [
@@ -183,13 +184,27 @@ export class XlsxKeptWriter {
       .join('');
   }
 
-  /** A worksheet's children: LiveDoc's own and the kept ones. */
-  worksheetChildren(sheet: number, own: readonly OwnChild[], rootNs: XmlBindings): string[] {
-    return inOrder(
-      WORKSHEET_ORDER,
-      this.of('worksheet', sheet).map((item) => keptXmlWithin(item, rootNs)),
-      own,
-    );
+  /**
+   * A worksheet's children: LiveDoc's own and the kept ones. LiveDoc's `outlinePr` (its attributes) goes into a kept
+   * `sheetPr`, or a `sheetPr` of its own when none is kept.
+   */
+  worksheetChildren(
+    sheet: number,
+    own: readonly OwnChild[],
+    rootNs: XmlBindings,
+    outlinePr: string | null = null,
+  ): string[] {
+    let placed = outlinePr === null;
+    const kept = this.of('worksheet', sheet).map((item) => {
+      const xml = keptXmlWithin(item, rootNs);
+      if (placed || keptLocalName(xml) !== 'sheetPr') return xml;
+      placed = true;
+      return withOutlinePr(xml, outlinePr!);
+    });
+    const sheetPr = placed
+      ? []
+      : [{ name: 'sheetPr', xml: `<sheetPr><outlinePr${outlinePr}/></sheetPr>` }];
+    return inOrder(WORKSHEET_ORDER, kept, [...sheetPr, ...own]);
   }
 
   /** The styles part's kept differential formats and table styles, after its cell styles. */

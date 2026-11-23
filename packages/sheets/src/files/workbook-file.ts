@@ -21,6 +21,7 @@ import { SheetName } from '../workbook/sheet-name';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import { formatCodeOf, formatFromCode } from './number-format-code';
 import { storedKept } from './kept-anchors';
+import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
 
 export type FileValue =
@@ -40,7 +41,14 @@ export type FileCell = {
   format?: string;
 };
 
-export type FileSheet = { name: string; rows: number; cols: number; cells: FileCell[] };
+export type FileSheet = {
+  name: string;
+  rows: number;
+  cols: number;
+  cells: FileCell[];
+  // Its rows' and columns' sizes, hidden lines and groups (standard-mapping.md "Rows and columns in the file").
+  lines?: FileLines;
+};
 
 /** A workbook as a file holds it, and what it holds that the model does not (standard-mapping.md "Unknown content"). */
 export type WorkbookFile = { sheets: FileSheet[]; kept?: KeptContent };
@@ -71,8 +79,8 @@ export type FileLoss =
   | { k: 'kept_cut'; sheet: string; cells: number }
   // A sheet's cells formatted past their number format (fonts, fills, borders, alignment): not read yet (D104).
   | { k: 'styles_unread'; sheet: string }
-  // An ODF sheet whose rows or columns are sized by hand: its sizes are not read yet (D104, D124).
-  | { k: 'sizes_unread'; sheet: string }
+  // A sheet whose sized rows and columns pass the most it holds: the rest left out (D124).
+  | { k: 'sizes_cut'; sheet: string }
   | { k: 'kept_unread'; count: number }
   | { k: 'kept_dropped'; count: number }
   // Kept items, relationships and entries past the sizes a spreadsheet stores (D113).
@@ -174,6 +182,7 @@ export function workbookFileOf(
         rows: sheet.layout.rows.length,
         cols: sheet.layout.cols.length,
         cells: inOrder(cells),
+        lines: fileLinesOf(sheet.layout),
       };
     }),
   };
@@ -287,7 +296,15 @@ function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] 
     if (title !== sheet.name) losses.push({ k: 'sheet_renamed', from: sheet.name, to: title });
     if (sheet.rows > rows || sheet.cols > cols)
       losses.push({ k: 'sheet_cut', sheet: title, rows, cols });
-    made.push({ file: sheet, id: makeSheetId(rand), title, layout: emptyLayout(rand, rows, cols) });
+    const layout = emptyLayout(rand, rows, cols);
+    const lines = layoutFromLines(sheet.lines, layout, limits.sizedAxes);
+    if (lines.cut) losses.push({ k: 'sizes_cut', sheet: title });
+    made.push({
+      file: sheet,
+      id: makeSheetId(rand),
+      title,
+      layout: { ...layout, ...lines.layout },
+    });
   }
   return made;
 }

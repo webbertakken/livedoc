@@ -24,7 +24,8 @@ import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
-import { odsHandSized, type OdsHandSized } from './ods-sizes';
+import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
+import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import { odsCellFormats, odsStyledCellStyles, type OdsCellFormats } from './ods-styles';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
@@ -226,7 +227,7 @@ type Book = {
   budget: Budget;
   formats: OdsCellFormats;
   styled: ReadonlySet<string>;
-  handSized: OdsHandSized;
+  lineStyles: OdsLineStyles;
   keeper: OdsKeeper;
 };
 
@@ -311,14 +312,18 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), extent.cols);
   if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
   if (cellsCut) losses.push({ k: 'cells_cut', sheet: name });
-  // Formatting past the number format, and the sizes of a sheet sized by hand, wait for their mappings: named (D104).
+  // Formatting past the number format waits for its mapping: named (D104).
   if (styled) losses.push({ k: 'styles_unread', sheet: name });
-  if (book.handSized(table)) losses.push({ k: 'sizes_unread', sheet: name });
   if (keeper.cut > cutBefore)
     losses.push({ k: 'kept_cut', sheet: name, cells: keeper.cut - cutBefore });
   // A line's own default format over its empty cells shows nothing, and is not named (D123).
   if (sheet.cut.formats) losses.push({ k: 'formats_cut', sheet: name });
-  return { name, rows, cols, cells };
+  // Lines are read as far as the grid a sheet makes of this one reaches (workbook-file.ts).
+  const lines = readOdsLines(table, book.lineStyles, {
+    rows: Math.min(ROWS_MAX, Math.max(rows, WORKBOOK_ROWS_NEW)),
+    cols: Math.min(COLS_MAX, Math.max(cols, WORKBOOK_COLS_NEW)),
+  });
+  return lines.r || lines.c ? { name, rows, cols, cells, lines } : { name, rows, cols, cells };
 }
 
 function readBody(
@@ -330,7 +335,7 @@ function readBody(
   const root = parsed.root;
   const formats = odsCellFormats([root, ...styleRoots]);
   const styled = odsStyledCellStyles([root, ...styleRoots]);
-  const handSized = odsHandSized([root, ...styleRoots]);
+  const lineStyles = odsLineStyles([root, ...styleRoots]);
   const spreadsheet = childElement(
     childElement(root, OFFICE, 'body') ?? root,
     OFFICE,
@@ -344,7 +349,7 @@ function readBody(
   keeper.spreadsheet(spreadsheet);
   const sheets = tables
     .slice(0, SHEETS_MAX)
-    .map((t, i) => readTable(t, i, { losses, budget, formats, styled, handSized, keeper }));
+    .map((t, i) => readTable(t, i, { losses, budget, formats, styled, lineStyles, keeper }));
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   // A file that keeps nothing reads as the model alone.

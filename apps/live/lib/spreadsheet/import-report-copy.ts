@@ -87,9 +87,9 @@ export function importReportLine(loss: ReportedLoss): string {
         `Fonts, fills, borders and alignment are not shown yet in ${counted(count, 'sheet', 'sheets')}`,
         loss,
       );
-    case 'sizes_unread':
+    case 'sizes_cut':
       return named(
-        `Row heights and column widths are not read yet in ${counted(count, 'sheet', 'sheets')}`,
+        `Row heights and column widths past the most a sheet holds are left out of ${counted(count, 'sheet', 'sheets')}`,
         loss,
       );
     case 'sheet_renamed':

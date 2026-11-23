@@ -10,6 +10,7 @@ import {
 } from '@livedoc/office-packages';
 import { dataStyleXml } from './odf-number-styles';
 import { readDataStyle, type DataStyleRead } from './odf-number-styles-read';
+import { odfLengthFromPx } from './line-units';
 
 const { office: OFFICE, style: STYLE, number: NUMBER } = ODF_NS;
 
@@ -37,9 +38,33 @@ export class OdsStyles {
     return name;
   }
 
+  private readonly lines = new Map<string, string>();
+  private readonly lineXml: string[] = [];
+
+  /**
+   * The automatic style of a row or a column of `px` (standard-mapping.md "Rows and columns in the file"): `ro1`,
+   * `co1`, ... in order of first use; a row's at its text's height when `optimal`.
+   */
+  lineStyle(family: 'table-row' | 'table-column', px: number, optimal: boolean): string {
+    const key = `${family}|${px}|${optimal}`;
+    const known = this.lines.get(key);
+    if (known) return known;
+    const row = family === 'table-row';
+    const name = `${row ? 'ro' : 'co'}${[...this.lines.keys()].filter((k) => k.startsWith(family + '|')).length + 1}`;
+    const size = odfLengthFromPx(px);
+    const properties = row
+      ? `<style:table-row-properties style:row-height="${size}" style:use-optimal-row-height="${optimal}"/>`
+      : `<style:table-column-properties style:column-width="${size}"/>`;
+    this.lineXml.push(
+      `<style:style style:name="${name}" style:family="${family}">${properties}</style:style>`,
+    );
+    this.lines.set(key, name);
+    return name;
+  }
+
   /** `office:automatic-styles` with the `kept` ones after the cells', or nothing when there are none. */
   automaticStyles(kept: readonly string[] = []): string[] {
-    const styles = [...this.xml, ...kept];
+    const styles = [...this.lineXml, ...this.xml, ...kept];
     return styles.length === 0
       ? []
       : ['<office:automatic-styles>', ...styles, '</office:automatic-styles>'];

@@ -12,7 +12,7 @@ describe('importReport', () => {
   it('gives a line a kind in the spec’s order, each counted with its first names', () => {
     const losses: FileLoss[] = [
       { k: 'sheet_renamed', from: 'Data', to: 'Data (2)' },
-      { k: 'sizes_unread', sheet: 'Data' },
+      { k: 'sizes_cut', sheet: 'Data' },
       { k: 'styles_unread', sheet: 'Data' },
       { k: 'formats_cut', sheet: 'Data' },
       { k: 'format_approximated', sheet: 'Data', code: 'yyyy' },
@@ -61,7 +61,7 @@ describe('importReport', () => {
       { k: 'format_approximated', count: 1, names: ['yyyy'] },
       { k: 'formats_cut', count: 1, names: ['Data'] },
       { k: 'styles_unread', count: 1, names: ['Data'] },
-      { k: 'sizes_unread', count: 1, names: ['Data'] },
+      { k: 'sizes_cut', count: 1, names: ['Data'] },
       { k: 'sheet_renamed', count: 1, names: [{ from: 'Data', to: 'Data (2)' }] },
     ]);
   });

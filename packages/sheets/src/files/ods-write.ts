@@ -13,6 +13,7 @@ import {
 } from '@livedoc/office-packages';
 import { declarations, OdsKeptWriter } from './ods-kept-write';
 import { OdsStyles } from './ods-styles';
+import { OdsAxisOut } from './ods-lines';
 import { toOpenFormula } from './open-formula';
 import type {
   FileCell,
@@ -139,8 +140,8 @@ function emptyCells(n: number): string {
   return `<table:table-cell${repeated('columns', n)}/>`;
 }
 
-function rowXml(cells: readonly FileCell[], cols: number, out: Out): string[] {
-  const lines = ['<table:table-row>'];
+function rowXml(cells: readonly FileCell[], cols: number, out: Out, attrs: string): string[] {
+  const lines = [`<table:table-row${attrs}>`];
   let at = 0;
   for (const cell of cells) {
     if (cell.c > at) lines.push(emptyCells(cell.c - at));
@@ -152,8 +153,27 @@ function rowXml(cells: readonly FileCell[], cols: number, out: Out): string[] {
   return lines;
 }
 
-function emptyRows(n: number, cols: number): string {
-  return `<table:table-row${repeated('rows', n)}>${emptyCells(cols)}</table:table-row>`;
+function emptyRows(n: number, cols: number, attrs: string): string {
+  return `<table:table-row${attrs}${repeated('rows', n)}>${emptyCells(cols)}</table:table-row>`;
+}
+
+// Where runs of lines start: 0, each line with something of its own and the one after it, and the end.
+function runStarts(count: number, breaks: Iterable<number>): number[] {
+  const at = new Set([0, count]);
+  for (const p of breaks) if (p >= 0 && p <= count) at.add(p);
+  return [...at].sort((a, b) => a - b);
+}
+
+// The columns, each run with its style and visibility, in their groups.
+function columnsXml(cols: number, axis: OdsAxisOut): string[] {
+  const starts = runStarts(cols, axis.breaks());
+  const runs = starts.slice(0, -1).map((from, i) => ({
+    from,
+    xml: [
+      `<table:table-column${axis.at(from).attrs}${repeated('columns', starts[i + 1]! - from)}/>`,
+    ],
+  }));
+  return axis.nest(runs, 'table-column-group');
 }
 
 function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'index'>): string[] {
@@ -173,26 +193,35 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   for (const row of rows.values()) for (const cell of row) cols = Math.max(cols, cell.c + 1);
   let rowCount = Math.max(1, sheet.rows);
   for (const r of rows.keys()) rowCount = Math.max(rowCount, r + 1);
-  const lines = [
+  const lineStyle = out.styles.lineStyle.bind(out.styles);
+  const rowAxis = new OdsAxisOut(sheet.lines?.r, 'table-row', lineStyle);
+  const colAxis = new OdsAxisOut(sheet.lines?.c, 'table-column', lineStyle);
+  // A row with cells is a run of its own; rows between are runs of empty rows, split where their attributes change.
+  const starts = runStarts(rowCount, [
+    ...rowAxis.breaks(),
+    ...[...rows.keys()].flatMap((r) => [r, r + 1]),
+  ]);
+  const runs = starts.slice(0, -1).map((from, i) => {
+    const { attrs } = rowAxis.at(from);
+    const cells = rows.get(from);
+    const xml = cells
+      ? rowXml(
+          cells.sort((a, b) => a.c - b.c),
+          cols,
+          sheetOut,
+          attrs,
+        )
+      : [emptyRows(starts[i + 1]! - from, cols, attrs)];
+    return { from, xml };
+  });
+  return [
     `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${kept.tableAttributes(index)}>`,
     ...kept.table('table-before', index),
-    `<table:table-column${repeated('columns', cols)}/>`,
+    ...columnsXml(cols, colAxis),
+    ...rowAxis.nest(runs, 'table-row-group'),
+    ...kept.table('table-after', index),
+    '</table:table>',
   ];
-  let next = 0;
-  for (const r of [...rows.keys()].sort((a, b) => a - b)) {
-    if (r > next) lines.push(emptyRows(r - next, cols));
-    lines.push(
-      ...rowXml(
-        rows.get(r)!.sort((a, b) => a.c - b.c),
-        cols,
-        sheetOut,
-      ),
-    );
-    next = r + 1;
-  }
-  if (rowCount > next) lines.push(emptyRows(rowCount - next, cols));
-  lines.push(...kept.table('table-after', index), '</table:table>');
-  return lines;
 }
 
 // How the file's formulas compare and match: as Google's do, text ignoring case, criteria with `*` and `?` over the
