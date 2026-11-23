@@ -56,8 +56,6 @@ import {
   type SortKey,
   shiftCells,
   type ShiftMode,
-  SHEET_FREEZE_COLS_MAX,
-  SHEET_FREEZE_ROWS_MAX,
   rangeOptions,
   validateWrite,
   writeForRules,
@@ -65,6 +63,7 @@ import {
 } from '@livedoc/sheets';
 import { track } from '@/lib/telemetry';
 import { useSheetController, type SheetController } from './sheet-controller';
+import { freezeLimit } from './sheet-freeze';
 import { fontPx, roughWidth } from './SheetCells';
 import { sheetRuleActions } from './rules/sheet-rule-actions';
 
@@ -399,17 +398,11 @@ export function useSheetActions() {
       }) {
         c.write({ kind: 'layout', changes: [{ k: 'options', ...options }] }, 'Settings');
       },
-      // Clamped to the freeze limits, so Up to Row 300 freezes what it may rather than being refused.
+      // Clamped to the freeze limits (sheet-freeze.ts), so Up to Row 300 freezes what it may rather than being refused.
       freeze: (rows?: number, cols?: number) => {
-        const most = (n: number | undefined, max: number, lines: number) =>
-          n === undefined ? n : Math.min(n, max, lines - 1);
-        c.write(
-          freeze(
-            most(rows, SHEET_FREEZE_ROWS_MAX, c.sheet.layout.rows.length),
-            most(cols, SHEET_FREEZE_COLS_MAX, c.sheet.layout.cols.length),
-          ),
-          'Freeze',
-        );
+        const most = (n: number | undefined, axis: 'r' | 'c') =>
+          n === undefined ? n : Math.min(n, freezeLimit(c.geometry, c.view, axis));
+        c.write(freeze(most(rows, 'r'), most(cols, 'c')), 'Freeze');
       },
       // ---- Dates ----
       typeNow: (what: 'date' | 'time') => {

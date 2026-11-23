@@ -85,11 +85,16 @@ test('back after a deploy brings the Explorer back, never a white screen', async
   );
   await row.click();
   await opened;
+  // The document page done loading, as someone sees it before they press back: once it has gone quiet
+  // (lib/page-quiet.ts, which can be well after the network first idles) and then idle, it fetches the
+  // code of the surfaces it loads on demand (docs/specs/016-platform/web-performance.md), and a deploy
+  // landing mid-fetch would refuse that code on the document page, not the Explorer's this test is about.
+  const quiet = page.waitForEvent('console', {
+    predicate: (m) => m.text().startsWith('[page-quiet] run'),
+    timeout: 30_000,
+  });
   await expect(page.locator('[data-canvas-a11y-root]')).toBeVisible({ timeout: 30_000 });
-  // The document page done loading, as someone sees it before they press back: once it has rendered
-  // and the page is idle, it fetches the code of the surfaces it loads on demand
-  // (docs/specs/016-platform/web-performance.md), and a deploy landing mid-fetch would refuse that
-  // code on the document page, not the Explorer's this test is about.
+  await quiet;
   await page.evaluate(
     () => new Promise((done) => requestIdleCallback(() => done(null), { timeout: 5_000 })),
   );

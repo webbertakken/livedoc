@@ -14,7 +14,7 @@ import {
 } from '@livedoc/sheets';
 
 export const ROW_HEADER_PX = 46;
-export const COL_HEADER_PX = 22;
+export const COL_HEADER_PX = 24;
 const GRID_OVERSCAN = 4;
 
 export type Geometry = {

@@ -12,12 +12,19 @@ Google Sheets does. What the Plan Sheet already does carries over unless this pa
   (Google's defaults).
 - Column letters run A to ZZZ (18,278); rows to the workbook's limit ([Spreadsheet](spreadsheet.md#limits)).
 - Only the cells in view are drawn; positions come from prefix sums of sizes, so a jump to row 1,000,000 costs no
-  more than to row 100 ([Grid research](../../research/sheets-open-standard/grid.md)).
+  more than to row 100 ([Grid research](../../research/sheets-open-standard/grid.md)). Finding the line under a point
+  is a search of those sums, never a walk of every line.
+- A sheet taller or wider than the scroll room (default, D134) scrolls through it in proportion: the scroll bar
+  stands for the whole sheet, under every browser's ceiling on an element's size, while panning, a drag at the edge
+  and bringing the active cell into view move the cells by the pixels asked.
+- Column letters are 24 px tall and row numbers 46 px wide, as Google's (measured on the reference capture).
 - Below the last row: **Add [1000] More Rows at the Bottom**, the number editable, as Google's.
 - Text runs over empty neighbours (left-aligned to the right, right-aligned to the left, centred both ways) unless
   it wraps or clips; numbers never run over: fewer decimals first, then scientific, then `#####`, as today.
 - Frozen rows and columns: dragged by the thick bars at the top-left corner, or View › Freeze; up to the rows and
-  columns that leave a third of the grid to scroll.
+  columns that leave a third of the grid to scroll, and never past 100 rows and 26 columns
+  ([Sheet](sheet.md#freeze), D16). A pick or a drag past either freezes as many as fit; before the grid has a size,
+  only the fixed limits hold.
 - Gridlines and formulas: View › Show › Gridlines, Formulas (Ctrl+`), Protected Ranges (hatched), Formula Bar.
 - Zoom: 50% to 200%, the person's own, never saved.
 
