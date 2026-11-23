@@ -54,9 +54,8 @@ export function SettingsTokenOverview({
               />
             ))}
           </div>
-          <span className="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-            <span className="font-semibold text-slate-700 dark:text-slate-200">{count}</span> of{' '}
-            {max}
+          <span className="shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
+            <span className="text-slate-700 dark:text-slate-200">{count}</span> of {max}
           </span>
           {composing ? null : (
             // Visibly just "New" beside the meter; the accessible name says what it makes, still starting with the
@@ -75,7 +74,7 @@ export function SettingsTokenOverview({
         </div>
       )}
       {atCap ? (
-        <p className="text-[11px] text-rose-600 dark:text-rose-400">
+        <p className="text-supporting text-rose-600 dark:text-rose-400">
           Every slot is taken. Revoke a token to make room for a new one.
         </p>
       ) : null}

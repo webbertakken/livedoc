@@ -78,16 +78,13 @@ export function SettingsRowShell({
       <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${dimmed ? 'opacity-50' : ''}`}>
         {leading}
         <div className="min-w-[9rem] flex-1">
-          <div
-            id={`${row.key}-label`}
-            className="text-sm font-medium text-slate-800 dark:text-slate-100"
-          >
+          <div id={`${row.key}-label`} className="text-body text-slate-800 dark:text-slate-100">
             {row.label}
           </div>
           {described ? (
             <p
               id={`${row.key}-description`}
-              className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400"
+              className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400"
             >
               {descriptionContent ?? row.description}
               {row.helpArticle ? (
@@ -125,7 +122,7 @@ export function SettingsRowShell({
       {notice ? (
         <p
           role="note"
-          className="flex items-start gap-1.5 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300"
+          className="flex items-start gap-1 text-supporting text-slate-600 dark:text-slate-300"
         >
           <InfoGlyph />
           <span>{notice}</span>
@@ -148,4 +145,4 @@ function InfoGlyph() {
 
 // The quiet bordered button a row's action uses (Change, Open Trash, Turn Off).
 export const SETTINGS_ROW_BUTTON =
-  'shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:border-brand-300 hover:bg-brand-50/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60';
+  'min-h-row shrink-0 cursor-pointer rounded-control border border-slate-200 bg-white px-3 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60';

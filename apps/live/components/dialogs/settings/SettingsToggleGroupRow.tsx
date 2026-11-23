@@ -39,15 +39,15 @@ export function SettingsToggleGroupRow({
               disabled={disabled}
               data-settings-toggle={toggle.key}
               onChange={(next) => onChange(toggle.key, next)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition ${
+              className={`inline-flex min-h-row items-center gap-1 rounded-full border px-3 text-body transition ${
                 on
-                  ? 'border-brand-300 bg-brand-50 text-brand-800 hover:bg-brand-100 dark:border-brand-500/50 dark:bg-brand-500/15 dark:text-brand-200 dark:hover:bg-brand-500/25'
+                  ? 'font-medium border-brand-300 bg-brand-50 text-brand-800 hover:bg-brand-100 dark:border-brand-500/50 dark:bg-brand-500/15 dark:text-brand-200 dark:hover:bg-brand-500/25'
                   : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
               }`}
             >
               <span
                 aria-hidden
-                className={`flex h-3.5 w-3.5 items-center justify-center rounded-full ${
+                className={`flex size-icon-row items-center justify-center rounded-full ${
                   on
                     ? 'bg-brand-700 text-white dark:bg-brand-600'
                     : 'border border-slate-300 dark:border-slate-500'

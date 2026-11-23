@@ -6,7 +6,7 @@
 //
 // Drawn here rather than pulled from @livedoc/icons because that package
 // is the canvas catalogue (what a user places on the canvas); these are chrome,
-// sized for a 28px tile and stroked to read at that size.
+// sized for a 24px tile and stroked to read at that size.
 
 import type { ReactNode } from 'react';
 import { Glyph, lucideGlyph, EDITOR_MODE_ICONS } from '@livedoc/ui';
@@ -61,12 +61,13 @@ const TILE: Record<SettingsIconId, string> = {
   privacy: 'bg-emerald-600',
 };
 
-// One tile: the coloured rounded square with its glyph centred.
+// One tile: the coloured rounded square with its glyph centred, at the chip step so its row keeps 28 px
+// (docs/specs/004-interface-design/sizing.md "Heights": a picture in a row).
 export function SettingsCategoryIcon({ id }: { id: SettingsIconId }) {
   return (
     <span
       aria-hidden
-      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-white ${TILE[id]}`}
+      className={`flex size-chip shrink-0 items-center justify-center rounded-control text-white ${TILE[id]}`}
     >
       {CATEGORY_GLYPHS[id]}
     </span>
@@ -226,7 +227,7 @@ export function SettingsSubcategoryIcon({ id }: { id: SettingsSubcategoryId }) {
   return (
     <span
       aria-hidden
-      className="flex h-4 w-4 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400"
+      className="flex size-icon-row shrink-0 items-center justify-center text-slate-500 dark:text-slate-400"
     >
       {SUBCATEGORY_GLYPHS[id]()}
     </span>

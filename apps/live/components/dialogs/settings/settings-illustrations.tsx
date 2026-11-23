@@ -276,14 +276,14 @@ export function SettingsIllustration({
 }) {
   if (isChoiceIllustration(id)) {
     return (
-      <div className="mt-2.5 px-3.5">
+      <div className="mt-2.5 px-3">
         <ChoiceStates id={id} value={value} onPick={onChoose} disabledIds={disabledValues} />
       </div>
     );
   }
   const drawing = ILLUSTRATIONS[id];
   return (
-    <div className="mt-2.5 px-3.5">
+    <div className="mt-2.5 px-3">
       <StatePair
         off={drawing.off}
         on={drawing.on}

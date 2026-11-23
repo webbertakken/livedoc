@@ -51,7 +51,8 @@ const TAILWIND_RADIUS_PX: Record<string, number> = {
   '3xl': 24,
   '4xl': 32,
 };
-const RADIUS_PASSES = new Set([...Object.keys(SIZING_SCALE.radius), 'full', 'none']);
+// `[inherit]` draws its parent's radius, which the parent names from the scale.
+const RADIUS_PASSES = new Set([...Object.keys(SIZING_SCALE.radius), 'full', 'none', '[inherit]']);
 const ON_SCALE_WEIGHTS = new Set(['normal', 'medium']);
 const OFF_SCALE_WEIGHTS = new Set([
   'thin',

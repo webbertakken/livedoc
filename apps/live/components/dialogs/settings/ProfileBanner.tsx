@@ -60,7 +60,7 @@ export function ProfileBanner({ name, colour }: { name: string; colour: string |
         />
       </svg>
       <div data-profile-cursor="" className="absolute top-7 right-[15rem] flex items-start">
-        <svg viewBox="0 0 16 16" className="size-5 drop-shadow-sm">
+        <svg viewBox="0 0 16 16" className="size-icon-title drop-shadow-sm">
           <path
             d="M2 1.5 14 7.2l-5.4 1.4L6 14z"
             className="fill-(--identity) stroke-white dark:fill-(--identity-deep) dark:stroke-slate-900"
@@ -68,7 +68,7 @@ export function ProfileBanner({ name, colour }: { name: string; colour: string |
             strokeLinejoin="round"
           />
         </svg>
-        <span className="mt-4 -ml-1 inline-flex h-6 max-w-40 items-center rounded-full bg-(--identity) px-2.5 text-xs font-semibold text-white shadow-sm dark:bg-(--identity-deep)">
+        <span className="mt-4 -ml-1 inline-flex h-chip max-w-40 items-center rounded-full bg-(--identity) px-2 text-supporting text-white shadow-sm dark:bg-(--identity-deep)">
           <span className="text-optical-centre min-w-0 truncate">{name}</span>
         </span>
       </div>

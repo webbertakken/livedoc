@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SIZING_SCALE } from '@livedoc/tailwind-config/sizing';
 
 // The drawing kit the Settings illustrations share: the frame size, the
 // colour roles, and the editor-window outline most of them are drawn inside.
@@ -15,6 +16,11 @@ export const GAP = 18;
 // a choice drawing of any option count keeps the same frame size.
 const TOGGLE_MAX_REM = 17;
 export const REM_PER_UNIT = TOGGLE_MAX_REM / (W * 2 + GAP + 8);
+
+// A caption is supporting text (docs/specs/004-interface-design/sizing.md "Type"), set in viewBox units so it
+// draws at the supporting step when the drawing renders at its widest (a 16 px rem, D235).
+const ROOT_PX = 16;
+export const CAPTION_UNITS = SIZING_SCALE.type.supporting[0] / (REM_PER_UNIT * ROOT_PX);
 
 export const PAPER = 'fill-white stroke-slate-300 dark:fill-slate-900 dark:stroke-slate-600';
 const CHROME = 'fill-slate-100 stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600';
@@ -88,11 +94,8 @@ export function StateFrame({
         x={W / 2}
         y={H + 13}
         textAnchor="middle"
-        className={
-          current
-            ? 'fill-brand-600 text-[8px] font-semibold dark:fill-brand-300'
-            : 'fill-slate-400 text-[8px]'
-        }
+        fontSize={CAPTION_UNITS}
+        className={current ? 'fill-brand-600 font-medium dark:fill-brand-300' : 'fill-slate-400'}
       >
         {caption}
       </text>

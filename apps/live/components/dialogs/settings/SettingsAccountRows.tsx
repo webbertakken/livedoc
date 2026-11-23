@@ -51,7 +51,7 @@ export function SettingsDeleteAccountRow({ row }: { row: SettingsDeleteAccountRo
           </Button>
         ) : (
           // A guest is offered the way in, beside the label.
-          <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+          <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
             <SettingsSignInLink />
           </span>
         )

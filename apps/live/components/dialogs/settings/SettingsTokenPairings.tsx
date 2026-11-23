@@ -33,23 +33,18 @@ export function SettingsTokenPairings({
   if (pairings.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-2.5 dark:border-slate-700/70">
-      <p
-        id={labelId}
-        className="text-[10px] font-semibold text-slate-500 uppercase dark:text-slate-400"
-      >
+    <div className="flex flex-col gap-2 border-t border-slate-100 pt-2.5 dark:border-slate-700/70">
+      <p id={labelId} className="text-supporting text-slate-500 dark:text-slate-400">
         Paired workbenches
       </p>
-      <ul aria-labelledby={labelId} className="flex flex-col gap-1.5">
+      <ul aria-labelledby={labelId} className="flex flex-col gap-1">
         {pairings.map((pairing) => {
           const name = pairing.name ?? UNNAMED;
           return (
             <li key={pairing.id} className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-200">
-                  {name}
-                </p>
-                <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="truncate text-body text-slate-700 dark:text-slate-200">{name}</p>
+                <p className="flex flex-wrap items-center gap-x-1 text-supporting text-slate-500 dark:text-slate-400">
                   <code className="font-mono break-all text-slate-600 dark:text-slate-300">
                     {pairing.origin}
                   </code>
@@ -63,7 +58,7 @@ export function SettingsTokenPairings({
                 type="button"
                 onClick={(e) => setConfirm({ pairing, anchor: e.currentTarget })}
                 aria-label={`Unpair ${name} at ${pairing.origin}`}
-                className="min-h-6 shrink-0 rounded-md px-1.5 text-[11px] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-400 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                className="min-h-row shrink-0 rounded-control px-2 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-400 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               >
                 Unpair
               </button>

@@ -252,13 +252,13 @@ export function SettingsDialog({
           <button
             type="button"
             onClick={() => setSelectedId(backTo?.id ?? null)}
-            className="-ml-1.5 flex items-center gap-0.5 rounded-md py-1 pr-2 pl-1 text-sm font-medium text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
+            className="-ml-1 flex min-h-row items-center gap-0.5 rounded-control pr-2 pl-1 text-body text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
           >
             <NavChevron direction="back" />
             {backTo?.label ?? 'Settings'}
           </button>
         ) : null}
-        <h2 className="flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+        <h2 className="flex-1 truncate text-dialog-title text-slate-800 dark:text-slate-100">
           {showBack ? selected?.label : 'Settings'}
         </h2>
         <DialogCloseButton compact onClick={close} />
@@ -358,7 +358,7 @@ export function SettingsDialog({
       </div>
 
       <footer className="border-t border-slate-200 px-4 py-3 dark:border-slate-800">
-        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+        <p className="text-supporting text-slate-500 dark:text-slate-400">
           {/* A guest has no account to sync to: their settings follow them in this browser only. */}
           {signedIn
             ? 'Settings sync to your account and apply to every document you open, on every device you sign in from.'

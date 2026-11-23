@@ -15,7 +15,7 @@ type ListCategory = SettingsCategorySpec & { matchCount?: number };
 // The phone's grouped card: the root list, and a parent pane's sub-category
 // links, which read as the same navigation one level in.
 const ROOT_CARD =
-  'flex flex-col divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-slate-800 dark:border-slate-700';
+  'flex flex-col divide-y divide-slate-100 overflow-hidden rounded-surface border border-slate-200 dark:divide-slate-800 dark:border-slate-700';
 
 function childrenOf<C extends SettingsCategorySpec>(categories: readonly C[], id: string): C[] {
   return categories.filter((c) => c.parent === id);
@@ -244,7 +244,7 @@ function CategoryRow({
   // the box takes in the disclosure chevron rather than stopping short of it.
   const surface = isRoot
     ? 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
-    : `rounded-lg ${
+    : `rounded-control ${
         lit
           ? 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-100'
           : 'hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -259,28 +259,30 @@ function CategoryRow({
       // what aria-current names. The root list is navigation, so its
       // rows make no such claim.
       aria-current={lit ? 'page' : undefined}
-      className={`flex min-w-0 flex-1 items-center gap-3 text-left transition ${
+      className={`flex min-h-row min-w-0 flex-1 items-center gap-2 py-0.5 text-left transition ${
         empty ? 'cursor-default opacity-40' : ''
       } ${
         isRoot
           ? nested
-            ? 'py-2 pr-3 pl-[34px]'
-            : 'px-3 py-2.5'
+            ? 'pointer-coarse:min-h-11 pr-3 pl-6'
+            : 'pointer-coarse:min-h-11 px-3'
           : nested
-            ? 'py-1.5 pr-2.5 pl-8'
-            : 'px-2.5 py-2'
+            ? 'pr-2 pl-6'
+            : 'px-2'
       } ${disclosure ? '' : surface}`}
     >
       {icon}
       <span
-        className={`text-optical-line flex-1 truncate text-sm font-medium ${
-          lit ? 'text-brand-800 dark:text-brand-100' : 'text-slate-800 dark:text-slate-100'
+        className={`text-optical-line flex-1 truncate text-body ${
+          lit
+            ? 'font-medium text-brand-800 dark:text-brand-100'
+            : 'text-slate-800 dark:text-slate-100'
         }`}
       >
         {label}
       </span>
       {searching && count > 0 ? (
-        <span className="inline-flex h-[19px] shrink-0 items-center rounded-full bg-brand-100 px-1.5 text-[10px] font-semibold tabular-nums text-brand-700 dark:bg-brand-500/25 dark:text-brand-100">
+        <span className="inline-flex h-icon-row min-w-icon-row shrink-0 items-center justify-center rounded-full bg-brand-100 px-1 text-glyph tabular-nums text-brand-700 dark:bg-brand-500/25 dark:text-brand-100">
           <span className="text-optical-centre">{count}</span>
         </span>
       ) : null}
@@ -301,7 +303,7 @@ function CategoryRow({
         aria-expanded={disclosure.open}
         aria-controls={disclosure.controls}
         aria-label={disclosure.label}
-        className="mr-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-slate-400 transition hover:text-slate-700 disabled:cursor-default disabled:opacity-40 disabled:hover:text-slate-400 dark:hover:text-slate-200"
+        className="mr-0.5 flex size-row shrink-0 items-center justify-center text-slate-400 transition hover:text-slate-700 disabled:cursor-default disabled:opacity-40 disabled:hover:text-slate-400 dark:hover:text-slate-200"
       >
         <NavChevron
           className={`transition-transform motion-reduce:transition-none ${disclosure.open ? 'rotate-90' : ''}`}

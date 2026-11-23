@@ -146,6 +146,8 @@ describe('judgeClass', () => {
       'rounded-b-surface',
       'rounded-full',
       'rounded-none',
+      'rounded-[inherit]',
+      'rounded-t-[inherit]',
     ]) {
       expect(judgeClass(ok), ok).toBeNull();
     }

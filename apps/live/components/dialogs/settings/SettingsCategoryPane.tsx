@@ -139,7 +139,7 @@ export function SettingsCategoryPane({
               />
             ) : null}
             {note ? (
-              <p className="-mt-1 px-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              <p className="-mt-1 px-1 text-supporting text-slate-500 dark:text-slate-400">
                 {note.note}
                 {note.helpArticle ? (
                   <>
@@ -325,7 +325,7 @@ function SectionHeading({ name, focused }: { name: string; focused: boolean }) {
       ref={ref}
       id={`settings-section-${settingsSectionId(name)}`}
       tabIndex={-1}
-      className="scroll-mt-2 rounded px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-400"
+      className="scroll-mt-2 rounded-control px-1 text-panel-title text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-200"
     >
       {name}
     </h3>
@@ -381,16 +381,15 @@ function CollapsedSection({
         onToggle={() => setOpen((o) => !o)}
         trailing={
           onCount ? (
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              {onCount}
-            </span>
+            <span className="text-supporting text-slate-500 dark:text-slate-400">{onCount}</span>
           ) : undefined
         }
-        headerClassName="flex w-full items-center justify-between rounded px-1 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        titleClassName="text-panel-title text-slate-700 dark:text-slate-200"
+        headerClassName="flex min-h-row w-full items-center justify-between rounded-control px-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         bodyClassName="flex flex-col gap-2 pt-1"
       >
         {note ? (
-          <p className="px-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="px-1 text-supporting text-slate-500 dark:text-slate-400">
             {note.note}
             {note.helpArticle ? (
               <>

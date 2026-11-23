@@ -16,12 +16,12 @@ export function useInSettingsGroup(): boolean {
 // The card's frame. No overflow clipping: a help link's hover card has to escape it, so the
 // first and last cells round their own corners instead (`rounded-[inherit]` on each cell).
 export const SETTINGS_CARD =
-  'rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800';
+  'rounded-surface border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800';
 
 // A cell's slot in the card: the hairline above every cell but the first, and the card's
 // corners on the first and last, so a cell's hover tint follows the card's outline.
 export const SETTINGS_CARD_SLOT =
-  'border-t border-slate-100 first:rounded-t-xl first:border-t-0 last:rounded-b-xl dark:border-slate-700/70';
+  'border-t border-slate-100 first:rounded-t-surface first:border-t-0 last:rounded-b-surface dark:border-slate-700/70';
 
 export function SettingsGroup({ children }: { children: ReactNode }) {
   return (
@@ -38,7 +38,7 @@ export function SettingsGroupChildren({ label, children }: { label: string; chil
     <div
       role="group"
       aria-label={label}
-      className={`flex flex-col bg-slate-50/80 pl-5 dark:bg-slate-900/30 ${SETTINGS_CARD_SLOT}`}
+      className={`flex flex-col bg-slate-50/80 pl-4 dark:bg-slate-900/30 ${SETTINGS_CARD_SLOT}`}
     >
       {children}
     </div>

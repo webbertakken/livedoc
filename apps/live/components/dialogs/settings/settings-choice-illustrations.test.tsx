@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { SETTINGS_CATEGORIES } from './settings-catalogue';
 import { CHOICE_ILLUSTRATIONS } from './settings-choice-illustrations';
 import { SettingsIllustration } from './settings-illustrations';
+import { REM_PER_UNIT } from './settings-illustration-kit';
 
 afterEach(cleanup);
 
@@ -46,8 +47,19 @@ describe('choice illustrations', () => {
     const { container } = render(<SettingsIllustration id="appearance" value="dark" />);
     const captions = [...container.querySelectorAll('text')];
     expect(captions.map((t) => t.textContent)).toEqual(['Light', 'Dark', 'System']);
-    const current = captions.filter((t) => t.getAttribute('class')?.includes('font-semibold'));
+    const current = captions.filter((t) => t.getAttribute('class')?.includes('font-medium'));
     expect(current.map((t) => t.textContent)).toEqual(['Dark']);
+  });
+
+  // docs/specs/004-interface-design/sizing.md: supporting text is 12 px, a caption under a drawing too.
+  it('draws each caption at the supporting step at the widest the drawing renders', () => {
+    const { container } = render(<SettingsIllustration id="appearance" value="dark" />);
+    const sizes = [...container.querySelectorAll('text')].map((t) =>
+      Number(t.getAttribute('font-size')),
+    );
+    expect(sizes.map((units) => Math.round(units * REM_PER_UNIT * 16 * 100) / 100)).toEqual([
+      12, 12, 12,
+    ]);
   });
 
   it('describes the drawing for assistive tech', () => {

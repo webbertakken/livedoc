@@ -31,16 +31,17 @@ export function SettingsPresetSummaryRow({
         {lines.map((line) => (
           <li key={line.setting} className="flex items-center gap-3 py-1.5">
             <div className="flex min-w-0 flex-1 flex-col">
-              <span className="text-xs text-slate-700 dark:text-slate-200">
-                {line.label}: <span className="font-semibold">{line.value}</span>
+              <span className="text-body text-slate-700 dark:text-slate-200">
+                {line.label}:{' '}
+                <span className="text-slate-900 dark:text-slate-50">{line.value}</span>
                 <span className="text-slate-500 dark:text-slate-400"> · {line.categoryLabel}</span>
               </span>
               {line.restorable ? (
                 <span
                   className={
                     line.changed
-                      ? 'text-[11px] text-amber-700 dark:text-amber-300'
-                      : 'text-[11px] text-slate-500 dark:text-slate-400'
+                      ? 'text-supporting text-amber-700 dark:text-amber-300'
+                      : 'text-supporting text-slate-500 dark:text-slate-400'
                   }
                 >
                   {line.changed
@@ -54,7 +55,7 @@ export function SettingsPresetSummaryRow({
                 type="button"
                 onClick={() => onGoToRow(line.categoryId, line.rowKey)}
                 aria-label={`Change ${line.label} in ${line.categoryLabel}`}
-                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
+                className="min-h-row shrink-0 rounded-control px-2 text-body text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
               >
                 Change
               </button>

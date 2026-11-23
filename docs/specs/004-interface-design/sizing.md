@@ -97,6 +97,7 @@ A surface names the token, never the number, so the scale changes in one place.
 | `full`    | pill   | A pill or a round button      |
 
 - A radius reads as `rounded-control`, or on one side or corner as `rounded-t-surface`; square is `rounded-none`.
+- A part that follows its parent's corners takes `rounded-[inherit]`: the parent names the step.
 
 ## Touch
 
