@@ -142,6 +142,8 @@ test('a damaged PDF opens repaired, and says so with its Details', async ({ page
   await expect(details).toContainText(
     "LiveDoc rebuilt this PDF's index of where each part of the file lies",
   );
+  // The dialog's entrance has played out before it is pictured.
+  await page.evaluate(() => Promise.all(document.getAnimations().map((motion) => motion.finished)));
   await page.emulateMedia({ colorScheme: 'light' });
   await page.screenshot({ path: test.info().outputPath('pdf-repaired-details-light.png') });
   await details.getByRole('button', { name: 'Close' }).click();
