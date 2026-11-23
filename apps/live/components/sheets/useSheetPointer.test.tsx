@@ -150,6 +150,29 @@ describe('headers', () => {
     expect(sel(h).ranges).toEqual([{ r1: 2, c1: 0, r2: 4, c2: 5 }]);
   });
 
+  // grid-and-editing.md "Selection": Ctrl and a header click or drag adds rows or columns.
+  it('a Ctrl+click or drag on headers adds rows or columns to the ranges held', async () => {
+    const h = await mountGrid({ rows: 6, cols: 6 });
+    select(h, 2, 1);
+    drag(h, colHead(3), colHead(4), { ctrlKey: true });
+    expect(sel(h).ranges).toEqual([
+      { r1: 2, c1: 1, r2: 2, c2: 1 },
+      { r1: 0, c1: 3, r2: 5, c2: 4 },
+    ]);
+    expect(sel(h).active).toEqual({ r: 0, c: 3 });
+    drag(h, rowHead(5), rowHead(5), { metaKey: true });
+    expect(sel(h).ranges).toHaveLength(3);
+    expect(sel(h).ranges[2]).toEqual({ r1: 5, c1: 0, r2: 5, c2: 5 });
+    // Dragged past the last column, the run stays where it last was.
+    drag(h, colHead(1), { clientX: 2_000, clientY: 10 });
+    expect(sel(h).ranges).toEqual([{ r1: 0, c1: 1, r2: 5, c2: 1 }]);
+    select(h, 2, 1);
+    drag(h, colHead(3), colHead(4), { ctrlKey: true });
+    // Ctrl on a column already whole selects it again rather than moving it.
+    drag(h, colHead(3), colHead(3), { ctrlKey: true });
+    expect(sel(h).ranges).toHaveLength(3);
+  });
+
   it('a drag on a header edge resizes, with a guide line, never below the least size', async () => {
     const h = await mountGrid();
     down(h, colHead(1, 98));

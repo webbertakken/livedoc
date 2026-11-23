@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addRange,
+  addSelection,
   extendTo,
   normaliseRange,
   selectAllCells,
@@ -17,6 +18,7 @@ import {
   displayValue,
   validationRuleAt,
   type GridRange,
+  type Selection,
 } from '@livedoc/sheets';
 import { useAssignRef, useLatest } from '@/hooks/ui/useLatest';
 import { pointingTargetFor } from './sheet-pointing';
@@ -42,7 +44,8 @@ type Drag =
   | { kind: 'select'; additive: boolean }
   | { kind: 'fill'; source: GridRange; target: GridRange; copy: boolean }
   | { kind: 'resize'; axis: 'r' | 'c'; index: number; start: number; size: number; px: number }
-  | { kind: 'axisSelect'; axis: 'r' | 'c'; from: number }
+  // `base`: the ranges held before a Ctrl/⌘ header click, which the picked rows or columns join.
+  | { kind: 'axisSelect'; axis: 'r' | 'c'; from: number; base: Selection | null }
   | {
       kind: 'axisMove';
       axis: 'r' | 'c';
@@ -235,8 +238,13 @@ export function useSheetPointer(
         d.axis === 'c' ? x : latest.current.geometry.headW - 1,
         d.axis === 'r' ? y : latest.current.geometry.headH - 1,
       );
-      if (h.kind === 'col' && d.axis === 'c') cc.setSelection(selectCols(d.from, h.c, cc.grid));
-      if (h.kind === 'row' && d.axis === 'r') cc.setSelection(selectRows(d.from, h.r, cc.grid));
+      const picked =
+        h.kind === 'col' && d.axis === 'c'
+          ? selectCols(d.from, h.c, cc.grid)
+          : h.kind === 'row' && d.axis === 'r'
+            ? selectRows(d.from, h.r, cc.grid)
+            : null;
+      if (picked) cc.setSelection(d.base ? addSelection(d.base, picked) : picked);
     } else if (d.kind === 'axisMove') {
       if (!d.armed && Math.hypot(x - d.x0, y - d.y0) < DRAG_START_PX) return;
       d.armed = true;
@@ -475,7 +483,8 @@ export function useSheetPointer(
           ? sel.r1 === 0 && sel.r2 >= cc.grid.rows - 1
           : sel.c1 === 0 && sel.c2 >= cc.grid.cols - 1;
       const [a, b] = axis === 'c' ? [sel.c1, sel.c2] : [sel.r1, sel.r2];
-      if (whole && index >= a && index <= b && cc.canEdit && !e.shiftKey) {
+      const adding = e.metaKey || e.ctrlKey;
+      if (whole && index >= a && index <= b && cc.canEdit && !e.shiftKey && !adding) {
         begin(
           { kind: 'axisMove', axis, from: a, to: b, drop: index, armed: false, x0: x, y0: y },
           e,
@@ -487,10 +496,11 @@ export function useSheetPointer(
           ? cc.selectionNow().anchor.c
           : cc.selectionNow().anchor.r
         : index;
-      cc.setSelection(
-        axis === 'c' ? selectCols(from, index, cc.grid) : selectRows(from, index, cc.grid),
-      );
-      begin({ kind: 'axisSelect', axis, from }, e);
+      const picked =
+        axis === 'c' ? selectCols(from, index, cc.grid) : selectRows(from, index, cc.grid);
+      const base = adding && !e.shiftKey ? cc.selectionNow() : null;
+      cc.setSelection(base ? addSelection(base, picked) : picked);
+      begin({ kind: 'axisSelect', axis, from, base }, e);
     }
   };
 
@@ -627,7 +637,7 @@ export function useSheetPointer(
         cc.setSelection(
           axis === 'c' ? selectCols(index, index, cc.grid) : selectRows(index, index, cc.grid),
         );
-        begin({ kind: 'axisSelect', axis, from: index }, { clientX, clientY });
+        begin({ kind: 'axisSelect', axis, from: index, base: null }, { clientX, clientY });
       }
     },
     openMenu,

@@ -30,6 +30,7 @@ import { useSheetActions, type SheetActions } from './useSheetActions';
 import { useFormulaInput } from './useFormulaInput';
 import { SheetGrid } from './SheetGrid';
 import type { PointRef } from './useSheetPointer';
+import type { SheetSurfaceKeys } from './useSheetGridKeys';
 import { COL_HEADER_PX, ROW_HEADER_PX } from './sheet-geometry';
 
 export const VIEW = { width: 800, height: 400 };
@@ -113,6 +114,8 @@ export type MountOptions = {
   title?: string;
   // The covering Sheet's zoom (sheet-zoom.ts).
   zoom?: number;
+  // A spreadsheet's own keys (useSheetGridKeys).
+  surfaceKeys?: SheetSurfaceKeys;
   // Providers around the grid (the editor's comment contexts), and parts drawn beside it under its controller.
   wrap?: (grid: ReactNode) => ReactNode;
   extra?: ReactNode;
@@ -227,6 +230,7 @@ export async function mountGrid(o: MountOptions = {}): Promise<MountedGrid> {
         pointRef={pointRef}
         peers={o.peers ?? []}
         {...(o.zoom ? { zoom: o.zoom } : {})}
+        {...(o.surfaceKeys ? { surfaceKeys: o.surfaceKeys } : {})}
       />
     );
   }

@@ -1,11 +1,12 @@
 import type { Page } from '@playwright/test';
-import { expect, expectNoPageErrors, test } from '../fixtures';
+import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
 // The grid at scale (plan 0020 Phase 8 box 3; docs/specs/029-sheets/surface.md "Grid"): the person's zoom from
 // View › Zoom and the toolbar's field, everything in the grid working at it.
 
 const READY = '[data-spreadsheet-surface="ready"]';
+const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
 
 async function openSpreadsheet(page: Page) {
   await page.setViewportSize({ width: 1280, height: 860 });
@@ -122,5 +123,49 @@ test('a screen reader reads the cells in view, and a row or column on request', 
   await expect(said).toHaveText('Column B: B1 Price, B2 blank, B3 12');
   await page.keyboard.press('Control+Alt+Shift+KeyR');
   await expect(said).toHaveText('Row 3: A3 blank, B3 12');
+  expectNoPageErrors(pageErrors);
+});
+
+// grid-and-editing.md "Moving around", "Selection" (Phase 8 box 4).
+test('the keyboard moves across the sheet and between sheets', async ({
+  page,
+  baseURL,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const id = new URL(page.url()).pathname.split('/')[2]!;
+  const headers = await pageOwnerHeaders(page, { Origin: new URL(baseURL!).origin });
+  const added = await page.request.post(`${apiBase}/documents/${id}/workbook/sheets`, {
+    headers,
+    data: { name: 'Data' },
+  });
+  expect(added.status()).toBe(201);
+  await expect(page.getByRole('tab', { name: 'Data' })).toBeVisible();
+
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  await nameBox.fill('B2');
+  await nameBox.press('Enter');
+  await page.keyboard.press('Shift+End');
+  await expect(nameBox).toHaveValue('B2:Z2');
+  await page.keyboard.press('Control+Shift+Space');
+  await expect(nameBox).toHaveValue('A1:Z1000');
+
+  // The summary takes focus from the grid, and gives it back on Escape.
+  await nameBox.fill('A1:A3');
+  await nameBox.press('Enter');
+  await page.keyboard.press('Alt+Shift+KeyQ');
+  await expect(page.getByRole('button', { name: /^Selection Summary/ })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('grid')).toBeFocused();
+
+  // Alt+Down to the next sheet, Alt+Up back; nothing past the first.
+  await page.keyboard.press('Alt+ArrowDown');
+  await expect(page.getByRole('tab', { name: 'Data', selected: true })).toBeVisible();
+  await expect(page.getByRole('grid', { name: 'Data grid' })).toBeFocused();
+  await page.keyboard.press('Alt+ArrowUp');
+  await expect(page.getByRole('tab', { name: 'Sheet1', selected: true })).toBeVisible();
+  await page.keyboard.press('Alt+ArrowUp');
+  await expect(page.getByRole('tab', { name: 'Sheet1', selected: true })).toBeVisible();
   expectNoPageErrors(pageErrors);
 });

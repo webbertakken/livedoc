@@ -6,11 +6,14 @@ import {
   expandForMerges,
   extendSelection,
   extendTo,
-  homeEnd,
+  addSelection,
+  farCorner,
+  goTo,
+  homeEndTarget,
   inSelection,
   jumpFrom,
   moveSelection,
-  pageSelection,
+  pageTarget,
   selectAll,
   selectAllCells,
   selectCols,
@@ -113,26 +116,44 @@ describe('moves', () => {
       c2: 5,
     });
   });
-  it('pages, goes home and end, and cycles inside a range', () => {
+  it('pages up, down and sideways, and goes home and end', () => {
     const g = grid();
-    expect(pageSelection(single({ r: 0, c: 0 }), 4, g).active).toEqual({ r: 4, c: 0 });
-    expect(pageSelection(single({ r: 2, c: 0 }), -4, g).active).toEqual({ r: 0, c: 0 });
-    expect(homeEnd(single({ r: 3, c: 3 }), 'home', false, g, { r: 0, c: 0 }).active).toEqual({
-      r: 3,
-      c: 0,
-    });
-    expect(homeEnd(single({ r: 3, c: 3 }), 'end', false, g, { r: 0, c: 0 }).active).toEqual({
-      r: 3,
-      c: 5,
-    });
-    expect(homeEnd(single({ r: 3, c: 3 }), 'home', true, g, { r: 0, c: 0 }).active).toEqual({
-      r: 0,
-      c: 0,
-    });
-    expect(homeEnd(single({ r: 3, c: 3 }), 'end', true, g, { r: 7, c: 2 }).active).toEqual({
-      r: 7,
-      c: 2,
-    });
+    expect(pageTarget({ r: 0, c: 0 }, { rows: 4, cols: 0 }, g)).toEqual({ r: 4, c: 0 });
+    expect(pageTarget({ r: 2, c: 0 }, { rows: -4, cols: 0 }, g)).toEqual({ r: 0, c: 0 });
+    // Sideways; a hidden column passed over.
+    expect(pageTarget({ r: 0, c: 0 }, { rows: 0, cols: 4 }, g)).toEqual({ r: 0, c: 4 });
+    const hidden = grid([], { hidden: true });
+    expect(pageTarget({ r: 0, c: 0 }, { rows: 0, cols: 4 }, hidden)).toEqual({ r: 0, c: 5 });
+    expect(pageTarget({ r: 0, c: 5 }, { rows: 0, cols: -2 }, g)).toEqual({ r: 0, c: 3 });
+    const end = { r: 7, c: 2 };
+    expect(homeEndTarget({ r: 3, c: 3 }, 'home', false, g, end)).toEqual({ r: 3, c: 0 });
+    expect(homeEndTarget({ r: 3, c: 3 }, 'end', false, g, end)).toEqual({ r: 3, c: 5 });
+    expect(homeEndTarget({ r: 3, c: 3 }, 'home', true, g, end)).toEqual({ r: 0, c: 0 });
+    expect(homeEndTarget({ r: 3, c: 3 }, 'end', true, g, end)).toEqual(end);
+  });
+  it('moves to a cell, or with Shift grows the selection from its anchor', () => {
+    const g = grid();
+    const sel = {
+      ranges: [{ r1: 2, c1: 1, r2: 4, c2: 3 }],
+      active: { r: 4, c: 3 },
+      anchor: { r: 4, c: 3 },
+    };
+    expect(farCorner(sel)).toEqual({ r: 2, c: 1 });
+    expect(farCorner({ ...sel, anchor: { r: 2, c: 1 } })).toEqual({ r: 4, c: 3 });
+    expect(goTo(sel, { r: 8, c: 0 }, g, false)).toEqual(single({ r: 8, c: 0 }));
+    expect(goTo(sel, { r: 30, c: 0 }, g, false).active).toEqual({ r: 9, c: 0 });
+    const grown = goTo(sel, { r: 8, c: 0 }, g, true);
+    expect(grown.ranges).toEqual([{ r1: 4, c1: 0, r2: 8, c2: 3 }]);
+    expect(grown.active).toEqual({ r: 4, c: 3 });
+  });
+  it('adds whole rows or columns to the ranges held', () => {
+    const g = grid();
+    const base = single({ r: 1, c: 1 });
+    const added = addSelection(base, selectCols(3, 4, g));
+    expect(added.ranges).toEqual([base.ranges[0], { r1: 0, c1: 3, r2: 9, c2: 4 }]);
+    expect(added.active).toEqual({ r: 0, c: 3 });
+  });
+  it('cycles inside a range', () => {
     const sel = {
       ranges: [{ r1: 0, c1: 0, r2: 1, c2: 1 }],
       active: { r: 1, c: 1 },

@@ -42,6 +42,11 @@ import {
   useSpreadsheetZoomScale,
 } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
+import {
+  SheetStepContext,
+  useSheetStep,
+  useSpreadsheetSurfaceKeys,
+} from './spreadsheet-surface-keys';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
 
@@ -78,6 +83,8 @@ export function SpreadsheetSurface({
   const [summarySlot, setSummarySlot] = useState<HTMLElement | null>(null);
   // The person's zoom on the grid, kept as sheets are switched (surface.md "Grid", D133).
   const { zoom, scale } = useSpreadsheetZoom();
+  // Alt+Up and Alt+Down in the grid: the previous and next sheet, none past either end.
+  const stepSheet = useSheetStep(tabs, tabId, onSelectTab);
   return (
     <section
       ref={root}
@@ -102,11 +109,13 @@ export function SpreadsheetSurface({
       <OfficeBindingsContext.Provider value={channel}>
         <SummarySlotContext.Provider value={summarySlot}>
           <SpreadsheetZoomProvider value={scale}>
-            {bridge ? (
-              <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
-            ) : (
-              <Status state="loading" />
-            )}
+            <SheetStepContext.Provider value={stepSheet}>
+              {bridge ? (
+                <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
+              ) : (
+                <Status state="loading" />
+              )}
+            </SheetStepContext.Provider>
           </SpreadsheetZoomProvider>
         </SummarySlotContext.Provider>
       </OfficeBindingsContext.Provider>
@@ -280,6 +289,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const c = useSheetController();
   const pointRef = useFormulaPointing(c, input);
   const zoom = useSpreadsheetZoomScale();
+  const surfaceKeys = useSpreadsheetSurfaceKeys();
   useGridMenuBindings(actions);
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
@@ -310,6 +320,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
         pointRef={pointRef}
         peers={bridge.peers}
         zoom={zoom}
+        surfaceKeys={surfaceKeys}
       />
       <SheetMenus actions={actions} />
       <SheetBarSummary />

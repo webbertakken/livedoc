@@ -52,6 +52,29 @@ describe('SheetBarSummary', () => {
     unmount();
   });
 
+  // grid-and-editing.md "Moving around": Alt+Shift+Q puts focus here; Escape hands it back to the grid.
+  it('gives focus back to the grid on Escape, once its menu is closed', () => {
+    renderSheet(h, ({ c }) => (
+      <SummarySlotContext.Provider value={slot}>
+        <div tabIndex={0} data-testid="grid" ref={c.setGridEl} />
+        <SheetBarSummary />
+      </SummarySlotContext.Provider>
+    ));
+    act(() => h.select('A1:A3'));
+    fireEvent.click(button());
+    // Escape while the menu is open is the menu's, on its trigger or an item.
+    fireEvent.keyDown(button(), { key: 'Escape' });
+    expect(document.activeElement).not.toBe(screen.getByTestId('grid'));
+    const open = screen.getAllByRole('menuitemradio')[0]!;
+    fireEvent.keyDown(open, { key: 'Escape' });
+    expect(document.activeElement).not.toBe(screen.getByTestId('grid'));
+    button().focus();
+    fireEvent.keyDown(button(), { key: 'Tab' });
+    expect(document.activeElement).toBe(button());
+    fireEvent.keyDown(button(), { key: 'Escape' });
+    expect(document.activeElement).toBe(screen.getByTestId('grid'));
+  });
+
   it('lists every kind with its value, the pick ticked, and shows the one picked', () => {
     show(h);
     act(() => h.select('A1:A3'));

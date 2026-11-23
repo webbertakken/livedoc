@@ -109,20 +109,35 @@ export function moveSelection(sel: Selection, dir: Dir, grid: Grid, jump = false
   return single(to);
 }
 
-// Shift + arrow: the far corner from the anchor moves; the active cell stays.
-export function extendSelection(sel: Selection, dir: Dir, grid: Grid, jump = false): Selection {
+// The corner of the last range across from its anchor: where Shift and a move go on from.
+export function farCorner(sel: Selection): CellPos {
   const range = sel.ranges[sel.ranges.length - 1]!;
-  const far: CellPos = {
+  return {
     r: sel.anchor.r === range.r1 ? range.r2 : range.r1,
     c: sel.anchor.c === range.c1 ? range.c2 : range.c1,
   };
+}
+
+// Shift + arrow: the far corner from the anchor moves; the active cell stays.
+export function extendSelection(sel: Selection, dir: Dir, grid: Grid, jump = false): Selection {
+  const far = farCorner(sel);
   const to = jump ? jumpFrom(far, dir, grid) : stepFrom(far, dir, grid);
   return extendTo(sel, to, grid);
+}
+
+// A move to a cell: the cell alone, or with Shift the selection grown from its anchor to it.
+export function goTo(sel: Selection, to: CellPos, grid: Grid, extend: boolean): Selection {
+  return extend ? extendTo(sel, to, grid) : single(clamp(to, grid));
 }
 
 export function extendTo(sel: Selection, to: CellPos, grid: Grid): Selection {
   const range = expandForMerges(normaliseRange(sel.anchor, clamp(to, grid)), grid);
   return { ...sel, ranges: [...sel.ranges.slice(0, -1), range] };
+}
+
+// Ctrl/⌘ and a header click or drag: the rows or columns picked join the ranges held before.
+export function addSelection(base: Selection, next: Selection): Selection {
+  return { ranges: [...base.ranges, ...next.ranges], active: next.active, anchor: next.anchor };
 }
 
 // Ctrl/⌘ + click: another range, its own active cell.
@@ -196,24 +211,30 @@ export function selectAll(sel: Selection, grid: Grid): Selection {
   return { ranges: [region], active: sel.active, anchor: { r: region.r1, c: region.c1 } };
 }
 
-// Page Up / Page Down: `rows` visible rows away.
-export function pageSelection(sel: Selection, rows: number, grid: Grid): Selection {
-  let pos = sel.active;
-  const dir: Dir = rows < 0 ? 'up' : 'down';
-  for (let i = 0; i < Math.abs(rows); i++) pos = stepFrom(pos, dir, grid);
-  return single(pos);
+// Page Up / Page Down a screen of rows away, Alt + Page Up / Page Down a screen of columns: where the move lands.
+export function pageTarget(
+  from: CellPos,
+  step: { rows: number; cols: number },
+  grid: Grid,
+): CellPos {
+  let pos = from;
+  const rowDir: Dir = step.rows < 0 ? 'up' : 'down';
+  const colDir: Dir = step.cols < 0 ? 'left' : 'right';
+  for (let i = 0; i < Math.abs(step.rows); i++) pos = stepFrom(pos, rowDir, grid);
+  for (let i = 0; i < Math.abs(step.cols); i++) pos = stepFrom(pos, colDir, grid);
+  return pos;
 }
 
-// Home / End and Ctrl+Home / Ctrl+End.
-export function homeEnd(
-  sel: Selection,
+// Home / End the row's first and last column; Ctrl+Home / Ctrl+End A1 and the last filled cell.
+export function homeEndTarget(
+  from: CellPos,
   which: 'home' | 'end',
   toSheet: boolean,
   grid: Grid,
   lastFilled: CellPos,
-): Selection {
-  if (toSheet) return single(which === 'home' ? { r: 0, c: 0 } : lastFilled);
-  return single({ r: sel.active.r, c: which === 'home' ? 0 : Math.max(0, grid.cols - 1) });
+): CellPos {
+  if (toSheet) return which === 'home' ? { r: 0, c: 0 } : lastFilled;
+  return { r: from.r, c: which === 'home' ? 0 : Math.max(0, grid.cols - 1) };
 }
 
 export function inSelection(sel: Selection, r: number, c: number): boolean {

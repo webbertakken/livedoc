@@ -31,7 +31,8 @@ Google Sheets does. What the Plan Sheet already does carries over unless this pa
 ## Selection
 
 - A click selects a cell; Shift and a click or a drag a range; Ctrl and a click or drag adds a range; a header click
-  a row or column; the corner, or Ctrl+A, the sheet (a second Ctrl+A in a data region widens from region to sheet).
+  a row or column, Shift and a header click grows to it, Ctrl and a header click or drag adds rows or columns; the
+  corner, Ctrl+A or Ctrl+Shift+Space the sheet (a second Ctrl+A in a data region widens from region to sheet).
 - Ctrl+Space a column, Shift+Space a row; Shift and the arrows grow it; Ctrl+Shift and the arrows grow it to the
   data's edge.
 - The active cell has a 2 px blue border, the range a light tint and a 1 px border, the fill handle a 6 px square at
@@ -40,10 +41,23 @@ Google Sheets does. What the Plan Sheet already does carries over unless this pa
 
 ## Moving around
 
-Every navigation shortcut of the matrix: arrows; Ctrl and the arrows to a region's edge; Home, End, Ctrl+Home,
-Ctrl+End; Page Up and Page Down; Alt+Page Up and Page Down a screen sideways; Ctrl+Page Up and Page Down, or
-Alt+Up and Down, to the previous and next sheet; Ctrl+Backspace back to the active cell; Tab and Enter move within a
-selection without losing it.
+Every navigation shortcut of the matrix, heard by the grid while it has focus and no cell is edited:
+
+- Arrows; Ctrl and the arrows to a region's edge; Home and End the row's first and last column; Ctrl+Home `A1`,
+  Ctrl+End the last filled cell; Page Up and Page Down a screen up and down; Alt+Page Up and Page Down a screen left
+  and right. With Shift, each grows the selection from its anchor to there instead (Shift+Home, Ctrl+Shift+End,
+  Shift+Page Down).
+- Ctrl+Backspace scrolls the active cell back into view, the selection kept.
+- Alt+Up and Alt+Down, or Ctrl+Shift+Page Up and Page Down, open the previous and next sheet, hidden ones passed
+  over and nothing past either end; on a cell with a dropdown Alt+Down opens it instead (default, D136). Ctrl+Page Up
+  and Page Down are the browser's own, switching its tabs, and are left to it.
+- Alt+Shift+Q moves focus to the selection's summary while more than one cell is selected; Escape there brings it
+  back to the grid. Alt+Shift+K opens All Sheets ([Surface](surface.md#sheet-bar)).
+- Tab and Enter move within a selection without losing it.
+
+The surface's areas, from anywhere in it: Ctrl+Alt+. and Ctrl+Alt+, move focus to the next and previous area (the
+menu bar, the toolbar, the formula bar, the grid, the sheet bar, an open side panel), as F6 and Shift+F6 do;
+Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 
 ## Editing
 
@@ -93,7 +107,8 @@ selection without losing it.
 - A row not sized by hand fits its text, as the Plan Sheet's does ([Row height](sheet.md#row-height)).
 - Hide and show rows and columns (arrows mark hidden ones); **Group** (Alt+Shift+→) and **Ungroup** (Alt+Shift+←)
   rows or columns, with +/− in the outline bar to collapse and expand.
-- Deleting rows or columns makes references to them `#REF!` and shrinks ranges, as today ([Sheet store](sheet-store.md)).
+- Deleting rows or columns makes references to them `#REF!` and shrinks ranges, as today
+  ([Sheet store](sheet-store.md)).
 
 ## Undo
 

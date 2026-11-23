@@ -10,6 +10,7 @@ import {
   geometryOf,
   hitTest,
   mergeAt,
+  pageCols,
   pageRows,
   scrollToReveal,
   totalSize,
@@ -222,6 +223,14 @@ describe('pageRows', () => {
     expect(pageRows(geometryOf(grid(100, 3)), 240)).toBe(10);
     expect(pageRows(geometryOf(grid(100, 3, { frozenRows: 2 })), 240)).toBe(8);
     expect(pageRows(geometryOf(grid(100, 3)), 5)).toBe(1);
+  });
+});
+
+describe('pageCols', () => {
+  it('is the columns of average width that fit beside the frozen columns, at least one', () => {
+    expect(pageCols(geometryOf(grid(3, 50)), 1000)).toBe(10);
+    expect(pageCols(geometryOf(grid(3, 50, { frozenCols: 3 })), 1000)).toBe(7);
+    expect(pageCols(geometryOf(grid(3, 50)), 20)).toBe(1);
   });
 });
 

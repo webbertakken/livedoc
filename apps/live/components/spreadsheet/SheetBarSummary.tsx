@@ -3,7 +3,7 @@
 // The sheet bar's summary of the selection (docs/specs/029-sheets/surface.md "Sheet bar", D132): for more than one
 // cell, the person's pick of Sum, Average, Min, Max, Count and Count Numbers, its menu listing each with its value.
 // Drawn into the sheet bar's end from inside the open sheet, which holds the selection it counts.
-import { useMemo } from 'react';
+import { useMemo, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { cellKey, formatNumber, type CellFormat } from '@livedoc/sheets';
 import { OfficeChoiceMenu } from '@/components/office/OfficeChoiceMenu';
@@ -82,8 +82,16 @@ export function SheetBarSummary() {
       { run: () => setSummaryPick(kind), checked: kind === pick, label: text(kind) },
     ]),
   );
+  // Escape on the closed summary hands focus back to the grid (grid-and-editing.md "Moving around").
+  const backToGrid = (e: KeyboardEvent<HTMLSpanElement>) => {
+    const trigger = e.target as HTMLElement;
+    if (e.key !== 'Escape' || !trigger.hasAttribute('aria-haspopup')) return;
+    if (trigger.getAttribute('aria-expanded') === 'true') return;
+    e.preventDefault();
+    c.focusGrid();
+  };
   return createPortal(
-    <>
+    <span className="contents" onKeyDown={backToGrid}>
       <OfficeChoiceMenu
         id="selection-summary"
         label="Selection Summary"
@@ -97,7 +105,7 @@ export function SheetBarSummary() {
       <span role="status" className="sr-only">
         {text(shown)}
       </span>
-    </>,
+    </span>,
     slot,
   );
 }
