@@ -36,7 +36,7 @@ export function emojisOf(raw: unknown): Emojis {
     if (!group || !isText(text) || !isText(name) || !isText(tags) || !isText(shortcodes)) return [];
     const toned =
       Array.isArray(tones) && tones.length === SKIN_TONES.length && tones.every(isText)
-        ? { tones: tones as string[] }
+        ? { tones }
         : {};
     return [
       { emoji: text, name, group, tags: listOf(tags), shortcodes: listOf(shortcodes), ...toned },

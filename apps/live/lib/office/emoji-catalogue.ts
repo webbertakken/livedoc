@@ -97,7 +97,7 @@ export function emojiCatalogueOf({
       const tones = SKIN_TONES.map(
         (tone) => e.skins!.find((skin) => uniformTone(skin.label) === tone)?.unicode,
       );
-      return tones.every((t) => t !== undefined) ? [...row, tones as string[]] : row;
+      return tones.every((t) => t !== undefined) ? [...row, tones] : row;
     });
   return { version, emoji: rows };
 }
