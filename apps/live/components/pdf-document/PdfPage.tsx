@@ -25,6 +25,7 @@ import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
 import { PdfView } from '@/lib/pdf-document/pdf-view';
 import type { PdfTextGesture } from '@/lib/pdf-document/usePdfTextSelection';
+import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 
 export type PdfPageTool = 'select' | 'highlight';
 
@@ -58,6 +59,7 @@ export const PdfPage = memo(function PdfPage({
   onText,
   linkName,
   onFollow,
+  found,
   register,
 }: {
   index: number;
@@ -86,6 +88,8 @@ export const PdfPage = memo(function PdfPage({
   // What a link of the page is called, and where a press on one goes (reading-surface.md "Following a link").
   linkName: (target: LinkTarget) => string;
   onFollow: (target: LinkTarget) => void;
+  // Find's results on this page, tinted.
+  found: PdfFindTints | null;
   // Hands the page's box to whoever watches which pages are near view.
   register: (index: number, element: HTMLElement | null) => void;
 }) {
@@ -281,6 +285,7 @@ export const PdfPage = memo(function PdfPage({
           marks={marks}
           preview={preview}
           selected={selected}
+          found={found}
         />
       ) : null}
       {matrix && tool === 'select' && links && links.by === drawnBy ? (

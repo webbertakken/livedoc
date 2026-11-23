@@ -39,8 +39,8 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Rotate view clockwise, counterclockwise | ⌘⇧+, ⌘⇧-                              | The same †                            | built     |
 | Read mode                               | ⌘⌥H                                   | Ctrl H †                              | specified |
 | Full screen                             | ⌘⌥L                                   | ⌘L †                                  | specified |
-| Find                                    | ⌘F                                    | The same                              | specified |
-| Next result, previous result            | ⌘G or Enter, ⌘⇧G or ⇧Enter            | F3 or ⌘G                              | specified |
+| Find                                    | ⌘F                                    | The same                              | built     |
+| Next result, previous result            | ⌘G or Enter, ⌘⇧G or ⇧Enter            | F3 or ⌘G                              | built     |
 | Print                                   | ⌘P                                    | The same                              | specified |
 | Properties                              | ⌘D                                    | The same                              | specified |
 | Dark pages on and off                   | ⌘⌥D `(default)`                       | None                                  | specified |

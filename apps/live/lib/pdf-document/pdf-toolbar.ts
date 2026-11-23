@@ -122,7 +122,7 @@ const EVERY_MODE: OfficeToolbar = [
   ]),
   group('file', 'File', [
     button(PRINT, 'Print', 'view', lucidePrinter),
-    button(FIND, 'Find', 'view', lucideSearch),
+    button(FIND, 'Find', 'view', lucideSearch, { ...BUILT, shortcut: FIND }),
   ]),
   group('pointer', 'Pointer', [
     toggle(TOOL_SELECT, 'Select', 'view', lucideMousePointer2, BUILT),

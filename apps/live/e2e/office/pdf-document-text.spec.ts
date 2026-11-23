@@ -105,3 +105,49 @@ test('a PDF’s links go to their place and ask before an address, and Previous 
 
   expectNoPageErrors(pageErrors);
 });
+
+// "Find": ⌘F opens the field; a query is counted and tinted, Enter steps to the next page's match, All results lists
+// each by page, and Escape closes it, its tints gone.
+test('a PDF’s text is found, stepped through and listed', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Pages.pdf', await textPdf(3));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  await pageOneDrawn(page);
+  const pageField = page
+    .getByRole('group', { name: 'Page and zoom' })
+    .getByRole('textbox', { name: 'Page' });
+
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('ControlOrMeta+f');
+  const search = page.getByRole('search', { name: 'Find in this PDF' });
+  const field = search.getByRole('searchbox', { name: 'Find' });
+  await expect(field).toBeFocused();
+  await field.fill('page');
+  await expect(search.getByRole('status')).toHaveText('1 of 3');
+  await expect(page.locator('[data-pdf-page="1"] [data-pdf-found-current] polygon')).toHaveCount(1);
+
+  await field.press('Enter');
+  await expect(search.getByRole('status')).toHaveText('2 of 3');
+  await expect(pageField).toHaveValue('2');
+
+  await search.getByRole('button', { name: 'All results' }).click();
+  const results = page.getByRole('complementary', { name: 'Find results' });
+  await expect(results.getByRole('button')).toHaveCount(4);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('pdf-find-dark.png') });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: test.info().outputPath('pdf-find-light.png') });
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await results.getByRole('region', { name: 'Page 3' }).getByRole('button').click();
+  await expect(search.getByRole('status')).toHaveText('3 of 3');
+
+  await field.press('Escape');
+  await expect(search).toHaveCount(0);
+  await expect(page.locator('[data-pdf-found]')).toHaveCount(0);
+  await expect(page.locator('[data-pdf-pages]')).toBeFocused();
+
+  expectNoPageErrors(pageErrors);
+});

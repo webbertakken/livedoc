@@ -143,3 +143,9 @@ export const PDF_PAGE_TEXTS_KEPT = 32;
 /** (default) Places Previous view keeps, the oldest let go first (reading-surface.md "The pages", "Limits"). Safe
  *  range: 20 to 1,000. */
 export const PDF_VIEW_HISTORY_MAX = 100;
+/** (default) How long a find query rests before it is searched (reading-surface.md "Find"). Safe range: 100 to 600. */
+export const PDF_FIND_SETTLE_MS = 250;
+/** (default) Characters of a find result's line shown either side of the match in All results. Safe range: 20 to 80. */
+export const PDF_FIND_CONTEXT_CHARS = 40;
+/** (default) Find results listed; the count still says there are more (reading-surface.md "Find", "Limits"). */
+export const PDF_FIND_MAX_RESULTS = 10_000;

@@ -8,6 +8,7 @@ import { SHELL_BOUND_ITEMS } from '@/lib/office/office-catalogue';
 import {
   COPY,
   DOWNLOAD_PDF,
+  FIND,
   GO_TO_FIRST_PAGE,
   GO_TO_LAST_PAGE,
   GO_TO_NEXT_PAGE,
@@ -90,6 +91,7 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_HIGHLIGHT,
     COPY,
     SELECT_ALL,
+    FIND,
     'mode-reviewing',
     'mode-viewing',
     // pdf-view-actions.ts: View > Page display, Zoom and Go to.
@@ -185,11 +187,18 @@ describe("a PDF document's menus and toolbar", () => {
         .map((control) => control.id);
     // The zoom is the page bar's, never the toolbar's ("The page bar").
     expect(controls('viewing', 'view')).toEqual([
+      FIND,
       TOOL_SELECT,
       PAGE_DISPLAY_CONTROL,
       ROTATE_VIEW_CLOCKWISE,
     ]);
-    expect(controls('reviewing', 'participate')).toEqual([UNDO, REDO, TOOL_SELECT, TOOL_HIGHLIGHT]);
+    expect(controls('reviewing', 'participate')).toEqual([
+      UNDO,
+      REDO,
+      FIND,
+      TOOL_SELECT,
+      TOOL_HIGHLIGHT,
+    ]);
     // "The toolbar": a mode's own tools are not another mode's.
     const labels = (mode: PdfMode) =>
       visibleToolbar(pdfToolbar(mode), 'edit', actions, fields, CHOICES).flatMap((group) =>
