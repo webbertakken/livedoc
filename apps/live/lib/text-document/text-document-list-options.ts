@@ -1,6 +1,6 @@
-// List styles and numbering in the writing (docs/specs/034-text-documents/lists.md "List styles", "Numbering"): a preset
-// taken by the list the selection is in, or by a new list; a numbered item's level restarted at a number; a restart
-// taken back, or a list joined to the numbered list before it. Each is one transaction, or one list written.
+// List styles and numbering in the writing (docs/specs/034-text-documents/lists.md "List styles", "Numbering", "List
+// options"): a preset taken by the list the selection is in, or by a new list; a numbered item's level restarted at a
+// number; a restart taken back, or a list joined to the numbered list before it; a character made a level's bullet. Each is one transaction, or one list written.
 import type { Node as PmNode } from 'prosemirror-model';
 import type { Command, EditorState } from 'prosemirror-state';
 import {
@@ -48,6 +48,50 @@ export function applyListPreset(access: ListsAccess, preset: ListPreset): Comman
     }
     const added = ListDefinition.newId(Object.keys(lists));
     access.set(added, preset.list);
+    const tr = state.tr;
+    for (const { node, pos } of paragraphs)
+      tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        list: { id: added, level: placeOf(node)?.level ?? 0 },
+      });
+    dispatch(tr.scrollIntoView());
+    return true;
+  };
+}
+
+/**
+ * More bullets: the character becomes the bullet of the caret item's level, for every item of its list there; off a
+ * list, the selected paragraphs join a new bulleted list with the character at their levels.
+ */
+export function setListBullet(access: ListsAccess, bullet: string): Command {
+  return (state, dispatch) => {
+    const paragraphs = selectedParagraphs(state);
+    if (paragraphs.length === 0) return false;
+    if (!dispatch) return true;
+    const lists = access.read();
+    const caret = placeOf(state.selection.$from.parent);
+    const bulleted = (list: ListDefinition, levels: ReadonlySet<number>): ListDefinition => ({
+      ...list,
+      levels: list.levels.map((level, at) =>
+        levels.has(at)
+          ? {
+              kind: 'bullet',
+              bullet,
+              ...(level.indent === undefined ? {} : { indent: level.indent }),
+              ...(level.hanging === undefined ? {} : { hanging: level.hanging }),
+            }
+          : level,
+      ),
+    });
+    const list = caret ? lists[caret.id] : undefined;
+    if (caret && list) {
+      access.set(caret.id, bulleted(list, new Set([caret.level])));
+      dispatch(state.tr.scrollIntoView());
+      return true;
+    }
+    const added = ListDefinition.newId(Object.keys(lists));
+    const levels = new Set(paragraphs.map(({ node }) => placeOf(node)?.level ?? 0));
+    access.set(added, bulleted(ListDefinition.of('bullet'), levels));
     const tr = state.tr;
     for (const { node, pos } of paragraphs)
       tr.setNodeMarkup(pos, undefined, {

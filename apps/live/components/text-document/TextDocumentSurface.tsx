@@ -62,6 +62,7 @@ import { writingKeysPlugin } from '@/lib/text-document/text-document-writing-key
 import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
 import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
+import { useTextDocumentSpecialCharacters } from './useTextDocumentSpecialCharacters';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
@@ -679,6 +680,8 @@ export function TextDocumentSurface({
     () => horizontalLineActions(editorView, bodyWrites),
     [editorView, bodyWrites],
   );
+  // Insert > Symbols > Special characters (objects.md "Special characters"), in whichever writing has the caret.
+  const specialCharacters = useTextDocumentSpecialCharacters(activeView, writes);
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
   const tableActions = useTextDocumentTables(
     editorView,
@@ -749,6 +752,7 @@ export function TextDocumentSurface({
       ...columns.actions,
       ...breakActions,
       ...lineActions,
+      ...specialCharacters.actions,
       ...tableActions,
       ...pictures.actions,
       ...pictureEditing.actions,
@@ -759,6 +763,7 @@ export function TextDocumentSurface({
     [
       breakActions,
       lineActions,
+      specialCharacters.actions,
       tableActions,
       pictures.actions,
       pictureEditing.actions,
@@ -863,6 +868,7 @@ export function TextDocumentSurface({
       {headers.optionsDialog}
       {headers.pageNumbersDialog}
       {lists.dialog}
+      {specialCharacters.dialog}
       {limitReached ? (
         <p
           role="status"

@@ -28,6 +28,7 @@ import {
   presetAt,
   restartAt,
   restartNumbering,
+  setListBullet,
 } from './text-document-list-options';
 
 export const LIST_ITEMS: readonly {
@@ -43,6 +44,7 @@ export const LIST_ITEMS: readonly {
 ];
 export const RESTART_NUMBERING = 'restart-numbering';
 export const CONTINUE_NUMBERING = 'continue-numbering';
+export const MORE_BULLETS = 'more-bullets';
 /** A preset's action, and its cell in its grid. */
 export const presetActionId = (preset: ListPreset) => `list-style-${preset.id}`;
 
@@ -74,10 +76,13 @@ export function textDocumentListActions(
   {
     canEdit,
     openRestart,
+    openMoreBullets,
   }: {
     canEdit: boolean;
     // Restart numbering's dialog, opened at the number it starts with.
     openRestart: (start: number) => void;
+    // More bullets' special characters dialog.
+    openMoreBullets: () => void;
   },
 ): {
   actions: OfficeActions;
@@ -85,8 +90,11 @@ export function textDocumentListActions(
   stepLevel: ((delta: number) => boolean) | null;
   // Restart numbering's dialog taken: the item's level restarted at the number, or refused.
   restart: ((start: number) => boolean) | null;
+  // A character pressed in More bullets' dialog, made the caret item's bullet on an undo step of its own.
+  bullet: ((text: string) => boolean) | null;
 } {
-  if (!view || !canEdit) return { actions: {}, choices: {}, stepLevel: null, restart: null };
+  if (!view || !canEdit)
+    return { actions: {}, choices: {}, stepLevel: null, restart: null, bullet: null };
   const fromWriting = (change: () => void) => () => {
     if (view.isDestroyed) return;
     readDomSelection(view);
@@ -173,10 +181,20 @@ export function textDocumentListActions(
     view.focus();
     return true;
   };
+  // List options > More bullets (lists.md "List options"): the dialog stays open, so the writing keeps no focus.
+  actions[MORE_BULLETS] = { run: openMoreBullets };
+  const bullet = (text: string) => {
+    if (view.isDestroyed) return false;
+    access.startStep();
+    if (!setListBullet(access, text)(view.state, view.dispatch)) return false;
+    access.startStep();
+    track('Element', 'Changed', 'TextDocumentListBullet');
+    return true;
+  };
   // Increase and Decrease indent move list items a level (lists.md "Levels").
   const stepLevel = (delta: number) =>
     !view.isDestroyed && stepListLevel(delta)(view.state, view.dispatch);
-  return { actions, choices, stepLevel, restart };
+  return { actions, choices, stepLevel, restart, bullet };
 }
 
 /** Enter, Backspace, Tab and Shift+Tab in an item, ahead of the editor's own. */

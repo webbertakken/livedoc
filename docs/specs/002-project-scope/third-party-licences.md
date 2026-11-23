@@ -42,7 +42,8 @@ reach a deployed artefact, and nothing else.
   subset the marketing hero writes in, and the document fonts the editor serves from their Fontsource
   packages (`document-font-works.ts`, one row and licence text per family). The same
   table covers material vendored into our own source (Lucide and Feather icon geometry, draw.io's
-  view geometry ported into the draw.io importer), triggered by the first-party source file that
+  view geometry ported into the draw.io importer, the Unicode Character Database's names and blocks generated into
+  the special characters catalogue), triggered by the first-party source file that
   carries it being bundled.
 
 ## Licence texts
@@ -114,7 +115,7 @@ reach a deployed artefact, and nothing else.
   own notices file). Rust crates inside resvg's WASM beyond resvg and tiny-skia are not enumerated;
   it runs only in our mcp worker.
 - `THIRD_PARTY_NOTICES.md` at the repo root stays the notice for material vendored into the source
-  tree (Lucide, Feather, draw.io); the page is the notice for what the deployed apps carry.
+  tree (Lucide, Feather, draw.io, Unicode); the page is the notice for what the deployed apps carry.
 
 ## Related
 

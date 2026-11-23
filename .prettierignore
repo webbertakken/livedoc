@@ -45,3 +45,7 @@ packages/document-views/src/__fixtures__/golden/
 # Google Fonts' catalogue, written by apps/live/scripts/google-fonts-catalogue.ts one family per line, so a
 # regeneration diffs by family.
 apps/live/lib/document-fonts/google-fonts.json
+
+# Unicode's characters for the special characters dialog, written by `pnpm chars:special` a group a line; kept as
+# written so a new Unicode version diffs by group.
+apps/live/lib/office/special-characters.json

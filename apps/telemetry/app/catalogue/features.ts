@@ -1344,8 +1344,8 @@ export const TEXT_DOCUMENT_CHARACTERS_AND_LINES = chart(
   'Element',
   'Added',
   'Text Document Lines and Characters',
-  'A horizontal line put in a text document from Insert > Horizontal line.',
-  { types: ['TextDocumentHorizontalLine'] },
+  'A horizontal line put in a text document from Insert > Horizontal line, or a character from Insert > Symbols > Special characters.',
+  { types: ['TextDocumentHorizontalLine', 'TextDocumentSpecialCharacter'] },
 );
 
 // The ruler shown or hidden (docs/specs/034-text-documents/editing-surface.md "The ruler").
@@ -1374,12 +1374,13 @@ export const TEXT_DOCUMENT_TEXT_WIDTH = chart(
 );
 
 // A text document's lists (docs/specs/034-text-documents/lists.md "Telemetry"): paragraphs put in a list or taken out,
-// by its kind, a list style taken, numbering restarted or continued, and checklist items ticked.
+// by its kind, a list style taken, numbering restarted or continued, a bullet from More bullets, and checklist items
+// ticked.
 export const TEXT_DOCUMENT_LISTS = chart(
   'Element',
   'Changed',
   'Text Document Lists',
-  "A text document's paragraphs made a bulleted, numbered or checklist list, or taken out of one; a list style taken; numbering restarted or continued; checklist items ticked.",
+  "A text document's paragraphs made a bulleted, numbered or checklist list, or taken out of one; a list style taken; numbering restarted or continued; a bullet chosen in More bullets; checklist items ticked.",
   {
     typeIn: (t) => (t ?? '').startsWith('TextDocumentList') || t === 'TextDocumentChecklistTicked',
   },

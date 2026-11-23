@@ -2,14 +2,15 @@
 
 // The lists the surface binds (docs/specs/034-text-documents/lists.md): the list actions and the list buttons' grids
 // over the editor there is now, reading and writing list definitions in the live state (a new one on the same undo
-// step as the paragraphs joining it), and Restart numbering's dialog.
-import { useMemo, useState, type RefObject } from 'react';
+// step as the paragraphs joining it), Restart numbering's dialog, and More bullets' special characters dialog.
+import { useCallback, useMemo, useState, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { textDocumentListActions } from '@/lib/text-document/text-document-list-actions';
 import { startUndoStep, TEXT_DOCUMENT_LISTS_ORIGIN } from '@/lib/text-document/text-document-undo';
 import { listsReader } from '@/lib/text-document/text-document-live-lists';
+import { OfficeSpecialCharactersDialog } from '@/components/office/OfficeSpecialCharactersDialog';
 import { TextDocumentRestartNumberingDialog } from './TextDocumentRestartNumberingDialog';
 
 export function useTextDocumentLists(
@@ -19,6 +20,7 @@ export function useTextDocumentLists(
 ) {
   // The number Restart numbering opened at; null while it is closed.
   const [restarting, setRestarting] = useState<number | null>(null);
+  const [bullets, setBullets] = useState(false);
   const bound = useMemo(
     () =>
       textDocumentListActions(
@@ -33,7 +35,7 @@ export function useTextDocumentLists(
             if (view) startUndoStep(view);
           },
         },
-        { canEdit, openRestart: setRestarting },
+        { canEdit, openRestart: setRestarting, openMoreBullets: () => setBullets(true) },
       ),
     [view, liveDoc, canEdit],
   );
@@ -41,8 +43,16 @@ export function useTextDocumentLists(
     setRestarting(null);
     if (view && !view.isDestroyed) view.focus();
   };
+  const closeBullets = () => {
+    setBullets(false);
+    if (view && !view.isDestroyed) view.focus();
+  };
+  const { bullet } = bound;
+  const pickBullet = useCallback((text: string) => void bullet?.(text), [bullet]);
   const dialog =
-    restarting !== null && bound.restart ? (
+    bullets && bullet ? (
+      <OfficeSpecialCharactersDialog onClose={closeBullets} onPick={pickBullet} />
+    ) : restarting !== null && bound.restart ? (
       <TextDocumentRestartNumberingDialog
         open
         start={restarting}

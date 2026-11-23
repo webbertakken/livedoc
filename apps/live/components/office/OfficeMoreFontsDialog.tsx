@@ -3,8 +3,8 @@
 // The Fonts dialog, More fonts (docs/specs/004-interface-design/fonts.md "More fonts"): Google Fonts' catalogue,
 // searched, shown by category and sorted, beside My fonts. Choosing a row adds it to My fonts or takes it out; OK keeps
 // the changes, Cancel and × keep none. Mounted only while open, so it always opens on the My fonts there is now.
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ChevronDownIcon, CloseIcon, SearchIcon } from '@livedoc/ui';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { CloseIcon } from '@livedoc/ui';
 import { DocumentFonts } from '@livedoc/document';
 import { debugLog } from '@/lib/debug-log';
 import { loadGoogleFonts, type GoogleFont } from '@/lib/document-fonts/google-font-catalogue';
@@ -21,6 +21,7 @@ import {
   type MoreFontsFamily,
 } from '@/lib/office/office-more-fonts';
 import { OfficeDialog } from './OfficeDialog';
+import { OfficeDialogMessage, OfficeDialogSearch, OfficeDialogSelect } from './OfficeDialogFields';
 import { OfficeFontList } from './OfficeFontList';
 
 type Catalogue =
@@ -75,21 +76,6 @@ export function OfficeMoreFontsDialog({
     };
   }, [readCatalogue, loads, initial, attempt]);
 
-  // Escape in a search with text clears it and goes no further, so the dialog stays (escape.md "A field leaves by its
-  // own rule"). On the field itself, so it runs before the dialog's own Escape on the document.
-  useEffect(() => {
-    const field = search.current;
-    if (!field) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || field.value === '') return;
-      e.stopPropagation();
-      e.preventDefault();
-      setQuery('');
-    };
-    field.addEventListener('keydown', onKeyDown);
-    return () => field.removeEventListener('keydown', onKeyDown);
-  }, []);
-
   const rows = useMemo(
     () =>
       catalogue.state === 'ready' ? moreFontsRows(catalogue.families, { query, show, sort }) : [],
@@ -113,22 +99,9 @@ export function OfficeMoreFontsDialog({
       primary={{ label: 'OK', onPress: () => onApply(draft), disabled: draft.length === 0 }}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex min-w-48 flex-1 items-center gap-2 rounded-full bg-(--office-toolbar) px-4 focus-within:ring-2 focus-within:ring-(--office-focus)">
-          <span aria-hidden="true" className="text-(--office-icon)">
-            <SearchIcon size={18} />
-          </span>
-          <input
-            ref={search}
-            type="search"
-            aria-label="Search fonts"
-            placeholder="Search fonts"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-(--office-muted)"
-          />
-        </div>
-        <Choice label="Show" value={show} options={FONT_SHOW} onChange={setShow} />
-        <Choice label="Sort" value={sort} options={FONT_SORT} onChange={setSort} />
+        <OfficeDialogSearch label="Search fonts" value={query} onChange={setQuery} field={search} />
+        <OfficeDialogSelect label="Show" value={show} options={FONT_SHOW} onChange={setShow} />
+        <OfficeDialogSelect label="Sort" value={sort} options={FONT_SORT} onChange={setSort} />
       </div>
       <div className="mt-3 flex min-h-0 flex-1 gap-4 sm:h-[440px] sm:flex-none max-sm:flex-col">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -138,7 +111,7 @@ export function OfficeMoreFontsDialog({
                 {rows.length === 1 ? '1 font' : `${rows.length} fonts`}
               </p>
               {rows.length === 0 ? (
-                <Message>No fonts match</Message>
+                <OfficeDialogMessage>No fonts match</OfficeDialogMessage>
               ) : (
                 <OfficeFontList
                   // A new search, category or sort is a new list, starting at its top.
@@ -151,11 +124,11 @@ export function OfficeMoreFontsDialog({
               )}
             </>
           ) : catalogue.state === 'loading' ? (
-            <Message>
+            <OfficeDialogMessage>
               <span role="status">Loading fonts</span>
-            </Message>
+            </OfficeDialogMessage>
           ) : (
-            <Message>
+            <OfficeDialogMessage>
               <span role="alert">Fonts could not load.</span>
               <button
                 type="button"
@@ -167,57 +140,12 @@ export function OfficeMoreFontsDialog({
               >
                 Try again
               </button>
-            </Message>
+            </OfficeDialogMessage>
           )}
         </div>
         <MyFontsColumn fonts={draft} onRemove={toggle} onEmptied={() => search.current?.focus()} />
       </div>
     </OfficeDialog>
-  );
-}
-
-function Message({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded border border-(--office-line) text-sm text-(--office-muted) max-sm:py-8">
-      {children}
-    </div>
-  );
-}
-
-function Choice<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: readonly T[];
-  onChange: (value: T) => void;
-}) {
-  return (
-    <label className="flex items-center gap-2 text-sm text-(--office-muted)">
-      {label}
-      <span className="relative inline-flex">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value as T)}
-          className="h-10 cursor-pointer appearance-none rounded border border-(--office-line) bg-transparent pr-8 pl-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)"
-        >
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-(--office-icon)"
-        >
-          <ChevronDownIcon size={14} />
-        </span>
-      </span>
-    </label>
   );
 }
 

@@ -1,4 +1,4 @@
-// docs/specs/034-text-documents/lists.md "List styles", "Numbering".
+// docs/specs/034-text-documents/lists.md "List styles", "Numbering", "List options".
 import { describe, expect, it } from 'vitest';
 import { ListDefinition, ListPresets, type ListDefinition as List } from '@livedoc/text-documents';
 import {
@@ -7,6 +7,7 @@ import {
   presetAt,
   restartAt,
   restartNumbering,
+  setListBullet,
 } from './text-document-list-options';
 import { access, p, places, run, stateOf } from './text-document-lists.test-kit';
 
@@ -206,5 +207,47 @@ describe('continueNumbering', () => {
       continueNumbering(() => lists),
       false,
     );
+  });
+});
+
+describe('setListBullet (List options > More bullets)', () => {
+  it('makes the character the bullet of the caret item’s level, its indents kept, changing no paragraph', () => {
+    const lists = access({ L1: ListDefinition.of('bullet'), L2: N() });
+    const state = stateOf([p('a', { id: 'L1', level: 0 }), p('b', { id: 'L1', level: 1 })], 1);
+    const next = run(state, setListBullet(lists, '★'));
+    const [[id, list]] = lists.added as [[string, List]];
+    expect(id).toBe('L1');
+    expect(list.levels[1]).toEqual({ kind: 'bullet', bullet: '★', indent: 72, hanging: 18 });
+    expect(list.levels[0]).toEqual(ListDefinition.of('bullet').levels[0]);
+    expect(next.doc.eq(state.doc)).toBe(true);
+  });
+
+  it('turns a numbered or checklist level into a bulleted one', () => {
+    const lists = access({ L1: N(), L2: ListDefinition.of('check') });
+    run(stateOf([p('a', { id: 'L1', level: 2 })]), setListBullet(lists, '→'));
+    run(stateOf([p('a', { id: 'L2', level: 0 })]), setListBullet(lists, '→'));
+    expect(lists.added.map(([id, list]) => [id, list.levels[id === 'L1' ? 2 : 0]])).toEqual([
+      ['L1', { kind: 'bullet', bullet: '→', indent: 108, hanging: 18 }],
+      ['L2', { kind: 'bullet', bullet: '→', indent: 36, hanging: 18 }],
+    ]);
+  });
+
+  it('puts the selection off a list in a new bulleted list with the character at its levels', () => {
+    const lists = access({ L1: N() });
+    const next = run(stateOf([p('a'), p('b')], [0, 1]), setListBullet(lists, '✓'));
+    const [[id, list]] = lists.added as [[string, List]];
+    expect(id).toBe('L2');
+    expect(list.levels[0]).toMatchObject({ kind: 'bullet', bullet: '✓' });
+    expect(list.levels[1]).toEqual(ListDefinition.of('bullet').levels[1]);
+    expect(places(next)).toEqual([
+      { id: 'L2', level: 0 },
+      { id: 'L2', level: 0 },
+    ]);
+  });
+
+  it('writes no list when only asked whether it can run', () => {
+    const lists = access({});
+    expect(setListBullet(lists, '★')(stateOf([p('a')]))).toBe(true);
+    expect(lists.added).toEqual([]);
   });
 });
