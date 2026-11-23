@@ -29,3 +29,7 @@ export const TEXT_DOCUMENT_MAX_STATE_BYTES = 64 * 1024 * 1024;
 
 /** (default) Pictures and drawings a text document holds (text-document.md "Limits"); past it, a picture read stays kept. */
 export const TEXT_DOCUMENT_MAX_OBJECTS = 2000;
+/** (default) Nodes in one equation (objects.md "The equation model"); a page of maths holds a few hundred. */
+export const EQUATION_MAX_NODES = 2000;
+/** (default) How deep one equation's structures nest; past it, the equation stays kept. */
+export const EQUATION_MAX_DEPTH = 32;

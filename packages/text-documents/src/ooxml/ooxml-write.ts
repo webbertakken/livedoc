@@ -23,6 +23,8 @@ import { HeaderPartsWriter } from './ooxml-headers';
 import { RelationshipList, relativeTarget } from './ooxml-relationships';
 import { ooxmlMediaPart, ooxmlPictureXml } from './ooxml-pictures';
 import { Pictures, type HeldPictureMedia, type Picture } from '../model/pictures';
+import type { Equation } from '../model/equations';
+import { M_NS, ommlXml } from './ooxml-equations';
 import { keptXmlTexts } from '../picture-media';
 import { Styles, type Style } from '../model/styles';
 import type { TabStop } from '../model/tab-stops';
@@ -41,6 +43,9 @@ import {
   runPropsChildren,
   sectionXml,
 } from './ooxml-props';
+
+/** The font Word writes maths in (objects.md "Equations in the formats", written). */
+const MATHS_FONT = 'Cambria Math';
 
 const STYLE_ORDER =
   'name aliases basedOn next link autoRedefine hidden uiPriority semiHidden unhideWhenUsed qFormat locked personal personalCompose personalReply rsid pPr rPr tblPr trPr tcPr tblStylePr'.split(
@@ -260,6 +265,20 @@ class OoxmlWriter {
     return ooxmlPictureXml(picture, this.rPr(picture), embed, this.#pictureId);
   }
 
+  /** An equation in line: each run in the maths font with the equation's own formatting. */
+  equationXml(equation: Equation): string {
+    const rPr = this.rPr({ ...equation, props: { ...equation.props, font: MATHS_FONT } });
+    return ommlXml(equation.math, rPr);
+  }
+
+  /** A paragraph's equations on their own line, aligned as the paragraph is. */
+  displayXml(p: Paragraph, pieces: readonly { xml: string }[]): string {
+    const align =
+      p.props.align ?? Styles.paragraphPropsOf(this.doc.styles, this.doc.defaults, p.style).align;
+    const jc = align === 'center' ? 'center' : align === 'end' ? 'right' : 'left';
+    return `<m:oMathPara xmlns:m="${M_NS}"><m:oMathParaPr><m:jc m:val="${jc}"/></m:oMathParaPr>${pieces.map((x) => x.xml).join('')}</m:oMathPara>`;
+  }
+
   /** A paragraph; `lead`, a run before its content (a note's number). */
   paragraphXml(p: Paragraph, ends: Section | undefined, lead = ''): string {
     const pieces = p.inlines.map((i) => ({
@@ -273,8 +292,15 @@ class OoxmlWriter {
               ? this.markXml(i)
               : i.type === 'picture'
                 ? this.pictureXml(i)
-                : this.kept(i.xml),
+                : i.type === 'equation'
+                  ? this.equationXml(i)
+                  : this.kept(i.xml),
     }));
+    // A paragraph of only equations is a display equation, as Word writes one (objects.md "Equations in the formats").
+    const display =
+      p.inlines.length > 0 && p.inlines.every((i) => i.type === 'equation' && i.link === undefined);
+    if (display)
+      pieces.splice(0, pieces.length, { link: undefined, xml: this.displayXml(p, pieces) });
     let content = '';
     for (let i = 0; i < pieces.length;) {
       const link = pieces[i]!.link;

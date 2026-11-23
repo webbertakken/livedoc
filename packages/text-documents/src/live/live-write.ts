@@ -11,6 +11,7 @@ import { Pictures, type Picture, type PictureMedia } from '../model/pictures';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
+  EQUATION,
   FIELD,
   FOOTNOTE,
   KEPT_INLINE,
@@ -76,14 +77,22 @@ function inlineNodes(
       continue;
     }
     const element = new Y.XmlElement(
-      inline.type === 'field' ? FIELD : inline.type === 'note' ? FOOTNOTE : KEPT_INLINE,
+      inline.type === 'field'
+        ? FIELD
+        : inline.type === 'note'
+          ? FOOTNOTE
+          : inline.type === 'equation'
+            ? EQUATION
+            : KEPT_INLINE,
     );
     setAttributes(element, {
       ...(inline.type === 'field'
         ? { field: inline.field, text: inline.text }
         : inline.type === 'note'
           ? { story: stories.note(inline) }
-          : { name: inline.name, xml: inline.xml }),
+          : inline.type === 'equation'
+            ? { math: inline.math }
+            : { name: inline.name, xml: inline.xml }),
       props: isEmpty(inline.props) ? undefined : inline.props,
       style: inline.style,
       link: inline.link,

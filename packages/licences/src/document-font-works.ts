@@ -1,4 +1,5 @@
-// The document fonts LiveDoc serves (docs/specs/004-interface-design/fonts.md "Served from LiveDoc"): each family's
+// The document fonts LiveDoc serves (docs/specs/004-interface-design/fonts.md "Served from LiveDoc"), and the maths font
+// equations draw in (docs/specs/034-text-documents/objects.md "Equations in the editor"): each family's
 // WOFF2 faces, bundled by the editor from its Fontsource package, with the licence text the package carries (pinned to
 // the published package). Generated from apps/live/node_modules/@fontsource; one row per package.
 import type { TextSource } from './texts.ts';
@@ -212,6 +213,14 @@ export const DOCUMENT_FONT_WORKS: readonly DocumentFontWork[] = [
     licence: 'OFL-1.1',
     file: 'fontsource-anton-5.3.0-LICENSE.txt',
     sha256: '9267baca92b7a7ce9db6dd9e6cc32c9fe3ddf1ac96e421d5f87c5746b9089d6a',
+  },
+  {
+    id: 'stix-two-math',
+    name: 'STIX Two Math',
+    version: '5.3.0',
+    licence: 'OFL-1.1',
+    file: 'fontsource-stix-two-math-5.3.0-LICENSE.txt',
+    sha256: '0c8b99c034064cbb3c8ad9ba4531b89e179645b93d612da3e8be1cc52b393e58',
   },
 ];
 

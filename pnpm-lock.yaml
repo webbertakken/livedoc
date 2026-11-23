@@ -545,6 +545,9 @@ importers:
       '@fontsource/spectral':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/stix-two-math':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/tinos':
         specifier: ^5.3.0
         version: 5.3.0
@@ -2469,6 +2472,9 @@ packages:
 
   '@fontsource/spectral@5.3.0':
     resolution: {integrity: sha512-2TL5WWGOZj4SIsBmPFEzKeA60tXXd1Qp1OqaaVEWkJL8IfSGLk6YmiusmC441iFkdJDIuFelu1r8lhCmQUU3mw==}
+
+  '@fontsource/stix-two-math@5.3.0':
+    resolution: {integrity: sha512-negoeozw6VSXjZMozwKRSm/dhCQT62csZcuea9I8KYqPaZq/8KbbBBrA02ZHF7AyuR5mVML/p+q0bwFuSIf2GQ==}
 
   '@fontsource/tinos@5.3.0':
     resolution: {integrity: sha512-VVDyyZdbcsLKxo/W7rClAvacD/7DsGc7J5xzzp51Tndib8kDkEe/0bqbb3Xb3iH6+IUjt07aRsvtQ9MGeGGi4w==}
@@ -5702,6 +5708,8 @@ snapshots:
   '@fontsource/roboto@5.3.0': {}
 
   '@fontsource/spectral@5.3.0': {}
+
+  '@fontsource/stix-two-math@5.3.0': {}
 
   '@fontsource/tinos@5.3.0': {}
 

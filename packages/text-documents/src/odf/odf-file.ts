@@ -9,6 +9,7 @@ import {
   refuse,
   type PackageBudgets,
   type PackageRefusal,
+  type XmlElement,
   type XmlParsed,
 } from '@livedoc/office-packages';
 import type { TextDocument } from '../model/text-document';
@@ -16,6 +17,7 @@ import type { ReportBuilder } from '../report';
 import { NS } from './odf-names';
 import { readOdfParts } from './odf-read';
 import { odfPictureLookup } from './odf-pictures';
+import { MATHML_NS } from '../model/equation-mathml';
 
 // A text document, its template, or a web page LibreOffice saved as one: all read as a text document.
 const TEXT_TYPES: readonly string[] = [
@@ -98,6 +100,7 @@ export async function readOdfFile(
     {
       content: c!,
       pictures,
+      formulas: formulaParts(kept),
       ...(maxObjects === undefined ? {} : { maxObjects }),
       ...(styles ? { styles } : {}),
       ...(meta ? { meta } : {}),
@@ -113,4 +116,22 @@ function dropReason(name: string) {
   if (/documentsignatures/.test(name)) return 'signature' as const;
   if (/^Thumbnails\//.test(name)) return 'thumbnail' as const;
   return 'macro' as const;
+}
+
+/**
+ * Each formula part's MathML root by its folder (objects.md "Equations in the formats", read): a `content.xml` in a
+ * folder whose root is MathML's `math`. A part that does not parse is left to stay kept.
+ */
+function formulaParts(
+  entries: readonly { name: string; data: Uint8Array }[],
+): Map<string, XmlElement> {
+  const found = new Map<string, XmlElement>();
+  for (const { name, data } of entries) {
+    const folder = /^(.+)\/content\.xml$/.exec(name)?.[1];
+    if (folder === undefined) continue;
+    const parsed = parseXml(decode(data), name);
+    if (parsed.ok && parsed.root.uri === MATHML_NS && parsed.root.local === 'math')
+      found.set(folder, parsed.root);
+  }
+  return found;
 }

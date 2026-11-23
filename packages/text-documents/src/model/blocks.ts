@@ -6,6 +6,7 @@ import type { KeptProperties, ParagraphProps, TextProps } from './props';
 import type { Section } from './sections';
 import type { Table } from './tables';
 import type { Picture } from './pictures';
+import type { Equation } from './equations';
 
 /** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
 export type Run = {
@@ -61,7 +62,7 @@ export type Note = {
   readonly kept?: KeptProperties;
 };
 
-export type Inline = Run | Field | Note | Picture | KeptInline;
+export type Inline = Run | Field | Note | Picture | Equation | KeptInline;
 
 export type Paragraph = {
   readonly type: 'paragraph';
@@ -94,9 +95,7 @@ export const Paragraph = {
     props: {},
     inlines: text ? [{ type: 'run', text, props: {} }] : [],
   }),
-  /** The paragraph's own characters, a field's as it last showed; notes' marks, pictures and kept inlines read as nothing. */
+  /** The paragraph's own characters, a field's as it last showed; notes' marks, objects and kept inlines read as nothing. */
   text: (paragraph: Paragraph): string =>
-    paragraph.inlines
-      .map((i) => (i.type === 'kept' || i.type === 'note' || i.type === 'picture' ? '' : i.text))
-      .join(''),
+    paragraph.inlines.map((i) => (i.type === 'run' || i.type === 'field' ? i.text : '')).join(''),
 } as const;

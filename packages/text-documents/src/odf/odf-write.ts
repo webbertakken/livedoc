@@ -23,6 +23,8 @@ import { Styles, type Style } from '../model/styles';
 import { TextDocument, type OdfSource } from '../model/text-document';
 import { shortHash } from '../hash';
 import { Pictures, type Picture } from '../model/pictures';
+import type { Equation } from '../model/equations';
+import { odfEquationXml } from './odf-equations';
 import {
   isPictureParentStyleXml,
   odfMediaEntry,
@@ -115,6 +117,7 @@ class OdfWriter {
   /** Whether it writes the flat file, which holds pictures' bytes as base64. */
   readonly flat: boolean;
   #pictures = 0;
+  #equations = 0;
   /** Whether tab positions are written from the indent: as the arriving file counted them; never for a new one. */
   readonly tabsFromIndent: boolean;
   readonly tabs: TabContext;
@@ -204,6 +207,12 @@ class OdfWriter {
       style,
       flat: this.flat,
     });
+  }
+
+  /** An equation in line as its frame, its MathML inside (objects.md "Equations in the formats", written). */
+  equationXml(equation: Equation): string {
+    this.#equations += 1;
+    return odfEquationXml(equation.math, `Equation ${this.#equations}`);
   }
 
   generated(prefix: string, body: (name: string) => string): string {
@@ -473,7 +482,9 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
               )
             : i.type === 'picture'
               ? w.pictureXml(i)
-              : w.kept(i.xml);
+              : i.type === 'equation'
+                ? w.equationXml(i)
+                : w.kept(i.xml);
       return { kind: 'kept', xml, ...compact({ span, link: i.link }) };
     });
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';

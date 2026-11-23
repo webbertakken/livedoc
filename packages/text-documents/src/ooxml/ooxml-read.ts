@@ -48,6 +48,8 @@ import { ooxmlFieldKind } from './ooxml-fields';
 import { adoptOoxmlMedia, ooxmlPictureLookup, readOoxmlPicture } from './ooxml-pictures';
 import { MediaTaken, type FoundMedia } from '../picture-media';
 import type { Picture } from '../model/pictures';
+import type { Equation } from '../model/equations';
+import { firstMathRunProps, M_NS, readOmml } from './ooxml-equations';
 import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import { FootnotesReader, markProps } from './ooxml-notes';
 import { overLines, readOoxmlTable, tableLinesOf, type TableLines } from './ooxml-tables';
@@ -597,7 +599,10 @@ class OoxmlReader {
     // A column break at the paragraph's start is its column break before (page-layout.md "Breaks").
     const runs = new RunReader(this, p);
     const inlines = runs.read();
-    const props: ParagraphProps = runs.columnBreak ? { ...read, columnBreakBefore: true } : read;
+    const aligned = runs.displayAlign && !read.align ? { ...read, align: runs.displayAlign } : read;
+    const props: ParagraphProps = runs.columnBreak
+      ? { ...aligned, columnBreakBefore: true }
+      : aligned;
     const values = {
       style,
       props,
@@ -712,6 +717,8 @@ class RunReader {
   readonly out: Inline[] = [];
   /** A column break opened the paragraph: its column break before (page-layout.md "Breaks"). */
   columnBreak = false;
+  /** An `m:oMathPara` set the paragraph's equations on their own line: how it aligns them (objects.md, read). */
+  displayAlign: ParagraphProps['align'];
   readonly r: OoxmlReader;
   readonly p: XmlElement;
   readonly skipped = new Set<XmlElement>();
@@ -854,7 +861,37 @@ class RunReader {
         return;
       }
     }
+    if (e.uri === M_NS && (e.local === 'oMath' || e.local === 'oMathPara'))
+      return this.maths(e, ctx);
     this.keepInline(e, ctx);
+  }
+
+  /**
+   * An `m:oMath` as its equation, an `m:oMathPara` as its equations with their paragraph aligned as it says (centred
+   * by default); kept whole when any of them holds what the model does not map (objects.md "Equations in the formats").
+   */
+  maths(e: XmlElement, ctx: RunContext): void {
+    const display = e.local === 'oMathPara';
+    const parts = display ? childElements(e) : [e];
+    const pr = display ? parts.find((c) => c.uri === M_NS && c.local === 'oMathParaPr') : undefined;
+    const equations = parts.filter((c) => c !== pr);
+    const rows = equations.map((c) =>
+      c.uri === M_NS && c.local === 'oMath' ? readOmml(c) : undefined,
+    );
+    if (rows.some((row) => row === undefined)) return this.keepInline(e, ctx);
+    if (display) {
+      const jc = pr && attributeOf(childElement(pr, M_NS, 'jc') ?? pr, M_NS, 'val');
+      this.displayAlign = jc === 'left' ? 'start' : jc === 'right' ? 'end' : 'center';
+    }
+    equations.forEach((equation, i) => {
+      const { font: _, ...props } = readRunProps(firstMathRunProps(equation)).props;
+      this.out.push({
+        type: 'equation',
+        math: rows[i]!,
+        props,
+        ...compact({ link: ctx.link }),
+      } satisfies Equation);
+    });
   }
 
   run(r: XmlElement, ctx: RunContext): void {
