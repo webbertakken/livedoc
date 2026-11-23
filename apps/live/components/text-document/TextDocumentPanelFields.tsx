@@ -135,6 +135,32 @@ export function PanelLengthField({
   );
 }
 
+/** An angle in degrees: any number, shown to two decimals; what it turns to is for the caller to hold. */
+export function PanelAngleField({
+  degrees,
+  ...rest
+}: {
+  label: string;
+  degrees: number | null;
+  disabled?: boolean;
+  onCommit: (degrees: number) => void;
+}) {
+  return (
+    <PanelNumberField
+      {...rest}
+      value={degrees === null ? null : Math.round(degrees * 100) / 100}
+      suffix="°"
+      read={(text) => {
+        const trimmed = text.trim().replace(',', '.').replace(/°$/, '').trim();
+        if (trimmed === '') return null;
+        const value = Number(trimmed);
+        return Number.isFinite(value) ? value : 'invalid';
+      }}
+      error="Enter a number of degrees."
+    />
+  );
+}
+
 /** A percent from `least` to `most`, shown to a whole number. */
 export function PanelPercentField({
   percent,

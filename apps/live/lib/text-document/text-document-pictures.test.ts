@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/objects.md "In the editor": a picture in line drawn at its size, its crop cutting its
 // media; its alternative text read, a decorative one read as nothing; one without media a grey box reading so;
-// selected, its handles; while cropped, its crop marks.
+// selected, its handles; while cropped, its crop marks. A turned picture is drawn turned about its centre, its line making
+// room for its bounds, its handles read along its own sides.
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { Decoration, EditorView } from 'prosemirror-view';
@@ -26,7 +27,23 @@ describe('pictureBox', () => {
       width: 60,
       height: 40,
       image: { width: 60, height: 40, left: 0, top: 0 },
+      rotation: 0,
+      bounds: { width: 60, height: 40 },
     });
+  });
+
+  it('turns the picture, its bounds those of the turned box', () => {
+    expect(pictureBox(picture({ rotation: 90 }).attrs)).toMatchObject({
+      width: 60,
+      height: 40,
+      rotation: 90,
+      bounds: { width: 40, height: 60 },
+    });
+    expect(pictureBox(picture({ rotation: 30 }).attrs).bounds).toEqual({
+      width: 71.962,
+      height: 64.641,
+    });
+    expect(pictureBox(picture({ rotation: 'x' }).attrs).rotation).toBe(0);
   });
 
   it('draws the picture larger, moved by the crop, so only what is left shows', () => {
@@ -35,6 +52,8 @@ describe('pictureBox', () => {
       width: 60,
       height: 40,
       image: { width: 75, height: 50, left: -7.5, top: -10 },
+      rotation: 0,
+      bounds: { width: 60, height: 40 },
     });
   });
 
@@ -74,6 +93,21 @@ describe('a picture drawn', () => {
     const img = dom.querySelector('img')!;
     expect(img.getAttribute('alt')).toBe('A green field');
     expect(img.getAttribute('src')).toMatch(/^blob:/);
+  });
+
+  it('draws a turned picture turned about its centre, its line making room for its bounds', () => {
+    const dom = draw({ rotation: 90 });
+    expect(dom.style.width).toBe('40pt');
+    expect(dom.style.height).toBe('60pt');
+    const turned = dom.querySelector<HTMLElement>('.text-document-picture-turn')!;
+    expect(turned.style.width).toBe('60pt');
+    expect(turned.style.height).toBe('40pt');
+    expect(turned.style.left).toBe('-10pt');
+    expect(turned.style.top).toBe('10pt');
+    expect(turned.style.transform).toBe('rotate(90deg)');
+    expect(
+      draw({}).querySelector<HTMLElement>('.text-document-picture-turn')!.style.transform,
+    ).toBe('');
   });
 
   it('reads a decorative picture as nothing', () => {
@@ -166,16 +200,18 @@ describe('a picture drawn', () => {
   describe('its handles', () => {
     const room = { width: 468, height: 648 };
     const cropMark = [Decoration.node(0, 1, {}, CROPPING_SPEC)];
-    const sized = (can = true, marks: readonly Decoration[] = []) => {
+    const sized = (can = true, marks: readonly Decoration[] = [], attrs = {}) => {
       const resize = vi.fn<(pos: number, size: { width: number; height: number }) => void>();
       const crop = vi.fn<(pos: number, next: CroppedPicture) => void>();
+      const rotate = vi.fn<(pos: number, rotation: number) => void>();
       const view = pictureView(sourceOf(held(true)), {
         can: () => can,
         room: () => room,
         resize,
         crop,
-      })(picture({}), {} as EditorView, () => 3, marks, undefined as never);
-      return { view, resize, crop };
+        rotate,
+      })(picture(attrs), {} as EditorView, () => 3, marks, undefined as never);
+      return { view, resize, crop, rotate };
     };
     const handle = (dom: HTMLElement, which: string) =>
       dom.querySelector<HTMLElement>(`[data-picture-handle="${which}"]`)!;
@@ -187,7 +223,7 @@ describe('a picture drawn', () => {
       window.dispatchEvent(new MouseEvent('pointermove', { clientX: 10 + dx, clientY: 10 + dy }));
     };
 
-    it('draws eight on a selected picture, and none once deselected', () => {
+    it('draws eight and the rotation handle on a selected picture, and none once deselected', () => {
       const { view } = sized();
       view.selectNode!();
       expect(view.dom.classList.contains('ProseMirror-selectednode')).toBe(true);
@@ -195,7 +231,7 @@ describe('a picture drawn', () => {
         [...view.dom.querySelectorAll('[data-picture-handle]')].map((h) =>
           h.getAttribute('data-picture-handle'),
         ),
-      ).toEqual(['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']);
+      ).toEqual(['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w', 'rotate']);
       view.deselectNode!();
       expect(view.dom.querySelector('[data-picture-handle]')).toBeNull();
       expect(view.dom.classList.contains('ProseMirror-selectednode')).toBe(false);
@@ -225,6 +261,42 @@ describe('a picture drawn', () => {
       window.dispatchEvent(new MouseEvent('pointerup', {}));
       expect(view.dom.style.width).toBe('60pt');
       expect(resize).not.toHaveBeenCalled();
+    });
+
+    // Turning by its handle: the picture follows the pointer round its centre, its line kept still, the turn written once.
+    it('turns by the rotation handle, writing the turn once on release', () => {
+      const { view, rotate, resize } = sized();
+      view.selectNode!();
+      // jsdom lays nothing out: the centre is at (0, 0), the handle pressed at 135° and moved to 225°.
+      drag(handle(view.dom, 'rotate'), -20, 0);
+      const turned = view.dom.querySelector<HTMLElement>('.text-document-picture-turn')!;
+      expect(turned.style.transform).toBe('rotate(90deg)');
+      expect(view.dom.style.width).toBe('60pt');
+      expect(rotate).not.toHaveBeenCalled();
+      window.dispatchEvent(new MouseEvent('pointerup', {}));
+      expect(rotate).toHaveBeenCalledExactlyOnceWith(3, 90);
+      expect(resize).not.toHaveBeenCalled();
+    });
+
+    it('leaves the turn as it was on Escape', () => {
+      const { view, rotate } = sized();
+      view.selectNode!();
+      drag(handle(view.dom, 'rotate'), -20, 0);
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      window.dispatchEvent(new MouseEvent('pointerup', {}));
+      expect(
+        view.dom.querySelector<HTMLElement>('.text-document-picture-turn')!.style.transform,
+      ).toBe('');
+      expect(rotate).not.toHaveBeenCalled();
+    });
+
+    it("reads a turned picture's handle along its own sides", () => {
+      const { view, resize } = sized(true, [], { rotation: 90 });
+      view.selectNode!();
+      // Turned a quarter clockwise, its east edge faces down: 40 pixels down is 30 points wider.
+      drag(handle(view.dom, 'e'), 0, 40);
+      window.dispatchEvent(new MouseEvent('pointerup', {}));
+      expect(resize).toHaveBeenCalledExactlyOnceWith(3, { width: 90, height: 40 });
     });
 
     // Cropping: the whole picture drawn, what lies beyond its box dimmed, a mark's drag cutting rather than scaling.

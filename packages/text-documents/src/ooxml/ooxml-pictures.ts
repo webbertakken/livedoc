@@ -111,16 +111,27 @@ function blipFillOf(fill: XmlElement): { embed: string; crop?: PictureCrop } | u
   return embed ? { embed, ...(crop ? { crop } : {}) } : undefined;
 }
 
-/** `pic:spPr`: true when it gives the picture no look of its own (a plain rectangle, unturned, no line or effects). */
-function plainShape(spPr: XmlElement): boolean {
-  if (!only(spPr, unqualified('bwMode'))) return false;
-  return childElements(spPr).every((c) => {
+/** Word's `rot`: a whole number of 60,000ths of a degree, clockwise. */
+const ROTATION_UNITS = 60_000;
+const EMU_A_POINT = 12_700;
+
+/**
+ * `pic:spPr`: the turn it gives the picture (objects.md "Rotation read"), when it gives it no other look of its own (a
+ * plain rectangle, unflipped, no line or effects); undefined when it does.
+ */
+function plainShape(spPr: XmlElement): { rotation: number | undefined } | undefined {
+  if (!only(spPr, unqualified('bwMode'))) return undefined;
+  let rotation: number | undefined;
+  const plain = childElements(spPr).every((c) => {
     if (is(c, A_NS, 'xfrm')) {
-      const turned = ['rot', 'flipH', 'flipV'].some((n) => {
+      const flipped = ['flipH', 'flipV'].some((n) => {
         const v = attributeOf(c, '', n);
         return v !== undefined && v !== '0' && v !== 'false';
       });
-      return !turned && childElements(c).every((x) => is(x, A_NS, 'off') || is(x, A_NS, 'ext'));
+      const rot = attributeOf(c, '', 'rot');
+      if (rot !== undefined && !/^-?\d+$/.test(rot)) return false;
+      rotation = Pictures.rotation(Number(rot ?? '0') / ROTATION_UNITS);
+      return !flipped && childElements(c).every((x) => is(x, A_NS, 'off') || is(x, A_NS, 'ext'));
     }
     if (is(c, A_NS, 'prstGeom'))
       return (
@@ -132,12 +143,13 @@ function plainShape(spPr: XmlElement): boolean {
     if (is(c, A_NS, 'effectLst')) return childElements(c).length === 0;
     return false;
   });
+  return plain ? { rotation } : undefined;
 }
 
 /** What a picture's drawing holds beyond the run around it. */
 export type OoxmlPictureRead = Pick<
   Picture,
-  'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop'
+  'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop' | 'rotation'
 >;
 
 /**
@@ -176,6 +188,7 @@ export function readOoxmlPicture(
   }
   if (!size || !named || !pic) return undefined;
   let fill: ReturnType<typeof blipFillOf>;
+  let shape: ReturnType<typeof plainShape> = { rotation: undefined };
   for (const c of childElements(pic)) {
     if (is(c, PIC_NS, 'nvPicPr')) {
       const cNvPr = childElement(c, PIC_NS, 'cNvPr');
@@ -185,12 +198,19 @@ export function readOoxmlPicture(
       fill = blipFillOf(c);
       if (!fill) return undefined;
     } else if (is(c, PIC_NS, 'spPr')) {
-      if (!plainShape(c)) return undefined;
+      shape = plainShape(c);
+      if (!shape) return undefined;
     } else return undefined;
   }
   const found = fill && mediaOf(fill.embed);
   if (!found || !taken.take(found)) return undefined;
-  return { media: found.key, ...size, ...named, ...(fill!.crop ? { crop: fill!.crop } : {}) };
+  return {
+    media: found.key,
+    ...size,
+    ...named,
+    ...(fill!.crop ? { crop: fill!.crop } : {}),
+    ...(shape.rotation ? { rotation: shape.rotation } : {}),
+  };
 }
 
 /** The part a picture's media is written at: the one it arrived in, else `media/<key>.<ext>` by the main part. */
@@ -202,6 +222,17 @@ const attr = (name: string, value: string | undefined) =>
   value === undefined ? '' : ` ${name}="${escapeXmlAttribute(value)}"`;
 const thousandths = (fraction: number) => String(Math.round(fraction * 100_000));
 
+/**
+ * `wp:effectExtent`: how far a turned picture's bounds reach past its extent on each side, in EMU, so its line makes
+ * room for them, as Word writes it (objects.md "Rotation written"); none unturned.
+ */
+function effectExtentOf(picture: Picture): string {
+  const bounds = Pictures.turnedBounds(picture, Pictures.rotation(picture.rotation));
+  const across = Math.max(0, Math.round(((bounds.width - picture.width) * EMU_A_POINT) / 2));
+  const down = Math.max(0, Math.round(((bounds.height - picture.height) * EMU_A_POINT) / 2));
+  return `<wp:effectExtent l="${across}" t="${down}" r="${across}" b="${down}"/>`;
+}
+
 /** A picture in line as Word writes one: `rPr` the run's formatting, `embed` its media's relationship, `id` its number. */
 export function ooxmlPictureXml(picture: Picture, rPr: string, embed: string, id: number): string {
   const cx = ptToEmu(picture.width);
@@ -212,10 +243,11 @@ export function ooxmlPictureXml(picture: Picture, rPr: string, embed: string, id
     : '';
   const docPr = `<wp:docPr id="${id}"${attr('name', name)}${attr('descr', picture.alt)}${attr('title', picture.title)}${decorative ? `>${decorative}</wp:docPr>` : '/>'}`;
   const crop = Pictures.crop(picture.crop);
+  const rotation = Pictures.rotation(picture.rotation);
   const srcRect = crop
     ? `<a:srcRect l="${thousandths(crop.left)}" t="${thousandths(crop.top)}" r="${thousandths(crop.right)}" b="${thousandths(crop.bottom)}"/>`
     : '';
-  return `<w:r>${rPr}<w:drawing><wp:inline xmlns:wp="${WP_NS}" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"/>${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+  return `<w:r>${rPr}<w:drawing><wp:inline xmlns:wp="${WP_NS}" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>${effectExtentOf(picture)}${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"/>${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rotation ? ` rot="${Math.round(rotation * ROTATION_UNITS)}"` : ''}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
 }
 
 const isImage = (r: Relationship) => r.type === RELATIONSHIP_TYPES.image && !r.external;

@@ -3,6 +3,7 @@ import { textDocumentBreakActions } from './text-document-breaks';
 import { textDocumentTableActions } from './text-document-tables';
 import { TABLE_EDIT_ITEMS } from './text-document-table-actions';
 import { TABLE_NAVIGATION } from './text-document-table-navigation';
+import { PICTURE_TURN_KEYS } from './text-document-picture-rotate';
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
@@ -186,6 +187,8 @@ describe('the text document menus', () => {
       ...FOOTNOTE_KEY_ACTIONS,
       // Moving through tables (text-document-table-navigation).
       ...Object.keys(TABLE_NAVIGATION),
+      // Turning a selected picture (useTextDocumentPictureSize).
+      ...Object.keys(PICTURE_TURN_KEYS),
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

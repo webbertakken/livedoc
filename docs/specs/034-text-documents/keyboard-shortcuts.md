@@ -103,10 +103,10 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 | Resize smaller                 | `Ctrl+Alt+J`      | `⌘+Ctrl+J`           | `Ctrl+Alt+J`            | specified |
 | Resize smaller horizontally    | `Ctrl+Alt+W`      | `⌘+Ctrl+W`           | `Ctrl+Alt+W`            | specified |
 | Resize smaller vertically      | `Ctrl+Alt+Q`      | `⌘+Ctrl+Q`           | `Ctrl+Alt+Q`            | specified |
-| Rotate clockwise by 15°        | `Alt+Right`       | `Option+Right`       | `Alt+Right`             | specified |
-| Rotate counterclockwise by 15° | `Alt+Left`        | `Option+Left`        | `Alt+Left`              | specified |
-| Rotate counterclockwise by 1°  | `Alt+Shift+Left`  | `Option+Shift+Left`  | `Alt+Shift+Left`        | specified |
-| Rotate clockwise by 1°         | `Alt+Shift+Right` | `Option+Shift+Right` | `Alt+Shift+Right`       | specified |
+| Rotate clockwise by 15°        | `Alt+Right`       | `Option+Right`       | `Alt+Right`             | built     |
+| Rotate counterclockwise by 15° | `Alt+Left`        | `Option+Left`        | `Alt+Left`              | built     |
+| Rotate counterclockwise by 1°  | `Alt+Shift+Left`  | `Option+Shift+Left`  | `Alt+Shift+Left`        | built     |
+| Rotate clockwise by 1°         | `Alt+Shift+Right` | `Option+Shift+Right` | `Alt+Shift+Right`       | built     |
 | Close drawing editor           | `Shift+Esc`       | `⌘+Esc or Shift+Esc` | `Ctrl+Esc or Shift+Esc` | specified |
 
 ## Comments and footnotes

@@ -397,7 +397,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Right',
     'Option+Right',
     'Alt+Right',
-    'specified',
+    'built',
   ),
   row(
     'rotate-counterclockwise-by-15',
@@ -406,7 +406,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Left',
     'Option+Left',
     'Alt+Left',
-    'specified',
+    'built',
   ),
   row(
     'rotate-counterclockwise-by-1',
@@ -415,7 +415,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+Left',
     'Option+Shift+Left',
     'Alt+Shift+Left',
-    'specified',
+    'built',
   ),
   row(
     'rotate-clockwise-by-1',
@@ -424,7 +424,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+Right',
     'Option+Shift+Right',
     'Alt+Shift+Right',
-    'specified',
+    'built',
   ),
   row(
     'close-drawing-editor',

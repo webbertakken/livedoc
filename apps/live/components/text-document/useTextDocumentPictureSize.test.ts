@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/objects.md "Working with a picture": Image options and Reset image are an Editor's,
 // dimmed while no picture is selected; its own size is its pixels (held bytes, else the image drawn); a size from the
-// panel or the handles, Reset image and a crop, each written as one step and counted; Crop image begins cropping.
+// panel or the handles, Reset image, a crop and a turn (the handle, the panel, the turning shortcuts, bound only while
+// a picture is selected), each written as one step and counted; Crop image begins cropping.
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
@@ -154,11 +155,53 @@ describe('useTextDocumentPictureSize', () => {
     expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImageCrop');
   });
 
+  it("writes the handle's turn, counted", () => {
+    const { hook, view } = setup();
+    act(() => hook.result.current.rotate(1, 30, 'handle'));
+    expect(attrs(view)).toMatchObject({ rotation: 30, width: 60 });
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImageRotate');
+  });
+
+  it("writes the panel's angle and its quarter turns", () => {
+    const { hook, view } = setup();
+    act(() => hook.result.current.turn({ angle: -45 }));
+    expect(attrs(view).rotation).toBe(315);
+    act(() => hook.result.current.turn({ by: 90 }));
+    expect(attrs(view).rotation).toBe(45);
+  });
+
+  it('turns by the shortcuts while a picture is selected, each on from the last', () => {
+    const { hook, view } = setup();
+    act(() => hook.result.current.actions['rotate-clockwise-by-15']!.run());
+    act(() => hook.result.current.actions['rotate-clockwise-by-15']!.run());
+    expect(attrs(view).rotation).toBe(30);
+    act(() => hook.result.current.actions['rotate-counterclockwise-by-1']!.run());
+    expect(attrs(view).rotation).toBe(29);
+    act(() => hook.result.current.actions['rotate-counterclockwise-by-15']!.run());
+    act(() => hook.result.current.actions['rotate-clockwise-by-1']!.run());
+    expect(attrs(view).rotation).toBe(15);
+    expect(track).toHaveBeenCalledTimes(5);
+  });
+
+  it('binds no turning shortcut without a selected picture, so the keys move the caret', () => {
+    const { actions } = setup({ selected: false }).hook.result.current;
+    expect(actions['rotate-clockwise-by-15']).toBeUndefined();
+  });
+
+  it('resets its turn too', () => {
+    const { hook, view } = setup();
+    act(() => hook.result.current.rotate(1, 30, 'handle'));
+    act(() => hook.result.current.actions['image-reset']!.run());
+    expect(attrs(view).rotation).toBeNull();
+  });
+
   it('writes nothing for anyone who may not edit', () => {
     const { hook, view } = setup({ canEdit: false });
     act(() => hook.result.current.resize(1, { width: 100, height: 20 }, 'handle'));
     act(() => hook.result.current.reset());
     act(() => hook.result.current.crop(1, { width: 10, height: 10, crop: null }));
-    expect(attrs(view)).toMatchObject({ width: 60, height: 30 });
+    act(() => hook.result.current.rotate(1, 90, 'handle'));
+    act(() => hook.result.current.turn({ by: 90 }));
+    expect(attrs(view)).toMatchObject({ width: 60, height: 30, rotation: null });
   });
 });

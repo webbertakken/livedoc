@@ -1,25 +1,33 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/objects.md "Working with a picture": Image options' Size & rotation holds Width and
 // Height in the person's unit, Scale in percent of its own size (dimmed while that is unknown) and Lock aspect ratio,
-// on at first; each field applies on Enter or when left, an invalid one says so; Reset; without a picture, a hint.
+// on at first; Rotate's Angle and a quarter turn either way; each field applies on Enter or when left, an invalid one
+// says so; Reset; without a picture, a hint.
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { TextDocumentImageOptionsPanel, type PictureSizing } from './TextDocumentImageOptionsPanel';
 
-const SHOWN: PictureSizing = { width: 72, height: 36, own: { width: 144, height: 72 } };
+const SHOWN: PictureSizing = {
+  width: 72,
+  height: 36,
+  own: { width: 144, height: 72 },
+  rotation: 30,
+};
 
 const panel = (picture: PictureSizing | null = SHOWN) => {
   const onChange = vi.fn();
   const onReset = vi.fn();
+  const onTurn = vi.fn();
   render(
     <TextDocumentImageOptionsPanel
       picture={picture}
       unit="in"
       onChange={onChange}
+      onTurn={onTurn}
       onReset={onReset}
     />,
   );
-  return { onChange, onReset };
+  return { onChange, onReset, onTurn };
 };
 
 const field = (name: string) => screen.getByRole<HTMLInputElement>('textbox', { name });
@@ -41,6 +49,25 @@ describe('TextDocumentImageOptionsPanel', () => {
     expect(
       screen.getByRole<HTMLInputElement>('checkbox', { name: 'Lock aspect ratio' }).checked,
     ).toBe(true);
+  });
+
+  it('shows its turn, applies an angle typed, and turns a quarter either way', () => {
+    const { onTurn } = panel();
+    expect(screen.getByRole('group', { name: 'Rotate' })).toBeTruthy();
+    expect(field('Angle').value).toBe('30');
+    type('Angle', '-90°');
+    expect(onTurn).toHaveBeenCalledWith({ angle: -90 });
+    fireEvent.click(screen.getByRole('button', { name: 'Rotate counter-clockwise 90°' }));
+    expect(onTurn).toHaveBeenLastCalledWith({ by: -90 });
+    fireEvent.click(screen.getByRole('button', { name: 'Rotate clockwise 90°' }));
+    expect(onTurn).toHaveBeenLastCalledWith({ by: 90 });
+  });
+
+  it('says an angle must be a number, and turns nothing', () => {
+    const { onTurn } = panel();
+    type('Angle', 'left');
+    expect(screen.getByText('Enter a number of degrees.')).toBeTruthy();
+    expect(onTurn).not.toHaveBeenCalled();
   });
 
   it('applies a width in points, locked to the ratio', () => {
@@ -75,7 +102,7 @@ describe('TextDocumentImageOptionsPanel', () => {
   });
 
   it('dims Scale and Reset while its own size is unknown', () => {
-    panel({ width: 72, height: 36, own: null });
+    panel({ width: 72, height: 36, own: null, rotation: 0 });
     expect(field('Scale width').disabled).toBe(true);
     expect(field('Scale width').value).toBe('');
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Reset' }).disabled).toBe(true);

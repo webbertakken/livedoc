@@ -146,6 +146,7 @@ const picture = schema.nodes[PICTURE]!.create({
   height: 100,
   alt: 'A field',
   crop,
+  rotation: 30,
 });
 const doc = schema.node('doc', null, [
   schema.nodes.paragraph!.create(null, [schema.text('a'), picture]),
@@ -175,12 +176,18 @@ describe('setPictureSize', () => {
 });
 
 describe('resetPicture', () => {
-  it('is its own size fitted to the room, its crop dropped', () => {
+  it('is its own size fitted to the room, its crop and turn dropped', () => {
     const { ran, next, attrs } = run(
       resetPicture(2, { width: 1248, height: 624 }, { width: 468, height: 648 }),
     );
     expect(ran).toBe(true);
-    expect(attrs).toMatchObject({ width: 468, height: 234, crop: null, alt: 'A field' });
+    expect(attrs).toMatchObject({
+      width: 468,
+      height: 234,
+      crop: null,
+      rotation: null,
+      alt: 'A field',
+    });
     expect(selectedPicture(next)?.pos).toBe(2);
   });
 

@@ -545,7 +545,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
     },
   }),
   // objects.md "The model": pictures in line, one cropped with alternative text and a title, one decorative sharing its
-  // media, one linked, one in a table cell and one in a header.
+  // media and turned, one linked, one in a table cell and one in a header.
   pictures: (format) => {
     const picture = (
       media: string,
@@ -577,7 +577,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
           run('Before '),
           cropped,
           run(' between '),
-          picture(GREEN_PNG_SHA, 24, 17, { decorative: true }),
+          picture(GREEN_PNG_SHA, 24, 17, { decorative: true, rotation: 330.5 }),
           run('.'),
         ]),
         p([picture(BLUE_PNG_SHA, 30, 30, { link: 'https://docs.nu/', alt: 'Blue' })]),
