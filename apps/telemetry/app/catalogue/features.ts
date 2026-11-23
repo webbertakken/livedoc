@@ -1294,13 +1294,20 @@ export const TEXT_DOCUMENT_TABLES = chart(
 );
 
 // A text document's picture changed (docs/specs/034-text-documents/objects.md "Working with a picture"): its alt text
-// written, its picture replaced.
+// written, its picture replaced, its size set by its handles or Image options, or reset.
 export const TEXT_DOCUMENT_PICTURE_CHANGES = chart(
   'Element',
   'Changed',
   'Text Document Picture Changes',
-  "A text document's picture changed: its alt text written or its picture replaced.",
-  { types: ['TextDocumentImageAltText', 'TextDocumentImageReplace'] },
+  "A text document's picture changed: its alt text written, its picture replaced, its size set or reset.",
+  {
+    types: [
+      'TextDocumentImageAltText',
+      'TextDocumentImageReplace',
+      'TextDocumentImageSize',
+      'TextDocumentImageReset',
+    ],
+  },
 );
 
 // A text document's table reshaped (docs/specs/034-text-documents/tables.md "Telemetry"): a row added with Tab or a

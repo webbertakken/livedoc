@@ -1,5 +1,5 @@
 {
-  "version": "1.73.0",
+  "version": "1.77.0",
   "glyphs": [
     "a-large-small",
     "align-center",
@@ -146,6 +146,7 @@
     "grip-vertical",
     "group",
     "hammer",
+    "hand",
     "handshake",
     "hash",
     "headphones",
@@ -197,6 +198,7 @@
     "milk",
     "minimize-2",
     "minus",
+    "moon",
     "mountain",
     "mouse-pointer-2",
     "move-right",
@@ -262,6 +264,7 @@
     "shopping-bag",
     "sigma",
     "signal",
+    "signature",
     "sliders-horizontal",
     "smile",
     "smile-plus",
@@ -278,6 +281,7 @@
     "square-dashed-mouse-pointer",
     "square-kanban",
     "square-plus",
+    "stamp",
     "star",
     "star-half",
     "star-off",

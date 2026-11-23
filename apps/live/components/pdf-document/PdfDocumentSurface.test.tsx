@@ -81,6 +81,7 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
     ],
     storedFile: KEY,
     bytes: 1_250_000,
+    version: '1.7',
     protected: false,
     engine: {} as never,
     drawer: { draw: async () => null, forget: () => {} },
@@ -272,7 +273,8 @@ describe('a PDF document’s surface', () => {
     const { container } = show(await ready());
     expect(surface(container).getAttribute('data-pdf-surface')).toBe('ready');
     expect(container.querySelector('[data-pdf-pages="2"]')).toBeTruthy();
-    expect(screen.getByLabelText('PDF, 2 pages, 1.3 MB').textContent).toBe('PDF');
+    // reading-surface.md "The title row": the pill's tooltip names the file's own version, its pages and its size.
+    expect(screen.getByLabelText('PDF 1.7, 2 pages, 1.3 MB').textContent).toBe('PDF');
     const highlight = screen.getByRole('button', { name: 'Highlight' });
     expect(highlight.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(highlight);
@@ -441,9 +443,14 @@ describe('a PDF document’s surface', () => {
       fireEvent.click(screen.getByRole('menuitemradio', { name: /Viewing/ }));
       expect(screen.getByRole('button', { name: 'Mode: Viewing' })).toBeTruthy();
       expect(screen.queryByRole('button', { name: 'Highlight' })).toBeNull();
+      // "The toolbar": the rest are the mode's own, drawn dimmed until their phases land.
+      expect(
+        screen.getByRole('button', { name: 'Page display' }).getAttribute('aria-disabled'),
+      ).toBe('true');
       fireEvent.click(screen.getByRole('button', { name: 'Mode: Viewing' }));
       fireEvent.click(screen.getByRole('menuitemradio', { name: /Reviewing/ }));
       expect(screen.getByRole('button', { name: 'Highlight' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Page display' })).toBeNull();
     });
 
     it('offers a Participant Reviewing and Viewing, never Editing', async () => {

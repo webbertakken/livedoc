@@ -15,7 +15,7 @@ import { tableEditing } from 'prosemirror-tables';
 import { tableResizePlugin } from '@/lib/text-document/text-document-table-resize-plugin';
 import { tableMovePlugin } from '@/lib/text-document/text-document-table-move-plugin';
 import { tableView } from '@/lib/text-document/text-document-table-dom';
-import { pictureView } from '@/lib/text-document/text-document-pictures';
+import { pictureView, type PictureSizingHooks } from '@/lib/text-document/text-document-pictures';
 import { galleryPicturesOf } from '@/lib/text-document/text-document-gallery-pictures';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
@@ -149,7 +149,8 @@ import {
   picturePastePlugin,
   type TakePictureFiles,
 } from '@/lib/text-document/text-document-picture-paste';
-import { pictureRoom } from '@/lib/text-document/text-document-picture-insert';
+import { pictureRoom as roomForPictures } from '@/lib/text-document/text-document-picture-insert';
+import { useTextDocumentPictureSize, IMAGE_OPTIONS_ITEM } from './useTextDocumentPictureSize';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -204,6 +205,12 @@ export function TextDocumentSurface({
   const clipboardLeftOut = useRef<(count: number) => void>(() => {});
   // Picture files pasted or dropped, taken by Insert > Image's placing (objects.md "Inserting") once it is made.
   const takePictureFiles = useRef<TakePictureFiles>(() => false);
+  // A selected picture's handles (objects.md "Working with a picture"), sized by the hook made below.
+  const pictureSizing = useRef<PictureSizingHooks>({
+    can: () => false,
+    room: () => ({ width: 0, height: 0 }),
+    resize: () => {},
+  });
   // What the layout lays the writing onto (page-layout.md "Laying out"), read as it lays out; and the pages it made.
   const layout = useRef<{ setup: PageSetup; pages: boolean } | null>(null);
   const [pageList, setPageList] = useState<readonly PageGeometry[]>([]);
@@ -435,10 +442,17 @@ export function TextDocumentSurface({
           nodeViews: {
             ...FIELD_NODE_VIEWS,
             table: tableView,
-            [PICTURE]: pictureView({
-              media: (key) => TextDocumentState.media(doc, key),
-              ...galleryPicturesOf(where),
-            }),
+            [PICTURE]: pictureView(
+              {
+                media: (key) => TextDocumentState.media(doc, key),
+                ...galleryPicturesOf(where),
+              },
+              {
+                can: () => pictureSizing.current.can(),
+                room: () => pictureSizing.current.room(),
+                resize: (pos, size) => pictureSizing.current.resize(pos, size),
+              },
+            ),
           },
           // Read only in Viewing (or for a Viewer), yet still focusable: the keyboard reads it, and its shortcuts work.
           attributes: () => ({
@@ -634,20 +648,26 @@ export function TextDocumentSurface({
     writes && headers.editing === null && headers.note === null,
     page.pageless ? 1 : Columns.of(page.caret.section.setup).count,
   );
+  // Writing in the body: not in a header, a footer or a note.
+  const bodyWrites = writes && headers.editing === null && headers.note === null;
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
   const tableActions = useTextDocumentTables(
     editorView,
-    writes && headers.editing === null && headers.note === null,
+    bodyWrites,
     Columns.width(page.caret.section.setup),
   );
   // Insert > Image, and picture files pasted or dropped, in the room the caret's text has (objects.md "Inserting").
+  const pictureRoom = useMemo(
+    () => roomForPictures(page.caret.section.setup),
+    [page.caret.section.setup],
+  );
   const pictures = useTextDocumentPictures({
     view: editorView,
     liveDoc,
     ownerId,
     documentId,
-    canEdit: writes && headers.editing === null && headers.note === null,
-    room: pictureRoom(page.caret.section.setup),
+    canEdit: bodyWrites,
+    room: pictureRoom,
   });
   useLayoutEffect(() => {
     takePictureFiles.current = pictures.take;
@@ -655,9 +675,25 @@ export function TextDocumentSurface({
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({
     view: editorView,
-    canEdit: writes && headers.editing === null && headers.note === null,
+    canEdit: bodyWrites,
     subscribe: changes.subscribeCaret,
     bring: pictures.bring,
+  });
+  // Format > Image > Image options and Reset image, and the handles' drag (objects.md "Working with a picture").
+  const pictureSize = useTextDocumentPictureSize({
+    view: editorView,
+    liveDoc,
+    canEdit: bodyWrites,
+    subscribe: changes.subscribeCaret,
+    toggle: panels.actions[IMAGE_OPTIONS_ITEM],
+    room: pictureRoom,
+  });
+  useLayoutEffect(() => {
+    pictureSizing.current = {
+      can: () => bodyWrites,
+      room: () => pictureRoom,
+      resize: (pos, size) => pictureSize.resize(pos, size, 'handle'),
+    };
   });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
@@ -684,6 +720,7 @@ export function TextDocumentSurface({
       ...tableActions,
       ...pictures.actions,
       ...pictureEditing.actions,
+      ...pictureSize.actions,
       ...tableProperties.actions,
       ...headers.actions,
     }),
@@ -692,6 +729,7 @@ export function TextDocumentSurface({
       tableActions,
       pictures.actions,
       pictureEditing.actions,
+      pictureSize.actions,
       tableProperties.actions,
       columns.actions,
       headers.actions,
@@ -820,6 +858,12 @@ export function TextDocumentSurface({
             lineNumbers={lineNumbers}
             watermark={watermark}
             tableProperties={{ ...tableProperties, unit: lengthUnit }}
+            imageOptions={{
+              picture: pictureSize.picture,
+              unit: lengthUnit,
+              apply: pictureSize.apply,
+              reset: pictureSize.reset,
+            }}
           />
         }
       >

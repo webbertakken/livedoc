@@ -1,10 +1,14 @@
 # Reading surface
 
-**Status: specified; a first slice is built.** Built: the title row with its PDF pill, the menus and toolbar as data
-(File > Download > PDF, Edit > Undo and Redo, View > Mode, Tools, Help; Undo, Redo, zoom, Select, Highlight), and the
-pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it. The accessible
-tree is not built: a page is a named region whose picture is hidden from assistive technology. Tiles, panels, find,
-text selection, the page bar and the phone layout are not built.
+**Status: specified; a first slice is built.** Built: the title row with its PDF pill and its tooltip, the menus and the
+toolbar declared whole as data and held to this page's tables by their test, with what is built bound (File > Download
+
+> PDF, Edit > Undo and Redo, View > Mode, Insert > Highlight, Tools > Select, Help; Undo, Redo, zoom, Select,
+> Highlight) and the rest drawn dimmed, "Coming soon"; and the pages: every page a box of its true size, a whole-page
+> picture for pages near view, let go far from it. The zoom field sits in the toolbar until the page bar is built. The
+> pill's lock glyph waits on the shell, whose pill takes words alone: a protected file's pill says "Protected" in its
+> tooltip and name. The accessible tree is not built: a page is a named region whose picture is hidden from assistive
+> technology. Tiles, panels, find, text selection, the page bar and the phone layout are not built.
 
 The chrome of a [PDF document](pdf-document.md) and how its pages are read: the title row, menus, toolbar, the left
 panel, the pages, zoom, find and the phone layout, with final copy. It fills the
@@ -37,8 +41,8 @@ is [Rendering](../../research/pdf-documents/rendering.md) and
 
 The shell draws it ([Office shell](../004-interface-design/office-shell.md#title-row)); a PDF document adds:
 
-- **The format pill** reads **PDF**, with the tooltip "PDF 1.7, 14 pages, 1.2 MB" (the file's own version); a
-  protected file's pill carries a lock glyph and "Protected" in its accessible name.
+- **The format pill** reads **PDF**, with the tooltip "PDF 1.7, 14 pages, 1.2 MB" (the file's own version, left out
+  where the file names none); a protected file's pill carries a lock glyph and "Protected" in its accessible name.
 - **Save status**: "Saved", "Saving…", "Offline: changes are kept in this browser", "In This Browser"; and "Uploading
   42%" while a new PDF's bytes travel, when the pages already show from the local bytes.
 - **The editing mode switch** ([Editing modes](editing-modes.md#switching)), left of Share.
@@ -54,73 +58,89 @@ the least level that sees it, and the shell draws the menus for the level of the
 ([Editing modes](editing-modes.md#switching)): a `participate` item shows in Reviewing and Editing, an `edit` item in
 Editing. Shortcuts are in [Keyboard shortcuts](keyboard-shortcuts.md).
 
+- **The tables below are the catalogue's source**: its test reads them and holds the catalogue to every item, in this
+  order, at this level.
+- A row names one item, or several, separated by commas, that share its level. **▸** marks a submenu: its **Does**
+  cell lists its items, separated by semicolons, up to the first full stop; words in round brackets are a note, never
+  part of a name.
+- **Mode** names the first editing mode that lists the item: the mode drawn for the item's level. It is the level in
+  the switch's words, never a second gate.
+- An item whose function is not built is drawn dimmed, "Coming soon", as the shell draws it for every kind.
+- Where the separators fall is the catalogue's.
+
 ### File
 
-| Item                        | Does                                                                                                                                | Level       |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Open                        | A LiveDoc document, or a PDF from the computer as a new PDF document                                                                | view        |
-| Make a copy                 | [Copies](live-editing-and-storage.md#copies-the-trash-and-versions)                                                                 | view        |
-| Share ▸                     | Share with others; Copy link                                                                                                        | by sharing  |
-| Email ▸                     | Email this file, where the host has email ([Files, print and sync](files-print-and-sync.md#email))                                  | view        |
-| Download ▸                  | PDF; PDF, flattened; PDF without comments; Pages as pictures; Text; Field data ([Downloading](files-print-and-sync.md#downloading)) | view        |
-| Replace file                | Another PDF's bytes become the stored file ([Files, print and sync](files-print-and-sync.md#replacing))                             | edit        |
-| Open as a text document     | A copy, through the text document's import                                                                                          | view        |
-| Rename, Move, Move to trash | The document's own                                                                                                                  | edit        |
-| Version history ▸           | Name current version; See version history; Previous versions                                                                        | participate |
-| Make available offline      | Keeps the stored file in this browser                                                                                               | view        |
-| Properties                  | Description, Security, Fonts, Size ([Document tools](document-tools.md#properties))                                                 | view        |
-| Print                       | [Printing](files-print-and-sync.md#printing)                                                                                        | view        |
+| Item                        | Does                                                                                                                               | Level       |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Open                        | A LiveDoc document, or a PDF from the computer as a new PDF document                                                               | view        |
+| Make a copy                 | [Copies](live-editing-and-storage.md#copies-the-trash-and-versions)                                                                | view        |
+| Share ▸                     | Share with others; Copy link. Drawn for who may share the document                                                                 | edit        |
+| Email ▸                     | Email this file. Where the host has email ([Files, print and sync](files-print-and-sync.md#email))                                 | view        |
+| Download ▸                  | PDF; PDF, flattened; PDF without comments; Pages as pictures; Text; Field data. [Downloading](files-print-and-sync.md#downloading) | view        |
+| Replace file                | Another PDF's bytes become the stored file ([Files, print and sync](files-print-and-sync.md#replacing))                            | edit        |
+| Open as a text document     | A copy, through the text document's import                                                                                         | view        |
+| Rename, Move, Move to trash | The document's own                                                                                                                 | edit        |
+| Version history ▸           | Name current version; See version history; Previous versions                                                                       | participate |
+| Make available offline      | Keeps the stored file in this browser                                                                                              | view        |
+| Properties                  | Description, Security, Fonts, Size ([Document tools](document-tools.md#properties))                                                | view        |
+| Print                       | [Printing](files-print-and-sync.md#printing)                                                                                       | view        |
 
 ### Edit
 
-| Item                     | Does                                                                     | Level       |
-| ------------------------ | ------------------------------------------------------------------------ | ----------- |
-| Undo, Redo               | The person's own changes ([Undo](live-editing-and-storage.md#undo))      | participate |
-| Cut, Copy, Paste, Delete | The selection: text (copy only), marks, objects, pages in the thumbnails | view (Copy) |
-| Select all               | The page's text, or every mark or object of the tool in hand             | view        |
-| Find                     | [Find](#find)                                                            | view        |
-| Find and replace         | [Editing text](editing-text.md#find-and-replace)                         | edit        |
-| Edit text                | The text tool ([Editing text](editing-text.md))                          | edit        |
-| Edit objects             | The object tool ([Objects](objects.md))                                  | edit        |
-| Take a snapshot          | Copies a dragged area of the page as a picture                           | view        |
+| Item             | Does                                                                               | Level       |
+| ---------------- | ---------------------------------------------------------------------------------- | ----------- |
+| Undo, Redo       | The person's own changes ([Undo](live-editing-and-storage.md#undo))                | participate |
+| Cut              | The selected marks, objects, or pages in the thumbnails, onto the clipboard        | participate |
+| Copy             | The selection: text, marks, objects, pages in the thumbnails                       | view        |
+| Paste, Delete    | What Cut takes: marks, objects, pages in the thumbnails; never the file's own text | participate |
+| Select all       | The page's text, or every mark or object of the tool in hand                       | view        |
+| Find             | [Find](#find)                                                                      | view        |
+| Find and replace | [Editing text](editing-text.md#find-and-replace)                                   | edit        |
+| Edit text        | The text tool ([Editing text](editing-text.md))                                    | edit        |
+| Edit objects     | The object tool ([Objects](objects.md))                                            | edit        |
+| Take a snapshot  | Copies a dragged area of the page as a picture                                     | view        |
 
 ### View
 
-| Item                                                            | Does                                                                                 |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Mode ▸                                                          | Viewing, Reviewing, Editing                                                          |
-| Page display ▸                                                  | Single page; Continuous (default); Two pages; Two pages, continuous; Show cover page |
-| Zoom ▸                                                          | Fit width (default); Fit page; Actual size; 50% to 6400%; Zoom to selection          |
-| Rotate view ▸                                                   | Clockwise; Counterclockwise: the person's view only, never the file                  |
-| Thumbnails, Outline, Embedded files, Layers, Signatures, Fields | Each opens its left panel                                                            |
-| Comments                                                        | The comments panel                                                                   |
-| Marks                                                           | Shows or hides every mark, for this person                                           |
-| Dark pages                                                      | A check, offered in the dark scheme only ([Dark pages](dark-pages.md))               |
-| Read mode                                                       | Hides the menu bar, toolbar and panels; Escape leaves                                |
-| Full screen                                                     | One page a screen, arrows to turn; Escape leaves                                     |
-| Go to ▸                                                         | First page; Last page; Previous page; Next page; Page…; Previous view; Next view     |
+| Item                                                            | Does                                                                                                                                    | Level |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| Mode ▸                                                          | Reviewing; Editing; Viewing. The switch's own order ([Editing modes](editing-modes.md#switching))                                       | view  |
+| Page display ▸                                                  | Single page; Continuous (default); Two pages; Two pages, continuous; Show cover page                                                    | view  |
+| Zoom ▸                                                          | Fit width (default); Fit page; Actual size; 50%; 75%; 100%; 125%; 150%; 200%; 400%; 800%; 1600%; 2400%; 3200%; 6400%; Zoom to selection | view  |
+| Rotate view ▸                                                   | Clockwise; Counterclockwise. The person's view only, never the file                                                                     | view  |
+| Thumbnails, Outline, Embedded files, Layers, Signatures, Fields | Each opens its left panel                                                                                                               | view  |
+| Comments                                                        | The comments panel                                                                                                                      | view  |
+| Marks                                                           | Shows or hides every mark, for this person                                                                                              | view  |
+| Dark pages                                                      | A check, offered in the dark scheme only ([Dark pages](dark-pages.md))                                                                  | view  |
+| Read mode                                                       | Hides the menu bar, toolbar and panels; Escape leaves                                                                                   | view  |
+| Full screen                                                     | One page a screen, arrows to turn; Escape leaves                                                                                        | view  |
+| Go to ▸                                                         | First page; Last page; Previous page; Next page; Page…; Previous view; Next view                                                        | view  |
 
-Every View item is seen by every level and changes one person's view only.
+- Every View item is seen by every level and changes one person's view only.
+- Zoom's percentages are Acrobat's own levels from 50% `(default)`; the zoom field takes any value from 10% to 6400%.
 
 ### Insert
 
-| Item                                                    | Does                                                                                 | Level       | Mode      |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------- | --------- |
-| Comment                                                 | A comment on the selection, or a note where the next press lands                     | participate | Reviewing |
-| Highlight, Underline, Strikethrough, Squiggly underline | A text mark on the selection                                                         | participate | Reviewing |
-| Text, Callout                                           | A text mark ([Marks](marks.md))                                                      | participate | Reviewing |
-| Drawing                                                 | Freehand                                                                             | participate | Reviewing |
-| Shape ▸                                                 | Line, Arrow, Rectangle, Ellipse, Polygon, Cloud, Connected lines                     | participate | Reviewing |
-| Stamp ▸                                                 | The stamps ([Marks](marks.md#stamps))                                                | participate | Reviewing |
-| Tick, Cross, Dot                                        | Fill marks for a PDF with no fields ([Fields](fields.md#a-pdf-with-no-fields))       | participate | Reviewing |
-| Signature ▸                                             | Drawn signature; Initials; Certificate signature; Time stamp ([Signing](signing.md)) | participate | Reviewing |
-| Text box                                                | New page content ([Editing text](editing-text.md))                                   | edit        | Editing   |
-| Picture                                                 | [Objects](objects.md#pictures)                                                       | edit        | Editing   |
-| Link                                                    | [Objects](objects.md#links)                                                          | edit        | Editing   |
-| Field ▸                                                 | Each field type ([Building fields](building-fields.md))                              | edit        | Editing   |
-| Header and footer, Page numbers, Watermark, Background  | [Document tools](document-tools.md)                                                  | edit        | Editing   |
-| Bookmark                                                | A bookmark to the place in view                                                      | edit        | Editing   |
-| Embedded file                                           | [Document tools](document-tools.md#embedded-files)                                   | edit        | Editing   |
+| Item                                                    | Does                                                                                                                                          | Level       | Mode      |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------- |
+| Comment                                                 | A comment on the selection, or a note where the next press lands                                                                              | participate | Reviewing |
+| Highlight, Underline, Strikethrough, Squiggly underline | A text mark on the selection                                                                                                                  | participate | Reviewing |
+| Text, Callout                                           | A text mark ([Marks](marks.md))                                                                                                               | participate | Reviewing |
+| Drawing                                                 | Freehand                                                                                                                                      | participate | Reviewing |
+| Shape ▸                                                 | Line; Arrow; Rectangle; Ellipse; Polygon; Cloud; Connected lines                                                                              | participate | Reviewing |
+| Stamp ▸                                                 | Standard stamps; Dynamic stamps; Custom stamps; Manage stamps. Each opens the stamps there ([Marks](marks.md#stamps))                         | participate | Reviewing |
+| Tick, Cross, Dot                                        | Fill marks for a PDF with no fields ([Fields](fields.md#a-pdf-with-no-fields))                                                                | participate | Reviewing |
+| Signature ▸                                             | Drawn signature; Initials; Certificate signature; Time stamp. [Signing](signing.md)                                                           | participate | Reviewing |
+| Text box                                                | New page content ([Editing text](editing-text.md))                                                                                            | edit        | Editing   |
+| Picture                                                 | [Objects](objects.md#pictures)                                                                                                                | edit        | Editing   |
+| Link                                                    | [Objects](objects.md#links)                                                                                                                   | edit        | Editing   |
+| Field ▸                                                 | Text field; Date field; Tick box; Radio button; Dropdown; List; Picture field; Button; Signature field. [Building fields](building-fields.md) | edit        | Editing   |
+| Header and footer, Page numbers, Watermark, Background  | [Document tools](document-tools.md)                                                                                                           | edit        | Editing   |
+| Bookmark                                                | A bookmark to the place in view                                                                                                               | edit        | Editing   |
+| Embedded file                                           | [Document tools](document-tools.md#embedded-files)                                                                                            | edit        | Editing   |
+
+- Stamp's four entries are its categories and their keeper `(default)`: the stamps themselves are a person's own, so
+  no menu lists them.
 
 ### Format
 
@@ -129,40 +149,94 @@ colour, weight, alignment, spacing), an object (arrange, align, distribute, flip
 to act on is dimmed. Colours come from the one colour picker
 ([Colour picker](../004-interface-design/colour-picker.md)).
 
+| Item                 | Does                                                                                                       | Level       | Mode      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- | ----------- | --------- |
+| Colour, Fill colour  | Of the selected mark, text or shape                                                                        | participate | Reviewing |
+| Opacity ▸            | 100%; 75%; 50%; 25%; 10%                                                                                   | participate | Reviewing |
+| Line width ▸         | 0.5 pt; 1 pt; 2 pt; 4 pt; 8 pt; 12 pt                                                                      | participate | Reviewing |
+| Line style ▸         | Solid; Dashed; Dotted; Dash dot; Long dashes                                                               | participate | Reviewing |
+| Line ends ▸          | None; Arrow; Open arrow; Circle; Square; Diamond; Bar                                                      | participate | Reviewing |
+| Align text ▸         | Left; Centre; Right; Justified. A Text or Callout mark's words, or a text box's                            | participate | Reviewing |
+| Arrange ▸            | Bring to front; Bring forward; Send backward; Send to back                                                 | participate | Reviewing |
+| Group, Ungroup, Lock | Marks ([Marks](marks.md#changing-a-mark)); Lock is a check                                                 | participate | Reviewing |
+| Text ▸               | Bold; Italic; Underline; Strikethrough; Superscript; Subscript. [Editing text](editing-text.md#formatting) | edit        | Editing   |
+| Spacing              | Line, paragraph and character spacing and the horizontal scale, in the side panel                          | edit        | Editing   |
+| List ▸               | Bulleted; Numbered; None                                                                                   | edit        | Editing   |
+| Align objects ▸      | Left; Centre; Right; Top; Middle; Bottom. [Objects](objects.md#arranging)                                  | edit        | Editing   |
+| Distribute ▸         | Horizontally; Vertically                                                                                   | edit        | Editing   |
+| Match size ▸         | Width; Height; Both                                                                                        | edit        | Editing   |
+| Flip ▸               | Horizontally; Vertically                                                                                   | edit        | Editing   |
+| Rotate ▸             | Clockwise; Counterclockwise                                                                                | edit        | Editing   |
+| Crop                 | A picture ([Objects](objects.md#pictures))                                                                 | edit        | Editing   |
+
+- The table is Format's items `(default)`: every one is a function [Marks](marks.md#changing-a-mark),
+  [Editing text](editing-text.md#formatting) or [Objects](objects.md#arranging) names, and none is new here.
+- A font and a size are chosen in the toolbar's fields, which no menu repeats `(default)`.
+- The steps of Opacity and Line width are the menu's `(default)`; the side panel takes any value in their range.
+
 ### Pages
 
-Each is Editing's ([Organising pages](organising-pages.md)), least level `edit`: Organise pages; Insert ▸ (Blank
-page, From a PDF, From a LiveDoc document); Delete; Extract; Split; Replace; Rotate ▸; Crop; Resize; Page labels;
-Combine files.
+Each is Editing's ([Organising pages](organising-pages.md)).
+
+| Item                                     | Does                                                                   | Level | Mode    |
+| ---------------------------------------- | ---------------------------------------------------------------------- | ----- | ------- |
+| Organise pages                           | [The organise view](organising-pages.md#the-organise-view)             | edit  | Editing |
+| Insert ▸                                 | Blank page; From a PDF; From a LiveDoc document                        | edit  | Editing |
+| Delete, Extract, Split, Replace          | The selected pages                                                     | edit  | Editing |
+| Rotate ▸                                 | Clockwise; Counterclockwise; Half turn. In the file, for everyone      | edit  | Editing |
+| Crop, Resize, Page labels, Combine files | [Organising pages](organising-pages.md#rotating-cropping-and-resizing) | edit  | Editing |
 
 ### Tools
 
-| Item               | Does                                                                                  | Level       | Mode      |
-| ------------------ | ------------------------------------------------------------------------------------- | ----------- | --------- |
-| Fill in ▸          | Highlight fields; Next field; Clear all fields; Import and export field data          | participate | Reviewing |
-| Recognise text     | [Scans](scans.md)                                                                     | participate | Reviewing |
-| Prepare fields     | [Building fields](building-fields.md)                                                 | edit        | Editing   |
-| Redact ▸           | Mark for redaction; Find text to redact; Apply redactions                             | edit        | Editing   |
-| Protect ▸          | Set passwords and permissions; Remove protection; Remove hidden information           | edit        | Editing   |
-| Flatten ▸          | Marks; Fields; Both                                                                   | edit        | Editing   |
-| Reduce file size   | [Document tools](document-tools.md#reducing-file-size)                                | edit        | Editing   |
-| Compare            | Two versions, or this PDF and another ([Document tools](document-tools.md#comparing)) | view        | Viewing   |
-| Keyboard shortcuts | The shell's shortcuts dialog                                                          | view        | Viewing   |
+| Item             | Does                                                                                  | Level       | Mode      |
+| ---------------- | ------------------------------------------------------------------------------------- | ----------- | --------- |
+| Select, Hand     | The pointer's tool, one of a set ([The toolbar](#the-toolbar))                        | view        | Viewing   |
+| Fill in ▸        | Highlight fields; Next field; Clear all fields; Import field data; Export field data  | participate | Reviewing |
+| Recognise text   | [Scans](scans.md)                                                                     | participate | Reviewing |
+| Prepare fields   | [Building fields](building-fields.md)                                                 | edit        | Editing   |
+| Redact ▸         | Mark for redaction; Find text to redact; Apply redactions                             | edit        | Editing   |
+| Protect ▸        | Set passwords and permissions; Remove protection; Remove hidden information           | edit        | Editing   |
+| Flatten ▸        | Marks; Fields; Both                                                                   | edit        | Editing   |
+| Reduce file size | [Document tools](document-tools.md#reducing-file-size)                                | edit        | Editing   |
+| Compare          | Two versions, or this PDF and another ([Document tools](document-tools.md#comparing)) | view        | Viewing   |
 
-Help is the shell's: Search the menus, Help, Report a bug, Keyboard shortcuts.
+- Select and Hand are in a menu so the keyboard and the tool finder reach them `(default)`.
+
+### Help
+
+The shell's own.
+
+| Item               | Does                           | Level |
+| ------------------ | ------------------------------ | ----- |
+| Search the menus   | The tool finder                | view  |
+| Help               | The help centre's PDF articles | view  |
+| Report a bug       | LiveDoc's own                  | view  |
+| Keyboard shortcuts | The shell's shortcuts dialog   | view  |
 
 ## The toolbar
 
 Declared as data ([Toolbar](../004-interface-design/office-shell.md#toolbar)). The first groups are every mode's; the
 rest are the mode's own. A control past the width goes into the shell's overflow row.
 
-| Editing mode  | Groups, left to right                                                                                                                                                  |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every mode    | Undo, Redo (hidden in Viewing) · Print · Find · **Select** and **Hand** (one of a set)                                                                                 |
-| **Viewing**   | Page display · Rotate view · Dark pages (dark scheme only)                                                                                                             |
-| **Reviewing** | Comment · Highlight, Underline, Strikethrough (one control remembering the last) · Text · Drawing · Shape · Stamp · Tick · Sign · colour and width of the tool in hand |
-| **Editing**   | Edit text · Text box · Picture · Link · Object tool · Organise pages · font, size, bold, italic, underline, colour, alignment (while a text box holds the caret)       |
+| Editing mode  | Group        | Controls                                                         |
+| ------------- | ------------ | ---------------------------------------------------------------- |
+| Every mode    | History      | Undo; Redo                                                       |
+| Every mode    | File         | Print; Find                                                      |
+| Every mode    | Pointer      | Select; Hand                                                     |
+| **Viewing**   | View         | Page display; Rotate view; Dark pages                            |
+| **Reviewing** | Comment      | Comment                                                          |
+| **Reviewing** | Marks        | Highlight; Text; Drawing; Shape; Stamp; Tick; Sign               |
+| **Reviewing** | Tool in hand | Colour; Line width                                               |
+| **Editing**   | Content      | Edit text; Text box; Picture; Link; Object tool; Organise pages  |
+| **Editing**   | Text         | Font; Font size; Bold; Italic; Underline; Text colour; Alignment |
 
+- **The table is the toolbar's source**: a row is one group, its controls separated by semicolons, and the toolbar's
+  test reads it. A mode's own controls are at the level the mode is drawn for.
+- **Undo** and **Redo** are a person who may review's, so hidden in Viewing; every other control of every mode is a
+  Viewer's too.
+- **Highlight** holds Underline and Strikethrough behind its chevron and remembers the last one used.
+- **Colour** and **Line width** are the tool in hand's; Editing's **Text** group shows while a text box holds the
+  caret. **Dark pages** is offered in the dark scheme only.
 - **Select** selects text and whatever the mode may change; **Hand** drags the view. Holding Space is the hand for as
   long as it is held.
 - A mark or page content tool **stays in hand** until Escape or another tool is chosen; pressing V returns to Select.

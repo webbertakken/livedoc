@@ -214,3 +214,71 @@ test('a picture is inserted from the computer, and pasted as a file', async ({
   await page.screenshot({ path: test.info().outputPath('pictures-inserted.png') });
   expectNoPageErrors(pageErrors);
 });
+
+// objects.md "Working with a picture": a selected picture's handles size it (a corner keeping its ratio), written as
+// one undo step; Image options' Width sizes it, locked to its ratio, its Scale read from its own size; Reset image
+// brings it back to its own size.
+test('a picture is sized by its handles and by Image options', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('Sized: ');
+  const [chooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    (await officeMenuItem(page, ['Insert', 'Image', 'Upload from computer'])).click(),
+  ]);
+  await chooser.setFiles({
+    name: 'teal.png',
+    mimeType: 'image/png',
+    buffer: solidPng(240, 120, [0, 128, 128]),
+  });
+  const picture = body.locator('.text-document-picture').first();
+  await expect(picture.locator('img')).toHaveCount(1);
+  const size = async () => {
+    const box = (await picture.boundingBox())!;
+    return { width: Math.round(box.width), height: Math.round(box.height) };
+  };
+  // 240 × 120 pixels at 96 an inch: 180 × 90 points, 240 × 120 CSS pixels at 100%.
+  expect(await size()).toEqual({ width: 240, height: 120 });
+
+  // Eight handles; the south-east one dragged along the diagonal: bigger, its ratio kept.
+  const handles = picture.locator('[data-picture-handle]');
+  await expect(handles).toHaveCount(8);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('picture-handles.png') });
+  const se = (await picture.locator('[data-picture-handle="se"]').boundingBox())!;
+  await page.mouse.move(se.x + se.width / 2, se.y + se.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(se.x + se.width / 2 + 120, se.y + se.height / 2 + 60, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(size).toEqual({ width: 360, height: 180 });
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect.poll(size).toEqual({ width: 240, height: 120 });
+
+  // Image options: Width typed, the height following; Scale read from its own size.
+  await picture.click();
+  await expect(body.locator('.ProseMirror-selectednode.text-document-picture')).toHaveCount(1);
+  await (await officeMenuItem(page, ['Format', 'Image', 'Image options'])).click();
+  const panel = page.getByRole('complementary', { name: 'Image options' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole('textbox', { name: 'Scale width' })).toHaveValue('100');
+  const unit = (await panel
+    .getByText(/^(in|cm)$/)
+    .first()
+    .textContent())!;
+  const width = panel.getByRole('textbox', { name: 'Width', exact: true });
+  await width.fill(unit === 'in' ? '3' : '7.62');
+  await width.press('Enter');
+  await expect.poll(size).toEqual({ width: 288, height: 144 });
+  await expect(panel.getByRole('textbox', { name: 'Scale height' })).toHaveValue('120');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('image-options-panel.png') });
+
+  // Reset: its own size again.
+  await panel.getByRole('button', { name: 'Reset' }).click();
+  await expect.poll(size).toEqual({ width: 240, height: 120 });
+  expectNoPageErrors(pageErrors);
+});

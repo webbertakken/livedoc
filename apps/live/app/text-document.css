@@ -661,25 +661,95 @@ div.text-document-kept {
 }
 /*
  * A picture in line (docs/specs/034-text-documents/objects.md "In the editor"): a box of its size on the baseline,
- * the picture drawn inside it, larger by its crop. One without media is a grey box: #3c4043 on #e8eaed (8.6:1).
+ * the picture drawn inside it, larger by its crop, clipped to the box. One without media is a grey box: #3c4043 on
+ * #e8eaed (8.6:1).
  */
 .text-document-picture {
   display: inline-block;
   position: relative;
-  overflow: hidden;
   vertical-align: baseline;
   user-select: all;
+}
+.text-document-picture-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 }
 .text-document-picture img {
   position: absolute;
   max-width: none;
 }
 .text-document-picture-missing {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   background: light-dark(#e8eaed, #3c4043);
   color: light-dark(#3c4043, #e3e3e3);
   font-size: 0.75em;
   text-align: center;
+}
+.text-document-picture-missing .text-document-picture-clip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/*
+ * A selected picture's handles (objects.md "Working with a picture"): eight squares of 8 px on its outline, each
+ * answering the pointer over 24 px; the selection blue on a white edge, against the page and the picture alike.
+ */
+.text-document-picture-handles [data-picture-handle] {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: light-dark(#0284c7, #38bdf8);
+  border: 1px solid light-dark(#ffffff, #082f49);
+  touch-action: none;
+  z-index: 1;
+}
+.text-document-picture-handles [data-picture-handle]::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+[data-picture-handle='nw'] {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+}
+[data-picture-handle='n'] {
+  left: 50%;
+  top: 0;
+  cursor: ns-resize;
+}
+[data-picture-handle='ne'] {
+  left: 100%;
+  top: 0;
+  cursor: nesw-resize;
+}
+[data-picture-handle='e'] {
+  left: 100%;
+  top: 50%;
+  cursor: ew-resize;
+}
+[data-picture-handle='se'] {
+  left: 100%;
+  top: 100%;
+  cursor: nwse-resize;
+}
+[data-picture-handle='s'] {
+  left: 50%;
+  top: 100%;
+  cursor: ns-resize;
+}
+[data-picture-handle='sw'] {
+  left: 0;
+  top: 100%;
+  cursor: nesw-resize;
+}
+[data-picture-handle='w'] {
+  left: 0;
+  top: 50%;
+  cursor: ew-resize;
+}
+.text-document-picture-sizing,
+.text-document-picture-sizing * {
+  user-select: none;
 }
