@@ -125,6 +125,7 @@ test('a PDF’s text is found, stepped through and listed', async ({ page, pageE
   const box = (await first.boundingBox())!;
   const scale = box.width / 612;
   await page.mouse.dblclick(box.x + 100 * scale, box.y + 68 * scale);
+  await expect(first.locator(SELECTION)).toHaveCount(1);
   await page.mouse.click(box.x + 100 * scale, box.y + 68 * scale, { button: 'right' });
   const menu = page.getByRole('menu', { name: 'Context menu' });
   await expect(menu.getByRole('menuitem', { name: /^Copy/ })).toBeVisible();
