@@ -1,5 +1,6 @@
-// Insert > Symbols > Special characters (docs/specs/034-text-documents/objects.md "Special characters"): a character
-// pressed in the dialog put in at the caret of the writing the caret is in, each press an undo step of its own.
+// Insert > Symbols > Special characters and Insert > Emoji (docs/specs/034-text-documents/objects.md "Special
+// characters", "Emoji"): a character or emoji pressed in its dialog put in at the caret of the writing the caret is
+// in, each press an undo step of its own.
 import type { EditorView } from 'prosemirror-view';
 import type { Command } from 'prosemirror-state';
 import { debugLog } from '@/lib/debug-log';
@@ -7,8 +8,11 @@ import { track } from '@/lib/telemetry';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { startUndoStep } from './text-document-undo';
 
-/** The menu item that opens the dialog. */
+/** The menu items that open the dialogs. */
 export const SPECIAL_CHARACTERS_ITEM = 'special-characters';
+export const EMOJI_ITEM = 'emoji';
+
+export type CharacterDialog = 'special-characters' | 'emoji';
 
 /** Puts the text in place of the selection, in the caret's formatting; the caret goes after it. */
 export const insertCharacter =
@@ -19,23 +23,31 @@ export const insertCharacter =
     return true;
   };
 
-/** Insert > Symbols > Special characters, for whoever may edit; nothing for anyone else (dimmed). */
-export function specialCharacterActions(
+/** Insert > Symbols > Special characters and Insert > Emoji, for whoever may edit; nothing for anyone else (dimmed). */
+export function characterDialogActions(
   view: EditorView | null,
   canEdit: boolean,
-  open: () => void,
+  open: (dialog: CharacterDialog) => void,
 ): OfficeActions {
   if (!canEdit) return {};
-  return { [SPECIAL_CHARACTERS_ITEM]: { run: () => view && open() } };
+  return {
+    [SPECIAL_CHARACTERS_ITEM]: { run: () => view && open('special-characters') },
+    [EMOJI_ITEM]: { run: () => view && open('emoji') },
+  };
 }
 
-/** A character pressed in the dialog: put in on an undo step of its own; the dialog keeps the focus. */
-export function insertSpecialCharacter(view: EditorView, text: string): boolean {
+const COUNTED = {
+  'special-characters': 'TextDocumentSpecialCharacter',
+  emoji: 'TextDocumentEmoji',
+} as const;
+
+/** A character or emoji pressed in its dialog: put in on an undo step of its own; the dialog keeps the focus. */
+export function insertPicked(view: EditorView, text: string, from: CharacterDialog): boolean {
   if (view.isDestroyed) return false;
   startUndoStep(view);
   if (!insertCharacter(text)(view.state, view.dispatch)) return false;
   startUndoStep(view);
-  track('Element', 'Added', 'TextDocumentSpecialCharacter');
-  debugLog('[text-document] special character');
+  track('Element', 'Added', COUNTED[from]);
+  debugLog('[text-document] character inserted', { from });
   return true;
 }

@@ -1344,8 +1344,8 @@ export const TEXT_DOCUMENT_CHARACTERS_AND_LINES = chart(
   'Element',
   'Added',
   'Text Document Lines and Characters',
-  'A horizontal line put in a text document from Insert > Horizontal line, or a character from Insert > Symbols > Special characters.',
-  { types: ['TextDocumentHorizontalLine', 'TextDocumentSpecialCharacter'] },
+  'A horizontal line put in a text document from Insert > Horizontal line, a character from Insert > Symbols > Special characters, or an emoji from Insert > Emoji.',
+  { types: ['TextDocumentHorizontalLine', 'TextDocumentSpecialCharacter', 'TextDocumentEmoji'] },
 );
 
 // The ruler shown or hidden (docs/specs/034-text-documents/editing-surface.md "The ruler").

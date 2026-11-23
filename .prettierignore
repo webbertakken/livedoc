@@ -46,6 +46,7 @@ packages/document-views/src/__fixtures__/golden/
 # regeneration diffs by family.
 apps/live/lib/document-fonts/google-fonts.json
 
-# Unicode's characters for the special characters dialog, written by `pnpm chars:special` a group a line; kept as
-# written so a new Unicode version diffs by group.
+# The special characters and emoji catalogues, written a row a line by `pnpm chars:special` and `pnpm chars:emoji`;
+# kept as written so a new version diffs by row.
 apps/live/lib/office/special-characters.json
+apps/live/lib/office/emoji.json

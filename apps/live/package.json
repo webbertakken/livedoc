@@ -29,6 +29,7 @@
     "fonts:advances": "node --import ../../scripts/ts-source-hooks.mjs scripts/sheet-font-advances.ts",
     "fonts:system": "node --import ../../scripts/ts-source-hooks.mjs scripts/sheet-system-font-check.ts",
     "fonts:google": "node --import ../../scripts/ts-source-hooks.mjs scripts/google-fonts-catalogue.ts",
+    "chars:emoji": "node --import ../../scripts/ts-source-hooks.mjs scripts/emoji-catalogue.ts",
     "chars:special": "node --import ../../scripts/ts-source-hooks.mjs scripts/special-characters-catalogue.ts"
   },
   "dependencies": {

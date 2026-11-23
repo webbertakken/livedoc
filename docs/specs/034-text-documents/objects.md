@@ -3,7 +3,7 @@
 **Status: in progress.** A picture in line is held, read and written in both formats, kept in the live state, drawn,
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
-A horizontal line and special characters are inserted.
+A horizontal line, special characters and emoji are inserted; the colon list for emoji is specified.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -328,11 +328,35 @@ Insert > Symbols > Special characters: the **Insert special characters** dialog;
 
 ## Emoji
 
-Insert > Emoji: LiveDoc's emoji picker, search and categories, skin tones; inserts the character.
+Insert > Emoji: the **Insert emoji** dialog; a press on an emoji inserts it as text at the caret.
 
-**Insert emoji using the colon character** (Preferences, on by default): `:` typed at a word's start and then letters
-opens a list of emoji whose names begin so; Enter, Tab or a press inserts the one chosen in place of what was typed,
-Escape leaves the text as typed.
+- **The emoji** are Unicode's fully qualified emoji, as Emojibase's English data names, tags and orders them
+  (`emojibase-data`, its version the catalogue was generated from); the skin tone and hair components are left out.
+- **Browsing**: tabs for **Recently used** and the nine groups, in Unicode's order: Smileys & emotion, People & body,
+  Animals & nature, Food & drink, Travel & places, Activities, Objects, Symbols, Flags. It opens on Recently used when
+  there are any, else on Smileys & emotion (default).
+- **Search**: every word typed starts a word of an emoji's name, tags or shortcodes (`wave` finds 👋), in any case; the
+  results keep Unicode's order, and the tabs are dimmed while a search is shown.
+- **Skin tone**: a menu of the default yellow and the five tones; an emoji that has tones is shown and inserted in the
+  tone chosen, one with two people in it in that tone for both. The tone is kept in this browser (default).
+- **Recently used**: the 24 emoji inserted last, newest first, in this browser (default), each as inserted.
+- **A cell** shows the emoji in the system's emoji font (one newer than that font shows as the font draws it,
+  default), named by its name; hovering or focusing one shows it large with its name and first shortcode
+  (`:waving_hand:`). The grid is one Tab stop, moved through as the special characters' grid is.
+- **Inserting**, **loading** and who may insert are as for [special characters](#special-characters): the emoji
+  replaces the selection, each press one undo step, the dialog staying open; the catalogue is fetched the first time
+  the dialog opens ("Loading emoji…", "The emoji could not load." with Try again); for an Editor, dimmed otherwise.
+
+**Insert emoji using the colon character** (Preferences, on by default): `:` typed at a word's start and then two or
+more letters, digits, `_`, `+` or `-` (default) opens a list under the caret of at most 8 emoji (default) whose
+shortcodes or name words begin so, shortcodes first, each in the chosen tone.
+
+- Up and Down move through the list; Enter, Tab or a press inserts the one chosen in place of what was typed;
+  Escape leaves the text as typed, and the list stays away until the word is left.
+- Typing on narrows the list; a space, a character outside those, or no emoji left closes it.
+- The list is a `listbox` whose options are read as their names; the writing keeps the focus
+  (`aria-activedescendant`).
+- An emoji from the list counts as one from the dialog does, and goes to Recently used.
 
 ## Horizontal line
 

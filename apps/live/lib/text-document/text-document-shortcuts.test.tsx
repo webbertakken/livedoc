@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { textDocumentBreakActions } from './text-document-breaks';
 import { horizontalLineActions } from './text-document-horizontal-line';
-import { specialCharacterActions } from './text-document-special-characters';
+import { characterDialogActions } from './text-document-special-characters';
 import { textDocumentTableActions } from './text-document-tables';
 import { TABLE_EDIT_ITEMS } from './text-document-table-actions';
 import { TABLE_NAVIGATION } from './text-document-table-navigation';
@@ -96,8 +96,8 @@ describe('the text document menus', () => {
         ),
         // Insert > Horizontal line (text-document-horizontal-line), bound by the surface.
         ...Object.keys(horizontalLineActions(null, true)),
-        // Insert > Symbols > Special characters (text-document-special-characters), bound by the surface.
-        ...Object.keys(specialCharacterActions(null, true, () => {})),
+        // Insert > Symbols > Special characters and Insert > Emoji (text-document-special-characters), bound by the surface.
+        ...Object.keys(characterDialogActions(null, true, () => {})),
         // Insert > Table (text-document-tables), bound by the surface.
         ...Object.keys(textDocumentTableActions(null, { canEdit: true, sectionWidth: 468 })),
         ...TABLE_EDIT_ITEMS.map((t) => t.item),

@@ -3,9 +3,8 @@
 // Insert special characters (docs/specs/034-text-documents/objects.md "Special characters"): Unicode's characters,
 // browsed by category and block or searched by name words or codepoint; a press hands the character to the caller and
 // the dialog stays open for more. The catalogue is fetched the first time a dialog opens, never with the editor.
-import { memo, useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { debugLog } from '@/lib/debug-log';
-import { GRID_KEYS, gridStep, type GridKey } from '@/lib/office/grid-step';
 import {
   SPECIAL_CHARACTER_CATEGORIES,
   blocksIn,
@@ -20,6 +19,7 @@ import {
   type SpecialCharacters,
 } from '@/lib/office/special-characters';
 import { OfficeDialog } from './OfficeDialog';
+import { OfficeGlyphGrid } from './OfficeGlyphGrid';
 import { OfficeDialogMessage, OfficeDialogSearch, OfficeDialogSelect } from './OfficeDialogFields';
 
 type Catalogue =
@@ -45,6 +45,10 @@ function Glyph({ character }: { character: SpecialCharacter }) {
   const text = characterText(character.codepoint);
   return <>{look.kind === 'mark' ? `${DOTTED_CIRCLE}${text}` : text}</>;
 }
+
+const codepointOf = (character: SpecialCharacter) => character.codepoint;
+const nameOf = (character: SpecialCharacter) => characterName(character.name);
+const draw = (character: SpecialCharacter) => <Glyph character={character} />;
 
 export function OfficeSpecialCharactersDialog({
   onClose,
@@ -146,10 +150,14 @@ export function OfficeSpecialCharactersDialog({
             {characters.length === 0 ? (
               <OfficeDialogMessage>No characters match</OfficeDialogMessage>
             ) : (
-              <CharacterGrid
+              <OfficeGlyphGrid
                 // A new search or block is a new grid, starting at its top with its first cell the Tab stop.
                 key={searching ? `search\n${query}` : `${browse.category}\n${browse.block}`}
-                characters={characters}
+                label="Characters"
+                items={characters}
+                keyOf={codepointOf}
+                nameOf={nameOf}
+                draw={draw}
                 onPick={pick}
                 onShow={setShown}
               />
@@ -179,68 +187,6 @@ export function OfficeSpecialCharactersDialog({
     </OfficeDialog>
   );
 }
-
-// The grid of characters, drawn again only when its characters change, not as the preview follows the pointer.
-const CharacterGrid = memo(function CharacterGrid({
-  characters,
-  onPick,
-  onShow,
-}: {
-  characters: readonly SpecialCharacter[];
-  onPick: (character: SpecialCharacter) => void;
-  onShow: (character: SpecialCharacter) => void;
-}) {
-  // The cell that is the grid's one Tab stop.
-  const [active, setActive] = useState(0);
-  // The arrows move by a cell and a row, Home and End to the first and last.
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const keys = [...GRID_KEYS, 'Home', 'End'];
-    if (!keys.includes(e.key) || e.altKey || e.ctrlKey || e.metaKey) return;
-    const cells = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('button')];
-    const at = cells.indexOf(document.activeElement as HTMLButtonElement);
-    if (at < 0) return;
-    e.preventDefault();
-    // The cells of the first row, as the grid lays them out at its width now.
-    const top = cells[0]?.offsetTop;
-    const wrapped = cells.findIndex((cell) => cell.offsetTop !== top);
-    const columns = wrapped > 0 ? wrapped : cells.length;
-    const to =
-      e.key === 'Home'
-        ? 0
-        : e.key === 'End'
-          ? cells.length - 1
-          : gridStep(at, cells.length, columns, e.key as GridKey);
-    setActive(to);
-    cells[to]?.focus();
-  };
-  return (
-    <div
-      role="group"
-      aria-label="Characters"
-      onKeyDown={onKeyDown}
-      className="grid min-h-0 min-w-0 flex-1 auto-rows-[2.5rem] grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] content-start overflow-y-auto rounded border border-(--office-line) p-1"
-    >
-      {characters.map((character, index) => (
-        <button
-          key={character.codepoint}
-          type="button"
-          tabIndex={index === active ? 0 : -1}
-          aria-label={characterName(character.name)}
-          data-codepoint={codepointLabel(character.codepoint)}
-          onClick={() => {
-            setActive(index);
-            onPick(character);
-          }}
-          onMouseEnter={() => onShow(character)}
-          onFocus={() => onShow(character)}
-          className="flex items-center justify-center rounded text-xl text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset"
-        >
-          <Glyph character={character} />
-        </button>
-      ))}
-    </div>
-  );
-});
 
 // The character hovered or focused, large, with its name and codepoint; read through the cell's own name instead.
 function Preview({ character }: { character: SpecialCharacter | null }) {
