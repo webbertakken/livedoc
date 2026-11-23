@@ -202,7 +202,7 @@ const PdfThumbnail = memo(function PdfThumbnail({
       className="group flex flex-col items-center gap-1 rounded-md p-1.5 outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
     >
       <span
-        className={`relative block bg-white shadow-sm outline ${
+        className={`relative block bg-(--pdf-paper) shadow-sm outline ${
           current ? 'outline-2 outline-(--office-focus)' : 'outline-1 outline-(--office-line)'
         }`}
         style={{ width: size.width, height: size.height }}
@@ -222,12 +222,12 @@ const PdfThumbnail = memo(function PdfThumbnail({
               <span
                 key={person.id}
                 data-pdf-thumbnail-person={person.id}
-                className="size-2.5 rounded-full ring-1 ring-white"
+                className="size-2.5 rounded-full ring-1 ring-(--pdf-paper)"
                 style={{ backgroundColor: person.color }}
               />
             ))}
             {people.length > MOST_DOTS ? (
-              <span className="rounded-full bg-white px-1 text-[10px] leading-3 text-slate-700">
+              <span className="rounded-full bg-(--pdf-paper) px-1 text-[10px] leading-3 text-(--pdf-paper-ink)">
                 +{people.length - MOST_DOTS}
               </span>
             ) : null}

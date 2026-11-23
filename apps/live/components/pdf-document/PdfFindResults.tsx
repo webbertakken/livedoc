@@ -78,7 +78,7 @@ export function PdfFindResults({
                     className="w-full rounded px-2 py-1.5 text-left text-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-current:bg-(--office-pressed) aria-current:text-(--office-pressed-ink)"
                   >
                     {result.snippet.before}
-                    <mark className="rounded-sm bg-amber-200 px-0.5 text-slate-950">
+                    <mark className="bg-transparent font-semibold text-inherit underline decoration-(--office-focus) decoration-2 underline-offset-2">
                       {result.snippet.match}
                     </mark>
                     {result.snippet.after}

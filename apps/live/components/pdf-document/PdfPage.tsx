@@ -245,7 +245,7 @@ export const PdfPage = memo(function PdfPage({
       data-pdf-page-drawn={drawn ? 'true' : 'false'}
       data-pdf-page-turns={drawn?.turns ?? ''}
       data-pdf-file-marks={drawn?.fileMarks.join(' ') ?? ''}
-      className={`absolute bg-white shadow-sm outline outline-1 outline-(--office-line) select-none ${
+      className={`absolute bg-(--pdf-paper) shadow-sm outline outline-1 outline-(--office-line) select-none ${
         marking ? 'cursor-text touch-none' : tool === 'select' && current ? 'cursor-text' : ''
       }`}
       style={{ left, top, width: shown.width * cssPerPoint, height: shown.height * cssPerPoint }}
@@ -299,7 +299,7 @@ export const PdfPage = memo(function PdfPage({
         />
       ) : null}
       {failed ? (
-        <p className="absolute inset-0 flex items-center justify-center text-sm text-slate-600">
+        <p className="absolute inset-0 flex items-center justify-center text-sm text-(--pdf-paper-ink)">
           This page couldn’t be drawn.
         </p>
       ) : null}
