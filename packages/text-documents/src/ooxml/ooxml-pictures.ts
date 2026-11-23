@@ -1,6 +1,7 @@
 // Pictures in line in WordprocessingML (docs/specs/034-text-documents/objects.md "In the formats"): a `w:drawing` holding
 // a `wp:inline` DrawingML picture, its size (`wp:extent`), alternative text and title (`wp:docPr`), whether it is
-// decorative (`adec:decorative`), its media (`a:blip r:embed`) and crop (`a:srcRect`). A drawing holding anything else
+// decorative (`adec:decorative`), its media (`a:blip r:embed`), its recolour and adjustments (the blip's effects,
+// ooxml-picture-colours.ts) and crop (`a:srcRect`). A drawing holding anything else
 // that changes how it looks is not the model's: the reader keeps it.
 import {
   attributeOf,
@@ -19,7 +20,9 @@ import {
 import { Pictures, type Picture, type PictureCrop, type PictureMedia } from '../model/pictures';
 import { findMedia, keptXmlTexts, type FoundMedia, type MediaTaken } from '../picture-media';
 import type { TextDocument } from '../model/text-document';
+import type { PictureColouring } from '../model/picture-colours';
 import { R_NS } from './ooxml-names';
+import { ooxmlColouringOf, ooxmlColouringXml } from './ooxml-picture-colours';
 
 export const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 export const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -83,19 +86,25 @@ function docPrOf(docPr: XmlElement): Pick<Picture, 'alt' | 'title' | 'decorative
   };
 }
 
-/** `pic:blipFill`: the relationship its blip names and its crop; undefined when it holds more. */
-function blipFillOf(fill: XmlElement): { embed: string; crop?: PictureCrop } | undefined {
+/** `pic:blipFill`: the relationship its blip names, its crop and colouring; undefined when it holds more. */
+function blipFillOf(
+  fill: XmlElement,
+): ({ embed: string; crop?: PictureCrop } & PictureColouring) | undefined {
   if (!only(fill, unqualified('dpi', 'rotWithShape'))) return undefined;
   let embed: string | undefined;
   let crop: PictureCrop | undefined;
+  let colouring: PictureColouring | undefined = {};
   for (const c of childElements(fill)) {
     if (is(c, A_NS, 'blip')) {
       if (!only(c, (a) => (a.uri === R_NS && a.local === 'embed') || unqualified('cstate')(a)))
         return undefined;
-      for (const b of childElements(c)) {
-        const exts = is(b, A_NS, 'extLst') ? extensions(b) : undefined;
+      const effects = childElements(c).filter((b) => !is(b, A_NS, 'extLst'));
+      for (const b of childElements(c).filter((x) => is(x, A_NS, 'extLst'))) {
+        const exts = extensions(b);
         if (!exts || exts.some((e) => e.uri !== LOCAL_DPI_EXT)) return undefined;
       }
+      colouring = ooxmlColouringOf(effects);
+      if (!colouring) return undefined;
       embed = attributeOf(c, R_NS, 'embed');
     } else if (is(c, A_NS, 'srcRect')) {
       if (!only(c, unqualified('l', 't', 'r', 'b'))) return undefined;
@@ -108,7 +117,7 @@ function blipFillOf(fill: XmlElement): { embed: string; crop?: PictureCrop } | u
         if (!is(s, A_NS, 'fillRect') || s.attributes.some((a) => a.value !== '0')) return undefined;
     } else return undefined;
   }
-  return embed ? { embed, ...(crop ? { crop } : {}) } : undefined;
+  return embed ? { embed, ...(crop ? { crop } : {}), ...colouring } : undefined;
 }
 
 /** Word's `rot`: a whole number of 60,000ths of a degree, clockwise. */
@@ -150,7 +159,8 @@ function plainShape(spPr: XmlElement): { rotation: number | undefined } | undefi
 export type OoxmlPictureRead = Pick<
   Picture,
   'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop' | 'rotation'
->;
+> &
+  PictureColouring;
 
 /**
  * A `w:drawing` read as a picture in line, when everything it holds is the model's and its blip names media found;
@@ -209,6 +219,10 @@ export function readOoxmlPicture(
     ...size,
     ...named,
     ...(fill!.crop ? { crop: fill!.crop } : {}),
+    ...(fill!.recolour ? { recolour: fill!.recolour } : {}),
+    ...(fill!.transparency ? { transparency: fill!.transparency } : {}),
+    ...(fill!.brightness ? { brightness: fill!.brightness } : {}),
+    ...(fill!.contrast ? { contrast: fill!.contrast } : {}),
     ...(shape.rotation ? { rotation: shape.rotation } : {}),
   };
 }
@@ -244,10 +258,11 @@ export function ooxmlPictureXml(picture: Picture, rPr: string, embed: string, id
   const docPr = `<wp:docPr id="${id}"${attr('name', name)}${attr('descr', picture.alt)}${attr('title', picture.title)}${decorative ? `>${decorative}</wp:docPr>` : '/>'}`;
   const crop = Pictures.crop(picture.crop);
   const rotation = Pictures.rotation(picture.rotation);
+  const blipEffects = ooxmlColouringXml(picture);
   const srcRect = crop
     ? `<a:srcRect l="${thousandths(crop.left)}" t="${thousandths(crop.top)}" r="${thousandths(crop.right)}" b="${thousandths(crop.bottom)}"/>`
     : '';
-  return `<w:r>${rPr}<w:drawing><wp:inline xmlns:wp="${WP_NS}" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>${effectExtentOf(picture)}${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"/>${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rotation ? ` rot="${Math.round(rotation * ROTATION_UNITS)}"` : ''}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+  return `<w:r>${rPr}<w:drawing><wp:inline xmlns:wp="${WP_NS}" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>${effectExtentOf(picture)}${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"${blipEffects ? `>${blipEffects}</a:blip>` : '/>'}${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rotation ? ` rot="${Math.round(rotation * ROTATION_UNITS)}"` : ''}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
 }
 
 const isImage = (r: Relationship) => r.type === RELATIONSHIP_TYPES.image && !r.external;

@@ -24,14 +24,16 @@ never a canvas element.
   ⌥⇧← / → (1°).
 - **Crop**: double-click or Crop; drag the black crop handles; Enter or a press outside ends it.
 - **Image options** panel: Size and rotation, Text wrapping, Position, Recolour (Google's presets: none, light and dark
-  of eight colours), Adjustments (transparency, brightness, contrast, 0 to 100 percent), **Reset**.
+  of eight colours), Adjustments (transparency 0 to 100 percent, brightness and contrast -100 to 100 percent
+  (default, until a capture)), **Reset**.
 - **Alt text** (⌘⌥Y): a description; "Mark as decorative".
 - **Replace image** keeps the size, crop, wrap and position.
 - Context menu: Crop image, Replace image, Image options, Alt text, Comment, Link, Delete.
 
 ### The model
 
-A picture is an inline of a paragraph, beside runs, fields and notes ([Standard mapping](standard-mapping.md#the-model)).
+A picture is an inline of a paragraph, beside runs, fields and notes
+([Standard mapping](standard-mapping.md#the-model)).
 
 - **`Picture`**: its media by key, the size it shows at in points (`width`, `height`), its alternative text (`alt`),
   its title, whether it is decorative, its crop, and the formatting and link of the run it sits in.
@@ -39,6 +41,11 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   from 0 to below 1, to four decimals); the size is that of what is left.
 - **Rotation**: the angle it is turned clockwise about its centre, in degrees from 0 to below 360, to two decimals
   (default); none is 0. Its size is that of the picture unturned, as Word's extent and LibreOffice's frame hold it.
+- **Recolour** (`recolour`): **greyscale**, or a **duotone** of two `#rrggbb` colours, `dark` and `light`, each pixel's
+  luminance laid from the one to the other, as DrawingML's duotone; none is no recolour.
+- **Adjustments**: `transparency` from 0 to 100 percent, `brightness` and `contrast` from -100 to 100 percent, each
+  to three decimals (OOXML's step); none is 0. Brightness and contrast are Word's: the contrast's slope is
+  1 / (1 - c) above 0 and 1 + c below, about the middle grey, half the brightness added before it and half after.
 - **Media**: the document's `media`, each picture's bytes by key, the SHA-256 of its bytes as 64 lower-case hex
   characters, with its media type and the package entry it arrived in, if any.
   Two pictures of the same bytes share one media.
@@ -58,17 +65,22 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 | Decorative       | `loext:decorative="true"` in the frame's graphic style                                      | `adec:decorative` `val="1"` in `wp:docPr`'s extension list        |
 | Crop             | `fo:clip="rect(top, right, bottom, left)"` in the graphic style, as lengths of the own size | `a:srcRect` `t`, `r`, `b`, `l` in thousandths of a percent        |
 | Rotation         | `draw:transform` on the frame, `rotate` in radians counter-clockwise                        | `a:xfrm` `rot` in 60,000ths of a degree clockwise                 |
+| Greyscale        | `draw:color-mode="greyscale"` in the graphic style                                          | `a:grayscl` in `a:blip`                                           |
+| Duotone          | `livedoc:duotone="<dark> <light>"` in the graphic style (no ODF form; default)              | `a:duotone` of two `a:srgbClr` in `a:blip`                        |
+| Transparency     | `draw:image-opacity`, 100% less the transparency                                            | `a:alphaModFix` `amt`, the opacity in thousandths of a percent    |
+| Brightness       | `draw:luminance` in percent                                                                 | `a:lum` `bright` in thousandths of a percent                      |
+| Contrast         | `draw:contrast` in percent                                                                  | `a:lum` `contrast` in thousandths of a percent                    |
 
 - **Held whole, or kept.** A picture is the model's when everything it holds is: in line, one picture of a mapped
-  media type, its size, crop, alternative text, title and whether it is decorative.
-  Anything else keeps it a kept inline, as the file has it: anchored (wrapped, in front, behind), flipped,
-  recoloured or adjusted, an outline or effects, a shape other than a rectangle, a link on the picture itself, a
-  picture with a fallback (SVG, EMF, WMF), a linked or missing picture, a frame with a caption or text.
+  media type, its size, crop, rotation, recolour, adjustments, alternative text, title and whether it is decorative.
+  Anything else keeps it a kept inline, as the file has it: anchored (wrapped, in front, behind), flipped, recoloured
+  or adjusted in any other way (below), an outline or effects, a shape other than a rectangle, a link on the picture
+  itself, a picture with a fallback (SVG, EMF, WMF), a linked or missing picture, a frame with a caption or text.
 - **No look of its own beyond those.** ODF: the frame's graphic style may hold only margins, padding and borders of
-  none, no fill, no mirror, colour adjustments at their neutral values, a vertical position on the baseline, and
-  wrap and horizontal position, which a picture in line ignores. OOXML: `wp:effectExtent`, `wp:docPr`'s id and name,
-  the non-visual properties, the blip's compression state and local resolution, `a:stretch` / `a:fillRect`, a
-  rectangle `a:prstGeom` and an `a:ln` with no fill or no children are what a plain picture holds.
+  none, no fill, no mirror, red, green, blue, gamma and inversion at their neutral values, a vertical position on the
+  baseline, and wrap and horizontal position, which a picture in line ignores. OOXML: `wp:effectExtent`, `wp:docPr`'s
+  id and name, the non-visual properties, the blip's compression state and local resolution, `a:stretch` /
+  `a:fillRect`, a rectangle `a:prstGeom` and an `a:ln` with no fill or no children are what a plain picture holds.
 - **Read**: the media's bytes come from the package entry or the flat file's base64, are hashed, and are held once.
   An entry every reference to which a picture now holds leaves the kept entries (its image relationships too); an
   entry kept content still names stays kept, and is written once.
@@ -77,7 +89,8 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
   The ODF flat file holds the bytes as `office:binary-data`.
   ODF writes the frame's graphic style as an automatic style named by a hash of its properties, positioned on the
   baseline, its parent the `Graphics` style (written, empty, when the file holds none), as LibreOffice writes a
-  picture: LibreOffice opens a frame whose automatic style has no parent as a drawing shape. OOXML writes Word's inline picture, its `wp:docPr` ids numbered in reading order.
+  picture: LibreOffice opens a frame whose automatic style has no parent as a drawing shape.
+  OOXML writes Word's inline picture, its `wp:docPr` ids numbered in reading order.
 - **Rotation read**: ODF's `draw:transform` of `rotate` and `translate` steps alone gives the sum of its rotations,
   turned to clockwise; its translations are where LibreOffice put the centre it turns about, which a picture in line
   takes from its line, as LibreOffice reads it. A `scale`, `skewX`, `skewY` or `matrix` step keeps it. OOXML's `rot`
@@ -85,6 +98,15 @@ A picture is an inline of a paragraph, beside runs, fields and notes ([Standard 
 - **Rotation written** as LibreOffice and Word write a turned picture in line: ODF `translate (-w/2 -h/2) rotate (θ)
 translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot` on `a:xfrm`, with `wp:effectExtent`
   holding how far the turned picture's bounds reach past its extent on each side, so its line makes room for them.
+- **Recolour and adjustments read** as LibreOffice reads them, one to one: `bright` 20000 is `draw:luminance` 20%.
+  ODF's colour modes `mono` and `watermark`, OOXML's `a:biLevel`, a duotone whose colour is a scheme or preset colour
+  other than black and white or carries colour changes (Word's own colour variations), and any other blip effect
+  keep the picture (default). A value out of its range keeps it. OOXML's effects are drawn in the model's order
+  (recolour, then brightness and contrast, then transparency) whatever order the blip lists them in (default).
+- **Recolour and adjustments written** in that order; a picture with none writes no effect and neutral values.
+  LibreOffice draws a duotone in neither format: it reads `a:duotone`, and `a:lum` holding both values, into new bytes,
+  and ignores `a:alphaModFix` on a Writer picture; it draws a picture with `livedoc:duotone` uncoloured and keeps the
+  attribute when it saves; it holds brightness and contrast in whole percents.
 - **Names and ids** (`draw:name`, `wp:docPr` `name` and `id`) are written anew: `Picture <n>` in reading order.
 - **Conversion** carries every picture and its media to the other format; a picture still kept is dropped and listed,
   as all kept content.
@@ -99,6 +121,8 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
 - A turned picture is drawn turned about its centre, and its line makes room for the turned picture's bounds
   (width × |cos| + height × |sin| across, width × |sin| + height × |cos| high), as Word, LibreOffice and Google lay it
   out; the bounds sit on the baseline.
+- A recoloured or adjusted picture is drawn so: its recolour and brightness and contrast as one colour filter over its
+  pixels, in sRGB, its transparency as its opacity.
 - A screen reader reads its alternative text; a decorative picture reads as nothing (an empty `alt`).
 - A picture whose media the state lacks shows as a grey box of its size reading "Picture, not loaded" (default).
 - Media no picture holds stays in `media`, so an undo brings its picture back whole; a file never carries it.
@@ -175,8 +199,8 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   as its turn from 0 to below 360 (-90 is 270), to two decimals. Its **own size** is its pixels at 96
   an inch, read from its bytes, or from the gallery image once drawn; until then Scale and Reset are dimmed.
   Without a selected picture the panel reads "Select an image to see its options." (default).
-- **Reset image** (Format > Image, the panel's Reset): back to its own size fitted to the room, its crop and
-  rotation dropped, as Google's.
+- **Reset image** (Format > Image, the panel's Reset): back to its own size fitted to the room, its crop, rotation,
+  recolour and adjustments dropped, as Google's. Replace image keeps the recolour and adjustments (default).
 - **Turning by its handle**: a selected picture draws a round rotation handle above the middle of its top edge, on a
   short stem, as Google's; dragging it turns the picture about its centre to follow the pointer, Shift snapping to
   15° steps, as Google's. The picture follows the pointer while dragging and the rotation is written once, on
@@ -268,4 +292,4 @@ the gallery's limit.
 
 `Element · Added · TextDocument<Object>` (Image, Drawing, Chart, Equation, SpecialCharacter, Emoji, HorizontalLine),
 with the image source as the type's suffix (ImageUpload, ImageUrl, ImageGallery, ImageCamera, ImageSearch);
-`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour). Never content.
+`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust). Never content.

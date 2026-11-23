@@ -1,7 +1,7 @@
 // Pictures in line in ODF (docs/specs/034-text-documents/objects.md "In the formats"): a `draw:frame` anchored as a
 // character holding one `draw:image`, its size, its title and description, its turn (`draw:transform`), and in its
-// automatic graphic style its crop (`fo:clip`, lengths of the picture's own size) and whether it is decorative
-// (`loext:decorative`). A frame holding anything else, or a style giving it any other look, is not the model's: the
+// automatic graphic style its crop (`fo:clip`, lengths of the picture's own size), its recolour and adjustments
+// (odf-picture-colours.ts) and whether it is decorative (`loext:decorative`). A frame holding anything else, or a style giving it any other look, is not the model's: the
 // reader keeps it.
 import {
   attributeOf,
@@ -25,7 +25,9 @@ import {
   type PictureCrop,
   type PictureMedia,
 } from '../model/pictures';
+import type { PictureColouring } from '../model/picture-colours';
 import { NS } from './odf-names';
+import { isOdfColouring, odfColouringAttributes, odfColouringOf } from './odf-picture-colours';
 
 /** The media of each `draw:image` a read may hold as a picture's, by element. */
 export type OdfPictureLookup = ReadonlyMap<XmlElement, FoundMedia>;
@@ -112,15 +114,11 @@ const NEUTRAL_GRAPHIC: Readonly<Record<string, (value: string) => boolean>> = {
   fill: (v) => v === 'none',
   'fill-color': () => true,
   mirror: (v) => v === 'none',
-  luminance: (v) => v === '0%',
-  contrast: (v) => v === '0%',
   red: (v) => v === '0%',
   green: (v) => v === '0%',
   blue: (v) => v === '0%',
   gamma: (v) => v === '100%',
   'color-inversion': (v) => v === 'false',
-  'image-opacity': (v) => v === '100%',
-  'color-mode': (v) => v === 'standard',
   shadow: (v) => v === 'none' || v === 'hidden',
   'vertical-pos': (v) => v === 'top',
   'vertical-rel': (v) => v === 'baseline',
@@ -150,11 +148,12 @@ function clipOf(value: string): number[] | undefined {
 
 const round4 = (n: number) => Math.round(n * 10_000) / 10_000;
 
-type GraphicRead = { crop?: PictureCrop; decorative?: true } | undefined;
+type GraphicRead = ({ crop?: PictureCrop; decorative?: true } & PictureColouring) | undefined;
 
 /** What the frame's automatic graphic style gives the picture, or undefined when it gives it any other look. */
 function graphicOf(style: XmlElement | undefined, own: FoundMedia['own']): GraphicRead {
   if (!style) return {};
+  const colouring = new Map<string, string>();
   let crop: PictureCrop | undefined;
   let decorative: true | undefined;
   for (const c of childElements(style)) {
@@ -173,21 +172,25 @@ function graphicOf(style: XmlElement | undefined, own: FoundMedia['own']): Graph
         };
         if (!Pictures.isCrop(read)) return undefined;
         crop = Pictures.crop(read);
-      } else if (a.uri === NS.loext && a.local === 'decorative') {
+      } else if (isOdfColouring(a)) colouring.set(a.local, a.value);
+      else if (a.uri === NS.loext && a.local === 'decorative') {
         if (a.value === 'true') decorative = true;
         else if (a.value !== 'false') return undefined;
       } else if (![NS.fo, NS.draw, NS.style, NS.loext].includes(a.uri as never)) return undefined;
       else if (!NEUTRAL_GRAPHIC[a.local]?.(a.value.trim())) return undefined;
     }
   }
-  return { ...(crop ? { crop } : {}), ...(decorative ? { decorative } : {}) };
+  const coloured = odfColouringOf(colouring);
+  if (!coloured) return undefined;
+  return { ...(crop ? { crop } : {}), ...(decorative ? { decorative } : {}), ...coloured };
 }
 
 /** What a picture's frame holds beyond the run around it. */
 export type OdfPictureRead = Pick<
   Picture,
   'media' | 'width' | 'height' | 'alt' | 'title' | 'decorative' | 'crop' | 'rotation'
->;
+> &
+  PictureColouring;
 
 const TRANSFORM_STEP = /^\s*([a-zA-Z]+)\s*\(([^()]*)\)/;
 const NUMBER = /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$/;
@@ -287,7 +290,7 @@ export function readOdfPicture(
 
 const LOEXT = `xmlns:loext="${NS.loext}"`;
 
-/** The picture's automatic graphic style's body: on the baseline, its crop and whether it is decorative. */
+/** The picture's automatic graphic style's body: on the baseline, its crop, colouring and whether it is decorative. */
 export function odfPictureStyle(picture: Picture, media: HeldPictureMedia): string {
   const crop = Pictures.crop(picture.crop);
   const header = pictureHeader(media.bytes);
@@ -297,7 +300,7 @@ export function odfPictureStyle(picture: Picture, media: HeldPictureMedia): stri
       ? ` fo:clip="rect(${[crop.top * own.height, crop.right * own.width, crop.bottom * own.height, crop.left * own.width].map(ptToOdf).join(', ')})"`
       : '';
   const decorative = picture.decorative ? ` ${LOEXT} loext:decorative="true"` : '';
-  return `<style:graphic-properties style:vertical-pos="top" style:vertical-rel="baseline"${clip}${decorative}/>`;
+  return `<style:graphic-properties style:vertical-pos="top" style:vertical-rel="baseline"${clip}${odfColouringAttributes(picture)}${decorative}/>`;
 }
 
 /**
