@@ -59,7 +59,7 @@ const STYLE_ART: Record<PollStyle, ReactNode> = {
   collaborators: (
     <span className="flex items-end justify-center gap-0.5">
       {[0, 1, 2].map((i) => (
-        <span key={i} className="flex flex-col items-center gap-[1px]">
+        <span key={i} className="flex flex-col items-center gap-0.5">
           <span className="h-1 w-1 rounded-full bg-current opacity-70" />
           <span className="h-[3px] w-2 rounded-t-full bg-current opacity-40" />
         </span>
@@ -74,7 +74,7 @@ const STYLE_ART: Record<PollStyle, ReactNode> = {
     </span>
   ),
   text: (
-    <span className="flex w-full flex-col items-center gap-[3px]">
+    <span className="flex w-full flex-col items-center gap-0.5">
       <span className="h-1 w-7 rounded-full bg-current opacity-40" />
       <span className="h-1 w-5 rounded-full bg-current opacity-30" />
     </span>
@@ -105,14 +105,14 @@ function PollStyleTile({
       // `overflow-hidden` + a truncating label: the tile is the box, and text
       // must never leave it. At the widths both callers use nothing truncates
       // today — this is the guarantee, not the everyday behaviour.
-      className={`flex h-full min-h-[3.5rem] cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-lg border px-1.5 py-2 text-center transition ${
+      className={`flex h-full min-h-[3.5rem] cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-control border px-2 py-2 text-center transition ${
         selected
           ? 'border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-500/60 dark:bg-brand-500/15 dark:text-brand-200'
           : 'border-slate-200 bg-white text-slate-500 hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-brand-500/60 dark:hover:text-slate-200'
       }`}
     >
-      <span className="flex h-4 w-8 items-center justify-center">{STYLE_ART[style]}</span>
-      <span className="w-full truncate text-[10px] font-semibold leading-tight">
+      <span className="flex h-icon-row w-8 items-center justify-center">{STYLE_ART[style]}</span>
+      <span className={`w-full truncate text-supporting ${selected ? 'font-medium' : ''}`}>
         {POLL_STYLE_LABEL[style]}
       </span>
     </button>

@@ -78,10 +78,10 @@ export function TimerSetupBody({
                 setMinutes={Math.min(minutes, DIAL_LAP_MINUTES)}
                 onSetMinutes={onMinutesChange}
               >
-                <span className="text-[22px] font-semibold leading-none tabular-nums text-slate-800 dark:text-slate-100">
+                <span className="text-dialog-title tabular-nums text-slate-800 dark:text-slate-100">
                   {formatTimerClock(minutes * 60_000)}
                 </span>
-                <span className="mt-1 text-[9px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span className="text-supporting text-slate-500 dark:text-slate-400">
                   Drag to set
                 </span>
               </TimerDial>
@@ -102,12 +102,10 @@ export function TimerSetupBody({
       ) : (
         <>
           <TimerDial fraction={0} variant="sweep">
-            <span className="text-[22px] font-semibold leading-none tabular-nums text-slate-800 dark:text-slate-100">
+            <span className="text-dialog-title tabular-nums text-slate-800 dark:text-slate-100">
               0:00
             </span>
-            <span className="mt-1 text-[9px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Counts up
-            </span>
+            <span className="text-supporting text-slate-500 dark:text-slate-400">Counts up</span>
           </TimerDial>
           <StudioButton
             variant="primary"
@@ -118,7 +116,7 @@ export function TimerSetupBody({
           </StudioButton>
         </>
       )}
-      <p className="text-center text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="text-center text-supporting text-slate-500 dark:text-slate-400">
         Everyone on this tab sees the same clock.
       </p>
     </div>
@@ -144,7 +142,7 @@ function NudgeButton({
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
-      className="border border-slate-200 bg-white text-[15px] font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500/60 dark:hover:text-white"
+      className="border border-slate-200 bg-white text-panel-title text-slate-600 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500/60 dark:hover:text-white"
     >
       {children}
     </GlyphDisc>

@@ -36,6 +36,7 @@ const SIZED_PATHS = [
   'components/dialogs/usePassExit.ts',
   'components/panels/explorer-panel',
   'components/panels/explorer-tree',
+  'components/panels/session-studio',
 ];
 
 describe('live sizing', () => {

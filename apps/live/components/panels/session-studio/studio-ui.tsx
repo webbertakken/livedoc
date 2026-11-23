@@ -37,7 +37,7 @@ export function StudioButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={title}
-      className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold transition disabled:cursor-not-allowed ${BUTTON_CLASS[variant]}`}
+      className={`inline-flex min-h-field w-full items-center justify-center gap-1 rounded-control px-3 text-body transition disabled:cursor-not-allowed ${variant === 'primary' ? 'font-medium' : ''} ${BUTTON_CLASS[variant]}`}
     >
       {icon}
       {children}
@@ -70,9 +70,9 @@ export function StudioSegmented<T extends string>({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`max-w-full truncate rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+            className={`min-h-row max-w-full truncate rounded-full border px-3 text-body transition ${
               on
-                ? 'border-brand-400 bg-brand-50 text-brand-800 dark:border-brand-500/60 dark:bg-brand-500/20 dark:text-brand-100'
+                ? 'font-medium border-brand-400 bg-brand-50 text-brand-800 dark:border-brand-500/60 dark:bg-brand-500/20 dark:text-brand-100'
                 : 'border-slate-200 bg-white text-slate-600 hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500/60 dark:hover:text-white'
             }`}
           >
@@ -102,13 +102,13 @@ export function TransportButton({
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400"
+      className="group flex flex-col items-center gap-1 text-supporting text-slate-500 dark:text-slate-400"
     >
       <span
         className={`flex items-center justify-center rounded-full transition ${
           primary
             ? `h-12 w-12 bg-brand-700 text-white shadow-md group-hover:bg-brand-800 ${SOLID_BRAND_DARK} dark:group-hover:bg-brand-700`
-            : 'h-9 w-9 border border-slate-200 bg-white text-slate-600 group-hover:border-brand-300 group-hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:border-brand-500/60 dark:group-hover:text-white'
+            : 'size-prominent border border-slate-200 bg-white text-slate-600 group-hover:border-brand-300 group-hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:border-brand-500/60 dark:group-hover:text-white'
         }`}
       >
         {icon}
@@ -127,7 +127,7 @@ export function StudioCallout({
 }) {
   return (
     <p
-      className={`rounded-lg px-2.5 py-1.5 text-[11px] leading-snug ${
+      className={`rounded-menu px-3 py-1.5 text-supporting ${
         tone === 'warn'
           ? 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200'
           : 'bg-slate-50 text-slate-600 dark:bg-slate-800/70 dark:text-slate-300'
@@ -141,11 +141,11 @@ export function StudioCallout({
 export function StudioLabel({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        {children}
-      </span>
+      <span className="text-supporting text-slate-500 dark:text-slate-400">{children}</span>
       {aside ? (
-        <span className="text-[10px] tabular-nums text-slate-500 dark:text-slate-400">{aside}</span>
+        <span className="text-supporting tabular-nums text-slate-500 dark:text-slate-400">
+          {aside}
+        </span>
       ) : null}
     </div>
   );
@@ -155,9 +155,9 @@ export function StudioLabel({ children, aside }: { children: ReactNode; aside?: 
 // the controls it disables, in the Studio and on the Session strip's popovers alike.
 export function FacilitatedNote({ name }: { name: string }) {
   return (
-    <p className="rounded-md bg-slate-100 px-2.5 py-2 text-[12px] leading-snug text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-      <span className="font-semibold">{name}</span> is facilitating this session. Ask them to start
-      the timer, the vote or a poll.
+    <p className="rounded-control bg-slate-100 px-3 py-2 text-supporting text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+      <span className="text-slate-800 dark:text-slate-100">{name}</span> is facilitating this
+      session. Ask them to start the timer, the vote or a poll.
     </p>
   );
 }

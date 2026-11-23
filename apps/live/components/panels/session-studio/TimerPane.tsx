@@ -88,13 +88,13 @@ function LiveTimer({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+        <span className="text-body text-slate-700 dark:text-slate-200">
           {countdown
             ? `Countdown · ${formatMinutesLabel(Math.round((timer.durationMs ?? 0) / 60_000))}`
             : 'Stopwatch'}
         </span>
         <span
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+          className={`inline-flex h-chip items-center gap-1 rounded-full px-2 text-supporting ${
             done
               ? 'bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
               : timer.running
@@ -115,13 +115,13 @@ function LiveTimer({
         extraLap={countdown && ms > DIAL_LAP_MINUTES * 60_000}
       >
         <span
-          className={`text-[26px] font-semibold leading-none tabular-nums ${
+          className={`text-page-title tabular-nums ${
             done ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-100'
           }`}
         >
           {formatTimerClock(ms)}
         </span>
-        <span className="mt-1 text-[9px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           {countdown ? 'left' : 'elapsed'}
         </span>
       </TimerDial>
@@ -167,7 +167,7 @@ function TimerControls({
               key={x.ms}
               type="button"
               onClick={() => onExtendTimer(x.ms)}
-              className="rounded-md bg-slate-100 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-brand-50 hover:text-brand-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-brand-500/15 dark:hover:text-brand-200"
+              className="min-h-row rounded-control bg-slate-100 text-body text-slate-600 transition hover:bg-brand-50 hover:text-brand-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-brand-500/15 dark:hover:text-brand-200"
             >
               {x.label}
             </button>
@@ -190,7 +190,7 @@ function TimerControls({
         )}
         <TransportButton label="End" icon={<StopGlyph />} onClick={onClearTimer} />
       </div>
-      <p className="text-center text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="text-center text-supporting text-slate-500 dark:text-slate-400">
         A tab runs one timer. End this one to start a different kind.
       </p>
     </>

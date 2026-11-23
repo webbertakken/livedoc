@@ -73,14 +73,14 @@ export function VoteSetupBody({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <StudioLabel aside={`${dots} each`}>Dots per person</StudioLabel>
         <DotBudgetPicker value={dots} onChange={onDotsChange} />
       </div>
       {/* With a single dot there is nothing to stack, so the choice would be
           a question with one answer. */}
       {dots > 1 ? (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <StudioLabel>Dots per item</StudioLabel>
           <StudioSegmented
             label="Dots per item"
@@ -88,7 +88,7 @@ export function VoteSetupBody({
             onChange={setStacking}
             options={STACKING_OPTIONS}
           />
-          <span className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
             {stacking === 'one'
               ? `Each person backs ${dots} different items, one dot apiece.`
               : 'People can pile several dots on one item they feel strongly about.'}
@@ -96,7 +96,7 @@ export function VoteSetupBody({
         </div>
       ) : null}
       {multiLayer ? (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <StudioLabel>Votable layer</StudioLabel>
           <StudioSegmented
             label="Votable layer"
@@ -107,14 +107,14 @@ export function VoteSetupBody({
               ...voteLayers.map((l) => ({ value: l.id, label: l.name })),
             ]}
           />
-          <span className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
             {layerId
               ? 'Only this layer takes dots. The rest stay visible, dimmed.'
               : 'Every votable element on the tab takes dots.'}
           </span>
         </div>
       ) : null}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <StudioLabel>Privacy</StudioLabel>
         <PrivacyCard
           icon={<CursorOffGlyph />}
@@ -159,7 +159,7 @@ function DotBudgetPicker({ value, onChange }: { value: number; onChange: (n: num
     <div
       role="radiogroup"
       aria-label="Dots per person"
-      className="flex items-center rounded-lg bg-slate-50 px-1 py-1.5 dark:bg-slate-800/70"
+      className="flex items-center rounded-menu bg-slate-50 px-1 py-1.5 dark:bg-slate-800/70"
       onPointerLeave={() => setHover(null)}
     >
       {Array.from({ length: count }, (_, i) => {
@@ -174,12 +174,12 @@ function DotBudgetPicker({ value, onChange }: { value: number; onChange: (n: num
             aria-label={`${n} ${n === 1 ? 'dot' : 'dots'} each`}
             onClick={() => onChange(n)}
             onPointerEnter={() => setHover(n)}
-            className="flex h-6 min-w-0 flex-1 items-center justify-center"
+            className="flex h-chip min-w-0 flex-1 items-center justify-center"
           >
             <span
               className={`block rounded-full transition-all ${
                 filled
-                  ? 'h-3.5 w-3.5 bg-brand-500 shadow-sm'
+                  ? 'size-icon-chevron bg-brand-500 shadow-sm'
                   : 'h-2.5 w-2.5 border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900'
               }`}
             />
@@ -207,14 +207,14 @@ function PrivacyCard({
     <button
       type="button"
       onClick={onToggle}
-      className={`flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition ${
+      className={`flex w-full items-center gap-2 rounded-menu border px-2 py-2 text-left transition ${
         checked
           ? 'border-brand-300 bg-brand-50/60 dark:border-brand-500/50 dark:bg-brand-500/10'
           : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500'
       }`}
     >
       <span
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
+        className={`flex size-row shrink-0 items-center justify-center rounded-control ${
           checked
             ? `bg-brand-700 text-white ${SOLID_BRAND_DARK}`
             : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'
@@ -223,10 +223,8 @@ function PrivacyCard({
         {icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-          {title}
-        </span>
-        <span className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">{hint}</span>
+        <span className="text-body text-slate-700 dark:text-slate-200">{title}</span>
+        <span className="text-supporting text-slate-500 dark:text-slate-400">{hint}</span>
       </span>
       <Switch presentational size="sm" checked={checked} />
     </button>
