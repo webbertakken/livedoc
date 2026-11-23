@@ -66,3 +66,4 @@ export { PdfPermissions } from './permissions';
 export { LinkTarget, type PdfActionKind } from './link-target';
 export { PageText, type TextBox } from './page-text';
 export { TextRange, type TextSpan } from './text-range';
+export { TextFind, type TextFindOptions } from './text-find';

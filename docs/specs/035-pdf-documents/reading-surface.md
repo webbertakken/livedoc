@@ -11,12 +11,13 @@
 - The left panel's rail, Thumbnails, Outline, Embedded files and Layers; Go to page by a page's number or its label; following a bookmark.
 - Selecting text and copying it.
 - Links on the pages, a link's and a bookmark's point on its page, Previous view and Next view.
+- Find, with its options and All results.
 
-Bound today: Download as PDF, Undo, Redo, Copy, Select all, the editing modes, Highlight, Select and Help; Page display, Zoom but for
+Bound today: Download as PDF, Undo, Redo, Copy, Select all, Find, the editing modes, Highlight, Select and Help; Page display, Zoom but for
 Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-Signatures and Fields, find, the page's context menu, the accessible tree (a page is a named region whose picture is
+Signatures and Fields, the page's context menu, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -519,6 +520,24 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 - A PDF with scanned pages and no recognised text says "12 pages are scans and weren't searched." with **Recognise
   text**.
 - Nothing is found by a regular expression `(default)`.
+- **What matches** `(default)`: the query and the text are read alike: a run of spaces or a line break is one space, a
+  word the file broke with a hyphen at a line's end is one word, and the query's ends are trimmed; Match case off
+  compares letters in either case. Whole words matches only where neither end is inside a word.
+- A search starts once the query has rested `PDF_FIND_SETTLE_MS`, and a new query or option stops the one before.
+  The first result is current; Enter and Next go to the next, ⇧Enter and Previous to the one before, round the ends.
+- **The count** reads "3 of 41", "No results" once every page is searched with none, and "Searching 120 of 400
+  pages…" while it runs; it is a polite live region. Past `PDF_FIND_MAX_RESULTS` it reads "10,000+" and lists that
+  many.
+- **Going to a result** is a jump ([Previous view](#the-pages)): its page, the match two lines below the view's top;
+  a bookmark found goes where the bookmark leads.
+- **Comments and marks' text** are the words of the marks the file holds; a result names its page and lies over the
+  mark. **Bookmarks** found are listed first, under "Bookmarks".
+- ⌘G and ⇧⌘G step while the field is open; Escape closes it, takes the tints away and gives the pages the keys.
+- **All results** lists each match with up to `PDF_FIND_CONTEXT_CHARS` of its line either side, the match marked,
+  under "Page 3" (the page's label where it has one); a press goes to it and makes it current.
+- Every role finds ([Share roles](#share-roles)). Logged `[pdf] find-searched pages=<n> results=<n>`; counted as
+  `Pdf · Searched · Find` once a search starts, never with its query.
+- Not built: recognised text, and the scans' sentence, which wait on [Scans](scans.md).
 
 ## Phone and tablet
 
@@ -551,6 +570,8 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 | `PDF_THUMBNAIL_BOX_PX`         | 160                                                                                                    | `(default)` CSS pixels a side of the square a thumbnail is fitted into; safe range 96 to 224                                             |
 | `PDF_VIEW_HISTORY_MAX`         | 100                                                                                                    | `(default)` Places Previous view keeps, the oldest let go first; safe range 20 to 1,000                                                  |
 | `PDF_PAGE_TEXTS_KEPT`          | 32                                                                                                     | `(default)` Pages whose text the surface keeps read for selecting, the least lately used let go first; safe range 8 to 256               |
+| `PDF_FIND_SETTLE_MS`           | 250                                                                                                    | `(default)` How long a query rests before it is searched; safe range 100 to 600                                                          |
+| `PDF_FIND_CONTEXT_CHARS`       | 40                                                                                                     | `(default)` Characters of a result's line shown either side of the match in All results; safe range 20 to 80                             |
 | `PDF_FIND_MAX_RESULTS`         | 10,000                                                                                                 | `(default)` Listed results; the count still says how many more                                                                           |
 
 ## Share roles
@@ -584,7 +605,7 @@ Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom
 `[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`,
 `[pdf] thumbnail-failed page=<n>`, `[pdf] outline-failed`, `[pdf] link-opened scheme=<scheme>`,
 `[pdf] link-refused kind=<kind>`, `[pdf] text-copied chars=<n>`, `[pdf] text-copy-refused`, `[pdf] text-copy-failed`,
-`[pdf] page-text-failed page=<n>`, `[pdf] view-history way=<back|forward> page=<n>`.
+`[pdf] page-text-failed page=<n>`, `[pdf] view-history way=<back|forward> page=<n>`, `[pdf] find-searched pages=<n> results=<n>`.
 
 ## Errors
 
