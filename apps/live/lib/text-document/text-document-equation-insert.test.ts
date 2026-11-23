@@ -51,7 +51,7 @@ describe('Insert > Equation', () => {
 
   it('is counted from the menu, and offered only to whoever may edit', () => {
     const v = mount(1);
-    equationActions(v, true)[EQUATION_ITEM]!.run!();
+    equationActions(v, true)[EQUATION_ITEM]!.run();
     expect(track).toHaveBeenCalledWith('Element', 'Added', 'TextDocumentEquation');
     expect(equationActions(v, false)).toEqual({});
   });
