@@ -753,3 +753,69 @@ div.text-document-kept {
 .text-document-picture-sizing * {
   user-select: none;
 }
+/*
+ * A picture being cropped (objects.md "Working with a picture", Cropping): drawn whole, above the text, what lies
+ * beyond its box dimmed; its handles become crop marks, L-shaped at the corners and bars on the edges, dark on light
+ * pages and light on dark ones, each still answering the pointer over 24 px.
+ */
+.text-document-picture-cropping {
+  z-index: 2;
+}
+.text-document-picture-cropping .text-document-picture-clip {
+  overflow: visible;
+}
+.text-document-picture-shade {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+.text-document-picture-shade > span {
+  position: absolute;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.55);
+}
+.text-document-picture-cropping [data-picture-handle]::before {
+  inset: -10px;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle] {
+  background: transparent;
+  border: 0 solid light-dark(#202124, #e8eaed);
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='nw'] {
+  border-width: 4px 0 0 4px;
+  margin: -4px 0 0 -4px;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='ne'] {
+  border-width: 4px 4px 0 0;
+  margin: -4px 0 0 -10px;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='se'] {
+  border-width: 0 4px 4px 0;
+  margin: -10px 0 0 -10px;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='sw'] {
+  border-width: 0 0 4px 4px;
+  margin: -10px 0 0 -4px;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='n'] {
+  border-top-width: 4px;
+  height: 4px;
+  margin: -4px 0 0 -7px;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='s'] {
+  border-bottom-width: 4px;
+  height: 4px;
+  margin: 0 0 0 -7px;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='e'] {
+  border-right-width: 4px;
+  width: 4px;
+  margin: -7px 0 0 0;
+}
+.text-document-picture-cropping .text-document-picture-handles [data-picture-handle='w'] {
+  border-left-width: 4px;
+  width: 4px;
+  margin: -7px 0 0 -4px;
+}

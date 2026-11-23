@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { Pictures, readTextDocumentFile } from '@livedoc/text-documents';
+import type { Locator, Page } from '@playwright/test';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
@@ -218,14 +219,15 @@ test('a picture is inserted from the computer, and pasted as a file', async ({
 // objects.md "Working with a picture": a selected picture's handles size it (a corner keeping its ratio), written as
 // one undo step; Image options' Width sizes it, locked to its ratio, its Scale read from its own size; Reset image
 // brings it back to its own size.
-test('a picture is sized by its handles and by Image options', async ({ page, pageErrors }) => {
-  test.setTimeout(120_000);
+// A new text document holding one picture of 240 × 120 pixels, inserted from the computer and left selected, and its
+// size as drawn, in CSS pixels.
+async function documentWithPicture(page: Page, words: string) {
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.goto('/new?kind=text-document');
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
   const body = page.locator(BODY);
   await body.click();
-  await page.keyboard.type('Sized: ');
+  await page.keyboard.type(words);
   const [chooser] = await Promise.all([
     page.waitForEvent('filechooser'),
     (await officeMenuItem(page, ['Insert', 'Image', 'Upload from computer'])).click(),
@@ -237,10 +239,16 @@ test('a picture is sized by its handles and by Image options', async ({ page, pa
   });
   const picture = body.locator('.text-document-picture').first();
   await expect(picture.locator('img')).toHaveCount(1);
-  const size = async () => {
-    const box = (await picture.boundingBox())!;
+  const sizeOf = (locator: Locator) => async () => {
+    const box = (await locator.boundingBox())!;
     return { width: Math.round(box.width), height: Math.round(box.height) };
   };
+  return { body, picture, size: sizeOf(picture), imageSize: sizeOf(picture.locator('img')) };
+}
+
+test('a picture is sized by its handles and by Image options', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  const { body, picture, size } = await documentWithPicture(page, 'Sized: ');
   // 240 × 120 pixels at 96 an inch: 180 × 90 points, 240 × 120 CSS pixels at 100%.
   expect(await size()).toEqual({ width: 240, height: 120 });
 
@@ -279,6 +287,36 @@ test('a picture is sized by its handles and by Image options', async ({ page, pa
 
   // Reset: its own size again.
   await panel.getByRole('button', { name: 'Reset' }).click();
+  await expect.poll(size).toEqual({ width: 240, height: 120 });
+  expectNoPageErrors(pageErrors);
+});
+
+// objects.md "Working with a picture", Cropping: a double-click begins it; a crop mark dragged in cuts that side, the
+// picture's scale kept; Enter ends it; the crop is one undo step.
+test('a picture is cropped by its crop marks', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  const { body, picture, size, imageSize } = await documentWithPicture(page, 'Cropped: ');
+  await picture.dblclick();
+  await expect(body.locator('.text-document-picture-cropping')).toHaveCount(1);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('picture-cropping.png') });
+
+  const mark = (await picture.locator('[data-picture-handle="e"]').boundingBox())!;
+  await page.mouse.move(mark.x + mark.width / 2, mark.y + mark.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(mark.x + mark.width / 2 - 60, mark.y + mark.height / 2, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(size).toEqual({ width: 180, height: 120 });
+  expect(await imageSize()).toEqual({ width: 240, height: 120 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('picture-cropped-marks.png') });
+
+  await page.keyboard.press('Enter');
+  await expect(body.locator('.text-document-picture-cropping')).toHaveCount(0);
+  await expect.poll(size).toEqual({ width: 180, height: 120 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('picture-cropped.png') });
+  await page.keyboard.press('ControlOrMeta+z');
   await expect.poll(size).toEqual({ width: 240, height: 120 });
   expectNoPageErrors(pageErrors);
 });
