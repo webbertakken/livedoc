@@ -49,4 +49,15 @@ describe('PdfPermissions', () => {
     expect(PdfPermissions.of(0xffffffff)).toEqual(PdfPermissions.all());
     expect(PdfPermissions.asksNothing(PdfPermissions.of(-3904))).toBe(false);
   });
+
+  // opening.md "Passwords": a file forbids changes where it allows none of the four kinds of change.
+  it('forbids changes only where no kind of change is allowed', () => {
+    const none = { changeContent: false, mark: false, fill: false, organise: false };
+    expect(PdfPermissions.forbidsChanges({ ...PdfPermissions.all(), ...none })).toBe(true);
+    expect(PdfPermissions.forbidsChanges({ ...PdfPermissions.all(), ...none, fill: true })).toBe(
+      false,
+    );
+    expect(PdfPermissions.forbidsChanges({ ...PdfPermissions.all(), copy: false })).toBe(false);
+    expect(PdfPermissions.forbidsChanges(PdfPermissions.all())).toBe(false);
+  });
 });

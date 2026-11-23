@@ -50,4 +50,7 @@ export const PdfPermissions = {
   /** Whether the file asks nothing of its reader. */
   asksNothing: (permissions: PdfPermissions): boolean =>
     Object.values(permissions).every((allowed) => allowed),
+  /** Whether the file allows no kind of change: page content, marks, filling and signing, or its pages' order. */
+  forbidsChanges: (permissions: PdfPermissions): boolean =>
+    !permissions.changeContent && !permissions.mark && !permissions.fill && !permissions.organise,
 } as const;

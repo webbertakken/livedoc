@@ -91,6 +91,7 @@ async function ready(): Promise<PdfDocumentOpen & { phase: 'ready' }> {
     version: '1.7',
     protected: false,
     permissions: PdfPermissions.all(),
+    liftLimits: async () => false,
     engine: {} as never,
     drawer: {
       draw: async () => null,
@@ -451,6 +452,31 @@ describe('a PDF document’s surface', () => {
       expect(
         screen.getByRole('menuitemradio', { name: /Editing/ }).getAttribute('aria-disabled'),
       ).toBe('true');
+    });
+
+    // opening.md "Passwords": a file that forbids changes is drawn for Viewing, its notice saying so, until its
+    // permissions password lifts the limits; then the level decides as for any PDF.
+    it('draws a file that forbids changes for Viewing, with its notice, until its limits are lifted', async () => {
+      const now = await ready();
+      const forbidding = {
+        ...now,
+        permissions: {
+          ...PdfPermissions.all(),
+          changeContent: false,
+          mark: false,
+          fill: false,
+          organise: false,
+        },
+      };
+      const before = show(forbidding, 'edit');
+      expect(screen.getByRole('button', { name: 'Mode: Viewing' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Highlight' })).toBeNull();
+      expect(screen.getByText('This PDF asks not to be changed.')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Enter permissions password' })).toBeTruthy();
+      before.unmount();
+      show({ ...forbidding, permissions: PdfPermissions.all() }, 'edit');
+      expect(screen.getByRole('button', { name: 'Mode: Reviewing' })).toBeTruthy();
+      expect(screen.queryByText('This PDF asks not to be changed.')).toBeNull();
     });
 
     it('takes the tools that mark away in Viewing, and hands them back in Reviewing', async () => {

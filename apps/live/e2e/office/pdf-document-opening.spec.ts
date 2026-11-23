@@ -72,3 +72,53 @@ test('a PDF encrypted to certificates is refused by name, with Download', async 
 
   expectNoPageErrors(pageErrors);
 });
+
+// "Passwords": a file that forbids changes opens in Viewing with its notice; its permissions password, given in the
+// shell's dialog, lifts the limits for this person, and a password that lifts nothing is said.
+test('a PDF that asks not to be changed opens in Viewing until its permissions password is given', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  const asking = await protectedPdf({
+    ownerPassword: 'owner',
+    permissions: { modify: false, annotate: false, fillForms: false, assemble: false },
+  });
+  await dropPdf(page, 'Notice.pdf', asking);
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  await pageOneDrawn(page);
+
+  await expect(page.getByRole('button', { name: 'Mode: Viewing' })).toBeVisible();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'This PDF asks not to be changed.' }),
+  ).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('pdf-limits-notice-dark.png') });
+
+  await page.getByRole('button', { name: 'Enter permissions password' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Permissions password' });
+  const field = dialog
+    .getByLabel('Permissions password', { exact: true })
+    .and(dialog.locator('input'));
+  await expect(field).toBeFocused();
+  await field.fill('not it');
+  await page.keyboard.press('Enter');
+  await expect(dialog.getByRole('alert')).toHaveText(
+    "That password didn't lift this PDF's limits.",
+  );
+  await expect(field).toBeFocused();
+  await page.screenshot({ path: test.info().outputPath('pdf-limits-wrong-dark.png') });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: test.info().outputPath('pdf-limits-wrong-light.png') });
+  await page.emulateMedia({ colorScheme: 'dark' });
+
+  await page.keyboard.type('owner');
+  await page.keyboard.press('Enter');
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText('This PDF asks not to be changed.')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Mode: Reviewing' })).toBeVisible();
+
+  expectNoPageErrors(pageErrors);
+});

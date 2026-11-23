@@ -14,6 +14,7 @@
 - Find, with its options and All results.
 - The page's context menu.
 - The chrome from the shell's tokens alone, and what LiveDoc draws on a page from the PDF's paper tokens, in both schemes.
+- The notice bar, with the permissions notices.
 
 Bound today: Download as PDF, Undo, Redo, Copy, Select all, Find, the editing modes, Highlight, Select and Help; Page display, Zoom but for
 Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
@@ -262,10 +263,14 @@ rest are the mode's own. A control past the width goes into the shell's overflow
 One bar under the toolbar, in the shell's notice style, dismissible per person per open; where more than one applies
 they queue in this order:
 
+- The bar spans the pages' width under the toolbar: an info glyph, the sentence, its action, and **Dismiss** (×) at
+  its end; a polite status, drawn in the shell's tokens `(default)`.
+
 | Notice                                                                                   | When                                | Action                         |
 | ---------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------ |
 | "This PDF was damaged. LiveDoc repaired it to show it; the file itself is unchanged."    | A repaired file                     | **Details**                    |
 | "This PDF asks not to be changed."                                                       | Permissions forbid changes          | **Enter permissions password** |
+| "This PDF limits what can be done with it."                                              | Other permissions                   | **Enter permissions password** |
 | "This PDF is signed. Reviewing keeps its signatures valid."                              | Certificate signatures, all intact  | **Signatures**                 |
 | "This PDF has changed since it was signed."                                              | A signature covers an earlier state | **Signatures**                 |
 | "This PDF has fields you can fill in."                                                   | Fields, opened in Viewing           | **Fill in** (enters Reviewing) |

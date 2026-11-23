@@ -1,13 +1,13 @@
 # Opening any PDF
 
 **Status: specified; a first slice is built.** Built: a file read whole by the engine in a worker thread, every page's
-size read before any is drawn, the refusals shown by name with their glyph and Download, the open password's screen.
-The engine reads a file's version, properties, page labels, what its permissions ask, and
+size read before any is drawn, the refusals shown by name with their glyph and Download, the open password's screen,
+the permissions password's notice and dialog. The engine reads a file's version, properties, page labels, what its permissions ask, and
 whether it has fields or a structure tree, a page's text with each character's box, the outline and a page's links
 (none followed), a page's marks and fields as the file holds them, its certificate signatures, embedded files and
 PDF layers, and opens and writes a protected file given its password; the engine is ended when it answers nothing
-for too long or holds too much memory, and the PDF then shows as stopped. The permissions password's notice, reading
-by range and repair notices are not built.
+for too long or holds too much memory, and the PDF then shows as stopped. Reading by range and repair notices are not
+built.
 
 What LiveDoc reads of a PDF, what it says when it cannot, and how damaged, protected and very large files are met.
 "Any PDF" is every PDF a common reader opens: PDF 1.0 to 2.0, linearised, encrypted, with damaged cross-references,
@@ -85,6 +85,14 @@ Fork F9 `(default)`.
   the notice "This PDF asks not to be changed." and **Enter permissions password**. Given, the person's level decides
   their modes as for any PDF. Permissions that forbid copying or printing are honoured the same way: Copy and Print
   are dimmed with the reason until the permissions password is given.
+- A file **forbids changes** where it allows none of the four: changing page content, marks, filling and signing,
+  and inserting, deleting and rotating pages `(default)`.
+- A file that asks anything else (not to be copied, printed, or some changes) opens as any PDF, with the notice
+  "This PDF limits what can be done with it." and the same **Enter permissions password** `(default)`.
+- **Enter permissions password** opens the shell's dialog "Permissions password": the line "Its permissions password
+  lifts this PDF's limits for you.", a password field, **Enter**. A password that does not lift every limit answers
+  "That password didn't lift this PDF's limits." in the dialog, focus kept in the field; lifted, the dialog and the
+  notice close and the limits go for this person, for the session `(default)`.
 - **What the permissions ask** is read as seven answers, each yes where the file asks nothing: printing, printing
   at full resolution, changing page content, copying text and pictures, marks (with filling and signing), filling and
   signing alone, and inserting, deleting and rotating pages. Text for screen readers is always allowed. Given the
@@ -179,5 +187,6 @@ as for any document.
   `NoFileStorage`, `BlobMissing`). Never the password or a name.
 - Fingerprints with the document and tab ids: `[pdf] opened pages=<n> bytes=<n> ranged=<bool> repaired=<bool>`
   (with `ms`, `read` and `engine`: how long the open, the read and the engine took),
-  `[pdf] refused name=<name>`, `[pdf] password-asked`, `[pdf] password-wrong`, `[pdf] page-refused reason=<reason>`,
+  `[pdf] refused name=<name>`, `[pdf] password-asked`, `[pdf] password-wrong`,
+  `[pdf] limits-lifted`, `[pdf] limits-wrong`, `[pdf] page-refused reason=<reason>`,
   `[pdf] worker-restarted reason=<trap|timeout|memory>`.

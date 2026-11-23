@@ -9,6 +9,7 @@ import {
   Mark,
   PageName,
   PdfLiveChanges,
+  PdfPermissions,
   type FileMark,
   type PageInfo,
   type PdfOpened,
@@ -252,6 +253,61 @@ describe('usePdfDocument', () => {
       await act(() => unlock('open sesame'));
       expect(o.bind).not.toHaveBeenCalled();
       expect(opens()).toEqual([]);
+    });
+  });
+
+  // opening.md "Passwords": the permissions password lifts a file's limits for this person, given to the engine that
+  // holds the file; a password that lifts less than every limit leaves them as they were.
+  describe('a file whose permissions ask something', () => {
+    const LIMITED = {
+      ...plainDocument,
+      encrypted: true,
+      permissions: { ...PdfPermissions.all(), copy: false, changeContent: false },
+    };
+    const OPENS = { ok: true, pages: PAGES, document: LIMITED } as const;
+
+    it('lifts the limits with the permissions password, the pages and binding kept', async () => {
+      const lifted = {
+        ok: true,
+        pages: PAGES,
+        document: { ...LIMITED, permissions: PdfPermissions.all() },
+      } as const;
+      const o = opening({ opens: OPENS, unlocks: [lifted] });
+      await waitFor(() => expect(phase(o)).toBe('ready'));
+      const before = readyOf(o);
+      expect(before.permissions.copy).toBe(false);
+      let answer = false;
+      await act(async () => {
+        answer = await before.liftLimits('owner');
+      });
+      expect(answer).toBe(true);
+      const after = readyOf(o);
+      expect(after.permissions).toEqual(PdfPermissions.all());
+      expect([after.binding, after.engine, after.pages]).toEqual([
+        before.binding,
+        before.engine,
+        before.pages,
+      ]);
+      expect(vi.mocked(o.engine.unlock)).toHaveBeenCalledWith('owner');
+      expect(logged()).toContain('[pdf] limits-lifted tab=t1');
+      expect(logged().join('\n')).not.toContain('owner');
+    });
+
+    it.each([
+      ['a wrong password', { ok: false, needsPassword: true, wrong: true }],
+      ['the open password, which lifts nothing', OPENS],
+      ['an engine that stopped', { ok: false, refusal: 'pdf_stopped' }],
+    ] as const)('keeps the limits for %s', async (_, answer) => {
+      const o = opening({ opens: OPENS, unlocks: [answer] });
+      await waitFor(() => expect(phase(o)).toBe('ready'));
+      const before = readyOf(o);
+      let lifted = true;
+      await act(async () => {
+        lifted = await before.liftLimits('swordfish');
+      });
+      expect(lifted).toBe(false);
+      expect(readyOf(o).permissions).toEqual(LIMITED.permissions);
+      expect(logged()).toContain('[pdf] limits-wrong tab=t1');
     });
   });
 
