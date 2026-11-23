@@ -241,6 +241,7 @@
     "remove-formatting",
     "rocket",
     "rotate-ccw",
+    "rotate-ccw-square",
     "rotate-cw-square",
     "route",
     "rows-2",

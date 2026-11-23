@@ -288,6 +288,7 @@ export const lucideRefreshCw: readonly IconPrim[] = [{"t":"path","d":"M3 12a9 9 
 export const lucideRemoveFormatting: readonly IconPrim[] = [{"t":"path","d":"M4 7V4h16v3"},{"t":"path","d":"M5 20h6"},{"t":"path","d":"M13 4 8 20"},{"t":"path","d":"m15 15 5 5"},{"t":"path","d":"m20 15-5 5"}];
 export const lucideRocket: readonly IconPrim[] = [{"t":"path","d":"M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"},{"t":"path","d":"M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09"},{"t":"path","d":"M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z"},{"t":"path","d":"M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"}];
 export const lucideRotateCcw: readonly IconPrim[] = [{"t":"path","d":"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"},{"t":"path","d":"M3 3v5h5"}];
+export const lucideRotateCcwSquare: readonly IconPrim[] = [{"t":"path","d":"M20 9V7a2 2 0 0 0-2-2h-6"},{"t":"path","d":"m15 2-3 3 3 3"},{"t":"path","d":"M20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"}];
 export const lucideRotateCwSquare: readonly IconPrim[] = [{"t":"path","d":"M12 5H6a2 2 0 0 0-2 2v3"},{"t":"path","d":"m9 8 3-3-3-3"},{"t":"path","d":"M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"}];
 export const lucideRoute: readonly IconPrim[] = [{"t":"path","d":"M9 5h8.5a1 1 0 010 7h-11a1 1 0 000 7H15"},{"t":"circle","cx":18,"cy":19,"r":3},{"t":"circle","cx":6,"cy":5,"r":3}];
 export const lucideRows2: readonly IconPrim[] = [{"t":"rect","x":3,"y":3,"w":18,"h":18,"rx":2},{"t":"path","d":"M3 12h18"}];

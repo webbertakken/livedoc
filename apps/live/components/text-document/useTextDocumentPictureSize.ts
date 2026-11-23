@@ -1,15 +1,16 @@
 'use client';
 
-// Sizing and cropping a selected picture (docs/specs/034-text-documents/objects.md "Working with a picture"): Format >
-// Image > Image options' panel and its Size & rotation fields, the handles' drag written once on release, Reset image,
-// and Crop image (begun here, each crop mark's drag written); each one undo step, counted. The picture's own size is
-// its pixels: its held bytes' header, or the gallery image as drawn. The items are dimmed while no picture is selected
+// Sizing, cropping and turning a selected picture (docs/specs/034-text-documents/objects.md "Working with a picture"):
+// Format > Image > Image options' panel and its Size & rotation fields, the handles' drag written once on release, the
+// turning shortcuts (bound only while a picture is selected, so the keys move the caret otherwise), Reset image, and
+// Crop image (begun here, each crop mark's drag written); each one undo step, counted. The picture's own size is its
+// pixels: its held bytes' header, or the gallery image as drawn. The items are dimmed while no picture is selected
 // (Reset also while its own size is not known); an Editor's alone.
 import { useCallback, useEffect, useState } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import { pictureHeader } from '@livedoc/office-packages';
-import { TextDocumentState } from '@livedoc/text-documents';
+import { Pictures, TextDocumentState } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
@@ -17,8 +18,10 @@ import {
   resetPicture,
   selectedPicture,
   setPictureCrop,
+  setPictureRotation,
   setPictureSize,
 } from '@/lib/text-document/text-document-picture-edit';
+import { PICTURE_TURN_KEYS, turnedBy } from '@/lib/text-document/text-document-picture-rotate';
 import { beginCropping } from '@/lib/text-document/text-document-picture-cropping-plugin';
 import type { CroppedPicture } from '@/lib/text-document/text-document-picture-crop';
 import { PICTURE_DRAWN_EVENT } from '@/lib/text-document/text-document-pictures';
@@ -29,7 +32,7 @@ import {
   type PictureSizeChange,
 } from '@/lib/text-document/text-document-picture-size';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
-import type { PictureSizing } from './TextDocumentImageOptionsPanel';
+import type { PictureSizing, PictureTurn } from './TextDocumentImageOptionsPanel';
 
 /** The panel's item, Reset image's and Crop image's. */
 export const IMAGE_OPTIONS_ITEM = 'image-options';
@@ -70,7 +73,7 @@ export function useTextDocumentPictureSize({
   const read = useCallback((): Selected | null => {
     const found = view && !view.isDestroyed ? selectedPicture(view.state) : null;
     if (!view || !found) return null;
-    const { media, width, height } = found.node.attrs;
+    const { media, width, height, rotation } = found.node.attrs;
     const held =
       typeof media === 'string' && liveDoc.current
         ? TextDocumentState.media(liveDoc.current, media)
@@ -83,6 +86,7 @@ export function useTextDocumentPictureSize({
       pos: found.pos,
       width: typeof width === 'number' ? width : 0,
       height: typeof height === 'number' ? height : 0,
+      rotation: Pictures.rotation(rotation) ?? 0,
       pixels,
       own: pixels ? ownPictureSize(pixels) : null,
     };
@@ -133,6 +137,31 @@ export function useTextDocumentPictureSize({
     [canEdit, view],
   );
 
+  /** Writes a turn as one undo step: the handle's release, a turning key, or the panel's Angle and buttons. */
+  const rotate = useCallback(
+    (pos: number, rotation: number, by: 'handle' | 'keys' | 'panel') => {
+      if (!canEdit || !view || view.isDestroyed) return;
+      startUndoStep(view);
+      const done = setPictureRotation(pos, rotation)(view.state, view.dispatch);
+      startUndoStep(view);
+      debugLog('[text-document] picture rotation', { done, by, rotation });
+      if (done) track('Element', 'Changed', 'TextDocumentImageRotate');
+      if (by !== 'panel') view.focus();
+    },
+    [canEdit, view],
+  );
+
+  /** The panel's turn: an angle typed, or a quarter turn either way. */
+  const turn = useCallback(
+    (change: PictureTurn) => {
+      const now = read();
+      if (!now) return;
+      const rotation = 'angle' in change ? change.angle : turnedBy(now.rotation, change.by);
+      rotate(now.pos, rotation, 'panel');
+    },
+    [read, rotate],
+  );
+
   const apply = useCallback(
     (change: PictureSizeChange, lock: boolean) => {
       const now = read();
@@ -171,7 +200,21 @@ export function useTextDocumentPictureSize({
             },
             disabled: !selected?.pixels,
           },
+          ...(selected
+            ? Object.fromEntries(
+                Object.entries(PICTURE_TURN_KEYS).map(([id, by]) => [
+                  id,
+                  {
+                    // Read as the key is pressed: a key held turns on from the turn just written.
+                    run: () => {
+                      const now = read();
+                      if (now) rotate(now.pos, turnedBy(now.rotation, by), 'keys');
+                    },
+                  },
+                ]),
+              )
+            : {}),
         }
       : {};
-  return { picture: selected, apply, reset, resize, crop, actions };
+  return { picture: selected, apply, reset, resize, crop, rotate, turn, actions };
 }

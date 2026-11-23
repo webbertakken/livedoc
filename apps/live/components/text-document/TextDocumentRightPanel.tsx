@@ -18,7 +18,11 @@ import type {
 } from '@/lib/text-document/text-document-table-properties';
 import type { IndentUnit } from '@/lib/text-document/indent-units';
 import type { PictureSizeChange } from '@/lib/text-document/text-document-picture-size';
-import { TextDocumentImageOptionsPanel, type PictureSizing } from './TextDocumentImageOptionsPanel';
+import {
+  TextDocumentImageOptionsPanel,
+  type PictureSizing,
+  type PictureTurn,
+} from './TextDocumentImageOptionsPanel';
 import { TextDocumentTablePropertiesPanel } from './TextDocumentTablePropertiesPanel';
 import type { LineNumbersChoice } from '@/lib/text-document/text-document-line-numbers';
 import { TextDocumentLineNumbersPanel } from './TextDocumentLineNumbersPanel';
@@ -47,6 +51,7 @@ export function TextDocumentRightPanel({
     picture: PictureSizing | null;
     unit: IndentUnit;
     apply: (change: PictureSizeChange, lock: boolean) => void;
+    turn: (turn: PictureTurn) => void;
     reset: () => void;
   };
 }) {
@@ -71,6 +76,7 @@ export function TextDocumentRightPanel({
           picture={imageOptions.picture}
           unit={imageOptions.unit}
           onChange={imageOptions.apply}
+          onTurn={imageOptions.turn}
           onReset={imageOptions.reset}
         />
       ) : spec === TABLE_PROPERTIES_PANEL ? (

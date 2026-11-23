@@ -1,9 +1,9 @@
 // Working with a picture (docs/specs/034-text-documents/objects.md "Working with a picture"): the one a selection holds
 // whole, its alternative text and decorative mark, its media replaced in place, its size written (its crop kept as
-// shares, so it scales), and Reset image: its own size fitted to the room, its crop dropped.
+// shares, so it scales), its turn, and Reset image: its own size fitted to the room, its crop and turn dropped.
 import { NodeSelection, type Command, type EditorState } from 'prosemirror-state';
 import type { Node as PmNode } from 'prosemirror-model';
-import { PICTURE } from '@livedoc/text-documents';
+import { PICTURE, Pictures } from '@livedoc/text-documents';
 import { insertedPictureSize } from './text-document-picture-insert';
 import type { CroppedPicture } from './text-document-picture-crop';
 import { hasPictureSize, type PictureSize } from './text-document-picture-size';
@@ -78,7 +78,7 @@ export const setPictureSize =
     return true;
   };
 
-/** Reset image: its own size (of these pixels) fitted to the room, its crop dropped; the picture stays selected. */
+/** Reset image: its own size (of these pixels) fitted to the room, its crop and turn dropped; it stays selected. */
 export const resetPicture =
   (pos: number, pixels: PictureSize, room: PictureSize): Command =>
   (state, dispatch) => {
@@ -88,6 +88,7 @@ export const resetPicture =
       ...node.attrs,
       ...insertedPictureSize(pixels, room),
       crop: null,
+      rotation: null,
     });
     tr.setSelection(NodeSelection.create(tr.doc, pos));
     dispatch?.(tr);
@@ -104,6 +105,20 @@ export const setPictureCrop =
     if (JSON.stringify({ width, height, crop: crop ?? null }) === JSON.stringify(next))
       return false;
     const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...next });
+    tr.setSelection(NodeSelection.create(tr.doc, pos));
+    dispatch?.(tr);
+    return true;
+  };
+
+/** Writes the picture's turn, clockwise in degrees, as it holds one (none for a whole turn); it stays selected. */
+export const setPictureRotation =
+  (pos: number, rotation: number): Command =>
+  (state, dispatch) => {
+    const node = pictureAt(state, pos);
+    if (!node || !Number.isFinite(rotation)) return false;
+    const turn = Pictures.rotation(rotation) ?? null;
+    if ((Pictures.rotation(node.attrs.rotation) ?? null) === turn) return false;
+    const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, rotation: turn });
     tr.setSelection(NodeSelection.create(tr.doc, pos));
     dispatch?.(tr);
     return true;

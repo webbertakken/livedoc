@@ -2,9 +2,11 @@
 
 // The Image options side panel's body (docs/specs/034-text-documents/objects.md "Working with a picture"): its Size &
 // rotation section, Width and Height in the person's unit, Scale width and height in percent of the picture's own size
-// (dimmed while that is not known), Lock aspect ratio (on at first), and Reset. Each field applies on Enter or when
-// left. Without a selected picture it says to select one.
-import { useState } from 'react';
+// (dimmed while that is not known), Lock aspect ratio (on at first), Rotate (Angle and a quarter turn either way), and
+// Reset. Each field applies on Enter or when left. Without a selected picture it says to select one.
+import { useId, useState } from 'react';
+import { Tooltip, lucideGlyph } from '@livedoc/ui';
+import { lucideRotateCcwSquare, lucideRotateCwSquare } from '@livedoc/icons/lucide';
 import type { IndentUnit } from '@/lib/text-document/indent-units';
 import {
   PICTURE_SCALE_MOST,
@@ -15,27 +17,40 @@ import {
   PANEL_CHECK,
   PANEL_CHECK_ROW,
   PANEL_CONTROL,
+  PANEL_LABEL,
+  PanelAngleField,
   PanelLengthField,
   PanelPercentField,
   PanelSection,
 } from './TextDocumentPanelFields';
 
-/** What the panel shows of the selected picture, in points. */
-export type PictureSizing = PictureSize & { own: PictureSize | null };
+/** What the panel shows of the selected picture: its size and own size in points, its turn in degrees clockwise. */
+export type PictureSizing = PictureSize & { own: PictureSize | null; rotation: number };
+
+/** A turn asked for: an angle typed, or a quarter turn either way (degrees clockwise). */
+export type PictureTurn = { angle: number } | { by: number };
+
+const QUARTER_TURN = 90;
+const TurnLeftGlyph = lucideGlyph(lucideRotateCcwSquare, 18);
+const TurnRightGlyph = lucideGlyph(lucideRotateCwSquare, 18);
+const ICON_BUTTON = `${PANEL_CONTROL} inline-flex size-9 cursor-pointer items-center justify-center p-0 hover:bg-(--office-hover)`;
 
 export function TextDocumentImageOptionsPanel({
   picture,
   unit,
   onChange,
+  onTurn,
   onReset,
 }: {
   // The selected picture's, or null.
   picture: PictureSizing | null;
   unit: IndentUnit;
   onChange: (change: PictureSizeChange, lock: boolean) => void;
+  onTurn: (turn: PictureTurn) => void;
   onReset: () => void;
 }) {
   const [lock, setLock] = useState(true);
+  const rotateLabel = useId();
   if (!picture)
     return (
       <p className="px-2 pt-1 text-sm text-(--office-muted)">Select an image to see its options.</p>
@@ -92,6 +107,39 @@ export function TextDocumentImageOptionsPanel({
           />
           Lock aspect ratio
         </label>
+        <div role="group" aria-labelledby={rotateLabel} className="flex flex-col">
+          <span id={rotateLabel} className={PANEL_LABEL}>
+            Rotate
+          </span>
+          <div className="flex items-end gap-2">
+            <PanelAngleField
+              key={`angle:${picture.rotation}`}
+              label="Angle"
+              degrees={picture.rotation}
+              onCommit={(angle) => onTurn({ angle })}
+            />
+            <Tooltip label="Rotate counter-clockwise 90°">
+              <button
+                type="button"
+                aria-label="Rotate counter-clockwise 90°"
+                onClick={() => onTurn({ by: -QUARTER_TURN })}
+                className={ICON_BUTTON}
+              >
+                <TurnLeftGlyph />
+              </button>
+            </Tooltip>
+            <Tooltip label="Rotate clockwise 90°">
+              <button
+                type="button"
+                aria-label="Rotate clockwise 90°"
+                onClick={() => onTurn({ by: QUARTER_TURN })}
+                className={ICON_BUTTON}
+              >
+                <TurnRightGlyph />
+              </button>
+            </Tooltip>
+          </div>
+        </div>
         <div>
           <button
             type="button"

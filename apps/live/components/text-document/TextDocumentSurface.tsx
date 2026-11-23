@@ -212,6 +212,7 @@ export function TextDocumentSurface({
     room: () => ({ width: 0, height: 0 }),
     resize: () => {},
     crop: () => {},
+    rotate: () => {},
   });
   // What the layout lays the writing onto (page-layout.md "Laying out"), read as it lays out; and the pages it made.
   const layout = useRef<{ setup: PageSetup; pages: boolean } | null>(null);
@@ -457,6 +458,7 @@ export function TextDocumentSurface({
                 room: () => pictureSizing.current.room(),
                 resize: (pos, size) => pictureSizing.current.resize(pos, size),
                 crop: (pos, next) => pictureSizing.current.crop(pos, next),
+                rotate: (pos, rotation) => pictureSizing.current.rotate(pos, rotation),
               },
             ),
           },
@@ -700,6 +702,7 @@ export function TextDocumentSurface({
       room: () => pictureRoom,
       resize: (pos, size) => pictureSize.resize(pos, size, 'handle'),
       crop: pictureSize.crop,
+      rotate: (pos, rotation) => pictureSize.rotate(pos, rotation, 'handle'),
     };
   });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
@@ -869,6 +872,7 @@ export function TextDocumentSurface({
               picture: pictureSize.picture,
               unit: lengthUnit,
               apply: pictureSize.apply,
+              turn: pictureSize.turn,
               reset: pictureSize.reset,
             }}
           />

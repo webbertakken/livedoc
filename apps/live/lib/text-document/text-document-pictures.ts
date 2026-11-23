@@ -1,18 +1,25 @@
 // Pictures in line in the editor (docs/specs/034-text-documents/objects.md "In the editor"): one atom of its paragraph,
 // drawn at its size from its media in the live state's `media` map, its crop cutting the picture drawn larger behind a
 // box of that size; read by its alternative text, a decorative one as nothing; a grey box when its media is missing.
-// A gallery media is drawn from the gallery image it names (objects.md "Where the bytes live"). Selected, it is sized
-// by its handles (objects.md "Working with a picture").
+// A gallery media is drawn from the gallery image it names (objects.md "Where the bytes live"). A turned picture is
+// drawn turned about its centre, its line making room for its bounds. Selected, it is sized, cropped and turned by its
+// handles (objects.md "Working with a picture").
 import type { Node as PmNode, NodeSpec } from 'prosemirror-model';
 import type { Decoration, NodeView, NodeViewConstructor } from 'prosemirror-view';
-import { croppedPicture, type CroppedPicture } from './text-document-picture-crop';
-import { PICTURE_ATTRIBUTES, type PictureCrop, type PictureMedia } from '@livedoc/text-documents';
+import type { CroppedPicture } from './text-document-picture-crop';
 import {
-  PICTURE_HANDLES,
-  resizedPicture,
-  type PictureHandle,
-  type PictureSize,
-} from './text-document-picture-size';
+  PICTURE_ATTRIBUTES,
+  Pictures,
+  type PictureCrop,
+  type PictureMedia,
+} from '@livedoc/text-documents';
+import { PICTURE_HANDLES, type PictureSize } from './text-document-picture-size';
+import {
+  dragPicture,
+  PICTURE_ROTATE_HANDLE,
+  type PictureDragHandle,
+  type PictureDragResult,
+} from './text-document-picture-drag';
 
 /** What a picture shows when its media is not in the state. */
 export const PICTURE_MISSING_TEXT = 'Picture, not loaded';
@@ -26,11 +33,16 @@ const share = (value: unknown): number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 && value < 1 ? value : 0;
 const round3 = (n: number) => Math.round(n * 1000) / 1000 + 0;
 
-/** The box a picture takes, in points, and the picture drawn inside it: larger by its crop, moved by its top and left. */
+/**
+ * The box a picture takes, in points, and the picture drawn inside it: larger by its crop, moved by its top and left;
+ * its turn, and the bounds its line makes room for, the box centred in them.
+ */
 export function pictureBox(attrs: Readonly<Record<string, unknown>>): {
   width: number;
   height: number;
   image: { width: number; height: number; left: number; top: number };
+  rotation: number;
+  bounds: { width: number; height: number };
 } {
   const width = length(attrs.width);
   const height = length(attrs.height);
@@ -44,16 +56,20 @@ export function pictureBox(attrs: Readonly<Record<string, unknown>>): {
   const across = left + right < 1 ? 1 - left - right : 1;
   const down = top + bottom < 1 ? 1 - top - bottom : 1;
   const image = { width: round3(width / across), height: round3(height / down) };
+  const rotation = Pictures.rotation(attrs.rotation) ?? 0;
+  const bounds = Pictures.turnedBounds({ width, height }, rotation);
   return {
     width,
     height,
     image: { ...image, left: round3(-left * image.width), top: round3(-top * image.height) },
+    rotation,
+    bounds: { width: round3(bounds.width), height: round3(bounds.height) },
   };
 }
 
 const boxStyle = (attrs: Readonly<Record<string, unknown>>) => {
-  const box = pictureBox(attrs);
-  return `width: ${box.width}pt; height: ${box.height}pt`;
+  const { bounds } = pictureBox(attrs);
+  return `width: ${bounds.width}pt; height: ${bounds.height}pt`;
 };
 
 /** The schema's picture: one atom, read as no text; its static form is the box (a copy carries it as its values). */
@@ -88,21 +104,20 @@ export type PictureSource = {
 };
 
 /**
- * How a selected picture is sized and cropped by its handles (objects.md "Working with a picture"): whether the reader
- * may, the room the text has (points), and the size or the crop written on release, at the picture's position then.
+ * How a selected picture is sized, cropped and turned by its handles (objects.md "Working with a picture"): whether the
+ * reader may, the room the text has (points), and the size, crop or turn written on release, at the picture's position
+ * then.
  */
 export type PictureSizingHooks = {
   readonly can: () => boolean;
   readonly room: () => PictureSize;
   readonly resize: (pos: number, size: PictureSize) => void;
   readonly crop: (pos: number, next: CroppedPicture) => void;
+  readonly rotate: (pos: number, rotation: number) => void;
 };
 
 /** Told, bubbling from a picture, once its image is drawn and its own pixels noted. */
 export const PICTURE_DRAWN_EVENT = 'text-document-picture-drawn';
-
-// A point is drawn as 4/3 of a pixel where nothing is laid out to measure.
-const PIXELS_A_POINT = 96 / 72;
 
 /**
  * The node view drawing each picture from its media: held bytes as an object URL, a gallery image as its URL, clipped
@@ -117,9 +132,13 @@ export function pictureView(
     const dom = document.createElement('span');
     dom.contentEditable = 'false';
     dom.className = 'text-document-picture';
+    // The picture's own box, turned about its centre inside the bounds its line makes room for.
+    const turn = document.createElement('span');
+    turn.className = 'text-document-picture-turn';
     const clip = document.createElement('span');
     clip.className = 'text-document-picture-clip';
-    dom.append(clip);
+    turn.append(clip);
+    dom.append(turn);
     // What is shown, and how to give it back: an object URL is revoked, a gallery URL released.
     let shown: { key: string; url?: string; give?: () => void } | undefined;
     let current = node;
@@ -134,11 +153,20 @@ export function pictureView(
       shown?.give?.();
       shown = undefined;
     };
-    // The box and the picture in it at a size: the picture's own, or a drag's.
-    const fit = (attrs: Readonly<Record<string, unknown>>) => {
+    // The box and the picture in it at a size and turn: the picture's own, or a drag's. A turn being dragged keeps the
+    // bounds it began with, so the line stays still under the pointer until the turn is written.
+    let bounds = { width: 0, height: 0 };
+    const fit = (attrs: Readonly<Record<string, unknown>>, keepBounds = false) => {
       const box = pictureBox(attrs);
-      dom.style.width = `${box.width}pt`;
-      dom.style.height = `${box.height}pt`;
+      if (!keepBounds) bounds = box.bounds;
+      dom.style.width = `${bounds.width}pt`;
+      dom.style.height = `${bounds.height}pt`;
+      turn.style.width = `${box.width}pt`;
+      turn.style.height = `${box.height}pt`;
+      turn.style.left = `${round3((bounds.width - box.width) / 2)}pt`;
+      turn.style.top = `${round3((bounds.height - box.height) / 2)}pt`;
+      turn.style.transform = box.rotation ? `rotate(${box.rotation}deg)` : '';
+      dom.dataset.rotation = String(box.rotation);
       const img = clip.querySelector('img');
       if (!img) return;
       img.alt = attrs.decorative === true ? '' : typeof attrs.alt === 'string' ? attrs.alt : '';
@@ -173,7 +201,7 @@ export function pictureView(
         shade.className = 'text-document-picture-shade';
         shade.setAttribute('aria-hidden', 'true');
         shade.append(document.createElement('span'));
-        dom.insertBefore(shade, handles);
+        turn.insertBefore(shade, handles);
       }
       fit(current.attrs);
     };
@@ -240,52 +268,29 @@ export function pictureView(
       fit(picture.attrs);
     };
 
-    // A handle dragged: the box follows the pointer (in points, by how large the box is drawn), written on release.
-    const startDrag = (down: PointerEvent, handle: PictureHandle) => {
+    // A handle dragged: the picture follows the pointer, and what the drag made is written on release.
+    const startDrag = (down: PointerEvent, handle: PictureDragHandle) => {
       if (!sizing || down.button !== 0 || endDrag) return;
       down.preventDefault();
       down.stopPropagation();
-      const box = pictureBox(current.attrs);
-      const start = { width: box.width, height: box.height };
-      const startCrop = { ...start, crop: (current.attrs.crop as PictureCrop | null) ?? null };
-      const byCropping = cropping;
-      const drawn = dom.getBoundingClientRect().width;
-      const pixelsAPoint = drawn > 0 && start.width > 0 ? drawn / start.width : PIXELS_A_POINT;
-      const room = sizing.room();
-      let next: CroppedPicture = startCrop;
-      const move = (e: PointerEvent) => {
-        const dx = (e.clientX - down.clientX) / pixelsAPoint;
-        const dy = (e.clientY - down.clientY) / pixelsAPoint;
-        next = byCropping
-          ? croppedPicture(startCrop, handle, dx, dy)
-          : { ...startCrop, ...resizedPicture(start, handle, dx, dy, { shift: e.shiftKey, room }) };
-        fit({ ...current.attrs, ...next });
-      };
-      const up = () => endDrag?.(true);
-      const cancel = () => endDrag?.(false);
-      const key = (e: KeyboardEvent) => {
-        if (e.key !== 'Escape') return;
-        e.preventDefault();
-        e.stopPropagation();
-        cancel();
-      };
-      endDrag = (write) => {
+      const turning = handle === PICTURE_ROTATE_HANDLE;
+      const write = (made: PictureDragResult | null) => {
         endDrag = null;
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', up);
-        window.removeEventListener('pointercancel', cancel);
-        window.removeEventListener('keydown', key, true);
         dom.classList.remove('text-document-picture-sizing');
         const pos = getPos();
-        const moved = JSON.stringify(next) !== JSON.stringify(startCrop);
-        if (!write || !moved || pos === undefined || destroyed) fit(current.attrs);
-        else if (byCropping) sizing.crop(pos, next);
-        else sizing.resize(pos, { width: next.width, height: next.height });
+        if (!made || pos === undefined || destroyed) fit(current.attrs);
+        else if ('crop' in made) sizing.crop(pos, made.crop);
+        else if ('size' in made) sizing.resize(pos, made.size);
+        else sizing.rotate(pos, made.rotation);
       };
-      window.addEventListener('pointermove', move);
-      window.addEventListener('pointerup', up);
-      window.addEventListener('pointercancel', cancel);
-      window.addEventListener('keydown', key, true);
+      endDrag = dragPicture(down, handle, {
+        attrs: current.attrs,
+        cropping,
+        dom,
+        room: sizing.room(),
+        preview: (attrs) => fit(attrs, turning),
+        done: write,
+      });
       dom.classList.add('text-document-picture-sizing');
     };
     const showHandles = () => {
@@ -293,13 +298,13 @@ export function pictureView(
       handles = document.createElement('span');
       handles.className = 'text-document-picture-handles';
       handles.setAttribute('aria-hidden', 'true');
-      for (const which of PICTURE_HANDLES) {
+      for (const which of [...PICTURE_HANDLES, PICTURE_ROTATE_HANDLE] as const) {
         const handle = document.createElement('span');
         handle.dataset.pictureHandle = which;
         handle.addEventListener('pointerdown', (e) => startDrag(e, which));
         handles.append(handle);
       }
-      dom.append(handles);
+      turn.append(handles);
     };
     const hideHandles = () => {
       endDrag?.(false);
