@@ -905,15 +905,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'specified',
   ),
   // Formulas
-  row(
-    'show-all-formulas',
-    'Formulas',
-    'Show all formulas',
-    'Ctrl+~',
-    'Ctrl+~',
-    'Ctrl+~',
-    'built',
-  ),
+  row('show-all-formulas', 'Formulas', 'Show all formulas', 'Ctrl+~', 'Ctrl+~', 'Ctrl+~', 'built'),
   row(
     'insert-array-formula',
     'Formulas',
