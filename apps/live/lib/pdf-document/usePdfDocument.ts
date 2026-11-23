@@ -8,7 +8,7 @@
 // and what the room had not confirmed is made again on it ("A change carried across a replacement").
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { BlobKey } from '@livedoc/document';
-import type { PageInfo, UnconfirmedChange } from '@livedoc/pdf-documents';
+import type { PageInfo, PdfPermissions, UnconfirmedChange } from '@livedoc/pdf-documents';
 import { apiReadBlob } from '@/lib/api/files';
 import { apiLoadPdfState, type PdfDocumentScope, type PdfStateRead } from '@/lib/api/pdf-documents';
 import { ApiError } from '@/lib/api-client';
@@ -36,6 +36,8 @@ export type PdfDocumentOpen =
       version: string | null;
       /** Whether the file is protected: opened with a password, or its permissions limited (opening.md "Passwords"). */
       protected: boolean;
+      /** What the file asks of its reader, for the password it was opened with (opening.md "Passwords"). */
+      permissions: PdfPermissions;
       engine: PdfEngineClient;
       drawer: PdfPageDrawer;
       binding: PdfLiveBinding;
@@ -200,6 +202,7 @@ export function usePdfDocument(
           bytes: size,
           version: opened.document.version,
           protected: opened.document.encrypted,
+          permissions: opened.document.permissions,
           engine: client,
           drawer,
           binding: bound,

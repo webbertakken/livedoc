@@ -4,7 +4,7 @@
 // mark"): a box of the page's true size from the first frame, the engine's picture of it once it is near view, and
 // LiveDoc's marks drawn over that picture from the live changes. The file's own marks are in the picture. Nothing of
 // the file reaches the page as markup: pixels, and geometry LiveDoc draws itself.
-import { memo, useEffect, useRef, useState, type PointerEvent } from 'react';
+import { memo, useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
 import {
   PageView,
   type Mark,
@@ -21,6 +21,7 @@ import { PdfMarksOverlay } from './PdfMarksOverlay';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
 import { PdfView } from '@/lib/pdf-document/pdf-view';
+import type { PdfTextGesture } from '@/lib/pdf-document/usePdfTextSelection';
 
 export type PdfPageTool = 'select' | 'highlight';
 
@@ -50,6 +51,8 @@ export const PdfPage = memo(function PdfPage({
   marks,
   tool,
   onHighlight,
+  selected,
+  onText,
   register,
 }: {
   index: number;
@@ -72,6 +75,9 @@ export const PdfPage = memo(function PdfPage({
   marks: readonly Mark[];
   tool: PdfPageTool;
   onHighlight: (index: number, selection: TextSelection) => void;
+  // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
+  selected: readonly Quad[];
+  onText: (index: number, gesture: PdfTextGesture) => void;
   // Hands the page's box to whoever watches which pages are near view.
   register: (index: number, element: HTMLElement | null) => void;
 }) {
@@ -80,6 +86,8 @@ export const PdfPage = memo(function PdfPage({
   const [failed, setFailed] = useState(false);
   const [preview, setPreview] = useState<readonly Quad[]>([]);
   const drag = useRef<{ from: PagePoint; asking: boolean; next: PagePoint | null } | null>(null);
+  // A text selection being dragged with Select in hand.
+  const selecting = useRef(false);
 
   // Draw the page while it is near view, again once its size has settled on another scale; let its picture go once
   // it is far from view.
@@ -129,7 +137,7 @@ export const PdfPage = memo(function PdfPage({
   const current = drawn?.turns === turns ? drawn : null;
 
   // A pointer's place on the page as the file has it (marks.md: a mark is made on the page as the file has it).
-  const pagePoint = (event: PointerEvent<HTMLElement>): PagePoint | null => {
+  const pagePoint = (event: MouseEvent<HTMLElement>): PagePoint | null => {
     if (!current) return null;
     const box = event.currentTarget.getBoundingClientRect();
     return PageView.toPage(current.toView, {
@@ -158,7 +166,17 @@ export const PdfPage = memo(function PdfPage({
   };
 
   const marking = tool === 'highlight' && current !== null;
+  // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
+  const selectingText = (event: PointerEvent<HTMLElement>) =>
+    tool === 'select' && event.button === 0 && event.pointerType !== 'touch';
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
+    if (selectingText(event)) {
+      const at = pagePoint(event);
+      if (!at) return;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      selecting.current = true;
+      return onText(index, { kind: 'press', at, shift: event.shiftKey, alt: event.altKey });
+    }
     if (!marking || event.button !== 0) return;
     const from = pagePoint(event);
     if (!from) return;
@@ -167,10 +185,18 @@ export const PdfPage = memo(function PdfPage({
     drag.current = { from, asking: false, next: null };
   };
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    const at = selecting.current ? pagePoint(event) : null;
+    if (at) return onText(index, { kind: 'drag', at });
     const to = drag.current ? pagePoint(event) : null;
     if (to) previewTo(to);
   };
+  // Two presses in a row select a word, three a line.
+  const onClick = (event: MouseEvent<HTMLElement>) => {
+    const at = tool === 'select' && event.detail >= 2 ? pagePoint(event) : null;
+    if (at) onText(index, { kind: 'presses', at, count: event.detail });
+  };
   const endDrag = (event: PointerEvent<HTMLElement>, make: boolean) => {
+    selecting.current = false;
     const dragging = drag.current;
     drag.current = null;
     setPreview([]);
@@ -192,14 +218,15 @@ export const PdfPage = memo(function PdfPage({
       data-pdf-page-drawn={drawn ? 'true' : 'false'}
       data-pdf-page-turns={drawn?.turns ?? ''}
       data-pdf-file-marks={drawn?.fileMarks.join(' ') ?? ''}
-      className={`absolute bg-white shadow-sm outline outline-1 outline-(--office-line) ${
-        marking ? 'cursor-text touch-none' : ''
+      className={`absolute bg-white shadow-sm outline outline-1 outline-(--office-line) select-none ${
+        marking ? 'cursor-text touch-none' : tool === 'select' && current ? 'cursor-text' : ''
       }`}
       style={{ left, top, width: shown.width * cssPerPoint, height: shown.height * cssPerPoint }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => endDrag(event, true)}
       onPointerCancel={(event) => endDrag(event, false)}
+      onClick={onClick}
     >
       <canvas
         ref={canvas}
@@ -230,6 +257,7 @@ export const PdfPage = memo(function PdfPage({
           height={shown.height}
           marks={marks}
           preview={preview}
+          selected={selected}
         />
       ) : null}
       {failed ? (

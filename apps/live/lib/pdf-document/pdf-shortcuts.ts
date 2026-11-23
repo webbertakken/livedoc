@@ -4,6 +4,7 @@
 // (editing-modes.md "Switching"). The tools' single keys are the surface's own: they must not fire in a text field.
 import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
+import { COPY, SELECT_ALL } from './pdf-menus';
 
 const SHARED = new Set([
   'undo',
@@ -73,6 +74,25 @@ const PANELS: readonly ShortcutRow[] = [
   },
 ];
 
+/** Copy and Select all (keyboard-shortcuts.md "Selections, marks and comments"): the surface hears them itself, ⌘C
+ *  outside a field with text selected and ⌘A on the pages, so a field keeps its own. */
+const SELECTIONS: readonly ShortcutRow[] = [
+  {
+    id: COPY,
+    group: 'Selections, marks and comments',
+    action: 'Copy',
+    keys: { pc: 'Ctrl+C', mac: '⌘+C', chromeos: 'Ctrl+C' },
+    status: 'surface',
+  },
+  {
+    id: SELECT_ALL,
+    group: 'Selections, marks and comments',
+    action: 'Select all',
+    keys: { pc: 'Ctrl+A', mac: '⌘+A', chromeos: 'Ctrl+A' },
+    status: 'surface',
+  },
+];
+
 export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
   ...TEXT_DOCUMENT_SHORTCUTS.filter((row) => SHARED.has(row.id)).map((row) =>
     row.id.startsWith('switch-to-') ? { ...row, group: MODES } : row,
@@ -102,6 +122,7 @@ export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
   },
   ...READING,
   ...PANELS,
+  ...SELECTIONS,
 ];
 
 /** The tools' own keys, heard on the pages and never in a text field ("Tools"). */
