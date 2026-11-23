@@ -1647,7 +1647,7 @@ export const TEXT_DOCUMENT_PANELS_OPENED = opened(
 // View item or its key.
 export const PDF_DOCUMENT_PANELS_OPENED = opened(
   'PDF Document Panels',
-  'A left panel of a PDF document opened from its rail, its View item or its key: the thumbnails.',
+  'A left panel of a PDF document opened from its rail, its View item or its key: the thumbnails or the outline.',
   (t) => (t ?? '').startsWith('PdfDocumentPanel'),
 );
 

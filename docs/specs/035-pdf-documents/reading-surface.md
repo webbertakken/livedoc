@@ -8,13 +8,13 @@
 - The pages: every page a box of its true size, a whole-page picture for pages near view, let go far from it, and
   sharp tiles over the part in view where that picture is softer than the screen.
 - Page display, zoom, Go to, the page bar and Rotate view.
-- The left panel's rail and Thumbnails; Go to page by a page's number or its label.
+- The left panel's rail, Thumbnails and Outline; Go to page by a page's number or its label; following a bookmark.
 
 Bound today: Download as PDF, Undo, Redo, the editing modes, Highlight, Select and Help; Page display, Zoom but for
-Zoom to selection, Go to but for Previous view and Next view, Rotate view, and Thumbnails.
+Zoom to selection, Go to but for Previous view and Next view, Rotate view, Thumbnails and Outline.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-the panels but Thumbnails, find, text selection, the accessible tree (a page is a named region whose picture is
+the panels but Thumbnails and Outline, a bookmark's point on its page, find, text selection, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -314,6 +314,40 @@ or from its View item; the shell's left panel ([Side panels](../004-interface-de
 - **Presence**: a person on a page shows on its thumbnail as a dot in their colour, at most three, then "+2"; the
   thumbnail's description names them ("Ada and Ben are here").
 
+### Outline
+
+- The file's bookmarks as a tree, in the file's order, each with its title; the top level shows and every nested
+  level starts folded `(default)`.
+- **A press goes** where the bookmark leads, as a link of the file does ([Following a link](#following-a-link)).
+  A bookmark to a place in the document goes to its page, its top at the view's top `(default)`.
+- **The bookmark for the place in view** is the last, in the file's order, whose page is the page in view or the
+  nearest before it `(default)`; it is marked as the current location, or its nearest shown parent is while folded.
+- **Keys**: the tree takes one Tab stop; ↓ and ↑ move between the bookmarks shown, → unfolds a bookmark or moves to
+  its first child, ← folds it or moves to its parent, Home and End go to the first and the last shown, `*` unfolds
+  every bookmark, and Enter goes.
+- A file with more bookmarks than `PDF_OUTLINE_MAX_ITEMS` lists that many and says "This PDF has more bookmarks
+  than LiveDoc lists (20,000)." under them.
+- While the outline is read the panel says "Reading bookmarks…"; one that cannot be read says "The bookmarks
+  couldn't be read." and logs `[pdf] outline-failed`.
+
+### Following a link
+
+A press on a bookmark, or on a link of a page ([Security](security.md#links-and-actions)):
+
+| Leads to                                     | What happens                                                                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| A place in the document                      | Goes there at once                                                                                                        |
+| A page no longer in the document, or nowhere | Nothing; a bookmark says "Goes nowhere" after its title                                                                   |
+| An `http`, `https` or `mailto` address       | Asks first, "Open this address?", with the address as text; **Open** opens it in a new tab with no opener and no referrer |
+| An address that is not opened                | "This link can't be opened here." with the address as text; **Copy address**                                              |
+| Another file by its path                     | "This link leads to another file, which LiveDoc can't open." with the path as text; **Copy path**                         |
+| An action                                    | "This link asks for something LiveDoc never does." `(default)`                                                            |
+
+- Each is the shell's dialog, titled "Link" `(default)`; the address and the path are plain text, never a link
+  LiveDoc draws, so what is shown is what is opened.
+- An address opened is logged `[pdf] link-opened scheme=<scheme>`; a link not followed
+  `[pdf] link-refused kind=<kind>`; a copy the browser refuses `[pdf] link-copy-failed`.
+
 ### Go to page
 
 - The page bar's field takes a page number or a page label ("iv", "A-3"); Enter goes.
@@ -469,7 +503,8 @@ Never a query, a page's text or a name.
 
 Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom> way=<way>`,
 `[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`,
-`[pdf] thumbnail-failed page=<n>`.
+`[pdf] thumbnail-failed page=<n>`, `[pdf] outline-failed`, `[pdf] link-opened scheme=<scheme>`,
+`[pdf] link-refused kind=<kind>`.
 
 ## Errors
 

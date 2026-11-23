@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { labelledPdf, textPdf } from '@livedoc/pdf-documents/testing';
+import { labelledPdf, outlinePdf, textPdf } from '@livedoc/pdf-documents/testing';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { dropPdf, pageOneDrawn } from './pdf-document-pages';
 
@@ -89,6 +89,41 @@ test('a PDF’s thumbnails go to their pages, and the page bar takes a page’s 
   await pageField(page).press('Enter');
   await expect(pageBar(page).locator('..').getByRole('status')).toHaveText('There is no page iv.');
   await page.screenshot({ path: test.info().outputPath('pdf-go-to-label-dark.png') });
+
+  // "Outline": the bookmarks as a tree; a press goes to a place, asks before an address, says what it never does.
+  await openPdf(page, 'Bookmarked.pdf', outlinePdf());
+  await rail(page).getByRole('button', { name: 'Outline' }).click();
+  const tree = page.getByRole('tree', { name: 'Bookmarks' });
+  await expect(tree.getByRole('treeitem')).toHaveText([
+    'Chapter 1',
+    'Website',
+    'Run it',
+    'Elsewhere',
+  ]);
+  await tree.getByRole('treeitem', { name: 'Chapter 1' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await expect(tree.getByRole('treeitem', { name: 'Section 1.1' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(pageField(page)).toHaveValue('2');
+  await expect(tree.getByRole('treeitem', { name: 'Section 1.1' })).toHaveAttribute(
+    'aria-current',
+    'location',
+  );
+  await page.screenshot({ path: test.info().outputPath('pdf-outline-dark.png') });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: test.info().outputPath('pdf-outline-light.png') });
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await tree.getByRole('treeitem', { name: 'Website' }).click();
+  const link = page.getByRole('dialog', { name: 'Link' });
+  await expect(link).toContainText('Open this address?');
+  await expect(link).toContainText('https://example.com/a');
+  await page.screenshot({ path: test.info().outputPath('pdf-link-ask-dark.png') });
+  await link.getByRole('button', { name: 'Cancel' }).click();
+  await tree.getByRole('treeitem', { name: 'Run it' }).click();
+  await expect(link).toContainText('This link asks for something LiveDoc never does.');
+  await link.getByRole('button', { name: 'Close' }).click();
+  await expect(link).toHaveCount(0);
 
   expectNoPageErrors(pageErrors);
 });

@@ -17,8 +17,7 @@ import {
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { PageInfo, TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
-import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
-import { OfficePanelRail } from '@/components/office/OfficePanelRail';
+import { OfficePanelLayout } from '@/components/office/OfficePanel';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { PdfDocumentScope } from '@/lib/api/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
@@ -49,7 +48,7 @@ import {
   UNDO,
 } from '@/lib/pdf-document/pdf-menus';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
-import { PDF_PANELS, PDF_RAIL, THUMBNAILS_PANEL } from '@/lib/pdf-document/pdf-panels';
+import { PDF_PANELS, THUMBNAILS_PANEL } from '@/lib/pdf-document/pdf-panels';
 import { pdfRoomBinding, type PdfFrame } from '@/lib/pdf-document/pdf-room-binding';
 import {
   PDF_REFUSAL_COPY,
@@ -61,6 +60,7 @@ import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
 import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
 import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
 import { usePdfPagesInput } from '@/lib/pdf-document/usePdfPagesInput';
+import { usePdfLinks } from '@/lib/pdf-document/usePdfLinks';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
@@ -70,7 +70,8 @@ import { PdfNotice, PdfNoticeButton } from './PdfNotice';
 import { PdfPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
-import { PdfThumbnails } from './PdfThumbnails';
+import { PdfLeftPanel } from './PdfLeftPanel';
+import { PdfLinkDialog } from './PdfLinkDialog';
 
 /** "This PDF holds the most marks LiveDoc keeps for one file (20,000)." (marks.md "Errors"). */
 const TOO_MANY_MARKS_COPY = 'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
@@ -218,6 +219,7 @@ export function PdfDocumentSurface({
     panels: PDF_PANELS,
     onFocusDocument: () => pagesElement?.focus(),
   });
+  const links = usePdfLinks(pages ?? NO_PAGES, goToPage);
   const { reveal } = panels;
   const leftOpen = panels.open.left;
   // ⌘⌥⇧T: focus in the left panel open, or Thumbnails opened.
@@ -425,25 +427,17 @@ export function PdfDocumentSurface({
       {ready && marks ? (
         <OfficePanelLayout
           left={
-            <>
-              <OfficePanelRail panels={PDF_RAIL} actions={panels.actions} />
-              {leftOpen === THUMBNAILS_PANEL.id ? (
-                <OfficePanel
-                  spec={THUMBNAILS_PANEL}
-                  onClose={() => panels.close('left')}
-                  focusNonce={panels.focusNonce}
-                >
-                  <PdfThumbnails
-                    tabId={tabId}
-                    pages={ready.pages}
-                    page={viewer.page}
-                    onGoTo={goToPage}
-                    drawer={ready.drawer}
-                    marks={marks}
-                  />
-                </OfficePanel>
-              ) : null}
-            </>
+            <PdfLeftPanel
+              panels={panels}
+              tabId={tabId}
+              pages={ready.pages}
+              page={viewer.page}
+              engine={ready.engine}
+              drawer={ready.drawer}
+              marks={marks}
+              onGoTo={goToPage}
+              onFollow={links.follow}
+            />
           }
           right={null}
         >
@@ -489,6 +483,7 @@ export function PdfDocumentSurface({
           ) : null}
         </PdfNotice>
       ) : null}
+      <PdfLinkDialog asked={links.asked} onClose={links.close} />
       {open.phase === 'gone' ? (
         <PdfNotice sentence="This PDF is no longer in this document." />
       ) : null}
