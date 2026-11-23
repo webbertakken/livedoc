@@ -146,4 +146,4 @@ none is pointer-only for one level and not another.
   once a page's tree is built (`tags` says why a page did or did not read from its tags);
   `[pdf] page-tags-failed page=<n>` where the engine could not read a page's tags (the page reads from geometry);
   `[pdf] claim-removed
-  claim=<pdfua|pdfa> reason=<reason>`.
+claim=<pdfua|pdfa> reason=<reason>`.

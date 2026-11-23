@@ -57,7 +57,7 @@ describe("a page's tags", () => {
         ],
       },
     ]);
-    const figure = (tags.elements[0]!.kids[4] as TagElement)!;
+    const figure = tags.elements[0]!.kids[4] as TagElement;
     expect(figure).toMatchObject({ alt: 'A red square', actual: '', lang: '' });
     reader.close();
   });
@@ -102,7 +102,9 @@ describe("a page's tags", () => {
 
     expect(read).toMatchObject({
       source: 'tags',
-      nodes: [{ type: 'Document', kids: [{ type: 'P', kids: [{ type: 'Figure', alt: 'Black Image' }] }] }],
+      nodes: [
+        { type: 'Document', kids: [{ type: 'P', kids: [{ type: 'Figure', alt: 'Black Image' }] }] },
+      ],
     });
     reader.close();
   });

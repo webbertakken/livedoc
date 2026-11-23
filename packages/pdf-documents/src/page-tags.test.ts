@@ -81,7 +81,10 @@ describe('PageTags.read', () => {
 
   it('nests elements and leaves out content with no text', () => {
     const page = pageOf('a', [1]);
-    const tags = { elements: [el('L', [el('LI', [el('Lbl', [1]), el('LBody', [9])])])], cut: false };
+    const tags = {
+      elements: [el('L', [el('LI', [el('Lbl', [1]), el('LBody', [9])])])],
+      cut: false,
+    };
 
     expect(PageTags.read(tags, page)).toEqual({
       source: 'tags',
@@ -142,9 +145,9 @@ describe('PageTags.read', () => {
 
     expect(PageTags.read(null, page)).toEqual({ source: 'geometry', why: 'absent' });
     expect(PageTags.read({ elements: [], cut: false }, page)).toMatchObject({ why: 'absent' });
-    expect(PageTags.read({ elements: [el('P', [0])], cut: false }, pageOf('a', null))).toMatchObject(
-      { why: 'absent' },
-    );
+    expect(
+      PageTags.read({ elements: [el('P', [0])], cut: false }, pageOf('a', null)),
+    ).toMatchObject({ why: 'absent' });
     expect(PageTags.read({ elements: [el('P', [0])], cut: true }, page)).toMatchObject({
       why: 'cut',
     });

@@ -19,7 +19,7 @@ import { usePdfTextActions } from './usePdfTextActions';
 import { usePdfTextSelection } from './usePdfTextSelection';
 import type { PdfSpot } from './usePdfView';
 
-type Engine = Pick<PdfEngine, 'pageText' | 'fileMarks' | 'outline' | 'pageMatrix'>;
+type Engine = Pick<PdfEngine, 'pageText' | 'pageTags' | 'fileMarks' | 'outline' | 'pageMatrix'>;
 
 export function usePdfReadingText({
   engine,

@@ -67,7 +67,7 @@ export const PageText = {
     const marks = marked ? new Int32Array(units) : null;
     if (marks && marked) {
       for (let at = 0; at < codes.length; at += 1) {
-        marks.fill(marked[at]!, starts[at]!, starts[at]! + parts[at]!.length);
+        marks.fill(marked[at]!, starts[at], starts[at]! + parts[at]!.length);
       }
     }
     return {

@@ -49,7 +49,7 @@ const drawn = (page: PageText, at: number): boolean => {
 // Each marked content's runs of the text: the reader's own characters inside a run join it; anything drawn ends it.
 function runsOf(page: PageText, marked: Int32Array): Map<number, TextSpan[]> {
   const runs = new Map<number, [number, number][]>();
-  let open: { id: number; run: [number, number] } | null = null;
+  let open = null as { id: number; run: [number, number] } | null;
   for (let at = 0; at < marked.length; at += 1) {
     const id = marked[at]!;
     if (id >= 0 && open?.id === id) open.run[1] = at + 1;
