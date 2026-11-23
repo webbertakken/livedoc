@@ -41,6 +41,7 @@ import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
   DOWNLOAD_PDF,
+  FIND,
   GO_TO_PAGE,
   PDF_MENUS,
   REDO,
@@ -68,6 +69,7 @@ import { usePdfTextSelection } from '@/lib/pdf-document/usePdfTextSelection';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
 import { usePdfViewHistory } from '@/lib/pdf-document/usePdfViewHistory';
 import { usePdfFind } from '@/lib/pdf-document/usePdfFind';
+import { usePdfContextMenu } from '@/lib/pdf-document/usePdfContextMenu';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
@@ -350,6 +352,24 @@ export function PdfDocumentSurface({
     [ready, author],
   );
 
+  // "The context menu" on the pages: the shell's, its own Highlight and Find "…" acting on the selected text.
+  const { ask: askFind, actions: findActions } = find;
+  const findSelection = useCallback(
+    (query: string) => {
+      findActions[FIND]?.run();
+      askFind(query);
+    },
+    [findActions, askFind],
+  );
+  const contextMenu = usePdfContextMenu({
+    pages: pagesElement,
+    selected: textSelection.selected,
+    marking,
+    onHighlight,
+    onFind: findSelection,
+    clear: textSelection.clear,
+  });
+
   const actions: OfficeActions = useMemo(
     () => ({
       ...modeActions,
@@ -361,6 +381,7 @@ export function PdfDocumentSurface({
             ...textActions.actions,
             ...history.actions,
             ...find.actions,
+            ...contextMenu.actions,
             [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -396,6 +417,7 @@ export function PdfDocumentSurface({
       textActions.actions,
       history.actions,
       find.actions,
+      contextMenu.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -467,6 +489,7 @@ export function PdfDocumentSurface({
         toolbar={pdfToolbar(mode)}
         choices={ready ? viewChrome.choices : null}
         mode={open.phase === 'ready' ? choice : null}
+        contextMenu={ready ? contextMenu.source : null}
       />
       {open.phase === 'opening' ? (
         // A page-shaped placeholder on the surface's ground, so nothing shifts when page one arrives.

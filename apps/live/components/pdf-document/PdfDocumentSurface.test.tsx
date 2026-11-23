@@ -860,3 +860,35 @@ describe('a PDF document’s find', () => {
     expect(screen.queryByRole('complementary', { name: 'Find results' })).toBeNull();
   });
 });
+
+// reading-surface.md "The pages": The context menu: a right-click on the pages opens the shell's menu, which acts on
+// the selected text.
+describe('a PDF document’s context menu', () => {
+  afterEach(() => localStorage.clear());
+
+  it('opens on a right-click on the pages, and finds the selected text', async () => {
+    const now = await ready();
+    const text = PageText.of(
+      [...'fox'].map((c) => c.codePointAt(0)!),
+      [...Array.from({ length: 3 }, (_, at) => [at * 6, 400, at * 6 + 6, 408]).flat()],
+    );
+    const engine = {
+      pageText: async () => text,
+      fileMarks: async () => [],
+      outline: async () => ({ items: [], cut: false }),
+      pageMatrix: async () => null,
+    };
+    const { container } = show({ ...now, engine: engine as never }, 'view');
+    const pages = container.querySelector<HTMLElement>('[data-pdf-pages]')!;
+    await act(async () => {
+      fireEvent.keyDown(pages, { key: 'a', ctrlKey: true });
+    });
+    fireEvent.contextMenu(pages, { clientX: 100, clientY: 100 });
+    const menu = screen.getByRole('menu', { name: 'Context menu' });
+    expect(within(menu).getByRole('menuitem', { name: /^Copy/ })).toBeTruthy();
+    // A Viewer is offered no Highlight.
+    expect(within(menu).queryByRole('menuitem', { name: /^Highlight/ })).toBeNull();
+    fireEvent.click(within(menu).getByRole('menuitem', { name: /Find “fox”/ }));
+    expect((screen.getByRole('searchbox', { name: 'Find' }) as HTMLInputElement).value).toBe('fox');
+  });
+});

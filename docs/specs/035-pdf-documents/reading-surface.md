@@ -12,12 +12,13 @@
 - Selecting text and copying it.
 - Links on the pages, a link's and a bookmark's point on its page, Previous view and Next view.
 - Find, with its options and All results.
+- The page's context menu.
 
 Bound today: Download as PDF, Undo, Redo, Copy, Select all, Find, the editing modes, Highlight, Select and Help; Page display, Zoom but for
 Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-Signatures and Fields, the page's context menu, the accessible tree (a page is a named region whose picture is
+Signatures and Fields, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -486,6 +487,14 @@ A press on a bookmark, or on a link of a page ([Security](security.md#links-and-
 - **The context menu** on a page: Copy, Select all, Add comment, Highlight (and the last mark used), Find "…",
   Go to ▸, Rotate view, and the items of whatever is under the pointer (a mark, a field, an object), each only for
   the level that may.
+  - It is the shell's ([Office shell](../004-interface-design/office-shell.md#context-menus)): a right-click on the
+    pages, Shift+F10 or the menu key; with Shift held the browser's own shows.
+  - A right-click keeps the selection where it is, so the menu acts on it wherever it was pressed `(default)`.
+  - **Highlight** marks the selected text, as a drag with the Highlight tool does, and clears the selection; it is
+    drawn only while text is selected and the person is in Reviewing. **Find "…"** opens Find with the selected text,
+    its first 30 characters in its label `(default)`, drawn only while text is selected.
+  - Add comment is drawn dimmed until [Comments](comments.md) are built; nothing is yet under the pointer to offer.
+  - From the keyboard it opens at the selection's first rectangle, or the middle of the pages with none `(default)`.
 - Memory is bounded: pages left behind are closed in the engine and tiles kept to `PDF_TILE_CACHE_BYTES`.
 
 ## The page bar
