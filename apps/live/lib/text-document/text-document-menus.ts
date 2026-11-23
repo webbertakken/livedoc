@@ -200,7 +200,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       SEPARATOR,
       item('tab', 'Tab', 'edit'),
-      item('horizontal-line', 'Horizontal line', 'edit'),
+      item('horizontal-line', 'Horizontal line', 'edit', BUILT),
       item('emoji', 'Emoji', 'edit'),
       item('footnote', 'Footnote', 'edit', { shortcut: 'insert-footnote', ...BUILT }),
       submenu('headers-and-footers', 'Headers & footers', [
