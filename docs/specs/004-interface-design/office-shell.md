@@ -102,6 +102,8 @@ The WAI-ARIA [menubar pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/
 - In an open menu, Left and Right open the menu beside it (Right on a submenu row opens the submenu instead, Left in a
   submenu closes only it); Escape closes the menu and puts focus back on its name in the bar.
 - A press opens a menu; while one is open, hovering another name opens that one instead.
+- A submenu opens beside its row, level with it; where it would cross the window's bottom edge it moves up until it
+  fits, 8 px clear of the edge, never past the window's top, as Google's does.
 - **Access keys** open a menu from anywhere in the surface: Alt+letter in Chrome, Alt+Shift+letter in other browsers,
   Ctrl+Option+letter on a Mac, as [Keyboard shortcuts](../034-text-documents/keyboard-shortcuts.md) lists.
 - A row shows its label, its check where it has one, its shortcut on the right in the platform's notation, and ▸ for

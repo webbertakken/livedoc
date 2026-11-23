@@ -18,7 +18,7 @@ import type {
   OfficeSubmenu,
 } from '@/lib/office/office-catalogue';
 
-import { contextMenuPlace, type Point } from '@/lib/office/context-menu-place';
+import { contextMenuPlace, submenuLift, type Point } from '@/lib/office/context-menu-place';
 import { OfficeSizeGrid } from './OfficeSizeGrid';
 import type { ShortcutText } from '@/lib/office/shortcut-notation';
 
@@ -227,6 +227,14 @@ export function OfficeMenuPanel({
     element.style.left = `${left}px`;
     element.style.top = `${top}px`;
   }, [placement, at]);
+  // Beside its row: moved up, once drawn and before it is painted, where it would cross the window's bottom edge.
+  useLayoutEffect(() => {
+    const element = panel.current;
+    if (placement !== 'side' || !element) return;
+    element.style.translate = '';
+    const lift = submenuLift(element.getBoundingClientRect(), window.innerHeight);
+    if (lift > 0) element.style.translate = `0 -${lift}px`;
+  }, [placement, entries]);
   // A long popup scrolls (a font menu); one holding submenus never does, so they are never cut off.
   const scrolls = !entries.some((entry) => entry.kind === 'submenu');
   const where =

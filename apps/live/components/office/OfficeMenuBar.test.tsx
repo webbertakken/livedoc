@@ -184,6 +184,27 @@ describe('OfficeMenuBar', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
+  // office-shell.md "Menu bar": a submenu that would cross the window's bottom edge moves up until it fits.
+  it('moves a submenu crossing the bottom edge up, and leaves one that fits', () => {
+    const drawn = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ top: 600, bottom: 926 } as DOMRect);
+    vi.stubGlobal('innerHeight', 900);
+    render(<Shell actions={ACTIONS()} />);
+    fireEvent.click(name('File'));
+    const download = screen.getByRole('menuitem', { name: 'Download' });
+    download.focus();
+    fireEvent.keyDown(download, { key: 'ArrowRight' });
+    const submenu = () => screen.getByRole('menu', { name: 'Download' });
+    expect(submenu().style.translate).toBe('0px -34px');
+    fireEvent.keyDown(submenu(), { key: 'ArrowLeft' });
+    drawn.mockReturnValue({ top: 100, bottom: 400 } as DOMRect);
+    fireEvent.keyDown(download, { key: 'ArrowRight' });
+    expect(submenu().style.translate).toBe('');
+    drawn.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
   it('shows a check and a shortcut, named for assistive technology', () => {
     render(<Shell actions={ACTIONS()} />);
     fireEvent.click(name('Edit'));
