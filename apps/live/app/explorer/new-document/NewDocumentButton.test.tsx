@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NewDocumentButton } from './NewDocumentButton';
 import { prefetchNewDocumentOpen, startNewDocument } from './start-new-document';
@@ -153,5 +153,21 @@ describe('NewDocumentButton', () => {
     render(<NewDocumentButton place={{}} />);
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'New Diagram' }).parentElement!);
     expect(vi.mocked(prefetchNewDocumentOpen)).toHaveBeenCalled();
+  });
+
+  // docs/specs/004-interface-design/sizing.md: rows at the row step in regular body type, labels at the supporting step
+  // in their own case.
+  it('draws the menu on the sizing scale', async () => {
+    const has = (className: string, token: string) => className.split(/\s+/).includes(token);
+    render(<NewDocumentButton place={{}} />);
+    const menu = await openMenu();
+    const row = screen.getByRole('menuitem', { name: 'Diagram, blank' });
+    expect(has(row.className, 'min-h-row')).toBe(true);
+    const name = within(row).getByText('Diagram');
+    expect(has(name.className, 'text-body')).toBe(true);
+    expect(name.className).not.toMatch(/font-(medium|semibold)/);
+    const heading = menu.querySelector('h3')!;
+    expect(has(heading.className, 'text-supporting')).toBe(true);
+    expect(heading.className).not.toMatch(/uppercase|tracking-|font-semibold/);
   });
 });

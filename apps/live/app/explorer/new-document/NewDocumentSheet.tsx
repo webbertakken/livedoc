@@ -51,7 +51,7 @@ export default function NewDocumentSheet({
                 role="menuitem"
                 tabIndex={-1}
                 onClick={() => setShown(null)}
-                className={`${ROW} text-sm font-medium text-slate-700 dark:text-slate-200`}
+                className={`${ROW} text-body text-slate-700 dark:text-slate-200`}
               >
                 <BackIcon aria-hidden />
                 Back
@@ -74,7 +74,7 @@ export default function NewDocumentSheet({
                     tabIndex={-1}
                     aria-label={`${b.name}, blank`}
                     onClick={() => onChoose(b.id, 'blank', b.blank)}
-                    className={`${ROW} flex-1 text-[15px] font-medium text-slate-800 dark:text-slate-100`}
+                    className={`${ROW} flex-1 text-body text-slate-800 pointer-coarse:text-[15px] dark:text-slate-100`}
                   >
                     <BlankGlyph id={b.id} />
                     {b.name}
@@ -85,7 +85,7 @@ export default function NewDocumentSheet({
                     tabIndex={-1}
                     aria-label={`${b.name} templates`}
                     onClick={() => setShown(b.id)}
-                    className={`${ROW} text-sm text-slate-500 dark:text-slate-400`}
+                    className={`${ROW} text-body text-slate-500 dark:text-slate-400`}
                   >
                     <GridIcon aria-hidden />
                     Templates
@@ -103,7 +103,7 @@ export default function NewDocumentSheet({
                     role="menuitem"
                     tabIndex={-1}
                     onClick={onCreateFolder}
-                    className={`${ROW} text-[15px] text-slate-700 dark:text-slate-200 [&_svg]:h-4 [&_svg]:w-4`}
+                    className={`${ROW} text-body text-slate-700 pointer-coarse:text-[15px] dark:text-slate-200 [&_svg]:size-icon-row`}
                   >
                     <FolderOutlineIcon />
                     {folderLabel ?? 'New Folder'}
