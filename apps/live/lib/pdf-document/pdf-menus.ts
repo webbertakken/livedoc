@@ -100,6 +100,8 @@ export const GO_TO_NEXT_PAGE = 'go-to-next-page';
 export const GO_TO_PAGE = 'go-to-page';
 /** View > Thumbnails: the left panel's (reading-surface.md "The left panel"). */
 export const PANEL_THUMBNAILS = 'panel-thumbnails';
+/** View > Outline: the file's bookmarks (reading-surface.md "Outline"). */
+export const PANEL_OUTLINE = 'panel-outline';
 
 /** View > Zoom's percentages: Acrobat's own levels from 50% ("View"). */
 export const PDF_ZOOM_MENU_PERCENTS: readonly number[] = [
@@ -221,7 +223,7 @@ export const PDF_MENUS: OfficeCatalogue = [
     ]),
     SEPARATOR,
     item(PANEL_THUMBNAILS, 'Thumbnails', 'view', { ...BUILT, ...CHECK, keywords: ['pages'] }),
-    item('panel-outline', 'Outline', 'view', { ...CHECK, keywords: ['bookmarks'] }),
+    item(PANEL_OUTLINE, 'Outline', 'view', { ...BUILT, ...CHECK, keywords: ['bookmarks'] }),
     item('panel-embedded-files', 'Embedded files', 'view', { ...CHECK, keywords: ['attachments'] }),
     item('panel-layers', 'Layers', 'view', CHECK),
     item('panel-signatures', 'Signatures', 'view', CHECK),

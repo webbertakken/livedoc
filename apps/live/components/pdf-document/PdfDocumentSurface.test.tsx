@@ -636,3 +636,45 @@ describe('a PDF document’s left panel', () => {
     expect(document.activeElement).toBe(scrollerOf(container));
   });
 });
+
+// reading-surface.md "Outline", "Following a link".
+describe('a PDF document’s outline', () => {
+  afterEach(() => localStorage.clear());
+
+  const withOutline = async () => {
+    const now = await ready();
+    const outline = {
+      items: [
+        {
+          title: 'Second page',
+          depth: 0,
+          target: { kind: 'place' as const, page: PageName.ofObject(5), x: null, y: null },
+        },
+        {
+          title: 'Website',
+          depth: 0,
+          target: { kind: 'address' as const, address: 'https://example.com/' },
+        },
+      ],
+      cut: false,
+    };
+    return { ...now, engine: { outline: async () => outline } as never };
+  };
+
+  it('opens from the rail, goes to a bookmark’s page, and asks before an address', async () => {
+    laidOut();
+    const now = await withOutline();
+    const { container } = show(now, 'view');
+    const rail = screen.getByRole('toolbar', { name: 'Panels' });
+    await act(async () => {
+      fireEvent.click(within(rail).getByRole('button', { name: 'Outline' }));
+    });
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentPanelOutline');
+    fireEvent.click(screen.getByRole('treeitem', { name: 'Second page' }));
+    expect(scrollerOf(container).scrollTop).toBeCloseTo(topOf(container, 2), 1);
+    fireEvent.click(screen.getByRole('treeitem', { name: 'Website' }));
+    expect(screen.getByRole('dialog', { name: 'Link' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog', { name: 'Link' })).toBeNull();
+  });
+});
