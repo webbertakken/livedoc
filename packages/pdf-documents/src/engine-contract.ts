@@ -203,9 +203,15 @@ export type PdfEngine = {
   unlock(password: string): Promise<PdfOpened>;
   /**
    * The page at that place in the order, drawn at `scale` (1 is 72 dpi), the file's own marks included, turned
-   * `turns` quarters clockwise (none unless asked).
+   * `turns` quarters clockwise (none unless asked). `hidden`: the PDF layers one person hides, by id, every other
+   * layer shown; none given draws the layers as the file sets them (reading-surface.md "Layers").
    */
-  drawPage(index: number, scale: number, turns?: PageTurns): Promise<PageBitmap | null>;
+  drawPage(
+    index: number,
+    scale: number,
+    turns?: PageTurns,
+    hidden?: readonly string[],
+  ): Promise<PageBitmap | null>;
   /**
    * A tile: the part `rect` of the page drawn at `scale` and turned `turns` quarters, as the same pixels of the
    * whole page would be (reading-surface.md "The pages"). Null where there is no such page or part.
@@ -215,6 +221,7 @@ export type PdfEngine = {
     scale: number,
     turns: PageTurns,
     rect: TileRect,
+    hidden?: readonly string[],
   ): Promise<PageBitmap | null>;
   /** The file's bookmarks, in reading order; none where it has no outline. */
   outline(): Promise<Outline>;
@@ -239,6 +246,11 @@ export type PdfEngine = {
   embeddedFile(at: number): Promise<EmbeddedFileRead>;
   /** The file's PDF layers, in the file's order; none where it has none. */
   layers(): Promise<readonly PdfLayer[]>;
+  /**
+   * Makes ready the drawing of pages with the layers `hidden` off and every other on, and answers whether pages can be
+   * drawn so; false leaves them drawn as the file sets them (reading-surface.md "Layers").
+   */
+  layerView(hidden: readonly string[]): Promise<boolean>;
   /**
    * Whether the open file can take an addition; a file opened only by rebuilding it cannot, and its changes are
    * written as a rewritten file (opening.md "Damaged files"). Asking reads the whole file a second time.

@@ -7,7 +7,7 @@ import { PdfLiveChanges } from '../live-changes';
 import { bakeChanges } from './bake';
 import { PdfReader, type Pdfium } from './reader';
 import { signerOf } from './signer';
-import { layersOf, openWriter } from './writer';
+import { layersOf, openWriter, withLayersSet } from './writer';
 
 /**
  * The engine over a started reader; `write` is the writer, the engine's own unless a test hands another, and `log`
@@ -35,12 +35,41 @@ export function pdfEngineOver(
   const writer = (): Promise<PDF | null> =>
     stored ? (written ??= openWriter(stored, password)) : Promise.resolve(null);
 
+  // A person's layers (reading-surface.md "Layers"): pages drawn from a copy of the file whose layers are set so,
+  // read by a reader of its own, made when asked and kept while the same layers are asked. The stored file and the
+  // writer's copy of it are never touched: the copy is written from a writer of its own.
+  let view: { key: string; reader: PdfReader | null } | null = null;
+  const dropView = () => {
+    view?.reader?.close();
+    view = null;
+  };
+  const drawerFor = async (hidden: readonly string[] | undefined): Promise<PdfReader> => {
+    if (!hidden || !stored) return reader;
+    const key = [...new Set(hidden)].toSorted().join(' ');
+    if (view?.key !== key) {
+      dropView();
+      const bytes = await withLayersSet(await openWriter(stored, password), new Set(hidden));
+      const copy = bytes ? new PdfReader(pdfium) : null;
+      const read = copy?.open(bytes!, password ?? '');
+      if (copy && read?.ok) {
+        view = { key, reader: copy };
+        log(`[pdf] layer-view hidden=${new Set(hidden).size}`);
+      } else {
+        copy?.close();
+        view = { key, reader: null };
+        if (bytes) log('[pdf] layer-view-failed');
+      }
+    }
+    return view?.reader ?? reader;
+  };
+
   const opening = (bytes: Uint8Array<ArrayBuffer>, given: string | null): PdfOpened => {
     const opened = reader.open(bytes, given ?? '');
     stored = opened.ok ? bytes : null;
     password = opened.ok ? given : null;
     waiting = !opened.ok && opened.needsPassword ? bytes : null;
     written = null;
+    dropView();
     pages = opened.ok ? opened.pages : [];
     // security.md "Scripts": counted and never run.
     if (opened.ok && opened.document.scripts > 0)
@@ -93,8 +122,10 @@ export function pdfEngineOver(
       if (before.stored) opening(before.stored, before.password);
       return { ...opened, wrong: true };
     },
-    drawPage: async (index, scale, turns) => reader.drawPage(index, scale, undefined, turns),
-    drawTile: async (index, scale, turns, rect) => reader.drawTile(index, scale, turns, rect),
+    drawPage: async (index, scale, turns, hidden) =>
+      (await drawerFor(hidden)).drawPage(index, scale, undefined, turns),
+    drawTile: async (index, scale, turns, rect, hidden) =>
+      (await drawerFor(hidden)).drawTile(index, scale, turns, rect),
     outline: async () => said(reader.outline()),
     links: async (index) => said(reader.links(index)),
     pageText: async (index) => said(reader.pageText(index)),
@@ -122,10 +153,12 @@ export function pdfEngineOver(
       if (cut) log('[pdf] value-clamped what=list count=1');
       return layers;
     },
+    layerView: async (hidden) => (await drawerFor(hidden)) !== reader,
     canAppend: async () => (await writer())?.canSaveIncrementally() === null,
     bake,
     heldBytes: async () => reader.heldBytes(),
     close: async () => {
+      dropView();
       reader.close();
       stored = waiting = password = written = null;
       pages = [];

@@ -379,6 +379,23 @@ export function layersPdf(more = 0): Uint8Array<ArrayBuffer> {
 }
 
 /**
+ * One page drawing two squares, each in a PDF layer: "Plan" a black one at 72 to 172 points, shown; "Notes" a red one
+ * at 300 to 400 points, hidden by the file.
+ */
+export const layeredDrawingPdf = (): Uint8Array<ArrayBuffer> =>
+  rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [5 0 R 6 0 R] /D << /Order [5 0 R 6 0 R] /OFF [6 0 R] >> >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Properties << /Plan 5 0 R /Notes 6 0 R >> >> >>',
+    stream(
+      '',
+      '/OC /Plan BDC 0 0 0 rg 72 72 100 100 re f EMC /OC /Notes BDC 1 0 0 rg 300 300 100 100 re f EMC',
+    ),
+    '<< /Type /OCG /Name (Plan) >>',
+    '<< /Type /OCG /Name (Notes) >>',
+  ]);
+
+/**
  * One page and two signature fields signed by hand, neither with bytes that are a signature: the first certifies
  * the file, allowing fields to be filled, and says a byte range of two runs; the second says no byte range.
  */
