@@ -51,12 +51,29 @@ export {
 } from './model/blocks';
 export { Notes } from './model/notes';
 export {
+  childRowKeys,
+  childRows,
   Equations,
+  mathRowId,
+  withChildRow,
   type Equation,
   type MathNode,
   type MathRow,
+  type MathStep,
   type MathTokenKind,
 } from './model/equations';
+export {
+  EQUATION_FUNCTIONS,
+  EQUATION_MENU_LABELS,
+  EQUATION_MENUS,
+  EQUATION_STRUCTURE_MENU,
+  EQUATION_SYMBOLS,
+  equationShortcut,
+  type EquationMenu,
+  type EquationStructure,
+  type EquationSymbol,
+} from './model/equation-symbols';
+export { EquationEditing, type MathCaret, type MathEdit } from './model/equation-editing';
 export { MATHML_NS, mathMlTree, mathMlXml, type MathMlElement } from './model/equation-mathml';
 export {
   Pictures,

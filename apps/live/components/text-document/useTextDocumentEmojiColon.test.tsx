@@ -84,11 +84,20 @@ describe('the emoji colon list', () => {
     render(<Harness />);
     type(':thumbs');
     await waitFor(() => expect(options().length).toBe(2));
+    // The list takes the keys once the editor knows its chosen option (an effect after it draws): waited for.
+    const chosen = async (index: number) => {
+      await waitFor(() => expect(options()[index]!.getAttribute('aria-selected')).toBe('true'));
+      await waitFor(() =>
+        expect(view!.dom.getAttribute('aria-activedescendant')).toBe(options()[index]!.id),
+      );
+    };
+    await chosen(0);
     press('ArrowDown');
-    expect(options()[1]!.getAttribute('aria-selected')).toBe('true');
+    await chosen(1);
     press('ArrowDown');
-    expect(options()[0]!.getAttribute('aria-selected')).toBe('true');
+    await chosen(0);
     press('ArrowUp');
+    await chosen(1);
     press('Enter');
     expect(text()).toBe('Hi 👎');
     expect(options()).toHaveLength(0);

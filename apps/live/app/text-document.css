@@ -93,7 +93,7 @@ div.text-document-kept {
 .ProseMirror-selectednode.text-document-kept,
 .ProseMirror-selectednode.text-document-picture > .text-document-picture-turn,
 .ProseMirror-selectednode.text-document-section-break,
-.ProseMirror-selectednode.text-document-equation {
+.ProseMirror-selectednode.text-document-equation:not([data-editing]) {
   outline: 2px solid light-dark(#0284c7, #38bdf8);
 }
 .text-document-kept-hidden {
@@ -676,7 +676,35 @@ div.text-document-kept {
 }
 .text-document-equation {
   display: inline-block;
+  position: relative;
   user-select: all;
+}
+/* An empty row: a dotted box of an em, so the caret has somewhere to stand ("Equations in the editor"). */
+.text-document-equation mrow[data-empty] {
+  padding: 0 0.3em;
+  border: 1px dotted light-dark(#5f6368, #9aa0a6);
+}
+/* The box being written: framed, its caret a blinking bar where it stands (steady with reduced motion). */
+.text-document-equation[data-editing] {
+  outline: 1px solid light-dark(#1a73e8, #8ab4f8);
+  outline-offset: 2px;
+}
+.text-document-equation-caret {
+  position: absolute;
+  width: 1px;
+  background: currentColor;
+  pointer-events: none;
+  animation: text-document-equation-caret 1.06s steps(1) infinite;
+}
+@keyframes text-document-equation-caret {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .text-document-equation-caret {
+    animation: none;
+  }
 }
 .text-document-equation > math {
   font-family: 'LiveDoc Maths', math;

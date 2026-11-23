@@ -4,7 +4,7 @@
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
 A horizontal line, special characters and emoji are inserted, emoji also from the colon list.
-An equation is held, read and written in both formats, kept in the live state and drawn.
+An equation is held, read and written in both formats, kept in the live state, drawn and written in its box.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -368,16 +368,25 @@ An equation is an inline of a paragraph, beside runs, fields, notes and pictures
   screen lays it out alike (default; [Fonts](../004-interface-design/fonts.md#served-from-livedoc)); it is one
   character to the caret, and can be selected, copied, moved and deleted, as a picture can. Copied as text, it reads
   as its linear form (`a/b`, `x^2`, `√z`).
-- **The equation box**: a press on an equation, or the caret moving into it, puts the caret inside its box, a frame
-  drawn round it; the caret moves through its rows with the arrow keys and leaves it at either end. Typing writes
-  tokens at the caret; Backspace and Delete remove the token beside the caret, or, at a row's start, the structure it
-  opens, its rows' content kept in its place (default). An empty row shows a dotted box. Escape, or a press outside,
-  leaves the box.
+- **The equation box**: a press on an equation, or the caret moving into it with the arrow keys, puts the caret
+  inside its box, a frame drawn round it; Escape, a press outside, or the arrow keys past either end leave it, the
+  caret beside the equation in the text. The caret stands between two nodes of a row.
+- **Typing** writes each character as a token of its own at the caret: a digit a number, a letter an identifier, any
+  other character but a space an operator; a space writes nothing (it ends a shortcut) (default).
+- **Moving**: Right steps over a token, into a structure's first row, from a row's end into the structure's next row,
+  and from its last row out after it; Left mirrors it. Up and Down move between a fraction's numerator and
+  denominator, a superscript and its subscript, and an upper and lower limit, to the end of the row (default).
+- **Removing**: Backspace removes the token before the caret, or steps into the structure before it, to its last row's
+  end (default); at a row's start it undoes the structure holding the row, its rows' content, in reading order,
+  taking its place, the caret where this row's content now starts (default). Delete mirrors it forward. Backspace in
+  an empty equation removes the equation; at the start of one that holds maths it does nothing (default).
+- An empty row shows a dotted box of an em, so the caret has somewhere to stand.
 - **Typed shortcuts**: `\` and a name, then a space, writes what the name stands for: the toolbar's symbols by their
   names (`\alpha`, `\leq`, `\rightarrow` …), and structures (`\frac`, `\sqrt`, `\rootof`, `\subscript`,
   `\superscript`, `\subsuperscript`, `\sum`, `\prod`, `\int`, `\oint`, `\lim`, …) with the caret in their first empty
-  row, as Google's names. `^` and `_` (also after `\`, as Google's help gives them) put what follows in a superscript
-  or subscript of the token before the caret.
+  row, as Google's names; a name it does not know stays as typed. `^` and `_` (also after `\`, as Google's help
+  gives them) make the node before the caret the base of a superscript or subscript, the caret in it; with nothing
+  before the caret, its base is an empty row (default).
 - **The equation toolbar** (View > Show equation toolbar; shown while an equation is being written): **New equation**,
   then the menus Greek letters, Miscellaneous operations, Relations, Math operators and Arrows, each a grid of
   symbols, Google's sets (default, until a capture): a press writes it at the caret, in an equation, a new one if the

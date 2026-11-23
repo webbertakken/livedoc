@@ -22,6 +22,7 @@ import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
   Columns,
+  EQUATION,
   liveFirstHeaders,
   PICTURE,
   TextDocumentState,
@@ -144,6 +145,8 @@ import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
 // The served document fonts' faces, loaded with the surface, never on other pages (fonts.md "Served from LiveDoc").
 import '@/app/document-fonts.css';
 import { FIELD_NODE_VIEWS } from '@/lib/text-document/text-document-fields';
+import { equationView } from '@/lib/text-document/text-document-equations';
+import { equationBoxPlugin } from '@/lib/text-document/text-document-equation-box';
 import { footnoteNumbersPlugin } from '@/lib/text-document/text-document-footnotes';
 import { TextDocumentEndNotes } from './TextDocumentEndNotes';
 import { TextDocumentPageNotes } from './TextDocumentPageNotes';
@@ -345,6 +348,9 @@ export function TextDocumentSurface({
               ySyncPlugin(TextDocumentState.body(doc)),
               // The emoji colon list takes Up, Down, Enter, Tab and Escape while it is shown, before any keymap.
               emojiColonPlugin,
+              // The equation being written takes the keys inside its box, before any keymap (objects.md "Equations in
+              // the editor").
+              equationBoxPlugin(),
               // A picture cropped after a double-click or Crop image (objects.md "Working with a picture"): before the
               // keymaps, so Enter and Escape end cropping rather than reaching the writing.
               pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
@@ -471,6 +477,7 @@ export function TextDocumentSurface({
           nodeViews: {
             ...FIELD_NODE_VIEWS,
             table: tableView,
+            [EQUATION]: equationView,
             [PICTURE]: pictureView(
               {
                 media: (key) => TextDocumentState.media(doc, key),
