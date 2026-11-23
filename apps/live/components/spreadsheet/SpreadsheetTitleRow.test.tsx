@@ -11,6 +11,7 @@ import { track } from '@/lib/telemetry';
 import { createOfficeBindingsChannel } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { useSpreadsheetZoom } from './spreadsheet-zoom';
+import { useShowFormulas } from '@/components/sheets/show-formulas';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/download-blob', () => ({ downloadBlob: vi.fn() }));
@@ -40,6 +41,7 @@ function Row({
   const root = useRef<HTMLDivElement | null>(null);
   const [pushed] = useState(() => vi.fn());
   const { zoom } = useSpreadsheetZoom();
+  const formulas = useShowFormulas();
   return (
     <div ref={root}>
       <SpreadsheetTitleRow
@@ -51,6 +53,7 @@ function Row({
         history={history}
         channel={channel}
         zoom={zoom}
+        formulas={formulas}
         keyScope={root}
         onWorkbook={undefined}
         pushUndo={pushed}
@@ -79,6 +82,19 @@ describe('SpreadsheetTitleRow', () => {
     expect(screen.getByText('Untitled spreadsheet')).toBeTruthy();
     openMenu('Data');
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'SpreadsheetMenuData');
+  });
+
+  // grid-and-editing.md "Formulas" (D141): View › Show › Formulas is the person's view, ticked while on.
+  it('ticks View › Show › Formulas once pressed', () => {
+    render(<Row />);
+    openMenu('View');
+    openSub('Show');
+    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: /^Formulas/ }));
+    openMenu('View');
+    openSub('Show');
+    expect(
+      screen.getByRole('menuitemcheckbox', { name: /^Formulas/ }).getAttribute('aria-checked'),
+    ).toBe('true');
   });
 
   it('runs the open sheet’s items from the channel, ticked as it says', () => {

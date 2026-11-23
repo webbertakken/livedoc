@@ -76,10 +76,15 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 - `=` starts a formula. While typing: each reference and its range share a colour; clicking or arrowing in the grid
   inserts a reference (point mode) at the caret; F4 cycles `$` anchors; the function help card shows (F1 hides it);
   names autocomplete (Tab or Enter takes one).
-- Ctrl+Shift+Enter wraps the formula in `ARRAYFORMULA`.
+- Ctrl+Shift+Enter wraps the formula in `ARRAYFORMULA`: `=A1:A3*2` becomes `=ARRAYFORMULA(A1:A3*2)`, the edit kept
+  open with the caret at its end. A formula wrapped already, or a draft that is no formula, is saved as Ctrl+Enter
+  saves it (default, D140).
 - A formula that cannot be read is not saved: the cell keeps the edit open with the error under it ("There was a
   problem: missing `)`"), as Google's.
-- Ctrl+` shows every formula instead of its value.
+- Ctrl+` and View › Show › Formulas show every formula instead of its value: a formula cell draws its formula as
+  typed, left-aligned, and every other cell is drawn as before. It is the person's own view, kept across the sheets
+  while the page is open and never saved (default, D141).
+- F4 outside an edit redoes, as Google's does; in a formula it cycles the `$` anchors.
 
 ## Fill and move
 
@@ -142,8 +147,9 @@ Ctrl+Shift+Z.
   not, so focus never names a cell that is not there.
 - **Read Row** (Ctrl+Alt+Shift+R) says the active cell's row from its first column to the active cell, and
   **Read Column** (Ctrl+Alt+Shift+C) its column from its first row, as Google's Verbalize to Screen Reader does
-  (⌘+Option+Shift+R and C, or Option+Shift+R and C, on a Mac): each cell's address and value, an empty one as "blank", hidden lines left out.
-  It says at most the first 50 cells, then how many more (default, D135); said politely, again on a second press.
+  (⌘+Option+Shift+R and C, or Option+Shift+R and C, on a Mac): each cell's address and value, an empty one as
+  "blank", hidden lines left out. It says at most the first 50 cells, then how many more (default, D135); said
+  politely, again on a second press.
 - Every action is reachable by the keyboard; the fill handle's work by Ctrl+D, Ctrl+R and Edit's items.
 - Range colours in formulas pair with a dashed or dotted border pattern so colour is never the only cue.
 - Reduced motion: no animated scroll or selection transitions.

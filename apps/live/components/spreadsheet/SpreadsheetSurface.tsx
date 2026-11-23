@@ -22,6 +22,7 @@ import { useAttachedSheetStore } from '@/components/sheets/useAttachedSheetStore
 import { useFormulaInput } from '@/components/sheets/useFormulaInput';
 import { useFormulaPointing } from '@/components/sheets/useFormulaPointing';
 import { useSheetActions } from '@/components/sheets/useSheetActions';
+import { ShowFormulasContext, useShowFormulas } from '@/components/sheets/show-formulas';
 import { SheetImagesContext, useSheetImageLoader } from '@/components/sheets/sheet-images-context';
 import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import type { WorkbookScope } from '@/lib/api/workbook';
@@ -44,6 +45,7 @@ import {
 import { useSheetBarPeers } from './useSheetBarPeers';
 import {
   SheetStepContext,
+  SurfaceRedoContext,
   useSheetStep,
   useSpreadsheetSurfaceKeys,
 } from './spreadsheet-surface-keys';
@@ -83,6 +85,8 @@ export function SpreadsheetSurface({
   const [summarySlot, setSummarySlot] = useState<HTMLElement | null>(null);
   // The person's zoom on the grid, kept as sheets are switched (surface.md "Grid", D133).
   const { zoom, scale } = useSpreadsheetZoom();
+  // View › Show › Formulas, the person's own across the sheets (grid-and-editing.md "Formulas", D141).
+  const formulas = useShowFormulas();
   // Alt+Up and Alt+Down in the grid: the previous and next sheet, none past either end.
   const stepSheet = useSheetStep(tabs, tabId, onSelectTab);
   return (
@@ -102,6 +106,7 @@ export function SpreadsheetSurface({
         history={history}
         channel={channel}
         zoom={zoom}
+        formulas={formulas}
         keyScope={root}
         onWorkbook={onWorkbook}
         pushUndo={(step) => bridge?.pushUndo(step)}
@@ -110,11 +115,15 @@ export function SpreadsheetSurface({
         <SummarySlotContext.Provider value={summarySlot}>
           <SpreadsheetZoomProvider value={scale}>
             <SheetStepContext.Provider value={stepSheet}>
-              {bridge ? (
-                <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
-              ) : (
-                <Status state="loading" />
-              )}
+              <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                <ShowFormulasContext.Provider value={formulas.shown}>
+                  {bridge ? (
+                    <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
+                  ) : (
+                    <Status state="loading" />
+                  )}
+                </ShowFormulasContext.Provider>
+              </SurfaceRedoContext.Provider>
             </SheetStepContext.Provider>
           </SpreadsheetZoomProvider>
         </SummarySlotContext.Provider>

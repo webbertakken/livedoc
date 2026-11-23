@@ -1,10 +1,12 @@
 // docs/specs/029-sheets/keyboard-shortcuts.md: every way of every row the surface hears itself, on each platform,
-// reaches what the row names: the grid's keys (sheetKey), the area cycle (regionStep) and the editor's history keys.
+// reaches what the row names: the grid's keys (sheetKey), an edit's (formulaKey), the area cycle (regionStep) and the
+// editor's history keys.
 import { describe, expect, it } from 'vitest';
 import { runModShortcut } from '@/hooks/canvas/editor-shortcut-keys';
 import { regionStep } from '@/hooks/ui/useRegionCycle';
 import { parseShortcut, type KeyStep, type OfficePlatform } from '@/lib/office/shortcut-notation';
 import { SPREADSHEET_SHORTCUTS } from '@/lib/spreadsheet/spreadsheet-shortcuts';
+import { formulaKey } from '@/components/sheets/formula-keys';
 import { sheetKey } from '@/components/sheets/sheet-keys';
 
 type Press = {
@@ -77,7 +79,10 @@ const keyEvent = (press: Press) =>
 // What each row the surface hears comes to.
 const HEARD: Record<string, (press: Press, platform: OfficePlatform) => unknown> = {
   undo: historyOf,
-  redo: historyOf,
+  // Ctrl+Y and Ctrl+Shift+Z the editor's; F4 the grid's.
+  redo: (press, platform) => historyOf(press) ?? sheetKey(press, platform),
+  'insert-array-formula': formulaKey,
+  'absolute-relative-references': formulaKey,
   'cycle-focus': (press, platform) => regionStep(keyEvent(press), platform),
 };
 
@@ -86,7 +91,9 @@ const EXPECTED: Record<string, unknown[]> = {
   'select-row': [{ kind: 'selectRow' }],
   'select-all': [{ kind: 'selectAll' }],
   undo: ['undo'],
-  redo: ['redo'],
+  redo: ['redo', { kind: 'redo' }],
+  'insert-array-formula': ['arrayEntry'],
+  'absolute-relative-references': ['anchors'],
   find: [{ kind: 'find', replace: false }],
   'find-and-replace': [{ kind: 'find', replace: true }],
   'fill-down': [{ kind: 'fill', dir: 'down' }],

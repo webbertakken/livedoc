@@ -121,6 +121,21 @@ describe('the formula input', () => {
     expect(draft(h)).toBe('=1+2');
   });
 
+  // grid-and-editing.md "Formulas" (D140): Ctrl+Shift+Enter wraps the formula, the edit kept open.
+  it('wraps a formula in ARRAYFORMULA on Ctrl+Shift+Enter, and fills as Ctrl+Enter outside one', () => {
+    show(h);
+    edit('cell', '=A1:A3*2');
+    key('Enter', { ctrlKey: true, shiftKey: true });
+    expect(draft(h)).toBe('=ARRAYFORMULA(A1:A3*2)');
+    expect(editor().selectionStart).toBe('=ARRAYFORMULA(A1:A3*2)'.length);
+    key('Enter', { ctrlKey: true, shiftKey: true });
+    expect(h.ctl().editing).toBeNull();
+    act(() => h.select('A1:A2', 'A1'));
+    edit('type', '7');
+    key('Enter', { ctrlKey: true, shiftKey: true });
+    expect([h.value('A1'), h.value('A2')]).toEqual([7, 7]);
+  });
+
   it('ends an edit typed over a cell with an arrow, moving that way', () => {
     show(h);
     edit('type', 'x');

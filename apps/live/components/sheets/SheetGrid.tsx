@@ -14,7 +14,14 @@ import { invalidWhy } from './rules/sheet-rule-hover';
 import { SheetTouchLinkChip } from './SheetTouchLinkChip';
 import { previewFormatRules } from './rules/useSheetRulesState';
 import { SheetCellComments } from './SheetCellComments';
-import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import { displayValue, isError, posRangeOf, single } from '@livedoc/sheets';
 import { useSheetController } from './sheet-controller';
 import { SheetCells } from './SheetCells';
@@ -33,6 +40,7 @@ import { useSheetClipboard } from './useSheetClipboard';
 import { sheetPresenceFor } from './sheet-presence-store';
 import type { SheetActions } from './useSheetActions';
 import type { FormulaInput } from './useFormulaInput';
+import { ShowFormulasContext } from './show-formulas';
 import type { SheetPeer } from '@/hooks/sheets/useSheetsBridge';
 import { useCoarsePointer } from '@/hooks/ui/useCoarsePointer';
 import { LongPressRing } from '@/components/primitives/LongPressRing';
@@ -64,6 +72,8 @@ export function SheetGrid({
   surfaceKeys,
 }: Props) {
   const c = useSheetController();
+  // View › Show › Formulas, the spreadsheet surface's (D141); off in a Plan Sheet.
+  const showFormulas = useContext(ShowFormulasContext);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const pointer = useSheetPointer(viewportRef, actions, pointRef);
   // Under a finger the selection's corner is a grip anyone who can select may drag (useSheetTouch).
@@ -375,6 +385,7 @@ export function SheetGrid({
                 palette={c.palette}
                 locale={c.locale}
                 fontFamily={fontFamily}
+                showFormulas={showFormulas}
               />
               {c.interactive ? (
                 <SheetSelectionLayer

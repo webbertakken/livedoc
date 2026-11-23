@@ -2,8 +2,8 @@
 
 // The grid's keys only a workbook has (docs/specs/029-sheets/grid-and-editing.md "Moving around"): Alt+Up and
 // Alt+Down, Ctrl+Shift+Page Up and Page Down open the previous and next sheet; Alt+Shift+Q puts focus on the
-// selection's summary; Ctrl+Alt+Shift+M takes it out to the toolbar (D137). The surface knows the sheets; the open
-// sheet's grid hears the keys.
+// selection's summary; Ctrl+Alt+Shift+M takes it out to the toolbar (D137); F4 redoes ("Formulas"). The surface
+// knows the sheets and the timeline; the open sheet's grid hears the keys.
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { SheetSurfaceKeys } from '@/components/sheets/useSheetGridKeys';
 import { regionTarget, shownRegions } from '@/hooks/ui/useRegionCycle';
@@ -40,13 +40,21 @@ export function useSheetStep(
   );
 }
 
+/** The person's timeline's redo, for F4 in the grid (grid-and-editing.md "Formulas"). */
+export const SurfaceRedoContext = createContext<(() => void) | null>(null);
+
 /** The open sheet's workbook keys, for its grid. */
 export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
   const step = useContext(SheetStepContext);
   const slot = useSummarySlot();
+  const redo = useContext(SurfaceRedoContext);
   return useMemo(
     () => ({
       stepSheet: (by) => step?.(by),
+      redo: () => {
+        debugLog('[workbook] redo by F4', { bound: !!redo });
+        redo?.();
+      },
       focusSummary: () => {
         const summary = slot?.querySelector<HTMLButtonElement>('button[aria-haspopup]');
         debugLog('[workbook] summary focus', { shown: !!summary });
@@ -59,6 +67,6 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
         target?.focus();
       },
     }),
-    [step, slot],
+    [step, slot, redo],
   );
 }

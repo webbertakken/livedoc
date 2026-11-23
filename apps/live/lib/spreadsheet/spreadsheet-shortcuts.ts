@@ -59,8 +59,8 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'redo',
     'Common actions',
     'Redo',
-    'Ctrl+Y or Ctrl+Shift+Z',
-    '⌘+Y or ⌘+Shift+Z',
+    'Ctrl+Y or Ctrl+Shift+Z or F4',
+    '⌘+Y or ⌘+Shift+Z or Fn+F4',
     'Ctrl+Y or Ctrl+Shift+Z',
     'surface',
   ),
@@ -905,15 +905,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'specified',
   ),
   // Formulas
-  row(
-    'show-all-formulas',
-    'Formulas',
-    'Show all formulas',
-    'Ctrl+~',
-    'Ctrl+~',
-    'Ctrl+~',
-    'specified',
-  ),
+  row('show-all-formulas', 'Formulas', 'Show all formulas', 'Ctrl+~', 'Ctrl+~', 'Ctrl+~', 'built'),
   row(
     'insert-array-formula',
     'Formulas',
@@ -921,7 +913,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+Enter',
     '⌘+Shift+Enter',
     'Ctrl+Shift+Enter',
-    'specified',
+    'surface',
   ),
   row(
     'collapse-array-formula',
@@ -957,7 +949,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'F4',
     'Fn+F4',
     'Search+4',
-    'specified',
+    'surface',
   ),
   row(
     'formula-result-previews',

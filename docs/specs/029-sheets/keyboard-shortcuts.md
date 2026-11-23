@@ -30,35 +30,35 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 
 ## Common actions
 
-| Action                         | PC                           | Mac                          | ChromeOS                 | Status                                                  |
-| ------------------------------ | ---------------------------- | ---------------------------- | ------------------------ | ------------------------------------------------------- |
-| Select column                  | `Ctrl+Space`                 | `Ctrl+Space`                 | `Ctrl+Space`             | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Select row                     | `Shift+Space`                | `Shift+Space`                | `Shift+Space`            | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Select all                     | `Ctrl+A or Ctrl+Shift+Space` | `⌘+A or ⌘+Shift+Space`       | `Ctrl+A`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Select current region          | —                            | `⌘+Shift+8 or Ctrl+Shift+8`  | —                        | specified                                               |
-| Undo                           | `Ctrl+Z`                     | `⌘+Z`                        | `Ctrl+Z`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Redo                           | `Ctrl+Y or Ctrl+Shift+Z`     | `⌘+Y or ⌘+Shift+Z`           | `Ctrl+Y or Ctrl+Shift+Z` | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Find                           | `Ctrl+F`                     | `⌘+F`                        | `Ctrl+F`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Find and replace               | `Ctrl+H`                     | `⌘+Shift+H`                  | `Ctrl+H`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Fill range                     | `Ctrl+Enter`                 | `⌘+Enter`                    | `Ctrl+Enter`             | specified                                               |
-| Fill down                      | `Ctrl+D`                     | `⌘+D`                        | `Ctrl+D`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Fill right                     | `Ctrl+R`                     | `⌘+R`                        | `Ctrl+R`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Save                           | `Ctrl+S`                     | `⌘+S`                        | `Ctrl+S`                 | specified                                               |
-| Open                           | `Ctrl+O`                     | `⌘+O`                        | `Ctrl+O`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
-| Print                          | `Ctrl+P`                     | `⌘+P`                        | `Ctrl+P`                 | specified                                               |
-| Copy                           | `Ctrl+C`                     | `⌘+C`                        | `Ctrl+C`                 | the browser's                                           |
-| Cut                            | `Ctrl+X`                     | `⌘+X`                        | `Ctrl+X`                 | the browser's                                           |
-| Paste                          | `Ctrl+V`                     | `⌘+V`                        | `Ctrl+V`                 | the browser's                                           |
-| Paste values only              | `Ctrl+Shift+V`               | `⌘+Shift+V`                  | `Ctrl+Shift+V`           | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Show common keyboard shortcuts | `Ctrl+/`                     | `⌘+/`                        | `Ctrl+/`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
-| Insert new sheet               | `Shift+F11`                  | `Shift+Fn+F11`               | —                        | specified                                               |
-| Compact controls               | `Ctrl+Shift+F`               | `Ctrl+Shift+F`               | `Ctrl+Shift+F`           | specified                                               |
-| Show or hide the menus         | —                            | `⌘+Option+R or Ctrl+Shift+F` | —                        | specified                                               |
-| Input tools on or off          | `Ctrl+Shift+K`               | `⌘+Shift+K`                  | `Ctrl+Shift+K`           | specified                                               |
-| Select input tools             | `Ctrl+Alt+Shift+K`           | `⌘+Option+Shift+K`           | `Ctrl+Alt+Shift+K`       | specified                                               |
-| Tool finder                    | `Alt+/`                      | `Option+/`                   | `Alt+/`                  | built (`spreadsheet-shortcuts.test.tsx`)                |
-| Rename sheet                   | `Alt+1`                      | —                            | —                        | specified                                               |
-| Convert range to table         | `Ctrl+Alt+T`                 | `⌘+Option+T`                 | `Alt+Shift+T`            | specified                                               |
+| Action                         | PC                             | Mac                          | ChromeOS                 | Status                                                  |
+| ------------------------------ | ------------------------------ | ---------------------------- | ------------------------ | ------------------------------------------------------- |
+| Select column                  | `Ctrl+Space`                   | `Ctrl+Space`                 | `Ctrl+Space`             | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Select row                     | `Shift+Space`                  | `Shift+Space`                | `Shift+Space`            | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Select all                     | `Ctrl+A or Ctrl+Shift+Space`   | `⌘+A or ⌘+Shift+Space`       | `Ctrl+A`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Select current region          | —                              | `⌘+Shift+8 or Ctrl+Shift+8`  | —                        | specified                                               |
+| Undo                           | `Ctrl+Z`                       | `⌘+Z`                        | `Ctrl+Z`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Redo                           | `Ctrl+Y or Ctrl+Shift+Z or F4` | `⌘+Y or ⌘+Shift+Z or Fn+F4`  | `Ctrl+Y or Ctrl+Shift+Z` | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Find                           | `Ctrl+F`                       | `⌘+F`                        | `Ctrl+F`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Find and replace               | `Ctrl+H`                       | `⌘+Shift+H`                  | `Ctrl+H`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Fill range                     | `Ctrl+Enter`                   | `⌘+Enter`                    | `Ctrl+Enter`             | specified                                               |
+| Fill down                      | `Ctrl+D`                       | `⌘+D`                        | `Ctrl+D`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Fill right                     | `Ctrl+R`                       | `⌘+R`                        | `Ctrl+R`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Save                           | `Ctrl+S`                       | `⌘+S`                        | `Ctrl+S`                 | specified                                               |
+| Open                           | `Ctrl+O`                       | `⌘+O`                        | `Ctrl+O`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Print                          | `Ctrl+P`                       | `⌘+P`                        | `Ctrl+P`                 | specified                                               |
+| Copy                           | `Ctrl+C`                       | `⌘+C`                        | `Ctrl+C`                 | the browser's                                           |
+| Cut                            | `Ctrl+X`                       | `⌘+X`                        | `Ctrl+X`                 | the browser's                                           |
+| Paste                          | `Ctrl+V`                       | `⌘+V`                        | `Ctrl+V`                 | the browser's                                           |
+| Paste values only              | `Ctrl+Shift+V`                 | `⌘+Shift+V`                  | `Ctrl+Shift+V`           | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Show common keyboard shortcuts | `Ctrl+/`                       | `⌘+/`                        | `Ctrl+/`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Insert new sheet               | `Shift+F11`                    | `Shift+Fn+F11`               | —                        | specified                                               |
+| Compact controls               | `Ctrl+Shift+F`                 | `Ctrl+Shift+F`               | `Ctrl+Shift+F`           | specified                                               |
+| Show or hide the menus         | —                              | `⌘+Option+R or Ctrl+Shift+F` | —                        | specified                                               |
+| Input tools on or off          | `Ctrl+Shift+K`                 | `⌘+Shift+K`                  | `Ctrl+Shift+K`           | specified                                               |
+| Select input tools             | `Ctrl+Alt+Shift+K`             | `⌘+Option+Shift+K`           | `Ctrl+Alt+Shift+K`       | specified                                               |
+| Tool finder                    | `Alt+/`                        | `Option+/`                   | `Alt+/`                  | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Rename sheet                   | `Alt+1`                        | —                            | —                        | specified                                               |
+| Convert range to table         | `Ctrl+Alt+T`                   | `⌘+Option+T`                 | `Alt+Shift+T`            | specified                                               |
 
 ## Format cells
 
@@ -173,17 +173,17 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 
 ## Formulas
 
-| Action                                                    | PC                     | Mac                                  | ChromeOS                           | Status    |
-| --------------------------------------------------------- | ---------------------- | ------------------------------------ | ---------------------------------- | --------- |
-| Show all formulas                                         | `Ctrl+~`               | `Ctrl+~`                             | `Ctrl+~`                           | specified |
-| Insert array formula                                      | `Ctrl+Shift+Enter`     | `⌘+Shift+Enter`                      | `Ctrl+Shift+Enter`                 | specified |
-| Collapse an expanded array formula                        | `Ctrl+E`               | `⌘+E`                                | `Ctrl+E`                           | specified |
-| Show or hide formula help (when entering a formula)       | `Shift+F1`             | `Shift+Fn+F1`                        | `Shift+Search+1`                   | specified |
-| Full or compact formula help (when entering a formula)    | `F1`                   | `Fn+F1`                              | `Search+1`                         | specified |
-| Absolute or relative references (when entering a formula) | `F4`                   | `Fn+F4`                              | `Search+4`                         | specified |
-| Toggle formula result previews (when entering a formula)  | `F9`                   | `Fn+F9`                              | `Search+9`                         | specified |
-| Resize formula bar                                        | `Ctrl+Up or Ctrl+Down` | `Ctrl+Option+Up or Ctrl+Option+Down` | `Ctrl+Shift+Up or Ctrl+Shift+Down` | specified |
-| Toggle formula range selection (when entering a formula)  | `F2 or Ctrl+E`         | `F2 or Ctrl+E`                       | `F2 or Ctrl+E`                     | specified |
+| Action                                                    | PC                     | Mac                                  | ChromeOS                           | Status                                                  |
+| --------------------------------------------------------- | ---------------------- | ------------------------------------ | ---------------------------------- | ------------------------------------------------------- |
+| Show all formulas                                         | `Ctrl+~`               | `Ctrl+~`                             | `Ctrl+~`                           | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Insert array formula                                      | `Ctrl+Shift+Enter`     | `⌘+Shift+Enter`                      | `Ctrl+Shift+Enter`                 | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Collapse an expanded array formula                        | `Ctrl+E`               | `⌘+E`                                | `Ctrl+E`                           | specified                                               |
+| Show or hide formula help (when entering a formula)       | `Shift+F1`             | `Shift+Fn+F1`                        | `Shift+Search+1`                   | specified                                               |
+| Full or compact formula help (when entering a formula)    | `F1`                   | `Fn+F1`                              | `Search+1`                         | specified                                               |
+| Absolute or relative references (when entering a formula) | `F4`                   | `Fn+F4`                              | `Search+4`                         | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Toggle formula result previews (when entering a formula)  | `F9`                   | `Fn+F9`                              | `Search+9`                         | specified                                               |
+| Resize formula bar                                        | `Ctrl+Up or Ctrl+Down` | `Ctrl+Option+Up or Ctrl+Option+Down` | `Ctrl+Shift+Up or Ctrl+Shift+Down` | specified                                               |
+| Toggle formula range selection (when entering a formula)  | `F2 or Ctrl+E`         | `F2 or Ctrl+E`                       | `F2 or Ctrl+E`                     | specified                                               |
 
 ## Screen readers
 
@@ -196,8 +196,6 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 
 ## Ways not listed
 
-- Google's F4 for Redo (Fn+F4 on a Mac) waits for the grid to hear F4, which also switches a reference between
-  absolute and relative while a formula is entered ([Editing](grid-and-editing.md#editing)).
 - Google's three-step menu paths (Alt+I, then R, then R inserts a row above) are not listed: a sequence is two keys.
   The menus' Alt keys and arrows reach the same items; a row with none of its other ways reads `—`.
 - Google's keys for Portugal, Italy, Germany and Spain (Ctrl+Shift+H for Insert time, Ctrl+Shift+D for Insert date,

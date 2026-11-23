@@ -90,3 +90,53 @@ test('the sheet bar sums a selection, and the formula bar names and helps', asyn
   await page.keyboard.press('Escape');
   expectNoPageErrors(pageErrors);
 });
+
+// grid-and-editing.md "Formulas" (D140, D141): Ctrl+Shift+Enter wraps a formula in ARRAYFORMULA, Ctrl+` shows the
+// formulas in their cells and ticks View › Show › Formulas, and F4 outside an edit redoes.
+test('array entry, shown formulas and F4 redo', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  const bar = page.getByRole('textbox', { name: 'Formula bar' }).first();
+  // The cells as drawn, never the formula bar's text.
+  const grid = page.locator('[data-sheet-grid]');
+
+  await typeInto(page, 'A1', '1');
+  await typeInto(page, 'A2', '2');
+  await select(page, 'B1');
+  await page.keyboard.type('=A1:A2*10');
+  await page.keyboard.press('Control+Shift+Enter');
+  await expect(bar).toHaveValue('=ARRAYFORMULA(A1:A2*10)');
+  await page.keyboard.press('Enter');
+  await select(page, 'B2');
+  await expect(grid.getByText('20', { exact: true }).first()).toBeVisible();
+
+  // Ctrl+`: the formula in its cell, the values elsewhere as before; View › Show › Formulas ticked.
+  await page.keyboard.press('Control+Backquote');
+  await expect(grid.getByText('=ARRAYFORMULA(A1:A2*10)', { exact: true }).first()).toBeVisible();
+  await page.getByRole('menubar').getByRole('menuitem', { name: 'View' }).click();
+  await page.getByRole('menuitem', { name: /^Show/ }).click();
+  await expect(page.getByRole('menuitemcheckbox', { name: /^Formulas/ })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await page.screenshot({
+    path: test.info().outputPath('show-formulas.png'),
+    animations: 'disabled',
+  });
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+Backquote');
+  await expect(grid.getByText('=ARRAYFORMULA(A1:A2*10)', { exact: true })).toHaveCount(0);
+
+  // F4 outside an edit puts back what Ctrl+Z took.
+  await typeInto(page, 'C1', 'kept');
+  await page.keyboard.press('Control+z');
+  await select(page, 'C1');
+  await expect(bar).toHaveValue('');
+  await page.keyboard.press('F4');
+  await expect(bar).toHaveValue('kept');
+  expectNoPageErrors(pageErrors);
+});

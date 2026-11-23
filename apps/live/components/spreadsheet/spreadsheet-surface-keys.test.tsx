@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   SheetStepContext,
+  SurfaceRedoContext,
   tabAfter,
   useSheetStep,
   useSpreadsheetSurfaceKeys,
@@ -46,14 +47,20 @@ describe('useSpreadsheetSurfaceKeys', () => {
     const slot = document.createElement('div');
     slot.innerHTML = '<button aria-haspopup="menu">Sum: 3</button>';
     document.body.appendChild(slot);
+    const redo = vi.fn();
     const wrapper = ({ children }: { children: ReactNode }) => (
       <SheetStepContext.Provider value={step}>
-        <SummarySlotContext.Provider value={slot}>{children}</SummarySlotContext.Provider>
+        <SurfaceRedoContext.Provider value={redo}>
+          <SummarySlotContext.Provider value={slot}>{children}</SummarySlotContext.Provider>
+        </SurfaceRedoContext.Provider>
       </SheetStepContext.Provider>
     );
     const { result } = renderHook(() => useSpreadsheetSurfaceKeys(), { wrapper });
     result.current.stepSheet(-1);
     expect(step).toHaveBeenCalledWith(-1);
+    // F4 outside an edit: the person's timeline redoes (grid-and-editing.md "Formulas").
+    result.current.redo();
+    expect(redo).toHaveBeenCalledTimes(1);
     result.current.focusSummary();
     expect(document.activeElement).toBe(slot.querySelector('button'));
     // D137: out of the grid, to the toolbar's tab stop.
@@ -77,6 +84,7 @@ describe('useSpreadsheetSurfaceKeys', () => {
       result.current.stepSheet(1);
       result.current.focusSummary();
       result.current.leaveGrid();
+      result.current.redo();
     }).not.toThrow();
   });
 });
