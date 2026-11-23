@@ -1,7 +1,9 @@
 // Pictures in line (docs/specs/034-text-documents/objects.md "The model"): an inline of a paragraph holding its media by
-// key, the size it shows at, its alternative text, title, whether it is decorative, its crop and its turn; the bytes are
-// the document's `media`, by the SHA-256 of their bytes, so two pictures of the same bytes share one.
+// key, the size it shows at, its alternative text, title, whether it is decorative, its crop, turn, recolour and
+// adjustments; the bytes are the document's `media`, by the SHA-256 of their bytes, so two pictures of the same bytes
+// share one.
 import type { MappedPictureType } from '@livedoc/office-packages';
+import type { PictureColouring } from './picture-colours';
 import type { KeptProperties, TextProps } from './props';
 import type { Block, Inline } from './blocks';
 import { HEADER_FOOTER_KINDS, HEADER_FOOTER_SLOTS, type SectionHeaders } from './headers';
@@ -15,7 +17,8 @@ export type PictureCrop = {
   readonly left: number;
 };
 
-export type Picture = {
+/** A picture in line; its recolour and adjustments are its `PictureColouring`. */
+export type Picture = PictureColouring & {
   readonly type: 'picture';
   /** Its media's key in the document's `media`. */
   readonly media: string;

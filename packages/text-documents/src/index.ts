@@ -60,6 +60,16 @@ export {
   type PictureMedia,
 } from './model/pictures';
 export {
+  PICTURE_ADJUSTMENT_RANGES,
+  PICTURE_ADJUSTMENTS,
+  PICTURE_CONTRAST_MAX_SLOPE,
+  PICTURE_LUMA,
+  PictureColours,
+  type PictureAdjustment,
+  type PictureColouring,
+  type PictureRecolour,
+} from './model/picture-colours';
+export {
   Blocks,
   CELL_SIDES,
   TABLE_COLUMN_FALLBACK_PT,

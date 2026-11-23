@@ -104,8 +104,9 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   keep the picture (default). A value out of its range keeps it. OOXML's effects are drawn in the model's order
   (recolour, then brightness and contrast, then transparency) whatever order the blip lists them in (default).
 - **Recolour and adjustments written** in that order; a picture with none writes no effect and neutral values.
-  LibreOffice keeps a duotone in neither format: it reads `a:duotone`, and `a:lum` holding both values, into new bytes,
-  and ignores `a:alphaModFix` on a Writer picture; it passes over `livedoc:duotone`, drawing the picture uncoloured.
+  LibreOffice draws a duotone in neither format: it reads `a:duotone`, and `a:lum` holding both values, into new bytes,
+  and ignores `a:alphaModFix` on a Writer picture; it draws a picture with `livedoc:duotone` uncoloured and keeps the
+  attribute when it saves; it holds brightness and contrast in whole percents.
 - **Names and ids** (`draw:name`, `wp:docPr` `name` and `id`) are written anew: `Picture <n>` in reading order.
 - **Conversion** carries every picture and its media to the other format; a picture still kept is dropped and listed,
   as all kept content.

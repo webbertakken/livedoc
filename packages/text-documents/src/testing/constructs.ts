@@ -545,7 +545,8 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
     },
   }),
   // objects.md "The model": pictures in line, one cropped with alternative text and a title, one decorative sharing its
-  // media and turned, one linked, one in a table cell and one in a header.
+  // media and turned, one linked and recoloured in two colours and adjusted, one greyscale in a table cell and one in a
+  // header.
   pictures: (format) => {
     const picture = (
       media: string,
@@ -580,12 +581,30 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
           picture(GREEN_PNG_SHA, 24, 17, { decorative: true, rotation: 330.5 }),
           run('.'),
         ]),
-        p([picture(BLUE_PNG_SHA, 30, 30, { link: 'https://docs.nu/', alt: 'Blue' })]),
+        p([
+          picture(BLUE_PNG_SHA, 30, 30, {
+            link: 'https://docs.nu/',
+            alt: 'Blue',
+            recolour: { kind: 'duotone', dark: '#1a2b3c', light: '#4285f4' },
+            transparency: 40,
+            brightness: 20.5,
+            contrast: -30,
+          }),
+        ]),
         {
           type: 'table',
           columns: [200],
           headerRows: 0,
-          rows: [{ cells: [{ blocks: [p([picture(BLUE_PNG_SHA, 12, 12)])], props: {} }] }],
+          rows: [
+            {
+              cells: [
+                {
+                  blocks: [p([picture(BLUE_PNG_SHA, 12, 12, { recolour: { kind: 'greyscale' } })])],
+                  props: {},
+                },
+              ],
+            },
+          ],
         },
         p([run('After.')]),
       ],
