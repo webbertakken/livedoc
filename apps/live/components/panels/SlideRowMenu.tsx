@@ -166,7 +166,7 @@ export function SlideRowMenu({
                   of bare verbs called Add and Remove says nothing about what
                   they act on, and by the time you have read the caption
                   underneath you have already had to guess. */}
-                <p className="px-1 pb-1.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                <p className="px-1 pb-1.5 text-supporting text-slate-500 dark:text-slate-400">
                   {canEditMembership
                     ? `Put what you have selected on this slide, or take it off. It holds ${
                         slide.elementIds.length === 1
@@ -210,7 +210,7 @@ export function SlideRowMenu({
               {/* Hiding is a different idea from deleting, and the panel should
                   say so: a slide you might want next week, a backup detail for
                   a question you may not get, a section you cut for time. */}
-              <p className="px-1 pb-1.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+              <p className="px-1 pb-1.5 text-supporting text-slate-500 dark:text-slate-400">
                 {slide.hidden
                   ? 'This slide is skipped when you present. It still lives in the deck.'
                   : 'Keep the slide, leave it out of the run. Nothing is deleted.'}

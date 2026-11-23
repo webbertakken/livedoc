@@ -35,7 +35,7 @@ const NO_ELEMENTS: Element[] = [];
 
 // Shared look of the footer's labelled buttons.
 const FOOTER_BUTTON =
-  'flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent';
+  'flex h-row items-center justify-center gap-1 whitespace-nowrap rounded-control px-2 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent';
 
 export function LayersPanel({
   layers,
@@ -223,14 +223,14 @@ export function LayersPanel({
     >
       <div className="pb-1">
         <div className="flex items-center justify-between gap-2 px-3 pb-2">
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
             {layers.length} {layers.length === 1 ? 'layer' : 'layers'}
           </span>
           <HoverCard title="New Layer" description="Add a layer above the active one.">
             <button
               type="button"
               onClick={onAddLayer}
-              className={`flex h-8 items-center gap-1.5 rounded-lg bg-brand-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
+              className={`flex h-field items-center gap-1 rounded-control bg-brand-700 px-3 text-body font-medium text-white shadow-sm transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
             >
               <PlusIcon />
               New Layer
@@ -270,7 +270,7 @@ export function LayersPanel({
           ))}
         </ul>
         {layers.length === 1 ? (
-          <p className="px-3 pb-1 pt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="px-3 pb-1 pt-2 text-supporting text-slate-500 dark:text-slate-400">
             {SINGLE_LAYER_HINT}
           </p>
         ) : null}

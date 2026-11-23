@@ -41,9 +41,9 @@ function ChoiceRow<T extends string | number>({
 }) {
   return (
     <div className="flex flex-col gap-1 px-2 py-1.5">
-      <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200">{label}</span>
+      <span className="text-body text-slate-700 dark:text-slate-200">{label}</span>
       {hint ? (
-        <span className="text-[10px] leading-tight text-slate-500 dark:text-slate-400">{hint}</span>
+        <span className="text-supporting text-slate-500 dark:text-slate-400">{hint}</span>
       ) : null}
       <div className="flex gap-1 pt-0.5">
         {options.map((o) => (
@@ -52,9 +52,9 @@ function ChoiceRow<T extends string | number>({
               type="button"
               aria-pressed={value === o.id}
               onClick={() => onPick(o.id)}
-              className={`flex-1 cursor-pointer rounded-md border px-1 py-1 text-[10px] font-medium transition ${
+              className={`min-h-row flex-1 cursor-pointer rounded-control border px-1 text-body transition ${
                 value === o.id
-                  ? 'border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500/50 dark:bg-brand-500/15 dark:text-brand-200'
+                  ? 'font-medium border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500/50 dark:bg-brand-500/15 dark:text-brand-200'
                   : 'border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
             >

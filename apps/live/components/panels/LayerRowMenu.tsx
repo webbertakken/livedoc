@@ -148,13 +148,13 @@ export function LayerRowMenu({
           {...surfaceProps}
           data-testid="layer-row-menu"
           onContextMenu={(e) => e.preventDefault()}
-          className="lvd-menu-stagger animate-fade-in fixed z-[var(--z-modal)] flex w-64 flex-col rounded-xl border border-slate-200 bg-white py-1.5 text-sm shadow-xl outline-none dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50"
+          className="lvd-menu-stagger animate-fade-in fixed z-[var(--z-modal)] flex w-64 flex-col rounded-menu border border-slate-200 bg-white py-1 text-body shadow-xl outline-none dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50"
           style={{ left: anchor.panelLeft - MENU_GAP - MENU_WIDTH, top: MENU_GAP }}
         >
-          <div className="flex items-center gap-2.5 px-3 pb-2 pt-1">
+          <div className="flex items-center gap-2 px-3 pb-2 pt-1">
             <span
               className={
-                'flex h-8 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white dark:bg-slate-950 ' +
+                'flex h-field w-12 shrink-0 items-center justify-center overflow-hidden rounded-control bg-white dark:bg-slate-950 ' +
                 (thumbMarkup
                   ? 'border border-slate-200 dark:border-slate-700'
                   : 'border border-dashed border-slate-300 dark:border-slate-600')
@@ -171,10 +171,10 @@ export function LayerRowMenu({
               ) : null}
             </span>
             <span className="flex min-w-0 flex-col">
-              <span className="truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+              <span className="truncate text-body text-slate-800 dark:text-slate-100">
                 {layer.name}
               </span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="text-supporting text-slate-500 dark:text-slate-400">
                 {elementCount === 0 ? 'Empty' : `${elementCount} ${plural}`}
               </span>
             </span>

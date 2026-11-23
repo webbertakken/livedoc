@@ -157,7 +157,7 @@ export function SlideDeckPanel({
       headerActions={
         <>
           {deck.slides.length > 0 ? (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-supporting tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
               {deck.slides.length === 1 ? '1 slide' : `${deck.slides.length} slides`}
               {totalMinutes > 0 ? ` · ${totalMinutes} min` : ''}
             </span>
@@ -183,10 +183,8 @@ export function SlideDeckPanel({
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200">
               <SlideDeckIcon />
             </span>
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-              Build your deck
-            </p>
-            <p className="max-w-[18rem] text-xs leading-snug text-slate-500 dark:text-slate-400">
+            <p className="text-body text-slate-800 dark:text-slate-100">Build your deck</p>
+            <p className="max-w-[18rem] text-supporting text-slate-500 dark:text-slate-400">
               {/* Each way in names the button it has: on a Pages tab a slide page joins on its own
                   (docs/specs/007-editor/pages-mode.md "Slides"), any other page a page at a time. */}
               {pages
@@ -263,7 +261,7 @@ export function SlideDeckPanel({
         {notesSlide && !isReadOnly ? (
           <label className="flex flex-col gap-1">
             <span className="flex items-center justify-between px-0.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <span className="text-supporting text-slate-500 dark:text-slate-400">
                 Notes · {slideName(notesSlide, deck.slides.indexOf(notesSlide))}
               </span>
               <button
@@ -272,7 +270,7 @@ export function SlideDeckPanel({
                   setNotesForId(null);
                   notesTracked.current = null;
                 }}
-                className="cursor-pointer text-[10px] font-medium text-slate-500 dark:text-slate-400 transition hover:text-slate-700 dark:hover:text-slate-200"
+                className="cursor-pointer text-supporting text-slate-500 dark:text-slate-400 transition hover:text-slate-700 dark:hover:text-slate-200"
               >
                 Done
               </button>
@@ -294,13 +292,13 @@ export function SlideDeckPanel({
               onPointerDown={(e) => e.stopPropagation()}
               rows={3}
               placeholder="What you'll say over this slide…"
-              className="w-full resize-none rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] leading-snug text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              className="w-full resize-none rounded-control border border-slate-200 bg-white px-2 py-1.5 text-body text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
             />
             {/* The slide's time budget, beside its notes because both are
                 decided while WRITING the talk rather than while giving it.
                 Blank means no target, which is most slides. */}
             <span className="flex items-center gap-2 px-0.5 pt-0.5">
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">Budget</span>
+              <span className="text-supporting text-slate-500 dark:text-slate-400">Budget</span>
               <input
                 type="number"
                 min={0}
@@ -311,9 +309,9 @@ export function SlideDeckPanel({
                 onPointerDown={(e) => e.stopPropagation()}
                 placeholder="—"
                 aria-label={`Minutes budgeted for ${slideName(notesSlide, deck.slides.indexOf(notesSlide))}`}
-                className="w-14 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] tabular-nums text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                className="w-14 rounded-control border border-slate-200 bg-white px-1 py-0.5 text-body tabular-nums text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
               />
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+              <span className="text-supporting text-slate-500 dark:text-slate-400">
                 min · shown in the HUD if you turn the budget on
               </span>
             </span>
@@ -327,7 +325,7 @@ export function SlideDeckPanel({
             type="button"
             onClick={newSlideFromSelection}
             disabled={selectionCount === 0}
-            className="w-full cursor-pointer rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-600 transition hover:border-brand-300 hover:text-brand-700 disabled:cursor-default disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+            className="min-h-row w-full cursor-pointer rounded-control border border-slate-200 bg-white px-2 text-body text-slate-600 transition hover:border-brand-300 hover:text-brand-700 disabled:cursor-default disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
           >
             {selectionCount === 0
               ? 'Select elements to make a slide'
@@ -340,14 +338,14 @@ export function SlideDeckPanel({
           onClick={() => void start()}
           disabled={runnable.length === 0 || startingDeck}
           data-presentation-start="panel"
-          className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md bg-brand-700 font-semibold text-white transition hover:bg-brand-800 disabled:cursor-default disabled:opacity-40 ${
-            roomy ? 'rounded-lg px-3 py-2.5 text-sm' : 'px-2 py-2 text-[11px]'
+          className={`flex w-full cursor-pointer items-center justify-center gap-1 rounded-control bg-brand-700 font-medium text-white transition hover:bg-brand-800 disabled:cursor-default disabled:opacity-40 ${
+            roomy ? 'min-h-prominent px-3 text-body' : 'min-h-field px-2 text-body'
           } ${SOLID_BRAND_DARK_CONTROL}`}
         >
           <PlayIcon />
           {startingDeck ? 'Loading…' : 'Present'}
           {runnable.length > 0 && !startingDeck ? (
-            <span className="inline-flex h-[17px] items-center rounded-full bg-white/25 px-1.5 text-[10px] font-semibold tabular-nums">
+            <span className="inline-flex h-icon-row min-w-icon-row items-center justify-center rounded-full bg-white/25 px-1 text-glyph tabular-nums">
               <span className="text-optical-centre">{runnable.length}</span>
             </span>
           ) : null}

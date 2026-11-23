@@ -47,10 +47,10 @@ function BrushPreview({
 }) {
   const on = config.copies;
   return (
-    <div className="mb-1 flex items-center gap-2 rounded-lg bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
+    <div className="mb-1 flex items-center gap-2 rounded-menu bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
       <span
         aria-hidden
-        className="flex h-9 w-12 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold"
+        className="flex h-prominent w-12 shrink-0 items-center justify-center rounded-control text-supporting"
         style={{
           background: on.fill ? (source?.fill ?? '#ffffff') : '#ffffff',
           border: `2px ${on.border ? 'solid' : 'dashed'} ${
@@ -63,10 +63,10 @@ function BrushPreview({
         Aa
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+        <span className="block truncate text-body text-slate-700 dark:text-slate-200">
           {source ? source.name : 'Nothing loaded'}
         </span>
-        <span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">
+        <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
           {source
             ? (source.summary ?? `Copies: ${formatCopiesSummary(config)}`)
             : 'Pick something to copy from'}
@@ -106,12 +106,11 @@ export function FormatPanel({
             open={openRow === 'copies'}
             onToggle={() => toggle('copies')}
             headerClassName="flex w-full items-center justify-between gap-2 py-1.5 text-left"
-            titleClassName="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
             chevronClassName="text-slate-400"
             bodyClassName="pb-2"
             trailing={
               <span
-                className={`truncate text-[11px] font-medium ${
+                className={`truncate text-supporting ${
                   paintsAnything
                     ? 'text-slate-600 dark:text-slate-300'
                     : 'text-amber-600 dark:text-amber-400'
@@ -131,9 +130,9 @@ export function FormatPanel({
                       role="checkbox"
                       aria-checked={active}
                       onClick={() => onToggleGroup(group.id)}
-                      className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+                      className={`min-h-row rounded-control border px-2 text-body transition ${
                         active
-                          ? 'border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/15 dark:text-brand-200'
+                          ? 'font-medium border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/15 dark:text-brand-200'
                           : 'border-slate-200 text-slate-400 line-through hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:text-slate-400'
                       }`}
                     >
@@ -149,13 +148,10 @@ export function FormatPanel({
             open={openRow === 'mode'}
             onToggle={() => toggle('mode')}
             headerClassName="flex w-full items-center justify-between gap-2 py-1.5 text-left"
-            titleClassName="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
             chevronClassName="text-slate-400"
             bodyClassName="pb-2"
             trailing={
-              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                {mode?.label}
-              </span>
+              <span className="text-body text-slate-600 dark:text-slate-300">{mode?.label}</span>
             }
           >
             <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="After painting">
@@ -168,9 +164,9 @@ export function FormatPanel({
                       role="radio"
                       aria-checked={active}
                       onClick={() => onSetMode(option.id)}
-                      className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+                      className={`min-h-row rounded-control border px-2 text-body transition ${
                         active
-                          ? 'border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/15 dark:text-brand-200'
+                          ? 'font-medium border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/15 dark:text-brand-200'
                           : 'border-slate-200 text-slate-600 hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-brand-500'
                       }`}
                     >
@@ -183,7 +179,7 @@ export function FormatPanel({
           </AccordionSection>
         </div>
         <p
-          className={`px-1 pt-1.5 text-[10px] leading-snug ${
+          className={`px-1 pt-1.5 text-supporting ${
             paintsAnything
               ? 'text-slate-400 dark:text-slate-400'
               : 'text-amber-600 dark:text-amber-400'

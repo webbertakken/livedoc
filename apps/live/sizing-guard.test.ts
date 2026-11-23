@@ -49,6 +49,17 @@ const SIZED_PATHS = [
   'components/panels/PollPanel.tsx',
   'components/panels/PollPromptSheet.tsx',
   'components/panels/VotePanel.tsx',
+  'components/panels/FormatPanel.tsx',
+  'components/panels/LayerRowMenu.tsx',
+  'components/panels/LayerRow.tsx',
+  'components/panels/layers-panel-icons.tsx',
+  'components/panels/LayersPanel.tsx',
+  'components/panels/PageSlidePicker.tsx',
+  'components/panels/SlideDeckPanel.tsx',
+  'components/panels/SlideDeckRow.tsx',
+  'components/panels/SlideDeckSettingsPopover.tsx',
+  'components/panels/SlideRowMenu.tsx',
+  'components/panels/ToolOptionRow.tsx',
 ];
 
 describe('live sizing', () => {

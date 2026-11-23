@@ -5,7 +5,7 @@ import { HoverCard } from '@livedoc/ui';
 
 // One collapsible row of mutually-exclusive choices, the shape every
 // tool-config panel is built from (docs/specs/008-canvas/avatar-mode.md, docs/specs/008-canvas/laser-panel.md, docs/specs/008-canvas/spotlight-panel.md, docs/specs/008-canvas/eraser-panel.md):
-// an uppercase title, the current value still readable while collapsed, and a
+// a title in its own case, the current value still readable while collapsed, and a
 // wrap of radio pills once open.
 //
 // Avatar, Eraser, Laser and Spotlight each carried their own copy of this,
@@ -51,13 +51,12 @@ export function ToolOptionRow<T extends string>({
       open={open}
       onToggle={onToggle}
       headerClassName="flex w-full items-center justify-between gap-2 py-1.5 text-left"
-      titleClassName="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
       chevronClassName="text-slate-400"
       bodyClassName="pb-2"
       // The value stays visible while collapsed, so a panel reads as a summary
       // of the tool rather than four mystery rows.
       trailing={
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+        <span className="flex items-center gap-1 text-body text-slate-600 dark:text-slate-300">
           {swatchFor && value !== null ? (
             <span
               aria-hidden
@@ -79,9 +78,9 @@ export function ToolOptionRow<T extends string>({
               role="radio"
               aria-checked={active}
               onClick={() => onPick(option.id)}
-              className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+              className={`flex min-h-row items-center gap-1 rounded-control border px-2 text-body transition ${
                 active
-                  ? 'border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/15 dark:text-brand-200'
+                  ? 'font-medium border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/15 dark:text-brand-200'
                   : 'border-slate-200 text-slate-600 hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-brand-500'
               }`}
             >
