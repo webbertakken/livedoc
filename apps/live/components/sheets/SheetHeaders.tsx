@@ -90,7 +90,7 @@ function unhideMarkers({ geometry: g, scroll, palette, view, onUnhide }: Props):
       </button>
     </Tooltip>
   );
-  for (const [a, b] of hiddenRuns(g.cols.length - 1, g.hiddenCol)) {
+  for (const [a, b] of hiddenRuns(g.cols.length - 1, g.userHiddenCol)) {
     const x = g.headW + (a < g.frozenCols ? g.cols[a]! : g.cols[a]! - scroll.left);
     if (x < g.headW - 4 || x > view.width) continue;
     const label = `Show Column${a === b ? '' : 's'} ${columnLetters(a)}${a === b ? '' : ` to ${columnLetters(b)}`}`;

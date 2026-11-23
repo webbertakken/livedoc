@@ -74,7 +74,10 @@ describe('the emoji colon list', () => {
     expect(screen.getByRole('listbox', { name: 'Emoji' })).toBeTruthy();
     expect(options()[0]!.getAttribute('aria-label')).toBe('Thumbs up');
     expect(options()[0]!.getAttribute('aria-selected')).toBe('true');
-    expect(view!.dom.getAttribute('aria-activedescendant')).toBe(options()[0]!.id);
+    // The editor learns the chosen option in an effect after the list draws: waited for, as the list is.
+    await waitFor(() =>
+      expect(view!.dom.getAttribute('aria-activedescendant')).toBe(options()[0]!.id),
+    );
   });
 
   it('moves with Up and Down, and Enter puts the chosen one in place of what was typed', async () => {

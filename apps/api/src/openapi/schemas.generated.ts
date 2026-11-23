@@ -7753,6 +7753,22 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "GroupMark": {
+    "additionalProperties": false,
+    "properties": {
+      "at": {
+        "type": "string"
+      },
+      "depth": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "at",
+      "depth"
+    ],
+    "type": "object"
+  },
   "HeroCaption": {
     "additionalProperties": false,
     "properties": {
@@ -9583,6 +9599,80 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "axis",
           "ids",
           "hidden"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "axis": {
+            "$ref": "#/components/schemas/Axis"
+          },
+          "depths": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object"
+          },
+          "k": {
+            "const": "depth",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "axis",
+          "depths"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "axis": {
+            "$ref": "#/components/schemas/Axis"
+          },
+          "collapsed": {
+            "type": "boolean"
+          },
+          "depth": {
+            "type": "number"
+          },
+          "k": {
+            "const": "collapse",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "axis",
+          "at",
+          "depth",
+          "collapsed"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "after": {
+            "type": "boolean"
+          },
+          "axis": {
+            "$ref": "#/components/schemas/Axis"
+          },
+          "k": {
+            "const": "controls",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "axis",
+          "after"
         ],
         "type": "object"
       },
@@ -14794,6 +14884,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         },
         "type": "array"
       },
+      "colCollapsed": {
+        "items": {
+          "$ref": "#/components/schemas/GroupMark"
+        },
+        "type": "array"
+      },
+      "colDepth": {
+        "additionalProperties": {
+          "type": "number"
+        },
+        "type": "object"
+      },
       "colSize": {
         "additionalProperties": {
           "type": "number"
@@ -14808,6 +14910,20 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "type": "string"
         },
         "type": "array"
+      },
+      "controlsAfter": {
+        "additionalProperties": false,
+        "properties": {
+          "c": {
+            "const": true,
+            "type": "boolean"
+          },
+          "r": {
+            "const": true,
+            "type": "boolean"
+          }
+        },
+        "type": "object"
       },
       "filter": {
         "$ref": "#/components/schemas/SheetFilter"
@@ -14847,6 +14963,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "$ref": "#/components/schemas/RangeName"
         },
         "type": "array"
+      },
+      "rowCollapsed": {
+        "items": {
+          "$ref": "#/components/schemas/GroupMark"
+        },
+        "type": "array"
+      },
+      "rowDepth": {
+        "additionalProperties": {
+          "type": "number"
+        },
+        "type": "object"
       },
       "rowHeight": {
         "type": "number"

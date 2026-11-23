@@ -231,5 +231,5 @@ Version History (the shell's). Each is specified with its area.
   (default).
 - **D163** Collapsing for a Participant and a Viewer: Their own, never saved or sent; Google's viewers cannot
   (default).
-- **D164** Lines inserted inside a group: They join it at the lesser depth of their neighbours; moved lines keep
-  their depth (default).
+- **D164** Lines inserted inside a group: They join it at the lesser depth of their neighbours; groups stay at
+  their places when lines move or are sorted (default).

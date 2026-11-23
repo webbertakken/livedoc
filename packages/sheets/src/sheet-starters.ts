@@ -274,7 +274,7 @@ export function cardsStarter(
 }
 
 // Clear Sheet (sheet.md "Sheet Settings"): the sheet back to how a placed one starts, as one change: every cell and
-// format gone, sizes, hidden lines, freeze, merges, filter, card tables and its look back to the defaults, and
+// format gone, sizes, hidden lines, groups, freeze, merges, filter, card tables and its look back to the defaults, and
 // awaiting setup again (the Setup Sheet card shows). Its rows and columns stay where they are.
 export function resetSheetWrite(sheet: Sheet): SheetWrite {
   const { layout } = sheet;
@@ -287,6 +287,19 @@ export function resetSheetWrite(sheet: Sheet): SheetWrite {
     changes.push({ k: 'hide', axis: 'r', ids: [...layout.hiddenRows], hidden: false });
   if (layout.hiddenCols?.length)
     changes.push({ k: 'hide', axis: 'c', ids: [...layout.hiddenCols], hidden: false });
+  // Groups: every line out of them, nothing collapsed, the controls back before their groups.
+  for (const axis of ['r', 'c'] as const) {
+    const depths = axis === 'r' ? layout.rowDepth : layout.colDepth;
+    if (depths)
+      changes.push({
+        k: 'depth',
+        axis,
+        depths: Object.fromEntries(Object.keys(depths).map((id) => [id, 0])),
+      });
+    for (const m of (axis === 'r' ? layout.rowCollapsed : layout.colCollapsed) ?? [])
+      changes.push({ k: 'collapse', axis, at: m.at, depth: m.depth, collapsed: false });
+    if (layout.controlsAfter?.[axis]) changes.push({ k: 'controls', axis, after: false });
+  }
   if (layout.frozenRows || layout.frozenCols) changes.push({ k: 'freeze', rows: 0, cols: 0 });
   if (layout.merges?.length) changes.push({ k: 'merges', merges: [] });
   if (layout.filter) changes.push({ k: 'filter', filter: null });

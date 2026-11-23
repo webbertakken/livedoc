@@ -146,6 +146,9 @@ export type FormatRule = IdRange & {
   max?: ScalePoint;
 };
 
+// A collapsed group: the group of depth `depth` holding the line `at`.
+export type GroupMark = { at: string; depth: number };
+
 export type SheetLayout = {
   rows: string[];
   cols: string[];
@@ -153,6 +156,13 @@ export type SheetLayout = {
   colSize?: Record<string, number>;
   hiddenRows?: string[];
   hiddenCols?: string[];
+  // Groups (docs/specs/029-sheets/grid-and-editing.md "Groups and the outline"): each grouped line's depth (1 to
+  // OUTLINE_DEPTH_MAX), the collapsed groups by a line in them and their depth, and the side the controls sit on.
+  rowDepth?: Record<string, number>;
+  colDepth?: Record<string, number>;
+  rowCollapsed?: GroupMark[];
+  colCollapsed?: GroupMark[];
+  controlsAfter?: { r?: true; c?: true };
   frozenRows?: number;
   frozenCols?: number;
   merges?: IdRange[];

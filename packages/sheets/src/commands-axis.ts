@@ -3,6 +3,7 @@
 import type { GridRange } from './address';
 import { makeAxisIds, type Rand } from './ids';
 import { idRangeOf, layoutIndex, posRangeOf } from './layout';
+import { depthsOf } from './outline';
 import type { GridSize } from './sheet-limits';
 import { cellKey, type FilterCondition, type Sheet } from './sheet';
 import { sortedOrder, type SortKey } from './sort';
@@ -38,10 +39,15 @@ export function insertAxis(
   const pos = side === 'before' ? at - 1 : at;
   const after = pos < 0 ? null : (list[Math.min(pos, list.length - 1)] ?? null);
   const ids = makeAxisIds(n, rand, new Set(list));
-  return {
-    kind: 'layout',
-    changes: [{ k: axis === 'r' ? 'insertRows' : 'insertCols', after, ids }],
-  };
+  const changes: LayoutChange[] = [{ k: axis === 'r' ? 'insertRows' : 'insertCols', after, ids }];
+  // Between two lines of a group, the new lines join it at the lesser depth of the two (D164).
+  const depths = depthsOf(sheet.layout, axis);
+  const before = after === null ? 0 : (depths?.[after] ?? 0);
+  const next = list[pos + 1];
+  const depth = Math.min(before, next === undefined ? 0 : (depths?.[next] ?? 0));
+  if (depth > 0)
+    changes.push({ k: 'depth', axis, depths: Object.fromEntries(ids.map((id) => [id, depth])) });
+  return { kind: 'layout', changes };
 }
 
 // Rows (or columns) added at the end: "Add 100 Rows", and a paste past the edge.

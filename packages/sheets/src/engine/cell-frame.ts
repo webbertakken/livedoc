@@ -9,7 +9,7 @@ import { renderFormula, storedAst, type SheetsCtx } from '../formula/stored';
 import { formulaSyntaxOf, formulaToLocale } from '../formula/locale-syntax';
 import { filterTest, type FilterTest } from '../filter';
 import type { Value } from '../formula/values';
-import { colWidth } from '../layout';
+import { colWidth, layoutIndex } from '../layout';
 import { cellKey, type CellInput, type Sheet } from '../sheet';
 import { NO_CELL, type CellNo } from './cell-numbers';
 import type { CellAt, Frame, RangeRef } from './frame';
@@ -66,15 +66,8 @@ export function cellFrame(
     if (!filters.has(s)) filters.set(s, filterTest(src.sheet(s)!, src.locale));
     return filters.get(s)!;
   };
-  const hiddenBySheet = new Map<string, ReadonlySet<string>>();
-  const hiddenOf = (s: string): ReadonlySet<string> => {
-    let set = hiddenBySheet.get(s);
-    if (!set) {
-      set = new Set(src.sheet(s)!.layout.hiddenRows ?? []);
-      hiddenBySheet.set(s, set);
-    }
-    return set;
-  };
+  // Hidden by hand or collapsed in a group: SUBTOTAL's 101 to 111 leave both out.
+  const hiddenOf = (s: string): ReadonlySet<string> => layoutIndex(src.sheet(s)!.layout).hiddenRows;
   return {
     sheetId,
     row,

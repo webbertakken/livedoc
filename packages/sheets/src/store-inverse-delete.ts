@@ -7,6 +7,7 @@
 // shrunk filter replaced) is theirs, so it is not put back over them.
 import { applyLayoutChange, shrinkRange, type LayoutChange } from './store-layout';
 import { sameName } from './range-names';
+import { restoreOutline } from './outline-store';
 import type { CardTable, FilterCondition, IdRange, SheetLayout } from './sheet';
 
 export const idRangeOf = (x: IdRange): IdRange => ({ r1: x.r1, c1: x.c1, r2: x.r2, c2: x.c2 });
@@ -205,6 +206,7 @@ export function inverseDelete(
   for (const [px, list] of bySize) out.push({ k: 'size', axis, ids: list, px });
   const hidden = (rows ? before.hiddenRows : before.hiddenCols)?.filter((id) => ids.has(id));
   if (hidden?.length) out.push({ k: 'hide', axis, ids: hidden, hidden: true });
+  out.push(...restoreOutline(before, axis, ids));
   out.push(
     rows
       ? { k: 'freeze', rows: before.frozenRows ?? 0 }

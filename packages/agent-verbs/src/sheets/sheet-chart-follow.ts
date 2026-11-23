@@ -5,6 +5,7 @@
 // takes: every one of the sheet's, or those reading cells of a range. Pure.
 import {
   colWidth,
+  layoutIndex,
   posRangeOf,
   baseRowHeight,
   type GridRange,
@@ -52,13 +53,10 @@ const heightsOf = ({ layout, heights }: SheetShape): RowHeights =>
 
 export function anchorCell(shape: SheetShape, anchor: { x: number; y: number }): AnchorCell | null {
   const { layout } = shape;
-  const col = lineAt(
-    layout.cols,
-    new Set(layout.hiddenCols ?? []),
-    (id) => colWidth(layout, id),
-    anchor.x,
-  );
-  const row = lineAt(layout.rows, new Set(layout.hiddenRows ?? []), heightsOf(shape), anchor.y);
+  // Hidden by hand or collapsed in a group.
+  const { hiddenCols, hiddenRows } = layoutIndex(layout);
+  const col = lineAt(layout.cols, hiddenCols, (id) => colWidth(layout, id), anchor.x);
+  const row = lineAt(layout.rows, hiddenRows, heightsOf(shape), anchor.y);
   return col && row ? { row: row.id, col: col.id, dx: col.into, dy: row.into } : null;
 }
 

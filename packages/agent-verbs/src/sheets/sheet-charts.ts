@@ -18,6 +18,7 @@ import {
   accentChartPalette,
   cellKey,
   colWidth,
+  layoutIndex,
   columnLetters,
   templateTints,
   columnIndex,
@@ -115,8 +116,8 @@ export function anchorAt(
   at: readonly [number, number],
   heightOf: RowHeights = (id) => baseRowHeight(layout, id),
 ): { x: number; y: number } {
-  const hiddenCols = new Set(layout.hiddenCols ?? []);
-  const hiddenRows = new Set(layout.hiddenRows ?? []);
+  // Hidden by hand or collapsed in a group.
+  const { hiddenCols, hiddenRows } = layoutIndex(layout);
   let x = 0;
   for (const id of layout.cols.slice(0, at[1])) if (!hiddenCols.has(id)) x += colWidth(layout, id);
   let y = 0;

@@ -2,13 +2,23 @@
 // maps built once per layout object, sizes with their defaults, and the layout changes every write applies.
 import type { IdRange, SheetLayout } from './sheet';
 import { COLUMN_WIDTH_NEW, ROW_HEIGHT_NEW } from './limits';
+import { outlineOf } from './outline';
 
 type LayoutIndex = {
   rowPos: ReadonlyMap<string, number>;
   colPos: ReadonlyMap<string, number>;
+  // Every hidden line: hidden by hand, or inside a collapsed group.
   hiddenRows: ReadonlySet<string>;
   hiddenCols: ReadonlySet<string>;
+  // Hidden by hand only (the double arrows show them again; Show never expands a group).
+  handHiddenRows: ReadonlySet<string>;
+  handHiddenCols: ReadonlySet<string>;
 };
+
+// Hidden by hand and collapsed, as one set; the hand's own when nothing is collapsed.
+function joined(hand: ReadonlySet<string>, collapsed: ReadonlySet<string>): ReadonlySet<string> {
+  return collapsed.size ? new Set([...hand, ...collapsed]) : hand;
+}
 
 const INDEXES = new WeakMap<SheetLayout, LayoutIndex>();
 
@@ -21,11 +31,15 @@ export function layoutIndex(layout: SheetLayout): LayoutIndex {
     layout.rows.forEach((id, i) => rowPos.set(id, i));
     const colPos = new Map<string, number>();
     layout.cols.forEach((id, i) => colPos.set(id, i));
+    const handHiddenRows = new Set(layout.hiddenRows ?? []);
+    const handHiddenCols = new Set(layout.hiddenCols ?? []);
     index = {
       rowPos,
       colPos,
-      hiddenRows: new Set(layout.hiddenRows ?? []),
-      hiddenCols: new Set(layout.hiddenCols ?? []),
+      hiddenRows: joined(handHiddenRows, outlineOf(layout, 'r').collapsed),
+      hiddenCols: joined(handHiddenCols, outlineOf(layout, 'c').collapsed),
+      handHiddenRows,
+      handHiddenCols,
     };
     INDEXES.set(layout, index);
   }

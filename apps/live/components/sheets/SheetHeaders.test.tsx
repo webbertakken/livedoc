@@ -140,6 +140,22 @@ describe('the sheet headers', () => {
     expect(screen.getByRole('button', { name: 'Show Column C' })).toBeTruthy();
   });
 
+  // grid-and-editing.md "Groups and the outline": Show never expands a group.
+  it('draws no arrow for lines a collapsed group hides', () => {
+    draw(
+      grid(6, 6, {
+        colDepth: { c1: 1 },
+        colCollapsed: [{ at: 'c1', depth: 1 }],
+        rowDepth: { r2: 1 },
+        rowCollapsed: [{ at: 'r2', depth: 1 }],
+      }),
+      { onUnhide: vi.fn() },
+    );
+    expect(texts('columnheader')).not.toContain('B');
+    expect(texts('rowheader')).not.toContain('3');
+    expect(screen.queryByRole('button', { name: /^Show/ })).toBeNull();
+  });
+
   it('names a single hidden column and a run of hidden rows', () => {
     draw(grid(6, 6, { hiddenCols: ['c4'], hiddenRows: ['r1', 'r2'] }), { onUnhide: vi.fn() });
     expect(screen.getByRole('button', { name: 'Show Column E' })).toBeTruthy();
