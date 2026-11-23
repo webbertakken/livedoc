@@ -157,6 +157,14 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   side of the column with more room, the other side left clear (default, until ruled; Google's runs it both sides);
   In front of text is drawn over the text and Behind text under it, neither moving it. A picture moving with text
   goes with its paragraph from page to page; one fixed on the page stays on its anchor's page.
+- The text keeps clear of a Wrap or Break picture's turned bounds and its margins, below its paragraph's top: a
+  picture placed higher is drawn there, and the text makes room for what of it lies below that top (default).
+- A paragraph holds its Wrap and Break pictures: the next paragraph starts below the lowest of them (default; Google
+  runs the next paragraphs beside it too), and its lines down to that picture's foot stay on one page (default).
+- Two Wrap or Break pictures in one paragraph stand where the first leaves room for the second: beside it, or below
+  it, never over it (default).
+- A picture fixed on the page is drawn at its offsets from its anchor's page's top left corner, wherever its paragraph
+  stands on that page.
 - A recoloured or adjusted picture is drawn so: its recolour and brightness and contrast as one colour filter over its
   pixels, in sRGB, its transparency as its opacity.
 - A screen reader reads its alternative text; a decorative picture reads as nothing (an empty `alt`).
