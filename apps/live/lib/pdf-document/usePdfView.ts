@@ -26,7 +26,14 @@ const DISPLAY_TELEMETRY: Record<PdfPageDisplayName, string> = {
 // What the next layout keeps in place: a point of the view (the place under it stays under it), a page (its top at
 // the view's top), or the shown row's end (a row turned back to, from its start).
 type Anchor =
-  { kind: 'focus'; focus: PdfPoint } | { kind: 'page'; index: number } | { kind: 'row-end' };
+  | { kind: 'focus'; focus: PdfPoint }
+  | { kind: 'page'; index: number; at?: PdfSpot }
+  | { kind: 'row-end' };
+
+/** A point of a page as fractions of its width and height from its top left (a link's place). */
+export type PdfSpot = { readonly across: number; readonly down: number };
+
+const TOP: PdfSpot = { across: 0, down: 0 };
 
 type Scroll = { left: number; top: number };
 
@@ -167,7 +174,12 @@ export function usePdfView(pages: readonly PageInfo[]) {
     if (before === layout || viewport.width === 0) return;
     laid.current = layout;
     let to: Scroll | null = null;
-    if (next?.kind === 'page') to = PdfPageLayout.scrollToPage(layout, next.index, viewport);
+    if (next?.kind === 'page')
+      to = PdfPageLayout.scrollToPlace(
+        layout,
+        { index: next.index, ...(next.at ?? TOP) },
+        viewport,
+      );
     else if (next?.kind === 'row-end')
       to = { left: 0, top: Math.max(0, layout.height - viewport.height) };
     else if (before) {
@@ -209,34 +221,38 @@ export function usePdfView(pages: readonly PageInfo[]) {
   );
 
   /** A row by its index: scrolled to where every row is down the view, else shown alone. */
+  // `at`: a place on the row's page `page` to put at the view's top left, rather than the row's first page's top.
   const goToRow = useCallback(
-    (row: number, end = false) => {
+    (row: number, end = false, at?: { page: number; spot: PdfSpot }) => {
       const now = latest.current;
-      const index = firstOf(now.rows[row]);
-      if (index === null) return;
+      const first = firstOf(now.rows[row]);
+      if (first === null) return;
+      const index = at?.page ?? first;
+      const spot = at?.spot ?? TOP;
       if (now.shown === null || now.shown === row) {
         const to = end
           ? { left: 0, top: Math.max(0, now.layout.height - now.viewport.height) }
-          : PdfPageLayout.scrollToPage(now.layout, index, now.viewport);
+          : PdfPageLayout.scrollToPlace(now.layout, { index, ...spot }, now.viewport);
         if (to) scrollTo(to);
         readPage();
         return;
       }
-      anchor.current = end ? { kind: 'row-end' } : { kind: 'page', index };
+      anchor.current = end ? { kind: 'row-end' } : { kind: 'page', index, at: spot };
       setShownRow(row);
       setPage(index);
     },
     [scrollTo, readPage],
   );
 
-  /** A page by its index: its top at the view's top, its row shown where one row is. */
+  /** A page by its index: its top at the view's top, or `at` a place on it; its row shown where one row is. */
   const goToPage = useCallback(
-    (index: number) => {
+    (index: number, at: PdfSpot = TOP) => {
       const now = latest.current;
       if (index < 0 || index >= pages.length) return;
       debugLog(`[pdf] view-went-to page=${index + 1}`);
-      if (now.shown !== null) return goToRow(PdfPageLayout.rowOf(now.rows, index));
-      const to = PdfPageLayout.scrollToPage(now.layout, index, now.viewport);
+      if (now.shown !== null)
+        return goToRow(PdfPageLayout.rowOf(now.rows, index), false, { page: index, spot: at });
+      const to = PdfPageLayout.scrollToPlace(now.layout, { index, ...at }, now.viewport);
       if (to) scrollTo(to);
       readPage();
     },
@@ -267,6 +283,12 @@ export function usePdfView(pages: readonly PageInfo[]) {
       if (!seen) goToPage(index);
     },
     [goToPage],
+  );
+
+  /** The place at the view's top left, for Previous view to go back to; null before a page is laid out. */
+  const placeInView = useCallback(
+    () => PdfPageLayout.placeInView(latest.current.layout, scroll.current),
+    [],
   );
 
   const setDisplay = useCallback(
@@ -333,6 +355,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       zoomBy,
       goToPage,
       showPage,
+      placeInView,
       turn,
       setDisplay,
       setCover,
@@ -354,6 +377,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       zoomBy,
       goToPage,
       showPage,
+      placeInView,
       turn,
       setDisplay,
       setCover,

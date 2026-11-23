@@ -153,6 +153,16 @@ describe("a person's view of the pages", () => {
     expect(at.now().page).toBe(5);
   });
 
+  // "Following a link": a place's point at the view's top left; "Previous view": the place there, read back.
+  it('goes to a place on a page, and reads the place at the view’s top left', () => {
+    const at = viewing();
+    act(() => at.now().goToPage(4, { across: 0, down: 0.5 }));
+    const box = at.now().layout.boxes[4]!;
+    expect(at.scroller.scrollTop).toBeCloseTo(box.top + box.height / 2 - 24, 6);
+    const place = at.now().placeInView()!;
+    expect([place.index, place.down]).toEqual([4, expect.closeTo(0.5, 6)]);
+  });
+
   it('shows a page only where it is out of view', () => {
     const at = viewing();
     act(() => at.now().showPage(0));
@@ -194,6 +204,20 @@ describe('a display of one row at a time', () => {
     act(() => at.now().goToPage(5));
     expect(at.now().layout.boxes.map((box) => box.index)).toEqual([4, 5]);
     expect(at.now().atLast).toBe(true);
+  });
+
+  // "Following a link" in one row at a time: the place's row shown, the place at the view's top left.
+  it('shows the row of a place gone to, the place at the view’s top left', () => {
+    const at = viewing();
+    act(() => at.now().zoomTo(2, 'Custom'));
+    act(() => at.now().setDisplay('single'));
+    act(() => at.now().goToPage(3, { across: 0, down: 0.5 }));
+    expect(at.now().layout.boxes.map((box) => box.index)).toEqual([3]);
+    const box = at.now().layout.boxes[0]!;
+    expect(at.scroller.scrollTop).toBeCloseTo(box.top + box.height / 2 - 24, 6);
+    // A place on the row in view is scrolled to, the row kept.
+    act(() => at.now().goToPage(3, { across: 0, down: 0.25 }));
+    expect(at.scroller.scrollTop).toBeCloseTo(box.top + box.height / 4 - 24, 6);
   });
 
   // "Pushed past its start to the row before, at its end."

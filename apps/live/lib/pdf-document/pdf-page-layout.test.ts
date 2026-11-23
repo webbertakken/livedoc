@@ -291,6 +291,29 @@ describe('a place in the pages', () => {
     expect(PdfPageLayout.scrollToPage(layout, 0, VIEW)).toEqual({ left: 0, top: 0 });
     expect(PdfPageLayout.scrollToPage(layout, 9, VIEW)).toBeNull();
   });
+
+  // "Following a link": a place's point at the view's top left, the ground over it showing.
+  it('scrolls a place on a page to the top left of the view', () => {
+    const layout = at(1);
+    // Half way down page two: its top, the gap, and half of its 1,056 pixels.
+    expect(PdfPageLayout.scrollToPlace(layout, { index: 1, across: 0, down: 0.5 }, VIEW)).toEqual({
+      left: 0,
+      top: 1056 + 16 + 528,
+    });
+    expect(PdfPageLayout.scrollToPlace(layout, { index: 9, across: 0, down: 0 }, VIEW)).toBeNull();
+  });
+
+  // "Previous view": the place at the view's top left, kept to go back to.
+  it('reads the place at the view’s top left', () => {
+    const layout = at(1);
+    const scrolled = { left: 0, top: 1056 + 16 + 528 };
+    expect(PdfPageLayout.placeInView(layout, scrolled)).toEqual({
+      index: 1,
+      across: expect.any(Number),
+      down: 0.5,
+    });
+    expect(PdfPageLayout.placeInView({ ...layout, boxes: [] }, scrolled)).toBeNull();
+  });
 });
 
 describe('the page in view', () => {
