@@ -132,3 +132,30 @@ test('a Word file’s equations are drawn as maths, and leave as they came', asy
   }
   expectNoPageErrors(pageErrors);
 });
+
+// objects.md "Equations in the editor": Insert > Symbols > Equation puts an empty equation at the caret, the caret in
+// its box; Escape returns to the text after it.
+test('an equation is inserted from the menu and written in its box', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.focus();
+  await page.keyboard.type('Area ');
+
+  await (await officeMenuItem(page, ['Insert', 'Symbols', 'Equation'])).click();
+  const equation = body.locator('.text-document-equation');
+  await expect(equation).toHaveAttribute('data-editing', 'true');
+  await page.keyboard.type('\\pi r^2');
+  await page.keyboard.press('Escape');
+  await page.keyboard.type(' here.');
+  await expect(equation.locator('mi', { hasText: 'π' })).toHaveCount(1);
+  await expect(equation.locator('msup')).toHaveCount(1);
+  await expect(body.locator('p').first()).toContainText('here.');
+  await expect(equation).not.toHaveAttribute('data-editing', 'true');
+  expectNoPageErrors(pageErrors);
+});

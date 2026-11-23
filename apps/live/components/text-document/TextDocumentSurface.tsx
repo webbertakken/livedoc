@@ -120,6 +120,7 @@ import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
+import { equationActions } from '@/lib/text-document/text-document-equation-insert';
 import { placedPicturesPlugin } from '@/lib/text-document/text-document-picture-placed-plugin';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import {
@@ -693,6 +694,11 @@ export function TextDocumentSurface({
     () => horizontalLineActions(editorView, bodyWrites),
     [editorView, bodyWrites],
   );
+  // Insert > Symbols > Equation (objects.md "Equations in the editor"), in the body.
+  const equationInsert = useMemo(
+    () => equationActions(editorView, bodyWrites),
+    [editorView, bodyWrites],
+  );
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, writes);
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
@@ -765,6 +771,7 @@ export function TextDocumentSurface({
       ...columns.actions,
       ...breakActions,
       ...lineActions,
+      ...equationInsert,
       ...characterDialogs.actions,
       ...tableActions,
       ...pictures.actions,
@@ -776,6 +783,7 @@ export function TextDocumentSurface({
     [
       breakActions,
       lineActions,
+      equationInsert,
       characterDialogs.actions,
       tableActions,
       pictures.actions,

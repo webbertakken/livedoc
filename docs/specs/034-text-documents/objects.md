@@ -4,7 +4,8 @@
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
 A horizontal line, special characters and emoji are inserted, emoji also from the colon list.
-An equation is held, read and written in both formats, kept in the live state, drawn and written in its box.
+An equation is held, read and written in both formats, kept in the live state, drawn, inserted and written in its
+box; the equation toolbar is specified.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -391,7 +392,8 @@ An equation is an inline of a paragraph, beside runs, fields, notes and pictures
   then the menus Greek letters, Miscellaneous operations, Relations, Math operators and Arrows, each a grid of
   symbols, Google's sets (default, until a capture): a press writes it at the caret, in an equation, a new one if the
   caret is outside one.
-- **Insert > Equation** inserts an empty equation at the caret, the caret in its box, and shows the toolbar.
+- **Insert > Equation** inserts an empty equation at the caret, in place of a selection, the caret in its box, and shows
+  the toolbar; in the body only, as the box is (default).
 - Undo takes back an equation's typing as Google's, a word at a time, as typing in text does.
 
 ## Special characters
