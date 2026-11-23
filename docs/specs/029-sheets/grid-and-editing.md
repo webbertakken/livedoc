@@ -55,8 +55,9 @@ Every navigation shortcut of the matrix, heard by the grid while it has focus an
   back to the grid. Alt+Shift+K opens All Sheets ([Surface](surface.md#sheet-bar)).
 - Tab and Enter move within a selection without losing it.
 
-The surface's areas, from anywhere in it: Ctrl+Alt+. and Ctrl+Alt+, move focus to the next and previous area (the
-menu bar, the toolbar, the formula bar, the grid, the sheet bar, an open side panel), as F6 and Shift+F6 do;
+The surface's areas, from anywhere in it: F6 and Ctrl+Alt+. move focus to the next area and Shift+F6 and Ctrl+Alt+,
+to the previous one, wrapping round (the title row, the menu bar, the toolbar, the formula bar, the grid, an open
+side panel, the sheet bar; [Canvas accessibility](../004-interface-design/canvas-accessibility.md));
 Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 
 ## Editing

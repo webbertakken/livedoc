@@ -29,6 +29,8 @@ export type SheetSurfaceKeys = {
   stepSheet: (step: -1 | 1) => void;
   // Alt+Shift+Q: focus to the selection's summary, while it shows.
   focusSummary: () => void;
+  // Ctrl+Alt+Shift+M: focus out of the grid, to the toolbar (D137).
+  leaveGrid: () => void;
 };
 
 export function useSheetGridKeys({
@@ -114,6 +116,8 @@ export function useSheetGridKeys({
         return surface?.stepSheet(cmd.step);
       case 'summary':
         return surface?.focusSummary();
+      case 'leave':
+        return surface?.leaveGrid();
       case 'selectAll':
         return c.setSelection(selectAll(sel, c.grid));
       case 'selectRow':

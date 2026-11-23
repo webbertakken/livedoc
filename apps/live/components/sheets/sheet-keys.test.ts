@@ -42,6 +42,7 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     [k('PageDown', { ctrlKey: true, shiftKey: true }), { kind: 'sheet', step: 1 }],
     [k('Q', { altKey: true, shiftKey: true, code: 'KeyQ' }), { kind: 'summary' }],
     [k(' ', { ctrlKey: true, shiftKey: true }), { kind: 'selectAll' }],
+    [k('M', { ctrlKey: true, altKey: true, shiftKey: true, code: 'KeyM' }), { kind: 'leave' }],
     [k('a', { metaKey: true }), { kind: 'selectAll' }],
     [k(' ', { shiftKey: true }), { kind: 'selectRow' }],
     [k(' ', { ctrlKey: true }), { kind: 'selectCol' }],

@@ -2,9 +2,11 @@
 
 // The grid's keys only a workbook has (docs/specs/029-sheets/grid-and-editing.md "Moving around"): Alt+Up and
 // Alt+Down, Ctrl+Shift+Page Up and Page Down open the previous and next sheet; Alt+Shift+Q puts focus on the
-// selection's summary. The surface knows the sheets; the open sheet's grid hears the keys.
+// selection's summary; Ctrl+Alt+Shift+M takes it out to the toolbar (D137). The surface knows the sheets; the open
+// sheet's grid hears the keys.
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { SheetSurfaceKeys } from '@/components/sheets/useSheetGridKeys';
+import { regionTarget, shownRegions } from '@/hooks/ui/useRegionCycle';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetBarTab } from './SheetBar';
 import { useSummarySlot } from './summary-slot';
@@ -49,6 +51,12 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
         const summary = slot?.querySelector<HTMLButtonElement>('button[aria-haspopup]');
         debugLog('[workbook] summary focus', { shown: !!summary });
         summary?.focus();
+      },
+      leaveGrid: () => {
+        const toolbar = shownRegions(document).find((root) => root.dataset.region === 'toolbar');
+        const target = toolbar ? regionTarget(toolbar) : null;
+        debugLog('[workbook] leave grid', { to: target ? 'toolbar' : null });
+        target?.focus();
       },
     }),
     [step, slot],

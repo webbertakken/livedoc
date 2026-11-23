@@ -30,6 +30,8 @@ type SheetKeyCommand =
   | { kind: 'sheet'; step: -1 | 1 }
   // Alt+Shift+Q: focus to the selection's summary.
   | { kind: 'summary' }
+  // Ctrl+Alt+Shift+M: focus out of the grid (D137).
+  | { kind: 'leave' }
   | { kind: 'selectAll' }
   | { kind: 'selectRow' }
   | { kind: 'selectCol' }
@@ -75,6 +77,8 @@ export function sheetKey(e: KeyLike): SheetKeyCommand | null {
   if (e.key === 'Delete' || e.key === 'Backspace') return mod ? null : { kind: 'clear' };
   if (e.key === 'Escape') return { kind: 'escape' };
   if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) return { kind: 'menu' };
+  if (e.ctrlKey && e.altKey && e.shiftKey && !e.metaKey && e.code === 'KeyM')
+    return { kind: 'leave' };
   if (
     e.altKey &&
     e.shiftKey &&
