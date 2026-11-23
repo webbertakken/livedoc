@@ -8,6 +8,7 @@ import type {
   FileMark,
   Outline,
   PageBitmap,
+  PageMatrix,
   PageTurns,
   TileRect,
   PageLink,
@@ -19,7 +20,7 @@ import type {
 import type { EmbeddedFiles } from '../embedded-file';
 import type { PageField } from '../file-field';
 import type { PageText } from '../page-text';
-import { drawPage, drawTile } from './draw-page';
+import { drawPage, drawTile, pageMatrix } from './draw-page';
 import { readDocument, readPages } from './read-document';
 import { readEmbeddedFile, readEmbeddedFiles } from './read-embedded-files';
 import { readFields } from './read-fields';
@@ -99,6 +100,10 @@ export class PdfReader {
 
   drawTile(index: number, scale: number, turns: PageTurns, rect: TileRect): PageBitmap | null {
     return drawTile(this.file, index, scale, turns, rect);
+  }
+
+  pageMatrix(index: number, turns: PageTurns = 0): PageMatrix | null {
+    return pageMatrix(this.file, index, turns);
   }
 
   outline(most?: number): Outline {

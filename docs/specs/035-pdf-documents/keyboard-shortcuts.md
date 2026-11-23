@@ -33,7 +33,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Previous page, next page                | ←, →                                  | ←, → (or ⌘Page Up, ⌘Page Down)        | built     |
 | First page, last page                   | Home, End                             | The same                              | built     |
 | Go to page                              | ⌘⌥G `(default)`                       | ⌘⇧N                                   | built     |
-| Previous view, next view                | ⌥←, ⌥→                                | The same                              | specified |
+| Previous view, next view                | ⌥←, ⌥→                                | The same                              | built     |
 | Zoom in, zoom out                       | ⌘=, ⌘-                                | The same                              | built     |
 | Actual size, fit page, fit width        | ⌘1, ⌘0, ⌘2                            | The same †                            | built     |
 | Rotate view clockwise, counterclockwise | ⌘⇧+, ⌘⇧-                              | The same †                            | built     |

@@ -112,6 +112,8 @@ describe('the engine over a worker thread', () => {
     expect(selected?.text).toBe(FIXTURE_LINE.slice(0, selected?.text.length));
     expect(selected?.text.length).toBeGreaterThan(3);
     expect(await engine.fileMarks(0)).toEqual([]);
+    // A page's matrix crosses as six numbers.
+    expect(await engine.pageMatrix(0)).toEqual([1, 0, 0, -1, 0, 792]);
     // What a file holds besides its pages crosses as plain values: this one holds none of it.
     expect(await engine.fields(0)).toEqual([]);
     expect(await engine.signatures()).toEqual([]);
@@ -179,6 +181,7 @@ describe('the engine over a worker thread', () => {
     expect(await engine.pageText(0)).toBeNull();
     expect(await engine.outline()).toEqual({ items: [], cut: false });
     expect(await engine.links(0)).toEqual([]);
+    expect(await engine.pageMatrix(0)).toBeNull();
     expect(await engine.selectText(0, { x: 0, y: 0 }, { x: 1, y: 1 })).toBeNull();
     expect(await engine.fileMarks(0)).toEqual([]);
     expect(await engine.fields(0)).toEqual([]);

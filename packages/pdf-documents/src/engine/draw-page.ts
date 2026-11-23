@@ -109,6 +109,26 @@ function pictureOf(
   return rgba;
 }
 
+/** The matrix a page is drawn with, turned `turns` quarters, whatever the scale; null where there is no such page. */
+export function pageMatrix(
+  file: ReaderFile,
+  index: number,
+  turns: PageTurns = 0,
+): PageMatrix | null {
+  const { p } = file;
+  return file.withPage(index, (page) =>
+    matrixOf(
+      file,
+      page,
+      turnedView(
+        clampSide(p.FPDF_GetPageWidthF(page)),
+        clampSide(p.FPDF_GetPageHeightF(page)),
+        turns,
+      ),
+    ),
+  );
+}
+
 /**
  * Draws a page, turned `turns` quarters clockwise by the reader itself, so the matrix places a mark on the turned
  * picture; `ceiling` is the most pixels its picture may hold, the limit's own unless a test hands a smaller.
