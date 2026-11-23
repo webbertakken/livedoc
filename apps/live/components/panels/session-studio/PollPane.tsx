@@ -27,7 +27,7 @@ import type { SessionToolsProps } from '@/components/chrome/session-tools-props'
 import { StudioButton, StudioCallout, StudioLabel } from './studio-ui';
 
 const field =
-  'w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100';
+  'min-h-field w-full rounded-control border border-slate-200 bg-white px-2 py-1.5 text-body text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100';
 
 type PollPaneProps = Pick<
   SessionToolsProps,
@@ -149,7 +149,7 @@ export function PollComposerBody({
           This document isn&apos;t shared, so only you will get this poll. Share it to ask others.
         </StudioCallout>
       ) : null}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <StudioLabel
           aside={
             question.length > POLL_QUESTION_MAX * 0.8
@@ -180,7 +180,7 @@ export function PollComposerBody({
           className={`${field} resize-none leading-snug`}
         />
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <StudioLabel>Answers</StudioLabel>
         <PollStyleTiles style={style} onChange={setStyle} />
       </div>
@@ -188,8 +188,8 @@ export function PollComposerBody({
       {style === 'choice' ? (
         <div className="flex flex-col gap-1">
           {options.map((opt, i) => (
-            <div key={i} className="flex items-center gap-1.5">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+            <div key={i} className="flex items-center gap-1">
+              <span className="flex size-icon-title shrink-0 items-center justify-center rounded-full bg-slate-100 text-glyph text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                 <span className="text-optical-centre">{String.fromCharCode(65 + i)}</span>
               </span>
               <input
@@ -220,7 +220,7 @@ export function PollComposerBody({
                   type="button"
                   aria-label={`Remove answer ${i + 1}`}
                   onClick={() => setOptions(options.filter((_, j) => j !== i))}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                  className="flex size-chip shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 >
                   ×
                 </button>
@@ -231,7 +231,7 @@ export function PollComposerBody({
             <button
               type="button"
               onClick={() => addOption(true)}
-              className="ml-6 self-start rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
+              className="ml-6 min-h-row self-start rounded-control px-2 text-body text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/15"
             >
               + Add answer
             </button>
@@ -241,7 +241,7 @@ export function PollComposerBody({
       <StudioButton variant="primary" onClick={start} disabled={missing !== null}>
         {missing ?? 'Ask everyone'}
       </StudioButton>
-      <p className="text-center text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="text-center text-supporting text-slate-500 dark:text-slate-400">
         Everyone here who can take part is asked; view-only visitors are not. Answers are anonymous
         and nothing is saved to the document.
       </p>
@@ -256,7 +256,7 @@ export function PollComposerBody({
 function RosterPreview({ options }: { options: string[] }) {
   if (options.length === 0) {
     return (
-      <p className="rounded-lg bg-slate-50 px-2.5 py-2 text-[11px] text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+      <p className="rounded-menu bg-slate-50 px-3 py-2 text-supporting text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
         Nobody else is here yet. Share the document and this poll will list whoever has joined when
         you ask it.
       </p>
@@ -269,13 +269,13 @@ function RosterPreview({ options }: { options: string[] }) {
         {options.map((name) => (
           <li
             key={name}
-            className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            className="rounded-control bg-slate-100 px-1 py-0.5 text-supporting text-slate-700 dark:bg-slate-800 dark:text-slate-200"
           >
             {name}
           </li>
         ))}
       </ul>
-      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">
         Taken when you ask, so anyone who joins after won&rsquo;t be on the list.
       </p>
     </div>
@@ -285,14 +285,12 @@ function RosterPreview({ options }: { options: string[] }) {
 function RunningPoll({ poll }: { poll: LivePoll }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+      <div className="flex flex-col gap-2 rounded-surface border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+        <span className="inline-flex items-center gap-1 text-supporting text-emerald-700 dark:text-emerald-300">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" aria-hidden />
           Asking now · {POLL_STYLE_LABEL[poll.style]}
         </span>
-        <span className="text-[13px] font-semibold leading-snug text-slate-800 dark:text-slate-100">
-          {poll.question}
-        </span>
+        <span className="text-body text-slate-800 dark:text-slate-100">{poll.question}</span>
       </div>
       <StudioCallout>
         Answers come in on the Poll panel, where you can end the poll or keep its results on the

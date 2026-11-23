@@ -31,9 +31,9 @@ export function TimerPresetChips({
           type="button"
           onClick={() => onPick(m)}
           aria-pressed={minutes === m}
-          className={`cursor-pointer rounded-md py-1 text-[11px] font-semibold tabular-nums transition ${
+          className={`min-h-row cursor-pointer rounded-control text-body tabular-nums transition ${
             minutes === m
-              ? `bg-brand-700 text-white ${SOLID_BRAND_DARK_CONTROL}`
+              ? `font-medium bg-brand-700 text-white ${SOLID_BRAND_DARK_CONTROL}`
               : 'bg-slate-100 text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-brand-500/15 dark:hover:text-brand-100'
           }`}
         >
