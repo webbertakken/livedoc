@@ -25,7 +25,7 @@ export function SideTabs({
     <div
       role="tablist"
       aria-label="Show open or resolved"
-      className={`relative grid grid-cols-2 rounded-lg p-0.5 ${SEGMENT_TRACK}`}
+      className={`relative grid grid-cols-2 rounded-menu p-0.5 ${SEGMENT_TRACK}`}
     >
       <SegmentSlider
         count={SIDES.length}
@@ -41,15 +41,15 @@ export function SideTabs({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(s.id)}
-            className={`relative z-10 flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-[11px] font-semibold transition-colors ${
+            className={`relative z-10 flex min-h-row items-center justify-center gap-1 rounded-control px-2 text-body transition-colors ${
               active
-                ? 'text-white'
+                ? 'font-medium text-white'
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
             {s.label}
             <span
-              className={`inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-[10px] font-semibold transition-colors ${
+              className={`inline-flex h-icon-row min-w-icon-row items-center justify-center rounded-full px-1 text-glyph transition-colors ${
                 active
                   ? 'bg-white/25 text-white'
                   : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
@@ -94,9 +94,9 @@ export function KindChips({
             aria-pressed={active}
             aria-label={`${k.label} ${counts[k.id]}`}
             onClick={() => onChange(k.id)}
-            className={`inline-flex h-7 min-w-0 items-center justify-center gap-1 rounded-full px-2 text-[11px] font-semibold transition-colors ${
+            className={`inline-flex h-row min-w-0 items-center justify-center gap-1 rounded-full px-2 text-body transition-colors ${
               active
-                ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200 dark:bg-brand-500/15 dark:text-brand-200 dark:ring-brand-500/30'
+                ? 'font-medium bg-brand-50 text-brand-700 ring-1 ring-brand-200 dark:bg-brand-500/15 dark:text-brand-200 dark:ring-brand-500/30'
                 : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
             }`}
           >

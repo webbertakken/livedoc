@@ -142,7 +142,7 @@ export function CollaboratePanel({
       dismissOnOutside={dismissOnOutside}
       onPopoverClose={onPopoverClose}
     >
-      <div className="flex flex-col gap-2.5 px-3 pb-3">
+      <div className="flex flex-col gap-2 px-3 pb-3">
         <SideTabs
           value={side}
           counts={{ open: openAll, resolved: resolvedAll }}
@@ -162,11 +162,11 @@ export function CollaboratePanel({
             {sections.map((section, s) => (
               <section key={section.key} aria-label={section.label ?? undefined}>
                 {section.label ? (
-                  <h3 className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <h3 className="px-3 pb-1.5 text-supporting text-slate-500 dark:text-slate-400">
                     {section.label}
                   </h3>
                 ) : null}
-                <ul className="flex flex-col gap-1.5">
+                <ul className="flex flex-col gap-1">
                   {section.rows.map((row, r) =>
                     row.kind === 'action' ? (
                       <ActionRowItem
