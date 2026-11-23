@@ -8,11 +8,17 @@
 // and what the room had not confirmed is made again on it ("A change carried across a replacement").
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { BlobKey } from '@livedoc/document';
-import type { PageInfo, PdfPermissions, UnconfirmedChange } from '@livedoc/pdf-documents';
+import type {
+  PageInfo,
+  PdfOpened,
+  PdfPermissions,
+  UnconfirmedChange,
+} from '@livedoc/pdf-documents';
 import { apiReadBlob } from '@/lib/api/files';
 import { apiLoadPdfState, type PdfDocumentScope, type PdfStateRead } from '@/lib/api/pdf-documents';
 import { ApiError } from '@/lib/api-client';
 import { debugLog } from '@/lib/debug-log';
+import { track } from '@/lib/telemetry';
 import { carryPdfChanges } from './pdf-carry';
 import {
   startPdfEngineWorker,
@@ -22,7 +28,7 @@ import {
 import type { PdfDocumentRefusal } from './pdf-document-bus';
 import type { BindPdfLiveChanges, PdfLiveBinding } from './pdf-live-binding';
 import { pdfPageDrawer, type PdfPageDrawer } from './pdf-page-drawer';
-import type { PdfSurfaceRefusal } from './pdf-refusals';
+import { pdfOpenedType, type PdfOpenOutcome, type PdfSurfaceRefusal } from './pdf-refusals';
 import { pdfUndo, type PdfUndo } from './pdf-undo';
 
 export type PdfDocumentOpen =
@@ -54,6 +60,16 @@ export type PdfDocumentOpen =
       /** Listen for a change made here being dropped because the room refused it; the same across bindings. */
       onDropped: (listener: (refusal: PdfDocumentRefusal) => void) => () => void;
     }
+  /**
+   * The file asks for an open password (opening.md "Passwords"): the engine holds it and waits. `tries`: how many
+   * given so far did not open it. `unlock` gives the engine a password and settles once it has answered.
+   */
+  | {
+      phase: 'locked';
+      storedFile: BlobKey;
+      tries: number;
+      unlock: (password: string) => Promise<void>;
+    }
   // `storedFile`: the bytes are held and can be downloaded as they came.
   | { phase: 'refused'; refusal: PdfSurfaceRefusal; storedFile: BlobKey | null }
   // The tab is no longer a PDF tab of this document.
@@ -76,6 +92,12 @@ const BROWSER: PdfDocumentDeps = {
 const OPENING: PdfDocumentOpen = { phase: 'opening' };
 
 const codeOf = (error: unknown): string | null => (error instanceof ApiError ? error.code : null);
+
+/** What the engine answers once it has a password it can open the file with, or a refusal. */
+type PdfUnlocked = Exclude<PdfOpened, { needsPassword: true }>;
+
+const asksPassword = (opened: PdfOpened): opened is Extract<PdfOpened, { needsPassword: true }> =>
+  !opened.ok && opened.needsPassword === true;
 
 export function usePdfDocument(
   scope: PdfDocumentScope,
@@ -126,6 +148,26 @@ export function usePdfDocument(
       debugLog(`[pdf] surface ${name} tab=${tabId}`);
       setShown({ of: opening, open: next });
     };
+    // Asks this person for the open password until the engine opens the file or refuses it; the password goes to the
+    // engine and nowhere else, never logged or kept here.
+    const passwordGiven = (client: PdfEngineClient, storedFile: BlobKey) =>
+      new Promise<PdfUnlocked>((resolve) => {
+        const ask = (tries: number) =>
+          show({
+            phase: 'locked',
+            storedFile,
+            tries,
+            unlock: async (password) => {
+              const answer = await client.unlock(password);
+              if (cancelled) return;
+              if (answer.ok || !answer.needsPassword) return resolve(answer);
+              debugLog(`[pdf] password-wrong tab=${tabId}`);
+              ask(tries + 1);
+            },
+          });
+        debugLog(`[pdf] password-asked tab=${tabId}`);
+        ask(0);
+      });
     const readState = async (): Promise<PdfStateRead | null> => {
       try {
         return await from.loadState(where);
@@ -149,14 +191,20 @@ export function usePdfDocument(
         shown?.terminate();
         return result;
       };
+      // Counted once per open (opening.md "Telemetry and observability"): a replaced stored file is no new open.
+      const counted = (outcome: PdfOpenOutcome) => {
+        if (!shown && !cancelled) track('Pdf', 'Opened', pdfOpenedType(outcome));
+      };
       const storedFile = read.storedFile;
       let bytes: Uint8Array<ArrayBuffer>;
       try {
         bytes = await from.readBlob(where, storedFile);
       } catch (error) {
         const code = codeOf(error);
-        if (code === 'blob_missing' || code === 'files_unavailable')
+        if (code === 'blob_missing' || code === 'files_unavailable') {
+          counted(code);
           return ending(show({ phase: 'refused', refusal: code, storedFile: null }));
+        }
         return ending(show({ phase: 'failed' }));
       }
       if (cancelled) return ending(undefined);
@@ -166,13 +214,16 @@ export function usePdfDocument(
         // Only the engine whose pages are shown says so: one ended for its successor stopped on purpose.
         if (engine === client) show({ phase: 'refused', refusal: 'pdf_stopped', storedFile });
       });
-      const opened = await client.open(bytes);
+      const first = await client.open(bytes);
       if (cancelled) return ending(client.terminate());
       engine = client;
+      const opened = asksPassword(first) ? await passwordGiven(client, storedFile) : first;
+      const asked = opened !== first;
       if (!opened.ok) {
-        const refusal = opened.needsPassword ? 'pdf_password' : opened.refusal;
-        return ending(show({ phase: 'refused', refusal, storedFile }));
+        counted(opened.refusal);
+        return ending(show({ phase: 'refused', refusal: opened.refusal, storedFile }));
       }
+      counted(asked ? 'password' : 'read');
       debugLog(
         `[pdf] opened pages=${opened.pages.length} bytes=${size} ranged=false ms=${Date.now() - started} read=${fetched - started} engine=${Date.now() - fetched}`,
       );

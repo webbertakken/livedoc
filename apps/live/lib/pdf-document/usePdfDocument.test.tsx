@@ -16,10 +16,17 @@ import {
 } from '@livedoc/pdf-documents';
 import { plainDocument } from '@livedoc/pdf-documents/testing';
 import { ApiError } from '@/lib/api/core';
+import { debugLog } from '@/lib/debug-log';
+import { track } from '@/lib/telemetry';
 import type { PdfEngineClient, PdfEngineStop } from './pdf-engine-client';
 import type { PdfDocumentRefusal } from './pdf-document-bus';
 import { unboundPdfLiveChanges, type BindPdfLiveChanges } from './pdf-live-binding';
 import { usePdfDocument, type PdfDocumentDeps } from './usePdfDocument';
+
+vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
+vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
+const logged = () => vi.mocked(debugLog).mock.calls.map(([line]) => line);
+const opens = () => vi.mocked(track).mock.calls.filter(([, action]) => action === 'Opened');
 
 const KEY = 'ab'.repeat(32) as BlobKey;
 const scope = { ownerId: 'ada', documentId: 'D', tabId: 't1', shareCode: null };
@@ -32,10 +39,11 @@ const read = () => ({
   storedFile: KEY,
 });
 
-function engineThat(opens: PdfOpened) {
+function engineThat(opens: PdfOpened, unlocks: PdfOpened[] = []) {
   let stop: (reason: PdfEngineStop) => void = () => {};
   const engine = {
     open: vi.fn(async () => opens),
+    unlock: vi.fn(async () => unlocks.shift()!),
     drawPage: vi.fn(async () => null),
     selectText: vi.fn(async () => null),
     fileMarks: vi.fn(async () => []),
@@ -52,9 +60,16 @@ function engineThat(opens: PdfOpened) {
 }
 
 function opening(
-  over: Partial<PdfDocumentDeps> & { opens?: PdfOpened; bind?: BindPdfLiveChanges } = {},
+  over: Partial<PdfDocumentDeps> & {
+    opens?: PdfOpened;
+    unlocks?: PdfOpened[];
+    bind?: BindPdfLiveChanges;
+  } = {},
 ) {
-  const made = engineThat(over.opens ?? { ok: true, pages: PAGES, document: plainDocument });
+  const made = engineThat(
+    over.opens ?? { ok: true, pages: PAGES, document: plainDocument },
+    over.unlocks,
+  );
   const deps: PdfDocumentDeps = {
     loadState: vi.fn(async () => read()),
     readBlob: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),
@@ -156,7 +171,6 @@ describe('usePdfDocument', () => {
   it.each([
     [{ ok: false, refusal: 'pdf_damaged' }, 'pdf_damaged'],
     [{ ok: false, refusal: 'pdf_certificate_protected' }, 'pdf_certificate_protected'],
-    [{ ok: false, needsPassword: true }, 'pdf_password'],
   ] as const)('shows the engine’s refusal %j by name, the file still held', async (opens, name) => {
     const o = opening({ opens });
     await waitFor(() => expect(phase(o)).toBe('refused'));
@@ -176,6 +190,83 @@ describe('usePdfDocument', () => {
       expect(o.hook.result.current).toEqual({ phase: 'refused', refusal: code, storedFile: null });
     },
   );
+
+  // opening.md "Passwords": an open password is asked on the pages' place, never a refusal; the engine holds the file
+  // while it waits, a wrong password leaves it waiting, and no live change is loaded until the file is open.
+  describe('a file with an open password', () => {
+    const ASKS = { ok: false, needsPassword: true } as const;
+    const WRONG = { ok: false, needsPassword: true, wrong: true } as const;
+    const OPENS = {
+      ok: true,
+      pages: PAGES,
+      document: { ...plainDocument, encrypted: true },
+    } as const;
+
+    const lockedOf = (o: ReturnType<typeof opening>) => {
+      const open = o.hook.result.current;
+      if (open.phase !== 'locked') throw new Error(`not locked: ${open.phase}`);
+      return open;
+    };
+
+    it('asks for the password, the file held and nothing bound', async () => {
+      const o = opening({ opens: ASKS });
+      await waitFor(() => expect(phase(o)).toBe('locked'));
+      expect(lockedOf(o)).toMatchObject({ storedFile: KEY, tries: 0 });
+      expect(o.bind).not.toHaveBeenCalled();
+      expect(logged()).toContain('[pdf] password-asked tab=t1');
+      expect(opens()).toEqual([]);
+    });
+
+    it('says a wrong password, then opens with the right one, never logging either', async () => {
+      const o = opening({ opens: ASKS, unlocks: [WRONG, OPENS] });
+      await waitFor(() => expect(phase(o)).toBe('locked'));
+      await act(() => lockedOf(o).unlock('swordfish'));
+      expect(lockedOf(o).tries).toBe(1);
+      expect(logged()).toContain('[pdf] password-wrong tab=t1');
+      expect(o.bind).not.toHaveBeenCalled();
+      await act(() => lockedOf(o).unlock('open sesame'));
+      await waitFor(() => expect(phase(o)).toBe('ready'));
+      expect(vi.mocked(o.engine.unlock).mock.calls).toEqual([['swordfish'], ['open sesame']]);
+      expect(readyOf(o).protected).toBe(true);
+      expect(opens()).toEqual([['Pdf', 'Opened', 'PasswordGiven']]);
+      expect(logged().join('\n')).not.toMatch(/swordfish|sesame/);
+    });
+
+    it('shows a refusal the engine names on the password', async () => {
+      const o = opening({ opens: ASKS, unlocks: [{ ok: false, refusal: 'pdf_damaged' }] });
+      await waitFor(() => expect(phase(o)).toBe('locked'));
+      await act(() => lockedOf(o).unlock('open sesame'));
+      expect(o.hook.result.current).toEqual({
+        phase: 'refused',
+        refusal: 'pdf_damaged',
+        storedFile: KEY,
+      });
+      expect(opens()).toEqual([['Pdf', 'Opened', 'Refused.Damaged']]);
+    });
+
+    it('shows nothing more once the surface has gone while a password was checked', async () => {
+      const o = opening({ opens: ASKS, unlocks: [OPENS] });
+      await waitFor(() => expect(phase(o)).toBe('locked'));
+      const { unlock } = lockedOf(o);
+      o.hook.unmount();
+      await act(() => unlock('open sesame'));
+      expect(o.bind).not.toHaveBeenCalled();
+      expect(opens()).toEqual([]);
+    });
+  });
+
+  // opening.md "Telemetry and observability": `Pdf · Opened` once per open, never again for a replaced stored file.
+  it('counts each open once, read or refused', async () => {
+    const o = opening();
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    expect(opens()).toEqual([['Pdf', 'Opened', 'Read']]);
+    const refused = opening({ opens: { ok: false, refusal: 'pdf_newer' } });
+    await waitFor(() => expect(phase(refused)).toBe('refused'));
+    expect(opens()).toEqual([
+      ['Pdf', 'Opened', 'Read'],
+      ['Pdf', 'Opened', 'Refused.Newer'],
+    ]);
+  });
 
   it('says the tab is gone when it is no PDF tab of the document any more', async () => {
     const o = opening({
@@ -270,6 +361,20 @@ describe('usePdfDocument', () => {
     await waitFor(() => expect(phase(o)).toBe('failed'));
   });
 
+  it('fails, to be tried again, when the state cannot be bound again after a refusal', async () => {
+    const live = refusable();
+    let binds = 0;
+    const bind: BindPdfLiveChanges = async (state) => {
+      binds += 1;
+      if (binds > 1) throw new TypeError('network');
+      return live.bind(state);
+    };
+    const o = opening({ bind });
+    await waitFor(() => expect(phase(o)).toBe('ready'));
+    act(() => live.made[0]!.refuse('state'));
+    await waitFor(() => expect(phase(o)).toBe('failed'));
+  });
+
   it('opens the stored file anew when the state names another after a refusal', async () => {
     const live = refusable();
     const o = opening({ bind: live.bind });
@@ -280,6 +385,8 @@ describe('usePdfDocument', () => {
     await waitFor(() => expect(o.deps.readBlob).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(phase(o)).toBe('ready'));
     expect(readyOf(o).storedFile).toBe(other);
+    // A replaced stored file is no new open.
+    expect(opens()).toEqual([['Pdf', 'Opened', 'Read']]);
     expect(o.engine.terminate).toHaveBeenCalled();
   });
 

@@ -51,11 +51,6 @@ import {
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
 import { PDF_PANELS, THUMBNAILS_PANEL } from '@/lib/pdf-document/pdf-panels';
 import { pdfRoomBinding, type PdfFrame } from '@/lib/pdf-document/pdf-room-binding';
-import {
-  PDF_REFUSAL_COPY,
-  pdfRefusalDownloads,
-  pdfRefusalRetries,
-} from '@/lib/pdf-document/pdf-refusals';
 import { OPEN_LEFT_PANEL, PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
 import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
 import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
@@ -70,7 +65,7 @@ import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
-import { PdfNotice, PdfNoticeButton } from './PdfNotice';
+import { PdfOpenNotices } from './PdfOpenNotices';
 import { PdfPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
@@ -279,7 +274,7 @@ export function PdfDocumentSurface({
     [tabId, pages, goToPage],
   );
 
-  const storedFile = open.phase === 'ready' || open.phase === 'refused' ? open.storedFile : null;
+  const storedFile = 'storedFile' in open ? open.storedFile : null;
   const download = useCallback(async () => {
     if (!storedFile) return;
     setProblem(null);
@@ -524,25 +519,12 @@ export function PdfDocumentSurface({
           </div>
         </OfficePanelLayout>
       ) : null}
-      {open.phase === 'refused' ? (
-        <PdfNotice sentence={PDF_REFUSAL_COPY[open.refusal]}>
-          {pdfRefusalRetries(open.refusal) ? (
-            <PdfNoticeButton onClick={() => setAttempt((n) => n + 1)}>Try again</PdfNoticeButton>
-          ) : null}
-          {open.storedFile && pdfRefusalDownloads(open.refusal) ? (
-            <PdfNoticeButton onClick={() => void download()}>Download</PdfNoticeButton>
-          ) : null}
-        </PdfNotice>
-      ) : null}
+      <PdfOpenNotices
+        open={open}
+        onTryAgain={() => setAttempt((n) => n + 1)}
+        onDownload={() => void download()}
+      />
       <PdfLinkDialog asked={links.asked} onClose={links.close} />
-      {open.phase === 'gone' ? (
-        <PdfNotice sentence="This PDF is no longer in this document." />
-      ) : null}
-      {open.phase === 'failed' ? (
-        <PdfNotice role="alert" sentence="This tab couldn’t load.">
-          <PdfNoticeButton onClick={() => setAttempt((n) => n + 1)}>Try Again</PdfNoticeButton>
-        </PdfNotice>
-      ) : null}
     </div>
   );
 }

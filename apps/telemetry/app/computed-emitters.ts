@@ -48,6 +48,7 @@ function tokensAfter(source: string, marker: string, close: string): string[] {
 
 // A PDF document's view: its page displays and the ways a zoom is asked for.
 const PDF_VIEW = read('live/lib/pdf-document/usePdfView.ts');
+const PDF_REFUSALS = read('live/lib/pdf-document/pdf-refusals.ts');
 
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
@@ -486,6 +487,15 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   },
   'apps/live/lib/pdf-document/usePdfView.ts Pdf·Zoomed': {
     values: tokensAfter(PDF_VIEW, 'export type PdfZoomWay =', ';'),
+  },
+  // How each open of a PDF document came out (docs/specs/035-pdf-documents/opening.md "Telemetry and observability"),
+  // a refusal's name read from `pdfOpenedType`'s own table.
+  'apps/live/lib/pdf-document/usePdfDocument.ts Pdf·Opened': {
+    values: [
+      'Read',
+      'PasswordGiven',
+      ...tokensAfter(PDF_REFUSALS, 'const REFUSED_TYPE', '};').map((name) => `Refused.${name}`),
+    ],
   },
   // A text document downloaded in the format it is held in (docs/specs/034-text-documents/text-document.md).
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {

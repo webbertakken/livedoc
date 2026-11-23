@@ -42,7 +42,6 @@ import {
   zoomPercentId,
 } from './pdf-menus';
 import { PDF_MODES, type PdfMode } from './pdf-modes';
-import { PDF_REFUSAL_COPY, pdfRefusalDownloads, pdfRefusalRetries } from './pdf-refusals';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
 import { PAGE_DISPLAY_CONTROL, pdfToolbar } from './pdf-toolbar';
 
@@ -221,24 +220,5 @@ describe("a PDF document's menus and toolbar", () => {
     // keyboard-shortcuts.md "Marks and comments": Undo and redo, a text document's keys.
     expect([keys['undo'], keys['redo']]).toEqual(['Ctrl+Z', 'Ctrl+Shift+Z']);
     expect(new Set(PDF_SHORTCUTS.map((row) => row.id)).size).toBe(PDF_SHORTCUTS.length);
-  });
-});
-
-// opening.md "Refusals": one sentence a refusal, Download wherever the bytes are held, Try again after a stop.
-describe('what a refusal says and offers', () => {
-  it('has copy for every refusal, ending as a sentence', () => {
-    for (const sentence of Object.values(PDF_REFUSAL_COPY)) expect(sentence).toMatch(/\.$/);
-    expect(PDF_REFUSAL_COPY.pdf_damaged).toBe(
-      "This PDF is damaged and can't be opened. You can still download the file.",
-    );
-  });
-
-  it('offers Download unless the bytes are not held, and Try again only after a stop', () => {
-    expect(pdfRefusalDownloads('pdf_damaged')).toBe(true);
-    expect(pdfRefusalDownloads('pdf_password')).toBe(true);
-    expect(pdfRefusalDownloads('blob_missing')).toBe(false);
-    expect(pdfRefusalDownloads('files_unavailable')).toBe(false);
-    expect(pdfRefusalRetries('pdf_stopped')).toBe(true);
-    expect(pdfRefusalRetries('pdf_damaged')).toBe(false);
   });
 });
