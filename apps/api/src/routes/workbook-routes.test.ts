@@ -232,6 +232,11 @@ describe('downloading a spreadsheet', () => {
           { r: 0, c: 1, formula: '=A1*2', value: { k: 'n', v: 42 } },
           { r: 1, c: 0, value: { k: 's', v: 'rent' } },
         ],
+        // The sheet's own line sizes (standard-mapping.md "Rows and columns in the file"), nothing sized by hand.
+        lines: {
+          r: { lines: new Map(), collapsed: [], size: expect.closeTo(28, 2) },
+          c: { lines: new Map(), collapsed: [], size: expect.closeTo(120, 2) },
+        },
       },
     ]);
   });
