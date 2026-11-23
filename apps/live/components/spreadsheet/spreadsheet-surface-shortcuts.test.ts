@@ -118,6 +118,15 @@ const EXPECTED: Record<string, unknown[]> = {
   'find-with-find-tab': [{ kind: 'find', replace: false }],
   'context-menu': [{ kind: 'menu' }],
   'read-column': [{ kind: 'read', axis: 'c' }],
+  // grid-and-editing.md "Rows, columns and cells": whole lines at once, else a menu (D157).
+  'insert-rows-above': [{ kind: 'lines', op: 'insert' }],
+  'insert-columns-left': [{ kind: 'lines', op: 'insert' }],
+  'delete-rows': [{ kind: 'lines', op: 'delete' }],
+  'delete-columns': [{ kind: 'lines', op: 'delete' }],
+  'hide-row': [{ kind: 'hide', axis: 'r', hidden: true }],
+  'unhide-row': [{ kind: 'hide', axis: 'r', hidden: false }],
+  'hide-column': [{ kind: 'hide', axis: 'c', hidden: true }],
+  'unhide-column': [{ kind: 'hide', axis: 'c', hidden: false }],
   'read-row': [{ kind: 'read', axis: 'r' }],
 };
 

@@ -250,6 +250,15 @@ export function selectsSeveral(sel: Selection, grid: Grid): boolean {
   return range.r1 < one.r1 || range.c1 < one.c1 || range.r2 > one.r2 || range.c2 > one.c2;
 }
 
+// Whole lines the selection's range holds (grid-and-editing.md "Rows, columns and cells"): rows when it spans every
+// column (the whole sheet included), columns when it spans every row, else none: cells.
+export function wholeLines(sel: Selection, grid: Grid): 'r' | 'c' | null {
+  const range = primaryRange(sel);
+  if (range.c1 === 0 && range.c2 >= grid.cols - 1) return 'r';
+  if (range.r1 === 0 && range.r2 >= grid.rows - 1) return 'c';
+  return null;
+}
+
 // The range Enter and Tab move within, when more than one cell is selected.
 function primaryRange(sel: Selection): GridRange {
   return sel.ranges[sel.ranges.length - 1]!;

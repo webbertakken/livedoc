@@ -82,6 +82,19 @@ export function hideAxis(
   return ids.length ? { kind: 'layout', changes: [{ k: 'hide', axis, ids, hidden }] } : null;
 }
 
+// Ctrl+Shift+9 and 0: the lines hidden by hand within from..to shown again; null when none is.
+export function showAxis(
+  sheet: Sheet,
+  axis: 'r' | 'c',
+  from: number,
+  to: number,
+): SheetWrite | null {
+  const list = axis === 'r' ? sheet.layout.rows : sheet.layout.cols;
+  const hidden = new Set((axis === 'r' ? sheet.layout.hiddenRows : sheet.layout.hiddenCols) ?? []);
+  const ids = list.slice(Math.max(0, from), to + 1).filter((id) => hidden.has(id));
+  return ids.length ? { kind: 'layout', changes: [{ k: 'hide', axis, ids, hidden: false }] } : null;
+}
+
 export function resizeAxis(
   sheet: Sheet,
   axis: 'r' | 'c',

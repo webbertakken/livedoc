@@ -46,6 +46,10 @@ export type OpenMenu =
   | { kind: 'header'; axis: 'r' | 'c'; index: number; x: number; y: number }
   | { kind: 'filter'; colId: string; x: number; y: number }
   | { kind: 'sort' }
+  // Ctrl+Alt+= or - over cells: the four inserts or deletes (D157).
+  | { kind: 'lines'; op: 'insert' | 'delete'; x: number; y: number }
+  // The Resize dialog over lines from..to.
+  | { kind: 'resize'; axis: 'r' | 'c'; from: number; to: number }
   | null;
 
 export type SheetController = {

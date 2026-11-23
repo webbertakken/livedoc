@@ -19,6 +19,7 @@ import {
   deleteAxis,
   freeze,
   hideAxis,
+  showAxis,
   insertAxis,
   moveAxis,
   resizeAxis,
@@ -271,6 +272,14 @@ describe('rows and columns', () => {
     run(b, hideAxis(s(), 'r', 1, 1, true));
     expect(s().layout.hiddenRows).toHaveLength(1);
     expect(hideAxis(s(), 'r', 50, 50, true)).toBeNull();
+    // Shown again: only the hidden lines within the span; none hidden there is no write.
+    expect(showAxis(s(), 'r', 2, 4)).toBeNull();
+    expect(showAxis(s(), 'c', 0, 3)).toBeNull();
+    const shown = showAxis(s(), 'r', 0, 3)!;
+    expect(shown).toEqual({
+      kind: 'layout',
+      changes: [{ k: 'hide', axis: 'r', ids: [s().layout.rows[1]], hidden: false }],
+    });
     run(b, resizeAxis(s(), 'c', [0], 140));
     expect(Object.values(s().layout.colSize ?? {})).toEqual([140]);
     expect(resizeAxis(s(), 'c', [99], 140)).toBeNull();

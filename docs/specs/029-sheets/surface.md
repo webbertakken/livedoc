@@ -218,3 +218,18 @@ Version History (the shell's). Each is specified with its area.
   its cells from their old place; an Editor's paste only (default).
 - **D156** One date dragged by the fill handle: Continues by the day, as Google's and Excel's do; Ctrl copies it
   (default).
+- **D157** Ctrl+Alt+= and Ctrl+Alt+- over cells: A menu at the active cell with the four inserts or deletes; over
+  whole rows or columns they act at once (default).
+- **D158** The Resize dialog's sizes: A row from 18 px, a column from 24 px, both to 2,000 px; a number past either
+  taken at the bound; OK dimmed without a number (default).
+- **D159** How deep groups nest: 7, the most XLSX carries (default).
+- **D160** Group and Ungroup over cells: A menu at the active cell offering the rows and the columns, as Google's
+  (default).
+- **D161** Alt+Shift+↑ and ↓: The innermost expanded group holding the active cell collapses; every collapsed one
+  holding it expands, or those whose control sits on it (default).
+- **D162** The outline bar: 12 px a depth and 4 px more, beside the row numbers and above the column letters
+  (default).
+- **D163** Collapsing for a Participant and a Viewer: Their own, never saved or sent; Google's viewers cannot
+  (default).
+- **D164** Lines inserted inside a group: They join it at the lesser depth of their neighbours; moved lines keep
+  their depth (default).

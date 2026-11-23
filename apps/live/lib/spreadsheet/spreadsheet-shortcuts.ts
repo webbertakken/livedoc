@@ -793,7 +793,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+=',
     '⌘+Option+=',
     'Ctrl+Alt+=',
-    'specified',
+    'surface',
   ),
   row('insert-rows-below', 'Rows and columns', 'Insert rows below', '—', '—', '—', 'specified'),
   row(
@@ -803,7 +803,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+=',
     '⌘+Option+=',
     'Ctrl+Alt+=',
-    'specified',
+    'surface',
   ),
   row(
     'insert-columns-right',
@@ -821,7 +821,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+-',
     '⌘+Option+-',
     'Ctrl+Alt+-',
-    'specified',
+    'surface',
   ),
   row(
     'delete-columns',
@@ -830,7 +830,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+-',
     '⌘+Option+-',
     'Ctrl+Alt+-',
-    'specified',
+    'surface',
   ),
   row(
     'hide-row',
@@ -839,7 +839,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+9',
     '⌘+Option+9',
     'Ctrl+Alt+9',
-    'specified',
+    'surface',
   ),
   row(
     'unhide-row',
@@ -848,7 +848,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+9',
     '⌘+Shift+9',
     'Ctrl+Shift+9',
-    'specified',
+    'surface',
   ),
   row(
     'hide-column',
@@ -857,7 +857,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+0',
     '⌘+Option+0',
     'Ctrl+Alt+0',
-    'specified',
+    'surface',
   ),
   row(
     'unhide-column',
@@ -866,7 +866,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+0',
     '⌘+Shift+0',
     'Ctrl+Shift+0',
-    'specified',
+    'surface',
   ),
   row(
     'group-rows-or-columns',

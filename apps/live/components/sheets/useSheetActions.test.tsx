@@ -435,6 +435,11 @@ describe('rows and columns', () => {
     expect(h.sheet().layout.hiddenCols).toHaveLength(1);
     h.run((a) => a.hide('r', false));
     expect(h.sheet().layout.hiddenRows ?? []).toEqual([]);
+    expect(track).toHaveBeenLastCalledWith('Sheet', 'Changed', 'Hide');
+    // Shown again with none hidden in the selection: no change.
+    vi.mocked(track).mockClear();
+    h.run((a) => a.hide('r', false));
+    expect(track).not.toHaveBeenCalled();
   });
 
   // docs/specs/029-sheets/sheet.md "Row height": sized, and back to automatic.
@@ -474,6 +479,18 @@ describe('rows and columns', () => {
     // An empty column falls back to the smallest width.
     h.run((a) => a.autofit('c', [3]));
     expect(h.view.result.current.actions.sizeOf('c', 3)).toBe(24);
+    // Several columns fit as one change (grid-and-editing.md "Fit to data").
+    vi.mocked(track).mockClear();
+    h.run((a) => a.resize('c', [0, 1], 300));
+    h.run((a) => a.autofit('c', [0, 1]));
+    expect(vi.mocked(track).mock.calls).toEqual([
+      ['Sheet', 'Changed', 'Resize'],
+      ['Sheet', 'Changed', 'Resize'],
+    ]);
+    expect(h.view.result.current.actions.sizeOf('c', 0)).toBe(24);
+    // Out of the sheet: nothing to fit, no change.
+    h.run((a) => a.autofit('c', [99]));
+    expect(vi.mocked(track)).toHaveBeenCalledTimes(2);
   });
 
   it('moves dragged lines', async () => {

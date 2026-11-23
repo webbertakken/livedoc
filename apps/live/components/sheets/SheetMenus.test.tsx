@@ -349,42 +349,79 @@ describe('a header menu', () => {
     expect(layout(h).rowSize?.[row]).toBeUndefined();
   });
 
-  it('resizes to the pixels typed, at least the line’s minimum', () => {
+  // grid-and-editing.md "Rows, columns and cells": the Resize dialog (D158).
+  it('resizes the lines selected to the pixels typed, within their bounds', () => {
     show(h, colMenu, { at: 'A1:B8' });
-    fireEvent.click(btn('Resize…'));
-    const field = screen.getByLabelText<HTMLInputElement>('Width');
+    fireEvent.click(btn('Resize columns A - B'));
+    expect(screen.getByRole('dialog', { name: 'Resize columns A - B' })).toBeTruthy();
+    const field = screen.getByRole<HTMLInputElement>('textbox', {
+      name: 'Enter a new column width in pixels. (Default: 120)',
+    });
     expect(Number(field.value)).toBeGreaterThan(0);
     // Only digits, up to four.
     fireEvent.change(field, { target: { value: '1x2' } });
     expect(field.value).toBe('12');
-    fireEvent.keyDown(field, { key: 'Enter' });
+    fireEvent.click(btn('OK'));
     const [a, b] = layout(h).cols;
     expect(layout(h).colSize).toMatchObject({ [a!]: 24, [b!]: 24 });
     expect(h.ctl().menu).toBeNull();
+    act(() => h.select('A1'));
     act(() => h.ctl().setMenu(rowMenu));
-    fireEvent.click(btn('Resize…'));
-    const height = screen.getByLabelText<HTMLInputElement>('Height');
+    fireEvent.click(btn('Resize row 1'));
+    const height = screen.getByRole<HTMLInputElement>('textbox', { name: /row height/ });
     fireEvent.change(height, { target: { value: '' } });
-    // Nothing typed: nothing happens.
-    fireEvent.click(btn('OK'));
-    expect(h.ctl().menu).not.toBeNull();
+    // Nothing typed: OK is dimmed.
+    expect(btn('OK').hasAttribute('disabled')).toBe(true);
     fireEvent.change(height, { target: { value: '99999' } });
     expect(height.value).toBe('9999');
-    fireEvent.keyDown(height, { key: 'a' });
     fireEvent.click(btn('OK'));
     expect(layout(h).rowSize?.[layout(h).rows[0]!]).toBe(2000);
   });
 
-  it('opens a row’s Resize at its height', async () => {
+  it('opens a row’s Resize at its height, and fits to data', () => {
     show(h, rowMenu, { at: 'A2' });
-    fireEvent.click(btn('Resize…'));
-    const height = screen.getByLabelText<HTMLInputElement>('Height');
+    fireEvent.click(btn('Resize row 2'));
+    const height = screen.getByRole<HTMLInputElement>('textbox', { name: /row height/ });
     expect(Number(height.value)).toBe(
       Math.round(h.ctl().geometry.rows[2]! - h.ctl().geometry.rows[1]!),
     );
     fireEvent.change(height, { target: { value: '5' } });
     fireEvent.click(btn('OK'));
     expect(layout(h).rowSize?.[layout(h).rows[1]!]).toBe(18);
+    act(() => h.ctl().setMenu(rowMenu));
+    fireEvent.click(btn('Resize row 2'));
+    fireEvent.click(screen.getByRole('radio', { name: 'Fit to data' }));
+    fireEvent.click(btn('OK'));
+    expect(layout(h).rowSize?.[layout(h).rows[1]!]).toBeUndefined();
+    // Typing picks the size again; Cancel changes nothing.
+    act(() => h.ctl().setMenu(rowMenu));
+    fireEvent.click(btn('Resize row 2'));
+    fireEvent.click(screen.getByRole('radio', { name: 'Fit to data' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /row height/ }), {
+      target: { value: '40' },
+    });
+    expect(screen.getByRole<HTMLInputElement>('radio', { name: /row height/ }).checked).toBe(true);
+    fireEvent.click(screen.getByRole('radio', { name: 'Fit to data' }));
+    fireEvent.click(screen.getByRole('radio', { name: /row height/ }));
+    expect(screen.getByRole<HTMLInputElement>('radio', { name: 'Fit to data' }).checked).toBe(
+      false,
+    );
+    fireEvent.click(btn('Cancel'));
+    expect(layout(h).rowSize?.[layout(h).rows[1]!]).toBeUndefined();
+    expect(h.ctl().menu).toBeNull();
+  });
+
+  it('names the default as the sheet’s own', () => {
+    show(h, { kind: 'resize', axis: 'r', from: 0, to: 0 });
+    act(() => {
+      h.ctl().write(
+        { kind: 'layout', changes: [{ k: 'options', rowHeight: 30, colWidth: 90 }] },
+        'Settings',
+      );
+    });
+    expect(screen.getByText('Enter a new row height in pixels. (Default: 30)')).toBeTruthy();
+    act(() => h.ctl().setMenu({ kind: 'resize', axis: 'c', from: 0, to: 0 }));
+    expect(screen.getByText('Enter a new column width in pixels. (Default: 90)')).toBeTruthy();
   });
 
   it('shows someone who may not edit only Copy', () => {
@@ -594,5 +631,55 @@ describe('the sort dialog', () => {
     act(() => h.ctl().setMenu({ kind: 'sort' }));
     fireEvent.click(btn('Sort'));
     expect(values(h, 'A')).toEqual(['Name', 'a', 'b', 'c']);
+  });
+});
+
+// grid-and-editing.md "Rows, columns and cells": Ctrl+Alt+= and Ctrl+Alt+- over cells (D157).
+describe('the insert and delete menus', () => {
+  let h: SheetHarness;
+  beforeEach(async () => {
+    h = await makeSheet({ cells: { A1: 'a', B1: 'b', A2: 'c', B2: 'd' } });
+  });
+  const menu = (op: 'insert' | 'delete'): OpenMenu => ({ kind: 'lines', op, x: 5, y: 5 });
+
+  it('inserts cells either way, or the rows above and the columns left', () => {
+    show(h, menu('insert'), { at: 'A1:B2' });
+    expect(screen.getByRole('dialog', { name: 'Insert menu' })).toBeTruthy();
+    fireEvent.click(btn('Insert cells and shift right'));
+    expect(h.value('C1')).toBe('a');
+    expect(h.ctl().menu).toBeNull();
+    act(() => h.ctl().setMenu(menu('insert')));
+    act(() => h.select('C1:D2'));
+    act(() => h.ctl().setMenu(menu('insert')));
+    fireEvent.click(btn('Insert cells and shift down'));
+    expect(h.value('C3')).toBe('a');
+    act(() => h.ctl().setMenu(menu('insert')));
+    const rows = layout(h).rows.length;
+    fireEvent.click(btn('Insert 2 rows above'));
+    expect(layout(h).rows).toHaveLength(rows + 2);
+    act(() => h.ctl().setMenu(menu('insert')));
+    const cols = layout(h).cols.length;
+    fireEvent.click(btn('Insert 2 columns left'));
+    expect(layout(h).cols).toHaveLength(cols + 2);
+  });
+
+  it('deletes the rows, the columns, or the cells either way', () => {
+    show(h, menu('delete'), { at: 'A1' });
+    expect(screen.getByRole('dialog', { name: 'Delete menu' })).toBeTruthy();
+    fireEvent.click(btn('Delete cells and shift up'));
+    expect(h.value('A1')).toBe('c');
+    act(() => h.ctl().setMenu(menu('delete')));
+    fireEvent.click(btn('Delete cells and shift left'));
+    expect(h.value('A1')).toBe('b');
+    act(() => h.select('A1:B2'));
+    act(() => h.ctl().setMenu(menu('delete')));
+    const cols = layout(h).cols.length;
+    fireEvent.click(btn('Delete columns A - B'));
+    expect(layout(h).cols).toHaveLength(cols - 2);
+    act(() => h.select('A1'));
+    act(() => h.ctl().setMenu(menu('delete')));
+    const rows = layout(h).rows.length;
+    fireEvent.click(btn('Delete row 1'));
+    expect(layout(h).rows).toHaveLength(rows - 1);
   });
 });

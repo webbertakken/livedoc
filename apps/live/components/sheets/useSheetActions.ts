@@ -23,6 +23,8 @@ import {
   formatRanges,
   freeze,
   hideAxis,
+  showAxis,
+  type LayoutChange,
   displayValue,
   inputAsText,
   readTypedInput,
@@ -295,16 +297,17 @@ export function useSheetActions() {
           }),
         );
       },
+      // Hide the selection's lines (or from..to); show the hidden ones among them, none hidden being no change.
       hide: (axis: 'r' | 'c', hidden: boolean, from?: number, to?: number) => {
         const g = primary(c);
         const [a, b] =
           from !== undefined ? [from, to ?? from] : axis === 'r' ? [g.r1, g.r2] : [g.c1, g.c2];
-        const w = hideAxis(c.sheet, axis, a, b, hidden);
-        if (w) c.write(w, axis === 'r' ? 'Rows' : 'Columns');
+        const w = hidden ? hideAxis(c.sheet, axis, a, b, true) : showAxis(c.sheet, axis, a, b);
+        if (w) c.write(w, 'Hide');
       },
       resize: (axis: 'r' | 'c', positions: number[], px: number | null) => {
         const w = resizeAxis(c.sheet, axis, positions, px);
-        if (w) c.write(w, axis === 'r' ? 'Rows' : 'Columns');
+        if (w) c.write(w, 'Resize');
       },
       // Fit to Data (a header's menu, or a double-click on its edge). A row fits its text by itself (sheet.md "Row
       // height"), so fitting rows is taking their own sizes away: they are automatic again. A column takes the width
@@ -314,10 +317,12 @@ export function useSheetActions() {
           const { rows, rowSize } = c.sheet.layout;
           const sized = positions.filter((p) => rowSize?.[rows[p]!] !== undefined);
           const w = sized.length ? resizeAxis(c.sheet, 'r', sized, null) : null;
-          if (w) c.write(w, 'Rows');
+          if (w) c.write(w, 'Resize');
           return;
         }
+        // Every column's width in one write: one change and one undo step.
         const ext = c.workbook.extent(c.sheet.id);
+        const changes: LayoutChange[] = [];
         for (const p of positions) {
           let best = 24;
           for (let r = 0; r < ext.rows; r++) {
@@ -330,8 +335,9 @@ export function useSheetActions() {
             best = Math.max(best, roughWidth(text, fontPx(f)) + 14);
           }
           const w = resizeAxis(c.sheet, 'c', [p], Math.min(2000, Math.ceil(best)));
-          if (w) c.write(w, 'Columns');
+          if (w?.kind === 'layout') changes.push(...w.changes);
         }
+        if (changes.length) c.write({ kind: 'layout', changes }, 'Resize');
       },
       // Dragged headers: lines from..to moved to before position `before`; true when they moved.
       moveAxis: (axis: 'r' | 'c', from: number, to: number, before: number): boolean => {

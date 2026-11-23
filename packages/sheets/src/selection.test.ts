@@ -20,6 +20,7 @@ import {
   selectRows,
   selectsSeveral,
   single,
+  wholeLines,
   stepFrom,
   type Grid,
 } from './selection';
@@ -178,6 +179,25 @@ describe('moves', () => {
 
 // docs/specs/029-sheets/sheet.md "Keyboard": a merge is one cell, so Enter and Tab on a clicked merge do not cycle
 // into the cells it covers.
+describe('wholeLines', () => {
+  const over = (r1: number, c1: number, r2: number, c2: number) => ({
+    ranges: [{ r1, c1, r2, c2 }],
+    active: { r: r1, c: c1 },
+    anchor: { r: r1, c: c1 },
+  });
+
+  it('reads rows over every column, the whole sheet included, and columns over every row', () => {
+    expect(wholeLines(over(2, 0, 4, 5), grid())).toBe('r');
+    expect(wholeLines(over(0, 0, 9, 5), grid())).toBe('r');
+    expect(wholeLines(over(0, 1, 9, 2), grid())).toBe('c');
+  });
+
+  it('reads cells as none', () => {
+    expect(wholeLines(over(1, 0, 2, 4), grid())).toBeNull();
+    expect(wholeLines(over(0, 1, 8, 1), grid())).toBeNull();
+  });
+});
+
 describe('selectsSeveral', () => {
   const merged = { r1: 1, c1: 1, r2: 2, c2: 2 };
   const sel = (range: typeof merged, active = { r: range.r1, c: range.c1 }) => ({
