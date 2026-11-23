@@ -52,7 +52,7 @@ function RowShell({
       style={{ '--stagger-i': index } as CSSProperties}
     >
       <div
-        className={`flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+        className={`flex items-start gap-3 rounded-control px-3 py-2.5 transition-colors ${
           mine
             ? 'bg-brand-50/70 hover:bg-brand-50 dark:bg-brand-500/10 dark:hover:bg-brand-500/15'
             : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80'
@@ -64,7 +64,7 @@ function RowShell({
           type="button"
           onClick={onClick}
           aria-label={label}
-          className="flex min-w-0 flex-1 items-start gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          className="flex min-w-0 flex-1 items-start gap-2 rounded-control text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         >
           {children}
         </button>
@@ -93,7 +93,7 @@ export function ActionRowItem({
   const shownDone = pressed ? !done : done;
   const check = (
     <span
-      className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
+      className={`flex size-icon-title items-center justify-center rounded-full border-2 transition-colors ${
         shownDone && wontDo && !pressed
           ? 'border-slate-400 bg-slate-400 text-white'
           : shownDone
@@ -131,20 +131,20 @@ export function ActionRowItem({
     >
       <span className="min-w-0 flex-1">
         <span
-          className={`line-clamp-2 text-[13px] font-semibold leading-snug ${
+          className={`line-clamp-2 text-body ${
             shownDone ? 'text-slate-400 line-through' : 'text-slate-800 dark:text-slate-100'
           }`}
         >
           {row.actionName}
         </span>
-        <span className="mt-[3px] block truncate text-[11px] text-slate-500 dark:text-slate-400">
+        <span className="mt-0.5 block truncate text-supporting text-slate-500 dark:text-slate-400">
           {wontDo ? 'Won’t Do · ' : ''}
           {row.label} · {formatRelativeTimeCompact(now - row.createdAt)}
         </span>
       </span>
       {row.mine ? (
         <span
-          className={`mt-px shrink-0 rounded-full bg-brand-700 px-1.5 py-0.5 text-[9px] font-semibold text-white ${SOLID_BRAND_DARK}`}
+          className={`mt-px shrink-0 rounded-full bg-brand-700 px-2 text-supporting text-white ${SOLID_BRAND_DARK}`}
         >
           You
         </span>
@@ -152,7 +152,7 @@ export function ActionRowItem({
         <HoverCard title={row.assigneeName} description="Assignee">
           <GlyphDisc
             size={20}
-            className="mt-px bg-slate-200 text-[8px] font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="mt-px bg-slate-200 text-glyph text-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             {initialsOf(row.assigneeName)}
           </GlyphDisc>
@@ -185,7 +185,7 @@ export function CommentRowItem({
           description={`Latest from ${row.latestAuthorName}`}
         >
           <span
-            className={`relative flex h-6 w-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--author)_16%,transparent)] ${AUTHOR_INK} ${
+            className={`relative flex size-chip items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--author)_16%,transparent)] ${AUTHOR_INK} ${
               row.resolved ? 'opacity-60' : ''
             }`}
             style={authorVars(color)}
@@ -193,7 +193,7 @@ export function CommentRowItem({
             <CommentIcon size={12} />
             {row.count > 1 ? (
               <span
-                className={`absolute -bottom-1 -right-1 flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-full px-0.5 text-[8px] font-bold text-white ring-2 ring-white dark:ring-slate-900 ${IDENTITY_FILL}`}
+                className={`absolute -bottom-1 -right-1 flex h-icon-row min-w-icon-row items-center justify-center rounded-full px-1 text-glyph text-white ring-2 ring-white dark:ring-slate-900 ${IDENTITY_FILL}`}
                 style={identityVars(color)}
               >
                 <span className="text-optical-centre">{row.count}</span>
@@ -206,18 +206,18 @@ export function CommentRowItem({
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
           <span
-            className={`min-w-0 flex-1 truncate text-[13px] font-semibold ${
+            className={`min-w-0 flex-1 truncate text-body ${
               row.resolved ? 'text-slate-400' : 'text-slate-800 dark:text-slate-100'
             }`}
           >
             {label}
           </span>
-          <span className="shrink-0 text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
             {formatRelativeTimeCompact(now - row.latestAt)}
           </span>
         </span>
-        <span className="mt-[3px] line-clamp-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          <span className={`font-semibold ${AUTHOR_INK}`} style={authorVars(color)}>
+        <span className="mt-0.5 line-clamp-2 text-supporting text-slate-500 dark:text-slate-400">
+          <span className={AUTHOR_INK} style={authorVars(color)}>
             {firstName(row.latestAuthorName)}:
           </span>{' '}
           {row.latestText}

@@ -135,7 +135,7 @@ export function VotePanel({
           {voteRules(vote, voteLayers).map((r) => (
             <li
               key={r}
-              className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              className="rounded-full bg-slate-100 px-2 py-0.5 text-supporting text-slate-600 dark:bg-slate-800 dark:text-slate-300"
             >
               {r}
             </li>
@@ -157,7 +157,7 @@ export function VotePanel({
             gets the readout only — not disabled buttons, which would just
             advertise something they can't do. */}
         {readOnly || !isHost ? (
-          <p className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+          <p className="text-supporting text-slate-500 dark:text-slate-400">
             {vote.revealed
               ? 'The host is walking through the results.'
               : 'Only the person who started this vote, or the facilitator, can end it.'}
@@ -198,8 +198,8 @@ function YourDots({ vote, selfId }: { vote: TabVote; selfId: string }) {
   const budget = vote.votesPerPerson;
   const remaining = Math.max(0, budget - votesSpentBy(vote, selfId));
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md bg-brand-50 px-2 py-1.5 dark:bg-brand-500/15">
-      <span className="text-[11px] font-medium text-brand-700 dark:text-brand-100">
+    <div className="flex items-center justify-between gap-2 rounded-control bg-brand-50 px-2 py-1.5 dark:bg-brand-500/15">
+      <span className="text-body text-brand-700 dark:text-brand-100">
         {remaining} of {budget} {budget === 1 ? 'dot' : 'dots'} left
       </span>
       <span className="flex flex-wrap items-center gap-0.5" aria-hidden>
@@ -232,8 +232,8 @@ function ReviewBar({
 }) {
   const isLast = review.index === review.total - 1;
   return (
-    <div className="flex flex-col gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 dark:bg-amber-500/10">
-      <span className="flex items-center gap-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-200">
+    <div className="flex flex-col gap-1 rounded-control bg-amber-50 px-2 py-1.5 dark:bg-amber-500/10">
+      <span className="flex items-center gap-1 text-body text-amber-800 dark:text-amber-200">
         <span aria-hidden className="h-2 w-2 rounded-full bg-amber-400" />
         Top result {review.index + 1} of {review.total} &middot; {review.votes}{' '}
         {review.votes === 1 ? 'vote' : 'votes'}
@@ -282,10 +282,10 @@ function VoteTurnout({ vote, participantCount }: { vote: TabVote; participantCou
     <>
       <div className="flex flex-col gap-0.5">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-[11px] text-slate-700 dark:text-slate-200">
+          <span className="text-body text-slate-700 dark:text-slate-200">
             {finished} of {Math.max(participantCount, started)} finished
           </span>
-          <span className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+          <span className="text-supporting tabular-nums text-slate-500 dark:text-slate-400">
             {dotsCast}/{dotsTotal}
           </span>
         </div>
@@ -317,7 +317,7 @@ function VoteTurnout({ vote, participantCount }: { vote: TabVote; participantCou
                   />
                 ))}
               </span>
-              <span className="shrink-0 text-[10px] tabular-nums text-slate-500 dark:text-slate-400">
+              <span className="shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
                 {budget - spent} left
               </span>
             </li>
@@ -325,7 +325,7 @@ function VoteTurnout({ vote, participantCount }: { vote: TabVote; participantCou
         </ul>
       ) : null}
 
-      <p className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">
         {notStarted > 0
           ? `${notStarted} ${notStarted === 1 ? 'person hasn’t' : 'people haven’t'} voted yet`
           : started === 0
@@ -357,7 +357,7 @@ function VoteResultsList({
   const plan = usePlan();
   if (results.length === 0) {
     return (
-      <p className="text-[11px] italic text-slate-500 dark:text-slate-400">
+      <p className="text-supporting italic text-slate-500 dark:text-slate-400">
         No dots were cast on this tab.
       </p>
     );
@@ -388,7 +388,7 @@ function VoteResultsList({
               disabled={!canControl}
               onClick={() => onJumpToResult(i)}
               className={
-                'flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left transition ' +
+                'flex min-h-row w-full items-center gap-2 rounded-control px-2 py-1 text-left transition ' +
                 (active
                   ? 'bg-brand-50 dark:bg-brand-500/15'
                   : canControl
@@ -398,16 +398,16 @@ function VoteResultsList({
             >
               <span
                 className={
-                  'w-3 shrink-0 text-[10px] font-semibold tabular-nums ' +
+                  'w-3 shrink-0 text-glyph tabular-nums ' +
                   (isWinner ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400')
                 }
               >
                 {i + 1}
               </span>
-              <span className="min-w-0 flex-1 truncate text-[11px] text-slate-700 dark:text-slate-200">
+              <span className="min-w-0 flex-1 truncate text-body text-slate-700 dark:text-slate-200">
                 {label}
               </span>
-              <span className="shrink-0 text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+              <span className="shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
                 {row.votes}
               </span>
             </button>

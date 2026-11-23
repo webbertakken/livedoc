@@ -44,6 +44,11 @@ const SIZED_PATHS = [
   'components/panels/comment-thread-parts.tsx',
   'components/panels/CommentThreadPopover.tsx',
   'components/panels/ActionPopover.tsx',
+  'components/panels/collaborate',
+  'components/panels/CollaboratePanel.tsx',
+  'components/panels/PollPanel.tsx',
+  'components/panels/PollPromptSheet.tsx',
+  'components/panels/VotePanel.tsx',
 ];
 
 describe('live sizing', () => {
