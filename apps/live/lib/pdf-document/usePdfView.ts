@@ -144,7 +144,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
   /** A zoom from the menus, the keys or the page bar keeps the middle of the view; a wheel's, the pointer's place. */
   const zoomTo = useCallback((zoom: PdfZoom, way: PdfZoomWay, focus?: PdfPoint) => {
     track('Pdf', 'Zoomed', way);
-    debugLog('[pdf] view-zoomed', { zoom, way });
+    debugLog(`[pdf] view-zoomed zoom=${zoom} way=${way}`);
     if (focus) anchor.current = { kind: 'focus', focus };
     setView((before) => PdfView.withZoom(before, zoom));
   }, []);
@@ -186,7 +186,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
     (index: number) => {
       const now = latest.current;
       if (index < 0 || index >= pages.length) return;
-      debugLog('[pdf] view-went-to', { page: index + 1 });
+      debugLog(`[pdf] view-went-to page=${index + 1}`);
       if (now.shown !== null) return goToRow(PdfPageLayout.rowOf(now.rows, index));
       const to = PdfPageLayout.scrollToPage(now.layout, index, now.viewport);
       if (to) scrollTo(to);
@@ -226,7 +226,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       const now = latest.current;
       if (PdfView.displayName(now.view.display) === name) return;
       track('Pdf', 'Changed', `PageDisplay.${DISPLAY_TELEMETRY[name]}`);
-      debugLog('[pdf] view-display', { display: name });
+      debugLog(`[pdf] view-display display=${name}`);
       const next = PdfView.withDisplay(now.view, name);
       anchor.current = { kind: 'page', index: now.page };
       setShownRow(PdfPageLayout.rowOf(PdfPageLayout.rows(pages.length, next.display), now.page));

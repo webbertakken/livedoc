@@ -415,6 +415,9 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 `Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
 menu and tool finder events. Never a query, a page's text or a name.
 
+Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom> way=<way>`,
+`[pdf] view-went-to page=<n>`.
+
 ## Errors
 
 | When                                    | A person sees                                                                 |
