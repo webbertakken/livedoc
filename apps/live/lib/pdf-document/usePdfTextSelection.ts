@@ -136,5 +136,5 @@ export function usePdfTextSelection(
     setSelected(null);
   }, [setSelected]);
 
-  return { selected, gesture, selectAll, clear };
+  return { selected, gesture, selectAll, clear, texts };
 }

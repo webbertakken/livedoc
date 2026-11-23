@@ -6,6 +6,7 @@
 // a box of no size, and `\u0002` for a word it saw broken by a hyphen at a line's end, with no break after it.
 import type { PagePoint } from './engine-contract';
 import type { Quad } from './mark';
+import { PDF_TREE_MAX_NODES_A_PAGE } from './limits';
 import { PageText, type TextBox } from './page-text';
 
 /** A run of the text, `[start, end)` in units of `PageText.text`. */
@@ -188,6 +189,19 @@ export const TextRange = {
     return quads;
   },
   /** The plain text the spans copy, lines joined where the file broke them inside a paragraph, spans by a break. */
+  /**
+   * The page's text as paragraphs, joined exactly as Copy joins the whole page, none empty; past `most` the rest joins
+   * the last (accessibility.md "The accessible tree").
+   */
+  paragraphs: (page: PageText, most = PDF_TREE_MAX_NODES_A_PAGE): string[] => {
+    const parts = TextRange.copied(page, [TextRange.all(page)])
+      .split('\n')
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+    return parts.length <= most
+      ? parts
+      : [...parts.slice(0, most - 1), parts.slice(most - 1).join(' ')];
+  },
   copied: (page: PageText, spans: readonly TextSpan[]): string =>
     spans.map((span) => copiedSpan(page, span)).join('\n'),
 } as const;

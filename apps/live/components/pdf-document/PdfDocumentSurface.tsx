@@ -515,6 +515,7 @@ export function PdfDocumentSurface({
               onHighlight={onHighlight}
               selection={textSelection.selected}
               onText={textSelection.gesture}
+              texts={textSelection.texts}
               onFollow={links.follow}
               found={find.tints}
             />

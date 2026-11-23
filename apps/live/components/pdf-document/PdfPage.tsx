@@ -21,11 +21,13 @@ import {
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfMarksOverlay } from './PdfMarksOverlay';
 import { PdfPageLinks } from './PdfPageLinks';
+import { PdfPageReading, pageRegionName } from './PdfPageReading';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
 import { PdfView } from '@/lib/pdf-document/pdf-view';
 import type { PdfTextGesture } from '@/lib/pdf-document/usePdfTextSelection';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
+import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 
 export type PdfPageTool = 'select' | 'highlight';
 
@@ -57,6 +59,7 @@ export const PdfPage = memo(function PdfPage({
   onHighlight,
   selected,
   onText,
+  texts,
   linkName,
   onFollow,
   found,
@@ -85,6 +88,8 @@ export const PdfPage = memo(function PdfPage({
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
   selected: readonly Quad[];
   onText: (index: number, gesture: PdfTextGesture) => void;
+  // The pages' text, read to assistive technology while the page is near view (accessibility.md).
+  texts: PdfPageTexts | null;
   // What a link of the page is called, and where a press on one goes (reading-surface.md "Following a link").
   linkName: (target: LinkTarget) => string;
   onFollow: (target: LinkTarget) => void;
@@ -239,7 +244,7 @@ export const PdfPage = memo(function PdfPage({
     <div
       ref={(element) => register(index, element)}
       role="region"
-      aria-label={`Page ${index + 1} of ${count}`}
+      aria-label={pageRegionName(index, count, page.label)}
       data-pdf-page={index + 1}
       data-pdf-page-name={page.name}
       data-pdf-page-drawn={drawn ? 'true' : 'false'}
@@ -260,6 +265,7 @@ export const PdfPage = memo(function PdfPage({
         aria-hidden="true"
         className={`block h-full w-full ${drawn && !current ? 'invisible' : ''}`}
       />
+      <PdfPageReading index={index} texts={texts} wanted={wanted} />
       {current && wanted ? (
         <PdfPageTiles
           index={index}

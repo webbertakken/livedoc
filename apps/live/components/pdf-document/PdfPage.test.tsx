@@ -67,6 +67,7 @@ async function page(
       onHighlight={vi.fn()}
       selected={selected}
       onText={onText}
+      texts={null}
       linkName={(target) => `Link to ${target.kind}`}
       onFollow={onFollow}
       found={null}
