@@ -104,7 +104,7 @@ export function PanelFolderItem({
             ariaLabel={`Rename ${folder.name}`}
             onCommit={commitRename}
             onCancel={() => setEditing(false)}
-            className="w-full rounded border border-brand-300 bg-white px-1.5 py-0.5 text-[13px] dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full rounded-control border border-brand-300 bg-white px-1 py-0.5 text-body dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
           />
         ) : (
           <FolderLabel folderId={folder.id} name={folder.name} marked />

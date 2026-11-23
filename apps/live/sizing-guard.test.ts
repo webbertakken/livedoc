@@ -34,6 +34,8 @@ const SIZED_PATHS = [
   'components/dialogs/TeamFormModal.tsx',
   'components/dialogs/TeamInviteLinkDialog.tsx',
   'components/dialogs/usePassExit.ts',
+  'components/panels/explorer-panel',
+  'components/panels/explorer-tree',
 ];
 
 describe('live sizing', () => {

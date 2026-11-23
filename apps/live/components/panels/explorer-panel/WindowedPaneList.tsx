@@ -13,7 +13,7 @@ import { WindowGap, windowChildren } from '@/components/primitives/windowed-list
 import { paneListKeys } from './pane-parts';
 
 // A pane row's height and the list's gap before one is measured.
-const PANE_ROW_STRIDE_PX = 58;
+const PANE_ROW_STRIDE_PX = 60;
 
 export function WindowedPaneList<T extends { id: string }>({
   label,
@@ -45,7 +45,7 @@ export function WindowedPaneList<T extends { id: string }>({
       onKeyDown={paneListKeys}
       onFocus={onFocus}
       onDragStart={onDragStart}
-      className={`${cascading ? 'lvd-cascade ' : ''}flex flex-col gap-1.5`}
+      className={`${cascading ? 'lvd-cascade ' : ''}flex flex-col gap-2`}
     >
       {windowChildren(
         segments,

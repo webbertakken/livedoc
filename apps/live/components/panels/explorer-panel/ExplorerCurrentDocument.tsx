@@ -50,7 +50,7 @@ export function ExplorerCurrentDocument({
     <section
       aria-label="Current document"
       onContextMenu={menu.onContextMenu}
-      className="flex items-center gap-3 rounded-xl bg-slate-50 p-2.5 ring-1 ring-slate-200/70 dark:bg-slate-800/50 dark:ring-slate-700/60"
+      className="flex items-center gap-3 rounded-surface bg-slate-50 p-3 ring-1 ring-slate-200/70 dark:bg-slate-800/50 dark:ring-slate-700/60"
     >
       <span className="shrink-0 [&>*]:!h-14 [&>*]:!w-20">
         <DocumentThumbnail
@@ -65,8 +65,8 @@ export function ExplorerCurrentDocument({
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         {/* The badge rides the label's row and the menu the date's, so the name has the card's whole width (a
             phone's banner left it a dozen characters beside a column of both). */}
-        <span className="flex min-h-5 items-center justify-between gap-2">
-          <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span className="flex min-h-icon-title items-center justify-between gap-2">
+          <span className="truncate text-supporting text-slate-500 dark:text-slate-400">
             Current Document
           </span>
           {visibility ? (
@@ -85,7 +85,7 @@ export function ExplorerCurrentDocument({
             ariaLabel={`Rename ${item.name}`}
             onCommit={commit}
             onCancel={() => setEditing(false)}
-            className="w-full rounded border border-brand-300 bg-white px-1.5 py-0.5 text-sm font-semibold text-slate-900 dark:border-brand-400 dark:bg-slate-800 dark:text-slate-50"
+            className="w-full rounded-control border border-brand-300 bg-white px-1 text-panel-title text-slate-900 dark:border-brand-400 dark:bg-slate-800 dark:text-slate-50"
           />
         ) : onRename ? (
           // Fitted to the name: hovering underlines it and shows the pencil, never a block of fill.
@@ -93,9 +93,9 @@ export function ExplorerCurrentDocument({
             type="button"
             aria-label={`Rename ${name}`}
             onClick={() => setEditing(true)}
-            className="group/name flex max-w-full cursor-pointer items-center gap-1.5 self-start rounded text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+            className="group/name flex max-w-full cursor-pointer items-center gap-1 self-start rounded-control text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
-            <span className="min-w-0 truncate text-[15px] font-semibold text-slate-900 decoration-slate-400 decoration-dotted underline-offset-4 group-hover/name:underline dark:text-slate-50 dark:decoration-slate-500">
+            <span className="min-w-0 truncate text-panel-title text-slate-900 decoration-slate-400 decoration-dotted underline-offset-4 group-hover/name:underline dark:text-slate-50 dark:decoration-slate-500">
               {name}
             </span>
             <span
@@ -110,13 +110,13 @@ export function ExplorerCurrentDocument({
             type="button"
             onClick={onOpen}
             aria-current="true"
-            className="min-w-0 self-start truncate text-left text-[15px] font-semibold text-slate-900 dark:text-slate-50"
+            className="min-w-0 self-start truncate text-left text-panel-title text-slate-900 dark:text-slate-50"
           >
             {name}
           </button>
         )}
-        <span className="flex min-h-5 items-center justify-between gap-2">
-          <span className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+        <span className="flex min-h-icon-title items-center justify-between gap-2">
+          <span className="truncate text-supporting text-slate-500 dark:text-slate-400">
             Updated {relative}
           </span>
           {hasMenu && !editing ? (

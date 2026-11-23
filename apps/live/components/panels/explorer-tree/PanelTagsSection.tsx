@@ -33,10 +33,10 @@ export function PanelTagsSection({ documents }: { documents: readonly PaneDocume
         const ids = documentsFor(tag.id);
         const docs = ids.size ? documents.filter((d) => ids.has(d.id)) : [];
         return (
-          <section key={tag.id} aria-label={tag.name} className="flex flex-col gap-1.5">
+          <section key={tag.id} aria-label={tag.name} className="flex flex-col gap-2">
             <div className="flex items-center gap-2 px-2">
               <TagChip tag={tag} />
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="text-supporting text-slate-500 dark:text-slate-400">
                 {documentCountLabel(docs.length)}
               </span>
             </div>
