@@ -54,7 +54,15 @@ type SheetKeyCommand =
   | { kind: 'dropdown' }
   // Read Row and Read Column (grid-and-editing.md "Accessibility"): Ctrl+Alt+Shift+R or C, Option+Shift on a Mac.
   | { kind: 'read'; axis: 'r' | 'c' }
+  // Ctrl+Alt+= and Ctrl+Alt+-: insert or delete lines, or a menu of the four over cells (D157).
+  | { kind: 'lines'; op: 'insert' | 'delete' }
+  // Ctrl+Alt+9 and 0 hide the selection's rows or columns; Ctrl+Shift+9 and 0 show them.
+  | { kind: 'hide'; axis: 'r' | 'c'; hidden: boolean }
   | { kind: 'menu' };
+
+// The keys of rows and columns, by where they sit (`code`): Option and Shift change what a Mac's keys type.
+const LINE_KEYS: Record<string, 'insert' | 'delete'> = { Equal: 'insert', Minus: 'delete' };
+const HIDE_KEYS: Record<string, 'r' | 'c'> = { Digit9: 'r', Digit0: 'c' };
 
 const ARROWS: Record<string, Dir> = {
   ArrowUp: 'up',
@@ -94,6 +102,14 @@ export function sheetKey(e: KeyLike, platform: OfficePlatform = 'pc'): SheetKeyC
   // Ctrl+Alt+Shift+M, or Ctrl+⌘+Shift+M on a Mac.
   if (e.ctrlKey && e.shiftKey && e.altKey !== e.metaKey && e.code === 'KeyM')
     return { kind: 'leave' };
+  const code = e.code ?? '';
+  // Ctrl+Alt (⌘+Option on a Mac): a key composed with AltGr is the character it types, never these.
+  if (mod && e.altKey && !e.shiftKey && !altGraphHeld(e)) {
+    if (LINE_KEYS[code]) return { kind: 'lines', op: LINE_KEYS[code] };
+    if (HIDE_KEYS[code]) return { kind: 'hide', axis: HIDE_KEYS[code], hidden: true };
+  }
+  if (mod && e.shiftKey && !e.altKey && HIDE_KEYS[code])
+    return { kind: 'hide', axis: HIDE_KEYS[code], hidden: false };
   if (e.altKey && e.shiftKey && !altGraphHeld(e) && (e.code === 'KeyR' || e.code === 'KeyC'))
     return { kind: 'read', axis: e.code === 'KeyR' ? 'r' : 'c' };
   if (e.altKey && e.shiftKey && !mod && !altGraphHeld(e) && e.code === 'KeyQ')

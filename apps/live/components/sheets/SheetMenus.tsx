@@ -19,6 +19,9 @@ import type { SheetActions } from './useSheetActions';
 import { useSheetClipboard } from './useSheetClipboard';
 import { Glyph, SheetCellMenu } from './SheetCellMenu';
 import { FilterIcon, SortIcon, ClearFormatIcon } from './sheet-icons';
+import { lineSpan } from '@/lib/spreadsheet/line-span';
+import { SheetLinesMenu } from './SheetLinesMenu';
+import { SheetResizeDialog } from './SheetResizeDialog';
 
 const CONDITION_LABELS: Record<NonNullable<FilterCondition['op']>, string> = {
   empty: 'Is empty',
@@ -55,6 +58,25 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
   };
   if (menu.kind === 'cell')
     return <SheetCellMenu at={{ x: menu.x, y: menu.y }} actions={actions} onClose={close} />;
+  if (menu.kind === 'lines')
+    return (
+      <SheetLinesMenu
+        op={menu.op}
+        at={{ x: menu.x, y: menu.y }}
+        actions={actions}
+        onClose={close}
+      />
+    );
+  if (menu.kind === 'resize')
+    return (
+      <SheetResizeDialog
+        axis={menu.axis}
+        from={menu.from}
+        to={menu.to}
+        actions={actions}
+        onClose={close}
+      />
+    );
   if (menu.kind === 'header') {
     const rows = menu.axis === 'r';
     const g = c.selection.ranges[c.selection.ranges.length - 1]!;
@@ -103,13 +125,17 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
                 actions.autofit(menu.axis, range(rows ? g.r1 : g.c1, rows ? g.r2 : g.c2)),
               )}
             />
-            <ResizeRow
-              axis={menu.axis}
-              at={menu.index}
-              onResize={(px) => {
-                actions.resize(menu.axis, range(rows ? g.r1 : g.c1, rows ? g.r2 : g.c2), px);
-                close();
-              }}
+            <MenuActionRow
+              label={`Resize ${lineSpan(menu.axis, rows ? g.r1 : g.c1, rows ? g.r2 : g.c2)}`}
+              icon={<Glyph t="↔" />}
+              onClick={() =>
+                c.setMenu({
+                  kind: 'resize',
+                  axis: menu.axis,
+                  from: rows ? g.r1 : g.c1,
+                  to: rows ? g.r2 : g.c2,
+                })
+              }
             />
             {!rows ? (
               <>
@@ -147,54 +173,6 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
       />
     );
   return <SortDialog actions={actions} onClose={close} />;
-}
-
-// Resize…: opens a field with the line's size in pixels (a column at least 24, a row at least 18).
-function ResizeRow({
-  axis,
-  at,
-  onResize,
-}: {
-  axis: 'r' | 'c';
-  at: number;
-  onResize: (px: number) => void;
-}) {
-  const c = useSheetController();
-  const offs = axis === 'c' ? c.geometry.cols : c.geometry.rows;
-  const now = Math.round(offs[at + 1]! - offs[at]!);
-  const [open, setOpen] = useState(false);
-  const [px, setPx] = useState(String(now || (axis === 'c' ? 100 : 24)));
-  const min = axis === 'c' ? 24 : 18;
-  if (!open)
-    return <MenuActionRow label="Resize…" icon={<Glyph t="↔" />} onClick={() => setOpen(true)} />;
-  const done = () => {
-    const n = Math.round(Number(px));
-    if (Number.isFinite(n) && n > 0) onResize(Math.min(2000, Math.max(min, n)));
-  };
-  return (
-    <div
-      className="flex items-center gap-2 px-3 py-1.5 text-[12px]"
-      onKeyDown={(e) => e.stopPropagation()}
-    >
-      <label htmlFor="sheet-resize-px">{axis === 'c' ? 'Width' : 'Height'}</label>
-      <input
-        id="sheet-resize-px"
-        autoFocus
-        inputMode="numeric"
-        className="h-7 w-16 rounded-md border bg-transparent px-2 text-right tabular-nums outline-none"
-        style={{ borderColor: c.palette.border }}
-        value={px}
-        onChange={(e) => setPx(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') done();
-        }}
-      />
-      <span style={{ color: c.palette.muted }}>px</span>
-      <Button variant="primary" size="xs" onClick={done}>
-        OK
-      </Button>
-    </div>
-  );
 }
 
 function range(a: number, b: number): number[] {

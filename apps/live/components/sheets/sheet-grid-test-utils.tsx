@@ -106,6 +106,8 @@ export type MountOptions = {
   cells?: Record<string, string>;
   formats?: Record<string, CellFormat>;
   canEdit?: boolean;
+  // A Participant: writes cells, never the shape.
+  canShape?: boolean;
   interactive?: boolean;
   maximised?: boolean;
   peers?: readonly SheetPeer[];
@@ -245,6 +247,7 @@ export async function mountGrid(o: MountOptions = {}): Promise<MountedGrid> {
       palette,
       interactive: o.interactive ?? true,
       canEdit: o.canEdit ?? true,
+      ...(o.canShape === undefined ? {} : { canShape: o.canShape }),
       maximised: o.maximised ?? false,
       locale: 'en-GB',
       announce: (m) => announced.push(m),

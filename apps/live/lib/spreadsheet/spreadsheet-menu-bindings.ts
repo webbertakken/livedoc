@@ -14,6 +14,7 @@ import {
 } from '@livedoc/sheets';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
 import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadsheet-menus';
+import { lineSpan } from './line-span';
 
 type Axis = 'r' | 'c';
 
@@ -72,11 +73,10 @@ const run = (fn: () => void, extra: Omit<OfficeAction, 'run'> = {}): OfficeActio
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 
-/** A span of lines as Google names it: "Row 3", "Rows 2 - 4", "Column B", "Columns B - D". */
+/** A span of lines as Edit's items name it: "Row 3", "Rows 2 - 4", "Column B", "Columns B - D". */
 function spanLabel(axis: Axis, a: number, b: number): string {
-  const name = (p: number) => (axis === 'r' ? String(p + 1) : columnLetters(p));
-  const noun = axis === 'r' ? 'Row' : 'Column';
-  return a === b ? `${noun} ${name(a)}` : `${noun}s ${name(a)} - ${name(b)}`;
+  const span = lineSpan(axis, a, b);
+  return span.charAt(0).toUpperCase() + span.slice(1);
 }
 
 function writeBindings(port: GridMenuPort): Record<string, OfficeAction> {

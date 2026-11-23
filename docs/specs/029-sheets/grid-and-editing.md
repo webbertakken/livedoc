@@ -155,14 +155,61 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 
 - Insert rows above or below, columns left or right (as many as are selected), cells shifting right or down; delete
   rows, columns, or cells shifting up or left; Edit › Delete › Values.
+- **Ctrl+Alt+=** (⌘+Option+= on a Mac) inserts as many rows above as whole rows are selected, or columns to the
+  left as whole columns are; **Ctrl+Alt+-** deletes them. With cells selected either opens a menu at the active cell:
+  Insert cells and shift right, Insert cells and shift down, Insert 3 rows above, Insert 2 columns left; or Delete
+  rows 2 - 4, Delete columns B - C, Delete cells and shift up, Delete cells and shift left (default, D157).
 - Move rows up or down and columns left or right (Edit › Move, or dragging headers).
-- Resize by dragging a header edge (a double-click fits to the data), or **Resize Row** / **Resize Column** (a size
-  in px, or Fit to Data).
+- Resize by dragging a header edge (a double-click fits to the data), or a header's **Resize row** (**Resize rows
+  2 - 4**, **Resize column**, **Resize columns B - D**), which opens the Resize dialog of the same title: **Enter a new
+  row height in pixels. (Default: 21)** with its field, holding the first line's size as drawn, or **Fit to data**;
+  Cancel and OK, Enter for OK and Escape for Cancel. A size runs from 18 px for a row and 24 px for a column to
+  2,000 px, a number past either taken at the bound, and OK is dimmed while the field holds no number (default,
+  D158). The default named is the sheet's own.
+- **Fit to data**: a column takes the width of its widest value, a row goes back to fitting its text; the lines
+  selected change together, one change and one undo step.
 - A row not sized by hand fits its text, as the Plan Sheet's does ([Row height](sheet.md#row-height)).
-- Hide and show rows and columns (arrows mark hidden ones); **Group** (Alt+Shift+→) and **Ungroup** (Alt+Shift+←)
-  rows or columns, with +/− in the outline bar to collapse and expand.
+- **Hide**: a header's **Hide row** (**Hide rows 2 - 4**), **Ctrl+Alt+9** the selection's rows and **Ctrl+Alt+0** its
+  columns (⌘+Option on a Mac). Hidden lines show a small double arrow on the headers either side that shows them
+  again; **Ctrl+Shift+9** and **Ctrl+Shift+0** show the hidden rows or columns within the selection, nothing when it
+  holds none. A key composed with AltGr types its character, never a shortcut.
 - Deleting rows or columns makes references to them `#REF!` and shrinks ranges, as today
   ([Sheet store](sheet-store.md)).
+
+### Groups and the outline
+
+- A **group** gathers a run of rows, or of columns, to fold away as one, as Google's and Excel's do. Every line has a
+  **depth**, how many groups hold it, from 0 to 7, the most XLSX carries (default, D159); a group of depth d is a
+  longest run of lines whose depth is at least d.
+- **Group** (Alt+Shift+→; Option+Shift+→ on a Mac) adds one to the depth of each selected line: lines inside a group
+  nest in it, lines overlapping one's edge extend it and nest where they overlap, and two groups that come to touch
+  become one. A line already at depth 7 refuses it with "Groups nest at most 7 deep".
+- **Ungroup** (Alt+Shift+←) takes one from each selected line's depth; lines in no group are left as they are, and a
+  selection in none does nothing.
+- With whole rows or columns selected Group and Ungroup act on them; with cells the keys open a menu at the active
+  cell holding **Group rows 2 - 4** and **Group columns B - C** (Ungroup likewise), as Google's does (default, D160).
+- View › Group holds **Group rows 2 - 4**, **Group columns B - C**, **Ungroup rows 2 - 4**, **Ungroup columns B -
+  C**, then **Expand all row groups**, **Collapse all row groups**, **Expand all column groups**, **Collapse all
+  column groups**; an item with nothing to act on is dimmed. A header's menu holds **Group rows 2 - 4** and, on lines
+  in a group, **Ungroup rows 2 - 4**.
+- **Collapse** folds a group away (its lines hidden) and **Expand** shows it again. A group keeps its own fold, so a
+  group inside a collapsed one comes back as it was when the outer one expands, as Google's does.
+- **Alt+Shift+↑** collapses the innermost expanded group holding the active cell's row, else its column (columns
+  first when whole columns are selected); **Alt+Shift+↓** expands every collapsed group holding it, or, holding none,
+  the collapsed groups whose control sits on it (default, D161).
+- **The outline bar**: once a sheet has a row group, a band left of the row numbers, 12 px a depth and 4 px more, and
+  for column groups a band above the column letters (default, D162). A group draws as a bracket along its lines
+  ending in its control, − when expanded and + when collapsed, on the line just before it, as Google's does; on the
+  line just after it when the group starts at the first line or the sheet puts the controls after. Right-clicking
+  the band opens Expand all row groups, Collapse all row groups and **Move +/- button to the bottom** (**to the
+  top**; for columns **to the right**, **to the left**).
+- Collapsed lines are hidden lines in every way (moving the cursor passes them; charts and `SUBTOTAL`'s 101 to 111
+  leave them out) but draw no double arrow: Show never expands a group, and Hide never collapses one.
+- Lines inserted between two lines of a group join it (the lesser depth of the two), deleted lines take their depth
+  with them, and moved lines keep theirs (default, D164).
+- An Editor groups, ungroups, collapses and expands for everyone, each one change and one undo step. A Participant
+  and a Viewer collapse and expand for themselves only, never saved or sent; Google's viewers cannot (default, D163).
+- A file carries the groups and their folds both ways ([Standard mapping](standard-mapping.md)).
 
 ## Undo
 
@@ -180,8 +227,9 @@ Ctrl+Shift+Z.
 
 - **Editor**: everything on this page.
 - **Participant**: types, pastes values, fills values and clears inputs in unprotected cells; never inserts, deletes,
-  moves, resizes, hides or groups rows and columns, and a paste lands as values.
-- **Viewer**: selects, moves around, copies, zooms; nothing that writes.
+  moves, resizes, hides or groups rows and columns, and a paste lands as values; collapses and expands groups for
+  themselves only.
+- **Viewer**: selects, moves around, copies, zooms, collapses and expands groups for themselves; nothing that writes.
 
 ## Accessibility
 
@@ -208,5 +256,6 @@ Ctrl+Shift+Z.
 
 ## Telemetry
 
-`Spreadsheet · Changed · <Kind>` once per change (`Cell`, `Formula`, `Paste`, `Fill`, `SmartFill`, `Rows`,
-`Columns`, `Move`, `Resize`, `Hide`, `Group`), never content.
+`Sheet · Changed · <Kind>` once per change (`Cell`, `Formula`, `Paste`, `Fill`, `SmartFill`, `Rows`, `Columns`,
+`Move`, `Resize`, `Hide`, `Group`), never content: Resize and Fit to data are `Resize`, Hide and Show `Hide`, and
+Group, Ungroup and an Editor's collapse, expand and control side `Group`.

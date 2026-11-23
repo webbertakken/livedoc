@@ -11,6 +11,7 @@ import {
   selectCols,
   selectRows,
   selectsSeveral,
+  wholeLines,
 } from '@livedoc/sheets';
 import { restorePlanElement } from '@/hooks/plan/maximised-plan';
 import { useSheetsBridgeContext } from '@/hooks/sheets/useSheetsBridge';
@@ -91,6 +92,16 @@ export function useSheetGridKeys({
     const range = sel.ranges[sel.ranges.length - 1]!;
     // A clicked merge is one cell, not a range to cycle through.
     const multi = selectsSeveral(sel, c.grid);
+    // Below the active cell, on the screen: where a menu opened by a key stands.
+    const activeCellPoint = () => {
+      // The grid that heard the key: always there, unlike a ref read later.
+      const rect = e.currentTarget.getBoundingClientRect();
+      const box = cellBox(c.geometry, sel.active.r, sel.active.c, c.scroll);
+      return {
+        x: rect.left + c.geometry.headW + box.x,
+        y: rect.top + c.geometry.headH + box.y + box.h,
+      };
+    };
     switch (cmd.kind) {
       case 'move':
         return actions.move(cmd.dir, cmd.jump, cmd.extend);
@@ -155,17 +166,18 @@ export function useSheetGridKeys({
         return c.canEdit ? actions.numberFormat(cmd.nf) : undefined;
       case 'find':
         return c.setFindOpen(cmd.replace && c.canEdit ? 'replace' : 'find');
-      case 'menu': {
-        const rect = c.gridEl?.getBoundingClientRect();
-        const box = cellBox(c.geometry, sel.active.r, sel.active.c, c.scroll);
-        if (rect)
-          c.setMenu({
-            kind: 'cell',
-            x: rect.left + c.geometry.headW + box.x,
-            y: rect.top + c.geometry.headH + box.y + box.h,
-          });
-        return;
+      case 'menu':
+        return c.setMenu({ kind: 'cell', ...activeCellPoint() });
+      // Whole lines act at once; cells open the four ways at the active cell (D157).
+      case 'lines': {
+        if (!c.canShape) return;
+        const whole = wholeLines(sel, c.grid);
+        if (whole)
+          return cmd.op === 'insert' ? actions.insert(whole, 'before') : actions.remove(whole);
+        return c.setMenu({ kind: 'lines', op: cmd.op, ...activeCellPoint() });
       }
+      case 'hide':
+        return c.canShape ? actions.hide(cmd.axis, cmd.hidden) : undefined;
       case 'read': {
         // Emptied first, so a second press on the same cell is said again.
         const said = readSheetLine(c, cmd.axis, sel.active);

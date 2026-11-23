@@ -159,6 +159,54 @@ describe('Read Row and Read Column', () => {
 
 // keyboard-shortcuts.md "Navigate the spreadsheet": a MacBook's Option+Left and Option+Right step sheets; on a PC
 // Alt+Left and Alt+Right are the browser's Back and Forward, left to it.
+describe('rows and columns (grid-and-editing.md "Rows, columns and cells")', () => {
+  const ctrlAlt = { ctrlKey: true, altKey: true };
+  const cmdOpt = { metaKey: true, altKey: true };
+
+  it('inserts with Ctrl+Alt+= and deletes with Ctrl+Alt+-, ⌘+Option on a Mac', () => {
+    expect(sheetKey(k('=', { ...ctrlAlt, code: 'Equal' }))).toEqual({
+      kind: 'lines',
+      op: 'insert',
+    });
+    expect(sheetKey(k('–', { ...cmdOpt, code: 'Minus' }), 'mac')).toEqual({
+      kind: 'lines',
+      op: 'delete',
+    });
+  });
+
+  it('hides with Ctrl+Alt+9 and 0, and shows with Ctrl+Shift+9 and 0', () => {
+    expect(sheetKey(k('9', { ...ctrlAlt, code: 'Digit9' }))).toEqual({
+      kind: 'hide',
+      axis: 'r',
+      hidden: true,
+    });
+    expect(sheetKey(k('º', { ...cmdOpt, code: 'Digit0' }), 'mac')).toEqual({
+      kind: 'hide',
+      axis: 'c',
+      hidden: true,
+    });
+    expect(sheetKey(k('(', { ctrlKey: true, shiftKey: true, code: 'Digit9' }))).toEqual({
+      kind: 'hide',
+      axis: 'r',
+      hidden: false,
+    });
+    expect(sheetKey(k(')', { metaKey: true, shiftKey: true, code: 'Digit0' }), 'mac')).toEqual({
+      kind: 'hide',
+      axis: 'c',
+      hidden: false,
+    });
+  });
+
+  it('leaves AltGr, Ctrl+Alt+Shift and other digits alone', () => {
+    const altGr = { ...ctrlAlt, getModifierState: (m: 'AltGraph') => m === 'AltGraph' };
+    expect(sheetKey(k(']', { ...altGr, code: 'Digit9' }))?.kind).toBe('type');
+    expect(sheetKey(k('9', { ...ctrlAlt, shiftKey: true, code: 'Digit9' }))).toBeNull();
+    expect(sheetKey(k('8', { ...ctrlAlt, code: 'Digit8' }))).toBeNull();
+    expect(sheetKey(k('9', { altKey: true, code: 'Digit9' }))?.kind).not.toBe('hide');
+    expect(sheetKey(k('*', { ctrlKey: true, shiftKey: true, code: 'Digit8' }))).toBeNull();
+  });
+});
+
 describe('Option+Left and Option+Right', () => {
   it('step sheets on a Mac only', () => {
     expect(sheetKey(k('ArrowRight', { altKey: true }), 'mac')).toEqual({ kind: 'sheet', step: 1 });

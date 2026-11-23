@@ -468,7 +468,7 @@ A finger has no hover and no right button, and its drag pans the cells, so selec
   ([Row height](#row-height)).
 - Several selected headers resize, and fit, together.
 - A header's menu (right-click, a long press on a touch screen, or the menu key): **Insert 1 Above / Below** (rows) or **Left / Right**
-  (columns), as many as selected; **Delete**; **Clear**; **Hide**; **Fit to Data**; **Resize…**; and on a column **Sort A to Z**,
+  (columns), as many as selected; **Delete**; **Clear**; **Hide**; **Fit to Data**; **Resize…**, the Resize dialog ([Grid and editing](grid-and-editing.md#rows-columns-and-cells)); and on a column **Sort A to Z**,
   **Sort Z to A**. Hidden rows and columns show a small double arrow on the headers either side (**Show Column C**,
   **Show Rows 2 to 3**, with the shared tooltip), which unhides them; a sheet without headers draws the arrows at the
   grid's own edge, so hidden lines can always come back. Rows a filter leaves out are not hidden lines and draw no
@@ -1022,7 +1022,7 @@ changeset onto one is refused. Its grid takes no input outside Plan, and a doubl
 - `Plan · Toggled · SheetMaximised` / `SheetRestored`, `SheetFillTabOn` / `SheetFillTabOff`, `SheetFocused`.
 - The `Sheet` category: `Changed` with the kind of change (`Cell`, `Formula`, `Format`, `Rows`, `Columns`, `Merge`,
   `Freeze`, `Sort`, `Filter`, `Replace`, `Fill`, `SmartFill`, `Paste`, `Title`, `Clear`, `Shift`, `Move`, `Settings`, `Setup`,
-  `Name`, `Validation`, `ConditionalFormat`: the closed `SHEET_CHANGE_KINDS`), sent once per change, never content; `Imported · Csv`, `Exported · Csv`; `Opened · Find`,
+  `Name`, `Validation`, `ConditionalFormat`, `Resize`, `Hide`, `Group`: the closed `SHEET_CHANGE_KINDS`), sent once per change, never content; `Imported · Csv`, `Exported · Csv`; `Opened · Find`,
   `Opened · Settings`; `Searched · Function` (the toolbar's Search took someone to a function); `Created` with how a sheet was set up (`Blank`, `Cards`, `Csv`, or a
   template's name without spaces, Setup Sheet above) or `Chart` (Insert Chart only, never a template's chart);
   `Used` with a function's name when a formula using it is first saved (names from the closed function list only).
