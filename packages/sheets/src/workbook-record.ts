@@ -2,6 +2,8 @@
 // whole rather than to one of its sheets. One per spreadsheet, in its room; a document holds one exactly when it is
 // a spreadsheet (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
 import type { FileMeaning } from './formula/meaning';
+import type { Rand } from './ids';
+import { emptyLayout, type SheetLayout } from './sheet';
 
 /** The native file format a workbook keeps (standard-mapping.md): ODF as a package or flat, or OOXML. */
 export const WORKBOOK_FORMATS = ['ods', 'fods', 'xlsx'] as const;
@@ -14,6 +16,22 @@ export const WORKBOOK_BORN_FORMAT: WorkbookFormat = 'ods';
 export const WORKBOOK_FIRST_SHEET_NAME = 'Sheet1';
 export const WORKBOOK_ROWS_NEW = 1_000;
 export const WORKBOOK_COLS_NEW = 26;
+/** A spreadsheet's new lines, Google's: columns 100 px wide and rows 21 px tall (grid-and-editing.md "The grid"). */
+export const WORKBOOK_COL_WIDTH_NEW = 100;
+export const WORKBOOK_ROW_HEIGHT_NEW = 21;
+
+/** A new spreadsheet sheet's grid, holding Google's line sizes as its own (D169). */
+export function workbookSheetLayout(
+  rand: Rand = Math.random,
+  rows = WORKBOOK_ROWS_NEW,
+  cols = WORKBOOK_COLS_NEW,
+): SheetLayout {
+  return {
+    ...emptyLayout(rand, rows, cols),
+    colWidth: WORKBOOK_COL_WIDTH_NEW,
+    rowHeight: WORKBOOK_ROW_HEIGHT_NEW,
+  };
+}
 
 export const WORKBOOK_RECALC_MODES = ['change', 'minute', 'hour'] as const;
 export type WorkbookRecalc = (typeof WORKBOOK_RECALC_MODES)[number];

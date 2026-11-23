@@ -48,6 +48,8 @@ describe('adding a sheet', () => {
     expect(tab).toEqual({ id: expect.any(String), name: 'Sheet2', orderIndex: 1 });
     expect(sheet).toMatchObject({ tabId: tab.id, title: 'Sheet2', cells: [] });
     expect([sheet.layout.rows.length, sheet.layout.cols.length]).toEqual([1_000, 26]);
+    // Google's line sizes, the sheet's own (D169).
+    expect([sheet.layout.colWidth, sheet.layout.rowHeight]).toEqual([100, 21]);
     expect(await tabsOf('book1')).toEqual([
       { id: 'book1t', name: 'Sheet1' },
       { id: tab.id, name: 'Sheet2' },

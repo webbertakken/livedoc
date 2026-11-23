@@ -10,6 +10,8 @@ Google Sheets does. What the Plan Sheet already does carries over unless this pa
 
 - A new sheet is 1,000 rows by 26 columns; columns 100 px, rows 21 px, text 10 points in the workbook's default font
   (Google's defaults).
+- A spreadsheet's sheet holds those sizes as its own, so its files carry them, a sheet opened from a file takes the
+  file's; a Plan Sheet keeps its 120 by 28, and a sheet made before keeps the sizes it was drawn at (default, D169).
 - Column letters run A to ZZZ (18,278); rows to the workbook's limit ([Spreadsheet](spreadsheet.md#limits)).
 - Only the cells in view are drawn; positions come from prefix sums of sizes, so a jump to row 1,000,000 costs no
   more than to row 100 ([Grid research](../../research/sheets-open-standard/grid.md)). Finding the line under a point

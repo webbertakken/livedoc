@@ -120,7 +120,7 @@ const fitted = (axis: OutlineAxis, px: number) =>
  */
 export function layoutFromLines(
   lines: FileLines | undefined,
-  layout: Pick<SheetLayout, 'rows' | 'cols'>,
+  layout: Pick<SheetLayout, 'rows' | 'cols' | 'rowHeight' | 'colWidth'>,
   sizedMax: number,
 ): LinesRead {
   const out: Record<string, unknown> = {};
@@ -132,7 +132,9 @@ export function layoutFromLines(
     const ids = axis === 'r' ? layout.rows : layout.cols;
     const fields = AXIS_FIELDS[axis];
     const own = read.size === undefined ? undefined : fitted(axis, read.size);
-    const fallback = axis === 'r' ? ROW_HEIGHT_NEW : COLUMN_WIDTH_NEW;
+    // The made sheet's own sizes, else a Plan Sheet's.
+    const fallback =
+      axis === 'r' ? (layout.rowHeight ?? ROW_HEIGHT_NEW) : (layout.colWidth ?? COLUMN_WIDTH_NEW);
     if (own !== undefined && own !== fallback) out[fields.own] = own;
     const groups = fileGroups(read);
     const folded = collapsedLines(groups);

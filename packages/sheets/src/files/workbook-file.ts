@@ -5,7 +5,6 @@
 import type { PackageRefusal } from '@livedoc/office-packages';
 import { layoutIndex } from '../layout';
 import {
-  emptyLayout,
   splitCellKey,
   type CellFormat,
   type CellInput,
@@ -18,7 +17,7 @@ import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/value
 import type { Workbook } from '../engine/workbook';
 import { SheetLimits } from '../sheet-limits';
 import { SheetName } from '../workbook/sheet-name';
-import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
+import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW, workbookSheetLayout } from '../workbook-record';
 import { formatCodeOf, formatFromCode } from './number-format-code';
 import { storedKept } from './kept-anchors';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
@@ -296,7 +295,7 @@ function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] 
     if (title !== sheet.name) losses.push({ k: 'sheet_renamed', from: sheet.name, to: title });
     if (sheet.rows > rows || sheet.cols > cols)
       losses.push({ k: 'sheet_cut', sheet: title, rows, cols });
-    const layout = emptyLayout(rand, rows, cols);
+    const layout = workbookSheetLayout(rand, rows, cols);
     const lines = layoutFromLines(sheet.lines, layout, limits.sizedAxes);
     if (lines.cut) losses.push({ k: 'sizes_cut', sheet: title });
     made.push({

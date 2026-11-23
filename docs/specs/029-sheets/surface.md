@@ -235,3 +235,5 @@ Version History (the shell's). Each is specified with its area.
   their places when lines move or are sorted (default).
 - **D165** The outline bar's edges: A control with no line on its side takes the other; a group of every line has
   none; the bands stay when the sheet hides its headers (default).
+- **D169** Google's line sizes: Held by each new spreadsheet sheet as its own (100 by 21); a sheet made before keeps
+  120 by 28 (default).
