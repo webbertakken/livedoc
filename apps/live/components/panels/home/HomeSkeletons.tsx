@@ -20,8 +20,9 @@ function TileSkeleton({ thumb }: { thumb: string }) {
   return (
     <>
       <div className={`${thumb} ${SKELETON}`} />
-      <div className="mt-1 h-4 py-0.5">
-        <div className={`h-3 w-3/4 ${SKELETON}`} />
+      {/* The tile label's 16 px line: a 10 px bar with 3 px above and below, so the tile is 100 px either way. */}
+      <div className="mt-1 py-[3px]">
+        <div className={`h-2.5 w-3/4 ${SKELETON}`} />
       </div>
     </>
   );
@@ -56,12 +57,12 @@ export function StripSkeleton() {
 export function WhatHappenedSkeleton() {
   return (
     <div aria-hidden className="flex flex-col gap-1">
-      <div className={`mb-1 h-3 w-16 ${SKELETON}`} />
+      <div className={`mt-px mb-[5px] h-2.5 w-16 ${SKELETON}`} />
       {Array.from({ length: ENTRY_ROWS }, (_, i) => (
         <div key={i} className="flex h-14 items-center gap-3 px-2">
-          <div className={`h-7 w-7 shrink-0 rounded-full ${SKELETON}`} />
+          <div className={`size-row shrink-0 rounded-full ${SKELETON}`} />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className={`h-3 w-3/4 ${SKELETON}`} />
+            <div className={`h-2.5 w-3/4 ${SKELETON}`} />
             <div className={`h-2.5 w-1/3 ${SKELETON}`} />
           </div>
         </div>

@@ -64,11 +64,11 @@ export function HomePane({
   if (home.status === 'error') {
     return (
       <div role="alert" className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className={`text-sm ${MUTED}`}>{HOME_COPY.readFailed}</p>
+        <p className={`text-body ${MUTED}`}>{HOME_COPY.readFailed}</p>
         <button
           type="button"
           onClick={home.retry}
-          className={`rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 ${FOCUS_RING}`}
+          className={`min-h-field rounded-control border border-slate-300 bg-white px-3 text-body text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 ${FOCUS_RING}`}
         >
           {HOME_COPY.tryAgain}
         </button>
@@ -87,7 +87,7 @@ export function HomePane({
 
   const loading = home.status === 'loading';
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-6">
       <JumpBackIn
         ownerId={ownerId}
         set={home.jumpBackIn}

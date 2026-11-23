@@ -9,7 +9,7 @@ import { ThisBrowserPill } from '@/components/primitives/ThisBrowserPill';
 import { helpArticleHref } from '@/lib/help-articles';
 import type { InboxFacts } from './inbox-entries';
 
-const CTA = `inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${SOLID_BRAND_DARK_CONTROL}`;
+const CTA = `inline-flex min-h-prominent items-center gap-1 rounded-control bg-brand-700 px-4 py-2 text-body font-medium text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${SOLID_BRAND_DARK_CONTROL}`;
 
 // Which document the row is from; a team document's chip leads with the team glyph. A document in This Browser is
 // followed by the This Browser pill, as a label: the row is one option, not a set of links
@@ -17,7 +17,7 @@ const CTA = `inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-brand-700 px
 export function InboxDocumentChip({ document, local }: Pick<InboxFacts, 'document' | 'local'>) {
   return (
     <>
-      <span className="inline-flex min-w-0 max-w-[14rem] shrink items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+      <span className="inline-flex min-w-0 max-w-[14rem] shrink items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
         {document.via === 'team' ? (
           <span aria-hidden className="text-slate-500 dark:text-slate-400">
             <TeamIcon />
@@ -55,11 +55,9 @@ export function InboxEmptyState({ compact = false }: { compact?: boolean }) {
 // The read failed, which is NOT "nothing outstanding".
 export function InboxFailedState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center dark:border-slate-700">
-      <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-        Couldn&apos;t load your Inbox
-      </p>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+    <div className="rounded-surface border border-dashed border-slate-300 px-6 py-10 text-center dark:border-slate-700">
+      <p className="text-body text-slate-600 dark:text-slate-300">Couldn&apos;t load your Inbox</p>
+      <p className="mt-1 text-supporting text-slate-500 dark:text-slate-400">
         Check your connection and try again.
       </p>
       <button type="button" onClick={onRetry} className={`mt-3 ${CTA}`}>

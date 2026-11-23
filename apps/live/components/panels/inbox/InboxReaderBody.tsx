@@ -57,21 +57,21 @@ export function InboxReaderBody({
       return (
         <ol className="flex flex-col gap-3 border-t border-slate-200 pt-3 dark:border-slate-700">
           {comments.map((c) => (
-            <li key={c.key} className="flex items-start gap-2.5">
+            <li key={c.key} className="flex items-start gap-2">
               <GlyphDisc
                 size={24}
                 aria-hidden
-                className={`text-[9px] font-semibold text-white ${c.color ? IDENTITY_FILL : 'bg-brand-700'}`}
+                className={`text-glyph text-white ${c.color ? IDENTITY_FILL : 'bg-brand-700'}`}
                 style={c.color ? identityVars(c.color) : undefined}
               >
                 {initialsOf(c.name)}
               </GlyphDisc>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  <span className="font-semibold text-slate-800 dark:text-slate-100">{c.name}</span>{' '}
-                  · {formatRelativeTimeShort(now - c.at)}
+                <p className="text-supporting text-slate-500 dark:text-slate-400">
+                  <span className="text-slate-800 dark:text-slate-100">{c.name}</span> ·{' '}
+                  {formatRelativeTimeShort(now - c.at)}
                 </p>
-                <p className="whitespace-pre-wrap break-words text-sm text-slate-800 dark:text-slate-200">
+                <p className="whitespace-pre-wrap break-words text-body text-slate-800 dark:text-slate-200">
                   {c.text}
                 </p>
               </div>
@@ -82,21 +82,21 @@ export function InboxReaderBody({
     }
     case 'Action':
       return entry.row.description ? (
-        <p className="whitespace-pre-wrap break-words border-t border-slate-200 pt-3 text-sm text-slate-800 dark:border-slate-700 dark:text-slate-200">
+        <p className="whitespace-pre-wrap break-words border-t border-slate-200 pt-3 text-body text-slate-800 dark:border-slate-700 dark:text-slate-200">
           {entry.row.description}
         </p>
       ) : null;
     case 'Card': {
       const type = ITEM_TYPES.find((t) => t.id === entry.row.type)?.label ?? 'Card';
       return (
-        <p className="border-t border-slate-200 pt-3 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-300">
+        <p className="border-t border-slate-200 pt-3 text-body text-slate-700 dark:border-slate-700 dark:text-slate-300">
           {entry.row.board ? `${type} on ${entry.row.board.title}` : `${type}, not on a board`}
         </p>
       );
     }
     case 'FormResponses':
       return (
-        <p className="border-t border-slate-200 pt-3 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-300">
+        <p className="border-t border-slate-200 pt-3 text-body text-slate-700 dark:border-slate-700 dark:text-slate-300">
           {entry.row.unseen === 1
             ? `1 new response to ${entry.row.heading} waits on its board.`
             : `${entry.row.unseen} new responses to ${entry.row.heading} wait on its board.`}

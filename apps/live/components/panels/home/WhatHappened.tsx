@@ -55,7 +55,7 @@ export function WhatHappened({
         <div className="flex flex-col gap-3">
           {days.map((day) => (
             <div key={day.day}>
-              <h3 id={`home-day-${day.day}`} className={`mb-1 px-2 text-xs font-medium ${MUTED}`}>
+              <h3 id={`home-day-${day.day}`} className={`mb-1 px-2 text-supporting ${MUTED}`}>
                 {day.label}
               </h3>
               <ul className="flex flex-col gap-1">

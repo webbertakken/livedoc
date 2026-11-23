@@ -7,12 +7,12 @@ export const SECTION_HEADER =
   'flex items-baseline justify-between gap-4 border-b border-slate-200 pb-2 dark:border-slate-700';
 
 /** A section's title: Jump Back In, What Happened. */
-export const SECTION_HEADING = 'text-base font-semibold text-slate-900 dark:text-slate-100';
+export const SECTION_HEADING = 'text-panel-title text-slate-900 dark:text-slate-100';
 
 /** The quiet link at the end of a heading row: See More, See Timeline. Its line box is padded
  *  to the 24 px target. */
 export const SECTION_LINK =
-  'inline-flex min-h-6 items-center rounded-sm text-sm font-medium text-brand-700 hover:underline dark:text-brand-300';
+  'inline-flex min-h-chip items-center rounded-control text-body text-brand-700 hover:underline dark:text-brand-300';
 
 /** Quiet words: places, times, counts. Slate-500 on the page meets 4.5:1; slate-400 in dark. */
 export const MUTED = 'text-slate-500 dark:text-slate-400';
@@ -22,13 +22,15 @@ export const FOCUS_RING =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
 
 /** A row that opens something: a What Happened entry. */
-export const ROW = 'rounded-lg px-2 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800/70';
+export const ROW =
+  'rounded-control px-2 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800/70';
 
 /** The page behind Home, for overlays that blend into it (the strip's fade, the avatar rings). */
 export const PAGE_RING = 'ring-2 ring-slate-50 dark:ring-slate-900';
 
 /** A placeholder block. */
-export const SKELETON = 'rounded-md bg-slate-200/70 motion-safe:animate-pulse dark:bg-slate-800';
+export const SKELETON =
+  'rounded-control bg-slate-200/70 motion-safe:animate-pulse dark:bg-slate-800';
 
 // ---- Jump Back In's tiles (desktop and tablet), shared by the tiles and their skeletons ----
 
@@ -43,7 +45,8 @@ export const GRID = 'grid grid-cols-4 content-start gap-3';
 export const GRID_MIN_HEIGHT = 'min-h-[13.25rem]';
 
 /** An empty list's one slot, the size of the tile it stands in for: a dashed edge. */
-export const EMPTY_SLOT = 'rounded-md border border-dashed border-slate-300 dark:border-slate-600';
+export const EMPTY_SLOT =
+  'rounded-control border border-dashed border-slate-300 dark:border-slate-600';
 
 /** A still surface for the first run's cards: a white card on the page, a hairline edge (the raised surface in dark). */
 export const PANEL_SURFACE =

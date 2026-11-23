@@ -49,11 +49,11 @@ const FAILURE_COPY: Record<Failure, string> = {
 };
 
 const VERB =
-  'inline-flex items-center gap-1.5 rounded-lg px-3 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none';
-const PRIMARY = `${VERB} bg-brand-700 text-white hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`;
+  'inline-flex items-center gap-1 rounded-control px-3 text-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none';
+const PRIMARY = `${VERB} bg-brand-700 font-medium text-white hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`;
 const SECONDARY = `${VERB} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700`;
 const KBD =
-  'rounded border border-current/30 px-1 font-mono text-[10px] font-medium leading-4 opacity-80 pointer-coarse:hidden';
+  'rounded-control border border-current/30 px-1 font-mono text-glyph opacity-80 pointer-coarse:hidden';
 
 export function InboxReader({
   ref,
@@ -160,7 +160,7 @@ export function InboxReader({
     focusTitle: () => titleRef.current?.focus(),
   }));
 
-  const target = stacked ? 'min-h-11' : 'min-h-9';
+  const target = stacked ? 'min-h-11' : 'min-h-field';
   const replyTo = firstName(f.person?.name) ?? 'the thread';
 
   return (
@@ -173,7 +173,7 @@ export function InboxReader({
         <button
           type="button"
           onClick={onBack}
-          className={`-ml-2 inline-flex min-h-11 items-center gap-1.5 self-start rounded-lg px-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white`}
+          className={`-ml-2 inline-flex min-h-11 items-center gap-1 self-start rounded-control px-2 text-body text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white`}
         >
           <BackGlyph />
           Back to Inbox
@@ -181,7 +181,7 @@ export function InboxReader({
       ) : null}
       <nav
         aria-label="Where it is"
-        className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-slate-500 dark:text-slate-400"
+        className="flex min-w-0 flex-wrap items-center gap-1 text-supporting text-slate-500 dark:text-slate-400"
       >
         {[f.document.name, ...f.where].map((part, i) => (
           <span key={`${i}:${part}`} className="inline-flex min-w-0 items-center gap-1">
@@ -195,11 +195,11 @@ export function InboxReader({
         id={titleId}
         ref={titleRef}
         tabIndex={-1}
-        className="break-words text-xl font-semibold text-slate-900 outline-none dark:text-slate-50"
+        className="break-words text-name text-slate-900 outline-none dark:text-slate-50"
       >
         {f.title}
       </h2>
-      <p className="flex flex-wrap items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+      <p className="flex flex-wrap items-center gap-2 text-body text-slate-600 dark:text-slate-300">
         {f.reason ? (
           <span aria-hidden className="text-slate-500 dark:text-slate-400">
             <ReasonIcon kind={f.reason.kind} />
@@ -255,7 +255,7 @@ export function InboxReader({
         </Link>
       </div>
       {failed ? (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+        <p role="alert" className="text-body text-red-700 dark:text-red-300">
           {FAILURE_COPY[failed]}
         </p>
       ) : null}
@@ -290,10 +290,10 @@ export function InboxReader({
               }
             }}
             placeholder={`Reply to ${replyTo}…`}
-            className="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-brand-600 focus:outline-2 focus:outline-brand-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400"
+            className="w-full resize-y rounded-control border border-slate-300 bg-white px-3 py-2 text-body text-slate-900 placeholder:text-slate-500 focus:border-brand-600 focus:outline-2 focus:outline-brand-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400"
           />
           <div className="flex items-center justify-end gap-3">
-            <span className="text-xs text-slate-500 pointer-coarse:hidden dark:text-slate-400">
+            <span className="text-supporting text-slate-500 pointer-coarse:hidden dark:text-slate-400">
               {keyLabel('Mod-↵')} to send
             </span>
             <button

@@ -151,7 +151,9 @@ describe('HomePane', () => {
       const heading = screen.getByRole('heading', { level: 2, name });
       const row = heading.parentElement!;
       expect(row.className).toContain('border-b');
-      expect(heading.className).toContain('font-semibold');
+      // A section's title is the 16 px panel title, regular (docs/specs/004-interface-design/sizing.md "Type").
+      expect(heading.className).toContain('text-panel-title');
+      expect(heading.className).not.toContain('font-semibold');
       expect(row.className).toContain('justify-between');
       expect(row.lastElementChild!.textContent).toBe(link);
     }
