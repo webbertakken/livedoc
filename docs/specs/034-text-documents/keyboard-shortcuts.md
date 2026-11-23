@@ -12,8 +12,9 @@ the [dialog](../004-interface-design/office-shell.md#keyboard-shortcuts-dialog) 
 
 - Keys held together are joined by `+`: `Ctrl+Shift+V`. Letters are written in capitals; `Plus` is the + key.
 - Modifiers: `Ctrl`, `Alt`, `Shift`; on a Mac `⌘`, `Option`, `Ctrl`, `Fn`; on ChromeOS also `Search`.
-- Other keys: `Enter`, `Esc`, `Space`, `Up`, `Down`, `Left`, `Right`, `Home`, `End`, `PgUp`, `PgDn`, `F7`, `F10`, and
-  the characters `/ \ [ ] . , ' ; ~ - 0` to `9`.
+- Other keys: `Enter`, `Esc`, `Space`, `Backspace`, `Up`, `Down`, `Left`, `Right`, `Home`, `End`, `PgUp`, `PgDn`,
+  `F1`, `F2`, `F4`, `F7`, `F9`, `F10`, `F11`, and the characters `/ \ [ ] . , ' ; ~ - = 0` to `9`; `=` is the key
+  `Plus` is on, written as Google writes it.
 - A **sequence** holds its modifiers and presses two keys in turn: `Ctrl+Alt+N, H` is "holding Ctrl and Alt, press N
   then H".
 - `[1-6]` stands for each of the digits 1 to 6, one shortcut each.

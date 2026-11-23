@@ -219,16 +219,29 @@ describe('regionStep', () => {
     return e;
   };
   it('reads F6, Ctrl+Alt+. and Ctrl+Alt+, and leaves every other key', () => {
-    expect(regionStep(key({ key: 'F6' }))).toBe('on');
-    expect(regionStep(key({ key: 'F6', shiftKey: true }))).toBe('back');
-    expect(regionStep(key({ key: 'F6', ctrlKey: true }))).toBeNull();
-    expect(regionStep(key({ code: 'Period', ctrlKey: true, altKey: true }))).toBe('on');
-    expect(regionStep(key({ code: 'Comma', ctrlKey: true, altKey: true }))).toBe('back');
-    expect(regionStep(key({ code: 'KeyM', ctrlKey: true, altKey: true }))).toBeNull();
-    expect(regionStep(key({ code: 'Period', ctrlKey: true }))).toBeNull();
+    expect(regionStep(key({ key: 'F6' }), 'pc')).toBe('on');
+    expect(regionStep(key({ key: 'F6', shiftKey: true }), 'pc')).toBe('back');
+    expect(regionStep(key({ key: 'F6', ctrlKey: true }), 'pc')).toBeNull();
+    expect(regionStep(key({ code: 'Period', ctrlKey: true, altKey: true }), 'pc')).toBe('on');
+    expect(regionStep(key({ code: 'Comma', ctrlKey: true, altKey: true }), 'pc')).toBe('back');
+    expect(regionStep(key({ code: 'KeyM', ctrlKey: true, altKey: true }), 'pc')).toBeNull();
+    expect(regionStep(key({ code: 'Period', ctrlKey: true }), 'pc')).toBeNull();
     expect(
-      regionStep(key({ code: 'Period', ctrlKey: true, altKey: true, shiftKey: true })),
+      regionStep(key({ code: 'Period', ctrlKey: true, altKey: true, shiftKey: true }), 'pc'),
     ).toBeNull();
-    expect(regionStep(key({ code: 'Period', ctrlKey: true, altKey: true }, true))).toBeNull();
+    expect(regionStep(key({ code: 'Period', ctrlKey: true, altKey: true }, true), 'pc')).toBeNull();
+  });
+
+  // docs/specs/029-sheets/keyboard-shortcuts.md "Navigate the spreadsheet": Cycle focus between main areas.
+  it('reads ⌘+Option on a Mac and Alt+Shift on ChromeOS, each on its own platform only', () => {
+    const mac = { code: 'Period', metaKey: true, altKey: true };
+    const chromeos = { code: 'Comma', altKey: true, shiftKey: true };
+    expect(regionStep(key(mac), 'mac')).toBe('on');
+    expect(regionStep(key(mac), 'pc')).toBeNull();
+    expect(regionStep(key({ ...mac, ctrlKey: true }), 'mac')).toBeNull();
+    expect(regionStep(key(chromeos), 'chromeos')).toBe('back');
+    expect(regionStep(key(chromeos), 'mac')).toBeNull();
+    expect(regionStep(key({ ...chromeos, metaKey: true }), 'chromeos')).toBeNull();
+    expect(regionStep(key({ code: 'Period', ctrlKey: true, altKey: true }), 'mac')).toBe('on');
   });
 });

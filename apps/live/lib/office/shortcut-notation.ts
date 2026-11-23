@@ -6,8 +6,8 @@ export type OfficePlatform = 'pc' | 'mac' | 'chromeos';
 
 export type ShortcutModifier = 'ctrl' | 'alt' | 'shift' | 'meta';
 
-// One press: the modifiers held and the key's code.
-export type KeyStep = { mods: ShortcutModifier[]; code: string };
+// One press: the modifiers held and the key's code; `label`, how the key is written where that is not its code's name.
+export type KeyStep = { mods: ShortcutModifier[]; code: string; label?: string };
 
 // One way to give a shortcut: a press, or a sequence of two under the same modifiers; or a pointer gesture.
 export type ShortcutWay = {
@@ -34,6 +34,7 @@ const NAMED: Record<string, string> = {
   Enter: 'Enter',
   Esc: 'Escape',
   Space: 'Space',
+  Backspace: 'Backspace',
   Up: 'ArrowUp',
   Down: 'ArrowDown',
   Left: 'ArrowLeft',
@@ -42,8 +43,13 @@ const NAMED: Record<string, string> = {
   End: 'End',
   PgUp: 'PageUp',
   PgDn: 'PageDown',
+  F1: 'F1',
+  F2: 'F2',
+  F4: 'F4',
   F7: 'F7',
+  F9: 'F9',
   F10: 'F10',
+  F11: 'F11',
   Plus: 'Equal',
   '/': 'Slash',
   '\\': 'Backslash',
@@ -57,13 +63,20 @@ const NAMED: Record<string, string> = {
   '-': 'Minus',
 };
 
+// Keys written otherwise than their code's name: `=` is the key `Plus` names.
+const LABELLED: Record<string, string> = { '=': 'Equal' };
+
 // A Mac's Fn turns the arrows into the keys a full keyboard has for them.
 const WITH_FN: Record<string, string> = {
   Left: 'Home',
   Right: 'End',
   Up: 'PageUp',
   Down: 'PageDown',
+  F1: 'F1',
+  F4: 'F4',
   F7: 'F7',
+  F9: 'F9',
+  F11: 'F11',
 };
 
 const POINTER = /^(Shift\+)?(Double-click|Triple-click|right-click)(\+drag)?$/;
@@ -99,7 +112,9 @@ function readPress(press: string): KeyStep {
     else if (MODIFIERS[part]) held.add(MODIFIERS[part]);
     else throw new Error(`shortcut: ${part} is not a modifier`);
   }
-  return { mods: MODIFIER_ORDER.filter((m) => held.has(m)), code: codeOf(key, fn) };
+  const mods = MODIFIER_ORDER.filter((m) => held.has(m));
+  const labelled = LABELLED[key];
+  return labelled ? { mods, code: labelled, label: key } : { mods, code: codeOf(key, fn) };
 }
 
 function readWay(text: string): ShortcutWay[] {
@@ -170,16 +185,24 @@ const CODE_NAMES: Record<string, string> = {
   PageDown: 'PgDn',
 };
 
-function keyName(code: string): string {
+// A key by its name: a letter or digit by itself, a named key by the notation's word.
+function ariaKeyName(code: string): string {
   if (code.startsWith('Key')) return code.slice(3);
   if (code.startsWith('Digit')) return code.slice(5);
-  return ARROWS[code] ?? CODE_NAMES[code] ?? code;
+  return CODE_NAMES[code] ?? code;
 }
 
-function writePress({ mods, code }: KeyStep, platform: OfficePlatform): string {
-  if (platform === 'mac') return mods.map((m) => MAC_SYMBOLS[m]).join('') + keyName(code);
+function keyName(code: string): string {
+  return ARROWS[code] ?? ariaKeyName(code);
+}
+
+const stepName = (step: KeyStep): string => step.label ?? keyName(step.code);
+
+function writePress(step: KeyStep, platform: OfficePlatform): string {
+  const { mods } = step;
+  if (platform === 'mac') return mods.map((m) => MAC_SYMBOLS[m]).join('') + stepName(step);
   const names = mods.map((m) => (m === 'meta' && platform === 'chromeos' ? 'Search' : PC_NAMES[m]));
-  return [...names, keyName(code)].join('+');
+  return [...names, stepName(step)].join('+');
 }
 
 export function formatShortcut(way: ShortcutWay, platform: OfficePlatform): string {
@@ -187,7 +210,7 @@ export function formatShortcut(way: ShortcutWay, platform: OfficePlatform): stri
   const [first, second] = way.steps;
   if (!first) return '';
   const head = writePress(first, platform);
-  return second ? `${head} ${keyName(second.code)}` : head;
+  return second ? `${head} ${stepName(second)}` : head;
 }
 
 const ARIA_MODIFIERS: Record<ShortcutModifier, string> = {
@@ -201,11 +224,7 @@ const ARIA_MODIFIERS: Record<ShortcutModifier, string> = {
 function ariaOf(way: ShortcutWay): string {
   const [press, second] = way.steps;
   if (!press || second) return '';
-  const key = press.code.startsWith('Key')
-    ? press.code.slice(3)
-    : press.code.startsWith('Digit')
-      ? press.code.slice(5)
-      : (CODE_NAMES[press.code] ?? press.code);
+  const key = press.label ?? ariaKeyName(press.code);
   return [...press.mods.map((m) => ARIA_MODIFIERS[m]), key === 'Esc' ? 'Escape' : key].join('+');
 }
 

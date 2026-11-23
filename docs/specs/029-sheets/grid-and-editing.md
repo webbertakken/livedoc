@@ -54,6 +54,8 @@ Every navigation shortcut of the matrix, heard by the grid while it has focus an
 - Alt+Shift+Q moves focus to the selection's summary while more than one cell is selected; Escape there brings it
   back to the grid. Alt+Shift+K opens All Sheets ([Surface](surface.md#sheet-bar)).
 - Tab and Enter move within a selection without losing it.
+- Each key holds as [Keyboard shortcuts](keyboard-shortcuts.md) lists it for the platform: on a Mac Option+Left and
+  Option+Right step sheets too, and ⌘+Option+. and , move between the areas; on ChromeOS Alt+Shift+. and ,.
 
 The surface's areas, from anywhere in it: F6 and Ctrl+Alt+. move focus to the next area and Shift+F6 and Ctrl+Alt+,
 to the previous one, wrapping round (the title row, the menu bar, the toolbar, the formula bar, the grid, an open
@@ -140,7 +142,7 @@ Ctrl+Shift+Z.
   not, so focus never names a cell that is not there.
 - **Read Row** (Ctrl+Alt+Shift+R) says the active cell's row from its first column to the active cell, and
   **Read Column** (Ctrl+Alt+Shift+C) its column from its first row, as Google's Verbalize to Screen Reader does
-  (Option+Shift+R and C on a Mac): each cell's address and value, an empty one as "blank", hidden lines left out.
+  (⌘+Option+Shift+R and C, or Option+Shift+R and C, on a Mac): each cell's address and value, an empty one as "blank", hidden lines left out.
   It says at most the first 50 cells, then how many more (default, D135); said politely, again on a second press.
 - Every action is reachable by the keyboard; the fill handle's work by Ctrl+D, Ctrl+R and Edit's items.
 - Range colours in formulas pair with a dashed or dotted border pattern so colour is never the only cue.

@@ -5,6 +5,8 @@
 // dozens of presses. F6 goes to the next region and Shift+F6 to the previous, wrapping round, in screen order; a
 // region not on screen is skipped. Each region's root carries `data-region` with its name.
 import { useEffect } from 'react';
+import { currentOfficePlatform } from '@/lib/office/office-platform';
+import type { OfficePlatform } from '@/lib/office/shortcut-notation';
 
 /** The regions, in screen order: the canvas's, and the office shell's parts for a kind outside the canvas (menu bar,
  *  toolbar, the panels either side of the document). Only one set is on screen at a time. */
@@ -66,11 +68,16 @@ export function nextRegion(
 }
 
 /** The way a key moves between regions: F6 and Ctrl+Alt+. on, Shift+F6 and Ctrl+Alt+, back; null for any other key.
+ *  A Mac also takes ⌘+Option+. and , and ChromeOS Alt+Shift+. and , (docs/specs/029-sheets/keyboard-shortcuts.md).
  *  AltGr (Ctrl+Alt on Windows) types characters, so a key composed with it never moves. */
-export function regionStep(e: KeyboardEvent): 'on' | 'back' | null {
+export function regionStep(e: KeyboardEvent, platform: OfficePlatform): 'on' | 'back' | null {
   if (e.key === 'F6' && !e.altKey && !e.ctrlKey && !e.metaKey) return e.shiftKey ? 'back' : 'on';
-  if (!e.ctrlKey || !e.altKey || e.shiftKey || e.metaKey || e.getModifierState('AltGraph'))
-    return null;
+  if (!e.altKey || e.getModifierState('AltGraph')) return null;
+  const held =
+    (e.ctrlKey && !e.shiftKey && !e.metaKey) ||
+    (platform === 'mac' && e.metaKey && !e.ctrlKey && !e.shiftKey) ||
+    (platform === 'chromeos' && e.shiftKey && !e.ctrlKey && !e.metaKey);
+  if (!held) return null;
   return e.code === 'Period' ? 'on' : e.code === 'Comma' ? 'back' : null;
 }
 
@@ -79,7 +86,7 @@ export function useRegionCycle(enabled = true): void {
   useEffect(() => {
     if (!enabled) return;
     const onKey = (e: KeyboardEvent) => {
-      const step = regionStep(e);
+      const step = regionStep(e, currentOfficePlatform().platform);
       if (!step) return;
       if (document.activeElement?.closest('[aria-modal="true"]')) return;
       const back = step === 'back';

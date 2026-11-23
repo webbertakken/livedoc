@@ -312,3 +312,60 @@ describe('OfficeTitleRow, the notice', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 });
+
+// docs/specs/004-interface-design/office-shell.md "Shortcut layer": keys the kind's surface hears itself pass on.
+describe('OfficeTitleRow, the shortcut layer', () => {
+  it("leaves the surface's keys alone, its items' and its own ids' alike, and runs a built row", () => {
+    const undo = vi.fn();
+    const own = vi.fn();
+    const keep = vi.fn();
+    const keys = (pc: string) => ({ pc, mac: pc, chromeos: pc });
+    function Surface() {
+      const root = useRef<HTMLDivElement | null>(null);
+      return (
+        <div ref={root} data-testid="surface">
+          <OfficeTitleRow
+            name="Budget"
+            format=".ODS"
+            formatTitle="OpenDocument format"
+            problem={null}
+            catalogue={[
+              {
+                id: 'edit',
+                label: 'Edit',
+                entries: [
+                  {
+                    kind: 'item',
+                    id: 'undo',
+                    label: 'Undo',
+                    level: 'edit',
+                    status: 'built',
+                    shortcut: 'undo',
+                  },
+                ],
+              },
+            ]}
+            level="edit"
+            actions={{ undo: { run: undo }, own: { run: own }, keep: { run: keep } }}
+            shortcuts={[
+              { id: 'undo', group: 'G', action: 'Undo', keys: keys('Ctrl+Z'), status: 'surface' },
+              { id: 'own', group: 'G', action: 'Own', keys: keys('Ctrl+J'), status: 'surface' },
+              { id: 'keep', group: 'G', action: 'Keep', keys: keys('Ctrl+K'), status: 'built' },
+            ]}
+            keyScope={root}
+          />
+        </div>
+      );
+    }
+    render(<Surface />);
+    const surface = screen.getByTestId('surface');
+    const press = (code: string) =>
+      fireEvent.keyDown(surface, { code, key: code.slice(3).toLowerCase(), ctrlKey: true });
+    expect(press('KeyZ')).toBe(true);
+    expect(press('KeyJ')).toBe(true);
+    expect(press('KeyK')).toBe(false);
+    expect(undo).not.toHaveBeenCalled();
+    expect(own).not.toHaveBeenCalled();
+    expect(keep).toHaveBeenCalledTimes(1);
+  });
+});

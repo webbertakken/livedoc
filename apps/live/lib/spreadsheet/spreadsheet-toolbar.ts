@@ -84,9 +84,9 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
         shortcut: 'tool-finder',
         built: true,
       }),
-      icon('undo', 'Undo', 'participate', lucideUndo2, BUILT),
-      icon('redo', 'Redo', 'participate', lucideRedo2, BUILT),
-      icon('print', 'Print', 'view', lucidePrinter),
+      icon('undo', 'Undo', 'participate', lucideUndo2, { ...BUILT, shortcut: 'undo' }),
+      icon('redo', 'Redo', 'participate', lucideRedo2, { ...BUILT, shortcut: 'redo' }),
+      icon('print', 'Print', 'view', lucidePrinter, { shortcut: 'print' }),
       icon('paint-format', 'Paint Format', 'edit', lucidePaintRoller, { toggle: true }),
     ],
   },
@@ -99,8 +99,14 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
     id: 'number',
     label: 'Number',
     controls: [
-      icon('number-currency', 'Format as Currency', 'edit', lucideDollarSign, BUILT),
-      icon('number-percent', 'Format as Percent', 'edit', lucidePercent, BUILT),
+      icon('number-currency', 'Format as Currency', 'edit', lucideDollarSign, {
+        ...BUILT,
+        shortcut: 'format-as-currency',
+      }),
+      icon('number-percent', 'Format as Percent', 'edit', lucidePercent, {
+        ...BUILT,
+        shortcut: 'format-as-percentage',
+      }),
       icon(
         'decrease-decimal-places',
         'Decrease Decimal Places',
@@ -132,11 +138,16 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
     id: 'text',
     label: 'Text',
     controls: [
-      icon('bold', 'Bold', 'edit', lucideBold, { toggle: true, built: true }),
-      icon('italic', 'Italic', 'edit', lucideItalic, { toggle: true, built: true }),
+      icon('bold', 'Bold', 'edit', lucideBold, { toggle: true, built: true, shortcut: 'bold' }),
+      icon('italic', 'Italic', 'edit', lucideItalic, {
+        toggle: true,
+        built: true,
+        shortcut: 'italic',
+      }),
       icon('strikethrough', 'Strikethrough', 'edit', lucideStrikethrough, {
         toggle: true,
         built: true,
+        shortcut: 'strikethrough',
       }),
       // A glyph while no colour picker binds it.
       icon('text-colour', 'Text Colour', 'edit', lucideBaseline),
@@ -174,8 +185,10 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
     id: 'insert',
     label: 'Insert',
     controls: [
-      icon('insert-link', 'Insert Link', 'edit', lucideLink),
-      icon('insert-comment', 'Insert Comment', 'participate', lucideMessageSquarePlus),
+      icon('insert-link', 'Insert Link', 'edit', lucideLink, { shortcut: 'insert-link' }),
+      icon('insert-comment', 'Insert Comment', 'participate', lucideMessageSquarePlus, {
+        shortcut: 'insert-or-edit-comment',
+      }),
       icon('insert-chart', 'Insert Chart', 'edit', lucideChartColumn),
       icon('create-a-filter', 'Create a Filter', 'edit', lucideFunnel, {
         toggle: true,
@@ -187,6 +200,10 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
   {
     id: 'end',
     label: 'View',
-    controls: [icon('hide-the-menus', 'Hide the Menus', 'view', lucideChevronUp)],
+    controls: [
+      icon('hide-the-menus', 'Hide the Menus', 'view', lucideChevronUp, {
+        shortcut: 'compact-controls',
+      }),
+    ],
   },
 ];

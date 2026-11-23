@@ -106,3 +106,49 @@ test('the menus run what the grid does, and dim what is still to come', async ({
   await page.keyboard.press('Escape');
   expectNoPageErrors(pageErrors);
 });
+
+// docs/specs/029-sheets/keyboard-shortcuts.md; surface.md "Menu bar": items show their keys, Ctrl+/ lists every one,
+// a format key runs its item through the shell, and Ctrl+Z, the editor's own, still takes it back.
+test('the menus show their keys and Ctrl+/ lists the grid’s own', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  await select(page, 'A1');
+  await page.keyboard.type('Total');
+  await page.keyboard.press('Enter');
+
+  const undo = await officeMenuItem(page, ['Edit', 'Undo']);
+  await expect(undo).toContainText('Ctrl+Z');
+  await expect(page.getByRole('menuitem', { name: /^Copy/ })).toContainText('Ctrl+C');
+  await page.screenshot({
+    path: test.info().outputPath('edit-menu-keys.png'),
+    animations: 'disabled',
+  });
+  await page.keyboard.press('Escape');
+
+  await select(page, 'A1');
+  await page.keyboard.press('Control+/');
+  const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
+  await expect(dialog).toBeVisible();
+  const selectColumn = dialog
+    .locator('div', { has: page.getByText('Select column', { exact: true }) })
+    .last();
+  await expect(selectColumn).toContainText('Ctrl+Space');
+  await expect(selectColumn).not.toContainText('Coming soon');
+  await page.screenshot({
+    path: test.info().outputPath('shortcuts-dialog.png'),
+    animations: 'disabled',
+  });
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+
+  const bold = page.getByRole('toolbar').getByRole('button', { name: /^Bold/ });
+  await select(page, 'A1');
+  await page.keyboard.press('Control+b');
+  await expect(bold).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Control+z');
+  await expect(bold).toHaveAttribute('aria-pressed', 'false');
+  expectNoPageErrors(pageErrors);
+});
