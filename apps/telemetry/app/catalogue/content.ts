@@ -1382,6 +1382,14 @@ export const PDF_TEXT_COPIED = chart(
   { types: ['Text'] },
 );
 
+export const PDF_SEARCHES = chart(
+  'Pdf',
+  'Searched',
+  'PDF Searches',
+  'A search of a PDF document’s text, from its find field, once the query rests. Never the query.',
+  { types: ['Find'] },
+);
+
 export const PDF_DOCUMENTS: MetricStack = {
   stack: true,
   title: 'PDF Documents',
@@ -1399,6 +1407,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_ZOOMS,
     PDF_LAYERS_TOGGLED,
     PDF_TEXT_COPIED,
+    PDF_SEARCHES,
   ],
 };
 

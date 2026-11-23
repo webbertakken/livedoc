@@ -68,6 +68,7 @@ async function page(
       onText={onText}
       linkName={(target) => `Link to ${target.kind}`}
       onFollow={onFollow}
+      found={null}
       register={() => {}}
     />,
   );

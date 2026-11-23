@@ -24,6 +24,7 @@ import { HELD_MARGIN, NEAR_MARGIN, useWithin } from '@/lib/pdf-document/useWithi
 import type { PdfTileSource } from './PdfPageTiles';
 import { PdfPage, type PdfPageTool } from './PdfPage';
 import type { PdfTextGesture, PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
+import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 
 const NOTHING_SELECTED: readonly Quad[] = [];
 
@@ -44,6 +45,7 @@ export function PdfPages({
   selection,
   onText,
   onFollow,
+  found,
 }: {
   // Hands the scroller to the view that lays the pages out and scrolls them.
   attach: (element: HTMLDivElement | null) => void;
@@ -69,6 +71,8 @@ export function PdfPages({
   onText: (index: number, gesture: PdfTextGesture) => void;
   // Where a press on a page's link goes (usePdfLinks.ts).
   onFollow: (target: LinkTarget) => void;
+  // Find's results, by page.
+  found: ReadonlyMap<number, PdfFindTints>;
 }) {
   const scroller = useRef<HTMLDivElement | null>(null);
   const ref = useCallback(
@@ -140,6 +144,7 @@ export function PdfPages({
                   onText={onText}
                   linkName={linkName}
                   onFollow={onFollow}
+                  found={found.get(box.index) ?? null}
                   register={register}
                 />
               );

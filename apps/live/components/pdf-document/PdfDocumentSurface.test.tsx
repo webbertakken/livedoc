@@ -7,7 +7,7 @@
 // and the mode, said for the tab the person is on, and a press on a person going to their page; "Offline and This
 // Browser": a PDF kept here is read from this browser, and its stored file is not replaced for the budget.
 import type { OfficeChrome } from '@/components/office/office-chrome';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import {
@@ -825,5 +825,38 @@ describe('a PDF document’s text', () => {
       fireEvent.keyDown(pagesOf(container), { key: 'a', ctrlKey: true });
     });
     expect(await copyOn(screen.getByRole('textbox', { name: 'Page' }))).toBeNull();
+  });
+});
+
+// reading-surface.md "Find": ⌘F opens the field on the pages, a query is found and listed, Escape gives the pages the
+// keys back.
+describe('a PDF document’s find', () => {
+  afterEach(() => localStorage.clear());
+
+  it('opens by its key, finds a query and lists it, and closes with Escape', async () => {
+    const now = await ready();
+    const text = PageText.of(
+      [...'a fox'].map((c) => c.codePointAt(0)!),
+      [...Array.from({ length: 5 }, (_, at) => [at * 6, 400, at * 6 + 6, 408]).flat()],
+    );
+    const engine = {
+      pageText: async () => text,
+      fileMarks: async () => [],
+      outline: async () => ({ items: [], cut: false }),
+      pageMatrix: async () => null,
+    };
+    const { container } = show({ ...now, engine: engine as never }, 'view');
+    const pages = container.querySelector<HTMLElement>('[data-pdf-pages]')!;
+    fireEvent.keyDown(pages, { key: 'f', code: 'KeyF', ctrlKey: true });
+    const field = screen.getByRole('searchbox', { name: 'Find' });
+    fireEvent.change(field, { target: { value: 'fox' } });
+    const search = screen.getByRole('search', { name: 'Find in this PDF' });
+    await waitFor(() => expect(within(search).getByRole('status').textContent).toBe('1 of 2'));
+    expect(track).toHaveBeenCalledWith('Pdf', 'Searched', 'Find');
+    fireEvent.click(screen.getByRole('button', { name: 'All results' }));
+    expect(screen.getByRole('complementary', { name: 'Find results' })).toBeTruthy();
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(screen.queryByRole('search', { name: 'Find in this PDF' })).toBeNull();
+    expect(screen.queryByRole('complementary', { name: 'Find results' })).toBeNull();
   });
 });

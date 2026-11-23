@@ -163,6 +163,7 @@ export const EMITTED_EVENT_PAIRS: readonly string[] = [
   'Pdf·Exported',
   'Pdf·Imported',
   'Pdf·Redone',
+  'Pdf·Searched',
   'Pdf·Selected',
   'Pdf·Toggled',
   'Pdf·Undone',

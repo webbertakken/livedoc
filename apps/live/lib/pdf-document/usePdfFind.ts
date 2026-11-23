@@ -128,7 +128,7 @@ export function usePdfFind({
     return () => clearTimeout(timer);
   }, [open, engine, pages.length, query, options]);
 
-  const listed = progress?.results ?? [];
+  const listed = useMemo(() => progress?.results ?? [], [progress]);
   const step = useCallback(
     (by: 1 | -1) => {
       if (listed.length === 0) return;
@@ -185,7 +185,7 @@ export function usePdfFind({
   );
 
   // Every result on a page tinted, the current one stronger (reading-surface.md "Find").
-  const tints = useMemo(() => {
+  const tints = useMemo((): ReadonlyMap<number, PdfFindTints> => {
     const byPage = new Map<number, { found: Quad[]; current: Quad[] }>();
     listed.forEach((result, at) => {
       if (result.kind === 'bookmark') return;
@@ -193,7 +193,7 @@ export function usePdfFind({
       (at === current ? tint.current : tint.found).push(...result.quads);
       byPage.set(result.page, tint);
     });
-    return byPage as ReadonlyMap<number, PdfFindTints>;
+    return byPage;
   }, [listed, current]);
 
   return {

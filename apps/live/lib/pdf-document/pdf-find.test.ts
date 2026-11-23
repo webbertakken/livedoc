@@ -25,7 +25,7 @@ function source(pages = ['The fox', 'No match', 'fox and fox']) {
   return {
     pages: pages.length,
     pageText: vi.fn(async (index: number) =>
-      pages[index] === undefined ? null : textOf(pages[index]!),
+      pages[index] === undefined ? null : textOf(pages[index]),
     ),
     fileMarks: vi.fn(async (index: number) => (index === 1 ? [MARK] : [])),
     outline: vi.fn(async () => OUTLINE),

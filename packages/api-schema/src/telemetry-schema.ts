@@ -183,7 +183,7 @@ export const TELEMETRY_CATEGORIES = [
   // ('Imported', `type` the way: 'Explorer'), a mark made ('Added', 'Mark.Highlight'), a tool taken in hand
   // ('Selected', 'Tool.Highlight'), a person's own change taken back or made again ('Undone', 'Redone'), a
   // download ('Exported', 'Pdf'), and a person's view: its page display ('Changed', 'PageDisplay.Single') and how
-  // it was zoomed ('Zoomed', 'FitWidth'), a PDF layer shown or hidden for them ('Toggled', 'Layer.Hidden'), and text copied ('Copied', 'Text').
+  // it was zoomed ('Zoomed', 'FitWidth'), a PDF layer shown or hidden for them ('Toggled', 'Layer.Hidden'), text copied ('Copied', 'Text'), and a search of its text ('Searched', 'Find').
   // Never a name, a password or any text of a file.
   'Pdf',
   // Forms (docs/specs/030-forms/forms.md "Telemetry"): a form started (its starter), a question added (its type),

@@ -3,6 +3,7 @@
 // their own colour. Geometry LiveDoc draws itself, never markup of the file. The page and its thumbnail share it.
 import type { Mark, PageMatrix, Quad } from '@livedoc/pdf-documents';
 import { PageView } from '@livedoc/pdf-documents';
+import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 
 /** A quad as an SVG polygon's points, in view space. */
 export const pointsOf = (matrix: PageMatrix, quad: Quad): string =>
@@ -19,6 +20,7 @@ export function PdfMarksOverlay({
   marks,
   preview = [],
   selected = [],
+  found = null,
 }: {
   // Page space to view space, as the picture under it was drawn.
   matrix: PageMatrix;
@@ -30,6 +32,8 @@ export function PdfMarksOverlay({
   preview?: readonly Quad[];
   // The text selected on the page, in the shell's focus colour (reading-surface.md "The pages": Selecting text).
   selected?: readonly Quad[];
+  // Find's results on the page, the current one stronger (reading-surface.md "Find").
+  found?: PdfFindTints | null;
 }) {
   return (
     <svg
@@ -51,6 +55,20 @@ export function PdfMarksOverlay({
           ))}
         </g>
       ))}
+      {found && found.found.length > 0 ? (
+        <g data-pdf-found="true" className="fill-amber-300" opacity={0.6}>
+          {found.found.map((quad, at) => (
+            <polygon key={at} points={pointsOf(matrix, quad)} />
+          ))}
+        </g>
+      ) : null}
+      {found && found.current.length > 0 ? (
+        <g data-pdf-found-current="true" className="fill-orange-500" opacity={0.6}>
+          {found.current.map((quad, at) => (
+            <polygon key={at} points={pointsOf(matrix, quad)} />
+          ))}
+        </g>
+      ) : null}
       {selected.length > 0 ? (
         <g data-pdf-text-selection="true" className="fill-(--office-focus)" opacity={0.35}>
           {selected.map((quad, at) => (

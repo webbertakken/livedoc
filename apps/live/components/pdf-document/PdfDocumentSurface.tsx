@@ -67,6 +67,7 @@ import { usePdfTextActions } from '@/lib/pdf-document/usePdfTextActions';
 import { usePdfTextSelection } from '@/lib/pdf-document/usePdfTextSelection';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
 import { usePdfViewHistory } from '@/lib/pdf-document/usePdfViewHistory';
+import { usePdfFind } from '@/lib/pdf-document/usePdfFind';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
@@ -77,6 +78,8 @@ import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
 import { PdfLeftPanel } from './PdfLeftPanel';
 import { PdfLinkDialog } from './PdfLinkDialog';
+import { PdfFindBar } from './PdfFindBar';
+import { PdfFindResults } from './PdfFindResults';
 
 /** "This PDF holds the most marks LiveDoc keeps for one file (20,000)." (marks.md "Errors"). */
 const TOO_MANY_MARKS_COPY = 'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
@@ -244,6 +247,14 @@ export function PdfDocumentSurface({
     mayCopy: ready?.permissions.copy ?? false,
     onProblem: setProblem,
   });
+  // "Find": the field on the pages, its results tinted and listed; going to one is a jump.
+  const find = usePdfFind({
+    engine: ready?.engine ?? null,
+    pages: pages ?? NO_PAGES,
+    turns: viewer.view.turns,
+    jump,
+    follow: links.follow,
+  });
   const { reveal } = panels;
   const leftOpen = panels.open.left;
   // ⌘⌥⇧T: focus in the left panel open, or Thumbnails opened.
@@ -349,6 +360,7 @@ export function PdfDocumentSurface({
             ...panels.actions,
             ...textActions.actions,
             ...history.actions,
+            ...find.actions,
             [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -383,6 +395,7 @@ export function PdfDocumentSurface({
       panels.actions,
       textActions.actions,
       history.actions,
+      find.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -486,7 +499,11 @@ export function PdfDocumentSurface({
               layerView={layerView}
             />
           }
-          right={null}
+          right={
+            find.open && find.listOpen ? (
+              <PdfFindResults find={find} pages={ready.pages} focusNonce={0} />
+            ) : null
+          }
         >
           <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
             <PdfPages
@@ -506,7 +523,9 @@ export function PdfDocumentSurface({
               selection={textSelection.selected}
               onText={textSelection.gesture}
               onFollow={links.follow}
+              found={find.tints}
             />
+            {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
             <PdfPageBar
               page={viewer.page}
               labels={labels}
