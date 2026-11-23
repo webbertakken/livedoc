@@ -112,7 +112,7 @@ export function SlideDeckRow({
   const picture = (
     <span
       className={`relative flex shrink-0 items-center justify-center overflow-hidden border bg-white transition dark:bg-slate-950 ${
-        roomy ? 'h-[63px] w-28 rounded-lg shadow-sm' : 'h-8 w-11 rounded'
+        roomy ? 'h-[63px] w-28 rounded-control shadow-sm' : 'h-field w-11 rounded-control'
       } ${
         isOpen ? 'border-brand-400 dark:border-brand-400' : 'border-slate-200 dark:border-slate-700'
       } ${slide.hidden ? 'opacity-40' : ''}`}
@@ -129,7 +129,7 @@ export function SlideDeckRow({
       ) : slide.itemId ? (
         <span
           aria-hidden
-          className="relative flex h-5 w-8 flex-col justify-center gap-0.5 overflow-hidden rounded-sm border border-slate-200 bg-white pl-1.5 dark:border-slate-600 dark:bg-slate-800"
+          className="relative flex h-icon-title w-8 flex-col justify-center gap-0.5 overflow-hidden rounded-none border border-slate-200 bg-white pl-1 dark:border-slate-600 dark:bg-slate-800"
         >
           <span
             className="absolute inset-y-0 left-0 w-0.5"
@@ -140,7 +140,7 @@ export function SlideDeckRow({
         </span>
       ) : null}
       {roomy ? (
-        <span className="absolute bottom-1 left-1 rounded bg-slate-900/70 px-1 text-[10px] font-semibold tabular-nums text-white">
+        <span className="absolute bottom-1 left-1 rounded-control bg-slate-900/70 px-1 text-glyph tabular-nums text-white">
           {index + 1}
         </span>
       ) : null}
@@ -157,7 +157,7 @@ export function SlideDeckRow({
       // Without this a touch-drag scrolls the panel instead of moving the row.
       style={{ touchAction: 'none' }}
       className={`group flex w-full items-center text-left transition ${
-        roomy ? 'gap-3 rounded-xl p-1.5' : 'gap-2 rounded-md border px-2 py-1.5'
+        roomy ? 'gap-3 rounded-menu p-2' : 'gap-2 rounded-control border px-2 py-1.5'
       } ${
         isDragging
           ? 'cursor-grabbing bg-brand-50 opacity-50 dark:bg-brand-500/15'
@@ -172,7 +172,7 @@ export function SlideDeckRow({
     >
       {roomy ? null : (
         <span
-          className={`w-4 shrink-0 text-center text-[10px] font-semibold tabular-nums ${
+          className={`w-4 shrink-0 text-center text-glyph tabular-nums ${
             slide.hidden ? 'text-slate-300 dark:text-slate-600' : 'text-slate-400'
           }`}
         >
@@ -196,9 +196,7 @@ export function SlideDeckRow({
           }}
           onPointerDown={(e) => e.stopPropagation()}
           placeholder={headline ?? `Slide ${index + 1}`}
-          className={`min-w-0 flex-1 rounded border border-brand-300 bg-white px-1 py-0.5 text-slate-800 outline-none dark:bg-slate-900 dark:text-slate-100 ${
-            roomy ? 'text-sm' : 'text-[11px]'
-          }`}
+          className="min-w-0 flex-1 rounded-control border border-brand-300 bg-white px-1 py-0.5 text-body text-slate-800 outline-none dark:bg-slate-900 dark:text-slate-100"
         />
       ) : (
         <button
@@ -207,7 +205,7 @@ export function SlideDeckRow({
           className="flex min-w-0 flex-1 cursor-pointer flex-col gap-0.5 text-left"
         >
           <span
-            className={`truncate font-medium ${roomy ? 'text-sm' : 'text-[11px]'} ${
+            className={`truncate text-body ${
               slide.hidden
                 ? 'text-slate-400 line-through dark:text-slate-400'
                 : 'text-slate-800 dark:text-slate-100'
@@ -215,11 +213,7 @@ export function SlideDeckRow({
           >
             {title}
           </span>
-          <span
-            className={`flex min-w-0 items-center gap-1.5 text-slate-500 dark:text-slate-400 ${
-              roomy ? 'text-xs' : 'text-[9px]'
-            }`}
-          >
+          <span className="flex min-w-0 items-center gap-1 text-supporting text-slate-500 dark:text-slate-400">
             <span className="truncate">{source}</span>
             {/* Quiet markers for what the slide carries: its notes, its minutes, that it is hidden. */}
             {slide.notes ? (
@@ -257,7 +251,7 @@ export function SlideDeckRow({
             aria-label={`Present from slide ${index + 1}`}
             onClick={onPresentFrom}
             onPointerDown={(e) => e.stopPropagation()}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-brand-700 opacity-0 transition hover:bg-brand-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-brand-600 group-hover:opacity-100 dark:text-brand-200 dark:hover:bg-brand-500/20"
+            className="flex size-row shrink-0 items-center justify-center rounded-full text-brand-700 opacity-0 transition hover:bg-brand-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-brand-600 group-hover:opacity-100 dark:text-brand-200 dark:hover:bg-brand-500/20"
           >
             <PlayIcon size={13} />
           </button>

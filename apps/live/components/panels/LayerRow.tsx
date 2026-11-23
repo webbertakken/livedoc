@@ -109,7 +109,7 @@ export function LayerRow({
         openRowMenu(layer.id, e.currentTarget);
       }}
       className={
-        'group relative flex min-h-[60px] cursor-pointer select-none items-center gap-2 rounded-xl py-1.5 pl-4 pr-1.5 transition ' +
+        'group relative flex min-h-[60px] cursor-pointer select-none items-center gap-2 rounded-menu py-1.5 pl-4 pr-1 transition ' +
         (active
           ? 'bg-brand-50 ring-1 ring-inset ring-brand-200 dark:bg-brand-500/10 dark:ring-brand-500/30 '
           : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 ') +
@@ -138,7 +138,7 @@ export function LayerRow({
       {showPreview ? (
         <span
           className={
-            'flex h-12 w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white transition dark:bg-slate-950 ' +
+            'flex h-12 w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-control bg-white transition dark:bg-slate-950 ' +
             (count === 0
               ? 'border border-dashed border-slate-300 dark:border-slate-600 '
               : 'border border-slate-200 shadow-sm dark:border-slate-700 ') +
@@ -163,22 +163,22 @@ export function LayerRow({
             onCommit={commitRename}
             onCancel={() => setRenamingId(null)}
             ariaLabel="Layer name"
-            className="w-full min-w-0 rounded-md border border-brand-300 bg-white px-1.5 py-0.5 text-[13px] text-slate-800 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full min-w-0 rounded-control border border-brand-300 bg-white px-1 py-0.5 text-body text-slate-800 dark:border-brand-500/50 dark:bg-slate-900 dark:text-slate-100"
           />
         ) : (
           <span
             className={
-              'truncate text-[13px] ' +
+              'truncate text-body ' +
               (active
-                ? 'font-semibold text-brand-700 dark:text-brand-200'
-                : 'font-medium text-slate-800 dark:text-slate-100') +
+                ? 'font-medium text-brand-700 dark:text-brand-200'
+                : 'text-slate-800 dark:text-slate-100') +
               (visible ? '' : ' opacity-50')
             }
           >
             {layer.name}
           </span>
         )}
-        <span className="truncate text-[11px] text-slate-600 dark:text-slate-400">
+        <span className="truncate text-supporting text-slate-600 dark:text-slate-400">
           {layerMetaLine(layer, count, showCount)}
         </span>
       </span>
@@ -223,7 +223,7 @@ export function LayerRow({
             e.stopPropagation();
             openRowMenu(layer.id, e.currentTarget);
           }}
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${active ? '' : REVEAL}`}
+          className={`flex size-row shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${active ? '' : REVEAL}`}
         >
           <EllipsisIcon />
         </button>
@@ -260,7 +260,7 @@ function RowToggle({
           e.stopPropagation();
           onClick();
         }}
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${className}`}
+        className={`flex size-row shrink-0 items-center justify-center rounded-control transition hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${className}`}
       >
         {children}
       </button>
