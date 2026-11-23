@@ -55,18 +55,46 @@ export function declarations(style: string): [string, string][] {
   return out;
 }
 
-/** Excel's class rules (`.xl65 { ... }`) from the <style> blocks of pasted HTML, by class name. */
+// A class rule's name from one selector (`.xl65`, `td.xl65`); null for any other selector. Excel wraps its rules in an
+// HTML comment, so a selector may carry the comment's `<!--` or `-->`.
+function className(selector: string): string | null {
+  const words = selector
+    .trim()
+    .split(/\s+/)
+    .map((w) => (w.startsWith('<!--') ? w.slice(4) : w))
+    .filter((w) => w && w !== '-->');
+  if (words.length !== 1) return null;
+  return /^(?:td)?\.([\w-]+)$/i.exec(words[0]!)?.[1]?.toLowerCase() ?? null;
+}
+
+// Each `selectors { declarations }` rule of a style sheet, its class rules kept.
+function readRules(css: string, out: Map<string, string>): void {
+  for (let at = 0; ;) {
+    const open = css.indexOf('{', at);
+    const close = open < 0 ? -1 : css.indexOf('}', open);
+    if (close < 0) return;
+    for (const selector of css.slice(at, open).split(',')) {
+      const name = className(selector);
+      if (name) out.set(name, css.slice(open + 1, close).trim());
+    }
+    at = close + 1;
+  }
+}
+
+/** Excel's class rules (`.xl65 { ... }`) from the <style> blocks of pasted HTML, by class name. Scanned by index, so a
+ *  long paste costs one pass. */
 export function excelClassStyles(html: string): Map<string, string> {
   const out = new Map<string, string>();
-  for (const block of html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)) {
-    const css = block[1]!.replace(/<!--|-->/g, '');
-    for (const rule of css.matchAll(/([^{}]+)\{([^}]*)\}/g))
-      for (const selector of rule[1]!.split(',')) {
-        const name = /^\s*(?:td)?\.([\w-]+)\s*$/i.exec(selector)?.[1];
-        if (name) out.set(name.toLowerCase(), rule[2]!.trim());
-      }
+  const lower = html.toLowerCase();
+  for (let at = 0; ;) {
+    const tag = lower.indexOf('<style', at);
+    const body = tag < 0 ? -1 : lower.indexOf('>', tag);
+    if (body < 0) return out;
+    const end = lower.indexOf('</style', body);
+    readRules(html.slice(body + 1, end < 0 ? undefined : end), out);
+    if (end < 0) return out;
+    at = end + 7;
   }
-  return out;
 }
 
 // Excel's named number formats, and its text one.

@@ -38,6 +38,8 @@ describe('excelClassStyles', () => {
       ['xl66', 'font-weight:700'],
       ['a', 'x:1'],
     ]);
+    expect([...excelClassStyles('<style>table .xl1 {a:1} .xl2 {b:2}')]).toEqual([['xl2', 'b:2']]);
+    expect([...excelClassStyles('<style')]).toEqual([]);
   });
 });
 
