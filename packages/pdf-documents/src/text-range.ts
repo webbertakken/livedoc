@@ -111,7 +111,14 @@ export const TextRange = {
    * The caret place nearest a point of the page: before or after the nearest drawn character by its middle, a
    * character on a line beside the point picked before any other. Null where the page has no drawn character.
    */
-  caretAt: (page: PageText, { x, y }: PagePoint): number | null => {
+  caretAt: (page: PageText, point: PagePoint): number | null => {
+    const nearest = TextRange.nearest(page, point);
+    if (nearest === null) return null;
+    const box = boxOf(page, nearest)!;
+    return point.x < (box.left + box.right) / 2 ? nearest : nearest + 1;
+  },
+  /** The drawn character nearest a point, one on a line beside the point first; null where the page has none. */
+  nearest: (page: PageText, { x, y }: PagePoint): number | null => {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
     let best = -1;
     let bestScore = Infinity;
@@ -122,9 +129,7 @@ export const TextRange = {
         outside(y, box.bottom, box.top) * ACROSS_WEIGHT + outside(x, box.left, box.right);
       if (score < bestScore) [best, bestScore] = [at, score];
     }
-    if (best < 0) return null;
-    const box = boxOf(page, best)!;
-    return x < (box.left + box.right) / 2 ? best : best + 1;
+    return best < 0 ? null : best;
   },
   /** The span between two caret places, whichever way they were dragged. */
   between: (a: number, b: number): TextSpan => [Math.min(a, b), Math.max(a, b)],

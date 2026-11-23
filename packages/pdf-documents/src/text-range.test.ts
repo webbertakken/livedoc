@@ -59,6 +59,12 @@ describe('a caret place on a page', () => {
     expect(TextRange.caretAt(PageText.of([32], [5, 5, 5, 5]), { x: 1, y: 1 })).toBeNull();
   });
 
+  it('names the character nearest a point, for a word or a line pressed', () => {
+    expect(TextRange.nearest(page, { x: 105, y: 704 })).toBe(0);
+    expect(TextRange.nearest(page, { x: 400, y: 683 })).toBe(23);
+    expect(TextRange.nearest(PageText.of([], []), { x: 1, y: 1 })).toBeNull();
+  });
+
   it('has no place for a point that is not a number', () => {
     expect(TextRange.caretAt(page, { x: Number.NaN, y: 700 })).toBeNull();
   });

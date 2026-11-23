@@ -137,3 +137,6 @@ export const PDF_PHONE_PIXEL_RATIO = 2;
 /** (default) CSS pixels a side of the square a thumbnail of the left panel is fitted into (reading-surface.md
  *  "Thumbnails"). Safe range: 96 to 224. */
 export const PDF_THUMBNAIL_BOX_PX = 160;
+/** (default) Pages whose text the surface keeps read for selecting, least lately used let go first (reading-surface.md
+ *  "Limits"). Safe range: 8 to 256. */
+export const PDF_PAGE_TEXTS_KEPT = 32;
