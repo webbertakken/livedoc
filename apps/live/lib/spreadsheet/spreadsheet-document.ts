@@ -3,11 +3,9 @@
 // workbook row beside them says the document is a spreadsheet.
 import type { Tab } from '@livedoc/document';
 import {
-  emptyLayout,
+  workbookSheetLayout,
   makeSheetId,
-  WORKBOOK_COLS_NEW,
   WORKBOOK_FIRST_SHEET_NAME,
-  WORKBOOK_ROWS_NEW,
   WorkbookRecord,
 } from '@livedoc/sheets';
 import type { NewDocumentContent } from '@/lib/new-document-content';
@@ -36,7 +34,7 @@ export function spreadsheetDocumentContent(tabId: string): NewDocumentContent {
         id: makeSheetId(),
         tabId,
         title: WORKBOOK_FIRST_SHEET_NAME,
-        layout: emptyLayout(Math.random, WORKBOOK_ROWS_NEW, WORKBOOK_COLS_NEW),
+        layout: workbookSheetLayout(),
       },
     ],
     workbook: workbookMadeHere(),

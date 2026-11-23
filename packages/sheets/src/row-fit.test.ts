@@ -4,6 +4,7 @@ import { AXIS_SIZE_MAX, ROW_HEIGHT_NEW } from './limits';
 import { cellLines, rowHeights } from './row-fit';
 import { cellKey, type CellFormat, type SheetLayout } from './sheet';
 import { book } from './testing/book';
+import { WORKBOOK_ROW_HEIGHT_NEW } from './workbook-record';
 
 const PROSE =
   'Rows grow to fit the text their cells hold, so nobody has to size them by hand, in any browser at all';
@@ -47,6 +48,14 @@ describe('rowHeights', () => {
     // Text that does not wrap runs over its neighbours: one line, however long.
     expect(heightOf(b, 2)).toBe(ROW_HEIGHT_NEW);
     expect(heightOf(b, 3)).toBe(ROW_HEIGHT_NEW);
+  });
+
+  // grid-and-editing.md "The grid" (D169): a spreadsheet's 21 px rows hold a line of 10-point text.
+  it('keeps a spreadsheet’s row of one 10-point line at 21 px', () => {
+    const b = book({ A1: 'Deal', A2: PROSE });
+    relayout(b, () => ({ rowHeight: WORKBOOK_ROW_HEIGHT_NEW }));
+    format(b, 'A2', { fs: 10 });
+    expect([heightOf(b, 1), heightOf(b, 2)]).toEqual([21, 21]);
   });
 
   it('grows a row to the lines its wrapping cell breaks into: 17 px a line and 8 px round them', () => {

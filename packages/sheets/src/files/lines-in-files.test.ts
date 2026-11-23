@@ -33,6 +33,9 @@ function shaped(): Sheet {
     colDepth: { [c[3]!]: 1, [c[4]!]: 1 },
     colCollapsed: [{ at: c[3]!, depth: 1 }],
     controlsAfter: { c: true },
+    // A spreadsheet's own line sizes (D169).
+    colWidth: 100,
+    rowHeight: 21,
   };
   return sheet!;
 }
@@ -88,9 +91,24 @@ describe('rows and columns in files', () => {
 
   it('carry the sheet’s own sizes both ways', async () => {
     const sheet = shaped();
-    sheet.layout = { ...sheet.layout, rowHeight: 21, colWidth: 100 };
+    sheet.layout = { ...sheet.layout, rowHeight: 30, colWidth: 150 };
     for (const format of ['xlsx', 'ods'] as const)
-      expect(await backAgain(sheet, format)).toMatchObject({ rowHeight: 21, colWidth: 100 });
+      expect(await backAgain(sheet, format)).toMatchObject({ rowHeight: 30, colWidth: 150 });
+  });
+
+  it('give a Plan Sheet’s 120 by 28 to the spreadsheet it opens as (D169)', async () => {
+    const sheet = shaped();
+    const { colWidth: _w, rowHeight: _h, ...plan } = sheet.layout;
+    sheet.layout = plan;
+    for (const format of ['xlsx', 'ods'] as const)
+      expect(await backAgain(sheet, format)).toMatchObject({ rowHeight: 28, colWidth: 120 });
+  });
+
+  it('open a file that says nothing of its sizes at Google’s (D169)', async () => {
+    const read = await readXlsx(xlsxWith('', '<row r="1"><c r="A1"><v>1</v></c></row>'));
+    if (!read.ok) throw new Error(read.rejection);
+    const { layout } = sheetsFromFile(read.file, 'en-GB').sheets[0]!;
+    expect([layout.colWidth, layout.rowHeight]).toEqual([100, 21]);
   });
 });
 
