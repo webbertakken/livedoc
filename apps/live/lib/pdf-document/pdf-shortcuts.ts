@@ -4,7 +4,11 @@
 // (editing-modes.md "Switching"). The tools' single keys are the surface's own: they must not fire in a text field.
 import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
-import { COPY, GO_TO_NEXT_VIEW, GO_TO_PREVIOUS_VIEW, SELECT_ALL } from './pdf-menus';
+import { COPY, FIND, GO_TO_NEXT_VIEW, GO_TO_PREVIOUS_VIEW, SELECT_ALL } from './pdf-menus';
+
+/** Find's next and previous result: no menu item's, the surface binds them under these ids. */
+export const FIND_NEXT = 'find-next';
+export const FIND_PREVIOUS = 'find-previous';
 
 const SHARED = new Set([
   'undo',
@@ -46,6 +50,10 @@ const READING: readonly ShortcutRow[] = [
   reading('page-keys', 'Previous page, next page', 'Left or Right', 'Left or Right'),
   reading('end-keys', 'First page, last page', 'Home or End', 'Home or End'),
   reading('go-to-page', 'Go to page', 'Ctrl+Alt+G', '⌘+Option+G'),
+  reading(FIND, 'Find', 'Ctrl+F', '⌘+F'),
+  // Bound while the find field is open with results (usePdfFind.ts): Enter and ⇧Enter step in the field itself.
+  reading(FIND_NEXT, 'Next result', 'Ctrl+G', '⌘+G'),
+  reading(FIND_PREVIOUS, 'Previous result', 'Ctrl+Shift+G', '⌘+Shift+G'),
   // Heard by the surface outside a field, so a field's own ⌥← stays its own; with nowhere to go, the browser's.
   {
     ...reading(GO_TO_PREVIOUS_VIEW, 'Previous view', 'Alt+Left', 'Option+Left'),

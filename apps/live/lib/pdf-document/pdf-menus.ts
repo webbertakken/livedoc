@@ -175,7 +175,7 @@ export const PDF_MENUS: OfficeCatalogue = [
     SEPARATOR,
     item(SELECT_ALL, 'Select all', 'view', { shortcut: SELECT_ALL, status: 'built' }),
     SEPARATOR,
-    item(FIND, 'Find', 'view', { keywords: ['search'] }),
+    item(FIND, 'Find', 'view', { keywords: ['search'], shortcut: FIND, status: 'built' }),
     item('find-and-replace', 'Find and replace', 'edit', { keywords: ['search'] }),
     SEPARATOR,
     item(EDIT_TEXT, 'Edit text', 'edit'),
