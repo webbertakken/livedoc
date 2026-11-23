@@ -1,6 +1,8 @@
 # Accessibility
 
-**Status: specified.** Nothing is built.
+**Status: specified; a first slice is built.** Built: one landmark a page, named with its label, and each page near
+view reading its text as paragraphs rebuilt from the file's order, the same text Copy gives. Not built: the file's
+tags, a scanned page's words, marks in the tree, the tree's selection, unreadable text, the text caret.
 
 A PDF page is a picture to a browser. This spec says what makes a [PDF document](pdf-document.md) readable by a
 screen reader and usable by keyboard alone, and what a written file keeps of its own accessibility. The bar is
@@ -17,9 +19,14 @@ Each page has real DOM behind its canvas, hidden from sight and exposed to assis
 | **Reading order rebuilt**  | The page is untagged, or its tags do not cover it | Lines and paragraphs grouped by geometry, as Editing groups them ([Editing text](editing-text.md#text-boxes)) |
 | **A scanned page's words** | The page is a scan with recognised text           | The recognised words in reading order ([Scans](scans.md))                                                     |
 
-- **One landmark a page**, a region named "Page 3 of 14" (with the page's label where the file gives one); pages not
-  near the viewport are a named, empty region until scrolled to, so the tree stays small and page navigation still
-  counts them all.
+- **One landmark a page**, a region named "Page 3 of 14", or "Page 3 of 14 (iii)" where the file gives the page a
+  label of its own `(default)`; pages not near the viewport are a named, empty region until scrolled to, so the tree
+  stays small and page navigation still counts them all.
+- **Near the viewport** is where a page holds its picture ([Reading surface](reading-surface.md#the-pages)): the tree
+  comes and goes with it `(default)`.
+- **Reading order rebuilt** is the page's text in the file's own order, joined into paragraphs exactly as Copy joins a
+  whole page ([Reading surface](reading-surface.md#the-pages)): one paragraph element each, after the page's
+  picture, visually hidden `(default)`.
 - Headings are headings at their level, lists are lists, tables are tables with their header cells, figures are
   images with their alternative text, links are links with their target named, and **fields are real form controls**
   with the field's name (its tooltip text where the file gives one, else its name) and its required and read-only
@@ -107,8 +114,7 @@ none is pointer-only for one level and not another.
 
 | Constant                    | Value | Why                                                                                           |
 | --------------------------- | ----- | --------------------------------------------------------------------------------------------- |
-| `PDF_TREE_PAGES_AROUND`     | 2     | `(default)` Pages either side of the viewport that hold their full tree; safe range 1 to 5    |
-| `PDF_TREE_MAX_NODES_A_PAGE` | 5,000 | `(default)` Past it runs are joined into lines; a page of plans has tens of thousands of runs |
+| `PDF_TREE_MAX_NODES_A_PAGE` | 5,000 | `(default)` Past it the rest is joined into the last paragraph; a page of plans has tens of thousands of runs |
 
 ## Tests
 
@@ -122,5 +128,5 @@ none is pointer-only for one level and not another.
 ## Telemetry and observability
 
 - No telemetry tells whether a person uses assistive technology.
-- Fingerprints: `[pdf] tree source=<tags|geometry|recognised|none> pages=<n>`, `[pdf] claim-removed
+- Fingerprints: `[pdf] tree source=<tags|geometry|recognised|none> page=<n> nodes=<n>`, once a page's tree is built; `[pdf] claim-removed
 claim=<pdfua|pdfa> reason=<reason>`.

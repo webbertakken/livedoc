@@ -25,6 +25,7 @@ import type { PdfTileSource } from './PdfPageTiles';
 import { PdfPage, type PdfPageTool } from './PdfPage';
 import type { PdfTextGesture, PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
+import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 
 const NOTHING_SELECTED: readonly Quad[] = [];
 
@@ -44,6 +45,7 @@ export function PdfPages({
   onHighlight,
   selection,
   onText,
+  texts,
   onFollow,
   found,
 }: {
@@ -69,6 +71,8 @@ export function PdfPages({
   // The person's text selection, and where a page's gestures go (usePdfTextSelection.ts).
   selection: PdfTextSelected | null;
   onText: (index: number, gesture: PdfTextGesture) => void;
+  // The pages' text, as the selection reads it: what each page near view reads to assistive technology.
+  texts: PdfPageTexts | null;
   // Where a press on a page's link goes (usePdfLinks.ts).
   onFollow: (target: LinkTarget) => void;
   // Find's results, by page.
@@ -142,6 +146,7 @@ export function PdfPages({
                   onHighlight={onHighlight}
                   selected={selection?.page === box.index ? selection.quads : NOTHING_SELECTED}
                   onText={onText}
+                  texts={texts}
                   linkName={linkName}
                   onFollow={onFollow}
                   found={found.get(box.index) ?? null}

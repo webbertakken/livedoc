@@ -219,3 +219,36 @@ describe('a selection between two caret places', () => {
     expect(TextRange.between(2, 7)).toEqual([2, 7]);
   });
 });
+
+// accessibility.md "The accessible tree": reading order rebuilt is the page's text in the file's order, joined into
+// paragraphs exactly as Copy joins a whole page; past PDF_TREE_MAX_NODES_A_PAGE the rest joins the last paragraph.
+describe('a page’s paragraphs', () => {
+  it('reads the page as Copy joins it, one paragraph a part, none empty', () => {
+    const page = pageOf([
+      { text: 'Heading', x: 100, y: 740 },
+      { text: 'The first line runs', x: 100, y: 700 },
+      { text: 'all the way, then', x: 100, y: 689 },
+      { text: 'it ends.', x: 100, y: 678 },
+      { text: ' ', x: 100, y: 600 },
+      { text: 'Next one.', x: 100, y: 560 },
+    ]);
+    expect(TextRange.paragraphs(page)).toEqual([
+      'Heading',
+      'The first line runs all the way, then it ends.',
+      'Next one.',
+    ]);
+  });
+
+  it('joins the rest into the last paragraph past the most a page holds', () => {
+    const page = pageOf([
+      { text: 'One', x: 100, y: 740 },
+      { text: 'Two', x: 100, y: 700 },
+      { text: 'Three', x: 100, y: 660 },
+    ]);
+    expect(TextRange.paragraphs(page, 2)).toEqual(['One', 'Two Three']);
+  });
+
+  it('has none on a page with no text', () => {
+    expect(TextRange.paragraphs(PageText.of([], []))).toEqual([]);
+  });
+});
