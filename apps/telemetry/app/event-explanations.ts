@@ -942,6 +942,22 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone downloaded a PDF document as a PDF, with every change made in LiveDoc written into the file.',
   'Pdf|Undone|': 'Someone took back their last change to a PDF document.',
   'Pdf|Redone|': 'Someone made again a change to a PDF document they had taken back.',
+  'Pdf|Changed|PageDisplay.Single': 'Someone chose to read a PDF document one page at a time.',
+  'Pdf|Changed|PageDisplay.Continuous':
+    'Someone chose to read a PDF document with its pages down one column.',
+  'Pdf|Changed|PageDisplay.Two': 'Someone chose to read a PDF document two pages at a time.',
+  'Pdf|Changed|PageDisplay.TwoContinuous':
+    'Someone chose to read a PDF document with its pages two across, down the view.',
+  'Pdf|Changed|PageDisplay.CoverShown':
+    'Someone showed a PDF document’s first page alone, as a book’s cover, beside the pairs.',
+  'Pdf|Changed|PageDisplay.CoverHidden': 'Someone paired a PDF document’s first page again.',
+  'Pdf|Zoomed|FitWidth': 'Someone zoomed a PDF document to fit the width of the view.',
+  'Pdf|Zoomed|FitPage': 'Someone zoomed a PDF document so a whole page fits the view.',
+  'Pdf|Zoomed|Actual': 'Someone zoomed a PDF document to its actual size.',
+  'Pdf|Zoomed|In': 'Someone zoomed in on a PDF document by a step.',
+  'Pdf|Zoomed|Out': 'Someone zoomed out of a PDF document by a step.',
+  'Pdf|Zoomed|Custom':
+    'Someone zoomed a PDF document to a percentage of their own: typed, chosen, or with the wheel or a pinch.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
   'Sheet|Searched|Function':
     'Someone searched the functions a Sheet formula can use, from the toolbar’s function picker.',
@@ -2840,6 +2856,9 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Pdf|Exported': 'Someone downloaded a PDF document (the value says as what).',
   'Pdf|Undone': 'Someone took back their last change to a PDF document.',
   'Pdf|Redone': 'Someone made again a change to a PDF document they had taken back.',
+  'Pdf|Changed':
+    'Someone changed how a PDF document’s pages are laid out for them (the value says how).',
+  'Pdf|Zoomed': 'Someone zoomed a PDF document (the value says how).',
   'Sheet|Searched': 'Someone searched a list on a Sheet (the value says which: the functions).',
   'Plan|Imported': "Someone read a file into a board's cards (the value says which kind: Csv).",
   'Plan|Exported': "Someone downloaded a board's cards as a file (the value says which kind: Csv).",

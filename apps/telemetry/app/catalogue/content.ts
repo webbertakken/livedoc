@@ -1332,11 +1332,37 @@ export const PDF_REDOS = chart(
   { rising: 'neutral' },
 );
 
+export const PDF_PAGE_DISPLAYS = chart(
+  'Pdf',
+  'Changed',
+  'PDF Page Displays Chosen',
+  'A page display chosen for reading a PDF document: one page or two, a row or a column, a cover page.',
+  {
+    types: [
+      'PageDisplay.Single',
+      'PageDisplay.Continuous',
+      'PageDisplay.Two',
+      'PageDisplay.TwoContinuous',
+      'PageDisplay.CoverShown',
+      'PageDisplay.CoverHidden',
+    ],
+    rising: 'neutral',
+  },
+);
+
+export const PDF_ZOOMS = chart(
+  'Pdf',
+  'Zoomed',
+  'PDF Zooms',
+  'A PDF document zoomed, by how: fitted, actual size, a step, or a percentage of the person’s own.',
+  { types: ['FitWidth', 'FitPage', 'Actual', 'In', 'Out', 'Custom'], rising: 'neutral' },
+);
+
 export const PDF_DOCUMENTS: MetricStack = {
   stack: true,
   title: 'PDF Documents',
   blurb:
-    'PDF documents: opened from files, marked, changes taken back, and downloaded with every change in the file.',
+    'PDF documents: opened from files, marked, changes taken back, downloaded with every change in the file, and how they are read.',
   members: [
     PDFS_IMPORTED,
     PDF_MARKS_ADDED,
@@ -1344,6 +1370,8 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_UNDOS,
     PDF_REDOS,
     PDFS_EXPORTED,
+    PDF_PAGE_DISPLAYS,
+    PDF_ZOOMS,
   ],
 };
 

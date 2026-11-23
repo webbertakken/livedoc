@@ -22,6 +22,35 @@ const SHARED = new Set([
 ]);
 
 const MODES = 'Editing modes';
+const READING_GROUP = 'Reading';
+
+const reading = (id: string, action: string, pc: string, mac: string): ShortcutRow => ({
+  id,
+  group: READING_GROUP,
+  action,
+  keys: { pc, mac, chromeos: pc },
+  status: 'built',
+});
+
+/** The keys a page is read by (keyboard-shortcuts.md "Reading"). The ones bound to a menu item share its id; the plain
+ *  keys are the pages' own, heard there and never in a field, so their rows only list them (`PDF_PAGE_KEYS`). */
+const READING: readonly ShortcutRow[] = [
+  reading('scroll-keys', 'Scroll up, down', 'Up or Down', 'Up or Down'),
+  reading(
+    'screen-keys',
+    'Previous screen, next screen',
+    'PgUp or Shift+Space or PgDn or Space',
+    'PgUp or Shift+Space or PgDn or Space',
+  ),
+  reading('page-keys', 'Previous page, next page', 'Left or Right', 'Left or Right'),
+  reading('end-keys', 'First page, last page', 'Home or End', 'Home or End'),
+  reading('go-to-page', 'Go to page', 'Ctrl+Alt+G', '⌘+Option+G'),
+  reading('zoom-in', 'Zoom in', 'Ctrl+Plus', '⌘+Plus'),
+  reading('zoom-out', 'Zoom out', 'Ctrl+-', '⌘+-'),
+  reading('zoom-actual-size', 'Actual size', 'Ctrl+1', '⌘+1'),
+  reading('zoom-fit-page', 'Fit page', 'Ctrl+0', '⌘+0'),
+  reading('zoom-fit-width', 'Fit width', 'Ctrl+2', '⌘+2'),
+];
 
 export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
   ...TEXT_DOCUMENT_SHORTCUTS.filter((row) => SHARED.has(row.id)).map((row) =>
@@ -50,7 +79,16 @@ export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
     },
     status: 'built',
   },
+  ...READING,
 ];
 
 /** The tools' own keys, heard on the pages and never in a text field ("Tools"). */
 export const PDF_TOOL_KEYS = { select: 'v', highlight: 'u' } as const;
+
+/** The pages' own plain keys (keyboard-shortcuts.md "Reading"), by `KeyboardEvent.key`. */
+export const PDF_PAGE_KEYS = {
+  previousPage: 'ArrowLeft',
+  nextPage: 'ArrowRight',
+  firstPage: 'Home',
+  lastPage: 'End',
+} as const;

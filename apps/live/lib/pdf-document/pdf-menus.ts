@@ -79,11 +79,39 @@ export const EDIT_OBJECTS = 'edit-objects';
 export const ORGANISE_PAGES = 'organise-pages';
 export const ROTATE_VIEW_CLOCKWISE = 'rotate-view-clockwise';
 export const DARK_PAGES = 'dark-pages';
+/** View > Page display, Zoom and Go to: one person's view (reading-surface.md "The pages", "The page bar"). */
+export const PAGE_DISPLAY_SINGLE = 'page-display-single-page';
+export const PAGE_DISPLAY_CONTINUOUS = 'page-display-continuous';
+export const PAGE_DISPLAY_TWO = 'page-display-two-pages';
+export const PAGE_DISPLAY_TWO_CONTINUOUS = 'page-display-two-pages-continuous';
+export const PAGE_DISPLAY_COVER = 'page-display-show-cover-page';
+export const ZOOM_IN = 'zoom-in';
+export const ZOOM_OUT = 'zoom-out';
+export const ZOOM_FIT_WIDTH = 'zoom-fit-width';
+export const ZOOM_FIT_PAGE = 'zoom-fit-page';
+export const ZOOM_ACTUAL_SIZE = 'zoom-actual-size';
+/** View > Zoom's item for a percentage. */
+export const zoomPercentId = (percent: number): string => `zoom-${percent}`;
+export const GO_TO_FIRST_PAGE = 'go-to-first-page';
+export const GO_TO_LAST_PAGE = 'go-to-last-page';
+export const GO_TO_PREVIOUS_PAGE = 'go-to-previous-page';
+export const GO_TO_NEXT_PAGE = 'go-to-next-page';
+export const GO_TO_PAGE = 'go-to-page';
 
 /** View > Zoom's percentages: Acrobat's own levels from 50% ("View"). */
 export const PDF_ZOOM_MENU_PERCENTS: readonly number[] = [
   50, 75, 100, 125, 150, 200, 400, 800, 1600, 2400, 3200, 6400,
 ];
+
+/** View > Page display, also the Viewing toolbar's Page display list ("The toolbar"). */
+export const PAGE_DISPLAY_MENU = submenu('page-display', 'Page display', [
+  item(PAGE_DISPLAY_SINGLE, 'Single page', 'view', { ...BUILT, ...ONE_OF }),
+  item(PAGE_DISPLAY_CONTINUOUS, 'Continuous', 'view', { ...BUILT, ...ONE_OF }),
+  item(PAGE_DISPLAY_TWO, 'Two pages', 'view', { ...BUILT, ...ONE_OF }),
+  item(PAGE_DISPLAY_TWO_CONTINUOUS, 'Two pages, continuous', 'view', { ...BUILT, ...ONE_OF }),
+  SEPARATOR,
+  item(PAGE_DISPLAY_COVER, 'Show cover page', 'view', { ...BUILT, ...CHECK }),
+]);
 
 export const PDF_MENUS: OfficeCatalogue = [
   menu('file', 'File', [
@@ -159,21 +187,21 @@ export const PDF_MENUS: OfficeCatalogue = [
       }),
     ]),
     SEPARATOR,
-    submenu('page-display', 'Page display', [
-      item('page-display-single-page', 'Single page', 'view', ONE_OF),
-      item('page-display-continuous', 'Continuous', 'view', ONE_OF),
-      item('page-display-two-pages', 'Two pages', 'view', ONE_OF),
-      item('page-display-two-pages-continuous', 'Two pages, continuous', 'view', ONE_OF),
-      SEPARATOR,
-      item('page-display-show-cover-page', 'Show cover page', 'view', CHECK),
-    ]),
+    PAGE_DISPLAY_MENU,
     submenu('zoom', 'Zoom', [
-      item('zoom-fit-width', 'Fit width', 'view', ONE_OF),
-      item('zoom-fit-page', 'Fit page', 'view', ONE_OF),
-      item('zoom-actual-size', 'Actual size', 'view', ONE_OF),
+      item(ZOOM_IN, 'Zoom in', 'view', { ...BUILT, shortcut: ZOOM_IN }),
+      item(ZOOM_OUT, 'Zoom out', 'view', { ...BUILT, shortcut: ZOOM_OUT }),
+      SEPARATOR,
+      item(ZOOM_FIT_WIDTH, 'Fit width', 'view', { ...BUILT, ...ONE_OF, shortcut: ZOOM_FIT_WIDTH }),
+      item(ZOOM_FIT_PAGE, 'Fit page', 'view', { ...BUILT, ...ONE_OF, shortcut: ZOOM_FIT_PAGE }),
+      item(ZOOM_ACTUAL_SIZE, 'Actual size', 'view', {
+        ...BUILT,
+        ...ONE_OF,
+        shortcut: ZOOM_ACTUAL_SIZE,
+      }),
       SEPARATOR,
       ...PDF_ZOOM_MENU_PERCENTS.map((percent) =>
-        item(`zoom-${percent}`, `${percent}%`, 'view', ONE_OF),
+        item(zoomPercentId(percent), `${percent}%`, 'view', { ...BUILT, ...ONE_OF }),
       ),
       SEPARATOR,
       item('zoom-to-selection', 'Zoom to selection', 'view'),
@@ -197,14 +225,14 @@ export const PDF_MENUS: OfficeCatalogue = [
     item('read-mode', 'Read mode', 'view', CHECK),
     item('full-screen', 'Full screen', 'view', { ...CHECK, keywords: ['present'] }),
     SEPARATOR,
-    choices('go-to', 'Go to', 'view', [
-      'First page',
-      'Last page',
-      'Previous page',
-      'Next page',
-      'Page…',
-      'Previous view',
-      'Next view',
+    submenu('go-to', 'Go to', [
+      item(GO_TO_FIRST_PAGE, 'First page', 'view', BUILT),
+      item(GO_TO_LAST_PAGE, 'Last page', 'view', BUILT),
+      item(GO_TO_PREVIOUS_PAGE, 'Previous page', 'view', BUILT),
+      item(GO_TO_NEXT_PAGE, 'Next page', 'view', BUILT),
+      item(GO_TO_PAGE, 'Page…', 'view', { ...BUILT, shortcut: GO_TO_PAGE }),
+      item('go-to-previous-view', 'Previous view', 'view'),
+      item('go-to-next-view', 'Next view', 'view'),
     ]),
   ]),
   // A mark's tool is taken in hand by its item and stays there: one of a set with Select and Hand ("The toolbar").

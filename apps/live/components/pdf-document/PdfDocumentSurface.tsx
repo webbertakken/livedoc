@@ -15,7 +15,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
-import type { TextSelection } from '@livedoc/pdf-documents';
+import type { PageInfo, TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { PdfDocumentScope } from '@/lib/api/pdf-documents';
@@ -23,7 +23,6 @@ import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { levelInMode } from '@/lib/office/office-mode';
-import type { OfficeZoomValue } from '@/lib/office/office-zoom';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
@@ -39,6 +38,7 @@ import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
   DOWNLOAD_PDF,
+  GO_TO_PAGE,
   PDF_MENUS,
   REDO,
   TOOL_HIGHLIGHT,
@@ -55,11 +55,15 @@ import {
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
 import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
 import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
+import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
+import { usePdfPagesInput } from '@/lib/pdf-document/usePdfPagesInput';
+import { usePdfView } from '@/lib/pdf-document/usePdfView';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
 import { PdfNotice, PdfNoticeButton } from './PdfNotice';
+import { PdfPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
 
@@ -79,6 +83,7 @@ export const lostChangesCopy = (count: number): string =>
     : `${count} changes couldn’t be placed on the new file.`;
 
 const NO_STEPS: PdfUndoState = { canUndo: false, canRedo: false };
+const NO_PAGES: readonly PageInfo[] = [];
 const neverChanges = () => () => {};
 
 /** What a person is told once a change the room refused has been dropped. */
@@ -120,7 +125,6 @@ export function PdfDocumentSurface({
   home?: PdfHome;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
-  const scroller = useRef<HTMLDivElement | null>(null);
   const [attempt, setAttempt] = useState(0);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // Read as the binding sends: a level that changes, or a room that reconnects, never binds again.
@@ -148,7 +152,6 @@ export function PdfDocumentSurface({
   const open = usePdfDocument(scope, bind, attempt, deps);
   const { mode, choice, actions: modeActions } = useOfficeMode(level, PDF_MODES, 'PdfDocumentMode');
   const [tool, setTool] = useState<PdfPageTool>('select');
-  const [zoom, setZoom] = useState<OfficeZoomValue>('fit');
   const [problem, setProblem] = useState<string | null>(null);
   const ready = open.phase === 'ready' ? open : null;
   // Marks are Reviewing's: in Viewing a tool that marks is neither offered nor in hand (editing-modes.md).
@@ -195,15 +198,21 @@ export function PdfDocumentSurface({
     () => NO_STEPS,
   );
   const pages = ready?.pages ?? null;
+  // "The pages", "The page bar": the person's own view of the pages, and what moves it.
+  const viewer = usePdfView(pages ?? NO_PAGES);
+  const pagesInput = usePdfPagesInput(viewer);
+  const pageField = useRef<HTMLInputElement | null>(null);
+  // Go to > Page… puts the caret in the page bar's page field.
+  const focusPageField = useCallback(() => pageField.current?.focus(), []);
+  const viewChrome = useMemo(() => pdfViewActions(viewer), [viewer]);
+  const { showPage, goToPage } = viewer;
   useEffect(
     () =>
       undo?.onReturn((place) => {
         const at = (pages ?? []).findIndex((page) => page.name === place.page);
-        scroller.current
-          ?.querySelector(`[data-pdf-page="${at + 1}"]`)
-          ?.scrollIntoView({ block: 'nearest' });
+        if (at >= 0) showPage(at);
       }),
-    [undo, pages],
+    [undo, pages, showPage],
   );
 
   // "Presence": the page in view and the mode, said for the tab this person is on, and taken back on leaving it.
@@ -215,26 +224,22 @@ export function PdfDocumentSurface({
   }, [present, pages, tabId, mode]);
   useEffect(publishPlace, [publishPlace]);
   useEffect(() => (present ? () => setLocalPdfPresence(tabId, null) : undefined), [present, tabId]);
-  const onPageInView = useCallback(
-    (index: number) => {
-      inView.current = index;
-      publishPlace();
-    },
-    [publishPlace],
-  );
+  const inViewNow = viewer.page;
+  useEffect(() => {
+    inView.current = inViewNow;
+    publishPlace();
+  }, [inViewNow, publishPlace]);
   // A press on a person in the title row goes to the page they are on; false where their page is not in this file.
   const goToPerson = useCallback(
     (personId: string): boolean => {
       const peer = pdfPresencePeersOf(tabId).find((person) => person.id === personId);
       const at = peer ? (pages ?? []).findIndex((page) => page.name === peer.place.page) : -1;
-      const element =
-        at < 0 ? null : scroller.current?.querySelector(`[data-pdf-page="${at + 1}"]`);
-      if (!element) return false;
-      element.scrollIntoView({ block: 'start' });
+      if (at < 0) return false;
+      goToPage(at);
       track('UI', 'Used', 'PdfDocumentFollow');
       return true;
     },
-    [tabId, pages],
+    [tabId, pages, goToPage],
   );
 
   const storedFile = open.phase === 'ready' || open.phase === 'refused' ? open.storedFile : null;
@@ -294,7 +299,11 @@ export function PdfDocumentSurface({
       ...modeActions,
       ...(storedFile ? { [DOWNLOAD_PDF]: { run: () => void download() } } : {}),
       ...(ready
-        ? { [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' } }
+        ? {
+            ...viewChrome.actions,
+            [GO_TO_PAGE]: { run: focusPageField },
+            [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
+          }
         : {}),
       ...(marking && undo
         ? {
@@ -316,7 +325,19 @@ export function PdfDocumentSurface({
           }
         : {}),
     }),
-    [modeActions, storedFile, download, ready, marking, undo, steps, inHand, pickTool],
+    [
+      modeActions,
+      storedFile,
+      download,
+      ready,
+      viewChrome,
+      focusPageField,
+      marking,
+      undo,
+      steps,
+      inHand,
+      pickTool,
+    ],
   );
 
   // The tools' own keys, heard anywhere on the surface but a text field (keyboard-shortcuts.md "Tools").
@@ -361,7 +382,7 @@ export function PdfDocumentSurface({
         onFollow={goToPerson}
         saveStatus={ready?.binding.saveStatus ?? null}
         toolbar={pdfToolbar(mode)}
-        zoom={ready ? { value: zoom, onChange: setZoom } : null}
+        choices={ready ? viewChrome.choices : null}
         mode={open.phase === 'ready' ? choice : null}
       />
       {open.phase === 'opening' ? (
@@ -379,17 +400,34 @@ export function PdfDocumentSurface({
         </div>
       ) : null}
       {ready && marks ? (
-        <PdfPages
-          scroller={scroller}
-          pages={ready.pages}
-          zoom={zoom}
-          engine={ready.engine}
-          drawer={ready.drawer}
-          marks={marks}
-          tool={inHand}
-          onHighlight={onHighlight}
-          onPageInView={onPageInView}
-        />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <PdfPages
+            attach={viewer.attach}
+            layout={viewer.layout}
+            scale={viewer.scale}
+            sized={viewer.viewport.width > 0}
+            onKeyDown={pagesInput.onKeyDown}
+            pages={ready.pages}
+            engine={ready.engine}
+            drawer={ready.drawer}
+            marks={marks}
+            tool={inHand}
+            onHighlight={onHighlight}
+          />
+          <PdfPageBar
+            page={viewer.page}
+            count={viewer.count}
+            atFirst={viewer.atFirst}
+            atLast={viewer.atLast}
+            zoom={viewer.view.zoom}
+            scale={viewer.scale}
+            onPrevious={() => viewer.turn(-1)}
+            onNext={() => viewer.turn(1)}
+            onGoTo={viewer.goToPage}
+            onZoom={viewer.zoomTo}
+            pageField={pageField}
+          />
+        </div>
       ) : null}
       {open.phase === 'refused' ? (
         <PdfNotice sentence={PDF_REFUSAL_COPY[open.refusal]}>

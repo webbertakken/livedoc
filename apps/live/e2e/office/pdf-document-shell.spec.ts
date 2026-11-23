@@ -65,7 +65,7 @@ test('a PDF’s title row, menus and toolbar are its own, and follow the editing
   // "The toolbar": every mode's groups, then Reviewing's own.
   await expect(toolbar(page, 'Highlight')).toHaveAttribute('aria-pressed', 'false');
   await expect(toolbar(page, 'Comment')).toHaveAttribute('aria-disabled', 'true');
-  await expect(toolbar(page, 'Page display')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Page display/ })).toHaveCount(0);
 
   // Viewing: a Viewer's menus, and the reading tools in place of the marking ones, on a bar of the same height.
   const barTop = (await page.locator('[data-pdf-pages]').boundingBox())!.y;
@@ -75,7 +75,11 @@ test('a PDF’s title row, menus and toolbar are its own, and follow the editing
   expect(await menuNames(page)).toEqual(['File', 'Edit', 'View', 'Tools', 'Help']);
   await expect(toolbar(page, 'Highlight')).toHaveCount(0);
   await expect(toolbar(page, 'Undo')).toHaveCount(0);
-  await expect(toolbar(page, 'Page display')).toHaveAttribute('aria-disabled', 'true');
+  await expect(toolbar(page, 'Page display: Continuous')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await expect(toolbar(page, 'Rotate view')).toHaveAttribute('aria-disabled', 'true');
   await expect(toolbar(page, 'Select')).toHaveAttribute('aria-pressed', 'true');
   // "The toolbar never changes height between modes, so the pages do not jump."
   expect((await page.locator('[data-pdf-pages]').boundingBox())!.y).toBe(barTop);
