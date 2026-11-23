@@ -31,9 +31,9 @@ const PICTURE_AT = 3;
 const key = (view: EditorView, name: string) =>
   view.someProp('handleKeyDown', (f) => f(view, new KeyboardEvent('keydown', { key: name })));
 const marks = (view: EditorView) =>
-  ((view.someProp('decorations', (f) => f(view.state)) as DecorationSet | null)
+  (view.someProp('decorations', (f) => f(view.state)) as DecorationSet | null)
     ?.find()
-    .map((d: Decoration) => d.spec as unknown) ?? []) as unknown[];
+    .map((d: Decoration): unknown => d.spec) ?? [];
 
 describe('pictureCroppingPlugin', () => {
   it('begins cropping a picture, selecting it and marking it', () => {

@@ -100,12 +100,9 @@ export const setPictureCrop =
   (state, dispatch) => {
     const node = pictureAt(state, pos);
     if (!node || !hasPictureSize(next)) return false;
-    const was = {
-      width: node.attrs.width,
-      height: node.attrs.height,
-      crop: node.attrs.crop ?? null,
-    };
-    if (JSON.stringify(was) === JSON.stringify(next)) return false;
+    const { width, height, crop } = node.attrs as Record<string, unknown>;
+    if (JSON.stringify({ width, height, crop: crop ?? null }) === JSON.stringify(next))
+      return false;
     const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...next });
     tr.setSelection(NodeSelection.create(tr.doc, pos));
     dispatch?.(tr);
