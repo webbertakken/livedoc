@@ -484,7 +484,9 @@ describe('a PDF document’s surface', () => {
     // opening.md "Damaged files": the repaired notice says how changes are saved while the mode can change the PDF.
     it('says a repaired PDF is saved as a repaired copy in Reviewing, and not in Viewing', async () => {
       show({ ...(await ready()), repaired: true }, 'edit');
-      expect(screen.getByText(/This PDF was damaged/).textContent).toContain('saved as a repaired copy');
+      expect(screen.getByText(/This PDF was damaged/).textContent).toContain(
+        'saved as a repaired copy',
+      );
       fireEvent.click(screen.getByRole('button', { name: 'Mode: Reviewing' }));
       fireEvent.click(screen.getByRole('menuitemradio', { name: /Viewing/ }));
       expect(screen.getByText(/This PDF was damaged/).textContent).not.toContain('repaired copy');

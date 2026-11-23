@@ -11,7 +11,8 @@ export const PDF_REPAIRED_COPY = {
   title: 'Repaired PDF',
   rebuilt:
     "LiveDoc rebuilt this PDF's index of where each part of the file lies, to show it. The file itself is unchanged.",
-  saved: 'Changes are saved as a repaired copy: the whole file written anew, never added to its end.',
+  saved:
+    'Changes are saved as a repaired copy: the whole file written anew, never added to its end.',
 } as const;
 
 export type PdfFileNoticeId = 'repaired' | 'limits';
