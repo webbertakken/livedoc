@@ -25,6 +25,7 @@ export type {
   PageMatrix,
   PagePoint,
   PageTurns,
+  TileRect,
   PdfEngine,
   PdfEngineLog,
   PdfDocumentInfo,

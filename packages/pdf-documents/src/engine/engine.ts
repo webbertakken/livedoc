@@ -94,6 +94,7 @@ export function pdfEngineOver(
       return { ...opened, wrong: true };
     },
     drawPage: async (index, scale, turns) => reader.drawPage(index, scale, undefined, turns),
+    drawTile: async (index, scale, turns, rect) => reader.drawTile(index, scale, turns, rect),
     outline: async () => said(reader.outline()),
     links: async (index) => said(reader.links(index)),
     pageText: async (index) => said(reader.pageText(index)),

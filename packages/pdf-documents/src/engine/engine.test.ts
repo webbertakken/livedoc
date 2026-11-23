@@ -314,6 +314,42 @@ describe('drawing', () => {
       expect(inkNear(bitmap, PageView.toView(bitmap.toView, start))).toBe(true);
   });
 
+  // reading-surface.md "The pages": a tile is the same pixels as the whole page drawn at its scale and turn.
+  it("draws a tile as the same part of the whole page, turned too, cut at the page's edge", async () => {
+    await engine.open(stored);
+    // Over the start of the line of text: upright, and down the right of the page turned clockwise.
+    for (const [turns, rect] of [
+      [0, { x: 40, y: 50, width: 96, height: 64 }],
+      [1, { x: 690, y: 40, width: 64, height: 96 }],
+    ] as const) {
+      const whole = (await engine.drawPage(0, 1, turns))!;
+      const tile = (await engine.drawTile(0, 1, turns, rect))!;
+      expect([tile.width, tile.height]).toEqual([rect.width, rect.height]);
+      expect(tile.toView).toEqual(whole.toView);
+      let differing = 0;
+      for (let row = 0; row < rect.height; row += 1)
+        for (let column = 0; column < rect.width * 4; column += 1) {
+          const inWhole = whole.rgba[((rect.y + row) * whole.width + rect.x) * 4 + column]!;
+          if (Math.abs(inWhole - tile.rgba[row * rect.width * 4 + column]!) > 8) differing += 1;
+        }
+      expect(differing).toBe(0);
+      // The line of text is in the tile where it is in the whole page: some ink.
+      expect(tile.rgba.some((value, at) => at % 4 === 0 && value < 128)).toBe(true);
+    }
+    // Cut at the page's edge: a US Letter page at 1 is 612 by 792 pixels.
+    const edge = (await engine.drawTile(0, 1, 0, { x: 600, y: 780, width: 64, height: 64 }))!;
+    expect([edge.width, edge.height]).toEqual([12, 12]);
+    expect(await engine.drawTile(0, 1, 0, { x: 700, y: 0, width: 64, height: 64 })).toBeNull();
+    expect(await engine.drawTile(9, 1, 0, { x: 0, y: 0, width: 64, height: 64 })).toBeNull();
+    expect(
+      await engine.drawTile(0, Number.NaN, 0, { x: 0, y: 0, width: 64, height: 64 }),
+    ).toBeNull();
+    // A tile of a page at 6400% on a sharp screen draws the tile, never the page.
+    expect(
+      (await engine.drawTile(0, 128, 0, { x: 9000, y: 9000, width: 1024, height: 1024 }))!.width,
+    ).toBe(1024);
+  });
+
   // fields.md "What a file's fields are": a field shows as the file drew it, on the page, before anyone fills it.
   it("draws a file's fields as the file drew them", async () => {
     await engine.open(drawnFieldPdf());

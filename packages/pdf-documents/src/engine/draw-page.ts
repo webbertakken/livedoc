@@ -5,6 +5,7 @@ import {
   type PageMatrix,
   type PagePoint,
   type PageTurns,
+  type TileRect,
 } from '../engine-contract';
 import { PDF_MAX_PAGE_PIXELS } from '../limits';
 import { clampSide, type ReaderFile } from './reader-file';
@@ -75,6 +76,39 @@ export function drawnSize(
   };
 }
 
+// The widest a whole page is reckoned at for a tile: the reader takes its size as a 32-bit whole number.
+const MAX_WHOLE_PX = 2 ** 30;
+
+/** A page's size as drawn turned: on its side for an odd turn. */
+function turnedView(pageWidth: number, pageHeight: number, turns: PageTurns): Turned {
+  const sideways = turns % 2 === 1;
+  return {
+    width: sideways ? pageHeight : pageWidth,
+    height: sideways ? pageWidth : pageHeight,
+    turns,
+  };
+}
+
+/** Puts the reader's bitmap into a picture of its own, and lets the bitmap go. */
+function pictureOf(
+  file: ReaderFile,
+  bitmap: number,
+  width: number,
+  height: number,
+): Uint8ClampedArray<ArrayBuffer> {
+  const { p } = file;
+  const buffer = p.FPDFBitmap_GetBuffer(bitmap);
+  const stride = p.FPDFBitmap_GetStride(bitmap);
+  const rgba = new Uint8ClampedArray(width * height * 4);
+  for (let row = 0; row < height; row += 1)
+    rgba.set(
+      file.heap.subarray(buffer + row * stride, buffer + row * stride + width * 4),
+      row * width * 4,
+    );
+  p.FPDFBitmap_Destroy(bitmap);
+  return rgba;
+}
+
 /**
  * Draws a page, turned `turns` quarters clockwise by the reader itself, so the matrix places a mark on the turned
  * picture; `ceiling` is the most pixels its picture may hold, the limit's own unless a test hands a smaller.
@@ -90,12 +124,7 @@ export function drawPage(
   return file.withFormPage(index, (page, form) => {
     const pageWidth = clampSide(p.FPDF_GetPageWidthF(page));
     const pageHeight = clampSide(p.FPDF_GetPageHeightF(page));
-    const sideways = turns % 2 === 1;
-    const view: Turned = {
-      width: sideways ? pageHeight : pageWidth,
-      height: sideways ? pageWidth : pageHeight,
-      turns,
-    };
+    const view = turnedView(pageWidth, pageHeight, turns);
     const { width, height } = drawnSize(view.width, view.height, scale, ceiling);
     const bitmap = p.FPDFBitmap_CreateEx(width, height, BITMAP_BGRA, 0, 0);
     if (!bitmap) return null;
@@ -103,15 +132,48 @@ export function drawPage(
     p.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
     // The reader leaves a file's fields to its form: without this a filled form shows empty boxes.
     if (form) p.FPDF_FFLDraw(form, bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
-    const buffer = p.FPDFBitmap_GetBuffer(bitmap);
-    const stride = p.FPDFBitmap_GetStride(bitmap);
-    const rgba = new Uint8ClampedArray(width * height * 4);
-    for (let row = 0; row < height; row += 1)
-      rgba.set(
-        file.heap.subarray(buffer + row * stride, buffer + row * stride + width * 4),
-        row * width * 4,
-      );
-    p.FPDFBitmap_Destroy(bitmap);
+    const rgba = pictureOf(file, bitmap, width, height);
+    return { width, height, rgba, toView: matrixOf(file, page, view) };
+  });
+}
+
+/**
+ * Draws a tile: the whole page reckoned at `scale` and turned, the bitmap only `rect` of it, so the reader draws no
+ * more than the tile. A tile past the page is cut at its edge; one with nothing left, or past the pixel ceiling, is
+ * none.
+ */
+export function drawTile(
+  file: ReaderFile,
+  index: number,
+  scale: number,
+  turns: PageTurns,
+  rect: TileRect,
+): PageBitmap | null {
+  const { p } = file;
+  return file.withFormPage(index, (page, form) => {
+    const view = turnedView(
+      clampSide(p.FPDF_GetPageWidthF(page)),
+      clampSide(p.FPDF_GetPageHeightF(page)),
+      turns,
+    );
+    if (!Number.isFinite(scale) || scale <= 0) return null;
+    const whole = {
+      width: Math.round(view.width * scale),
+      height: Math.round(view.height * scale),
+    };
+    if (whole.width > MAX_WHOLE_PX || whole.height > MAX_WHOLE_PX) return null;
+    const x = Math.max(0, Math.floor(rect.x));
+    const y = Math.max(0, Math.floor(rect.y));
+    const width = Math.min(Math.floor(rect.x + rect.width), whole.width) - x;
+    const height = Math.min(Math.floor(rect.y + rect.height), whole.height) - y;
+    if (width < 1 || height < 1 || width * height > PDF_MAX_PAGE_PIXELS) return null;
+    const bitmap = p.FPDFBitmap_CreateEx(width, height, BITMAP_BGRA, 0, 0);
+    if (!bitmap) return null;
+    p.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, WHITE);
+    p.FPDF_RenderPageBitmap(bitmap, page, -x, -y, whole.width, whole.height, turns, RENDER_FLAGS);
+    if (form)
+      p.FPDF_FFLDraw(form, bitmap, page, -x, -y, whole.width, whole.height, turns, RENDER_FLAGS);
+    const rgba = pictureOf(file, bitmap, width, height);
     return { width, height, rgba, toView: matrixOf(file, page, view) };
   });
 }

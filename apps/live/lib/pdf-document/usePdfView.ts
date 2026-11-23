@@ -10,6 +10,7 @@ import type { PageInfo } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { PdfPageLayout, type PdfPoint, type PdfRow, type PdfViewport } from './pdf-page-layout';
+import type { PdfLayoutRect } from './pdf-tiles';
 import { PdfView, type PdfPageDisplayName, type PdfZoom } from './pdf-view';
 
 /** How a zoom was asked for, as telemetry names it (reading-surface.md "Telemetry"). */
@@ -30,6 +31,12 @@ type Anchor =
 type Scroll = { left: number; top: number };
 
 export type PdfViewer = ReturnType<typeof usePdfView>;
+
+/** The part of the layout in view, read on demand and told as it moves (useSyncExternalStore's shape). */
+export type PdfViewStore = {
+  get: () => PdfLayoutRect;
+  subscribe: (watcher: () => void) => () => void;
+};
 
 const firstOf = (row: PdfRow | undefined): number | null =>
   row?.find((index): index is number => index !== null) ?? null;
@@ -83,6 +90,35 @@ export function usePdfView(pages: readonly PageInfo[]) {
     latest.current = { layout, viewport, rows, shown, page, extent, view };
   });
 
+  // The part of the layout in view, for whoever draws only what shows (a page's tiles): told on every scroll and
+  // every layout, read without a render.
+  const shownRect = useRef<PdfLayoutRect>({ left: 0, top: 0, width: 0, height: 0 });
+  const watchers = useRef(new Set<() => void>());
+  const tellView = useCallback(() => {
+    const size = latest.current.viewport;
+    const { left, top } = scroll.current;
+    const now = shownRect.current;
+    if (
+      now.left === left &&
+      now.top === top &&
+      now.width === size.width &&
+      now.height === size.height
+    )
+      return;
+    shownRect.current = { left, top, width: size.width, height: size.height };
+    for (const watcher of watchers.current) watcher();
+  }, []);
+  const viewStore = useMemo<PdfViewStore>(
+    () => ({
+      get: () => shownRect.current,
+      subscribe: (watcher) => {
+        watchers.current.add(watcher);
+        return () => watchers.current.delete(watcher);
+      },
+    }),
+    [],
+  );
+
   const readPage = useCallback(() => {
     const { layout: now, viewport: size } = latest.current;
     if (size.width === 0) return;
@@ -95,19 +131,24 @@ export function usePdfView(pages: readonly PageInfo[]) {
 
   // The scroller, as the moves set its offsets; `element` is the same, as state, for the effects that watch it.
   const scroller = useRef<HTMLDivElement | null>(null);
-  const scrollTo = useCallback((to: Scroll) => {
-    const node = scroller.current;
-    if (!node) return;
-    node.scrollLeft = to.left;
-    node.scrollTop = to.top;
-    scroll.current = to;
-  }, []);
+  const scrollTo = useCallback(
+    (to: Scroll) => {
+      const node = scroller.current;
+      if (!node) return;
+      node.scrollLeft = to.left;
+      node.scrollTop = to.top;
+      scroll.current = to;
+      tellView();
+    },
+    [tellView],
+  );
 
   useEffect(() => {
     if (!element) return;
     let frame = 0;
     const onScroll = () => {
       scroll.current = { left: element.scrollLeft, top: element.scrollTop };
+      tellView();
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(readPage);
     };
@@ -116,7 +157,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       cancelAnimationFrame(frame);
       element.removeEventListener('scroll', onScroll);
     };
-  }, [element, readPage]);
+  }, [element, readPage, tellView]);
 
   // Every commit: a new layout keeps its anchor's place; an anchor whose change laid nothing out again is spent.
   useLayoutEffect(() => {
@@ -139,6 +180,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
     }
     if (to) scrollTo(to);
     readPage();
+    tellView();
   });
 
   /** The scale a zoom is now. */
@@ -295,6 +337,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       setDisplay,
       setCover,
       rotate,
+      viewStore,
     }),
     [
       view,
@@ -315,6 +358,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       setDisplay,
       setCover,
       rotate,
+      viewStore,
     ],
   );
 }

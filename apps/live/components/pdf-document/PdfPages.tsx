@@ -7,6 +7,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -17,6 +18,10 @@ import type { PageInfo, PageTurns, PdfEngine, TextSelection } from '@livedoc/pdf
 import { CSS_PER_POINT, type PdfPageLayout } from '@/lib/pdf-document/pdf-page-layout';
 import { marksOnPage, type PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
+import { PdfDevice } from '@/lib/pdf-document/pdf-device';
+import { pdfTileCache } from '@/lib/pdf-document/pdf-tile-cache';
+import type { PdfViewStore } from '@/lib/pdf-document/usePdfView';
+import type { PdfTileSource } from './PdfPageTiles';
 import { PdfPage, type PdfPageTool } from './PdfPage';
 
 // A page is drawn once it is within one viewport of view, and keeps its picture until it is three away
@@ -66,6 +71,7 @@ export function PdfPages({
   layout,
   scale,
   turns,
+  viewStore,
   sized,
   onKeyDown,
   pages,
@@ -82,6 +88,8 @@ export function PdfPages({
   scale: number;
   // Rotate view's turn, in quarters clockwise.
   turns: PageTurns;
+  // The part of the layout in view, for the pages' tiles.
+  viewStore: PdfViewStore;
   // The view has a size: until it has, no page is drawn at a scale fitted to nothing.
   sized: boolean;
   // The pages' own keys (usePdfPagesInput.ts).
@@ -113,6 +121,16 @@ export function PdfPages({
     },
     [watchNear, watchHeld],
   );
+  // A surface's tiles, kept to this device's budget; a replaced stored file comes with another drawer, and new tiles.
+  const tiles = useMemo<PdfTileSource>(() => {
+    const device = PdfDevice.current();
+    return {
+      drawer,
+      cache: pdfTileCache(PdfDevice.tileBudget(device)),
+      view: viewStore,
+      pixelRatio: PdfDevice.tilePixelRatio(device, window.devicePixelRatio || 1),
+    };
+  }, [drawer, viewStore]);
   const byPage = useSyncExternalStore(marks.subscribe, marks.get, marks.get);
 
   return (
@@ -139,6 +157,7 @@ export function PdfPages({
                   left={box.left}
                   top={box.top}
                   turns={turns}
+                  tiles={tiles}
                   wanted={near.within.has(box.index)}
                   held={held.within.has(box.index)}
                   engine={engine}

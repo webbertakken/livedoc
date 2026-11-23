@@ -85,6 +85,25 @@ test('a PDF’s pages are laid out, zoomed and turned as the person’s own view
   await zoomField(page).press('Enter');
   await expect(zoomField(page)).toHaveValue('250%');
 
+  // "The pages": at 800% the whole-page picture is softer than the screen, so the part in view is drawn as sharp
+  // tiles over it: a few, never the page's hundreds.
+  await zoomField(page).fill('800');
+  await zoomField(page).press('Enter');
+  await expect(page.locator('[data-pdf-tile-drawn="true"]').first()).toBeAttached({
+    timeout: 15_000,
+  });
+  expect(await page.locator('[data-pdf-tile]').count()).toBeLessThan(40);
+  // Over the line of text on page one, 72 points in and down: at 800% about 768 CSS pixels from the page's corner.
+  await page.locator(PAGES).evaluate((pages) => {
+    const one = pages.querySelector<HTMLElement>('[data-pdf-page="1"]')!;
+    pages.scrollTo(one.offsetLeft + 600, one.offsetTop + 600);
+  });
+  await expect(
+    page.locator('[data-pdf-page="1"] [data-pdf-tile-drawn="true"]').first(),
+  ).toBeAttached({ timeout: 15_000 });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: test.info().outputPath('pdf-view-tiles-dark.png') });
+
   // "The wheel and a pinch keep what is under the pointer."
   await viewItem(page, 'Zoom', 'Fit width');
   const pages = page.locator(PAGES);

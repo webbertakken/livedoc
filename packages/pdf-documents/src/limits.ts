@@ -123,3 +123,11 @@ export const PDF_WHEEL_TURN_MS = 300;
 /** (default) How long a wheel's or a pinch's zoom rests before it is told to telemetry, once a gesture. Safe range:
  *  200 to 1,000. */
 export const PDF_ZOOM_SETTLE_MS = 400;
+/** (default) A tile's side in CSS pixels (reading-surface.md "The pages", "Limits"). Safe range: 256 to 1,024. */
+export const PDF_TILE_PX = 512;
+/** (default) The tiles a desktop keeps, in bytes of their pictures; least lately shown let go first. */
+export const PDF_TILE_CACHE_BYTES = 134_217_728;
+/** (default) The tiles a phone keeps (reading-surface.md "Phone and tablet"). */
+export const PDF_TILE_PHONE_CACHE_BYTES = 50_331_648;
+/** (default) The most device pixels a CSS pixel a phone's tiles are drawn at. */
+export const PDF_PHONE_PIXEL_RATIO = 2;

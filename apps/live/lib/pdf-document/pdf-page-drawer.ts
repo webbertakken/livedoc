@@ -7,12 +7,13 @@ import {
   type PageInfo,
   type PageTurns,
   type PdfEngine,
+  type TileRect,
 } from '@livedoc/pdf-documents';
 
+// One draw waiting its turn, by its name: a page's picture (`page:<index>`) or a tile (its own key).
 type Waiting = {
-  index: number;
-  scale: number;
-  turns: PageTurns;
+  key: string;
+  run: () => Promise<PageBitmap | null>;
   settle: (bitmap: PageBitmap | null) => void;
 };
 
@@ -24,6 +25,16 @@ export type PdfPageDrawer = {
   draw: (index: number, scale: number, turns?: PageTurns) => Promise<PageBitmap | null>;
   /** Gives up a page still waiting its turn. */
   forget: (index: number) => void;
+  /** A tile of a page (reading-surface.md "The pages"), in the same line as the pages: the latest asked first. */
+  drawTile: (
+    key: string,
+    index: number,
+    scale: number,
+    turns: PageTurns,
+    rect: TileRect,
+  ) => Promise<PageBitmap | null>;
+  /** Gives up a tile still waiting its turn. */
+  forgetTile: (key: string) => void;
 };
 
 /**
@@ -38,7 +49,7 @@ export function pictureScale(page: PageInfo, cssScale: number, pixelRatio: numbe
     : wanted * Math.sqrt(PDF_PAGE_PICTURE_MAX_PIXELS / pixels);
 }
 
-export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage'>): PdfPageDrawer {
+export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage' | 'drawTile'>): PdfPageDrawer {
   const waiting: Waiting[] = [];
   let drawing = false;
 
@@ -47,28 +58,34 @@ export function pdfPageDrawer(engine: Pick<PdfEngine, 'drawPage'>): PdfPageDrawe
     const turn = waiting.pop();
     if (!turn) return;
     drawing = true;
-    const bitmap = await engine.drawPage(turn.index, turn.scale, turn.turns);
+    const bitmap = await turn.run();
     drawing = false;
     turn.settle(bitmap);
     void next();
   };
 
-  const forget = (index: number) => {
+  const forgetTile = (key: string) => {
     for (let at = waiting.length - 1; at >= 0; at -= 1) {
-      if (waiting[at]!.index !== index) continue;
+      if (waiting[at]!.key !== key) continue;
       waiting[at]!.settle(null);
       waiting.splice(at, 1);
     }
   };
+  const ask = (key: string, run: Waiting['run']) =>
+    new Promise<PageBitmap | null>((settle) => {
+      // A draw asked for again takes its earlier ask's place.
+      forgetTile(key);
+      waiting.push({ key, run, settle });
+      void next();
+    });
+  const pageKey = (index: number) => `page:${index}`;
 
   return {
     draw: (index, scale, turns = 0) =>
-      new Promise((settle) => {
-        // A page asked for again takes its earlier ask's place.
-        forget(index);
-        waiting.push({ index, scale, turns, settle });
-        void next();
-      }),
-    forget,
+      ask(pageKey(index), () => engine.drawPage(index, scale, turns)),
+    forget: (index) => forgetTile(pageKey(index)),
+    drawTile: (key, index, scale, turns, rect) =>
+      ask(key, () => engine.drawTile(index, scale, turns, rect)),
+    forgetTile,
   };
 }

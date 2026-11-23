@@ -6,7 +6,6 @@
 // so once (opening.md "Refusals": `pdf_stopped`).
 import {
   PDF_ENGINE_TIMEOUT_MS,
-  PDF_PHONE_MAX_DEVICE_GB,
   PDF_WORKER_MAX_BYTES,
   PDF_WORKER_PHONE_MAX_BYTES,
 } from '@livedoc/pdf-documents';
@@ -26,6 +25,7 @@ import type {
   TextSelection,
 } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
+import { PdfDevice } from './pdf-device';
 import type { PdfEngineMessage, PdfEngineMethod, PdfEngineRequest } from './pdf-engine-protocol';
 
 /** The part of a Worker the client uses. */
@@ -58,15 +58,8 @@ const BROWSER_LIMITS: PdfEngineLimits = {
  * The most memory the engine's reader may hold on this device: a phone's ceiling where the device says it has little
  * memory, or says nothing and is touched, not pointed at (opening.md "Limits").
  */
-export function pdfWorkerCeiling(device: {
-  deviceMemory: number | undefined;
-  coarsePointer: boolean;
-}): number {
-  const phone =
-    device.deviceMemory === undefined
-      ? device.coarsePointer
-      : device.deviceMemory <= PDF_PHONE_MAX_DEVICE_GB;
-  return phone ? PDF_WORKER_PHONE_MAX_BYTES : PDF_WORKER_MAX_BYTES;
+export function pdfWorkerCeiling(device: PdfDevice): number {
+  return PdfDevice.isPhone(device) ? PDF_WORKER_PHONE_MAX_BYTES : PDF_WORKER_MAX_BYTES;
 }
 
 // What each call answers once the worker has stopped.
@@ -74,6 +67,7 @@ const STOPPED = {
   open: { ok: false, refusal: 'pdf_stopped' } satisfies PdfOpened,
   unlock: { ok: false, refusal: 'pdf_stopped' } satisfies PdfOpened,
   drawPage: null,
+  drawTile: null,
   outline: { items: [], cut: false } satisfies Outline,
   links: [] as readonly PageLink[],
   pageText: null,
@@ -163,6 +157,8 @@ export function pdfEngineClient(
     unlock: (password) => ask<PdfOpened>({ method: 'unlock', args: [password] }),
     drawPage: (index, scale, turns) =>
       ask<PageBitmap | null>({ method: 'drawPage', args: [index, scale, turns] }),
+    drawTile: (index, scale, turns, rect) =>
+      ask<PageBitmap | null>({ method: 'drawTile', args: [index, scale, turns, rect] }),
     outline: () => ask<Outline>({ method: 'outline', args: [] }),
     links: (index) => ask<readonly PageLink[]>({ method: 'links', args: [index] }),
     pageText: (index) => ask<PageText | null>({ method: 'pageText', args: [index] }),
@@ -190,10 +186,7 @@ export function startPdfEngineWorker(onStopped?: (reason: PdfEngineStop) => void
     type: 'module',
     name: 'pdf-engine',
   });
-  const maxBytes = pdfWorkerCeiling({
-    deviceMemory: (navigator as { deviceMemory?: number }).deviceMemory,
-    coarsePointer: matchMedia('(pointer: coarse)').matches,
-  });
+  const maxBytes = pdfWorkerCeiling(PdfDevice.current());
   return pdfEngineClient(worker as unknown as PdfEngineWorker, onStopped, {
     timeoutMs: PDF_ENGINE_TIMEOUT_MS,
     maxBytes,
