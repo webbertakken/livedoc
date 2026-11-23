@@ -137,6 +137,27 @@ test.describe('Appearance', () => {
     expectNoPageErrors(pageErrors);
   });
 
+  // docs/specs/004-interface-design/appearance.md D76: the page follows the device on System once the Explorer has
+  // loaded the canvas's code at idle, whose renders read the appearance between a change and its report.
+  test('follows the device after the canvas code is in, without a reload', async ({
+    page,
+    pageErrors,
+  }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    const canvasIn = page.waitForEvent('console', (message) =>
+      message.text().startsWith('[canvas-code] in'),
+    );
+    await page.goto('/explorer/all');
+    await canvasIn;
+    const html = page.locator('html');
+    await expect(html).toHaveClass(/\bdark\b/);
+    await page.emulateMedia({ colorScheme: 'light' });
+    await expect(html).not.toHaveClass(/\bdark\b/);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await expect(html).toHaveClass(/\bdark\b/);
+    expectNoPageErrors(pageErrors);
+  });
+
   test('tells Dark Reader to stand down, in the served head', async ({ page }) => {
     // Asserted on the rendered page, not the metadata object: Next drops a meta
     // whose content is empty, and a unit test on the object passed while the

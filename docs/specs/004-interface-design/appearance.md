@@ -53,5 +53,8 @@ Each default below was applied where this spec is silent or qualitative, and hol
 The code cites each by its id.
 
 - **D76** Lifetime of the OS watch: One `MediaQueryList`, attached on first subscribe or write, never detached (default).
+  It is never read: a browser refreshes a list's state when its `matches` is read and reports a change only to lists
+  whose state changed since, so the preference is read from a second list, and a read between the change and its
+  report cannot swallow it.
 - **D77** Content of the `darkreader-lock` meta: `'true'`: Dark Reader keys on the name alone, and Next drops a meta with
   empty content (default).
