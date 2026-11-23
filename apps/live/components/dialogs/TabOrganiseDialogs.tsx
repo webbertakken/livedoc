@@ -51,18 +51,16 @@ function OrganiseDialogFrame({
       closeOnEscape={false}
       className="max-h-[80vh]"
     >
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 pb-3 pt-5 dark:border-slate-800">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-5 dark:border-slate-800">
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
-            {title}
-          </h2>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{sub}</p>
+          <h2 className="truncate text-dialog-title text-slate-900 dark:text-slate-100">{title}</h2>
+          <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">{sub}</p>
         </div>
         <div className="-mt-1 flex shrink-0 items-center">
           <DialogCloseButton onClick={onClose} />
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
+      <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
     </Dialog>
   );
 }
@@ -148,15 +146,15 @@ function DocumentPickCard({
     <button
       type="button"
       onClick={onPick}
-      className="flex flex-col gap-1.5 rounded-lg border border-slate-200 bg-white p-2 text-center transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600 dark:hover:bg-slate-700/60"
+      className="flex flex-col gap-2 rounded-menu border border-slate-200 bg-white p-2 text-center transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600 dark:hover:bg-slate-700/60"
     >
       <DocumentThumbnail
         ownerId={ownerId}
         documentId={liveDoc.id}
         version={liveDoc.savedAt ?? 0}
-        className="h-16 w-full rounded border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
+        className="h-16 w-full rounded-control border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
       />
-      <span className="w-full truncate text-xs font-medium text-slate-700 dark:text-slate-200">
+      <span className="w-full truncate text-body text-slate-700 dark:text-slate-200">
         {liveDoc.name || 'Untitled document'}
       </span>
     </button>
@@ -202,7 +200,7 @@ export function AddTabToDocumentDialog({
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Filter documents…"
         aria-label="Filter documents"
-        className="mb-3 w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+        className="mb-3 h-field w-full rounded-control border border-slate-200 bg-white px-2 text-body text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
       />
       {visible.length === 0 ? (
         query.trim() ? (

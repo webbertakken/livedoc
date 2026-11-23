@@ -222,7 +222,7 @@ export function AssignActionDialog({
           <div className="flex items-start justify-between gap-3">
             <h2
               id="assign-action-title"
-              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+              className="text-dialog-title text-slate-900 dark:text-slate-50"
             >
               {editing ? 'Edit Action' : 'Assign an Action'}
             </h2>
@@ -232,13 +232,13 @@ export function AssignActionDialog({
                 type="button"
                 aria-label="Close"
                 onClick={onClose}
-                className="rounded p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="flex size-row items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 <CloseIcon size={14} />
               </button>
             </div>
           </div>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-body text-slate-500 dark:text-slate-400">
             {editing
               ? 'Change what needs doing, or hand it to someone else.'
               : 'Attach a piece of work to this element, for yourself or a teammate.'}
@@ -246,10 +246,8 @@ export function AssignActionDialog({
         </div>
 
         <div className="flex flex-col gap-4 px-6 py-5">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-              Action name
-            </span>
+          <label className="flex flex-col gap-2">
+            <span className="text-body text-slate-700 dark:text-slate-200">Action name</span>
             <TextInput
               ref={nameRef}
               value={name}
@@ -259,8 +257,8 @@ export function AssignActionDialog({
             />
           </label>
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
+          <label className="flex flex-col gap-2">
+            <span className="text-body text-slate-700 dark:text-slate-200">
               Description{' '}
               <span className="font-normal text-slate-500 dark:text-slate-400">(optional)</span>
             </span>
@@ -270,13 +268,13 @@ export function AssignActionDialog({
               rows={3}
               maxLength={2000}
               placeholder="Any detail the assignee needs…"
-              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+              className="w-full resize-none rounded-control border border-slate-200 bg-white px-3 py-2 text-body text-slate-800 outline-none transition focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
             />
           </label>
 
           {editing ? (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-200">Status</span>
+            <div className="flex flex-col gap-2">
+              <span className="text-body text-slate-700 dark:text-slate-200">Status</span>
               <SegmentedRadio
                 label="Status"
                 options={ACTION_STATUSES.map((id) => ({ id, label: ACTION_STATUS_LABELS[id] }))}
@@ -315,7 +313,7 @@ export function AssignActionDialog({
           />
 
           {showAccessHint ? (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+            <p className="rounded-menu bg-amber-50 px-3 py-2 text-supporting text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
               {assigneeAccess === 'invited' ? (
                 // Informational, not a warning: access arrives with the
                 // invite acceptance, no owner action needed.
@@ -340,7 +338,7 @@ export function AssignActionDialog({
               type="button"
               onClick={() => setNotifyEmail((v) => !v)}
               aria-pressed={notifyEmail}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="flex min-h-field w-full cursor-pointer items-center justify-between gap-3 rounded-control border border-slate-200 px-3 py-1 text-left text-body text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <span>Email {assignee?.name ?? 'them'} about this action</span>
               <Switch presentational size="sm" checked={notifyEmail} />

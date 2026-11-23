@@ -70,7 +70,7 @@ export function AssigneePicker({
         type="button"
         onClick={() => onPick(m)}
         aria-pressed={selected}
-        className={`flex w-full items-center gap-2.5 px-3 py-2 text-left transition ${
+        className={`flex min-h-row w-full items-center gap-2 px-3 py-1 text-left transition ${
           selected
             ? 'bg-brand-50 dark:bg-brand-500/15'
             : 'hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -79,11 +79,11 @@ export function AssigneePicker({
         <GlyphDisc
           size={24}
           aria-hidden
-          className={`bg-brand-700 text-[10px] font-semibold text-white ${SOLID_BRAND_DARK}`}
+          className={`bg-brand-700 text-glyph text-white ${SOLID_BRAND_DARK}`}
         >
           {initialsOf(m.name)}
         </GlyphDisc>
-        <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm text-slate-800 dark:text-slate-100">
+        <span className="flex min-w-0 flex-1 items-center gap-1 truncate text-body text-slate-800 dark:text-slate-100">
           <span className="truncate">
             {isSelf ? 'Myself' : m.name}
             {isSelf ? (
@@ -92,13 +92,13 @@ export function AssigneePicker({
           </span>
           {m.pending ? (
             // Same amber badge the team pane uses for pending invites.
-            <span className="shrink-0 rounded-full bg-amber-100 px-1.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
+            <span className="shrink-0 rounded-full bg-amber-100 px-2 text-supporting text-amber-700 ring-1 ring-amber-200">
               Invited
             </span>
           ) : null}
         </span>
         {selected ? (
-          <span className="shrink-0 text-xs font-medium text-brand-700 dark:text-brand-400">
+          <span className="shrink-0 text-supporting text-brand-700 dark:text-brand-400">
             Selected
           </span>
         ) : null}
@@ -107,20 +107,20 @@ export function AssigneePicker({
   };
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-slate-700 dark:text-slate-200">Assignee</span>
-      <div className="max-h-52 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700">
+    <div className="flex flex-col gap-2">
+      <span className="text-body text-slate-700 dark:text-slate-200">Assignee</span>
+      <div className="max-h-52 overflow-y-auto rounded-menu border border-slate-200 dark:border-slate-700">
         {selfRow ? row(selfRow, true) : null}
         {grouped.map(([teamId, group]) => (
           <div key={teamId}>
-            <p className="sticky top-0 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            <p className="sticky top-0 bg-slate-50 px-3 py-1 text-supporting text-slate-500 dark:bg-slate-800 dark:text-slate-400">
               {group.teamName}
             </p>
             {group.members.map((m) => row(m, false))}
           </div>
         ))}
         {signedIn && memberOfDocumentTeam && members === null ? (
-          <p className="px-3 py-2 text-center text-xs text-slate-500 dark:text-slate-400">
+          <p className="px-3 py-2 text-center text-supporting text-slate-500 dark:text-slate-400">
             Loading teammates…
           </p>
         ) : null}
@@ -128,7 +128,7 @@ export function AssigneePicker({
       {/* Teammate nudges: sign in (guests), join a team (signed-in
           with none), or invite (teams with no other joined member). */}
       {!signedIn && signInAvailable ? (
-        <p className="rounded-lg border border-dashed border-slate-300 px-3 py-2.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <p className="rounded-menu border border-dashed border-slate-300 px-3 py-2.5 text-supporting text-slate-500 dark:border-slate-700 dark:text-slate-400">
           <a href={signInHref} className="font-medium text-brand-700 underline dark:text-brand-400">
             Sign in
           </a>{' '}
@@ -139,18 +139,18 @@ export function AssigneePicker({
         // action. With teams to offer, fix it INLINE — one click files
         // the document into that team's library root and the members
         // load right here (docs/specs/012-collaboration/assigned-actions.md §2). No teams -> create-team link.
-        <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 py-2.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <div className="flex flex-col gap-2 rounded-menu border border-dashed border-slate-300 px-3 py-2.5 text-supporting text-slate-500 dark:border-slate-700 dark:text-slate-400">
           {teams.length > 0 && onMoveToTeam ? (
             <>
               <p>Move this document into a team library to assign teammates:</p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {teams.map((t) => (
                   <button
                     key={t.id}
                     type="button"
                     disabled={movingToTeamId !== null}
                     onClick={() => onMoveToTeam(t.id)}
-                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 transition hover:border-brand-300 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-400 dark:hover:text-brand-300"
+                    className="min-h-row rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-400 dark:hover:text-brand-300"
                   >
                     {movingToTeamId === t.id ? 'Moving…' : t.name}
                   </button>
@@ -178,11 +178,11 @@ export function AssigneePicker({
       ) : signedIn && !memberOfDocumentTeam ? (
         // Share-link editor on someone else's team document: they can
         // edit, but only the team's members are assignable.
-        <p className="px-1 text-xs text-slate-500 dark:text-slate-400">
+        <p className="px-1 text-supporting text-slate-500 dark:text-slate-400">
           Only members of this document&apos;s team can be assigned actions.
         </p>
       ) : signedIn && members !== null && members.length === 0 ? (
-        <p className="px-1 text-xs text-slate-500 dark:text-slate-400">
+        <p className="px-1 text-supporting text-slate-500 dark:text-slate-400">
           No other members in this team yet. Invite teammates from the team page and they become
           assignable here, even before they accept.
         </p>
