@@ -17,14 +17,16 @@ Labels are not stamped on data; the class follows from the store it lives in, as
 
 ## Data stores
 
-| Asset                                         | Holds                                                                                          | Class        | Recovery                               |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------ | -------------------------------------- |
-| D1 `docs-nu` (western Europe)                 | Accounts, sessions, document index, folders, shares, tokens, events, bug reports not yet filed | Confidential | D1 Time Travel, 30 days                |
-| Durable Objects `DocumentRoom`                | Each document's content, comments, votes and live sessions                                     | Confidential | SQLite point-in-time recovery, 30 days |
-| R2 `docs-nu-images` (western Europe)          | Uploaded images                                                                                | Confidential | None; see risk `R-07`                  |
-| R2 `docs-nu-bug-screenshots` (western Europe) | Screenshots attached to bug reports, expired after 90 days                                     | Confidential | None needed; they expire               |
-| KV `docs-nu-mcp-oauth`                        | MCP client registrations and short-lived OAuth state                                           | Confidential | None needed; re-registration           |
-| Cloudflare request logs                       | Request metadata kept by the host                                                              | Internal     | Not restored                           |
+| Asset                                         | Holds                                                                                                                           | Class        | Recovery                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------- |
+| D1 `docs-nu` (western Europe)                 | Accounts, sessions, document index, folders, shares, tokens, events, bug reports not yet filed                                  | Confidential | D1 Time Travel, 30 days                |
+| Durable Objects `DocumentRoom`                | Each document's content, comments, votes and live sessions                                                                      | Confidential | SQLite point-in-time recovery, 30 days |
+| R2 `docs-nu-images` (western Europe)          | Uploaded images                                                                                                                 | Confidential | None; see risk `R-07`                  |
+| R2 `docs-nu-bug-screenshots` (western Europe) | Screenshots attached to bug reports, expired after 90 days                                                                      | Confidential | None needed; they expire               |
+| KV `docs-nu-mcp-oauth`                        | MCP client registrations and short-lived OAuth state                                                                            | Confidential | None needed; re-registration           |
+| Cloudflare request logs                       | Request metadata kept by the host                                                                                               | Internal     | Not restored                           |
+| Workers Logs (api, mcp, router)               | The workers' own log lines, each with its request's path, no query; 3 to 7 days ([Worker logs](../016-platform/worker-logs.md)) | Internal     | Not restored; they expire              |
+| Durable Object `WorkerIssuesLedger`           | Worker issue deliveries already handled (7 days), cards waiting to be filed ([Worker issues](../016-platform/worker-issues.md)) | Internal     | None needed; Cloudflare redelivers     |
 
 ## Secrets
 
