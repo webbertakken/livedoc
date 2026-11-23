@@ -5,6 +5,7 @@ import type { Block, Paragraph } from '../model/blocks';
 import type { BorderDash, BorderLine } from '../model/props';
 import type { Table, TableCell } from '../model/tables';
 import type { Picture } from '../model/pictures';
+import type { Equation, MathNode, MathRow } from '../model/equations';
 import { BLUE_PNG, BLUE_PNG_SHA, GREEN_PNG, GREEN_PNG_SHA } from './pictures';
 import { ListDefinition } from '../model/lists';
 import { ListPresets } from '../model/list-presets';
@@ -671,5 +672,55 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         },
       },
     );
+  },
+  // objects.md "The equation model": an equation in line among text, in its run's size and colour, holding every kind
+  // of node; a paragraph of one equation on its own line, centred.
+  equations: (format) => {
+    const id = (text: string): MathNode => ({ kind: 'identifier', text });
+    const num = (text: string): MathNode => ({ kind: 'number', text });
+    const op = (text: string): MathNode => ({ kind: 'operator', text });
+    const every: MathRow = [
+      { kind: 'fraction', numerator: [id('a')], denominator: [id('b'), op('+'), num('1')] },
+      op('+'),
+      { kind: 'scripts', base: [id('x')], sub: [num('1')], sup: [num('2')] },
+      { kind: 'root', radicand: [id('z')], index: [num('3')] },
+      { kind: 'root', radicand: [id('y')] },
+      op('≤'),
+      {
+        kind: 'large-operator',
+        operator: '∑',
+        lower: [id('k'), op('='), num('1')],
+        upper: [id('n')],
+        body: [id('k')],
+      },
+      { kind: 'large-operator', operator: '∫', lower: [num('0')], upper: [], body: [id('f')] },
+      { kind: 'fence', open: '(', close: ']', body: [id('p')] },
+      { kind: 'accent', base: [id('v')], accent: '→' },
+      { kind: 'under-over', base: [id('lim')], under: [id('a'), op('→'), id('b')] },
+      { kind: 'text', text: 'if x' },
+    ];
+    const equation = (math: MathRow, props = {}): Equation => ({ type: 'equation', math, props });
+    return base(format, [
+      paragraph(format, 'normal', [
+        run('Where '),
+        equation(every, { size: 14, color: '#1155cc' }),
+        run(' holds.'),
+      ]),
+      paragraph(
+        format,
+        'normal',
+        [
+          equation([
+            id('E'),
+            op('='),
+            id('m'),
+            { kind: 'scripts', base: [id('c')], sup: [num('2')] },
+          ]),
+        ],
+        {
+          props: { align: 'center' },
+        },
+      ),
+    ]);
   },
 };

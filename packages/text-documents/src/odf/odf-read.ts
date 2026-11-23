@@ -59,6 +59,8 @@ import { odfFootnoteBody } from './odf-notes';
 import { readOdfPicture, type OdfPictureLookup } from './odf-pictures';
 import { keptXmlTexts, MediaTaken } from '../picture-media';
 import type { Picture } from '../model/pictures';
+import type { Equation } from '../model/equations';
+import { readOdfEquation } from './odf-equations';
 import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import {
   isLineNumbering,
@@ -81,6 +83,8 @@ export type OdfParts = {
   pictures?: OdfPictureLookup;
   /** The most pictures the document holds; past it, the rest stay kept. */
   maxObjects?: number;
+  /** The formula parts' MathML roots by the part's folder (`Object 1`), for the equations naming them. */
+  formulas?: ReadonlyMap<string, XmlElement>;
 };
 
 const is = (e: XmlNode, uri: string, local: string): boolean =>
@@ -157,6 +161,13 @@ class OdfReader {
   /** Tab stops a read left out (bar stops, past the range or the most), reported. */
   readonly dropTabs = (count: number): void => this.report.drop('tab-stop', 'tab-stop', count);
   readonly unequalColumns = (): void => this.report.drop('column-width', 'column-width');
+
+  /** Marks the package entries an object was read from as taken: one entry, or a folder's (named with its `/`). */
+  takeEntries(entry: string): void {
+    for (const e of this.parts.entries)
+      if (entry.endsWith('/') ? e.name.startsWith(entry) : e.name === entry)
+        this.taken.parts.add(e.name);
+  }
 
   /** Kept XML, with what runs things and OLE binaries left out and reported. */
   kept(parsed: XmlParsed, element: XmlElement): KeptXml {
@@ -861,6 +872,18 @@ class InlineReader {
         props: ctx.props,
         ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
       } satisfies Field);
+      this.#afterSpace = false;
+      return;
+    }
+    const equation = readOdfEquation(node, this.r.parts.formulas ?? new Map());
+    if (equation) {
+      for (const entry of equation.entries) this.r.takeEntries(entry);
+      this.out.push({
+        type: 'equation',
+        math: equation.math,
+        props: ctx.props,
+        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+      } satisfies Equation);
       this.#afterSpace = false;
       return;
     }

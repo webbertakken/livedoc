@@ -39,6 +39,8 @@ api, agents) reads and writes one shape (default):
 - **A kept inline** is a `kept_inline` atom inside its paragraph: its name, XML, formatting and link.
 - **A picture** is a `picture` atom inside its paragraph: its media key, size, alternative text, title, whether it is
   decorative, crop, formatting and link ([Objects](objects.md#in-the-editor)).
+- **An equation** is an `equation` atom inside its paragraph: its maths as one whole value, its formatting and link
+  ([Objects](objects.md#equations-in-the-editor)).
 - **A field** is a `field` atom (what it shows, its text last drawn, formatting and link); **a footnote's mark** is a
   `footnote` atom naming its note by `story`, with the mark's formatting and link; the note's writing is a
   `story:<id>` fragment, as a header's.

@@ -92,7 +92,8 @@ div.text-document-kept {
 }
 .ProseMirror-selectednode.text-document-kept,
 .ProseMirror-selectednode.text-document-picture > .text-document-picture-turn,
-.ProseMirror-selectednode.text-document-section-break {
+.ProseMirror-selectednode.text-document-section-break,
+.ProseMirror-selectednode.text-document-equation {
   outline: 2px solid light-dark(#0284c7, #38bdf8);
 }
 .text-document-kept-hidden {
@@ -658,6 +659,34 @@ div.text-document-kept {
 .text-document-table-drop[data-kind='column'] {
   width: 2px;
   margin-left: -1px;
+}
+/*
+ * An equation (docs/specs/034-text-documents/objects.md "Equations in the editor"): MathML in line, in the maths font
+ * LiveDoc serves (STIX Two Math, its OpenType MATH table drawing radicals, large operators and stretched fences), the
+ * same on every screen, in display style as Google draws it (fractions full size, limits under and over); an empty one
+ * a dotted box of an em. The face loads only once an equation is drawn.
+ */
+@font-face {
+  font-family: 'LiveDoc Maths';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../node_modules/@fontsource/stix-two-math/files/stix-two-math-latin-400-normal.woff2')
+    format('woff2');
+}
+.text-document-equation {
+  display: inline-block;
+  user-select: all;
+}
+.text-document-equation > math {
+  font-family: 'LiveDoc Maths', math;
+  math-style: normal;
+}
+.text-document-equation[data-empty] {
+  min-width: 1em;
+  min-height: 1em;
+  vertical-align: text-bottom;
+  outline: 1px dotted light-dark(#5f6368, #9aa0a6);
 }
 /*
  * A picture in line (docs/specs/034-text-documents/objects.md "In the editor"): the bounds of its turned box on the

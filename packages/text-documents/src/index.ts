@@ -51,6 +51,14 @@ export {
 } from './model/blocks';
 export { Notes } from './model/notes';
 export {
+  Equations,
+  type Equation,
+  type MathNode,
+  type MathRow,
+  type MathTokenKind,
+} from './model/equations';
+export { MATHML_NS, mathMlTree, mathMlXml, type MathMlElement } from './model/equation-mathml';
+export {
   Pictures,
   type DocumentMedia,
   type Picture,
@@ -228,6 +236,8 @@ export {
   TABLE_PARTS,
   TABLE_ROW,
   TABLE_ROW_ATTRIBUTES,
+  EQUATION,
+  EQUATION_ATTRIBUTES,
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
   MEDIA_MAP,

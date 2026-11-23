@@ -5,7 +5,7 @@
 import * as Y from 'yjs';
 import { TEXT_DOCUMENT_WORDS_PER_PAGE } from './limits';
 import { liveStoryIds } from './live/live-stories';
-import { PICTURE } from './live/live-names';
+import { EQUATION, PICTURE } from './live/live-names';
 import { TextDocumentState } from './text-document-state';
 
 export type TextDocumentDigest = {
@@ -22,9 +22,13 @@ export type TextDocumentDigest = {
 
 const WORD = /\S+/g;
 
-/** Whether the body holds a picture: an object is content (live-editing-and-storage.md "The digest"). */
-const holdsPicture = (body: Y.XmlFragment): boolean =>
-  !body.createTreeWalker((n) => n instanceof Y.XmlElement && n.nodeName === PICTURE).next().done;
+/** Whether the body holds a picture or an equation: an object is content (live-editing-and-storage.md "The digest"). */
+const holdsObject = (body: Y.XmlFragment): boolean =>
+  !body
+    .createTreeWalker(
+      (n) => n instanceof Y.XmlElement && (n.nodeName === PICTURE || n.nodeName === EQUATION),
+    )
+    .next().done;
 
 export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
   const texts = TextDocumentState.paragraphs(doc).map((p) => p.text);
@@ -34,7 +38,7 @@ export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
     characters,
     words,
     pages: Math.max(1, Math.ceil(words / TEXT_DOCUMENT_WORDS_PER_PAGE)),
-    hasContent: characters > 0 || holdsPicture(TextDocumentState.body(doc)),
+    hasContent: characters > 0 || holdsObject(TextDocumentState.body(doc)),
     searchText: [
       ...texts,
       ...liveStoryIds(doc).flatMap((id) =>

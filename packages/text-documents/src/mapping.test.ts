@@ -113,7 +113,7 @@ describe('WordprocessingML properties as files write them', () => {
     });
     expect(
       a!.inlines.map((i) =>
-        i.type === 'kept' ? i.name : i.type === 'note' || i.type === 'picture' ? '' : i.text,
+        i.type === 'kept' ? i.name : i.type === 'run' || i.type === 'field' ? i.text : '',
       ),
     ).toEqual(['a\n\u2011\u00ad', 'br']);
     expect(a!.inlines[0]!.props).toEqual({

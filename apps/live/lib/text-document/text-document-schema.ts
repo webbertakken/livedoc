@@ -9,6 +9,7 @@ import {
   type NodeSpec,
 } from 'prosemirror-model';
 import {
+  EQUATION,
   FIELD,
   FIELD_ATTRIBUTES,
   FOOTNOTE,
@@ -29,6 +30,7 @@ import { cssText, paragraphDeclarations, textDeclarations } from './text-documen
 import { paperFill, paperInk } from './text-document-paper';
 import { tableNodeSpecs } from './text-document-table-dom';
 import { pictureNodeSpec } from './text-document-pictures';
+import { equationNodeSpec } from './text-document-equations';
 
 const fieldText = (text: unknown): string => (typeof text === 'string' ? text : '');
 
@@ -192,6 +194,8 @@ const nodes: Record<string, NodeSpec> = {
   },
   // A picture in line (objects.md "In the editor"), drawn from its media by its node view.
   [PICTURE]: pictureNodeSpec,
+  // An equation (objects.md "Equations in the editor"), drawn as MathML.
+  [EQUATION]: equationNodeSpec,
   // A page number or page count (page-layout.md "Page numbers"): one character to the caret, drawn in its own
   // formatting with the text it last showed; copied as that text.
   [FIELD]: {

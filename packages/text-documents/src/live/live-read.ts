@@ -21,12 +21,14 @@ import { isMappedPictureType } from '@livedoc/office-packages';
 import { Pictures, type DocumentMedia, type Picture, type PictureMedia } from '../model/pictures';
 import { PictureColours } from '../model/picture-colours';
 import { PicturePlacements } from '../model/picture-placement';
+import { Equations, type Equation } from '../model/equations';
 import { Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
   TABLE,
+  EQUATION,
   FIELD,
   FOOTNOTE,
   KEPT_INLINE,
@@ -132,6 +134,21 @@ function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): I
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Picture['kept'],
+        }),
+      );
+      continue;
+    }
+    if (child instanceof Y.XmlElement && child.nodeName === EQUATION) {
+      const a = child.getAttributes() as Attributes;
+      inlines.push(
+        defined<Equation>({
+          type: 'equation',
+          // Maths the model cannot hold read as an empty equation, so the atom and every position after it stay.
+          math: Equations.of(a.math) ?? [],
+          props: a.props ?? {},
+          style: a.style as string | undefined,
+          link: a.link as string | undefined,
+          kept: a.kept as Equation['kept'],
         }),
       );
       continue;

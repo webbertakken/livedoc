@@ -4,6 +4,7 @@
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
 A horizontal line, special characters and emoji are inserted, emoji also from the colon list.
+An equation is held, read and written in both formats, kept in the live state and drawn.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -292,9 +293,97 @@ matrix).
 
 ## Equations
 
-- Insert > Equation, or View > Show equation toolbar: an equation at the caret with Google's toolbar (Greek letters,
-  miscellaneous operations, relations, maths operators, arrows), and its typed shortcuts (`\alpha`, `\frac`, `^`, `_`).
-- Held as MathML (ODF) or OMML (OOXML), converted between them on conversion.
+Insert > Equation, or View > Show equation toolbar: an equation at the caret, written in its own box with Google's
+equation toolbar and its typed shortcuts. An equation is held as a tree of maths, MathML in ODF and OMML in OOXML.
+
+### The equation model
+
+An equation is an inline of a paragraph, beside runs, fields, notes and pictures
+([Standard mapping](standard-mapping.md#the-model)).
+
+- **`Equation`**: its maths (`math`), a row, and the formatting and link of the run it sits in; its maths take the
+  run's size and colour, in the maths font.
+- **A row** is a list of maths nodes, drawn one after another. A node is one of:
+  - **Tokens**: an **identifier** (a letter, or a word such as `sin` drawn upright), a **number** (digits with a
+    point), an **operator** (one character that is neither: `+`, `=`, `≤`, `→`, `(` …) or **text** (words drawn as
+    text, upright, their spaces kept); each holds its characters.
+  - **Fraction**: a numerator row over a denominator row.
+  - **Scripts**: a base row with a subscript row, a superscript row, or both.
+  - **Root**: a radicand row under the radical sign, with an index row for an nth root; none is a square root.
+  - **Large operator**: an operator character (`∑`, `∏`, `∐`, `⋂`, `⋃`, `∫`, `∮` …) with a lower and an upper limit
+    row, either empty for none, and the body row it applies to. Integrals take their limits as scripts beside the
+    sign, the others under and over it, as Word and Google draw them.
+  - **Fence**: a body row between an opening and a closing character (`(` `)`, `[` `]`, `{` `}`, `|` `|` …), either
+    empty for none, drawn as tall as the body.
+  - **Accent**: a base row with an accent character over it (`^`, `~`, `¯`, `→`, `˙`, `¨`).
+  - **Under and over**: a base row with a row under it, a row over it, or both (`lim` with `a→b` under it).
+- **Limits**: an equation holds at most 2,000 nodes, nested at most 32 deep (default); an equation past either is kept
+  as its file has it.
+
+### Equations in the formats
+
+| Model          | ODF (MathML in `draw:object`)                                     | OOXML (OMML)                                     |
+| -------------- | ----------------------------------------------------------------- | ------------------------------------------------ |
+| Equation       | `draw:frame` anchored `as-char`, its `draw:object` holding `math` | `m:oMath` in the paragraph                       |
+| Identifier     | `mi`                                                              | `m:r`, a word upright by `m:sty` `p`             |
+| Number         | `mn`                                                              | `m:r`                                            |
+| Operator       | `mo`                                                              | `m:r`                                            |
+| Text           | `mtext`                                                           | `m:r` with `m:nor`                               |
+| Fraction       | `mfrac`                                                           | `m:f` (`m:num`, `m:den`)                         |
+| Scripts        | `msub`, `msup`, `msubsup`                                         | `m:sSub`, `m:sSup`, `m:sSubSup`                  |
+| Root           | `msqrt`, `mroot`                                                  | `m:rad` (`m:degHide` without an index)           |
+| Large operator | `munderover` or `msubsup` (and the one-limit forms) on its `mo`   | `m:nary` (`m:chr`, `m:limLoc`, `m:sub`, `m:sup`) |
+| Fence          | `mrow` opening and closing with fence `mo`s                       | `m:d` (`m:begChr`, `m:endChr`)                   |
+| Accent         | `mover` `accent="true"`                                           | `m:acc` (`m:chr`)                                |
+| Under and over | `munder`, `mover`, `munderover`                                   | `m:limLow`, `m:limUpp`, one inside the other     |
+
+- **Read, ODF**: a frame in line whose object holds MathML, in the frame (a flat file) or as its own formula part
+  (`Object 1/content.xml`, its root MathML's `math`). `semantics` reads as
+  its first child, its annotations (LibreOffice's StarMath) and the replacement image left behind; `mrow` reads as
+  its children, or as a fence when it opens and closes with fence characters; a large operator's body is the node
+  after it. A frame of any other anchor, or holding anything else, is kept.
+- **Read, OOXML**: `m:oMath` in a paragraph; an `m:oMathPara` reads as its equations, its paragraph centred (as
+  LibreOffice reads it). A run's characters read as tokens: digits with a point a number, a word upright (`m:sty`
+  `p`) one identifier, each other letter an identifier, each other character an operator, spaces dropped; `m:nor`
+  reads as text. `m:func` reads as its name then its argument. Word's run formatting inside the maths
+  (`w:rPr`) gives the equation its size and colour from its first run; its maths font is left behind.
+- **Kept**: an equation holding what the model does not map (a matrix, an equation array, a box, a phantom, styled
+  letters other than upright words, …) is kept whole, as its file has it, and drawn as a kept inline.
+- **Written, ODF**: a frame anchored `as-char` holding `math` in the MathML namespace inside its `draw:object`, its
+  row in one `mrow`, in the content part (both the flat and the zipped file); no style or replacement image, which
+  LibreOffice gives a formula on reading (default). LibreOffice scales a formula into its frame and works out no size
+  of its own, so the frame is sized to hold the maths as LibreOffice lays them out at its base size, 12 pt, within a
+  fifth (default); LibreOffice draws ODF maths at that size, whatever the run's.
+- **Written, OOXML**: `m:oMath`, each token its own `m:r` in the maths font Cambria Math with the equation's size and
+  colour; a paragraph that holds only equations writes them in one `m:oMathPara`, centred, as Word writes a display
+  equation.
+- **Conversion** carries an equation through the model: MathML to OMML and back, nothing lost that the model holds.
+
+### Equations in the editor
+
+- The live state holds an equation as an `equation` atom inside its paragraph, its maths and formatting as
+  attributes ([Live editing and storage](live-editing-and-storage.md#the-layout)).
+- The editor draws an equation in line as MathML, in the browser's own maths layout, in display style as Google
+  draws it (fractions full size, limits under and over), in the maths font LiveDoc serves, STIX Two Math, so every
+  screen lays it out alike (default; [Fonts](../004-interface-design/fonts.md#served-from-livedoc)); it is one
+  character to the caret, and can be selected, copied, moved and deleted, as a picture can. Copied as text, it reads
+  as its linear form (`a/b`, `x^2`, `√z`).
+- **The equation box**: a press on an equation, or the caret moving into it, puts the caret inside its box, a frame
+  drawn round it; the caret moves through its rows with the arrow keys and leaves it at either end. Typing writes
+  tokens at the caret; Backspace and Delete remove the token beside the caret, or, at a row's start, the structure it
+  opens, its rows' content kept in its place (default). An empty row shows a dotted box. Escape, or a press outside,
+  leaves the box.
+- **Typed shortcuts**: `\` and a name, then a space, writes what the name stands for: the toolbar's symbols by their
+  names (`\alpha`, `\leq`, `\rightarrow` …), and structures (`\frac`, `\sqrt`, `\rootof`, `\subscript`,
+  `\superscript`, `\subsuperscript`, `\sum`, `\prod`, `\int`, `\oint`, `\lim`, …) with the caret in their first empty
+  row, as Google's names. `^` and `_` (also after `\`, as Google's help gives them) put what follows in a superscript
+  or subscript of the token before the caret.
+- **The equation toolbar** (View > Show equation toolbar; shown while an equation is being written): **New equation**,
+  then the menus Greek letters, Miscellaneous operations, Relations, Math operators and Arrows, each a grid of
+  symbols, Google's sets (default, until a capture): a press writes it at the caret, in an equation, a new one if the
+  caret is outside one.
+- **Insert > Equation** inserts an empty equation at the caret, the caret in its box, and shows the toolbar.
+- Undo takes back an equation's typing as Google's, a word at a time, as typing in text does.
 
 ## Special characters
 

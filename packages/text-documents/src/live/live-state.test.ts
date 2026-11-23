@@ -16,6 +16,7 @@ import {
   FIELD,
   FOOTNOTE,
   MEDIA_MAP,
+  EQUATION,
   PICTURE,
   KEPT_BLOCK,
   KEPT_INLINE,
@@ -284,6 +285,32 @@ describe('the live layout', () => {
       expect(textDocumentDigest(alone)).toMatchObject({ characters: 0, hasContent: true });
     },
   );
+
+  // objects.md "Equations in the editor": an equation an atom of its own, its maths one whole value; maths the model
+  // cannot hold read as an empty equation; a body holding only an equation has content.
+  it.each(['odf', 'ooxml'] as const)('reads equations back as written (%s)', (format) => {
+    const document = CONSTRUCTS.equations!(format);
+    expect(wholeOf(live(document))).toBe(wholeOf(document));
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+    const body = TextDocumentState.body(doc);
+    const first = body.get(0) as Y.XmlElement;
+    expect(first.toArray().map((n) => (n instanceof Y.XmlElement ? n.nodeName : 'text'))).toEqual([
+      'text',
+      EQUATION,
+      'text',
+    ]);
+    const only = { ...document, body: [document.body[1]!] };
+    const alone = TextDocumentState.load([TextDocumentState.fromDocument(only)]);
+    expect(textDocumentDigest(alone)).toMatchObject({ characters: 0, hasContent: true });
+    ((body.get(1) as Y.XmlElement).get(0) as Y.XmlElement).setAttribute('math', [
+      { kind: 'matrix' },
+    ] as never);
+    const back = TextDocumentState.document(doc, format);
+    const second = back.body[1]!;
+    expect(second.type === 'paragraph' && second.inlines).toEqual([
+      { type: 'equation', math: [], props: {} },
+    ]);
+  });
 
   it('makes a table merged edits left uneven whole, drops one with no rows, and gives a column without a width one', () => {
     const doc = TextDocumentState.load([TextDocumentState.fromDocument(CONSTRUCTS.tables!('odf'))]);
