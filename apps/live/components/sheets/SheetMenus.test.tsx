@@ -403,7 +403,9 @@ describe('a header menu', () => {
     expect(screen.getByRole<HTMLInputElement>('radio', { name: /row height/ }).checked).toBe(true);
     fireEvent.click(screen.getByRole('radio', { name: 'Fit to data' }));
     fireEvent.click(screen.getByRole('radio', { name: /row height/ }));
-    expect(screen.getByRole<HTMLInputElement>('radio', { name: 'Fit to data' }).checked).toBe(false);
+    expect(screen.getByRole<HTMLInputElement>('radio', { name: 'Fit to data' }).checked).toBe(
+      false,
+    );
     fireEvent.click(btn('Cancel'));
     expect(layout(h).rowSize?.[layout(h).rows[1]!]).toBeUndefined();
     expect(h.ctl().menu).toBeNull();

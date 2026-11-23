@@ -154,22 +154,22 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 
 ## Rows and columns
 
-| Action                                             | PC                | Mac                  | ChromeOS          | Status    |
-| -------------------------------------------------- | ----------------- | -------------------- | ----------------- | --------- |
+| Action                                             | PC                | Mac                  | ChromeOS          | Status                                                  |
+| -------------------------------------------------- | ----------------- | -------------------- | ----------------- | ------------------------------------------------------- |
 | Insert rows above (with rows selected)             | `Ctrl+Alt+=`      | `⌘+Option+=`         | `Ctrl+Alt+=`      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Insert rows below                                  | —                 | —                    | —                 | specified |
+| Insert rows below                                  | —                 | —                    | —                 | specified                                               |
 | Insert columns to the left (with columns selected) | `Ctrl+Alt+=`      | `⌘+Option+=`         | `Ctrl+Alt+=`      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Insert columns to the right                        | —                 | —                    | —                 | specified |
+| Insert columns to the right                        | —                 | —                    | —                 | specified                                               |
 | Delete rows (with rows selected)                   | `Ctrl+Alt+-`      | `⌘+Option+-`         | `Ctrl+Alt+-`      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Delete columns (with columns selected)             | `Ctrl+Alt+-`      | `⌘+Option+-`         | `Ctrl+Alt+-`      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Hide row                                           | `Ctrl+Alt+9`      | `⌘+Option+9`         | `Ctrl+Alt+9`      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Unhide row                                         | `Ctrl+Shift+9`    | `⌘+Shift+9`          | `Ctrl+Shift+9`    | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Hide column                                        | `Ctrl+Alt+0`      | `⌘+Option+0`         | `Ctrl+Alt+0`      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Unhide column                                      | `Ctrl+Shift+0`    | `⌘+Shift+0`          | `Ctrl+Shift+0`    | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Group rows or columns                              | `Alt+Shift+Right` | `Option+Shift+Right` | `Alt+Shift+Right` | specified |
-| Ungroup rows or columns                            | `Alt+Shift+Left`  | `Option+Shift+Left`  | `Alt+Shift+Left`  | specified |
-| Expand grouped rows or columns                     | `Alt+Shift+Down`  | `Option+Shift+Down`  | `Alt+Shift+Down`  | specified |
-| Collapse grouped rows or columns                   | `Alt+Shift+Up`    | `Option+Shift+Up`    | `Alt+Shift+Up`    | specified |
+| Group rows or columns                              | `Alt+Shift+Right` | `Option+Shift+Right` | `Alt+Shift+Right` | specified                                               |
+| Ungroup rows or columns                            | `Alt+Shift+Left`  | `Option+Shift+Left`  | `Alt+Shift+Left`  | specified                                               |
+| Expand grouped rows or columns                     | `Alt+Shift+Down`  | `Option+Shift+Down`  | `Alt+Shift+Down`  | specified                                               |
+| Collapse grouped rows or columns                   | `Alt+Shift+Up`    | `Option+Shift+Up`    | `Alt+Shift+Up`    | specified                                               |
 
 ## Formulas
 
