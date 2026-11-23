@@ -47,7 +47,8 @@ export function sheetPointerMenu({ controller, local, hitAt, pan }: MenuDeps) {
     const h = hitAt(x, y);
     selectFor(h);
     if (h.kind === 'cell') cc.setMenu({ kind: 'cell', x: clientX, y: clientY });
-    else if (h.kind === 'band') cc.setMenu({ kind: 'outline', axis: h.axis, x: clientX, y: clientY });
+    else if (h.kind === 'band')
+      cc.setMenu({ kind: 'outline', axis: h.axis, x: clientX, y: clientY });
     else if (h.kind === 'col' || h.kind === 'row')
       cc.setMenu({
         kind: 'header',
