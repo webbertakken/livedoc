@@ -112,8 +112,8 @@ none is pointer-only for one level and not another.
 
 ## Limits
 
-| Constant                    | Value | Why                                                                                           |
-| --------------------------- | ----- | --------------------------------------------------------------------------------------------- |
+| Constant                    | Value | Why                                                                                                           |
+| --------------------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
 | `PDF_TREE_MAX_NODES_A_PAGE` | 5,000 | `(default)` Past it the rest is joined into the last paragraph; a page of plans has tens of thousands of runs |
 
 ## Tests
