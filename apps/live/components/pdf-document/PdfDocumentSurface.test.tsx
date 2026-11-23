@@ -889,6 +889,6 @@ describe('a PDF document’s context menu', () => {
     // A Viewer is offered no Highlight.
     expect(within(menu).queryByRole('menuitem', { name: /^Highlight/ })).toBeNull();
     fireEvent.click(within(menu).getByRole('menuitem', { name: /Find “fox”/ }));
-    expect((screen.getByRole('searchbox', { name: 'Find' }) as HTMLInputElement).value).toBe('fox');
+    expect(screen.getByRole<HTMLInputElement>('searchbox', { name: 'Find' }).value).toBe('fox');
   });
 });

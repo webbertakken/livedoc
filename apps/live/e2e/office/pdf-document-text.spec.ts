@@ -106,7 +106,7 @@ test('a PDF’s links go to their place and ask before an address, and Previous 
   expectNoPageErrors(pageErrors);
 });
 
-// "Find": ⌘F opens the field; a query is counted and tinted, Enter steps to the next page's match, All results lists
+// "Find", "The context menu": ⌘F opens the field; a query is counted and tinted, Enter steps to the next page's match, All results lists
 // each by page, and Escape closes it, its tints gone.
 test('a PDF’s text is found, stepped through and listed', async ({ page, pageErrors }) => {
   test.setTimeout(120_000);
@@ -120,10 +120,23 @@ test('a PDF’s text is found, stepped through and listed', async ({ page, pageE
     .getByRole('group', { name: 'Page and zoom' })
     .getByRole('textbox', { name: 'Page' });
 
-  await page.locator('[data-pdf-pages]').focus();
-  await page.keyboard.press('ControlOrMeta+f');
+  // "The context menu": a right-click on a word selected offers Find with it.
+  const first = page.locator('[data-pdf-page="1"]');
+  const box = (await first.boundingBox())!;
+  const scale = box.width / 612;
+  await page.mouse.dblclick(box.x + 100 * scale, box.y + 68 * scale);
+  await page.mouse.click(box.x + 100 * scale, box.y + 68 * scale, { button: 'right' });
+  const menu = page.getByRole('menu', { name: 'Context menu' });
+  await expect(menu.getByRole('menuitem', { name: /^Copy/ })).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('pdf-context-menu-dark.png') });
+  await menu.getByRole('menuitem', { name: /Find “quick”/ }).click();
   const search = page.getByRole('search', { name: 'Find in this PDF' });
   const field = search.getByRole('searchbox', { name: 'Find' });
+  await expect(field).toHaveValue('quick');
+  await expect(search.getByRole('status')).toHaveText('1 of 3');
+
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('ControlOrMeta+f');
   await expect(field).toBeFocused();
   await field.fill('page');
   await expect(search.getByRole('status')).toHaveText('1 of 3');

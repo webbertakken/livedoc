@@ -41,7 +41,6 @@ import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
   DOWNLOAD_PDF,
-  FIND,
   GO_TO_PAGE,
   PDF_MENUS,
   REDO,
@@ -64,12 +63,9 @@ import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
 import { usePdfPagesInput } from '@/lib/pdf-document/usePdfPagesInput';
 import { usePdfLayerView } from '@/lib/pdf-document/usePdfLayerView';
 import { usePdfLinks } from '@/lib/pdf-document/usePdfLinks';
-import { usePdfTextActions } from '@/lib/pdf-document/usePdfTextActions';
-import { usePdfTextSelection } from '@/lib/pdf-document/usePdfTextSelection';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
 import { usePdfViewHistory } from '@/lib/pdf-document/usePdfViewHistory';
-import { usePdfFind } from '@/lib/pdf-document/usePdfFind';
-import { usePdfContextMenu } from '@/lib/pdf-document/usePdfContextMenu';
+import { usePdfReadingText } from '@/lib/pdf-document/usePdfReadingText';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
@@ -240,23 +236,6 @@ export function PdfDocumentSurface({
     engine: ready?.engine ?? null,
     goTo: jump,
   });
-  // "Selecting text", "Copy": the person's own selection on the pages.
-  const textSelection = usePdfTextSelection(ready?.engine ?? null, pages);
-  const textActions = usePdfTextActions({
-    selected: textSelection.selected,
-    selectAll: textSelection.selectAll,
-    page: viewer.page,
-    mayCopy: ready?.permissions.copy ?? false,
-    onProblem: setProblem,
-  });
-  // "Find": the field on the pages, its results tinted and listed; going to one is a jump.
-  const find = usePdfFind({
-    engine: ready?.engine ?? null,
-    pages: pages ?? NO_PAGES,
-    turns: viewer.view.turns,
-    jump,
-    follow: links.follow,
-  });
   const { reveal } = panels;
   const leftOpen = panels.open.left;
   // ⌘⌥⇧T: focus in the left panel open, or Thumbnails opened.
@@ -352,23 +331,22 @@ export function PdfDocumentSurface({
     [ready, author],
   );
 
-  // "The context menu" on the pages: the shell's, its own Highlight and Find "…" acting on the selected text.
-  const { ask: askFind, actions: findActions } = find;
-  const findSelection = useCallback(
-    (query: string) => {
-      findActions[FIND]?.run();
-      askFind(query);
-    },
-    [findActions, askFind],
-  );
-  const contextMenu = usePdfContextMenu({
-    pages: pagesElement,
-    selected: textSelection.selected,
+  // "Selecting text", "Copy", "Find", "The context menu": the person's own reading of the pages' text.
+  const reading = usePdfReadingText({
+    engine: ready?.engine ?? null,
+    pages,
+    page: viewer.page,
+    turns: viewer.view.turns,
+    pagesElement,
+    mayCopy: ready?.permissions.copy ?? false,
     marking,
+    jump,
+    follow: links.follow,
+    step: history.step,
     onHighlight,
-    onFind: findSelection,
-    clear: textSelection.clear,
+    onProblem: setProblem,
   });
+  const { selection: textSelection, find } = reading;
 
   const actions: OfficeActions = useMemo(
     () => ({
@@ -378,10 +356,8 @@ export function PdfDocumentSurface({
         ? {
             ...viewChrome.actions,
             ...panels.actions,
-            ...textActions.actions,
             ...history.actions,
-            ...find.actions,
-            ...contextMenu.actions,
+            ...reading.actions,
             [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -414,10 +390,8 @@ export function PdfDocumentSurface({
       ready,
       viewChrome,
       panels.actions,
-      textActions.actions,
       history.actions,
-      find.actions,
-      contextMenu.actions,
+      reading.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -431,24 +405,9 @@ export function PdfDocumentSurface({
   // The tools' own keys, heard anywhere on the surface but a text field (keyboard-shortcuts.md "Tools").
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (typesText(event.target)) return;
-    const key = event.key.toLowerCase();
-    // ⌘A on the pages selects the page in view's text ("Selecting text"); elsewhere it is the browser's.
-    const onPages = event.target === pagesElement;
-    if (ready && onPages && key === 'a' && (event.ctrlKey || event.metaKey) && !event.altKey) {
-      event.preventDefault();
-      return textSelection.selectAll(viewer.page);
-    }
-    // ⌘C copies the text selected on the pages; with none selected it is the browser's ("Copy").
-    const command = (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey;
-    if (command && key === 'c' && textActions.copyKey()) return event.preventDefault();
-    // ⌥← and ⌥→: Previous view and Next view; with nowhere to go the keys stay the browser's.
-    const alone = !event.ctrlKey && !event.metaKey && !event.shiftKey;
-    if (event.altKey && alone && (key === 'arrowleft' || key === 'arrowright')) {
-      if (history.step(key === 'arrowleft' ? 'back' : 'forward')) event.preventDefault();
-      return;
-    }
+    if (reading.onKey(event)) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (key === 'escape' && textSelection.selected) textSelection.clear();
+    const key = event.key.toLowerCase();
     if (key === PDF_TOOL_KEYS.highlight && marking) pickTool('highlight');
     else if ((key === PDF_TOOL_KEYS.select || key === 'escape') && inHand !== 'select')
       pickTool('select');
@@ -489,7 +448,7 @@ export function PdfDocumentSurface({
         toolbar={pdfToolbar(mode)}
         choices={ready ? viewChrome.choices : null}
         mode={open.phase === 'ready' ? choice : null}
-        contextMenu={ready ? contextMenu.source : null}
+        contextMenu={ready ? reading.contextMenu : null}
       />
       {open.phase === 'opening' ? (
         // A page-shaped placeholder on the surface's ground, so nothing shifts when page one arrives.
