@@ -24,6 +24,14 @@ async function write(page: Page, paragraphs: readonly string[]) {
   }
 }
 
+// The caret at the writing's start, collapsed. Not a click on the first paragraph: the empty body `write` clicked is
+// one line tall, so that click lands on the same point within ProseMirror's 500ms and counts as a double-click,
+// selecting a word, and Format > Columns then encloses the selection in a section of its own.
+async function caretToStart(page: Page) {
+  await page.locator(BODY).focus();
+  await page.keyboard.press('ControlOrMeta+Home');
+}
+
 const boxOf = (page: Page, index: number) =>
   page
     .locator(`${BODY} > p`)
@@ -156,8 +164,7 @@ test('a column break starts the next column, dimmed in one column, one undo step
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 
-  // The caret into the first paragraph by the keyboard: a click where write() clicked moments ago is a double-click.
-  await page.keyboard.press('ControlOrMeta+Home');
+  await caretToStart(page);
   await (await officeMenuItem(page, ['Format', 'Columns', 'Two columns'])).click();
   // The caret at the second paragraph's start: the break moves it to the second column.
   await body.locator('> p').nth(1).click();
@@ -188,8 +195,7 @@ test("the ruler shows the caret's column: the gap grey, its indents at the colum
   await newDocument(page);
   await write(page, ['First column', 'Second column']);
   const body = page.locator(BODY);
-  // The caret into the first paragraph by the keyboard: a click where write() clicked moments ago is a double-click.
-  await page.keyboard.press('ControlOrMeta+Home');
+  await caretToStart(page);
   await (await officeMenuItem(page, ['Format', 'Columns', 'Two columns'])).click();
   await body.locator('> p').nth(1).click();
   await page.keyboard.press('Home');
