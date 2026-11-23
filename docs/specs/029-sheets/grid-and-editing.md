@@ -200,9 +200,13 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
 - **The outline bar**: once a sheet has a row group, a band left of the row numbers, 12 px a depth and 4 px more, and
   for column groups a band above the column letters (default, D162). A group draws as a bracket along its lines
   ending in its control, − when expanded and + when collapsed, on the line just before it, as Google's does; on the
-  line just after it when the group starts at the first line or the sheet puts the controls after. Right-clicking
-  the band opens Expand all row groups, Collapse all row groups and **Move +/- button to the bottom** (**to the
-  top**; for columns **to the right**, **to the left**).
+  line just after it when the group starts at the first line or the sheet puts the controls after. A control with no
+  line on its side takes the other; a group of every line has none, and View › Group expands it. The bands stay when
+  the sheet hides its headers (default, D165). Right-clicking the band opens Expand all row groups, Collapse all row
+  groups and, for an Editor, **Move +/- button to the bottom** (**to the top**; for columns **to the right**, **to
+  the left**).
+- Each control is a button named for what it does, **Collapse rows 3 - 5** or **Expand rows 3 - 5**, saying whether
+  its group is expanded; the brackets are a picture to a screen reader.
 - Collapsed lines are hidden lines in every way (moving the cursor passes them; charts and `SUBTOTAL`'s 101 to 111
   leave them out) but draw no double arrow: Show never expands a group, and Hide never collapses one.
 - Lines inserted between two lines of a group join it (the lesser depth of the two), deleted lines take their depth

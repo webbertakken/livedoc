@@ -6,6 +6,10 @@ import {
   lucideArrowDownAZ,
   lucideArrowUpZA,
   lucideBetweenHorizontalEnd,
+  lucideFoldVertical,
+  lucideGroup,
+  lucideUngroup,
+  lucideUnfoldVertical,
   lucideBetweenHorizontalStart,
   lucideBetweenVerticalEnd,
   lucideBetweenVerticalStart,
@@ -217,6 +221,10 @@ export const SortZToAIcon = prims(lucideArrowUpZA);
 export const MergeCellsIcon = prims(lucideTableCellsMerge);
 export const UnmergeCellsIcon = prims(lucideTableCellsSplit);
 export const HideIcon = prims(lucideEyeOff);
+export const GroupIcon = prims(lucideGroup);
+export const UngroupIcon = prims(lucideUngroup);
+export const CollapseGroupsIcon = prims(lucideFoldVertical);
+export const ExpandGroupsIcon = prims(lucideUnfoldVertical);
 export const PasteValuesIcon = prims(lucideClipboardType);
 export const FormattingIcon = prims(lucidePaintbrush);
 

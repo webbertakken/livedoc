@@ -4,6 +4,7 @@
 import {
   axisOffsets,
   colWidth,
+  deepestOf,
   indexAtOffset,
   layoutIndex,
   posRangeOf,
@@ -15,6 +16,9 @@ import {
 
 export const ROW_HEADER_PX = 46;
 export const COL_HEADER_PX = 24;
+// The outline bar (grid-and-editing.md "Groups and the outline", D162): a lane a depth, and room around them.
+export const OUTLINE_DEPTH_PX = 12;
+export const OUTLINE_BAND_PAD_PX = 4;
 const GRID_OVERSCAN = 4;
 
 export type Geometry = {
@@ -35,11 +39,20 @@ export type Geometry = {
   // control expands it (grid-and-editing.md "Groups and the outline").
   userHiddenRow: (r: number) => boolean;
   userHiddenCol: (c: number) => boolean;
-  // The row numbers' width and the column letters' height: ROW_HEADER_PX and COL_HEADER_PX, or 0 when the sheet
-  // hides its headers (Sheet Settings).
+  // The outline bands left of the row numbers and above the column letters: 0 without groups (D162), kept when the
+  // sheet hides its headers (D165).
+  bandW: number;
+  bandH: number;
+  // Everything before the cells: the band, then the row numbers' width and the column letters' height
+  // (ROW_HEADER_PX and COL_HEADER_PX, or 0 when the sheet hides its headers, Sheet Settings).
   headW: number;
   headH: number;
 };
+
+function outlineBand(layout: SheetLayout, axis: 'r' | 'c'): number {
+  const deepest = deepestOf(layout, axis);
+  return deepest ? deepest * OUTLINE_DEPTH_PX + OUTLINE_BAND_PAD_PX : 0;
+}
 
 // `heightOf` says how tall each row is drawn (rowHeights: an automatic row fits its text, sheet.md "Row height");
 // without it, a layout's own sizes.
@@ -64,6 +77,8 @@ export function geometryOf(
     for (let r = p.r1; r <= p.r2; r++)
       for (let c = p.c1; c <= p.c2; c++) covered.set(`${r},${c}`, key);
   }
+  const bandW = outlineBand(layout, 'r');
+  const bandH = outlineBand(layout, 'c');
   return {
     rows,
     cols,
@@ -73,8 +88,10 @@ export function geometryOf(
     frozenWidth: cols[frozenCols]!,
     merges,
     covered,
-    headW: layout.showHeaders === false ? 0 : ROW_HEADER_PX,
-    headH: layout.showHeaders === false ? 0 : COL_HEADER_PX,
+    bandW,
+    bandH,
+    headW: bandW + (layout.showHeaders === false ? 0 : ROW_HEADER_PX),
+    headH: bandH + (layout.showHeaders === false ? 0 : COL_HEADER_PX),
     hiddenRow: (r) => hiddenRows.has(layout.rows[r]!),
     hiddenCol: (c) => ix.hiddenCols.has(layout.cols[c]!),
     userHiddenRow: (r) => ix.handHiddenRows.has(layout.rows[r]!),
@@ -139,6 +156,8 @@ export type Hit =
   | { kind: 'col'; c: number; edge: boolean }
   | { kind: 'row'; r: number; edge: boolean }
   | { kind: 'corner' }
+  // The outline bands (D162): their controls are buttons of their own; the band itself selects nothing.
+  | { kind: 'band'; axis: 'r' | 'c' }
   | { kind: 'none' };
 
 const RESIZE_HIT_PX = 4;
@@ -165,6 +184,8 @@ export function hitTest(
   const inColHead = y < g.headH;
   const inRowHead = x < g.headW;
   if (inColHead && inRowHead) return { kind: 'corner' };
+  if (x < g.bandW) return { kind: 'band', axis: 'r' };
+  if (y < g.bandH) return { kind: 'band', axis: 'c' };
   const gx = x - g.headW;
   const gy = y - g.headH;
   const total = totalSize(g);

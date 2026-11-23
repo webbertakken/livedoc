@@ -6,6 +6,9 @@ import {
   FONT_SIZE_MAX,
   FONT_SIZE_MIN,
   columnLetters,
+  groupedWithin,
+  outlineOf,
+  type SheetLayout,
   type CellFormat,
   type FormatPatch,
   type GridRange,
@@ -39,7 +42,13 @@ export type GridMenuActions = {
   copy: () => void;
   paste: () => void;
   pasteSpecial: (mode: PasteSpecialMode) => void;
+  group: (axis: Axis) => void;
+  ungroup: (axis: Axis) => void;
+  foldAll: (axis: Axis, collapsed: boolean) => void;
 };
+
+/** An axis's groups as the menus read them: any in the selection's lines, any collapsed, any expanded. */
+export type GridMenuOutline = { selected: boolean; collapsed: boolean; expanded: boolean };
 
 /** What the grid offers the menus: the role, the selection, the active cell's look, the sheet's layout. */
 export type GridMenuPort = {
@@ -55,6 +64,7 @@ export type GridMenuPort = {
   frozenCols: number;
   showGrid: boolean;
   filtered: boolean;
+  outline: Record<Axis, GridMenuOutline>;
   act: GridMenuActions;
 };
 
@@ -89,6 +99,25 @@ function writeBindings(port: GridMenuPort): Record<string, OfficeAction> {
   };
 }
 
+// Expand all and Collapse all, anyone's: an Editor's for everyone, anyone else's for themselves (D163).
+function foldBindings(port: GridMenuPort): Record<string, OfficeAction> {
+  const { act, outline } = port;
+  return {
+    'expand-all-row-groups': run(() => act.foldAll('r', false), {
+      disabled: !outline.r.collapsed,
+    }),
+    'collapse-all-row-groups': run(() => act.foldAll('r', true), {
+      disabled: !outline.r.expanded,
+    }),
+    'expand-all-column-groups': run(() => act.foldAll('c', false), {
+      disabled: !outline.c.collapsed,
+    }),
+    'collapse-all-column-groups': run(() => act.foldAll('c', true), {
+      disabled: !outline.c.expanded,
+    }),
+  };
+}
+
 function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
   const { act, range: g, format: f } = port;
   const rowsSelected = g.r2 - g.r1 + 1;
@@ -118,6 +147,16 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     'delete-rows': run(() => act.remove('r'), { label: `Delete ${spanLabel('r', g.r1, g.r2)}` }),
     'delete-columns': run(() => act.remove('c'), {
       label: `Delete ${spanLabel('c', g.c1, g.c2)}`,
+    }),
+    'group-rows': run(() => act.group('r'), { label: `Group ${spanLabel('r', g.r1, g.r2)}` }),
+    'group-columns': run(() => act.group('c'), { label: `Group ${spanLabel('c', g.c1, g.c2)}` }),
+    'ungroup-rows': run(() => act.ungroup('r'), {
+      label: `Ungroup ${spanLabel('r', g.r1, g.r2)}`,
+      disabled: !port.outline.r.selected,
+    }),
+    'ungroup-columns': run(() => act.ungroup('c'), {
+      label: `Ungroup ${spanLabel('c', g.c1, g.c2)}`,
+      disabled: !port.outline.c.selected,
     }),
     'delete-cells-shift-up': run(() => act.shift('deleteUp')),
     'delete-cells-shift-left': run(() => act.shift('deleteLeft')),
@@ -204,6 +243,19 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
   return out;
 }
 
+/** Each axis's groups as the menus read them, from the layout this person sees (D163). */
+export function gridMenuOutline(layout: SheetLayout, g: GridRange): Record<Axis, GridMenuOutline> {
+  const of = (axis: Axis, a: number, b: number): GridMenuOutline => {
+    const { groups } = outlineOf(layout, axis);
+    return {
+      selected: groupedWithin(layout, axis, a, b),
+      collapsed: groups.some((x) => x.collapsed),
+      expanded: groups.some((x) => !x.collapsed),
+    };
+  };
+  return { r: of('r', g.r1, g.r2), c: of('c', g.c1, g.c2) };
+}
+
 const fontSizeOf = (f: CellFormat | undefined) => f?.fs ?? FONT_SIZE_DEFAULT;
 
 /** A size asked for, kept whole and within the grid's limits; the default clears the cell's own (D128). */
@@ -240,6 +292,7 @@ export function gridOffice(port: GridMenuPort): GridOffice {
 export function gridMenuBindings(port: GridMenuPort): OfficeActions {
   return {
     copy: run(port.act.copy),
+    ...foldBindings(port),
     ...(port.canWrite ? writeBindings(port) : {}),
     ...(port.canWrite && port.canShape ? shapeBindings(port) : {}),
   };

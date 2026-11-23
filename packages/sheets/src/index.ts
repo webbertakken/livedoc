@@ -42,6 +42,7 @@ export * from './commands';
 export * from './commands-axis';
 export * from './outline';
 export * from './outline-commands';
+export { withFolds, type FoldChange } from './outline-store';
 export * from './merge-guards';
 export * from './commands-paste';
 export * from './paste-layout';

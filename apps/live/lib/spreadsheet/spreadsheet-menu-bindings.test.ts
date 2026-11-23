@@ -3,6 +3,7 @@ import { catalogueItems } from '@/lib/office/office-catalogue';
 import {
   bindingsSignature,
   gridMenuBindings,
+  gridMenuOutline,
   gridOffice,
   sheetFontSize,
   historyBindings,
@@ -32,7 +33,18 @@ const actions = (): GridMenuActions => ({
   copy: vi.fn(),
   paste: vi.fn(),
   pasteSpecial: vi.fn(),
+  group: vi.fn(),
+  ungroup: vi.fn(),
+  foldAll: vi.fn(),
 });
+
+const noGroups = { selected: false, collapsed: false, expanded: false };
+const FOLDS = [
+  'collapse-all-column-groups',
+  'collapse-all-row-groups',
+  'expand-all-column-groups',
+  'expand-all-row-groups',
+];
 
 const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
   canWrite: true,
@@ -46,6 +58,7 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
   frozenCols: 0,
   showGrid: true,
   filtered: false,
+  outline: { r: noGroups, c: noGroups },
   act: actions(),
   ...over,
 });
@@ -61,12 +74,12 @@ describe('gridMenuBindings', () => {
     for (const id of bound) expect(built, id).toContain(id);
   });
 
-  it('gives a Viewer Copy alone, a Participant the value items, an Editor the rest', () => {
-    expect(Object.keys(gridMenuBindings(port({ canWrite: false, canShape: false })))).toEqual([
-      'copy',
-    ]);
+  it('gives a Viewer Copy and the folds alone, a Participant the value items, an Editor the rest', () => {
+    expect(
+      Object.keys(gridMenuBindings(port({ canWrite: false, canShape: false }))).sort(),
+    ).toEqual(['copy', ...FOLDS].sort());
     expect(Object.keys(gridMenuBindings(port({ canShape: false }))).sort()).toEqual(
-      ['copy', 'cut', 'delete-values', 'paste', 'paste-values-only'].sort(),
+      ['copy', 'cut', 'delete-values', 'paste', 'paste-values-only', ...FOLDS].sort(),
     );
     expect(Object.keys(gridMenuBindings(port())).length).toBeGreaterThan(50);
   });
@@ -284,6 +297,52 @@ describe('gridMenuBindings', () => {
     expect(gridMenuBindings(port({ filtered: true }))['create-a-filter']!.label).toBe(
       'Remove Filter',
     );
+  });
+});
+
+// grid-and-editing.md "Groups and the outline": View › Group.
+describe('View › Group', () => {
+  it('groups and ungroups the selection’s lines, named, Ungroup dimmed where none is grouped', () => {
+    const p = port({ outline: { r: { ...noGroups, selected: true }, c: noGroups } });
+    const b = gridMenuBindings(p);
+    expect(b['group-rows']?.label).toBe('Group Rows 2 - 4');
+    expect(b['group-columns']?.label).toBe('Group Column B');
+    expect(b['ungroup-rows']).toMatchObject({ label: 'Ungroup Rows 2 - 4', disabled: false });
+    expect(b['ungroup-columns']).toMatchObject({ label: 'Ungroup Column B', disabled: true });
+    for (const id of ['group-rows', 'group-columns', 'ungroup-rows', 'ungroup-columns'])
+      b[id]!.run();
+    expect(p.act.group).toHaveBeenNthCalledWith(1, 'r');
+    expect(p.act.group).toHaveBeenNthCalledWith(2, 'c');
+    expect(p.act.ungroup).toHaveBeenNthCalledWith(1, 'r');
+    expect(p.act.ungroup).toHaveBeenNthCalledWith(2, 'c');
+  });
+
+  it('expands and collapses all, dimmed with nothing to fold', () => {
+    const p = port({
+      outline: { r: { ...noGroups, collapsed: true }, c: { ...noGroups, expanded: true } },
+    });
+    const b = gridMenuBindings(p);
+    expect(FOLDS.map((id) => b[id]!.disabled)).toEqual([false, true, true, false]);
+    for (const id of FOLDS) b[id]!.run();
+    expect(vi.mocked(p.act.foldAll).mock.calls).toEqual([
+      ['c', true],
+      ['r', true],
+      ['c', false],
+      ['r', false],
+    ]);
+  });
+
+  it('reads each axis’s groups from the layout', () => {
+    const layout = {
+      rows: ['ra', 'rb', 'rc', 'rd'],
+      cols: ['ca', 'cb'],
+      rowDepth: { rb: 1, rd: 1 },
+      rowCollapsed: [{ at: 'rd', depth: 1 }],
+    };
+    expect(gridMenuOutline(layout, { r1: 0, c1: 0, r2: 1, c2: 1 })).toEqual({
+      r: { selected: true, collapsed: true, expanded: true },
+      c: noGroups,
+    });
   });
 });
 

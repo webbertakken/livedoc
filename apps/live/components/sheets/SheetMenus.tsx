@@ -13,15 +13,16 @@ import {
   type SortKey,
 } from '@livedoc/sheets';
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
-import { MenuActionRow, MenuHeader } from '@/components/primitives/PortalMenu';
+import { MenuActionRow } from '@/components/primitives/PortalMenu';
 import { useSheetController } from './sheet-controller';
 import type { SheetActions } from './useSheetActions';
-import { useSheetClipboard } from './useSheetClipboard';
-import { Glyph, SheetCellMenu } from './SheetCellMenu';
-import { FilterIcon, SortIcon, ClearFormatIcon } from './sheet-icons';
-import { lineSpan } from '@/lib/spreadsheet/line-span';
+import { SheetCellMenu } from './SheetCellMenu';
+import { FilterIcon, SortIcon } from './sheet-icons';
 import { SheetLinesMenu } from './SheetLinesMenu';
 import { SheetResizeDialog } from './SheetResizeDialog';
+import { SheetHeaderMenu } from './SheetHeaderMenu';
+import { SheetGroupMenu } from './SheetGroupMenu';
+import { SheetOutlineMenu } from './SheetOutlineMenu';
 
 const CONDITION_LABELS: Record<NonNullable<FilterCondition['op']>, string> = {
   empty: 'Is empty',
@@ -45,16 +46,11 @@ const CONDITION_LABELS: Record<NonNullable<FilterCondition['op']>, string> = {
 
 export function SheetMenus({ actions }: { actions: SheetActions }) {
   const c = useSheetController();
-  const clip = useSheetClipboard();
   const menu = c.menu;
   if (!menu) return null;
   const close = () => {
     c.setMenu(null);
     c.focusGrid();
-  };
-  const act = (fn: () => void) => () => {
-    fn();
-    close();
   };
   if (menu.kind === 'cell')
     return <SheetCellMenu at={{ x: menu.x, y: menu.y }} actions={actions} onClose={close} />;
@@ -77,92 +73,26 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
         onClose={close}
       />
     );
-  if (menu.kind === 'header') {
-    const rows = menu.axis === 'r';
-    const g = c.selection.ranges[c.selection.ranges.length - 1]!;
-    const n = rows ? g.r2 - g.r1 + 1 : g.c2 - g.c1 + 1;
-    const what = rows ? (n > 1 ? `${n} Rows` : 'Row') : n > 1 ? `${n} Columns` : 'Column';
+  if (menu.kind === 'header')
+    return <SheetHeaderMenu menu={menu} actions={actions} onClose={close} />;
+  if (menu.kind === 'group')
     return (
-      <ContextMenu
-        position={{ x: menu.x, y: menu.y }}
-        label={rows ? 'Row menu' : 'Column menu'}
+      <SheetGroupMenu
+        op={menu.op}
+        at={{ x: menu.x, y: menu.y }}
+        actions={actions}
         onClose={close}
-      >
-        <MenuHeader
-          title={rows ? `Row ${menu.index + 1}` : `Column ${columnLetters(menu.index)}`}
-        />
-        {c.canShape ? (
-          <>
-            <MenuActionRow
-              label={`Insert ${n} ${rows ? 'Above' : 'Left'}`}
-              icon={<Glyph t={rows ? '↥' : '↤'} />}
-              onClick={act(() => actions.insert(menu.axis, 'before'))}
-            />
-            <MenuActionRow
-              label={`Insert ${n} ${rows ? 'Below' : 'Right'}`}
-              icon={<Glyph t={rows ? '↧' : '↦'} />}
-              onClick={act(() => actions.insert(menu.axis, 'after'))}
-            />
-            <MenuActionRow
-              label={`Delete ${what}`}
-              icon={<Glyph t="−" />}
-              onClick={act(() => actions.remove(menu.axis))}
-            />
-            <MenuActionRow
-              label="Clear"
-              icon={<ClearFormatIcon />}
-              onClick={act(() => actions.clear('all'))}
-            />
-            <MenuActionRow
-              label={`Hide ${what}`}
-              icon={<Glyph t="◌" />}
-              onClick={act(() => actions.hide(menu.axis, true))}
-            />
-            <MenuActionRow
-              label="Fit to Data"
-              icon={<Glyph t="⇔" />}
-              onClick={act(() =>
-                actions.autofit(menu.axis, range(rows ? g.r1 : g.c1, rows ? g.r2 : g.c2)),
-              )}
-            />
-            <MenuActionRow
-              label={`Resize ${lineSpan(menu.axis, rows ? g.r1 : g.c1, rows ? g.r2 : g.c2)}`}
-              icon={<Glyph t="↔" />}
-              onClick={() =>
-                c.setMenu({
-                  kind: 'resize',
-                  axis: menu.axis,
-                  from: rows ? g.r1 : g.c1,
-                  to: rows ? g.r2 : g.c2,
-                })
-              }
-            />
-            {!rows ? (
-              <>
-                <ContextMenuDivider />
-                <MenuActionRow
-                  label="Sort A to Z"
-                  icon={<SortIcon />}
-                  onClick={act(() => actions.sortColumn(true))}
-                />
-                <MenuActionRow
-                  label="Sort Z to A"
-                  icon={<SortIcon />}
-                  onClick={act(() => actions.sortColumn(false))}
-                />
-              </>
-            ) : null}
-          </>
-        ) : (
-          <MenuActionRow
-            label="Copy"
-            icon={<Glyph t="⧉" />}
-            onClick={act(() => clip.copyNow(false))}
-          />
-        )}
-      </ContextMenu>
+      />
     );
-  }
+  if (menu.kind === 'outline')
+    return (
+      <SheetOutlineMenu
+        axis={menu.axis}
+        at={{ x: menu.x, y: menu.y }}
+        actions={actions}
+        onClose={close}
+      />
+    );
   if (menu.kind === 'filter')
     return (
       <FilterMenu

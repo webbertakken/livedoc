@@ -19,11 +19,10 @@ import {
   landingOf,
   validationRuleAt,
   type GridRange,
-  type Selection,
 } from '@livedoc/sheets';
 import { useAssignRef, useLatest } from '@/hooks/ui/useLatest';
 import { pointingTargetFor } from './sheet-pointing';
-import { useSheetController, type SheetController } from './sheet-controller';
+import { useSheetController } from './sheet-controller';
 import { cellBox, hitTest, mergeAt, totalSize, type Hit } from './sheet-geometry';
 import { freezeCountAt, freezeEdgeUnder, freezeLineAt } from './sheet-freeze';
 import { roomPerSheetPx } from './sheet-scroll-room';
@@ -37,39 +36,10 @@ import { openHyperlink } from '@/lib/open-hyperlink';
 import { TOUCH_GRIP_HIT_PX, useSheetTouch } from './useSheetTouch';
 import { useSheetTouchLink } from './useSheetTouchLink';
 import { sheetPointerMenu } from './sheet-pointer-menu';
+import { endDrag, linesWith, type Drag } from './sheet-drag-end';
 
 const DRAG_START_PX = 4;
 const AUTOSCROLL_EDGE_PX = 24;
-
-type Drag =
-  | { kind: 'select'; additive: boolean }
-  | { kind: 'fill'; source: GridRange; target: GridRange; copy: boolean }
-  | { kind: 'resize'; axis: 'r' | 'c'; index: number; start: number; size: number; px: number }
-  // `base`: the ranges held before a Ctrl/⌘ header click, which the picked rows or columns join.
-  | { kind: 'axisSelect'; axis: 'r' | 'c'; from: number; base: Selection | null }
-  | {
-      kind: 'axisMove';
-      axis: 'r' | 'c';
-      from: number;
-      to: number;
-      drop: number;
-      armed: boolean;
-      x0: number;
-      y0: number;
-    }
-  | { kind: 'point'; from: { r: number; c: number }; sheet?: string }
-  // A selection moved by its border (D145): `grab` is the pressed cell's offset in it, `press` the cell itself.
-  | {
-      kind: 'cellMove';
-      source: GridRange;
-      grab: { r: number; c: number };
-      press: { r: number; c: number };
-      landing: GridRange;
-      armed: boolean;
-      x0: number;
-      y0: number;
-    }
-  | { kind: 'freeze'; axis: 'r' | 'c'; count: number };
 
 // A cell or range pointed at while a formula is written; `sheet` names another sheet of the tab it is on.
 export type PointRef = (
@@ -287,63 +257,7 @@ export function useSheetPointer(
     window.removeEventListener('pointermove', listeners.move);
     window.removeEventListener('pointerup', listeners.up);
     window.removeEventListener('pointercancel', listeners.up);
-    const cc = latest.current;
-    if (!d) return;
-    // Paint Format: the range just selected takes the held formats (sheet.md "Paint Format").
-    if (d.kind === 'select' && cc.rules.paint) {
-      const ranges = cc.selectionNow().ranges;
-      actions.paintApply(ranges[ranges.length - 1]!);
-    }
-    // Pointing leaves the caret in the formula being written (this sheet's, or another's).
-    if (d.kind === 'point') {
-      if (d.sheet) pointingTargetFor(cc.sheet.id, cc.sheet.tabId)?.refocus();
-      return;
-    }
-    if (d.kind === 'fill') {
-      const t = d.target;
-      if (
-        t.r1 !== d.source.r1 ||
-        t.r2 !== d.source.r2 ||
-        t.c1 !== d.source.c1 ||
-        t.c2 !== d.source.c2
-      ) {
-        actions.fill(d.source, t, d.copy || e.ctrlKey || e.altKey);
-        const s = d.source;
-        // Dragged back inside the source, what is left stays selected; otherwise the source and its fill.
-        const inside = t.r1 >= s.r1 && t.r2 <= s.r2 && t.c1 >= s.c1 && t.c2 <= s.c2;
-        const grown = inside
-          ? t
-          : {
-              r1: Math.min(t.r1, s.r1),
-              c1: Math.min(t.c1, s.c1),
-              r2: Math.max(t.r2, s.r2),
-              c2: Math.max(t.c2, s.c2),
-            };
-        cc.setSelection({
-          ranges: [grown],
-          active: cc.selectionNow().active,
-          anchor: { r: grown.r1, c: grown.c1 },
-        });
-      }
-    } else if (d.kind === 'resize') {
-      // Only a drag that changed the size sizes the line: a press on an edge alone leaves a row automatic (sheet.md
-      // "Row height").
-      if (d.px !== d.size) actions.resize(d.axis, linesWith(cc, d.axis, d.index), d.px);
-    } else if (d.kind === 'freeze') {
-      const now = d.axis === 'c' ? cc.geometry.frozenCols : cc.geometry.frozenRows;
-      if (d.count !== now) {
-        if (d.axis === 'c') actions.freeze(undefined, d.count);
-        else actions.freeze(d.count);
-      }
-    } else if (d.kind === 'cellMove') {
-      // Unmoved, the press was a click on the cell under it; moved, the block lands (Ctrl or ⌥ copies it).
-      if (!d.armed) cc.setSelection(single(d.press));
-      else if (d.landing.r1 !== d.source.r1 || d.landing.c1 !== d.source.c1)
-        actions.moveCells(d.source, d.landing, e.ctrlKey || e.altKey);
-    } else if (d.kind === 'axisMove' && d.armed) {
-      if (d.drop < d.from || d.drop > d.to + 1) actions.moveAxis(d.axis, d.from, d.to, d.drop);
-    }
-    cc.focusGrid();
+    if (d) endDrag(d, e, latest.current, actions);
   };
   const follow = (e: PointerEvent) => {
     pointer.current = local(e.clientX, e.clientY);
@@ -391,6 +305,8 @@ export function useSheetPointer(
       return;
     }
     const h = hitAt(x, y);
+    // The outline bands' controls are buttons of their own; the band itself selects nothing.
+    if (h.kind === 'band') return;
     const grabbed = h.kind === 'cell' ? borderAt(x, y) : null;
     if (grabbed && h.kind === 'cell') {
       e.preventDefault();
@@ -618,7 +534,7 @@ export function useSheetPointer(
     if (pan.swallowClick() || touch.swallowTap()) return;
     const { x, y } = local(e.clientX, e.clientY);
     const h = hitAt(x, y);
-    if (h.kind === 'none') return;
+    if (h.kind === 'none' || h.kind === 'band') return;
     if (cc.editing) actions.commitEdit('none');
     if (h.kind === 'cell') {
       // A link under the finger: Ctrl/⌘ and the tap open it; a plain tap marks it for the link chip (formulas.md
@@ -649,27 +565,4 @@ export function useSheetPointer(
     touchLink,
     normaliseRange,
   };
-}
-
-// The lines a header's edge acts on: every selected whole line when the line is among them, so several selected
-// headers resize, and fit, together (sheet.md "Rows and columns"); else the line alone.
-function linesWith(
-  cc: Pick<SheetController, 'selectionNow' | 'grid'>,
-  axis: 'r' | 'c',
-  index: number,
-): number[] {
-  const ranges = cc.selectionNow().ranges;
-  const sel = ranges[ranges.length - 1]!;
-  const whole =
-    axis === 'c'
-      ? sel.r1 === 0 && sel.r2 >= cc.grid.rows - 1
-      : sel.c1 === 0 && sel.c2 >= cc.grid.cols - 1;
-  const [a, b] = axis === 'c' ? [sel.c1, sel.c2] : [sel.r1, sel.r2];
-  return whole && index >= a && index <= b ? range(a, b) : [index];
-}
-
-function range(a: number, b: number): number[] {
-  const out: number[] = [];
-  for (let i = a; i <= b; i++) out.push(i);
-  return out;
 }

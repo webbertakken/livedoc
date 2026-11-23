@@ -875,7 +875,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+Right',
     'Option+Shift+Right',
     'Alt+Shift+Right',
-    'specified',
+    'surface',
   ),
   row(
     'ungroup-rows-or-columns',
@@ -884,7 +884,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+Left',
     'Option+Shift+Left',
     'Alt+Shift+Left',
-    'specified',
+    'surface',
   ),
   row(
     'expand-grouped',
@@ -893,7 +893,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+Down',
     'Option+Shift+Down',
     'Alt+Shift+Down',
-    'specified',
+    'surface',
   ),
   row(
     'collapse-grouped',
@@ -902,7 +902,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+Up',
     'Option+Shift+Up',
     'Alt+Shift+Up',
-    'specified',
+    'surface',
   ),
   // Formulas
   row('show-all-formulas', 'Formulas', 'Show all formulas', 'Ctrl+~', 'Ctrl+~', 'Ctrl+~', 'built'),

@@ -27,6 +27,7 @@ import { displayValue, isError, posRangeOf, single } from '@livedoc/sheets';
 import { useSheetController } from './sheet-controller';
 import { SheetCells } from './SheetCells';
 import { SheetHeaders } from './SheetHeaders';
+import { SheetOutlineBar } from './SheetOutlineBar';
 import { SheetSelectionLayer, type Outline } from './SheetSelectionLayer';
 import { SheetCellEditor } from './SheetCellEditor';
 import { SheetChartsLayer } from './SheetChartsLayer';
@@ -467,6 +468,7 @@ export function SheetGrid({
                   : null
               }
             />
+            <SheetOutlineBar onFold={c.interactive ? actions.fold : null} />
             {pointer.preview?.kind === 'resize' || pointer.preview?.kind === 'move' ? (
               <div
                 className="pointer-events-none absolute z-[9]"

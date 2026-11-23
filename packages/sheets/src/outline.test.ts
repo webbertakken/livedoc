@@ -7,13 +7,22 @@ import { layoutIndex } from './layout';
 import {
   collapseAll,
   collapseGroup,
+  collapseGroups,
   groupLines,
   OUTLINE_DEPTH_REFUSAL,
   setControls,
   ungroupLines,
 } from './outline-commands';
-import { controlLine, foldTargets, outlineOf, type OutlineAxis } from './outline';
+import {
+  controlLine,
+  deepestOf,
+  foldTargets,
+  groupedWithin,
+  outlineOf,
+  type OutlineAxis,
+} from './outline';
 import { emptySheet, type Sheet } from './sheet';
+import { withFolds } from './outline-store';
 import { applySheetWrite, inverseSheetWrite, type SheetWrite } from './store';
 import { validateWrite } from './validate';
 
@@ -263,9 +272,27 @@ describe('the keys’ targets (D161) and the controls', () => {
 
   it('sit before a group, after it when it starts the sheet or the sheet asks', () => {
     const g = { depth: 1, from: 3, to: 5, collapsed: false };
-    expect(controlLine(g, false)).toBe(2);
-    expect(controlLine(g, true)).toBe(6);
-    expect(controlLine({ ...g, from: 0 }, false)).toBe(6);
+    expect(controlLine(g, false, 12)).toBe(2);
+    expect(controlLine(g, true, 12)).toBe(6);
+    expect(controlLine({ ...g, from: 0 }, false, 12)).toBe(6);
+  });
+
+  it('take the other side when theirs is off the sheet, and a group of every line has none (D165)', () => {
+    const g = { depth: 1, from: 3, to: 11, collapsed: false };
+    expect(controlLine(g, true, 12)).toBe(2);
+    expect(controlLine({ ...g, from: 0 }, false, 12)).toBeNull();
+    expect(controlLine({ ...g, from: 0 }, true, 12)).toBeNull();
+  });
+
+  it('say how deep the deepest group runs', () => {
+    const t = sheetOf();
+    expect(deepestOf(t.s().layout, 'r')).toBe(0);
+    t.run(groupLines(t.s(), 'r', 2, 6));
+    t.run(groupLines(t.s(), 'r', 3, 4));
+    expect(deepestOf(t.s().layout, 'r')).toBe(2);
+    expect(deepestOf(t.s().layout, 'c')).toBe(0);
+    expect(groupedWithin(t.s().layout, 'r', 0, 2)).toBe(true);
+    expect(groupedWithin(t.s().layout, 'r', 7, 9)).toBe(false);
   });
 });
 
@@ -348,6 +375,38 @@ describe('lines inserted, deleted, moved and sorted (D164)', () => {
       ctx,
     );
     expect(sorted.sheet.layout.rowCollapsed).toEqual([]);
+  });
+});
+
+describe('folding several groups at once', () => {
+  it('expands them as one change, none when none changes', () => {
+    const t = sheetOf();
+    t.run(groupLines(t.s(), 'r', 2, 6));
+    t.run(groupLines(t.s(), 'r', 3, 4));
+    t.run(collapseAll(t.s(), 'r', true));
+    const all = outlineOf(t.s().layout, 'r').groups;
+    t.run(collapseGroups(t.s(), 'r', all, false));
+    expect(t.groups()).toEqual(['1:2-6', '2:3-4']);
+    expect(collapseGroups(t.s(), 'r', outlineOf(t.s().layout, 'r').groups, false)).toBeNull();
+  });
+});
+
+describe('folds for oneself (D163)', () => {
+  it('lay a person’s own folds over the sheet’s, the same layout without any', () => {
+    const t = sheetOf();
+    t.run(groupLines(t.s(), 'r', 2, 6));
+    const layout = t.s().layout;
+    expect(withFolds(layout, [])).toBe(layout);
+    const fold = {
+      k: 'collapse',
+      axis: 'r',
+      at: layout.rows[2]!,
+      depth: 1,
+      collapsed: true,
+    } as const;
+    const folded = withFolds(layout, [fold, { ...fold, at: 'gone0001' }]);
+    expect(outlineOf(folded, 'r').groups[0]!.collapsed).toBe(true);
+    expect(withFolds(folded, [{ ...fold, collapsed: false }]).rowCollapsed).toBeUndefined();
   });
 });
 

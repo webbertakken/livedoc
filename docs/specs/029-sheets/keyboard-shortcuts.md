@@ -166,10 +166,10 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Unhide row                                         | `Ctrl+Shift+9`    | `⌘+Shift+9`          | `Ctrl+Shift+9`    | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Hide column                                        | `Ctrl+Alt+0`      | `⌘+Option+0`         | `Ctrl+Alt+0`      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Unhide column                                      | `Ctrl+Shift+0`    | `⌘+Shift+0`          | `Ctrl+Shift+0`    | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Group rows or columns                              | `Alt+Shift+Right` | `Option+Shift+Right` | `Alt+Shift+Right` | specified                                               |
-| Ungroup rows or columns                            | `Alt+Shift+Left`  | `Option+Shift+Left`  | `Alt+Shift+Left`  | specified                                               |
-| Expand grouped rows or columns                     | `Alt+Shift+Down`  | `Option+Shift+Down`  | `Alt+Shift+Down`  | specified                                               |
-| Collapse grouped rows or columns                   | `Alt+Shift+Up`    | `Option+Shift+Up`    | `Alt+Shift+Up`    | specified                                               |
+| Group rows or columns                              | `Alt+Shift+Right` | `Option+Shift+Right` | `Alt+Shift+Right` | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Ungroup rows or columns                            | `Alt+Shift+Left`  | `Option+Shift+Left`  | `Alt+Shift+Left`  | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Expand grouped rows or columns                     | `Alt+Shift+Down`  | `Option+Shift+Down`  | `Alt+Shift+Down`  | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
+| Collapse grouped rows or columns                   | `Alt+Shift+Up`    | `Option+Shift+Up`    | `Alt+Shift+Up`    | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 
 ## Formulas
 

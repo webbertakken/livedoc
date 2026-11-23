@@ -94,7 +94,7 @@ function unhideMarkers({ geometry: g, scroll, palette, view, onUnhide }: Props):
     const x = g.headW + (a < g.frozenCols ? g.cols[a]! : g.cols[a]! - scroll.left);
     if (x < g.headW - 4 || x > view.width) continue;
     const label = `Show Column${a === b ? '' : 's'} ${columnLetters(a)}${a === b ? '' : ` to ${columnLetters(b)}`}`;
-    markers.push(marker(`hc${a}`, label, x - 8, 3, false, () => onUnhide('c', a, b)));
+    markers.push(marker(`hc${a}`, label, x - 8, g.bandH + 3, false, () => onUnhide('c', a, b)));
   }
   // Only rows someone hid: a row the filter leaves out shows as a gap in the numbers, with nothing to click.
   for (const [a, b] of hiddenRuns(g.rows.length - 1, g.userHiddenRow)) {
@@ -102,7 +102,9 @@ function unhideMarkers({ geometry: g, scroll, palette, view, onUnhide }: Props):
     if (y < g.headH - 4 || y > view.height) continue;
     const label = `Show Row${a === b ? '' : 's'} ${a + 1}${a === b ? '' : ` to ${b + 1}`}`;
     markers.push(
-      marker(`hr${a}`, label, g.headW ? g.headW - 18 : 3, y - 8, true, () => onUnhide('r', a, b)),
+      marker(`hr${a}`, label, g.headW - (g.headW > g.bandW ? 18 : -3), y - 8, true, () =>
+        onUnhide('r', a, b),
+      ),
     );
   }
   return markers;
@@ -112,7 +114,10 @@ export function SheetHeaders(props: Props) {
   const { geometry: g, window: w, scroll, palette, selection, view } = props;
   const markers = unhideMarkers(props);
   // A sheet that hides its headers (Sheet Settings) draws none, only the way back for hidden lines.
-  if (!g.headW && !g.headH) return <>{markers}</>;
+  // The bands before them belong to the outline bar (SheetOutlineBar).
+  const numbersW = g.headW - g.bandW;
+  const lettersH = g.headH - g.bandH;
+  if (!numbersW && !lettersH) return <>{markers}</>;
   const head = {
     backgroundColor: palette.column,
     color: palette.muted,
@@ -148,9 +153,9 @@ export function SheetHeaders(props: Props) {
         className="absolute flex select-none items-center justify-center border-b border-r text-[11px] transition-colors duration-75"
         style={{
           left: x,
-          top: 0,
+          top: g.bandH,
           width,
-          height: g.headH,
+          height: lettersH,
           ...head,
           ...look(colState, 'c'),
           zIndex: c < g.frozenCols ? 6 : 5,
@@ -176,9 +181,9 @@ export function SheetHeaders(props: Props) {
         aria-rowindex={r + 1}
         className="absolute flex select-none items-center justify-end border-b border-r pr-1.5 text-[11px] tabular-nums transition-colors duration-75"
         style={{
-          left: 0,
+          left: g.bandW,
           top: y,
-          width: g.headW,
+          width: numbersW,
           height,
           ...head,
           ...look(rowState, 'r'),

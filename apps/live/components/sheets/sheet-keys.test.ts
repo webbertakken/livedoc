@@ -207,13 +207,31 @@ describe('rows and columns (grid-and-editing.md "Rows, columns and cells")', () 
   });
 });
 
+// grid-and-editing.md "Groups and the outline": Alt+Shift (Option+Shift on a Mac) and an arrow.
+describe('Alt+Shift and the arrows', () => {
+  const as = { altKey: true, shiftKey: true };
+  it.each(['pc', 'mac'] as const)('group, ungroup, collapse and expand on %s', (platform) => {
+    expect(sheetKey(k('ArrowRight', as), platform)).toEqual({ kind: 'group', op: 'group' });
+    expect(sheetKey(k('ArrowLeft', as), platform)).toEqual({ kind: 'group', op: 'ungroup' });
+    expect(sheetKey(k('ArrowUp', as), platform)).toEqual({ kind: 'fold', collapse: true });
+    expect(sheetKey(k('ArrowDown', as), platform)).toEqual({ kind: 'fold', collapse: false });
+  });
+
+  it('leave Ctrl, ⌘ and AltGr alone', () => {
+    expect(sheetKey(k('ArrowRight', { ...as, ctrlKey: true }))).toBeNull();
+    expect(sheetKey(k('ArrowUp', { ...as, metaKey: true }))).toBeNull();
+    const altGr = { ...as, getModifierState: (m: 'AltGraph') => m === 'AltGraph' };
+    expect(sheetKey(k('ArrowRight', altGr))).toBeNull();
+  });
+});
+
 describe('Option+Left and Option+Right', () => {
   it('step sheets on a Mac only', () => {
     expect(sheetKey(k('ArrowRight', { altKey: true }), 'mac')).toEqual({ kind: 'sheet', step: 1 });
     expect(sheetKey(k('ArrowLeft', { altKey: true }), 'mac')).toEqual({ kind: 'sheet', step: -1 });
     expect(sheetKey(k('ArrowRight', { altKey: true }), 'pc')).toBeNull();
     expect(sheetKey(k('ArrowRight', { altKey: true }))).toBeNull();
-    expect(sheetKey(k('ArrowLeft', { altKey: true, shiftKey: true }), 'mac')).toBeNull();
+    expect(sheetKey(k('ArrowLeft', { altKey: true, shiftKey: true }), 'mac')?.kind).toBe('group');
     expect(sheetKey(k('ArrowLeft', { altKey: true, metaKey: true }), 'mac')).toBeNull();
   });
 });

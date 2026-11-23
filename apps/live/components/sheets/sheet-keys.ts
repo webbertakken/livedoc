@@ -58,6 +58,10 @@ type SheetKeyCommand =
   | { kind: 'lines'; op: 'insert' | 'delete' }
   // Ctrl+Alt+9 and 0 hide the selection's rows or columns; Ctrl+Shift+9 and 0 show them.
   | { kind: 'hide'; axis: 'r' | 'c'; hidden: boolean }
+  // Alt+Shift+→ and ← group and ungroup; Alt+Shift+↑ and ↓ collapse and expand (grid-and-editing.md "Groups and the
+  // outline"; Option on a Mac).
+  | { kind: 'group'; op: 'group' | 'ungroup' }
+  | { kind: 'fold'; collapse: boolean }
   | { kind: 'menu' };
 
 // The keys of rows and columns, by where they sit (`code`): Option and Shift change what a Mac's keys type.
@@ -82,6 +86,10 @@ export function sheetKey(e: KeyLike, platform: OfficePlatform = 'pc'): SheetKeyC
   const sideways = dir === 'left' || dir === 'right';
   if (platform === 'mac' && sideways && e.altKey && !mod && !e.shiftKey)
     return { kind: 'sheet', step: dir === 'right' ? 1 : -1 };
+  if (dir && e.altKey && e.shiftKey && !mod && !altGraphHeld(e))
+    return sideways
+      ? { kind: 'group', op: dir === 'right' ? 'group' : 'ungroup' }
+      : { kind: 'fold', collapse: dir === 'up' };
   if (e.key === 'Tab') return { kind: 'tab', back: e.shiftKey };
   if (e.key === 'Enter' && !mod && !e.altKey) return { kind: 'enter', back: e.shiftKey };
   if (e.key === 'Enter' && mod && !e.altKey && !e.shiftKey) return { kind: 'fillRange' };

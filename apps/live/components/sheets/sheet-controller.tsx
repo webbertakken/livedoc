@@ -20,6 +20,7 @@ import {
   type SheetLayout,
   type SheetWrite,
   type Workbook,
+  type FoldChange,
 } from '@livedoc/sheets';
 import { track } from '@/lib/telemetry';
 import { useLatest } from '@/hooks/ui/useLatest';
@@ -27,6 +28,7 @@ import type { PlanPalette } from '@/components/plan/plan-palette';
 import type { SheetStore } from './sheet-store-client';
 import { geometryOf, mergeAt, type Geometry } from './sheet-geometry';
 import { useFollowLayout } from './useFollowLayout';
+import { useSheetFolds } from './useSheetFolds';
 import { useSheetRulesState, type SheetRulesState } from './rules/useSheetRulesState';
 import type { Grid } from '@livedoc/sheets';
 import type { SheetChangeKind } from '@livedoc/api-schema';
@@ -50,6 +52,10 @@ export type OpenMenu =
   | { kind: 'lines'; op: 'insert' | 'delete'; x: number; y: number }
   // The Resize dialog over lines from..to.
   | { kind: 'resize'; axis: 'r' | 'c'; from: number; to: number }
+  // Alt+Shift+→ or ← over cells: the rows and the columns to group or ungroup (D160).
+  | { kind: 'group'; op: 'group' | 'ungroup'; x: number; y: number }
+  // A right-click on an outline band (grid-and-editing.md "Groups and the outline").
+  | { kind: 'outline'; axis: 'r' | 'c'; x: number; y: number }
   | null;
 
 export type SheetController = {
@@ -60,6 +66,10 @@ export type SheetController = {
   // The tab's font, by id: what a cell with no font of its own is measured in (sheet.md "Row height").
   font: string | undefined;
   geometry: Geometry;
+  // The layout as this person sees it: the sheet's, with their own folds over it when they may not shape it (D163).
+  viewLayout: SheetLayout;
+  // A Participant's or a Viewer's collapse or expand, kept for this session only (useSheetFolds).
+  foldForSelf: (changes: readonly FoldChange[]) => void;
   grid: Grid;
   palette: PlanPalette;
   interactive: boolean;
@@ -249,9 +259,13 @@ export function useSheetControllerState(opts: {
     () => rowHeights(workbook, sheet.id, opts.font),
     [workbook, sheet, opts.font, version], // oxlint-disable-line react/exhaustive-deps
   );
+  // A Participant writes cells and never the shape (docs/specs/013-workspace/share-roles.md); the server refuses
+  // it too, so it is held back here rather than shown and taken away.
+  const canShape = opts.canShape ?? opts.canEdit;
+  const { viewLayout, foldForSelf } = useSheetFolds(sheet.id, sheet.layout, canShape);
   const geometry = useMemo(
-    () => geometryOf(sheet.layout, filtered, heightOf),
-    [sheet.layout, filtered, heightOf],
+    () => geometryOf(viewLayout, filtered, heightOf),
+    [viewLayout, filtered, heightOf],
   );
   const grid = useMemo<Grid>(() => {
     const ix = { rows: sheet.layout.rows.length, cols: sheet.layout.cols.length };
@@ -267,9 +281,6 @@ export function useSheetControllerState(opts: {
       mergeAt: (r, c) => mergeAt(geometry, r, c),
     };
   }, [sheet.layout, geometry, workbook, sheet.id]);
-  // A Participant writes cells and never the shape (docs/specs/013-workspace/share-roles.md); the server refuses
-  // it too, so it is held back here rather than shown and taken away.
-  const canShape = opts.canShape ?? opts.canEdit;
   const shapeRefused = useLatest(() => {
     opts.toast(SHAPE_REFUSED);
     return false;
@@ -328,6 +339,8 @@ export function useSheetControllerState(opts: {
     font: opts.font,
     canShape,
     geometry,
+    viewLayout,
+    foldForSelf,
     grid,
     selection,
     setSelection,

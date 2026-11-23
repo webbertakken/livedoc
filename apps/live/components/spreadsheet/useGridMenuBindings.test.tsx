@@ -30,6 +30,7 @@ function bound(sheetLayout: object, roles = { canEdit: true, canShape: true }) {
       active: { r: 1, c: 1 },
     },
     sheet: { layout: sheetLayout },
+    viewLayout: sheetLayout,
   };
   const channel = createOfficeBindingsChannel();
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -72,7 +73,15 @@ describe('useGridMenuBindings', () => {
     expect(clip.pasteSpecial).toHaveBeenCalledWith('values');
   });
 
-  it('binds Copy alone for a Viewer', () => {
-    expect(Object.keys(bound(layout(), { canEdit: false, canShape: false }))).toEqual(['copy']);
+  it('binds Copy and the folds alone for a Viewer, read from the layout they see (D163)', () => {
+    const b = bound(layout(), { canEdit: false, canShape: false });
+    expect(Object.keys(b).sort()).toEqual([
+      'collapse-all-column-groups',
+      'collapse-all-row-groups',
+      'copy',
+      'expand-all-column-groups',
+      'expand-all-row-groups',
+    ]);
+    expect(b['expand-all-row-groups']!.disabled).toBe(true);
   });
 });

@@ -201,11 +201,17 @@ const VIEW_MENU = menu('view', 'View', [
     SEPARATOR,
     ...FREEZE_ITEMS.slice(4).map(freezeItem),
   ]),
+  // grid-and-editing.md "Groups and the outline": labels name the selection's lines (spreadsheet-menu-bindings.ts).
   submenu('group', 'Group', [
-    item('group', 'Group', 'edit'),
-    item('ungroup', 'Ungroup', 'edit'),
-    item('expand-all-groups', 'Expand All', 'view'),
-    item('collapse-all-groups', 'Collapse All', 'view'),
+    built('group-rows', 'Group Rows', 'edit', { shortcut: 'group-rows-or-columns' }),
+    built('group-columns', 'Group Columns', 'edit'),
+    built('ungroup-rows', 'Ungroup Rows', 'edit', { shortcut: 'ungroup-rows-or-columns' }),
+    built('ungroup-columns', 'Ungroup Columns', 'edit'),
+    SEPARATOR,
+    built('expand-all-row-groups', 'Expand All Row Groups', 'view'),
+    built('collapse-all-row-groups', 'Collapse All Row Groups', 'view'),
+    built('expand-all-column-groups', 'Expand All Column Groups', 'view'),
+    built('collapse-all-column-groups', 'Collapse All Column Groups', 'view'),
   ]),
   SEPARATOR,
   submenu('comments', 'Comments', [
