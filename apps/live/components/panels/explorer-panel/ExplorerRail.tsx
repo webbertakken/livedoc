@@ -70,10 +70,10 @@ export function ExplorerRail({
     <button
       type="button"
       onClick={onNewDocument}
-      className={`flex cursor-pointer items-center justify-center gap-1.5 bg-brand-700 font-semibold text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:bg-brand-600 dark:hover:bg-brand-500 ${
+      className={`flex cursor-pointer items-center justify-center gap-1 bg-brand-700 font-medium text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:bg-brand-600 dark:hover:bg-brand-500 ${
         phone
-          ? 'relative h-9 shrink-0 touch-target-y whitespace-nowrap rounded-lg px-3 text-[13px]'
-          : 'mb-3 h-9 w-full rounded-lg text-xs'
+          ? 'relative h-prominent shrink-0 touch-target-y whitespace-nowrap rounded-control px-3 text-body'
+          : 'mb-3 h-prominent w-full rounded-control text-body'
       }`}
     >
       <PlusIcon size={13} />
@@ -118,13 +118,13 @@ export function ExplorerRail({
           aria-label={badge ? `${label} (${badge})` : label}
           onClick={() => onPick(s)}
           {...dropProps}
-          className={`flex cursor-pointer items-center gap-2 text-left text-xs transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500 ${
+          className={`flex cursor-pointer items-center gap-2 text-left text-body transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500 ${
             phone
-              ? 'relative h-9 touch-target-y whitespace-nowrap rounded-lg px-2.5 text-[13px]'
-              : 'h-8 w-full rounded-md px-2'
+              ? 'relative h-row touch-target-y whitespace-nowrap rounded-control px-2'
+              : 'h-row w-full rounded-control px-2'
           } ${
             on
-              ? 'bg-brand-100 font-semibold text-brand-800 dark:bg-brand-500/20 dark:text-brand-100'
+              ? 'bg-brand-100 font-medium text-brand-800 dark:bg-brand-500/20 dark:text-brand-100'
               : phone
                 ? 'text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800'
                 : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
@@ -142,7 +142,7 @@ export function ExplorerRail({
           {badge ? (
             <span
               aria-hidden
-              className="rounded-full bg-slate-200/70 px-1.5 text-[10px] font-semibold leading-4 text-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="inline-flex h-icon-row min-w-icon-row items-center justify-center rounded-full bg-slate-200/70 px-1 text-glyph text-slate-600 dark:bg-slate-700 dark:text-slate-200"
             >
               {badge}
             </span>
@@ -158,12 +158,12 @@ export function ExplorerRail({
       onKeyDown={onKeyDown}
       className={
         phone
-          ? 'shrink-0 overflow-x-auto px-2.5 py-1 [scrollbar-width:none]'
-          : 'scrollbar-slim flex w-44 shrink-0 flex-col overflow-y-auto border-r border-slate-200 px-1.5 py-2 dark:border-slate-700/70'
+          ? 'shrink-0 overflow-x-auto px-2 py-1 [scrollbar-width:none]'
+          : 'scrollbar-slim flex w-44 shrink-0 flex-col overflow-y-auto border-r border-slate-200 px-2 py-2 dark:border-slate-700/70'
       }
     >
       {phone ? (
-        <ul className="flex gap-1.5">
+        <ul className="flex gap-1">
           {newDocument ? <li className="shrink-0">{newDocument}</li> : null}
           {groups.flatMap((g) => g.sections).map(entry)}
         </ul>
@@ -175,7 +175,7 @@ export function ExplorerRail({
               <section key={g.id} aria-label={SIDEBAR_GROUP_TITLES[g.id]}>
                 {divider === 'titles' ? (
                   <h3
-                    className={`px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${i ? 'mt-4' : ''}`}
+                    className={`px-2 pb-1 text-supporting text-slate-500 dark:text-slate-400 ${i ? 'mt-4' : ''}`}
                   >
                     {SIDEBAR_GROUP_TITLES[g.id]}
                   </h3>

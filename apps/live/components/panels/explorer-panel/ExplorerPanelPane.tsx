@@ -37,7 +37,7 @@ const LibrarySection = dynamic(() => load().then((m) => m.LibrarySection), {
 
 // The header's quiet actions: words with a glyph, a wash on hover, no frame.
 const HEADER_BUTTON =
-  'flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-500 pointer-coarse:h-11 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white';
+  'flex h-row shrink-0 cursor-pointer items-center gap-1 rounded-control px-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-500 pointer-coarse:h-11 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white';
 
 export function ExplorerPanelPane({
   section,
@@ -109,8 +109,8 @@ export function ExplorerPanelPane({
     );
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="flex items-center gap-2 px-5 pb-3 pt-4 max-sm:px-4 max-sm:pb-1.5 max-sm:pt-2.5">
-        <h3 className="min-w-0 flex-1 truncate text-[15px] font-semibold text-slate-900 dark:text-slate-50">
+      <div className="flex items-center gap-2 px-4 pb-3 pt-4 max-sm:pb-1.5 max-sm:pt-2.5">
+        <h3 className="min-w-0 flex-1 truncate text-panel-title text-slate-900 dark:text-slate-50">
           {title}
         </h3>
         {onNewFolder && (section.kind === 'mine' || section.kind === 'team') ? (

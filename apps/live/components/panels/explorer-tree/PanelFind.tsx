@@ -106,7 +106,7 @@ export function PanelFindField({
     inputRef.current?.focus();
   }, [inputRef]);
   return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1 pl-2 pr-1 transition-colors duration-micro focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/25 dark:border-slate-700 dark:bg-slate-800">
+    <div className="flex h-field items-center gap-1 rounded-control border border-slate-200 bg-white pl-2 pr-0.5 transition-colors duration-micro focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/25 dark:border-slate-700 dark:bg-slate-800">
       <SearchIcon size={14} aria-hidden className="shrink-0 text-slate-500 dark:text-slate-400" />
       <input
         ref={inputRef}
@@ -115,12 +115,12 @@ export function PanelFindField({
         onChange={(e) => find.setText(e.target.value)}
         aria-label={`Find in ${folderName}`}
         placeholder={`Find in ${folderName}`}
-        className="min-w-0 flex-1 bg-transparent py-0.5 text-[13px] text-slate-900 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
+        className="min-w-0 flex-1 bg-transparent text-body text-slate-900 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
       />
       <span
         role="status"
         aria-live="polite"
-        className="shrink-0 text-[11px] text-slate-500 dark:text-slate-400"
+        className="shrink-0 text-supporting text-slate-500 dark:text-slate-400"
       >
         {matches === null
           ? ''
@@ -132,7 +132,7 @@ export function PanelFindField({
         type="button"
         onClick={find.close}
         aria-label="Close find"
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+        className="inline-flex size-chip shrink-0 items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
       >
         <CloseIcon size={14} aria-hidden />
       </button>

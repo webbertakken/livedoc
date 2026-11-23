@@ -88,7 +88,7 @@ function JumpBackInCard({
       }
       title={item.name || 'Untitled document'}
       meta={
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-1">
           {/* Inside the row's button: a label, not a link (a link in a button is a control nested in a control). */}
           {item.localOnly ? <ThisBrowserPill asLabel /> : null}
           <span className="truncate">Opened {relativeSince(item.lastUsedAt, now)}</span>
@@ -116,10 +116,9 @@ function WhatHappenedRow({ group, onOpen }: { group: HomeGroup; onOpen: () => vo
       }
       title={
         <span className="font-normal text-slate-600 dark:text-slate-300">
-          <span className="font-semibold text-slate-800 dark:text-slate-100">{s.people}</span>{' '}
-          {s.verbs}
+          <span className="text-slate-800 dark:text-slate-100">{s.people}</span> {s.verbs}
           {s.preposition ? ` ${s.preposition}` : ''}{' '}
-          <span className="font-semibold text-slate-800 dark:text-slate-100">{s.document}</span>
+          <span className="text-slate-800 dark:text-slate-100">{s.document}</span>
         </span>
       }
       label={sentence}
@@ -235,7 +234,7 @@ export function HomeSection({
           <div className="flex flex-col gap-3">
             {groupsByDay(home.whatHappened, now).map((day) => (
               <div key={day.day} className="flex flex-col gap-0.5">
-                <p className="px-2 pb-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                <p className="px-2 pb-0.5 text-supporting text-slate-500 dark:text-slate-400">
                   {day.label}
                 </p>
                 <PaneList label={day.label}>
@@ -285,7 +284,7 @@ export function TimelineSection({ ownerId }: { ownerId: string }) {
     else days.push({ day, events: [e] });
   }
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       {days.map(({ day, events }) => (
         <PaneSection key={day} title={dayHeading(day, now)}>
           <PaneList label={dayHeading(day, now)}>
@@ -296,7 +295,7 @@ export function TimelineSection({ ownerId }: { ownerId: string }) {
         </PaneSection>
       ))}
       {feed.hasMore && feed.loadMoreFailed && !feed.loadingMore ? (
-        <p role="status" className="text-center text-xs text-slate-600 dark:text-slate-300">
+        <p role="status" className="text-center text-supporting text-slate-600 dark:text-slate-300">
           Couldn’t load older events.
         </p>
       ) : null}
@@ -305,7 +304,7 @@ export function TimelineSection({ ownerId }: { ownerId: string }) {
           type="button"
           onClick={feed.loadMore}
           disabled={feed.loadingMore}
-          className="mx-auto cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-800"
+          className="mx-auto min-h-row cursor-pointer rounded-control px-3 text-body text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-800"
         >
           {feed.loadingMore ? 'Loading…' : feed.loadMoreFailed ? 'Try Again' : 'Show Earlier'}
         </button>
@@ -343,8 +342,8 @@ export function TrashSection({
       />
     );
   return (
-    <div className="flex flex-col gap-5">
-      <p className="px-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
+    <div className="flex flex-col gap-4">
+      <p className="px-2 text-supporting text-slate-500 dark:text-slate-400">
         Deleted documents wait here for 30 days. Restoring one puts it back where it was.
       </p>
       {groups.map((group) =>
@@ -425,7 +424,7 @@ export function LibrarySection({
       <div
         role="tablist"
         aria-label="Library"
-        className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800"
+        className="flex gap-1 rounded-menu bg-slate-100 p-1 dark:bg-slate-800"
       >
         {LIBRARY_PAGES.map(({ kind, label, Icon, row }) => (
           <button
@@ -437,9 +436,9 @@ export function LibrarySection({
               trackSidebar(row, 'panel');
               setTab(kind);
             }}
-            className={`flex h-8 flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 text-xs font-medium transition pointer-coarse:h-11 ${
+            className={`flex h-row flex-1 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-control px-2 text-body transition pointer-coarse:h-11 ${
               tab === kind
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-50'
+                ? 'font-medium bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-50'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
             }`}
           >
