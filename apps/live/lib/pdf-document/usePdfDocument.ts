@@ -8,11 +8,11 @@
 // and what the room had not confirmed is made again on it ("A change carried across a replacement").
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { BlobKey } from '@livedoc/document';
-import type {
-  PageInfo,
-  PdfOpened,
+import {
   PdfPermissions,
-  UnconfirmedChange,
+  type PageInfo,
+  type PdfOpened,
+  type UnconfirmedChange,
 } from '@livedoc/pdf-documents';
 import { apiReadBlob } from '@/lib/api/files';
 import { apiLoadPdfState, type PdfDocumentScope, type PdfStateRead } from '@/lib/api/pdf-documents';
@@ -44,6 +44,11 @@ export type PdfDocumentOpen =
       protected: boolean;
       /** What the file asks of its reader, for the password it was opened with (opening.md "Passwords"). */
       permissions: PdfPermissions;
+      /**
+       * Gives the engine the permissions password: true where it lifts every limit, which go for this person for the
+       * session; false, the limits kept, where it does not.
+       */
+      liftLimits: (password: string) => Promise<boolean>;
       engine: PdfEngineClient;
       drawer: PdfPageDrawer;
       binding: PdfLiveBinding;
@@ -228,6 +233,21 @@ export function usePdfDocument(
         `[pdf] opened pages=${opened.pages.length} bytes=${size} ranged=false ms=${Date.now() - started} read=${fetched - started} engine=${Date.now() - fetched}`,
       );
       const drawer = pdfPageDrawer(client);
+      // What the file asks, lifted by its permissions password; and the pages as last shown, to show again lifted.
+      let permissions = opened.document.permissions;
+      let current: Extract<PdfDocumentOpen, { phase: 'ready' }> | null = null;
+      const liftLimits = async (password: string): Promise<boolean> => {
+        const answer = await client.unlock(password);
+        if (!answer.ok || !PdfPermissions.asksNothing(answer.document.permissions)) {
+          debugLog(`[pdf] limits-wrong tab=${tabId}`);
+          return false;
+        }
+        debugLog(`[pdf] limits-lifted tab=${tabId}`);
+        permissions = answer.document.permissions;
+        // Reached only from the pages shown, so they are there to show again.
+        show((current = { ...current!, permissions }));
+        return true;
+      };
       // The live changes bound to the pages that are open. A refusal of one of this binding's changes binds anew;
       // the stored file replaced opens the new one in place.
       const showBound = (bound: PdfLiveBinding) => {
@@ -246,21 +266,23 @@ export function usePdfDocument(
           offRefused();
           offMoved();
         };
-        show({
+        current = {
           phase: 'ready',
           pages: opened.pages,
           storedFile,
           bytes: size,
           version: opened.document.version,
           protected: opened.document.encrypted,
-          permissions: opened.document.permissions,
+          permissions,
+          liftLimits,
           engine: client,
           drawer,
           binding: bound,
           undo: steps,
           onLost,
           onDropped,
-        });
+        };
+        show(current);
       };
       // What was not confirmed, here or in a local copy left behind on another stored file, made again on these.
       const carry = (bound: PdfLiveBinding, unconfirmed: readonly UnconfirmedChange[]) =>

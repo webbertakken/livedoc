@@ -48,6 +48,7 @@ import {
   TOOL_SELECT,
   UNDO,
 } from '@/lib/pdf-document/pdf-menus';
+import { pdfLimitedLevel } from '@/lib/pdf-document/pdf-limits';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
 import { PDF_PANELS, THUMBNAILS_PANEL } from '@/lib/pdf-document/pdf-panels';
 import { pdfRoomBinding, type PdfFrame } from '@/lib/pdf-document/pdf-room-binding';
@@ -65,6 +66,7 @@ import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { track } from '@/lib/telemetry';
+import { PdfLimits } from './PdfLimits';
 import { PdfOpenNotices } from './PdfOpenNotices';
 import { PdfPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
@@ -157,7 +159,13 @@ export function PdfDocumentSurface({
     [home],
   );
   const open = usePdfDocument(scope, bind, attempt, deps);
-  const { mode, choice, actions: modeActions } = useOfficeMode(level, PDF_MODES, 'PdfDocumentMode');
+  // A file that forbids changes is drawn for Viewing until its permissions password is given (opening.md).
+  const drawnLevel = pdfLimitedLevel(level, open.phase === 'ready' ? open.permissions : null);
+  const {
+    mode,
+    choice,
+    actions: modeActions,
+  } = useOfficeMode(drawnLevel, PDF_MODES, 'PdfDocumentMode');
   const [tool, setTool] = useState<PdfPageTool>('select');
   const [problem, setProblem] = useState<string | null>(null);
   const ready = open.phase === 'ready' ? open : null;
@@ -432,7 +440,7 @@ export function PdfDocumentSurface({
         )}
         problem={problem}
         catalogue={PDF_MENUS}
-        level={levelInMode(PDF_MODES, level, mode)}
+        level={levelInMode(PDF_MODES, drawnLevel, mode)}
         actions={actions}
         shortcuts={PDF_SHORTCUTS}
         keyScope={root}
@@ -445,6 +453,7 @@ export function PdfDocumentSurface({
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
       />
+      {ready ? <PdfLimits permissions={ready.permissions} liftLimits={ready.liftLimits} /> : null}
       {open.phase === 'opening' ? (
         // A page-shaped placeholder on the surface's ground, so nothing shifts when page one arrives.
         <div
