@@ -7,8 +7,10 @@
 import { memo, useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
 import {
   PageView,
+  type LinkTarget,
   type Mark,
   type PageInfo,
+  type PageLink,
   type PageMatrix,
   type PagePoint,
   type PageTurns,
@@ -18,6 +20,7 @@ import {
 } from '@livedoc/pdf-documents';
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfMarksOverlay } from './PdfMarksOverlay';
+import { PdfPageLinks } from './PdfPageLinks';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
 import { PdfView } from '@/lib/pdf-document/pdf-view';
@@ -53,6 +56,8 @@ export const PdfPage = memo(function PdfPage({
   onHighlight,
   selected,
   onText,
+  linkName,
+  onFollow,
   register,
 }: {
   index: number;
@@ -70,7 +75,7 @@ export const PdfPage = memo(function PdfPage({
   // Near view: its picture is drawn. Held: its picture is kept though it left view.
   wanted: boolean;
   held: boolean;
-  engine: Pick<PdfEngine, 'selectText' | 'fileMarks'>;
+  engine: Pick<PdfEngine, 'selectText' | 'fileMarks' | 'links'>;
   drawer: PdfPageDrawer;
   marks: readonly Mark[];
   tool: PdfPageTool;
@@ -78,6 +83,9 @@ export const PdfPage = memo(function PdfPage({
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
   selected: readonly Quad[];
   onText: (index: number, gesture: PdfTextGesture) => void;
+  // What a link of the page is called, and where a press on one goes (reading-surface.md "Following a link").
+  linkName: (target: LinkTarget) => string;
+  onFollow: (target: LinkTarget) => void;
   // Hands the page's box to whoever watches which pages are near view.
   register: (index: number, element: HTMLElement | null) => void;
 }) {
@@ -86,6 +94,21 @@ export const PdfPage = memo(function PdfPage({
   const [failed, setFailed] = useState(false);
   const [preview, setPreview] = useState<readonly Quad[]>([]);
   const drag = useRef<{ from: PagePoint; asking: boolean; next: PagePoint | null } | null>(null);
+  // The page's links, read once its picture is drawn, again for another drawer (a replaced stored file).
+  const [links, setLinks] = useState<{ by: PdfPageDrawer; links: readonly PageLink[] } | null>(
+    null,
+  );
+  const drawnBy = drawn?.by ?? null;
+  useEffect(() => {
+    if (!drawnBy || links?.by === drawnBy) return;
+    let gone = false;
+    void engine.links(index).then((read) => {
+      if (!gone) setLinks({ by: drawnBy, links: read });
+    });
+    return () => {
+      gone = true;
+    };
+  }, [drawnBy, links, engine, index]);
   // A text selection being dragged with Select in hand.
   const selecting = useRef(false);
 
@@ -258,6 +281,16 @@ export const PdfPage = memo(function PdfPage({
           marks={marks}
           preview={preview}
           selected={selected}
+        />
+      ) : null}
+      {matrix && tool === 'select' && links && links.by === drawnBy ? (
+        <PdfPageLinks
+          matrix={matrix}
+          width={shown.width}
+          height={shown.height}
+          links={links.links}
+          nameOf={linkName}
+          onFollow={onFollow}
         />
       ) : null}
       {failed ? (

@@ -126,6 +126,7 @@ export function pdfEngineOver(
       (await drawerFor(hidden)).drawPage(index, scale, undefined, turns),
     drawTile: async (index, scale, turns, rect, hidden) =>
       (await drawerFor(hidden)).drawTile(index, scale, turns, rect),
+    pageMatrix: async (index, turns) => said(reader.pageMatrix(index, turns)),
     outline: async () => said(reader.outline()),
     links: async (index) => said(reader.links(index)),
     pageText: async (index) => said(reader.pageText(index)),

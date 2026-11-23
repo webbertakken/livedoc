@@ -19,6 +19,7 @@ import type {
   PageBitmap,
   PageField,
   PageLink,
+  PageMatrix,
   PageText,
   PdfEngine,
   PdfLayer,
@@ -69,6 +70,7 @@ const STOPPED = {
   unlock: { ok: false, refusal: 'pdf_stopped' } satisfies PdfOpened,
   drawPage: null,
   drawTile: null,
+  pageMatrix: null,
   outline: { items: [], cut: false } satisfies Outline,
   links: [] as readonly PageLink[],
   pageText: null,
@@ -163,6 +165,8 @@ export function pdfEngineClient(
     drawTile: (index, scale, turns, rect, hidden) =>
       ask<PageBitmap | null>({ method: 'drawTile', args: [index, scale, turns, rect, hidden] }),
     outline: () => ask<Outline>({ method: 'outline', args: [] }),
+    pageMatrix: (index, turns) =>
+      ask<PageMatrix | null>({ method: 'pageMatrix', args: [index, turns] }),
     links: (index) => ask<readonly PageLink[]>({ method: 'links', args: [index] }),
     pageText: (index) => ask<PageText | null>({ method: 'pageText', args: [index] }),
     selectText: (index, from, to) =>

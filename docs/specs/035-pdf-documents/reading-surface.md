@@ -10,12 +10,13 @@
 - Page display, zoom, Go to, the page bar and Rotate view.
 - The left panel's rail, Thumbnails, Outline, Embedded files and Layers; Go to page by a page's number or its label; following a bookmark.
 - Selecting text and copying it.
+- Links on the pages, a link's and a bookmark's point on its page, Previous view and Next view.
 
 Bound today: Download as PDF, Undo, Redo, Copy, Select all, the editing modes, Highlight, Select and Help; Page display, Zoom but for
-Zoom to selection, Go to but for Previous view and Next view, Rotate view, Thumbnails, Outline, Embedded files and Layers.
+Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-Signatures and Fields, a bookmark's point on its page, find, the page's context menu, the accessible tree (a page is a named region whose picture is
+Signatures and Fields, find, the page's context menu, the accessible tree (a page is a named region whose picture is
 hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -320,7 +321,7 @@ or from its View item; the shell's left panel ([Side panels](../004-interface-de
 - The file's bookmarks as a tree, in the file's order, each with its title; the top level shows and every nested
   level starts folded `(default)`.
 - **A press goes** where the bookmark leads, as a link of the file does ([Following a link](#following-a-link)).
-  A bookmark to a place in the document goes to its page, its top at the view's top `(default)`.
+  A bookmark to a place in the document goes to that place, as a link to it does ([Following a link](#following-a-link)).
 - **The bookmark for the place in view** is the last, in the file's order, whose page is the page in view or the
   nearest before it `(default)`; it is marked as the current location, or its nearest shown parent is while folded.
 - **Keys**: the tree takes one Tab stop; ↓ and ↑ move between the bookmarks shown, → unfolds a bookmark or moves to
@@ -377,7 +378,7 @@ A press on a bookmark, or on a link of a page ([Security](security.md#links-and-
 
 | Leads to                                     | What happens                                                                                                              |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| A place in the document                      | Goes there at once                                                                                                        |
+| A place in the document                      | Goes there at once: the place's point at the view's top left, or the page's top where the file names no point             |
 | A page no longer in the document, or nowhere | Nothing; a bookmark says "Goes nowhere" after its title                                                                   |
 | An `http`, `https` or `mailto` address       | Asks first, "Open this address?", with the address as text; **Open** opens it in a new tab with no opener and no referrer |
 | An address that is not opened                | "This link can't be opened here." with the address as text; **Copy address**                                              |
@@ -466,7 +467,21 @@ A press on a bookmark, or on a link of a page ([Security](security.md#links-and-
     cannot be read `[pdf] page-text-failed page=<n>`, and selects nothing. Counted as `Pdf · Copied · Text`.
 - **Links**: the pointer shows a hand and the target as a tooltip; a press follows a place in the document at once,
   and asks first for an address ([Security](security.md#links-and-actions)).
+  - A link is a control over its rectangle on the page, named for where it leads, as plain text: "Link to page 3",
+    "Link to https://example.com/path", "Link to another file, other.pdf", "Link to an action", "Link that goes
+    nowhere". Its tooltip is its name, as every control's is, so the target shows as the pointer rests `(default)`.
+  - Links take presses while Select is in hand; with a mark tool in hand a press marks `(default)`. Tab reaches them
+    in the file's order on each page.
+  - A link's place is reckoned through the page's matrix, so it leads to the same point however the page is turned
+    or zoomed; a coordinate the file leaves out keeps the page's own edge `(default)`.
 - **Previous view** and **Next view** step through the places a person jumped from and to, as a browser's history.
+  - A jump is following a link or a bookmark, a thumbnail, the page bar's field, Go to > First page, Last page and
+    Page…, and a find result; scrolling and turning a page are not `(default)`.
+  - Each jump keeps the place in view before it, the page and the point at the view's top left; Previous view goes back
+    to it, and Next view forward again, until a new jump drops what was ahead, as a browser does.
+  - At most `PDF_VIEW_HISTORY_MAX` places are kept, the oldest let go first; a place kept twice in a row is kept once.
+  - Previous view and Next view are dimmed with nowhere to go; ⌥← and ⌥→ are heard outside a field.
+  - Logged `[pdf] view-history way=<back|forward> page=<n>`.
 - **The context menu** on a page: Copy, Select all, Add comment, Highlight (and the last mark used), Find "…",
   Go to ▸, Rotate view, and the items of whatever is under the pointer (a mark, a field, an object), each only for
   the level that may.
@@ -534,6 +549,7 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 | `PDF_ZOOM_SETTLE_MS`           | 400                                                                                                    | `(default)` How long a wheel's or a pinch's zoom rests before it is told to telemetry; safe range 200 to 1,000                           |
 | `PDF_EMBEDDED_FILE_MAX_BYTES`  | 100,000,000 (100 MB)                                                                                   | `(default)` The most of an embedded file read out to be saved or opened: a stored file's cap, `FILE_TAB_MAX_BYTES`                       |
 | `PDF_THUMBNAIL_BOX_PX`         | 160                                                                                                    | `(default)` CSS pixels a side of the square a thumbnail is fitted into; safe range 96 to 224                                             |
+| `PDF_VIEW_HISTORY_MAX`         | 100                                                                                                    | `(default)` Places Previous view keeps, the oldest let go first; safe range 20 to 1,000                                                  |
 | `PDF_PAGE_TEXTS_KEPT`          | 32                                                                                                     | `(default)` Pages whose text the surface keeps read for selecting, the least lately used let go first; safe range 8 to 256               |
 | `PDF_FIND_MAX_RESULTS`         | 10,000                                                                                                 | `(default)` Listed results; the count still says how many more                                                                           |
 
@@ -568,7 +584,7 @@ Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom
 `[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`,
 `[pdf] thumbnail-failed page=<n>`, `[pdf] outline-failed`, `[pdf] link-opened scheme=<scheme>`,
 `[pdf] link-refused kind=<kind>`, `[pdf] text-copied chars=<n>`, `[pdf] text-copy-refused`, `[pdf] text-copy-failed`,
-`[pdf] page-text-failed page=<n>`.
+`[pdf] page-text-failed page=<n>`, `[pdf] view-history way=<back|forward> page=<n>`.
 
 ## Errors
 

@@ -680,6 +680,14 @@ describe('a PDF document’s outline', () => {
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentPanelOutline');
     fireEvent.click(screen.getByRole('treeitem', { name: 'Second page' }));
     expect(scrollerOf(container).scrollTop).toBeCloseTo(topOf(container, 2), 1);
+    // "Previous view": the bookmark was a jump; ⌥← goes back to where the view was, ⌥→ forward again.
+    const pages = container.querySelector<HTMLElement>('[data-pdf-pages]')!;
+    fireEvent.keyDown(pages, { key: 'ArrowLeft', altKey: true });
+    expect(scrollerOf(container).scrollTop).toBe(0);
+    fireEvent.keyDown(pages, { key: 'ArrowRight', altKey: true });
+    expect(scrollerOf(container).scrollTop).toBeCloseTo(topOf(container, 2), 1);
+    // With nowhere further to go, the key is left to the browser.
+    expect(fireEvent.keyDown(pages, { key: 'ArrowRight', altKey: true })).toBe(true);
     fireEvent.click(screen.getByRole('treeitem', { name: 'Website' }));
     expect(screen.getByRole('dialog', { name: 'Link' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

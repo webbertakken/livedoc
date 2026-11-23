@@ -329,6 +329,18 @@ describe("drawing with a person's layers", () => {
 
 // reading-surface.md "The pages"
 describe('drawing', () => {
+  // reading-surface.md "Following a link": a place on a page not yet drawn is reckoned with the page's matrix.
+  it('answers the matrix a page is drawn with, turned or not, without drawing it', async () => {
+    await engine.open(stored);
+    const drawn = (await engine.drawPage(0, 0.5, 1))!;
+    expect(await engine.pageMatrix(0, 1)).toEqual(drawn.toView);
+    expect(PageView.toView((await engine.pageMatrix(0))!, { x: 72, y: 720 })).toEqual({
+      x: 72,
+      y: 72,
+    });
+    expect(await engine.pageMatrix(9)).toBeNull();
+  });
+
   it('draws a page at the scale asked, with the matrix that places marks on it', async () => {
     await engine.open(stored);
     const bitmap = (await engine.drawPage(0, 0.5))!;

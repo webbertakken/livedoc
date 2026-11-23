@@ -223,6 +223,12 @@ export type PdfEngine = {
     rect: TileRect,
     hidden?: readonly string[],
   ): Promise<PageBitmap | null>;
+  /**
+   * The matrix the page at that place is drawn with, turned `turns` quarters (none unless asked), whatever the scale:
+   * a place on a page not yet drawn is reckoned with it (reading-surface.md "Following a link"). Null where there is no
+   * such page.
+   */
+  pageMatrix(index: number, turns?: PageTurns): Promise<PageMatrix | null>;
   /** The file's bookmarks, in reading order; none where it has no outline. */
   outline(): Promise<Outline>;
   /** The links on a page, none of them followed. */

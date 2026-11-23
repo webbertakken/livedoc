@@ -140,3 +140,6 @@ export const PDF_THUMBNAIL_BOX_PX = 160;
 /** (default) Pages whose text the surface keeps read for selecting, least lately used let go first (reading-surface.md
  *  "Limits"). Safe range: 8 to 256. */
 export const PDF_PAGE_TEXTS_KEPT = 32;
+/** (default) Places Previous view keeps, the oldest let go first (reading-surface.md "The pages", "Limits"). Safe
+ *  range: 20 to 1,000. */
+export const PDF_VIEW_HISTORY_MAX = 100;

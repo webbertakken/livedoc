@@ -101,6 +101,8 @@ export const GO_TO_LAST_PAGE = 'go-to-last-page';
 export const GO_TO_PREVIOUS_PAGE = 'go-to-previous-page';
 export const GO_TO_NEXT_PAGE = 'go-to-next-page';
 export const GO_TO_PAGE = 'go-to-page';
+export const GO_TO_PREVIOUS_VIEW = 'go-to-previous-view';
+export const GO_TO_NEXT_VIEW = 'go-to-next-view';
 /** View > Thumbnails: the left panel's (reading-surface.md "The left panel"). */
 export const PANEL_THUMBNAILS = 'panel-thumbnails';
 /** View > Outline: the file's bookmarks (reading-surface.md "Outline"). */
@@ -253,8 +255,11 @@ export const PDF_MENUS: OfficeCatalogue = [
       item(GO_TO_PREVIOUS_PAGE, 'Previous page', 'view', BUILT),
       item(GO_TO_NEXT_PAGE, 'Next page', 'view', BUILT),
       item(GO_TO_PAGE, 'Page…', 'view', { ...BUILT, shortcut: GO_TO_PAGE }),
-      item('go-to-previous-view', 'Previous view', 'view'),
-      item('go-to-next-view', 'Next view', 'view'),
+      item(GO_TO_PREVIOUS_VIEW, 'Previous view', 'view', {
+        ...BUILT,
+        shortcut: GO_TO_PREVIOUS_VIEW,
+      }),
+      item(GO_TO_NEXT_VIEW, 'Next view', 'view', { ...BUILT, shortcut: GO_TO_NEXT_VIEW }),
     ]),
   ]),
   // A mark's tool is taken in hand by its item and stays there: one of a set with Select and Hand ("The toolbar").

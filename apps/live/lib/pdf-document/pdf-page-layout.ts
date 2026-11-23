@@ -232,13 +232,28 @@ export const PdfPageLayout = {
     layout: PdfPageLayout,
     index: number,
     viewport: PdfViewport,
+  ): { left: number; top: number } | null =>
+    PdfPageLayout.scrollToPlace(layout, { index, across: 0, down: 0 }, viewport),
+
+  /** How far to scroll so a place lies at the view's corner, the ground's pad before it; null: its page not laid out. */
+  scrollToPlace: (
+    layout: PdfPageLayout,
+    place: PdfPlace,
+    viewport: PdfViewport,
   ): { left: number; top: number } | null => {
-    if (!layout.boxes.some((box) => box.index === index)) return null;
+    if (!layout.boxes.some((box) => box.index === place.index)) return null;
     return PdfPageLayout.scrollTo(
       layout,
-      { index, across: 0, down: 0 },
+      place,
       { x: PDF_PAGES_PAD_PX, y: PDF_PAGES_PAD_PX },
       viewport,
     );
   },
+
+  /** The place at the view's corner, the pad in, as `scrollToPlace` goes back to it; null with no page laid out. */
+  placeInView: (layout: PdfPageLayout, scroll: { left: number; top: number }): PdfPlace | null =>
+    PdfPageLayout.placeAt(layout, {
+      x: scroll.left + PDF_PAGES_PAD_PX,
+      y: scroll.top + PDF_PAGES_PAD_PX,
+    }),
 } as const;
