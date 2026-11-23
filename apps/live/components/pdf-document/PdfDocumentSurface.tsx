@@ -392,6 +392,9 @@ export function PdfDocumentSurface({
       event.preventDefault();
       return textSelection.selectAll(viewer.page);
     }
+    // ⌘C copies the text selected on the pages; with none selected it is the browser's ("Copy").
+    const command = (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey;
+    if (command && key === 'c' && textActions.copyKey()) return event.preventDefault();
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (key === 'escape' && textSelection.selected) textSelection.clear();
     if (key === PDF_TOOL_KEYS.highlight && marking) pickTool('highlight');
@@ -409,7 +412,6 @@ export function PdfDocumentSurface({
       data-pdf-surface={state}
       data-pdf-tool={inHand}
       onKeyDown={onKeyDown}
-      onCopy={textActions.onCopy}
     >
       <OfficeTitleRow
         name={documentName || UNTITLED_PDF}

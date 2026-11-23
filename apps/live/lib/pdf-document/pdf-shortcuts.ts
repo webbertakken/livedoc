@@ -75,7 +75,7 @@ const PANELS: readonly ShortcutRow[] = [
 ];
 
 /** Copy and Select all (keyboard-shortcuts.md "Selections, marks and comments"): the surface hears them itself, ⌘C
- *  as the browser's copy event so a field keeps its own, ⌘A on the pages. */
+ *  outside a field with text selected and ⌘A on the pages, so a field keeps its own. */
 const SELECTIONS: readonly ShortcutRow[] = [
   {
     id: COPY,

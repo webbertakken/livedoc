@@ -756,10 +756,17 @@ describe('a PDF document’s text', () => {
   };
   const pagesOf = (container: HTMLElement) =>
     container.querySelector<HTMLElement>('[data-pdf-pages]')!;
-  const copyOn = (element: HTMLElement) => {
-    const setData = vi.fn();
-    fireEvent.copy(element, { clipboardData: { setData } });
-    return setData;
+  const writeText = vi.fn(async (_text: string) => {});
+  beforeEach(() => {
+    writeText.mockClear();
+    Object.assign(navigator, { clipboard: { writeText } });
+  });
+  // ⌘C on an element, and what it wrote to the clipboard.
+  const copyOn = async (element: HTMLElement) => {
+    await act(async () => {
+      fireEvent.keyDown(element, { key: 'c', ctrlKey: true });
+    });
+    return writeText.mock.calls.at(-1)?.[0] ?? null;
   };
 
   it('selects the page in view’s text by its key, copies it, and clears it with Escape', async () => {
@@ -768,10 +775,11 @@ describe('a PDF document’s text', () => {
     await act(async () => {
       fireEvent.keyDown(pages, { key: 'a', ctrlKey: true });
     });
-    expect(copyOn(pages)).toHaveBeenCalledWith('text/plain', 'Hello');
+    expect(await copyOn(pages)).toBe('Hello');
     expect(track).toHaveBeenCalledWith('Pdf', 'Copied', 'Text');
+    writeText.mockClear();
     fireEvent.keyDown(pages, { key: 'Escape' });
-    expect(copyOn(pages)).not.toHaveBeenCalled();
+    expect(await copyOn(pages)).toBeNull();
   });
 
   it('binds Copy and Select all in Edit, Copy dimmed with the reason where the file asks', async () => {
@@ -790,7 +798,7 @@ describe('a PDF document’s text', () => {
     await act(async () => {
       fireEvent.keyDown(pages, { key: 'a', metaKey: true });
     });
-    expect(copyOn(pages)).not.toHaveBeenCalled();
+    expect(await copyOn(pages)).toBeNull();
     expect(screen.getByText('This PDF asks not to be copied.')).toBeTruthy();
   });
 
@@ -800,6 +808,14 @@ describe('a PDF document’s text', () => {
     await act(async () => {
       fireEvent.keyDown(container.firstElementChild!, { key: 'a', ctrlKey: true });
     });
-    expect(copyOn(pages)).not.toHaveBeenCalled();
+    expect(await copyOn(pages)).toBeNull();
+  });
+
+  it('leaves ⌘C in a field to the field', async () => {
+    const { container } = show(await withText(), 'view');
+    await act(async () => {
+      fireEvent.keyDown(pagesOf(container), { key: 'a', ctrlKey: true });
+    });
+    expect(await copyOn(screen.getByRole('textbox', { name: 'Page' }))).toBeNull();
   });
 });

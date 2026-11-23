@@ -1,0 +1,55 @@
+import { FIXTURE_LINE, textPdf } from '@livedoc/pdf-documents/testing';
+import { expect, expectNoPageErrors, test } from '../fixtures';
+import { dragAcrossFirstLine, dropPdf, pageOneDrawn } from './pdf-document-pages';
+
+// Selecting a PDF's text and copying it (docs/specs/035-pdf-documents/reading-surface.md "The pages": Selecting text,
+// Copy; keyboard-shortcuts.md "Selections, marks and comments"): a drag with Select in hand selects by character, a
+// double press a word, ⌘A the page in view, and ⌘C puts the selection on the clipboard as plain text.
+
+const SELECTION = '[data-pdf-text-selection] polygon';
+
+test('a PDF’s text is selected by a drag, a double press and ⌘A, and copied by ⌘C', async ({
+  page,
+  context,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Field guide.pdf', await textPdf(2));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const clipboard = () => page.evaluate(() => navigator.clipboard.readText());
+
+  // A drag from the line's first character selects up to where it ends, drawn over the glyphs.
+  await expect(page.locator('[data-pdf-tool="select"]')).toBeVisible();
+  await dragAcrossFirstLine(page, first, { from: 1, to: 110 });
+  await expect(first.locator(SELECTION)).toHaveCount(1);
+  await page.keyboard.press('ControlOrMeta+c');
+  await expect.poll(clipboard).toMatch(/^The quick brown fox/);
+  const dragged = await clipboard();
+  expect(FIXTURE_LINE.startsWith(dragged)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('pdf-text-selected-dark.png') });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: test.info().outputPath('pdf-text-selected-light.png') });
+  await page.emulateMedia({ colorScheme: 'dark' });
+
+  // A double press on "quick" selects the word.
+  const box = (await first.boundingBox())!;
+  const scale = box.width / 612;
+  await page.mouse.dblclick(box.x + 100 * scale, box.y + 68 * scale);
+  await page.keyboard.press('ControlOrMeta+c');
+  await expect.poll(clipboard).toBe('quick');
+
+  // ⌘A on the pages selects the page in view's text; Escape clears the selection.
+  await page.keyboard.press('ControlOrMeta+a');
+  await expect(first.locator(SELECTION)).toHaveCount(2);
+  await page.keyboard.press('ControlOrMeta+c');
+  await expect.poll(clipboard).toBe(`${FIXTURE_LINE}\nPage 1`);
+  await page.keyboard.press('Escape');
+  await expect(first.locator(SELECTION)).toHaveCount(0);
+
+  expectNoPageErrors(pageErrors);
+});

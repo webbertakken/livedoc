@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/reading-surface.md "The pages": Copy puts the selection on the clipboard as plain text
-// (Edit > Copy, or ⌘C as the browser's copy event, a field keeping its own); a file that asks not to be copied dims
+// (Edit > Copy, or ⌘C heard by the surface); a file that asks not to be copied dims
 // Copy with the reason and ⌘C says so; a clipboard the browser refuses says so; Select all is the page in view's text.
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -27,17 +27,6 @@ function actions({ selected = SELECTED as PdfTextSelected | null, mayCopy = true
     usePdfTextActions({ selected, selectAll, page: 2, mayCopy, onProblem }),
   );
   return { hook, onProblem, selectAll };
-}
-
-// A copy event as the browser sends it, with its clipboard.
-function copyEvent(target: EventTarget) {
-  const setData = vi.fn();
-  const preventDefault = vi.fn();
-  return {
-    event: { target, clipboardData: { setData }, preventDefault } as never,
-    setData,
-    preventDefault,
-  };
 }
 
 afterEach(() => vi.clearAllMocks());
@@ -81,32 +70,22 @@ describe('copying the selected text', () => {
     expect(writeText).not.toHaveBeenCalled();
   });
 
-  it('copies on the browser’s copy event, keeping the event from the browser', () => {
+  it('copies on ⌘C, and leaves the key to the browser with nothing selected', async () => {
+    const writeText = vi.fn(async () => {});
+    Object.assign(navigator, { clipboard: { writeText } });
     const { hook } = actions();
-    const { event, setData, preventDefault } = copyEvent(document.body);
-    hook.result.current.onCopy(event);
-    expect(setData).toHaveBeenCalledWith('text/plain', 'Hello');
-    expect(preventDefault).toHaveBeenCalled();
-    expect(debugLog).toHaveBeenCalledWith('[pdf] text-copied chars=5');
+    await act(async () => expect(hook.result.current.copyKey()).toBe(true));
+    expect(writeText).toHaveBeenCalledWith('Hello');
     expect(track).toHaveBeenCalledWith('Pdf', 'Copied', 'Text');
-  });
-
-  it('leaves a copy event in a field, or with nothing selected, to the browser', () => {
-    const field = document.createElement('input');
-    const typed = copyEvent(field);
-    actions().hook.result.current.onCopy(typed.event);
-    expect(typed.preventDefault).not.toHaveBeenCalled();
-    const empty = copyEvent(document.body);
-    actions({ selected: null }).hook.result.current.onCopy(empty.event);
-    expect(empty.preventDefault).not.toHaveBeenCalled();
+    expect(actions({ selected: null }).hook.result.current.copyKey()).toBe(false);
   });
 
   it('says the file asks not to be copied on ⌘C, copying nothing', () => {
+    const writeText = vi.fn(async () => {});
+    Object.assign(navigator, { clipboard: { writeText } });
     const { hook, onProblem } = actions({ mayCopy: false });
-    const { event, setData, preventDefault } = copyEvent(document.body);
-    hook.result.current.onCopy(event);
-    expect(setData).not.toHaveBeenCalled();
-    expect(preventDefault).toHaveBeenCalled();
+    expect(hook.result.current.copyKey()).toBe(true);
+    expect(writeText).not.toHaveBeenCalled();
     expect(debugLog).toHaveBeenCalledWith('[pdf] text-copy-refused');
     expect(onProblem).toHaveBeenCalledWith(COPY_REFUSED_COPY);
     expect(COPY_REFUSED_COPY).toBe('This PDF asks not to be copied.');
