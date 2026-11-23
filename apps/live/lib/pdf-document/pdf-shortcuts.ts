@@ -13,6 +13,8 @@ const SHARED = new Set([
   'file-menu',
   'edit-menu',
   'view-menu',
+  'insert-menu',
+  'format-menu',
   'tools-menu',
   'help-menu',
   'switch-to-editing',
@@ -33,6 +35,18 @@ export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
       pc: 'Ctrl+Alt+Shift+X',
       mac: '⌘+Option+Shift+X',
       chromeos: 'Ctrl+Alt+Shift+X',
+    },
+    status: 'built',
+  },
+  // The Pages menu, which a text document has none of (keyboard-shortcuts.md "Rules").
+  {
+    id: 'pages-menu',
+    group: 'Menus',
+    action: 'Pages menu',
+    keys: {
+      pc: 'Alt+P (Chrome) or Alt+Shift+P (other browsers)',
+      mac: 'Ctrl+Option+P',
+      chromeos: 'Alt+P',
     },
     status: 'built',
   },

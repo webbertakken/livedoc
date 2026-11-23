@@ -32,6 +32,8 @@ export type PdfDocumentOpen =
       pages: readonly PageInfo[];
       storedFile: BlobKey;
       bytes: number;
+      /** The PDF version the file names, as "1.7"; null where it names none. */
+      version: string | null;
       /** Whether the file is protected: opened with a password, or its permissions limited (opening.md "Passwords"). */
       protected: boolean;
       engine: PdfEngineClient;
@@ -196,6 +198,7 @@ export function usePdfDocument(
           pages: opened.pages,
           storedFile,
           bytes: size,
+          version: opened.document.version,
           protected: opened.document.encrypted,
           engine: client,
           drawer,
