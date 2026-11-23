@@ -85,7 +85,7 @@ export function PollPromptSheet({
         // class-shaped string here is enough to make it compile one. Spelling
         // the safe-area utility out in prose generated a rule whose value was
         // the literal ellipsis, and the stylesheet failed to parse.
-        className="animate-sheet-up fixed inset-x-0 bottom-0 z-[calc(var(--z-toast,60)+1)] mx-auto w-full max-w-lg overflow-hidden rounded-t-surface border border-b-0 border-slate-200 bg-white shadow-[0_-8px_40px_-12px_rgb(0_0_0/0.25)] dark:border-slate-700 dark:bg-slate-900 sm:mb-3 sm:rounded-2xl sm:border-b"
+        className="animate-sheet-up fixed inset-x-0 bottom-0 z-[calc(var(--z-toast,60)+1)] mx-auto w-full max-w-lg overflow-hidden rounded-t-surface border border-b-0 border-slate-200 bg-white shadow-[0_-8px_40px_-12px_rgb(0_0_0/0.25)] dark:border-slate-700 dark:bg-slate-900 sm:mb-3 sm:rounded-surface sm:border-b"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {/* A grab-handle bar. Purely a signal: it says "sheet" in the one
