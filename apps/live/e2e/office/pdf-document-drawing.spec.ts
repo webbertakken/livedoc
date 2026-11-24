@@ -12,7 +12,8 @@ import { dropPdf, PAGE_ONE, pageOneDrawn } from './pdf-document-pages';
 // keyboard-shortcuts.md "Tools"): D takes the tool; two strokes in a row are one Drawing, a stroke after a pause another;
 // undo takes back the last stroke; the download holds each Drawing as an Ink annotation.
 
-/** A stroke dragged across page one, from and to points given as fractions of its box. */
+/** A stroke dragged across page one, from and to points given as fractions of its box, kept within the
+ * window: the page runs on below it. */
 async function stroke(page: Page, first: Locator, from: [number, number], to: [number, number]) {
   const box = (await first.boundingBox())!;
   const point = ([x, y]: [number, number]) =>
@@ -49,15 +50,15 @@ test('strokes drawn on a page are Drawings, joined in a run, undone a stroke at 
   );
 
   // Two strokes in a row: one Drawing of two strokes.
-  await stroke(page, first, [0.2, 0.4], [0.4, 0.45]);
-  await stroke(page, first, [0.2, 0.5], [0.4, 0.55]);
+  await stroke(page, first, [0.2, 0.25], [0.4, 0.28]);
+  await stroke(page, first, [0.2, 0.32], [0.4, 0.35]);
   await expect(drawings).toHaveCount(1);
   await expect(strokes(0)).toHaveCount(2);
   await expect(strokes(0).first()).toHaveAttribute('stroke-linecap', 'round');
 
   // After a pause past PDF_DRAWING_JOIN_MS, a Drawing of its own.
   await page.waitForTimeout(1_200);
-  await stroke(page, first, [0.5, 0.6], [0.7, 0.65]);
+  await stroke(page, first, [0.5, 0.38], [0.7, 0.41]);
   await expect(drawings).toHaveCount(2);
   await page.screenshot({ path: test.info().outputPath('pdf-drawing.png') });
 

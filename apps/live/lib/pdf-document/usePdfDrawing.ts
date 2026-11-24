@@ -54,7 +54,7 @@ export function usePdfDrawing({
       } else if (made.reason === 'pdf_too_many_marks') {
         debugLog('[pdf] limit-refused name=pdf_too_many_marks');
         onProblem(TOO_MANY_MARKS_COPY);
-      }
+      } else debugLog(`[pdf] mark-refused name=${made.reason}`);
     },
     [ready, author, look, onProblem],
   );

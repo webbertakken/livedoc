@@ -289,6 +289,11 @@ describe('drawing on a page', () => {
     fireEvent.pointerUp(box, at(100, 92));
     expect(onDraw).toHaveBeenCalledWith(1, [72, 700, 100, 700], expect.any(Number));
     expect(view.container.querySelector('[data-pdf-ink-preview]')).toBeNull();
+    // The next stroke is a stroke of its own.
+    fireEvent.pointerDown(box, at(80, 92));
+    fireEvent.pointerMove(box, at(90, 92));
+    fireEvent.pointerUp(box, at(90, 92));
+    expect(onDraw).toHaveBeenLastCalledWith(1, [80, 700, 90, 700], expect.any(Number));
     expect(onMark).not.toHaveBeenCalled();
   });
 
