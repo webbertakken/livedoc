@@ -23,7 +23,13 @@ export * from './input';
 export * from './typed-input';
 export * from './format';
 export * from './number-format';
-export { formatCodeReads } from './format-codes';
+export {
+  CODE_COLOURS,
+  formatCodeDraw,
+  formatCodeProblem,
+  formatCodeReads,
+  type CodeDraw,
+} from './format-codes';
 export * from './cards';
 export * from './imports/import-request';
 export * from './imports/range-import';

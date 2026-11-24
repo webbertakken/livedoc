@@ -32,6 +32,13 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 - **Custom Number Format** dialog: a field for a format code with a live preview and the list of Google's examples;
   codes follow the shared grammar (sections for positive, negative, zero and text; `0`, `#`, `?`, `,`, `%`, `E+`,
   `@`, `[Red]`-style colours, `[h]` durations, conditions such as `[<1000]`).
+  - The dialog is the shell's, titled **Custom Number Formats**; the field starts as the active cell's code (its
+    format's code when it is not Custom), else `#,##0.00`.
+  - The preview draws the active cell's value in the code, its colour included, else 1234.5; a code that cannot be
+    read shows why in its place, announced politely, and **Apply** is dimmed.
+  - The examples list (D193) shows each code with its preview of 1234.5; a press puts it in the field, never
+    applies it.
+  - **Apply** formats the selection with the code, one undo step; Cancel, Escape and × change nothing.
 - **Custom Date and Time**: building blocks (Day, Month, Year, Hour, Minute, Second, AM/PM) each with its variants,
   arranged by the person.
 - **Custom Currency**: a searchable list of currencies, each with its symbol placements.
@@ -117,6 +124,9 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
 - **D191** A code with conditions: The first section whose condition holds, else the first with none; the number
   keeps its minus; none left, Automatic (default).
 - **D192** A code's colour: Over the cell's text colour, under a met conditional format's; never in `TEXT` (default).
+- **D193** The Custom Number Formats dialog's examples: `0.00`, `#,##0`, `#,##0.00`, `0%`, `0.00%`, `0.00E+00`,
+  `£#,##0.00`, `#,##0.00;[Red]-#,##0.00`, `#,##0.00;(#,##0.00)`, `[<1000]0;[<1000000]0.0,"K";0.0,,"M"`,
+  `dd/mm/yyyy`, `hh:mm`, `[h]:mm:ss`, `"Total: "@` (default).
 
 ## Telemetry
 

@@ -349,7 +349,7 @@ const formatMenu = (locale: string | null) =>
       SEPARATOR,
       item('custom-currency', 'Custom Currency', 'edit'),
       item('custom-date-and-time', 'Custom Date and Time', 'edit'),
-      item('custom-number-format', 'Custom Number Format', 'edit'),
+      built('custom-number-format', 'Custom Number Format', 'edit'),
     ]),
     submenu('text', 'Text', [
       built('bold', 'Bold', 'edit', { checkable: 'checkbox', shortcut: 'bold' }),

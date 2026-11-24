@@ -46,3 +46,35 @@ test('Format › Number shows each example and draws Financial and Currency Roun
   await page.keyboard.press('Escape');
   expectNoPageErrors(pageErrors);
 });
+
+test('Custom Number Formats applies a code with a colour and refuses one it cannot read', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  await nameBox.fill('A1');
+  await nameBox.press('Enter');
+  await page.keyboard.type('-42');
+  await page.keyboard.press('Enter');
+  await nameBox.fill('A1');
+  await nameBox.press('Enter');
+
+  await (await officeMenuItem(page, ['Format', 'Number', 'Custom Number Format'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Custom Number Formats' });
+  const field = dialog.getByRole('textbox', { name: 'Format Code' });
+  await field.fill('[Purple]0');
+  await expect(dialog.getByRole('status')).toHaveText('`[Purple]` is not a colour or a condition');
+  await expect(dialog.getByRole('button', { name: 'Apply' })).toBeDisabled();
+  await dialog.getByRole('button', { name: /^#,##0\.00;\[Red\]-#,##0\.00/ }).click();
+  await expect(dialog.getByRole('status')).toHaveText('Preview: -42.00');
+  await page.screenshot({
+    path: test.info().outputPath('custom-format.png'),
+    animations: 'disabled',
+  });
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(grid(page).getByText('-42.00', { exact: true })).toBeVisible();
+  expectNoPageErrors(pageErrors);
+});
