@@ -60,7 +60,7 @@ Every function is reachable without a pointer ([Keyboard shortcuts](keyboard-sho
 
 - **Reading**: arrow keys scroll, Page Up and Down turn screens, the page field and the thumbnails jump; F6 moves
   between the surface's regions in screen order (title row, menu bar, toolbar, notice, rail, left panel, pages, side
-  panel, page bar, the document group), ⇧F6 back.
+  panel, page bar), ⇧F6 back.
 - **A text caret** lives in the pages: with Select in hand, pressing Enter on a page (or F7 `(default)`) places a
   caret at the start of the page's text; arrow keys move it by character and line, ⌥ by word; ⇧ extends a selection;
   the mark tools then act on the selection as they do on a dragged one.

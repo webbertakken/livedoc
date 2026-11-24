@@ -36,10 +36,9 @@ test('F6 moves between a PDF’s regions, its notice and page bar among them', a
   await expect(page.locator('[data-region="notice"]')).toBeVisible();
   await page.locator('[data-pdf-pages]').focus();
 
-  const onward = await walk(page, 'F6', 8);
+  const onward = await walk(page, 'F6', 7);
   expect(onward.slice(0, onward.indexOf('document') + 1)).toEqual([
     'pagebar',
-    'tabs',
     'header',
     'menubar',
     'toolbar',
