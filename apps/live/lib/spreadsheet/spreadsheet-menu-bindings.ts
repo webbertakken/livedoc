@@ -55,6 +55,8 @@ export type GridMenuActions = {
   openCustomFormat: () => void;
   // Format › Number › Custom Currency's dialog.
   openCustomCurrency: () => void;
+  // Format › Number › Custom Date and Time's dialog.
+  openCustomDateTime: () => void;
 };
 
 /** An axis's groups as the menus read them: any in the selection's lines, any collapsed, any expanded. */
@@ -199,6 +201,7 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     'clear-formatting': run(() => act.clear('formats')),
     'custom-number-format': run(act.openCustomFormat),
     'custom-currency': run(act.openCustomCurrency),
+    'custom-date-and-time': run(act.openCustomDateTime),
     ...Object.fromEntries(
       port.recentCodes.map((nc, i) => [
         recentFormatItemId(i),

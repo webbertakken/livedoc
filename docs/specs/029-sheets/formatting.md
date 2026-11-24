@@ -44,6 +44,17 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
   - **Apply** formats the selection with the code, one undo step; Cancel, Escape and × change nothing.
 - **Custom Date and Time**: building blocks (Day, Month, Year, Hour, Minute, Second, AM/PM) each with its variants,
   arranged by the person.
+  - The dialog is the shell's, titled **Custom Date and Time Formats**: the format as a row of parts, each block a
+    choice of its variants and each piece of text between them a field; a part goes with its ×, and **Add** puts a
+    block at the end.
+  - Variants (D197): Day `d` 5, `dd` 05, `ddd` Tue, `dddd` Tuesday; Month `m` 8, `mm` 08, `mmm` Aug, `mmmm` August,
+    `mmmmm` A; Year `yy` 30, `yyyy` 1930; Hour `h`, `hh`; Minute `m`, `mm`; Second `s`, `ss`; AM/PM `AM/PM`, `A/P`.
+  - It starts from the active cell's format when that draws a date or a time, else from Date's; the presets (D198)
+    replace the row with theirs.
+  - The preview draws the active cell's value, else 26 September 2008 15:59:00, in the code the row makes. A Minute
+    reads as a Month unless it follows an Hour or comes before a Second, as in every format code; the preview shows
+    it as it will be drawn.
+  - **Apply** formats the selection with the code as Custom, one undo step; an empty row dims it.
 - **Custom Currency**: a searchable list of currencies, each with its symbol placements.
   - The dialog is the shell's, titled **Custom Currencies**: a search field, the currencies the browser knows (each
     its name in the workbook's locale, its ISO code and its symbol), sorted by name, matched by any of the three.
@@ -141,6 +152,10 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
 - **D195** Custom Currencies' formats: The symbol before or after, with two decimals or none (default).
 - **D196** Custom Currencies as it opens: Nothing picked, the first format ready once a currency is; Apply dimmed
   until then (default).
+- **D197** Custom Date and Time's blocks: Day, Month, Year, Hour, Minute, Second, AM/PM, with the variants listed
+  (default).
+- **D198** Custom Date and Time's presets: `dd/mm/yyyy`, `d mmmm yyyy`, `dddd, d mmmm yyyy`, `mmmm yyyy`, `yyyy-mm-dd`,
+  `hh:mm`, `hh:mm:ss`, `h:mm AM/PM`, `dd/mm/yyyy hh:mm:ss` (default).
 
 ## Telemetry
 

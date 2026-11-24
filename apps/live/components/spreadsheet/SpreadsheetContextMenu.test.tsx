@@ -30,6 +30,7 @@ function Menus({ actions }: { actions: SheetActions }) {
   const office = useGridMenuBindings(actions, {
     openCustomFormat: vi.fn(),
     openCustomCurrency: vi.fn(),
+    openCustomDateTime: vi.fn(),
   });
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;
 }
