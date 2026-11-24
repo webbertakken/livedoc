@@ -181,7 +181,9 @@ describe('writing the marks of text', () => {
     expect(read.map((mark) => [mark.id, mark.subtype]).toSorted()).toEqual(
       kinds.map((kind) => [kind, kind]).toSorted(),
     );
-    expect(read.map((mark) => [mark.colour, mark.quads.length])).toEqual(kinds.map(() => ['#d93025', 1]));
+    expect(read.map((mark) => [mark.colour, mark.quads.length])).toEqual(
+      kinds.map(() => ['#d93025', 1]),
+    );
   });
 });
 
