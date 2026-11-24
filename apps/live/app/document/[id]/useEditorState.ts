@@ -2776,6 +2776,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // the page below.
   const {
     addTab,
+    addDrawingTab,
     importIntoActiveTab,
     importTextIntoActiveTab,
     importSceneIntoActiveTab,
@@ -4308,6 +4309,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     // The empty Plan tab's board picker places its board in the middle of the view.
     getViewportCenter,
     addTab,
+    addDrawingTab,
     addText,
     aiCapable,
     anyWelcomeOpen,

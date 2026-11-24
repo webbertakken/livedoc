@@ -5,56 +5,13 @@
 // changes no text. A position that no longer resolves is not drawn.
 import { Plugin, PluginKey, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
-import {
-  absolutePositionToRelativePosition,
-  relativePositionToAbsolutePosition,
-  ySyncPluginKey,
-} from 'y-prosemirror';
-import * as Y from 'yjs';
 import { afterNextPaint } from '@/lib/after-next-paint';
-import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bindingOf, encode, resolve } from './text-document-relative-positions';
 import type { TextDocumentPeer, TextDocumentSelection } from './text-document-carets-store';
-
-type Binding = {
-  doc: Y.Doc;
-  type: Y.XmlFragment;
-  binding: { mapping: Map<Y.AbstractType<unknown>, unknown> } | null;
-};
 
 export const textDocumentPeersKey = new PluginKey<readonly TextDocumentPeer[]>(
   'text-document-peers',
 );
-
-function bindingOf(state: EditorState): Binding | null {
-  const y = ySyncPluginKey.getState(state) as Binding | undefined;
-  return y?.binding ? y : null;
-}
-
-function encode(pos: number, y: Binding): string {
-  // y-prosemirror types its answer as any; it is a Yjs relative position.
-  const relative = absolutePositionToRelativePosition(
-    pos,
-    y.type,
-    y.binding!.mapping as never,
-  ) as unknown as Y.RelativePosition;
-  return base64OfBytes(Y.encodeRelativePosition(relative));
-}
-
-function resolve(position: string, y: Binding, size: number): number | null {
-  const bytes = bytesOfBase64(position);
-  if (!bytes) return null;
-  try {
-    const at = relativePositionToAbsolutePosition(
-      y.doc,
-      y.type,
-      Y.decodeRelativePosition(bytes),
-      y.binding!.mapping as never,
-    );
-    return at === null ? null : Math.min(at, size);
-  } catch {
-    return null;
-  }
-}
 
 /** The selection as relative positions, or null before the binding has mapped the document. */
 export function selectionOf(state: EditorState): TextDocumentSelection | null {

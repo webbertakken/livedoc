@@ -41,7 +41,7 @@ interchangeable. These are design decisions, taken before any feature that uses 
   Docs works ([Text document](../034-text-documents/text-document.md)). Its **editing mode** (Editing, Suggesting,
   Viewing) is one person's, never the tab's, so it is never called a mode alone. Its **format** is ODF or OOXML, the
   one it arrived in. Pages mode is retiring (plan 0019, C2); "article" leaves the language with it.
-- A **drawing tab** is a general tab in Sketch that belongs to one text document tab (`Tab.drawingOf`), never listed,
+- A **drawing tab** is a general tab that belongs to one text document tab (`Tab.drawingOf`), never listed,
   drawn in the writing as a picture ([Drawings](../034-text-documents/objects.md#drawings)); never a kind, never
   "drawing" alone where a drawing element could be meant.
 - **Markdown** and **File** are kinds outside the canvas, worked on in no mode: a markdown tab holds one text

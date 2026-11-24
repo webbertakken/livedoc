@@ -52,3 +52,12 @@ describe('deleting a drawing tab', () => {
     expect(setActiveId).toHaveBeenCalledWith('w');
   });
 });
+
+describe('deleting the drawing tab of a document’s one listed tab', () => {
+  it('deletes it, and goes back to its text document tab', () => {
+    const tabs = [tab('w', { kind: 'text-document' }), tab('d1', { drawingOf: 'w' })];
+    const { after, setActiveId } = deleting(tabs, 'd1');
+    expect(after!.map((t) => t.id)).toEqual(['w']);
+    expect(setActiveId).toHaveBeenCalledWith('w');
+  });
+});

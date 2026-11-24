@@ -5,6 +5,7 @@
 // ProseMirror's binding load only when a text document tab is open. `readOnly`: the other pane of a split shows the
 // tab live without editing it ("Side by side").
 import dynamic from 'next/dynamic';
+import { useCallback } from 'react';
 import { textDocumentFormatOf, type Tab } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
@@ -23,6 +24,10 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
   const local = useIsOfflineDocument(documentId);
   // The document's own parts in the title row, for the editor's pane alone (editing-surface.md "The title row").
   const office = useEditorLines()?.office ?? null;
+  // Drawings are an Editor's, in the editor's pane (objects.md "Drawings").
+  const { addDrawingTab } = ctx;
+  const mayDraw = !readOnly && can.textDocumentEdits;
+  const createDrawing = useCallback(() => addDrawingTab(tab.id), [addDrawingTab, tab.id]);
   if (!documentId) return null;
   return (
     <TextDocumentSurface
@@ -41,6 +46,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       sequence={(op) => roomRef.current?.sequence(op) ?? Promise.resolve(false)}
       chrome={readOnly ? null : office}
       documents={ctx.documentList}
+      createDrawing={mayDraw ? createDrawing : null}
     />
   );
 }

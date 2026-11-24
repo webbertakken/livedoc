@@ -86,6 +86,14 @@ const PlanSheetsHost = dynamic(
   () => import('@/components/plan/PlanSheetsHost').then((m) => m.PlanSheetsHost),
   { ssr: false },
 );
+// A drawing tab's bar loads only over a drawing tab (docs/specs/034-text-documents/objects.md "Drawings").
+const TextDocumentDrawingBar = dynamic(
+  () =>
+    import('@/components/text-document/TextDocumentDrawingBar').then(
+      (m) => m.TextDocumentDrawingBar,
+    ),
+  { ssr: false },
+);
 
 // The editor's full view (header + canvas + tab bar + all dialogs),
 // lifted out of editor-page.tsx. Every value/handler it needs is read
@@ -586,6 +594,8 @@ export function EditorView() {
                                     <AreaErrorBoundary area="Presentation">
                                       <PresentationHost />
                                     </AreaErrorBoundary>
+                                    {/* A drawing tab's bar (docs/specs/034-text-documents/objects.md "Inserting and editing"). */}
+                                    {activeTab.drawingOf ? <TextDocumentDrawingBar /> : null}
                                     {embedMode ? (
                                       // Embed chrome (docs/specs/013-workspace/embeds.md): the link-out badge + a minimal tab
                                       // switcher replace the full TabBar. Same selection clears as

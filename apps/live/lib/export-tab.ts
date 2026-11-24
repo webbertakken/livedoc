@@ -99,7 +99,7 @@ export type ImageExportOpts = {
   // backdrop do not apply.
   page?: LaidOutPage;
   // A logo page's plain paper left see-through (docs/specs/007-editor/logo-pages.md "Export"):
-  // PNG and SVG pass it, PDF never does.
+  // PNG and SVG pass it, PDF never does. Without a page, the whole tab's paper and pattern (a drawing's PNG).
   transparentPaper?: boolean;
   // Slides' animated backgrounds painted so far in this export, so a background repeated across a
   // deck is painted once (lib/page-motion-canvas.ts). Absent, each page paints its own.
@@ -313,8 +313,10 @@ export async function renderTabToCanvas(
   // The paper under the content: a hollow arrowhead is filled with it, as on the canvas.
   const paper = frame ? EXPORT_PAPER : bgColor;
   ctx.fillStyle = paper;
-  if (!frame?.transparent) ctx.fillRect(0, 0, w / scale, h / scale);
-  const bg = frame ? null : backgroundPatternDefs(tab, opts);
+  // A whole tab on a transparent ground (a text document's drawing, objects.md "Its picture") paints no paper or pattern.
+  const bare = !frame && opts.transparentPaper === true;
+  if (!frame?.transparent && !bare) ctx.fillRect(0, 0, w / scale, h / scale);
+  const bg = frame || bare ? null : backgroundPatternDefs(tab, opts);
   if (frame) {
     const { x, y, w: fw, h: fh } = frame.bounds;
     const svg =

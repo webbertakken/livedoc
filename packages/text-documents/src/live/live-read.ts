@@ -139,6 +139,7 @@ function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): I
           props: a.props ?? {},
           style: a.style as string | undefined,
           link: a.link as string | undefined,
+          drawing: typeof a.drawing === 'string' ? a.drawing : undefined,
           kept: a.kept as Picture['kept'],
         }),
       );

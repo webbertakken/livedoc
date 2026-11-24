@@ -120,6 +120,8 @@ describe('the text document menus', () => {
         'image-upload',
         'image-search',
         'image-gallery',
+        // Insert > Drawing > New (useTextDocumentDrawings), bound by the surface.
+        'drawing-new',
         // Format > Image (useTextDocumentPictureEditing), bound by the surface.
         'image-alt-text',
         'image-replace-upload',

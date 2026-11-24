@@ -71,6 +71,7 @@ export const PICTURE_ATTRIBUTES = [
   'props',
   'style',
   'link',
+  'drawing',
   'kept',
 ] as const;
 /** An equation (objects.md "Equations in the editor"): an atom inside its paragraph, its maths one whole value. */

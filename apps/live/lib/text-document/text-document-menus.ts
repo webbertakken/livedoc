@@ -212,7 +212,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       SEPARATOR,
       item('link', 'Link', 'edit', { shortcut: 'insert-or-edit-link', ...BUILT }),
       submenu('drawing', 'Drawing', [
-        item('drawing-new', 'New', 'edit'),
+        item('drawing-new', 'New', 'edit', BUILT),
         item('drawing-from-document', 'From a LiveDoc document', 'edit'),
       ]),
       submenu('chart', 'Chart', [
