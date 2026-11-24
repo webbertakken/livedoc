@@ -160,6 +160,16 @@ describe('useTextDocumentLinks', () => {
     ]);
   });
 
+  it('reads an email put in at a bare caret as typed, linked to mailto', () => {
+    const { view, hook, drawn } = setup({ from: 3 });
+    act(() => hook.result.current.actions[LINK_ITEM]!.run());
+    drawn();
+    const link = screen.getByRole<HTMLInputElement>('combobox', { name: 'Link' });
+    fireEvent.change(link, { target: { value: 'ada@example.com' } });
+    fireEvent.submit(link.form!);
+    expect(runs(view)[1]).toEqual(['ada@example.com', 'mailto:ada@example.com']);
+  });
+
   it('closes on Escape, changing nothing', () => {
     const { view, hook, drawn } = setup({ from: 5, to: 9 });
     act(() => hook.result.current.actions[LINK_ITEM]!.run());

@@ -133,7 +133,12 @@ export function useTextDocumentLinks({
         return address.problem;
       }
       startUndoStep(view);
-      const done = applyLink({ ...was, text, href: address.href })(view.state, view.dispatch);
+      // At a bare caret with Text empty, the link reads as Link was typed (an email without its mailto:).
+      const shown = was.from === was.to && !text ? typed.trim() : text;
+      const done = applyLink({ ...was, text: shown, href: address.href })(
+        view.state,
+        view.dispatch,
+      );
       startUndoStep(view);
       if (done) {
         if (was.href === '') track('Element', 'Added', 'TextDocumentLink');

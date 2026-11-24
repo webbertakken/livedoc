@@ -17,7 +17,7 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   most 8, newest first `(default)`, and this document's headings and bookmarks; Up and Down move, Enter takes one.
   A document taken fills Link with its address and an empty Text with its name.
 - Applying is one undo step. In a link, its text and address change; over a selection, the selection becomes Text
-  (when changed) and links to the address; at a bare caret, Text (the address when empty) is put in, linked.
+  (when changed) and links to the address; at a bare caret, Text (Link as typed when empty) is put in, linked.
   An empty Link removes the link.
 - Addresses kept: `http`, `https`, `mailto`, LiveDoc document addresses, and in-document targets (a heading, a
   bookmark); a bare domain becomes `https://`, a bare email address `mailto:` `(default)`. Others are refused under
