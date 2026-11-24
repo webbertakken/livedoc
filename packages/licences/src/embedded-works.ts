@@ -19,6 +19,7 @@ export type EmbeddedWork = {
 const TFJS_WASM = /^tfjs-backend-wasm(-simd|-threaded-simd)?\.[\w-]+\.wasm$/;
 const ORT_WASM = /^ort-wasm[\w.-]*\.wasm$/;
 const WEBP_WASM = /^webp_(enc|dec)(_simd)?\.[\w-]+\.wasm$/;
+const HARFBUZZ_WASM = /^harfbuzz\.[\w-]+\.wasm$/;
 // The PDF engine's reader (docs/specs/035-pdf-documents/security.md "The boundary"), as the editor's build emits it.
 const PDFIUM_WASM = /^pdfium\.[\w-]+\.wasm$/;
 const PDFIUM_CARRIER = '@embedpdf/pdfium (WebAssembly)';
@@ -112,6 +113,19 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
       { label: 'LICENSE', file: 'onnxruntime-89f8206ba4-LICENSE.txt' },
       { label: 'ThirdPartyNotices.txt', file: 'onnxruntime-89f8206ba4-ThirdPartyNotices.txt' },
     ],
+  },
+  // HarfBuzz inside harfbuzzjs 1.6.4 (its version string answers 15.0.0): the shaper the PDF engine sets a mark's
+  // words with in the mark faces (docs/specs/035-pdf-documents/marks.md "Laying out"). Its COPYING is the "Old MIT"
+  // licence: MIT's permission with the notice kept, recorded as MIT; the package's own MIT covers its glue.
+  {
+    id: 'harfbuzz',
+    name: 'HarfBuzz (WebAssembly)',
+    version: '15.0.0',
+    licence: 'MIT',
+    carrier: 'harfbuzzjs (WebAssembly)',
+    homepage: 'https://github.com/harfbuzz/harfbuzz',
+    trigger: { assets: HARFBUZZ_WASM },
+    texts: [{ label: 'COPYING', file: 'harfbuzz-15.0.0-COPYING.txt' }],
   },
   // libwebp inside @jsquash/webp, built from libwebp d2e245e (jSquash's codec Makefile).
   {
