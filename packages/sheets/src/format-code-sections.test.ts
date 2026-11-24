@@ -59,6 +59,13 @@ describe('a date section', () => {
     expect(formatCodeText(-400, 'dd/mm/yyyy')).toBe('25/11/1898');
   });
 
+  it('reads General past its brackets, and a run of brackets in no time', () => {
+    expect(formatCodeDraw(-2, '[Red]General')).toEqual({ text: '-2', colour: CODE_COLOURS.red });
+    const started = performance.now();
+    formatCodeDraw(1, '['.repeat(50_000));
+    expect(performance.now() - started).toBeLessThan(100);
+  });
+
   it('draws an unclosed bracket as it reads, never failing', () => {
     expect(formatCodeDraw(1, '0[Red')).toEqual({ text: '1' });
   });

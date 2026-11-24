@@ -121,11 +121,37 @@ function tokenize(section: string, dateMode: boolean): Tok[] {
   return out;
 }
 
+// A section's own characters: its quoted text and escapes out, and every bracket but elapsed time's (`[h]`). One
+// pass, so a run of `[` or `"` costs no more than its length.
+function bareSection(section: string): string {
+  let out = '';
+  const lastClose = section.lastIndexOf(']');
+  for (let i = 0; i < section.length; i++) {
+    const ch = section[i]!;
+    if (ch === '\\') {
+      i++;
+      continue;
+    }
+    if (ch === '"') {
+      const end = section.indexOf('"', i + 1);
+      if (end < 0) return out + section.slice(i);
+      i = end;
+      continue;
+    }
+    if (ch === '[' && i < lastClose) {
+      const end = section.indexOf(']', i);
+      const inner = section.slice(i + 1, end);
+      if (/[hms]/i.test(inner)) out += `[${inner}]`;
+      i = end;
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
 export function isDateSection(section: string): boolean {
-  const bare = section
-    .replace(/"[^"]*"/g, '')
-    .replace(/\\./g, '')
-    .replace(/\[[^\]hms]*\]/gi, '');
+  const bare = bareSection(section);
   return /[dmyhs]|am\/pm|a\/p/i.test(bare) && !/[0#?]/.test(bare.replace(/\.0+/g, ''));
 }
 
@@ -341,6 +367,18 @@ function bracketsOf(section: string): string[] {
   return out;
 }
 
+// A section with its brackets (`[Red]`, `[<0]`) taken out, in one pass however many `[` it holds.
+function withoutBrackets(section: string): string {
+  let out = '';
+  let open = false;
+  for (const ch of section) {
+    if (open) open = ch !== ']';
+    else if (ch === '[') open = true;
+    else out += ch;
+  }
+  return out;
+}
+
 // A section's colour and condition, read from its brackets.
 function metaOf(section: string): { colour?: string; condition?: Condition } {
   const meta: { colour?: string; condition?: Condition } = {};
@@ -412,7 +450,7 @@ export function formatCodeDraw(value: number | string, code: string): CodeDraw {
   if (section === '' && sections.length >= 2) return { text: '' };
   const n = Math.abs(value);
   const minus = signed && value < 0 ? '-' : '';
-  if (/^\s*general\s*$/i.test(section.replace(/\[[^\]]*\]/g, '')))
+  if (withoutBrackets(section).trim().toLowerCase() === 'general')
     return withColour(minus + numberText(n), section);
   if (isDateSection(section))
     return withColour(formatDateSection(signed ? value : n, tokenize(section, true)), section);
