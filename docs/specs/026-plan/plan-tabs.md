@@ -299,7 +299,7 @@ in Plan, so one on a Sketch, Structured or Pages tab could never be worked there
   segment's ([The tab's name](../007-editor/toolbar-layout.md#the-tabs-name)). For an Editor the name is a button
   (**Rename Dashboard**): a click, or Enter or Space on it, opens the field (Enter or leaving saves the trimmed name,
   up to 80 characters; Escape puts it back; focus returns to the name), and the tab list follows.
-- **Look**: each slot is a translucent card over the canvas (white at 72%, slate 900 at 60% in dark), 16 px corners,
+- **Look**: each slot is a translucent card over the canvas (white at 72%, slate 900 at 60% in dark), 12 px corners,
   a hairline edge and a soft shadow, lifting a little on hover; no backdrop blur (up to 48 slots would each
   recomposite on scroll).
 - **Slot content** (`content`):
@@ -368,7 +368,7 @@ offered.
   worked out from the sheet store (as [Sheet](../029-sheets/sheet.md#exports-and-images) says). Anything else hidden under the board or Sheet stays out.
 - An image of a **Dashboard tab** is its page: rows top to bottom, slots side by side, **1440 px** wide (the image's
   own 32 px margin round 1376 px of rows, 12 px between rows and slots, each row its own height; a row that fills the
-  page is **720 px** tall), each slot a card in the page's look (white at 72%, slate 900 at 60% in dark, 16 px
+  page is **720 px** tall), each slot a card in the page's look (white at 72%, slate 900 at 60% in dark, 12 px
   corners, a hairline edge) holding a picture of what it holds:
   - a Board or Sheet (its own, or a tab's) drawn as above at the slot's size; a Diagram tab's drawing fitted inside;
   - a plan view drawn as a chart, not a labelled box: a metric's figure, its line and its bars; Cards by Field's

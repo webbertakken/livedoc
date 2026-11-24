@@ -40,7 +40,7 @@ const GRIP_CORNER_ON_TOUCH =
   '[@media(hover:none)]:left-2 [@media(hover:none)]:top-2 [@media(hover:none)]:translate-x-0';
 
 const SLOT_CARD =
-  'overflow-hidden rounded-2xl border border-slate-900/[0.07] bg-white/[0.72] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-16px_rgba(15,23,42,0.22)] transition duration-micro hover:-translate-y-px hover:shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-16px_rgba(15,23,42,0.3)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-white/[0.08] dark:bg-slate-900/60 dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_12px_32px_-16px_rgba(0,0,0,0.6)]';
+  'overflow-hidden rounded-surface border border-slate-900/[0.07] bg-white/[0.72] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-16px_rgba(15,23,42,0.22)] transition duration-micro hover:-translate-y-px hover:shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-16px_rgba(15,23,42,0.3)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-white/[0.08] dark:bg-slate-900/60 dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_12px_32px_-16px_rgba(0,0,0,0.6)]';
 
 export function DashboardSlotView({
   rowId,
@@ -163,7 +163,7 @@ export function DashboardSlotView({
             // has no hover to reveal it: there it is always shown, quietly, with a finger's tap area, in the slot's top
             // left corner (the cog holds the right) where nothing heads the slot, clear of what it shows in its middle;
             // a slot with a header of its own (its title at the left) keeps it in the middle of its top edge.
-            className={`touch-target absolute left-1/2 top-1.5 z-30 flex h-5 w-9 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded-full border border-slate-900/10 bg-white text-slate-500 opacity-0 shadow-sm scale-75 transition-[opacity,scale,color] duration-micro ease-out hover:text-brand-700 focus-visible:scale-100 focus-visible:opacity-100 active:cursor-grabbing group-hover/slot:scale-100 group-hover/slot:opacity-70 group-data-[tour-reveal]/slot:scale-100 group-data-[tour-reveal]/slot:opacity-100 hover:!opacity-100 motion-reduce:scale-100 motion-reduce:transition-none dark:border-white/[0.06] dark:bg-slate-800 dark:text-slate-400 dark:group-hover/slot:opacity-50 dark:hover:text-brand-300 [@media(hover:none)]:scale-100 [@media(hover:none)]:opacity-70 ${headed ? '' : GRIP_CORNER_ON_TOUCH}`}
+            className={`touch-target absolute left-1/2 top-1 z-30 flex h-chip w-9 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded-full border border-slate-900/10 bg-white text-slate-500 opacity-0 shadow-sm scale-75 transition-[opacity,scale,color] duration-micro ease-out hover:text-brand-700 focus-visible:scale-100 focus-visible:opacity-100 active:cursor-grabbing group-hover/slot:scale-100 group-hover/slot:opacity-70 group-data-[tour-reveal]/slot:scale-100 group-data-[tour-reveal]/slot:opacity-100 hover:!opacity-100 motion-reduce:scale-100 motion-reduce:transition-none dark:border-white/[0.06] dark:bg-slate-800 dark:text-slate-400 dark:group-hover/slot:opacity-50 dark:hover:text-brand-300 [@media(hover:none)]:scale-100 [@media(hover:none)]:opacity-70 ${headed ? '' : GRIP_CORNER_ON_TOUCH}`}
           >
             <GripGlyph />
           </button>

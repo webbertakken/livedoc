@@ -71,8 +71,8 @@ export function AddSlotSides({
         onClick={() => {
           if (!reason) add(s);
         }}
-        className={`group/side flex items-center justify-center gap-1 rounded-lg border text-[11px] font-medium outline-none transition duration-micro focus-visible:ring-2 focus-visible:ring-brand-400 motion-reduce:transition-none ${
-          horizontal ? 'h-7 w-full' : 'h-full w-12 flex-col'
+        className={`group/side flex items-center justify-center gap-1 rounded-menu border text-supporting outline-none transition duration-micro focus-visible:ring-2 focus-visible:ring-brand-400 motion-reduce:transition-none ${
+          horizontal ? 'h-row w-full' : 'h-full w-12 flex-col'
         } ${
           reason
             ? 'cursor-not-allowed border-dashed border-slate-200 text-slate-300 dark:border-slate-700 dark:text-slate-600'
@@ -98,13 +98,11 @@ export function AddSlotSides({
   };
   return (
     // Labelled as a settings field is (settings-panel-parts SettingsField), atop the cog's Slot section.
-    <div role="group" aria-label="Add a Slot" className="flex flex-col gap-1.5 px-3 pb-1 pt-1">
-      <span className="px-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
-        Add a Slot
-      </span>
+    <div role="group" aria-label="Add a Slot" className="flex flex-col gap-2 px-3 pb-1 pt-1">
+      <span className="px-0.5 text-supporting text-slate-600 dark:text-slate-300">Add a Slot</span>
       <div // Above and Below grow to a finger's 44 px on a touch screen (touch-targets.md: a row grows where a pad would
         // reach into its neighbour).
-        className="grid grid-cols-[3rem_minmax(0,1fr)_3rem] grid-rows-[1.75rem_4rem_1.75rem] gap-1.5 pointer-coarse:grid-rows-[2.75rem_4rem_2.75rem]"
+        className="grid grid-cols-[3rem_minmax(0,1fr)_3rem] grid-rows-[1.75rem_4rem_1.75rem] gap-2 pointer-coarse:grid-rows-[2.75rem_4rem_2.75rem]"
       >
         <span />
         {side('above', 'Above', true)}
@@ -113,7 +111,7 @@ export function AddSlotSides({
         {/* This slot, drawn small in the middle. */}
         <span
           aria-hidden
-          className="flex items-center justify-center rounded-lg border border-brand-300 bg-brand-50/70 text-[10px] font-semibold uppercase tracking-wider text-brand-700 dark:border-brand-500/50 dark:bg-brand-500/10 dark:text-brand-200"
+          className="flex items-center justify-center rounded-menu border border-brand-300 bg-brand-50/70 text-supporting text-brand-700 dark:border-brand-500/50 dark:bg-brand-500/10 dark:text-brand-200"
         >
           This Slot
         </span>

@@ -40,7 +40,7 @@ const HANDLE_FOCUS =
 const TOUCH_DIVIDER =
   '[@media(hover:none)]:top-1/2 [@media(hover:none)]:h-16 [@media(hover:none)]:w-6 [@media(hover:none)]:-translate-y-1/2 [@media(hover:none)]:opacity-50';
 const TOUCH_ROW_HANDLE =
-  '[@media(hover:none)]:-bottom-[18px] [@media(hover:none)]:left-1/2 [@media(hover:none)]:h-6 [@media(hover:none)]:w-16 [@media(hover:none)]:-translate-x-1/2 [@media(hover:none)]:opacity-50';
+  '[@media(hover:none)]:left-1/2 [@media(hover:none)]:w-16 [@media(hover:none)]:-translate-x-1/2 [@media(hover:none)]:opacity-50';
 
 type Drag =
   | { kind: 'divider'; index: number; startX: number; spanPx: number; delta: number }
@@ -244,7 +244,7 @@ export const DashboardRowView = memo(function DashboardRowView({
               aria-valuetext={`${shown.height} pixels tall`}
               onKeyDown={heightKey}
               // On a touch screen, as a divider: a quiet marker always shown, a finger tall and its bar's width wide.
-              className={`absolute -bottom-2.5 left-0 z-10 flex h-3 w-full cursor-row-resize touch-none items-center justify-center opacity-0 transition-opacity duration-micro ease-out hover:opacity-100 group-hover/row:opacity-60 motion-reduce:transition-none ${TOUCH_ROW_HANDLE} ${drag?.kind === 'height' ? '!opacity-100' : ''} ${HANDLE_FOCUS}`}
+              className={`absolute -bottom-[18px] left-0 z-10 flex h-chip w-full cursor-row-resize touch-none items-center justify-center opacity-0 transition-opacity duration-micro ease-out hover:opacity-100 group-hover/row:opacity-60 motion-reduce:transition-none ${TOUCH_ROW_HANDLE} ${drag?.kind === 'height' ? '!opacity-100' : ''} ${HANDLE_FOCUS}`}
               onPointerDown={(e) =>
                 begin(e, {
                   kind: 'height',

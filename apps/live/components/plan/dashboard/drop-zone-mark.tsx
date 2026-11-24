@@ -91,8 +91,8 @@ export function DropZoneMark({ mark, faint = false }: { mark: ZoneMark; faint?: 
         aria-hidden
         className={
           faint
-            ? 'pointer-events-none absolute z-10 rounded-2xl border-2 border-dashed border-brand-400/60 bg-brand-500/5'
-            : 'pointer-events-none absolute z-20 rounded-2xl border-[3px] border-brand-500 bg-brand-500/10 ring-[6px] ring-brand-500/15'
+            ? 'pointer-events-none absolute z-10 rounded-surface border-2 border-dashed border-brand-400/60 bg-brand-500/5'
+            : 'pointer-events-none absolute z-20 rounded-surface border-[3px] border-brand-500 bg-brand-500/10 ring-[6px] ring-brand-500/15'
         }
         style={{ left: mark.left, top: mark.top, width: mark.width, height: mark.height }}
       />

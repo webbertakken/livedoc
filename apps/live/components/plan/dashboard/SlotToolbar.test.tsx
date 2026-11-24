@@ -145,3 +145,11 @@ describe('a stacked slot’s toolbar', () => {
     expect(screen.queryByRole('button', { name: 'Move Up' })).toBeNull();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md (D239): a toolbar's controls are the 28 px row step.
+describe('a slot’s toolbar on the sizing scale', () => {
+  it('draws each control at 28 px', () => {
+    show({ id: 's', span: 6, content: { type: 'tab', tabId: 't' } });
+    for (const b of screen.getAllByRole('button')) expect(b.className).toContain('size-row');
+  });
+});

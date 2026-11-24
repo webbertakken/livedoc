@@ -59,7 +59,7 @@ export function SlotSection({
       <AddSlotSides rowId={rowId} at={at} onAdded={onClose} />
       {chartSheetId !== undefined || metric ? (
         <SettingsBody>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {chartSheetId !== undefined ? (
               <SettingsActionTile
                 icon={<ChangeGlyph />}

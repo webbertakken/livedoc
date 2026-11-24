@@ -23,7 +23,7 @@ function DrawingPlaceholder() {
   return (
     <div
       aria-hidden
-      className="h-full w-full animate-pulse rounded-lg bg-slate-100/60 dark:bg-slate-800/40"
+      className="h-full w-full animate-pulse rounded-menu bg-slate-100/60 dark:bg-slate-800/40"
     />
   );
 }
@@ -42,10 +42,10 @@ export function DashboardDiagramView({
   // Waiting while its content is on its way (a Pages tab has its page before then), then while there is nothing to draw.
   const empty = !tabHasDrawing(tab) || (status !== 'loaded' && tab.elements.length === 0);
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-900/[0.07] bg-white/[0.72] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-16px_rgba(15,23,42,0.22)] dark:border-white/[0.08] dark:bg-slate-900/60">
-      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-slate-900/[0.06] pl-3.5 pr-1.5 dark:border-white/[0.06]">
+    <div className="flex h-full flex-col overflow-hidden rounded-surface border border-slate-900/[0.07] bg-white/[0.72] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-16px_rgba(15,23,42,0.22)] dark:border-white/[0.08] dark:bg-slate-900/60">
+      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-slate-900/[0.06] pl-3 pr-2 dark:border-white/[0.06]">
         <TabModeIcon tab={tab} style={{ color: 'currentColor' }} />
-        <h3 className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
+        <h3 className="min-w-0 flex-1 truncate text-panel-title text-slate-800 dark:text-slate-100">
           {tab.name}
         </h3>
         {slot?.cog}

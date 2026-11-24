@@ -77,7 +77,7 @@ function dashboardSlotRects(
   return out;
 }
 
-// The slot's card (DashboardSlotView): white at 72% over the page (slate 900 at 60% in dark), 16 px corners, a
+// The slot's card (DashboardSlotView): white at 72% over the page (slate 900 at 60% in dark), 12 px corners, a
 // hairline edge. A styled Utility's fill and border over it (plan-tabs.md "Card style"); the shadow is the screen's.
 function slotCard(
   r: Rect,
@@ -89,8 +89,8 @@ function slotCard(
   const fill = look.fill ?? (dark ? mixHex('#0f172a', paper, 0.6) : mixHex('#ffffff', paper, 0.72));
   const edge =
     look.stroke ?? (dark ? mixHex('#ffffff', fill, 0.08) : mixHex('#0f172a', fill, 0.07));
-  if (look.borderWidth === 0) return box(r, { fill, rx: 16 });
-  return box(r, { fill, stroke: edge, rx: 16, strokeWidth: look.borderWidth ?? 1 });
+  if (look.borderWidth === 0) return box(r, { fill, rx: 12 });
+  return box(r, { fill, stroke: edge, rx: 12, strokeWidth: look.borderWidth ?? 1 });
 }
 
 const placeholder = (id: string, r: Rect): Element => ({
