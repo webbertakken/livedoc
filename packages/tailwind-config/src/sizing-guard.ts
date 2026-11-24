@@ -140,6 +140,14 @@ function splitVariants(className: string): { variants: string[]; utility: string
   return { variants, utility: className.slice(start) };
 }
 
+// A field reads 16 px on a phone so iOS never zooms in on it (apps/live/app/globals.css); a control that sits among
+// fields, a picker drawn as a button, takes the same floor.
+const PHONE_FIELD_FLOOR = { variant: 'max-sm', utility: 'text-[16px]' } as const;
+const isPhoneFieldFloor = (variants: readonly string[], utility: string): boolean =>
+  variants.length === 1 &&
+  variants[0] === PHONE_FIELD_FLOOR.variant &&
+  utility === PHONE_FIELD_FLOOR.utility;
+
 const isCoarsePointer = (variant: string): boolean =>
   variant === 'pointer-coarse' || variant.replace(/\s/g, '').includes('pointer:coarse');
 
@@ -187,6 +195,7 @@ export function judgeClass(className: string): string | null {
   const { variants, utility: raw } = splitVariants(className);
   if (variants.some(isCoarsePointer)) return null;
   const utility = raw.replace(/^!|!$/g, '');
+  if (isPhoneFieldFloor(variants, utility)) return null;
 
   if (utility === 'uppercase') return NO_TRACKED_CAPITALS;
   if (utility === 'rounded') return judgeRadius(undefined, undefined);
