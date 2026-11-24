@@ -132,6 +132,7 @@ describe('words in an appearance', () => {
     ],
     box: [100, 550, 300, 600] as const,
     faces: 'helvetica' as const,
+    region: 'sc' as const,
   };
 
   it('sets each line with words at its place, in the font at the size, in the mark’s colour', () => {
@@ -160,6 +161,7 @@ describe('words in an appearance', () => {
       ],
       box: [100, 600, 220, 640],
       faces: 'helvetica',
+      region: 'sc',
     });
     expect(drawn.content).toBe(
       [
@@ -220,11 +222,13 @@ describe('appearanceOf, words in the mark faces', () => {
     advance: () => 500,
     levels: (text, rtl) =>
       Array.from(text, (unit) => (/[\u0590-\u05FF]/.test(unit) ? 1 : rtl ? 2 : 0)),
+    split: (run) => [run],
   });
   const faced = (lines: (typeof line)[]) => ({
     lines,
     box: [100, 550, 300, 600] as const,
     faces: 'noto' as const,
+    region: 'sc' as const,
   });
 
   it('sets each run in its face, moving a glyph where shaping moved it', () => {

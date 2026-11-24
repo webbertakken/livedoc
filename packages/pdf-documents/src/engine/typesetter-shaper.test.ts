@@ -9,7 +9,9 @@ vi.mock('harfbuzzjs', () => {
 // marks.md "Loading": a face that does not load stops the bake by name; HarfBuzz is named `shaper`.
 describe('setting runs where the shaper does not load', () => {
   it('answers the shaper as what did not load', async () => {
-    expect(await loadTypesetter(['noto-sans-greek-400'], markFaceFiles)).toEqual({
+    expect(
+      await loadTypesetter([{ face: 'noto-sans-greek-400', text: 'Ω' }], markFaceFiles),
+    ).toEqual({
       ok: false,
       face: 'shaper',
     });

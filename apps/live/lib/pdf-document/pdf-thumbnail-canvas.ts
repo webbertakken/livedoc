@@ -30,8 +30,10 @@ function trace(
 }
 
 /** A line's font as a canvas names it. */
-const fontOf = (line: { bold: boolean; size: number }, words: Pick<MarkWords, 'faces'>): string =>
-  `${line.bold ? 'bold ' : ''}${line.size}px ${facesStackOf(words)}`;
+const fontOf = (
+  line: { bold: boolean; size: number },
+  words: Pick<MarkWords, 'faces' | 'region'>,
+): string => `${line.bold ? 'bold ' : ''}${line.size}px ${facesStackOf(words)}`;
 
 /**
  * The mark faces a picture's marks are drawn in, loaded first: a canvas draws in a face only once it has arrived
@@ -43,7 +45,9 @@ async function loadMarkFaces(marks: readonly Mark[]): Promise<void> {
     return words?.faces === 'noto' ? words.lines.map((line) => ({ line, words })) : [];
   });
   if (lines.length === 0) return;
-  addMarkFaces();
+  await Promise.all(
+    [...new Set(lines.map(({ words }) => words.region))].map((region) => addMarkFaces(region)),
+  );
   try {
     await Promise.all(
       lines.map(({ line, words }) => document.fonts.load(fontOf(line, words), line.text)),

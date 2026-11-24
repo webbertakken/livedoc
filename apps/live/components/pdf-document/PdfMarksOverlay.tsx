@@ -45,10 +45,11 @@ const helveticas = (text: string): boolean =>
  */
 export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark }) {
   const words = MarkWords.of(mark);
-  const faced = words?.faces === 'noto';
+  const region = words?.faces === 'noto' ? words.region : null;
+  const faced = region !== null;
   useEffect(() => {
-    if (faced) addMarkFaces();
-  }, [faced]);
+    if (region) void addMarkFaces(region);
+  }, [region]);
   if (!words) return null;
   const [a, b, c, d] = matrix;
   return (

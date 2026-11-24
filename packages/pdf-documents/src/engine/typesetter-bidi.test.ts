@@ -9,7 +9,9 @@ vi.mock('bidi-js', () => {
 // marks.md "Loading": the shaper is HarfBuzz and bidi-js together; either not loading stops the bake as `shaper`.
 describe('setting runs where bidi-js does not load', () => {
   it('answers the shaper as what did not load', async () => {
-    expect(await loadTypesetter(['noto-sans-greek-400'], markFaceFiles)).toEqual({
+    expect(
+      await loadTypesetter([{ face: 'noto-sans-greek-400', text: 'Ω' }], markFaceFiles),
+    ).toEqual({
       ok: false,
       face: 'shaper',
     });

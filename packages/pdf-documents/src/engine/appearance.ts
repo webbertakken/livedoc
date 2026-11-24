@@ -6,7 +6,7 @@
 import { Helvetica } from '../helvetica';
 import type { Box } from '../mark';
 import type { MarkDrawing } from '../mark-drawing';
-import { MarkFaces, type MarkRun } from '../mark-faces';
+import { MarkFaces, type FacedLine, type MarkRun } from '../mark-faces';
 import { inVisualOrder } from './bidi-order';
 import type { MarkWords, WordLine } from '../mark-words';
 import type { ShapedGlyph, ShapedRun } from './typesetter';
@@ -30,12 +30,14 @@ export type AppearanceFace = {
 
 /**
  * How a bake sets runs in the mark faces: each shaped, each glyph's advance as the font's `W` says it, and a line's
- * embedding levels, one per code unit, so its runs are set in visual order.
+ * embedding levels, one per code unit, so its runs are set in visual order; a run as the faces it is shaped in (a
+ * region's slice by slice).
  */
 export type RunSetter = {
   readonly shape: (run: MarkRun, rtl: boolean) => ShapedRun;
   readonly advance: (face: string, glyph: number) => number;
   readonly levels: (text: string, rtl: boolean) => readonly number[];
+  readonly split: (run: MarkRun) => readonly MarkRun[];
 };
 
 export type Appearance = {
@@ -129,11 +131,12 @@ function shownRun(run: ShapedRun, size: number, setter: RunSetter): string[] {
  * own side; narrowed to its measured width where shaping set it wider (marks.md "Laying out").
  */
 function facedLine(
-  line: WordLine,
+  line: WordLine & FacedLine,
   setter: RunSetter,
   fontOf: (run: ShapedRun) => string,
 ): string[] {
-  const ordered = inVisualOrder(MarkFaces.runs(line), setter.levels(line.text, line.rtl)).map(
+  const runs = MarkFaces.runs(line).flatMap(setter.split);
+  const ordered = inVisualOrder(runs, setter.levels(line.text, line.rtl)).map(
     ({ face, text, level }) => setter.shape({ face, text }, level % 2 === 1),
   );
   const shaped = (ordered.reduce((sum, run) => sum + run.width, 0) * line.size) / 1000;
@@ -180,7 +183,8 @@ export function appearanceOf(
       return face.name;
     };
     lines.push('BT', `${colour} rg`);
-    for (const line of set) lines.push(...facedLine(line, setter, fontOf));
+    for (const line of set)
+      lines.push(...facedLine({ ...line, region: words.region }, setter, fontOf));
     lines.push('ET');
   } else if (set.length > 0) {
     lines.push('BT');

@@ -9,7 +9,7 @@ import { bakeChanges } from './bake';
 import { cutPages } from './cut-pages';
 import { PdfReader, type Pdfium } from './reader';
 import { signerOf } from './signer';
-import { loadTypesetter, markFacesOf, type MarkFaceSource, type Typesetter } from './typesetter';
+import { loadTypesetter, markRunsOf, type MarkFaceSource, type Typesetter } from './typesetter';
 import { layersOf, openWriter, withLayersSet } from './writer';
 
 /**
@@ -103,20 +103,20 @@ export function pdfEngineOver(
     const marks = PdfLiveChanges.marks(changes);
     // The mark faces load only for a bake whose marks need them, and a face that does not load stops it by name,
     // never a silent question mark (marks.md "Loading").
-    const needed = markFacesOf(marks);
+    const needed = markRunsOf(marks);
     let typesetter: Typesetter | null = null;
-    if (needed.size > 0) {
+    if (needed.length > 0) {
       const started = Date.now();
       const loaded = faces
         ? await loadTypesetter(needed, faces)
-        : ({ ok: false, face: [...needed][0]! } as const);
+        : ({ ok: false, face: needed[0]!.face } as const);
       if (!loaded.ok) {
         log(`[pdf] faces-failed face=${loaded.face}`);
         return { ok: false, refusal: 'faces-unavailable' };
       }
       typesetter = loaded.typesetter;
       log(
-        `[pdf] faces-loaded count=${needed.size} bytes=${typesetter.bytes} ms=${Date.now() - started}`,
+        `[pdf] faces-loaded count=${typesetter.count} bytes=${typesetter.bytes} ms=${Date.now() - started}`,
       );
     }
     const baked = await write(

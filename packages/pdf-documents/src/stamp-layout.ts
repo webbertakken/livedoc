@@ -6,6 +6,7 @@ import type { PagePoint } from './engine-contract';
 import { Helvetica } from './helvetica';
 import { HelveticaBold } from './helvetica-bold';
 import type { StampMark } from './mark';
+import type { MarkFaceRegion } from './mark-face-families';
 import { MarkFaces, type MarkFaceSet } from './mark-faces';
 import type { MarkStroke } from './mark-drawing';
 import type { PlacedLine } from './typed-layout';
@@ -43,16 +44,19 @@ const faceOf = (at: number) =>
     ? { face: HelveticaBold, size: STAMP_NAME_PT, bold: true }
     : { face: Helvetica, size: STAMP_DETAIL_PT, bold: false };
 
-/** The faces a stamp's lines are set in, the name bold. */
-const facesOf = (lines: readonly string[]): MarkFaceSet =>
-  MarkFaces.setOf(lines.map((text, at) => ({ text, bold: at === 0 })));
+/** What a stamp's lines are set in: its faces, the name bold, and the region of its Chinese, Japanese or Korean. */
+type Setting = { readonly faces: MarkFaceSet; readonly region: MarkFaceRegion };
+const settingOf = (lines: readonly string[]): Setting => {
+  const faced = lines.map((text, at) => ({ text, bold: at === 0 }));
+  return { faces: MarkFaces.setOf(faced), region: MarkFaces.regionOf(faced) };
+};
 
-const widthOf = (text: string, at: number, faces: MarkFaceSet): number => {
+const widthOf = (text: string, at: number, { faces, region }: Setting): number => {
   const { face, size, bold } = faceOf(at);
   const thousandths =
     faces === 'helvetica'
       ? Array.from(text).reduce((sum, character) => sum + face.width(character.codePointAt(0)!), 0)
-      : MarkFaces.width({ text, bold });
+      : MarkFaces.width({ text, bold, region });
   return thousandths * (size / 1000);
 };
 
@@ -66,7 +70,7 @@ const arc = (centre: PagePoint, radius: number, from: number): PagePoint[] =>
 export const StampLayout = {
   /** The size a stamp's words need, in points, its border and room included. */
   natural: (lines: readonly string[]): { width: number; height: number } => ({
-    width: 2 * INSET + Math.max(...lines.map((text, at) => widthOf(text, at, facesOf(lines)))),
+    width: 2 * INSET + Math.max(...lines.map((text, at) => widthOf(text, at, settingOf(lines)))),
     height: 2 * INSET + NAME_HIGH + (lines.length > 1 ? STAMP_LINE_GAP_PT + DETAIL_HIGH : 0),
   }),
 
@@ -84,9 +88,9 @@ export const StampLayout = {
     const middle = (left + right) / 2;
     const ceiling = (bottom + top) / 2 + (height * scale) / 2;
     const name = ceiling - (INSET + NAME_HIGH) * scale;
-    const faces = facesOf(stamp.lines);
+    const setting = settingOf(stamp.lines);
     return stamp.lines.map((text, at): StampLine => {
-      const width = widthOf(text, at, faces) * scale;
+      const width = widthOf(text, at, setting) * scale;
       const { size, bold } = faceOf(at);
       return {
         text,
@@ -101,7 +105,10 @@ export const StampLayout = {
   },
 
   /** The faces a stamp's lines are set in. */
-  faces: (stamp: Pick<StampMark, 'lines'>): MarkFaceSet => facesOf(stamp.lines),
+  faces: (stamp: Pick<StampMark, 'lines'>): MarkFaceSet => settingOf(stamp.lines).faces,
+
+  /** The region a stamp's Chinese, Japanese or Korean is set in. */
+  region: (stamp: Pick<StampMark, 'lines'>): MarkFaceRegion => settingOf(stamp.lines).region,
 
   /** The border: round the box just inside its edge, its corners rounded, as wide as the border scaled. */
   border: (stamp: Stamped): MarkStroke => {

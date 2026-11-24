@@ -28,9 +28,13 @@ const hex4 = (n: number): string => n.toString(16).toUpperCase().padStart(4, '0'
 const utf16 = (text: string): string =>
   Array.from({ length: text.length }, (_, at) => hex4(text.charCodeAt(at))).join('');
 
-/** A six-letter subset tag made from the glyphs a subset holds: the same glyphs, the same tag. */
-export function subsetTag(glyphs: Iterable<number>): string {
+/** A six-letter subset tag made from the face and the glyphs a subset holds: the same of both, the same tag. */
+export function subsetTag(face: string, glyphs: Iterable<number>): string {
   let hash = 0x811c9dc5;
+  for (const character of face) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
   for (const glyph of [...glyphs].sort((a, b) => a - b)) {
     hash ^= glyph;
     hash = Math.imul(hash, 0x01000193) >>> 0;
@@ -120,7 +124,7 @@ export function embeddedFaces(pdf: PDF, typesetter: Typesetter): EmbeddedFaces {
       for (const [id, { dict, characters }] of used) {
         const { tables, metrics, advances } = typesetter.face(id);
         const glyphs = [...characters.keys()];
-        const name = `${subsetTag(glyphs)}+${metrics.postScriptName}`;
+        const name = `${subsetTag(id, glyphs)}+${metrics.postScriptName}`;
         const program = subsetFace(tables, glyphs);
         const file = pdf.register(
           PdfStream.fromDict({ Length1: PdfNumber.of(program.length) }, program),
@@ -147,7 +151,7 @@ export function embeddedFaces(pdf: PDF, typesetter: Typesetter): EmbeddedFaces {
             Supplement: PdfNumber.of(0),
           }),
           FontDescriptor: pdf.register(descriptor),
-          W: widthsOf(new Map(glyphs.map((glyph) => [glyph, advances[glyph] ?? 0]))),
+          W: widthsOf(new Map(glyphs.map((glyph) => [glyph, advances[glyph]!]))),
           CIDToGIDMap: PdfName.of('Identity'),
         });
         const words = new Map([...characters].filter(([, text]) => text !== ''));
