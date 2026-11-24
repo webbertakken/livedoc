@@ -12,6 +12,7 @@ import {
   type Quad,
 } from '@livedoc/pdf-documents';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
+import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 import { PdfPage, type PdfPageTool } from './PdfPage';
 
 vi.mock('@/lib/pdf-document/pdf-paint', () => ({ paintPicture: vi.fn(), REDRAW_SETTLE_MS: 0 }));
@@ -48,6 +49,7 @@ async function page(
 ) {
   const onText = vi.fn();
   const onFollow = vi.fn();
+  const onDoubleTap = vi.fn<(index: number, tap: PdfPageTap) => void>();
   const view = render(
     <PdfPage
       index={1}
@@ -71,6 +73,7 @@ async function page(
       linkName={(target) => `Link to ${target.kind}`}
       onFollow={onFollow}
       found={null}
+      onDoubleTap={onDoubleTap}
       register={() => {}}
     />,
   );
@@ -80,7 +83,7 @@ async function page(
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
-  return { box, onText, onFollow, view };
+  return { box, onText, onFollow, onDoubleTap, view };
 }
 
 describe('selecting text on a page', () => {
@@ -141,5 +144,43 @@ describe('selecting text on a page', () => {
     const { view } = await page('select', [quad]);
     const drawn = view.container.querySelector('[data-pdf-text-selection] polygon');
     expect(drawn?.getAttribute('points')).toBe('72,82 172,82 172,92 72,92');
+  });
+});
+
+// "Phone and tablet": a finger's double tap with Select in hand zooms to the column under it; it never selects.
+describe('a double tap on a page', () => {
+  const tap = (box: HTMLElement, clientX = 72, clientY = 92) => {
+    const finger = { pointerType: 'touch', pointerId: 7, clientX, clientY };
+    fireEvent.pointerDown(box, finger);
+    fireEvent.pointerUp(box, finger);
+  };
+
+  it('hands its point on the page over, and the way back to the window', async () => {
+    const { box, onDoubleTap, onText } = await page();
+    tap(box);
+    tap(box);
+    fireEvent.click(box, { detail: 2, clientX: 72, clientY: 92 });
+
+    expect(onDoubleTap).toHaveBeenCalledTimes(1);
+    const [index, handed] = onDoubleTap.mock.calls[0]!;
+    expect(index).toBe(1);
+    expect(handed.at).toEqual({ x: 72, y: 700 });
+    expect(handed.client).toEqual({ x: 72, y: 92 });
+    expect(handed.toClient({ x: 100, y: 692 })).toEqual({ x: 100, y: 100 });
+    expect(onText).not.toHaveBeenCalled();
+  });
+
+  it('is none for one tap, a scroll the browser took, or a mark tool in hand', async () => {
+    const { box, onDoubleTap } = await page();
+    tap(box);
+    fireEvent.pointerDown(box, { pointerType: 'touch', pointerId: 7, clientX: 72, clientY: 92 });
+    fireEvent.pointerCancel(box, { pointerType: 'touch', pointerId: 7 });
+    tap(box);
+    const marking = await page('highlight');
+    tap(marking.box);
+    tap(marking.box);
+
+    expect(onDoubleTap).not.toHaveBeenCalled();
+    expect(marking.onDoubleTap).not.toHaveBeenCalled();
   });
 });

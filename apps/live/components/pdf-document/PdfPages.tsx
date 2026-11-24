@@ -26,6 +26,7 @@ import { PdfPage, type PdfPageTool } from './PdfPage';
 import type { PdfTextGesture, PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
+import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 
 const NOTHING_SELECTED: readonly Quad[] = [];
 
@@ -48,6 +49,7 @@ export function PdfPages({
   texts,
   onFollow,
   found,
+  onDoubleTap,
 }: {
   // Hands the scroller to the view that lays the pages out and scrolls them.
   attach: (element: HTMLDivElement | null) => void;
@@ -77,6 +79,8 @@ export function PdfPages({
   onFollow: (target: LinkTarget) => void;
   // Find's results, by page.
   found: ReadonlyMap<number, PdfFindTints>;
+  // Where a finger's double tap on a page goes (usePdfColumnZoom.ts).
+  onDoubleTap: (index: number, tap: PdfPageTap) => void;
 }) {
   const scroller = useRef<HTMLDivElement | null>(null);
   const ref = useCallback(
@@ -151,6 +155,7 @@ export function PdfPages({
                   linkName={linkName}
                   onFollow={onFollow}
                   found={found.get(box.index) ?? null}
+                  onDoubleTap={onDoubleTap}
                   register={register}
                 />
               );

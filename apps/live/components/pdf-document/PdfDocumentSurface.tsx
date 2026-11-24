@@ -57,6 +57,7 @@ import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
 import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
 import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
 import { usePdfPagesInput } from '@/lib/pdf-document/usePdfPagesInput';
+import { usePdfColumnZoom } from '@/lib/pdf-document/usePdfColumnZoom';
 import { usePdfLayerView } from '@/lib/pdf-document/usePdfLayerView';
 import { usePdfLinks } from '@/lib/pdf-document/usePdfLinks';
 import { usePdfView } from '@/lib/pdf-document/usePdfView';
@@ -352,6 +353,7 @@ export function PdfDocumentSurface({
     onProblem: setProblem,
   });
   const { selection: textSelection, find } = reading;
+  const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);
 
   const actions: OfficeActions = useMemo(
     () => ({
@@ -520,6 +522,7 @@ export function PdfDocumentSurface({
               texts={textSelection.texts}
               onFollow={links.follow}
               found={find.tints}
+              onDoubleTap={zoomToColumn}
             />
             {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
             <PdfPageBar
