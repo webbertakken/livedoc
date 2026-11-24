@@ -381,14 +381,18 @@ export const PDF_MENUS: OfficeCatalogue = [
   menu('format', 'Format', [
     item('format-colour', 'Colour', 'participate'),
     item('format-fill-colour', 'Fill colour', 'participate'),
-    choices('opacity', 'Opacity', 'participate', ['100%', '75%', '50%', '25%', '10%'], ONE_OF),
+    // Of the selected marks (usePdfMarkRestyle.ts).
+    choices('opacity', 'Opacity', 'participate', ['100%', '75%', '50%', '25%', '10%'], {
+      ...ONE_OF,
+      ...BUILT,
+    }),
     SEPARATOR,
     choices(
       'line-width',
       'Line width',
       'participate',
       ['0.5 pt', '1 pt', '2 pt', '4 pt', '8 pt', '12 pt'],
-      ONE_OF,
+      { ...ONE_OF, ...BUILT },
     ),
     choices(
       'line-style',

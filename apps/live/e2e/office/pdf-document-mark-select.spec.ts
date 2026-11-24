@@ -146,3 +146,71 @@ test('a selected mark is resized by its handles and by ⌥ with the arrow keys',
     .toBeCloseTo(sized.width, 0);
   expectNoPageErrors(pageErrors);
 });
+
+test('the selected marks are restyled from the Colour control and the Format menu', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Looks.pdf', await textPdf(2));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const kind = (name: string) => page.locator(`${PAGE_ONE} [data-pdf-mark-kind="${name}"]`);
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+  const colour = toolbar.getByRole('button', { name: 'Colour', exact: true });
+
+  await (await officeMenuItem(page, ['Insert', 'Shape', 'Rectangle'])).click();
+  await drag(page, first, [0.5, 0.15], [0.75, 0.25]);
+  await (await officeMenuItem(page, ['Insert', 'Shape', 'Arrow'])).click();
+  await drag(page, first, [0.15, 0.32], [0.4, 0.32]);
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('v');
+  // With Select in hand and nothing selected there is no Colour.
+  await expect(colour).toHaveCount(0);
+
+  // Both selected: Colour is theirs; a Violet picked gives both its colour, one step of undo.
+  await page.mouse.click(...(await leftEdge(kind('rectangle'))));
+  await page.keyboard.down('Shift');
+  await page.mouse.click(...(await leftEdge(kind('arrow'))));
+  await page.keyboard.up('Shift');
+  const red = (await kind('rectangle').getAttribute('stroke'))!;
+  await expect(colour.locator('[data-colour-bar]')).toHaveAttribute('data-colour-bar', red);
+  await colour.click();
+  await page
+    .getByRole('group', { name: 'Colour' })
+    .getByRole('group', { name: 'Dark' })
+    .getByRole('button', { name: 'Violet' })
+    .click();
+  const violet = (await kind('rectangle').getAttribute('stroke'))!;
+  expect(violet).not.toBe(red);
+  await expect(kind('arrow')).toHaveAttribute('stroke', violet);
+  await expect(colour.locator('[data-colour-bar]')).toHaveAttribute('data-colour-bar', violet);
+
+  // Format > Opacity 50% and Line width 8 pt reach both; the steps read checked.
+  await (await officeMenuItem(page, ['Format', 'Opacity', '50%'])).click();
+  await expect(kind('rectangle')).toHaveAttribute('opacity', '0.5');
+  await expect(kind('arrow')).toHaveAttribute('opacity', '0.5');
+  await (await officeMenuItem(page, ['Format', 'Line width', '8 pt'])).click();
+  await expect(kind('rectangle').locator('[stroke-width]').first()).toHaveAttribute(
+    'stroke-width',
+    '8',
+  );
+  await expect(await officeMenuItem(page, ['Format', 'Line width', '8 pt'])).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await page.keyboard.press('Escape');
+  await page.screenshot({ path: test.info().outputPath('pdf-mark-restyle.png') });
+
+  // Undo takes back the width, then the opacity, then the colour.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('ControlOrMeta+z');
+  await page.keyboard.press('ControlOrMeta+z');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(kind('rectangle')).toHaveAttribute('stroke', red);
+  await expect(kind('rectangle')).toHaveAttribute('opacity', '1');
+  expectNoPageErrors(pageErrors);
+});

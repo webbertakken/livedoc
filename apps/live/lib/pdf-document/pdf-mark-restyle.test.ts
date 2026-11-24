@@ -1,0 +1,100 @@
+// docs/specs/035-pdf-documents/marks.md "Changing a mark": the selected marks' colour, Reset to each kind's first look
+// (a stamp its own), Format > Opacity and Line width (a width only where a mark has a line), each one step under the
+// person's own origin.
+import { describe, expect, it } from 'vitest';
+import * as Y from 'yjs';
+import { Mark, PageName, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
+import { FIRST_LOOKS } from './pdf-mark-looks';
+import {
+  firstColour,
+  OPACITY_ITEMS,
+  restyleMarks,
+  sharedOf,
+  WIDTH_ITEMS,
+  widthOf,
+} from './pdf-mark-restyle';
+import { STAMP_COLOURS } from './pdf-stamp';
+import { PDF_LOCAL_ORIGIN } from './pdf-undo';
+import { PDF_MENUS } from './pdf-menus';
+import { catalogueItems } from '@/lib/office/office-catalogue';
+
+const page = PageName.ofObject(4);
+const T = 1_795_000_000_000;
+const BASE = { page, colour: '#ff0000', opacity: 1, author: 'Ada', createdAt: T };
+const QUAD: Quad = [100, 716, 200, 716, 100, 700, 200, 700];
+
+const line = Mark.line('arrow', { ...BASE, id: 'l', line: [10, 10, 50, 60], width: 2 })!;
+const stamp = Mark.stamp({
+  ...BASE,
+  id: 's',
+  rect: [10, 700, 110, 740],
+  stamp: 'approved',
+  lines: ['APPROVED'],
+})!;
+const custom = { ...stamp, id: 'c', stamp: 'my-own' };
+const highlight = Mark.highlight({ ...BASE, id: 'h', quads: [QUAD], text: 'x' })!;
+
+function withMarks() {
+  const doc = PdfLiveChanges.load();
+  for (const mark of [line, stamp, highlight]) PdfLiveChanges.addMark(doc, mark);
+  const origins: unknown[] = [];
+  doc.on('afterTransaction', (transaction: Y.Transaction) => origins.push(transaction.origin));
+  return { doc, origins };
+}
+
+describe('the Format menu steps', () => {
+  it('names an item of Opacity and of Line width for each step, each a value in its range', () => {
+    const ids = new Set(catalogueItems(PDF_MENUS).map(({ item }) => item.id));
+    for (const id of [...Object.keys(OPACITY_ITEMS), ...Object.keys(WIDTH_ITEMS)])
+      expect(ids.has(id)).toBe(true);
+    expect(Object.values(OPACITY_ITEMS)).toEqual([1, 0.75, 0.5, 0.25, 0.1]);
+    expect(Object.values(WIDTH_ITEMS)).toEqual([0.5, 1, 2, 4, 8, 12]);
+  });
+});
+
+describe('firstColour', () => {
+  it('gives a kind its first look, a stamp its own, and a stamp LiveDoc does not draw the colour it has', () => {
+    expect(firstColour(highlight)).toBe(FIRST_LOOKS.highlight.colour);
+    expect(firstColour(line)).toBe(FIRST_LOOKS.arrow.colour);
+    expect(firstColour(stamp)).toBe(STAMP_COLOURS.green);
+    expect(firstColour(custom)).toBe('#ff0000');
+  });
+});
+
+describe('sharedOf', () => {
+  it('answers the value every mark holds, null where they differ or none holds one', () => {
+    expect(sharedOf([line, stamp], (mark) => mark.colour)).toBe('#ff0000');
+    expect(sharedOf([line, { ...stamp, colour: '#00ff00' }], (mark) => mark.colour)).toBeNull();
+    expect(sharedOf([line, highlight], widthOf)).toBe(2);
+    expect(sharedOf([highlight], widthOf)).toBeNull();
+    expect(sharedOf([], (mark) => mark.colour)).toBeNull();
+  });
+});
+
+describe('restyleMarks', () => {
+  it('gives every mark named its new look as one change under the person’s origin', () => {
+    const { doc, origins } = withMarks();
+    const changed = restyleMarks(doc, ['l', 'h', 'gone'], () => ({ colour: '#00AA00' }), T + 1);
+    expect(changed).toBe(2);
+    expect(PdfLiveChanges.mark(doc, 'l')).toMatchObject({ colour: '#00aa00', modifiedAt: T + 1 });
+    expect(PdfLiveChanges.mark(doc, 'h')).toMatchObject({ colour: '#00aa00' });
+    expect(PdfLiveChanges.mark(doc, 's')).toMatchObject({ colour: '#ff0000' });
+    expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  it('gives a width only to a mark with a line, and changes nothing a mark holds already', () => {
+    const { doc, origins } = withMarks();
+    expect(restyleMarks(doc, ['l', 'h'], () => ({ width: 8 }), T + 1)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'l')).toMatchObject({ width: 8 });
+    expect(PdfLiveChanges.mark(doc, 'h')).not.toHaveProperty('width');
+    expect(restyleMarks(doc, ['l', 'h'], () => ({ opacity: 1 }), T + 2)).toBe(0);
+    expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  it('takes each mark’s own look where it is asked for: Reset', () => {
+    const { doc } = withMarks();
+    expect(restyleMarks(doc, ['l', 's'], (mark) => ({ colour: firstColour(mark) }), T + 1)).toBe(2);
+    expect(PdfLiveChanges.mark(doc, 's')).toMatchObject({ colour: STAMP_COLOURS.green });
+    expect(PdfLiveChanges.mark(doc, 'l')).toMatchObject({ colour: FIRST_LOOKS.arrow.colour });
+  });
+});

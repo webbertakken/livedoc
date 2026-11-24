@@ -8,8 +8,9 @@ standard annotations under their own ids and read back by them; each tool's colo
 and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A stroke shown to
 others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
 snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
-Of changing a mark, selecting, moving, resizing and deleting a mark made here are built; restyling, rotating,
-arranging, grouping, locking, copying, Properties, Erase and the file's own marks are not.
+Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity and
+line width, are built; its fill, dash, line ends, font, size and alignment, Format > Colour, rotating, arranging,
+grouping, locking, copying, Properties, Erase and the file's own marks are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -60,7 +61,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
   ends, fill, font and size. A new mark takes it.
 - **A tool's colour** is chosen from the toolbar's Colour, the one colour picker's swatch button: the soft and strong
   rows for light paper, then the person's own colours. **Reset** returns the kind's first look. Colour shows while a
-  mark tool is in hand, its bar that tool's colour, and a pick gives the pages the keys again `(default)`.
+  mark tool is in hand, its bar that tool's colour, and a pick gives the pages the keys again `(default)`; with Select
+  in hand it is the selected marks' ([Changing a mark](#changing-a-mark)).
 - **A highlight's first look** is the colour picker's soft Yellow for light paper, at full opacity `(default)`. A
   highlight is drawn multiplied onto the page, so the words under it keep their own colour, here as in the file's
   appearance stream.
@@ -166,6 +168,14 @@ written into the file as a standard annotation, so any reader shows it. The rese
   [colour picker](../004-interface-design/colour-picker.md) (the `soft` tone for highlights and fills, `strong` for
   lines and text), opacity 10% to 100%, width 0.5 to 12 points, solid or one of four dashes, line ends (none, arrow,
   open arrow, circle, square, diamond, bar), and for Text and Callout: font, size, colour, alignment.
+- **The selected marks' colour** `(default)`: with Select in hand and marks selected, the toolbar's Colour is
+  theirs, its bar their colour, blank where they differ; a pick gives every selected mark that colour, and **Reset**
+  gives each its kind's first look's colour, a stamp its own; then the pages have the keys.
+- **Format > Opacity** gives every selected mark the opacity chosen; **Format > Line width** gives every selected
+  Drawing, Line, Arrow, Rectangle and Ellipse the width chosen, the others keeping theirs `(default)`.
+- A step of Opacity or Line width is checked where every selected mark it reaches holds it, and dimmed while no
+  selected mark has what it sets `(default)`.
+- Each restyle is one step of undo, and leaves the tool's remembered look as it was `(default)`.
 - **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°.
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
 - **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
@@ -413,10 +423,11 @@ a mark another person made is refused with `not_your_mark`.
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). A stamp placed is
   counted as `Stamp.<…>` alone, never also as `Mark.Stamp`; the tool taken in hand is `Tool.Stamp`. Never a mark's
   words, a stamp's name or a file's name.
-- A move is counted once a drag or a key press, `Mark.Moved`; a resize the same, `Mark.Resized`; a deletion once a
-  mark, `Mark.<Kind>` of its kind.
+- A move is counted once a drag or a key press, `Mark.Moved`; a resize the same, `Mark.Resized`; a restyle once a
+  pick or a choice, `Mark.Restyled`; a deletion once a mark, `Mark.<Kind>` of its kind.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] mark-resized kind=<kind>`,
+  `[pdf] marks-restyled count=<n> look=<colour|opacity|width>` (a pick or a choice),
   `[pdf] marks-deleted count=<n>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).
