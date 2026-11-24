@@ -75,8 +75,8 @@ export function NoteFormatToolbar({
   const toggles = runToggles('bold', 'italic', 'underline');
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800/60">
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-0.5 rounded-control border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800/60">
         {toggles.map((t) => (
           <HoverCard key={t.key} title={t.label} description={t.description}>
             <button
@@ -179,7 +179,7 @@ function NoteLinkField({
   };
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2">
       <input
         ref={inputRef}
         value={value}
@@ -202,7 +202,7 @@ function NoteLinkField({
         placeholder="example.com"
         aria-label="Link address"
         aria-invalid={invalid}
-        className={`min-w-0 flex-1 rounded-md border bg-white px-2 py-1 text-xs text-slate-800 outline-none placeholder:text-slate-400 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 ${
+        className={`h-field min-w-0 flex-1 rounded-control border bg-white px-2 text-body text-slate-800 outline-none placeholder:text-slate-400 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 ${
           invalid
             ? 'border-rose-400 focus:ring-2 focus:ring-rose-100 dark:border-rose-500'
             : 'border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700'
@@ -212,7 +212,7 @@ function NoteLinkField({
         type="button"
         onMouseDown={noFocusSteal}
         onClick={apply}
-        className={`rounded-md bg-brand-700 px-2 py-1 text-xs font-medium text-white transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
+        className={`h-field rounded-control bg-brand-700 px-3 text-body font-medium text-white transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
       >
         Apply
       </button>
@@ -221,7 +221,7 @@ function NoteLinkField({
           type="button"
           onMouseDown={noFocusSteal}
           onClick={() => onApply(null)}
-          className="rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="h-field rounded-control px-3 text-body text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           Remove
         </button>

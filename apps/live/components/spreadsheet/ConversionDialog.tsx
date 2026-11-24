@@ -36,17 +36,17 @@ export function ConversionDialog({
         data-conversion-dialog={state.k}
         className="border-b border-slate-100 px-6 pt-6 pb-4 dark:border-slate-800"
       >
-        <h2 id={TITLE_ID} className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+        <h2 id={TITLE_ID} className="text-dialog-title text-slate-900 dark:text-slate-50">
           {conversionTitle(purpose, to)}
         </h2>
-        <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <div className="mt-2 text-body text-slate-600 dark:text-slate-300">
           {state.k === 'checking' ? <p role="status">{conversionChecking(to)}</p> : null}
           {state.k === 'failed' ? <p role="alert">{CONVERSION_CHECK_FAILED}</p> : null}
           {state.k === 'listed' || state.k === 'running' ? (
             <>
               <p>{conversionLead(to, state.losses)}</p>
               {state.losses.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1 pl-5">
+                <ul className="mt-2 list-disc space-y-1 pl-4">
                   {state.losses.map((loss) => (
                     <li key={loss.k}>{conversionLine(loss, to)}</li>
                   ))}

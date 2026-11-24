@@ -69,7 +69,7 @@ export function NoteRichTextEditor({
   });
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <NoteFormatToolbar
         active={active}
         listStyle={listStyleOfText(liveText)}
@@ -157,7 +157,7 @@ export function NoteRichTextEditor({
           handleInput();
           onBlur?.();
         }}
-        className={`${surfaceClassName} overflow-y-auto whitespace-pre-wrap break-words rounded-md border border-slate-200 bg-white px-2 py-1.5 leading-snug text-slate-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100`}
+        className={`${surfaceClassName} overflow-y-auto whitespace-pre-wrap break-words rounded-control border border-slate-200 bg-white px-2 py-1.5 leading-snug text-slate-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100`}
       />
     </div>
   );

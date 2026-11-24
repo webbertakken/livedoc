@@ -21,6 +21,18 @@ const SIZED_PATHS = [
   'components/start',
   'components/panels',
   'components/canvas/ImageDropZone.tsx',
+  'components/notes',
+  'components/spreadsheet',
+  // A form's chrome; the form as respondents see it is content (sizing.md, D237).
+  'components/forms/FormBoardStrip.tsx',
+  'components/forms/FormLockedStrip.tsx',
+  'components/forms/FormNotTakingWarning.tsx',
+  'components/forms/FormPage.tsx',
+  'components/forms/FormProblems.tsx',
+  'components/forms/FormStatusBar.tsx',
+  'components/forms/NewResponseMark.tsx',
+  'components/forms/PendingFormStart.tsx',
+  'components/forms/ShareFormDialog.tsx',
 ];
 
 describe('live sizing', () => {

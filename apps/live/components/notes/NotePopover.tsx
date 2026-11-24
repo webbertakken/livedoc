@@ -126,21 +126,19 @@ export function NotePopover({
       <div
         ref={ref}
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-modal)] flex w-[26rem] flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2.5 shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40"
+        className="fixed z-[var(--z-modal)] flex w-[26rem] flex-col gap-2 rounded-menu border border-slate-200 bg-white p-3 shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40"
         style={{
           left: pos.left,
           top: pos.top,
           transform: 'translate(-50%, 0)',
         }}
       >
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          Note
-        </p>
+        <p className="text-supporting text-slate-500 dark:text-slate-400">Note</p>
         {readOnly ? (
           <NoteRichText
             note={initial}
             noteRich={initialRuns}
-            className="max-h-96 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            className="max-h-96 overflow-y-auto rounded-control border border-slate-200 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           />
         ) : (
           <>
@@ -157,7 +155,7 @@ export function NotePopover({
               onCancel={onClose}
             />
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+              <span className="text-supporting text-slate-500 dark:text-slate-400">
                 Cmd-Enter saves, Esc cancels.
               </span>
               <button
@@ -167,7 +165,7 @@ export function NotePopover({
                   onClose();
                 }}
                 disabled={!initial && !hasText}
-                className="text-[10px] font-medium text-slate-500 transition hover:text-slate-700 hover:underline disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:no-underline dark:text-slate-400 dark:hover:text-slate-200 dark:disabled:text-slate-600"
+                className="h-row text-supporting text-slate-500 transition hover:text-slate-700 hover:underline disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:no-underline dark:text-slate-400 dark:hover:text-slate-200 dark:disabled:text-slate-600"
               >
                 Delete note
               </button>

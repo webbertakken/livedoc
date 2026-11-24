@@ -67,7 +67,7 @@ export function SheetBarSummary() {
   if (!slot || single) return null;
   if (counted === 'too-many')
     return createPortal(
-      <span role="status" className="px-2 text-[12px] text-(--office-muted)">
+      <span role="status" className="px-2 text-body text-(--office-muted)">
         Too many cells
       </span>,
       slot,
@@ -100,7 +100,7 @@ export function SheetBarSummary() {
         actions={actions}
         width={SUMMARY_BUTTON_PX}
         tabIndex={0}
-        className="flex h-7 items-center gap-1 rounded-md px-2 text-[12px] tabular-nums text-(--office-ink) hover:bg-(--office-menu-hover)"
+        className="flex h-row items-center gap-1 rounded-control px-2 text-body tabular-nums text-(--office-ink) hover:bg-(--office-menu-hover)"
       />
       <span role="status" className="sr-only">
         {text(shown)}

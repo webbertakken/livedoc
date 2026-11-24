@@ -22,7 +22,7 @@ export function FormBoardStrip({ palette }: { palette: PlanPalette }) {
   const board = useFormBoard();
   if (!board || board.forms.length === 0) return null;
   return (
-    <span data-form-strip="" className="flex shrink-0 items-center gap-1.5 pr-1.5">
+    <span data-form-strip="" className="flex shrink-0 items-center gap-2 pr-2">
       {board.forms.map((f) => (
         <FormPill key={f.tabId} form={f} board={board} palette={palette} />
       ))}
@@ -56,7 +56,7 @@ function FormPill({
   const url = live?.code ? formUrlFor(window.location.origin, live.code) : null;
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
   const icon =
-    'flex h-6 w-6 cursor-pointer items-center justify-center rounded transition hover:bg-black/5 dark:hover:bg-white/10';
+    'flex size-chip cursor-pointer items-center justify-center rounded-control transition hover:bg-black/5 dark:hover:bg-white/10';
   return (
     <span
       role="group"
@@ -66,12 +66,12 @@ function FormPill({
       onPointerDown={stop}
     >
       <FormIcon aria-hidden style={{ color: palette.muted }} />
-      <span className="max-w-[10rem] truncate font-semibold">{form.heading}</span>
+      <span className="max-w-[10rem] truncate">{form.heading}</span>
       <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: dot }} />
       <span className="sr-only">{state}.</span>
       <span style={{ color: palette.muted }}>
         {responses} {responses === 1 ? 'response' : 'responses'}
-        {unseen ? <span className="font-semibold"> · {unseen} new</span> : null}
+        {unseen ? <span> · {unseen} new</span> : null}
       </span>
       {url && board.canShare ? (
         <Tooltip label={copied ? 'Copied' : 'Copy Form Link'}>

@@ -30,12 +30,12 @@ export function ImportReportDialog({ documentId }: { documentId: string }) {
         data-import-report
         className="border-b border-slate-100 px-6 pt-6 pb-4 dark:border-slate-800"
       >
-        <h2 id={TITLE_ID} className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+        <h2 id={TITLE_ID} className="text-dialog-title text-slate-900 dark:text-slate-50">
           {importReportTitle(report.name)}
         </h2>
-        <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <div className="mt-2 text-body text-slate-600 dark:text-slate-300">
           <p>{IMPORT_REPORT_LEAD}</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
+          <ul className="mt-2 list-disc space-y-1 pl-4">
             {report.lines.map((line) => (
               <li key={line}>{line}</li>
             ))}
