@@ -25,7 +25,7 @@ export function LocalMovePrompt({ enabled = true }: { enabled?: boolean }) {
         <DialogHeader title={title} />
         <p
           role="status"
-          className="flex items-center justify-center gap-2 px-6 py-8 text-sm text-slate-600 dark:text-slate-300"
+          className="flex items-center justify-center gap-2 px-6 py-8 text-body text-slate-600 dark:text-slate-300"
         >
           <span className="text-sky-600 dark:text-sky-400">
             <Spinner />
@@ -42,18 +42,18 @@ export function LocalMovePrompt({ enabled = true }: { enabled?: boolean }) {
         <DialogHeader title="Some Documents Stayed in This Browser">
           <DialogCloseButton onClick={prompt.finish} />
         </DialogHeader>
-        <div className="px-6 py-5 text-sm text-slate-700 dark:text-slate-200">
+        <div className="px-6 py-5 text-body text-slate-700 dark:text-slate-200">
           <p role="alert">
             {phase.failed.length === 1
               ? 'This one could not be moved and is still This Browser:'
               : `These ${phase.failed.length} could not be moved and are still This Browser:`}
           </p>
-          <ul className="mt-2 list-disc pl-5 text-slate-600 dark:text-slate-300">
+          <ul className="mt-2 list-disc pl-4 text-slate-600 dark:text-slate-300">
             {phase.failed.map((name, i) => (
               <li key={`${i}-${name}`}>{name}</li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-3 text-supporting text-slate-500 dark:text-slate-400">
             Try Sync Document on it later from the Explorer.
           </p>
         </div>

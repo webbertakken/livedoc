@@ -45,12 +45,12 @@ function RemoveQuestion({
     <div
       role="alertdialog"
       aria-label={`Remove ${removed.length} ${one ? 'node' : 'nodes'}?`}
-      className="rounded-lg bg-rose-50 p-3 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:ring-rose-500/30"
+      className="rounded-menu bg-rose-50 p-3 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:ring-rose-500/30"
     >
-      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+      <p className="text-body text-slate-900 dark:text-slate-100">
         Remove {removed.length} {one ? 'node' : 'nodes'}?
       </p>
-      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
+      <p className="mt-0.5 text-supporting text-slate-600 dark:text-slate-300">
         {names}
         {more > 0 ? ` and ${more} more` : ''} will go, with {one ? 'its' : 'their'} connectors. Undo
         brings them back.
@@ -131,7 +131,7 @@ export function MindOutlineDialog({
           />
         ) : null}
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+          <p className="text-supporting text-slate-500 dark:text-slate-400" aria-live="polite">
             {empty ? 'Write the root first' : summary ? countLine(summary) : ''}
           </p>
           <div className="flex items-center gap-2">

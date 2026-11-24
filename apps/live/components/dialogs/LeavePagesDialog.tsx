@@ -19,13 +19,10 @@ export function LeavePagesDialog({ leave }: { leave: LeavePages }) {
   return (
     <Dialog open={open} onClose={leave.cancel} titleId="leave-pages-title">
       <div className="border-b border-slate-100 px-6 pt-6 pb-4 dark:border-slate-800">
-        <h2
-          id="leave-pages-title"
-          className="text-lg font-semibold text-slate-900 dark:text-slate-50"
-        >
+        <h2 id="leave-pages-title" className="text-dialog-title text-slate-900 dark:text-slate-50">
           Turn Articles Into Pages?
         </h2>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-body text-slate-600 dark:text-slate-300">
           {mode} mode does not show the writing on article pages. Turn each article page into a Page
           you can keep writing in on the canvas, or keep them as articles to come back to in Pages.
         </p>

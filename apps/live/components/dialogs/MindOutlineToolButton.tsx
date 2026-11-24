@@ -33,7 +33,7 @@ export function MindOutlineToolButton({
         // The caret stays where it is: the button acts on it.
         onMouseDown={(e) => e.preventDefault()}
         onClick={onClick}
-        className={`flex h-8 w-8 items-center justify-center rounded-md transition disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent ${
+        className={`flex size-row items-center justify-center rounded-control transition disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent ${
           pressed
             ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
             : TOOLBAR_CONTROL_REST
@@ -46,5 +46,7 @@ export function MindOutlineToolButton({
 }
 
 export function MindOutlineToolDivider() {
-  return <span aria-hidden className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />;
+  return (
+    <span aria-hidden className="mx-1 my-1 w-px self-stretch bg-slate-200 dark:bg-slate-700" />
+  );
 }

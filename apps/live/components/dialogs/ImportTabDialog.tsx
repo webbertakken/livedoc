@@ -189,13 +189,13 @@ function ImportChooser({
   return (
     <>
       {/* Destructive-action warning — this overwrites the tab. */}
-      <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+      <div className="mb-4 flex items-start gap-2 rounded-menu border border-amber-200 bg-amber-50 px-3 py-2.5 text-body text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
         <span className="mt-0.5 shrink-0">
           <WarningIcon />
         </span>
         <span>
           This replaces everything on{' '}
-          <strong className="font-semibold">{tabName || 'this tab'}</strong> with the imported
+          <strong className="font-medium">{tabName || 'this tab'}</strong> with the imported
           content. Undo
           {/* The keys only where there is a keyboard to press them. */}
           <span className="pointer-coarse:hidden"> (⌘Z / Ctrl&#8209;Z)</span> brings it back.

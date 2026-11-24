@@ -106,7 +106,7 @@ function SwitchCard({
         onKeyDown={(e) => {
           if (e.key === 'Enter' && e.target === e.currentTarget) onConfirm();
         }}
-        className="fixed z-(--z-modal) animate-fade-in rounded-xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/15 motion-reduce:animate-none dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/60"
+        className="fixed z-(--z-modal) animate-fade-in rounded-menu border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/15 motion-reduce:animate-none dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/60"
         style={{
           width: WIDTH,
           left: place?.left ?? -9999,
@@ -116,7 +116,7 @@ function SwitchCard({
         {place?.arrow ? (
           <span
             aria-hidden
-            className={`absolute h-3 w-3 rotate-45 border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 ${
+            className={`absolute size-arrow rotate-45 border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 ${
               place.arrow.side === 'top'
                 ? '-top-1.5 border-l border-t'
                 : '-bottom-1.5 border-b border-r'
@@ -125,19 +125,19 @@ function SwitchCard({
           />
         ) : null}
         <div className="flex gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+          <span className="flex size-prominent shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
             <WarningIcon aria-hidden />
           </span>
           <div className="min-w-0">
             <h2
               id="leave-pages-title"
-              className="text-sm font-semibold text-slate-900 dark:text-slate-50"
+              className="text-panel-title text-slate-900 dark:text-slate-50"
             >
               Switch to {label}?
             </h2>
             <p
               id="leave-pages-body"
-              className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300"
+              className="mt-1 text-supporting text-slate-600 dark:text-slate-300"
             >
               {label} mode doesn&apos;t show pages. Changes you make there may not fit back onto
               your pages when you return to Pages.
