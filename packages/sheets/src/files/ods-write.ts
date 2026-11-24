@@ -10,9 +10,11 @@ import {
   ODF_VERSION,
   writeOdfPackage,
   XML_DECLARATION,
+  type XmlBindings,
 } from '@livedoc/office-packages';
 import { declarations, OdsKeptWriter } from './ods-kept-write';
 import { OdsStyles } from './ods-styles';
+import { odsFormatRulesXml } from './ods-format-rules';
 import { ODS_DEFAULT_CELL_STYLES } from './ods-cell-style';
 import { OdsAxisOut } from './ods-lines';
 import { toOpenFormula } from './open-formula';
@@ -220,9 +222,23 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
     ...kept.table('table-before', index),
     ...columnsXml(cols, colAxis),
     ...rowAxis.nest(runs, 'table-row-group'),
-    ...kept.table('table-after', index),
+    ...withFormatRules(
+      kept.table('table-after', index),
+      odsFormatRulesXml(sheet.formatRules, sheet.name, (s) => out.styles.conditionalStyle(s)),
+    ),
     '</table:table>',
   ];
+}
+
+// A table's format rules after its kept ones, in the kept `calcext:conditional-formats` or one of their own (D215).
+function withFormatRules(after: string[], own: string[]): string[] {
+  if (own.length === 0) return after;
+  const at = after.findIndex((xml) => /^<[\w.-]+:conditional-formats\b/.test(xml));
+  if (at < 0)
+    return [...after, `<calcext:conditional-formats>${own.join('')}</calcext:conditional-formats>`];
+  const holder = after[at]!.replace(/^<([\w.-]+:conditional-formats)([^>]*?)\/>$/, '<$1$2></$1>');
+  const close = holder.lastIndexOf('</');
+  return after.with(at, holder.slice(0, close) + own.join('') + holder.slice(close));
 }
 
 // A table's style, when its tab has a look (standard-mapping.md "Sheet name, hidden, tab colour").
@@ -238,8 +254,14 @@ const CALCULATION_SETTINGS =
   'table:search-criteria-must-apply-to-whole-cell="true" table:use-regular-expressions="false" ' +
   'table:use-wildcards="true"/>';
 
-// LiveDoc's common styles: its default cell style (standard-mapping.md "Cell styles in the file", D204).
-const COMMON_STYLES = ['<office:styles>', ...ODS_DEFAULT_CELL_STYLES, '</office:styles>'];
+// LiveDoc's common styles: its default cell style (standard-mapping.md "Cell styles in the file", D204), then the
+// named styles kept format rules name and its own rules' conditional styles ("Format rules in the file").
+const commonStyles = (more: readonly string[]) => [
+  '<office:styles>',
+  ...ODS_DEFAULT_CELL_STYLES,
+  ...more,
+  '</office:styles>',
+];
 
 // The body, after the scripts kept and the automatic styles its cells and its kept content name (D93); a flat file's
 // common styles between them, as a package keeps them in `styles.xml`.
@@ -247,13 +269,19 @@ function bodyXml(
   file: WorkbookFile,
   losses: FileLoss[],
   kept: OdsKeptWriter,
+  common: XmlBindings,
   flat: boolean,
-): string[] {
+): { body: string[]; common: string[] } {
   const styles = new OdsStyles();
+  const keptCommon = kept.commonStyles(common);
+  styles.reserve(
+    new Set(keptCommon.flatMap((xml) => /style:display-name="([^"]*)"/.exec(xml)?.[1] ?? [])),
+  );
   const tables = file.sheets.flatMap((sheet, i) => tableXml(sheet, i, { losses, styles, kept }));
-  return [
+  const commonXml = commonStyles([...keptCommon, ...styles.conditionalStyles()]);
+  const body = [
     ...kept.workbook('scripts'),
-    ...(flat ? COMMON_STYLES : []),
+    ...(flat ? commonXml : []),
     ...styles.automaticStyles(kept.workbook('styles')),
     '<office:body>',
     '<office:spreadsheet>',
@@ -265,7 +293,12 @@ function bodyXml(
     '</office:spreadsheet>',
     '</office:body>',
   ];
+  return { body, common: commonXml };
 }
+
+// The namespaces a root declares: `calcext` too when a sheet has format rules.
+const withRules = (file: WorkbookFile, prefixes: readonly Prefix[]): readonly Prefix[] =>
+  file.sheets.some((s) => s.formatRules?.length) ? [...prefixes, 'calcext'] : prefixes;
 
 function metaXml(title: string): string[] {
   return [
@@ -279,12 +312,13 @@ function metaXml(title: string): string[] {
 /** The workbook as an ODF flat file (`.fods`): one `office:document`, every part inline. */
 export function writeFlatOds(file: WorkbookFile, title: string): FileWritten<string> {
   const losses: FileLoss[] = [];
-  const own = bindings(FLAT_NAMESPACES);
+  const prefixes = withRules(file, FLAT_NAMESPACES);
+  const own = bindings(prefixes);
   const kept = new OdsKeptWriter(file.kept, own);
-  const body = bodyXml(file, losses, kept, true);
+  const { body } = bodyXml(file, losses, kept, own, true);
   const data = [
     XML_DECLARATION,
-    `<office:document ${namespaces(FLAT_NAMESPACES)}${kept.rootDeclarations(own, true)} office:version="${ODF_VERSION}" office:mimetype="${ODF_MEDIA_TYPES.spreadsheet}">`,
+    `<office:document ${namespaces(prefixes)}${kept.rootDeclarations(own, true)} office:version="${ODF_VERSION}" office:mimetype="${ODF_MEDIA_TYPES.spreadsheet}">`,
     ...metaXml(title),
     ...kept.settings({ ...kept.settingsNs, ...own }),
     ...body,
@@ -307,21 +341,22 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
     ...inner,
     `</office:${name}>`,
   ];
-  const own = bindings(CONTENT_NAMESPACES);
+  const prefixes = withRules(file, CONTENT_NAMESPACES);
+  const own = bindings(prefixes);
   const kept = new OdsKeptWriter(file.kept, own);
-  const body = bodyXml(file, losses, kept, false);
+  const { body, common } = bodyXml(file, losses, kept, bindings(STYLES_NAMESPACES), false);
   const settingsOwn = bindings(SETTINGS_NAMESPACES);
   const settings = kept.settings({ ...kept.settingsNs, ...settingsOwn });
   const data = writeOdfPackage(ODF_MEDIA_TYPES.spreadsheet, [
     {
       name: 'content.xml',
       mediaType: 'text/xml',
-      data: xml(root('document-content', CONTENT_NAMESPACES, body, kept.rootDeclarations(own))),
+      data: xml(root('document-content', prefixes, body, kept.rootDeclarations(own))),
     },
     {
       name: 'styles.xml',
       mediaType: 'text/xml',
-      data: xml(root('document-styles', STYLES_NAMESPACES, COMMON_STYLES)),
+      data: xml(root('document-styles', STYLES_NAMESPACES, common)),
     },
     {
       name: 'meta.xml',

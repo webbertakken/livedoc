@@ -65,8 +65,7 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
 
 ## In a spreadsheet
 
-**Status: in progress.** The side panel, several ranges, other sheets in a formula and XLSX files are built;
-ODF files are not.
+**Status: built.** The side panel, several ranges, other sheets in a formula, and XLSX and ODF files.
 The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ([Formatting](formatting.md#conditional-formatting)):
 

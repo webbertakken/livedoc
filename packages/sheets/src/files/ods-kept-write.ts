@@ -101,6 +101,13 @@ export class OdsKeptWriter {
     return this.elements(items);
   }
 
+  /** The named cell styles kept format rules name, for the common styles (`styles.xml`'s, or a flat file's). */
+  commonStyles(rootNs: XmlBindings): string[] {
+    const out = this.items('common-styles').map((item) => keptXmlWithin(item, rootNs));
+    this.written.push(...out);
+    return out;
+  }
+
   table(place: 'table-before' | 'table-after', sheet: number): string[] {
     return this.elements(this.items(place, { sheet }));
   }

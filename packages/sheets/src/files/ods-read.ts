@@ -28,6 +28,7 @@ import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
 import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import { odsCellFormats, type OdsCellFormats } from './ods-styles';
+import { readOdsFormatRules, unreadStyleNames } from './ods-format-rules';
 import { odsCellLooks, type OdsCellLooks } from './ods-cell-style';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
@@ -232,13 +233,17 @@ type Book = {
   lineStyles: OdsLineStyles;
   tabLooks: (style: string | undefined) => OdsTabLook;
   keeper: OdsKeeper;
+  // The named styles of the format rules left unread, kept with them.
+  ruleStyles: Set<string>;
 };
 
 function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const { losses, budget, formats, looks, keeper } = book;
   const plain = looks.of(undefined);
   const name = attributeOf(table, TABLE, 'name') ?? '';
-  keeper.table(table, index);
+  const rules = readOdsFormatRules(table, looks);
+  keeper.table(table, index, rules.read);
+  for (const name of unreadStyleNames(table, rules.read)) book.ruleStyles.add(name);
   const cutBefore = keeper.cut;
   const extent = { rows: 0, cols: 0 };
   const sheet: Sheet = { name, losses, formats, approximated: new Set(), cut: { formats: false } };
@@ -247,7 +252,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   let cut = false;
   let cellsCut = false;
   // A sheet naming a style that says more than the model holds is named (D104).
-  let styled = columns.some((style) => style !== undefined && looks.of(style).lost);
+  let styled = rules.styled || columns.some((style) => style !== undefined && looks.of(style).lost);
   let r = 0;
   for (const row of rowsOf(table)) {
     const rowRepeat = repeatOf(row, 'rows');
@@ -344,16 +349,18 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     cells,
     ...(lines.r || lines.c ? { lines } : {}),
     ...book.tabLooks(attributeOf(table, TABLE, 'style-name')),
+    ...(rules.rules.length ? { formatRules: rules.rules } : {}),
   };
 }
 
 function readBody(
   parsed: XmlParsed,
-  styleRoots: readonly XmlElement[],
+  stylesParsed: XmlParsed | null,
   keeper: OdsKeeper,
   parts: KeptPart[],
 ): FileRead {
   const root = parsed.root;
+  const styleRoots = stylesParsed ? [stylesParsed.root] : [];
   const formats = odsCellFormats([root, ...styleRoots]);
   const looks = odsCellLooks([...styleRoots, root]);
   const lineStyles = odsLineStyles([root, ...styleRoots]);
@@ -367,15 +374,18 @@ function readBody(
   const tables = childElements(spreadsheet).filter((e) => is(e, TABLE, 'table'));
   const losses: FileLoss[] = [];
   const budget: Budget = { cells: 0 };
+  const ruleStyles = new Set<string>();
   keeper.root(root);
   keeper.spreadsheet(spreadsheet);
   const sheets = tables
     .slice(0, SHEETS_MAX)
     .map((t, i) =>
-      readTable(t, i, { losses, budget, formats, looks, lineStyles, tabLooks, keeper }),
+      readTable(t, i, { losses, budget, formats, looks, lineStyles, tabLooks, keeper, ruleStyles }),
     );
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
+  // The common styles kept format rules name go with them (a flat file's are its own).
+  if (ruleStyles.size > 0) keeper.commonStyles(stylesParsed ?? parsed, ruleStyles);
   // A file that keeps nothing reads as the model alone.
   if (keeper.items.length === 0 && parts.length === 0)
     return { ok: true, file: { sheets }, losses };
@@ -396,7 +406,7 @@ export async function readOds(
     const mediaType = attributeOf(parsed.root, OFFICE, 'mimetype');
     if (!is(parsed.root, OFFICE, 'document') || mediaType !== ODF_MEDIA_TYPES.spreadsheet)
       return refuse('package_wrong_type');
-    return readBody(parsed, [], new OdsKeeper(parsed), []);
+    return readBody(parsed, null, new OdsKeeper(parsed), []);
   }
   const opened = await readOdfPackage(bytes, budgets);
   if (!opened.ok) return opened;
@@ -411,12 +421,7 @@ export async function readOds(
   const styles = stylesEntry && parseXml(new TextDecoder().decode(stylesEntry), 'styles.xml');
   const keeper = new OdsKeeper(parsed);
   keeper.items.push(...keptSettings(pkg));
-  const read = readBody(
-    parsed,
-    styles && styles.ok ? [styles.root] : [],
-    keeper,
-    keptOdfParts(pkg),
-  );
+  const read = readBody(parsed, styles && styles.ok ? styles : null, keeper, keptOdfParts(pkg));
   // What the package dropped, as what may run or signs bytes LiveDoc rewrites, is named (D106).
   if (read.ok && pkg.dropped.length > 0)
     read.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });

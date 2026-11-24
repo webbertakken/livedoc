@@ -34,6 +34,7 @@ const PLACES: Readonly<Record<KeptStandard, ReadonlySet<KeptPlace>>> = {
   odf: new Set<KeptPlace>([
     'scripts',
     'styles',
+    'common-styles',
     'settings',
     'spreadsheet-before',
     'spreadsheet-after',

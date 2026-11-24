@@ -41,7 +41,11 @@ export const ODS_DEFAULT_CELL_STYLES = [
 export type OdsLook = { style?: CellStyle; lost: boolean };
 
 /** The look of each cell style by name; none names the file's default (its "Default" style, else its default style). */
-export type OdsCellLooks = { of: (name: string | undefined) => OdsLook };
+export type OdsCellLooks = {
+  of: (name: string | undefined) => OdsLook;
+  // A named style's own look (by its name or display name), without its parents': what a format rule's style sets over a cell's; null for none.
+  own: (name: string) => OdsLook | null;
+};
 
 // A style's properties, merged over its parents': `<properties element>|<namespace>|<attribute>` to its value.
 type Properties = Map<string, string>;
@@ -254,6 +258,7 @@ function lookOf(p: Properties, file: FileLook): OdsLook {
 export function odsCellLooks(roots: readonly XmlElement[]): OdsCellLooks {
   const faces = new Map<string, string>();
   const styles = new Map<string, XmlElement>();
+  const shownNames = new Map<string, XmlElement>();
   let defaults: Properties = new Map();
   let declared = false;
   for (const root of roots) {
@@ -276,6 +281,9 @@ export function odsCellLooks(roots: readonly XmlElement[]): OdsCellLooks {
         }
         const name = attributeOf(element, STYLE, 'name');
         if (element.local === 'style' && name !== undefined) styles.set(name, element);
+        // LibreOffice names a format rule's style by its display name.
+        const shown = attributeOf(element, STYLE, 'display-name');
+        if (element.local === 'style' && shown !== undefined) shownNames.set(shown, element);
       }
     }
   }
@@ -312,7 +320,13 @@ export function odsCellLooks(roots: readonly XmlElement[]): OdsCellLooks {
     looks.set(memo, one);
     return one;
   };
-  return { of };
+  const own = (name: string): OdsLook | null => {
+    const style = shownNames.get(name) ?? styles.get(name);
+    return style
+      ? lookOf(ownProperties(style), { ...file, ink: undefined, absent: 'middle' })
+      : null;
+  };
+  return { of, own };
 }
 
 const WRITE_WIDTHS = ['0.74pt', '1.76pt', '2.49pt'];

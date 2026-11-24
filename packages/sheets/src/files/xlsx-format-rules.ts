@@ -35,8 +35,9 @@ export type XlsxDxf = { style: FormatStyle; extra: boolean };
 const on = (e: XmlElement | undefined) =>
   e !== undefined && !['0', 'false', 'none'].includes(attributeOf(e, '', 'val') ?? '1');
 
-// A font's children that name its face alone, which a rule's style leaves as the cell's: never counted as more.
-const FACE: ReadonlySet<string> = new Set(['name', 'family', 'scheme', 'charset']);
+// A font's children that name its face and size alone, which a rule's style leaves as the cell's and LibreOffice
+// writes in every one: never counted as more.
+const FACE: ReadonlySet<string> = new Set(['name', 'family', 'scheme', 'charset', 'sz']);
 const STYLE_PARTS: ReadonlySet<string> = new Set(['b', 'i', 'u', 'strike', 'color']);
 
 function dxfOf(dxf: XmlElement, ns: string, theme: readonly string[]): XlsxDxf {

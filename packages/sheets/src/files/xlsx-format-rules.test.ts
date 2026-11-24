@@ -211,7 +211,7 @@ describe('differential formats', () => {
     const read = readXlsxDxfs(
       styles(
         '<dxf><font><b/><i val="1"/><u val="double"/><strike/><color rgb="FF9C0006"/><name val="Arial"/><family val="2"/></font><fill><patternFill><bgColor rgb="FFFFC7CE"/></patternFill></fill></dxf>' +
-          '<dxf><font><b val="0"/><sz val="14"/></font><fill><patternFill patternType="solid"><fgColor rgb="FF00FF00"/></patternFill></fill><border/></dxf>' +
+          '<dxf><font><b val="0"/><sz val="14"/><outline/></font><fill><patternFill patternType="solid"><fgColor rgb="FF00FF00"/></patternFill></fill><border/></dxf>' +
           '<dxf><fill><patternFill patternType="gray125"><bgColor rgb="FF000000"/></patternFill></fill><numFmt numFmtId="1" formatCode="0"/></dxf>' +
           '<dxf><fill><patternFill patternType="none"><bgColor rgb="FF000000"/></patternFill></fill><border/></dxf>' +
           '<dxf><fill/><border><left/></border><other xmlns="urn:x"/></dxf>' +

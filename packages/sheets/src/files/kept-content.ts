@@ -14,7 +14,8 @@ import {
 export type KeptStandard = 'odf' | 'ooxml';
 
 /**
- * Where a kept item sat. ODF: `scripts`, `styles` (an automatic style kept drawings and notes name), `settings`,
+ * Where a kept item sat. ODF: `scripts`, `styles` (an automatic style kept drawings and notes name), `common-styles`
+ * (a named cell style a kept format rule names), `settings`,
  * `spreadsheet-before` / `-after` (the tables), `table-before` / `-after` (its columns and rows), `table-attribute`,
  * `cell` / `cell-after` (its paragraphs), `cell-attribute`. OOXML: `workbook` and `workbook-attribute` (its root's),
  * `stylesheet` (`dxfs`, `tableStyles`), `sheet-attribute` (its `sheet` element's), `worksheet` and
@@ -23,6 +24,7 @@ export type KeptStandard = 'odf' | 'ooxml';
 export const KEPT_PLACES = [
   'scripts',
   'styles',
+  'common-styles',
   'settings',
   'spreadsheet-before',
   'spreadsheet-after',
@@ -167,6 +169,7 @@ const KINDS: Readonly<Record<string, KeptKind>> = {
 // Items that only serve others (styles, relationships, the package's parts) are not counted as things kept.
 const SUPPORT: ReadonlySet<KeptPlace> = new Set([
   'styles',
+  'common-styles',
   'stylesheet',
   'workbook-attribute',
   'worksheet-attribute',
