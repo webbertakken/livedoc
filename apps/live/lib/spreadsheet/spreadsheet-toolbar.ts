@@ -149,15 +149,27 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
         built: true,
         shortcut: 'strikethrough',
       }),
-      // A glyph while no colour picker binds it.
-      icon('text-colour', 'Text Colour', 'edit', lucideBaseline),
+      // The A without its line: the control draws the line in the active cell's colour (formatting.md "Text and colour").
+      control(
+        'text-colour',
+        'Text Colour',
+        'edit',
+        { kind: 'colour', icon: lucideBaseline.slice(1) },
+        BUILT,
+      ),
     ],
   },
   {
     id: 'cell',
     label: 'Cell',
     controls: [
-      icon('fill-colour', 'Fill Colour', 'edit', lucidePaintBucket),
+      control(
+        'fill-colour',
+        'Fill Colour',
+        'edit',
+        { kind: 'colour', icon: lucidePaintBucket },
+        BUILT,
+      ),
       icon('borders', 'Borders', 'edit', lucideGrid2x2, { menu: true }),
       icon('merge-cells', 'Merge Cells', 'edit', lucideTableCellsMerge, { menu: true }),
     ],

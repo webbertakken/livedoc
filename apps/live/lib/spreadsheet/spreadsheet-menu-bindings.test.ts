@@ -474,6 +474,25 @@ describe('the toolbar’s own bindings', () => {
   });
 });
 
+// formatting.md "Text and colour" (D199): the toolbar's colours over the selection, an Editor's.
+describe('gridColours', () => {
+  it('reads the active cell\u2019s colours, sets and resets the selection\u2019s', () => {
+    const p = port({ format: { fc: '#ff0000' } });
+    const colours = gridOffice(p).colours!;
+    expect(colours['text-colour']).toMatchObject({ leading: 'Reset', none: '#000000' });
+    expect(colours['text-colour']!.read()).toBe('#ff0000');
+    expect(colours['fill-colour']!.read()).toBeUndefined();
+    colours['fill-colour']!.set('#00ff00');
+    expect(p.act.format).toHaveBeenCalledWith({ bg: '#00ff00' });
+    colours['text-colour']!.set(null);
+    expect(p.act.format).toHaveBeenCalledWith({ fc: null });
+  });
+
+  it('gives no one but an Editor the colours', () => {
+    expect(gridOffice(port({ canShape: false })).colours).toBeNull();
+  });
+});
+
 describe('gridOffice', () => {
   it('gives an Editor the active cell’s size and sets it, and no one else either', () => {
     const p = port({ format: { fs: 18 } });
