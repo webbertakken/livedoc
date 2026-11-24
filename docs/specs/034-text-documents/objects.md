@@ -347,11 +347,17 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 
 ### In the file
 
-- A drawing leaves as its picture: a PNG of the drawing at twice its size, refreshed on Save and close and before a
-  download, so LibreOffice, Word and Google show it. The picture names its drawing tab: `livedoc:drawing="<tab id>"` on
-  the ODF `draw:frame`, the same attribute on the OOXML `pic:cNvPr`, `livedoc` declared ignorable.
+- A drawing leaves as its picture: a PNG of the drawing at twice its size, so LibreOffice, Word and Google show it.
+  Its picture is made again on Save and close. A download from the editor draws each drawing it can reach afresh
+  into the file alone: the drawing as it is now, its width kept, its height by the drawing's shape, its crop dropped,
+  as Save and close places it; nothing is written to the document, so a Viewer's download is as fresh as an
+  Editor's `(default)`. A drawing it cannot reach (its tab gone, out of a share, failing to load) leaves with the
+  picture last saved. A download outside the editor (an agent, the api) leaves with the pictures last saved.
+- The picture names its drawing tab: `livedoc:drawing="<tab id>"` on the ODF `draw:frame`, the same attribute on the
+  OOXML `pic:cNvPr`, `livedoc` declared ignorable on every part that may hold a picture (the document, headers,
+  footers and notes).
 - A file read into a LiveDoc document keeps the name only while that tab is a drawing tab of the text document it is
-  read into (a reload, or a copy of its own); otherwise the picture is a plain picture.
+  read into (a reload, or a copy of its own); otherwise the picture is a plain picture. An empty name is no name.
 
 ### The document around it
 

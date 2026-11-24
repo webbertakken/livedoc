@@ -25,6 +25,15 @@ export function useEditorDrawingTabs(): DrawingTabs {
       ids: (textDocumentTabId) => drawingTabIdsOf(latest.current.ctx.tabs, textDocumentTabId),
       someoneIn: (id) => [...latest.current.ctx.remoteTabFocus.values()].includes(id),
       remove: (ids) => latest.current.ctx.removeDrawingTabs(ids),
+      draw: async (id) => {
+        const { tabs, loadedTabIds, isOutOfScope, imageContext } = latest.current.ctx;
+        const tab = tabs.find((t) => t.id === id);
+        if (!tab?.drawingOf || isOutOfScope(id) || !loadedTabIds.has(id)) return null;
+        // The export's code loads only when a drawing is drawn.
+        const { drawingPicture } =
+          await import('@/lib/text-document/text-document-drawing-picture');
+        return drawingPicture(tab, imageContext ?? null);
+      },
     };
   }, [latest]);
 }

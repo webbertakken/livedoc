@@ -5,6 +5,8 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const select = vi.fn();
+const picture = vi.hoisted(() => vi.fn(async () => new Uint8Array([1, 2])));
+vi.mock('@/lib/text-document/text-document-drawing-picture', () => ({ drawingPicture: picture }));
 const ctx = {
   tabs: [
     { id: 'w', name: 'Notes', elements: [] },
@@ -12,6 +14,8 @@ const ctx = {
     { id: 'd2', name: 'Drawing 2', drawingOf: 'w', elements: [] },
   ],
   isOutOfScope: (id: string) => id === 'd2',
+  loadedTabIds: new Set(['w', 'd1', 'd2']),
+  imageContext: { ownerId: 'me', documentId: 'D', shareCode: null },
   copyDrawingTab: vi.fn(() => 'copy'),
   removeDrawingTabs: vi.fn(),
   remoteTabFocus: new Map([['peer', 'd1']]),
@@ -49,5 +53,17 @@ describe('useEditorDrawingTabs', () => {
     expect(ctx.copyDrawingTab).toHaveBeenCalledWith('d1', 'w');
     drawing.remove(['d2']);
     expect(ctx.removeDrawingTabs).toHaveBeenCalledWith(['d2']);
+  });
+
+  // "In the file": a download draws each drawing it can reach afresh.
+  it('draws a loaded drawing shared with this person, and nothing else', async () => {
+    const drawing = tabs();
+    expect(await drawing.draw('d1')).toEqual(new Uint8Array([1, 2]));
+    expect(picture).toHaveBeenCalledWith(ctx.tabs[1], ctx.imageContext);
+    expect(await drawing.draw('d2')).toBeNull();
+    expect(await drawing.draw('w')).toBeNull();
+    ctx.loadedTabIds.delete('d1');
+    expect(await drawing.draw('d1')).toBeNull();
+    ctx.loadedTabIds.add('d1');
   });
 });

@@ -14,7 +14,7 @@ import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { TextDocumentScope } from '@/lib/api/text-documents';
 import { apiDownloadTextDocument } from '@/lib/api/text-documents';
 import { apiFetchImageBytes } from '@/lib/api/images';
-import { leftOutNotice } from '@/lib/text-document/text-document-download';
+import { leftOutNotice, textDocumentDownload } from '@/lib/text-document/text-document-download';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
@@ -33,20 +33,6 @@ import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import type { OfficeModeChoice } from '@/components/office/OfficeModeSwitch';
 import { openTextDocumentFile } from '@/lib/text-document/open-text-document-file';
-
-// A text document no room holds is written in this browser; the writer loads only when it is asked for.
-async function writtenHere(
-  doc: Y.Doc | null,
-  file: { format: TextDocumentFormat; name: string; type: TextDocumentFileType },
-  scope: TextDocumentScope,
-) {
-  if (!doc) throw new Error('text document not loaded');
-  const { textDocumentFileOf } = await import('@/lib/text-document/text-document-file');
-  // A picture pasted from a document whose media is in the gallery is read back from it (objects.md).
-  const readImage = (imageId: string) =>
-    apiFetchImageBytes(scope.ownerId, imageId, { documentId: scope.documentId });
-  return textDocumentFileOf(doc, { ...file, readImage });
-}
 
 // What the title row says of each format, and the files it downloads as itself.
 const FORMATS = {
@@ -76,6 +62,8 @@ export function TextDocumentTitleRow({
   editorActions,
   keyScope,
   localDoc = null,
+  liveDoc = null,
+  drawDrawing = null,
   chrome = null,
   onFollow,
   saveStatus = null,
@@ -97,6 +85,10 @@ export function TextDocumentTitleRow({
   keyScope: RefObject<HTMLElement | null>;
   // A text document in This Browser: its file is written here, from its live state (live-editing-and-storage.md).
   localDoc?: (() => Y.Doc | null) | null;
+  // The writing bound to the room, and a drawing drawn now: a writing naming drawings is written here, each drawn
+  // afresh into the file (objects.md "In the file").
+  liveDoc?: (() => Y.Doc | null) | null;
+  drawDrawing?: ((drawingTabId: string) => Promise<Uint8Array | null>) | null;
   chrome?: OfficeChrome | null;
   // Brings a collaborator's caret into view; false when they have none here.
   onFollow?: (personId: string) => boolean;
@@ -130,9 +122,21 @@ export function TextDocumentTitleRow({
     const download = async (type: TextDocumentFileType) => {
       setProblem(null);
       try {
-        const { blob, fileName, leftOut } = localDoc
-          ? await writtenHere(localDoc(), { format, name: documentName, type }, scope)
-          : await apiDownloadTextDocument(scope, type);
+        const here = localDoc?.() ?? null;
+        if (localDoc && !here) throw new Error('text document not loaded');
+        const { blob, fileName, leftOut } = await textDocumentDownload({
+          file: { format, name: documentName, type },
+          localDoc: here,
+          liveDoc: liveDoc?.() ?? null,
+          draw: drawDrawing,
+          // A picture whose media is in the gallery is read back from it (objects.md "Where the bytes live").
+          readImage: (imageId) =>
+            apiFetchImageBytes(scope.ownerId, imageId, {
+              documentId: scope.documentId,
+              shareCode: scope.shareCode,
+            }),
+          fromApi: () => apiDownloadTextDocument(scope, type),
+        });
         downloadBlob(blob, fileName);
         if (leftOut > 0) setProblem(leftOutNotice(leftOut));
         track('Document', 'Exported', DOWNLOADS[type].telemetry);
@@ -145,7 +149,7 @@ export function TextDocumentTitleRow({
     for (const type of NATIVE[format])
       out[DOWNLOADS[type].item] = { run: () => void download(type) };
     return out;
-  }, [editorActions, format, documentName, localDoc, scope]);
+  }, [editorActions, format, documentName, localDoc, liveDoc, drawDrawing, scope]);
 
   const opening = useMemo(
     () => ({

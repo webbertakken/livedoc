@@ -547,7 +547,8 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
   }),
   // objects.md "The model": pictures in line, one cropped with alternative text and a title, one decorative sharing its
   // media and turned, one linked and recoloured in two colours and adjusted, one greyscale in a table cell and one in a
-  // header.
+  // header; the linked one and the header's are drawings' pictures, naming their drawing tabs (objects.md "In the
+  // file").
   pictures: (format) => {
     const picture = (
       media: string,
@@ -586,6 +587,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
           picture(BLUE_PNG_SHA, 30, 30, {
             link: 'https://docs.nu/',
             alt: 'Blue',
+            drawing: 'drawing-1',
             recolour: { kind: 'duotone', dark: '#1a2b3c', light: '#4285f4' },
             transparency: 40,
             brightness: 20.5,
@@ -614,7 +616,13 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         section: {
           ...TextDocument.blank({ format }).section,
           headers: {
-            header: { default: { blocks: [p([run('Logo '), picture(BLUE_PNG_SHA, 18, 18)])] } },
+            header: {
+              default: {
+                blocks: [
+                  p([run('Logo '), picture(BLUE_PNG_SHA, 18, 18, { drawing: 'drawing-2' })]),
+                ],
+              },
+            },
           },
         },
       },

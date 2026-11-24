@@ -5,7 +5,6 @@
 import {
   attributeOf,
   childElements,
-  escapeXmlAttribute,
   RELATIONSHIP_TYPES,
   resolvePartName,
   type KeptXml,
@@ -32,7 +31,7 @@ import {
   type SectionHeaders,
 } from '../model/headers';
 import { toggle } from './ooxml-props';
-import { R_NS, W_NS, XML_HEAD } from './ooxml-names';
+import { R_NS, W_NS, XML_HEAD, declarations } from './ooxml-names';
 
 /** A section's reference element for each kind. */
 export const REFERENCE_OF: Record<HeaderFooterKind, string> = {
@@ -176,11 +175,6 @@ export type HeaderPartsHost = {
 
 type Part = { story: HeaderFooter; name: string; kind: HeaderFooterKind; id: string };
 
-const declarations = (ns: Readonly<Record<string, string>>) =>
-  Object.entries(ns)
-    .map(([p, uri]) => ` xmlns${p ? `:${p}` : ''}="${escapeXmlAttribute(uri)}"`)
-    .join('');
-
 export class HeaderPartsWriter {
   readonly #host: HeaderPartsHost;
   /** Every section's headers and footers with linking followed, in order. */
@@ -246,7 +240,8 @@ export class HeaderPartsWriter {
       .join('');
     host.partRels = outer;
     const content = blocks.includes('<w:p') ? blocks : `${blocks}<w:p/>`;
-    return `${XML_HEAD}<w:${ROOT_OF[kind]}${declarations(host.ns)}>${content}</w:${ROOT_OF[kind]}>\n`;
+    // `livedoc` ignorable: a drawing's picture names its drawing tab (objects.md "In the file").
+    return `${XML_HEAD}<w:${ROOT_OF[kind]}${declarations(host.ns)} mc:Ignorable="livedoc">${content}</w:${ROOT_OF[kind]}>\n`;
   }
 
   /** The relationship id of a header or footer's part, named once: under the part it came from, else numbered. */

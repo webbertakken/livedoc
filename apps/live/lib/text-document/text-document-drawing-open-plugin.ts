@@ -21,6 +21,11 @@ export type DrawingTabs = {
   readonly someoneIn: (drawingTabId: string) => boolean;
   /** Drops drawing tabs in one change of the document's tabs. */
   readonly remove: (drawingTabIds: readonly string[]) => void;
+  /**
+   * Its picture drawn now, a PNG at twice its size (objects.md "In the file"), or null when it is not here, not shared
+   * with this person or not loaded: the picture then leaves with the PNG last saved.
+   */
+  readonly draw: (drawingTabId: string) => Promise<Uint8Array | null>;
 };
 
 /** Opens a drawing: its tab, and where its picture is (its position in the writing). */

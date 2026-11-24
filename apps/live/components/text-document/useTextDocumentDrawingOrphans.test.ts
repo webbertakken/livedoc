@@ -20,6 +20,7 @@ function sweeping({ ready = true, canEdit = true, held = true } = {}) {
     ids: () => ['named', 'orphan', 'busy', 'waiting'],
     someoneIn: (id: string) => id === 'busy',
     remove,
+    draw: async () => null,
   };
   const liveDoc = { current: held ? TextDocumentState.load() : null };
   const hook = renderHook(

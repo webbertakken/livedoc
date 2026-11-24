@@ -55,9 +55,16 @@ describe('textDocumentFileOf with gallery pictures', () => {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0, 2,
     0, 0, 0, 1, 8, 2, 0, 0, 0,
   ]);
-  const withGalleryPicture = () => {
+  const withGalleryPicture = (drawing?: string) => {
     const blank = TextDocument.blank({ format: 'ooxml' });
-    const picture: Picture = { type: 'picture', media: 'k1', width: 20, height: 10, props: {} };
+    const picture: Picture = {
+      type: 'picture',
+      media: 'k1',
+      width: 20,
+      height: 10,
+      props: {},
+      ...(drawing ? { drawing } : {}),
+    };
     return TextDocumentState.load([
       TextDocumentState.fromDocument({
         ...blank,
@@ -91,5 +98,24 @@ describe('textDocumentFileOf with gallery pictures', () => {
     const file = await textDocumentFileOf(withGalleryPicture(), { format: 'ooxml', name: 'N' });
     expect(file.leftOut).toBe(1);
     expect(Pictures.ofDocument(await picturesOf(file.blob))).toEqual([]);
+  });
+
+  // objects.md "In the file": a download draws each drawing it can reach afresh, into the file alone.
+  it('writes a drawing drawn afresh, its width kept and its height by shape, never asking the gallery', async () => {
+    const readImage = vi.fn(async () => undefined);
+    const fresh = new Uint8Array(PNG);
+    fresh[19] = 4;
+    const doc = withGalleryPicture('d1');
+    const file = await textDocumentFileOf(doc, {
+      format: 'ooxml',
+      name: 'N',
+      readImage,
+      drawn: new Map([['d1', fresh]]),
+    });
+    expect(readImage).not.toHaveBeenCalled();
+    expect(file.leftOut).toBe(0);
+    const [picture] = Pictures.ofDocument(await picturesOf(file.blob));
+    expect(picture).toMatchObject({ width: 20, height: 5, drawing: 'd1' });
+    expect(Pictures.ofDocument(TextDocumentState.document(doc, 'ooxml'))[0]?.media).toBe('k1');
   });
 });

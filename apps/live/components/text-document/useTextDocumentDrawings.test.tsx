@@ -65,6 +65,7 @@ function setup(
     ids: () => [],
     someoneIn: () => false,
     remove: vi.fn(),
+    draw: async () => null,
   };
   const create = options.create ?? vi.fn(() => 'd1');
   const hook = renderHook(() =>
