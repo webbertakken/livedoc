@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Body, TextDocumentState } from '@livedoc/text-documents';
+import { Body, TextDocument, TextDocumentState } from '@livedoc/text-documents';
 import { sqliteD1 } from '../test-sqlite-d1';
 import { appendLiveTabUpdate } from '../live-tabs/live-tab-store';
 import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
@@ -343,6 +343,43 @@ describe('the content search rows the drain writes', () => {
       textDocumentTab(room);
       await drainOutbox(env, D);
       expect(digestOf(room)).toEqual({ characters: 0, words: 0, pages: 1, has_content: 0 });
+    });
+
+    // docs/specs/006-document/document-storage.md D8: the tabs' units are built before the document's, so the image
+    // references a text document's digest writes reach the image index in the same drain.
+    it('pushes the images its digest finds in the drain that finds them', async () => {
+      const { env, room, d1 } = harness();
+      textDocumentTab(room);
+      await drainOutbox(env, D);
+      const blank = TextDocument.blank();
+      await appendLiveTabUpdate(
+        env,
+        TEXT_DOCUMENT_LIVE_TAB,
+        'td',
+        TextDocumentState.fromDocument({
+          ...blank,
+          body: [
+            {
+              type: 'paragraph',
+              style: blank.styles[0]!.id,
+              props: {},
+              inlines: [{ type: 'picture', media: 'k1', width: 10, height: 10, props: {} }],
+            },
+          ],
+          media: { k1: { mediaType: 'image/png', image: 'img-1' } },
+        }),
+      );
+      // The document's images are owed too, as a file just read into a new document leaves them.
+      room
+        .prepare("INSERT OR IGNORE INTO outbox (document_id, kind, key) VALUES (?, 'images', '')")
+        .run(D);
+      await drainOutbox(env, D);
+      expect(
+        d1
+          .prepare('SELECT image_id FROM document_images WHERE document_id = ?')
+          .all(D)
+          .map((r) => r.image_id),
+      ).toEqual(['img-1']);
     });
 
     // docs/specs/013-workspace/content-search.md "What is searched": a drawing tab's words are its text document's.

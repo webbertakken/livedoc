@@ -152,8 +152,9 @@ The code cites each by its id.
 
 - **D7** Which outbox keys a room keeps: Five kinds: `summary`, `tab` (per tab id), `cards`, `items`, `images`; the four
   document kinds share one D1 unit, each tab has its own, so a tab's push fails alone (default).
-- **D8** How a drain groups its D1 writes: One D1 batch per unit (the document's, then each tab's), at most 6 in flight;
-  only succeeded units' keys go (default).
+- **D8** How a drain groups its D1 writes: One D1 batch per unit, at most 6 in flight; the tabs' units are built
+  first and the document's after them, since a tab's unit refreshes what the document's reads (a live tab's digest and
+  the image references it holds), so one drain carries both; only succeeded units' keys go (default).
 - **D9** Where the stats and the empty test are worked out: In the room, the D1-era SQL moved unchanged into the room's
   queries (default).
 - **D10** Which requests the worker hands to the room: Every path under `/api/documents/:id/`, as upstream; the

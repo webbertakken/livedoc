@@ -1,7 +1,7 @@
 // What a document's room pushes to D1 (docs/specs/006-document/document-storage.md "The outbox"). The room's
 // triggers key `outbox` in the transaction of every write (document-schema.ts); the room's
-// alarm drains it on idle. A drain reads the keys, builds one D1 batch per unit (the document unit: summary, images,
-// cards, items; each tab its own), runs at most PUSH_CONCURRENCY at once and deletes exactly the keys whose unit
+// alarm drains it on idle. A drain reads the keys, builds one D1 batch per unit (each tab its own, then the document
+// unit: summary, images, cards, items), runs at most PUSH_CONCURRENCY at once and deletes exactly the keys whose unit
 // landed, by the ids it read: a key written again meanwhile has a new id and stays for the next drain.
 //
 // Every D1 write is guarded by the document's D1 row (G2), so a drain racing a purge writes nothing. Every unit is a
@@ -425,7 +425,12 @@ async function itemsSearchStatements(
 
 // ---------- The drain -------------------------------------------------------------------------------------
 
-type Unit = { name: string; rows: OutboxRow[]; build: () => Promise<D1PreparedStatement[]> };
+type Unit = {
+  name: string;
+  kind: 'document' | 'tab';
+  rows: OutboxRow[];
+  build: () => Promise<D1PreparedStatement[]>;
+};
 
 function unitsOf(env: DocumentEnv, documentId: string, rows: OutboxRow[], now: number): Unit[] {
   const documentRows = rows.filter((r) => r.kind !== 'tab');
@@ -434,6 +439,7 @@ function unitsOf(env: DocumentEnv, documentId: string, rows: OutboxRow[], now: n
     const kinds = new Set(documentRows.map((r) => r.kind));
     units.push({
       name: 'summary',
+      kind: 'document',
       rows: documentRows,
       build: async () => [
         ...(kinds.has('summary') ? await summaryStatements(env, documentId) : []),
@@ -446,6 +452,7 @@ function unitsOf(env: DocumentEnv, documentId: string, rows: OutboxRow[], now: n
   for (const row of rows.filter((r) => r.kind === 'tab')) {
     units.push({
       name: `tab:${row.key}`,
+      kind: 'tab',
       rows: [row],
       build: () => tabStatements(env, documentId, row.key),
     });
@@ -483,19 +490,23 @@ export async function drainOutbox(env: DocumentEnv, documentId: string): Promise
   const rows = all.filter((r) => r.kind !== 'tab' || taken.has(r.id));
   const more = rows.length < all.length;
   const now = Date.now();
-  const outcomes = await pooled(
-    unitsOf(env, documentId, rows, now).map((unit) => async () => {
-      try {
-        const statements = await unit.build();
-        if (statements.length > 0) await env.DB.batch(statements);
-        return { unit, ok: true };
-      } catch (error) {
-        console.warn(`[outbox] unit failed id=${documentId} unit=${unit.name}`, error);
-        return { unit, ok: false };
-      }
-    }),
-    PUSH_CONCURRENCY,
-  );
+  const push = (unit: Unit) => async () => {
+    try {
+      const statements = await unit.build();
+      if (statements.length > 0) await env.DB.batch(statements);
+      return { unit, ok: true };
+    } catch (error) {
+      console.warn(`[outbox] unit failed id=${documentId} unit=${unit.name}`, error);
+      return { unit, ok: false };
+    }
+  };
+  // The tabs' units first: a tab's unit refreshes what the document's reads (a live tab's digest and the image
+  // references it holds), so the document's unit, built after them, carries them in this drain (D8).
+  const units = unitsOf(env, documentId, rows, now);
+  const outcomes = [
+    ...(await pooled(units.filter((u) => u.kind === 'tab').map(push), PUSH_CONCURRENCY)),
+    ...(await pooled(units.filter((u) => u.kind === 'document').map(push), PUSH_CONCURRENCY)),
+  ];
   const pushed = outcomes.filter((o) => o.ok).flatMap((o) => o.unit.rows.map((r) => r.id));
   if (pushed.length > 0) {
     await env.DOCUMENT_DB.prepare('DELETE FROM outbox WHERE id IN (SELECT value FROM json_each(?))')
