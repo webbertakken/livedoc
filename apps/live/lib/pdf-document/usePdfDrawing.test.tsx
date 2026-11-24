@@ -75,6 +75,7 @@ describe('the Drawing tool’s strokes', () => {
     act(() => open.draw(0, [], 0));
     expect(PdfLiveChanges.isEmpty(open.doc)).toBe(true);
     expect(open.onProblem).not.toHaveBeenCalled();
+    expect(debugLog).toHaveBeenCalledWith('[pdf] mark-refused name=no_stroke');
   });
 
   it('says so when the PDF holds the most marks it may', () => {
