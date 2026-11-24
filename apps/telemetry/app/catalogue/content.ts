@@ -1374,6 +1374,14 @@ export const PDF_LAYERS_TOGGLED = chart(
   { types: ['Layer.Shown', 'Layer.Hidden'], rising: 'neutral' },
 );
 
+export const PDF_ROOM_TOGGLED = chart(
+  'Pdf',
+  'Toggled',
+  'PDF Read Mode And Full Screen',
+  'A person gave a PDF document’s pages the room: Read mode or Full screen, counted on entering.',
+  { types: ['ReadMode', 'FullScreen'], rising: 'neutral' },
+);
+
 export const PDF_TEXT_COPIED = chart(
   'Pdf',
   'Copied',
@@ -1429,6 +1437,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_VIEW_TURNS,
     PDF_ZOOMS,
     PDF_LAYERS_TOGGLED,
+    PDF_ROOM_TOGGLED,
     PDF_TEXT_COPIED,
     PDF_SEARCHES,
     PDF_OPENS,

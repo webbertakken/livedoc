@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PageName, type PageInfo } from '@livedoc/pdf-documents';
 import { track } from '@/lib/telemetry';
 import { PdfPageLayout } from './pdf-page-layout';
+import { PdfView } from './pdf-view';
 import { usePdfView } from './usePdfView';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -162,6 +163,17 @@ describe("a person's view of the pages", () => {
     const at = viewing();
     act(() => at.now().setDisplay('continuous'));
     act(() => at.now().setCover(false));
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  // "Full screen": a whole view put in place at once, the page in view kept, told to no telemetry.
+  it('puts a whole view in place, the page in view kept, telling nothing', () => {
+    const at = viewing();
+    at.scrollTo(at.now().layout.boxes[3]!.top);
+    act(() => at.now().setWholeView(PdfView.presented(at.now().view)));
+    expect(at.now().view.zoom).toBe('fit-page');
+    expect(at.now().layout.boxes.map((box) => box.index)).toEqual([3]);
+    expect(at.now().page).toBe(3);
     expect(track).not.toHaveBeenCalled();
   });
 

@@ -15,9 +15,10 @@
 - The page's context menu.
 - The chrome from the shell's tokens alone, and what LiveDoc draws on a page from the PDF's paper tokens, in both schemes.
 - The notice bar, with the permissions notices.
+- Read mode and Full screen.
 
 Bound today: Download as PDF, Undo, Redo, Copy, Select all, Find, the editing modes, Highlight, Select and Help; Page display, Zoom but for
-Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
+Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers, Read mode and Full screen.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
 Signatures and Fields, and of the phone layout all but a pinch and two fingers on the pages and reduced motion
@@ -126,8 +127,8 @@ Editing. Shortcuts are in [Keyboard shortcuts](keyboard-shortcuts.md).
 | Comments                                                        | The comments panel                                                                                                                                         | view  |
 | Marks                                                           | Shows or hides every mark, for this person                                                                                                                 | view  |
 | Dark pages                                                      | A check, offered in the dark scheme only ([Dark pages](dark-pages.md))                                                                                     | view  |
-| Read mode                                                       | Hides the menu bar, toolbar and panels; Escape leaves                                                                                                      | view  |
-| Full screen                                                     | One page a screen, arrows to turn; Escape leaves                                                                                                           | view  |
+| Read mode                                                       | Hides the menu bar, toolbar and panels; Escape leaves ([Read mode](#read-mode))                                                                            | view  |
+| Full screen                                                     | One page a screen, arrows to turn; Escape leaves ([Full screen](#full-screen))                                                                             | view  |
 | Go to ▸                                                         | First page; Last page; Previous page; Next page; Page…; Previous view; Next view                                                                           | view  |
 
 - Every View item is seen by every level and changes one person's view only.
@@ -524,6 +525,25 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 - A page label typed in the field is the left panel's [Go to page](#go-to-page).
 - The bar is never under the document group: where the two would meet, the bar sits above it `(default)`.
 
+## Read mode
+
+- View > Read mode (⌘⌥R) hides the menu bar, the toolbar and both side panels: the pages get the room.
+- The name line and the page bar stay; where the menu bar was, one button, **Leave read mode**, is the way back.
+- Escape leaves Read mode where nothing nearer takes it (a field, a dialog, the find bar) `(default)`.
+- Items' keys and the tool finder still work in Read mode; a key that opens a menu or a panel does nothing `(default)`.
+- Leaving shows the panel that was open, the view as it is now.
+- Read mode is one person's, for this surface only, and never remembered `(default)`.
+- It changes nothing anyone else sees, and nothing in the file.
+
+## Full screen
+
+- View > Full screen (⌘⌥F) shows the pages alone on the whole screen: Single page, at Fit page, Rotate view kept.
+- Arrows, Space and the Page keys turn the pages as they do anywhere; a zoom made in full screen is its own.
+- Leaving it, by Escape, the item, its key or the browser's own way, brings back the display and zoom it found.
+- A browser with no full screen for part of a page (an iPhone) draws the item dimmed `(default)`.
+- A browser that refuses the request leaves the view as it was and logs `[pdf] full-screen-refused`.
+- Full screen is one person's, changes nothing anyone else sees, and nothing in the file.
+
 ## Find
 
 - ⌘F opens the find field at the top right of the pages: the query, the count ("3 of 41"), Previous, Next, and
@@ -676,7 +696,9 @@ Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom
 `[pdf] thumbnail-failed page=<n>`, `[pdf] outline-failed`, `[pdf] link-opened scheme=<scheme>`,
 `[pdf] link-refused kind=<kind>`, `[pdf] text-copied chars=<n>`, `[pdf] text-copy-refused`, `[pdf] text-copy-failed`,
 `[pdf] page-text-failed page=<n>`, `[pdf] view-history way=<back|forward> page=<n>`, `[pdf] find-searched pages=<n> results=<n>`,
-`[pdf] view-double-tapped column=<yes|no> back=<yes|no>`, `[pdf] text-long-pressed page=<n> selected=<yes|no>`.
+`[pdf] view-double-tapped column=<yes|no> back=<yes|no>`, `[pdf] text-long-pressed page=<n> selected=<yes|no>`,
+`[pdf] read-mode on=<yes|no>`, `[pdf] full-screen on=<yes|no>`, `[pdf] full-screen-refused`.
+`Pdf · Toggled · ReadMode` and `FullScreen` are sent on entering, never on leaving `(default)`.
 
 ## Errors
 

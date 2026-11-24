@@ -73,6 +73,10 @@ export const PdfView = {
     zoom: typeof zoom === 'number' ? clamp(zoom) : zoom,
   }),
 
+  /** Full screen's view (reading-surface.md "Full screen"): one page a screen, at Fit page, Rotate view kept. */
+  presented: (view: PdfView): PdfView =>
+    PdfView.withZoom(PdfView.withDisplay(view, 'single'), 'fit-page'),
+
   /** The step above the scale shown; the most where there is none. */
   stepIn: (scale: number): number =>
     PDF_ZOOM_STEPS.find((step) => step > scale + STEP_SLACK) ?? PDF_ZOOM_MAX,
