@@ -87,7 +87,7 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 | Show non-printing characters | ¶, spaces, tabs and breaks drawn          | built (`text-document-non-printing.test.ts`, `non-printing.spec.ts`)                                           | [Text and paragraphs](text-and-paragraphs.md#non-printing-characters) |
 | Full screen                  | Menus and toolbar hidden until Escape     | specified                                                                                                      | [Editing surface](editing-surface.md#compact-and-full-screen)         |
 | Text width                   | Pageless: narrow, medium, wide, full      | built (`useTextDocumentTextWidth.test.ts`, `text-document-page.test.ts`, `print-layout.spec.ts`)               | [Page layout](page-layout.md#pageless)                                |
-| Show tabs and outlines       | The outline panel with document tabs      | specified (the outline lists the tabs: Show outline)                                                           | [Links and navigation](links-and-navigation.md#the-outline)           |
+| Show tabs and outlines       | The outline panel with document tabs      | built (`useOfficePanels.test.tsx`, `document-tabs.spec.ts`)                                                    | [Links and navigation](links-and-navigation.md#the-outline)           |
 
 ## Insert menu
 

@@ -9,7 +9,13 @@ import { useOfficePanels } from './useOfficePanels';
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
 const PANELS: OfficePanelSpec[] = [
-  { id: 'outline', title: 'Outline', side: 'left', item: 'show-outline' },
+  {
+    id: 'outline',
+    title: 'Outline',
+    side: 'left',
+    item: 'show-outline',
+    alsoItems: ['show-tabs-and-outlines'],
+  },
   { id: 'numbers', title: 'Line numbers', side: 'right', item: 'line-numbers', editorsOnly: true },
 ];
 
@@ -44,6 +50,17 @@ describe('useOfficePanels', () => {
   });
 
   // "Side panels": a panel's telemetry name is its title's words joined, each capitalised.
+  it('opens and closes a panel from any more items it has, all checked alike', () => {
+    const { hook } = panels();
+    act(() => hook.result.current.actions['show-tabs-and-outlines']!.run());
+    expect(hook.result.current.open.left).toBe('outline');
+    expect(hook.result.current.actions['show-outline']!.checked).toBe(true);
+    expect(hook.result.current.actions['show-tabs-and-outlines']!.checked).toBe(true);
+    act(() => hook.result.current.actions['show-outline']!.run());
+    expect(hook.result.current.open.left).toBeNull();
+    expect(hook.result.current.actions['show-tabs-and-outlines']!.checked).toBe(false);
+  });
+
   it('names a panel of several words to telemetry in capitalised words', () => {
     const { hook } = panels();
     act(() => hook.result.current.actions['line-numbers']!.run());

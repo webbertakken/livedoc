@@ -95,10 +95,11 @@ export function useOfficePanels({
     for (const panel of panels) {
       if (panel.editorsOnly && !writes) continue;
       const isOpen = open[panel.side] === panel.id;
-      out[panel.item] = {
+      const toggle = {
         checked: isOpen,
         run: () => (isOpen ? close(panel.side) : openPanel(panel)),
       };
+      for (const item of [panel.item, ...(panel.alsoItems ?? [])]) out[item] = toggle;
     }
     return out;
   }, [panels, open, close, openPanel, writes]);

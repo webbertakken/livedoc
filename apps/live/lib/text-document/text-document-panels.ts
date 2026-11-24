@@ -9,6 +9,8 @@ export const OUTLINE_PANEL: OfficePanelSpec = {
   title: 'Outline',
   side: 'left',
   item: 'show-outline',
+  // View > Show tabs & outlines opens the same outline (links-and-navigation.md "The outline").
+  alsoItems: ['show-tabs-and-outlines'],
 };
 
 export const LINE_NUMBERS_PANEL: OfficePanelSpec = {

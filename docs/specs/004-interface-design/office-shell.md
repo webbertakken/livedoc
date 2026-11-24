@@ -5,8 +5,9 @@ title row with its mode switch (each kind's modes), the toolbar, side panels, di
 shortcuts dialog are built.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md),
-the spreadsheet of plan 0020 and the [PDF document](../035-pdf-documents/reading-surface.md). It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
-built once and filled by each kind with its own menus, toolbar groups and panels. Each kind's spec says what fills it
+the spreadsheet and the [PDF document](../035-pdf-documents/reading-surface.md). It is Google's office layout
+(title row, menu bar, toolbar, side panels, dialogs), built once and filled by each kind with its own menus, toolbar
+groups and panels. Each kind's spec says what fills it
 ([Editing surface](../034-text-documents/editing-surface.md)); this spec says how the frame behaves.
 
 ## Parts
@@ -204,7 +205,8 @@ draws a menu: dimmed while `comingSoon`, not drawn above the session's level or 
 ## Side panels
 
 A kind declares its **panels** as data, as it does its menus: each has an id, a title, a side (`left` or `right`),
-and the menu item that opens it. The shell draws the panel's frame; the kind fills its body.
+and the menu item that opens it, with any more that open it too (each checked while it is open). The shell draws the
+panel's frame; the kind fills its body.
 
 - **The right panel** sits at the right of the pages, under the toolbar, the full height left: 360 px wide `(default)`,
   resizable from 280 to 560 px by dragging its left edge. The edge is a `separator` (vertical) that holds its width as
@@ -213,7 +215,8 @@ and the menu item that opens it. The shell draws the panel's frame; the kind fil
 - **The left panel** sits at the left of the pages, 260 px wide, not resizable.
 - A kind with several left panels may give them a **rail**: a vertical toolbar of glyph toggles at the far left, one a
   panel, each named and with its name as tooltip, pressed while its panel is open; the rail is a part of its own in
-  the F6 cycle, before the left panel, and is not drawn on a phone ([PDF document](../035-pdf-documents/reading-surface.md#the-left-panel)).
+  the F6 cycle, before the left panel, and is not drawn on a phone
+  ([PDF document](../035-pdf-documents/reading-surface.md#the-left-panel)).
 - A panel's telemetry name is its title's words joined, each capitalised (`Line numbers` is `LineNumbers`).
 - One panel at a time on each side: opening a right panel closes the right panel open before it.
 - A panel's header holds its title and a × ("Close <title>"); the body under it scrolls on its own.

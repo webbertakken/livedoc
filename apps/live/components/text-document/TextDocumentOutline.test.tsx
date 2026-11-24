@@ -11,6 +11,7 @@ import { ADD_TAB_LABEL, OUTLINE_EMPTY, TextDocumentOutline } from './TextDocumen
 import { TAB_NAME_LABEL } from './TextDocumentOutlineTab';
 import { TAB_MENU_ITEMS } from '@/lib/text-document/text-document-tab-menu';
 import type { TextDocumentTabs } from './useTextDocumentTabs';
+import { TAB_DRAG_TYPE } from '@/lib/text-document/text-document-tab-drag';
 
 // One tab, as every text document has until it is given others.
 const tabsOf = (over: Partial<TextDocumentTabs> = {}): TextDocumentTabs => ({
@@ -29,6 +30,8 @@ const tabsOf = (over: Partial<TextDocumentTabs> = {}): TextDocumentTabs => ({
   pickEmoji: vi.fn(),
   confirmDelete: vi.fn(),
   cancelAsking: vi.fn(),
+  canDrop: vi.fn(() => false),
+  drop: vi.fn(() => false),
   said: '',
   ...over,
 });
@@ -218,5 +221,60 @@ describe('TextDocumentOutline', () => {
     outlineWith(tabsOf({ asking: { kind: 'emoji', id: 't.0' }, said: 'Link copied' }), p('Words'));
     expect(screen.getByRole('dialog')).toBeDefined();
     expect(screen.getByText('Link copied').getAttribute('aria-live')).toBe('polite');
+  });
+
+  // links-and-navigation.md "A tab's menu" (Dragging): the drop line only where a drop is allowed, then the drop.
+  describe('dragging a tab', () => {
+    const TWO = [
+      { id: 't.0', name: 'Tab 1', depth: 0 as const, body: [] },
+      { id: 't.b', name: 'Tab 2', depth: 0 as const, body: [] },
+    ];
+    const transfer = () => ({
+      types: [TAB_DRAG_TYPE],
+      setData: vi.fn(),
+      effectAllowed: '',
+      dropEffect: '',
+    });
+    const rowOf = (name: string) =>
+      screen.getByRole('button', { name: (text) => text === name }).parentElement!;
+    // jsdom lays nothing out: each row is 32 px tall at the top, so a drag reads the middle, into.
+    const at = (row: HTMLElement) =>
+      vi.spyOn(row, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 200, 32));
+
+    it('shows where an allowed drop lands, indented for into, and drops there', () => {
+      const tabs = tabsOf({ list: TWO, canDrop: vi.fn(() => true), drop: vi.fn(() => true) });
+      outlineWith(tabs, p('Words'));
+      const [from, to] = [rowOf('Tab 2'), rowOf('Tab 1')];
+      at(to);
+      expect(from.getAttribute('draggable')).toBe('true');
+      const dataTransfer = transfer();
+      fireEvent.dragStart(from, { dataTransfer });
+      expect(dataTransfer.setData).toHaveBeenCalledWith(TAB_DRAG_TYPE, 't.b');
+      fireEvent.dragOver(to, { dataTransfer, clientY: 16 });
+      expect(tabs.canDrop).toHaveBeenCalledWith('t.b', 't.0', 'into');
+      expect(to.dataset.drop).toBe('into');
+      expect(screen.getByTestId('tab-drop-line').style.left).toBe('20px');
+      fireEvent.drop(to, { dataTransfer, clientY: 16 });
+      expect(tabs.drop).toHaveBeenCalledWith('t.b', 't.0', 'into');
+      expect(screen.queryByTestId('tab-drop-line')).toBeNull();
+    });
+
+    it('shows nothing where a drop is refused', () => {
+      const tabs = tabsOf({ list: TWO });
+      outlineWith(tabs, p('Words'));
+      const [from, to] = [rowOf('Tab 2'), rowOf('Tab 1')];
+      at(to);
+      const dataTransfer = transfer();
+      fireEvent.dragStart(from, { dataTransfer });
+      fireEvent.dragOver(to, { dataTransfer, clientY: 16 });
+      expect(screen.queryByTestId('tab-drop-line')).toBeNull();
+      fireEvent.dragEnd(from);
+      expect(tabs.drop).not.toHaveBeenCalled();
+    });
+
+    it('lets no one but an Editor drag a tab', () => {
+      outlineWith(tabsOf({ list: TWO, canEditTabs: false }), p('Words'));
+      expect(rowOf('Tab 2').getAttribute('draggable')).toBe('false');
+    });
   });
 });

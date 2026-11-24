@@ -106,3 +106,37 @@ test('a document tab’s menu renames, nests, copies and deletes it', async ({
   );
   expectNoPageErrors(pageErrors);
 });
+
+// "A tab's menu" (Dragging) and "The outline": View > Show tabs & outlines opens the outline; a tab dragged into
+// another becomes its subtab, one dragged to the top of a row goes before it; the item closes the outline again.
+test('document tabs dragged in the outline, opened from Show tabs & outlines', async ({
+  page,
+  pageErrors,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await (await officeMenuItem(page, ['Insert', 'Tab'])).click();
+  await (await officeMenuItem(page, ['Insert', 'Tab'])).click();
+
+  await (await officeMenuItem(page, ['View', 'Show tabs & outlines'])).click();
+  const tabs = page.getByRole('list', { name: 'Document tabs' });
+  await expect(tabs).toBeVisible();
+  const row = (name: string) => tabs.getByRole('button', { name, exact: true });
+  const tabRows = tabs.locator('li > div > button:not([aria-haspopup])');
+  await expect(tabRows).toHaveText(['Tab 1', 'Tab 2', 'Tab 3']);
+
+  // Into: the middle of Tab 1's row.
+  await row('Tab 3').dragTo(row('Tab 1'));
+  await expect(tabRows).toHaveText(['Tab 1', 'Tab 3', 'Tab 2']);
+  await expect(row('Tab 3')).toHaveCSS('padding-left', '20px');
+
+  // Before: the top of Tab 1's row.
+  await row('Tab 2').dragTo(row('Tab 1'), { targetPosition: { x: 40, y: 2 } });
+  await expect(tabRows).toHaveText(['Tab 2', 'Tab 1', 'Tab 3']);
+  await expect(row('Tab 2')).toHaveCSS('padding-left', '8px');
+
+  await (await officeMenuItem(page, ['View', 'Show tabs & outlines'])).click();
+  await expect(tabs).toBeHidden();
+  expectNoPageErrors(pageErrors);
+});

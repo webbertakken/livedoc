@@ -168,7 +168,7 @@ describe('the text document menus', () => {
         // The editing modes (useOfficeMode), bound by the surface.
         ...TEXT_DOCUMENT_MODES.filter((m) => m.status === 'built').map((m) => m.item),
         // The panels' items (useOfficePanels), bound by the surface.
-        ...TEXT_DOCUMENT_PANELS.map((p) => p.item),
+        ...TEXT_DOCUMENT_PANELS.flatMap((p) => [p.item, ...(p.alsoItems ?? [])]),
         // View > Show ruler and Show non-printing characters (useTextDocumentViewToggle), bound by the surface.
         RULER_TOGGLE.item,
         NON_PRINTING_TOGGLE.item,

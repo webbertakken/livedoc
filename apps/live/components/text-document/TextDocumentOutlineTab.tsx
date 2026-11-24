@@ -2,32 +2,43 @@
 
 // One document tab in the outline (docs/specs/034-text-documents/links-and-navigation.md "Document tabs in the
 // outline", "A tab's menu"): its row shows it; its Tab options button (on hover and focus, always on the shown tab)
-// opens its menu; Rename turns its name into a field in place, Enter or leaving keeping the name, Escape the old one.
+// opens its menu; an Editor drags it by the row onto another tab; Rename turns its name into a field in place, Enter or leaving keeping the name, Escape the old one.
 import { useState, type KeyboardEvent } from 'react';
 import { EllipsisIcon, Tooltip } from '@livedoc/ui';
-import type { DocumentTab } from '@livedoc/text-documents';
+import type { DocumentTab, DocumentTabDropPlace } from '@livedoc/text-documents';
 import { OfficeMenuPanel } from '@/components/office/OfficeMenuPanel';
 import { OFFICE_PANEL_START } from '@/components/office/OfficePanel';
 import { OfficePopup } from '@/components/office/OfficePopup';
 import { tabMenuEntries } from '@/lib/text-document/text-document-tab-menu';
 import type { TextDocumentTabs } from './useTextDocumentTabs';
+import type { TabDragRow } from './useTextDocumentTabDrag';
 
 export const TAB_OPTIONS_LABEL = 'Tab options';
 export const TAB_NAME_LABEL = 'Tab name';
 
 const noShortcuts = () => null;
 
+// The drop line's indent for into, one depth deeper, in px.
+const INTO_INDENT_PX = 12;
+
 export function TextDocumentOutlineTab({
   tab,
   tabs,
   indent,
   rowClass,
+  drag,
+  dragged = false,
+  dropLine = null,
   start = false,
 }: {
   tab: DocumentTab;
   tabs: TextDocumentTabs;
   indent: number;
   rowClass: string;
+  // Dragging it onto another row, and where a drag over this row would land (A tab's menu, Dragging).
+  drag?: TabDragRow;
+  dragged?: boolean;
+  dropLine?: DocumentTabDropPlace | null;
   // Where focus starts when the outline is opened (links-and-navigation.md "The outline").
   start?: boolean;
 }) {
@@ -64,7 +75,21 @@ export function TextDocumentOutlineTab({
   }
 
   return (
-    <div className="group relative flex items-center">
+    <div
+      {...drag}
+      data-drop={dropLine ?? undefined}
+      className={`group relative flex items-center ${dragged ? 'opacity-50' : ''}`}
+    >
+      {dropLine && (
+        <span
+          aria-hidden
+          data-testid="tab-drop-line"
+          style={{ left: 8 + indent + (dropLine === 'into' ? INTO_INDENT_PX : 0) }}
+          className={`pointer-events-none absolute right-1 h-0.5 rounded-full bg-(--office-focus) ${
+            dropLine === 'before' ? 'top-0' : 'bottom-0'
+          }`}
+        />
+      )}
       <button
         type="button"
         aria-current={current ? 'page' : undefined}

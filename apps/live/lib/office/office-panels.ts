@@ -9,6 +9,8 @@ export type OfficePanelSpec = {
   side: OfficePanelSide;
   // The menu item that opens and closes it (an on/off check).
   item: string;
+  // More menu items that open and close it too, checked alike.
+  alsoItems?: readonly string[];
   // Offered only to a session that writes (an Editor): for the others its item is not bound and it is not drawn.
   editorsOnly?: true;
 };
