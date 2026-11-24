@@ -24,6 +24,7 @@ import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadshee
 import { lineSpan } from './line-span';
 import { recentFormatItemId } from './recent-formats';
 import { mergeBindings } from './merge-bindings';
+import { rotationBindings } from './rotation-bindings';
 import { paintFormatBinding } from './paint-format-binding';
 import { borderBindings, gridBorders, type BorderLineChoice } from './border-bindings';
 import type { OfficeBorders } from '@/components/office/OfficeBordersPanel';
@@ -74,6 +75,8 @@ export type GridMenuActions = {
   // Format › Merge Cells (formatting.md "Merges"): asking first where a merge would clear values.
   merge: (mode: MergeMode) => void;
   unmerge: () => void;
+  // Format › Rotation › Custom Angle's dialog (formatting.md "Alignment, wrapping, rotation").
+  openCustomAngle: () => void;
 };
 
 /** An axis's groups as the menus read them: any in the selection's lines, any collapsed, any expanded. */
@@ -432,6 +435,13 @@ export function gridMenuBindings(port: GridMenuPort): OfficeActions {
           merged: port.merged,
           merge: port.act.merge,
           unmerge: port.act.unmerge,
+        })
+      : {}),
+    ...(port.canWrite && port.canShape
+      ? rotationBindings({
+          format: port.format,
+          setFormat: port.act.format,
+          openCustomAngle: port.act.openCustomAngle,
         })
       : {}),
   };

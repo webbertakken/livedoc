@@ -63,6 +63,7 @@ function bound(
         openCustomCurrency,
         openCustomDateTime,
         merge: vi.fn(),
+        openCustomAngle: vi.fn(),
       }),
     {
       wrapper,

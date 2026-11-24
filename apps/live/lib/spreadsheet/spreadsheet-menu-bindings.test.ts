@@ -50,6 +50,7 @@ const actions = (): GridMenuActions => ({
   borders: vi.fn(),
   paintStart: vi.fn(),
   paintStop: vi.fn(),
+  openCustomAngle: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -549,6 +550,18 @@ describe('gridOffice borders', () => {
     expect(gridOffice(port({ canShape: false })).borders).toBeNull();
     gridMenuBindings(p)['apply-outer-border']!.run();
     expect(p.act.borders).toHaveBeenLastCalledWith('outer', { w: 3, s: 'solid', c: '#ff0000' });
+  });
+
+  // formatting.md "Alignment, wrapping, rotation": an Editor's, as every format is.
+  it("gives an Editor the rotations, ticked by the active cell, and Custom Angle's dialog", () => {
+    const p = port({ format: { ro: -45 } });
+    const bound = gridMenuBindings(p);
+    expect(bound['rotate-tilt-down']!.checked).toBe(true);
+    bound['rotate-up']!.run();
+    expect(p.act.format).toHaveBeenCalledWith({ ro: 90 });
+    bound['rotate-custom-angle']!.run();
+    expect(p.act.openCustomAngle).toHaveBeenCalledOnce();
+    expect(gridMenuBindings(port({ canShape: false }))['rotate-none']).toBeUndefined();
   });
 });
 

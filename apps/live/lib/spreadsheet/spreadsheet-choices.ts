@@ -1,6 +1,7 @@
 // The toolbar's choice controls (docs/specs/029-sheets/surface.md "Toolbar"): More Formats, Horizontal Align, Vertical
-// Align and Text Wrapping open the choices of Format › Number, Alignment and Wrapping, from the menus' own catalogue
-// and bindings, so a choice ticked in one is ticked in the other. The control's glyph shows the choice in force.
+// Align, Text Wrapping and Text Rotation open the choices of Format › Number, Alignment, Wrapping and Rotation, from
+// the menus' own catalogue and bindings, so a choice ticked in one is ticked in the other. The control's glyph shows
+// the choice in force.
 import type { IconPrim } from '@livedoc/icons';
 import {
   lucideAlignCenter,
@@ -9,7 +10,14 @@ import {
   lucideAlignVerticalJustifyCenter,
   lucideAlignVerticalJustifyEnd,
   lucideAlignVerticalJustifyStart,
+  lucideArrowDown,
+  lucideArrowDownRight,
+  lucideArrowDownToLine,
+  lucideArrowRight,
   lucideArrowRightToLine,
+  lucideArrowUp,
+  lucideArrowUpRight,
+  lucideRotateCcw,
   lucideScissors,
   lucideWrapText,
 } from '@livedoc/icons/lucide';
@@ -63,6 +71,15 @@ const VERTICAL = {
   Bottom: lucideAlignVerticalJustifyEnd,
 };
 const WRAPPING = { Overflow: lucideArrowRightToLine, Wrap: lucideWrapText, Clip: lucideScissors };
+// Each rotation as the way its text runs; a custom angle, Text Rotation's own glyph.
+const ROTATION = {
+  None: lucideArrowRight,
+  'Tilt Up': lucideArrowUpRight,
+  'Tilt Down': lucideArrowDownRight,
+  'Stack Vertically': lucideArrowDownToLine,
+  'Rotate Up': lucideArrowUp,
+  'Rotate Down': lucideArrowDown,
+};
 
 /** The four choice controls, bound as the menus' items are; none while the grid binds none of them. */
 export function spreadsheetChoices(
@@ -82,6 +99,12 @@ export function spreadsheetChoices(
       actions,
       WRAPPING,
       lucideArrowRightToLine,
+    ),
+    'text-rotation': choiceOf(
+      submenuEntries(catalogue, 'format', 'rotation'),
+      actions,
+      ROTATION,
+      lucideRotateCcw,
     ),
     // The toolbar's Merge Cells arrow (formatting.md "Merges", D208).
     'merge-cells': choiceOf(submenuEntries(catalogue, 'format', 'merge-cells'), actions),

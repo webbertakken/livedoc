@@ -26,6 +26,7 @@ export type GridDialogs = {
   openCustomCurrency: () => void;
   openCustomDateTime: () => void;
   merge: (mode: MergeMode) => void;
+  openCustomAngle: () => void;
 };
 
 export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs): GridOffice {
@@ -71,6 +72,7 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
       openCustomCurrency: dialogs.openCustomCurrency,
       openCustomDateTime: dialogs.openCustomDateTime,
       merge: dialogs.merge,
+      openCustomAngle: dialogs.openCustomAngle,
     },
   });
   const published = { ...office, actions: { ...office.actions, ...sheetBarBindings(bar) } };

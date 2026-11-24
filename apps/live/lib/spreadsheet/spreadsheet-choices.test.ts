@@ -4,6 +4,8 @@ import {
   lucideAlignLeft,
   lucideAlignVerticalJustifyCenter,
   lucideArrowRightToLine,
+  lucideArrowUpRight,
+  lucideRotateCcw,
   lucideWrapText,
 } from '@livedoc/icons/lucide';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
@@ -24,6 +26,7 @@ describe('spreadsheetChoices', () => {
     'align-left': { run },
     'align-middle': { run, checked: true },
     'wrap-wrap': { run, checked: true },
+    'rotate-tilt-up': { run, checked: true },
   };
   const choices = spreadsheetChoices(catalogue, actions);
 
@@ -44,6 +47,16 @@ describe('spreadsheetChoices', () => {
       'wrap-wrap',
       'wrap-clip',
     ]);
+    // formatting.md "Alignment, wrapping, rotation": Text Rotation opens Format › Rotation.
+    expect(ids(choices['text-rotation']!.entries)).toEqual([
+      'rotate-none',
+      'rotate-tilt-up',
+      'rotate-tilt-down',
+      'rotate-stack-vertically',
+      'rotate-up',
+      'rotate-down',
+      'rotate-custom-angle',
+    ]);
   });
 
   it('names the choice in force and draws its glyph', () => {
@@ -55,6 +68,10 @@ describe('spreadsheetChoices', () => {
     expect(choices['vertical-align']!.iconOf!('Middle')).toBe(lucideAlignVerticalJustifyCenter);
     expect(choices['text-wrapping']!.iconOf!('Wrap')).toBe(lucideWrapText);
     expect(choices['text-wrapping']!.iconOf!('Nothing')).toBe(lucideArrowRightToLine);
+    expect(choices['text-rotation']!.read()).toBe('Tilt Up');
+    expect(choices['text-rotation']!.iconOf!('Tilt Up')).toBe(lucideArrowUpRight);
+    // A custom angle ticks none: Text Rotation's own glyph.
+    expect(choices['text-rotation']!.iconOf!(null)).toBe(lucideRotateCcw);
   });
 
   it('reads none where nothing is ticked', () => {
