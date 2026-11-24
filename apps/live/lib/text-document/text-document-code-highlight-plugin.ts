@@ -102,9 +102,9 @@ export function codeHighlightPlugin({
     if (waiting && !asked) {
       asked = true;
       void tokenizer.load().then(() => {
-        const ready = view && !view.isDestroyed;
-        debugLog('[text-document] code tokenizer settled', { redraw: Boolean(ready) });
-        if (ready) view.dispatch(view.state.tr.setMeta(key, 'loaded'));
+        const live = view && !view.isDestroyed ? view : null;
+        debugLog('[text-document] code tokenizer settled', { redraw: live !== null });
+        live?.dispatch(live.state.tr.setMeta(key, 'loaded'));
       });
     }
     return decorations;
