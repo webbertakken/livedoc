@@ -1463,6 +1463,42 @@ export const TEXT_DOCUMENT_TABS_SHOWN = chart(
   { types: ['TextDocumentTabShown'] },
 );
 
+// A text document's tab renamed, given or cleared an emoji, moved, indented or outdented from its menu
+// (links-and-navigation.md "A tab's menu").
+export const TEXT_DOCUMENT_TABS_CHANGED = chart(
+  'Element',
+  'Changed',
+  'Text Document Tabs Changed',
+  "A text document's tab renamed, given or cleared an emoji, moved, indented or outdented from its menu.",
+  { types: ['TextDocumentTab'] },
+);
+
+// A text document's tab duplicated, or deleted with its subtabs, from its menu (links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_TABS_DUPLICATED = chart(
+  'Element',
+  'Duplicated',
+  'Text Document Tabs Duplicated',
+  "A copy of a text document's tab made from its menu, its writing with it.",
+  { types: ['TextDocumentTab'] },
+);
+
+export const TEXT_DOCUMENT_TABS_REMOVED = chart(
+  'Element',
+  'Removed',
+  'Text Document Tabs Deleted',
+  "A text document's tab deleted from its menu, with its subtabs and their writing.",
+  { types: ['TextDocumentTab'], rising: 'neutral' },
+);
+
+// A text document tab's link copied from its menu (links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_TAB_LINKS_COPIED = chart(
+  'UI',
+  'Used',
+  'Text Document Tab Links Copied',
+  "A link to one of a text document's tabs copied with Copy link from the tab's menu.",
+  { types: ['TextDocumentTabLinkCopied'] },
+);
+
 // A building block put in a text document (docs/specs/034-text-documents/objects.md "Building blocks").
 export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
   'Element',

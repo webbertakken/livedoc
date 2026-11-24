@@ -1236,6 +1236,14 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Tab|Created|TextDocument': 'Someone added a text document tab from the + menu.',
   'Element|Added|TextDocumentTab':
     'Someone added a tab inside a text document, from its outline or Insert > Tab.',
+  'Element|Changed|TextDocumentTab':
+    "Someone renamed, moved, nested or gave an emoji to a tab inside a text document, from the tab's menu.",
+  'Element|Duplicated|TextDocumentTab':
+    "Someone made a copy of a tab inside a text document, its writing with it, from the tab's menu.",
+  'Element|Removed|TextDocumentTab':
+    "Someone deleted a tab inside a text document, with its subtabs, from the tab's menu.",
+  'UI|Used|TextDocumentTabLinkCopied':
+    "Someone copied a link to a tab inside a text document from the tab's menu.",
   'UI|Used|TextDocumentTabShown':
     "Someone showed another of a text document's tabs, from its outline or the keyboard.",
   'Tab|Created|Pdf': 'Someone added a PDF tab from the + menu, from a file on their computer.',

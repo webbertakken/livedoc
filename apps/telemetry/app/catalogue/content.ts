@@ -556,7 +556,7 @@ export const ELEMENTS_CHANGED = chart(
   // document's (`TextDocumentFormat…`, Text Document Formatting; its styles, Text Document Paragraph Style),
   // as are a logo page's tools (Logo Tools Used), a text document's tables' changes (Text Document Table Changes),
   // its pictures' (Text Document Picture Changes), its links' (Text Document Links Edited) and its tables of contents'
-  // (Text Document Tables of Contents Changed).
+  // (Text Document Tables of Contents Changed), and its document tabs' (Text Document Tabs Changed).
   // An entity's fields and a relationship's cardinality are Data Models'.
   {
     typeIn: (t) =>
@@ -570,6 +570,7 @@ export const ELEMENTS_CHANGED = chart(
       !(t ?? '').startsWith('TextDocumentTable') &&
       !(t ?? '').startsWith('TextDocumentImage') &&
       t !== 'TextDocumentLink' &&
+      t !== 'TextDocumentTab' &&
       !LOGO_TOOL_TYPES.includes(t ?? '') &&
       !DATA_MODEL_CHANGED.includes(t ?? ''),
   },
@@ -588,6 +589,8 @@ export const ELEMENTS_DUPLICATED = chart(
   'Duplicated',
   'Elements Duplicated',
   'A duplicate made in place.',
+  // A text document's tab duplicated is its own card (Text Document Tabs Duplicated).
+  { typeIn: (t) => t !== 'TextDocumentTab' },
 );
 
 export const ELEMENTS_COPIED = chart(

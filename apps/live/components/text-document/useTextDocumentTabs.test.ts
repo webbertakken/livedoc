@@ -3,10 +3,11 @@
 // between tabs, Who may), "Telemetry": the list follows the live state; showing a tab rebinds the editor and names it
 // in the address while there are several; + and Insert > Tab add one at the end, named Tab N, and show it, for an
 // Editor only, dimmed past the most; Ctrl+Shift+Page Down / Up step through them; both counted.
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TEXT_DOCUMENT_MAX_TABS, TextDocumentState, addLiveTab } from '@livedoc/text-documents';
 import { textDocumentTabsStore, TAB_ITEM } from '@/lib/text-document/text-document-tabs';
+import { TAB_MENU_ITEMS } from '@/lib/text-document/text-document-tab-menu';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track }));
@@ -26,6 +27,7 @@ function setup({ canEdit = true, shown = 't.0' } = {}) {
     (props: { shown: string }) =>
       useTextDocumentTabs({
         store,
+        documentId: 'doc',
         shown: props.shown,
         showTab,
         canEdit,
@@ -95,5 +97,105 @@ describe('useTextDocumentTabs', () => {
     expect(hook.result.current.step(1)).toBe(false);
     expect(hook.result.current.step(-1)).toBe(true);
     expect(showTab.current).toHaveBeenLastCalledWith('t.0');
+  });
+
+  // links-and-navigation.md "A tab's menu": each item's change is one write of the list, counted.
+  describe('a tab’s menu', () => {
+    function withTwo() {
+      const set = setup();
+      act(() => addLiveTab(set.doc, { id: 't.b', name: 'Tab 2', style: 'Standard' }));
+      return set;
+    }
+    const names = (hook: ReturnType<typeof setup>['hook']) =>
+      hook.result.current.list.map((t) => `${t.emoji ?? ''}${t.name}:${t.depth}`);
+    const press = (hook: ReturnType<typeof setup>['hook'], id: string, item: string) =>
+      act(() => hook.result.current.menuActions(id)[item]!.run());
+
+    it('renames in place: the name typed kept, Escape keeping the old one', () => {
+      const { hook } = withTwo();
+      press(hook, 't.b', TAB_MENU_ITEMS.rename);
+      expect(hook.result.current.renaming).toBe('t.b');
+      act(() => hook.result.current.finishRename('t.b', null));
+      expect(hook.result.current.renaming).toBeNull();
+      expect(names(hook)).toEqual(['Tab 1:0', 'Tab 2:0']);
+      act(() => hook.result.current.finishRename('t.b', 'Notes'));
+      expect(names(hook)).toEqual(['Tab 1:0', 'Notes:0']);
+      expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentTab');
+    });
+
+    it('gives an emoji from the dialog and takes it away', () => {
+      const { hook } = withTwo();
+      press(hook, 't.b', TAB_MENU_ITEMS.chooseEmoji);
+      expect(hook.result.current.asking).toEqual({ kind: 'emoji', id: 't.b' });
+      act(() => hook.result.current.pickEmoji('📌'));
+      expect(names(hook)).toEqual(['Tab 1:0', '📌Tab 2:0']);
+      press(hook, 't.b', TAB_MENU_ITEMS.removeEmoji);
+      expect(names(hook)).toEqual(['Tab 1:0', 'Tab 2:0']);
+    });
+
+    it('adds a subtab one deeper and shows it', () => {
+      const { hook, showTab } = withTwo();
+      press(hook, 't.0', TAB_MENU_ITEMS.addSubtab);
+      expect(names(hook)).toEqual(['Tab 1:0', 'Tab 3:1', 'Tab 2:0']);
+      expect(showTab.current).toHaveBeenLastCalledWith(hook.result.current.list[1]!.id);
+    });
+
+    it('duplicates a tab with its writing after it, named Copy of, and shows it', () => {
+      const { doc, hook, showTab } = withTwo();
+      press(hook, 't.0', TAB_MENU_ITEMS.duplicate);
+      expect(names(hook)).toEqual(['Tab 1:0', 'Copy of Tab 1:0', 'Tab 2:0']);
+      const copy = hook.result.current.list[1]!.id;
+      expect(TextDocumentState.tabBody(doc, copy).length).toBe(
+        TextDocumentState.tabBody(doc, 't.0').length,
+      );
+      expect(showTab.current).toHaveBeenLastCalledWith(copy);
+      expect(track).toHaveBeenCalledWith('Element', 'Duplicated', 'TextDocumentTab');
+    });
+
+    it('moves and nests a tab', () => {
+      const { hook } = withTwo();
+      press(hook, 't.b', TAB_MENU_ITEMS.indent);
+      expect(names(hook)).toEqual(['Tab 1:0', 'Tab 2:1']);
+      press(hook, 't.b', TAB_MENU_ITEMS.outdent);
+      press(hook, 't.b', TAB_MENU_ITEMS.moveUp);
+      expect(names(hook)).toEqual(['Tab 2:0', 'Tab 1:0']);
+    });
+
+    it('deletes after asking, showing the tab before the one shown', () => {
+      const { doc, hook, showTab } = withTwo();
+      hook.rerender({ shown: 't.b' });
+      press(hook, 't.b', TAB_MENU_ITEMS.delete);
+      expect(hook.result.current.asking).toEqual({ kind: 'delete', id: 't.b' });
+      act(() => hook.result.current.confirmDelete());
+      expect(names(hook)).toEqual(['Tab 1:0']);
+      expect(showTab.current).toHaveBeenLastCalledWith('t.0');
+      expect(TextDocumentState.tabBody(doc, 't.b').length).toBe(0);
+      expect(track).toHaveBeenCalledWith('Element', 'Removed', 'TextDocumentTab');
+    });
+
+    it('keeps the tabs when a delete is cancelled', () => {
+      const { hook } = withTwo();
+      press(hook, 't.b', TAB_MENU_ITEMS.delete);
+      act(() => hook.result.current.cancelAsking());
+      expect(hook.result.current.asking).toBeNull();
+      expect(names(hook)).toHaveLength(2);
+    });
+
+    it('copies a tab’s link naming it, and says so', async () => {
+      const writeText = vi.fn(() => Promise.resolve());
+      Object.assign(navigator, { clipboard: { writeText } });
+      const { hook } = withTwo();
+      press(hook, 't.b', TAB_MENU_ITEMS.copyLink);
+      expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/document/doc?doctab=t.b`);
+      await waitFor(() => expect(hook.result.current.said).toBe('Link copied'));
+      expect(track).toHaveBeenCalledWith('UI', 'Used', 'TextDocumentTabLinkCopied');
+    });
+
+    it('offers only Copy link to a session that may not edit', () => {
+      const { hook } = setup({ canEdit: false });
+      expect(Object.keys(hook.result.current.menuActions('t.0'))).toEqual([
+        TAB_MENU_ITEMS.copyLink,
+      ]);
+    });
   });
 });

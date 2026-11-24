@@ -8,7 +8,7 @@ import { CONSTRUCTS } from '../testing/constructs';
 import { TextDocumentState } from '../text-document-state';
 import { readLiveDocument } from './live-read';
 import { liveNoteIds, liveSectionHeaders } from './live-stories';
-import { addLiveTab, liveTabIds, liveTabList } from './live-tabs';
+import { addLiveTab, copyLiveTabBody, liveTabIds, liveTabList, setLiveTabList } from './live-tabs';
 import { writeLiveDocument } from './live-write';
 
 const stateOf = (name: string) => {
@@ -98,5 +98,61 @@ describe('readers of the whole state', () => {
     const paragraph = TextDocumentState.tabBody(doc, 't.b').get(0) as Y.XmlElement;
     paragraph.insert(0, [notes]);
     expect(liveNoteIds(doc)).toEqual([...ids, 'n-in-tab']);
+  });
+});
+
+describe('setLiveTabList', () => {
+  it('writes the list in its order as one change, emptying the fragments of tabs gone', () => {
+    const doc = stateOf('tabs');
+    const changes: unknown[] = [];
+    doc.on('afterTransaction', (t: Y.Transaction) => changes.push(t.origin));
+    setLiveTabList(
+      doc,
+      [
+        { id: 't.a1b2c3d4e5f6', name: 'Sub', depth: 0 },
+        { id: 't.0', name: 'Overview', emoji: '🗂️', depth: 1 },
+      ],
+      'menu',
+    );
+    expect(changes).toEqual(['menu']);
+    expect(liveTabList(doc).map((t) => [t.id, t.name, t.emoji, t.depth])).toEqual([
+      ['t.a1b2c3d4e5f6', 'Sub', undefined, 0],
+      ['t.0', 'Overview', '🗂️', 1],
+    ]);
+    expect(TextDocumentState.tabBody(doc, 't.k3x9q2m7p1zz').length).toBe(0);
+    expect(TextDocumentState.tabBody(doc, 't.0').length).toBe(1);
+  });
+});
+
+describe('copyLiveTabBody', () => {
+  it('copies a tab’s writing into another tab’s fragment, each then its own', () => {
+    const doc = stateOf('tabs');
+    copyLiveTabBody(doc, 't.k3x9q2m7p1zz', 't.copy');
+    const read = () =>
+      TextDocumentState.tabBody(doc, 't.copy')
+        .toArray()
+        .map((n) => (n as Y.XmlElement).nodeName);
+    expect(read()).toEqual(['paragraph', 'section_break', 'paragraph']);
+    TextDocumentState.tabBody(doc, 't.copy').delete(0, 1);
+    expect(TextDocumentState.tabBody(doc, 't.k3x9q2m7p1zz').length).toBe(3);
+  });
+});
+
+describe('copyLiveTabBody with footnotes', () => {
+  it('gives the copy’s notes their own writing, under new story ids', () => {
+    const doc = stateOf('footnotes');
+    const [story] = liveNoteIds(doc);
+    let n = 0;
+    copyLiveTabBody(doc, 't.0', 't.copy', { newStory: () => `copied-note-${(n += 1)}` });
+    const marks = [
+      ...TextDocumentState.tabBody(doc, 't.copy').createTreeWalker(
+        (n) => n instanceof Y.XmlElement && n.nodeName === 'footnote',
+      ),
+    ] as Y.XmlElement[];
+    expect(marks[0]!.getAttribute('story')).toBe('copied-note-1');
+    expect(TextDocumentState.storyParagraphs(doc, 'copied-note-1')).toEqual(
+      TextDocumentState.storyParagraphs(doc, story!),
+    );
+    expect(TextDocumentState.storyParagraphs(doc, 'copied-note-1').length).toBeGreaterThan(0);
   });
 });
