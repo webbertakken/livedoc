@@ -35,7 +35,7 @@ export function PlaceholderField({ question: q }: { question: FormQuestion }) {
           maxLength={PLACEHOLDER_MAX}
           multiline={paragraph}
           label="Placeholder"
-          className="w-full bg-transparent text-[15px] text-slate-400 dark:text-slate-400"
+          className="w-full bg-transparent form-type-answer text-slate-400 dark:text-slate-400"
           onSave={(text) =>
             b.actions.changeForm((f) =>
               updateQuestion(f, q.id, { placeholder: text.trim() || undefined }),
@@ -43,7 +43,7 @@ export function PlaceholderField({ question: q }: { question: FormQuestion }) {
           }
         />
       </div>
-      <p className="text-[12px] text-slate-500 dark:text-slate-400">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">
         Placeholder: shown in the box until someone types.
       </p>
     </div>

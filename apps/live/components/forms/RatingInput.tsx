@@ -98,7 +98,7 @@ export function RatingInput({
                   ? 'rounded-md p-0.5 outline-none transition enabled:cursor-pointer enabled:hover:scale-110 focus-visible:ring-2 focus-visible:ring-[var(--rating-accent)] disabled:opacity-60 motion-reduce:transition-none motion-reduce:enabled:hover:scale-100'
                   : `form-box flex items-center justify-center rounded-lg border font-semibold tabular-nums outline-none transition enabled:cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--rating-accent)] focus-visible:ring-offset-1 disabled:opacity-60 ${
                       size === 'lg'
-                        ? 'h-11 min-w-11 px-2 text-[15px]'
+                        ? 'h-11 min-w-11 px-2 form-type-answer'
                         : size === 'sm'
                           ? 'h-7 min-w-7 px-1 text-[12px]'
                           : 'h-9 min-w-9 px-1.5 text-[13px]'

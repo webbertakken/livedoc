@@ -66,7 +66,7 @@ export function FormHeaderCard({ sections }: { sections: number }) {
     ...(form.cover ? { background: form.cover } : {}),
   };
   return (
-    <div className="form-box form-ink group/head overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-900">
+    <div className="form-box form-ink group/head overflow-hidden rounded-surface border border-slate-200 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-900">
       <div className="relative">
         <FormCoverBand cover={shownCover} accent={accent} className={shownCover ? '' : 'h-2.5'} />
         {b.canEdit ? (
@@ -75,7 +75,7 @@ export function FormHeaderCard({ sections }: { sections: number }) {
             type="button"
             aria-expanded={coverOpen}
             onClick={() => setCoverOpen((o) => !o)}
-            className={`absolute right-3 cursor-pointer rounded-md bg-white/90 px-2.5 py-1 text-[12px] font-medium text-slate-700 shadow-sm transition hover:bg-white focus-visible:opacity-100 dark:bg-slate-900/90 dark:text-slate-200 ${
+            className={`absolute right-3 h-row cursor-pointer rounded-control bg-white/90 px-2 text-body text-slate-700 shadow-sm transition hover:bg-white focus-visible:opacity-100 dark:bg-slate-900/90 dark:text-slate-200 ${
               form.cover
                 ? 'bottom-3 opacity-0 group-hover/head:opacity-100 [@media(hover:none)]:opacity-100'
                 : 'top-4 opacity-0 group-hover/head:opacity-100 [@media(hover:none)]:opacity-100'
@@ -95,9 +95,9 @@ export function FormHeaderCard({ sections }: { sections: number }) {
             setCoverOpen(false);
           }}
         >
-          <div className="flex max-h-[min(30rem,calc(100dvh-10rem))] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex max-h-[min(30rem,calc(100dvh-10rem))] flex-col overflow-hidden rounded-menu border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-              <p className="text-[14px] font-semibold text-slate-900 dark:text-slate-50">Cover</p>
+              <p className="text-panel-title text-slate-900 dark:text-slate-50">Cover</p>
               {form.cover ? (
                 <button
                   type="button"
@@ -105,7 +105,7 @@ export function FormHeaderCard({ sections }: { sections: number }) {
                     b.actions.changeForm((f) => patchForm(f, { cover: undefined }));
                     setCoverOpen(false);
                   }}
-                  className="cursor-pointer rounded-md px-2 py-1 text-[12px] font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                  className="h-row cursor-pointer rounded-control px-2 text-body text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 >
                   Remove Cover
                 </button>
@@ -134,7 +134,7 @@ export function FormHeaderCard({ sections }: { sections: number }) {
         className={`px-6 pb-5 pt-5 max-sm:px-4 ${form.cover ? '' : 'border-t-[6px] border-[var(--form-accent)]'}`}
       >
         {sections > 1 ? (
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <p className="mb-2 text-supporting text-slate-500 dark:text-slate-400">
             Section 1 of {sections}
           </p>
         ) : null}
@@ -145,7 +145,7 @@ export function FormHeaderCard({ sections }: { sections: number }) {
               maxLength={FORM_HEADING_MAX}
               label="Form heading"
               placeholder="Form heading"
-              className="border-b border-transparent pb-1 text-[28px] font-semibold tracking-tight text-slate-900 focus:border-[var(--form-accent)] max-sm:text-[24px] dark:text-slate-50"
+              className="border-b border-transparent pb-1 form-type-title text-slate-900 focus:border-[var(--form-accent)] dark:text-slate-50"
               onSave={(text) => text.trim() && b.actions.renameForm(text)}
             />
             <DraftText
@@ -154,7 +154,7 @@ export function FormHeaderCard({ sections }: { sections: number }) {
               multiline
               label="Form description"
               placeholder="Add a description"
-              className="mt-2 border-b border-transparent pb-1 text-[15px] leading-relaxed text-slate-600 focus:border-[var(--form-accent)] dark:text-slate-300"
+              className="mt-2 border-b border-transparent pb-1 form-type-lead text-slate-600 focus:border-[var(--form-accent)] dark:text-slate-300"
               onSave={(text) =>
                 b.actions.changeForm((f) => patchForm(f, { description: text.trim() || undefined }))
               }
@@ -162,13 +162,11 @@ export function FormHeaderCard({ sections }: { sections: number }) {
           </>
         ) : (
           <>
-            <h1 className="text-[28px] font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-              {form.heading}
-            </h1>
+            <h1 className="form-type-title text-slate-900 dark:text-slate-50">{form.heading}</h1>
             {form.description ? (
               <LinkedText
                 text={form.description}
-                className="mt-2 text-[15px] leading-relaxed text-slate-600 dark:text-slate-300"
+                className="mt-2 form-type-lead text-slate-600 dark:text-slate-300"
               />
             ) : null}
           </>
@@ -191,8 +189,8 @@ export function SectionHeader({
 }) {
   const b = useFormBuilder();
   return (
-    <div className="form-box form-ink mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-900">
-      <div className="flex items-center justify-between bg-[var(--form-accent)] px-4 py-1.5 text-[12px] font-semibold text-[var(--form-on-accent)]">
+    <div className="form-box form-ink mt-4 overflow-hidden rounded-surface border border-slate-200 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-900">
+      <div className="flex items-center justify-between bg-[var(--form-accent)] px-4 py-1.5 text-supporting text-[var(--form-on-accent)]">
         <span>
           Section {index + 1} of {count}
         </span>
@@ -202,7 +200,7 @@ export function SectionHeader({
               type="button"
               aria-label={`Delete section ${index + 1}`}
               onClick={() => b.actions.changeForm((f) => deleteSection(f, section.id))}
-              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-80 hover:bg-white/20 hover:opacity-100"
+              className="flex size-chip cursor-pointer items-center justify-center rounded-control opacity-80 hover:bg-white/20 hover:opacity-100"
             >
               <TrashIcon size={14} />
             </button>
@@ -217,7 +215,7 @@ export function SectionHeader({
               maxLength={SECTION_TITLE_MAX}
               label={`Section ${index + 1} title`}
               placeholder={`Section ${index + 1}`}
-              className="border-b border-transparent pb-1 text-[20px] font-semibold text-slate-900 focus:border-[var(--form-accent)] dark:text-slate-50"
+              className="border-b border-transparent pb-1 form-type-section text-slate-900 focus:border-[var(--form-accent)] dark:text-slate-50"
               onSave={(text) =>
                 b.actions.changeForm((f) => updateSection(f, section.id, { title: text.trim() }))
               }
@@ -228,7 +226,7 @@ export function SectionHeader({
               multiline
               label={`Section ${index + 1} description`}
               placeholder="Description (optional)"
-              className="mt-1 text-[14px] text-slate-600 dark:text-slate-300"
+              className="mt-1 form-type-note text-slate-600 dark:text-slate-300"
               onSave={(text) =>
                 b.actions.changeForm((f) =>
                   updateSection(f, section.id, { description: text.trim() }),
@@ -239,13 +237,13 @@ export function SectionHeader({
           </>
         ) : (
           <>
-            <h2 className="text-[20px] font-semibold text-slate-900 dark:text-slate-50">
+            <h2 className="form-type-section text-slate-900 dark:text-slate-50">
               {section.title || `Section ${index + 1}`}
             </h2>
             {section.description ? (
               <LinkedText
                 text={section.description}
-                className="mt-1 text-[14px] text-slate-600 dark:text-slate-300"
+                className="mt-1 form-type-note text-slate-600 dark:text-slate-300"
               />
             ) : null}
           </>

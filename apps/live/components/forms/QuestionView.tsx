@@ -65,7 +65,7 @@ export function QuestionView({
       <Prompt
         id={promptId}
         {...(single ? { htmlFor: controlId } : {})}
-        className="block text-[16px] font-medium leading-snug text-slate-900 dark:text-slate-50"
+        className="block form-type-question leading-snug text-slate-900 dark:text-slate-50"
       >
         {promptOf(question)}
         {question.required ? (
@@ -78,7 +78,7 @@ export function QuestionView({
       {question.help ? (
         <p
           id={helpId}
-          className="mt-1 whitespace-pre-line text-[14px] text-slate-500 dark:text-slate-400"
+          className="mt-1 whitespace-pre-line form-type-note text-slate-500 dark:text-slate-400"
         >
           {question.help}
         </p>

@@ -95,3 +95,27 @@
   animation: form-q-leave 160ms ease-in forwards;
   pointer-events: none;
 }
+
+/*
+ * A form's own type (docs/specs/004-interface-design/sizing.md, D237): a form as respondents see it is content, off
+ * the chrome's sizing scale. Named once here, so the builder's picture of the form and the page respondents fill in
+ * draw the same sizes.
+ */
+@utility form-type-title {
+  @apply text-[28px] font-semibold tracking-tight max-sm:text-[24px];
+}
+@utility form-type-lead {
+  @apply text-[15px] leading-relaxed;
+}
+@utility form-type-section {
+  @apply text-[20px] font-semibold;
+}
+@utility form-type-question {
+  @apply text-[16px] font-medium;
+}
+@utility form-type-note {
+  @apply text-[14px];
+}
+@utility form-type-answer {
+  @apply text-[15px];
+}

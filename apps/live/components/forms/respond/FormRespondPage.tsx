@@ -100,7 +100,7 @@ export function FormRespondPage() {
                 <h1 className="text-[26px] font-semibold tracking-tight text-slate-900 dark:text-slate-50">
                   {page.data.heading}
                 </h1>
-                <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="mt-2 whitespace-pre-line form-type-lead text-slate-600 dark:text-slate-300">
                   {page.data.message}
                 </p>
               </div>
