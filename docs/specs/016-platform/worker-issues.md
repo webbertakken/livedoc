@@ -36,6 +36,20 @@ When the error comes back after a quiet spell, the operator hears again.
 - A `5xx` the api answers reaches the caller through the router, so the router's Issues can hold it as well.
 - Its card names the same route as the api's, and is triaged with it.
 
+## What Cloudflare keeps
+
+Issues keeps each occurrence's details for 7 days, in the account the workers run in; the issue stays listed after.
+Read from docs.nu's occurrences (24 November 2026), an occurrence holds:
+
+- The error, its stack when there is one, the worker and its version, and the invocation's trail of spans and logs.
+- The request's URL, method and response status. No URL seen carried a query string.
+- Some of its headers: `user-agent`, `cf-ipcountry` (the country), `cf-ray`, `content-type`, `content-length`
+  and `origin`.
+- No cookie, `authorization` header or IP address appeared in any occurrence.
+
+[Worker logs](worker-logs.md) keeps no headers; Issues does keep these, for failing requests only. The receiver
+copies none of them into a card or an email (see [Reading the payload](#reading-the-payload)).
+
 ## The receiver
 
 Cloudflare's generic webhook sends the standard Notifications payload, with the destination's secret in the

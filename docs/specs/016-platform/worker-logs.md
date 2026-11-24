@@ -24,6 +24,8 @@ still be read: which route, which error, which stack.
   they carry time zones, tickets and codes. Cloudflare replaces path segments it reads as ids with `REDACTED`
   (measured: a participant id); that is its heuristic, not a guarantee, so a path must never be the only place a
   secret is kept out of.
+- **Not a failing request's details: [Worker issues](worker-issues.md#what-cloudflare-keeps) keeps those**, apart
+  from these lines, for 7 days, with some of its headers.
 - **Every invocation, unsampled.** A rare failure is the one worth reading; sampling would drop it.
 
 ## What a log line may carry
