@@ -76,6 +76,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   - **Number formats**: "2 number formats LiveDoc cannot read are left out: Data!A1"; "1 number format is shown as
     near as LiveDoc can: [$-F800]dddd"; "Formats over long runs of empty cells are left out of 1 sheet: Data".
   - **Styles**: "Rotation, indents, patterned fills and other styling are left out of 2 sheets: Data and Totals".
+  - **Format rules**: "1 conditional formatting rule LiveDoc cannot read is left out: Data!A2"
+    ([Format rules in the file](standard-mapping.md#format-rules-in-the-file)).
   - **Sizes**: "Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data".
   - **Sheet names**: "2 sheet names are changed to fit: “Data” becomes “Data (2)”".
 - A file's preview picture (its thumbnail) is not listed: it shows nothing in the sheet, and LiveDoc's files carry

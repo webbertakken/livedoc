@@ -24,6 +24,7 @@ import { cellStyleOf, type CellStyle } from './cell-style';
 import { storedKept } from './kept-anchors';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
+import { fileFormatRulesOf, formatRulesFromFile, type FileFormatRule } from './file-format-rules';
 
 export type FileValue =
   { k: 'n'; v: number } | { k: 's'; v: string } | { k: 'b'; v: boolean } | { k: 'e'; v: ErrorCode };
@@ -54,6 +55,8 @@ export type FileSheet = {
   // Its tab's colour (lower-case #rrggbb) and whether it is hidden (standard-mapping.md "Sheet name, hidden, tab colour").
   tabColour?: string;
   hidden?: true;
+  // Its format rules in list order (standard-mapping.md "Format rules in the file").
+  formatRules?: FileFormatRule[];
 };
 
 /** A workbook as a file holds it, and what it holds that the model does not (standard-mapping.md "Unknown content"). */
@@ -85,6 +88,8 @@ export type FileLoss =
   | { k: 'kept_cut'; sheet: string; cells: number }
   // A sheet's cells formatted past their number format (fonts, fills, borders, alignment): not read yet (D104).
   | { k: 'styles_unread'; sheet: string }
+  // A file's format rule the grid cannot hold (standard-mapping.md "Format rules in the file"), at its anchor.
+  | { k: 'format_rule_unread'; sheet: string; r: number; c: number }
   // A sheet whose sized rows and columns pass the most it holds: the rest left out (D124).
   | { k: 'sizes_cut'; sheet: string }
   | { k: 'kept_unread'; count: number }
@@ -185,6 +190,7 @@ export function workbookFileOf(
         if (value) out.value = value;
         cells.push(out);
       }
+      const formatRules = fileFormatRulesOf(sheet.layout, ctx, locale);
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,
@@ -193,6 +199,7 @@ export function workbookFileOf(
         lines: fileLinesOf(sheet.layout),
         ...(sheet.layout.tabColour ? { tabColour: sheet.layout.tabColour } : {}),
         ...(sheet.layout.hidden ? { hidden: true as const } : {}),
+        ...(formatRules ? { formatRules } : {}),
       };
     }),
   };
@@ -394,7 +401,16 @@ export function sheetsFromFile(
       if (input || format)
         cells.push({ r, c, ...(input ? { i: input } : {}), ...(format ? { f: format } : {}) });
     }
-    return { id: m.id, title: m.title, layout: m.layout, cells };
+    const formatRules = formatRulesFromFile(
+      m.file.formatRules,
+      m.layout,
+      ctx,
+      m.title,
+      rand,
+      losses,
+    );
+    const layout = formatRules ? { ...m.layout, formatRules } : m.layout;
+    return { id: m.id, title: m.title, layout, cells };
   });
   if (!file.kept) return { sheets, losses };
   // Kept content on a sheet, row or column the workbook's limits cut goes with it, counted.

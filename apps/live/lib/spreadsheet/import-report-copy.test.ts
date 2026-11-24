@@ -72,6 +72,14 @@ describe('the import report’s copy', () => {
         'Rotation, indents, patterned fills and other styling are left out of 2 sheets: Data and Totals',
       ],
       [
+        { k: 'format_rule_unread', count: 1, names: ['Data!A2'] },
+        '1 conditional formatting rule LiveDoc cannot read is left out: Data!A2',
+      ],
+      [
+        { k: 'format_rule_unread', count: 2, names: ['Data!A2', 'Data!B2'] },
+        '2 conditional formatting rules LiveDoc cannot read are left out: Data!A2 and Data!B2',
+      ],
+      [
         { k: 'sizes_cut', count: 1, names: ['Data'] },
         'Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data',
       ],

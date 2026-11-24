@@ -87,6 +87,11 @@ export function importReportLine(loss: ReportedLoss): string {
         `Rotation, indents, patterned fills and other styling are left out of ${counted(count, 'sheet', 'sheets')}`,
         loss,
       );
+    case 'format_rule_unread':
+      return named(
+        `${counted(count, 'conditional formatting rule', 'conditional formatting rules')} LiveDoc cannot read ${verb(count, 'is', 'are')} left out`,
+        loss,
+      );
     case 'sizes_cut':
       return named(
         `Row heights and column widths past the most a sheet holds are left out of ${counted(count, 'sheet', 'sheets')}`,

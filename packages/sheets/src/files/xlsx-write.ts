@@ -32,6 +32,7 @@ import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xls
 import { ownIds, XlsxKeptWriter } from './xlsx-kept-write';
 import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
+import { xlsxFormatRulesXml } from './xlsx-format-rules';
 import type {
   FileCell,
   FileLoss,
@@ -234,6 +235,13 @@ function worksheetXml(
       name: 'sheetData',
       xml: lines.length > 0 ? ['<sheetData>', ...lines, '</sheetData>'].join('\n') : '<sheetData/>',
     },
+    // Format rules after the kept ones' priorities, so a kept rule draws first (D215).
+    ...xlsxFormatRulesXml(
+      sheet.formatRules,
+      kept.priorityMax(index) + 1,
+      (style) => styles.dxf(style),
+      renamed,
+    ),
   ];
   const rootNs = kept.rootBindings('worksheet', OWN_NS, index);
   const xml = [
@@ -295,13 +303,13 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const losses: FileLoss[] = [];
   const renamed = excelNames(file.sheets, losses);
   const strings = new SharedStrings();
-  const styles = new XlsxStyles();
   // What the file kept goes back where it sat, its relationships with their ids (standard-mapping.md "Unknown content").
   const kept = new XlsxKeptWriter(
     file.kept,
     file.sheets.length,
     new Set(file.sheets.flatMap((s, i) => (s.hidden ? [i] : []))),
   );
+  const styles = new XlsxStyles(kept.stylesheet({ '': SPREADSHEETML_NS }));
   let dynamic = false;
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept }, renamed, losses);
@@ -341,11 +349,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       data: encode(workbookXml(names, sheetIds, kept)),
     },
     ...sheetParts,
-    xmlPart(
-      'xl/styles.xml',
-      OOXML_CONTENT_TYPES.spreadsheetStyles,
-      styles.xml(kept.stylesheet({ '': SPREADSHEETML_NS })),
-    ),
+    xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),
     xmlPart('xl/sharedStrings.xml', OOXML_CONTENT_TYPES.sharedStrings, strings.xml()),
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]

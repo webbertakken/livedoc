@@ -11,6 +11,7 @@ import {
   DROPDOWN_OPTION_MAX,
   FORMAT_RULE_FORMULA_MAX,
   FORMAT_RULE_RANGES_MAX,
+  FORMAT_RULE_VALUE_MAX,
   VALIDATION_HELP_MAX,
 } from '../limits';
 import type { SheetLayout, StoredFormula } from '../sheet';
@@ -62,7 +63,6 @@ const FORMAT_RULE_KEYS = new Set([
   'max',
 ]);
 const STYLE_KEYS = new Set(['b', 'i', 'u', 'st', 'fc', 'bg']);
-const OPERAND_MAX = 255;
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -143,7 +143,7 @@ export function isValidationRule(v: unknown, id: string, layout: SheetLayout): b
       if (typeof v.op !== 'string' || !TEXT_OPS.has(v.op) || v.b !== undefined) return false;
       return v.op === 'email' || v.op === 'url'
         ? v.a === undefined
-        : typeof v.a === 'string' && v.a.length > 0 && v.a.length <= OPERAND_MAX;
+        : typeof v.a === 'string' && v.a.length > 0 && v.a.length <= FORMAT_RULE_VALUE_MAX;
     default:
       return false;
   }
@@ -198,7 +198,7 @@ export function isFormatRule(
   if (!rangeOnSheet(v, layout)) return false;
   if (v.also !== undefined && !moreOnSheet(v.also, layout)) return false;
   const text = (x: unknown) =>
-    x === undefined || (typeof x === 'string' && x.length <= OPERAND_MAX);
+    x === undefined || (typeof x === 'string' && x.length <= FORMAT_RULE_VALUE_MAX);
   if (v.is === 'when') {
     if (v.min !== undefined || v.mid !== undefined || v.max !== undefined) return false;
     if (!styleOk(v.style)) return false;

@@ -48,7 +48,8 @@ export function isFilterCondition(v: unknown): v is FilterCondition {
   return (c.a === undefined || shortText(c.a)) && (c.b === undefined || shortText(c.b));
 }
 
-function asNumber(text: string | undefined, locale: string): number | null {
+// A condition's value as a number (a date as its day number), as the conditions read it; null for text.
+export function conditionNumber(text: string | undefined, locale: string): number | null {
   if (text === undefined) return null;
   const n = parsePlainNumber(text);
   if (n !== null) return n;
@@ -75,8 +76,8 @@ export function conditionMatcher(
   valueSet?: ReadonlySet<string>,
 ): (value: Scalar, shown: string) => boolean {
   const a = (cond.a ?? '').toLowerCase();
-  const na = asNumber(cond.a, locale);
-  const nb = asNumber(cond.b, locale);
+  const na = conditionNumber(cond.a, locale);
+  const nb = conditionNumber(cond.b, locale);
   const values = cond.values;
   const kept = values ? (valueSet ?? new Set(values)) : null;
   return (value, shown) => {
