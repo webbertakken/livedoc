@@ -223,6 +223,16 @@ export function storedAst(stored: StoredFormula): Node | null {
 
 // Rewrite each reference of a formula; `fn` returns the new reference, or null for #REF!. Returns the same object
 // when nothing changed.
+/**
+ * A reference to another sheet carried by that sheet's title, its parts as positions: a sheet copied into another
+ * workbook reads the sheet of that name there (Copy To, spreadsheet.md D184). Null when it reads #REF! here.
+ */
+export function refByTitle(ref: StoredRef, ctx: SheetsCtx): StoredRef | null {
+  const pos = resolveRef(ref, ctx);
+  if (!pos) return null;
+  return encodeRef({ ...pos, sheet: { title: ctx.byId(ref.s!)!.title } }, ctx);
+}
+
 export function mapFormulaRefs(
   stored: StoredFormula,
   fn: (ref: StoredRef) => StoredRef | null,

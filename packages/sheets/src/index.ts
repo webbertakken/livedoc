@@ -2,6 +2,7 @@
 // no dependencies; shared by the editor (lazily loaded), the api worker and the MCP worker.
 export * from './limits';
 export * from './workbook/sheet-name';
+export * from './workbook/sheet-copy';
 export * from './workbook/cell-style';
 export * from './workbook/workbook-limits';
 export * from './files/file-read-limits';

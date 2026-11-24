@@ -52,7 +52,7 @@ export async function contentSummaryOf(
   env: DocumentEnv,
   documentId: string,
 ): Promise<ContentSummary> {
-  const [tabs, stats, sheetTabs, textDocumentTabs] = await env.DOCUMENT_DB.batch([
+  const [tabs, stats, sheetTabs, textDocumentTabs, workbook] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
       `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${HAS_CONTENT} AS has_content,
               CASE WHEN json_valid(t.data) AND json_type(t.data, '$.blob') = 'text' THEN 1 ELSE 0 END AS holds_file
@@ -69,6 +69,7 @@ export async function contentSummaryOf(
         GROUP BY s.tab_id`,
     ).bind(documentId),
     env.DOCUMENT_DB.prepare(LIVE_TAB_ROWS).bind(documentId),
+    env.DOCUMENT_DB.prepare('SELECT 1 AS y FROM workbook WHERE document_id = ?').bind(documentId),
   ]);
   const rows = (tabs?.results ?? []) as TabCountRow[];
   const sheets = new Map(((sheetTabs?.results ?? []) as SheetTabRow[]).map((r) => [r.tab_id, r]));
@@ -94,6 +95,7 @@ export async function contentSummaryOf(
       ...texts.values(),
     ]),
     hasContent: rows.some((r) => r.has_content === 1 || (sheets.get(r.tab_id)?.cells ?? 0) > 0),
+    ...(workbook?.results?.length ? { spreadsheet: true as const } : {}),
   };
 }
 

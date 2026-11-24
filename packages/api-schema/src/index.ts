@@ -111,6 +111,9 @@ export type DocumentSummary = {
   // What the Details view shows (docs/specs/013-workspace/explorer-details-view.md), summed over the
   // document's tabs; null when it has no tab or one of its tabs is not counted yet.
   stats: DocumentStats | null;
+  // A spreadsheet, as its room last summarised it (Copy To's picker, docs/specs/029-sheets/spreadsheet.md D183); absent
+  // for any other document and for one not summarised since spreadsheets were.
+  spreadsheet?: true;
 } & RecordedIntent;
 
 // A document's tab stats (docs/specs/013-workspace/explorer-details-view.md "Where the numbers come

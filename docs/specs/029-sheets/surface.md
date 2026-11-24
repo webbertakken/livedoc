@@ -264,3 +264,9 @@ Version History (the shell's). Each is specified with its area.
   All Sheets); picking it shows it and opens it, one undo step (default).
 - **D181** Stepping over hidden sheets: Move Right, Move Left, Alt+Up and Alt+Down step to the next sheet shown
   (default).
+- **D183** Copy To: New Spreadsheet an untitled one in this one's format and settings; Existing Spreadsheet a picker of
+  the person's own spreadsheets, newest first, searchable; the copy last, "Copy of <name>" in a new one (default).
+- **D184** What a copy holds: Cells, formats and layout, not named ranges or card tables; another sheet named in a
+  formula is read by its name where the copy lands (default).
+- **D185** After a copy: A dialog says so, with Open Spreadsheet opening it in a new browser tab (default).
+- **D186** Who copies a sheet: Everyone who may read it, into a spreadsheet they may edit (default).

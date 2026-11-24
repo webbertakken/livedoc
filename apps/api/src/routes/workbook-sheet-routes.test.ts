@@ -348,6 +348,40 @@ describe('hiding a sheet and colouring its tab', () => {
   });
 });
 
+// spreadsheet.md "Sheets in the sheet bar": Copy To from another spreadsheet lands its sheet whole (D183).
+describe('copying a sheet in', () => {
+  const seed = (cells: unknown[] = []) => ({ layout: kit.layout, cells });
+
+  it('adds the sheet whole, last, named by the rules', async () => {
+    const cell = { r: kit.layout.rows[0], c: kit.layout.cols[0], i: { n: 5 }, f: { b: true } };
+    const res = await add({ name: 'Sheet1', seed: seed([cell]) });
+    expect(res.status).toBe(201);
+    const { tab, sheet } = await res.json<WorkbookSheetAddResponse>();
+    expect(tab).toMatchObject({ name: 'Sheet1 2', orderIndex: 1 });
+    expect(sheet.layout.rows).toEqual(kit.layout.rows);
+    expect(sheet.cells).toEqual([cell]);
+    // No name: Sheet<n>, as any add.
+    const plain = await (await add({ seed: seed() })).json<WorkbookSheetAddResponse>();
+    expect(plain.tab.name).toBe('Sheet3');
+  });
+
+  it('refuses a seed that is no sheet, beside a copy, or past its checks', async () => {
+    for (const body of [
+      { seed: { layout: 5, cells: [] } },
+      { seed: { layout: kit.layout, cells: 5 } },
+      { seed: 5 },
+      { seed: seed(), copyOf: 'book1Sheet' },
+    ])
+      expect((await add(body)).status).toBe(400);
+    const long = { r: kit.layout.rows[0], c: kit.layout.cols[0], i: { s: 'x'.repeat(60_000) } };
+    const bad = await add({ seed: seed([long]) });
+    expect(bad.status).toBe(400);
+    const broken = await add({ seed: { layout: { rows: 5 }, cells: [] } });
+    expect(await broken.json()).toMatchObject({ error: 'write_invalid' });
+    expect((await tabsOf('book1')).length).toBe(1);
+  });
+});
+
 describe('deleting a sheet', () => {
   const remove = (sheet: string) =>
     kit.call({ method: 'DELETE', path: `/book1/workbook/sheets/${sheet}` });

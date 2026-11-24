@@ -5,7 +5,12 @@
 // sheets; for anyone else, and for what is not built yet, an item stays in its place, dimmed (D174). Protect Sheet waits
 // for Protected Sheets and Ranges (plan 0020 Phase 10).
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
-import { MenuActionRow, MenuHeader } from '@/components/primitives/PortalMenu';
+import { useState } from 'react';
+import {
+  MenuAccordionSection,
+  MenuActionRow,
+  MenuHeader,
+} from '@/components/primitives/PortalMenu';
 import { Glyph } from '@/components/sheets/SheetCellMenu';
 import type { SheetBarActions } from './useSheetBarActions';
 
@@ -18,6 +23,7 @@ export function SheetTabMenu({
   index,
   actions,
   onColour,
+  onCopyTo,
   onClose,
 }: {
   at: SheetTabMenuAt;
@@ -29,8 +35,11 @@ export function SheetTabMenu({
   actions: SheetBarActions;
   // Change Colour: the bar opens the colour picker on the tab.
   onColour: () => void;
+  // Copy To, everyone's (D186): absent while the sheets are not reachable.
+  onCopyTo?: (to: 'new' | 'existing') => void;
   onClose: () => void;
 }) {
+  const [copyOpen, setCopyOpen] = useState(false);
   const act = (fn: () => void) => () => {
     onClose();
     fn();
@@ -60,7 +69,28 @@ export function SheetTabMenu({
         disabled={!can}
         onClick={act(() => actions.duplicate(at.tabId))}
       />
-      {later('Copy To', '⇥')}
+      {onCopyTo ? (
+        <MenuAccordionSection
+          title="Copy To"
+          icon={<Glyph t="⇥" />}
+          open={copyOpen}
+          onToggle={() => setCopyOpen((o) => !o)}
+          flush
+        >
+          <MenuActionRow
+            label="New Spreadsheet"
+            icon={<Glyph t="+" />}
+            onClick={act(() => onCopyTo('new'))}
+          />
+          <MenuActionRow
+            label="Existing Spreadsheet"
+            icon={<Glyph t="⇥" />}
+            onClick={act(() => onCopyTo('existing'))}
+          />
+        </MenuAccordionSection>
+      ) : (
+        later('Copy To', '⇥')
+      )}
       <ContextMenuDivider />
       <MenuActionRow
         label="Rename"

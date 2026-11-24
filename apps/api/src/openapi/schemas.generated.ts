@@ -5760,6 +5760,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           }
         ]
       },
+      "spreadsheet": {
+        "const": true,
+        "type": "boolean"
+      },
       "stats": {
         "anyOf": [
           {
@@ -18928,6 +18932,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "name": {
         "type": "string"
       },
+      "seed": {
+        "$ref": "#/components/schemas/WorkbookSheetSeed"
+      },
       "sheetId": {
         "type": "string"
       },
@@ -19073,6 +19080,25 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "sheetId",
       "name",
       "rev"
+    ],
+    "type": "object"
+  },
+  "WorkbookSheetSeed": {
+    "additionalProperties": false,
+    "properties": {
+      "cells": {
+        "items": {
+          "$ref": "#/components/schemas/SheetCellDto"
+        },
+        "type": "array"
+      },
+      "layout": {
+        "$ref": "#/components/schemas/SheetLayout"
+      }
+    },
+    "required": [
+      "layout",
+      "cells"
     ],
     "type": "object"
   },

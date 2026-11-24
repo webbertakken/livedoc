@@ -1,6 +1,7 @@
 // A spreadsheet's sheets changed with their tabs (docs/specs/029-sheets/sheet-store.md "Changing the workbook"):
 //   POST   /api/documents/<id>/workbook/sheets                    add a sheet tab: its tab and sheet in one batch, or
-//                                                                 a copy of a sheet (`copyOf`, Duplicate)
+//                                                                 a copy of a sheet (`copyOf`, Duplicate), or one
+//                                                                 carried in whole (`seed`, Copy To)
 //   POST   /api/documents/<id>/workbook/sheets/<sheetId>/move     its tab after the tab named, first for ''
 //   POST   /api/documents/<id>/workbook/sheets/<sheetId>/rename   the sheet's title and its tab's name as one write
 //   DELETE /api/documents/<id>/workbook/sheets/<sheetId>          its tab removed, its sheet kept for Undo; never the
@@ -50,6 +51,7 @@ import {
 import { storeSheetWrite } from './sheet-write-route';
 import { removeDocumentTab } from './tab-removal';
 import { liveSheets, shownElsewhere } from './workbook-shown-sheets';
+import { readSeed, seedProblem } from './workbook-sheet-seed';
 
 // A tab id a caller may name: what the editor makes (a UUID) and any id of the same alphabet up to this length.
 const TAB_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
@@ -70,14 +72,17 @@ async function workbookEditor(
 // The sheets on the document's tabs, in tab order: a deleted tab's sheet only waits to expire.
 function readAdd(raw: Record<string, unknown> | Response): WorkbookSheetAddRequest | null {
   if (raw instanceof Response) return null;
-  const { name, after, tabId, sheetId, copyOf } = raw;
+  const { name, after, tabId, sheetId, copyOf, seed } = raw;
   if (name !== undefined && typeof name !== 'string') return null;
   if (after !== undefined && typeof after !== 'string') return null;
   if (tabId !== undefined && (typeof tabId !== 'string' || !TAB_ID_PATTERN.test(tabId)))
     return null;
   if (sheetId !== undefined && !isSheetId(sheetId)) return null;
   if (copyOf !== undefined && !isSheetId(copyOf)) return null;
+  const seeded = seed === undefined ? undefined : readSeed(seed);
+  if (seeded === null || (seeded && copyOf !== undefined)) return null;
   return {
+    ...(seeded ? { seed: seeded } : {}),
     ...(name !== undefined ? { name } : {}),
     ...(after !== undefined ? { after } : {}),
     ...(tabId !== undefined ? { tabId } : {}),
@@ -110,7 +115,9 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
   if (await getTab(ctx.env, documentId, tabId)) return workbookRefused('sheet_exists', 409);
   const titles = live.map((h) => h.title);
   let name = source ? SheetName.fit(`Copy of ${source.title}`, titles) : SheetName.next(titles);
-  if (add.name !== undefined) {
+  // A sheet carried in keeps its name as the rules let it here, as a duplicate does.
+  if (add.seed && add.name !== undefined) name = SheetName.fit(add.name, titles);
+  else if (add.name !== undefined) {
     const named = SheetName.check(add.name, titles);
     if (!named.ok)
       return workbookRefused(named.refusal, named.refusal === 'sheet_name_taken' ? 409 : 400);
@@ -139,13 +146,15 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
     id: add.sheetId ?? makeSheetId(),
     tabId,
     title: name,
-    layout: workbookSheetLayout(),
-    cells: [],
+    layout: add.seed?.layout ?? workbookSheetLayout(),
+    cells: add.seed?.cells ?? [],
     rev: 0,
     createdAt: now,
     updatedAt: now,
     updatedBy: by,
   };
+  const seeded = add.seed ? seedProblem(sheet, totals.cells) : null;
+  if (seeded) return seeded;
   const grid = await newGridProblem(ctx, documentId, sheet.id, sheet.layout);
   if (grid) return grid;
   const tab: Tab = { id: tabId, name, kind: 'sheet', elements: [] };
@@ -154,7 +163,7 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
     ...tabWriteStatements(ctx.env, documentId, tab, orderIndex, { advance: true }, now),
     ...insertSheetStatements(ctx.env, documentId, sheet, now),
   ]);
-  return added(ctx, documentId, tab, sheet.id, orderIndex, started, 'made');
+  return added(ctx, documentId, tab, sheet.id, orderIndex, started, add.seed ? 'carried' : 'made');
 }
 
 // The tab of a kept sheet made again, with the sheet's id and title, and the sheet referenced again.
@@ -195,7 +204,7 @@ async function added(
   sheetId: string,
   orderIndex: number,
   started: number,
-  how: 'made' | 'copied' | 'restored',
+  how: 'made' | 'copied' | 'carried' | 'restored',
 ): Promise<Response> {
   const [stored] = await listSheets(ctx.env, documentId, { ids: [sheetId] });
   // The tab first, so a client that learns of the sheet already holds its tab.

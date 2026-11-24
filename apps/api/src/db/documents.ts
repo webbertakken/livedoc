@@ -18,6 +18,7 @@ import { documentRemovalStatements } from './document-removal';
 import { purgeRooms } from '../room-purge-client';
 import {
   docStatsSql,
+  spreadsheetSql,
   firstTabCountSql,
   isEmptyCount,
   type ContentSummary,
@@ -48,7 +49,11 @@ type DocumentRow = {
 // The document read's row: its owner's name and colour ride along (OWNER_COLS), null with no participant row.
 type OpenedDocumentRow = DocumentRow & { owner_name?: string | null; owner_color?: string | null };
 
-export type SummaryRow = DocumentRow & { first_tab_count: number | null; doc_stats: string | null };
+export type SummaryRow = DocumentRow & {
+  first_tab_count: number | null;
+  doc_stats: string | null;
+  spreadsheet: number | null;
+};
 
 async function rowToDocument(env: Env, row: OpenedDocumentRow): Promise<DocumentDTO> {
   // The owner's name and colour came with the row, so visitors can render "Owner: <name>" without waiting for the
@@ -94,7 +99,7 @@ const OWNER_COLS =
   '(SELECT name FROM participants WHERE participants.id = documents.owner_id) AS owner_name, ' +
   '(SELECT color FROM participants WHERE participants.id = documents.owner_id) AS owner_color';
 // The list projection reads the content summary the room pushed (content-summary.ts), never a room.
-export const DOCUMENT_SUMMARY_COLS = `id, owner_id, name, shareable, folder_id, team_id, source, ${INTENT_COLS}, saved_at, created_at, ${SHARE_CODE_EXPR}, ${firstTabCountSql('documents.id')}, ${docStatsSql('documents.id')}`;
+export const DOCUMENT_SUMMARY_COLS = `id, owner_id, name, shareable, folder_id, team_id, source, ${INTENT_COLS}, saved_at, created_at, ${SHARE_CODE_EXPR}, ${firstTabCountSql('documents.id')}, ${docStatsSql('documents.id')}, ${spreadsheetSql('documents.id')}`;
 
 // Gate-only projection: the columns access checks need (owner + team +
 // name for notifications) in ONE query — no participant join, no tab
@@ -237,6 +242,7 @@ export function rowToSummary(row: SummaryRow): DocumentSummary {
     createdAt: row.created_at,
     empty: isEmptyCount(row.first_tab_count),
     stats: readDocumentStats(row.doc_stats),
+    ...(row.spreadsheet === 1 ? { spreadsheet: true as const } : {}),
   };
 }
 

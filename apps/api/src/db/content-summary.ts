@@ -18,6 +18,8 @@ export type ContentSummary = {
   stats: DocumentStats | null;
   // Whether any tab holds content, by the empty clean-up's test (docs/specs/013-workspace/empty-document-cleanup.md).
   hasContent: boolean;
+  // A spreadsheet (it holds a workbook): Copy To's picker lists it (docs/specs/029-sheets/spreadsheet.md D183).
+  spreadsheet?: true;
 };
 
 // The `first_tab_count` column of a document list (docs/specs/006-document/document-snapshots.md): the element count
@@ -30,6 +32,12 @@ export function firstTabCountSql(documentIdSql: string, scopeTabSql: string | nu
     : `json_extract(cs.content_summary, '$.firstTabCount')`;
   return `(SELECT CASE WHEN cs.content_summary IS NULL THEN -1 ELSE ${counted} END
              FROM documents cs WHERE cs.id = ${documentIdSql}) AS first_tab_count`;
+}
+
+// Whether a document is a spreadsheet, as the `spreadsheet` column: 1, or NULL for none or a summary not pushed yet.
+export function spreadsheetSql(documentIdSql: string): string {
+  return `(SELECT json_extract(cs.content_summary, '$.spreadsheet')
+             FROM documents cs WHERE cs.id = ${documentIdSql}) AS spreadsheet`;
 }
 
 // A document's Details-view stats as the `doc_stats` column readDocumentStats reads: JSON text, or NULL.

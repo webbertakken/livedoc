@@ -602,6 +602,7 @@ export const SHEET_CHANGE_KINDS = [
   'SheetColour',
   'HideSheet',
   'ShowSheet',
+  'CopySheet',
 ] as const;
 export type SheetChangeKind = (typeof SHEET_CHANGE_KINDS)[number];
 
