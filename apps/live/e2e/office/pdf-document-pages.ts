@@ -227,7 +227,9 @@ export type TapReach = { name: string; across: number; down: number };
  * How far a finger reaches every control showing outside the pages (touch-targets.md; reading-surface.md "Phone and
  * tablet"): from each one's middle, the run of points across and down that land on it, its touch pad included; past the
  * window's edge, a finger lands on what is at the edge. A control covered at its middle is skipped: it is not where
- * a finger can reach it now. A field inside its label is reached through the label.
+ * a finger can reach it now. A control a sideways-scrolling row holds partly out of view (the phone's toolbar) is
+ * skipped too: it is reached once scrolled in, and the row's rounded end cuts it until then. A field inside its
+ * label is reached through the label.
  */
 export const tapReaches = (page: Page): Promise<TapReach[]> =>
   page.evaluate(() => {
@@ -253,6 +255,9 @@ export const tapReaches = (page: Page): Promise<TapReach[]> =>
       if (box.width === 0 || box.height === 0) return [];
       const [x, y] = [box.left + box.width / 2, box.top + box.height / 2];
       if (!hits(control, x, y)) return [];
+      const row = control.parentElement?.closest('[class*="overflow-x-auto"]');
+      const view = row?.getBoundingClientRect();
+      if (view && (box.left < view.left || box.right > view.right)) return [];
       const name =
         control.getAttribute('aria-label') ??
         control.textContent?.trim().slice(0, 40) ??
