@@ -25,9 +25,10 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
   const local = useIsOfflineDocument(documentId);
   // The document's own parts in the title row, for the editor's pane alone (editing-surface.md "The title row").
   const office = useEditorLines()?.office ?? null;
-  // Drawings are an Editor's, in the editor's pane (objects.md "Drawings").
-  const { addDrawingTab } = ctx;
-  const mayDraw = !readOnly && can.textDocumentEdits;
+  // Drawings are an Editor's, in the editor's pane (objects.md "Drawings"); a new one is a new tab, which a link to
+  // one tab never adds ("Sharing").
+  const { addDrawingTab, isStructureReadOnly } = ctx;
+  const mayDraw = !readOnly && can.textDocumentEdits && !isStructureReadOnly;
   const createDrawing = useCallback(() => addDrawingTab(tab.id), [addDrawingTab, tab.id]);
   // A drawing's picture opens its drawing tab, for anyone who sees the text document and is shared the tab (objects.md
   // "Opening it again").

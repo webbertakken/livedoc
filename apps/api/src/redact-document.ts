@@ -47,7 +47,8 @@ export function redactDocumentForReader(liveDoc: DocumentDTO, caller: string | n
 
 // A tab-scoped visitor's copy (docs/specs/013-workspace/tab-scoped-share-links.md). Every other tab keeps
 // its id and position, so the bar can draw a "Not shared" pill in place, and loses
-// its name, folder and timestamp. The deck goes too: slides span tabs.
+// its name, folder and timestamp. The deck goes too: slides span tabs. The scope tab's drawing tabs stay whole (a
+// picture in it draws from one), and every drawing tab keeps its `drawingOf`, so none shows as a tab of its own.
 // `tabScope` null (owner, team member, All-tabs link) returns the document as is.
 export function redactDocumentForScope(liveDoc: DocumentDTO, tabScope: string | null): DocumentDTO {
   if (tabScope === null) return liveDoc;
@@ -55,7 +56,7 @@ export function redactDocumentForScope(liveDoc: DocumentDTO, tabScope: string | 
     ...liveDoc,
     presentation: null,
     tabs: liveDoc.tabs.map((t) =>
-      t.id === tabScope
+      t.id === tabScope || t.drawingOf === tabScope
         ? t
         : {
             id: t.id,
@@ -64,6 +65,7 @@ export function redactDocumentForScope(liveDoc: DocumentDTO, tabScope: string | 
             orderIndex: t.orderIndex,
             updatedAt: 0,
             outOfScope: true,
+            ...(t.drawingOf === undefined ? {} : { drawingOf: t.drawingOf }),
           },
     ),
   };

@@ -30,6 +30,17 @@ describe('useEditorUiState active tab', () => {
     expect(toast.info).toHaveBeenCalledWith("That tab isn't shared with you");
   });
 
+  // "Drawing tabs": the scoped tab's drawing tabs open, as the tabs say at the time of the switch.
+  it("allows the scoped tab's drawing tabs, never another tab's", () => {
+    const scope = { current: 't1' };
+    const drawingOf = { current: (id: string) => (id === 'd1' ? 't1' : id === 'd2' ? 't2' : null) };
+    const { result } = renderHook(() => useEditorUiState('t1', scope, drawingOf));
+    act(() => result.current.setActiveId('d2'));
+    expect(result.current.activeId).toBe('t1');
+    act(() => result.current.setActiveId('d1'));
+    expect(result.current.activeId).toBe('d1');
+  });
+
   it('allows the scoped tab', () => {
     const scope: { current: string | null } = { current: null };
     const { result } = renderHook(() => useEditorUiState('t1', scope));

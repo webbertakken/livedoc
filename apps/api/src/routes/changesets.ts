@@ -23,6 +23,7 @@ import { parseChangesetRequest } from '../changesets/request';
 import { revertChangeset } from '../changesets/revert';
 import { submitChangeset, type SubmitResult } from '../changesets/submit';
 import type { Author } from '../changesets/write';
+import { isTabInScope } from '../tab-scope';
 import type { DocumentDTO } from '../types';
 import {
   gateEdit,
@@ -112,10 +113,10 @@ async function handleList(
   }
   const asked = ctx.url.searchParams.get('tab');
   // A tab-scoped link reads its own tab's history only (docs/specs/013-workspace/tab-scoped-share-links.md).
-  if (grant.tabScope !== null && asked !== null && asked !== grant.tabScope) {
+  if (asked !== null && !(await isTabInScope(ctx.env, document.id, grant.tabScope, asked))) {
     return json({ changesets: [] });
   }
-  const tabId = grant.tabScope ?? asked ?? undefined;
+  const tabId = asked ?? grant.tabScope ?? undefined;
   const records = await listChangesets(ctx.env, document.id, {
     limit,
     ...(tabId ? { tabId } : {}),

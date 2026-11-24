@@ -577,8 +577,16 @@ export type RoomOp =
       // `folder` (docs/specs/006-document/tab-folders.md) is the per-document folder name, optional so
       // an older peer that omits it is treated as loose — no parse break.
       // `outOfScope` marks a tab outside a tab-scoped session's scope
-      // (docs/specs/013-workspace/tab-scoped-share-links.md): its name is blanked by the room.
-      tabs: { id: string; name: string; orderIndex: number; folder?: string; outOfScope?: true }[];
+      // (docs/specs/013-workspace/tab-scoped-share-links.md): its name is blanked by the room. `drawingOf` names a
+      // drawing tab's text document tab (docs/specs/034-text-documents/objects.md), so no peer lists it as a tab.
+      tabs: {
+        id: string;
+        name: string;
+        orderIndex: number;
+        folder?: string;
+        outOfScope?: true;
+        drawingOf?: string;
+      }[];
     }
   // `tabId` scopes the selection to the tab it lives on: element ids
   // are only unique per tab in older documents (tab duplication used to

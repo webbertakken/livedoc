@@ -8,7 +8,7 @@ import {
 } from 'react';
 import type { Tab } from '@livedoc/document';
 import { loadTabWithKindFamilies } from '@/lib/element-kinds/load-tab';
-import { isTabOutOfScope } from '@/lib/tab-scope';
+import { drawingOfTabs, isTabOutOfScope } from '@/lib/tab-scope';
 import { track } from '@/lib/telemetry';
 import { startEditorTiming } from '@/lib/timing';
 import { useLatest } from '@/hooks/ui/useLatest';
@@ -314,7 +314,11 @@ export function usePerTabLoad(opts: {
       const wanted = tabsRef.current
         .map((t) => t.id)
         .filter((id) => !only || only.includes(id))
-        .filter((id) => !loadedTabIds.has(id) && !isTabOutOfScope(id, sessionTabScope));
+        .filter(
+          (id) =>
+            !loadedTabIds.has(id) &&
+            !isTabOutOfScope(id, sessionTabScope, drawingOfTabs(tabsRef.current)),
+        );
       // A tab another fetch is already loading is waited for, and reported as that fetch ends.
       const elsewhere = wanted.filter((id) => fetching.has(id));
       const pending = wanted.filter((id) => !fetching.has(id));

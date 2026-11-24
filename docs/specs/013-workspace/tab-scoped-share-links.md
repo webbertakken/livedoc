@@ -86,9 +86,15 @@ room has stored it.
 A drawing tab is never a link's own tab: the Share dialog lists listed tabs only.
 
 - What reaches is content alone: a link to one tab still adds and removes no tabs, drawing tabs included.
-- `isTabInScope(env, documentId, tabScope, tabId)` (`apps/api/src/tab-scope.ts`) answers for the REST doors; the room
-  answers from its own SQLite as each frame arrives (`room-scope.ts`, given the drawing tabs of the scope).
-- Redaction keeps a drawing tab of the link's tab whole: its name and `drawingOf`.
+- `isTabInScope(env, documentId, tabScope, tabId)` (`apps/api/src/tab-scope.ts`) answers for the REST doors, inside
+  the document's room; the room answers from its own SQLite as each frame arrives (`room-scope.ts`), reading each tab
+  once per frame, and a failed read admits nothing.
+- The ops, the catch-up, a scoped session's own ops (judged against the drawing tab's stored structure) and freeing a
+  selection hold all admit the scope's drawing tabs.
+- Redaction keeps a drawing tab of the link's tab whole: its name and `drawingOf`. Any other drawing tab keeps its
+  `drawingOf` beside its out-of-scope mark, so no visitor's tab bar shows it; `document-meta` carries `drawingOf` too.
+- The editor opens the link's drawing tabs and loads them like its own tab; any other tab still meets "That tab isn't
+  shared with you".
 
 ### Redaction
 

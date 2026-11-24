@@ -1,7 +1,9 @@
 import { useCallback, useState, type MutableRefObject, type SetStateAction } from 'react';
 import { useToast } from '@/hooks/ui/useToast';
 import { createSelectionStore } from '@/lib/selection-store';
-import { OUT_OF_SCOPE_MESSAGE, isTabOutOfScope } from '@/lib/tab-scope';
+import { OUT_OF_SCOPE_MESSAGE, isTabOutOfScope, type DrawingOf } from '@/lib/tab-scope';
+
+const NO_DRAWINGS_REF: { readonly current: DrawingOf } = { current: () => null };
 
 // Ephemeral, in-the-moment editing UI for the canvas: which tab is
 // active, what's selected / being edited, the format painter's "source"
@@ -19,21 +21,27 @@ import { OUT_OF_SCOPE_MESSAGE, isTabOutOfScope } from '@/lib/tab-scope';
 // through `setActiveId`, so refusing an out-of-scope tab here covers the tab
 // bar, links, search, the keyboard and slides at once. A ref, not state, so
 // the bootstrap can set the scope and the first active tab in one tick.
+
 export function useEditorUiState(
   initialActiveId: string,
   tabScopeRef: MutableRefObject<string | null>,
+  // Each drawing tab's text document tab, as the tabs say now: the scope's drawing tabs open too.
+  drawingOfRef: { readonly current: DrawingOf } = NO_DRAWINGS_REF,
 ) {
   const [activeId, setActiveIdRaw] = useState<string>(() => initialActiveId);
   const toast = useToast();
   const setActiveId = useCallback(
     (next: SetStateAction<string>) => {
-      if (typeof next === 'string' && isTabOutOfScope(next, tabScopeRef.current)) {
+      if (
+        typeof next === 'string' &&
+        isTabOutOfScope(next, tabScopeRef.current, drawingOfRef.current)
+      ) {
         toast.info(OUT_OF_SCOPE_MESSAGE);
         return;
       }
       setActiveIdRaw(next);
     },
-    [tabScopeRef, toast],
+    [tabScopeRef, drawingOfRef, toast],
   );
   // The selection lives in a store (docs/specs/008-canvas/canvas-performance.md). The editor
   // root holds it but never subscribes: handlers read it with readSelection() when they run, effects

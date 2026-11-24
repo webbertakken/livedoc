@@ -1,5 +1,7 @@
 // The facilitator baton in the room (docs/specs/012-collaboration/facilitator.md): who is running the session, kept
 // in storage, moved only by the rules in facilitator.ts, and announced so that exactly one socket ever sees the token.
+import type { DrawingOf } from './room-scope';
+import { scopeAdmits } from './tab-scope';
 import {
   beginGrace,
   claimBaton,
@@ -34,6 +36,8 @@ type RoomFacilitatorDeps = {
   /** The one connected socket wearing this presence id. */
   socketByPresence: (presenceId: string) => WebSocket | null;
   readSession: (ws: WebSocket) => SessionAttachment | null;
+  /** A tab's text document tab, as the room's store holds it now (room-drawing-of.ts). */
+  drawingReader: () => DrawingOf;
   /** Re-arm the room's one alarm after the grace deadline moved. */
   armAlarm: () => void;
 };
@@ -236,8 +240,11 @@ export class RoomFacilitator {
     const holder = this.deps.socketByPresence(target);
     if (!holder) return;
     // A session on a link to one tab (docs/specs/013-workspace/tab-scoped-share-links.md "Realtime") frees a hold
-    // only from someone working on that tab, never one on a tab it cannot reach.
-    if (tabScope && this.deps.readSession(holder)?.presence?.tabId !== tabScope) return;
+    // only from someone working on that tab or one of its drawing tabs, never one on a tab it cannot reach.
+    if (tabScope) {
+      const on = this.deps.readSession(holder)?.presence?.tabId;
+      if (typeof on !== 'string' || !scopeAdmits(tabScope, on, this.deps.drawingReader())) return;
+    }
     this.deps.sendToPresence(target, {
       kind: 'selection-released',
       elementId,

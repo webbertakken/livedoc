@@ -1,7 +1,7 @@
 // What a link to one tab reaches (docs/specs/013-workspace/tab-scoped-share-links.md "Drawing tabs"): its tab, and the
 // drawing tabs that belong to it, judged as each request arrives so a drawing stored after the visitor came is in
 // reach. A null scope (the owner, a team member, an All-tabs link) reaches every tab.
-import type { DocumentEnv } from './types';
+import type { DocumentEnv, Env } from './types';
 
 /** Whether `tabId` is in `tabScope`, given each tab's text document tab (`drawingOf`); pure, for the room. */
 export function scopeAdmits(
@@ -14,10 +14,12 @@ export function scopeAdmits(
 
 /**
  * Whether a request touching `tabId` (undefined: the whole document) is in `tabScope`: one read of the tab's
- * `drawing_of` in this document, made only when the scope is another tab.
+ * `drawing_of` in this document, made only when the scope is another tab. The read runs inside the document's room,
+ * whose SQLite holds the tabs (`DOCUMENT_DB`), where every door that names a tab is answered; asked anywhere else
+ * (a worker door, which has no `DOCUMENT_DB`) it admits only the scope's own tab, logged.
  */
 export async function isTabInScope(
-  env: DocumentEnv,
+  env: Env | DocumentEnv,
   documentId: string,
   tabScope: string | null,
   tabId: string | undefined,
@@ -25,6 +27,10 @@ export async function isTabInScope(
   if (tabScope === null) return true;
   if (tabId === undefined) return false;
   if (tabId === tabScope) return true;
+  if (!('DOCUMENT_DB' in env)) {
+    console.warn('[tab-scope] drawing unread outside the room', { documentId, tabScope, tabId });
+    return false;
+  }
   const row = await env.DOCUMENT_DB.prepare(
     `SELECT t.drawing_of FROM tabs t
        JOIN document_tabs dt ON dt.tab_id = t.id AND dt.document_id = ?1

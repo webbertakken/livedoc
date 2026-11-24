@@ -99,4 +99,35 @@ describe('redactDocumentForScope', () => {
   it('hands an unscoped reader the document untouched', () => {
     expect(redactDocumentForScope(full, null)).toBe(full);
   });
+
+  // docs/specs/013-workspace/tab-scoped-share-links.md "Drawing tabs".
+  it("keeps the scope tab's drawing tabs whole and another tab's drawing unlisted", () => {
+    const mine = {
+      id: 'd2',
+      documentId: 'd1',
+      name: 'Drawing 1',
+      orderIndex: 2,
+      updatedAt: 7,
+      drawingOf: 't2',
+    };
+    const theirs = {
+      id: 'd3',
+      documentId: 'd1',
+      name: 'Drawing 2',
+      orderIndex: 3,
+      updatedAt: 8,
+      drawingOf: 't1',
+    };
+    const out = redactDocumentForScope({ ...full, tabs: [...tabs, mine, theirs] }, 't2');
+    expect(out.tabs[2]).toEqual(mine);
+    expect(out.tabs[3]).toEqual({
+      id: 'd3',
+      documentId: 'd1',
+      name: '',
+      orderIndex: 3,
+      updatedAt: 0,
+      outOfScope: true,
+      drawingOf: 't1',
+    });
+  });
 });

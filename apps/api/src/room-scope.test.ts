@@ -161,3 +161,62 @@ describe('scopedSenderMayRelay (what a scoped session may send)', () => {
     expect(scopedSenderMayRelay(undefined, SCOPE)).toBe(false);
   });
 });
+
+// "Drawing tabs": a link to one tab reaches the drawing tabs that belong to it, as the room's store knows them.
+describe('a scoped session and its drawing tabs', () => {
+  const drawingOf = (id: string) => (id === 'd2' ? SCOPE : id === 'd1' ? 't1' : null);
+
+  it('receives ops on its drawing tabs, never on another tab’s drawing', () => {
+    for (const kind of ['el', 'tab', 'tab-meta', 'cursor']) {
+      const op = { kind, tabId: 'd2' };
+      expect(opForScope(op, SCOPE, drawingOf), kind).toBe(op);
+      expect(opForScope({ kind, tabId: 'd1' }, SCOPE, drawingOf), kind).toBeNull();
+    }
+  });
+
+  it('may change its drawing tabs, never another tab’s drawing', () => {
+    expect(scopedSenderMayRelay({ kind: 'el', tabId: 'd2' }, SCOPE, false, drawingOf)).toBe(true);
+    expect(scopedSenderMayRelay({ kind: 'el', tabId: 'd1' }, SCOPE, false, drawingOf)).toBe(false);
+  });
+
+  it('knows no drawing without the store', () => {
+    expect(opForScope({ kind: 'el', tabId: 'd2' }, SCOPE)).toBeNull();
+    expect(scopedSenderMayRelay({ kind: 'el', tabId: 'd2' }, SCOPE)).toBe(false);
+  });
+
+  it('keeps its drawing tabs whole in document-meta and another tab’s drawing unlisted', () => {
+    const op = {
+      kind: 'document-meta',
+      name: 'Plan',
+      tabs: [
+        { id: 't1', name: 'Pricing', orderIndex: 0 },
+        { id: 't2', name: 'Roadmap', orderIndex: 1 },
+        { id: 'd1', name: 'Drawing 1', orderIndex: 2, drawingOf: 't1' },
+        { id: 'd2', name: 'Drawing 2', orderIndex: 3, drawingOf: SCOPE },
+      ],
+    };
+    expect(opForScope(op, SCOPE, drawingOf)).toEqual({
+      kind: 'document-meta',
+      name: 'Plan',
+      tabs: [
+        { id: 't1', name: '', orderIndex: 0, outOfScope: true },
+        { id: 't2', name: 'Roadmap', orderIndex: 1 },
+        { id: 'd1', name: '', orderIndex: 2, outOfScope: true, drawingOf: 't1' },
+        { id: 'd2', name: 'Drawing 2', orderIndex: 3, drawingOf: SCOPE },
+      ],
+    });
+  });
+
+  it('trusts the store, not the op, for which tab a drawing belongs to', () => {
+    const op = {
+      kind: 'document-meta',
+      name: 'Plan',
+      tabs: [{ id: 't1', name: 'Pricing', orderIndex: 0, drawingOf: SCOPE }],
+    };
+    expect(opForScope(op, SCOPE, drawingOf)).toEqual({
+      kind: 'document-meta',
+      name: 'Plan',
+      tabs: [{ id: 't1', name: '', orderIndex: 0, outOfScope: true, drawingOf: SCOPE }],
+    });
+  });
+});
