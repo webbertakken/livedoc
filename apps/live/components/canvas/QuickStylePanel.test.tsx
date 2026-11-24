@@ -136,7 +136,7 @@ describe('QuickRadioRow: custom swatches', () => {
   it('keeps every swatch a 24 px target, drawing a smaller chip inside it', () => {
     renderSwatches();
     const button = screen.getByRole('button', { name: 'Theme default' });
-    expect(button.className).toContain('size-chip');
+    expect(button.className).toContain('h-6 w-6');
     expect(button.firstElementChild!.className).toContain('size-icon-title');
   });
 });
