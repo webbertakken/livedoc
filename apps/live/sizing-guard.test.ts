@@ -31,6 +31,18 @@ const SIZED_PATHS = [
   'components/sheets/rules/SheetValidationEditor.tsx',
   // Plan's one option list, shared by Plan's pickers and the sheet's rule popovers.
   'components/plan/OptionRows.tsx',
+  // A sheet's own chrome; its cells and drawing layers are content, its toolbar moves with the canvas palette.
+  'components/sheets/NameBoxList.tsx',
+  'components/sheets/SheetBordersPicker.tsx',
+  'components/sheets/SheetCellMenu.tsx',
+  'components/sheets/SheetColourSwatches.tsx',
+  'components/sheets/SheetFindBar.tsx',
+  'components/sheets/SheetFormulaBar.tsx',
+  'components/sheets/SheetFunctionMenu.tsx',
+  'components/sheets/SheetFunctionSearch.tsx',
+  'components/sheets/SheetMenus.tsx',
+  'components/sheets/SheetNamedRanges.tsx',
+  'components/sheets/SheetStatusBar.tsx',
   // A form's chrome; the form as respondents see it is content (sizing.md, D237).
   'components/forms/FormBoardStrip.tsx',
   'components/forms/FormLockedStrip.tsx',

@@ -23,7 +23,7 @@ export function SheetNamedRanges({
   const names = [...(layout.names ?? [])].sort((a, b) => a.name.localeCompare(b.name));
   if (!names.length)
     return (
-      <p className="px-0.5 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+      <p className="px-0.5 text-supporting text-slate-500 dark:text-slate-400">
         {c.canShape ? NO_NAMES : NO_NAMES_READ}
       </p>
     );
@@ -34,19 +34,19 @@ export function SheetNamedRanges({
         return (
           <li
             key={x.name}
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white py-1 pl-2.5 pr-1 dark:border-slate-700 dark:bg-slate-800"
+            className="flex items-center gap-2 rounded-menu border border-slate-200 bg-white py-1 pl-3 pr-1 dark:border-slate-700 dark:bg-slate-800"
           >
-            <span className="min-w-0 flex-1 truncate font-mono text-[12px] font-semibold text-slate-800 dark:text-slate-100">
+            <span className="min-w-0 flex-1 truncate font-mono text-body text-slate-800 dark:text-slate-100">
               {x.name}
             </span>
-            <span className="shrink-0 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="shrink-0 font-mono text-supporting text-slate-500 dark:text-slate-400">
               {at ? formatRange(at) : ''}
             </span>
             {at ? (
               <button
                 type="button"
                 aria-label={`Go To ${x.name}`}
-                className="shrink-0 cursor-pointer rounded-md px-1.5 py-0.5 text-[11px] font-medium text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
+                className="h-row shrink-0 cursor-pointer rounded-control px-2 text-body text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
                 onClick={() => {
                   actions.goTo(at);
                   onClose();
@@ -61,7 +61,7 @@ export function SheetNamedRanges({
                 <button
                   type="button"
                   aria-label={`Remove ${x.name}`}
-                  className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                  className="flex size-row shrink-0 cursor-pointer items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
                   onClick={() =>
                     c.write(
                       { kind: 'layout', changes: [{ k: 'name', name: x.name, range: null }] },

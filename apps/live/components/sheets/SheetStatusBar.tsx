@@ -52,7 +52,7 @@ export function SheetStatusBar() {
     formatNumber(v, { nf: 'number', dp: Number.isInteger(v) ? 0 : 2 }, c.locale);
   return (
     <div
-      className="relative flex shrink-0 items-center justify-end border-t px-1 text-[12px] tabular-nums"
+      className="relative flex shrink-0 items-center justify-end border-t px-1 text-supporting tabular-nums"
       style={{ height: STATUS_BAR_PX, borderColor: c.palette.cardBorder, color: c.palette.muted }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -61,7 +61,7 @@ export function SheetStatusBar() {
         aria-haspopup="true"
         aria-expanded={!!open}
         aria-label="Selection totals"
-        className="flex h-[20px] cursor-pointer items-center gap-3 rounded-md px-2 transition hover:bg-black/5 dark:hover:bg-white/10"
+        className="flex h-chip cursor-pointer items-center gap-3 rounded-control px-2 transition hover:bg-black/5 dark:hover:bg-white/10"
         onClick={(e) => {
           const at = e.currentTarget;
           setOpen((v) => (v ? null : at));
@@ -70,13 +70,13 @@ export function SheetStatusBar() {
         {pick.map((stat) => (
           // The name quiet, the number in ink, as a modern spreadsheet's totals read.
           <span key={stat} role="status" className="flex items-baseline gap-1">
-            <span className="text-[11px]">{stat}</span>
-            <span className="font-semibold" style={{ color: c.palette.text }}>
+            <span>{stat}</span>
+            <span style={{ color: c.palette.text }}>
               {stat === 'Count' ? stats.count : n(statValue(stat, stats))}
             </span>
           </span>
         ))}
-        <span aria-hidden className="text-[9px] opacity-70">
+        <span aria-hidden className="text-glyph opacity-70">
           ▾
         </span>
       </button>
@@ -96,7 +96,7 @@ export function SheetStatusBar() {
               id: stat,
               label: stat,
               trailing: (
-                <span className="text-[11px] tabular-nums" style={{ color: c.palette.muted }}>
+                <span className="text-supporting tabular-nums" style={{ color: c.palette.muted }}>
                   {stat === 'Count' ? stats.count : n(statValue(stat, stats))}
                 </span>
               ),

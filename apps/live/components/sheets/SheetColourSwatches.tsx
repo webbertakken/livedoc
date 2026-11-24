@@ -64,7 +64,7 @@ export function SheetColourSwatches({
           aria-haspopup="menu"
           data-colour-key=""
           tabIndex={-1}
-          className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:bg-slate-800"
+          className="flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:bg-slate-800"
           onClick={(e) => onMore(e.currentTarget)}
         >
           <MoreColoursGlyph />
