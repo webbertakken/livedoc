@@ -76,6 +76,11 @@ function ItemRow({
       }}
     >
       <Check on={item.checkable !== undefined && action?.checked === true} />
+      {action?.picture ? (
+        <span aria-hidden="true" className="flex shrink-0 text-(--office-icon)">
+          {action.picture}
+        </span>
+      ) : null}
       <span
         className="flex-1 whitespace-nowrap"
         style={

@@ -205,6 +205,31 @@ describe('OfficeChoiceMenu with a bound label', () => {
   });
 });
 
+// office-shell.md "Menus as data": a bound picture is drawn before the label, hidden from screen readers.
+describe('OfficeChoiceMenu with a bound picture', () => {
+  it('draws the picture before the label, the label still naming the item', () => {
+    render(
+      <OfficeChoiceMenu
+        id="looks"
+        label="Looks"
+        value={null}
+        entries={[
+          { kind: 'item', id: 'toc-plain', label: 'Plain text', level: 'edit', status: 'built' },
+        ]}
+        actions={{ 'toc-plain': { run: vi.fn(), picture: <svg data-testid="picture" /> } }}
+        width={120}
+        tabIndex={0}
+        className=""
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Looks' }));
+    const item = screen.getByRole('menuitem', { name: 'Plain text' });
+    const picture = within(item).getByTestId('picture');
+    expect(picture.closest('[aria-hidden="true"]')).toBeTruthy();
+    expect(item.textContent).toBe('Plain text');
+  });
+});
+
 describe('OfficeToolbar choices', () => {
   it('draws a choice control where the kind binds it, with its value', () => {
     const control = (id: string) => ({

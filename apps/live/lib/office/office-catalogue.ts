@@ -1,6 +1,7 @@
 // An office kind's menus as data (docs/specs/004-interface-design/office-shell.md "Menus as data"): the kind declares
 // them once; the shell draws them, lists them in the tool finder, and hides what the session's level may not see.
 // What an item does is bound by its id at run time, never drawn by hand.
+import type { ReactNode } from 'react';
 import { levelAtLeast, type AccessLevel } from '@livedoc/api-schema';
 import type { GridSize } from './size-grid';
 
@@ -67,6 +68,8 @@ export type OfficeAction = {
   label?: string;
   // A size grid's choice: the size pointed at or keyed.
   runSized?: (size: GridSize) => void;
+  // A small picture drawn before its label (Insert > Table of contents' looks), hidden from screen readers.
+  picture?: ReactNode;
 };
 export type OfficeActions = Readonly<Record<string, OfficeAction | undefined>>;
 
