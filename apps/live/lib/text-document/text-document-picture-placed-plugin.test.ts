@@ -9,6 +9,8 @@ import { PICTURE } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { PLACED_ROOM_CLASS } from './text-document-picture-placed';
 import {
+  paragraphOnPage,
+  pictureSpot,
   placedAt,
   placedPicturesPlugin,
   setPlacedShifts,
@@ -75,5 +77,45 @@ describe('placedPicturesPlugin', () => {
     expect(setPlacedShifts(view, new Map([[PICTURE_AT, { x: -72.2, y: -100.1 }]]))).toBe(false);
     view.dispatch(view.state.tr.insertText('x', 1));
     expect(placedAt(view.state, PICTURE_AT + 1)?.picture).toEqual({ left: -62, top: -80 });
+  });
+});
+
+describe('the placing measures', () => {
+  const rect = (left: number, top: number, width: number, height: number) =>
+    ({ left, top, width, height, right: left + width, bottom: top + height }) as DOMRect;
+  const stub = (element: Element, box: DOMRect) => {
+    element.getBoundingClientRect = () => box;
+  };
+
+  function drawn(sheet: Element | null) {
+    const inline = schema.nodes[PICTURE]!.create({ media: 'm', width: 96, height: 48 });
+    const doc = schema.node('doc', null, [
+      schema.nodes.paragraph!.create(null, [schema.text('ab'), inline, schema.text('cd')]),
+    ]);
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        doc,
+        plugins: [placedPicturesPlugin({ columnWidth: () => 400, sheetOf: () => sheet })],
+      }),
+    });
+    // Drawn at twice its size (the zoom): 1 px of the writing is 2 screen px.
+    Object.defineProperty(view.dom, 'offsetWidth', { value: 500 });
+    stub(view.dom, rect(0, 0, 1000, 2000));
+    stub(view.nodeDOM(0) as Element, rect(100, 300, 800, 200));
+    // The picture drawn with its centre 80 screen px right of its paragraph's left and 40 below its top.
+    stub(view.nodeDOM(PICTURE_AT) as Element, rect(180 - 128, 340 - 64, 256, 128));
+    return view;
+  }
+
+  it('measures a picture in line from its paragraph, through the zoom', () => {
+    // Its centre 80 × 40 screen px in: 30 × 15 pt, less half its size.
+    expect(pictureSpot(drawn(null), PICTURE_AT)).toEqual({ x: 30 - 48, y: 15 - 24 });
+  });
+
+  it('measures its paragraph from its page, or nothing without a page', () => {
+    const sheet = document.createElement('div');
+    stub(sheet, rect(20, 60, 900, 1200));
+    expect(paragraphOnPage(drawn(sheet), PICTURE_AT)).toEqual({ x: 30, y: 90 });
+    expect(paragraphOnPage(drawn(null), PICTURE_AT)).toBeNull();
   });
 });

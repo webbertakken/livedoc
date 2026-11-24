@@ -79,6 +79,8 @@ function placedState(
 export function placedPicturesPlugin(options: PlacedPicturesOptions): Plugin<PlacedState> {
   return new Plugin<PlacedState>({
     key,
+    // Read by the measures below (paragraphOnPage).
+    sheetOf: options.sheetOf,
     state: {
       init: (_, state) => placedState(state.doc, new Map(), options),
       apply: (tr, previous, _old, state) => {
@@ -156,22 +158,66 @@ export function measurePlacedShifts(
 ): void {
   if (view.isDestroyed) return;
   const shifts = new Map<number, PlacedShift>();
-  const writing = view.dom.getBoundingClientRect();
-  const ratio = view.dom.offsetWidth > 0 ? writing.width / view.dom.offsetWidth : 1;
   view.state.doc.descendants((node, pos) => {
     if (node.type.name !== PICTURE) return true;
     if (PicturePlacements.of(node.attrs.placement)?.moves !== 'page') return false;
-    const sheet = sheetOf(pageIndexAt(view, pos));
-    const paragraph = view.nodeDOM(view.state.doc.resolve(pos).before());
-    if (!sheet || !(paragraph instanceof HTMLElement)) return false;
-    const page = sheet.getBoundingClientRect();
-    const own = paragraph.getBoundingClientRect();
-    shifts.set(pos, {
-      x: Math.round(((page.left - own.left) / ratio) * PT_PER_PX * 1000) / 1000,
-      y: Math.round(((page.top - own.top) / ratio) * PT_PER_PX * 1000) / 1000,
-    });
+    const paragraph = paragraphOn(view, pos, sheetOf);
+    if (paragraph) shifts.set(pos, { x: -paragraph.x + 0, y: -paragraph.y + 0 });
     return false;
   });
   if (setPlacedShifts(view, shifts))
     debugLog('[text-document] placed pictures fixed on the page measured', shifts.size);
+}
+
+// How many points a pixel of the writing is, drawn at its scale (the zoom).
+function pointsPerPixel(view: EditorView): number {
+  const writing = view.dom.getBoundingClientRect();
+  const ratio = view.dom.offsetWidth > 0 ? writing.width / view.dom.offsetWidth : 1;
+  return PT_PER_PX / ratio;
+}
+
+const round3 = (n: number) => Math.round(n * 1000) / 1000 + 0;
+
+function paragraphOn(
+  view: EditorView,
+  pos: number,
+  sheetOf: (page: number) => Element | null,
+): { x: number; y: number } | null {
+  const sheet = sheetOf(pageIndexAt(view, pos));
+  const paragraph = view.nodeDOM(view.state.doc.resolve(pos).before());
+  if (!sheet || !(paragraph instanceof HTMLElement)) return null;
+  const page = sheet.getBoundingClientRect();
+  const own = paragraph.getBoundingClientRect();
+  const pt = pointsPerPixel(view);
+  return { x: round3((own.left - page.left) * pt), y: round3((own.top - page.top) * pt) };
+}
+
+/**
+ * Where the paragraph of the picture at `pos` stands from its page's top left corner, in points, as drawn now; null
+ * where no page is laid out (pageless) or it is not drawn.
+ */
+export function paragraphOnPage(view: EditorView, pos: number): { x: number; y: number } | null {
+  const sheetOf = key.get(view.state)?.spec.sheetOf as PlacedPicturesOptions['sheetOf'];
+  return sheetOf ? paragraphOn(view, pos, sheetOf) : null;
+}
+
+/**
+ * Where the picture at `pos` stands in its paragraph as drawn now: its unturned box's top left from the paragraph's,
+ * in points (its drawn centre less half its size); null where it is not drawn.
+ */
+export function pictureSpot(view: EditorView, pos: number): { x: number; y: number } | null {
+  const node = view.state.doc.nodeAt(pos);
+  const dom = view.nodeDOM(pos);
+  const paragraph = view.nodeDOM(view.state.doc.resolve(pos).before());
+  if (node?.type.name !== PICTURE || !(dom instanceof HTMLElement)) return null;
+  if (!(paragraph instanceof HTMLElement)) return null;
+  const box = dom.getBoundingClientRect();
+  const own = paragraph.getBoundingClientRect();
+  const pt = pointsPerPixel(view);
+  const width = Number(node.attrs.width) || 0;
+  const height = Number(node.attrs.height) || 0;
+  return {
+    x: round3((box.left + box.width / 2 - own.left) * pt - width / 2),
+    y: round3((box.top + box.height / 2 - own.top) * pt - height / 2),
+  };
 }

@@ -1,10 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Pictures, readTextDocumentFile } from '@livedoc/text-documents';
-import type { Locator, Page } from '@playwright/test';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
-import { solidPng } from './office-pictures';
+import { documentWithPicture, solidPng } from './office-pictures';
 
 // Pictures in line (docs/specs/034-text-documents/objects.md "In the editor", "In the formats"): a Word file's pictures
 // are drawn at their size from their media, read by their alternative text; one Word kept (a metafile) stays kept;
@@ -186,32 +185,6 @@ test('a picture is inserted from the computer, and pasted as a file', async ({
 // objects.md "Working with a picture": a selected picture's handles size it (a corner keeping its ratio), written as
 // one undo step; Image options' Width sizes it, locked to its ratio, its Scale read from its own size; Reset image
 // brings it back to its own size.
-// A new text document holding one picture of 240 × 120 pixels, inserted from the computer and left selected, and its
-// size as drawn, in CSS pixels.
-async function documentWithPicture(page: Page, words: string) {
-  await page.setViewportSize({ width: 1280, height: 860 });
-  await page.goto('/new?kind=text-document');
-  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
-  const body = page.locator(BODY);
-  await body.click();
-  await page.keyboard.type(words);
-  const [chooser] = await Promise.all([
-    page.waitForEvent('filechooser'),
-    (await officeMenuItem(page, ['Insert', 'Image', 'Upload from computer'])).click(),
-  ]);
-  await chooser.setFiles({
-    name: 'teal.png',
-    mimeType: 'image/png',
-    buffer: solidPng(240, 120, [0, 128, 128]),
-  });
-  const picture = body.locator('.text-document-picture').first();
-  await expect(picture.locator('img')).toHaveCount(1);
-  const sizeOf = (locator: Locator) => async () => {
-    const box = (await locator.boundingBox())!;
-    return { width: Math.round(box.width), height: Math.round(box.height) };
-  };
-  return { body, picture, size: sizeOf(picture), imageSize: sizeOf(picture.locator('img')) };
-}
 
 test('a picture is sized by its handles and by Image options', async ({ page, pageErrors }) => {
   test.setTimeout(120_000);

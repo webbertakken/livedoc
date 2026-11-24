@@ -109,10 +109,11 @@ function PanelNumberField({
   );
 }
 
-/** A length in the person's unit, given and applied in points. */
+/** A length in the person's unit, given and applied in points; from 0 to 22 in, or within its own `range` (points). */
 export function PanelLengthField({
   pt,
   unit,
+  range,
   onCommit,
   ...rest
 }: {
@@ -120,17 +121,20 @@ export function PanelLengthField({
   // Points; null where what it changes differs.
   pt: number | null;
   unit: IndentUnit;
+  range?: { least: number; most: number };
   disabled?: boolean;
   start?: boolean;
   onCommit: (pt: number) => void;
 }) {
+  const least = range ? unitOf(range.least, unit) : 0;
+  const most = range ? unitOf(range.most, unit) : INDENT_FIELD_MAX[unit];
   return (
     <PanelNumberField
       {...rest}
       value={pt === null ? null : unitOf(pt, unit)}
       suffix={unit}
-      read={(text) => readIndentField(text, unit)}
-      error={`Enter a number from 0 to ${INDENT_FIELD_MAX[unit]}.`}
+      read={(text) => (range ? readLength(text, least, most) : readIndentField(text, unit))}
+      error={`Enter a number from ${least} to ${most}.`}
       onCommit={(value) => onCommit(ptOf(value, unit))}
     />
   );
@@ -229,4 +233,12 @@ export function PanelListField<T extends string>({
       </select>
     </div>
   );
+}
+
+// A length typed in the unit, within its range: its number, null for blank (no change), or 'invalid'.
+function readLength(text: string, least: number, most: number): number | null | 'invalid' {
+  const trimmed = text.trim().replace(',', '.');
+  if (trimmed === '') return null;
+  const value = Number(trimmed);
+  return Number.isFinite(value) && value >= least && value <= most ? value : 'invalid';
 }

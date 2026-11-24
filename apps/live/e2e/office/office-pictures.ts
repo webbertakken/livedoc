@@ -1,5 +1,11 @@
 // Picture files for the office end-to-end suites: real PNGs built in plain code, so a test hands the editor a picture.
+// And a new text document holding one, for the suites that work with a picture.
 import { deflateSync } from 'node:zlib';
+import type { Locator, Page } from '@playwright/test';
+import { expect } from '../fixtures';
+import { officeMenuItem } from './office-menus';
+
+const BODY = '[role="textbox"][aria-label="Document body"]';
 
 /** A solid PNG `width` by `height` (zlib through node), so a test hands the editor a real picture file. */
 export function solidPng(
@@ -36,4 +42,31 @@ export function solidPng(
     chunk('IDAT', deflateSync(Buffer.concat(Array(height).fill(row)))),
     chunk('IEND', Buffer.alloc(0)),
   ]);
+}
+
+// A new text document holding one picture of 240 × 120 pixels, inserted from the computer and left selected, and its
+// size as drawn, in CSS pixels.
+export async function documentWithPicture(page: Page, words: string) {
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type(words);
+  const [chooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    (await officeMenuItem(page, ['Insert', 'Image', 'Upload from computer'])).click(),
+  ]);
+  await chooser.setFiles({
+    name: 'teal.png',
+    mimeType: 'image/png',
+    buffer: solidPng(240, 120, [0, 128, 128]),
+  });
+  const picture = body.locator('.text-document-picture').first();
+  await expect(picture.locator('img')).toHaveCount(1);
+  const sizeOf = (locator: Locator) => async () => {
+    const box = (await locator.boundingBox())!;
+    return { width: Math.round(box.width), height: Math.round(box.height) };
+  };
+  return { body, picture, size: sizeOf(picture), imageSize: sizeOf(picture.locator('img')) };
 }

@@ -1,13 +1,15 @@
 // Working with a picture (docs/specs/034-text-documents/objects.md "Working with a picture"): the one a selection holds
 // whole, its alternative text and decorative mark, its media replaced in place, its size written (its crop kept as
-// shares, so it scales), its turn, and Reset image: its own size fitted to the room, its crop and turn dropped.
+// shares, so it scales), its turn, its placement out of its line, and Reset image: its own size fitted to the room, its crop and turn dropped.
 import { NodeSelection, type Command, type EditorState } from 'prosemirror-state';
 import type { Node as PmNode } from 'prosemirror-model';
 import {
   PICTURE,
   PictureColours,
+  PicturePlacements,
   Pictures,
   type PictureAdjustment,
+  type PicturePlacement,
   type PictureRecolour,
 } from '@livedoc/text-documents';
 import { insertedPictureSize } from './text-document-picture-insert';
@@ -156,6 +158,21 @@ export const setPictureColours =
       return false;
     if (JSON.stringify(node.attrs[name] ?? null) === JSON.stringify(value)) return false;
     const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, [name]: value });
+    tr.setSelection(NodeSelection.create(tr.doc, pos));
+    dispatch?.(tr);
+    return true;
+  };
+
+/** Writes where the picture stands out of its line, or none to put it in line; it stays selected. */
+export const setPicturePlacement =
+  (pos: number, placement: PicturePlacement | undefined): Command =>
+  (state, dispatch) => {
+    const node = pictureAt(state, pos);
+    if (!node) return false;
+    const next = PicturePlacements.of(placement) ?? null;
+    if (JSON.stringify(PicturePlacements.of(node.attrs.placement) ?? null) === JSON.stringify(next))
+      return false;
+    const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, placement: next });
     tr.setSelection(NodeSelection.create(tr.doc, pos));
     dispatch?.(tr);
     return true;
