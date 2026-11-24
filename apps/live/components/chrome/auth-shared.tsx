@@ -11,7 +11,8 @@ import { buttonClassName, TextInput, ButtonContent } from '@livedoc/ui';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { sameOriginPath } from '@/lib/same-origin-path';
-import { AUTH_TITLE, AuthStage } from './AuthStage';
+import { AuthStage } from './AuthStage';
+import { AUTH_TITLE } from './auth-card';
 import { AccountPitch } from './auth-pitches';
 
 // ---------------------------------------------------------------------
