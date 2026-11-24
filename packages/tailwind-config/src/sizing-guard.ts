@@ -35,6 +35,12 @@ const SCALE_CEILING_PX = Math.max(...Object.values(SIZING_SCALE.height));
 const SPACING_UNIT_PX = 4;
 
 const TYPE_TOKENS = Object.keys(SIZING_SCALE.type).map((step) => `text-${step}`);
+// The spacing tokens theme.css declares (`--spacing-row`, `--spacing-icon-row`), which a gap or a padding must not take.
+const SPACING_TOKENS = new Set([
+  ...Object.keys(SIZING_SCALE.height),
+  ...Object.keys(SIZING_SCALE.icon),
+  ...Object.keys(SIZING_SCALE.shape),
+]);
 // Tailwind's own type sizes in px, the ones moved source must name by token.
 const TAILWIND_TYPE_PX: Record<string, number> = {
   xs: 12,
@@ -117,6 +123,9 @@ function judgeBox(prefix: string, value: string): string | null {
 }
 
 function judgeSpacingStep(value: string, steps: readonly number[], what: string): string | null {
+  // A word that is neither a number, px, a bracket, a variable nor a spacing token (an id like gap-refetch, px-auto)
+  // names something else, not a size.
+  if (!/^(\d+(\.\d+)?|px|\[.*\]|\(.*\))$/.test(value) && !SPACING_TOKENS.has(value)) return null;
   const units = /^\d+(\.\d+)?$/.test(value) ? Number(value) : null;
   if (units !== null && steps.includes(units)) return null;
   return `${what} off the scale: use one of ${steps.join(', ')} (Tailwind units)`;
