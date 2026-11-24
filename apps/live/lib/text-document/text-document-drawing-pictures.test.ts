@@ -8,6 +8,7 @@ import {
   drawingOfPicture,
   drawingPicturesIn,
   refreshDrawingPictures,
+  repointDrawingPicture,
 } from './text-document-drawing-pictures';
 
 const picture = (attrs: Record<string, unknown>) =>
@@ -71,5 +72,22 @@ describe('refreshDrawingPictures', () => {
     expect(
       refreshDrawingPictures('d1', { key: 'new', pixels: { width: 0, height: 5 } })(state),
     ).toBe(false);
+  });
+});
+
+describe('repointDrawingPicture', () => {
+  it('points the picture at its own copy of the drawing', () => {
+    let state = stateOf();
+    expect(repointDrawingPicture(6, 'd1', 'd3')(state, (tr) => (state = state.apply(tr)))).toBe(
+      true,
+    );
+    expect(state.doc.nodeAt(6)!.attrs).toMatchObject({ drawing: 'd3', media: 'old', width: 30 });
+    expect(state.doc.nodeAt(2)!.attrs.drawing).toBe('d1');
+  });
+
+  it('refuses where the picture names another drawing, or none is there', () => {
+    const state = stateOf();
+    expect(repointDrawingPicture(7, 'd1', 'd3')(state)).toBe(false);
+    expect(repointDrawingPicture(1, 'd1', 'd3')(state)).toBe(false);
   });
 });

@@ -327,8 +327,11 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 - **Its bar**: while a drawing tab is open, a bar over the canvas names its text document (**Drawing in <name>**) with
   **Save and close**; the canvas editor's tab strip shows nothing for it.
 - **One drawing, one picture**: copying a drawing's picture (copy and paste, a duplicated document tab) shares its
-  drawing tab until one of them is opened; opening a picture whose drawing tab another picture also shows first gives
-  this picture its own copy of the tab, so an edit never changes a drawing elsewhere.
+  drawing tab until one of them is opened; opening a picture whose drawing tab another picture also shows, or whose
+  drawing tab belongs to another text document tab (a duplicated text document tab), first gives this picture its own
+  copy of the tab, so an edit never changes a drawing elsewhere. The copy is a new drawing tab of this text document,
+  named as a new drawing is, its elements copied with fresh ids; the picture names it from then on, as its own undo
+  step `(default)`. An Editor's alone: anyone else opens the drawing as it is.
 - **Insert > Drawing > From LiveDoc** lists the person's documents and places one of their tabs as a linked drawing
   ([Linked objects](#linked-objects)); it makes no drawing tab.
 
@@ -364,7 +367,10 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 - **Deleting**: deleting the text document tab deletes its drawing tabs, as one undo step in the editor and by the
   api for a tab deleted outside it. A drawing tab no picture in its text document
   names (the picture deleted) is kept while an undo could bring the picture back, and removed when the text document
-  is next opened.
+  is next opened by an Editor, once its writing has loaded, in one change of the document's tabs. A drawing tab
+  someone is in, or one waiting in this browser to be placed, is kept `(default)`.
+- **Presence**: someone in a drawing tab shows as in its text document tab, wherever the document's people are
+  listed by tab `(default)`.
 
 ## Charts
 

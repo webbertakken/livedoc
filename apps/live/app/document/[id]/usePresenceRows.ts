@@ -7,7 +7,7 @@
 import { useCallback, useMemo } from 'react';
 import { useByValue } from '@/hooks/ui/useByValue';
 import { useLocalBesideTab, useRemoteBesideTabs } from '@/lib/split-presence';
-import type { Tab } from '@livedoc/document';
+import { presenceOnListedTabs, type Tab } from '@livedoc/document';
 import type { Participant } from '@/lib/identity';
 import { useDeferredAuth } from '@/components/providers/deferred-auth';
 import type { PresenceClock } from './usePresenceState';
@@ -115,28 +115,32 @@ export function usePresenceRows(deps: PresenceRowsDeps) {
   const remoteBesideTabs = useRemoteBesideTabs();
   const selfBesideTabId = useLocalBesideTab();
   const shownSelf = ownPicture ? { ...selfParticipant, picture: ownPicture } : selfParticipant;
-  const participantsByTab = foldAgentPresence({
-    participantsByTab: buildParticipantsByTab({
-      documentShareable,
-      documentTeamId,
-      agentsPresent: liveAgents.length > 0,
-      activeId,
+  // Someone in a drawing tab is in its text document tab (docs/specs/034-text-documents/objects.md "Presence").
+  const participantsByTab = presenceOnListedTabs(
+    foldAgentPresence({
+      participantsByTab: buildParticipantsByTab({
+        documentShareable,
+        documentTeamId,
+        agentsPresent: liveAgents.length > 0,
+        activeId,
+        selfParticipant: shownSelf,
+        tabs,
+        remoteTabFocus,
+        remoteBesideTabs,
+        selfBesideTabId,
+        livePresence,
+        livePresenceById,
+        lastSeen: presenceClock.lastSeen,
+        now: presenceClock.now,
+      }),
+      agents: liveAgents,
       selfParticipant: shownSelf,
-      tabs,
-      remoteTabFocus,
-      remoteBesideTabs,
-      selfBesideTabId,
-      livePresence,
-      livePresenceById,
-      lastSeen: presenceClock.lastSeen,
+      activeId,
+      tabIds: tabs.map((tab) => tab.id),
       now: presenceClock.now,
     }),
-    agents: liveAgents,
-    selfParticipant: shownSelf,
-    activeId,
-    tabIds: tabs.map((tab) => tab.id),
-    now: presenceClock.now,
-  });
+    tabs,
+  );
   // Cursor rows joined with presence so we get a fresh colour + name on
   // every render and don't have to denormalise them into each `cursor`
   // op payload. Filter to the active tab so cursors of teammates

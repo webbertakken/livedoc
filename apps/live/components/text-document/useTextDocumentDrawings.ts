@@ -19,7 +19,10 @@ import {
 import {
   drawingPicturesIn,
   refreshDrawingPictures,
+  repointDrawingPicture,
 } from '@/lib/text-document/text-document-drawing-pictures';
+import { startUndoStep } from '@/lib/text-document/text-document-undo';
+import { TextDocumentState } from '@livedoc/text-documents';
 import type {
   DrawingTabs,
   OpenDrawing,
@@ -149,16 +152,34 @@ export function useTextDocumentDrawings({
         debugLog('[text-document] drawing not opened', { drawing });
         return;
       }
+      const opened = canEdit ? ownDrawing(drawing, pos) : drawing;
       if (canEdit)
-        putDrawingPending(drawing, {
+        putDrawingPending(opened, {
           textDocumentTabId: tabId,
           documentTab: shownTab ?? '',
           anchor: anchorOf(view.state, pos),
         });
-      debugLog('[text-document] drawing opened', { drawing, editing: canEdit });
-      drawingTabs.open(drawing);
+      debugLog('[text-document] drawing opened', { drawing: opened, editing: canEdit });
+      drawingTabs.open(opened);
     };
-  }, [drawingTabs, view, canEdit, tabId, shownTab]);
+    // One drawing, one picture (objects.md): a drawing another picture also names, or another text document tab's, is
+    // first copied for this picture, which names the copy from then on (its own undo step). The drawing to open.
+    function ownDrawing(drawing: string, pos: number): string {
+      const doc = placing.doc();
+      const named = doc ? (TextDocumentState.drawingNames(doc).get(drawing) ?? 0) : 0;
+      if (named <= 1 && drawingTabs!.drawingOf(drawing) === tabId) return drawing;
+      const copy = drawingTabs!.copy(drawing, tabId);
+      if (!copy || !view) {
+        debugLog('[text-document] drawing copy refused', { drawing });
+        return drawing;
+      }
+      startUndoStep(view);
+      const repointed = repointDrawingPicture(pos, drawing, copy)(view.state, view.dispatch);
+      startUndoStep(view);
+      debugLog('[text-document] drawing copied', { from: drawing, to: copy, repointed });
+      return repointed ? copy : drawing;
+    }
+  }, [drawingTabs, view, canEdit, tabId, shownTab, placing]);
 
   return { actions, open };
 }

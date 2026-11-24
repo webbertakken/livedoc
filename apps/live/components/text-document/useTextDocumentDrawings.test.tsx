@@ -57,7 +57,15 @@ function setup(
   };
   const showTab = { current: vi.fn() };
   const openDrawing = vi.fn();
-  const drawingTabs = { opens: (id: string) => id !== 'gone', open: openDrawing };
+  const drawingTabs = {
+    opens: (id: string) => id !== 'gone',
+    open: openDrawing,
+    drawingOf: (id: string) => (id === 'foreign' ? 'v' : 'w'),
+    copy: vi.fn((_id: string, _of: string): string | null => 'copy'),
+    ids: () => [],
+    someoneIn: () => false,
+    remove: vi.fn(),
+  };
   const create = options.create ?? vi.fn(() => 'd1');
   const hook = renderHook(() =>
     useTextDocumentDrawings({
@@ -71,7 +79,7 @@ function setup(
       drawingTabs,
     }),
   );
-  return { hook, view, showTab, create, liveDoc, openDrawing };
+  return { hook, view, showTab, create, liveDoc, openDrawing, drawingTabs };
 }
 
 beforeEach(() => {
@@ -135,6 +143,47 @@ describe('useTextDocumentDrawings', () => {
     const where = drawingPending('d1')!;
     expect(where).toMatchObject({ textDocumentTabId: 'w', documentTab: 't.0' });
     expect(view.state.doc.nodeAt(6)!.type.name).toBe(PICTURE);
+  });
+
+  // objects.md "One drawing, one picture": a shared or another text document's drawing is copied for this picture first.
+  it('copies a drawing another picture also names, the picture naming the copy, and opens the copy', () => {
+    const names = vi.spyOn(TextDocumentState, 'drawingNames').mockReturnValue(new Map([['d1', 2]]));
+    const { hook, view, openDrawing, drawingTabs } = setup({ pictures: ['d1'] });
+    hook.result.current.open!('d1', 6);
+    expect(drawingTabs.copy).toHaveBeenCalledWith('d1', 'w');
+    expect(view.state.doc.nodeAt(6)!.attrs.drawing).toBe('copy');
+    expect(openDrawing).toHaveBeenCalledWith('copy');
+    expect(drawingPending('copy')).toMatchObject({ textDocumentTabId: 'w' });
+    names.mockRestore();
+    takeDrawing('copy');
+  });
+
+  it('copies a drawing that belongs to another text document tab', () => {
+    const { hook, view, openDrawing } = setup({ pictures: ['foreign'] });
+    hook.result.current.open!('foreign', 6);
+    expect(view.state.doc.nodeAt(6)!.attrs.drawing).toBe('copy');
+    expect(openDrawing).toHaveBeenCalledWith('copy');
+    takeDrawing('copy');
+  });
+
+  it('opens the drawing as it is when no copy could be made, or the picture is not there', () => {
+    const refused = setup({ pictures: ['foreign'] });
+    refused.drawingTabs.copy.mockReturnValue(null);
+    refused.hook.result.current.open!('foreign', 6);
+    expect(refused.openDrawing).toHaveBeenCalledWith('foreign');
+    expect(refused.view.state.doc.nodeAt(6)!.attrs.drawing).toBe('foreign');
+    takeDrawing('foreign');
+    const moved = setup({ pictures: ['foreign'] });
+    moved.hook.result.current.open!('foreign', 1);
+    expect(moved.openDrawing).toHaveBeenCalledWith('foreign');
+    takeDrawing('foreign');
+  });
+
+  it('copies nothing for anyone who may not edit', () => {
+    const { hook, openDrawing, drawingTabs } = setup({ pictures: ['foreign'], canEdit: false });
+    hook.result.current.open!('foreign', 6);
+    expect(drawingTabs.copy).not.toHaveBeenCalled();
+    expect(openDrawing).toHaveBeenCalledWith('foreign');
   });
 
   it('opens nothing, keeping nothing, for a drawing whose tab is not there to open', () => {
