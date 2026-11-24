@@ -99,6 +99,8 @@ The api, mcp, router and live keep their own log lines in Workers Logs ([Worker 
 
 - Read them in the Cloudflare dashboard: Workers & Pages, the worker, Observability.
 - Search by fingerprint: `api error route=` for a `500`, `[d1] unavailable` for a `503 storage_unavailable`.
+- A router `5xx` names the app that answered it: search `[router] upstream fault` in the router's logs.
+- The router's Issues tab holds each such `5xx` (`HttpServerError`) with its method and path.
 - `pnpm exec wrangler tail docs-nu-api` (from `apps/api`) is the live stream; it keeps nothing.
 
 ## Worker issues

@@ -6,7 +6,8 @@ still be read: which route, which error, which stack.
 ## Why
 
 - Every decision point and failure in the workers writes a log line with a recognisable fingerprint
-  (`[d1] unavailable route=...`, `api error route=...`, `home: read ...`).
+  (`[d1] unavailable route=...`, `api error route=...`, `home: read ...`,
+  `[router] upstream fault service=...`).
 - With no log store those lines exist only while someone runs `wrangler tail`. A crash nobody was watching leaves a
   count on the [telemetry dashboard](../017-telemetry/telemetry.md) and nothing to act on: two `500`s on
   `GET /api/home` in November 2026 were counted as `Error·Api·Internal.Get.Home`, and their cause was never found.

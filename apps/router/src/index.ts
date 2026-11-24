@@ -5,6 +5,7 @@
 
 import { applyCachePolicy } from './cache-policy';
 import { legacyEditorRedirect, legacyHelpRedirect } from './legacy-editor-route';
+import { noteUpstreamFault, type Service } from './upstream-fault';
 import { LIVE_ROUTE_SEGMENTS } from '@livedoc/api-schema';
 
 export interface Env {
@@ -97,8 +98,13 @@ const MARKETING_MOVED_SEGMENTS = new Set([
 function isLivePageRoute(pathname: string): boolean {
   if (pathname === '/') return true;
   if (LIVE_ROOT_ASSETS.has(pathname)) return true;
-  const first = pathname.split('/')[1] ?? '';
-  return LIVE_ROUTE_SEGMENTS.has(first);
+  return LIVE_ROUTE_SEGMENTS.has(firstSegment(pathname));
+}
+
+// The first segment of a path: `document` for `/document/abc`, `` for `/`.
+function firstSegment(pathname: string): string {
+  const end = pathname.indexOf('/', 1);
+  return end === -1 ? pathname.slice(1) : pathname.slice(1, end);
 }
 
 function hasPrefix(pathname: string, prefix: string): boolean {
@@ -128,13 +134,41 @@ export function withPrefixedRedirect(res: Response, prefix: string): Response {
 // Local dev (origin): swap the origin and keep the path UNstripped — the
 // Next dev servers serve their own prefixes (basePath for telemetry/help,
 // the live app's `/live` assetPrefix, which applies in dev too).
+// Where each service is reached: its service binding in production, its origin in local dev.
+const SERVICE_ENV = {
+  marketing: { binding: 'MARKETING', origin: 'MARKETING_ORIGIN' },
+  live: { binding: 'LIVE', origin: 'LIVE_ORIGIN' },
+  api: { binding: 'API', origin: 'API_ORIGIN' },
+  telemetry: { binding: 'TELEMETRY', origin: 'TELEMETRY_ORIGIN' },
+  help: { binding: 'HELP', origin: 'HELP_ORIGIN' },
+} as const satisfies Record<Service, { binding: keyof Env; origin: keyof Env }>;
+
 function forward(
+  request: Request,
+  url: URL,
+  env: Env,
+  service: Service,
+  stripPrefix?: string,
+): Response | Promise<Response> {
+  const { binding, origin } = SERVICE_ENV[service];
+  const answer = reach(request, url, env[binding], env[origin], stripPrefix);
+  if (!answer) {
+    return new Response(
+      `router: no service binding and no *_ORIGIN var for ${url.pathname} — ` +
+        'run `wrangler dev --env local` locally, or check wrangler.toml.',
+      { status: 503 },
+    );
+  }
+  return answer.then((res) => noteUpstreamFault(service, request, res));
+}
+
+function reach(
   request: Request,
   url: URL,
   binding: Fetcher | undefined,
   origin: string | undefined,
-  stripPrefix?: string,
-): Response | Promise<Response> {
+  stripPrefix: string | undefined,
+): Promise<Response> | undefined {
   if (binding) {
     if (!stripPrefix) return binding.fetch(request);
     const rewritten = new URL(url.toString());
@@ -150,11 +184,7 @@ function forward(
     rewritten.host = target.host;
     return fetch(new Request(rewritten.toString(), request));
   }
-  return new Response(
-    `router: no service binding and no *_ORIGIN var for ${url.pathname} — ` +
-      'run `wrangler dev --env local` locally, or check wrangler.toml.',
-    { status: 503 },
-  );
+  return undefined;
 }
 
 // Stamp `X-Robots-Tag: noindex, nofollow` on a preview response (docs/specs/016-platform/preview-deployments.md).
@@ -206,24 +236,24 @@ async function route(request: Request, env: Env): Promise<Response> {
   // the full pathname (it expects `/api/...`) so there's no prefix
   // stripping here, unlike the basePath apps.
   if (hasPrefix(url.pathname, API_PATH)) {
-    return forward(request, url, env.API, env.API_ORIGIN);
+    return forward(request, url, env, 'api');
   }
   // `/live/*` is ONLY the live app's `_next` assets (its `assetPrefix`).
   // Stripped in production — the worker serves them from `out/_next`.
   if (hasPrefix(url.pathname, LIVE_PATH)) {
-    return forward(request, url, env.LIVE, env.LIVE_ORIGIN, LIVE_PATH);
+    return forward(request, url, env, 'live', LIVE_PATH);
   }
   if (hasPrefix(url.pathname, TELEMETRY_PATH)) {
     // The public transparency dashboard (docs/specs/017-telemetry/telemetry.md), a basePath:'/telemetry'
     // static app — same prefix-strip as the live app's assets.
-    return forward(request, url, env.TELEMETRY, env.TELEMETRY_ORIGIN, TELEMETRY_PATH);
+    return forward(request, url, env, 'telemetry', TELEMETRY_PATH);
   }
   const legacyHelp = legacyHelpRedirect(url);
   if (legacyHelp) return legacyHelp;
   if (hasPrefix(url.pathname, HELP_PATH)) {
     // The help centre (docs/specs/018-help/help-app.md), a basePath:'/help' static app — same
     // prefix-strip as telemetry.
-    return forward(request, url, env.HELP, env.HELP_ORIGIN, HELP_PATH);
+    return forward(request, url, env, 'help', HELP_PATH);
   }
   const legacyEditor = legacyEditorRedirect(url);
   if (legacyEditor) return legacyEditor;
@@ -231,18 +261,18 @@ async function route(request: Request, env: Env): Promise<Response> {
   // its root-served icon: forwarded AS-IS (no strip — the worker's
   // files are already `/live`-free).
   if (isLivePageRoute(url.pathname)) {
-    return forward(request, url, env.LIVE, env.LIVE_ORIGIN);
+    return forward(request, url, env, 'live');
   }
   // A help article URL that lost its `/help` prefix. Sent on with a
   // permanent redirect rather than dropped into marketing's 404: the path
   // is unambiguous, and these are links people have already shared.
-  if (HELP_CATEGORY_SEGMENTS.has(url.pathname.split('/')[1] ?? '')) {
+  if (HELP_CATEGORY_SEGMENTS.has(firstSegment(url.pathname))) {
     url.pathname = `${HELP_PATH}${url.pathname}`;
     return Response.redirect(url.toString(), 308);
   }
-  if (MARKETING_MOVED_SEGMENTS.has(url.pathname.split('/')[1] ?? '')) {
+  if (MARKETING_MOVED_SEGMENTS.has(firstSegment(url.pathname))) {
     url.pathname = `${MARKETING_PATH}${url.pathname}`;
     return Response.redirect(url.toString(), 308);
   }
-  return forward(request, url, env.MARKETING, env.MARKETING_ORIGIN);
+  return forward(request, url, env, 'marketing');
 }
