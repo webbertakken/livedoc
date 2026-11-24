@@ -2,8 +2,8 @@
 
 // Dark pages (docs/specs/035-pdf-documents/dark-pages.md "What it is, and is not", "The setting", "Accessibility"):
 // one person's setting, kept with their preferences so it follows the account, read live from every place that
-// flips it. Offered in the dark scheme only, and never where the system forces its colours; the pages show dark only
-// while it is offered and on. Missing is "not yet asked": the pages show as paper until the question is answered.
+// flips it. Offered in the dark scheme only, and never where the system forces its colours; the pages show dark while
+// it is offered and on. Missing is on: the pages follow the dark scheme until the person turns it off.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import type { PageLook } from '@livedoc/pdf-documents';
 import { useAppearance, useMediaQuery } from '@livedoc/ui';
@@ -16,7 +16,6 @@ import {
   writeUserPreferences,
 } from '@/lib/user-preferences';
 import { DARK_PAGES } from './pdf-menus';
-import { usePdfDarkPagesQuestion } from './usePdfDarkPagesQuestion';
 
 /** "Errors": said when the choice could not be kept. */
 export const DARK_PAGES_NOT_SAVED_COPY =
@@ -44,25 +43,23 @@ export function keepDarkPages(on: boolean, ownerId: string | null): boolean {
 export function usePdfDarkPages({
   ownerId,
   onProblem,
-  say = () => {},
 }: {
   // The person: their preferences sync to their account, or to this browser.
   ownerId: string | null;
   // What the title row says when the choice could not be kept.
   onProblem: (problem: string) => void;
-  // A one-line toast, for what the first-time question says when dismissed.
-  say?: (message: string) => void;
 }) {
   const kept = useSyncExternalStore(subscribe, stored, notOnTheServer);
   // A choice that could not be kept still applies while this PDF is open.
   const [unkept, setUnkept] = useState<boolean | null>(null);
   const setting = unkept ?? kept;
+  const on = setting !== false;
   const { appearance } = useAppearance();
   const forced = useMediaQuery(FORCED_COLOURS);
   const offered = appearance === 'dark' && !forced;
-  const look: PageLook = offered && setting === true ? 'dark' : 'paper';
+  const look: PageLook = offered && on ? 'dark' : 'paper';
 
-  /** Sets it, as a person’s choice: the answer to the question too. Counted by the caller, before it is kept. */
+  /** Sets it, as a person’s choice. Counted by the caller, before it is kept. */
   const choose = useCallback(
     (on: boolean) => {
       debugLog(`[pdf] dark-pages on=${on ? 'yes' : 'no'}`);
@@ -80,19 +77,16 @@ export function usePdfDarkPages({
         ? {
             [DARK_PAGES]: {
               run: () => {
-                const on = setting !== true;
                 // Counted before it is kept, as every setting’s flip is.
-                track('Pdf', 'Toggled', on ? 'DarkPagesOn' : 'DarkPagesOff');
-                choose(on);
+                track('Pdf', 'Toggled', on ? 'DarkPagesOff' : 'DarkPagesOn');
+                choose(!on);
               },
-              checked: setting === true,
+              checked: on,
             },
           }
         : {},
-    [offered, setting, choose],
+    [offered, on, choose],
   );
 
-  const question = usePdfDarkPagesQuestion({ offered, setting, choose, say });
-
-  return { look, offered, setting, choose, actions, question };
+  return { look, offered, setting, choose, actions };
 }

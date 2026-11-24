@@ -16,8 +16,8 @@ export const PAGE_ONE = '[data-pdf-page="1"]';
 const LETTER = { width: 612, height: 792 };
 const LINE = { left: 72, middle: LETTER.height - 720 - 4 };
 
-/** Answers Dark pages' first-time question as kept (dark-pages.md "The first-time question"), so a spec of something
- *  else reads the pages as the file says with no card over them. Runs in the page: the preferences' own key. */
+/** Turns Dark pages off where the person never set it (dark-pages.md "The setting"), so a spec of something else
+ *  reads the pages as the file says in the dark scheme. Runs in the page: the preferences' own key. */
 function keepPagesAsTheyAre(): void {
   const key = 'livedoc:user-preferences:v1';
   const prefs = JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, unknown>;
@@ -26,16 +26,16 @@ function keepPagesAsTheyAre(): void {
 }
 
 /**
- * Drops a PDF from the computer on the page, as a person drags a file onto the window. Dark pages' question is
- * answered first, unless `asked` is false, as the Dark pages spec asks.
+ * Drops a PDF from the computer on the page, as a person drags a file onto the window. Dark pages is turned off
+ * first, so the pages read as the file says, unless `asTheFileSays` is false, as the Dark pages spec asks.
  */
 export async function dropPdf(
   page: Page,
   name: string,
   bytes: Uint8Array,
-  { asked = true }: { asked?: boolean } = {},
+  { asTheFileSays = true }: { asTheFileSays?: boolean } = {},
 ): Promise<void> {
-  if (asked) await page.evaluate(keepPagesAsTheyAre);
+  if (asTheFileSays) await page.evaluate(keepPagesAsTheyAre);
   const transfer = await page.evaluateHandle(
     ({ fileName, base64 }) => {
       const binary = atob(base64);

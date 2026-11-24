@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/dark-pages.md "What it is, and is not", "The setting", "Accessibility", "Telemetry and
-// observability", "Errors": one setting, offered in the dark scheme alone and never under forced colours, live from
-// wherever it is flipped, counted before it is kept, and said when it could not be kept.
+// observability", "Errors": one setting, on until turned off, offered in the dark scheme alone and never under forced
+// colours, live from wherever it is flipped, counted before it is kept, and said when it could not be kept.
 import { act, renderHook } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -36,30 +36,30 @@ const render = (onProblem = vi.fn()) => ({
 });
 
 describe('the Dark pages setting', () => {
-  it('stands unasked at first: offered in the dark scheme, the pages paper', () => {
+  it('is on until turned off: the pages follow the dark scheme, nothing asked', () => {
     const { result } = render();
     expect(result.current.setting).toBeUndefined();
     expect(result.current.offered).toBe(true);
-    expect(result.current.look).toBe('paper');
-    expect(result.current.actions[DARK_PAGES]?.checked).toBe(false);
-  });
-
-  it('turns on from its item, counted before it is kept, and the pages show dark', () => {
-    const { result } = render();
-    act(() => result.current.actions[DARK_PAGES]!.run());
-    expect(track).toHaveBeenCalledWith('Pdf', 'Toggled', 'DarkPagesOn');
-    expect(readUserPreferences().pdfDarkPages).toBe(true);
     expect(result.current.look).toBe('dark');
     expect(result.current.actions[DARK_PAGES]?.checked).toBe(true);
+  });
+
+  it('turns off from its item, counted before it is kept, and the pages show as paper', () => {
+    const { result } = render();
     act(() => result.current.actions[DARK_PAGES]!.run());
     expect(track).toHaveBeenCalledWith('Pdf', 'Toggled', 'DarkPagesOff');
+    expect(readUserPreferences().pdfDarkPages).toBe(false);
     expect(result.current.look).toBe('paper');
+    expect(result.current.actions[DARK_PAGES]?.checked).toBe(false);
+    act(() => result.current.actions[DARK_PAGES]!.run());
+    expect(track).toHaveBeenCalledWith('Pdf', 'Toggled', 'DarkPagesOn');
+    expect(result.current.look).toBe('dark');
   });
 
   it('follows a flip made elsewhere (Settings, another tab) without a reload', () => {
     const { result } = render();
-    act(() => writeUserPreferences({ ...readUserPreferences(), pdfDarkPages: true }));
-    expect(result.current.look).toBe('dark');
+    act(() => writeUserPreferences({ ...readUserPreferences(), pdfDarkPages: false }));
+    expect(result.current.look).toBe('paper');
   });
 
   it('is not offered in the light scheme, where the pages are paper whatever it says', () => {

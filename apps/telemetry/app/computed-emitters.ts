@@ -49,7 +49,6 @@ function tokensAfter(source: string, marker: string, close: string): string[] {
 // A PDF document's view: its page displays and the ways a zoom is asked for.
 const PDF_VIEW = read('live/lib/pdf-document/usePdfView.ts');
 const PDF_REFUSALS = read('live/lib/pdf-document/pdf-refusals.ts');
-const PDF_DARK_PAGES_QUESTION = read('live/lib/pdf-document/usePdfDarkPagesQuestion.ts');
 // A PDF's text marks, each kind's name in telemetry.
 const PDF_TEXT_MARK_NAMES = tokensAfter(
   read('live/lib/pdf-document/pdf-text-mark.ts'),
@@ -514,13 +513,6 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   },
   'apps/live/lib/pdf-document/usePdfView.ts Pdf·Zoomed': {
     values: tokensAfter(PDF_VIEW, 'export type PdfZoomWay =', ';'),
-  },
-  // How the Dark pages question was answered (docs/specs/035-pdf-documents/dark-pages.md "Telemetry and
-  // observability"), read from `DarkPagesAnswer`.
-  'apps/live/lib/pdf-document/usePdfDarkPagesQuestion.ts Pdf·Selected': {
-    values: tokensAfter(PDF_DARK_PAGES_QUESTION, 'export type DarkPagesAnswer =', ';').map(
-      (how) => `DarkPagesQuestion.${how}`,
-    ),
   },
   // A text mark made and a text tool taken in hand (docs/specs/035-pdf-documents/marks.md "Telemetry and
   // observability"), each kind's name read from the tools' own table; a shape tool's from the shapes', a typing tool's

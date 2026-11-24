@@ -1001,13 +1001,6 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Toggled|DarkPagesOn':
     'Someone turned on Dark pages: PDF pages shown dark for them alone, in the dark colour scheme.',
   'Pdf|Toggled|DarkPagesOff': 'Someone turned off Dark pages: PDF pages shown as the file says.',
-  'Pdf|Opened|DarkPagesQuestion':
-    'Someone was asked, once, whether to show PDF pages dark, on their first PDF in the dark scheme.',
-  'Pdf|Selected|DarkPagesQuestion.Use': 'Someone answered the Dark pages question: use dark pages.',
-  'Pdf|Selected|DarkPagesQuestion.Keep':
-    'Someone answered the Dark pages question: keep the pages as they are.',
-  'Pdf|Selected|DarkPagesQuestion.Dismissed':
-    'Someone closed the Dark pages question without answering; Dark pages stays off.',
   'Pdf|Toggled|ReadMode':
     'Someone turned on Read mode in a PDF document, hiding the menus, toolbar and panels for themselves.',
   'Pdf|Toggled|FullScreen': 'Someone showed a PDF document’s pages full screen, one page a screen.',

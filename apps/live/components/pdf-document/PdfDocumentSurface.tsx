@@ -64,8 +64,6 @@ import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { usePdfZoomablePage } from '@/lib/pdf-document/usePdfZoomablePage';
 import { track } from '@/lib/telemetry';
-import { useToast } from '@/hooks/ui/useToast';
-import { PdfDarkPagesQuestion } from './PdfDarkPagesQuestion';
 import { PdfFileNotices } from './PdfFileNotices';
 import { PdfOpenNotices } from './PdfOpenNotices';
 import { PdfOpeningPage } from './PdfOpeningPage';
@@ -154,12 +152,7 @@ export function PdfDocumentSurface({
   const marking = canReview && mode !== 'viewing' && ready !== null;
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
   // "Dark pages": this person's look; "Layers": theirs too, and the drawer their pages are drawn with.
-  const toast = useToast();
-  const darkPages = usePdfDarkPages({
-    ownerId: scope.ownerId,
-    onProblem: setProblem,
-    say: toast.info,
-  });
+  const darkPages = usePdfDarkPages({ ownerId: scope.ownerId, onProblem: setProblem });
   const layerView = usePdfLayerView(ready?.engine ?? null, ready?.drawer ?? null, darkPages.look);
 
   // "Replacing the stored file": an Editor's idle surface replaces it for the budget. The room's alone: in This
@@ -518,16 +511,6 @@ export function PdfDocumentSurface({
                 pages={pagesElement}
                 view={viewer.viewStore}
               />
-              {darkPages.question.asking ? (
-                <PdfDarkPagesQuestion
-                  engine={ready.engine}
-                  page={viewer.page}
-                  width={ready.pages[viewer.page]?.width ?? 612}
-                  turns={viewer.view.turns}
-                  onAnswer={darkPages.question.answer}
-                  onLeave={() => pagesElement?.focus()}
-                />
-              ) : null}
               {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
               {fullScreen.on ? null : (
                 <PdfViewerPageBar

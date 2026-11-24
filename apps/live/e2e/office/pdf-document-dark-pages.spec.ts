@@ -4,12 +4,11 @@ import { expect, expectNoPageErrors, test } from '../fixtures';
 import { dropPdf, pageOneDrawn } from './pdf-document-pages';
 
 // Dark pages (docs/specs/035-pdf-documents/dark-pages.md "The recolouring", "The setting"; keyboard-shortcuts.md
-// "Reading"): one person's view of the pages shown dark in the dark scheme, the photograph kept as drawn; turned on
-// and off from View, the toolbar and its key; not offered in the light scheme, where the pages are as the file says.
+// "Reading"): a PDF's pages follow the scheme, dark in the dark one with the photograph kept as drawn, paper in the
+// light one; one person may turn it off and on from View, the toolbar and its key; nothing is asked.
 
 const SURFACE = '[data-pdf-surface="ready"]';
 const menuBar = (page: Page) => page.getByRole('menubar', { name: 'Menu bar' });
-const question = (page: Page) => page.getByRole('region', { name: 'Show PDF pages dark?' });
 const toggle = (page: Page) =>
   page.getByRole('toolbar', { name: 'Toolbar' }).getByRole('button', { name: 'Dark pages' });
 
@@ -32,7 +31,7 @@ const PHOTOGRAPH: [number, number] = [
   DARK_PAGES_PARTS.photograph[1] + 100,
 ];
 
-test('Dark pages shows a PDF’s pages dark for one person, the photograph as drawn', async ({
+test('a PDF’s pages follow the scheme, the photograph as drawn, and one person may turn it off', async ({
   page,
   pageErrors,
 }) => {
@@ -41,7 +40,7 @@ test('Dark pages shows a PDF’s pages dark for one person, the photograph as dr
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/explorer/all');
   await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
-  await dropPdf(page, 'Dark pages.pdf', darkPagesPdf(), { asked: false });
+  await dropPdf(page, 'Dark pages.pdf', darkPagesPdf(), { asTheFileSays: false });
   await page.waitForURL(/\/document\//, { timeout: 30_000 });
   await pageOneDrawn(page);
 
@@ -49,29 +48,33 @@ test('Dark pages shows a PDF’s pages dark for one person, the photograph as dr
   await page.getByRole('button', { name: /^Mode: / }).click();
   await page.getByRole('menuitemradio', { name: /Viewing/ }).click();
 
-  // Off until answered: the pages are as the file says, and the question stands until it is.
-  await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'paper');
-  await expect(question(page)).toBeVisible();
-  await expect.poll(() => colourAt(page, ...PAPER)).toEqual([255, 255, 255]);
-  const photograph = await colourAt(page, ...PHOTOGRAPH);
-
-  // View > Dark pages: the paper turns dark, the photograph stays as drawn.
-  await menuBar(page).getByRole('menuitem', { name: 'View' }).click();
-  await page.getByRole('menuitemcheckbox', { name: 'Dark pages' }).click();
+  // Dark at once in the dark scheme, nothing asked: the paper dark, the photograph as drawn.
   await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'dark');
-  await expect(question(page)).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Show PDF pages dark?' })).toHaveCount(0);
   await expect.poll(() => colourAt(page, ...PAPER), { timeout: 15_000 }).toEqual([31, 31, 31]);
-  expect(await colourAt(page, ...PHOTOGRAPH)).toEqual(photograph);
+  const photograph = await colourAt(page, ...PHOTOGRAPH);
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
   await page.waitForTimeout(300);
   await page.screenshot({ path: test.info().outputPath('pdf-dark-pages-on.png') });
 
-  // ⌃⌥N turns it off, and the toolbar's toggle on again.
-  await page.locator('[data-pdf-pages]').focus();
-  await page.keyboard.press('Control+Alt+KeyN');
+  // View > Dark pages turns it off: the pages as the file says, the photograph the same as before.
+  await menuBar(page).getByRole('menuitem', { name: 'View' }).click();
+  await page.getByRole('menuitemcheckbox', { name: 'Dark pages' }).click();
   await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'paper');
   await expect.poll(() => colourAt(page, ...PAPER), { timeout: 15_000 }).toEqual([255, 255, 255]);
+  expect(await colourAt(page, ...PHOTOGRAPH)).toEqual(photograph);
+
+  // ⌃⌥N turns it on, the toolbar's toggle off, and its key on again; the choice survives a reload.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('Control+Alt+KeyN');
+  await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'dark');
   await toggle(page).click();
+  await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'paper');
+  await page.reload();
+  await pageOneDrawn(page);
+  await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'paper');
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('Control+Alt+KeyN');
   await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'dark');
 
   // The light scheme: not offered, and the pages are as the file says whatever the setting.
@@ -80,52 +83,5 @@ test('Dark pages shows a PDF’s pages dark for one person, the photograph as dr
   await expect(toggle(page)).toHaveCount(0);
   await expect.poll(() => colourAt(page, ...PAPER), { timeout: 15_000 }).toEqual([255, 255, 255]);
   await page.screenshot({ path: test.info().outputPath('pdf-dark-pages-light.png') });
-  expectNoPageErrors(pageErrors);
-});
-
-test('the first-time question asks once, without blocking reading, and its answer sets Dark pages', async ({
-  page,
-  pageErrors,
-}) => {
-  test.setTimeout(150_000);
-  await page.setViewportSize({ width: 1280, height: 860 });
-  await page.emulateMedia({ colorScheme: 'dark' });
-  await page.goto('/explorer/all');
-  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
-  await dropPdf(page, 'Dark pages.pdf', darkPagesPdf(), { asked: false });
-  await page.waitForURL(/\/document\//, { timeout: 30_000 });
-  await pageOneDrawn(page);
-
-  // A card, never a dialog: focus stays where it was, the pages still turn, and it shows the page both ways.
-  await expect(question(page)).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(question(page).locator('canvas')).toHaveCount(2);
-  await page.locator('[data-pdf-pages]').focus();
-  await page.keyboard.press('End');
-  await expect(page.getByRole('textbox', { name: 'Page' })).toHaveValue('2');
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: test.info().outputPath('pdf-dark-pages-question.png') });
-  // On a phone it spans the pages' width.
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(question(page)).toBeVisible();
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: test.info().outputPath('pdf-dark-pages-question-phone.png') });
-  await page.setViewportSize({ width: 1280, height: 860 });
-
-  // F6 reaches it; its answer sets Dark pages, and it is never asked again.
-  for (
-    let at = 0;
-    at < 8 && !(await question(page).evaluate((card) => card.contains(document.activeElement)));
-    at += 1
-  )
-    await page.keyboard.press('F6');
-  await question(page).getByRole('button', { name: 'Use dark pages' }).click();
-  await expect(question(page)).toHaveCount(0);
-  await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'dark');
-  await page.reload();
-  await pageOneDrawn(page);
-  await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'dark');
-  await expect(question(page)).toHaveCount(0);
-
   expectNoPageErrors(pageErrors);
 });

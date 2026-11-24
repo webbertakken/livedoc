@@ -1014,7 +1014,8 @@ export const SETTINGS_CATEGORIES: SettingsCategorySpec[] = [
         label: 'Dark Pages',
         description: 'Show PDF pages dark in the dark colour scheme. Only your view changes.',
         alsoIn: 'a PDF’s View menu and its toolbar',
-        read: (p) => p.pdfDarkPages === true,
+        // On until turned off (dark-pages.md "The setting").
+        read: (p) => p.pdfDarkPages !== false,
         write: (p, v) => ({ ...p, pdfDarkPages: v }),
         event: { category: 'Pdf', on: 'DarkPagesOn', off: 'DarkPagesOff' },
       },

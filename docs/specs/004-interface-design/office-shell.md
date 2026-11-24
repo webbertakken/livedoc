@@ -43,8 +43,8 @@ Four looks were drawn for D2, each in light and dark, desktop and phone; Webber 
 - The page is paper in every scheme: white in the light one, dark in the dark one (Webber: "in dark mode the paper
   should be dark as well"), unless the document sets a page colour
   ([The page in the dark scheme](../034-text-documents/editing-surface.md#the-page-in-the-dark-scheme)).
-- A PDF's pages are the exception: they are their author's, drawn as the file says in both schemes, until the person
-  turns on [Dark pages](../035-pdf-documents/dark-pages.md), their own view of them.
+- A PDF's pages follow the scheme too, recoloured by [Dark pages](../035-pdf-documents/dark-pages.md), which a person
+  may turn off for their own view.
 - Every token pair meets WCAG 2.2 AA in both schemes: 4.5:1 for text, 3:1 for a control's outline and focus ring.
 - The shell's sizes are the source of LiveDoc's one [sizing scale](sizing.md), one step lower in height: its parts take
   the shared tokens (`packages/tailwind-config/theme.css`), and `office-shell.css` carries only the look's colours.
