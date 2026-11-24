@@ -131,8 +131,10 @@ shapes and text boxes, and constructs of newer versions of either standard.
   paragraph is not edited. In the editor it shows as a grey placeholder with its name ("Form control, kept from the
   file"), which can be selected, copied, moved and deleted, never edited.
 - **Shown as it reads** (default): a kept construct with nothing to see (declarations, bookmark and comment markers,
-  proofing marks, soft page breaks) takes no room on the page, and a kept line break breaks the line; the rest show as
-  the placeholder. The list is `keptPresenceOf` in `@livedoc/text-documents`.
+  proofing marks, soft page breaks) takes no room on the page, and a kept line break breaks the line; a content
+  control inside a paragraph (Word's `w:sdt`, LibreOffice's `loext:content-control`: a date picker, a dropdown, a
+  chip) shows its text, read only, as smart chips are left out (C3); the rest show as the placeholder. The lists are
+  `keptPresenceOf` and `keptShownText` in `@livedoc/text-documents`.
 - **Edited around.** Typing in a paragraph that holds a kept construct keeps it in its place among the characters.
 - **Styles and settings** the model does not read are kept whole, on the style or the document they belong to.
 - **Gone when its anchor is.** Deleting the paragraph that holds a kept construct deletes it, as any content.

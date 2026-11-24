@@ -277,4 +277,9 @@ export {
   TEXT_PROPERTY_MARKS,
   TEXT_STYLE_MARK,
 } from './live/live-names';
-export { keptBreakOf, keptPresenceOf, type KeptPresence } from './live/kept-presence';
+export {
+  keptBreakOf,
+  keptPresenceOf,
+  keptShownText,
+  type KeptPresence,
+} from './live/kept-presence';

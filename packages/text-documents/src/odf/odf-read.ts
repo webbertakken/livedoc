@@ -71,6 +71,7 @@ import {
   type ParagraphLines,
 } from './odf-lines';
 import { readOdfTable } from './odf-tables';
+import { keptShownText } from '../live/kept-presence';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -907,6 +908,10 @@ class InlineReader {
     };
     this.r.report.keep(node.local);
     this.out.push(kept);
+    // A kept control showing text counts as those characters for the white space after it (standard-mapping.md
+    // "Shown as it reads"); a kept marker holds none.
+    const shown = keptShownText(node.local, kept.xml.xml);
+    if (shown !== null) this.#afterSpace = /\s$/.test(shown);
   }
 
   /** A frame read as a picture, in line or placed, when it holds only what the model maps (objects.md "In the formats"). */

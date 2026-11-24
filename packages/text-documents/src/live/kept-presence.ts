@@ -49,3 +49,36 @@ export function keptBreakOf(name: string, xml: string): 'page' | 'column' | null
   const type = BREAK_TYPE.exec(xml)?.[1];
   return type === 'page' || type === 'column' ? type : null;
 }
+
+const ENTITIES: Readonly<Record<string, string>> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+};
+const unescape = (text: string) =>
+  text.replace(/&(amp|lt|gt|quot|apos);/g, (_, name: string) => ENTITIES[name]!);
+
+/**
+ * The text a kept content control inside a paragraph shows (docs/specs/034-text-documents/standard-mapping.md "Shown
+ * as it reads"): a Word `w:sdt`'s runs' text in its content, or a LibreOffice `loext:content-control`'s text,
+ * its list items left out; null for anything else, or a control showing no text. Reads the kept element's own
+ * serialised XML.
+ */
+export function keptShownText(name: string, xml: string): string | null {
+  let text: string;
+  if (name === 'sdt') {
+    const content =
+      /<(?:[\w.-]+:)?sdtContent\b[^>]*>([\s\S]*)<\/(?:[\w.-]+:)?sdtContent>/.exec(xml)?.[1] ?? '';
+    text = [
+      ...content.matchAll(/<(?:[\w.-]+:)?(t|tab)\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:[\w.-]+:)?t>)/g),
+    ]
+      .map(([, element, inner]) => (element === 'tab' ? '\t' : (inner ?? '')))
+      .join('');
+  } else if (name === 'content-control') {
+    text = xml.replace(/<(?:[\w.-]+:)?list-item\b[^>]*\/>/g, '').replace(/<[^>]*>/g, '');
+  } else return null;
+  const shown = unescape(text);
+  return shown === '' ? null : shown;
+}
