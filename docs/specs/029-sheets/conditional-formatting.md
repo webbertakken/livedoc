@@ -20,6 +20,12 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
 
 - A **range**: one rectangle, by its corner cells' row and column ids, as a [validation rule](data-validation.md)'s,
   so it grows with insertions inside it, shrinks with deletions and goes when every cell does.
+  - A range may be **several rectangles**, typed with commas (`A1:A10,C1:C10`), at most `FORMAT_RULE_RANGES_MAX`.
+  - The first is the rule's **anchor**: a custom formula is written for its top-left cell.
+  - Each rectangle shrinks on its own; one whose cells all went is dropped, and the rule goes with the last one.
+  - When the anchor goes, the next rectangle becomes the anchor and a custom formula moves to its top-left cell.
+  - A cell in two of a rule's rectangles is that rule's once: drawn once, and counted once in a colour scale.
+  - Several ranges and the formula's reach below hold for every sheet, a Plan Sheet's too (default, D214).
 - **Single Colour**: a condition and a style.
   - The conditions are the [filter](sheet.md#filter)'s, worded as in Google Sheets: **Is Empty**, **Is Not Empty**,
     **Text Contains**, **Text Does Not Contain**, **Text Starts With**, **Text Ends With**, **Text Is Exactly**,
@@ -27,11 +33,14 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
     **Less Than or Equal To**, **Is Between**, **Is Equal To**, **Is Not Equal To**, and **Custom Formula Is**. Each
     reads the cell's value as the filter does (text case aside, as shown).
   - **Custom Formula Is**: a formula written for the range's top-left cell (`=$C2>100`, `=ISODD(ROW())`), read for
-    every other cell with its relative references moved by that cell's offset, as a fill moves them; the cell meets
+    every other cell with its relative references moved by that cell's offset (up or left of it in a later rectangle
+    of several), as a fill moves them; the cell meets
     the condition when the formula's value is TRUE or a number other than 0. A formula that cannot be read is not
     saved: the editor says why under its field. An error meets nothing. Deleting the range's top row or left column
     moves the formula to the new top-left cell: its relative references on the sheet keep their offsets from that
     cell, as in Google Sheets (`=$C2>100` on A2:A10 with row 2 deleted is `=$C2>100` on A2:A9, reading the old C3).
+    The formula may read the workbook's other sheets (`=Totals!$B$1>0`, which no deletion here moves) and its named
+    ranges (`=A1>Limit`).
   - The style: any of **Bold**, **Italic**, **Underline**, **Strikethrough**, **Text Colour**, **Fill Colour** (the
     one [colour picker](../004-interface-design/colour-picker.md)). A new rule starts with a light green fill
     (`#b7e1cd`) and dark green text (`#137333`), as Google Sheets' does; six **preset styles** sit above the controls (**Green Fill**, **Red Fill**, **Yellow Fill**, **Blue Fill**, **Bold Text**
@@ -56,7 +65,7 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
 
 ## In a spreadsheet
 
-**Status: in progress.** The side panel is built; several ranges, other sheets in a formula and the files are not.
+**Status: in progress.** The side panel, several ranges and other sheets in a formula are built; the files are not.
 The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ([Formatting](formatting.md#conditional-formatting)):
 
@@ -67,8 +76,8 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   - It follows the selection while it stays open: a new selection lists the rules touching it (default, D213).
   - Done in the form returns to the list and keeps the panel open; Escape or × closes it and the keys go back to the
     grid.
-- A rule's range may be several ranges (`A1:A10,C1:C10`).
-- **Custom Formula Is** may read other sheets of the workbook, and named ranges.
+- A rule's range may be several ranges (`A1:A10,C1:C10`), as on every sheet ([Rules](#rules)).
+- **Custom Formula Is** may read other sheets of the workbook, and named ranges ([Rules](#rules)).
 - ODF keeps rules as `calcext:conditional-formats`, XLSX as `conditionalFormatting` ([Standard mapping](standard-mapping.md)).
 
 ## Making and changing rules
@@ -115,11 +124,13 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   a `style` (the `format` op's bold, italic, underline, strikethrough, color and background), or `scale: { min, mid?,
 max }`, each point `{ color, type: "min" | "max" | "number" | "percent" | "percentile", value? }`), added last, and
   `clear_conditional_formats` (every rule touching a range, or all with no range).
-- `read_sheet` lists the format rules in order (range, condition or scale, style).
+  A range may be several, with commas (`A1:A10,C1:C10`).
+- `read_sheet` lists the format rules in order (range, condition or scale, style), several ranges with commas.
 
 ## Limits
 
-- At most **100** format rules a sheet (`FORMAT_RULES_MAX`); a custom formula up to 1,000 characters
+- At most **100** format rules a sheet (`FORMAT_RULES_MAX`), each of at most **100** rectangles
+  (`FORMAT_RULE_RANGES_MAX`, default, D214); a custom formula up to 1,000 characters
   (`FORMAT_RULE_FORMULA_MAX`); a condition's values up to 255 characters each.
 
 ## Performance

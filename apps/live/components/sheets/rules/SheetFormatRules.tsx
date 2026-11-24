@@ -15,13 +15,12 @@ import { Button, Select, TextInput, Tooltip, lucideGlyph } from '@livedoc/ui';
 import {
   FORMAT_CONDITION_LABELS,
   conditionValues,
-  formatRange,
   formulaAsTyped,
   formatRuleLine,
-  posRangeOf,
+  ruleRangeText,
+  ruleTouches,
   type FormatRule,
   type FormatStyle,
-  type GridRange,
   type ScalePoint,
 } from '@livedoc/sheets';
 import { OptionRows } from '@/components/plan/OptionRows';
@@ -84,10 +83,6 @@ function Swatch({ rule }: { rule: Pick<FormatRule, 'is' | 'style' | 'min' | 'mid
   );
 }
 
-function touches(a: GridRange, b: GridRange): boolean {
-  return a.r1 <= b.r2 && b.r1 <= a.r2 && a.c1 <= b.c2 && b.c1 <= a.c2;
-}
-
 /**
  * The rule list and the rule form, as the popover and the spreadsheet's side panel hold them. `ruleId` opens that
  * rule's form, closing with it (`onClose`); otherwise the form returns to the list.
@@ -113,13 +108,7 @@ export function SheetFormatRulesBody({
   const [why, setWhy] = useState<string | null>(null);
   const sel = c.selection.ranges[c.selection.ranges.length - 1]!;
   const shown = useMemo(
-    () =>
-      all
-        ? rules
-        : rules.filter((x) => {
-            const p = posRangeOf(c.sheet.layout, x);
-            return p && touches(p, sel);
-          }),
+    () => (all ? rules : rules.filter((x) => ruleTouches(c.sheet.layout, x, sel))),
     [all, rules, c.sheet.layout, sel],
   );
   const { setFormatPreview } = c.rules;
@@ -203,7 +192,6 @@ export function SheetFormatRulesBody({
             <ul className="flex flex-col gap-1" aria-label="Format rules">
               {shown.map((rule) => {
                 const at = rules.indexOf(rule);
-                const p = posRangeOf(c.sheet.layout, rule);
                 const line = formatRuleLine(
                   rule,
                   rule.fx
@@ -224,7 +212,7 @@ export function SheetFormatRulesBody({
                       <span className="min-w-0 flex-1">
                         <span className="block truncate">{line}</span>
                         <span className="block text-supporting text-slate-500 dark:text-slate-400">
-                          {p ? formatRange(p) : ''}
+                          {ruleRangeText(c.sheet.layout, rule)}
                         </span>
                       </span>
                     </button>

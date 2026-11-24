@@ -7441,6 +7441,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "a": {
         "type": "string"
       },
+      "also": {
+        "items": {
+          "$ref": "#/components/schemas/IdRange"
+        },
+        "type": "array"
+      },
       "b": {
         "type": "string"
       },

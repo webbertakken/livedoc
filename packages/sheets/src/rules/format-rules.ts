@@ -16,6 +16,7 @@ import type {
 } from '../sheet';
 import type { Workbook } from '../engine/workbook';
 import { ruleIndex, rulesAt } from './rule-index';
+import { rulePositions } from './rule-ranges';
 
 // The most custom formulas kept moved to their cells per recalculation, so a long scroll cannot grow it unbounded.
 const MOVED_KEEP_MAX = 20_000;
@@ -56,18 +57,28 @@ export function formatRulesAt(layout: SheetLayout, r: number, c: number): Format
   return rulesAt(ruleIndex(layout, list ?? EMPTY), r, c);
 }
 
-// A scale rule's numbers, sorted, worked out once per recalculation.
-function scaleNumbers(wb: Workbook, sheetId: string, rule: FormatRule): number[] {
+// A scale rule's numbers, sorted, worked out once per recalculation: every rectangle's, each cell once.
+function scaleNumbers(
+  wb: Workbook,
+  sheetId: string,
+  layout: SheetLayout,
+  rule: FormatRule,
+): number[] {
   const cache = cacheOf(wb);
   const key = `${sheetId}|${rule.id}`;
   const known = cache.scales.get(key);
   if (known) return known;
-  const sheet = wb.sheet(sheetId);
-  const p = sheet ? posRangeOf(sheet.layout, rule) : null;
+  const boxes = rulePositions(layout, rule);
+  const seen = boxes.length > 1 ? new Set<number>() : null;
+  const span = layout.cols.length;
   const out: number[] = [];
-  if (p)
+  for (const p of boxes)
     for (let r = p.r1; r <= p.r2; r++)
       for (let c = p.c1; c <= p.c2; c++) {
+        if (seen) {
+          if (seen.has(r * span + c)) continue;
+          seen.add(r * span + c);
+        }
         const v = wb.value(sheetId, r, c);
         if (typeof v === 'number' && Number.isFinite(v)) out.push(v);
       }
@@ -172,7 +183,7 @@ export function formatRuleStyle(
   for (const rule of list) {
     if (rule.is === 'scale') {
       if (typeof v !== 'number' || !Number.isFinite(v)) continue;
-      const fill = scaleColour(rule, v, scaleNumbers(wb, sheetId, rule));
+      const fill = scaleColour(rule, v, scaleNumbers(wb, sheetId, sheet.layout, rule));
       if (fill) return { bg: fill };
       continue;
     }

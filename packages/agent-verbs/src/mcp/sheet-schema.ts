@@ -31,6 +31,9 @@ const sheetArg = z
   .string()
   .describe('The sheet, by its title ("Budget") or id. list_sheets lists them.');
 const rangeArg = z.string().describe('A cell or range in A1 form: "B4", "A1:D20".');
+const rangesArg = z
+  .string()
+  .describe('One or more cells or ranges in A1 form, with commas: "B4", "A1:A10,C1:C10".');
 
 const cellValue = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
@@ -412,7 +415,7 @@ const sheetChange = z.discriminatedUnion('op', [
       .describe(
         'Add a format rule (last in the list): a condition and a style, or a colour scale.',
       ),
-    range: rangeArg,
+    range: rangesArg,
     when: z
       .object({
         condition: z

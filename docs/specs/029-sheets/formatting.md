@@ -229,6 +229,8 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   clears (default).
 - **D213** The Conditional Format Rules panel: the office shell's right panel holding the Plan Sheet popover's list and
   form, following the selection while open; Done keeps it open (default).
+- **D214** A format rule's several rectangles: at most 100 (`FORMAT_RULE_RANGES_MAX`), as many as its sheet's rules;
+  several ranges and a custom formula reading other sheets and named ranges hold for every sheet (default).
 
 ## Telemetry
 

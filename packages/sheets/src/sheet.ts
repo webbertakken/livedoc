@@ -141,6 +141,8 @@ export type FormatStyle = Pick<CellFormat, 'b' | 'i' | 'u' | 'st' | 'fc' | 'bg'>
 export type ScalePoint = { c: string; at: 'min' | 'max' | 'num' | 'pct' | 'pctile'; v?: number };
 export type FormatRule = IdRange & {
   id: string;
+  // The rectangles after the anchor (the rule's own corners), when its range is several.
+  also?: IdRange[];
   is: 'when' | 'scale';
   op?: ConditionOp | 'formula';
   a?: string;

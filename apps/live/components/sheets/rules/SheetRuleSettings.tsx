@@ -5,9 +5,9 @@
 // Settings closes, the rule's cells are selected and its editor opens against them), Go To and, for an Editor, Remove.
 import { CloseIcon, Tooltip } from '@livedoc/ui';
 import {
-  formatRange,
   formatRuleLine,
   posRangeOf,
+  ruleRangeText,
   formulaAsTyped,
   ruleLine,
   type FormatRule,
@@ -36,7 +36,7 @@ export function validationRuleShortLine(rule: ValidationRule, c: SheetController
     : line.replace(/^Enter (a |an )?/, '').replace(/^(\w)/, (m) => m.toUpperCase());
 }
 
-function RuleRows<T extends IdRange & { id: string }>({
+function RuleRows<T extends IdRange & { id: string; also?: IdRange[] }>({
   rules,
   lineOf,
   label,
@@ -69,7 +69,7 @@ function RuleRows<T extends IdRange & { id: string }>({
                 {line}
               </span>
               <span className="block font-mono text-supporting text-slate-500 dark:text-slate-400">
-                {at ? formatRange(at) : ''}
+                {ruleRangeText(c.sheet.layout, rule)}
               </span>
             </span>
             {at && c.canShape ? (

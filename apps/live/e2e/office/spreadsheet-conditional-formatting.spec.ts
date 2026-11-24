@@ -61,3 +61,44 @@ test('Conditional Format Rules panel makes a rule that draws on the grid', async
   await expect(panel).toBeHidden();
   expectNoPageErrors(pageErrors);
 });
+
+// A rule of several ranges (conditional-formatting.md "Rules", D214) whose custom formula names a sheet.
+test('a rule over several ranges draws each, its formula naming a sheet', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1440, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  for (const [cell, n] of [
+    ['A1', '11'],
+    ['B1', '22'],
+    ['C1', '33'],
+  ] as const)
+    await typeInto(page, cell, n);
+
+  await select(page, 'A1');
+  await (await officeMenuItem(page, ['Format', 'Conditional Formatting'])).click();
+  const panel = page.getByRole('complementary', { name: 'Conditional Format Rules' });
+  await panel.getByRole('button', { name: 'Add Another Rule' }).click();
+  await panel.getByRole('textbox', { name: 'Apply to Range' }).fill('A1,C1');
+  await panel
+    .getByRole('combobox', { name: 'Condition' })
+    .selectOption({ label: 'Custom Formula Is' });
+  await panel.getByRole('textbox', { name: 'Custom Formula' }).fill("='Sheet1'!$A$1>10");
+  await panel.getByRole('button', { name: 'Red Fill' }).click();
+  await panel.getByRole('button', { name: 'Done' }).click();
+  await expect(panel.getByRole('list', { name: 'Format rules' })).toContainText('A1,C1');
+  const inkOf = (text: string) =>
+    page
+      .locator('[data-sheet-text]')
+      .filter({ hasText: new RegExp(`^${text}$`) })
+      .evaluate((el) => getComputedStyle(el).color);
+  await expect.poll(() => inkOf('33')).toBe('rgb(165, 14, 14)');
+  expect(await inkOf('11')).toBe('rgb(165, 14, 14)');
+  expect(await inkOf('22')).not.toBe('rgb(165, 14, 14)');
+  await page.screenshot({ path: test.info().outputPath('cf-several.png'), animations: 'disabled' });
+  expectNoPageErrors(pageErrors);
+});

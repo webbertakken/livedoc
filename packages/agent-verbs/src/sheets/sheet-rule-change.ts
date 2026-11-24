@@ -9,8 +9,11 @@ import {
   formatRuleLine,
   isColour,
   makeAxisIds,
+  ruleRangeText,
   parseRangeText,
+  parseRuleRangeText,
   posRangeOf,
+  ruleTouches,
   removeValidation,
   renderFormula,
   ruleLine,
@@ -141,9 +144,12 @@ const POINT_TYPES: Record<AgentScalePoint['type'], ScalePoint['at']> = {
 const badRange = (text: string) =>
   refuse('range_invalid', `"${text}" is not a cell or range in A1 form ("B4", "A1:D20").`);
 
+const onSheet = (layout: SheetLayout, g: GridRange) =>
+  g.r2 < layout.rows.length && g.c2 < layout.cols.length;
+
 function rangeOn(layout: SheetLayout, text: string): GridRange | null {
   const g = parseRangeText(text);
-  return g && g.r2 < layout.rows.length && g.c2 < layout.cols.length ? g : null;
+  return g && onSheet(layout, g) ? g : null;
 }
 
 function dateOf(v: number | string | undefined): number | null {
@@ -286,9 +292,18 @@ export function buildRuleChange(
       };
     }
     case 'conditional_format': {
-      const g = rangeOn(layout, change.range);
-      const ids = g ? idRangeOf(layout, g.r1, g.c1, g.r2, g.c2) : null;
-      if (!g || !ids) return badRange(change.range);
+      // One or more rectangles; the first is the anchor a formula is written for.
+      const boxes = (parseRuleRangeText(change.range) ?? []).map((g) => ({
+        g,
+        ids: onSheet(layout, g) ? idRangeOf(layout, g.r1, g.c1, g.r2, g.c2) : null,
+      }));
+      if (!boxes.length || boxes.some((x) => !x.ids)) return badRange(change.range);
+      const g = boxes[0]!.g;
+      const ids = {
+        ...boxes[0]!.ids!,
+        ...(boxes.length > 1 ? { also: boxes.slice(1).map((x) => x.ids!) } : {}),
+      };
+      const shown = boxes.map((x) => formatRange(x.g)).join(',');
       const [id] = makeAxisIds(1, rand, new Set((layout.formatRules ?? []).map((x) => x.id)));
       let rule: FormatRule;
       if (change.scale) {
@@ -346,17 +361,13 @@ export function buildRuleChange(
             changes: [{ k: 'frule', id: rule.id, rule, ...(change.first ? { at: 0 } : {}) }],
           },
         ],
-        line: `added a format rule to ${formatRange(g)}${change.first ? ', first in the list' : ''}`,
+        line: `added a format rule to ${shown}${change.first ? ', first in the list' : ''}`,
       };
     }
     case 'clear_conditional_formats': {
       const g = change.range ? rangeOn(layout, change.range) : null;
       if (change.range && !g) return badRange(change.range);
-      const gone = (layout.formatRules ?? []).filter((x) => {
-        if (!g) return true;
-        const p = posRangeOf(layout, x);
-        return p && p.r1 <= g.r2 && g.r1 <= p.r2 && p.c1 <= g.c2 && g.c1 <= p.c2;
-      });
+      const gone = (layout.formatRules ?? []).filter((x) => !g || ruleTouches(layout, x, g));
       return {
         ok: true,
         writes: gone.length
@@ -402,7 +413,7 @@ export function rulesRead(wb: Workbook, sheetId: string) {
     ...(r.help ? { help: r.help } : {}),
   }));
   const conditionalFormats = (layout.formatRules ?? []).map((r) => ({
-    range: a1(r),
+    range: ruleRangeText(layout, r),
     rule: formatRuleLine(r, r.fx ? renderFormula(r.fx, wb.ctxFor(sheetId)) : undefined),
     ...(r.style ? { style: r.style } : {}),
     ...(r.is === 'scale'

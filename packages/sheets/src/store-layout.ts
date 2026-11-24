@@ -16,6 +16,7 @@ import type {
   ValidationRule,
 } from './sheet';
 import { sameName } from './range-names';
+import { ruleRectangles } from './rules/rule-ranges';
 import { applyOutlineChange, outlineAfterDelete, outlineInPlace } from './outline-store';
 
 export type Axis = 'r' | 'c';
@@ -260,12 +261,16 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
         });
         next.rules = rules.length ? rules : undefined;
       }
+      // A format rule's rectangles shrink one by one; the first left is its anchor, its formula moved there.
       if (layout.formatRules?.length) {
         const rules = layout.formatRules.flatMap((x): FormatRule[] => {
-          const range = shrinkRange(x, layout, goneRows, goneCols);
+          const [range, ...also] = ruleRectangles(x).flatMap(
+            (box) => shrinkRange(box, layout, goneRows, goneCols) ?? [],
+          );
           if (!range) return [];
+          const { also: _also, ...rest } = x;
           const fx = x.fx && reanchorFormula(x.fx, layout, next, x, range);
-          return [{ ...x, ...range, ...(fx ? { fx } : {}) }];
+          return [{ ...rest, ...range, ...(also.length ? { also } : {}), ...(fx ? { fx } : {}) }];
         });
         next.formatRules = rules.length ? rules : undefined;
       }

@@ -6,8 +6,8 @@ import {
   compileTypedFormula,
   conditionValues,
   formatRange,
-  parseRangeText,
-  posRangeOf,
+  parseRuleRangeText,
+  ruleRangeText,
   formulaAsTyped,
   type ConditionOp,
   type FormatRule,
@@ -82,11 +82,11 @@ export function pointDraft(p: ScalePoint | undefined, fallback: Point): Point {
 }
 
 export function draftOf(c: SheetController, rule: FormatRule | null, id: string): Draft {
-  const sel = c.selection.ranges[c.selection.ranges.length - 1]!;
-  const p = rule ? posRangeOf(c.sheet.layout, rule) : null;
   return {
     id,
-    range: formatRange(p ?? sel),
+    range: rule
+      ? ruleRangeText(c.sheet.layout, rule)
+      : c.selection.ranges.map(formatRange).join(','),
     is: rule?.is ?? 'when',
     op: rule?.op ?? 'notEmpty',
     a: rule?.a ?? '',
@@ -105,10 +105,17 @@ export function ruleOf(
   d: Draft,
   actions: SheetActions,
 ): { ok: true; rule: FormatRule } | { ok: false; why: string } {
-  const g = parseRangeText(d.range);
-  const ids = g ? actions.rangeIds(g) : null;
-  if (!g || !ids || g.r2 >= c.sheet.layout.rows.length || g.c2 >= c.sheet.layout.cols.length)
-    return { ok: false, why: 'Type a range like B2:B20' };
+  // One or more rectangles; the first is the anchor a custom formula is written for.
+  const { rows, cols } = c.sheet.layout;
+  const boxes = (parseRuleRangeText(d.range) ?? []).map((g) =>
+    g.r2 < rows.length && g.c2 < cols.length ? actions.rangeIds(g) : null,
+  );
+  if (!boxes.length || boxes.some((x) => !x))
+    return { ok: false, why: 'Type a range like B2:B20, or several with commas' };
+  const ids = {
+    ...boxes[0]!,
+    ...(boxes.length > 1 ? { also: boxes.slice(1).map((x) => x!) } : {}),
+  };
   if (d.is === 'scale') {
     const point = (p: Point, name: string): ScalePoint | string => {
       if (p.at === 'min' || p.at === 'max') return { c: p.c, at: p.at };

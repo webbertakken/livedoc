@@ -1,7 +1,8 @@
 // Which rules cover a cell: each rule bucketed by the columns its range spans,
-// built once per layout and rule list, so drawing a visible cell scans only its column's few rules.
-import { posRangeOf } from '../layout';
+// built once per layout and rule list, so drawing a visible cell scans only its column's few rules. A rule of
+// several rectangles (a format rule's `also`) is bucketed by each, its entries side by side in each bucket.
 import type { IdRange, SheetLayout } from '../sheet';
+import { rulePositions } from './rule-ranges';
 
 type Entry<T> = { rule: T; r1: number; r2: number };
 type RuleIndex<T> = ReadonlyMap<number, readonly Entry<T>[]>;
@@ -9,7 +10,7 @@ type RuleIndex<T> = ReadonlyMap<number, readonly Entry<T>[]>;
 const INDEXES = new WeakMap<SheetLayout, WeakMap<readonly IdRange[], RuleIndex<IdRange>>>();
 
 // The rules by column, in list order. A rule whose corners are not on the sheet covers nothing.
-export function ruleIndex<T extends IdRange>(
+export function ruleIndex<T extends IdRange & { also?: readonly IdRange[] }>(
   layout: SheetLayout,
   list: readonly T[],
 ): RuleIndex<T> {
@@ -21,16 +22,14 @@ export function ruleIndex<T extends IdRange>(
   const known = byList.get(list);
   if (known) return known as RuleIndex<T>;
   const index = new Map<number, Entry<T>[]>();
-  for (const rule of list) {
-    const p = posRangeOf(layout, rule);
-    if (!p) continue;
-    for (let c = p.c1; c <= p.c2; c++) {
-      const bucket = index.get(c);
-      const entry = { rule, r1: p.r1, r2: p.r2 };
-      if (bucket) bucket.push(entry);
-      else index.set(c, [entry]);
-    }
-  }
+  for (const rule of list)
+    for (const p of rulePositions(layout, rule))
+      for (let c = p.c1; c <= p.c2; c++) {
+        const bucket = index.get(c);
+        const entry = { rule, r1: p.r1, r2: p.r2 };
+        if (bucket) bucket.push(entry);
+        else index.set(c, [entry]);
+      }
   byList.set(list, index);
   return index;
 }
@@ -43,11 +42,12 @@ export function firstRuleAt<T>(index: RuleIndex<T>, r: number, c: number): T | n
   return null;
 }
 
-// Every rule covering the cell, in list order.
+// Every rule covering the cell, in list order, each once.
 export function rulesAt<T>(index: RuleIndex<T>, r: number, c: number): T[] {
   const bucket = index.get(c);
   if (!bucket) return [];
   const out: T[] = [];
-  for (const e of bucket) if (r >= e.r1 && r <= e.r2) out.push(e.rule);
+  for (const e of bucket)
+    if (r >= e.r1 && r <= e.r2 && out[out.length - 1] !== e.rule) out.push(e.rule);
   return out;
 }
