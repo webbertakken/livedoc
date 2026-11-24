@@ -3,7 +3,13 @@
 // shares, so it scales), its turn, and Reset image: its own size fitted to the room, its crop and turn dropped.
 import { NodeSelection, type Command, type EditorState } from 'prosemirror-state';
 import type { Node as PmNode } from 'prosemirror-model';
-import { PICTURE, Pictures } from '@livedoc/text-documents';
+import {
+  PICTURE,
+  PictureColours,
+  Pictures,
+  type PictureAdjustment,
+  type PictureRecolour,
+} from '@livedoc/text-documents';
 import { insertedPictureSize } from './text-document-picture-insert';
 import type { CroppedPicture } from './text-document-picture-crop';
 import { hasPictureSize, type PictureSize } from './text-document-picture-size';
@@ -126,6 +132,30 @@ export const setPictureRotation =
     const turn = Pictures.rotation(rotation) ?? null;
     if ((Pictures.rotation(node.attrs.rotation) ?? null) === turn) return false;
     const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, rotation: turn });
+    tr.setSelection(NodeSelection.create(tr.doc, pos));
+    dispatch?.(tr);
+    return true;
+  };
+
+/** A change from Image options' Recolour or Adjustments (objects.md "Working with a picture"). */
+export type PictureColoursChange =
+  | { readonly recolour: PictureRecolour | undefined }
+  | { readonly adjustment: PictureAdjustment; readonly value: number };
+
+/** Writes the picture's recolour, or one adjustment as it holds one (none for 0); it stays selected. */
+export const setPictureColours =
+  (pos: number, change: PictureColoursChange): Command =>
+  (state, dispatch) => {
+    const node = pictureAt(state, pos);
+    if (!node) return false;
+    const [name, value] =
+      'recolour' in change
+        ? ['recolour', PictureColours.recolour(change.recolour) ?? null]
+        : [change.adjustment, PictureColours.adjustment(change.adjustment, change.value) ?? null];
+    if ('adjustment' in change && !PictureColours.inRange(change.adjustment, change.value))
+      return false;
+    if (JSON.stringify(node.attrs[name] ?? null) === JSON.stringify(value)) return false;
+    const tr = state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, [name]: value });
     tr.setSelection(NodeSelection.create(tr.doc, pos));
     dispatch?.(tr);
     return true;

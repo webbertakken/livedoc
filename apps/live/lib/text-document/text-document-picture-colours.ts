@@ -1,6 +1,22 @@
 // A picture's recolour and adjustments drawn (docs/specs/034-text-documents/objects.md "In the editor"): its recolour,
 // brightness and contrast as one colour matrix over its pixels, in sRGB, and its transparency as its opacity.
-import { PictureColours, type PictureColouring } from '@livedoc/text-documents';
+import {
+  PICTURE_ADJUSTMENTS,
+  PictureColours,
+  type PictureColouring,
+} from '@livedoc/text-documents';
+
+/** A picture's recolour and adjustments as it holds them, each absent where it has none. */
+export function pictureColouring(attrs: Readonly<Record<string, unknown>>): PictureColouring {
+  const recolour = PictureColours.recolour(attrs.recolour);
+  const out: { -readonly [K in keyof PictureColouring]: PictureColouring[K] } = {};
+  if (recolour) out.recolour = recolour;
+  for (const name of PICTURE_ADJUSTMENTS) {
+    const value = PictureColours.adjustment(name, attrs[name]);
+    if (value !== undefined) out[name] = value;
+  }
+  return out;
+}
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 let filters = 0;

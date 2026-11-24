@@ -195,6 +195,24 @@ describe('useTextDocumentPictureSize', () => {
     expect(attrs(view).rotation).toBeNull();
   });
 
+  // objects.md "Working with a picture" (Recolour, Adjustments): read into the panel, written one step each, counted.
+  it('writes a recolour and an adjustment, each counted', () => {
+    const { hook, view } = setup();
+    const recolour = { kind: 'duotone' as const, dark: '#000000', light: '#ff0000' };
+    act(() => hook.result.current.colour({ recolour }));
+    expect(attrs(view).recolour).toEqual(recolour);
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImageRecolour');
+    act(() => hook.result.current.colour({ adjustment: 'brightness', value: 25 }));
+    expect(attrs(view).brightness).toBe(25);
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImageAdjust');
+  });
+
+  it('counts nothing for a colour change that changes nothing', () => {
+    const { hook } = setup();
+    act(() => hook.result.current.colour({ recolour: undefined }));
+    expect(track).not.toHaveBeenCalled();
+  });
+
   it('writes nothing for anyone who may not edit', () => {
     const { hook, view } = setup({ canEdit: false });
     act(() => hook.result.current.resize(1, { width: 100, height: 20 }, 'handle'));
@@ -202,6 +220,7 @@ describe('useTextDocumentPictureSize', () => {
     act(() => hook.result.current.crop(1, { width: 10, height: 10, crop: null }));
     act(() => hook.result.current.rotate(1, 90, 'handle'));
     act(() => hook.result.current.turn({ by: 90 }));
-    expect(attrs(view)).toMatchObject({ width: 60, height: 30, rotation: null });
+    act(() => hook.result.current.colour({ adjustment: 'contrast', value: 40 }));
+    expect(attrs(view)).toMatchObject({ width: 60, height: 30, rotation: null, contrast: null });
   });
 });
