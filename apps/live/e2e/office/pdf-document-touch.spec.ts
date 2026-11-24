@@ -1,3 +1,4 @@
+import { PDF_LONG_PRESS_MS } from '@livedoc/pdf-documents';
 import { COLUMNS_RIGHT_LEFT, columnsPdf, taggedPdf } from '@livedoc/pdf-documents/testing';
 import { PDF_PAGES_PAD_PX as PAD } from '../../lib/pdf-document/pdf-page-layout';
 import { expect, expectNoPageErrors, test } from '../fixtures';
@@ -120,5 +121,76 @@ test('a double tap zooms to the column under the finger, and another goes back',
   // A finger's presses in a row zoom, never select.
   await expect(page.locator('[data-pdf-text-selection]')).toHaveCount(0);
 
+  expectNoPageErrors(pageErrors);
+});
+
+/** One finger on the window: down at `from`, through `path`, lifted after `held` milliseconds there. */
+async function finger(
+  page: import('@playwright/test').Page,
+  from: { x: number; y: number },
+  { held = 0, path = [] as { x: number; y: number }[] } = {},
+) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ ...from, id: 0 }],
+  });
+  if (held > 0) await page.waitForTimeout(held);
+  for (const point of path)
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{ ...point, id: 0 }],
+    });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+}
+
+// "A long press selects the word under the finger, with handles to extend and a small bar".
+test('a long press selects a word, with handles to extend it and a bar to act on it', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Two columns.pdf', await columnsPdf());
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const sheet = await pageOneDrawn(page);
+  const box = (await sheet.boundingBox())!;
+  const at = (across: number, up: number) => ({
+    x: box.x + (across / 612) * box.width,
+    y: box.y + ((792 - up) / 792) * box.height,
+  });
+
+  // "Left" of the left column's first line, 72 points in and 690 up.
+  await finger(page, at(80, 694), { held: PDF_LONG_PRESS_MS + 300 });
+  const drawn = page.locator('[data-pdf-text-selection] polygon');
+  await expect(drawn).toHaveCount(1);
+  const word = (await drawn.boundingBox())!;
+  const bar = page.getByRole('toolbar', { name: 'Selection' });
+  await expect(bar).toBeVisible();
+  await expect(bar).not.toHaveClass(/invisible/);
+  // The owner may mark: Highlight is there; Comment waits for comments.
+  await expect(bar.getByRole('button')).toHaveText(['Copy', 'Highlight']);
+  const handle = page.locator('[data-pdf-handle="end"]');
+  await expect(handle).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('pdf-long-press.png') });
+
+  // The end handle dragged along the line: the selection grows from where it starts.
+  const grip = (await handle.boundingBox())!;
+  const from = { x: grip.x + grip.width / 2, y: grip.y + grip.height / 2 };
+  await finger(page, from, {
+    path: [1, 2, 3, 4].map((step) => ({ x: from.x + step * 20, y: from.y })),
+  });
+  await expect
+    .poll(async () => (await drawn.boundingBox())!.width)
+    .toBeGreaterThan(word.width + 40);
+  expect(Math.round((await drawn.boundingBox())!.x)).toBe(Math.round(word.x));
+
+  // A tap elsewhere clears the selection, its handles and its bar.
+  await page.touchscreen.tap(at(300, 300).x, at(300, 300).y);
+  await expect(drawn).toHaveCount(0);
+  await expect(bar).toHaveCount(0);
+  await expect(handle).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });

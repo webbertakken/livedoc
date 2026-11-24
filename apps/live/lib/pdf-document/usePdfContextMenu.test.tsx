@@ -12,6 +12,7 @@ const SELECTED: PdfTextSelected = {
   page: 1,
   spans: [[0, 9]],
   quads: [[0, 8, 6, 8, 0, 0, 6, 0]],
+  touch: false,
   text: 'quick\r\nfox',
 };
 
