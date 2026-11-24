@@ -6,6 +6,7 @@ import { undo, ySyncPlugin, yUndoPluginKey } from 'y-prosemirror';
 import { TEXT_DOCUMENT_UNDO_GROUP_MS, TextDocumentState } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
 import {
+  continueUndoStep,
   startUndoStep,
   TEXT_DOCUMENT_PAGE_ORIGIN,
   TEXT_DOCUMENT_STYLES_ORIGIN,
@@ -38,6 +39,30 @@ describe('textDocumentUndoPlugins', () => {
     expect(view.state.doc.textContent).toBe('ab');
     undo(view.state);
     expect(view.state.doc.textContent).toBe('');
+    view.destroy();
+  });
+
+  // links-and-navigation.md "Table of contents": Insert, its page numbers read again after the pages are laid out, is
+  // one step, though a change kept out of undo (the pages' own drawing) came between.
+  it('continues the step being gathered past a change kept out of undo', async () => {
+    const doc = TextDocumentState.load();
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        schema: textDocumentSchema,
+        plugins: [ySyncPlugin(TextDocumentState.body(doc)), ...textDocumentUndoPlugins()],
+      }),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const typeAt = (text: string) =>
+      view.dispatch(view.state.tr.insertText(text, 1 + view.state.doc.textContent.length));
+    typeAt('a');
+    startUndoStep(view);
+    typeAt('b');
+    view.dispatch(view.state.tr.setMeta('addToHistory', false));
+    continueUndoStep(view);
+    typeAt('c');
+    undo(view.state);
+    expect(view.state.doc.textContent).toBe('a');
     view.destroy();
   });
 });

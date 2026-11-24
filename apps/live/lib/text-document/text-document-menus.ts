@@ -246,9 +246,9 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       item('bookmark', 'Bookmark', 'edit', BUILT),
       submenu('table-of-contents', 'Table of contents', [
-        item('toc-plain', 'Plain text', 'edit'),
-        item('toc-dotted', 'Dotted', 'edit'),
-        item('toc-links', 'With blue links', 'edit'),
+        item('toc-plain', 'Plain text', 'edit', BUILT),
+        item('toc-dotted', 'Dotted', 'edit', BUILT),
+        item('toc-links', 'With blue links', 'edit', BUILT),
       ]),
       SEPARATOR,
       item('comment', 'Comment', 'participate', { shortcut: 'insert-comment' }),

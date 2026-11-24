@@ -75,6 +75,45 @@ describe('a press on a table of contents', () => {
     expect((state.selection as NodeSelection).node.type.name).toBe('table_of_contents');
   });
 
+  it('goes to an entry’s heading once it is selected, or at once where the writing is read only', () => {
+    const entry = schema.nodes.paragraph!.create(
+      null,
+      schema.text('One\t2', [schema.marks.link!.create({ href: '#_h' })]),
+    );
+    const heading = schema.nodes.paragraph!.create({ props: { outlineLevel: 1 } }, [
+      schema.nodes.bookmark!.create({ name: '_h' }),
+      schema.text('One'),
+    ]);
+    const block = schema.nodes.table_of_contents!.create({ look: 'plain', levels: 6 }, [entry]);
+    const doc = schema.node('doc', null, [block, heading]);
+    const press = contentsPressPlugin().props.handleClickOn!;
+    const pressed = (selection: 'whole' | 'none', editable: boolean) => {
+      let state = EditorState.create({
+        doc,
+        selection:
+          selection === 'whole'
+            ? NodeSelection.create(doc, 0)
+            : TextSelection.create(doc, block.nodeSize + 2),
+      });
+      const view = {
+        get state() {
+          return state;
+        },
+        editable,
+        focus: () => {},
+        dispatch: (tr: Parameters<EditorState['apply']>[0]) => (state = state.apply(tr)),
+      } as unknown as EditorView;
+      press.call(null as never, view, 3, block, 0, new MouseEvent('click'), false);
+      return state.selection;
+    };
+    // The heading's text starts after its bookmark.
+    const start = block.nodeSize + 1;
+    expect(pressed('whole', true)).toMatchObject({ from: start, to: start });
+    expect(pressed('whole', true)).toBeInstanceOf(TextSelection);
+    expect(pressed('none', true)).toBeInstanceOf(NodeSelection);
+    expect(pressed('none', false)).toMatchObject({ from: start });
+  });
+
   it('selects it whole on a double or triple press too, never words inside it', () => {
     const doc = schema.node('doc', null, [contents('plain', 6, 'A', 'B'), p('Body')]);
     const { handleDoubleClickOn, handleTripleClickOn } = contentsPressPlugin().props;
@@ -107,6 +146,14 @@ describe('the table of contents view', () => {
     expect(view.update!(contents('links', 2, 'A', 'B'), [], DecorationSet.empty)).toBe(true);
     expect([dom.dataset.look, dom.dataset.levels]).toEqual(['links', '2']);
     expect(view.update!(p('x'), [], DecorationSet.empty)).toBe(false);
+  });
+
+  it('stays drawn as selected as its entries are rebuilt', () => {
+    const view = contentsView(contents('dotted', 3, 'A'));
+    view.dom.classList.add('ProseMirror-selectednode');
+    view.update!(contents('dotted', 3, 'A', 'B'), [], DecorationSet.empty);
+    expect(view.dom.classList.contains('ProseMirror-selectednode')).toBe(true);
+    expect(view.dom.classList.contains(CONTENTS_CLASS)).toBe(true);
   });
 
   // Another hand writing to its attributes (a browser extension, a screenshot tool) never has it drawn anew.

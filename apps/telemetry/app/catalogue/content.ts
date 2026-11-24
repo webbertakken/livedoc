@@ -504,8 +504,9 @@ export const OTHER_ELEMENTS_ADDED: Metric = {
   // Article inserts (`Article…`) are their own card (Article Inserts, features.ts), and a text document's breaks
   // theirs (`TextDocumentBreak…`, Text Document Breaks), its page numbers too (`TextDocumentPage…`, Text Document
   // Page Numbers), its footnotes (`TextDocumentFootnote`, Text Document Footnotes), its pictures
-  // (`TextDocumentImage…`, Text Document Pictures), its tables (`TextDocumentTable…`, Text Document Tables) and its
-  // links and bookmarks (`TextDocumentLink`, `TextDocumentBookmark`, Text Document Links).
+  // (`TextDocumentImage…`, Text Document Pictures), its tables (`TextDocumentTable…`, Text Document Tables; its tables
+  // of contents, Text Document Tables of Contents) and its links and bookmarks (`TextDocumentLink`,
+  // `TextDocumentBookmark`, Text Document Links).
   typeIn: (type) =>
     !PALETTE_KINDS.has(canonicalElementType(type)) &&
     !isTablePart(type) &&

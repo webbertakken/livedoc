@@ -25,7 +25,7 @@ import { shortHash } from '../hash';
 import { Pictures, type Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
 import type { Bookmark } from '../model/bookmarks';
-import type { TableOfContents } from '../model/contents';
+import { Contents, type TableOfContents } from '../model/contents';
 import { odfEquationXml } from './odf-equations';
 import {
   isPictureParentStyleXml,
@@ -77,8 +77,7 @@ export function odfContentsXml(
       ? ''
       : `<text:index-entry-tab-stop style:type="right"${block.look === 'dotted' ? ' style:leader-char="."' : ''}/><text:index-entry-page-number/>`;
   const templates = Array.from({ length: block.levels }, (_, i) => {
-    const own = `Contents_20_${i + 1}`;
-    const style = styles.some((s) => s.id === own) ? own : normal;
+    const style = Contents.heldStyle(styles, i + 1)?.id ?? normal;
     return `<text:table-of-content-entry-template text:outline-level="${i + 1}" text:style-name="${escapeXmlAttribute(style)}"><text:index-entry-link-start/><text:index-entry-text/>${pages}<text:index-entry-link-end/></text:table-of-content-entry-template>`;
   }).join('');
   return `<text:table-of-content text:name="Table of Contents${n}" text:protected="true"><text:table-of-content-source text:outline-level="${block.levels}" text:use-index-marks="false">${templates}</text:table-of-content-source><text:index-body>${entries.join('')}</text:index-body></text:table-of-content>`;

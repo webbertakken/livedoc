@@ -113,8 +113,9 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
   each entry a `w:hyperlink w:anchor` around its text, tab and page number, styled `TOCN`. Read: a `TOC` field in
   such a `w:sdt`, or standing alone, is one; `\n` without a range, or no page numbers, is With blue links; an entry
   style's or paragraph's dot leader is Dotted; a `PAGEREF` field's shown text is the page number.
-- The `Contents N` and `TOCN` styles are LiveDoc's own when a file has none: based on Normal text, indented
-  0.5 cm a level below the first, a right tab stop at the text width (dotted in Dotted) `(default)`.
+- The entry styles are LiveDoc's own when a file has none: ODF `Contents_20_N` named `Contents N`, OOXML `TOCN`
+  named `toc N` as Word's own; based on Normal text, indented 0.5 cm a level below the first `(default)`. Each
+  entry with a page number holds its own right tab stop at the text width, dotted in Dotted `(default)`.
 
 ## Extensions
 

@@ -1410,6 +1410,25 @@ export const TEXT_DOCUMENT_HEADING_LINKS_COPIED = chart(
   { types: ['TextDocumentHeadingLinkCopied'] },
 );
 
+// A table of contents put in a text document from Insert > Table of contents (docs/specs/034-text-documents/
+// links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_TABLES_OF_CONTENTS = chart(
+  'Element',
+  'Added',
+  'Text Document Tables of Contents',
+  'A table of contents put in a text document from Insert > Table of contents, in any of its three looks.',
+  { types: ['TextDocumentTableOfContents'] },
+);
+
+// A table of contents' entry followed to its heading (links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_CONTENTS_FOLLOWED = chart(
+  'UI',
+  'Used',
+  'Text Document Contents Followed',
+  "A text document's table of contents entry pressed to go to its heading.",
+  { types: ['TextDocumentTableOfContentsFollowed'] },
+);
+
 // A building block put in a text document (docs/specs/034-text-documents/objects.md "Building blocks").
 export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
   'Element',

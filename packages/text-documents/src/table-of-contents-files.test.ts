@@ -10,6 +10,7 @@ import { convertTextDocument } from './convert';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import type { Block, Paragraph } from './model/blocks';
 import { CONTENTS_LEVELS_MAX, Contents, type TableOfContents } from './model/contents';
+import { Styles } from './model/styles';
 import type { TextDocument } from './model/text-document';
 import { CONSTRUCTS } from './testing/constructs';
 import { docx, fodt, W_P, W_R } from './testing/packages';
@@ -219,6 +220,18 @@ describe('a table of contents written and read back', () => {
     expect(xml).toContain('text:outline-level="2"');
     expect(xml.match(/<text:table-of-content-entry-template /g)).toHaveLength(2);
     expect(xml).toContain('style:leader-char="."');
+  });
+
+  it("names each level's template by the file's own entry style, in either spelling, else Normal text", async () => {
+    const document = CONSTRUCTS.contents!('odf');
+    const own = Contents.entryStyle('ooxml', 2, document.styles);
+    const bytes = written({ ...document, styles: [...document.styles, own] }, 'odt');
+    const pkg = await readOdfPackage(new Uint8Array(bytes));
+    if (!pkg.ok) throw new Error(pkg.rejection);
+    const xml = new TextDecoder().decode(pkg.package.entries.get('content.xml'));
+    const normal = Styles.idOfRole(document.styles, 'normal')!;
+    expect(xml).toContain(`text:outline-level="1" text:style-name="${normal}"`);
+    expect(xml).toContain('text:outline-level="2" text:style-name="TOC2"');
   });
 
   it('writes OOXML a w:sdt of the Table of Contents gallery, its TOC field over the entries', async () => {

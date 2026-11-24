@@ -72,6 +72,7 @@ import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
 import { useTextDocumentHeadingLinks } from './useTextDocumentHeadingLinks';
 import { contentsPressPlugin, contentsView } from '@/lib/text-document/text-document-contents';
+import { useTextDocumentContents } from './useTextDocumentContents';
 import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
@@ -781,6 +782,16 @@ export function TextDocumentSurface({
     bodyWrites,
     Columns.width(page.caret.section.setup),
   );
+  // Insert > Table of contents (links-and-navigation.md "Table of contents").
+  const contentsActions = useTextDocumentContents({
+    view: editorView,
+    writes: bodyWrites,
+    liveDoc,
+    format,
+    pageless: page.pageless,
+    textWidth: Columns.width(page.caret.section.setup),
+    subscribe: changes.subscribeCaret,
+  });
   // Insert > Image, and picture files pasted or dropped, in the room the caret's text has (objects.md "Inserting").
   const pictureRoom = useMemo(
     () => roomForPictures(page.caret.section.setup),
@@ -852,6 +863,7 @@ export function TextDocumentSurface({
       ...headingLinks.actions,
       ...tableActions,
       ...buildingBlocks,
+      ...contentsActions,
       ...pictures.actions,
       ...pictureEditing.actions,
       ...pictureSize.actions,
@@ -868,6 +880,7 @@ export function TextDocumentSurface({
       headingLinks.actions,
       tableActions,
       buildingBlocks,
+      contentsActions,
       pictures.actions,
       pictureEditing.actions,
       pictureSize.actions,
