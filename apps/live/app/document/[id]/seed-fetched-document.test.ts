@@ -60,6 +60,7 @@ function seed(
   noteChangesetSeen = vi.fn(),
   setDocumentWorkbook = vi.fn(),
   resetTabs = vi.fn(),
+  setActiveId = vi.fn(),
 ) {
   const noop = vi.fn();
   return makeSeedFetchedDocument({
@@ -70,7 +71,7 @@ function seed(
     lastSavedNameRef: { current: '' },
     loadedTabIdsRef: { current: new Set() },
     noteChangesetSeen,
-    setActiveId: noop,
+    setActiveId,
     setDocumentName: noop,
     setDocumentPresentation: noop,
     setDocumentItemTypes: noop,
@@ -196,5 +197,38 @@ describe('seedFetchedDocument and the canvas’s code', () => {
     canvas.asked.length = 0;
     await seed(true)('me', fetched, null, null);
     expect(canvas.asked).toEqual([]);
+  });
+});
+
+// docs/specs/034-text-documents/objects.md "A drawing tab": an address naming a drawing tab opens its text document tab,
+// and a document's first tab is its first listed one.
+describe('seedFetchedDocument and drawing tabs', () => {
+  const withDrawing = {
+    ...fetched,
+    tabs: [
+      { id: 'd', documentId: 'd1', name: 'Drawing 1', orderIndex: 0, updatedAt: 1, drawingOf: 'w' },
+      {
+        id: 'w',
+        documentId: 'd1',
+        name: 'Notes',
+        orderIndex: 1,
+        updatedAt: 1,
+        kind: 'text-document',
+      },
+    ],
+  } satisfies LiveDoc;
+
+  it('opens the text document tab for an address naming its drawing tab', async () => {
+    window.location.hash = '#t=d';
+    const setActiveId = vi.fn();
+    await seed(true, vi.fn(), vi.fn(), vi.fn(), setActiveId)('me', withDrawing, 'CODE', null);
+    expect(setActiveId).toHaveBeenLastCalledWith('w');
+  });
+
+  it('opens the first listed tab with no address', async () => {
+    window.location.hash = '';
+    const setActiveId = vi.fn();
+    await seed(true, vi.fn(), vi.fn(), vi.fn(), setActiveId)('me', withDrawing, 'CODE', null);
+    expect(setActiveId).toHaveBeenLastCalledWith('w');
   });
 });

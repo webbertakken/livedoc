@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ArrowElement, Element, ShapeElement } from './index';
-import { remapElementRefs, remapTabLinks } from './duplicate';
+import { remapElementRefs, remapTabLinks, withTabLinksRemapped } from './duplicate';
 
 const shape = (id: string, extra: Partial<ShapeElement> = {}): ShapeElement =>
   ({
@@ -68,5 +68,29 @@ describe('remapTabLinks', () => {
       { kind: 'url', url: 'https://x' },
       { kind: 'tab', tabId: 'elsewhere' },
     ]);
+  });
+});
+
+describe('withTabLinksRemapped', () => {
+  // docs/specs/034-text-documents/objects.md "Copying": a drawing tab is re-pointed at the copy's text document tab.
+  it('re-points a drawing tab at the copy of its text document tab, with its links', () => {
+    const tab = {
+      id: 'd1',
+      name: 'Drawing 1',
+      drawingOf: 't1',
+      elements: [shape('a', { link: { kind: 'tab', tabId: 't1' } })] as Element[],
+    };
+    const out = withTabLinksRemapped(tab, new Map([['t1', 'T1']]));
+    expect(out.drawingOf).toBe('T1');
+    expect(out.elements[0]!.link).toEqual({ kind: 'tab', tabId: 'T1' });
+    expect(out.id).toBe('d1');
+  });
+
+  it('keeps a drawingOf the copy does not hold, and adds none to a tab without one', () => {
+    const map = new Map([['t1', 'T1']]);
+    expect(withTabLinksRemapped({ id: 'd', drawingOf: 'x', elements: [] }, map).drawingOf).toBe(
+      'x',
+    );
+    expect('drawingOf' in withTabLinksRemapped({ id: 'b', elements: [] }, map)).toBe(false);
   });
 });

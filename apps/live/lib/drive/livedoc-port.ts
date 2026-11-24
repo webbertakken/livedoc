@@ -15,7 +15,7 @@ import {
   type DriveLease,
 } from '@livedoc/api-schema';
 import {
-  remapTabLinks,
+  withTabLinksRemapped,
   type StoredPresentation,
   type Tab,
   documentToEnvelopeText,
@@ -113,9 +113,8 @@ export function copyEnvelope(envelope: DocumentEnvelope): {
 } {
   const idMap = new Map(envelope.document.tabs.map((t) => [t.id, crypto.randomUUID()] as const));
   const tabs = envelope.document.tabs.map((t) => ({
-    ...t,
+    ...withTabLinksRemapped(t, idMap),
     id: idMap.get(t.id)!,
-    elements: remapTabLinks(t.elements, idMap),
   }));
   let presentation = envelope.document.presentation;
   if (presentation) {

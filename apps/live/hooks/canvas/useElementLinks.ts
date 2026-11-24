@@ -13,7 +13,7 @@
 //   page-load to another document, or open an external URL in a new tab.
 
 import { useState } from 'react';
-import { type Element, type ElementLink, type Tab } from '@livedoc/document';
+import { listedTabIdFor, type Element, type ElementLink, type Tab } from '@livedoc/document';
 import { apiUnfurl } from '@/lib/api-client';
 import { isSafeFollowUrl } from '@/lib/url-safety';
 import { track } from '@/lib/telemetry';
@@ -118,8 +118,10 @@ export function useElementLinks(deps: ElementLinksDeps) {
 
   const followLink = (link: ElementLink) => {
     if (link.kind === 'tab' || link.kind === 'element') {
-      if (!tabs.some((t) => t.id === link.tabId)) return;
-      setActiveId(link.tabId);
+      // A drawing tab's link opens its text document tab (docs/specs/034-text-documents/objects.md "A drawing tab").
+      const opens = listedTabIdFor(tabs, link.tabId);
+      if (!opens) return;
+      setActiveId(opens);
       setSelectedId(null);
       setEditingId(null);
       setFormatSourceId(null);

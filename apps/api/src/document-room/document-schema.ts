@@ -520,6 +520,14 @@ CREATE TABLE IF NOT EXISTS workbook_kept_chunks (
 );
 `;
 
+// Each tab row's text document tab when it is a drawing tab (docs/specs/034-text-documents/objects.md "A drawing tab"),
+// so a document's tab list leaves it out without reading a body. Written by every writer of a body, as the kind is;
+// the bodies stored before it are read once here.
+const TAB_DRAWING_OF_STEP = `
+ALTER TABLE tabs ADD COLUMN drawing_of TEXT;
+UPDATE tabs SET drawing_of = json_extract(data, '$.drawingOf') WHERE json_valid(data);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -537,6 +545,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   // A PDF tab's previous versions ("Replacing the stored file").
   PDF_PREVIOUS_STEP,
   WORKBOOK_KEPT_STEP,
+  TAB_DRAWING_OF_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

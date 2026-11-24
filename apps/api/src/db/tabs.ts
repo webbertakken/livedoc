@@ -7,6 +7,9 @@ import { rowToTab, type TabRow } from '../tab-row';
 // The kind a body names, as its row's `kind` column keeps it (docs/specs/006-document/kinds-outside-the-canvas.md "The
 // surface"): written with the body, never parsed back out of it.
 const storedKindOf = (tab: Pick<Tab, 'kind'>): string | null => tab.kind ?? null;
+// A drawing tab's text document tab, as its row's `drawing_of` column keeps it (docs/specs/034-text-documents/objects.md
+// "A drawing tab"): written with the body, as the kind is.
+const storedDrawingOf = (tab: Pick<Tab, 'drawingOf'>): string | null => tab.drawingOf ?? null;
 import { MAX_TAB_BYTES, TabTooLargeError, byteLength, logTabRefused } from '../limits';
 
 // Every write of a tab's data meets this first (docs/specs/015-api/api.md "Tab size"): data over the
@@ -205,17 +208,27 @@ export function tabWriteStatements(
   const insertRev = advance ? 1 : revision.expected + 1;
   return [
     env.DOCUMENT_DB.prepare(
-      `INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind, drawing_of)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          name = excluded.name,
          data = excluded.data,
          updated_at = excluded.updated_at,
          element_count = excluded.element_count,
          rev = ${advance ? 'tabs.rev + 1' : 'excluded.rev'},
-         kind = excluded.kind
+         kind = excluded.kind,
+         drawing_of = excluded.drawing_of
        RETURNING rev`,
-    ).bind(id, name, data, now, drawnCount(tab), insertRev, storedKindOf(tab)),
+    ).bind(
+      id,
+      name,
+      data,
+      now,
+      drawnCount(tab),
+      insertRev,
+      storedKindOf(tab),
+      storedDrawingOf(tab),
+    ),
     env.DOCUMENT_DB.prepare(
       `INSERT INTO document_tabs (document_id, tab_id, order_index, added_at)
        VALUES (?, ?, ?, ?)
@@ -335,16 +348,17 @@ export async function seedTabs(
     const data = JSON.stringify(rest);
     return [
       env.DOCUMENT_DB.prepare(
-        `INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind)
-         VALUES (?, ?, ?, ?, ?, 1, ?)
+        `INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind, drawing_of)
+         VALUES (?, ?, ?, ?, ?, 1, ?, ?)
          ON CONFLICT(id) DO UPDATE SET
            name = excluded.name,
            data = excluded.data,
            updated_at = excluded.updated_at,
            element_count = excluded.element_count,
            rev = tabs.rev + 1,
-           kind = excluded.kind`,
-      ).bind(id, name, data, now, drawnCount(tab), storedKindOf(tab)),
+           kind = excluded.kind,
+           drawing_of = excluded.drawing_of`,
+      ).bind(id, name, data, now, drawnCount(tab), storedKindOf(tab), storedDrawingOf(tab)),
       env.DOCUMENT_DB.prepare(
         `INSERT INTO document_tabs (document_id, tab_id, order_index, added_at)
          VALUES (?, ?, ?, ?)

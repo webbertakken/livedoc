@@ -16023,6 +16023,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "defaultTextSize": {
         "$ref": "#/components/schemas/TextSize"
       },
+      "drawingOf": {
+        "$ref": "#/components/schemas/TabId"
+      },
       "elements": {
         "items": {
           "$ref": "#/components/schemas/Element"
@@ -16190,6 +16193,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "documentId": {
         "type": "string"
       },
+      "drawingOf": {
+        "$ref": "#/components/schemas/TabId"
+      },
       "elements": {
         "items": {
           "$ref": "#/components/schemas/Element"
@@ -16338,6 +16344,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "additionalProperties": false,
     "properties": {
       "documentId": {
+        "type": "string"
+      },
+      "drawingOf": {
         "type": "string"
       },
       "folder": {

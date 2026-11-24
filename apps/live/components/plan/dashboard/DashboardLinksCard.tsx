@@ -7,7 +7,7 @@
 // one by its ×, shown on hover (always on a touch screen); each change is one step. Everything under the heading
 // scrolls when the slot is short, top-aligned.
 import { useState } from 'react';
-import { DASHBOARD_LINKS_MAX, type DashboardLink } from '@livedoc/document';
+import { DASHBOARD_LINKS_MAX, listedTabs, type DashboardLink } from '@livedoc/document';
 import { linkLabelOf } from '@livedoc/plan-art';
 import { CompactEmptyState, lucideGlyph } from '@livedoc/ui';
 import {
@@ -149,7 +149,8 @@ export function DashboardLinksCard({
         ) : null}
         {canEdit && adding ? (
           <AddLinkForm
-            tabs={tabs}
+            // A Links card never offers a drawing tab (docs/specs/034-text-documents/objects.md "Not listed").
+            tabs={listedTabs(tabs)}
             onAdd={(link) => {
               save({ links: [...links.links, link] });
               setAdding(false);

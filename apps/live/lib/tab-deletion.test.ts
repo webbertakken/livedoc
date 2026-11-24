@@ -134,3 +134,16 @@ describe('deleteDescription', () => {
     );
   });
 });
+
+// docs/specs/034-text-documents/objects.md "Never counted": a text document's drawing tabs never make it one of several.
+describe('tabDeletion: drawing tabs', () => {
+  it('takes a text document tab whose only company is its drawings as the last tab', () => {
+    const tabs = [
+      tab('w', { kind: 'text-document' }),
+      tab('d1', { drawingOf: 'w', elements: [box] }),
+    ];
+    expect(tabDeletion({ tabs, tabId: 'w', canDeleteDocument: true, isTabLoaded: loaded })).toEqual(
+      { kind: 'document' },
+    );
+  });
+});

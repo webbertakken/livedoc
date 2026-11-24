@@ -6,6 +6,7 @@
 import { getDocument, getDocumentForSave, getDocumentMeta } from '../db';
 import { conflict, forbidden, json, noContent, notFound } from '../responses';
 import { tabEtag } from '@livedoc/api-schema';
+import { drawingTabIdsOf, listedTabs } from '@livedoc/document';
 import { grantedTab, recordTabRead } from './granted-tab';
 import { handleDocumentShareRoutes } from './document-share-routes';
 import { handleQaBoardRoute } from './qa-board-routes';
@@ -166,8 +167,17 @@ export async function handleDocumentSubresources(
       // An agent or the CLI (a token) may not delete the last tab (docs/specs/015-api/mcp-server.md
       // §4.17). The editor is let through: its saves and deletes race, so adding a tab and deleting
       // the other in one save can reach here first.
-      if (ctx.token && existing.tabs.length <= 1) return conflict('last_tab');
+      // A text document's drawing tabs are never counted (docs/specs/034-text-documents/objects.md "Never counted").
+      if (ctx.token && listedTabs(existing.tabs).length <= 1) return conflict('last_tab');
       await removeDocumentTab(ctx, id, tabId);
+      // Its drawing tabs go with a text document tab (objects.md "Deleting"); an editor's own later delete of each
+      // is a 404 its client lets through.
+      const drawings = drawingTabIdsOf(existing.tabs, tabId);
+      for (const drawing of drawings) await removeDocumentTab(ctx, id, drawing);
+      if (drawings.length > 0)
+        console.log(
+          `[tab-removal] drawing tabs removed id=${id} tab=${tabId} count=${drawings.length}`,
+        );
       return noContent();
     }
   }

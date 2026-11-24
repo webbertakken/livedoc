@@ -320,6 +320,21 @@ export function remapElementRefs<E extends Element>(
   });
 }
 
+// A copied tab's own references to the copy's tabs re-pointed (old → new in `tabIdMap`): its elements' tab and element
+// links and windows (remapTabLinks), and a drawing tab's text document tab (`drawingOf`,
+// docs/specs/034-text-documents/objects.md "Copying"). Its own id is the caller's to give.
+export function withTabLinksRemapped<T extends { elements: Element[]; drawingOf?: string }>(
+  tab: T,
+  tabIdMap: Map<string, string>,
+): T {
+  const drawingOf = tab.drawingOf === undefined ? undefined : tabIdMap.get(tab.drawingOf);
+  return {
+    ...tab,
+    elements: remapTabLinks(tab.elements, tabIdMap),
+    ...(drawingOf ? { drawingOf } : {}),
+  };
+}
+
 // Re-point tab and element links after a whole document is copied with fresh
 // tab ids (old → new in `tabIdMap`), so the copy's internal navigation lands
 // on its own tabs instead of the source document's. A Tab Window's tab

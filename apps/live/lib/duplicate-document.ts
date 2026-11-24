@@ -24,7 +24,7 @@
 // round-trip so it can stand alone.
 
 import type { CreationIntent, DocumentPlacement, RecordedIntent } from '@livedoc/api-schema';
-import { remapTabLinks, tabKindOf, type Tab } from '@livedoc/document';
+import { tabKindOf, withTabLinksRemapped, type Tab } from '@livedoc/document';
 import {
   apiCreateDocument,
   apiDeleteDocument,
@@ -107,11 +107,10 @@ export async function duplicateDocument(
   for (const tab of fullTabs) {
     if (!tab) continue;
     const newTabId = tabIdMap.get(tab.id) ?? crypto.randomUUID();
-    // Tab / element links follow the copy's tabs; document and url links
+    // Tab / element links and a drawing tab's text document tab follow the copy's tabs; document and url links
     // leave the document and survive unchanged (shared with the api's copy
     // route via @livedoc/document).
-    const elements = remapTabLinks(tab.elements, tabIdMap);
-    remappedTabs.push({ ...tab, id: newTabId, elements });
+    remappedTabs.push({ ...withTabLinksRemapped(tab, tabIdMap), id: newTabId });
   }
   const newId = crypto.randomUUID();
   // The item store comes with the copy, ids and keys unchanged, so every Plan card and board on

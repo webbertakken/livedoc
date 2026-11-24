@@ -49,3 +49,11 @@ describe('tabNamedByDocument', () => {
     expect(tabNamedByDocument([], 'Roadmap')).toBeNull();
   });
 });
+
+// docs/specs/034-text-documents/objects.md "Never counted": the first tab is the first listed one.
+describe('tabNamedByDocument with drawing tabs', () => {
+  it('skips a drawing tab to the first listed tab', () => {
+    const tabs = [{ id: 'd', name: 'Tab 9', drawingOf: 'a' }, tab('a', 'Tab 1')];
+    expect(tabNamedByDocument(tabs, 'Roadmap')).toEqual({ id: 'a', name: 'Roadmap' });
+  });
+});

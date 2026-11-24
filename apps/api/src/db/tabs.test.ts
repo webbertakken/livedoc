@@ -147,6 +147,35 @@ describe('tab revisions', () => {
     expect(copied).toEqual(['text-document', null, 'board']);
   });
 
+  // docs/specs/034-text-documents/objects.md "A drawing tab", "Copying": the row keeps its text document tab, written
+  // with the body by every writer; a copy names the copy's text document tab.
+  it('keeps a drawing tab’s text document tab in its row, through a seed, a save and a copy', async () => {
+    const db = documentWith();
+    const drawingOfRow = (id: string) =>
+      db.sql.prepare('SELECT drawing_of FROM tabs WHERE id = ?').get(id)!.drawing_of as
+        string | null;
+    const textDocument: Tab = { id: 'w', name: 'Notes', kind: 'text-document', elements: [] };
+    await seedTabs(db.env, 'D', [textDocument, { ...tab('d1'), drawingOf: 'w' }]);
+    expect(drawingOfRow('d1')).toBe('w');
+    expect(drawingOfRow('w')).toBeNull();
+    await upsertTab(db.env, 'D', { ...tab('d2'), drawingOf: 'w' }, 2);
+    expect(drawingOfRow('d2')).toBe('w');
+    await copyDocument(db.env, 'D', 'D2', 'o', 'Copy');
+    const copied = db.sql
+      .prepare(
+        "SELECT t.id, t.drawing_of, t.data FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id WHERE dt.document_id = 'D2' ORDER BY dt.order_index",
+      )
+      .all() as { id: string; drawing_of: string | null; data: string }[];
+    const copiedText = copied[0]!.id;
+    expect(copiedText).not.toBe('w');
+    expect(copied.map((r) => r.drawing_of)).toEqual([null, copiedText, copiedText]);
+    expect(copied.map((r) => (JSON.parse(r.data) as Tab).drawingOf)).toEqual([
+      undefined,
+      copiedText,
+      copiedText,
+    ]);
+  });
+
   it('reads the revision with the tab', async () => {
     const db = documentWith();
     await upsertTab(db.env, 'D', tab('t1'), 0);

@@ -5,6 +5,7 @@ import type { BoxedElement } from './index';
 import type { CanvasSurface } from './colors';
 import { r2, xmlEscape } from './svg-render-primitives';
 import { SKETCH_FACE_FILTER } from './sketch-filters';
+import { isDrawingTab } from './drawing-tabs';
 
 /** A window's size as it lands (16:9). */
 export const TAB_WINDOW_SIZE = { width: 640, height: 360 } as const;
@@ -18,12 +19,12 @@ export const TAB_WINDOW_EMPTY = {
   dark: { fill: '#1e293b', ink: '#94a3b8' },
 } as const;
 
-type TabLike = { id: string; kind?: string; opensIn?: string };
+type TabLike = { id: string; kind?: string; opensIn?: string; drawingOf?: string };
 
 /** Whether a window on `ownTabId` may show this tab: any tab of the document but its own, a Plan tab (a Board, Sheet
- *  or Dashboard tab, or any tab in Plan mode) included. */
+ *  or Dashboard tab, or any tab in Plan mode) included, never a text document's drawing tab, which is never listed. */
 export function tabWindowMayShow(tab: TabLike, ownTabId: string | undefined): boolean {
-  return tab.id !== ownTabId;
+  return tab.id !== ownTabId && !isDrawingTab(tab);
 }
 
 /** The tabs a window on `ownTabId` may show, in tab-bar order. */

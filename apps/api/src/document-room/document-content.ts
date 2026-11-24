@@ -3,7 +3,7 @@
 // copy's two halves. Runs inside the document's room, on `env.DOCUMENT_DB`; the worker reaches it through the room's
 // RPCs (document-rpc.ts).
 
-import { remapTabLinks, type Element } from '@livedoc/document';
+import { withTabLinksRemapped, type Element } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { keptBytes, type KeptContent, type StoredAt } from '@livedoc/sheets/files';
 import { workbookFromRow, WORKBOOK_COLUMNS, type WorkbookRow } from '../db/workbook';
@@ -41,7 +41,7 @@ export async function readDocumentOutline(
 ): Promise<DocumentOutline> {
   const [tabs, doc, workbook] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
-      `SELECT t.id, dt.document_id, t.name, dt.order_index, '' AS data, t.updated_at, t.rev, dt.folder, t.kind
+      `SELECT t.id, dt.document_id, t.name, dt.order_index, '' AS data, t.updated_at, t.rev, dt.folder, t.kind, t.drawing_of
          FROM document_tabs dt
          JOIN tabs t ON t.id = dt.tab_id
         WHERE dt.document_id = ?
@@ -94,6 +94,8 @@ type CopiedTab = {
   elementCount: number | null;
   // The row's kind (docs/specs/006-document/kinds-outside-the-canvas.md "The surface"), carried as the count is.
   kind: string | null;
+  // A drawing tab's text document tab (docs/specs/034-text-documents/objects.md "Copying"), re-pointed on import.
+  drawingOf: string | null;
   orderIndex: number;
 };
 type Row = Record<string, string | number | null>;
@@ -146,7 +148,7 @@ export async function exportDocumentCopy(
   const tabRows = (
     await db
       .prepare(
-        `SELECT t.id, t.name, t.data, t.element_count, t.kind, dt.order_index
+        `SELECT t.id, t.name, t.data, t.element_count, t.kind, t.drawing_of, dt.order_index
            FROM document_tabs dt JOIN tabs t ON t.id = dt.tab_id
           WHERE dt.document_id = ?${onlyTabId === null ? '' : ' AND dt.tab_id = ?'}
           ORDER BY dt.order_index ASC`,
@@ -158,6 +160,7 @@ export async function exportDocumentCopy(
         data: string;
         element_count: number | null;
         kind: string | null;
+        drawing_of: string | null;
         order_index: number;
       }>()
   ).results;
@@ -168,6 +171,7 @@ export async function exportDocumentCopy(
     data: redactAuthorsFor === null ? row.data : redactTabDataAuthors(row.data, redactAuthorsFor),
     elementCount: row.element_count,
     kind: row.kind,
+    drawingOf: row.drawing_of,
     orderIndex: row.order_index,
   }));
   const tabIds = JSON.stringify(tabs.map((t) => t.id));
@@ -260,14 +264,14 @@ function keptOfSheets(
   };
 }
 
-// Re-point the tab and element links inside one tab's stored `data` at the copy's tab ids. Parsed only when it
-// mentions a tab id, so the common link-free tab is copied byte for byte.
+// Re-point the tab and element links inside one tab's stored `data` at the copy's tab ids, and a drawing tab's text
+// document tab. Parsed only when it mentions a tab id, so the common link-free tab is copied byte for byte.
 export function remapTabDataLinks(data: string, tabIdMap: Map<string, string>): string {
-  if (!data.includes('"tabId"') && !data.includes('"windowTabId"')) return data;
+  if (!['"tabId"', '"windowTabId"', '"drawingOf"'].some((key) => data.includes(key))) return data;
   try {
-    const parsed = JSON.parse(data) as { elements?: Element[] };
+    const parsed = JSON.parse(data) as { elements?: Element[]; drawingOf?: string };
     if (!Array.isArray(parsed.elements)) return data;
-    return JSON.stringify({ ...parsed, elements: remapTabLinks(parsed.elements, tabIdMap) });
+    return JSON.stringify(withTabLinksRemapped({ ...parsed, elements: parsed.elements }, tabIdMap));
   } catch {
     return data;
   }
@@ -304,9 +308,17 @@ export async function importDocumentCopy(
       // Link remapping rewrites ids inside elements, never their number, so the count carries over.
       db
         .prepare(
-          'INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind) VALUES (?, ?, ?, ?, ?, 1, ?)',
+          'INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind, drawing_of) VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
         )
-        .bind(id, tab.name, data, now, tab.elementCount, tab.kind ?? null),
+        .bind(
+          id,
+          tab.name,
+          data,
+          now,
+          tab.elementCount,
+          tab.kind ?? null,
+          tab.drawingOf ? (tabIdMap.get(tab.drawingOf) ?? tab.drawingOf) : null,
+        ),
       db
         .prepare(
           'INSERT INTO document_tabs (document_id, tab_id, order_index, added_at) VALUES (?, ?, ?, ?)',
