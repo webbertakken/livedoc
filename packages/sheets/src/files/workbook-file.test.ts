@@ -111,6 +111,52 @@ describe('workbookFileOf', () => {
   });
 });
 
+// standard-mapping.md "Sheet name, hidden, tab colour" (D177, D182).
+describe("a sheet's tab look in the file", () => {
+  it('writes the colour and the hiding a sheet has', () => {
+    const sheets = makeSheets({ A: { A1: '1' }, B: {} }, { rows: 2, cols: 2 });
+    sheets[1] = {
+      ...sheets[1]!,
+      layout: { ...sheets[1]!.layout, tabColour: '#1a73e8', hidden: true },
+    };
+    const file = workbookFileOf(new Workbook({ sheets, locale: 'en-GB' }), sheets, 'en-GB');
+    expect(file.sheets.map((s) => [s.tabColour, s.hidden])).toEqual([
+      [undefined, undefined],
+      ['#1a73e8', true],
+    ]);
+  });
+
+  it('reads them, a colour that is none passed over, and shows the first when every one is hidden', () => {
+    const sheet = { rows: 1, cols: 1, cells: [] };
+    const read = sheetsFromFile(
+      {
+        sheets: [
+          { ...sheet, name: 'A', tabColour: 'red' },
+          { ...sheet, name: 'B', tabColour: '#00ff00', hidden: true },
+        ],
+      },
+      'en-GB',
+      seeded(),
+    ).sheets;
+    expect(read.map((s) => [s.layout.tabColour, s.layout.hidden])).toEqual([
+      [undefined, undefined],
+      ['#00ff00', true],
+    ]);
+    const all = sheetsFromFile(
+      {
+        sheets: [
+          { ...sheet, name: 'A', hidden: true },
+          { ...sheet, name: 'B', hidden: true },
+        ],
+      },
+      'en-GB',
+      seeded(),
+    ).sheets;
+    expect(all.map((s) => s.layout.hidden)).toEqual([undefined, true]);
+    expect(sheetsFromFile({ sheets: [] }, 'en-GB', seeded()).sheets).toEqual([]);
+  });
+});
+
 describe('sheetsFromFile', () => {
   // standard-mapping.md "Arrays in the file": a block's other cells are cache, never inputs.
   it('skips the cells a block caches', () => {

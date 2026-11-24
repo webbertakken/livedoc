@@ -214,21 +214,15 @@ function startTagEnd(xml: string): number {
 }
 
 /**
- * A kept `sheetPr` with LiveDoc's `outlinePr` in it, after its `tabColor` as the schema orders them, in the kept
- * element's own prefix (standard-mapping.md "Unknown content").
+ * A kept `sheetPr` with LiveDoc's own children (its `tabColor` and `outlinePr`) first, as the schema orders them
+ * (the kept one holds neither), in the kept element's own prefix (standard-mapping.md "Unknown content").
  */
-export function withOutlinePr(sheetPr: string, attributes: string): string {
+export function withSheetPrOwn(sheetPr: string, own: (prefix: string) => string): string {
   const prefix = /^<([\w.-]+:)?/.exec(sheetPr)?.[1] ?? '';
-  const own = `<${prefix}outlinePr${attributes}/>`;
+  const children = own(prefix);
   const end = startTagEnd(sheetPr);
-  // An empty `sheetPr` closes itself: opened for its one child.
+  // An empty `sheetPr` closes itself: opened for its children.
   if (sheetPr[end - 1] === '/')
-    return `${sheetPr.slice(0, end - 1).trimEnd()}>${own}</${prefix}sheetPr>`;
-  const tab = sheetPr.indexOf(`<${prefix}tabColor`);
-  if (tab < 0) return sheetPr.slice(0, end + 1) + own + sheetPr.slice(end + 1);
-  const close = `</${prefix}tabColor>`;
-  const closeAt = sheetPr.indexOf(close, tab);
-  const tabEnd = tab + startTagEnd(sheetPr.slice(tab));
-  const after = sheetPr[tabEnd - 1] === '/' || closeAt < 0 ? tabEnd + 1 : closeAt + close.length;
-  return sheetPr.slice(0, after) + own + sheetPr.slice(after);
+    return `${sheetPr.slice(0, end - 1).trimEnd()}>${children}</${prefix}sheetPr>`;
+  return sheetPr.slice(0, end + 1) + children + sheetPr.slice(end + 1);
 }

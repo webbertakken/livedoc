@@ -145,7 +145,7 @@ function xlsxWith(sheetPr: string, rows: string): Uint8Array<ArrayBuffer> {
 describe('a kept sheetPr', () => {
   const grouped = '<row r="2" outlineLevel="1"><c r="A2"><v>1</v></c></row>';
 
-  it('keeps all but its outlinePr, and takes LiveDoc’s back when written', async () => {
+  it('keeps all but its outlinePr and tabColor, and takes LiveDoc’s back when written', async () => {
     const read = await readXlsx(
       xlsxWith(
         '<sheetPr codeName="S1"><tabColor rgb="FFFF0000"/><outlinePr summaryBelow="0"/></sheetPr>',
@@ -153,15 +153,50 @@ describe('a kept sheetPr', () => {
       ),
     );
     if (!read.ok) throw new Error(read.rejection);
-    expect(read.file.kept?.items.map((i) => i.xml)).toEqual([
-      '<sheetPr codeName="S1"><tabColor rgb="FFFF0000"/></sheetPr>',
-    ]);
+    expect(read.file.kept?.items.map((i) => i.xml)).toEqual(['<sheetPr codeName="S1"></sheetPr>']);
+    expect(read.file.sheets[0]!.tabColour).toBe('#ff0000');
     const written = await readOoxmlPackage(writeXlsx(read.file, 'T').data);
     if (!written.ok) throw new Error(written.rejection);
     expect(
       new TextDecoder().decode(written.package.parts.get('xl/worksheets/sheet1.xml')),
     ).toContain(
       '<sheetPr codeName="S1"><tabColor rgb="FFFF0000"/><outlinePr summaryBelow="0" summaryRight="0"/></sheetPr>',
+    );
+  });
+
+  it('names a tab colour by theme, never kept', async () => {
+    const read = await readXlsx(xlsxWith('<sheetPr><tabColor theme="4"/></sheetPr>', grouped));
+    if (!read.ok) throw new Error(read.rejection);
+    expect(read.file.kept).toBeUndefined();
+    expect(read.file.sheets[0]!.tabColour).toBeUndefined();
+    expect(read.losses).toContainEqual({ k: 'kept_unread', count: 1 });
+  });
+
+  it('writes a tab colour and a hidden sheet, the first shown sheet open', async () => {
+    const sheet = { rows: 1, cols: 1, cells: [] };
+    const data = writeXlsx(
+      {
+        sheets: [
+          { ...sheet, name: 'A', hidden: true },
+          { ...sheet, name: 'B', tabColour: '#1a73e8' },
+        ],
+      },
+      'T',
+    ).data;
+    const read = await readXlsx(data);
+    if (!read.ok) throw new Error(read.rejection);
+    expect(read.file.sheets.map((s) => [s.hidden, s.tabColour])).toEqual([
+      [true, undefined],
+      [undefined, '#1a73e8'],
+    ]);
+    const parts = await readOoxmlPackage(data);
+    if (!parts.ok) throw new Error(parts.rejection);
+    const text = (name: string) => new TextDecoder().decode(parts.package.parts.get(name));
+    expect(text('xl/workbook.xml')).toContain(
+      '<bookViews><workbookView activeTab="1"/></bookViews>',
+    );
+    expect(text('xl/worksheets/sheet2.xml')).toContain(
+      '<sheetPr><tabColor rgb="FF1A73E8"/></sheetPr>',
     );
   });
 

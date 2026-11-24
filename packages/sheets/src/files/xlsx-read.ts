@@ -36,6 +36,7 @@ import {
   SPREADSHEETML_NS,
 } from './xlsx-parts';
 import { readXlsxLines } from './xlsx-lines';
+import { readXlsxTabLook } from './xlsx-tab-look';
 
 // A file is read up to a workbook's limits (files-and-print.md "A file sent in parts"): past them it is cut, and said.
 const {
@@ -312,7 +313,10 @@ export async function readXlsx(
     keeper?.sheetEntry(sheet, sheets.length);
     keeper?.worksheet(worksheet, part!, sheets.length);
     strictUnread += keeper ? 0 : unreadChildren(worksheet.root, WORKSHEET_READ);
-    sheets.push(readSheet(name, worksheet.root, book));
+    sheets.push({
+      ...readSheet(name, worksheet.root, book),
+      ...readXlsxTabLook(sheet, worksheet.root, ns),
+    });
   }
   keeper?.workbook(parsed, pkg.mainPart, listed, placed);
   keeper?.styles(text(pkg, partOf(RELATIONSHIP_TYPES.styles)));

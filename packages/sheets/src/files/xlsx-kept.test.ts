@@ -66,7 +66,7 @@ describe('XLSX kept content', () => {
         `workbook@1:${LOCAL_NAME}`,
         `workbook@:${CALC}`,
         `workbook@:${PIVOTS}`,
-        'sheet-attribute@1:state="hidden"',
+        'sheet-attribute@1:xr:uid="{01}"',
         'worksheet-attribute@0:mc:Ignorable="x14ac xr"',
         'worksheet-attribute@1:mc:Ignorable="x14ac xr"',
         'worksheet-attribute@0:xr:uid="{00}"',
@@ -142,7 +142,9 @@ describe('XLSX kept content', () => {
     expect(book.indexOf(REVISION)).toBeLessThan(book.indexOf('<workbookPr/>'));
     expect(book.indexOf('<sheets>')).toBeLessThan(book.indexOf('<definedNames>'));
     expect(book).toContain('mc:Ignorable="xr x99"');
-    expect(book).toContain('<sheet name="Hidden" sheetId="2" state="hidden" r:id="rId2"/>');
+    expect(book).toContain(
+      '<sheet name="Hidden" sheetId="2" state="hidden" xr:uid="{01}" r:id="rId2"/>',
+    );
     // LiveDoc's own relationships are numbered past the kept ones.
     expect(book).toContain('<sheet name="Data" sheetId="1" r:id="rId1"/>');
     expect(parts.get('xl/styles.xml')).toContain(
@@ -150,7 +152,7 @@ describe('XLSX kept content', () => {
     );
   });
 
-  // D112: a defined name follows its sheet; a view's sheet past the last becomes the first.
+  // D112: a defined name follows its sheet; a view's sheet past the last becomes the first shown (D182).
   it('numbers a defined name’s sheet by its place now, and a view’s past the last sheet as the first', async () => {
     const read = await readOk(excelFileWithKept());
     const swapped: WorkbookFile = {
@@ -169,6 +171,25 @@ describe('XLSX kept content', () => {
     };
     const book = (await partsOf(writeXlsx(swapped, 'T').data)).get('xl/workbook.xml')!;
     expect(book).toContain('<definedName name="Mine" localSheetId="0">Data!$B$1</definedName>');
+    // The open sheet past the last becomes the first shown: Data, as Hidden is hidden (D182).
+    expect(book).toContain('<workbookView activeTab="1" firstSheet="1"/>');
+  });
+
+  // D182: a kept view whose open sheet is hidden opens the first shown.
+  it('opens the first shown sheet when a kept view opens a hidden one', async () => {
+    const read = await readOk(excelFileWithKept());
+    const kept = read.file.kept!;
+    const file: WorkbookFile = {
+      ...read.file,
+      kept: {
+        ...kept,
+        items: kept.items.map((i) => ({
+          ...i,
+          xml: i.xml.replace('activeTab="2"', 'activeTab="1"'),
+        })),
+      },
+    };
+    const book = (await partsOf(writeXlsx(file, 'T').data)).get('xl/workbook.xml')!;
     expect(book).toContain('<workbookView activeTab="0" firstSheet="1"/>');
   });
 

@@ -99,7 +99,7 @@ export function excelFileWithKept(): Uint8Array<ArrayBuffer> {
       OOXML_CONTENT_TYPES.spreadsheet,
       workbook(
         '<sheet name="Data" sheetId="1" r:id="rId1"/><sheet name="Chart" sheetId="2" r:id="rId2"/>' +
-          '<sheet name="Hidden" sheetId="3" state="hidden" r:id="rId3"/>',
+          '<sheet name="Hidden" sheetId="3" state="hidden" xr:uid="{01}" r:id="rId3"/>',
       ),
     ),
     xml(

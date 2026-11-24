@@ -16,6 +16,7 @@ import { compileFormula, renderFormula, type SheetHandle, type SheetsCtx } from 
 import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
 import type { Workbook } from '../engine/workbook';
 import { SheetLimits } from '../sheet-limits';
+import { isColour } from '../format';
 import { SheetName } from '../workbook/sheet-name';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW, workbookSheetLayout } from '../workbook-record';
 import { formatCodeOf, formatFromCode } from './number-format-code';
@@ -47,6 +48,9 @@ export type FileSheet = {
   cells: FileCell[];
   // Its rows' and columns' sizes, hidden lines and groups (standard-mapping.md "Rows and columns in the file").
   lines?: FileLines;
+  // Its tab's colour (lower-case #rrggbb) and whether it is hidden (standard-mapping.md "Sheet name, hidden, tab colour").
+  tabColour?: string;
+  hidden?: true;
 };
 
 /** A workbook as a file holds it, and what it holds that the model does not (standard-mapping.md "Unknown content"). */
@@ -182,6 +186,8 @@ export function workbookFileOf(
         cols: sheet.layout.cols.length,
         cells: inOrder(cells),
         lines: fileLinesOf(sheet.layout),
+        ...(sheet.layout.tabColour ? { tabColour: sheet.layout.tabColour } : {}),
+        ...(sheet.layout.hidden ? { hidden: true as const } : {}),
       };
     }),
   };
@@ -302,9 +308,16 @@ function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] 
       file: sheet,
       id: makeSheetId(rand),
       title,
-      layout: { ...layout, ...lines.layout },
+      layout: {
+        ...layout,
+        ...lines.layout,
+        ...(isColour(sheet.tabColour) ? { tabColour: sheet.tabColour } : {}),
+        ...(sheet.hidden ? { hidden: true as const } : {}),
+      },
     });
   }
+  // A spreadsheet shows a sheet at least: a file hiding every one shows its first (D182).
+  if (made.length > 0 && made.every((m) => m.layout.hidden)) delete made[0]!.layout.hidden;
   return made;
 }
 
