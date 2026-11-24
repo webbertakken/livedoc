@@ -219,7 +219,7 @@ function CountBadge({ count, icon }: { count: number; icon: React.ReactNode }) {
       {icon}
       <span
         aria-hidden
-        className={`absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-700 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white dark:ring-slate-900 ${SOLID_BRAND_DARK}`}
+        className={`absolute -right-2 -top-2 flex h-icon-row min-w-icon-row items-center justify-center rounded-full bg-brand-700 px-1 text-glyph leading-none text-white ring-2 ring-white dark:ring-slate-900 ${SOLID_BRAND_DARK}`}
       >
         <span className="text-optical-centre">{count}</span>
       </span>
@@ -251,7 +251,7 @@ function TimerClockSegment({
       aria-label={`${kind} ${clock}`}
       aria-expanded={open}
       style={open ? undefined : timerFillStyle(timer, now)}
-      className={`relative flex h-9 touch-target-y items-center gap-1.5 rounded-md px-3 transition ${
+      className={`relative flex h-row touch-target-y items-center gap-2 rounded-control px-3 transition ${
         open
           ? PRESSED
           : done
@@ -260,7 +260,7 @@ function TimerClockSegment({
       }`}
     >
       <TimerMenuIcon size={16} />
-      <span className="select-none text-sm font-semibold tabular-nums">{clock}</span>
+      <span className="select-none text-body tabular-nums">{clock}</span>
     </button>
   );
   // No hover card while open: it would sit over the panel it names. Disabled, not unwrapped, so the button keeps its focus as the panel opens.

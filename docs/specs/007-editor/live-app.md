@@ -82,7 +82,7 @@ The **role pill** says whether you are editing, participating in or viewing this
   `sm` up: a phone's line has no room. Under [Minimal chrome](power-user-mode.md#minimal-chrome) it becomes its
   status icon in the document group instead, where the pill was.
 - **What it reads.** "Editing" (emerald), "Participating" (teal) or "Viewing" (amber).
-- **Level with the name.** The 19 px pill is centred on the title's line, as the share-state icon is: neither sits higher or lower.
+- **Level with the name.** The 24 px pill is centred on the title's line, as the share-state icon is: neither sits higher or lower.
 - **Who owns the document** is disclosed progressively: a Tooltip on the pill reads "Owned by <name>" ("Owned by you"
   for the owner), and the pill's accessible name carries the same words after its role. There is no separate owner
   badge. With no known owner (the owner has never joined the room), the pill has no Tooltip.
@@ -289,13 +289,13 @@ upright phone whose layout shrinks for its keyboard (an older Android) from fold
   `LANDSCAPE_PHONE_MEDIA_QUERY` above), the same gate the workbench frame uses; the palette keeps
   the phone's swiping row.
 - **The bars handle.** A small card at the canvas's top-right corner (12px in, and past a landscape
-  notch's side inset and below the top inset; a 36px button with a 44px tap area) holds a chevron:
+  notch's side inset and below the top inset; a 32px button, the tool line's, with a 44px tap area) holds a chevron:
   **Show Controls**. Pressing it brings both groups back where they always are, over the canvas.
   The button turns into **Hide Controls** (`aria-expanded` says which) and folds them again. So
   what lives in the two groups stays one press away: Share or Make a Copy, the document's name and
   badges, the role pill, the active tab and its menu, the tab stack and its tab list, Add Tab, Search, Settings and the appearance
-  toggle. The strip's row keeps the handle's 54px clear on its right (`LANDSCAPE_HANDLE_ROOM`: the
-  46px card and the row's 8px gap), so a long strip scrolls short of it rather than under it. The
+  toggle. The strip's row and the top line keep the handle's 50px clear on their right (`LANDSCAPE_HANDLE_ROOM`:
+  the 42px card and the row's 8px gap), so a long strip scrolls short of it rather than under it. The
   choice lasts while the document is open in that window: not saved, not synced, and a
   fresh load starts folded.
 - **The two groups come back on their own** when something needs them: a rename asked for elsewhere (the

@@ -49,7 +49,7 @@ export function DocumentName({
   }
   const renaming = editing && !readOnly;
   return (
-    <div data-title-bar-middle="" className="flex min-w-0 items-center gap-1.5 pl-0.5">
+    <div data-title-bar-middle="" className="flex min-w-0 items-center gap-2 pl-0.5">
       <SharedBadge
         look="icon"
         shareable={shareable}
@@ -71,10 +71,10 @@ export function DocumentName({
               setEditing(false);
             }}
             onCancel={() => setEditing(false)}
-            className="w-full rounded border border-slate-300 bg-white px-2 py-0.5 text-[13px] text-slate-800 outline-none focus:border-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            className="w-full rounded-control border border-slate-300 bg-white px-2 py-0.5 text-body text-slate-800 outline-none focus:border-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           />
         ) : readOnly ? (
-          <span className="truncate px-1 text-[13px] text-slate-700 dark:text-slate-200">
+          <span className="truncate px-1 text-body text-slate-700 dark:text-slate-200">
             {documentName}
           </span>
         ) : (
@@ -87,7 +87,7 @@ export function DocumentName({
               type="button"
               onClick={() => setEditing(true)}
               // 44px tall on a touch screen; padding, not a pad, since `truncate` clips a ::before.
-              className="w-full truncate rounded-md px-1.5 py-1 text-left text-[13px] text-slate-700 transition pointer-coarse:py-3 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="w-full truncate rounded-control px-2 py-1 text-left text-body text-slate-700 transition pointer-coarse:py-3 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
             >
               {documentName}
             </button>

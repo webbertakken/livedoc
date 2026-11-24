@@ -72,7 +72,7 @@ export function ClusterPopoverSegment({
       onClick={(e) => onTogglePopover(e.currentTarget)}
       aria-label={label}
       aria-expanded={popoverOpen}
-      className={`relative flex h-9 w-9 touch-target items-center justify-center rounded-md transition ${
+      className={`relative flex h-row w-row touch-target items-center justify-center rounded-control transition ${
         popoverOpen
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
           : CLUSTER_CONTROL_REST

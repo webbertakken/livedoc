@@ -23,10 +23,10 @@ export function LandscapeBarFold({ shown, children }: { shown: boolean; children
   );
 }
 
-/** The room the handle takes from the strip's row on a phone held sideways: its card (a 36px button,
- *  4px of padding and a 1px border each side: 46px) and the row's 8px gap, so 54px (3.375rem). Set as
- *  `--landscape-handle-room` on the row, which adds it to its right gutter. */
-export const LANDSCAPE_HANDLE_ROOM = 'landscape-phone:[--landscape-handle-room:3.375rem]';
+/** The room the handle takes from the strip's row on a phone held sideways: its card (a 32px button, the tool
+ *  line's, D242; 4px of padding and a 1px border each side: 42px) and the row's 8px gap, so 50px (3.125rem). Set
+ *  as `--landscape-handle-room` on the row, which adds it to its right gutter; the top line pads by it too. */
+export const LANDSCAPE_HANDLE_ROOM = 'landscape-phone:[--landscape-handle-room:3.125rem]';
 
 // What the handle folds: the actions group and the document group (docs/specs/007-editor/live-app.md "A phone held
 // sideways").
@@ -58,7 +58,7 @@ export function LandscapeBarsHandle({ shown, onToggle }: { shown: boolean; onTog
             aria-label={label}
             aria-expanded={shown}
             onClick={onToggle}
-            className={`relative flex h-9 w-9 touch-target items-center justify-center rounded-md transition ${TOOLBAR_CONTROL_REST}`}
+            className={`relative flex h-field w-field touch-target items-center justify-center rounded-control transition ${TOOLBAR_CONTROL_REST}`}
           >
             <Glyph size={18} units={20}>
               <path d={shown ? 'M6 12.5l4-4 4 4' : 'M6 8l4 4 4-4'} />

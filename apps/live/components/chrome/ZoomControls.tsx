@@ -137,7 +137,7 @@ export function ZoomControls({
             onClick={onFitToScreen}
             aria-label="Fit to screen"
             disabled={zoomOff}
-            className="flex h-9 items-center justify-center rounded-md px-2.5 text-xs font-medium text-slate-700 transition enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:enabled:hover:bg-slate-800"
+            className="flex h-row items-center justify-center rounded-control px-3 text-body text-slate-700 transition enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:enabled:hover:bg-slate-800"
           >
             Fit
           </button>
@@ -192,7 +192,7 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       disabled={disabled}
-      className="flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:enabled:hover:bg-slate-800 dark:enabled:hover:text-white"
+      className="flex h-row w-row items-center justify-center rounded-control text-slate-600 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:enabled:hover:bg-slate-800 dark:enabled:hover:text-white"
     >
       {children}
     </button>

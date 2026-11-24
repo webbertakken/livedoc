@@ -234,7 +234,7 @@ export function IconButton({
       }}
       className={
         hideCaption
-          ? `relative flex h-field w-field items-center justify-center rounded-control transition disabled:cursor-not-allowed disabled:opacity-50 ${stripTile ? 'phone:w-8' : ''} ${tone}`
+          ? `relative flex h-field w-field items-center justify-center rounded-control transition disabled:cursor-not-allowed disabled:opacity-50 ${stripTile ? 'phone:w-row' : ''} ${tone}`
           : minimalChrome
             ? // Keeps its grid cell's width, so the icon stays centred where the
               // captioned tile had it.

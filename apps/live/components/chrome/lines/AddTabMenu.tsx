@@ -112,7 +112,7 @@ export function AddTabMenu({
             track('UI', 'Opened', 'AddTabMenu');
           onTriggerKeyDown(event);
         }}
-        className={`${TOOLBAR_ICON_BUTTON} text-lg leading-none`}
+        className={`${TOOLBAR_ICON_BUTTON} text-name leading-none`}
       >
         +
       </button>

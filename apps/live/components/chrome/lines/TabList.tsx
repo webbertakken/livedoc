@@ -165,16 +165,16 @@ export function TabList({
         data-floating-panel=""
         onKeyDown={onKeyDown}
         style={{ left: place.left, bottom: place.bottom, width: TAB_LIST_WIDTH_PX }}
-        className={`fixed z-[var(--z-popover)] max-h-[min(32rem,calc(100dvh-8rem))] rounded-xl p-1.5 outline-none ${MENU_PANEL}`}
+        className={`fixed z-[var(--z-popover)] max-h-[min(32rem,calc(100dvh-8rem))] rounded-surface p-2 outline-none ${MENU_PANEL}`}
       >
-        <div className="flex items-center justify-between px-2 pb-2 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-between px-2 pb-2 pt-1.5 text-supporting text-slate-500 dark:text-slate-400">
           <span>Tabs · {tabs.tabs.length}</span>
           {peopleHere > 0 ? (
             <span className="normal-case tracking-normal">{peopleHereLabel(peopleHere)}</span>
           ) : null}
         </div>
         {filterShown ? (
-          <label className="mx-0.5 mb-1.5 flex h-8 items-center gap-1.5 rounded-md border border-slate-200 px-2 text-slate-500 focus-within:border-brand-400 dark:border-slate-700 dark:text-slate-400">
+          <label className="mx-0.5 mb-1.5 flex h-field items-center gap-2 rounded-control border border-slate-200 px-2 text-slate-500 focus-within:border-brand-400 dark:border-slate-700 dark:text-slate-400">
             <SearchGlyph />
             <input
               data-tab-list-filter=""
@@ -192,13 +192,13 @@ export function TabList({
                   setQuery('');
                 }
               }}
-              className="min-w-0 flex-1 bg-transparent text-[12px] text-slate-800 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400"
+              className="min-w-0 flex-1 bg-transparent text-supporting text-slate-800 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400"
             />
           </label>
         ) : null}
         <ul
           role="list"
-          className="scrollbar-slim -mx-0.5 flex min-h-0 flex-col gap-px overflow-y-auto px-0.5"
+          className="scrollbar-slim -mx-0.5 flex min-h-0 flex-col gap-0.5 overflow-y-auto px-0.5"
         >
           {runs.map((run) =>
             run!.kind === 'loose' ? (
@@ -235,7 +235,7 @@ export function TabList({
             ),
           )}
           {runs.length === 0 ? (
-            <li className="px-2 py-2 text-[12px] text-slate-500 dark:text-slate-400">
+            <li className="px-2 py-2 text-supporting text-slate-500 dark:text-slate-400">
               No tab matches
             </li>
           ) : null}
@@ -244,7 +244,7 @@ export function TabList({
           // The add menu's rows (docs/specs/007-editor/toolbar-layout.md "The tab list"): New Tab, New Board, New
           // Sheet, New Dashboard and, where offered, New Text Document and New PDF From a File, each adding its choice
           // and closing the list.
-          <div className="mt-1.5 flex flex-col gap-px border-t border-slate-200 pt-1.5 dark:border-slate-800">
+          <div className="mt-1.5 flex flex-col gap-0.5 border-t border-slate-200 pt-1.5 dark:border-slate-800">
             {addTabRows(tabs.addTabOffers ?? NO_ADD_TAB_OFFERS).map(({ choice, footer }) => {
               const Mark = addTabMark(choice, newTabMode(chrome.activeTab));
               return (
@@ -256,7 +256,7 @@ export function TabList({
                     tabs.onAdd(choice);
                     onClose();
                   }}
-                  className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-[12px] font-medium text-slate-700 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-300 dark:hover:bg-slate-800"
+                  className="flex h-row w-full items-center gap-2 rounded-control px-2 text-body text-slate-700 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   <Mark
                     size={14}
@@ -321,7 +321,7 @@ function FolderRows({
                 onDrop(e);
               }
         }
-        className={`flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] font-semibold text-slate-500 dark:text-slate-400 ${
+        className={`flex h-row items-center gap-2 rounded-control px-2 text-supporting text-slate-500 dark:text-slate-400 ${
           over ? 'bg-brand-50 ring-1 ring-brand-400 dark:bg-brand-500/15' : ''
         }`}
       >
@@ -335,7 +335,7 @@ function FolderRows({
               setRenaming(false);
             }}
             onCancel={() => setRenaming(false)}
-            className="h-6 min-w-0 flex-1 rounded bg-white px-1.5 text-[12px] text-slate-800 outline-none ring-1 ring-brand-300 dark:bg-slate-800 dark:text-slate-100"
+            className="h-chip min-w-0 flex-1 rounded-control bg-white px-2 text-supporting text-slate-800 outline-none ring-1 ring-brand-300 dark:bg-slate-800 dark:text-slate-100"
           />
         ) : (
           <span className="truncate" onDoubleClick={readOnly ? undefined : () => setRenaming(true)}>

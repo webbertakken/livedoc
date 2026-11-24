@@ -49,7 +49,7 @@ function TimerResetIcon() {
 }
 
 export const TIMER_BUTTON_CLASS =
-  'flex h-6 w-6 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white';
+  'flex size-chip items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white';
 
 /**
  * The drain: a countdown empties left to right as time runs out, so the
@@ -109,10 +109,10 @@ export function TimerPillBody({
   const ms = timerDisplayMs(timer, now);
   return (
     <>
-      <span className="select-none text-[10px] font-medium uppercase tracking-wide opacity-70">
+      <span className="select-none text-supporting opacity-70">
         {timer.mode === 'countdown' ? 'Timer' : 'Stopwatch'}
       </span>
-      <span className="select-none text-sm font-semibold tabular-nums">{formatTimerClock(ms)}</span>
+      <span className="select-none text-body tabular-nums">{formatTimerClock(ms)}</span>
       {/* pointer-events-auto below: on the canvas the element's face is inert
           so drags reach the canvas, and the controls have to opt back in. It
           changes nothing in the chrome, where everything is already live. */}

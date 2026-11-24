@@ -7,7 +7,7 @@ import { IconSlot } from '@livedoc/ui';
 // pills. Shared by EditorHeader and AuthControls so Share / Copy / Sign in / the
 // account all match. The caller adds the tone (default slate, or the Share brand fill).
 export const HEADER_ACTION_BTN =
-  'flex h-full min-w-[3.75rem] cursor-pointer flex-col items-center justify-center gap-1 border-l border-slate-200 px-3 text-[10px] font-medium leading-none transition dark:border-slate-800';
+  'flex h-full min-w-[3.75rem] cursor-pointer flex-col items-center justify-center gap-1 border-l border-slate-200 px-3 text-supporting leading-none transition dark:border-slate-800';
 
 // The slate tone of the header actions other than Share: Sign in, the account, Search.
 export const HEADER_ACTION_TONE =

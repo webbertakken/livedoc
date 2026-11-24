@@ -56,7 +56,7 @@ export function WorkbenchReconnectLine({
       className="pointer-events-none fixed top-3 left-1/2 z-[var(--z-chrome)] -translate-x-1/2"
     >
       {reconnect ? (
-        <p className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 shadow-sm dark:bg-amber-950 dark:text-amber-100">
+        <p className="rounded-full bg-amber-50 px-3 py-1.5 text-supporting text-amber-900 shadow-sm dark:bg-amber-950 dark:text-amber-100">
           {reconnectLine(workbenchName)}
         </p>
       ) : null}
