@@ -72,18 +72,18 @@ export function PdfOutlinePanel({
 
   if (read.phase === 'reading')
     return (
-      <p role="status" className="px-2 py-2 text-sm text-(--office-muted)">
+      <p role="status" className="px-2 py-2 text-body text-(--office-muted)">
         {OUTLINE_COPY.reading}
       </p>
     );
   if (read.phase === 'failed')
     return (
-      <p role="alert" className="px-2 py-2 text-sm">
+      <p role="alert" className="px-2 py-2 text-body">
         {OUTLINE_COPY.failed}
       </p>
     );
   if (!outline || outline.nodes.length === 0)
-    return <p className="px-2 py-2 text-sm text-(--office-muted)">{OUTLINE_COPY.none}</p>;
+    return <p className="px-2 py-2 text-body text-(--office-muted)">{OUTLINE_COPY.none}</p>;
 
   const toggle = (at: number) =>
     setOpen((before) => {
@@ -144,7 +144,7 @@ export function PdfOutlinePanel({
               onFocus={() => setFocused(at)}
               onClick={() => onFollow(node.item.target)}
               style={{ paddingLeft: 4 + (level - 1) * 16 }}
-              className={`flex min-h-8 cursor-pointer items-center pointer-coarse:min-h-11 gap-1 rounded-md pr-2 text-sm outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${
+              className={`flex min-h-row cursor-pointer items-center pointer-coarse:min-h-11 gap-1 rounded-control pr-2 text-body outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${
                 at === marked ? 'bg-(--office-pressed) font-medium text-(--office-pressed-ink)' : ''
               }`}
             >
@@ -156,7 +156,7 @@ export function PdfOutlinePanel({
                   event.stopPropagation();
                   toggle(at);
                 }}
-                className={`flex size-6 shrink-0 items-center justify-center rounded text-(--office-icon) ${
+                className={`flex size-chip shrink-0 items-center justify-center rounded-control text-(--office-icon) ${
                   folds ? 'hover:bg-(--office-hover)' : 'invisible'
                 }`}
               >
@@ -168,7 +168,7 @@ export function PdfOutlinePanel({
               </span>
               <span className="min-w-0 flex-1 truncate">{node.item.title}</span>
               {nowhere ? (
-                <span className="shrink-0 text-xs text-(--office-muted)">
+                <span className="shrink-0 text-supporting text-(--office-muted)">
                   {OUTLINE_COPY.nowhere}
                 </span>
               ) : null}
@@ -177,7 +177,7 @@ export function PdfOutlinePanel({
         })}
       </div>
       {read.cut ? (
-        <p className="px-2 py-2 text-xs text-(--office-muted)">{OUTLINE_COPY.cut}</p>
+        <p className="px-2 py-2 text-supporting text-(--office-muted)">{OUTLINE_COPY.cut}</p>
       ) : null}
     </>
   );

@@ -45,9 +45,9 @@ function PagePicture({
       <canvas
         ref={canvas}
         aria-hidden="true"
-        className="block w-full rounded-sm bg-(--pdf-paper) outline outline-1 outline-(--office-line)"
+        className="block w-full rounded-control bg-(--pdf-paper) outline outline-1 outline-(--office-line)"
       />
-      <figcaption className="mt-1 text-xs text-(--office-muted)">{label}</figcaption>
+      <figcaption className="mt-1 text-supporting text-(--office-muted)">{label}</figcaption>
     </figure>
   );
 }
@@ -101,13 +101,13 @@ export function PdfDarkPagesQuestion({
         if (from instanceof HTMLElement && !event.currentTarget.contains(from))
           cameFrom.current = from;
       }}
-      className="absolute top-3 right-3 z-20 w-[22rem] max-w-[calc(100%-1.5rem)] rounded-2xl bg-(--office-dialog) p-4 text-(--office-ink) shadow-lg outline outline-1 outline-(--office-line) phone:inset-x-2 phone:w-auto phone:max-w-none"
+      className="absolute top-3 right-3 z-20 w-[22rem] max-w-[calc(100%-1.5rem)] rounded-surface bg-(--office-dialog) p-4 text-(--office-ink) shadow-lg outline outline-1 outline-(--office-line) phone:inset-x-2 phone:w-auto phone:max-w-none"
     >
       <p role="status" className="sr-only">
         {said}
       </p>
       <div className="flex items-start gap-2">
-        <h2 id={heading} className="m-0 flex-1 text-base font-semibold">
+        <h2 id={heading} className="m-0 flex-1 text-panel-title">
           Show PDF pages dark?
         </h2>
         <Tooltip label="Close">
@@ -115,7 +115,7 @@ export function PdfDarkPagesQuestion({
             type="button"
             aria-label="Close"
             onClick={dismiss}
-            className="relative -mt-1 -mr-1 flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+            className="relative -mt-1 -mr-1 flex size-row shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
           >
             <Glyph size={16} units={24} aria-hidden="true">
               <Prims prims={lucideX} />
@@ -123,7 +123,7 @@ export function PdfDarkPagesQuestion({
           </button>
         </Tooltip>
       </div>
-      <p className="mt-1 text-sm text-(--office-muted)">
+      <p className="mt-1 text-body text-(--office-muted)">
         Only your view changes. The file, downloads and prints stay as they are.
       </p>
       <div className="mt-3 flex gap-3">

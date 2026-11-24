@@ -787,6 +787,40 @@ div.text-document-kept {
   pointer-events: none;
   user-select: none;
 }
+/*
+ * A drawing's picture (objects.md "Drawn"): its drawing drawn live over the PNG last saved, laid out as the picture's
+ * image and clipped to its box; once drawn, the PNG under it is hidden. Its bar sits under the picture's bounds.
+ */
+.text-document-picture-drawing {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.text-document-picture-drawing > span {
+  position: absolute;
+}
+.text-document-picture-turn:has([data-drawing-drawn]) > .text-document-picture-clip {
+  visibility: hidden;
+}
+.text-document-drawing-failed {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+.text-document-picture-bar {
+  position: absolute;
+  margin-top: 6px;
+  z-index: 5;
+  white-space: nowrap;
+  user-select: none;
+}
+.text-document-picture-bar:empty {
+  display: none;
+}
 /* The colour filter a recoloured or adjusted picture is drawn through: defined here, drawing nothing itself. */
 .text-document-picture-colours {
   position: absolute;

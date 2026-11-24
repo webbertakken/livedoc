@@ -140,6 +140,13 @@ import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
 import { useTextDocumentDrawings } from './useTextDocumentDrawings';
+import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
+import {
+  drawingBarKeys,
+  drawingOpenPlugin,
+  type DrawingTabs,
+  type OpenDrawing,
+} from '@/lib/text-document/text-document-drawing-open-plugin';
 import {
   initialTab,
   TAB_STEP_KEYS,
@@ -224,11 +231,14 @@ export type TextDocumentSurfaceProps = {
   documents?: readonly LinkDocument[];
   // Adds an empty drawing tab of this tab and opens it (objects.md "Drawings"); absent where none may be added.
   createDrawing?: (() => string | null) | null;
+  // The editor's drawing tabs (objects.md "Opening it again"); absent outside an editor, where drawings stay their PNGs.
+  drawingTabs?: DrawingTabs | null;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
 
 const NO_DOCUMENTS: readonly LinkDocument[] = [];
+const NO_DRAWING = () => false;
 
 export function TextDocumentSurface({
   scope,
@@ -241,6 +251,7 @@ export function TextDocumentSurface({
   chrome = null,
   documents = NO_DOCUMENTS,
   createDrawing = null,
+  drawingTabs = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -265,6 +276,11 @@ export function TextDocumentSurface({
   // Picture files pasted or dropped, taken by Insert > Image's placing (objects.md "Inserting") once it is made.
   const takePictureFiles = useRef<TakePictureFiles>(() => false);
   // A selected picture's handles (objects.md "Working with a picture"), sized by the hook made below.
+  // Drawings' pictures drawn live (objects.md "Drawn"): their hosts, handed in by the pictures' node view; and how a
+  // picture opens its drawing, made by the hook below.
+  const [drawingHosts] = useState(drawingHostStore);
+  const drawsDrawings = drawingTabs !== null;
+  const openDrawingAt = useRef<OpenDrawing | null>(null);
   const pictureSizing = useRef<PictureSizingHooks>({
     can: () => false,
     room: () => ({ width: 0, height: 0 }),
@@ -405,6 +421,8 @@ export function TextDocumentSurface({
           // A picture cropped after a double-click or Crop image (objects.md "Working with a picture"): before the
           // keymaps, so Enter and Escape end cropping rather than reaching the writing.
           pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
+          // A double-click on a drawing's picture opens its drawing (objects.md "Opening it again").
+          drawingOpenPlugin(() => openDrawingAt.current),
           // Pictures placed out of their line, and the room the text keeps clear of (objects.md "In the editor").
           placedPicturesPlugin({
             columnWidth: (body, pos) =>
@@ -474,6 +492,8 @@ export function TextDocumentSurface({
           contentsPressPlugin(),
           // Alt+F10 from a selected table of contents to its bar.
           contentsBarKeys(),
+          // Alt+F10 from a selected drawing's picture to its bar.
+          drawingBarKeys(),
           // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
           // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
           tableKeysPlugin(),
@@ -554,6 +574,7 @@ export function TextDocumentSurface({
               {
                 media: (key) => TextDocumentState.media(doc, key),
                 ...galleryPicturesOf(where),
+                drawing: drawsDrawings ? drawingHosts.attach : undefined,
               },
               {
                 can: () => pictureSizing.current.can(),
@@ -619,7 +640,18 @@ export function TextDocumentSurface({
       cancelled = true;
       teardown();
     };
-  }, [ownerId, documentId, tabId, shareCode, attempt, local, changes, emojiColonPlugin]);
+  }, [
+    ownerId,
+    documentId,
+    tabId,
+    shareCode,
+    attempt,
+    local,
+    changes,
+    emojiColonPlugin,
+    drawsDrawings,
+    drawingHosts,
+  ]);
 
   useEffect(() => {
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
@@ -891,6 +923,18 @@ export function TextDocumentSurface({
     showTab,
     placing: pictures.placing,
     create: createDrawing,
+    drawingTabs,
+  });
+  useLayoutEffect(() => {
+    openDrawingAt.current = drawings.open;
+  });
+  const drawingPictures = useTextDocumentDrawingPictures({
+    store: drawingHosts,
+    view: editorView,
+    canEdit: bodyWrites,
+    subscribe: changes.subscribeCaret,
+    open: drawings.open,
+    opens: drawingTabs?.opens ?? NO_DRAWING,
   });
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({
@@ -950,7 +994,7 @@ export function TextDocumentSurface({
       ...buildingBlocks,
       ...contents.actions,
       ...pictures.actions,
-      ...drawings,
+      ...drawings.actions,
       ...pictureEditing.actions,
       ...pictureSize.actions,
       ...tableProperties.actions,
@@ -969,7 +1013,7 @@ export function TextDocumentSurface({
       buildingBlocks,
       contents.actions,
       pictures.actions,
-      drawings,
+      drawings.actions,
       pictureEditing.actions,
       pictureSize.actions,
       tableProperties.actions,
@@ -1071,6 +1115,7 @@ export function TextDocumentSurface({
       {links.status}
       {bookmarks.card}
       {contents.bar}
+      {drawingPictures}
       {bookmarks.status}
       {headingLinks.status}
       <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />

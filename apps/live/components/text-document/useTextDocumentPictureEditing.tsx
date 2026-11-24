@@ -14,15 +14,21 @@ import {
   setPictureAlt,
 } from '@/lib/text-document/text-document-picture-edit';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
+import { drawingOfPicture } from '@/lib/text-document/text-document-drawing-pictures';
 import { TextDocumentAltTextDialog } from './TextDocumentAltTextDialog';
 import type { Bringing } from './useTextDocumentPictures';
 import type { ImagePickerTab } from '@/components/panels/ImagePicker';
 
-type Selected = { pos: number; alt: string; decorative: boolean };
+type Selected = { pos: number; alt: string; decorative: boolean; drawing: boolean };
 
 const sameSelected = (a: Selected | null, b: Selected | null) =>
   a === b ||
-  (a !== null && b !== null && a.pos === b.pos && a.alt === b.alt && a.decorative === b.decorative);
+  (a !== null &&
+    b !== null &&
+    a.pos === b.pos &&
+    a.alt === b.alt &&
+    a.decorative === b.decorative &&
+    a.drawing === b.drawing);
 
 export function useTextDocumentPictureEditing({
   view,
@@ -48,6 +54,7 @@ export function useTextDocumentPictureEditing({
       pos: found.pos,
       alt: typeof alt === 'string' ? alt : '',
       decorative: decorative === true,
+      drawing: drawingOfPicture(found.node) !== null,
     };
   }, [view]);
   const [selected, setSelected] = useState(read);
@@ -96,20 +103,25 @@ export function useTextDocumentPictureEditing({
   const actions = useMemo((): OfficeActions => {
     if (!canEdit || !view) return {};
     const disabled = selected === null;
+    // A drawing's picture is made from its drawing, never replaced (objects.md "Drawn").
+    const unreplaceable = disabled || selected.drawing;
     const pos = selected?.pos ?? -1;
     return {
       'image-alt-text': {
         run: () => selected && setAltOpen({ nonce: Date.now(), at: selected }),
         disabled,
       },
-      'image-replace-upload': { run: () => bring.chooseFile(replacing(pos)), disabled },
+      'image-replace-upload': {
+        run: () => bring.chooseFile(replacing(pos)),
+        disabled: unreplaceable,
+      },
       'image-replace-search': {
         run: () => bring.openPicker('search', replacing(pos)),
-        disabled,
+        disabled: unreplaceable,
       },
       'image-replace-gallery': {
         run: () => bring.openPicker('gallery', replacing(pos)),
-        disabled,
+        disabled: unreplaceable,
       },
     };
   }, [canEdit, view, selected, bring, replacing]);

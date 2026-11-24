@@ -1,8 +1,10 @@
 'use client';
 
-// Drawings in the writing (docs/specs/034-text-documents/objects.md "Inserting and editing", "Where it goes"):
-// Insert > Drawing > New keeps where the caret is and opens a new drawing tab; when Save and close has made the
-// drawing's picture, the text document places it there (its document tab shown first), one undo step.
+// Drawings in the writing (docs/specs/034-text-documents/objects.md "Inserting and editing", "Where it goes", "Opening
+// it again", "Its picture again"): Insert > Drawing > New keeps where the caret is and opens a new drawing tab; a
+// picture opens its drawing, keeping where the picture is. When Save and close has made the drawing's picture, the text
+// document puts it in the pictures naming it, or, where none does, places it there (its document tab shown first),
+// one undo step either way.
 import { useEffect, useMemo, useRef } from 'react';
 import { Selection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -14,6 +16,14 @@ import {
   readyDrawingFor,
   takeDrawing,
 } from '@/lib/text-document/text-document-drawing-pending';
+import {
+  drawingPicturesIn,
+  refreshDrawingPictures,
+} from '@/lib/text-document/text-document-drawing-pictures';
+import type {
+  DrawingTabs,
+  OpenDrawing,
+} from '@/lib/text-document/text-document-drawing-open-plugin';
 import {
   insertedPictureSize,
   insertPicture,
@@ -47,6 +57,7 @@ export function useTextDocumentDrawings({
   showTab,
   placing,
   create,
+  drawingTabs,
 }: {
   view: EditorView | null;
   // The text document tab this surface shows.
@@ -59,7 +70,9 @@ export function useTextDocumentDrawings({
   placing: PicturePlacing;
   // Adds an empty drawing tab of this text document tab and opens it; its id, or null when none may be added.
   create: (() => string | null) | null;
-}): OfficeActions {
+  // The editor's drawing tabs, opened in the canvas editor; null where none may be opened (outside an editor).
+  drawingTabs: DrawingTabs | null;
+}): { actions: OfficeActions; open: OpenDrawing | null } {
   // Placed once each: a re-render while its upload settles must not place it twice.
   const placingNow = useRef<string | null>(null);
 
@@ -72,34 +85,43 @@ export function useTextDocumentDrawings({
       return;
     }
     placingNow.current = ready.drawingTabId;
+    const drawing = ready.drawingTabId;
+    const named = drawingPicturesIn(view.state.doc, drawing).length;
     const at = placeIn(
       view,
       ready.where.anchor ? positionOf(view.state, ready.where.anchor) : null,
     );
     const put: PutPicture = ({ key, pixels }) =>
-      insertPicture(
-        {
-          key,
-          drawing: ready.drawingTabId,
-          ...insertedPictureSize(
+      named > 0
+        ? refreshDrawingPictures(drawing, { key, pixels })
+        : insertPicture(
             {
-              width: pixels.width / DRAWING_PICTURE_SCALE,
-              height: pixels.height / DRAWING_PICTURE_SCALE,
+              key,
+              drawing,
+              ...insertedPictureSize(
+                {
+                  width: pixels.width / DRAWING_PICTURE_SCALE,
+                  height: pixels.height / DRAWING_PICTURE_SCALE,
+                },
+                placing.room(),
+              ),
             },
-            placing.room(),
-          ),
-        },
-        at,
-      );
+            at,
+          );
     void placeStoredPicture(placing, ready.bytes, ready.stored, put).then((placed) => {
-      takeDrawing(ready.drawingTabId);
+      takeDrawing(drawing);
       placingNow.current = null;
-      if (placed) track('Element', 'Added', 'TextDocumentDrawing');
-      debugLog('[text-document] drawing placed', { drawing: ready.drawingTabId, placed });
+      if (placed && named > 0) track('Element', 'Changed', 'TextDocumentImageDrawing');
+      else if (placed) track('Element', 'Added', 'TextDocumentDrawing');
+      debugLog(named > 0 ? '[text-document] drawing refreshed' : '[text-document] drawing placed', {
+        drawing,
+        placed,
+        count: named,
+      });
     });
   }, [view, canEdit, shownTab, tabId, showTab, placing]);
 
-  return useMemo<OfficeActions>(() => {
+  const actions = useMemo<OfficeActions>(() => {
     if (!canEdit || !create || !view) return {};
     return {
       [DRAWING_NEW_ITEM]: {
@@ -117,4 +139,26 @@ export function useTextDocumentDrawings({
       },
     };
   }, [canEdit, create, view, tabId, shownTab]);
+
+  // Opening a drawing again: an Editor's Save and close comes back to where its picture is. A drawing whose tab is not
+  // there to open (gone, or outside this person's share) stays its picture.
+  const open = useMemo<OpenDrawing | null>(() => {
+    if (!drawingTabs || !view) return null;
+    return (drawing, pos) => {
+      if (!drawingTabs.opens(drawing)) {
+        debugLog('[text-document] drawing not opened', { drawing });
+        return;
+      }
+      if (canEdit)
+        putDrawingPending(drawing, {
+          textDocumentTabId: tabId,
+          documentTab: shownTab ?? '',
+          anchor: anchorOf(view.state, pos),
+        });
+      debugLog('[text-document] drawing opened', { drawing, editing: canEdit });
+      drawingTabs.open(drawing);
+    };
+  }, [drawingTabs, view, canEdit, tabId, shownTab]);
+
+  return { actions, open };
 }

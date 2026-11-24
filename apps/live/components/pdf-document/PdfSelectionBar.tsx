@@ -98,7 +98,7 @@ export function PdfSelectionBar({
       ref={bar}
       role="toolbar"
       aria-label="Selection"
-      className={`absolute z-20 flex items-center gap-0.5 rounded-full bg-(--office-menu) px-1 text-sm text-(--office-ink) shadow-lg outline outline-1 outline-(--office-line) ${
+      className={`absolute z-20 flex items-center gap-0.5 rounded-full bg-(--office-menu) px-1 text-body text-(--office-ink) shadow-lg outline outline-1 outline-(--office-line) ${
         place ? '' : 'invisible'
       }`}
       style={place ?? { left: 0, top: 0 }}
@@ -112,7 +112,7 @@ export function PdfSelectionBar({
             onClick={() => {
               if (!action.disabled) action.run();
             }}
-            className="h-11 rounded-full px-3 font-medium outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent"
+            className="h-11 rounded-full px-3 outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent"
           >
             {label}
           </button>

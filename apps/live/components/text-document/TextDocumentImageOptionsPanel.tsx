@@ -3,7 +3,7 @@
 // The Image options side panel's body (docs/specs/034-text-documents/objects.md "Working with a picture"): its Size &
 // rotation section, Width and Height in the person's unit, Scale width and height in percent of the picture's own size
 // (dimmed while that is not known), Lock aspect ratio (on at first), Rotate (Angle and a quarter turn either way);
-// Recolour and Adjustments (TextDocumentImageColours); then Reset. Each field applies on Enter or when left. Without a
+// Recolour and Adjustments (TextDocumentImageColours), dimmed for a drawing; then Reset. Each field applies on Enter or when left. Without a
 // selected picture it says to select one.
 import { useId, useState } from 'react';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
@@ -34,7 +34,12 @@ export type PictureSizing = PictureSize & {
   rotation: number;
   // Its recolour and adjustments (Recolour, Adjustments).
   colours: PictureColouring;
+  // A drawing's picture: Recolour and Adjustments are dimmed (objects.md "Drawn").
+  drawing: boolean;
 };
+
+// A drawing's Recolour and Adjustments: every control inside dimmed and out of reach.
+const DIMMED_FIELDS = 'm-0 min-w-0 border-0 p-0 disabled:opacity-50';
 
 /** A turn asked for: an angle typed, or a quarter turn either way (degrees clockwise). */
 export type PictureTurn = { angle: number } | { by: number };
@@ -155,10 +160,14 @@ export function TextDocumentImageOptionsPanel({
         </div>
       </PanelSection>
       <PanelSection title="Recolour">
-        <ImageRecolour recolour={picture.colours.recolour} onColour={onColour} />
+        <fieldset disabled={picture.drawing} className={DIMMED_FIELDS}>
+          <ImageRecolour recolour={picture.colours.recolour} onColour={onColour} />
+        </fieldset>
       </PanelSection>
       <PanelSection title="Adjustments">
-        <ImageAdjustments colours={picture.colours} onColour={onColour} />
+        <fieldset disabled={picture.drawing} className={DIMMED_FIELDS}>
+          <ImageAdjustments colours={picture.colours} onColour={onColour} />
+        </fieldset>
       </PanelSection>
       <div className="px-2 pt-2">
         <button

@@ -10,6 +10,7 @@ import { CROPPING_SPEC } from './text-document-picture-cropping-plugin';
 import type { CroppedPicture } from './text-document-picture-crop';
 import { PICTURE, PictureColours, type PictureMedia } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
+import type { DrawingHosts } from './text-document-picture-drawing-layer';
 import {
   PICTURE_DRAWN_EVENT,
   pictureBox,
@@ -167,6 +168,26 @@ describe('a picture drawn', () => {
     const img = view.dom.querySelector('img')!;
     expect(img.style.filter).toBe('');
     expect(img.style.opacity).toBe('');
+  });
+
+  // objects.md "Drawn": a drawing's picture is drawn live over its PNG, cropped and turned as the picture is.
+  it('gives a drawing a layer over its picture, laid out as its image, and its bar under its bounds', () => {
+    const release = vi.fn();
+    const drawing = vi.fn((_hosts: DrawingHosts) => release);
+    const source = { ...sourceOf(held(true)), drawing };
+    const crop = { top: 0.2, right: 0.1, bottom: 0, left: 0.1 };
+    const view = viewOf({ drawing: 'drawing-1', crop, rotation: 90 }, source);
+    expect(drawing).toHaveBeenCalledTimes(1);
+    const hosts = drawing.mock.calls[0]![0];
+    expect(hosts.drawing.style.cssText).toBe(
+      'left: -7.5pt; top: -10pt; width: 75pt; height: 50pt;',
+    );
+    expect([hosts.bar.style.left, hosts.bar.style.top]).toEqual(['0pt', '60pt']);
+    view.update!(picture({ crop, rotation: 90 }), [], undefined as never);
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(view.dom.querySelector('.text-document-picture-drawing')).toBeNull();
+    expect(viewOf({}, source).dom.querySelector('.text-document-picture-drawing')).toBeNull();
+    expect(drawing).toHaveBeenCalledTimes(1);
   });
 
   it('reads a decorative picture as nothing', () => {

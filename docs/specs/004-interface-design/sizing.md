@@ -21,6 +21,8 @@ respondents see it and a slide keep the sizes their author chose.
   selection's labels, a rule's marks, card rows' buttons, the outline's group buttons, Add Rows and charts (D238,
   default).
 - A sheet's tab window face is its picture, drawn as the sheet looks.
+- A PDF's pages are content with everything drawn on them at the zoom: its marks, a stamp, a link's place, Find's tints
+  and the text selected; its chrome is on the scale: the panels, the page bar, Find, the notices and the dialogs.
 - A sheet's chrome is on the scale: its bars, menus, popovers and dialogs, and what floats over the grid (Smart Fill,
   Import CSV, a cell's tooltip).
 - A Plan view's drawing is content, drawn at the canvas's zoom as a sheet's grid is: a Gantt's timeline, rows,
@@ -213,8 +215,8 @@ A surface names the token, never the number, so the scale changes in one place.
   fields takes the same floor (`max-sm:text-[16px]`), and that alone passes under a width.
 - Each app names what is not chrome as exceptions, a file or a whole folder, each with why: content drawn at a
   document's zoom, drawn art, display type, or a folder moving with its own lane; a stale one fails the run.
-- Text documents, the office shell and PDF documents are named as moving with their lanes (plans 0019 and 0022), and
-  leave the list as each lands.
+- Text documents and the office shell are named as moving with their lane (plan 0019), and leave the list as each
+  lands; a PDF's chrome is on the scale.
 - A word after a spacing prefix that is not a size and not a spacing token (an id like `gap-refetch`) is a name and
   passes.
 - The marketing site alone opts in to display type and layout steps (`marketingPages`, D244).

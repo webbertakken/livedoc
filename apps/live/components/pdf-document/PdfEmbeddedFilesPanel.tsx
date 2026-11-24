@@ -29,7 +29,7 @@ const looksLikePdf = (file: EmbeddedFile): boolean =>
   file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 
 const BUTTON =
-  'touch-target relative h-7 rounded-full border border-(--office-line) px-3 text-xs font-medium text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40';
+  'touch-target relative h-row rounded-full border border-(--office-line) px-3 text-body text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40';
 
 export function PdfEmbeddedFilesPanel({
   engine,
@@ -62,19 +62,19 @@ export function PdfEmbeddedFilesPanel({
 
   if (read.phase === 'reading')
     return (
-      <p role="status" className="px-2 py-2 text-sm text-(--office-muted)">
+      <p role="status" className="px-2 py-2 text-body text-(--office-muted)">
         {EMBEDDED_COPY.reading}
       </p>
     );
   if (read.phase === 'failed')
     return (
-      <p role="alert" className="px-2 py-2 text-sm">
+      <p role="alert" className="px-2 py-2 text-body">
         {EMBEDDED_COPY.failed}
       </p>
     );
   const { files, cut } = read.listed;
   if (files.length === 0)
-    return <p className="px-2 py-2 text-sm text-(--office-muted)">{EMBEDDED_COPY.none}</p>;
+    return <p className="px-2 py-2 text-body text-(--office-muted)">{EMBEDDED_COPY.none}</p>;
 
   const say = (at: number, words: string | null) =>
     setSaid((before) => {
@@ -120,19 +120,17 @@ export function PdfEmbeddedFilesPanel({
           <li
             key={at}
             data-pdf-embedded-file={at}
-            className="flex flex-col gap-1 rounded-md px-2 py-2 hover:bg-(--office-hover)"
+            className="flex flex-col gap-1 rounded-control px-2 py-2 hover:bg-(--office-hover)"
           >
-            <span className="text-sm font-medium break-all">
-              {file.name || UNNAMED_EMBEDDED_FILE}
-            </span>
-            <span className="text-xs text-(--office-muted)">
+            <span className="text-body break-all">{file.name || UNNAMED_EMBEDDED_FILE}</span>
+            <span className="text-supporting text-(--office-muted)">
               {[file.size === null ? null : pdfSizeText(file.size), file.type || null]
                 .filter(Boolean)
                 .join(' · ')}
             </span>
-            {file.description ? <span className="text-xs">{file.description}</span> : null}
+            {file.description ? <span className="text-supporting">{file.description}</span> : null}
             {file.runs ? (
-              <span data-pdf-embedded-runs className="text-xs text-(--office-ink)">
+              <span data-pdf-embedded-runs className="text-supporting text-(--office-ink)">
                 {EMBEDDED_COPY.runs}
               </span>
             ) : null}
@@ -159,14 +157,16 @@ export function PdfEmbeddedFilesPanel({
               ) : null}
             </span>
             {said.has(at) ? (
-              <span role="status" className="text-xs">
+              <span role="status" className="text-supporting">
                 {said.get(at)}
               </span>
             ) : null}
           </li>
         ))}
       </ul>
-      {cut ? <p className="px-2 py-2 text-xs text-(--office-muted)">{EMBEDDED_COPY.cut}</p> : null}
+      {cut ? (
+        <p className="px-2 py-2 text-supporting text-(--office-muted)">{EMBEDDED_COPY.cut}</p>
+      ) : null}
     </>
   );
 }

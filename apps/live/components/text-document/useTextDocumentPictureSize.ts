@@ -36,6 +36,7 @@ import {
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
 import { pictureColouring } from '@/lib/text-document/text-document-picture-colours';
 import type { PictureSizing, PictureTurn } from './TextDocumentImageOptionsPanel';
+import { drawingOfPicture } from '@/lib/text-document/text-document-drawing-pictures';
 
 /** The panel's item, Reset image's and Crop image's. */
 export const IMAGE_OPTIONS_ITEM = 'image-options';
@@ -92,6 +93,7 @@ export function useTextDocumentPictureSize({
       height: typeof height === 'number' ? height : 0,
       rotation: Pictures.rotation(rotation) ?? 0,
       colours: pictureColouring({ recolour, transparency, brightness, contrast }),
+      drawing: drawingOfPicture(found.node) !== null,
       pixels,
       own: pixels ? ownPictureSize(pixels) : null,
     };

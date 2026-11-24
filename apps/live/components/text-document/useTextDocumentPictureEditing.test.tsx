@@ -16,12 +16,13 @@ const { useTextDocumentPictureEditing } = await import('./useTextDocumentPicture
 import type { Bringing } from './useTextDocumentPictures';
 import type { ImagePickerTab } from '@/components/panels/ImagePicker';
 
-function setup({ pictureSelected = true, canEdit = true } = {}) {
+function setup({ pictureSelected = true, canEdit = true, drawing = null as string | null } = {}) {
   const picture = schema.nodes[PICTURE]!.create({
     media: 'old',
     width: 100,
     height: 50,
     alt: 'Sky',
+    drawing,
   });
   const doc = schema.node('doc', null, [schema.nodes.paragraph!.create(null, [picture])]);
   const view = new EditorView(document.createElement('div'), {
@@ -47,6 +48,14 @@ describe('useTextDocumentPictureEditing', () => {
     const { hook } = setup({ pictureSelected: false });
     expect(hook.result.current.actions['image-alt-text']?.disabled).toBe(true);
     expect(hook.result.current.actions['image-replace-gallery']?.disabled).toBe(true);
+  });
+
+  // objects.md "Drawn": a drawing's picture is made from its drawing, never replaced.
+  it("dims Replace image for a drawing's picture, its alt text still its own", () => {
+    const { hook } = setup({ drawing: 'd1' });
+    for (const item of ['image-replace-upload', 'image-replace-search', 'image-replace-gallery'])
+      expect(hook.result.current.actions[item]?.disabled).toBe(true);
+    expect(hook.result.current.actions['image-alt-text']?.disabled).toBe(false);
   });
 
   it('binds nothing for anyone who may not edit', () => {
