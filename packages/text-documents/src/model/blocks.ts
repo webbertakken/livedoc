@@ -8,6 +8,7 @@ import type { Table } from './tables';
 import type { Picture } from './pictures';
 import type { Equation } from './equations';
 import type { Bookmark } from './bookmarks';
+import type { TableOfContents } from './contents';
 
 /** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
 export type Run = {
@@ -87,7 +88,7 @@ export type SectionBreak = {
 /** A body-level element the model does not map (a table of contents, a table past the limits). */
 export type KeptBlock = { readonly type: 'kept'; readonly name: string; readonly xml: KeptXml };
 
-export type Block = Paragraph | Table | SectionBreak | KeptBlock;
+export type Block = Paragraph | Table | SectionBreak | TableOfContents | KeptBlock;
 
 export const Paragraph = {
   of: (text: string, style: string): Paragraph => ({

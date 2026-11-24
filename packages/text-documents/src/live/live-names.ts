@@ -11,7 +11,9 @@ export const TABLE = 'table';
 export const TABLE_ROW = 'table_row';
 export const TABLE_CELL = 'table_cell';
 export const TABLE_HEADER = 'table_header';
-export const BODY_BLOCKS = [PARAGRAPH, SECTION_BREAK, KEPT_BLOCK, TABLE] as const;
+/** A table of contents (links-and-navigation.md "Table of contents"): its look and levels, its entries paragraphs. */
+export const CONTENTS = 'table_of_contents';
+export const BODY_BLOCKS = [PARAGRAPH, SECTION_BREAK, KEPT_BLOCK, TABLE, CONTENTS] as const;
 /** The elements inside a table. */
 export const TABLE_PARTS = [TABLE_ROW, TABLE_CELL, TABLE_HEADER] as const;
 
@@ -37,6 +39,7 @@ export const SECTION_BREAK_ATTRIBUTES = [
  * A kept block's name and XML. `table`: a table held whole as the model's value, as documents imported before the
  * editor drew tables hold one; read as that table, never written.
  */
+export const CONTENTS_ATTRIBUTES = ['look', 'levels'] as const;
 export const KEPT_BLOCK_ATTRIBUTES = ['name', 'xml', 'table'] as const;
 export const TABLE_ATTRIBUTES = ['align', 'indent', 'kept', 'tag'] as const;
 export const TABLE_ROW_ATTRIBUTES = ['height', 'heightRule', 'breaks', 'kept', 'tag'] as const;

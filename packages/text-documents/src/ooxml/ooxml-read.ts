@@ -50,6 +50,7 @@ import { MediaTaken, type FoundMedia } from '../picture-media';
 import type { Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
 import { Bookmarks, type Bookmark } from '../model/bookmarks';
+import { Contents, type TableOfContents } from '../model/contents';
 import { firstMathRunProps, M_NS, readOmml } from './ooxml-equations';
 import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import { FootnotesReader, markProps } from './ooxml-notes';
@@ -91,6 +92,42 @@ const isOnAttribute = (value: string | undefined) =>
   value !== undefined && !['0', 'false', 'off'].includes(value);
 
 // Field instructions that run things or fetch from elsewhere (files-and-print.md "Import security").
+/** A paragraph's runs in order, those inside its links too. */
+function runsOf(p: XmlElement): XmlElement[] {
+  return childElements(p).flatMap((c) => (isW(c, 'r') ? [c] : isW(c, 'pPr') ? [] : runsOf(c)));
+}
+
+/** How many complex fields a paragraph opens and leaves open (less than 0 for those it closes). */
+function fieldDepth(p: XmlElement): number {
+  let depth = 0;
+  for (const run of runsOf(p))
+    for (const c of childElements(run))
+      if (isW(c, 'fldChar'))
+        depth += wVal(c, 'fldCharType') === 'begin' ? 1 : wVal(c, 'fldCharType') === 'end' ? -1 : 0;
+  return depth;
+}
+
+/** The instruction of a TOC field a paragraph's first field is; none when it is not one. */
+function contentsInstruction(p: XmlElement): string | undefined {
+  let instruction = '';
+  let begun = false;
+  for (const run of runsOf(p))
+    for (const c of childElements(run)) {
+      if (isW(c, 'fldChar')) {
+        const type = wVal(c, 'fldCharType');
+        if (type === 'begin' && !begun) begun = true;
+        else if (begun) return /^\s*TOC\b/i.test(instruction) ? instruction.trim() : undefined;
+      } else if (begun && isW(c, 'instrText')) instruction += textContent(c);
+    }
+  return begun && /^\s*TOC\b/i.test(instruction) ? instruction.trim() : undefined;
+}
+
+/** Whether a `w:sdt` of the body is a table of contents: its gallery is Word's "Table of Contents". */
+function isContentsBlock(sdt: XmlElement): boolean {
+  const object = childElement(childElement(sdt, W_NS, 'sdtPr') ?? sdt, W_NS, 'docPartObj');
+  return wVal(childElement(object ?? sdt, W_NS, 'docPartGallery'), 'val') === 'Table of Contents';
+}
+
 const UNSAFE_FIELD = /^\s*(DDE|DDEAUTO|INCLUDETEXT|INCLUDEPICTURE|LINK|IMPORT)\b/i;
 
 type Parts = {
@@ -257,6 +294,9 @@ class OoxmlReader {
     this.part = { parsed: parts.document, name: pkg.mainPart, rels: this.rels };
     this.parsePart = parsePart;
   }
+
+  /** The runs of a table of contents' fields' marks (its TOC field's, its PAGEREFs'): read as nothing. */
+  readonly fieldMarks = new Set<XmlElement>();
 
   kept(parsed: XmlParsed, e: XmlElement): KeptXml {
     const unsafe = (x: XmlElement) =>
@@ -477,7 +517,37 @@ class OoxmlReader {
     };
     const blocks: Block[] = [];
     let sectionAt = 0;
+    // A TOC field opened in a paragraph of the body, standing alone: the paragraphs to the one closing it.
+    let open: { instruction: string; paragraphs: XmlElement[]; depth: number } | undefined;
     for (const e of elements) {
+      const sectionEnds =
+        isW(e, 'p') &&
+        childElement(childElement(e, W_NS, 'pPr') ?? e, W_NS, 'sectPr') !== undefined;
+      if (open && isW(e, 'p') && !sectionEnds) {
+        open.paragraphs.push(e);
+        open.depth += fieldDepth(e);
+        if (open.depth <= 0) {
+          blocks.push(this.contents(open.paragraphs, open.instruction, styles));
+          open = undefined;
+        }
+        continue;
+      }
+      if (open) {
+        blocks.push(this.contents(open.paragraphs, open.instruction, styles));
+        open = undefined;
+      }
+      const opening = isW(e, 'p') && !sectionEnds ? contentsInstruction(e) : undefined;
+      if (opening !== undefined && fieldDepth(e) > 0) {
+        open = { instruction: opening, paragraphs: [e], depth: fieldDepth(e) };
+        continue;
+      }
+      if (isW(e, 'sdt') && isContentsBlock(e)) {
+        const content = childElement(e, W_NS, 'sdtContent');
+        const paragraphs = content ? childElements(content).filter((c) => isW(c, 'p')) : [];
+        const instruction = paragraphs.map(contentsInstruction).find((i) => i !== undefined) ?? '';
+        blocks.push(this.contents(paragraphs, instruction, styles));
+        continue;
+      }
       if (isW(e, 'p')) {
         const ends = childElement(childElement(e, W_NS, 'pPr') ?? e, W_NS, 'sectPr') !== undefined;
         // A paragraph holding a `w:sectPr` ends the section that sectPr describes; the next one starts after it.
@@ -497,6 +567,7 @@ class OoxmlReader {
         this.report.keep(e.local);
       }
     }
+    if (open) blocks.push(this.contents(open.paragraphs, open.instruction, styles));
     if (!blocks.some((b) => b.type === 'paragraph'))
       blocks.push({
         type: 'paragraph',
@@ -646,6 +717,38 @@ class OoxmlReader {
       report: this.report,
       normal: this.normalId(),
     });
+  }
+
+  /**
+   * A table of contents (standard-mapping.md "Tables of contents"): its entries the paragraphs, without the marks of
+   * their fields (a PAGEREF's shown page number stays); its levels the TOC field's range; With blue links when `\\n`
+   * leaves out every page number or no entry has one; Dotted when a dot leads to them.
+   */
+  contents(
+    paragraphs: readonly XmlElement[],
+    instruction: string,
+    styles: readonly Style[],
+  ): TableOfContents {
+    for (const run of paragraphs.flatMap(runsOf))
+      if (childElements(run).some((c) => isW(c, 'fldChar') || isW(c, 'instrText')))
+        this.fieldMarks.add(run);
+    const entries = paragraphs.map((p) => this.paragraph(p, undefined));
+    const range = /\\o\s+"?\s*(\d+)\s*-\s*(\d+)/.exec(instruction);
+    const noPages = /\\n(?!\s+"?\s*\d)/.test(instruction);
+    const tabbed = entries.some((p) =>
+      p.inlines.some((i) => i.type === 'run' && i.text.includes('\t')),
+    );
+    const stopsOf = (p: Paragraph) =>
+      p.props.tabStops ?? styles.find((s) => s.id === p.style)?.paragraph.tabStops ?? [];
+    return {
+      type: 'contents',
+      look: Contents.lookOf({
+        pages: !noPages && tabbed,
+        dotted: entries.some((p) => stopsOf(p).some((t) => t.leader === 'dot')),
+      }),
+      levels: Contents.levelsOf(range ? Number(range[2]) : undefined),
+      entries,
+    };
   }
 
   /** The blocks a cell, header, footer or note holds: paragraphs, tables and kept elements. */
@@ -937,7 +1040,7 @@ class RunReader {
   run(r: XmlElement, ctx: RunContext): void {
     const field = this.fields.get(r);
     if (field) return this.field(field.kind, field.results, r, ctx);
-    if (this.skipped.has(r)) return;
+    if (this.skipped.has(r) || this.r.fieldMarks.has(r)) return;
     const doc = this.r.part.parsed;
     const rPr = childElement(r, W_NS, 'rPr');
     const { style, props } = readRunProps(rPr);

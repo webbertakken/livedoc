@@ -23,6 +23,7 @@ import {
   PARAGRAPH,
   RUN_KEPT_MARK,
   SECTION_BREAK,
+  CONTENTS,
   SOURCE_MAP,
   STYLES_MAP,
   TEXT_PROPERTY_MARK_OF,
@@ -161,6 +162,15 @@ function blockNode(block: Block, stories: StoryWriter): Y.XmlElement {
     }
     case 'table':
       return tableElement(block, (b) => blockNode(b, stories), setAttributes);
+    case 'contents': {
+      const element = new Y.XmlElement(CONTENTS);
+      setAttributes(element, { look: block.look, levels: block.levels });
+      element.insert(
+        0,
+        block.entries.map((p) => paragraphNode(p, stories)),
+      );
+      return element;
+    }
   }
 }
 

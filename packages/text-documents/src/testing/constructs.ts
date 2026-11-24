@@ -688,6 +688,31 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         run('start', {}, { link: '#a1b2c3d4e5f6' }),
       ]),
     ]),
+  // links-and-navigation.md "Table of contents": a Dotted one of two levels, each entry its heading's text and page
+  // number linked to the heading's id, then the headings it lists.
+  contents: (format) => {
+    const DOTTED_STOP = { position: 468, align: 'end', leader: 'dot' } as const;
+    const linked = (text: string, id: string) => run(text, {}, { link: `#${id}` });
+    const heading = (role: 'heading1' | 'heading2', id: string, text: string) =>
+      paragraph(format, role, [{ type: 'bookmark', name: id, props: {} }, run(text)]);
+    return base(format, [
+      {
+        type: 'contents',
+        look: 'dotted',
+        levels: 2,
+        entries: [
+          paragraph(format, 'normal', [linked('Alpha\t1', '_alpha0000001')], {
+            props: { tabStops: [DOTTED_STOP] },
+          }),
+          paragraph(format, 'normal', [linked('Beta\t2', '_beta00000001')], {
+            props: { tabStops: [DOTTED_STOP] },
+          }),
+        ],
+      },
+      heading('heading1', '_alpha0000001', 'Alpha'),
+      heading('heading2', '_beta00000001', 'Beta'),
+    ]);
+  },
   // objects.md "The equation model": an equation in line among text, in its run's size and colour, holding every kind
   // of node; a paragraph of one equation on its own line, centred.
   equations: (format) => {

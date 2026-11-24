@@ -23,6 +23,7 @@ import { PictureColours } from '../model/picture-colours';
 import { PicturePlacements } from '../model/picture-placement';
 import { Equations, type Equation } from '../model/equations';
 import { Bookmarks, type Bookmark } from '../model/bookmarks';
+import { Contents, type TableOfContents } from '../model/contents';
 import { Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
@@ -41,6 +42,7 @@ import {
   PARAGRAPH,
   RUN_KEPT_MARK,
   SECTION_BREAK,
+  CONTENTS,
   SOURCE_MAP,
   STYLES_MAP,
   TEXT_PROPERTY_MARK_OF,
@@ -214,6 +216,21 @@ function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Blo
     }
     case TABLE:
       return tableOf(node, (child) => blockOf(child, normal, stories), normal);
+    case CONTENTS: {
+      const entries = node
+        .toArray()
+        .flatMap((child) =>
+          child instanceof Y.XmlElement && child.nodeName === PARAGRAPH
+            ? [blockOf(child, normal, stories) as Paragraph]
+            : [],
+        );
+      return {
+        type: 'contents',
+        look: (a.look as TableOfContents['look'] | undefined) ?? 'plain',
+        levels: Contents.levelsOf(a.levels as number | undefined),
+        entries,
+      };
+    }
     case KEPT_BLOCK:
       // A table held whole, as documents imported before the editor drew tables hold one.
       if (a.table) return a.table as Table;

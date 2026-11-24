@@ -50,7 +50,9 @@ function structure(document: TextDocument) {
             ]
           : b.type === 'kept'
             ? ['kept', b.name]
-            : ['section', b.start, b.setup.orientation],
+            : b.type === 'contents'
+              ? ['contents', b.look, ...b.entries.map(Paragraph.text)]
+              : ['section', b.start, b.setup.orientation],
     ),
     roles: document.styles.filter((s) => s.role).map((s) => `${s.role}=${s.id}`),
     lists: Object.keys(document.lists).length,

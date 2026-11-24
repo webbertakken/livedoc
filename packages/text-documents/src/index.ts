@@ -260,6 +260,8 @@ export {
   FOOTNOTE_ATTRIBUTES,
   KEPT_BLOCK,
   KEPT_BLOCK_ATTRIBUTES,
+  CONTENTS,
+  CONTENTS_ATTRIBUTES,
   TABLE,
   TABLE_ATTRIBUTES,
   TABLE_CELL,
@@ -292,3 +294,9 @@ export {
   keptShownText,
   type KeptPresence,
 } from './live/kept-presence';
+export {
+  CONTENTS_LEVELS_MAX,
+  Contents,
+  type ContentsLook,
+  type TableOfContents,
+} from './model/contents';

@@ -25,6 +25,7 @@ import { ooxmlMediaPart, ooxmlPictureXml } from './ooxml-pictures';
 import { Pictures, type HeldPictureMedia, type Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
 import type { Bookmark } from '../model/bookmarks';
+import type { TableOfContents } from '../model/contents';
 import { M_NS, ommlXml } from './ooxml-equations';
 import { keptXmlTexts } from '../picture-media';
 import { Styles, type Style } from '../model/styles';
@@ -352,6 +353,24 @@ class OoxmlWriter {
     );
   }
 
+  /**
+   * A table of contents as Word writes one (standard-mapping.md "Tables of contents"): a `w:sdt` of the Table of
+   * Contents gallery holding the entries, the first opening its TOC field, the last closing it.
+   */
+  contentsXml(block: TableOfContents): string {
+    const entries = block.entries.map((p) => this.paragraphXml(p, undefined));
+    if (entries.length === 0) entries.push('<w:p/>');
+    const instruction = `TOC \\o "1-${block.levels}" \\h \\z \\u${block.look === 'links' ? ' \\n' : ''}`;
+    const begin = `<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${escapeXmlAttribute(instruction)} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>`;
+    const end = '<w:r><w:fldChar w:fldCharType="end"/></w:r>';
+    entries[0] = withFieldStart(entries[0]!, begin);
+    const last = entries.length - 1;
+    entries[last] = entries[last]!.replace(/(<\/w:p>|<w:p\/>)$/, (close) =>
+      close === '<w:p/>' ? `<w:p>${end}</w:p>` : `${end}</w:p>`,
+    );
+    return `<w:sdt><w:sdtPr><w:docPartObj><w:docPartGallery w:val="Table of Contents"/><w:docPartUnique/></w:docPartObj></w:sdtPr><w:sdtContent>${entries.join('')}</w:sdtContent></w:sdt>`;
+  }
+
   /** Blocks of a cell: paragraphs, tables and kept elements. */
   blocksXml(blocks: readonly Block[]): string {
     return blocks
@@ -375,8 +394,14 @@ class OoxmlWriter {
       const next = blocks[i + 1];
       const ends = next?.type === 'section' ? current : undefined;
       if (block.type === 'paragraph') out.push(this.paragraphXml(block, ends));
-      else if (block.type === 'kept' || block.type === 'table') {
-        out.push(block.type === 'kept' ? this.kept(block.xml) : this.tableXml(block));
+      else if (block.type === 'kept' || block.type === 'table' || block.type === 'contents') {
+        out.push(
+          block.type === 'kept'
+            ? this.kept(block.xml)
+            : block.type === 'table'
+              ? this.tableXml(block)
+              : this.contentsXml(block),
+        );
         if (ends) out.push(`<w:p><w:pPr>${this.sectPr(ends)}</w:pPr></w:p>`);
       } else {
         const previous = blocks[i - 1];
@@ -661,6 +686,13 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     if (!defaults.has(ext)) defaults.set(ext, media.mediaType);
   }
   return writeOoxmlPackage(parts, relationships, defaults);
+}
+
+/** A paragraph written with runs put first among its runs, after its properties. */
+function withFieldStart(paragraph: string, runs: string): string {
+  if (paragraph === '<w:p/>') return `<w:p>${runs}</w:p>`;
+  const open = /^<w:p\b[^>]*>(?:<w:pPr\/>|<w:pPr>[\s\S]*?<\/w:pPr>)?/.exec(paragraph)![0];
+  return `${open}${runs}${paragraph.slice(open.length)}`;
 }
 
 /** The highest bookmark id kept content holds, so the bookmarks written are numbered after it. */
