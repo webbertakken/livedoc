@@ -37,6 +37,11 @@ import { SummarySlotContext } from './summary-slot';
 import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
+import {
+  SpreadsheetFullScreenProvider,
+  useFullScreenContext,
+  useSpreadsheetFullScreen,
+} from './spreadsheet-full-screen';
 import { useGridMenuBindings } from './useGridMenuBindings';
 import {
   SpreadsheetZoomProvider,
@@ -94,6 +99,8 @@ export function SpreadsheetSurface({
   const { zoom, scale } = useSpreadsheetZoom();
   // View › Show › Formulas, the person's own across the sheets (grid-and-editing.md "Formulas", D141).
   const formulas = useShowFormulas();
+  // View › Full Screen, the person's own for the page (surface.md "Layout", D188).
+  const fullScreen = useSpreadsheetFullScreen();
   // Each tab's colour and whether it is hidden, from its sheet (spreadsheet.md "Sheets in the sheet bar", D177).
   const looks = useSheetTabLooks(bridge, tabs);
   const hidden = useMemo(() => hiddenTabIds(looks), [looks]);
@@ -118,22 +125,26 @@ export function SpreadsheetSurface({
       aria-label="Spreadsheet"
       className="office-shell absolute inset-0 flex flex-col bg-white dark:bg-slate-950"
     >
-      <SpreadsheetTitleRow
-        scope={scope}
-        tabId={tabId}
-        format={workbook.format}
-        documentName={documentName}
-        level={
-          bridge ? spreadsheetLevel(bridge.canEdit, bridge.canEdit && bridge.canShape) : 'view'
-        }
-        history={history}
-        channel={channel}
-        zoom={zoom}
-        formulas={formulas}
-        keyScope={root}
-        onWorkbook={onWorkbook}
-        pushUndo={(step) => bridge?.pushUndo(step)}
-      />
+      {/* Full Screen hides the title row, menus and toolbar, keeping them mounted: their keys and dialogs go on. */}
+      <div className={fullScreen.on ? 'hidden' : 'contents'}>
+        <SpreadsheetTitleRow
+          scope={scope}
+          tabId={tabId}
+          format={workbook.format}
+          documentName={documentName}
+          level={
+            bridge ? spreadsheetLevel(bridge.canEdit, bridge.canEdit && bridge.canShape) : 'view'
+          }
+          history={history}
+          channel={channel}
+          zoom={zoom}
+          formulas={formulas}
+          onFullScreen={fullScreen.enter}
+          keyScope={root}
+          onWorkbook={onWorkbook}
+          pushUndo={(step) => bridge?.pushUndo(step)}
+        />
+      </div>
       <SheetBarActionsContext.Provider value={sheetBar}>
         <OfficeBindingsContext.Provider value={channel}>
           <SummarySlotContext.Provider value={summarySlot}>
@@ -141,16 +152,18 @@ export function SpreadsheetSurface({
               <SheetStepContext.Provider value={stepSheet}>
                 <SurfaceRedoContext.Provider value={history?.redo ?? null}>
                   <ShowFormulasContext.Provider value={formulas.shown}>
-                    {bridge ? (
-                      <OpenSheet
-                        bridge={bridge}
-                        tabId={tabId}
-                        sync={sync}
-                        onWorkbook={onWorkbook}
-                      />
-                    ) : (
-                      <Status state="loading" />
-                    )}
+                    <SpreadsheetFullScreenProvider value={fullScreen}>
+                      {bridge ? (
+                        <OpenSheet
+                          bridge={bridge}
+                          tabId={tabId}
+                          sync={sync}
+                          onWorkbook={onWorkbook}
+                        />
+                      ) : (
+                        <Status state="loading" />
+                      )}
+                    </SpreadsheetFullScreenProvider>
                   </ShowFormulasContext.Provider>
                 </SurfaceRedoContext.Provider>
               </SheetStepContext.Provider>
@@ -333,6 +346,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const zoom = useSpreadsheetZoomScale();
   const surfaceKeys = useSpreadsheetSurfaceKeys();
   const office = useGridMenuBindings(actions);
+  const fullScreen = useFullScreenContext();
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
   useEffect(() => {
@@ -355,8 +369,16 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
       }}
     >
       {/* The surface's areas, for F6 and Ctrl+Alt+. (grid-and-editing.md "Moving around"). */}
-      <div data-region="formulabar">
-        <SheetFormulaBar actions={actions} input={input} />
+      <div data-region="formulabar" className="flex items-center">
+        <div className="min-w-0 flex-1">
+          <SheetFormulaBar actions={actions} input={input} />
+        </div>
+        {/* The way back from Full Screen without a key, beside the formula bar (D187). */}
+        {fullScreen?.on ? (
+          <Button variant="secondary" size="xs" className="mx-2 shrink-0" onClick={fullScreen.exit}>
+            Exit Full Screen
+          </Button>
+        ) : null}
       </div>
       <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
         <SheetGrid

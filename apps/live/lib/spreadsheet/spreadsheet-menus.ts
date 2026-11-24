@@ -227,7 +227,8 @@ const VIEW_MENU = menu('view', 'View', [
     'Zoom',
     ZOOM_ITEMS.map(({ id, label }) => built(id, label, 'view', { checkable: 'radio' })),
   ),
-  item('full-screen', 'Full Screen', 'view'),
+  // surface.md "Layout": the title row, menus and toolbar step aside (D187, D188).
+  built('full-screen', 'Full Screen', 'view'),
 ]);
 
 function freezeItem({ id, axis, count }: (typeof FREEZE_ITEMS)[number]): OfficeItem {

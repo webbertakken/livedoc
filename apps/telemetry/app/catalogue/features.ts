@@ -1087,6 +1087,16 @@ export const SPREADSHEET_STARRED = chart(
   { types: ['SpreadsheetStar'], rising: 'neutral' },
 );
 
+// A spreadsheet's Full Screen turned on from View › Full Screen, or off by Esc or its Exit button
+// (docs/specs/029-sheets/surface.md "Layout").
+export const SPREADSHEET_FULL_SCREEN = chart(
+  'UI',
+  'Toggled',
+  'Spreadsheet Full Screen',
+  "A spreadsheet's Full Screen turned on from View › Full Screen, or off by Esc or its Exit Full Screen button.",
+  { types: ['SpreadsheetFullScreen'], rising: 'neutral' },
+);
+
 // A spreadsheet's grid zoom picked from View › Zoom or its toolbar (docs/specs/029-sheets/surface.md "Grid").
 export const SPREADSHEET_ZOOMED = chart(
   'UI',
@@ -1488,6 +1498,7 @@ export const EDITOR_CHROME: MetricStack = {
     TOOL_FINDER_USED,
     TEXT_DOCUMENT_STARRED,
     SPREADSHEET_STARRED,
+    SPREADSHEET_FULL_SCREEN,
     SPREADSHEET_ZOOMED,
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,

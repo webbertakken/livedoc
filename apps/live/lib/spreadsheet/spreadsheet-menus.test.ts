@@ -182,6 +182,7 @@ describe('spreadsheetMenus', () => {
       'expand-all-column-groups',
       'collapse-all-column-groups',
       ...ZOOM_ITEMS.map((i) => i.id),
+      'full-screen',
       'search-the-menus',
       'keyboard-shortcuts',
     ]);
