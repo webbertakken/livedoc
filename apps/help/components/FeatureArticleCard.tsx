@@ -13,22 +13,18 @@ export function FeatureArticleCard({ article }: { article: Article }) {
   return (
     <Link
       href={articleHref(article)}
-      className="card-glow group block rounded-xl bg-white p-5 transition-colors duration-micro hover:bg-brand-50/30 dark:hover:bg-brand-500/10 sm:p-6 dark:bg-slate-900"
+      className="card-glow group block rounded-surface bg-white p-6 transition-colors duration-micro hover:bg-brand-50/30 dark:hover:bg-brand-500/10 sm:p-6 dark:bg-slate-900"
     >
       <div className="flex items-start gap-4">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${FEATURE_TILE_CLASS}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-menu ${FEATURE_TILE_CLASS}`}
           style={featureTileStyle(colour)}
         >
           {featureIcon(article.slug, article.categorySlug)}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="mb-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {article.title}
-          </h3>
-          <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-            {article.description}
-          </p>
+          <h3 className="mb-1 text-name text-slate-900 dark:text-slate-100">{article.title}</h3>
+          <p className="text-body text-slate-500 dark:text-slate-400">{article.description}</p>
         </div>
       </div>
       <CountPill count={subCount} noun="guide" />

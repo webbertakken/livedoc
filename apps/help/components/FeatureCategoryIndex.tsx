@@ -56,17 +56,17 @@ export function FeatureCategoryIndex({ slug }: { slug: string }) {
         lede={cat.description}
         art={<CategoryArt slug={slug} />}
       >
-        <p className="mt-5 text-sm font-medium text-(--hero-muted)">
+        <p className="mt-5 text-body text-(--hero-muted)">
           {guideCount(cat.articleCount)}
           {grouped && ` in ${groups.length} sections`}
         </p>
       </HelpHero>
-      <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
-        <div className={grouped ? 'lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-10' : ''}>
+      <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
+        <div className={grouped ? 'lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-6' : ''}>
           {grouped && (
             <nav aria-label={`${cat.title} sections`} className="hidden lg:block">
               <div className="sticky top-32">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                <p className="mb-3 text-supporting text-slate-500 dark:text-slate-400">
                   On this page
                 </p>
                 <ul className="space-y-1 border-l border-slate-200 dark:border-slate-800">
@@ -74,10 +74,10 @@ export function FeatureCategoryIndex({ slug }: { slug: string }) {
                     <li key={group}>
                       <a
                         href={`#${groupAnchor(group)}`}
-                        className="-ml-px flex items-center justify-between border-l-2 border-transparent py-1.5 pl-4 pr-1 text-sm text-slate-600 transition-colors hover:border-brand-500 hover:text-brand-700 dark:text-slate-300 dark:hover:text-brand-200"
+                        className="-ml-px flex items-center justify-between border-l-2 border-transparent py-1.5 pl-4 pr-1 text-body text-slate-600 transition-colors hover:border-brand-500 hover:text-brand-700 dark:text-slate-300 dark:hover:text-brand-200"
                       >
                         {group}
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-supporting text-slate-500 dark:text-slate-400">
                           {articles.length}
                         </span>
                       </a>
@@ -95,9 +95,9 @@ export function FeatureCategoryIndex({ slug }: { slug: string }) {
                 className="mb-12 scroll-mt-32 last:mb-0"
               >
                 {group ? (
-                  <h2 className="mb-4 flex items-baseline gap-3 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                  <h2 className="mb-4 flex items-baseline gap-3 text-dialog-title text-slate-900 dark:text-slate-50">
                     {group}
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    <span className="text-body text-slate-500 dark:text-slate-400">
                       {articles.length}
                     </span>
                   </h2>

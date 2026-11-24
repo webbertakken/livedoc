@@ -43,7 +43,7 @@ import type { ReactNode } from 'react';
  *  back to the `the-canvas` icon at the call site. */
 export function Glyph({ children }: { children: ReactNode }) {
   return (
-    <UiGlyph size={24} units={24} className="h-6 w-6">
+    <UiGlyph size={24} units={24} className="size-chip">
       {children}
     </UiGlyph>
   );

@@ -28,7 +28,7 @@ describe('TableOfContents', () => {
   it('numbers the sections and indents the sub-sections', () => {
     const rows = [...render(items).querySelectorAll('a')];
     expect(rows.map((a) => a.textContent)).toEqual(['1First part', 'A detail', '2Second part']);
-    expect(rows[1]!.className).toMatch(/\bpl-7\b/);
+    expect(rows[1]!.className).toMatch(/\bpl-6\b/);
   });
 
   it('shows nothing for an article without an outline', () => {

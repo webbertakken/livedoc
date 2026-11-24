@@ -23,11 +23,11 @@ export function Figure({
 }) {
   return (
     <figure className={`my-6 ${width === 'narrow' ? 'mx-auto max-w-md' : ''}`}>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-brand-50/60 to-white p-4 shadow-[0_16px_36px_-28px_rgb(30_27_75/0.4)] md:p-6 dark:border-slate-800 dark:bg-slate-900 dark:from-brand-500/10 dark:to-slate-900">
+      <div className="overflow-hidden rounded-surface border border-slate-200 bg-gradient-to-br from-brand-50/60 to-white p-4 shadow-[0_16px_36px_-28px_rgb(30_27_75/0.4)] md:p-6 dark:border-slate-800 dark:bg-slate-900 dark:from-brand-500/10 dark:to-slate-900">
         {children}
       </div>
       {caption && (
-        <figcaption className="mt-2.5 px-1 text-center text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+        <figcaption className="mt-2.5 px-1 text-center text-body text-slate-500 dark:text-slate-400">
           {caption}
         </figcaption>
       )}

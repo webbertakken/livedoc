@@ -31,23 +31,21 @@ export function HelpHero({
       >
         <div className={home ? 'mx-auto max-w-3xl' : 'max-w-3xl'}>
           {eyebrow && (
-            <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-300">
-              {eyebrow}
-            </div>
+            <div className="mb-3 text-supporting text-brand-700 dark:text-brand-300">{eyebrow}</div>
           )}
           <h1
-            className={`font-bold tracking-tight text-(--hero-ink) ${
-              home
-                ? 'text-4xl sm:text-5xl md:text-6xl'
-                : 'text-3xl md:text-[2.75rem] md:leading-tight'
+            className={`text-(--hero-ink) ${
+              home ? 'text-4xl sm:text-5xl md:text-6xl' : 'text-3xl md:text-[2.75rem]'
             }`}
           >
             {title}
           </h1>
           {lede && (
             <p
-              className={`mt-4 leading-relaxed text-(--hero-muted) ${
-                home ? 'mx-auto max-w-2xl text-base md:text-lg' : 'max-w-2xl text-base md:text-lg'
+              className={`mt-4 text-(--hero-muted) ${
+                home
+                  ? 'mx-auto max-w-2xl text-panel-title md:text-name'
+                  : 'max-w-2xl text-panel-title md:text-name'
               }`}
             >
               {lede}
@@ -58,7 +56,7 @@ export function HelpHero({
         {art && (
           <div
             aria-hidden
-            className="mt-0 hidden aspect-[400/220] overflow-hidden rounded-2xl border border-slate-200 shadow-[0_18px_40px_-24px_var(--hero-card-shadow)] lg:block dark:border-slate-800"
+            className="mt-0 hidden aspect-[400/220] overflow-hidden rounded-surface border border-slate-200 shadow-[0_18px_40px_-24px_var(--hero-card-shadow)] lg:block dark:border-slate-800"
           >
             {art}
           </div>

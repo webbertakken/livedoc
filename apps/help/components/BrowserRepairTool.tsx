@@ -46,11 +46,11 @@ export function BrowserRepairTool() {
   }, []);
 
   return (
-    <div className="not-prose my-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900/60">
-      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">This Browser</p>
+    <div className="not-prose my-6 rounded-surface border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/60">
+      <p className="text-body text-slate-900 dark:text-slate-100">This Browser</p>
       <ul
         aria-live="polite"
-        className="mt-2 mb-4 space-y-1 font-mono text-xs text-slate-600 dark:text-slate-300"
+        className="mt-2 mb-4 space-y-1 font-mono text-supporting text-slate-600 dark:text-slate-300"
       >
         {lines ? lines.map((line) => <li key={line}>{line}</li>) : <li>Checking…</li>}
       </ul>
@@ -63,7 +63,7 @@ export function BrowserRepairTool() {
           confirmLabel="Repair This Browser"
         />
       ) : (
-        <p role="status" className="text-sm text-slate-700 dark:text-slate-200">
+        <p role="status" className="text-body text-slate-700 dark:text-slate-200">
           Done. Open your document again.{' '}
           <a
             href="/explorer/recent"

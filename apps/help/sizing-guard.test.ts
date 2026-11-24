@@ -7,8 +7,13 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 // The help centre's chrome is on the sizing scale (docs/specs/004-interface-design/sizing.md "The other apps").
 const SIZED_PATHS = ['app', 'components', 'lib'];
 
-// An article's prose is content, set for reading; the category pictures are drawn art.
-const SIZING_EXCEPTIONS = ['components/category-art'];
+// The category pictures and the article illustrations (pictures of the editor) are drawn art.
+// The home page's hero headline is display type, as the marketing site's (D243).
+const SIZING_EXCEPTIONS = [
+  'components/category-art',
+  'components/illustrations',
+  'components/HelpHero.tsx',
+];
 
 describe('help sizing', () => {
   it('draws every part from the sizing scale', () => {

@@ -57,13 +57,9 @@ function SectionHead({
 }) {
   return (
     <div className="mb-8 max-w-2xl">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-300">
-        {eyebrow}
-      </p>
-      <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl dark:text-slate-50">
-        {heading}
-      </h2>
-      <p className="mt-2 text-base leading-relaxed text-slate-500 dark:text-slate-400">{lede}</p>
+      <p className="mb-2 text-supporting text-brand-700 dark:text-brand-300">{eyebrow}</p>
+      <h2 className="text-page-title text-slate-900 dark:text-slate-50">{heading}</h2>
+      <p className="mt-2 text-panel-title text-slate-500 dark:text-slate-400">{lede}</p>
     </div>
   );
 }
@@ -82,11 +78,11 @@ export default function HelpHome() {
         lede="Guides and answers for every part of LiveDoc, from your first diagram onwards."
       >
         <div className="mx-auto mt-5 flex flex-wrap justify-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-3 py-1 text-xs font-medium text-(--hero-chip-text)">
+          <span className="inline-flex items-center gap-2 rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-3 py-1 text-supporting text-(--hero-chip-text)">
             <span aria-hidden className="size-1.5 rounded-full bg-emerald-500" />
             {`${articles.length} guides`}
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-3 py-1 text-xs font-medium text-(--hero-chip-text)">
+          <span className="inline-flex items-center gap-2 rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-3 py-1 text-supporting text-(--hero-chip-text)">
             <span aria-hidden className="size-1.5 rounded-full bg-brand-500" />
             Search them from inside the editor too
           </span>
@@ -98,12 +94,12 @@ export default function HelpHome() {
           aria-label="Popular topics"
           className="mx-auto mt-5 flex max-w-3xl flex-wrap items-center justify-center gap-2"
         >
-          <span className="text-sm text-(--hero-muted)">Popular:</span>
+          <span className="text-body text-(--hero-muted)">Popular:</span>
           {POPULAR_TOPICS.map((t) => (
             <Link
               key={t.path}
               href={articleHref(articleAt(t.path))}
-              className="relative rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-3 py-1 text-sm text-(--hero-chip-text) transition-colors touch-target-y hover:border-(--hero-chip-border-hover)"
+              className="relative rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-3 py-1 text-body text-(--hero-chip-text) transition-colors touch-target-y hover:border-(--hero-chip-border-hover)"
             >
               {t.label}
             </Link>
@@ -112,8 +108,8 @@ export default function HelpHome() {
       </HelpHero>
 
       {/* Start here. */}
-      <section aria-labelledby="start-here" className="mx-auto max-w-7xl px-4 pt-14 md:px-8">
-        <div className="card-glow overflow-hidden rounded-2xl bg-white dark:bg-slate-900">
+      <section aria-labelledby="start-here" className="mx-auto max-w-7xl px-4 pt-14 md:px-6">
+        <div className="card-glow overflow-hidden rounded-surface bg-white dark:bg-slate-900">
           <div className="grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
             <div
               aria-hidden
@@ -121,14 +117,9 @@ export default function HelpHome() {
             >
               <CategoryArt slug={walkthrough.slug} />
             </div>
-            <div className="p-6 md:p-8">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-300">
-                Start Here
-              </p>
-              <h2
-                id="start-here"
-                className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50"
-              >
+            <div className="p-6 md:p-6">
+              <p className="mb-1 text-supporting text-brand-700 dark:text-brand-300">Start Here</p>
+              <h2 id="start-here" className="text-dialog-title text-slate-900 dark:text-slate-50">
                 New to LiveDoc?
               </h2>
               <ol className="mt-4 space-y-1">
@@ -136,12 +127,9 @@ export default function HelpHome() {
                   <li key={a.slug}>
                     <Link
                       href={articleHref(a)}
-                      className="group/step -mx-2 flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-800 dark:text-slate-200 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
+                      className="group/step -mx-2 flex items-center gap-3 rounded-menu px-2 py-1.5 text-body text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-800 dark:text-slate-200 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
                     >
-                      <GlyphDisc
-                        size={24}
-                        className="bg-brand-700 text-xs font-semibold text-white"
-                      >
+                      <GlyphDisc size={24} className="bg-brand-700 text-supporting text-white">
                         {i + 1}
                       </GlyphDisc>
                       <span className="font-medium">{a.title}</span>
@@ -151,7 +139,7 @@ export default function HelpHome() {
               </ol>
               <Link
                 href={categoryHref(walkthrough.slug)}
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
+                className="mt-4 inline-flex items-center gap-2 text-body text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
               >
                 {`All ${walkthroughArticles.length} getting started guides`}
                 <ArrowRightIcon />
@@ -172,7 +160,7 @@ export default function HelpHome() {
           <section
             key={s.id}
             id={s.id}
-            className="mx-auto max-w-7xl scroll-mt-32 px-4 pt-16 md:px-8"
+            className="mx-auto max-w-7xl scroll-mt-32 px-4 pt-16 md:px-6"
           >
             <SectionHead eyebrow={s.eyebrow} heading={s.heading} lede={s.lede} />
             <div
@@ -193,21 +181,19 @@ export default function HelpHome() {
       })}
 
       {/* Still stuck? */}
-      <section aria-labelledby="still-stuck" className="mx-auto max-w-7xl px-4 pt-16 md:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-slate-900 p-6 text-white md:p-10 dark:bg-slate-900 dark:ring-1 dark:ring-slate-800">
+      <section aria-labelledby="still-stuck" className="mx-auto max-w-7xl px-4 pt-16 md:px-6">
+        <div className="relative overflow-hidden rounded-surface bg-slate-900 p-6 text-white md:p-6 dark:bg-slate-900 dark:ring-1 dark:ring-slate-800">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.08)_1px,transparent_1px)] bg-size-[18px_18px] [mask-image:linear-gradient(to_bottom,black,transparent_90%)]"
           />
-          <div className="relative grid items-center gap-8 lg:grid-cols-2">
+          <div className="relative grid items-center gap-6 lg:grid-cols-2">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-300">
-                Still Stuck?
-              </p>
-              <h2 id="still-stuck" className="text-2xl font-bold tracking-tight md:text-3xl">
+              <p className="mb-2 text-supporting text-brand-300">Still Stuck?</p>
+              <h2 id="still-stuck" className="text-page-title">
                 We&apos;ll help you get going again
               </h2>
-              <p className="mt-3 max-w-md leading-relaxed text-slate-300">
+              <p className="mt-3 max-w-md text-slate-300">
                 Most problems have a quick fix in Troubleshooting. If yours doesn&apos;t, tell us
                 and we will look into it.
               </p>
@@ -227,7 +213,7 @@ export default function HelpHome() {
                 <a
                   href={`${REPORT_A_BUG_PATH}?from=/help/`}
                   data-bug-report-entry=""
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-100 transition-colors hover:border-slate-400 hover:bg-white/5"
+                  className="inline-flex items-center gap-2 rounded-menu border border-slate-600 px-4 py-2 text-body text-slate-100 transition-colors hover:border-slate-400 hover:bg-white/5"
                 >
                   Report a Bug
                 </a>
@@ -235,19 +221,19 @@ export default function HelpHome() {
             </div>
             <Link
               href={categoryHref(troubleshooting.slug)}
-              className="group flex flex-col overflow-hidden rounded-2xl bg-white text-slate-900 ring-1 ring-white/10 transition-shadow hover:ring-brand-300 sm:flex-row dark:bg-slate-950 dark:text-slate-100"
+              className="group flex flex-col overflow-hidden rounded-surface bg-white text-slate-900 ring-1 ring-white/10 transition-shadow hover:ring-brand-300 sm:flex-row dark:bg-slate-950 dark:text-slate-100"
             >
               <div aria-hidden className="aspect-[400/220] overflow-hidden sm:aspect-auto sm:w-1/2">
                 <CategoryArt slug={troubleshooting.slug} />
               </div>
-              <div className="flex flex-1 flex-col justify-center p-5">
-                <h3 className="font-semibold group-hover:text-brand-700 dark:group-hover:text-brand-200">
+              <div className="flex flex-1 flex-col justify-center p-6">
+                <h3 className="group-hover:text-brand-700 dark:group-hover:text-brand-200">
                   {troubleshooting.title}
                 </h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-body text-slate-500 dark:text-slate-400">
                   {troubleshooting.description}
                 </p>
-                <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 dark:text-brand-300">
+                <span className="mt-3 inline-flex items-center gap-2 text-body text-brand-700 dark:text-brand-300">
                   {`Browse ${guideCount(troubleshooting.articleCount)}`}
                   <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5" />
                 </span>
