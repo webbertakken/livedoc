@@ -33,7 +33,8 @@ import { startUndoStep } from '@/lib/text-document/text-document-undo';
 import { TextDocumentLinkCard } from './TextDocumentLinkCard';
 import { TextDocumentLinkEditor } from './TextDocumentLinkEditor';
 
-type AtCaret = { link: LinkStretch; anchor: Box } | null;
+// The link at the caret, where the caret is in it, and the box under it.
+type AtCaret = { link: LinkStretch; head: number; anchor: Box } | null;
 
 const sameLink = (a: AtCaret, b: AtCaret) =>
   a === b ||
@@ -42,10 +43,13 @@ const sameLink = (a: AtCaret, b: AtCaret) =>
     a.link.from === b.link.from &&
     a.link.to === b.link.to &&
     a.link.href === b.link.href &&
+    a.head === b.head &&
     a.anchor.left === b.anchor.left &&
     a.anchor.top === b.anchor.top);
 
-const keyOf = (link: LinkStretch) => `${link.from}:${link.to}:${link.href}`;
+// Escape hides the card until the caret moves.
+const keyOf = (at: NonNullable<AtCaret>) =>
+  `${at.link.from}:${at.link.to}:${at.link.href}@${at.head}`;
 
 // The box under a stretch: its start's left, its end's line.
 function boxOf(view: EditorView, from: number, to: number): Box {
@@ -89,9 +93,11 @@ export function useTextDocumentLinks({
     const update = () => {
       if (view.isDestroyed) return;
       const link = view.state.selection.empty ? linkAt(view.state) : null;
-      const now = link ? { link, anchor: boxOf(view, link.from, link.to) } : null;
+      const now = link
+        ? { link, head: view.state.selection.head, anchor: boxOf(view, link.from, link.to) }
+        : null;
       setAtCaret((was) => (sameLink(was, now) ? was : now));
-      setDismissed((key) => (key !== null && (!now || keyOf(now.link) !== key) ? null : key));
+      setDismissed((key) => (key !== null && (!now || keyOf(now) !== key) ? null : key));
     };
     update();
     const stop = subscribe(update);
@@ -189,18 +195,19 @@ export function useTextDocumentLinks({
     };
   }, [link, writes, view, open, follow, copy, remove]);
 
-  // Escape hides the card while the caret stays in its link.
+  // Escape hides the card until the caret moves.
   const cardShown =
-    shownAt !== null && editing === null && dismissed !== keyOf(shownAt.link) && showCard;
+    shownAt !== null && editing === null && dismissed !== keyOf(shownAt) && showCard;
   useEffect(() => {
     const dom = view?.dom;
-    if (!dom || !cardShown || !link) return;
+    if (!dom || !cardShown || !shownAt) return;
+    const key = keyOf(shownAt);
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDismissed(keyOf(link));
+      if (e.key === 'Escape') setDismissed(key);
     };
     dom.addEventListener('keydown', onKeyDown);
     return () => dom.removeEventListener('keydown', onKeyDown);
-  }, [view, cardShown, link]);
+  }, [view, cardShown, shownAt]);
 
   const editor = editing ? (
     <TextDocumentLinkEditor

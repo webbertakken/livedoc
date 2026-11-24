@@ -28,7 +28,7 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
 - **Link details** (while Preferences > **Show link details** is on, as it is by default): the caret, with nothing
   selected, in a link shows a card under it: its title (a LiveDoc document's name when it is one of the person's;
   else its address), a press on which opens it, then **Copy link**, **Edit link** and **Remove link**.
-  Escape or the caret leaving the link hides it; it never takes the focus from the writing.
+  Escape hides it until the caret moves; it never takes the focus from the writing.
 - **Remove link** takes the address off the link's whole stretch; its text stays. **Copy link** copies the address.
 - Alt+Enter (⌥Enter) opens the link at the caret, whether the card shows or not.
 - Opening: a web, email or LiveDoc address opens in a new browser tab with no opener and no referrer; a heading or

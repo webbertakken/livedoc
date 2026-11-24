@@ -187,6 +187,16 @@ describe('useTextDocumentLinks', () => {
       expect(hook.result.current.card).toBeNull();
     });
 
+    it('hides the card on Escape until the caret moves', () => {
+      const { view, hook, moveTo } = setup({ doc: doc(), from: 6 });
+      act(() => {
+        view.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      });
+      expect(hook.result.current.card).toBeNull();
+      moveTo(7);
+      expect(hook.result.current.card).not.toBeNull();
+    });
+
     it('shows no card off a link, nor over a selection', () => {
       const { hook, moveTo } = setup({ doc: doc(), from: 2 });
       expect(hook.result.current.card).toBeNull();
