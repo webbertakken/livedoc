@@ -306,7 +306,7 @@ type UserPreferences = {
   // Google's (switches, defaults off or removed, the person's own pairs). Validated on read (TypingAids.parse), never trimmed.
   textDocumentTypingAids?: Record<string, unknown>;
   // Dark pages (../035-pdf-documents/dark-pages.md "The setting"): a PDF's pages shown dark in the dark scheme.
-  // Missing: not yet asked, so the first-time question stands and the pages show as paper.
+  // Missing: on, so the pages follow the dark scheme until the person turns it off.
   pdfDarkPages?: boolean;
   // A text document's default page setup (../034-text-documents/page-layout.md "Page setup"): sides, orientation,
   // margins and colour in points, as Set as default kept them. Validated on read (PageSetup.parse), never trimmed.
@@ -509,8 +509,7 @@ Missing key === undefined === default behaviour. Concretely:
   `UI`/`Toggled`/`MinimalChrome{On,Off}`.
 - `powerUserOfferShown` undefined → the offer may still be made, once its
   thresholds are met.
-- `pdfDarkPages` undefined → not yet asked: a PDF's pages show as paper and, in the dark scheme, the first-time
-  question stands. Emits `Pdf`/`Toggled`/`DarkPages{On,Off}` when flipped.
+- `pdfDarkPages` undefined → on: in the dark scheme a PDF's pages show dark until the person turns it off. Emits `Pdf`/`Toggled`/`DarkPages{On,Off}` when flipped.
 
 Empty (or missing entirely) localStorage entry, AND no row in
 `user_preferences` for this owner, is therefore the "everything

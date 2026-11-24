@@ -15,7 +15,7 @@ measured against Acrobat's. The research is in `docs/research/pdf-documents/`.
 - ./security.md - when a file could hurt: the boundary, scripts, links and actions, embedded files, every abuse case and its rule
 - ./performance.md - when changing what a PDF document loads, how fast it opens or scrolls, or what it holds in memory: the budgets and how they are measured
 - ./reading-surface.md - when working on the PDF document's chrome: title row, menus, toolbar, the left panel, the pages, zoom, find, phone and tablet
-- ./dark-pages.md - when working on pages shown dark: the recolouring, its setting, the first-time question
+- ./dark-pages.md - when working on pages shown dark: the recolouring, following the scheme, its setting
 - ./keyboard-shortcuts.md - when binding, listing or checking a keyboard shortcut of a PDF document
 - ./accessibility.md - when working on the accessible tree, keyboard-only use, or what a written file keeps of its tags
 - ./marks.md - when working on highlights, notes, text, drawings, shapes and stamps, and their mapping onto the file

@@ -1,26 +1,26 @@
 # Dark pages
 
 **Status: built.** The step in the engine's worker, photographs put back; the setting in Settings, View and the
-toolbar, live; the first-time question.
+toolbar, live; the pages following the scheme until turned off.
 
-The look (photographs kept as drawn) and the first-time question (a card, once per person) are `(default)`: the
-director chose them on 2026-11-24 while Webber's answer is open; the drawn options are in the plan's assets.
+The look (photographs kept as drawn) is `(default)`: the director chose it on 2026-11-24; the drawn options are in
+the plan's assets.
 
 **Dark pages** is one person's view of a [PDF document](pdf-document.md)'s pages shown dark: lightness inverted, hue
-kept, pictures untouched. The file, Download, print and what anyone else sees never change (ruling C3). Webber: "Dark
-pages, but it can be turned on or off with a setting as well, and it should ask the first time you enter a document
-on dark mode." The research is [Dark pages](../../research/pdf-documents/dark-pages.md).
+kept, pictures untouched. The file, Download, print and what anyone else sees never change (ruling C3). Webber:
+"I want PDFs to also do this, display dark for dark theme, light for light theme": a PDF's pages follow the colour
+scheme as a text document's paper does. His earlier ruling ("it should ask the first time you enter a document on
+dark mode") is replaced by it: nothing is asked. The research is [Dark pages](../../research/pdf-documents/dark-pages.md).
 
 ## What it is, and is not
 
 - The surface's **chrome follows the scheme**, always, as all of LiveDoc does
   ([Colour scheme](../004-interface-design/color-scheme.md)).
-- The **pages** are the author's: in either scheme they are drawn as the file says, unless the person has Dark pages
-  on. A text document's page is dark paper in the dark scheme because LiveDoc knows which of its pixels is ink
-  ([The page in the dark scheme](../034-text-documents/editing-surface.md#the-page-in-the-dark-scheme)); a PDF page
-  arrives as drawing operators, so showing it dark is a recolouring, and a person's choice.
-- Dark pages is **offered in the dark scheme only**. In the light scheme it is not listed, and a person who has it on
-  sees paper pages there.
+- The **pages follow the scheme too**: dark in the dark scheme, paper in the light one, as a text document's page is
+  ([The page in the dark scheme](../034-text-documents/editing-surface.md#the-page-in-the-dark-scheme)). A PDF page
+  arrives as drawing operators, so showing it dark is a recolouring, which a person may turn off for their own view.
+- Dark pages is **offered in the dark scheme only**. In the light scheme it is not listed, and the pages are paper
+  there, whatever the setting.
 - It is **never in a file**: not in a download, a bake, a print, a thumbnail, a share card, an agent's preview, a
   version's rendering or another person's view. Those never pass through the step that makes it.
 
@@ -57,30 +57,9 @@ to be shown:
   Viewing.
 - **Live**: flipping it recolours the open pages without a reload, in every open PDF document of that person's
   browser.
-- It is **off until answered** ([The first-time question](#the-first-time-question)).
+- It is **on until turned off**: a person who never touched it sees dark pages in the dark scheme; turning it off
+  is kept, and shows the pages as the file says in both schemes `(default)`.
 - The toolbar toggle carries `aria-pressed`, and its name and tooltip are "Dark pages" `(default)`.
-
-## The first-time question
-
-Fork F13 `(default)`.
-
-- **Asked once per person, ever**: the first time a person opens a PDF document in the dark scheme (or switches to
-  the dark scheme with one open), never once per document. Its answer follows the account, or this browser.
-- **It never blocks reading.** It is a card anchored under the toolbar at the right, not a dialog: the pages scroll,
-  zoom and select behind it, focus does not move to it, and it is announced politely once ("Question: show PDF pages
-  dark?").
-- **While it stands the pages show as paper**, so nothing is recoloured unasked.
-- The card: the heading "Show PDF pages dark?", the line "Only your view changes. The file, downloads and prints stay
-  as they are.", a small before and after of the open page side by side, and two buttons: **Use dark pages** and
-  **Keep as they are**.
-- Either button sets the setting and closes the card for good. Closing it another way (its ×, Escape while it has
-  focus) leaves Dark pages off and counts as asked, with a one-line toast: "You can turn on Dark pages in the View
-  menu."
-- Leaving the document without answering asks again on the next PDF `(default)`: nothing was chosen.
-- It is reachable by keyboard: F6 moves through the surface's regions and reaches the card (region `question`, after
-  the notice); its buttons follow in tab order; Escape closes it and returns focus to where it was.
-- On a phone the card spans the pages' width, under the toolbar.
-- A Viewer, a Participant and an Editor are asked alike; a guest is asked once per browser.
 
 ## Limits
 
@@ -109,10 +88,8 @@ Dark pages is a view, so every role has it alike; it changes nothing anyone else
 ## Telemetry and observability
 
 - `Pdf · Toggled · <DarkPagesOn|DarkPagesOff>` wherever it is flipped, fired before the setting is persisted.
-- `Pdf · Opened · DarkPagesQuestion` when the card shows; `Pdf · Selected · DarkPagesQuestion.<Use|Keep|Dismissed>`
-  when it closes.
 - Fingerprints: `[pdf] dark-pages step ms=<n> pictures=<n>` (the first, then one in `DARK_PAGES_LOG_EVERY`),
-  `[pdf] dark-pages asked`, `[pdf] dark-pages on=<yes|no>` (a choice), `[pdf] dark-pages not-saved`.
+  `[pdf] dark-pages on=<yes|no>` (a choice), `[pdf] dark-pages not-saved`.
 
 ## Errors
 
