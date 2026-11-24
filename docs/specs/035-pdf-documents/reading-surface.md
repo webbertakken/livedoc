@@ -20,7 +20,7 @@ Bound today: Download as PDF, Undo, Redo, Copy, Select all, Find, the editing mo
 Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-Signatures and Fields, and of the phone layout all but a pinch and two fingers on the pages
+Signatures and Fields, and of the phone layout all but a pinch and two fingers on the pages and reduced motion
 ([Accessibility](accessibility.md) holds the accessible tree). The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
@@ -565,7 +565,8 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
   column under the finger and back. One finger scrolls in Viewing and with the Hand; with a mark tool in hand it draws.
 - The toolbar shows the mode's first tools and puts the rest in its overflow row; every target is at least 44 px.
 - A long press selects the word under the finger, with handles to extend and a small bar: Copy, Highlight, Comment.
-- Reduced motion: no animated scroll to a result or a page, no zoom easing; the page appears where asked.
+- Reduced motion: no animated scroll to a result or a page, no zoom easing; the page appears where asked. The surface
+  never eases a scroll or a zoom, reduced or not `(default)`; the shell's own transitions stop with reduced motion.
 - Tiles are drawn at a pixel ratio capped at `PDF_PHONE_PIXEL_RATIO` and the cache is the phone's budget.
 
 ## Limits
