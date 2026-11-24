@@ -203,6 +203,7 @@ export function SpreadsheetTitleRow({
         tabId={tabId}
         toolbar={SPREADSHEET_TOOLBAR}
         fontSize={fontSize}
+        colours={grid.colours}
         zoom={zoom}
         choices={spreadsheetChoices(catalogue, actions)}
         refresh={channel.subscribe}

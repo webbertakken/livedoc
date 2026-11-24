@@ -9,6 +9,7 @@ import { createContext, useContext, useLayoutEffect, useSyncExternalStore } from
 import type { OfficeAction } from '@/lib/office/office-catalogue';
 import { bindingsSignature, type GridOffice } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { debugLog } from '@/lib/debug-log';
+import type { OfficeColours } from '@/components/office/OfficeColourControl';
 
 export type { GridOffice };
 
@@ -20,13 +21,22 @@ export type OfficeBindingsChannel = {
 
 export const NO_GRID_OFFICE: GridOffice = {
   actions: {},
+  colours: null,
   recentCodes: [],
   fontSize: null,
   setFontSize: () => {},
 };
 
+// What the colour controls show now: each one's colour, so a change of the active cell's redraws them.
+const coloursSignature = (colours: OfficeColours | null) =>
+  colours
+    ? Object.entries(colours)
+        .map(([id, colour]) => `${id}=${String(colour.read())}`)
+        .join(',')
+    : '';
+
 const signatureOf = (office: GridOffice) =>
-  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.recentCodes.join('\n')}`;
+  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.recentCodes.join('\n')}#${coloursSignature(office.colours)}`;
 
 export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let latest: GridOffice = NO_GRID_OFFICE;
@@ -34,13 +44,26 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let signature = signatureOf(NO_GRID_OFFICE);
   const listeners = new Set<() => void>();
   // What the title row holds: each binding's look now, its run the latest one.
-  const delegating = ({ actions, recentCodes, fontSize }: GridOffice): GridOffice => ({
+  const delegating = ({ actions, colours, recentCodes, fontSize }: GridOffice): GridOffice => ({
     actions: Object.fromEntries(
       Object.entries(actions).map(([id, action]): [string, OfficeAction] => [
         id,
         { ...action!, run: () => latest.actions[id]?.run() },
       ]),
     ),
+    // A colour is read and set through the latest, as a run is.
+    colours: colours
+      ? Object.fromEntries(
+          Object.entries(colours).map(([id, colour]) => [
+            id,
+            {
+              ...colour,
+              read: () => latest.colours?.[id]?.read(),
+              set: (value: string | null) => latest.colours?.[id]?.set(value),
+            },
+          ]),
+        )
+      : null,
     recentCodes,
     fontSize,
     setFontSize: (pt) => latest.setFontSize(pt),

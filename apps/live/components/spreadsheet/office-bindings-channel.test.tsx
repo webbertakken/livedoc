@@ -16,7 +16,8 @@ const office = (
   fontSize: number | null = null,
   setFontSize: (pt: number) => void = () => {},
   recentCodes: readonly string[] = [],
-): GridOffice => ({ actions, recentCodes, fontSize, setFontSize });
+  colours: GridOffice['colours'] = null,
+): GridOffice => ({ actions, colours, recentCodes, fontSize, setFontSize });
 
 // docs/specs/029-sheets/surface.md "Menu bar", "Toolbar": the open sheet's bindings reach the title row above it.
 // formatting.md "Number formats" (D194): a change of the recently used codes alone is heard.
@@ -116,5 +117,28 @@ describe('usePublishedBindings', () => {
     channel.set(office({}, null, () => {}, ['0.00']));
     expect(heard).toHaveBeenCalledTimes(2);
     expect(channel.get().recentCodes).toEqual(['0.00']);
+  });
+
+  // formatting.md "Text and colour": a colour control shows the active cell's colour and sets through the latest.
+  it('redraws on a change of colour alone, reading and setting through the latest', () => {
+    const channel = createOfficeBindingsChannel();
+    const heard = vi.fn();
+    channel.subscribe(heard);
+    const colours = (fc: string | undefined, set = vi.fn()) => ({
+      'text-colour': { read: () => fc, set, leading: 'Reset' },
+    });
+    channel.set(office({}, null, () => {}, [], colours('#ff0000')));
+    channel.set(office({}, null, () => {}, [], colours('#ff0000')));
+    const set = vi.fn();
+    channel.set(office({}, null, () => {}, [], colours('#00ff00', set)));
+    expect(heard).toHaveBeenCalledTimes(2);
+    const shown = channel.get().colours!['text-colour']!;
+    expect(shown.read()).toBe('#00ff00');
+    shown.set('#0000ff');
+    expect(set).toHaveBeenCalledWith('#0000ff');
+    channel.set(office({}));
+    expect(channel.get().colours).toBeNull();
+    expect(shown.read()).toBeUndefined();
+    shown.set(null);
   });
 });

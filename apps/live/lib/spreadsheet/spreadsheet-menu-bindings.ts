@@ -16,6 +16,7 @@ import {
   type PasteSpecialMode,
 } from '@livedoc/sheets';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
+import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadsheet-menus';
 import { lineSpan } from './line-span';
 import { recentFormatItemId } from './recent-formats';
@@ -327,6 +328,8 @@ function setFontSize(act: GridMenuActions, pt: number) {
 /** What the open sheet offers the title row: its items' bindings and the active cell's font size. */
 export type GridOffice = {
   actions: OfficeActions;
+  // The toolbar's Text Colour and Fill Colour, for an Editor; null for anyone else (formatting.md "Text and colour").
+  colours: OfficeColours | null;
   // The Number menu's recently used codes (D194), for the title row's catalogue.
   recentCodes: readonly string[];
   // The active cell's size in points; null while no sheet is open or the session may not format.
@@ -334,11 +337,32 @@ export type GridOffice = {
   setFontSize: (pt: number) => void;
 };
 
+/**
+ * Text Colour and Fill Colour over the selection (formatting.md "Text and colour", D199): each reads the active cell's
+ * own colour and sets the selection's, Reset taking it away.
+ */
+export function gridColours({ format: f, act }: GridMenuPort): OfficeColours {
+  return {
+    'text-colour': {
+      read: () => f?.fc,
+      set: (colour) => act.format({ fc: colour }),
+      leading: 'Reset',
+      none: '#000000',
+    },
+    'fill-colour': {
+      read: () => f?.bg,
+      set: (colour) => act.format({ bg: colour }),
+      leading: 'Reset',
+    },
+  };
+}
+
 /** The grid's menu and toolbar bindings, and its font size for an Editor. */
 export function gridOffice(port: GridMenuPort): GridOffice {
   const editor = port.canWrite && port.canShape;
   return {
     actions: gridMenuBindings(port),
+    colours: editor ? gridColours(port) : null,
     recentCodes: port.recentCodes,
     fontSize: editor ? fontSizeOf(port.format) : null,
     setFontSize: (pt) => {

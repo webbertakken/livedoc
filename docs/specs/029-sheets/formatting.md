@@ -82,6 +82,11 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 - **Bold** (Ctrl+B), **Italic** (Ctrl+I), **Underline** (Ctrl+U), **Strikethrough** (Alt+Shift+5).
 - **Text Colour** and **Fill Colour**: the one colour picker, with the theme's colours, the standard grid,
   **Custom** and **Reset**.
+  - Each is the toolbar's colour control: its glyph over a bar in the active cell's colour (Text Colour's bar black
+    for a cell with none, Fill Colour's empty), opening the picker in its swatch skin; a pick colours the selection,
+    one undo step, and **Reset** takes the cell's own colour away. An Editor's, as every format is.
+  - Until [Themes](#themes) are built the picker has no theme row: Reset, the standard Light and Dark rows, then
+    Custom Colours, as the office kinds' is (default, D199).
 
 ## Borders
 
@@ -156,6 +161,8 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   (default).
 - **D198** Custom Date and Time's presets: `dd/mm/yyyy`, `d mmmm yyyy`, `dddd, d mmmm yyyy`, `mmmm yyyy`, `yyyy-mm-dd`,
   `hh:mm`, `hh:mm:ss`, `h:mm AM/PM`, `dd/mm/yyyy hh:mm:ss` (default).
+- **D199** Text Colour and Fill Colour before Themes: Reset, the standard Light and Dark rows and Custom Colours, the
+  office kinds' picker (default).
 
 ## Telemetry
 
