@@ -1355,6 +1355,24 @@ export const TEXT_DOCUMENT_CHARACTERS_AND_LINES = chart(
   },
 );
 
+// A building block put in a text document (docs/specs/034-text-documents/objects.md "Building blocks").
+export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
+  'Element',
+  'Added',
+  'Text Document Building Blocks',
+  'Meeting notes, an email draft or a tracker (product roadmap, review tracker, project assets, content launch tracker) put in a text document from Insert > Building blocks.',
+  {
+    types: [
+      'TextDocumentBuildingBlockMeetingNotes',
+      'TextDocumentBuildingBlockEmailDraft',
+      'TextDocumentBuildingBlockProductRoadmap',
+      'TextDocumentBuildingBlockReviewTracker',
+      'TextDocumentBuildingBlockProjectAssets',
+      'TextDocumentBuildingBlockContentLaunchTracker',
+    ],
+  },
+);
+
 // The ruler shown or hidden (docs/specs/034-text-documents/editing-surface.md "The ruler").
 export const TEXT_DOCUMENT_RULER_TOGGLED = chart(
   'UI',

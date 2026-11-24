@@ -160,6 +160,26 @@ export const STYLE_OPTIONS: OfficeSubmenu = {
   ],
 };
 
+/**
+ * The id of the document's style of `role`, a new document's added first when the document lacks it; null for Normal
+ * text, which is no style of the paragraph's own.
+ */
+export function ensureRoleStyle(
+  role: StyleRole,
+  {
+    styles,
+    format,
+    add,
+  }: { styles: readonly Style[]; format: TextDocumentFormat; add: (style: Style) => void },
+): string | null {
+  if (role === 'normal') return null;
+  const held = Styles.idOfRole(styles, role);
+  if (held) return held;
+  const added = TextDocument.blank({ format }).styles.find((s) => s.role === role);
+  if (added) add(added);
+  return added?.id ?? null;
+}
+
 /** How the styles bound here reach the document's live state and the person's preferences. */
 export type ParagraphStyleDeps = {
   view: EditorView | null;
@@ -182,7 +202,6 @@ export function textDocumentParagraphStyleActions({
   canEdit,
 }: ParagraphStyleDeps): { actions: OfficeActions; choices: OfficeChoices | null } {
   if (!view || !canEdit) return { actions: {}, choices: null };
-  const builtIn = TextDocument.blank({ format }).styles;
   // Runs a change from the writing's selection there is now, then gives the writing focus back.
   const fromWriting = (change: () => void) => () => {
     if (view.isDestroyed) return;
@@ -191,14 +210,11 @@ export function textDocumentParagraphStyleActions({
     view.focus();
   };
   const apply = (role: StyleRole) => {
-    let id: string | null = null;
-    if (role !== 'normal') {
-      const { styles } = readFormatting();
-      const held = Styles.idOfRole(styles, role);
-      const added = held ? undefined : builtIn.find((s) => s.role === role);
-      if (added) writer.add(added);
-      id = held ?? added?.id ?? null;
-    }
+    const id = ensureRoleStyle(role, {
+      styles: readFormatting().styles,
+      format,
+      add: writer.add,
+    });
     setParagraphStyle(id)(view.state, view.dispatch);
     track('Element', 'Changed', 'TextDocumentParagraphStyle');
   };

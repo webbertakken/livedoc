@@ -53,6 +53,7 @@ import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragrap
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { tableKeysPlugin } from '@/lib/text-document/text-document-tables';
 import { useTextDocumentTables } from '@/lib/text-document/useTextDocumentTables';
+import { useTextDocumentBuildingBlocks } from '@/lib/text-document/useTextDocumentBuildingBlocks';
 import { indentUnit } from '@/lib/text-document/indent-units';
 import {
   TABLE_PROPERTIES_ITEM,
@@ -719,6 +720,14 @@ export function TextDocumentSurface({
     bodyWrites,
     Columns.width(page.caret.section.setup),
   );
+  // Insert > Building blocks (objects.md "Building blocks"), in the body, at the caret's text width.
+  const buildingBlocks = useTextDocumentBuildingBlocks(
+    editorView,
+    liveDoc,
+    format,
+    bodyWrites,
+    Columns.width(page.caret.section.setup),
+  );
   // Insert > Image, and picture files pasted or dropped, in the room the caret's text has (objects.md "Inserting").
   const pictureRoom = useMemo(
     () => roomForPictures(page.caret.section.setup),
@@ -786,6 +795,7 @@ export function TextDocumentSurface({
       ...equationInsert,
       ...characterDialogs.actions,
       ...tableActions,
+      ...buildingBlocks,
       ...pictures.actions,
       ...pictureEditing.actions,
       ...pictureSize.actions,
@@ -798,6 +808,7 @@ export function TextDocumentSurface({
       equationInsert,
       characterDialogs.actions,
       tableActions,
+      buildingBlocks,
       pictures.actions,
       pictureEditing.actions,
       pictureSize.actions,

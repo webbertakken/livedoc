@@ -2,6 +2,7 @@
 import { textDocumentBreakActions } from './text-document-breaks';
 import { horizontalLineActions } from './text-document-horizontal-line';
 import { equationActions } from './text-document-equation-insert';
+import { BUILDING_BLOCKS } from './text-document-building-blocks';
 import { characterDialogActions } from './text-document-special-characters';
 import { textDocumentTableActions } from './text-document-tables';
 import { TABLE_EDIT_ITEMS } from './text-document-table-actions';
@@ -105,6 +106,8 @@ describe('the text document menus', () => {
         // Insert > Table (text-document-tables), bound by the surface.
         ...Object.keys(textDocumentTableActions(null, { canEdit: true, sectionWidth: 468 })),
         ...TABLE_EDIT_ITEMS.map((t) => t.item),
+        // Insert > Building blocks (useTextDocumentBuildingBlocks), bound by the surface.
+        ...BUILDING_BLOCKS.map((block) => block.item),
         // Insert > Image (useTextDocumentPictures), bound by the surface.
         'image-upload',
         'image-search',
