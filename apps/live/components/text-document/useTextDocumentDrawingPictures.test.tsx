@@ -1,15 +1,13 @@
 // @vitest-environment jsdom
-// docs/specs/034-text-documents/objects.md "Drawn", "The picture's bar": each drawing's picture is drawn live into the
-// host its picture hands in; a selected one's bar holds Edit (Open for anyone who cannot edit), which opens it where
-// it is; outside an editor nothing is drawn.
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+// docs/specs/034-text-documents/objects.md "Drawn": each drawing's picture is drawn live into the host its picture
+// hands in; outside an editor nothing is drawn.
+import { render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
+import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { PICTURE } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from '@/lib/text-document/text-document-schema';
 import { pictureView } from '@/lib/text-document/text-document-pictures';
-import type { OpenDrawing } from '@/lib/text-document/text-document-drawing-open-plugin';
 
 const editor = vi.hoisted(() => ({ value: {} as object | null }));
 vi.mock('@/app/document/[id]/EditorContext', () => ({
@@ -44,13 +42,9 @@ beforeEach(() => {
   URL.revokeObjectURL = () => {};
 });
 
-function setup({
-  canEdit = true,
-  open = vi.fn<OpenDrawing>(),
-  drawing = 'd1',
-}: { canEdit?: boolean; open?: OpenDrawing | null; drawing?: string } = {}) {
+function setup() {
   const store = drawingHostStore();
-  const pictures = [drawing, null].map((drawing) =>
+  const pictures = ['d1', null].map((drawing) =>
     schema.nodes[PICTURE]!.create({ media: 'm', width: 60, height: 30, drawing }),
   );
   const doc = schema.node('doc', null, [schema.nodes.paragraph!.create(null, pictures)]);
@@ -66,22 +60,10 @@ function setup({
     },
   });
   views.push(view);
-  const listeners = new Set<() => void>();
-  const subscribe = (l: () => void) => {
-    listeners.add(l);
-    return () => listeners.delete(l);
-  };
   function Harness() {
-    const opens = (id: string) => id !== 'gone';
-    return <>{useTextDocumentDrawingPictures({ store, view, canEdit, subscribe, open, opens })}</>;
+    return <>{useTextDocumentDrawingPictures({ store })}</>;
   }
-  const harness = render(<Harness />);
-  const select = (pos: number) =>
-    act(() => {
-      view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)));
-      listeners.forEach((l) => l());
-    });
-  return { view, harness, select, open, store };
+  return { view, harness: render(<Harness />) };
 }
 
 describe('useTextDocumentDrawingPictures', () => {
@@ -91,49 +73,11 @@ describe('useTextDocumentDrawingPictures', () => {
     expect(view.dom.querySelectorAll('[data-drawn-tab]')).toHaveLength(1);
   });
 
-  it('puts Edit under a selected drawing, opening it where it is', () => {
-    const { select, open, view } = setup();
-    expect(screen.queryByRole('toolbar', { name: 'Drawing' })).toBeNull();
-    select(1);
-    const edit = screen.getByRole('button', { name: 'Edit' });
-    expect(view.nodeDOM(1)!.contains(edit)).toBe(true);
-    fireEvent.click(edit);
-    expect(open).toHaveBeenCalledWith('d1', 1);
-  });
-
-  it('offers Open to anyone who cannot edit, and no bar on a plain picture', () => {
-    const { select } = setup({ canEdit: false });
-    select(1);
-    expect(screen.getByRole('button', { name: 'Open' })).toBeTruthy();
-    select(2);
-    expect(screen.queryByRole('toolbar', { name: 'Drawing' })).toBeNull();
-  });
-
-  it('draws no bar for a drawing whose tab is not there to open', () => {
-    const { select } = setup({ drawing: 'gone' });
-    select(1);
-    expect(screen.queryByRole('toolbar', { name: 'Drawing' })).toBeNull();
-  });
-
-  it('goes back to the writing on Escape from the bar', () => {
-    const { select, view } = setup();
-    select(1);
-    const focus = vi.spyOn(view, 'focus');
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Edit' }), { key: 'Escape' });
-    expect(focus).toHaveBeenCalled();
-  });
-
-  it('draws no bar where no drawing may be opened, and nothing outside an editor', async () => {
-    const closed = setup({ open: null });
-    closed.select(1);
-    expect(screen.queryByRole('toolbar', { name: 'Drawing' })).toBeNull();
-    closed.harness.unmount();
+  it('draws nothing outside an editor', async () => {
     editor.value = null;
     const outside = setup();
-    outside.select(1);
     await new Promise((r) => setTimeout(r, 0));
     expect(outside.view.dom.querySelector('[data-drawn-tab]')).toBeNull();
-    expect(screen.queryByRole('toolbar', { name: 'Drawing' })).toBeNull();
   });
 });
 
@@ -145,7 +89,6 @@ describe('drawingHostStore', () => {
     const hosts = {
       drawingTabId: 'd1',
       drawing: document.createElement('span'),
-      bar: document.createElement('span'),
     };
     const release = store.attach(hosts);
     expect(store.hosts()).toEqual([{ ...hosts, key: '1' }]);

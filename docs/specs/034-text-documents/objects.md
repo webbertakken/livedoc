@@ -255,6 +255,12 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   its column's left edge, or from the page's top left corner, as the choice says, within 22 in either way; a field
   applies on Enter or when left. Switching between the two keeps the picture where it is drawn. Fix position on page
   is dimmed in a pageless document, which has no page to fix it on `(default)`. Each change is one undo step.
+- **The picture's bar** (look and order `(default)`, until a capture): under a selected picture, for whoever may edit,
+  a bar holds the five Text wrapping choices as buttons named as in the panel, the one in force pressed, then **Image
+  options**, which opens the panel, as Google's; a choice is the panel's, one undo step. A drawing's picture holds
+  Edit (Open for anyone who cannot edit) before them; a picture that is not a drawing has no bar for anyone who
+  cannot edit. Alt+F10 goes to the bar's first button; Left and Right move along it; Escape goes back to the
+  writing, the picture still selected.
 - **Recolour** (look and order `(default)`, until a capture): a grid of choices, **No recolour**, then **Light 1** to
   **Light 8** and **Dark 1** to **Dark 8**, each drawn as its duotone. Light N lays the picture from its colour (dark)
   to white, Dark N from black to its colour; the colours, 1 to 8, are grey `#666666`, red `#ff0000`, orange
@@ -330,9 +336,9 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
   anyone who sees the text document; Save and close goes back to the text document at the picture, selected. A
   drawing's picture is cropped from Format > Image or the context menu, its double-click being the drawing's
   `(default)`. Every change in the drawing tab is live (everyone's, as on any canvas).
-- **The picture's bar**: under a selected drawing's picture, as Google's, a bar holds **Edit** (**Open** for anyone
-  who cannot edit) `(default)`; a drawing whose tab is gone or outside the person's share has no bar and does not
-  open.
+- **The picture's bar** ([In the editor](#in-the-editor)): a drawing's picture adds **Edit** (**Open** for anyone
+  who cannot edit) first `(default)`; a drawing whose tab is gone or outside the person's share has no Edit or Open
+  and does not open.
 - **Its picture again**: Save and close on a drawing already placed puts its new PNG in every picture naming it in
   the document tab it was opened from, each keeping its width, its height following the drawing's shape and its crop
   dropped, as Replace image does, one undo step `(default)`; a drawing whose picture was deleted meanwhile is placed

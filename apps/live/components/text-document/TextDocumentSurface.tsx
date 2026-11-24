@@ -122,6 +122,7 @@ import { useTextDocumentLineNumbers } from './useTextDocumentLineNumbers';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import {
+  IMAGE_OPTIONS_PANEL,
   OUTLINE_PANEL,
   TABLE_OF_CONTENTS_PANEL,
   TEXT_DOCUMENT_PANELS,
@@ -144,11 +145,11 @@ import { useTextDocumentDrawingOrphans } from './useTextDocumentDrawingOrphans';
 import { useTextDocumentDrawingReveal } from './useTextDocumentDrawingReveal';
 import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
 import {
-  drawingBarKeys,
   drawingOpenPlugin,
   type DrawingTabs,
   type OpenDrawing,
 } from '@/lib/text-document/text-document-drawing-open-plugin';
+import { pictureBarKeys } from '@/lib/text-document/text-document-picture-bar';
 import {
   initialTab,
   TAB_STEP_KEYS,
@@ -206,6 +207,7 @@ import {
 import { pictureRoom as roomForPictures } from '@/lib/text-document/text-document-picture-insert';
 import { useTextDocumentPictureSize, IMAGE_OPTIONS_ITEM } from './useTextDocumentPictureSize';
 import { useTextDocumentPicturePlacing } from './useTextDocumentPicturePlacing';
+import { useTextDocumentPictureBar } from './useTextDocumentPictureBar';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -496,7 +498,7 @@ export function TextDocumentSurface({
           // Alt+F10 from a selected table of contents to its bar.
           contentsBarKeys(),
           // Alt+F10 from a selected drawing's picture to its bar.
-          drawingBarKeys(),
+          pictureBarKeys(),
           // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
           // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
           tableKeysPlugin(),
@@ -578,6 +580,7 @@ export function TextDocumentSurface({
                 media: (key) => TextDocumentState.media(doc, key),
                 ...galleryPicturesOf(where),
                 drawing: drawsDrawings ? drawingHosts.attach : undefined,
+                bar: true,
               },
               {
                 can: () => pictureSizing.current.can(),
@@ -948,14 +951,7 @@ export function TextDocumentSurface({
     liveDoc,
     drawingTabs,
   });
-  const drawingPictures = useTextDocumentDrawingPictures({
-    store: drawingHosts,
-    view: editorView,
-    canEdit: bodyWrites,
-    subscribe: changes.subscribeCaret,
-    open: drawings.open,
-    opens: drawingTabs?.opens ?? NO_DRAWING,
-  });
+  const drawingPictures = useTextDocumentDrawingPictures({ store: drawingHosts });
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({
     view: editorView,
@@ -978,6 +974,16 @@ export function TextDocumentSurface({
     canEdit: bodyWrites,
     subscribe: changes.subscribeCaret,
     paged: !page.pageless,
+  });
+  // The selected picture's bar: a drawing's Edit, the wraps and Image options (objects.md "The picture's bar").
+  const pictureBar = useTextDocumentPictureBar({
+    view: editorView,
+    canEdit: bodyWrites,
+    subscribe: changes.subscribeCaret,
+    open: drawings.open,
+    opens: drawingTabs?.opens ?? NO_DRAWING,
+    wrap: picturePlacing.wrap,
+    options: () => panels.reveal(IMAGE_OPTIONS_PANEL),
   });
   useLayoutEffect(() => {
     pictureSizing.current = {
@@ -1145,6 +1151,7 @@ export function TextDocumentSurface({
       {bookmarks.card}
       {contents.bar}
       {drawingPictures}
+      {pictureBar}
       {bookmarks.status}
       {headingLinks.status}
       <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />
