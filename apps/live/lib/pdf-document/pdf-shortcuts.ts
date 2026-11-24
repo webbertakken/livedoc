@@ -4,7 +4,16 @@
 // (editing-modes.md "Switching"). The tools' single keys are the surface's own: they must not fire in a text field.
 import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
-import { COPY, FIND, GO_TO_NEXT_VIEW, GO_TO_PREVIOUS_VIEW, PRINT, SELECT_ALL } from './pdf-menus';
+import {
+  COPY,
+  FIND,
+  FULL_SCREEN,
+  GO_TO_NEXT_VIEW,
+  GO_TO_PREVIOUS_VIEW,
+  PRINT,
+  READ_MODE,
+  SELECT_ALL,
+} from './pdf-menus';
 
 /** Find's next and previous result: no menu item's, the surface binds them under these ids. */
 export const FIND_NEXT = 'find-next';
@@ -72,6 +81,9 @@ const READING: readonly ShortcutRow[] = [
     'Ctrl+Shift+-',
     '⌘+Shift+-',
   ),
+  // ⌘⌥H hides apps on a Mac, and ⌃⌥L locks a Linux screen, before a page hears either.
+  reading(READ_MODE, 'Read mode', 'Ctrl+Alt+R', '⌘+Option+R'),
+  reading(FULL_SCREEN, 'Full screen', 'Ctrl+Alt+F', '⌘+Option+F'),
 ];
 
 /** Not a menu item's: the surface binds it under this id (keyboard-shortcuts.md "Panels"). */

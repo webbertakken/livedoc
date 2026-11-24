@@ -14,6 +14,7 @@ import {
 import type { TextFormatting } from '../text-document-formatting';
 import type { BlockMetrics } from './pagination';
 import { PLACED_PICTURE_CLASS, PLACED_ROOM_CLASS } from '../text-document-picture-placed';
+import { BOOKMARK_GLYPH_CLASS } from '../text-document-bookmarks';
 import { groupLines, holdLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
 import type { NoteMark } from './pagination-notes';
 import { measuringRange } from './pagination-range';
@@ -82,8 +83,9 @@ export function rulesOf(node: PmNode, formatting: TextFormatting, inColumns = fa
 
 const px = (value: string) => Number.parseFloat(value) || 0;
 
-// What is drawn out of a paragraph's lines (objects.md "In the editor"): a placed picture and its room.
-const PLACED = `.${PLACED_PICTURE_CLASS}, .${PLACED_ROOM_CLASS}`;
+// What is drawn out of a paragraph's lines (objects.md "In the editor"): a placed picture and its room, and a
+// bookmark's ribbon in the margin (links-and-navigation.md "Bookmarks").
+const PLACED = `.${PLACED_PICTURE_CLASS}, .${PLACED_ROOM_CLASS}, .${BOOKMARK_GLYPH_CLASS}`;
 
 // The rectangles of a paragraph's lines: its contents, less what is placed out of them.
 function lineRects(element: HTMLElement): DOMRect[] {

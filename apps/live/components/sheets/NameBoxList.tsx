@@ -62,7 +62,7 @@ export function NameBoxList({
         aria-label="Named Ranges"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="my-[2px] flex h-6 w-4 shrink-0 items-center justify-center rounded-sm hover:bg-black/5 dark:hover:bg-white/10"
+        className="my-[2px] flex size-chip shrink-0 items-center justify-center rounded-control hover:bg-black/5 dark:hover:bg-white/10"
         style={{ color: colour }}
         onClick={() => setOpen((v) => !v)}
       >

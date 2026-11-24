@@ -27,6 +27,13 @@ a spreadsheet in use); each band below is checked against it.
   tabs ([Spreadsheet](spreadsheet.md#the-workbook-shape)).
 - **Hide the Menus** (^, Ctrl+Shift+F) folds the title row and menu bar into the toolbar's row, as Google's
   compact controls do; the choice is the person's, kept in their browser.
+- **Full Screen** (View › Full Screen) hides the title row, the menu bar and the toolbar, as Google's does; the
+  formula bar, the grid and the sheet bar stay. Esc in the grid brings them back, once nothing else takes the key
+  (an edit, Paint Format, a copy's marquee, Find).
+  - An **Exit Full Screen** button sits at the top right while it lasts, for a touch screen with no Esc, and for
+    anyone who forgets the key (default, D187).
+  - It is the person's own view, open to a Viewer: never saved, sent or undone, and off each time the spreadsheet
+    opens; it is not the browser's full screen (default, D188).
 
 ## Menu bar
 
@@ -139,6 +146,43 @@ Left to right:
   - It is a menu button (`aria-haspopup="menu"`), its menu items radio items, the pick ticked; the shown value
     is announced politely as the selection changes.
 
+## Context menus
+
+A right-click opens the menu of what it is on, as a held finger does on a touch screen: a cell's, a row number's, a
+column letter's, or a sheet tab's ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar)). Over a cell or a header it
+selects what it is on first, unless the selection holds it. Ctrl+Shift+\ (⌘⇧\ on a Mac), Shift+F10 and the
+keyboard's menu key open the cell menu at the active cell.
+
+Each is the shell's context menu ([Office shell](../004-interface-design/office-shell.md#context-menus)): its items
+are the menus' own by id, so one binding runs both, in the order and words of its
+[parity matrix](parity-matrix.md) rows, in Title Case (D125). An item not yet built shows dimmed with "Coming soon",
+never hidden.
+
+| Place           | Items, a separator between the groups                                                                                                                                                                                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A cell or range | Cut, Copy, Paste, Paste Special › · Insert Rows Above, Insert Columns Left, Insert Cells › · Delete Rows, Delete Columns, Delete Cells › · Create a Filter, Filter by Cell Value · Show Edit History · Conditional Formatting, Data Validation · Insert Link, Comment, Insert Note · Convert to Table, View More Cell Actions › |
+| A row number    | Cut, Copy, Paste, Paste Special › · Insert Rows Above, Insert Rows Below, Delete Rows, Clear Rows, Hide Rows, Resize Rows · Create a Filter · Conditional Formatting, Data Validation · View More Row Actions ›                                                                                                                 |
+| A column letter | Cut, Copy, Paste, Paste Special › · Insert Columns Left, Insert Columns Right, Delete Columns, Clear Columns, Hide Columns, Resize Columns · Create a Filter · Sort Sheet A to Z, Sort Sheet Z to A · Conditional Formatting, Data Validation, Column Stats · Convert to Table, View More Column Actions ›                      |
+
+- **Paste Special** is Edit's submenu; **Insert Cells** holds Shift Right and Shift Down, **Delete Cells** Shift Left
+  and Shift Up.
+- **View More Cell Actions** › Get Link to This Cell, Define Named Range, Protect Range, Randomise Range, Column
+  Stats. **View More Row Actions** › Group Rows, Ungroup Rows, Freeze Up to Row, Get Link to This Range, Define Named
+  Range, Protect Range. **View More Column Actions** › Group Columns, Ungroup Columns, Freeze Up to Column, Randomise
+  Range, Define Named Range, Protect Range (Smart Chips are left out, C3).
+- An item counts what it acts on as the menu bar's do: **Insert 3 Rows Above**, **Delete Rows 2 - 4**, **Clear
+  Column B**, **Hide Columns B - D**, **Freeze Up to Row 5**; Ungroup dims where the selection holds no group.
+- **Clear** empties the lines of what they hold and their formats; **Hide** hides them; **Resize** opens the Resize
+  dialog, its size in pixels or fitted to the data ([Grid and editing](grid-and-editing.md)).
+- **Open Link** heads the cell menu while the active cell holds a link, for every role: the way to it without Ctrl or
+  ⌘, on a touch screen above all; it is not drawn otherwise (default, D189).
+- Who sees what is the menu bar's rule ([Menu bar](#menu-bar)): an item above the session's role is not drawn. A
+  Viewer sees Copy, Open Link and the items anyone may use (Get Link, Column Stats); a Participant also Cut, Paste,
+  Paste Special › Values Only and Comment; an Editor everything.
+- It is a WAI-ARIA menu: focus starts on its first item; Escape, a press outside or an item run closes it, and focus
+  goes back to the grid (or the tab).
+- Opening one is a `UI · Opened · SpreadsheetContextMenu` event, never one per item (D127).
+
 ## Side panels
 
 Opened by their menu items; one at a time, beside the grid (over it on a phone, as a sheet from the foot):
@@ -148,9 +192,13 @@ Version History (the shell's). Each is specified with its area.
 
 ## Phone and tablet
 
-- A tablet (768 px and up) keeps every band; the toolbar folds into More sooner.
-- A phone shows the title row (name and a menu button holding the menus), the formula bar when a cell is edited,
-  the grid and the sheet bar; formatting opens as a sheet from the foot (Text, Cell tabs, as Google's app).
+Phone and tablet are the office shell's ([Office shell](../004-interface-design/office-shell.md#phone-and-tablet)).
+
+- A tablet keeps every band; the toolbar folds into More sooner.
+- A phone shows the shell's one-line title row (its menus in More), the shell's toolbar as one row that scrolls
+  sideways, the grid and the sheet bar. Formatting is the toolbar's, as every office kind formats on a phone.
+- On a phone the formula bar shows only while a cell is edited, giving the grid the room; it comes and goes with the
+  edit (ruled by the director, 2026-11-24).
 
 ## Accessibility
 
@@ -270,3 +318,8 @@ Version History (the shell's). Each is specified with its area.
   formula is read by its name where the copy lands (default).
 - **D185** After a copy: A dialog says so, with Open Spreadsheet opening it in a new browser tab (default).
 - **D186** Who copies a sheet: Everyone who may read it, into a spreadsheet they may edit (default).
+- **D187** Leaving Full Screen without a key: An Exit Full Screen button at the top right while it lasts (default).
+- **D188** Full Screen's keeping: The person's own view for the page, off each time the spreadsheet opens; not the
+  browser's full screen (default).
+- **D189** A cell menu over a link: Open Link heads it, for every role, drawn only while the active cell holds a link
+  (default).

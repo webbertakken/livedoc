@@ -45,6 +45,7 @@ function Row({
         channel={channel}
         zoom={zoom}
         formulas={formulas}
+        onFullScreen={vi.fn()}
         keyScope={root}
         onWorkbook={undefined}
         pushUndo={vi.fn()}

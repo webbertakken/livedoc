@@ -88,8 +88,29 @@ function editorSource(): string {
   return all.toLowerCase();
 }
 
+// Every string literal the editor holds, spelled as written. Two surfaces may print one name in different case (the
+// canvas's "Edit Link", a text document's "Edit link"), and a label can reach its control by a path uiLabels() does
+// not read (a ternary, a constant); an article spelling a name exactly as a literal holds it names a real control.
+function editorLiterals(): Set<string> {
+  const skip = new Set(['node_modules', '.next', '.next-dev', 'out', 'dist', '.turbo']);
+  const out = new Set<string>();
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir)) {
+      if (skip.has(entry)) continue;
+      const full = `${dir}/${entry}`;
+      if (statSync(full).isDirectory()) walk(full);
+      else if (/\.tsx?$/.test(entry) && !entry.includes('.test.'))
+        for (const m of readFileSync(full, 'utf8').matchAll(/['"]([^'"\n]{3,30})['"]/g))
+          out.add(m[1]!);
+    }
+  };
+  walk(`${ROOT}/apps/live`);
+  return out;
+}
+
 describe('bold control names in articles match the editor', () => {
   const labels = uiLabels();
+  const literals = editorLiterals();
   const pages = articles();
 
   it('reads both sides (guard against this test going blind)', () => {
@@ -111,7 +132,7 @@ describe('bold control names in articles match the editor', () => {
         // Those are lowercase, and a control name a reader hunts for is not.
         if (labels.has(bold.toLowerCase()) === false) continue;
         const real = labels.get(bold.toLowerCase())!;
-        if (real.has(bold) || bold === bold.toLowerCase()) continue;
+        if (real.has(bold) || literals.has(bold) || bold === bold.toLowerCase()) continue;
         wrong.push(
           `${path.replace(`${ROOT}/apps/help/app/`, '')}: **${bold}** but the UI says "${[...real].join('" / "')}"`,
         );

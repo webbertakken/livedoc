@@ -49,6 +49,7 @@ import { adoptOoxmlMedia, ooxmlPictureLookup, readOoxmlPicture } from './ooxml-p
 import { MediaTaken, type FoundMedia } from '../picture-media';
 import type { Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
+import { Bookmarks, type Bookmark } from '../model/bookmarks';
 import { firstMathRunProps, M_NS, readOmml } from './ooxml-equations';
 import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import { FootnotesReader, markProps } from './ooxml-notes';
@@ -729,6 +730,34 @@ class RunReader {
     this.r = r;
     this.p = p;
     this.markUnsafeFields();
+    this.markPointBookmarks();
+  }
+
+  /** Bookmarks by their start: a `w:bookmarkStart` its `w:bookmarkEnd` follows at once, its name one the model holds. */
+  readonly points = new Map<XmlElement, string>();
+  /** Their ends, read with their starts. */
+  readonly pointEnds = new Set<XmlElement>();
+
+  /** A point bookmark is read at its start, its end skipped (links-and-navigation.md "Bookmarks"). */
+  markPointBookmarks(): void {
+    const walk = (e: XmlElement) => {
+      const children = childElements(e);
+      children.forEach((c, i) => {
+        const end = children[i + 1];
+        const name = isW(c, 'bookmarkStart') ? wVal(c, 'name') : undefined;
+        if (
+          name !== undefined &&
+          end &&
+          isW(end, 'bookmarkEnd') &&
+          wVal(end, 'id') === wVal(c, 'id') &&
+          Bookmarks.held(name)
+        ) {
+          this.points.set(c, name);
+          this.pointEnds.add(end);
+        } else if (!isW(c, 'p') && !isW(c, 'r')) walk(c);
+      });
+    };
+    walk(this.p);
   }
 
   /** Complex fields whose instruction runs things: their begin, instruction, separator and end runs are skipped. */
@@ -836,6 +865,17 @@ class RunReader {
   }
 
   node(e: XmlElement, ctx: RunContext): void {
+    if (this.pointEnds.has(e)) return;
+    const bookmark = this.points.get(e);
+    if (bookmark !== undefined) {
+      this.out.push({
+        type: 'bookmark',
+        name: bookmark,
+        props: {},
+        ...compact({ link: ctx.link }),
+      } satisfies Bookmark);
+      return;
+    }
     if (e.uri === W_NS) {
       if (e.local === 'pPr') return;
       if (e.local === 'r') return this.run(e, ctx);

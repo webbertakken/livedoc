@@ -65,6 +65,18 @@ describe("a person's view of a PDF document", () => {
     expect(PdfView.withCover(shown, false)).toEqual(before);
   });
 
+  // "Full screen": Single page, at Fit page, Rotate view kept.
+  it('shows one page a screen in full screen, turned as the person turned it', () => {
+    const before = PdfView.turned(
+      PdfView.withZoom(PdfView.withDisplay(PdfView.initial(), 'two'), 2),
+      1,
+    );
+    const presented = PdfView.presented(before);
+    expect(presented.display).toMatchObject({ across: 1, continuous: false });
+    expect(presented.zoom).toBe('fit-page');
+    expect(presented.turns).toBe(1);
+  });
+
   // "Limits": PDF_ZOOM_MIN, PDF_ZOOM_MAX, 10% to 6400%.
   it('keeps a zoom within 10% and 6400%', () => {
     expect(PdfView.withZoom(PdfView.initial(), 0.01).zoom).toBe(PDF_ZOOM_MIN);

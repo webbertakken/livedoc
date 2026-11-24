@@ -957,3 +957,24 @@ div.text-document-kept {
   color: light-dark(#5f6368, #9aa0a6);
   user-select: none;
 }
+
+/*
+ * A bookmark (docs/specs/034-text-documents/links-and-navigation.md "Bookmarks"): no room in the text; its ribbon sits
+ * in the left margin beside its line (its static place gives the line, the paragraph the margin), never printed.
+ */
+.text-document-body p:has(.text-document-bookmark) {
+  position: relative;
+}
+.text-document-bookmark-glyph {
+  position: absolute;
+  left: -1.75rem;
+  margin-top: 0.15em;
+  color: var(--office-primary);
+  line-height: 0;
+  user-select: none;
+}
+@media print {
+  .text-document-bookmark-glyph {
+    display: none;
+  }
+}

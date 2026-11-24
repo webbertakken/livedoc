@@ -61,13 +61,13 @@ export function SheetFindBar() {
       {label}
     </label>
   );
-  const field = 'h-7 rounded-md border bg-transparent px-2 text-[12px] outline-none';
+  const field = 'h-field rounded-control border bg-transparent px-2 text-body outline-none';
   return (
     <div
       role="search"
       data-keeps-escape
       aria-label="Find in sheet"
-      className="absolute right-2 z-30 w-80 rounded-lg border p-2 text-[12px] shadow-lg"
+      className="absolute right-2 z-30 w-80 rounded-menu border p-2 text-body shadow-lg"
       style={{
         // Under the header.
         top: HEADER_PX + 6,
@@ -81,7 +81,7 @@ export function SheetFindBar() {
         if (e.key === 'Escape') close();
       }}
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         <input
           ref={input}
           aria-label="Find"
@@ -108,7 +108,7 @@ export function SheetFindBar() {
           <button
             type="button"
             aria-label="Previous Match"
-            className="h-7 w-6 cursor-pointer rounded hover:bg-black/5"
+            className="size-field shrink-0 cursor-pointer rounded-control hover:bg-black/5"
             onClick={() => step(-1)}
           >
             ↑
@@ -118,7 +118,7 @@ export function SheetFindBar() {
           <button
             type="button"
             aria-label="Next Match"
-            className="h-7 w-6 cursor-pointer rounded hover:bg-black/5"
+            className="size-field shrink-0 cursor-pointer rounded-control hover:bg-black/5"
             onClick={() => step(1)}
           >
             ↓
@@ -128,7 +128,7 @@ export function SheetFindBar() {
           <button
             type="button"
             aria-label="Close Find"
-            className="h-7 w-6 cursor-pointer rounded hover:bg-black/5"
+            className="size-field shrink-0 cursor-pointer rounded-control hover:bg-black/5"
             onClick={close}
           >
             ✕
@@ -136,7 +136,7 @@ export function SheetFindBar() {
         </Tooltip>
       </div>
       {replace ? (
-        <div className="mt-1.5 flex items-center gap-1.5">
+        <div className="mt-1.5 flex items-center gap-2">
           <input
             aria-label="Replace with"
             placeholder="Replace with"
@@ -147,7 +147,7 @@ export function SheetFindBar() {
           />
           <button
             type="button"
-            className="h-7 cursor-pointer rounded-md px-2 hover:bg-black/5"
+            className="h-field cursor-pointer rounded-control px-2 hover:bg-black/5"
             onClick={() => {
               const m = at === null ? undefined : matches[at];
               if (!m) return step(1);
@@ -170,7 +170,7 @@ export function SheetFindBar() {
           </button>
           <Button
             variant="primary"
-            size="xs"
+            size="sm"
 
             onClick={() => {
               const r = replaceAll(c.workbook, c.sheet.id, query, by, opts);

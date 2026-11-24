@@ -1,6 +1,6 @@
 # Links and navigation
 
-**Status: partly built.** The outline's headings are built; the rest is specified.
+**Status: partly built.** The outline's headings, links and bookmarks are built; the rest is specified.
 
 Links, bookmarks, heading links, the table of contents, the outline and document tabs' navigation in a
 [text document](text-document.md). Smart chips are left out (fork C3, ruled): a chip in an arriving file is kept as
@@ -8,20 +8,54 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
 
 ## Links
 
-- ⌘K (Insert > Link, the toolbar) opens the link editor under the selection: the text, and the address field, which
-  also searches the person's LiveDoc documents and this document's headings and bookmarks as they type.
+- ⌘K, Insert > Link, the toolbar's **Insert link** and the context menu open the **link editor** under the selection,
+  in whichever writing has the caret (the body, a header, a footer, a footnote).
+- The editor holds **Text** (the selection's text; the whole link's when the caret is in one; empty at a bare caret),
+  **Link** (placeholder "Search or paste a link", the link's address when there is one) and **Apply**.
+  Enter in either field applies, Escape closes; the writing has the focus back either way.
+- As Link is typed in, a list under it offers the person's LiveDoc documents whose names hold every typed word, at
+  most 8, newest first `(default)`, and this document's headings and bookmarks; Up and Down move, Enter takes one.
+  A document taken fills Link with its address and an empty Text with its name.
+- Applying is one undo step. In a link, its text and address change; over a selection, the selection becomes Text
+  (when changed) and links to the address; at a bare caret, Text (Link as typed when empty) is put in, linked.
+  An empty Link removes the link.
 - Addresses kept: `http`, `https`, `mailto`, LiveDoc document addresses, and in-document targets (a heading, a
-  bookmark); a bare domain becomes `https://`. Others are refused: "Use a web, email or LiveDoc address".
+  bookmark); a bare domain becomes `https://`, a bare email address `mailto:` `(default)`. Others are refused under
+  the field: "Use a web, email or LiveDoc address"; past 2,048 characters `(default)`: "Use a shorter address".
+- A LiveDoc document address is the document's own address in full (on docs.nu `https://docs.nu/document/<id>`), so it
+  opens from Word or LibreOffice too.
 - **Automatically detect links** (Preferences) turns a typed address into a link.
-- **Link details** (while Preferences > **Show link details** is on, as it is by default): the caret on a link shows
-  a card with its title (a LiveDoc document's name; a web page's address)
-  and **Copy link**, **Edit link**, **Remove link**; Alt+Enter (⌥Enter) opens it.
-- A LiveDoc document link opens in a new browser tab; a heading or bookmark link scrolls to its target.
+- A new link (applied, detected or typed as Markdown) takes the link look as its own formatting, so every program
+  draws it alike: colour `#1155cc`, underlined `(default)`. What is typed after it takes neither; an edited link keeps
+  its own formatting; Remove link takes the look off where the text still has it exactly.
+- **Link details** (while Preferences > **Show link details** is on, as it is by default): the caret, with nothing
+  selected, in a link shows a card under it: its title (a LiveDoc document's name when it is one of the person's;
+  else its address), a press on which opens it, then **Copy link**, **Edit link** and **Remove link**.
+  Escape hides it until the caret moves; it never takes the focus from the writing.
+- **Remove link** takes the address off the link's whole stretch; its text stays. **Copy link** copies the address.
+- Alt+Enter (⌥Enter) opens the link at the caret, whether the card shows or not.
+- Opening: a web, email or LiveDoc address opens in a new browser tab with no opener and no referrer; a heading or
+  bookmark link scrolls to its target. An address of any other scheme, from a file, never opens.
+- The context menu on a link `(default)`: **Edit link** in place of Insert link, then **Copy link** and **Remove link**.
 
 ## Bookmarks
 
-Insert > Bookmark at the caret: a marker in the margin when shown; its card offers **Link**, **Copy link** (the
-document's address with `#bookmark=<id>`), **Remove**. Navigating with ⌘⌥ N then B / P then B.
+- A **bookmark** is a named place in the writing, a point between two characters. Insert > Bookmark puts one at the
+  caret, at the start of a selection `(default)`, in the body only.
+- Its name is made once: 12 lowercase letters and digits, the first a letter, a name both formats accept. A file's
+  bookmarks keep the names they arrive with.
+- It takes no room in the text; a small blue ribbon in the left margin beside its line shows it, never printed.
+  The caret beside it, with nothing selected, shows its card: **Bookmark**, **Copy link** and **Remove**
+  (Remove for whoever may edit) `(default)`.
+- **Copy link** copies the document's address with `#bookmark=<name>`; opening that address scrolls the bookmark
+  into view once the document is drawn, the caret at it.
+- The link editor's list offers this document's bookmarks under the documents, each named by the text after it (its
+  first 40 characters, "Bookmark" when none), those holding every typed word, at most 8. A link to one is `#<name>`;
+  opening it scrolls the bookmark into view, the caret at it. A link to a bookmark that is gone opens nothing.
+- Remove on its card takes it away; so does deleting the text around it, as one character would.
+- A hidden bookmark (its name starting with `_`, as Word and Google hide theirs, headings' among them) and a bookmark
+  that spans text (a start and an end apart) are kept as the file has them, never drawn `(default)`.
+- Navigating with ⌘⌥ N then B / P then B.
 
 ## Heading links
 
@@ -59,10 +93,14 @@ the keyboard layer ([Editing surface](editing-surface.md#keyboard-shortcuts)).
 ## Share roles
 
 Editors add and change links, bookmarks, the table of contents and document tabs; a Participant only as suggestions
-(D7); everyone may follow links and use the outline.
+(D7); everyone may follow links and use the outline. The link card of a session that may not edit offers only
+Copy link.
 
 ## Telemetry
 
 `Element · Added · TextDocumentLink`, `TextDocumentBookmark`, `TextDocumentTableOfContents`;
+`Element · Removed · TextDocumentBookmark` (Remove on its card);
+`Element · Changed · TextDocumentLink` (an edited link), `Element · Removed · TextDocumentLink` (Remove link);
+`UI · Used · TextDocumentLinkOpened` (Alt+Enter or the card's title);
 `Tab · Added · TextDocumentTab`; `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never
 content.

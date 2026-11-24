@@ -51,7 +51,7 @@ import {
 
 // A text glyph in a row's icon slot (the row and column header menus' arrows).
 export const Glyph = ({ t }: { t: string }) => (
-  <span aria-hidden className="w-4 text-center text-[13px]">
+  <span aria-hidden className="w-4 text-center text-body">
     {t}
   </span>
 );
@@ -109,7 +109,7 @@ export function SheetCellMenu({
       <MenuHeader
         title={words.title}
         aside={
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">{words.count}</span>
+          <span className="text-supporting text-slate-500 dark:text-slate-400">{words.count}</span>
         }
       />
       <MenuToolbar>

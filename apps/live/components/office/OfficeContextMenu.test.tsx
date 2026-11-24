@@ -99,7 +99,7 @@ describe('the context menu', () => {
       'Delete',
       'Comment',
       'Suggest edits',
-      'Insert link',
+      // Insert link shows only while the link actions bind it (links-and-navigation.md "Links"): none here.
       'Format options',
       'Clear formattingCtrl+\\',
       'Select all matching text',

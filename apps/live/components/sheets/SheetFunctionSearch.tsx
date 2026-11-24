@@ -49,20 +49,18 @@ function MatchRow({ match, onPick }: { match: FunctionMatch; onPick: () => void 
       onClick={onPick}
       className="flex w-full min-w-0 cursor-pointer items-start gap-2 px-3 py-1.5 text-left transition hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800"
     >
-      <span aria-hidden className="mt-0.5 flex shrink-0 text-slate-500 [&_svg]:size-4">
+      <span aria-hidden className="mt-0.5 flex shrink-0 text-slate-500 [&_svg]:size-icon-row">
         <Icon />
       </span>
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="font-mono text-[12px] font-semibold text-slate-800 dark:text-slate-100">
+        <span className="font-mono text-body text-slate-800 dark:text-slate-100">
           {match.name}
           <span className="ml-1.5 font-sans font-normal text-slate-500 dark:text-slate-400">
             {FUNCTION_FAMILY_LABELS[match.family]}
           </span>
         </span>
         {doc?.summary ? (
-          <span className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-            {doc.summary}
-          </span>
+          <span className="text-supporting text-slate-500 dark:text-slate-400">{doc.summary}</span>
         ) : null}
       </span>
     </button>
@@ -110,7 +108,7 @@ export function SheetFunctionSearch({
             <NoMatches things="functions" query={query} hint="Try what it does, like “average”." />
           )
         ) : (
-          <p className="px-1 py-2 text-[12px] text-slate-500 dark:text-slate-400">
+          <p className="px-1 py-2 text-supporting text-slate-500 dark:text-slate-400">
             Type a function’s name, or what it does.
           </p>
         )}

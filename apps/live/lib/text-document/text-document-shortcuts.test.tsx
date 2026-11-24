@@ -76,6 +76,8 @@ import { TEXT_WIDTH_ITEMS } from './useTextDocumentTextWidth';
 import { FOOTNOTE_ITEM } from './text-document-footnotes-edit';
 import { FOOTNOTE_KEY_ACTIONS } from '@/components/text-document/useTextDocumentNoteEditing';
 import { textDocumentUndoPlugins } from './text-document-undo';
+import { LINK_ITEM, OPEN_LINK } from './text-document-links';
+import { BOOKMARK_ITEM } from './text-document-bookmarks';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
@@ -172,6 +174,10 @@ describe('the text document menus', () => {
         ...Object.values(TEXT_WIDTH_ITEMS),
         // Insert > Footnote (useTextDocumentNoteEditing), bound by the surface.
         FOOTNOTE_ITEM,
+        // Insert > Link (useTextDocumentLinks), bound by the surface.
+        LINK_ITEM,
+        // Insert > Bookmark (useTextDocumentBookmarks), bound by the surface.
+        BOOKMARK_ITEM,
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {
@@ -207,6 +213,8 @@ describe('the text document menus', () => {
       ...Object.keys(TABLE_NAVIGATION),
       // Turning a selected picture (useTextDocumentPictureSize).
       ...Object.keys(PICTURE_TURN_KEYS),
+      // Open link at the caret (useTextDocumentLinks).
+      OPEN_LINK,
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

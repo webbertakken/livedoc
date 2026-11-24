@@ -28,6 +28,7 @@ vi.mock('@/lib/spreadsheet/open-spreadsheet-file', async (load) => ({
 afterEach(() => vi.clearAllMocks());
 
 const SCOPE = { ownerId: 'o1', documentId: 'd1', shareCode: null };
+const fullScreen = vi.fn();
 
 function Row({
   level = 'edit',
@@ -54,6 +55,7 @@ function Row({
         channel={channel}
         zoom={zoom}
         formulas={formulas}
+        onFullScreen={fullScreen}
         keyScope={root}
         onWorkbook={undefined}
         pushUndo={pushed}
@@ -95,6 +97,14 @@ describe('SpreadsheetTitleRow', () => {
     expect(
       screen.getByRole('menuitemcheckbox', { name: /^Formulas/ }).getAttribute('aria-checked'),
     ).toBe('true');
+  });
+
+  // surface.md "Layout": View › Full Screen, open to a Viewer (D188).
+  it('runs View › Full Screen, for a Viewer too', () => {
+    render(<Row level="view" />);
+    openMenu('View');
+    fireEvent.click(item(/^Full Screen/));
+    expect(fullScreen).toHaveBeenCalledOnce();
   });
 
   it('runs the open sheet’s items from the channel, ticked as it says', () => {

@@ -40,6 +40,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       level={readOnly ? 'view' : can.level}
       sequence={(op) => roomRef.current?.sequence(op) ?? Promise.resolve(false)}
       chrome={readOnly ? null : office}
+      documents={ctx.documentList}
     />
   );
 }

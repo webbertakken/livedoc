@@ -17,11 +17,11 @@ exports[`the corpus > reads google/features-gdocs.docx and writes it back the sa
     ],
     "kept": [
       {
-        "count": 3,
+        "count": 2,
         "name": "bookmarkStart",
       },
       {
-        "count": 3,
+        "count": 2,
         "name": "bookmarkEnd",
       },
       {
@@ -56,7 +56,7 @@ exports[`the corpus > reads google/features-gdocs.docx and writes it back the sa
         "Normal",
         "",
         "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
-        "bookmarkStart,bookmarkEnd",
+        "",
       ],
       [
         "Heading1",
@@ -189,7 +189,7 @@ exports[`the corpus > reads google/features-gdocs.odt and writes it back the sam
         "name": "sequence-decls",
       },
       {
-        "count": 3,
+        "count": 2,
         "name": "bookmark",
       },
       {
@@ -220,7 +220,7 @@ exports[`the corpus > reads google/features-gdocs.odt and writes it back the sam
         "Standard",
         "",
         "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
-        "bookmark",
+        "",
       ],
       [
         "Heading_20_1",
@@ -355,14 +355,6 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
       },
       {
         "count": 1,
-        "name": "bookmarkStart",
-      },
-      {
-        "count": 1,
-        "name": "bookmarkEnd",
-      },
-      {
-        "count": 1,
         "name": "commentRangeStart",
       },
       {
@@ -389,7 +381,7 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
         "Normal",
         "",
         "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
-        "bookmarkStart,bookmarkEnd",
+        "",
       ],
       [
         "Heading1",
@@ -518,10 +510,6 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
       },
       {
         "count": 1,
-        "name": "bookmark",
-      },
-      {
-        "count": 1,
         "name": "annotation",
       },
       {
@@ -553,7 +541,7 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
         "Standard",
         "",
         "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
-        "bookmark",
+        "",
       ],
       [
         "Heading_20_1",
@@ -675,10 +663,6 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
       },
       {
         "count": 1,
-        "name": "bookmark",
-      },
-      {
-        "count": 1,
         "name": "annotation",
       },
       {
@@ -710,7 +694,7 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
         "Standard",
         "",
         "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
-        "bookmark",
+        "",
       ],
       [
         "Heading_20_1",

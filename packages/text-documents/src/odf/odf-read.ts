@@ -60,6 +60,7 @@ import { readOdfPicture, type OdfPictureLookup } from './odf-pictures';
 import { keptXmlTexts, MediaTaken } from '../picture-media';
 import type { Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
+import { Bookmarks, type Bookmark } from '../model/bookmarks';
 import { readOdfEquation } from './odf-equations';
 import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import {
@@ -841,6 +842,17 @@ class InlineReader {
         if (!safe) this.r.report.drop('link', 'link');
         const inner = { ...ctx, ...(safe ? { link: href } : {}) };
         for (const child of node.children) this.node(child, inner);
+        return;
+      }
+      // A named point (links-and-navigation.md "Bookmarks"); it shows nothing, so white space collapses across it.
+      const name = node.local === 'bookmark' ? attributeOf(node, NS.text, 'name') : undefined;
+      if (name !== undefined && Bookmarks.held(name)) {
+        this.out.push({
+          type: 'bookmark',
+          name,
+          props: ctx.props,
+          ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+        } satisfies Bookmark);
         return;
       }
       if (KEPT_INLINE_SKIP.has(node.local)) {

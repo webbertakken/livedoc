@@ -23,6 +23,7 @@ import {
 } from '@livedoc/text-documents';
 import { borderCss, cssText } from './text-document-style-sheet';
 import { paperFill } from './text-document-paper';
+import { nullAttributes } from './text-document-attributes';
 
 /** A table's own class, which the style sheet draws. */
 export const TABLE_CLASS = 'text-document-table';
@@ -36,9 +37,6 @@ const length = (value: unknown, most: number): number | null =>
 const pt = (value: number) => `${Math.round(value * 1000) / 1000}pt`;
 /** The widest a page's text runs, in points: a table or a column past it is drawn no wider. */
 const MOST_PT = 22 * 72;
-
-const nullAttributes = (names: readonly string[]) =>
-  Object.fromEntries(names.map((name) => [name, { default: null }]));
 
 /** The table's columns: its first row's cells' widths, each spanned column its own. */
 export function columnWidths(table: PmNode): number[] {

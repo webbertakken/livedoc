@@ -64,7 +64,10 @@ test('the Resize dialog sets a column’s width', async ({ page, pageErrors }) =
   await page.mouse.click(letterB.x + letterB.width / 2, letterB.y + letterB.height / 2, {
     button: 'right',
   });
-  await page.getByRole('button', { name: 'Resize column B' }).click();
+  await page
+    .getByRole('menu', { name: 'Context menu' })
+    .getByRole('menuitem', { name: 'Resize Column B' })
+    .click();
   const dialog = page.getByRole('dialog', { name: 'Resize column B' });
   const field = dialog.getByRole('textbox', { name: /column width in pixels/ });
   // The column's width as drawn.

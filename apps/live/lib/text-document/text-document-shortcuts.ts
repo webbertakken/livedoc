@@ -38,7 +38,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+K',
     '⌘+K',
     'Ctrl+K',
-    'specified',
+    'built',
   ),
   row(
     'open-link',
@@ -47,7 +47,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Enter',
     'Option+Enter',
     'Alt+Enter',
-    'specified',
+    'built',
   ),
   row(
     'show-common-keyboard-shortcuts',

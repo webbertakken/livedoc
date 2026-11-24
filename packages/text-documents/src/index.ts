@@ -51,6 +51,12 @@ export {
 } from './model/blocks';
 export { Notes } from './model/notes';
 export {
+  BOOKMARK_NAME_LENGTH,
+  BOOKMARK_NAME_MAX,
+  Bookmarks,
+  type Bookmark,
+} from './model/bookmarks';
+export {
   childRowKeys,
   childRows,
   Equations,
@@ -263,6 +269,8 @@ export {
   TABLE_ROW_ATTRIBUTES,
   EQUATION,
   EQUATION_ATTRIBUTES,
+  BOOKMARK,
+  BOOKMARK_ATTRIBUTES,
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
   MEDIA_MAP,

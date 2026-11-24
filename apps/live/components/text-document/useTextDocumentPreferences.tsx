@@ -58,5 +58,5 @@ export function useTextDocumentPreferences(view: EditorView | null, ownerId: str
     />
   ) : null;
   const read = useCallback(() => current.current, []);
-  return { actions, dialog, read };
+  return { actions, dialog, read, aids };
 }

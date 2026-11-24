@@ -139,11 +139,13 @@ export function catalogueItems(catalogue: OfficeCatalogue): FoundItem[] {
 }
 
 // One entry of a context menu (office-shell.md "Context menus"): a menu item by its id, relabelled where the context
-// names it otherwise ("Insert link") or offers it to fewer (a level of its own), an item of the context's own, or a separator.
+// names it otherwise ("Insert link") or offers it to fewer (a level of its own), an item or a submenu of the context's
+// own, or a separator.
 export type ContextEntrySpec =
   | string
   | { id: string; label?: string; level?: AccessLevel; contextual?: true }
   | OfficeItem
+  | { kind: 'submenu'; id: string; label: string; entries: readonly ContextEntrySpec[] }
   | { kind: 'separator' };
 
 // A context menu's entries, sharing the menus' items (their status, level and binding) by id, as commands. An id no menu holds is a
@@ -154,7 +156,10 @@ export function contextEntries(
 ): OfficeEntry[] {
   const byId = new Map(catalogueItems(catalogue).map(({ item }) => [item.id, item]));
   return specs.map((spec): OfficeEntry => {
-    if (typeof spec === 'object' && 'kind' in spec) return spec;
+    if (typeof spec === 'object' && 'kind' in spec)
+      return spec.kind === 'submenu'
+        ? { ...spec, entries: contextEntries(catalogue, spec.entries) }
+        : spec;
     const id = typeof spec === 'string' ? spec : spec.id;
     const found = byId.get(id);
     if (!found) throw new Error(`context menu: no menu item ${id}`);

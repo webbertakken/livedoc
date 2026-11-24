@@ -24,6 +24,7 @@ import { RelationshipList, relativeTarget } from './ooxml-relationships';
 import { ooxmlMediaPart, ooxmlPictureXml } from './ooxml-pictures';
 import { Pictures, type HeldPictureMedia, type Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
+import type { Bookmark } from '../model/bookmarks';
 import { M_NS, ommlXml } from './ooxml-equations';
 import { keptXmlTexts } from '../picture-media';
 import { Styles, type Style } from '../model/styles';
@@ -89,6 +90,7 @@ class OoxmlWriter {
   readonly mediaParts = new Map<string, HeldPictureMedia>();
   /** The last `wp:docPr` id given: numbered after those kept content holds. */
   #pictureId: number;
+  #bookmarkId: number;
   /** Each section's place among the sections, by the section itself. */
   readonly #sectionAt = new Map<Section, number>();
 
@@ -116,6 +118,7 @@ class OoxmlWriter {
       this.mainPart,
     );
     this.#pictureId = keptDocPrIds(doc);
+    this.#bookmarkId = keptBookmarkIds(doc);
     this.partRels = this.rels;
     this.defaultStyle = doc.styles.find((s) => s.role === 'normal' && s.family === 'paragraph')?.id;
     const sections = [
@@ -265,6 +268,14 @@ class OoxmlWriter {
     return ooxmlPictureXml(picture, this.rPr(picture), embed, this.#pictureId);
   }
 
+  /** A bookmark as Word writes a point: its start and its end at once, numbered after the kept ones. */
+  bookmarkXml(bookmark: Bookmark): string {
+    if (!bookmark.name) return '';
+    this.#bookmarkId += 1;
+    const id = this.#bookmarkId;
+    return `<w:bookmarkStart w:id="${id}" w:name="${escapeXmlAttribute(bookmark.name)}"/><w:bookmarkEnd w:id="${id}"/>`;
+  }
+
   /** An equation in line: each run in the maths font with the equation's own formatting. */
   equationXml(equation: Equation): string {
     const rPr = this.rPr({ ...equation, props: { ...equation.props, font: MATHS_FONT } });
@@ -294,7 +305,9 @@ class OoxmlWriter {
                 ? this.pictureXml(i)
                 : i.type === 'equation'
                   ? this.equationXml(i)
-                  : this.kept(i.xml),
+                  : i.type === 'bookmark'
+                    ? this.bookmarkXml(i)
+                    : this.kept(i.xml),
     }));
     // A paragraph of only equations is a display equation, as Word writes one (objects.md "Equations in the formats").
     const display =
@@ -648,6 +661,15 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     if (!defaults.has(ext)) defaults.set(ext, media.mediaType);
   }
   return writeOoxmlPackage(parts, relationships, defaults);
+}
+
+/** The highest bookmark id kept content holds, so the bookmarks written are numbered after it. */
+function keptBookmarkIds(document: TextDocument): number {
+  let most = -1;
+  for (const xml of keptXmlTexts(document))
+    for (const match of xml.matchAll(/bookmark(?:Start|End)\b[^>]*?\sw:id="(\d+)"/g))
+      most = Math.max(most, Number(match[1]));
+  return most;
 }
 
 /** The highest `wp:docPr` id kept content holds, so the pictures written are numbered after it. */

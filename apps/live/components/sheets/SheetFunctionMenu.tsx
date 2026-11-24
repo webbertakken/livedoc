@@ -66,16 +66,14 @@ function FunctionRow({
       onClick={onPick}
       className="flex w-full min-w-0 cursor-pointer flex-col items-start gap-0.5 break-words px-3 py-1.5 text-left transition duration-micro motion-reduce:transition-none data-[highlighted]:bg-brand-100 data-[highlighted]:ring-2 data-[highlighted]:ring-inset data-[highlighted]:ring-brand-400 dark:data-[highlighted]:bg-brand-500/20 hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800"
     >
-      <span className="font-mono text-[12px] font-semibold text-slate-800 dark:text-slate-100">
+      <span className="font-mono text-body text-slate-800 dark:text-slate-100">
         {name}
         <span className="font-normal text-slate-500 dark:text-slate-400">
           ({doc?.args.join(', ') ?? ''})
         </span>
       </span>
       {doc?.summary ? (
-        <span className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-          {doc.summary}
-        </span>
+        <span className="text-supporting text-slate-500 dark:text-slate-400">{doc.summary}</span>
       ) : null}
     </button>
   );

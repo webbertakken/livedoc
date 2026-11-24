@@ -9,6 +9,7 @@ import { createPdfEngine } from '../engine/index';
 import type { PdfEngine, PdfOpened } from '../engine-contract';
 import { PDF_ENGINE_TIMEOUT_MS } from '../limits';
 import { PdfLiveChanges } from '../live-changes';
+import { TextFind } from '../text-find';
 import { readerWasm } from '../testing/fixtures';
 import {
   fetchPdfCorpus,
@@ -110,5 +111,19 @@ describe('the wider corpus', () => {
     expect(result.document.encrypted).toBe(true);
     expect(result.document.permissions.changeContent).toBe(false);
     expect(result.document.permissions.copy).toBe(true);
+  });
+
+  // reading-surface.md "Find": any script is read, found and copied as the file maps it to Unicode.
+  it.each([
+    { file: 'scripts/ArabicCIDTrueType.pdf', word: 'الخطوط', times: 4 },
+    { file: 'scripts/vertical.pdf', word: '日本語', times: 1 },
+  ])('reads and finds the words of $file in their own script', async ({ file, word, times }) => {
+    const result = await engine.open(fetchedBytes({ file }));
+    if (!result.ok) throw new Error(`${file} did not open`);
+    const text = (await engine.pageText(0))!.text;
+    const spans = TextFind.spans(text, word);
+    expect(spans).toHaveLength(times);
+    // What is copied is the page's text over the span: the word as the file writes it.
+    expect(spans.map(([start, end]) => text.slice(start, end))).toEqual(Array(times).fill(word));
   });
 });

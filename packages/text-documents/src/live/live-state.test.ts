@@ -15,6 +15,7 @@ import {
   DOCUMENT_MAP,
   FIELD,
   FOOTNOTE,
+  BOOKMARK,
   MEDIA_MAP,
   EQUATION,
   PICTURE,
@@ -194,7 +195,7 @@ describe('the live layout', () => {
     };
     walk(TextDocumentState.body(doc));
     for (const name of names)
-      expect([...BODY_BLOCKS, ...TABLE_PARTS, KEPT_INLINE, FOOTNOTE]).toContain(name);
+      expect([...BODY_BLOCKS, ...TABLE_PARTS, KEPT_INLINE, FOOTNOTE, BOOKMARK]).toContain(name);
     expect(names).toContain('paragraph');
     expect([...marks].some((m) => (TEXT_PROPERTY_MARKS as readonly string[]).includes(m))).toBe(
       true,

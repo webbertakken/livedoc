@@ -73,6 +73,9 @@ export const PICTURE_ATTRIBUTES = [
 /** An equation (objects.md "Equations in the editor"): an atom inside its paragraph, its maths one whole value. */
 export const EQUATION = 'equation';
 export const EQUATION_ATTRIBUTES = ['math', 'props', 'style', 'link', 'kept'] as const;
+/** A bookmark (links-and-navigation.md "Bookmarks"): an atom of no width inside its paragraph, by its name. */
+export const BOOKMARK = 'bookmark';
+export const BOOKMARK_ATTRIBUTES = ['name', 'props', 'style', 'link', 'kept'] as const;
 export const KEPT_INLINE_ATTRIBUTES = ['name', 'xml', 'props', 'style', 'link', 'kept'] as const;
 export const FIELD_ATTRIBUTES = ['field', 'text', 'props', 'style', 'link', 'kept'] as const;
 export const FOOTNOTE_ATTRIBUTES = ['story', 'props', 'style', 'link', 'kept'] as const;

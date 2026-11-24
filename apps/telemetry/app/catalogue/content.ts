@@ -504,8 +504,8 @@ export const OTHER_ELEMENTS_ADDED: Metric = {
   // Article inserts (`Article…`) are their own card (Article Inserts, features.ts), and a text document's breaks
   // theirs (`TextDocumentBreak…`, Text Document Breaks), its page numbers too (`TextDocumentPage…`, Text Document
   // Page Numbers), its footnotes (`TextDocumentFootnote`, Text Document Footnotes), its pictures
-  // (`TextDocumentImage…`, Text Document Pictures) and its tables
-  // (`TextDocumentTable…`, Text Document Tables).
+  // (`TextDocumentImage…`, Text Document Pictures), its tables (`TextDocumentTable…`, Text Document Tables) and its
+  // links and bookmarks (`TextDocumentLink`, `TextDocumentBookmark`, Text Document Links).
   typeIn: (type) =>
     !PALETTE_KINDS.has(canonicalElementType(type)) &&
     !isTablePart(type) &&
@@ -515,7 +515,9 @@ export const OTHER_ELEMENTS_ADDED: Metric = {
     !(type ?? '').startsWith('TextDocumentPage') &&
     type !== 'TextDocumentFootnote' &&
     !(type ?? '').startsWith('TextDocumentImage') &&
-    !(type ?? '').startsWith('TextDocumentTable'),
+    !(type ?? '').startsWith('TextDocumentTable') &&
+    type !== 'TextDocumentLink' &&
+    type !== 'TextDocumentBookmark',
   title: 'Other Elements Added',
   blurb:
     'Kinds the palette catalogue does not list, such as pasted images. Table rows and columns are in Tables, entity fields in Data Models.',
@@ -550,8 +552,8 @@ export const ELEMENTS_CHANGED = chart(
   'Restyled or edited: colour, text, arrow ends, size, presets, the format painter and more.',
   // An article's writing formatted (`Article…`) is its own card (Article Formatting, features.ts), as is a text
   // document's (`TextDocumentFormat…`, Text Document Formatting; its styles, Text Document Paragraph Style),
-  // as are a logo page's tools (Logo Tools Used), a text document's tables' changes (Text Document Table Changes)
-  // and its pictures' (Text Document Picture Changes).
+  // as are a logo page's tools (Logo Tools Used), a text document's tables' changes (Text Document Table Changes),
+  // its pictures' (Text Document Picture Changes) and its links' (Text Document Links Edited).
   // An entity's fields and a relationship's cardinality are Data Models'.
   {
     typeIn: (t) =>
@@ -564,6 +566,7 @@ export const ELEMENTS_CHANGED = chart(
       !TEXT_DOCUMENT_RULER.typeIn!(t) &&
       !(t ?? '').startsWith('TextDocumentTable') &&
       !(t ?? '').startsWith('TextDocumentImage') &&
+      t !== 'TextDocumentLink' &&
       !LOGO_TOOL_TYPES.includes(t ?? '') &&
       !DATA_MODEL_CHANGED.includes(t ?? ''),
   },
@@ -1374,6 +1377,14 @@ export const PDF_LAYERS_TOGGLED = chart(
   { types: ['Layer.Shown', 'Layer.Hidden'], rising: 'neutral' },
 );
 
+export const PDF_ROOM_TOGGLED = chart(
+  'Pdf',
+  'Toggled',
+  'PDF Read Mode And Full Screen',
+  'A person gave a PDF document’s pages the room: Read mode or Full screen, counted on entering.',
+  { types: ['ReadMode', 'FullScreen'], rising: 'neutral' },
+);
+
 export const PDF_TEXT_COPIED = chart(
   'Pdf',
   'Copied',
@@ -1429,6 +1440,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_VIEW_TURNS,
     PDF_ZOOMS,
     PDF_LAYERS_TOGGLED,
+    PDF_ROOM_TOGGLED,
     PDF_TEXT_COPIED,
     PDF_SEARCHES,
     PDF_OPENS,

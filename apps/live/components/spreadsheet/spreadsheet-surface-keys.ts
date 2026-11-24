@@ -3,13 +3,15 @@
 // The grid's keys only a workbook has (docs/specs/029-sheets/grid-and-editing.md "Moving around"): Alt+Up and
 // Alt+Down, Ctrl+Shift+Page Up and Page Down open the previous and next sheet; Alt+Shift+Q puts focus on the
 // selection's summary; Ctrl+Alt+Shift+M takes it out to the toolbar (D137); F4 redoes ("Formulas"); Alt+1 renames
-// the open sheet (spreadsheet.md "Sheets in the sheet bar"); Alt+Shift+K opens All Sheets (surface.md "Sheet bar"). The surface
+// the open sheet (spreadsheet.md "Sheets in the sheet bar"); Alt+Shift+K opens All Sheets (surface.md "Sheet bar"); Escape
+// ends Full Screen (surface.md "Layout"). The surface
 // knows the sheets and the timeline; the open sheet's grid hears the keys.
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { SheetSurfaceKeys } from '@/components/sheets/useSheetGridKeys';
 import { regionTarget, shownRegions } from '@/hooks/ui/useRegionCycle';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetBarTab } from './SheetBar';
+import { useFullScreenContext } from './spreadsheet-full-screen';
 import { useSummarySlot } from './summary-slot';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 
@@ -51,6 +53,7 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
   const slot = useSummarySlot();
   const redo = useContext(SurfaceRedoContext);
   const bar = useSheetBarActionsContext();
+  const fullScreen = useFullScreenContext();
   return useMemo(
     () => ({
       stepSheet: (by) => step?.(by),
@@ -77,7 +80,8 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
         debugLog('[workbook] leave grid', { to: target ? 'toolbar' : null });
         target?.focus();
       },
+      escape: () => fullScreen?.exit() ?? false,
     }),
-    [step, slot, redo, bar],
+    [step, slot, redo, bar, fullScreen],
   );
 }

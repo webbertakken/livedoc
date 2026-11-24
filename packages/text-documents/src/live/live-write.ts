@@ -12,6 +12,7 @@ import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
   EQUATION,
+  BOOKMARK,
   FIELD,
   FOOTNOTE,
   KEPT_INLINE,
@@ -83,7 +84,9 @@ function inlineNodes(
           ? FOOTNOTE
           : inline.type === 'equation'
             ? EQUATION
-            : KEPT_INLINE,
+            : inline.type === 'bookmark'
+              ? BOOKMARK
+              : KEPT_INLINE,
     );
     setAttributes(element, {
       ...(inline.type === 'field'
@@ -92,7 +95,9 @@ function inlineNodes(
           ? { story: stories.note(inline) }
           : inline.type === 'equation'
             ? { math: inline.math }
-            : { name: inline.name, xml: inline.xml }),
+            : inline.type === 'bookmark'
+              ? { name: inline.name }
+              : { name: inline.name, xml: inline.xml }),
       props: isEmpty(inline.props) ? undefined : inline.props,
       style: inline.style,
       link: inline.link,

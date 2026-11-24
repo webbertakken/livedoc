@@ -318,6 +318,17 @@ export function usePdfView(pages: readonly PageInfo[]) {
     [pages.length],
   );
 
+  /** A whole view at once, the page in view kept: Full screen's own change, told to no telemetry. */
+  const setWholeView = useCallback(
+    (next: PdfView) => {
+      const now = latest.current;
+      anchor.current = { kind: 'page', index: now.page };
+      setShownRow(PdfPageLayout.rowOf(PdfPageLayout.rows(pages.length, next.display), now.page));
+      setView(next);
+    },
+    [pages.length],
+  );
+
   const setCover = useCallback(
     (cover: boolean) => {
       const now = latest.current;
@@ -371,6 +382,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       placeInView,
       turn,
       setDisplay,
+      setWholeView,
       setCover,
       rotate,
       viewStore,
@@ -393,6 +405,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
       placeInView,
       turn,
       setDisplay,
+      setWholeView,
       setCover,
       rotate,
       viewStore,

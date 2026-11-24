@@ -28,6 +28,8 @@ import {
   PDF_MENUS,
   PDF_ZOOM_MENU_PERCENTS,
   PRINT,
+  READ_MODE,
+  FULL_SCREEN,
   REDO,
   ROTATE_VIEW_CLOCKWISE,
   ROTATE_VIEW_COUNTERCLOCKWISE,
@@ -122,6 +124,9 @@ describe("a PDF document's menus and toolbar", () => {
     PANEL_OUTLINE,
     PANEL_EMBEDDED_FILES,
     PANEL_LAYERS,
+    // usePdfReadMode.ts, usePdfFullScreen.ts: one person's room for the pages.
+    READ_MODE,
+    FULL_SCREEN,
   ];
 
   it('has no built item nothing runs, no shortcut its registry lacks, no id twice', () => {

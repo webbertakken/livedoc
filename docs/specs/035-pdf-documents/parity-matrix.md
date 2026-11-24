@@ -1,7 +1,7 @@
 # Parity matrix
 
-**Status: specified.** Nothing is built. Every row reads `specified` until it is built; a built row names the test
-that proves it.
+**Status: specified; the reading rows are built.** Every row reads `specified` until it is built; a built row names
+the test that proves it.
 
 What "all functionality" is measured against (F5, ruled by Webber on 2026-11-21): **every topic of Adobe's own help for Acrobat on
 desktop**, 403 topics in its contents as read on 2026-11-21
@@ -12,18 +12,21 @@ functions are laid out in LiveDoc's own office shell; its name, logos and artwor
 
 A row is done when it reads **built** (with its test) or **left out** (with Webber's ruling).
 
-| Status                | Means                                                                            | Rows |
-| --------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`           | In, by the spec named                                                            | 134  |
-| `specified, in part`  | In, but for the part its rule names as left out                                  | 55   |
-| `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 160  |
-| `not a function`      | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
-| `built (<test>)`      | Built, with the test that proves it                                              | 0    |
+| Status                                             | Means                                                                            | Rows |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
+| `specified`                                        | In, by the spec named                                                            | 117  |
+| `specified, in part`                               | In, but for the part its rule names as left out                                  | 49   |
+| `left out (<ruling>)`                              | Not built, by the ruling or fork named                                           | 160  |
+| `not a function`                                   | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
+| `built (<test>)`                                   | Built, with the test that proves it                                              | 13   |
+| `built, in part (<test>)`                          | Built, but for the part its rule names as left out                               | 3    |
+| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 7    |
 
 - Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 101 `left out (F5)`.
 - **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
   out, their data in a file kept untouched. A row reading `left out (F5)` is this matrix's reading of the reference,
   topic by topic: Webber may bring any one back in, and the row changes here first.
+- A `specified` row carrying "(Phase N)" is built by the phase named; a `built so far` row is done once its rest is.
 - **F10 (scans) and F12 (starting from nothing) are open**: their two rows stand as defaults until ruled.
 - `not a function` rows are left out under F5's ruling with the rest; they are told apart so the count of functions
   is honest.
@@ -39,16 +42,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Get started: learn the basics
 
-| Topic                                                | Rule                                                                                                                                                                                                                                | Mode    | Status             | Spec                                                         |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------------ |
-| Acrobat on desktop overview                          | What a PDF document's surface offers, laid out in LiveDoc's office shell                                                                                                                                                            | Viewing | specified          | [Reading surface](reading-surface.md)                        |
-| Workspace basics                                     | The Explorer is the home view and the tool finder lists every tool; a PDF's surface is title row, menus, toolbar, left panel, pages, side panel and page bar; the Read panel (the assistant's summaries, reading aloud) is left out | Viewing | specified, in part | [Reading surface](reading-surface.md#layout-top-to-bottom)   |
-| Technical requirements                               | Acrobat's system requirements; LiveDoc's are a current browser                                                                                                                                                                      |         | not a function     |                                                              |
-| Supported file formats                               | A PDF opens as a PDF document and downloads as PDF, pictures or text; every other file is another kind's; playing video and sound placed in a PDF is left out                                                                       | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#downloading) |
-| Navigate through pages                               | Next, previous, first, last, go to page, previous and next view, bookmarks; automatic scrolling and article threads are left out                                                                                                    | Viewing | specified, in part | [Reading surface](reading-surface.md#the-pages)              |
-| Identify Acrobat track and version                   | Telling which Acrobat is installed                                                                                                                                                                                                  |         | not a function     |                                                              |
-| Asian, European, and Middle Eastern language support | Text in any script draws, is found and is copied; new text in a complex script is shaped by the browser; a field's and a Text mark's direction follows what is typed, with no direction or digit setting                            | Editing | specified, in part | [Editing text](editing-text.md#typing)                       |
-| Work smarter with the prompt bar                     | Adobe's assistant prompt bar; LiveDoc's agents work through their own tools                                                                                                                                                         |         | left out (F5)      | [Agents](agents.md)                                          |
+| Topic                                                | Rule                                                                                                                                                                                                                                | Mode    | Status                                                                                                                                                                                                                                  | Spec                                                         |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Acrobat on desktop overview                          | What a PDF document's surface offers, laid out in LiveDoc's office shell                                                                                                                                                            | Viewing | built (`PdfDocumentSurface.test.tsx`, `pdf-chrome.test.ts`, `pdf-document-shell.spec.ts`)                                                                                                                                               | [Reading surface](reading-surface.md)                        |
+| Workspace basics                                     | The Explorer is the home view and the tool finder lists every tool; a PDF's surface is title row, menus, toolbar, left panel, pages, side panel and page bar; the Read panel (the assistant's summaries, reading aloud) is left out | Viewing | built so far: the title row, menus, toolbar, tool finder, left panel, pages and page bar (`pdf-chrome.test.ts`, `pdf-document-shell.spec.ts`, `pdf-document-panels.spec.ts`, `pdf-document-keyboard.spec.ts`); the rest: Phases 8 and 9 | [Reading surface](reading-surface.md#layout-top-to-bottom)   |
+| Technical requirements                               | Acrobat's system requirements; LiveDoc's are a current browser                                                                                                                                                                      |         | not a function                                                                                                                                                                                                                          |                                                              |
+| Supported file formats                               | A PDF opens as a PDF document and downloads as PDF, pictures or text; every other file is another kind's; playing video and sound placed in a PDF is left out                                                                       | Files   | built so far: opened as a PDF document, downloaded as PDF (`sniff.test.ts`, `pdf-tab-from-file.test.ts`, `pdf-document-tracer.spec.ts`, `pdf-document-download.spec.ts`); the rest: Phase 17                                            | [Files, print and sync](files-print-and-sync.md#downloading) |
+| Navigate through pages                               | Next, previous, first, last, go to page, previous and next view, bookmarks; automatic scrolling and article threads are left out                                                                                                    | Viewing | built, in part (`pdf-view-actions.test.ts`, `usePdfViewHistory.test.tsx`, `PdfOutlinePanel.test.tsx`, `pdf-document-view.spec.ts`, `pdf-document-text.spec.ts`)                                                                         | [Reading surface](reading-surface.md#the-pages)              |
+| Identify Acrobat track and version                   | Telling which Acrobat is installed                                                                                                                                                                                                  |         | not a function                                                                                                                                                                                                                          |                                                              |
+| Asian, European, and Middle Eastern language support | Text in any script draws, is found and is copied; new text in a complex script is shaped by the browser; a field's and a Text mark's direction follows what is typed, with no direction or digit setting                            | Editing | built so far: read, found and copied in any script (`corpus.validate.ts`, `text-find.test.ts`); the rest: Phases 8, 10 and 12                                                                                                           | [Editing text](editing-text.md#typing)                       |
+| Work smarter with the prompt bar                     | Adobe's assistant prompt bar; LiveDoc's agents work through their own tools                                                                                                                                                         |         | left out (F5)                                                                                                                                                                                                                           | [Agents](agents.md)                                          |
 
 ## Get started: access the app
 
@@ -70,16 +73,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Get started: preferences and settings
 
-| Topic                                  | Rule                                                                                          | Mode    | Status             | Spec                                                 |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------- |
-| Set Acrobat as the default PDF program | The operating system's default PDF program                                                    |         | not a function     |                                                      |
-| Change display themes                  | The chrome follows the colour scheme; Dark pages is one person's view of the pages            | Viewing | specified          | [Dark pages](dark-pages.md)                          |
-| Change Acrobat language                | The app's language is LiveDoc's own setting                                                   |         | not a function     |                                                      |
-| Customize side panels                  | One left panel at a time, remembered per person; choosing which panels are listed is left out | Viewing | specified, in part | [Reading surface](reading-surface.md#the-left-panel) |
-| Customize Quick action toolbar         | The toolbar is the editing mode's; a tool's look is remembered, its place is not customised   | Viewing | left out (F5)      | [Reading surface](reading-surface.md#the-toolbar)    |
-| Keyboard shortcuts                     | Acrobat's keys where the browser and the shell leave them free                                | Viewing | specified          | [Keyboard shortcuts](keyboard-shortcuts.md)          |
-| Turn the new Acrobat on or off         | Switching between Acrobat's two interfaces                                                    |         | not a function     |                                                      |
-| Set Acrobat update preferences         | Acrobat's updater                                                                             |         | not a function     |                                                      |
+| Topic                                  | Rule                                                                                          | Mode    | Status                                                                                                                                                                                    | Spec                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Set Acrobat as the default PDF program | The operating system's default PDF program                                                    |         | not a function                                                                                                                                                                            |                                                      |
+| Change display themes                  | The chrome follows the colour scheme; Dark pages is one person's view of the pages            | Viewing | built so far: the chrome in both schemes (`pdf-document-look.test.ts`); the rest: Dark pages, Phase 7                                                                                     | [Dark pages](dark-pages.md)                          |
+| Change Acrobat language                | The app's language is LiveDoc's own setting                                                   |         | not a function                                                                                                                                                                            |                                                      |
+| Customize side panels                  | One left panel at a time, remembered per person; choosing which panels are listed is left out | Viewing | built, in part (`useOfficePanels.test.tsx`, `pdf-document-panels.spec.ts`)                                                                                                                | [Reading surface](reading-surface.md#the-left-panel) |
+| Customize Quick action toolbar         | The toolbar is the editing mode's; a tool's look is remembered, its place is not customised   | Viewing | left out (F5)                                                                                                                                                                             | [Reading surface](reading-surface.md#the-toolbar)    |
+| Keyboard shortcuts                     | Acrobat's keys where the browser and the shell leave them free                                | Viewing | built so far: the reading and panel keys (`pdf-chrome.test.ts`, `pdf-document-keyboard.spec.ts`, `pdf-document-view.spec.ts`, `pdf-document-read-mode.spec.ts`); the rest: Phases 7 to 15 | [Keyboard shortcuts](keyboard-shortcuts.md)          |
+| Turn the new Acrobat on or off         | Switching between Acrobat's two interfaces                                                    |         | not a function                                                                                                                                                                            |                                                      |
+| Set Acrobat update preferences         | Acrobat's updater                                                                             |         | not a function                                                                                                                                                                            |                                                      |
 
 ## Acrobat AI
 
@@ -283,15 +286,15 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## PDF layers
 
-| Topic                    | Rule                                                                                   | Mode    | Status             | Spec                                                 |
-| ------------------------ | -------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------- |
-| PDF layers overview      | A file's PDF layers are listed                                                         | Viewing | specified          | [Reading surface](reading-surface.md#the-left-panel) |
-| Import files as layers   | Authoring PDF layers                                                                   |         | left out (F14)     | [Reading surface](reading-surface.md#the-left-panel) |
-| Manage PDF layers        | Show and hide a PDF layer, for one person; renaming, locking and deleting are left out | Viewing | specified, in part | [Reading surface](reading-surface.md#the-left-panel) |
-| Reorder PDF layers       | Authoring PDF layers                                                                   |         | left out (F14)     | [Reading surface](reading-surface.md#the-left-panel) |
-| Edit layer properties    | Authoring PDF layers                                                                   |         | left out (F14)     | [Reading surface](reading-surface.md#the-left-panel) |
-| Add layer navigation     | An action that sets a PDF layer's state is never performed                             |         | left out (F14)     | [Security](security.md#links-and-actions)            |
-| Merge and flatten layers | A flattened download merges PDF layers as shown                                        | Editing | specified, in part | [Document tools](document-tools.md#flattening)       |
+| Topic                    | Rule                                                                                   | Mode    | Status                                                                                                | Spec                                                 |
+| ------------------------ | -------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| PDF layers overview      | A file's PDF layers are listed                                                         | Viewing | built (`PdfLayersPanel.test.tsx`, `pdf-document-panels.spec.ts`)                                      | [Reading surface](reading-surface.md#the-left-panel) |
+| Import files as layers   | Authoring PDF layers                                                                   |         | left out (F14)                                                                                        | [Reading surface](reading-surface.md#the-left-panel) |
+| Manage PDF layers        | Show and hide a PDF layer, for one person; renaming, locking and deleting are left out | Viewing | built, in part (`usePdfLayerView.test.tsx`, `PdfLayersPanel.test.tsx`, `pdf-document-panels.spec.ts`) | [Reading surface](reading-surface.md#the-left-panel) |
+| Reorder PDF layers       | Authoring PDF layers                                                                   |         | left out (F14)                                                                                        | [Reading surface](reading-surface.md#the-left-panel) |
+| Edit layer properties    | Authoring PDF layers                                                                   |         | left out (F14)                                                                                        | [Reading surface](reading-surface.md#the-left-panel) |
+| Add layer navigation     | An action that sets a PDF layer's state is never performed                             |         | left out (F14)                                                                                        | [Security](security.md#links-and-actions)            |
+| Merge and flatten layers | A flattened download merges PDF layers as shown                                        | Editing | specified, in part (Phase 15)                                                                         | [Document tools](document-tools.md#flattening)       |
 
 ## Geospatial PDFs
 
@@ -552,25 +555,25 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Protected view
 
-| Topic                                      | Rule                                                                            | Mode    | Status    | Spec                                 |
-| ------------------------------------------ | ------------------------------------------------------------------------------- | ------- | --------- | ------------------------------------ |
-| Protected View and Protected Mode overview | Every PDF is parsed inside WebAssembly in a worker, always; there is no setting | Viewing | specified | [Security](security.md#the-boundary) |
-| Enable or disable protected view           | Every PDF is parsed inside WebAssembly in a worker, always; there is no setting | Viewing | specified | [Security](security.md#the-boundary) |
-| Bypass protected view restrictions         | Every PDF is parsed inside WebAssembly in a worker, always; there is no setting | Viewing | specified | [Security](security.md#the-boundary) |
+| Topic                                      | Rule                                                                            | Mode    | Status                                                                             | Spec                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------- | ------------------------------------ |
+| Protected View and Protected Mode overview | Every PDF is parsed inside WebAssembly in a worker, always; there is no setting | Viewing | built (`pdf-engine-boundary.test.ts`, `pdf-engine.test.ts`, `abuse-cases.test.ts`) | [Security](security.md#the-boundary) |
+| Enable or disable protected view           | Every PDF is parsed inside WebAssembly in a worker, always; there is no setting | Viewing | built (`pdf-engine-boundary.test.ts`, `pdf-engine.test.ts`, `abuse-cases.test.ts`) | [Security](security.md#the-boundary) |
+| Bypass protected view restrictions         | Every PDF is parsed inside WebAssembly in a worker, always; there is no setting | Viewing | built (`pdf-engine-boundary.test.ts`, `pdf-engine.test.ts`, `abuse-cases.test.ts`) | [Security](security.md#the-boundary) |
 
 ## Security risks
 
-| Topic                                     | Rule                                                                              | Mode    | Status         | Spec                                      |
-| ----------------------------------------- | --------------------------------------------------------------------------------- | ------- | -------------- | ----------------------------------------- |
-| Acrobat and PDF content security overview | The trust boundary and the rule for each abuse case                               | Viewing | specified      | [Security](security.md)                   |
-| Security warnings in PDFs                 | What a file wanted and was not allowed is listed, not asked                       | Viewing | specified      | [Security](security.md#links-and-actions) |
-| Security warning triggers                 | Each case and its rule                                                            | Viewing | specified      | [Security](security.md#abuse-cases)       |
-| Respond to security warnings              | An address is shown before it is opened; nothing else asks                        | Viewing | specified      | [Security](security.md#links-and-actions) |
-| Allow or block links to other websites    | Only http, https and mailto, asked each time, with no setting                     | Viewing | specified      | [Security](security.md#links-and-actions) |
-| Restrict access to JavaScript APIs        | No script from a file ever runs                                                   | Viewing | specified      | [Security](security.md#scripts)           |
-| Allow attachments to start applications   | An embedded file is never opened or run by LiveDoc                                | Viewing | specified      | [Security](security.md#embedded-files)    |
-| Block or allow file attachments           | A type that runs carries a warning before it is saved; there are no lists to keep | Viewing | specified      | [Security](security.md#embedded-files)    |
-| Reset attachment permissions              | There are no attachment permissions to reset                                      |         | not a function | [Security](security.md#embedded-files)    |
+| Topic                                     | Rule                                                                              | Mode    | Status                                                                                                                                        | Spec                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Acrobat and PDF content security overview | The trust boundary and the rule for each abuse case                               | Viewing | built so far: the engine's boundary and abuse cases (`abuse-cases.test.ts`, `pdf-engine-boundary.test.ts`); the rest: Phases 9, 11, 15 and 20 | [Security](security.md)                   |
+| Security warnings in PDFs                 | What a file wanted and was not allowed is listed, not asked                       | Viewing | specified (Phase 15)                                                                                                                          | [Security](security.md#links-and-actions) |
+| Security warning triggers                 | Each case and its rule                                                            | Viewing | built so far: the engine's cases (`abuse-cases.test.ts`); the rest: Phases 9, 11, 15 and 20                                                   | [Security](security.md#abuse-cases)       |
+| Respond to security warnings              | An address is shown before it is opened; nothing else asks                        | Viewing | built (`PdfLinkDialog.test.tsx`, `usePdfLinks.test.tsx`, `pdf-document-text.spec.ts`)                                                         | [Security](security.md#links-and-actions) |
+| Allow or block links to other websites    | Only http, https and mailto, asked each time, with no setting                     | Viewing | built (`link-target.test.ts`, `pdf-link.test.ts`, `pdf-document-text.spec.ts`)                                                                | [Security](security.md#links-and-actions) |
+| Restrict access to JavaScript APIs        | No script from a file ever runs                                                   | Viewing | built (`abuse-cases.test.ts`)                                                                                                                 | [Security](security.md#scripts)           |
+| Allow attachments to start applications   | An embedded file is never opened or run by LiveDoc                                | Viewing | built (`embedded-file.test.ts`, `PdfEmbeddedFilesPanel.test.tsx`, `abuse-cases.test.ts`)                                                      | [Security](security.md#embedded-files)    |
+| Block or allow file attachments           | A type that runs carries a warning before it is saved; there are no lists to keep | Viewing | built (`embedded-file.test.ts`, `PdfEmbeddedFilesPanel.test.tsx`)                                                                             | [Security](security.md#embedded-files)    |
+| Reset attachment permissions              | There are no attachment permissions to reset                                      |         | not a function                                                                                                                                | [Security](security.md#embedded-files)    |
 
 ## Security policies
 
@@ -590,12 +593,12 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Enhanced security
 
-| Topic                                                | Rule                                      | Mode    | Status        | Spec                                 |
-| ---------------------------------------------------- | ----------------------------------------- | ------- | ------------- | ------------------------------------ |
-| Enable enhanced security                             | Always on; no setting weakens it          | Viewing | specified     | [Security](security.md#the-boundary) |
-| Turn on sandbox protection                           | The sandbox is WebAssembly in a worker    | Viewing | specified     | [Security](security.md#the-boundary) |
-| Specify privileged locations for trusted content     | No location is privileged                 |         | left out (F5) | [Security](security.md#the-boundary) |
-| Ways to allow trusted content with enhanced security | No content is trusted more than any other | Viewing | specified     | [Security](security.md#the-boundary) |
+| Topic                                                | Rule                                      | Mode    | Status                                                      | Spec                                 |
+| ---------------------------------------------------- | ----------------------------------------- | ------- | ----------------------------------------------------------- | ------------------------------------ |
+| Enable enhanced security                             | Always on; no setting weakens it          | Viewing | built (`pdf-engine-boundary.test.ts`, `pdf-engine.test.ts`) | [Security](security.md#the-boundary) |
+| Turn on sandbox protection                           | The sandbox is WebAssembly in a worker    | Viewing | built (`pdf-engine-boundary.test.ts`, `pdf-engine.test.ts`) | [Security](security.md#the-boundary) |
+| Specify privileged locations for trusted content     | No location is privileged                 |         | left out (F5)                                               | [Security](security.md#the-boundary) |
+| Ways to allow trusted content with enhanced security | No content is trusted more than any other | Viewing | built (`pdf-engine-boundary.test.ts`, `pdf-engine.test.ts`) | [Security](security.md#the-boundary) |
 
 ## Set up and print
 
@@ -756,6 +759,7 @@ What a PDF document does that the reference does not, each with its spec:
 
 ## Tests
 
-- The matrix's rows equal the inventory's topics, one for one, by a test that reads both.
-- Every `specified` row's spec link resolves to a heading; every `built` row's test exists.
+- The matrix's rows number the inventory's 403 topics, each with a status the table names and counts truly, and
+  every test a built row names exists (`apps/help/lib/pdf-parity-matrix.test.ts`).
+- Every `specified` row's spec link resolves to a heading.
 - No row reads `specified` once the kind is done: each is `built` or `left out`.

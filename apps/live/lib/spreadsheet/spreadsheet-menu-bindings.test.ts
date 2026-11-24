@@ -12,6 +12,7 @@ import {
   type GridMenuPort,
 } from './spreadsheet-menu-bindings';
 import { spreadsheetMenus } from './spreadsheet-menus';
+import { SPREADSHEET_CONTEXT_MENUS } from './spreadsheet-context-menus';
 import { SPREADSHEET_TOOLBAR } from './spreadsheet-toolbar';
 
 const actions = (): GridMenuActions => ({
@@ -37,6 +38,9 @@ const actions = (): GridMenuActions => ({
   group: vi.fn(),
   ungroup: vi.fn(),
   foldAll: vi.fn(),
+  hide: vi.fn(),
+  resize: vi.fn(),
+  openLink: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -60,6 +64,7 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
   showGrid: true,
   filtered: false,
   outline: { r: noGroups, c: noGroups },
+  link: null,
   act: actions(),
   ...over,
 });
@@ -68,7 +73,12 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
 describe('gridMenuBindings', () => {
   it('binds every built grid item of the menus and the toolbar, and nothing they do not hold', () => {
     const bound = Object.keys(gridMenuBindings(port()));
-    const built = catalogueItems(spreadsheetMenus('ods'))
+    const contexts = Object.values(SPREADSHEET_CONTEXT_MENUS).map((entries) => ({
+      id: 'context',
+      label: 'Context',
+      entries,
+    }));
+    const built = catalogueItems([...spreadsheetMenus('ods'), ...contexts])
       .filter(({ item }) => item.status === 'built')
       .map(({ item }) => item.id)
       .concat(SPREADSHEET_TOOLBAR.flatMap((g) => g.controls).map((c) => c.id));
@@ -302,6 +312,47 @@ describe('gridMenuBindings', () => {
 });
 
 // grid-and-editing.md "Groups and the outline": View › Group.
+// surface.md "Context menus": a header's Clear, Hide and Resize, Freeze Up to here, and Open Link for anyone (D189).
+describe('the context menus’ own bindings', () => {
+  it('clears, hides and resizes the selected lines, named by what they act on', () => {
+    const p = port({ range: { r1: 1, c1: 1, r2: 3, c2: 3 } });
+    const b = gridMenuBindings(p);
+    expect(b['clear-rows']?.label).toBe('Clear Rows 2 - 4');
+    expect(b['hide-columns']?.label).toBe('Hide Columns B - D');
+    expect(b['resize-rows']?.label).toBe('Resize Rows 2 - 4');
+    b['clear-rows']!.run();
+    b['clear-columns']!.run();
+    expect(p.act.clear).toHaveBeenCalledTimes(2);
+    expect(p.act.clear).toHaveBeenCalledWith('all');
+    b['hide-rows']!.run();
+    b['hide-columns']!.run();
+    expect(p.act.hide).toHaveBeenNthCalledWith(1, 'r');
+    expect(p.act.hide).toHaveBeenNthCalledWith(2, 'c');
+    b['resize-rows']!.run();
+    b['resize-columns']!.run();
+    expect(p.act.resize).toHaveBeenNthCalledWith(1, 'r', 1, 3);
+    expect(p.act.resize).toHaveBeenNthCalledWith(2, 'c', 1, 3);
+  });
+
+  it('freezes up to the active row and column, named by it', () => {
+    const p = port({ active: { r: 4, c: 2 } });
+    const b = gridMenuBindings(p);
+    expect(b['freeze-up-to-this-row']?.label).toBe('Freeze Up to Row 5');
+    expect(b['freeze-up-to-this-column']?.label).toBe('Freeze Up to Column C');
+    b['freeze-up-to-this-row']!.run();
+    b['freeze-up-to-this-column']!.run();
+    expect(p.act.freeze).toHaveBeenNthCalledWith(1, 5);
+    expect(p.act.freeze).toHaveBeenNthCalledWith(2, undefined, 3);
+  });
+
+  it('opens the active cell’s link for anyone, and is not bound without one', () => {
+    expect(gridMenuBindings(port())['open-link']).toBeUndefined();
+    const p = port({ canWrite: false, canShape: false, link: 'https://example.com' });
+    gridMenuBindings(p)['open-link']!.run();
+    expect(p.act.openLink).toHaveBeenCalledWith('https://example.com');
+  });
+});
+
 describe('View › Group', () => {
   it('groups and ungroups the selection’s lines, named, Ungroup dimmed where none is grouped', () => {
     const p = port({ outline: { r: { ...noGroups, selected: true }, c: noGroups } });
