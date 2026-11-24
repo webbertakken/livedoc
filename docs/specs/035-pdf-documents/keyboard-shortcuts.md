@@ -102,9 +102,11 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Tick the thread in focus (a person's own check mark) | ⇧K                               | The same                 | specified |
 | Clear the comments panel's filters                   | ⌘8                               | The same                 | specified |
 | Leave the thread                                     | Escape                           | The same                 | specified |
-| Move the selected mark or object                     | Arrow keys; ⇧ by 10              | Arrow keys               | specified |
-| Resize it                                            | ⌥ with arrow keys `(default)`    | None                     | specified |
-| Delete it                                            | Delete or Backspace              | The same                 | specified |
+| Move the selected mark                               | Arrow keys; ⇧ by 10              | Arrow keys               | built     |
+| Move the selected object                             | Arrow keys; ⇧ by 10              | Arrow keys               | specified |
+| Resize the selected mark or object                   | ⌥ with arrow keys `(default)`    | None                     | specified |
+| Delete the selected mark                             | Delete or Backspace              | The same                 | built     |
+| Delete the selected object                           | Delete or Backspace              | The same                 | specified |
 | Undo, redo                                           | ⌘Z, ⌘⇧Z                          | The same †               | built     |
 | The comments panel                                   | ⌘⌥⇧A                             | None (a text document's) | specified |
 

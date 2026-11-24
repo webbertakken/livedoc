@@ -37,6 +37,7 @@ import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { droppedChangeCopy, lostChangesCopy } from '@/lib/pdf-document/pdf-surface-copy';
 import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
 import { usePdfDarkPages } from '@/lib/pdf-document/usePdfDarkPages';
+import { usePdfMarkSelection } from '@/lib/pdf-document/usePdfMarkSelection';
 import { usePdfMarkTools } from '@/lib/pdf-document/usePdfMarkTools';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
@@ -323,6 +324,15 @@ export function PdfDocumentSurface({
     focusPages: focusPagesElement,
     onProblem: setProblem,
   });
+  // "Changing a mark": the marks this person selected, moved and deleted.
+  const markSelection = usePdfMarkSelection({
+    ready,
+    marks,
+    marking,
+    textSelected: textSelection.selected,
+    clearText: textSelection.clear,
+    focusPages: focusPagesElement,
+  });
   const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);
   // "Read mode", "Full screen": one person's room for the pages.
   const readMode = usePdfReadMode();
@@ -349,6 +359,7 @@ export function PdfDocumentSurface({
             ...darkPages.actions,
             ...fullScreen.actions,
             ...tools.actions,
+            ...markSelection.actions,
             [GO_TO_PAGE]: { run: focusPageField },
           }
         : {}),
@@ -391,6 +402,7 @@ export function PdfDocumentSurface({
       undo,
       steps,
       tools.actions,
+      markSelection.actions,
     ],
   );
 
@@ -499,6 +511,8 @@ export function PdfDocumentSurface({
                 stamping={tools.stamping}
                 typing={tools.typing}
                 selection={textSelection.selected}
+                chosen={markSelection.chosen}
+                choosing={markSelection.choosing}
                 onText={textSelection.gesture}
                 texts={textSelection.texts}
                 onFollow={links.follow}

@@ -7,8 +7,9 @@ typed onto the page; and the standard and dynamic stamps, placed by a press; eac
 standard annotations under their own ids and read back by them; each tool's colour, chosen from the one colour picker
 and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A stroke shown to
 others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
-snapping, every other kind made here, custom stamps and Manage stamps, changing a mark, and the room's own-marks check
-are not built.
+snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
+Of changing a mark, selecting, moving and deleting a mark made here are built; resizing, restyling, rotating,
+arranging, grouping, locking, copying, Properties, Erase and the file's own marks are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -123,6 +124,26 @@ written into the file as a standard annotation, so any reader shows it. The rese
 ## Changing a mark
 
 - **Select** by a press; a drag from empty space selects every mark it touches; ⇧ adds to the selection.
+- A press with Select in hand, in Reviewing, for a session that may review, selects the mark it lands on; where
+  marks overlap, the one drawn last, on top.
+- **What a press reaches** `(default)`: a text mark's glyphs; a Drawing's, a Line's, an Arrow's, a Rectangle's and
+  an Ellipse's line, within `PDF_MARK_REACH_PX` of it, so a box drawn round a paragraph leaves its text to select;
+  a Text's, a Callout's and a stamp's box, and a Callout's line as a line's.
+- **A press on a text mark** selects it once let go where it was pressed; a drag from it selects text, as a drag from
+  anywhere else does `(default)`.
+- ⇧ with a press on a selected mark takes it out of the selection `(default)`.
+- **A selection holds the marks of one page**: a press on a mark of another page starts a new one there
+  `(default)`.
+- A press on nothing lets the marks go; a mark selected lets a text selection go, and text selected lets the marks
+  go; Escape lets them go and gives the pages the keys.
+- **A selected mark is outlined**: a dashed line in the shell's focus colour round the smallest box holding it,
+  `PDF_MARK_OUTLINE_PX` out from it `(default)`.
+- **A drag from a selected mark moves every mark selected**, together, held on their page, shown as they go and
+  made one step of undo once let go; a pointer moved less than `PDF_DRAG_SLOP_PX` is a press `(default)`.
+- **Arrow keys** move the selected marks `PDF_MARK_NUDGE_PT` the way the arrow points on screen, whatever the page's
+  turn, ⇧ `PDF_MARK_NUDGE_FAR_PT`, held on their page; each press one step of undo `(default)`.
+- **Delete** or **Backspace**, or Edit > Delete, deletes every selected mark as one step of undo, and gives the
+  pages the keys.
 - **Move** by dragging; **resize** by its handles (⇧ keeps proportions); a line by its ends; a polygon by its
   corners; a callout by its text box, its knee and its end separately. A text mark (a highlight) is not moved or
   resized: it is changed by selecting other text.
@@ -336,6 +357,11 @@ question mark. The research is [Every script in a mark's words](../../research/p
 | `PDF_TEXT_SIZE_MAX_PT`      | 144                 | `(default)` The largest size a Text's or a Callout's words are set at, in points               |
 | `PDF_CALLOUT_KNEE_PT`       | 12                  | `(default)` How far a Callout's knee stands out from its box, in points; safe range 6 to 24    |
 | `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
+| `PDF_MARK_REACH_PX`         | 6                   | `(default)` Screen pixels from a mark's line that a press still selects it; safe range 4 to 12 |
+| `PDF_MARK_OUTLINE_PX`       | 3                   | `(default)` Screen pixels between a selected mark and its outline; safe range 2 to 6           |
+| `PDF_DRAG_SLOP_PX`          | 3                   | `(default)` Screen pixels a pointer moves before a press is a drag; safe range 2 to 6          |
+| `PDF_MARK_NUDGE_PT`         | 1                   | `(default)` Points an arrow key moves a selected mark                                          |
+| `PDF_MARK_NUDGE_FAR_PT`     | 10                  | `(default)` Points ⇧ with an arrow key moves it                                                |
 | `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4          |
 | `PDF_STAMP_LINE_MAX_CHARS`  | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000   |
 | `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
@@ -359,6 +385,9 @@ a mark another person made is refused with `not_your_mark`.
 - Marks are in the page's tab sequence and the accessible tree
   ([Accessibility](accessibility.md#the-accessible-tree)); a selected mark is moved by arrow keys, resized with ⌥,
   deleted with Delete.
+- **Each mark made here is a control** over it, in the page's tab sequence in the order marks are drawn, named for
+  its kind and author, "Highlight by Ada Lovelace", and pressed while selected; Tab to one selects it alone
+  `(default)`. A press of the pointer that selects a mark puts the keys on it.
 - A mark's colour is never its only sign: its kind is named, and the comments panel lists it by kind.
 - Handles are 24 px targets (44 on touch); a drag has a keyboard equal for every change but freehand drawing.
 
@@ -369,7 +398,9 @@ a mark another person made is refused with `not_your_mark`.
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). A stamp placed is
   counted as `Stamp.<…>` alone, never also as `Mark.Stamp`; the tool taken in hand is `Tool.Stamp`. Never a mark's
   words, a stamp's name or a file's name.
+- A move is counted once a drag or a key press, `Mark.Moved`; a deletion once a mark, `Mark.<Kind>` of its kind.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
+  `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] marks-deleted count=<n>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).
 

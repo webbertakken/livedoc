@@ -76,6 +76,13 @@ const PDF_STAMP_KINDS = tokensAfter(
   '=>',
 );
 
+// Every kind of mark, each kind's name in telemetry.
+const PDF_MARK_KIND_NAMES = tokensAfter(
+  read('live/lib/pdf-document/pdf-mark-change.ts'),
+  'export const MARK_KIND_NAMES',
+  '}',
+).filter((token) => /^[A-Z]/.test(token));
+
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
 const TIMELINE_CATEGORIES = [
@@ -532,6 +539,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   // the stamps' own.
   'apps/live/lib/pdf-document/usePdfStampTool.ts Pdf·Added': {
     values: PDF_STAMP_KINDS.map((kind) => `Stamp.${kind}`),
+  },
+  // A mark deleted (marks.md "Telemetry and observability": `Mark.<Kind>`), each kind's name read from the marks' own.
+  'apps/live/lib/pdf-document/usePdfMarkSelection.ts Pdf·Deleted': {
+    values: PDF_MARK_KIND_NAMES.map((name) => `Mark.${name}`),
   },
   'apps/live/lib/pdf-document/usePdfShapes.ts Pdf·Added': {
     values: PDF_SHAPE_NAMES.map((name) => `Mark.${name}`),

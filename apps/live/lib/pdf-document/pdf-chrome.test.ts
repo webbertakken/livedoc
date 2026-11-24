@@ -8,6 +8,7 @@ import { SHELL_BOUND_ITEMS } from '@/lib/office/office-catalogue';
 import {
   COPY,
   DARK_PAGES,
+  DELETE_MARKS,
   DOWNLOAD_PDF,
   FIND,
   GO_TO_FIRST_PAGE,
@@ -111,6 +112,8 @@ describe("a PDF document's menus and toolbar", () => {
     UNDO,
     REDO,
     TOOL_SELECT,
+    // usePdfMarkSelection.ts: Edit > Delete (marks.md "Changing a mark").
+    DELETE_MARKS,
     // usePdfMarkTools.ts: the text tools (marks.md "Making a mark").
     TOOL_HIGHLIGHT,
     TOOL_UNDERLINE,

@@ -1393,6 +1393,38 @@ export const PDF_TOOL_COLOURS = chart(
   { types: ['ToolColour'], rising: 'neutral' },
 );
 
+export const PDF_MARKS_CHANGED = chart(
+  'Pdf',
+  'Changed',
+  'PDF Marks Changed',
+  'Marks on a PDF page changed after they were made: moved by a drag or the arrow keys.',
+  { types: ['Mark.Moved'], rising: 'neutral' },
+);
+
+export const PDF_MARKS_DELETED = chart(
+  'Pdf',
+  'Deleted',
+  'PDF Marks Deleted',
+  'A mark deleted from a PDF page, by its kind.',
+  {
+    types: [
+      'Mark.Highlight',
+      'Mark.Underline',
+      'Mark.Strikethrough',
+      'Mark.SquigglyUnderline',
+      'Mark.Drawing',
+      'Mark.Line',
+      'Mark.Arrow',
+      'Mark.Rectangle',
+      'Mark.Ellipse',
+      'Mark.Text',
+      'Mark.Callout',
+      'Mark.Stamp',
+    ],
+    rising: 'neutral',
+  },
+);
+
 export const PDF_PAGE_DISPLAYS = chart(
   'Pdf',
   'Changed',
@@ -1486,12 +1518,14 @@ export const PDF_DOCUMENTS: MetricStack = {
   stack: true,
   title: 'PDF Documents',
   blurb:
-    'PDF documents: opened from files, marked, changes taken back, downloaded with every change in the file, and how they are read.',
+    'PDF documents: opened from files, marked, marks moved and deleted, changes taken back, downloaded with every change in the file, and how they are read.',
   members: [
     PDFS_IMPORTED,
     PDF_MARKS_ADDED,
     PDF_TOOLS_SELECTED,
     PDF_TOOL_COLOURS,
+    PDF_MARKS_CHANGED,
+    PDF_MARKS_DELETED,
     PDF_UNDOS,
     PDF_REDOS,
     PDFS_EXPORTED,

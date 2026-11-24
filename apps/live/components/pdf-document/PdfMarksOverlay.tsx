@@ -4,7 +4,8 @@
 // Under Dark pages (dark-pages.md "The recolouring") a mark takes the colour the step gives the file's own marks, and
 // lightens the dark page as multiplying darkens the white one, so the words under it keep their ink. A Text's, a
 // Callout's and a stamp's words are set line for line as MarkWords places them, in a face with Helvetica's widths,
-// a stamp's name bold; or in the mark faces, as shaped (marks.md "Words in every script").
+// a stamp's name bold; or in the mark faces, as shaped (marks.md "Words in every script"). A selected mark is
+// outlined in the shell's focus colour, and marks being dragged are drawn where the drag has them ("Changing a mark").
 import { useContext, useEffect } from 'react';
 import type { MarkShape, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
 import {
@@ -12,12 +13,14 @@ import {
   Helvetica,
   Mark,
   MarkDrawing,
+  MarkPlace,
   MarkWords,
   PageView,
 } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { addMarkFaces, facesStackOf } from '@/lib/pdf-document/pdf-mark-faces';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
+import type { PdfMarksMoving } from '@/lib/pdf-document/usePdfPageMarkPress';
 
 /** A quad as an SVG polygon's points, in view space. */
 export const pointsOf = (matrix: PageMatrix, quad: Quad): string =>
@@ -109,6 +112,35 @@ export function MarkShapes({ matrix, shape }: { matrix: PageMatrix; shape: MarkS
   );
 }
 
+/** A mark where a drag has it: moved by the drag's offset while among the marks dragged. */
+const placed = (mark: Mark, moving: PdfMarksMoving | null): Mark =>
+  moving?.ids.includes(mark.id) ? { ...mark, ...MarkPlace.moved(mark, moving.by) } : mark;
+
+/** The outline round a selected mark, in view space: the box holding it and its line, `gap` points out. */
+function MarkOutline({ matrix, mark, gap }: { matrix: PageMatrix; mark: Mark; gap: number }) {
+  const [left, bottom, right, top] = Mark.bounds(mark);
+  const out = gap + ('width' in mark ? mark.width / 2 : 0);
+  const corners = [
+    { x: left - out, y: bottom - out },
+    { x: right + out, y: top + out },
+  ].map((corner) => PageView.toView(matrix, corner));
+  const xs = corners.map((corner) => corner.x);
+  const ys = corners.map((corner) => corner.y);
+  return (
+    <rect
+      data-pdf-mark-outline={mark.id}
+      x={Math.min(...xs)}
+      y={Math.min(...ys)}
+      width={Math.abs(xs[1]! - xs[0]!)}
+      height={Math.abs(ys[1]! - ys[0]!)}
+      fill="none"
+      strokeWidth={1.5}
+      strokeDasharray="4 3"
+      vectorEffect="non-scaling-stroke"
+    />
+  );
+}
+
 export function PdfMarksOverlay({
   matrix,
   width,
@@ -118,6 +150,9 @@ export function PdfMarksOverlay({
   draft = null,
   selected = [],
   found = null,
+  chosen = [],
+  outline = 0,
+  moving = null,
 }: {
   // Page space to view space, as the picture under it was drawn.
   matrix: PageMatrix;
@@ -133,7 +168,13 @@ export function PdfMarksOverlay({
   selected?: readonly Quad[];
   // Find's results on the page, the current one stronger (reading-surface.md "Find").
   found?: PdfFindTints | null;
+  // The marks selected, outlined `outline` points out from them (marks.md "Changing a mark").
+  chosen?: readonly string[];
+  outline?: number;
+  // The marks being dragged, and how far.
+  moving?: PdfMarksMoving | null;
 }) {
+  const shown = moving ? marks.map((mark) => placed(mark, moving)) : marks;
   const dark = useContext(PdfLookContext) === 'dark';
   return (
     <svg
@@ -143,7 +184,7 @@ export function PdfMarksOverlay({
       preserveAspectRatio="none"
       className={`pointer-events-none absolute inset-0 h-full w-full ${dark ? 'mix-blend-lighten' : 'mix-blend-multiply'}`}
     >
-      {marks.map((mark) => {
+      {shown.map((mark) => {
         const colour = dark ? DarkPages.hex(mark.colour) : mark.colour;
         return (
           <g
@@ -178,6 +219,15 @@ export function PdfMarksOverlay({
           {selected.map((quad, at) => (
             <polygon key={at} points={pointsOf(matrix, quad)} />
           ))}
+        </g>
+      ) : null}
+      {chosen.length > 0 ? (
+        <g data-pdf-mark-outlines="true" className="stroke-(--office-focus)">
+          {shown
+            .filter((mark) => chosen.includes(mark.id))
+            .map((mark) => (
+              <MarkOutline key={mark.id} matrix={matrix} mark={mark} gap={outline} />
+            ))}
         </g>
       ) : null}
       {draft ? (

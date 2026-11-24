@@ -159,6 +159,7 @@ export const EMITTED_EVENT_PAIRS: readonly string[] = [
   // download, a PDF arriving, a step made again, a tool taken in hand, a step taken back.
   'Pdf·Added',
   'Pdf·Copied',
+  'Pdf·Deleted',
   'Pdf·Changed',
   'Pdf·Exported',
   'Pdf·Imported',

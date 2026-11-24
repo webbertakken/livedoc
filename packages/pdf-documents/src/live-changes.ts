@@ -110,6 +110,11 @@ export const PdfLiveChanges = {
     }
     return marks.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   },
+  /** The mark of an id as the live changes hold it now; null where there is none, or what is there is no mark. */
+  mark: (doc: Y.Doc, id: string): Mark | null => {
+    const entry = marksOf(doc).get(id);
+    return entry instanceof Y.Map ? Mark.parse(entry.toJSON()) : null;
+  },
   /** Adds a mark as one change, each property a whole value; refused whole past the limit. */
   addMark: (doc: Y.Doc, mark: Mark, origin?: unknown): PdfLimitRefusal | null =>
     PdfChange.apply(doc, PdfChange.addMark(mark), origin) === null ? null : 'pdf_too_many_marks',
