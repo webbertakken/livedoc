@@ -1,8 +1,6 @@
 {
   "excel/50096.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -18,9 +16,7 @@
     ]
   },
   "excel/55406_Conditional_formatting_sample.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -28,9 +24,7 @@
     ]
   },
   "excel/DataValidations-49244.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -38,9 +32,7 @@
     ]
   },
   "excel/DateFormatTests.xlsx": {
-    "read": {
-      "styles_unread": 2
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -56,9 +48,7 @@
     ]
   },
   "excel/Formatting.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -66,9 +56,7 @@
     ]
   },
   "excel/NumberFormatTests.xlsx": {
-    "read": {
-      "styles_unread": 2
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -76,9 +64,7 @@
     ]
   },
   "excel/SampleSS.xlsx": {
-    "read": {
-      "styles_unread": 2
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -118,9 +104,7 @@
     ]
   },
   "excel/shared_formulas.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -139,8 +123,7 @@
   },
   "libreoffice/50096.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -150,8 +133,7 @@
   },
   "libreoffice/54034.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 1
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -161,8 +143,7 @@
   },
   "libreoffice/55406_Conditional_formatting_sample.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 1
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -172,8 +153,7 @@
   },
   "libreoffice/DataValidations-49244.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 1
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -182,9 +162,7 @@
     ]
   },
   "libreoffice/DataValidations-49244.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -194,7 +172,7 @@
   "libreoffice/DateFormatTests.ods": {
     "read": {
       "entries_dropped": 1,
-      "styles_unread": 2
+      "formats_cut": 1
     },
     "written": {},
     "reread": {},
@@ -204,8 +182,7 @@
   },
   "libreoffice/ExcelTables.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 1
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -216,8 +193,7 @@
   "libreoffice/Formatting.ods": {
     "read": {
       "entries_dropped": 1,
-      "format_approximated": 1,
-      "styles_unread": 3
+      "format_approximated": 1
     },
     "written": {},
     "reread": {},
@@ -228,7 +204,7 @@
   "libreoffice/NumberFormatTests.ods": {
     "read": {
       "entries_dropped": 1,
-      "styles_unread": 2
+      "formats_cut": 1
     },
     "written": {},
     "reread": {},
@@ -237,9 +213,7 @@
     ]
   },
   "libreoffice/NumberFormatTests.xlsx": {
-    "read": {
-      "styles_unread": 2
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -248,8 +222,7 @@
   },
   "libreoffice/SampleSS.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -259,8 +232,7 @@
   },
   "libreoffice/WithConditionalFormatting.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -270,8 +242,7 @@
   },
   "libreoffice/WithDrawing.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -281,8 +252,7 @@
   },
   "libreoffice/WithTable.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -292,8 +262,7 @@
   },
   "libreoffice/comments.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -312,7 +281,7 @@
   "libreoffice/shared_formulas.ods": {
     "read": {
       "entries_dropped": 1,
-      "styles_unread": 1
+      "formats_cut": 1
     },
     "written": {},
     "reread": {},
@@ -321,9 +290,7 @@
     ]
   },
   "libreoffice/shared_formulas.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -332,8 +299,7 @@
   },
   "libreoffice/table-sample.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 1
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -343,8 +309,7 @@
   },
   "google/DataValidations-49244.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 1
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -353,9 +318,7 @@
     ]
   },
   "google/DataValidations-49244.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -365,8 +328,7 @@
   "google/NumberFormatTests.ods": {
     "read": {
       "entries_dropped": 1,
-      "formats_cut": 2,
-      "styles_unread": 2
+      "formats_cut": 2
     },
     "written": {},
     "reread": {},
@@ -375,9 +337,7 @@
     ]
   },
   "google/NumberFormatTests.xlsx": {
-    "read": {
-      "styles_unread": 2
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -386,8 +346,7 @@
   },
   "google/SampleSS.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -396,9 +355,7 @@
     ]
   },
   "google/SampleSS.xlsx": {
-    "read": {
-      "styles_unread": 2
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -407,8 +364,7 @@
   },
   "google/comments.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 3
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -417,9 +373,7 @@
     ]
   },
   "google/comments.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -428,8 +382,7 @@
   },
   "google/google-functions.ods": {
     "read": {
-      "entries_dropped": 1,
-      "styles_unread": 1
+      "entries_dropped": 1
     },
     "written": {},
     "reread": {},
@@ -438,9 +391,7 @@
     ]
   },
   "google/google-functions.xlsx": {
-    "read": {
-      "styles_unread": 1
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [

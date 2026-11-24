@@ -98,16 +98,26 @@ describe('workbookFileOf', () => {
     ]);
   });
 
-  it('skips a format-only cell and a cell whose row is gone', () => {
+  // standard-mapping.md "Cell styles in the file": a styled empty cell is written, one styled as a file draws by
+  // default is not (D204, D205).
+  it('writes a styled empty cell with its style, skipping an unstyled one and a cell whose row is gone', () => {
     const [sheet] = makeSheets({ S: { A1: '1' } }, { rows: 2, cols: 2 }) as [Sheet];
-    sheet.cells.set(cellKey(sheet.layout.rows[1]!, sheet.layout.cols[0]!), { format: { b: true } });
+    sheet.cells.set(cellKey(sheet.layout.rows[1]!, sheet.layout.cols[0]!), {
+      format: { b: true, va: 'm', bg: '#ffff00' },
+    });
+    sheet.cells.set(cellKey(sheet.layout.rows[1]!, sheet.layout.cols[1]!), {
+      format: { va: 'm', wr: 'c' },
+    });
     sheet.cells.set(cellKey('gone', sheet.layout.cols[0]!), { input: { n: 3 } });
     const file = workbookFileOf(
       new Workbook({ sheets: [sheet], locale: 'en-GB' }),
       [sheet],
       'en-GB',
     );
-    expect(file.sheets[0]!.cells).toEqual([{ r: 0, c: 0, value: { k: 'n', v: 1 } }]);
+    expect(file.sheets[0]!.cells).toEqual([
+      { r: 0, c: 0, value: { k: 'n', v: 1 } },
+      { r: 1, c: 0, style: { b: true, bg: '#ffff00' } },
+    ]);
   });
 });
 
@@ -238,6 +248,28 @@ describe('sheetsFromFile', () => {
     );
     expect(cell?.i).toEqual({ n: 9 });
     expect(made.losses).toEqual([{ k: 'formula_unread', sheet: 'Budget', r: 2, c: 0 }]);
+  });
+
+  // standard-mapping.md "Cell styles in the file": a cell's style joins its number format, an empty cell's alone.
+  it('gives a cell its style with its number format', () => {
+    const styled: WorkbookFile = {
+      sheets: [
+        {
+          name: 'S',
+          rows: 2,
+          cols: 1,
+          cells: [
+            { r: 0, c: 0, value: { k: 'n', v: 1 }, format: '0.00%', style: { b: true, ha: 'c' } },
+            { r: 1, c: 0, style: { bg: '#ffff00' } },
+          ],
+        },
+      ],
+    };
+    const sheet = sheetsFromFile(styled, 'en-GB', seeded()).sheets[0]!;
+    expect(sheet.cells.map((x) => x.f)).toEqual([
+      { nf: 'percent', dp: 2, b: true, ha: 'c' },
+      { bg: '#ffff00' },
+    ]);
   });
 
   it('drops a lone error value, which no input holds', () => {

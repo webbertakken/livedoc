@@ -273,9 +273,10 @@ describe('readXlsx from other makers', () => {
       ),
     );
     expect(read.file.sheets[0]!.cells).toEqual([
-      { r: 0, c: 0, format: '0.00%', value: { k: 'n', v: 0.5 } },
-      { r: 0, c: 1, value: { k: 'n', v: 3 } },
-      { r: 0, c: 2, format: '0.00%' },
+      // Bottom is the file's default alignment, read as the cell's own (D204).
+      { r: 0, c: 0, format: '0.00%', style: { va: 'b' }, value: { k: 'n', v: 0.5 } },
+      { r: 0, c: 1, style: { va: 'b' }, value: { k: 'n', v: 3 } },
+      { r: 0, c: 2, format: '0.00%', style: { va: 'b' } },
       { r: 0, c: 3, value: { k: 'n', v: 1 } },
     ]);
     expect(read.losses).toEqual([{ k: 'format_unread', sheet: 'S1', r: 0, c: 1 }]);

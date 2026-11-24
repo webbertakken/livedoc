@@ -39,7 +39,7 @@ describe('number formats written to ODF', () => {
     expect(losses).toEqual([{ k: 'format_unwritten', sheet: 'S', r: 1, c: 1 }]);
     const lines = data.split('\n');
     expect(lines).toContain(
-      '<style:style style:name="ce1" style:family="table-cell" style:data-style-name="N1"/>',
+      '<style:style style:name="ce1" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N1"/>',
     );
     expect(lines.indexOf('<office:automatic-styles>')).toBeLessThan(lines.indexOf('<office:body>'));
     expect(lines).toContain(

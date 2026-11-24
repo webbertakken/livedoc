@@ -1,6 +1,7 @@
-// A workbook's number formats in ODF (docs/specs/029-sheets/standard-mapping.md "Number formats in the file", D93,
-// D94): written as a data style and an automatic cell style per code, `N1`/`ce1` in order of first use; read back from
-// a file's automatic and common styles, a cell's own style over its row's and column's default.
+// A workbook's cell styles in ODF (docs/specs/029-sheets/standard-mapping.md "Number formats in the file", "Cell
+// styles in the file", D93, D94): written as a data style per code and an automatic cell style per code and look,
+// `N1`/`ce1` in order of first use; number formats read back from a file's automatic and common styles, a cell's own
+// style over its row's and column's default.
 import {
   attributeOf,
   childElement,
@@ -8,6 +9,8 @@ import {
   ODF_NS,
   type XmlElement,
 } from '@livedoc/office-packages';
+import { cellStyleKey, type CellStyle } from './cell-style';
+import { odsStyleProperties } from './ods-cell-style';
 import { dataStyleXml } from './odf-number-styles';
 import { readDataStyle, type DataStyleRead } from './odf-number-styles-read';
 import { odfLengthFromPx } from './line-units';
@@ -15,28 +18,47 @@ import { odsTableProperties, type OdsTabLook } from './ods-tab-look';
 
 const { office: OFFICE, style: STYLE, number: NUMBER } = ODF_NS;
 
-/** The cell styles a written file names, one per number format. */
-export class OdsStyles {
-  private readonly cells = new Map<string, string | null>();
-  private readonly xml: string[] = [];
-  private written = 0;
+/** A cell's written style: its name (none for neither a format nor a look) and whether its code could not be said. */
+export type OdsCellStyle = { name: string | null; unwritten: boolean };
 
-  /** The cell style for a code, or null when ODF cannot say the code (the caller names the loss). */
-  cellStyle(code: string): string | null {
-    const known = this.cells.get(code);
+/** The cell styles a written file names, one per number format and look. */
+export class OdsStyles {
+  private readonly data = new Map<string, string | null>();
+  private readonly cells = new Map<string, OdsCellStyle>();
+  private readonly xml: string[] = [];
+
+  /** A code's data style (`N1`, ...), or null when ODF cannot say it (the caller names the loss). */
+  private dataStyle(code: string): string | null {
+    const known = this.data.get(code);
     if (known !== undefined) return known;
-    const n = this.written + 1;
-    const data = dataStyleXml(`N${n}`, code);
-    const name = data ? `ce${n}` : null;
-    if (data) {
-      this.written = n;
+    const name = `N${[...this.data.values()].filter(Boolean).length + 1}`;
+    const xml = dataStyleXml(name, code);
+    if (xml) this.xml.push(...xml);
+    this.data.set(code, xml ? name : null);
+    return xml ? name : null;
+  }
+
+  /** The cell style for a code and a look: `ce1`, ... in order of first use. */
+  cellStyle(code: string | undefined, style?: CellStyle): OdsCellStyle {
+    const key = `${code ?? ''}\u0000${cellStyleKey(style)}`;
+    const known = this.cells.get(key);
+    if (known) return known;
+    const data = code === undefined ? null : this.dataStyle(code);
+    const unwritten = code !== undefined && data === null;
+    const properties = odsStyleProperties(style);
+    let name: string | null = null;
+    if (data || properties) {
+      name = `ce${[...this.cells.values()].filter((c) => c.name).length + 1}`;
+      const dataAttribute = data ? ` style:data-style-name="${data}"` : '';
       this.xml.push(
-        ...data,
-        `<style:style style:name="ce${n}" style:family="table-cell" style:data-style-name="N${n}"/>`,
+        properties
+          ? `<style:style style:name="${name}" style:family="table-cell" style:parent-style-name="Default"${dataAttribute}>${properties}</style:style>`
+          : `<style:style style:name="${name}" style:family="table-cell" style:parent-style-name="Default"${dataAttribute}/>`,
       );
     }
-    this.cells.set(code, name);
-    return name;
+    const made = { name, unwritten };
+    this.cells.set(key, made);
+    return made;
   }
 
   private readonly lines = new Map<string, string>();
@@ -87,24 +109,6 @@ export class OdsStyles {
       ? []
       : ['<office:automatic-styles>', ...styles, '</office:automatic-styles>'];
   }
-}
-
-/**
- * The cell styles among a file's style containers that format more than the number: any properties of their own
- * (a font, a fill, a border, an alignment) (standard-mapping.md "Unknown content", `styles_unread`, D104).
- */
-export function odsStyledCellStyles(roots: readonly XmlElement[]): Set<string> {
-  const out = new Set<string>();
-  for (const root of roots)
-    for (const local of ['automatic-styles', 'styles']) {
-      const container = childElement(root, OFFICE, local);
-      for (const style of container ? childElements(container) : []) {
-        const name = attributeOf(style, STYLE, 'name');
-        const cell = attributeOf(style, STYLE, 'family') === 'table-cell';
-        if (cell && name !== undefined && childElements(style).length > 0) out.add(name);
-      }
-    }
-  return out;
 }
 
 /** A cell style's number format: its code read, none for a style with no data style. */

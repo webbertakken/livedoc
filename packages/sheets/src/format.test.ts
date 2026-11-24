@@ -79,6 +79,14 @@ describe('mergeFormat', () => {
   });
 });
 
+describe('fontFamilyName', () => {
+  it('names a family as itself and an editor font by its id in Title Case', async () => {
+    const { fontFamilyName } = await import('./format');
+    expect(fontFamilyName('Roboto Mono')).toBe('Roboto Mono');
+    expect(fontFamilyName('space-grotesk')).toBe('Space Grotesk');
+  });
+});
+
 describe('font size steps', () => {
   it('steps through the presets, kept within the limits', async () => {
     const { stepFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX } = await import('./format');

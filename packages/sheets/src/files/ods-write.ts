@@ -13,6 +13,7 @@ import {
 } from '@livedoc/office-packages';
 import { declarations, OdsKeptWriter } from './ods-kept-write';
 import { OdsStyles } from './ods-styles';
+import { ODS_DEFAULT_CELL_STYLES } from './ods-cell-style';
 import { OdsAxisOut } from './ods-lines';
 import { toOpenFormula } from './open-formula';
 import type {
@@ -40,6 +41,7 @@ const CONTENT_NAMESPACES: readonly Prefix[] = [
   'of',
 ];
 const META_NAMESPACES: readonly Prefix[] = ['office', 'meta', 'dc'];
+const STYLES_NAMESPACES: readonly Prefix[] = ['office', 'style', 'fo'];
 const SETTINGS_NAMESPACES: readonly Prefix[] = ['office'];
 const FLAT_NAMESPACES: readonly Prefix[] = [
   'office',
@@ -62,13 +64,12 @@ type Out = {
   kept: OdsKeptWriter;
 };
 
-// A cell's style, its number format's; a format ODF cannot say is named, the cell written without it.
+// A cell's style, its number format's and its look's; a format ODF cannot say is named, the cell written without it.
 function styleAttribute(cell: FileCell, out: Out): string[] {
-  if (cell.format === undefined) return [];
-  const name = out.styles.cellStyle(cell.format);
-  if (name) return [`table:style-name="${name}"`];
-  out.losses.push({ k: 'format_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
-  return [];
+  if (cell.format === undefined && !cell.style) return [];
+  const { name, unwritten } = out.styles.cellStyle(cell.format, cell.style);
+  if (unwritten) out.losses.push({ k: 'format_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
+  return name ? [`table:style-name="${name}"`] : [];
 }
 
 function namespaces(prefixes: readonly Prefix[]): string {
@@ -237,12 +238,22 @@ const CALCULATION_SETTINGS =
   'table:search-criteria-must-apply-to-whole-cell="true" table:use-regular-expressions="false" ' +
   'table:use-wildcards="true"/>';
 
-// The body, after the scripts kept and the automatic styles its cells and its kept content name (D93).
-function bodyXml(file: WorkbookFile, losses: FileLoss[], kept: OdsKeptWriter): string[] {
+// LiveDoc's common styles: its default cell style (standard-mapping.md "Cell styles in the file", D204).
+const COMMON_STYLES = ['<office:styles>', ...ODS_DEFAULT_CELL_STYLES, '</office:styles>'];
+
+// The body, after the scripts kept and the automatic styles its cells and its kept content name (D93); a flat file's
+// common styles between them, as a package keeps them in `styles.xml`.
+function bodyXml(
+  file: WorkbookFile,
+  losses: FileLoss[],
+  kept: OdsKeptWriter,
+  flat: boolean,
+): string[] {
   const styles = new OdsStyles();
   const tables = file.sheets.flatMap((sheet, i) => tableXml(sheet, i, { losses, styles, kept }));
   return [
     ...kept.workbook('scripts'),
+    ...(flat ? COMMON_STYLES : []),
     ...styles.automaticStyles(kept.workbook('styles')),
     '<office:body>',
     '<office:spreadsheet>',
@@ -270,7 +281,7 @@ export function writeFlatOds(file: WorkbookFile, title: string): FileWritten<str
   const losses: FileLoss[] = [];
   const own = bindings(FLAT_NAMESPACES);
   const kept = new OdsKeptWriter(file.kept, own);
-  const body = bodyXml(file, losses, kept);
+  const body = bodyXml(file, losses, kept, true);
   const data = [
     XML_DECLARATION,
     `<office:document ${namespaces(FLAT_NAMESPACES)}${kept.rootDeclarations(own, true)} office:version="${ODF_VERSION}" office:mimetype="${ODF_MEDIA_TYPES.spreadsheet}">`,
@@ -298,7 +309,7 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
   ];
   const own = bindings(CONTENT_NAMESPACES);
   const kept = new OdsKeptWriter(file.kept, own);
-  const body = bodyXml(file, losses, kept);
+  const body = bodyXml(file, losses, kept, false);
   const settingsOwn = bindings(SETTINGS_NAMESPACES);
   const settings = kept.settings({ ...kept.settingsNs, ...settingsOwn });
   const data = writeOdfPackage(ODF_MEDIA_TYPES.spreadsheet, [
@@ -306,6 +317,11 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
       name: 'content.xml',
       mediaType: 'text/xml',
       data: xml(root('document-content', CONTENT_NAMESPACES, body, kept.rootDeclarations(own))),
+    },
+    {
+      name: 'styles.xml',
+      mediaType: 'text/xml',
+      data: xml(root('document-styles', STYLES_NAMESPACES, COMMON_STYLES)),
     },
     {
       name: 'meta.xml',

@@ -1,16 +1,18 @@
-// An XLSX file's cell styles (docs/specs/029-sheets/standard-mapping.md "Number formats in the file", "Values in
-// XLSX"): each `cellXfs` entry's number format as a format code, read with ECMA-376's built-in formats (Part 1
-// §18.8.30) and written with them where a code is one (D92); and which styles show dates, the only numbers that move
-// between the 1900 and 1904 date systems.
+// An XLSX file's cell styles (docs/specs/029-sheets/standard-mapping.md "Number formats in the file", "Cell styles
+// in the file", "Values in XLSX"): each `cellXfs` entry's number format as a format code, read with ECMA-376's
+// built-in formats (Part 1 §18.8.30) and written with them where a code is one (D92), with the rest of its look
+// (xlsx-cell-style.ts); and which styles show dates, the only numbers that move between the 1900 and 1904 date systems.
 import {
   attributeOf,
   childElement,
   childElements,
   escapeXmlAttribute,
   parseXml,
-  type XmlElement,
 } from '@livedoc/office-packages';
+import { cellStyleKey, type CellStyle } from './cell-style';
 import { shortDateCode } from './number-format-code';
+import { readXlsxStylesheet, xlsxCellStyleOf, XlsxStyleParts } from './xlsx-cell-style';
+import { readThemeColours } from './xlsx-colours';
 import { SPREADSHEETML_NS } from './xlsx-parts';
 
 const STRICT_NS = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
@@ -87,10 +89,23 @@ export function xlsxBuiltinCode(id: number, locale: string): string | null | und
 }
 
 /** A cell style's number format: its code (null for General), or unknown when the file names none it defines. */
-export type XlsxCellStyle = { code: string | null } | { unknown: true };
+export type XlsxNumberFormat = { code: string | null } | { unknown: true };
 
-/** Each cell style (`cellXfs` entry) of `xl/styles.xml`'s text, in order; none when the part is absent or unread. */
-export function readCellStyles(stylesXml: string | undefined, locale: string): XlsxCellStyle[] {
+/**
+ * A cell style: its number format, the rest of its look as a cell's style (none for LiveDoc's defaults), and whether
+ * it says more than the model holds (`styles_unread`, D104).
+ */
+export type XlsxCellStyle = { number: XlsxNumberFormat; style?: CellStyle; lost: boolean };
+
+/**
+ * Each cell style (`cellXfs` entry) of `xl/styles.xml`'s text, in order, its colours from the theme's; none when the
+ * part is absent or unread.
+ */
+export function readCellStyles(
+  stylesXml: string | undefined,
+  locale: string,
+  themeXml?: string,
+): XlsxCellStyle[] {
   if (stylesXml === undefined) return [];
   const parsed = parseXml(stylesXml, 'xl/styles.xml');
   if (!parsed.ok) return [];
@@ -102,107 +117,87 @@ export function readCellStyles(stylesXml: string | undefined, locale: string): X
   const codes = new Map<number, string>();
   for (const fmt of listed('numFmts', 'numFmt'))
     codes.set(Number(attributeOf(fmt, '', 'numFmtId')), attributeOf(fmt, '', 'formatCode') ?? '');
+  const stylesheet = readXlsxStylesheet(parsed.root, ns, readThemeColours(themeXml));
+  // Styles that look the same share one, so the cells of a file's many entries share their formats (D121).
+  const looks = new Map<string, CellStyle>();
   return listed('cellXfs', 'xf').map((xf) => {
     const id = Number(attributeOf(xf, '', 'numFmtId') ?? 0);
     const code = codes.get(id) ?? xlsxBuiltinCode(id, locale);
-    return code === undefined ? { unknown: true } : { code };
+    const number: XlsxNumberFormat = code === undefined ? { unknown: true } : { code };
+    const { style, lost } = xlsxCellStyleOf(xf, stylesheet);
+    if (!style) return { number, lost };
+    const key = cellStyleKey(style);
+    const shared = looks.get(key) ?? style;
+    looks.set(key, shared);
+    return { number, style: shared, lost };
   });
-}
-
-// Excel's defaults of an alignment and a protection (ECMA-376 18.8.1, 18.8.33): one that says only these formats
-// nothing, as LibreOffice writes on every cell style.
-const XF_DEFAULTS = new Map<string, Map<string, readonly string[]>>(
-  Object.entries({
-    alignment: {
-      horizontal: ['general'],
-      vertical: ['bottom'],
-      textRotation: ['0'],
-      wrapText: ['0', 'false'],
-      indent: ['0'],
-      relativeIndent: ['0'],
-      justifyLastLine: ['0', 'false'],
-      shrinkToFit: ['0', 'false'],
-      readingOrder: ['0'],
-    },
-    protection: { locked: ['1', 'true'], hidden: ['0', 'false'] },
-  }).map(([local, attributes]) => [local, new Map(Object.entries(attributes))]),
-);
-
-// Whether an `xf`'s child formats the cell: any but an alignment or protection holding only Excel's defaults.
-function formats(child: XmlElement): boolean {
-  const defaults = XF_DEFAULTS.get(child.local);
-  if (!defaults) return true;
-  return child.attributes.some(
-    ({ uri, local, value }) => uri !== '' || !(defaults.get(local) ?? []).includes(value),
-  );
-}
-
-/**
- * The cell styles (`cellXfs` indexes) that format more than the number: a font, fill or border other than the
- * first, or an alignment or protection other than Excel's default (standard-mapping.md "Unknown content",
- * `styles_unread`, D104).
- */
-export function styledCellStyles(stylesXml: string | undefined): Set<number> {
-  const out = new Set<number>();
-  const parsed = stylesXml === undefined ? undefined : parseXml(stylesXml, 'xl/styles.xml');
-  if (!parsed?.ok) return out;
-  const holder = childElements(parsed.root).find((e) => e.local === 'cellXfs');
-  const xfs = holder ? childElements(holder).filter((e) => e.local === 'xf') : [];
-  xfs.forEach((xf, i) => {
-    const own = ['fontId', 'fillId', 'borderId'].some(
-      (id) => (attributeOf(xf, '', id) ?? '0') !== '0',
-    );
-    if (own || childElements(xf).some(formats)) out.add(i);
-  });
-  return out;
 }
 
 /** The cell styles whose number format shows a date. */
 export function dateStyles(styles: readonly XlsxCellStyle[]): Set<number> {
   const out = new Set<number>();
-  styles.forEach((style, i) => {
-    if ('code' in style && style.code !== null && isDateFormatCode(style.code)) out.add(i);
+  styles.forEach(({ number }, i) => {
+    if ('code' in number && number.code !== null && isDateFormatCode(number.code)) out.add(i);
   });
   return out;
 }
 
-/** The styles part an XLSX file is written with: one cell style per number format, in order of first use. */
+/** One written cell style: its number format's id and its look's parts. */
+type WrittenXf = { numFmt: number; font: number; fill: number; border: number; alignment: string };
+
+/**
+ * The styles part an XLSX file is written with: one cell style per distinct number format and look, in order of first
+ * use, after the default (D203, D204).
+ */
 export class XlsxStyles {
   private readonly xfs = new Map<string, number>();
+  private readonly written: WrittenXf[] = [];
   private readonly own = new Map<string, number>();
+  private readonly parts = new XlsxStyleParts();
 
-  /** The cell style (`c@s`) for a code: 0, the default, for none. */
-  xf(code: string | undefined): number {
-    if (code === undefined) return 0;
-    const known = this.xfs.get(code);
+  /** The cell style (`c@s`) for a code and a look: 0, the default, for neither. */
+  xf(code: string | undefined, style?: CellStyle): number {
+    if (code === undefined && style === undefined) return 0;
+    const key = `${code ?? ''}\u0000${cellStyleKey(style)}`;
+    const known = this.xfs.get(key);
     if (known !== undefined) return known;
-    this.xfs.set(code, this.xfs.size + 1);
-    if (!WRITTEN_BUILTINS.has(code)) this.own.set(code, XLSX_CUSTOM_FORMAT_ID + this.own.size);
-    return this.xfs.size;
+    if (code !== undefined && !WRITTEN_BUILTINS.has(code) && !this.own.has(code))
+      this.own.set(code, XLSX_CUSTOM_FORMAT_ID + this.own.size);
+    this.written.push({
+      numFmt: code === undefined ? 0 : (WRITTEN_BUILTINS.get(code) ?? this.own.get(code)!),
+      font: this.parts.font(style),
+      fill: this.parts.fill(style),
+      border: this.parts.border(style),
+      alignment: this.parts.alignment(style),
+    });
+    this.xfs.set(key, this.written.length);
+    return this.written.length;
   }
 
-  private numFmtId(code: string): number {
-    return WRITTEN_BUILTINS.get(code) ?? this.own.get(code)!;
-  }
-
-  /** `xl/styles.xml`: Google Sheets' default font, no fill, no border, and each number format's cell style. */
   /** The styles part, LiveDoc's styles and then `kept`: the file's differential formats and table styles (D110). */
   xml(kept = ''): string {
     const own = [...this.own].map(
       ([code, id]) => `<numFmt numFmtId="${id}" formatCode="${escapeXmlAttribute(code)}"/>`,
     );
-    const xfs = [...this.xfs.keys()].map(
-      (code) =>
-        `<xf numFmtId="${this.numFmtId(code)}" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>`,
+    const middle = this.parts.alignment(undefined);
+    const xfs = this.written.map(
+      ({ numFmt, font, fill, border, alignment }) =>
+        `<xf numFmtId="${numFmt}" fontId="${font}" fillId="${fill}" borderId="${border}" xfId="0"` +
+        (numFmt > 0 ? ' applyNumberFormat="1"' : '') +
+        (font > 0 ? ' applyFont="1"' : '') +
+        (fill > 0 ? ' applyFill="1"' : '') +
+        (border > 0 ? ' applyBorder="1"' : '') +
+        ` applyAlignment="1">${alignment}</xf>`,
     );
+    const { fonts, fills, borders } = this.parts.xml();
     return (
       `<styleSheet xmlns="${SPREADSHEETML_NS}">` +
       (own.length > 0 ? `<numFmts count="${own.length}">${own.join('')}</numFmts>` : '') +
-      '<fonts count="1"><font><sz val="10"/><name val="Arial"/></font></fonts>' +
-      '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
-      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
-      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-      `<cellXfs count="${xfs.length + 1}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>${xfs.join('')}</cellXfs>` +
+      fonts +
+      fills +
+      borders +
+      `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1">${middle}</xf></cellStyleXfs>` +
+      `<cellXfs count="${xfs.length + 1}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">${middle}</xf>${xfs.join('')}</cellXfs>` +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
       kept +
       '</styleSheet>'

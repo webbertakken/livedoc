@@ -3,19 +3,11 @@
 // formula in Google's `data-sheets-formula` (R1C1 from its cell), a merge as one cell spanning its rows and columns.
 import type { SheetClip } from './clipboard';
 import { a1ToR1C1 } from './formula/r1c1-text';
+import { fontFamilyName } from './format';
 import type { Border, CellFormat } from './sheet';
 
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ESCAPES[c]!);
-
-// A font id's family name, as another spreadsheet reads it from pasted HTML: the editor's fonts are named as their
-// ids in Title Case (`space-grotesk` is Space Grotesk).
-function fontFamilyName(id: string): string {
-  return id
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-}
 
 const SIDES = [
   ['bt', 'top'],

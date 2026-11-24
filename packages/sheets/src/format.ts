@@ -57,6 +57,18 @@ const FONT_FAMILY_MAX = 64;
 /** Whether a cell's font names an editor font by id (else a family by name). */
 export const isFontId = (font: string): boolean => FONT_ID_RE.test(font);
 
+/**
+ * The family another app reads for a cell's font (a file, pasted HTML): a family as itself, an editor font by its id in
+ * Title Case (`space-grotesk` is Space Grotesk).
+ */
+export function fontFamilyName(ff: string): string {
+  if (!isFontId(ff)) return ff;
+  return ff
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
 const isFontName = (v: unknown): boolean =>
   typeof v === 'string' && v.length <= FONT_FAMILY_MAX && FONT_FAMILY_RE.test(v);
 

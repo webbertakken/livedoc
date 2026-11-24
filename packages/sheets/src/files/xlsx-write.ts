@@ -205,11 +205,11 @@ function worksheetXml(
   }
   const rows = new Map<number, string[]>();
   for (const cell of ordered) {
-    // A cell with a number format and nothing else keeps its format, as an empty styled cell.
-    const write = cellWrite(cell, ctx) ?? (cell.format === undefined ? null : {});
+    // A cell with a format and nothing else keeps it, as an empty styled cell.
+    const write = cellWrite(cell, ctx) ?? (cell.format === undefined && !cell.style ? null : {});
     if (!write) continue;
     const row = rows.get(cell.r) ?? [];
-    row.push(cellXml(cell, write, styles.xf(cell.format)));
+    row.push(cellXml(cell, write, styles.xf(cell.format, cell.style)));
     rows.set(cell.r, row);
   }
   if (ctx.cut > 0) losses.push({ k: 'text_cut', sheet: sheet.name, cells: ctx.cut });

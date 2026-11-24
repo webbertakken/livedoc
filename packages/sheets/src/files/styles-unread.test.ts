@@ -1,5 +1,5 @@
-// docs/specs/029-sheets/standard-mapping.md "Unknown content", D104: a sheet's cells formatted past their number
-// format are named by the read (`styles_unread`), in both formats, until Formatting maps them.
+// docs/specs/029-sheets/standard-mapping.md "Cell styles in the file", "Unknown content", D104: a sheet whose cells,
+// rows or columns name a style saying more than the model holds is named by the read (`styles_unread`), in both formats.
 import {
   ODF_NS,
   OOXML_CONTENT_TYPES,
@@ -14,8 +14,8 @@ import { readXlsx } from './xlsx-read';
 
 const encode = (text: string) => new TextEncoder().encode(text);
 
-const BOLD =
-  '<style:style style:name="bold" style:family="table-cell"><style:text-properties fo:font-weight="bold"/></style:style>';
+const TURNED =
+  '<style:style style:name="turned" style:family="table-cell"><style:table-cell-properties style:rotation-angle="90"/><style:text-properties fo:font-weight="bold"/></style:style>';
 const PLAIN = '<style:style style:name="plain" style:family="table-cell"/>';
 
 function fods(table: string): Uint8Array<ArrayBuffer> {
@@ -24,7 +24,7 @@ function fods(table: string): Uint8Array<ArrayBuffer> {
     .join(' ');
   return encode(
     `<?xml version="1.0"?><office:document ${ns} office:mimetype="application/vnd.oasis.opendocument.spreadsheet">` +
-      `<office:automatic-styles>${BOLD}${PLAIN}</office:automatic-styles><office:body><office:spreadsheet>${table}` +
+      `<office:automatic-styles>${TURNED}${PLAIN}</office:automatic-styles><office:body><office:spreadsheet>${table}` +
       '</office:spreadsheet></office:body></office:document>',
   );
 }
@@ -39,13 +39,13 @@ const lossesOf = async (
 };
 
 describe('styles past the number format', () => {
-  it('names an ODF sheet whose cell, row or column style formats more than the number', async () => {
+  it('names an ODF sheet whose cell, row or column style says more than the model holds', async () => {
     const cell =
-      '<table:table table:name="A"><table:table-row><table:table-cell table:style-name="bold"/></table:table-row></table:table>';
+      '<table:table table:name="A"><table:table-row><table:table-cell table:style-name="turned"/></table:table-row></table:table>';
     const row =
-      '<table:table table:name="B"><table:table-row table:default-cell-style-name="bold"><table:table-cell/></table:table-row></table:table>';
+      '<table:table table:name="B"><table:table-row table:default-cell-style-name="turned"><table:table-cell/></table:table-row></table:table>';
     const column =
-      '<table:table table:name="C"><table:table-column table:default-cell-style-name="bold"/><table:table-row><table:table-cell/></table:table-row></table:table>';
+      '<table:table table:name="C"><table:table-column table:default-cell-style-name="turned"/><table:table-row><table:table-cell/></table:table-row></table:table>';
     const plain =
       '<table:table table:name="D"><table:table-column/><table:table-row><table:table-cell table:style-name="plain"/></table:table-row></table:table>';
     expect(await lossesOf(fods(cell + row + column + plain))).toEqual([
@@ -55,7 +55,8 @@ describe('styles past the number format', () => {
     ]);
   });
 
-  it('names an XLSX sheet whose cells use a font, fill, border or alignment of their own', async () => {
+  // standard-mapping.md "Cell styles in the file": what a style says that the model does not hold is named.
+  it('names an XLSX sheet whose cells’ styles say more than the model holds', async () => {
     const xlsx = (styles: string, cell: string) =>
       writeOoxmlPackage(
         [
@@ -103,13 +104,13 @@ describe('styles past the number format', () => {
       '<xf numFmtId="0"><protection locked="0"/></xf>' +
       `<xf numFmtId="0"><alignment xmlns:x="urn:x" x:own="1"/></xf>` +
       '<xf numFmtId="0"><alignment justify="1"/></xf><xf numFmtId="0"><extLst/></xf><xf numFmtId="0"><constructor/></xf>';
-    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="1"><v>1</v></c>'), readXlsx)).toEqual([
-      { k: 'styles_unread', sheet: 'A' },
-    ]);
-    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="2"><v>1</v></c>'), readXlsx)).toHaveLength(1);
+    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="1"><v>1</v></c>'), readXlsx)).toEqual([]);
+    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="2"><v>1</v></c>'), readXlsx)).toEqual([]);
     expect(await lossesOf(xlsx(xfs, '<c r="A1"><v>1</v></c>'), readXlsx)).toEqual([]);
     expect(await lossesOf(xlsx(xfs, '<c r="A1" s="3"><v>1</v></c>'), readXlsx)).toEqual([]);
-    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="4"><v>1</v></c>'), readXlsx)).toHaveLength(1);
+    expect(await lossesOf(xlsx(xfs, '<c r="A1" s="4"><v>1</v></c>'), readXlsx)).toEqual([
+      { k: 'styles_unread', sheet: 'A' },
+    ]);
     for (const s of [5, 6, 7, 8])
       expect(await lossesOf(xlsx(xfs, `<c r="A1" s="${s}"><v>1</v></c>`), readXlsx)).toHaveLength(
         1,
