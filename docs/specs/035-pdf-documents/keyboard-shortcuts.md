@@ -104,7 +104,8 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Leave the thread                                     | Escape                           | The same                 | specified |
 | Move the selected mark                               | Arrow keys; ⇧ by 10              | Arrow keys               | built     |
 | Move the selected object                             | Arrow keys; ⇧ by 10              | Arrow keys               | specified |
-| Resize the selected mark or object                   | ⌥ with arrow keys `(default)`    | None                     | specified |
+| Resize the selected mark                             | ⌥ with arrow keys `(default)`    | None                     | built     |
+| Resize the selected object                           | ⌥ with arrow keys `(default)`    | None                     | specified |
 | Delete the selected mark                             | Delete or Backspace              | The same                 | built     |
 | Delete the selected object                           | Delete or Backspace              | The same                 | specified |
 | Undo, redo                                           | ⌘Z, ⌘⇧Z                          | The same †               | built     |

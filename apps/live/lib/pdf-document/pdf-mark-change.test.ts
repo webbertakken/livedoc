@@ -10,6 +10,7 @@ import {
   MARK_KIND_NAMES,
   markControlName,
   moveMarks,
+  reshapeMark,
 } from './pdf-mark-change';
 import { SHAPE_NAMES } from './pdf-shape';
 import { TEXT_MARK_NAMES } from './pdf-text-mark';
@@ -84,6 +85,25 @@ describe('moveMarks', () => {
     expect(moveMarks(doc, ['h', 'gone'], { x: 5, y: 5 }, T + 9)).toBe(0);
     expect(PdfLiveChanges.mark(doc, 'h')).toEqual(highlight);
     expect(moveMarks(doc, ['l'], { x: 0, y: 0 }, T + 9)).toBe(0);
+    expect(origins).toEqual([]);
+  });
+});
+
+describe('reshapeMark', () => {
+  it('gives a mark new geometry as one step under the person’s origin, answering its kind', () => {
+    const { doc, line, origins } = withMarks();
+    expect(reshapeMark(doc, 'l', { line: [0, 0, 9, 9] }, T + 9)).toBe('line');
+    expect(PdfLiveChanges.mark(doc, 'l')).toEqual({
+      ...line,
+      line: [0, 0, 9, 9],
+      modifiedAt: T + 9,
+    });
+    expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  it('changes nothing for a mark that is gone', () => {
+    const { doc, origins } = withMarks();
+    expect(reshapeMark(doc, 'gone', { line: [0, 0, 9, 9] }, T + 9)).toBeNull();
     expect(origins).toEqual([]);
   });
 });

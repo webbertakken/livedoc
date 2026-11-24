@@ -321,4 +321,43 @@ describe('the selected marks over a page', () => {
     // A text mark is not moved.
     expect(container.querySelector('[data-pdf-mark-outline="m1"]')!.getAttribute('x')).toBe('10');
   });
+
+  it('draws the mark a handle resizes as the drag has it, the others where they are', () => {
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[mark, box]}
+        chosen={['r1', 'm1']}
+        reshaping={{ id: 'r1', place: { rect: [20, 20, 90, 40] } }}
+      />,
+    );
+    expect(container.querySelector('[data-pdf-mark-outline="r1"]')!.getAttribute('width')).toBe(
+      '72',
+    );
+    expect(container.querySelector('[data-pdf-mark-outline="m1"]')!.getAttribute('x')).toBe('10');
+  });
+});
+
+// reading-surface.md "Find": every result tinted, the current one stronger; marks.md "Making a mark": the text a drag
+// would mark is drawn while it lasts.
+describe('the find tints, the text selected and a mark’s preview over a page', () => {
+  it('tints every result, the current one apart, the selection, and draws the preview', () => {
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[]}
+        found={{ found: [QUAD, QUAD], current: [QUAD] }}
+        preview={[QUAD]}
+        selected={[QUAD]}
+      />,
+    );
+    expect(container.querySelectorAll('[data-pdf-found] polygon')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-pdf-found-current] polygon')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-pdf-mark-preview] polygon')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-pdf-text-selection] polygon')).toHaveLength(1);
+  });
 });

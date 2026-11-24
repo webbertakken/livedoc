@@ -431,6 +431,7 @@ describe('changing a mark on a page', () => {
     letGo: vi.fn(),
     leave: vi.fn(),
     move: vi.fn(),
+    reshape: vi.fn(),
     remove: vi.fn(),
   });
 
@@ -471,6 +472,40 @@ describe('changing a mark on a page', () => {
     expect(onText).not.toHaveBeenCalled();
     fireEvent.keyDown(control, { key: 'ArrowRight' });
     expect(chose.move).toHaveBeenLastCalledWith(1, { x: 1, y: 0 });
+  });
+
+  // marks.md "Changing a mark": one selected mark has handles; a handle dragged or ⌥ with an arrow key resizes it.
+  it('resizes the one selected mark by a handle and by ⌥ with an arrow key', async () => {
+    const chose = choosing();
+    const { view } = await page('select', [], [], false, null, null, null, null, null, {
+      marks: [arrow],
+      chosen: ['a1'],
+      choosing: chose,
+    });
+    const end = view.container.querySelector<HTMLElement>('[data-pdf-mark-handle="end"]')!;
+    end.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(end, { pointerId: 2, clientX: 200, clientY: 92 });
+    fireEvent.pointerMove(end, { pointerId: 2, clientX: 250, clientY: 62 });
+    expect(
+      view.container.querySelector('[data-pdf-mark="a1"] polyline')!.getAttribute('points'),
+    ).toContain('250,62');
+    fireEvent.pointerUp(end, { pointerId: 2, clientX: 250, clientY: 62 });
+    expect(chose.reshape).toHaveBeenCalledWith(1, 'a1', { line: [100, 700, 250, 730] });
+    fireEvent.keyDown(view.getByRole('button', { name: 'Arrow by Ada' }), {
+      key: 'ArrowRight',
+      altKey: true,
+    });
+    expect(chose.reshape).toHaveBeenLastCalledWith(1, 'a1', { line: [100, 700, 201, 700] });
+  });
+
+  it('shows no handles for two marks selected', async () => {
+    const other = Mark.line('line', { ...arrow, id: 'b1' })!;
+    const { view } = await page('select', [], [], false, null, null, null, null, null, {
+      marks: [arrow, other],
+      chosen: ['a1', 'b1'],
+      choosing: choosing(),
+    });
+    expect(view.container.querySelector('[data-pdf-mark-handle]')).toBeNull();
   });
 
   it('lets the marks go for a press on nothing, which selects text', async () => {

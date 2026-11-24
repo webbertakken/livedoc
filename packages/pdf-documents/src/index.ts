@@ -47,6 +47,13 @@ export {
 } from './mark-drawing';
 export { MarkHit } from './mark-hit';
 export { MarkPlace } from './mark-place';
+export {
+  BOX_HANDLES,
+  MarkReshape,
+  type BoxHandle,
+  type MarkHandle,
+  type PointHandle,
+} from './mark-reshape';
 export { MarkWords, type WordLine } from './mark-words';
 export { STAMPS, Stamps, type Stamp, type StampTone } from './stamps';
 export { StampLayout, type StampLine } from './stamp-layout';

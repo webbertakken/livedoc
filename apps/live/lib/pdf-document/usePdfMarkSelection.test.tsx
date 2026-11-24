@@ -172,6 +172,24 @@ describe('moving and deleting the selected marks', () => {
     ]);
   });
 
+  // marks.md "Changing a mark": a resize is one step of undo; "Telemetry and observability": Mark.Resized.
+  it('resizes a mark as one step of undo, logged and counted', () => {
+    const { hook, doc, steps } = selecting();
+    act(() => hook.result.current.choosing!.reshape(0, 'a', { line: [0, 0, 9, 9] }));
+    expect(PdfLiveChanges.mark(doc, 'a')).toMatchObject({ line: [0, 0, 9, 9] });
+    expect(steps).toEqual([{ page: PAGES[0]!.name }]);
+    expect(debugLog).toHaveBeenCalledWith('[pdf] mark-resized kind=arrow');
+    expect(track).toHaveBeenCalledWith('Pdf', 'Changed', 'Mark.Resized');
+  });
+
+  it('resizes nothing that is gone, or on a page that is not there', () => {
+    const { hook, steps } = selecting();
+    act(() => hook.result.current.choosing!.reshape(0, 'gone', { line: [0, 0, 9, 9] }));
+    act(() => hook.result.current.choosing!.reshape(7, 'a', { line: [0, 0, 9, 9] }));
+    expect(steps).toEqual([{ page: PAGES[0]!.name }]);
+    expect(track).not.toHaveBeenCalled();
+  });
+
   it('deletes nothing with nothing selected', () => {
     const { hook, steps } = selecting();
     act(() => hook.result.current.choosing!.remove());

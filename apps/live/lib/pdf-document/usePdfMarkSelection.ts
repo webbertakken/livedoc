@@ -3,13 +3,13 @@
 // The marks a person has selected (docs/specs/035-pdf-documents/marks.md "Changing a mark"): a press selects a mark,
 // ⇧ adds one or takes one out, and a selection holds the marks of one page; a mark selected lets a text selection go,
 // and text selected lets the marks go. The selection moved, by a drag or an arrow key, and deleted, by Delete or
-// Edit > Delete, each one step of the person's undo. Marks are Reviewing's: while `marking` is off nothing is chosen.
+// Edit > Delete, and a mark resized by a handle or ⌥ with an arrow key, each one step of the person's undo. Marks are Reviewing's: while `marking` is off nothing is chosen.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import type { PagePoint } from '@livedoc/pdf-documents';
+import type { MarkPlace, PagePoint } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
-import { deleteMarks, MARK_KIND_NAMES, moveMarks } from './pdf-mark-change';
+import { deleteMarks, MARK_KIND_NAMES, moveMarks, reshapeMark } from './pdf-mark-change';
 import { marksOnPage, type PdfMarksByPage, type PdfMarksStore } from './pdf-marks-store';
 import { DELETE_MARKS } from './pdf-menus';
 import type { PdfDocumentOpen } from './usePdfDocument';
@@ -30,6 +30,8 @@ export type PdfPageChoosing = {
   readonly leave: () => void;
   /** The selection on the page at `index` moved by `by`, in page space, held on the page already. */
   readonly move: (index: number, by: PagePoint) => void;
+  /** A mark of the page at `index` given new geometry by a handle or ⌥ with an arrow key. */
+  readonly reshape: (index: number, id: string, place: MarkPlace) => void;
   /** The selection deleted. */
   readonly remove: () => void;
 };
@@ -115,6 +117,20 @@ export function usePdfMarkSelection({
     [ready, chosen],
   );
 
+  const reshape = useCallback(
+    (index: number, id: string, place: MarkPlace) => {
+      const page = ready?.pages[index];
+      if (!ready || !page) return;
+      const kind = ready.undo.step({ page: page.name }, () =>
+        reshapeMark(ready.binding.doc, id, place, Date.now()),
+      );
+      if (!kind) return;
+      debugLog(`[pdf] mark-resized kind=${kind}`);
+      track('Pdf', 'Changed', 'Mark.Resized');
+    },
+    [ready],
+  );
+
   const remove = useCallback(() => {
     const page = chosen ? ready?.pages[chosen.page] : undefined;
     if (!ready || !chosen || !page) return;
@@ -129,8 +145,8 @@ export function usePdfMarkSelection({
 
   const changing = marking && ready !== null;
   const choosing = useMemo<PdfPageChoosing | null>(
-    () => (changing ? { choose, letGo, leave, move, remove } : null),
-    [changing, choose, letGo, leave, move, remove],
+    () => (changing ? { choose, letGo, leave, move, reshape, remove } : null),
+    [changing, choose, letGo, leave, move, reshape, remove],
   );
   const actions = useMemo<OfficeActions>(
     () => (changing ? { [DELETE_MARKS]: { run: remove, disabled: chosen === null } } : {}),
