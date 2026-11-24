@@ -35,9 +35,9 @@ export function MetricBreadcrumb({
   onNavigate: (path: CloudPath) => void;
 }) {
   return (
-    <nav aria-label="Event levels" className="flex flex-wrap items-center gap-1.5 text-sm">
+    <nav aria-label="Event levels" className="flex flex-wrap items-center gap-2 text-body">
       {crumbs.map((c, i) => (
-        <span key={i} className="flex items-center gap-1.5">
+        <span key={i} className="flex items-center gap-2">
           {i > 0 ? (
             <span aria-hidden className="text-slate-300 dark:text-slate-600">
               ›
@@ -46,7 +46,7 @@ export function MetricBreadcrumb({
           {c.to === null ? (
             <span
               aria-current="page"
-              className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white dark:bg-slate-200 dark:text-slate-900"
+              className="rounded-full bg-slate-900 px-3 py-1 text-supporting text-white dark:bg-slate-200 dark:text-slate-900"
             >
               {c.label}
             </span>
@@ -54,7 +54,7 @@ export function MetricBreadcrumb({
             <button
               type="button"
               onClick={() => onNavigate(c.to!)}
-              className="cursor-pointer rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:text-white dark:hover:border-slate-600"
+              className="cursor-pointer rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-body text-slate-600 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:text-white dark:hover:border-slate-600"
             >
               {c.label}
             </button>

@@ -93,7 +93,7 @@ export function StickyWindowBar({
       {/* Below `sm` the pills drop to 10px side padding and their short names, so the bar fits a 320px
           phone (in full it ran 8px past a 390px screen); on a touch screen each is 44px tall to tap
           (touch-targets.md). */}
-      <div className="inline-flex items-center gap-1 rounded-full border sm:gap-1.5 border-slate-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5 backdrop-blur dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10">
+      <div className="inline-flex items-center gap-1 rounded-full border sm:gap-2 border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5 backdrop-blur dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10">
         {WINDOW_META.map((w) => {
           const isActive = active === w.key;
           return (
@@ -104,7 +104,7 @@ export function StickyWindowBar({
               aria-pressed={isActive}
               aria-label={w.label}
               className={
-                'relative cursor-pointer whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm font-semibold transition touch-target-y sm:px-4 ' +
+                'relative cursor-pointer whitespace-nowrap rounded-full px-3 py-1.5 text-body transition touch-target-y sm:px-4 ' +
                 (isActive
                   ? 'bg-brand-700 text-white shadow-sm dark:bg-brand-600'
                   : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800')
@@ -117,7 +117,7 @@ export function StickyWindowBar({
         })}
 
         {/* Divider, then the view (category) picker. */}
-        <span aria-hidden className="mx-0.5 h-5 w-px bg-slate-200 dark:bg-slate-700" />
+        <span aria-hidden className="mx-0.5 h-chip w-px bg-slate-200 dark:bg-slate-700" />
         <div className="relative">
           {/* The glyph alone shows the current view, so the name says it too. */}
           <Tooltip label={viewPickerLabel}>
@@ -130,14 +130,14 @@ export function StickyWindowBar({
               aria-expanded={menuOpen}
               aria-label={viewPickerLabel}
               className={
-                'relative flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-semibold transition touch-target-y sm:px-3 ' +
+                'relative flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-body transition touch-target-y sm:px-3 ' +
                 (menuOpen
                   ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100'
                   : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800')
               }
             >
               {activeView ? (
-                <span aria-hidden className="[&_svg]:h-3.5 [&_svg]:w-3.5">
+                <span aria-hidden className="[&_svg]:size-icon-row">
                   {activeView.icon}
                 </span>
               ) : null}
@@ -170,18 +170,18 @@ export function StickyWindowBar({
                         closeMenu();
                       }}
                       className={
-                        'flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition ' +
+                        'flex h-row w-full cursor-pointer items-center gap-3 rounded-control px-3 text-left text-body transition ' +
                         (isCurrent
                           ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300'
                           : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800')
                       }
                     >
-                      <span aria-hidden className="[&_svg]:h-4 [&_svg]:w-4">
+                      <span aria-hidden className="[&_svg]:size-icon-row">
                         {v.icon}
                       </span>
                       <span className="flex-1 truncate">{v.label}</span>
                       {isCurrent ? (
-                        <span aria-hidden className="text-xs">
+                        <span aria-hidden className="text-supporting">
                           ✓
                         </span>
                       ) : null}
@@ -211,7 +211,7 @@ function ViewMenu({
     <div
       ref={attach}
       {...surfaceProps}
-      className="absolute right-0 top-full z-20 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-xl outline-none ring-1 ring-black/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10"
+      className="absolute right-0 top-full z-20 mt-2 w-56 rounded-surface border border-slate-200 bg-white p-1 shadow-xl outline-none ring-1 ring-black/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10"
     >
       {children}
     </div>

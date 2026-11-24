@@ -11,7 +11,7 @@ const PAD = 12;
 export function MiniSparkline({
   values,
   color,
-  className = 'h-6 w-24',
+  className = 'h-chip w-24',
 }: {
   values: number[];
   color: string;

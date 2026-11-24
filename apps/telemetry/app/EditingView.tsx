@@ -152,7 +152,7 @@ export function EditingView({
     rank(rows, (r) => r.category === category && r.action === action);
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         The tools that organise the work rather than draw it, for{' '}
         <span className="font-medium">{windowLabel(active)}</span>: notes, assigned actions, and
         folders, then the rest of the editor&rsquo;s tools, then which formatting controls, export

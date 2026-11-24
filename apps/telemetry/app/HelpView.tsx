@@ -57,12 +57,12 @@ export function HelpView({
 
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         How the help centre is doing, for <span className="font-medium">{windowLabel(active)}</span>
         : reads and per-article feedback, the articles opened from inside the editor, and how far
         people get through the Diagram tour.
       </p>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      <p className="mt-1 text-supporting text-slate-500 dark:text-slate-400">
         Rows before late September 2026 for format-painter and command-palette also count the Tips
         and Tricks articles of the same name, which report on their own since then.
       </p>

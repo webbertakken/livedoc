@@ -33,7 +33,7 @@ export function SettingsView({
   );
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         How often each setting in the editor&rsquo;s Settings dialog was changed, for{' '}
         <span className="font-medium">{windowLabel(active)}</span>, either way. Which way it went is
         in Search. Below, which categories people open inside the dialog.

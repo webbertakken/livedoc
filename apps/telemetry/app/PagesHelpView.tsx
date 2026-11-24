@@ -56,7 +56,7 @@ export function PagesHelpView({ summary, active, focus }: Props & { focus?: Sect
           title: 'Tours & Prompts',
           content: (
             <>
-              <p className="mt-8 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-8 text-body text-slate-500 dark:text-slate-400">
                 Each guided tour from offer to finish, then the one-off prompts, for{' '}
                 <span className="font-medium">{windowLabel(active)}</span>.
               </p>

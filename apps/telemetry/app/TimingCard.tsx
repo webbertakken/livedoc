@@ -31,25 +31,23 @@ export function TimingCard({
   const p = (q: number) => formatPercentile(histogram.scale, timingPercentile(histogram, q));
   const peak = Math.max(...histogram.buckets.map((b) => b.count), 1);
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+    <div className="flex h-full flex-col rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{chart.title}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-body text-slate-900 dark:text-slate-100">{chart.title}</p>
+          <p className="text-supporting text-slate-500 dark:text-slate-400">
             {histogram.total.toLocaleString()} {histogram.total === 1 ? 'timing' : 'timings'}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          <p className="text-page-title text-slate-900 dark:text-slate-100">
             {enough ? p(0.75) : '–'}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">p75</p>
+          <p className="text-supporting text-slate-500 dark:text-slate-400">p75</p>
         </div>
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-        {chart.blurb}
-      </p>
-      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+      <p className="mt-3 text-supporting text-slate-500 dark:text-slate-400">{chart.blurb}</p>
+      <p className="mt-2 text-supporting text-slate-500 dark:text-slate-400">
         {enough
           ? `Median ${p(0.5)} · p95 ${p(0.95)}`
           : `Fewer than ${TIMING_MIN_SAMPLES} timings in this window, too few to read a percentile.`}
@@ -66,7 +64,7 @@ export function TimingCard({
           {histogram.buckets.map(({ bucket, count }) => (
             <div
               key={bucket.token}
-              className="flex-1 rounded-t-sm"
+              className="flex-1 rounded-t-control"
               style={{
                 height: `${count === 0 ? 2 : Math.max(6, (count / peak) * 100)}%`,
                 backgroundColor: color,
@@ -75,7 +73,7 @@ export function TimingCard({
             />
           ))}
         </div>
-        <div className="mt-1 flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="mt-1 flex justify-between text-supporting text-slate-500 dark:text-slate-400">
           <span>{formatTiming(histogram.scale, 0)}</span>
           <span>{bucketLabel(histogram.scale, histogram.buckets.at(-1)!.bucket)}</span>
         </div>
@@ -106,7 +104,7 @@ function P75Line({ values, color }: { values: (number | null)[]; color: string }
   if (run.length > 1) runs.push(run.join(' '));
   return (
     <div className="mt-3">
-      <p className="text-[11px] text-slate-500 dark:text-slate-400">Daily p75, last 30 days</p>
+      <p className="text-supporting text-slate-500 dark:text-slate-400">Daily p75, last 30 days</p>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-10 w-full" aria-hidden>
         {runs.map((points) => (
           <polyline

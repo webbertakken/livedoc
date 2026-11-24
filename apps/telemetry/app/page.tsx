@@ -92,10 +92,10 @@ export default function TelemetryDashboard() {
           SiteFooter), so telemetry reads as part of the product. */}
       <SiteHeader ctaSurface="Dashboard" />
       <main className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
+        <h1 className="mt-2 text-page-title text-slate-900 dark:text-slate-100">
           Telemetry, in the open
         </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-4 max-w-2xl text-name text-slate-600 dark:text-slate-300">
           This is everything we measure. We record anonymous, first-party product events to learn
           which features actually help. There are no third-party analytics or tracking vendors, no
           user content (never a document name, your name, or anything you type), and the data is
@@ -172,7 +172,7 @@ export default function TelemetryDashboard() {
             </div>
 
             {summary.generatedAt ? (
-              <p className="mt-10 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-10 text-supporting text-slate-500 dark:text-slate-400">
                 Anonymous, first-party, no vendors. Updated a few minutes at a time.
               </p>
             ) : null}

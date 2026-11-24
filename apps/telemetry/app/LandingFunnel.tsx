@@ -26,10 +26,8 @@ export function LandingFunnel({
 
   return (
     <section className="mt-8">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Landing funnel
-      </h2>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+      <h2 className="text-supporting text-slate-500 dark:text-slate-400">Landing funnel</h2>
+      <p className="mt-2 text-body text-slate-500 dark:text-slate-400">
         From a public page to a document, for{' '}
         <span className="font-medium">{windowLabel(active)}</span>. Every call to action into the
         editor names which button it is; the editor counts the arrival and whether a document
@@ -59,7 +57,7 @@ export function LandingFunnel({
             </CardColumns>
           </div>
           {funnel.quiet.length > 0 ? (
-            <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-4 text-supporting text-slate-500 dark:text-slate-400">
               No views or arrivals in this window:{' '}
               {funnel.quiet.map((s) => SURFACE_LABELS[s]).join(', ')}.
             </p>
@@ -105,12 +103,12 @@ function Headline({
         against={against}
         step={`${formatRate(rate(total.created, total.arrived))} of arrivals`}
       />
-      <div className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
-        <p className="text-xs font-medium text-brand-700 dark:text-brand-300">Views to documents</p>
-        <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-900 dark:text-brand-100">
+      <div className="rounded-surface border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
+        <p className="text-supporting text-brand-700 dark:text-brand-300">Views to documents</p>
+        <p className="mt-1 text-page-title tabular-nums text-brand-900 dark:text-brand-100">
           {formatRate(overall)}
         </p>
-        <p className="mt-1 text-xs text-brand-700 dark:text-brand-300/80">
+        <p className="mt-1 text-supporting text-brand-700 dark:text-brand-300/80">
           {before && against
             ? overallBefore === null
               ? `No public page views in ${against}`
@@ -136,17 +134,17 @@ function Stat({
   step?: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
+    <div className="rounded-surface border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">{label}</p>
       <div className="mt-1 flex items-center gap-2">
-        <span className="text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+        <span className="text-page-title tabular-nums text-slate-900 dark:text-slate-100">
           {count.toLocaleString()}
         </span>
         {before !== undefined && against ? (
           <TrendBadge now={count} before={before} against={against} />
         ) : null}
       </div>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      <p className="mt-1 text-supporting text-slate-500 dark:text-slate-400">
         {step ?? 'Landing, feature, help and more'}
       </p>
     </div>

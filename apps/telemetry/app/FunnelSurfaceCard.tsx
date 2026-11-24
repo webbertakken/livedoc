@@ -30,12 +30,10 @@ export function FunnelSurfaceCard({
   const busiest = Math.max(...surface.slots.map((s) => s.arrived), 1);
 
   return (
-    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+    <div className="min-w-0 rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {surface.label}
-        </h3>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <h3 className="text-body text-slate-900 dark:text-slate-100">{surface.label}</h3>
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           {formatRate(rate(surface.created, surface.views))} of views became a document
         </span>
       </div>
@@ -66,7 +64,7 @@ export function FunnelSurfaceCard({
 
       {/* Fixed layout so a long label truncates instead of widening the card
           past a phone screen. */}
-      <table className="mt-5 w-full table-fixed text-sm">
+      <table className="mt-5 w-full table-fixed text-body">
         <colgroup>
           <col />
           <col className="w-16 sm:w-20" />
@@ -74,7 +72,7 @@ export function FunnelSurfaceCard({
           <col className="w-16 sm:w-20" />
         </colgroup>
         <thead>
-          <tr className="text-left text-[11px] tracking-wide text-slate-500 dark:text-slate-400 uppercase">
+          <tr className="text-left text-supporting text-slate-500 dark:text-slate-400">
             <th className="pb-2 font-medium">Call to action</th>
             <th className="pb-2 pl-2 text-right font-medium">Arrived</th>
             <th className="pb-2 pl-2 text-right font-medium">Created</th>
@@ -136,9 +134,9 @@ function FunnelStep({
 }) {
   return (
     <li>
-      <div className="flex items-baseline justify-between gap-2 text-sm">
+      <div className="flex items-baseline justify-between gap-2 text-body">
         <span className="text-slate-600 dark:text-slate-300">{label}</span>
-        <span className="font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+        <span className="tabular-nums text-slate-900 dark:text-slate-100">
           {count.toLocaleString()}
         </span>
       </div>
@@ -157,15 +155,13 @@ function StepRate({ value, verb }: { value: number | null; verb: string }) {
   return (
     <li
       aria-label={`${formatRate(value)} ${verb}`}
-      className="flex items-center gap-2 py-1.5 pl-1 text-xs text-slate-500 dark:text-slate-400"
+      className="flex items-center gap-2 py-1.5 pl-1 text-supporting text-slate-500 dark:text-slate-400"
     >
       <Glyph size={10} units={10} className="h-2.5 w-2.5">
         <path d="M5 1v8M2 6l3 3 3-3" />
       </Glyph>
       <span>
-        <span className="font-semibold text-slate-600 tabular-nums dark:text-slate-300">
-          {formatRate(value)}
-        </span>{' '}
+        <span className="text-slate-600 tabular-nums dark:text-slate-300">{formatRate(value)}</span>{' '}
         {verb}
       </span>
     </li>

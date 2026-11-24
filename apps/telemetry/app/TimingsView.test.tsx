@@ -59,7 +59,7 @@ function render(s: TelemetrySummary) {
 }
 
 const card = (host: HTMLElement, title: string) =>
-  [...host.querySelectorAll('div.rounded-2xl')].find(
+  [...host.querySelectorAll('div.rounded-surface')].find(
     (el) => el.querySelector('p')?.textContent === title,
   )!;
 

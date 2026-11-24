@@ -92,18 +92,18 @@ export function ViewTabs<K extends string>({
   // Taller on a touch screen (touch-targets.md): padding, not a ::before pad, since the tabs sit in a
   // horizontal scroller that would clip one. The icon-only Dashboard tab gets a min-height to match.
   const arrowClass = (enabled: boolean) =>
-    'flex h-8 w-7 shrink-0 pointer-coarse:h-10 pointer-coarse:w-8 items-center justify-center rounded-lg text-slate-500 transition dark:text-slate-400 ' +
+    'flex h-field w-7 shrink-0 pointer-coarse:h-10 pointer-coarse:w-8 items-center justify-center rounded-menu text-slate-500 transition dark:text-slate-400 ' +
     (enabled
       ? 'cursor-pointer hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100'
       : 'cursor-default opacity-30');
 
   const tabClass = (selected: boolean) =>
-    'flex shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition pointer-coarse:min-h-10 ' +
+    'flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-menu px-3 py-1.5 text-body transition pointer-coarse:min-h-10 ' +
     (selected
-      ? 'bg-brand-700 text-white shadow-sm dark:bg-brand-600'
+      ? 'bg-brand-700 font-medium text-white shadow-sm dark:bg-brand-600'
       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100');
   const bar =
-    'flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900';
+    'flex items-center gap-1 rounded-surface border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900';
 
   return (
     <div role="tablist" aria-label="Telemetry views" className="mt-8 flex items-center gap-3">
@@ -119,7 +119,7 @@ export function ViewTabs<K extends string>({
               onClick={() => onSelect(v.key)}
               className={tabClass(view === v.key)}
             >
-              <span aria-hidden className="shrink-0 [&_svg]:h-3.5 [&_svg]:w-3.5">
+              <span aria-hidden className="shrink-0 [&_svg]:size-icon-row">
                 {v.icon}
               </span>
               {/* Icon-only on a phone, so the Detail carousel beside it has
@@ -132,7 +132,7 @@ export function ViewTabs<K extends string>({
       <div className={`${bar} min-w-0 flex-1`}>
         <span
           aria-hidden
-          className="hidden shrink-0 pl-2 pr-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:inline"
+          className="hidden shrink-0 pl-2 pr-1 text-supporting text-slate-500 dark:text-slate-400 sm:inline"
         >
           Detail
         </span>
@@ -165,7 +165,7 @@ export function ViewTabs<K extends string>({
               onClick={() => onSelect(v.key)}
               className={tabClass(view === v.key)}
             >
-              <span aria-hidden className="shrink-0 [&_svg]:h-3.5 [&_svg]:w-3.5">
+              <span aria-hidden className="shrink-0 [&_svg]:size-icon-row">
                 {v.icon}
               </span>
               {v.label}
