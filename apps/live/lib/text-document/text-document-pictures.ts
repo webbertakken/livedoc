@@ -23,6 +23,11 @@ import {
   type PictureDragResult,
 } from './text-document-picture-drag';
 import { nullAttributes } from './text-document-attributes';
+import {
+  DRAWING_CONTROL,
+  pictureDrawingLayer,
+  type AttachDrawing,
+} from './text-document-picture-drawing-layer';
 
 /** What a picture shows when its media is not in the state. */
 export const PICTURE_MISSING_TEXT = 'Picture, not loaded';
@@ -101,6 +106,8 @@ export type PictureSource = {
   readonly media: (key: string) => PictureMedia | undefined;
   readonly gallery: (imageId: string) => Promise<string | null>;
   readonly release: (url: string) => void;
+  // Where a drawing's picture is drawn live, and its bar (objects.md "Drawn"); absent where nothing draws drawings.
+  readonly drawing?: AttachDrawing;
 };
 
 /**
@@ -140,6 +147,7 @@ export function pictureView(
     turn.append(clip);
     dom.append(turn);
     const colour = pictureColourer(dom);
+    const drawingLayer = pictureDrawingLayer(clip, dom, source.drawing);
     // What is shown, and how to give it back: an object URL is revoked, a gallery URL released.
     let shown: { key: string; url?: string; give?: () => void } | undefined;
     let current = node;
@@ -172,6 +180,17 @@ export function pictureView(
       turn.style.left = `${placed ? placed.picture.left : round3((bounds.width - box.width) / 2)}pt`;
       turn.style.top = `${placed ? placed.picture.top : round3((bounds.height - box.height) / 2)}pt`;
       turn.style.transform = box.rotation ? `rotate(${box.rotation}deg)` : '';
+      const turnLeft = placed ? placed.picture.left : (bounds.width - box.width) / 2;
+      const turnTop = placed ? placed.picture.top : (bounds.height - box.height) / 2;
+      drawingLayer.fit({
+        image: box.image,
+        bounds: {
+          left: round3(turnLeft + (box.width - bounds.width) / 2),
+          top: round3(turnTop + (box.height - bounds.height) / 2),
+          width: bounds.width,
+          height: bounds.height,
+        },
+      });
       dom.dataset.rotation = String(box.rotation);
       const img = clip.querySelector('img');
       if (!img) return;
@@ -275,6 +294,11 @@ export function pictureView(
       current = picture;
       const key = typeof picture.attrs.media === 'string' ? picture.attrs.media : '';
       dom.dataset.media = key;
+      drawingLayer.show(
+        typeof picture.attrs.drawing === 'string' && picture.attrs.drawing
+          ? picture.attrs.drawing
+          : null,
+      );
       if (key !== shown?.key) load(key);
       fit(picture.attrs);
     };
@@ -343,14 +367,17 @@ export function pictureView(
         dom.classList.remove('ProseMirror-selectednode');
         hideHandles();
       },
-      // The handles are the picture's own: the editor neither selects nor drags from them.
+      // The handles, a drawing's bar and its Retry are the picture's own: the editor neither selects nor drags from them.
       stopEvent: (event) =>
-        event.target instanceof Element && event.target.closest('[data-picture-handle]') !== null,
+        event.target instanceof Element &&
+        event.target.closest(`[data-picture-handle], [data-picture-bar], ${DRAWING_CONTROL}`) !==
+          null,
       ignoreMutation: () => true,
       destroy: () => {
         destroyed = true;
         hideHandles();
         giveBack();
+        drawingLayer.destroy();
       },
     };
   };
