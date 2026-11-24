@@ -958,6 +958,20 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone placed a dynamic stamp on a PDF page: its name with who placed it and when.',
   'Pdf|Changed|ToolColour':
     'Someone chose a colour, or reset it, for the mark tool in hand on a PDF document.',
+  'Pdf|Changed|Mark.Moved':
+    'Someone moved marks on a PDF page, by dragging them or with the arrow keys.',
+  'Pdf|Deleted|Mark.Highlight': 'Someone deleted a highlight from a PDF page.',
+  'Pdf|Deleted|Mark.Underline': 'Someone deleted an underline from a PDF page.',
+  'Pdf|Deleted|Mark.Strikethrough': 'Someone deleted a strikethrough from a PDF page.',
+  'Pdf|Deleted|Mark.SquigglyUnderline': 'Someone deleted a squiggly underline from a PDF page.',
+  'Pdf|Deleted|Mark.Drawing': 'Someone deleted a drawing from a PDF page.',
+  'Pdf|Deleted|Mark.Line': 'Someone deleted a line from a PDF page.',
+  'Pdf|Deleted|Mark.Arrow': 'Someone deleted an arrow from a PDF page.',
+  'Pdf|Deleted|Mark.Rectangle': 'Someone deleted a rectangle from a PDF page.',
+  'Pdf|Deleted|Mark.Ellipse': 'Someone deleted an ellipse from a PDF page.',
+  'Pdf|Deleted|Mark.Text': 'Someone deleted words typed onto the page from a PDF page.',
+  'Pdf|Deleted|Mark.Callout': 'Someone deleted a callout from a PDF page.',
+  'Pdf|Deleted|Mark.Stamp': 'Someone deleted a stamp from a PDF page.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Underline': 'Someone took the Underline tool in hand on a PDF document.',
@@ -2939,6 +2953,7 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Pdf|Imported':
     'Someone opened a PDF from their computer as a new PDF document (the value says the way it arrived).',
   'Pdf|Added': 'Someone made a mark on a PDF page (the value says which kind).',
+  'Pdf|Deleted': 'Someone deleted a mark from a PDF page (the value says which kind).',
   'Pdf|Selected': 'Someone took a tool in hand on a PDF document (the value says which).',
   'Pdf|Exported': 'Someone downloaded a PDF document (the value says as what).',
   'Pdf|Undone': 'Someone took back their last change to a PDF document.',

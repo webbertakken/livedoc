@@ -6,6 +6,7 @@ import * as Y from 'yjs';
 import type { FieldValue } from './field-value';
 import { PDF_MAX_MARKS } from './limits';
 import type { DrawingMark, Mark, TextMark } from './mark';
+import type { MarkPlace } from './mark-place';
 import type { PageName } from './page-name';
 
 /** The roots a change reaches; the others join as what they hold is built. */
@@ -29,11 +30,14 @@ export type PdfChange =
 /** Why a change was refused whole, writing nothing. */
 export type PdfChangeRefusal = 'pdf_change_target_missing' | 'pdf_too_many_marks';
 
-/** What a mark's maker may change of it afterwards (marks.md "Changing a mark"). */
+/** What a mark's maker may change of its look afterwards (marks.md "Changing a mark"). */
 export type MarkLook = Partial<
   Pick<TextMark, 'colour' | 'opacity' | 'quads' | 'text' | 'modifiedAt'> &
     Pick<DrawingMark, 'strokes' | 'width'>
 >;
+
+/** A change to a mark: its look, and its geometry where it moved. */
+export type MarkChange = MarkLook & Partial<MarkPlace>;
 
 /** What of the stored file a deletion names (the layout's `removed`). */
 export type RemovedKind = 'mark' | 'field' | 'object';
@@ -77,10 +81,10 @@ export const PdfChange = {
   /** A mark made. */
   addMark: (mark: Mark): PdfChange => ({ root: 'marks', id: mark.id, put: { ...mark } }),
   /** A mark made here changed: only what is given. */
-  changeMark: (id: string, look: MarkLook): PdfChange => ({
+  changeMark: (id: string, change: MarkChange): PdfChange => ({
     root: 'marks',
     id,
-    set: { ...look },
+    set: { ...change },
     unset: [],
   }),
   /** A mark made here deleted. */

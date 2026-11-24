@@ -45,6 +45,8 @@ export {
   type StampShape,
   type TypedShape,
 } from './mark-drawing';
+export { MarkHit } from './mark-hit';
+export { MarkPlace } from './mark-place';
 export { MarkWords, type WordLine } from './mark-words';
 export { STAMPS, Stamps, type Stamp, type StampTone } from './stamps';
 export { StampLayout, type StampLine } from './stamp-layout';
@@ -106,6 +108,7 @@ export { FieldValue } from './field-value';
 export {
   PdfChange,
   PdfChangeset,
+  type MarkChange,
   type MarkLook,
   type PdfChangeRefusal,
   type PdfChangeRoot,

@@ -6,6 +6,7 @@ import { act, fireEvent, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   PDF_LONG_PRESS_MS,
+  Mark,
   PageName,
   type PageBitmap,
   type PageInfo,
@@ -19,6 +20,7 @@ import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
 import type { PdfPageStamping } from '@/lib/pdf-document/usePdfStampTool';
 import type { PdfPageTyping } from '@/lib/pdf-document/usePdfTyping';
+import type { PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
 import { PdfPage } from './PdfPage';
 
 vi.mock('@/lib/pdf-document/pdf-paint', () => ({ paintPicture: vi.fn(), REDRAW_SETTLE_MS: 0 }));
@@ -48,6 +50,12 @@ const drawer: PdfPageDrawer = {
   firstDrawn: () => new Promise<void>(() => {}),
 };
 
+type Choosing = {
+  marks?: readonly Mark[];
+  chosen?: readonly string[];
+  choosing?: PdfPageChoosing | null;
+};
+
 async function page(
   tool: PdfPageTool = 'select',
   selected: readonly Quad[] = [],
@@ -58,6 +66,7 @@ async function page(
   shaping: PdfPageShaping | null = null,
   typing: PdfPageTyping | null = null,
   stamping: PdfPageStamping | null = null,
+  { marks = [], chosen = [], choosing = null }: Choosing = {},
 ) {
   const onText = vi.fn();
   const onMark = vi.fn();
@@ -81,7 +90,7 @@ async function page(
         links: async () => links,
       }}
       drawer={drawer}
-      marks={[]}
+      marks={marks}
       tool={tool}
       onMark={onMark}
       ink={ink}
@@ -90,6 +99,8 @@ async function page(
       stamping={stamping}
       selected={selected}
       handles={handles}
+      chosen={chosen}
+      choosing={choosing}
       onText={onText}
       texts={null}
       linkName={(target) => `Link to ${target.kind}`}
@@ -399,5 +410,112 @@ describe('placing a stamp on a page', () => {
     fireEvent.pointerDown(box, { button: 2, pointerId: 1, clientX: 72, clientY: 92 });
     expect(onStamp).toHaveBeenCalledOnce();
     expect(onMark).not.toHaveBeenCalled();
+  });
+});
+
+// marks.md "Changing a mark": with Select in hand a press on a mark selects it and puts the keys on it, a drag moves the
+// selection once let go, outlined as it goes; a press on nothing lets the marks go and selects text.
+describe('changing a mark on a page', () => {
+  const arrow = Mark.line('arrow', {
+    id: 'a1',
+    page: PAGE.name,
+    line: [100, 700, 200, 700],
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 0,
+  })!;
+  const choosing = (): PdfPageChoosing => ({
+    choose: vi.fn(),
+    letGo: vi.fn(),
+    leave: vi.fn(),
+    move: vi.fn(),
+    remove: vi.fn(),
+  });
+
+  it('selects a mark pressed, puts the keys on it, and moves it by a drag', async () => {
+    const chose = choosing();
+    const { box, onText, view } = await page(
+      'select',
+      [],
+      [],
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        marks: [arrow],
+        chosen: ['a1'],
+        choosing: chose,
+      },
+    );
+    const control = view.getByRole('button', { name: 'Arrow by Ada' });
+    fireEvent.pointerDown(box, {
+      button: 0,
+      pointerType: 'mouse',
+      pointerId: 1,
+      clientX: 150,
+      clientY: 92,
+    });
+    expect(chose.choose).toHaveBeenCalledWith(1, 'a1', false);
+    fireEvent.pointerMove(box, { pointerId: 1, clientX: 160, clientY: 82 });
+    expect(view.container.querySelector('[data-pdf-mark-outline="a1"]')!.getAttribute('x')).toBe(
+      '106',
+    );
+    fireEvent.pointerUp(box, { pointerId: 1, clientX: 160, clientY: 82 });
+    expect(chose.move).toHaveBeenCalledWith(1, { x: 10, y: 10 });
+    expect(document.activeElement).toBe(control);
+    expect(onText).not.toHaveBeenCalled();
+    fireEvent.keyDown(control, { key: 'ArrowRight' });
+    expect(chose.move).toHaveBeenLastCalledWith(1, { x: 1, y: 0 });
+  });
+
+  it('lets the marks go for a press on nothing, which selects text', async () => {
+    const chose = choosing();
+    const { box, onText } = await page('select', [], [], false, null, null, null, null, null, {
+      marks: [arrow],
+      choosing: chose,
+    });
+    fireEvent.pointerDown(box, {
+      button: 0,
+      pointerType: 'mouse',
+      pointerId: 1,
+      clientX: 400,
+      clientY: 400,
+    });
+    expect(chose.letGo).toHaveBeenCalled();
+    expect(onText).toHaveBeenCalledWith(1, expect.objectContaining({ kind: 'press' }));
+  });
+
+  it('hands a drag that began on a text mark to the text', async () => {
+    const highlight = Mark.highlight({
+      ...arrow,
+      id: 'h1',
+      quads: [[100, 716, 200, 716, 100, 700, 200, 700]],
+      text: 'x',
+    })!;
+    const { box, onText } = await page('select', [], [], false, null, null, null, null, null, {
+      marks: [highlight],
+      choosing: choosing(),
+    });
+    fireEvent.pointerDown(box, {
+      button: 0,
+      pointerType: 'mouse',
+      pointerId: 1,
+      clientX: 150,
+      clientY: 84,
+    });
+    fireEvent.pointerMove(box, { pointerId: 1, clientX: 180, clientY: 84 });
+    expect(onText).toHaveBeenNthCalledWith(1, 1, {
+      kind: 'press',
+      at: { x: 150, y: 708 },
+      shift: false,
+      alt: false,
+    });
+    expect(onText).toHaveBeenNthCalledWith(2, 1, { kind: 'drag', at: { x: 180, y: 708 } });
+    fireEvent.pointerCancel(box, { pointerId: 1 });
   });
 });

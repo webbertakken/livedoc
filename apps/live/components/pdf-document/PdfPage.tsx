@@ -15,6 +15,7 @@ import {
 } from 'react';
 import {
   PageView,
+  PDF_MARK_OUTLINE_PX,
   type LinkTarget,
   type Mark,
   type PageInfo,
@@ -49,6 +50,9 @@ import { pageBoxOf } from '@/lib/pdf-document/pdf-typed';
 import type { PdfPageTyping as Typing } from '@/lib/pdf-document/usePdfTyping';
 import { screenBoxOf } from '@/lib/pdf-document/pdf-shape';
 import { PdfPageTyping } from './PdfPageTyping';
+import { PdfPageMarks } from './PdfPageMarks';
+import type { PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
+import { usePdfPageMarkPress } from '@/lib/pdf-document/usePdfPageMarkPress';
 
 // `by`: the drawer that drew it. A replaced stored file comes with another, and the page is then drawn again,
 // its picture staying until the new one arrives (live-editing-and-storage.md "Replacing the stored file").
@@ -82,6 +86,8 @@ export const PdfPage = memo(function PdfPage({
   stamping,
   selected,
   handles,
+  chosen,
+  choosing,
   onText,
   texts,
   linkName,
@@ -123,6 +129,10 @@ export const PdfPage = memo(function PdfPage({
   selected: readonly Quad[];
   // A finger made the selection: it has handles (reading-surface.md "Phone and tablet").
   handles: boolean;
+  // The marks selected on this page, and where a press on a mark goes; null while marks may not be changed
+  // (marks.md "Changing a mark").
+  chosen: readonly string[];
+  choosing: PdfPageChoosing | null;
   onText: (index: number, gesture: PdfTextGesture) => void;
   // The pages' text, read to assistive technology while the page is near view (accessibility.md).
   texts: PdfPageTexts | null;
@@ -235,6 +245,8 @@ export const PdfPage = memo(function PdfPage({
     onDoubleTap,
   });
 
+  // The page as the file has it, in page space; null before it is drawn.
+  const pageBox = () => (current ? pageBoxOf(current.toView, shown) : null);
   // A stroke of the Drawing tool, or a line or shape of a shape tool, while one is in hand.
   const inking = usePdfPageDraft({
     index,
@@ -242,10 +254,29 @@ export const PdfPage = memo(function PdfPage({
     shaping: current ? shaping : null,
     stamping: current ? stamping : null,
     pointAt,
-    pageBox: () => (current ? pageBoxOf(current.toView, shown) : null),
+    pageBox,
     box,
   });
   const textMark = usePdfPageTextMark({ index, engine, onMark });
+  // A press on a mark with Select in hand: selected, dragged, or a drag from a text mark handed to the text.
+  const markPress = usePdfPageMarkPress({
+    index,
+    marks,
+    chosen,
+    choosing: tool === 'select' && current ? choosing : null,
+    cssPerPoint,
+    pointAt,
+    matrix: () => current?.toView ?? null,
+    pageBox,
+    onTextPress: (at, shift, alt) => {
+      selecting.current = true;
+      onText(index, { kind: 'press', at, shift, alt });
+    },
+    focusMark: (id) =>
+      box
+        ?.querySelector<HTMLElement>(`[data-pdf-mark-control="${id}"]`)
+        ?.focus({ preventScroll: true }),
+  });
   // A drag across text marks it with a text tool in hand: not with a drawing, shape or typing tool.
   const marking = tool !== 'select' && !inking.active && !typing && current !== null;
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
@@ -254,6 +285,7 @@ export const PdfPage = memo(function PdfPage({
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     fingers.down(event);
     if (inking.down(event)) return;
+    if (markPress.down(event)) return;
     if (selectingText(event)) {
       const at = pagePoint(event);
       if (!at) return;
@@ -269,7 +301,7 @@ export const PdfPage = memo(function PdfPage({
     textMark.begin(from);
   };
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
-    if (inking.move(event)) return;
+    if (inking.move(event) || markPress.move(event)) return;
     const at = selecting.current ? pagePoint(event) : null;
     if (at) return onText(index, { kind: 'drag', at });
     const to = textMark.dragging() ? pagePoint(event) : null;
@@ -302,20 +334,24 @@ export const PdfPage = memo(function PdfPage({
           ? 'cursor-text touch-none'
           : inking.active
             ? 'cursor-crosshair touch-none'
-            : tool === 'select' && current
-              ? 'cursor-text'
-              : ''
+            : markPress.over === 'movable' || markPress.moving
+              ? 'cursor-move'
+              : markPress.over === 'text'
+                ? 'cursor-default'
+                : tool === 'select' && current
+                  ? 'cursor-text'
+                  : ''
       }`}
       style={{ left, top, width: shown.width * cssPerPoint, height: shown.height * cssPerPoint }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => {
         fingers.up(event);
-        if (!inking.up(event, true)) endDrag(event, true);
+        if (!inking.up(event, true) && !markPress.up(event)) endDrag(event, true);
       }}
       onPointerCancel={(event) => {
         fingers.cancel(event);
-        if (!inking.up(event, false)) endDrag(event, false);
+        if (!inking.up(event, false) && !markPress.cancel()) endDrag(event, false);
       }}
       onClick={onClick}
     >
@@ -352,6 +388,21 @@ export const PdfPage = memo(function PdfPage({
           draft={inking.draft}
           selected={selected}
           found={found}
+          chosen={chosen}
+          outline={PDF_MARK_OUTLINE_PX / cssPerPoint}
+          moving={markPress.moving}
+        />
+      ) : null}
+      {matrix ? (
+        <PdfPageMarks
+          index={index}
+          matrix={matrix}
+          width={shown.width}
+          height={shown.height}
+          marks={marks}
+          chosen={chosen}
+          choosing={tool === 'select' ? choosing : null}
+          onNudge={markPress.nudge}
         />
       ) : null}
       {matrix && typing ? (

@@ -31,8 +31,10 @@ import type { PdfTextGesture, PdfTextSelected } from '@/lib/pdf-document/usePdfT
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
+import type { PdfMarksChosen, PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
 
 const NOTHING_SELECTED: readonly Quad[] = [];
+const NO_MARKS_CHOSEN: readonly string[] = [];
 
 export function PdfPages({
   attach,
@@ -53,6 +55,8 @@ export function PdfPages({
   stamping,
   typing,
   selection,
+  chosen,
+  choosing,
   onText,
   texts,
   onFollow,
@@ -86,6 +90,9 @@ export function PdfPages({
   typing: PdfPageTyping | null;
   // The person's text selection, and where a page's gestures go (usePdfTextSelection.ts).
   selection: PdfTextSelected | null;
+  // The marks selected, and where a press on a mark goes (usePdfMarkSelection.ts); null while marks may not change.
+  chosen: PdfMarksChosen | null;
+  choosing: PdfPageChoosing | null;
   onText: (index: number, gesture: PdfTextGesture) => void;
   // The pages' text, as the selection reads it: what each page near view reads to assistive technology.
   texts: PdfPageTexts | null;
@@ -169,6 +176,8 @@ export function PdfPages({
                   typing={typing}
                   selected={selection?.page === box.index ? selection.quads : NOTHING_SELECTED}
                   handles={selection?.page === box.index && selection.touch}
+                  chosen={chosen?.page === box.index ? chosen.ids : NO_MARKS_CHOSEN}
+                  choosing={choosing}
                   onText={onText}
                   texts={texts}
                   linkName={linkName}

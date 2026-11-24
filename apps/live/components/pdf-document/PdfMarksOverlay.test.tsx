@@ -265,3 +265,60 @@ describe('a stamp over a page', () => {
     );
   });
 });
+
+// marks.md "Changing a mark": a selected mark is outlined, PDF_MARK_OUTLINE_PX out from it; a drag shows the marks
+// moved as they go.
+describe('the selected marks over a page', () => {
+  const box = Mark.shape('rectangle', {
+    id: 'r1',
+    page: PageName.ofObject(1),
+    rect: [20, 20, 60, 40],
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 0,
+  })!;
+
+  it('outlines each selected mark round its line, the gap given in points', () => {
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[mark, box]}
+        chosen={['r1']}
+        outline={3}
+      />,
+    );
+    const outlines = container.querySelectorAll('[data-pdf-mark-outline]');
+    expect(outlines).toHaveLength(1);
+    // The box's line reaches 1 point past its rect; the outline 3 more: x 16 to 64, y 16 to 44 (view 56 to 84).
+    expect(outlines[0]!.getAttribute('data-pdf-mark-outline')).toBe('r1');
+    expect(['x', 'y', 'width', 'height'].map((key) => outlines[0]!.getAttribute(key))).toEqual([
+      '16',
+      '56',
+      '48',
+      '28',
+    ]);
+  });
+
+  it('draws the marks being dragged where the drag has them, outlined there', () => {
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[mark, box]}
+        chosen={['r1', 'm1']}
+        outline={0}
+        moving={{ ids: ['r1', 'm1'], by: { x: 10, y: -10 } }}
+      />,
+    );
+    const outline = container.querySelector('[data-pdf-mark-outline="r1"]')!;
+    expect(outline.getAttribute('x')).toBe('29');
+    expect(outline.getAttribute('y')).toBe('69');
+    // A text mark is not moved.
+    expect(container.querySelector('[data-pdf-mark-outline="m1"]')!.getAttribute('x')).toBe('10');
+  });
+});

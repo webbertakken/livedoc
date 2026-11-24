@@ -138,6 +138,16 @@ describe('PdfLiveChanges', () => {
     expect(PdfLiveChanges.isEmpty(ada.doc)).toBe(true);
   });
 
+  // marks.md "Changing a mark": a change is made from the mark as the live changes hold it now.
+  it('reads one mark by its id, or null where none is there or it is no mark', () => {
+    const doc = PdfLiveChanges.load();
+    PdfLiveChanges.addMark(doc, highlight('a'));
+    expect(PdfLiveChanges.mark(doc, 'a')).toEqual(highlight('a'));
+    expect(PdfLiveChanges.mark(doc, 'missing')).toBeNull();
+    doc.getMap<Y.Map<unknown>>('marks').get('a')!.set('opacity', 7);
+    expect(PdfLiveChanges.mark(doc, 'a')).toBeNull();
+  });
+
   it('leaves out an entry that is no mark', () => {
     const doc = PdfLiveChanges.load();
     PdfLiveChanges.addMark(doc, highlight('a'));

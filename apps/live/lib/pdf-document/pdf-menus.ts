@@ -62,6 +62,8 @@ const ONE_OF = { checkable: 'radio' } as const;
 export const DOWNLOAD_PDF = 'download-pdf';
 export const UNDO = 'undo';
 export const REDO = 'redo';
+/** Edit > Delete: the selected marks (marks.md "Changing a mark"). */
+export const DELETE_MARKS = 'delete';
 export const PRINT = 'print';
 /** Edit > Copy and Select all: the text selected on the pages (reading-surface.md "The pages"). */
 export const COPY = 'copy';
@@ -186,7 +188,7 @@ export const PDF_MENUS: OfficeCatalogue = [
     item('cut', 'Cut', 'participate'),
     item(COPY, 'Copy', 'view', { shortcut: COPY, status: 'built' }),
     item('paste', 'Paste', 'participate'),
-    item('delete', 'Delete', 'participate'),
+    item(DELETE_MARKS, 'Delete', 'participate', { status: 'built' }),
     SEPARATOR,
     item(SELECT_ALL, 'Select all', 'view', { shortcut: SELECT_ALL, status: 'built' }),
     SEPARATOR,
