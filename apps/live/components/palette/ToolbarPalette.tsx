@@ -454,6 +454,8 @@ export function ToolbarPalette(props: Props) {
     <div
       ref={rootRef}
       data-toolbar-palette=""
+      // The tool line: its controls take the drawing tools' 32px (docs/specs/004-interface-design/sizing.md, D242).
+      data-tool-line=""
       data-region="palette"
       // The strip is the Palette in this layout, so the panel-opacity
       // preference (docs/specs/007-editor/user-preferences.md) fades it and its More popover

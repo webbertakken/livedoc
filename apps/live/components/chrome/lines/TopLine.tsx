@@ -14,6 +14,7 @@ export function TopLine({ brand, actions }: { brand: ReactNode; actions: ReactNo
   return (
     <div
       data-top-line=""
+      data-tool-line=""
       style={{
         top: `calc(0.75rem + ${safeInset('top')})`,
         left: atLeastInset('0.75rem', 'left'),

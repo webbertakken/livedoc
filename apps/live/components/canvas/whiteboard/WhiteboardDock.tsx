@@ -262,6 +262,8 @@ export function WhiteboardDock({ model, ink, onDrawn }: WhiteboardDockProps) {
       data-floating-panel=""
       ref={wrapper}
       data-whiteboard-dock=""
+      // Drawing tools wherever it sits, so the tool line's 32px (docs/specs/004-interface-design/sizing.md, D242).
+      data-tool-line=""
       data-region="palette"
       data-dock-position={model.position}
       onPointerDown={(e) => e.stopPropagation()}

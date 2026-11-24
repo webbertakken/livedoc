@@ -55,6 +55,10 @@
   }
 }
 
+/* The tool line (docs/specs/004-interface-design/sizing.md "The editor's toolbars"): the top line and Draw's dock,
+ * where the drawing tools sit. A toolbar control inside it takes the tools' field step rather than the row step (D242). */
+@custom-variant tool-line (&:where([data-tool-line] *));
+
 /* Scan the shared UI package so utility classes used only inside its
  * components (e.g. the <Brand> mark's hover-rotate) are generated here too.
  * Tailwind v4 skips node_modules, where the workspace package is symlinked. */
