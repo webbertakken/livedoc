@@ -307,6 +307,11 @@ category dropdown, in its toolbar style, a tile grid), and to its right the chos
 - Text runs over empty neighbours to the right (left-aligned) unless the cell wraps or clips. Numbers never run
   over: one too wide for its column shows with fewer decimals, then in scientific form, and as `#####` only when
   nothing fits.
+- Numbers, dates and times are drawn in tabular figures where the font has them: every digit one width, so a column
+  of them lines up (ruled 2026-11-24).
+- Whether a number fits its column is measured from its font's widths, its digits as drawn, so it shortens before
+  it would reach the cell's edge.
+- Fit to Data, a person's or an agent's, leaves a column room for its numbers' digits as drawn.
 - A cell's value is aligned by its kind unless set: numbers and dates right, text left, true/false centred.
 - A cell with an error shows the error (`#DIV/0!`) in red ink; hovering it shows why ("Division by zero").
 
@@ -997,6 +1002,8 @@ changeset onto one is refused. Its grid takes no input outside Plan, and a doubl
   and row headers, and the cells that fit its frame from the top left (after frozen rows and columns), with values
   worked out from the sheet store.
 - Rows are as tall there as in the editor, and text is drawn on the same lines ([Row height](#row-height)).
+- An SVG asks for tabular figures as the grid does; a PNG keeps the font's own, as its renderer cannot ask for
+  them, which only ever draws a number narrower.
 - Card functions ([Formulas](formulas.md#plan-cards)) in an export read the document's items, as boards do. An image
   of one named tab (the picture a link confined to that tab gets) reads only the items that tab shows
   ([Items](../026-plan/items.md) "Who may do what"), so it never tells a tab-scoped visitor more than their editor
