@@ -1,7 +1,7 @@
 // Insert > Table of contents on the open writing, for an Editor (docs/specs/034-text-documents/links-and-navigation.md
 // "Table of contents"): one of three looks put in at the caret in the body, built from the headings, each gaining an id,
 // its entries in the Contents styles (made when first needed); once the pages are laid out with it in, its page
-// numbers are read again, all one undo step. Dimmed while the caret is in a table.
+// numbers are read again, all one undo step (continued past the redraws outside undo between them). Dimmed while the caret is in a table.
 import { useEffect, useMemo, useState, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import { NodeSelection } from 'prosemirror-state';
@@ -27,7 +27,11 @@ import {
   type ContentsBuild,
 } from '@/lib/text-document/text-document-contents-build';
 import { shownPageOfBlock } from '@/lib/text-document/pagination/pagination-plugin';
-import { TEXT_DOCUMENT_STYLES_ORIGIN, startUndoStep } from '@/lib/text-document/text-document-undo';
+import {
+  TEXT_DOCUMENT_STYLES_ORIGIN,
+  continueUndoStep,
+  startUndoStep,
+} from '@/lib/text-document/text-document-undo';
 
 export type TextDocumentContentsDeps = {
   view: EditorView | null;
@@ -87,8 +91,11 @@ export function useTextDocumentContents(deps: TextDocumentContentsDeps): OfficeA
         if (!held) made.push(style);
         ids.set(level, style.id);
       }
-      if (made.length > 0 && liveDoc.current)
+      if (made.length > 0 && liveDoc.current) {
         TextDocumentState.setStyles(liveDoc.current, format, made, TEXT_DOCUMENT_STYLES_ORIGIN);
+        // The styles made redraw the writing outside undo, which ends the step: what follows goes on with them.
+        continueUndoStep(view);
+      }
       return {
         styles: [...styles, ...made],
         pages: pagesNow(),
@@ -112,8 +119,11 @@ export function useTextDocumentContents(deps: TextDocumentContentsDeps): OfficeA
           selection instanceof NodeSelection && selection.node.type.name === CONTENTS
             ? selection.from
             : null;
-        if (placed !== null && look !== 'links' && !pageless)
+        if (placed !== null && look !== 'links' && !pageless) {
+          // The pages' drawing came between, outside undo: the renumbering joins the insert's step.
+          continueUndoStep(view);
           rebuildContents(placed, buildNow(CONTENTS_LEVELS_MAX))(view.state, view.dispatch);
+        }
         startUndoStep(view);
         track('Element', 'Added', 'TextDocumentTableOfContents');
         debugLog('[text-document] table of contents', { look, renumbered: placed !== null });

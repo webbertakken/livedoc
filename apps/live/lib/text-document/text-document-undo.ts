@@ -44,3 +44,12 @@ export function textDocumentUndoPlugins({ story = false }: { story?: boolean } =
 export function startUndoStep(view: EditorView): void {
   yUndoPluginKey.getState(view.state)?.undoManager.stopCapturing();
 }
+
+/**
+ * Continues the undo step being gathered: the change that follows joins it, though a change kept out of undo (which
+ * ends the step) came between. Only for a step made of the person's own changes, gathered moments ago.
+ */
+export function continueUndoStep(view: EditorView): void {
+  const undoManager = yUndoPluginKey.getState(view.state)?.undoManager;
+  if (undoManager) undoManager.lastChange = Date.now();
+}
