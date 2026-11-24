@@ -497,12 +497,12 @@ written as its text (C3), so it opens alike in every suite and nothing in it nee
   column names in bold, shaded `#f3f3f3`; then their rows, a status written as its text. The title row and the names
   row are header rows, repeated on each page. The caret goes to the first empty cell after the names.
 
-| Tracker                | Columns                                    | Rows, as the status or answer column reads       |
-| ---------------------- | ------------------------------------------ | ------------------------------------------------ |
-| Product roadmap        | Project, Status, Related files, Notes      | Not started; In progress; Launched               |
-| Review tracker         | Reviewer, Status, Notes                    | Not started; In progress; Under review; Approved |
-| Project assets         | File, Description, Status                  | Not started; In progress; Under review; Approved |
-| Content launch tracker | Type, Description, Date, Published, Outlet | No; Yes                                          |
+| Tracker                | Columns                                    | Its rows, by their status column              |
+| ---------------------- | ------------------------------------------ | --------------------------------------------- |
+| Product roadmap        | Project, Status, Related files, Notes      | Not started/In progress/Launched              |
+| Review tracker         | Reviewer, Status, Notes                    | Not started/In progress/Under review/Approved |
+| Project assets         | File, Description, Status                  | Not started/In progress/Under review/Approved |
+| Content launch tracker | Type, Description, Date, Published, Outlet | No/Yes                                        |
 
 - **Tables in a block** are lined 1 pt `#dadce0` round every cell, padded as a new table, their columns sharing the
   text width at the caret equally (a cell's, inside a table), except the email draft's labels.
