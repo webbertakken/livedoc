@@ -20,10 +20,12 @@ import {
   CARD_TABLE_ROWS_MAX,
   COLUMN_WIDTH_MIN,
   ROW_HEIGHT_MIN,
+  BANDINGS_MAX,
   FORMAT_RULES_MAX,
   VALIDATION_RULES_MAX,
 } from './limits';
 import { isFormatRule, isValidationRule } from './rules/rule-shape';
+import { bandingOverlaps, isBanding } from './rules/bandings';
 import { inputAllowed, ruleMessage, validationRuleAt, type RangeValues } from './rules/validation';
 import { layoutIndex } from './layout';
 import { posRangeOf } from './layout';
@@ -325,6 +327,13 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         (ch.rule === null || isFormatRule(ch.rule, ch.id, layout, refsOk))
         ? OK
         : no('write_invalid');
+    case 'band':
+      return typeof ch.id === 'string' &&
+        isAxisId(ch.id) &&
+        (ch.band === null ||
+          (isBanding(ch.band, ch.id, layout) && !bandingOverlaps(layout, ch.band)))
+        ? OK
+        : no('write_invalid');
     case 'fruleOrder':
       return Array.isArray(ch.ids) && ch.ids.length <= FORMAT_RULES_MAX && ch.ids.every(isAxisId)
         ? OK
@@ -368,7 +377,8 @@ export function sheetProblem(sheet: Sheet, limits: SheetLimits = SheetLimits.pla
   if (sized > limits.sizedAxes) return no('sheet_full');
   if (
     (layout.rules?.length ?? 0) > VALIDATION_RULES_MAX ||
-    (layout.formatRules?.length ?? 0) > FORMAT_RULES_MAX
+    (layout.formatRules?.length ?? 0) > FORMAT_RULES_MAX ||
+    (layout.bands?.length ?? 0) > BANDINGS_MAX
   )
     return no('rules_full');
   return mergeProblem(layout);
@@ -472,7 +482,8 @@ export function validateWrite(sheet: Sheet, write: SheetWrite, opts: WriteCheck 
   }
   const more =
     (after.layout.rules?.length ?? 0) > (sheet.layout.rules?.length ?? 0) ||
-    (after.layout.formatRules?.length ?? 0) > (sheet.layout.formatRules?.length ?? 0);
+    (after.layout.formatRules?.length ?? 0) > (sheet.layout.formatRules?.length ?? 0) ||
+    (after.layout.bands?.length ?? 0) > (sheet.layout.bands?.length ?? 0);
   if (grew || more) {
     const v = limitsProblem(after, opts.limits ?? SheetLimits.plan);
     if (!v.ok) return v;
@@ -537,6 +548,12 @@ export function validateSheetCreate(
       (!Array.isArray(layout.formatRules) ||
         !layout.formatRules.every((x) =>
           isFormatRule(x, (x as { id?: string })?.id ?? '', layout, refsOk),
+        ))) ||
+    (layout.bands !== undefined &&
+      (!Array.isArray(layout.bands) ||
+        !layout.bands.every(
+          (x) =>
+            isBanding(x, (x as { id?: string })?.id ?? '', layout) && !bandingOverlaps(layout, x),
         )))
   )
     return no('write_invalid');

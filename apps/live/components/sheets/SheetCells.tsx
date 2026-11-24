@@ -12,6 +12,7 @@ import {
   cellLines,
   cellTurn,
   displayValue,
+  bandingFillAt,
   formatRuleStyle,
   inputAsText,
   isPending,
@@ -150,6 +151,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
     },
   };
   const hasRules = !!sheet.layout.rules?.length;
+  const hasBands = !!sheet.layout.bands?.length;
   for (let r = region.r1; r <= region.r2; r++) {
     if (g.hiddenRow(r)) continue;
     // Each row's text runs right over empty cells; `width` is how far the current run reaches.
@@ -174,7 +176,10 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
       const met = fIndex
         ? formatRuleStyle(workbook, sheet.id, r, c, value, shown.text, rulesAt(fIndex, r, c))
         : null;
-      const f: CellFormat | undefined = met ? { ...cell?.format, ...met } : cell?.format;
+      const styled: CellFormat | undefined = met ? { ...cell?.format, ...met } : cell?.format;
+      // Alternating colours shade under a cell's own fill and a met rule's (formatting.md "Alternating colours").
+      const band = hasBands && !styled?.bg ? bandingFillAt(sheet.layout, r, c) : null;
+      const f: CellFormat | undefined = band ? { ...styled, bg: band } : styled;
       const vRule = hasRules ? validationRuleAt(sheet.layout, r, c) : null;
       const pending = formula === null ? shownValue(value) : { text: '', pending: false };
       // A value whose new one is on its way from the engine (formulas.md "Recalculation").

@@ -307,6 +307,7 @@ export function resetSheetWrite(sheet: Sheet): SheetWrite {
   for (const x of layout.names ?? []) changes.push({ k: 'name', name: x.name, range: null });
   for (const x of layout.rules ?? []) changes.push({ k: 'vrule', id: x.id, rule: null });
   for (const x of layout.formatRules ?? []) changes.push({ k: 'frule', id: x.id, rule: null });
+  for (const x of layout.bands ?? []) changes.push({ k: 'band', id: x.id, band: null });
   changes.push({
     k: 'options',
     showGrid: true,

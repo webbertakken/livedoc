@@ -591,6 +591,8 @@ export const SHEET_CHANGE_KINDS = [
   'Name',
   'Validation',
   'ConditionalFormat',
+  // Alternating colours (docs/specs/029-sheets/formatting.md "Alternating colours").
+  'Banding',
   'Resize',
   'Hide',
   'Group',

@@ -355,6 +355,8 @@ function inverseLayout(before: SheetLayout, ch: LayoutChange, now: SheetLayout):
       return [{ k: 'merges', merges: before.merges ?? [] }];
     case 'vrule':
       return [{ k: 'vrule', id: ch.id, rule: before.rules?.find((x) => x.id === ch.id) ?? null }];
+    case 'band':
+      return [{ k: 'band', id: ch.id, band: before.bands?.find((x) => x.id === ch.id) ?? null }];
     case 'frule': {
       const list = before.formatRules ?? [];
       const at = list.findIndex((x) => x.id === ch.id);

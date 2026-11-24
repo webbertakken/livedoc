@@ -3,7 +3,7 @@
 // The open sheet's parts (docs/specs/029-sheets/surface.md): the formula bar, the grid, the right side panel beside them
 // (office-shell.md "Side panels"), the grid's menus and dialogs and the sheet bar's summary, all on the open sheet's
 // controller.
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { DocumentFonts } from '@livedoc/document';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
@@ -13,7 +13,7 @@ import { useSheetActions } from '@/components/sheets/useSheetActions';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { SPREADSHEET_DEFAULT_FONT } from '@/lib/spreadsheet/spreadsheet-fonts';
-import { SPREADSHEET_PANELS } from '@/lib/spreadsheet/spreadsheet-panels';
+import { SPREADSHEET_PANELS, withBandingOnOpen } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SheetBarSummary } from './SheetBarSummary';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
@@ -44,6 +44,11 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     onFocusDocument: c.focusGrid,
     writes: c.canEdit && c.canShape,
   });
+  const { actions: panelActions } = panels;
+  const bandingActions = useMemo(
+    () => withBandingOnOpen(panelActions, () => actions.addBanding()),
+    [panelActions, actions],
+  );
   const office = useGridMenuBindings(
     actions,
     {
@@ -51,7 +56,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       merge: mergeDialog.merge,
       openCustomAngle: angleDialog.openCustomAngle,
     },
-    panels.actions,
+    bandingActions,
   );
   useCellGoogleFonts(c.sheet);
   const { focusGrid, canEdit } = c;

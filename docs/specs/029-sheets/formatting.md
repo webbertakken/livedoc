@@ -173,9 +173,34 @@ Formatting** opens them in the Conditional Format Rules side panel
 
 ## Alternating colours
 
-- **Format › Alternating Colours**: a side panel with Header and Footer switches, default styles and a custom one
-  (header, colour 1, colour 2, footer, each from the colour picker), over a range. Writes as banding in both formats
-  where they hold it, else as a format rule.
+**Alternating colours** (a **banding**) shade a range's rows: an optional **header** row, then rows alternating
+**colour 1** and **colour 2**, and an optional **footer** row. A banding is the sheet's, seen by everyone, as a format
+rule is.
+
+- **Format › Alternating Colours** opens the **Alternating Colours** side panel (the office shell's right panel,
+  [Side panels](../004-interface-design/office-shell.md#side-panels)), an Editor's alone:
+  - On a selection touching a banding, the panel edits that banding; otherwise it makes one over the selection at
+    once, in the first default style with the header on, as Google Sheets does (one change, one undo step).
+  - **Apply to Range** (an A1 range field): a range touching another banding is refused, "Alternating colours can't
+    overlap"; one off the sheet, "Type a range like A1:D20".
+  - **Header** and **Footer** switches.
+  - **Default Styles**: eight swatches (`BANDING_STYLES`), each drawing its header, colour 1 and colour 2.
+  - **Custom Style**: **Header**, **Colour 1**, **Colour 2** and **Footer**, each a swatch opening the one
+    [colour picker](../004-interface-design/colour-picker.md); picking a default style sets all four.
+  - **Remove Alternating Colours** removes the banding and closes the panel; **Done** and × close it.
+  - Every change writes at once (one change, one undo step each), as the panel's controls change.
+- **Drawn**: a cell in a banding takes its row's colour as its fill unless the cell has a fill of its own or a met
+  format rule sets one; text is untouched. Rows count by position, hidden rows too, so colours do not shift when
+  rows hide (default, D216). Bandings draw wherever the grid draws, the static render too.
+- The range grows with insertions inside it, shrinks with deletions and goes when every cell does, as a format
+  rule's; a copied sheet keeps its bandings, **Clear Sheet** removes them, Clear Formatting leaves them.
+- **Files**: neither format holds a banding: it is written as format rules over its range (the header row, colour
+  1 rows by `ISEVEN(ROW()-ROW(<first body row>))`, colour 2 rows by `ISODD(...)`, the footer row), after the sheet's
+  own rules, and reads back as those rules (default, D216).
+- At most **100** bandings a sheet (`BANDINGS_MAX`).
+- Telemetry: a change of kind `Banding` (`Sheet · Changed · Banding`, as a format rule's `ConditionalFormat`); the
+  panel opening is `UI · Opened · SpreadsheetPanelAlternatingColours`.
+- **Who may do what**: an Editor makes, edits and removes bandings; a Participant and a Viewer see them drawn.
 
 ## Tables
 
@@ -231,6 +256,9 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   form, following the selection while open; Done keeps it open (default).
 - **D214** A format rule's several rectangles: at most 100 (`FORMAT_RULE_RANGES_MAX`), as many as its sheet's rules;
   several ranges and a custom formula reading other sheets and named ranges hold for every sheet (default).
+- **D216** Alternating colours: made at once over the selection in the first default style, header on, as Google
+  Sheets does; eight default styles, LiveDoc's own; rows counted by position, hidden ones too; fills under a cell's own
+  and a met format rule's; written to files as format rules, which read back as rules (default).
 
 ## Telemetry
 

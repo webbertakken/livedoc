@@ -159,7 +159,7 @@ function restoreCardTables(
   return out;
 }
 
-// Each validation and format rule the deletion shrank or dropped, back as it was (a format rule at its old place),
+// Each validation and format rule and banding the deletion shrank or dropped, back as it was (a format rule at its old place),
 // unless it has been changed since.
 function restoreRules(before: SheetLayout, after: SheetLayout, now: SheetLayout): LayoutChange[] {
   const out: LayoutChange[] = [];
@@ -176,6 +176,12 @@ function restoreRules(before: SheetLayout, after: SheetLayout, now: SheetLayout)
     const cur = now.formatRules?.find((r) => r.id === x.id);
     if (left ? cur && same(cur, left) : !cur) out.push({ k: 'frule', id: x.id, rule: x, at });
   });
+  for (const x of before.bands ?? []) {
+    const left = after.bands?.find((r) => r.id === x.id);
+    if (left && same(left, x)) continue;
+    const cur = now.bands?.find((r) => r.id === x.id);
+    if (left ? cur && same(cur, left) : !cur) out.push({ k: 'band', id: x.id, band: x });
+  }
   return out;
 }
 

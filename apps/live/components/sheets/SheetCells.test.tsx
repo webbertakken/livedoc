@@ -232,6 +232,35 @@ describe('the cells', () => {
     expect(textBox('wrapped').className).not.toContain('pre-wrap');
   });
 
+  // formatting.md "Alternating colours" (D216): a banding fills under a cell's own fill.
+  it("shades alternating colours under a cell's own fill", () => {
+    const book = sheetOf(
+      { A1: 'head', A2: 'one', A3: 'two', A4: 'own' },
+      { A4: { bg: '#00ff00' } },
+    );
+    book.sheet.layout.bands = [
+      {
+        id: 'band01',
+        r1: 'r0',
+        c1: 'c0',
+        r2: 'r3',
+        c2: 'c0',
+        head: '#ff0000',
+        band1: '#0000ff',
+        band2: '#ffff00',
+        foot: '#000000',
+        header: true,
+      },
+    ];
+    book.workbook.updateSheet(book.sheet);
+    draw(book);
+    const fills = [...document.querySelectorAll<HTMLElement>('div')].map(
+      (el) => el.style.backgroundColor,
+    );
+    for (const colour of ['rgb(255, 0, 0)', 'rgb(0, 0, 255)', 'rgb(255, 255, 0)', 'rgb(0, 255, 0)'])
+      expect(fills).toContain(colour);
+  });
+
   // docs/specs/029-sheets/sheet.md "Row height": the grid draws exactly the lines that were measured.
   it('draws a wrapping cell on the lines its row was sized by, in a row as tall as they need', () => {
     const text = 'Rows grow to fit the text their cells hold, so nobody sizes them by hand';

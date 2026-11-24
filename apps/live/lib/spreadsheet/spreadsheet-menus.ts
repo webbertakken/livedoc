@@ -420,7 +420,7 @@ const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
       shortcut: 'convert-range-to-table',
     }),
     built('conditional-formatting', 'Conditional Formatting', 'edit', { checkable: 'checkbox' }),
-    item('alternating-colours', 'Alternating Colours', 'edit'),
+    built('alternating-colours', 'Alternating Colours', 'edit', { checkable: 'checkbox' }),
     SEPARATOR,
     built('clear-formatting', 'Clear Formatting', 'edit', { shortcut: 'clear-formatting' }),
   ]);

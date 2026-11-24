@@ -11,6 +11,7 @@ import type { CardSource } from '../cards';
 import { sheetFromJson, type SheetJson } from '../sheet-json';
 import { checkboxValue, optionFor, validationRuleAt } from '../rules/validation';
 import { formatRuleStyle } from '../rules/format-rules';
+import { bandingFillAt } from '../rules/bandings';
 import { isArray, isError, scalarOf } from '../formula/values';
 import { sparklineShapes, type SparkShape } from '../sparkline/sparkline-shapes';
 
@@ -136,7 +137,10 @@ export function renderWindow(
       const style = layout.formatRules?.length
         ? formatRuleStyle(wb, sheetId, r, c, value, shown.text)
         : null;
-      const f: CellFormat = style ? { ...own, ...style } : own;
+      const met: CellFormat = style ? { ...own, ...style } : own;
+      // Alternating colours shade under a cell's own fill and a met rule's (formatting.md "Alternating colours").
+      const band = !met.bg && layout.bands?.length ? bandingFillAt(layout, r, c) : null;
+      const f: CellFormat = band ? { ...met, bg: band } : met;
       // A checkbox draws as a box, a chip on its option's colour (data-validation.md "Drawing").
       const rule = layout.rules?.length ? validationRuleAt(layout, r, c) : null;
       const scalar = isArray(value) ? scalarOf(value) : value;
