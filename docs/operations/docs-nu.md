@@ -36,7 +36,8 @@ private document in Webber's docs.nu account, never shared. Until it is set up, 
 What the hosted setup holds:
 
 - **The document**: "Bug Tracker", owned by Webber's account, unshared. A board tab with one board whose columns are
-  Reported, Triaged, In Progress, Fixed and Won't Fix (the last two done), in that order: reports land in the first.
+  Reported, Security, Triaged, In Progress, Fixed and Won't Fix (the last two done), in that order: reports land in
+  the first, security worker issues in Security.
 - **The card type** "Bug Report" (the board takes it), with the custom fields Severity (Choice: Low, Medium, High,
   Critical), Context (Long Text), Screenshot (Link), Reporter (Text) and Release (Text). A field left out is written
   into the card's Details instead.
@@ -78,7 +79,7 @@ Setting it up, once (the CLI steps were run against a local stack and file as de
    livedoc tab add "Bug Tracker" "Bug Reports" --template kanban
    livedoc type apply "Bug Tracker" -f types.json
    livedoc board set "Bug Tracker" Kanban --title "Bug Reports" \
-     --columns "Reported,Triaged,In Progress,Fixed,Won't Fix" --types "Bug Report" --done "Fixed,Won't Fix"
+     --columns "Reported,Security,Triaged,In Progress,Fixed,Won't Fix" --types "Bug Report" --done "Fixed,Won't Fix"
    livedoc tab ls "Bug Tracker" --json
    ```
 

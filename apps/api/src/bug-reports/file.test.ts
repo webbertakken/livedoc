@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { BugReportFiling } from '@livedoc/api-schema';
+import { workerIssueFiling, type BugReportFiling } from '@livedoc/api-schema';
 import { ITEMS_MAX, statusColumn, type PlanBoardSetup } from '@livedoc/items';
 import { listItems } from '../db';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
@@ -40,11 +40,11 @@ const filing: BugReportFiling = {
 const env = (vars: Partial<Env> = {}) =>
   Object.assign(db.env, { BUG_REPORT_DOCUMENT_ID: 'tracker', BUG_REPORT_TAB_ID: 'board' }, vars);
 
-const file = (vars: Partial<Env> = {}) => {
+const file = (vars: Partial<Env> = {}, what: BugReportFiling = filing) => {
   const pending: Promise<unknown>[] = [];
   const vared = env(vars);
   withTestDocumentRooms(vared, undefined, (p) => void pending.push(p));
-  return fileBugReport(vared, filing).then(async (out) => {
+  return fileBugReport(vared, what).then(async (out) => {
     await Promise.all(pending);
     return out;
   });
@@ -72,6 +72,25 @@ describe('fileBugReport', () => {
     });
     expect(card?.fields['f-sev']).toBeUndefined();
     expect(relayed.map((r) => r.op.upserts.map((i) => i.id))).toEqual([[card!.id]]);
+  });
+
+  // docs/specs/016-platform/worker-issues.md "The issue card": a security issue goes to the Security column.
+  it('files a security issue in the Security column, else in the first', async () => {
+    const scan = workerIssueFiling({ trigger: 'first_sight', issueType: 'security' });
+    const crash = workerIssueFiling({ trigger: 'first_sight', issueType: 'exception' });
+    const status = async (n: number) =>
+      (await listItems(db.env, 'tracker')).find((i) => i.key === n)?.fields['status'];
+    expect(await file({}, scan)).toEqual({ filed: true, number: 1 });
+    expect(await status(1)).toBe('reported');
+    writeBoards(
+      board({
+        columns: [statusColumn('reported', 'Reported'), statusColumn('security', 'Security')],
+      }),
+    );
+    expect(await file({}, scan)).toEqual({ filed: true, number: 2 });
+    expect(await status(2)).toBe('security');
+    expect(await file({}, crash)).toEqual({ filed: true, number: 3 });
+    expect(await status(3)).toBe('reported');
   });
 
   it('numbers each card after the last', async () => {

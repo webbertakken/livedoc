@@ -4,6 +4,7 @@ import {
   WORKER_ISSUE_LIMITS,
   workerIssueContextLines,
   workerIssueDetails,
+  workerIssueColumnName,
   workerIssueLabels,
   workerIssueTitle,
   type WorkerIssue,
@@ -14,6 +15,7 @@ import {
 const full: WorkerIssue = {
   trigger: 'first_sight',
   worker: 'docs-nu-api',
+  issueType: 'exception',
   issueId: 'iss_1',
   title: "TypeError: Cannot read properties of undefined (reading 'id')",
   error: "TypeError: Cannot read properties of undefined (reading 'id')",
@@ -56,9 +58,29 @@ describe('workerIssueLabels', () => {
     expect(workerIssueLabels({ trigger: 'unknown' })).toEqual(['Worker Issue']);
   });
 
+  it('adds Security to a security issue, with or without its worker', () => {
+    expect(workerIssueLabels({ ...full, issueType: 'security' })).toEqual([
+      'Worker Issue',
+      'docs-nu-api',
+      'Security',
+    ]);
+    expect(workerIssueLabels({ trigger: 'unknown', issueType: 'security' })).toEqual([
+      'Worker Issue',
+      'Security',
+    ]);
+  });
+
   it('cuts a long worker name to a label', () => {
     const [, worker] = workerIssueLabels({ trigger: 'unknown', worker: 'w'.repeat(64) });
     expect(worker).toHaveLength(32);
+  });
+});
+
+describe('workerIssueColumnName', () => {
+  it('files a security issue in the Security column, any other in the first', () => {
+    expect(workerIssueColumnName({ trigger: 'unknown', issueType: 'security' })).toBe('Security');
+    expect(workerIssueColumnName(full)).toBeUndefined();
+    expect(workerIssueColumnName({ trigger: 'unknown' })).toBeUndefined();
   });
 });
 
@@ -66,6 +88,7 @@ describe('workerIssueContextLines', () => {
   it('lists what the delivery named, in the card order', () => {
     expect(workerIssueContextLines(full)).toEqual([
       { label: 'Worker', value: 'docs-nu-api' },
+      { label: 'Type', value: 'Exception' },
       { label: 'Trigger', value: 'First sight' },
       { label: 'Error', value: full.error },
       { label: 'Route', value: 'GET /api/home' },
@@ -84,6 +107,13 @@ describe('workerIssueContextLines', () => {
     ['unknown', 'Unknown'],
   ] as const)('names the %s trigger', (trigger, value) => {
     expect(workerIssueContextLines({ trigger })).toEqual([{ label: 'Trigger', value }]);
+  });
+
+  it('words a type Cloudflare adds later', () => {
+    expect(workerIssueContextLines({ trigger: 'unknown', issueType: 'cpu_limit' })[0]).toEqual({
+      label: 'Type',
+      value: 'Cpu limit',
+    });
   });
 });
 

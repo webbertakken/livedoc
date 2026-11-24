@@ -16,6 +16,7 @@ import {
   WORKER_ISSUES_REPORTER,
   workerIssueContextLines,
   workerIssueDetails,
+  workerIssueColumnName,
   workerIssueLabels,
   workerIssueTitle,
   type WorkerIssue,
@@ -93,4 +94,14 @@ export function bugReportCard(
 // What a worker issue files: its title, Workers Issues as the reporter, and the issue itself.
 export function workerIssueFiling(issue: WorkerIssue): BugReportFiling {
   return { title: workerIssueTitle(issue), reporter: { kind: 'workers-issues', id: null }, issue };
+}
+
+// The column a card is filed in (docs/specs/016-platform/worker-issues.md "The issue card"): a security issue in the
+// column named Security, case apart, when the board has one; everything else in the first column.
+export function bugReportColumn<C extends { name: string }>(
+  filing: BugReportFiling,
+  columns: readonly C[],
+): C | undefined {
+  const wanted = filing.issue && workerIssueColumnName(filing.issue);
+  return (wanted && columns.find((c) => same(c.name, wanted))) || columns[0];
 }
