@@ -9,6 +9,7 @@ import {
   WorkbookCopy,
   cellKey,
   cellLines,
+  cellTurn,
   rowHeights,
   parseA1,
   readTypedInput,
@@ -256,6 +257,56 @@ describe('the cells', () => {
     expect(wrapped!.style.textRendering).toBe('geometricprecision');
     expect(broken!.style.textRendering).toBe('geometricprecision');
     expect(plain!.style.textRendering).toBe('');
+  });
+
+  // formatting.md "Alignment, wrapping, rotation": turned text in the box it turns to, in a row as tall as it needs.
+  it("turns a cell's text counterclockwise in its turned box, and stacks one upright", () => {
+    const made = sheetOf(
+      {
+        A1: 'Quarter',
+        A2: 'Down',
+        A3: 'Top',
+        A4: '12345678901234',
+        A5: 'Quarterly results so far',
+        A6: 'Short row',
+      },
+      {
+        A1: { ro: 90, va: 'b' },
+        A2: { ro: -45 },
+        A3: { ro: 'v', va: 'b' },
+        A4: { ro: 90 },
+        A5: { ro: 45 },
+        A6: { ro: 90, va: 'b' },
+      },
+      { ...automatic(), rowSize: { r5: 24 } },
+    );
+    const heightOf = rowHeights(made.workbook, made.sheet.id);
+    draw(made, { geometry: geometryOf(made.sheet.layout, new Set(), heightOf) });
+    const up = document.querySelector<HTMLElement>('[data-sheet-turned="90"]')!;
+    const turn = cellTurn(made.workbook, made.sheet.id, 0, 0, 'Quarter')!;
+    expect(up.style.width).toBe(`${turn.w}px`);
+    expect(up.style.height).toBe(`${turn.h}px`);
+    expect((up.firstChild as HTMLElement).style.transform).toBe(
+      'translate(-50%, -50%) rotate(-90deg)',
+    );
+    expect(textBox('Down').style.transform).toContain('rotate(45deg)');
+    // Bottom-aligned, 3 px up where the row has that to spare over the turned box, as upright text.
+    expect(up.parentElement!.style.paddingBottom).toBe('3px');
+    expect(textBox('Short row').parentElement!.parentElement!.style.paddingBottom).toBe('0px');
+    // Stacked: upright, a character a line, its row a line each.
+    const stacked = document.querySelectorAll<HTMLElement>('[data-sheet-text]')[2]!;
+    expect(stacked.textContent).toBe('T\no\np');
+    expect(stacked.style.height).toBe(`${3 * 17 + 8}px`);
+    expect(stacked.style.paddingBottom).toBe('3px');
+    // A turned number keeps all its digits; turned text runs over empty neighbours by the width it turns to.
+    expect(textBox('12345678901234')).toBeTruthy();
+    const tilted = cellTurn(made.workbook, made.sheet.id, 4, 0, 'Quarterly results so far')!;
+    expect(tilted.w).toBeGreaterThan(100);
+    expect(
+      Number.parseFloat(
+        textBox('Quarterly results so far').parentElement!.parentElement!.style.width,
+      ),
+    ).toBeGreaterThan(100);
   });
 
   it('keeps bottom-aligned text 3 px up only where its row has that to spare', () => {

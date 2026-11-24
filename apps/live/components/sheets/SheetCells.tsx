@@ -10,6 +10,7 @@ import { sheetFontStack } from '@/lib/spreadsheet/spreadsheet-fonts';
 import {
   cellKey,
   cellLines,
+  cellTurn,
   displayValue,
   formatRuleStyle,
   inputAsText,
@@ -36,6 +37,7 @@ import { cellBox, mergeAt, type Geometry, type GridWindow } from './sheet-geomet
 import { SheetImage } from './SheetImage';
 import { useSheetImages } from './sheet-images-context';
 import { SheetSparkline } from './SheetSparkline';
+import { SheetTurnedText } from './SheetTurnedText';
 
 const CELL_PAD = 4;
 const BASE_PX = 13;
@@ -215,21 +217,29 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
         p.padEnd?.has(cols[c]!) ? DROPDOWN_PAD_PX : ruled?.padEnd ? RULE_ARROW_PX : 0,
         p.filterHead?.r === r && p.filterHead.cols.has(c) ? FILTER_PAD_PX : 0,
       );
-      if (shown.kind === 'number' && typeof value === 'number')
+      // Turned text keeps its whole text, on the lines its row was sized by (formatting.md "Alignment, wrapping,
+      // rotation"); a stacked text is drawn upright, a character a line.
+      const turn =
+        text && !pending.pending ? cellTurn(workbook, sheet.id, r, c, text, p.font) : null;
+      if (turn) text = turn.lines.join('\n');
+      const turned = turn?.deg ? turn : null;
+      if (!turn && shown.kind === 'number' && typeof value === 'number')
         text = fitNumber(text, value, f, box.w - padEnd, px, p.font);
       const align = f?.ha ?? (pending.pending ? 'l' : shown.align);
       const wrap = f?.wr ?? 'o';
       // Text of more than one line is drawn on the lines the engine broke it into, the very lines its row was sized
       // by (sheet.md "Row height"): the browser never wraps it again, so an automatic row cuts no line off.
       const lined =
-        shown.kind === 'text' && !pending.pending && (wrap === 'w' || text.includes('\n'));
+        !turn && shown.kind === 'text' && !pending.pending && (wrap === 'w' || text.includes('\n'));
       const lines = lined ? cellLines(workbook, sheet.id, r, c, text, p.font) : null;
       if (lines) text = lines.join('\n');
       const lineH = Math.round(px * 1.3);
+      // How tall the drawn text is: its turned box, else its lines.
+      const textHeight = turned ? turned.h : (lines ?? turn?.lines ?? [text]).length * lineH;
       // Overflow: left-aligned text with empty cells to its right runs into them (not past the window).
       let width = box.w;
       if (text && wrap === 'o' && align === 'l' && !m && shown.kind === 'text') {
-        const need = roughWidth(text, px) + CELL_PAD * 2;
+        const need = (turned ? turned.w : roughWidth(text, px)) + CELL_PAD * 2;
         for (let k = c + 1; k <= region.c2 && width < need; k++) {
           if (g.hiddenCol(k)) continue;
           const next = workbook.value(sheet.id, r, k);
@@ -345,15 +355,14 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             // Middle unless the cell says otherwise.
             alignItems: f?.va === 't' ? 'flex-start' : f?.va === 'b' ? 'flex-end' : 'center',
             // Bottom-aligned text sits 3 px up, where its row has that to spare.
-            paddingBottom:
-              f?.va === 'b' ? Math.max(0, Math.min(3, box.h - (lines?.length ?? 1) * lineH)) : 0,
+            paddingBottom: f?.va === 'b' ? Math.max(0, Math.min(3, box.h - textHeight)) : 0,
             textAlign: align === 'r' ? 'right' : align === 'c' ? 'center' : 'left',
             // Faded only once the wait outlasts 120 ms, so a quick answer never flickers; a step, not
             // a motion.
             ...(waiting ? { opacity: WAITING_OPACITY, transition: 'opacity 0s 120ms' } : {}),
           }}
         >
-          {text}
+          {turned ? <SheetTurnedText turn={turned} text={text} /> : text}
         </div>,
       );
     }
