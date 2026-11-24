@@ -5,7 +5,7 @@
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { planPalette, type Tab } from '@livedoc/document';
+import { DocumentFonts, planPalette, type Tab } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
@@ -26,6 +26,9 @@ import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useShe
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
 import { shownTabs } from '@/lib/spreadsheet/sheet-bar-places';
+import { SPREADSHEET_DEFAULT_FONT } from '@/lib/spreadsheet/spreadsheet-fonts';
+// The served document fonts' faces, which a cell's family draws in (formatting.md "Font").
+import '@/app/document-fonts.css';
 import type { SpreadsheetHistory } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { ImportReportDialog } from './ImportReportDialog';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
@@ -39,6 +42,7 @@ import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { SpreadsheetFullScreenProvider, useSpreadsheetFullScreen } from './spreadsheet-full-screen';
 import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
 import { useGridMenuBindings } from './useGridMenuBindings';
+import { useCellGoogleFonts } from './useCellGoogleFonts';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import {
   SpreadsheetZoomProvider,
@@ -289,6 +293,8 @@ function SheetWorkspace({
     canShape: bridge.canEdit && bridge.canShape,
     // The grid fills the surface, as a Sheet filling its tab lays out.
     maximised: true,
+    // A cell with no font of its own is measured and drawn in Arial (formatting.md "Font", D201).
+    font: SPREADSHEET_DEFAULT_FONT,
     locale: bridge.locale,
     announce: setAnnouncement,
     toast: bridge.toast,
@@ -336,6 +342,8 @@ function SheetWorkspace({
   );
 }
 
+const DEFAULT_FONT_STACK = DocumentFonts.stack(SPREADSHEET_DEFAULT_FONT);
+
 function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const actions = useSheetActions();
   const input = useFormulaInput(actions);
@@ -345,6 +353,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const surfaceKeys = useSpreadsheetSurfaceKeys();
   const formatDialogs = useNumberFormatDialogs(actions);
   const office = useGridMenuBindings(actions, formatDialogs);
+  useCellGoogleFonts(c.sheet);
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
   useEffect(() => {
@@ -377,6 +386,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
           peers={bridge.peers}
           zoom={zoom}
           surfaceKeys={surfaceKeys}
+          fontFamily={DEFAULT_FONT_STACK}
         />
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />

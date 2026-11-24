@@ -17,7 +17,17 @@ const office = (
   setFontSize: (pt: number) => void = () => {},
   recentCodes: readonly string[] = [],
   colours: GridOffice['colours'] = null,
-): GridOffice => ({ actions, colours, recentCodes, fontSize, setFontSize });
+  fontFamily: string | null = null,
+  setFontFamily: (family: string) => void = () => {},
+): GridOffice => ({
+  actions,
+  colours,
+  recentCodes,
+  fontSize,
+  setFontSize,
+  fontFamily,
+  setFontFamily,
+});
 
 // docs/specs/029-sheets/surface.md "Menu bar", "Toolbar": the open sheet's bindings reach the title row above it.
 // formatting.md "Number formats" (D194): a change of the recently used codes alone is heard.
@@ -26,6 +36,7 @@ describe('createOfficeBindingsChannel', () => {
     const channel = createOfficeBindingsChannel();
     expect(channel.get()).toBe(NO_GRID_OFFICE);
     expect(() => NO_GRID_OFFICE.setFontSize(12)).not.toThrow();
+    expect(() => NO_GRID_OFFICE.setFontFamily('Lora')).not.toThrow();
     const heard = vi.fn();
     const unsubscribe = channel.subscribe(heard);
     const first = vi.fn();
@@ -67,6 +78,25 @@ describe('createOfficeBindingsChannel', () => {
     channel.set(office({}, 14, after));
     expect(heard).toHaveBeenCalledTimes(2);
     expect(channel.get().fontSize).toBe(14);
+  });
+
+  it('carries the active cell’s family, set through the latest sheet (formatting.md "Font")', () => {
+    const channel = createOfficeBindingsChannel();
+    const heard = vi.fn();
+    channel.subscribe(heard);
+    const before = vi.fn();
+    const after = vi.fn();
+    channel.set(office({}, 10, undefined, [], null, 'Arial', before));
+    const shown = channel.get();
+    expect(shown.fontFamily).toBe('Arial');
+    channel.set(office({}, 10, undefined, [], null, 'Arial', after));
+    expect(heard).toHaveBeenCalledTimes(1);
+    shown.setFontFamily('Lora');
+    expect(after).toHaveBeenCalledWith('Lora');
+    expect(before).not.toHaveBeenCalled();
+    channel.set(office({}, 10, undefined, [], null, 'Lora', after));
+    expect(heard).toHaveBeenCalledTimes(2);
+    expect(channel.get().fontFamily).toBe('Lora');
   });
 });
 

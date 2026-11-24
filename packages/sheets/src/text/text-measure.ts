@@ -2,7 +2,14 @@
 // advance from a table of its font's own (font-advances.ts), so every browser, the api, an agent's write and an
 // export measure the same line. A character outside the table is measured by its kind (D98). Text with no font of
 // its own is measured, and drawn, in Inter (D99). Pure.
-import { ADVANCE_FIRST, FONT_ADVANCES, TABULAR_DIGITS } from './font-advances';
+import { isFontId } from '../format';
+import {
+  ADVANCE_FIRST,
+  FAMILY_MEASURED_AS,
+  FAMILY_MEASURED_FALLBACK,
+  FONT_ADVANCES,
+  TABULAR_DIGITS,
+} from './font-advances';
 
 // A cell's text with no font size of its own, in px (sheet.md "The grid"), and a line's height in font sizes.
 export const TEXT_BASE_PX = 13;
@@ -12,10 +19,11 @@ const LINE_HEIGHT_EM = 1.3;
 export const SHEET_TEXT_FONT = 'inter';
 const ADVANCE_LAST = 0x7e;
 
-// The fonts with a table of their own, by id: the editor's fonts, kept in step with its catalogue by a test.
+// The fonts with a table of their own: the editor's fonts by id and the served document families by name, kept in step
+// with their catalogues by a test.
 export const MEASURED_FONTS: readonly string[] = Object.keys(FONT_ADVANCES);
 
-// What a text is measured in: a font by its id (the editor's fonts) and whether it is bold.
+// What a text is measured in: a font by its id (the editor's fonts) or a family by name, and whether it is bold.
 // `tabular`: a number, drawn in tabular figures where the face has them.
 export type TextFace = {
   font?: string | undefined;
@@ -42,9 +50,16 @@ function mean(units: readonly number[], from: string, to: string): number {
   return sum / (to.charCodeAt(0) - from.charCodeAt(0) + 1);
 }
 
-// The font a text is measured in: the one named when it has a table of widths, else Inter.
+// The table a text is measured by: the font's own where it has one; an editor font no longer offered, or none, by
+// Inter; a document family by its stand-in's, and one the catalogue does not know by Arimo's (formatting.md D202).
 export function measuredFont(font: string | undefined): string {
-  return font && Object.hasOwn(FONT_ADVANCES, font) ? font : SHEET_TEXT_FONT;
+  if (!font || isFontId(font))
+    return font && Object.hasOwn(FONT_ADVANCES, font) ? font : SHEET_TEXT_FONT;
+  if (Object.hasOwn(FONT_ADVANCES, font)) return font;
+  const key = font.toLowerCase();
+  return Object.hasOwn(FAMILY_MEASURED_AS, key)
+    ? FAMILY_MEASURED_AS[key]!
+    : FAMILY_MEASURED_FALLBACK;
 }
 
 // The digits 0 to 9 in a table of advances.

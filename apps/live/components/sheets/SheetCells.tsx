@@ -6,6 +6,7 @@
 // then ####. Memoised on what it draws, so moving the selection redraws none of it.
 import { memo, type CSSProperties } from 'react';
 import { cellColours, isLightColor, resolveFontStack } from '@livedoc/document';
+import { sheetFontStack } from '@/lib/spreadsheet/spreadsheet-fonts';
 import {
   cellKey,
   cellLines,
@@ -186,7 +187,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
         .join(' ');
       const textStyle: CSSProperties = {
         fontSize: px,
-        fontFamily: resolveFontStack(f?.ff),
+        fontFamily: sheetFontStack(f?.ff),
         fontWeight: f?.b ? 700 : undefined,
         fontStyle: f?.i ? 'italic' : undefined,
         textDecoration: deco || undefined,

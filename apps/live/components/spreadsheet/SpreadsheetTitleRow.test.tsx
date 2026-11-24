@@ -119,6 +119,8 @@ describe('SpreadsheetTitleRow', () => {
         actions: { bold: { run: bold, checked: true } },
         fontSize: 10,
         setFontSize: () => {},
+        fontFamily: null,
+        setFontFamily: () => {},
       }),
     );
     openMenu('Format');
@@ -133,6 +135,7 @@ describe('SpreadsheetTitleRow', () => {
     const channel = createOfficeBindingsChannel();
     const bold = vi.fn();
     const setFontSize = vi.fn();
+    const setFontFamily = vi.fn();
     render(<Row channel={channel} />);
     act(() =>
       channel.set({
@@ -144,6 +147,8 @@ describe('SpreadsheetTitleRow', () => {
         },
         fontSize: 12,
         setFontSize,
+        fontFamily: 'Arial',
+        setFontFamily,
       }),
     );
     const toolbar = screen.getByRole('toolbar');
@@ -156,6 +161,10 @@ describe('SpreadsheetTitleRow', () => {
     fireEvent.change(size, { target: { value: '14' } });
     fireEvent.keyDown(size, { key: 'Enter' });
     expect(setFontSize).toHaveBeenCalledWith(14);
+    // formatting.md "Font": the active cell’s family, Arial for none, a family chosen set through the sheet.
+    fireEvent.click(within(toolbar).getByRole('button', { name: 'Font: Arial' }));
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Lora' }));
+    expect(setFontFamily).toHaveBeenCalledWith('Lora');
     expect(within(toolbar).getByRole('button', { name: /Horizontal Align: Left/ })).toBeTruthy();
   });
 

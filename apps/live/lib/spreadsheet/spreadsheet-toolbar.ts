@@ -128,7 +128,7 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
     id: 'font',
     label: 'Font',
     controls: [
-      control('font', 'Font', 'edit', { kind: 'text', text: 'Default', width: 112, list: true }),
+      control('font', 'Font', 'edit', { kind: 'font' }, BUILT),
       icon('font-size-decrease', 'Decrease Font Size', 'edit', lucideMinus, BUILT),
       control('font-size', 'Font Size', 'edit', { kind: 'fontSize' }, BUILT),
       icon('font-size-increase', 'Increase Font Size', 'edit', lucidePlus, BUILT),

@@ -153,10 +153,14 @@ Font`.
 
 - A Sheet breaks a cell's lines by each font's own character widths, with no browser to ask
   ([Row height](../029-sheets/sheet.md#row-height)).
-- The widths of the eleven are a generated table: `pnpm --filter @livedoc/live fonts:advances` writes
-  `packages/sheets/src/text/font-advances.ts`.
+- The widths of the eleven and of the served document families are a generated table:
+  `pnpm --filter @livedoc/live fonts:advances` writes `packages/sheets/src/text/font-advances.ts`.
+- The eleven are measured as Google Fonts serves them; the document families from their Fontsource files, the faces
+  LiveDoc serves, with no network.
+- A named document family is measured as its stand-in, and a family the catalogue does not know as Arimo
+  ([Formatting](../029-sheets/formatting.md#text-and-colour), D202).
 - It holds each face's tabular figure too (null for a face with none), for a Sheet's numbers.
-- A font added to or dropped from the eleven regenerates it; a test fails while the table and the eleven differ.
+- A font added to or dropped from the eleven or the served families regenerates it; a test fails while they differ.
 - A Sheet's cells with no font, on a tab with none, are measured and drawn in Inter
   ([Row height](../029-sheets/sheet.md#row-height), D99).
 - `pnpm --filter @livedoc/live fonts:system` reports how the fonts installed on a machine would draw such text where
@@ -261,7 +265,7 @@ Fontsource packages, as Liberation is not (default).
   from its Fontsource package (`@fontsource/<family>`), bundled by the editor as its own static assets: no outside
   service, offline and self-hosted alike. Each family's licence (OFL-1.1) is checked and listed on the licences page.
 - The faces are declared (`@font-face`, `font-display: swap`) in one stylesheet that loads with the text document's
-  surface, never on other pages; a browser downloads a face only when text uses it.
+  and the spreadsheet's surfaces, never on other pages; a browser downloads a face only when text uses it.
 - A face that has not arrived yet draws in its fallback and the text re-lays when it lands.
 - The maths font: STIX Two Math (OFL-1.1, `@fontsource/stix-two-math`, its OpenType MATH table kept), the one face
   equations draw in ([Objects](../034-text-documents/objects.md#equations-in-the-editor)); never in the font menu.

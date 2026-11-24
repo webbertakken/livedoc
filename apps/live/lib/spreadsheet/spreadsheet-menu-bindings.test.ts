@@ -509,6 +509,21 @@ describe('gridOffice', () => {
     office.setFontSize(24);
     expect(participant.act.format).not.toHaveBeenCalled();
   });
+
+  it('gives an Editor the active cell’s family, Arial for none, and sets the selection’s (formatting.md "Font")', () => {
+    const p = port({ format: { ff: 'Lora' } });
+    const editor = gridOffice(p);
+    expect(editor.fontFamily).toBe('Lora');
+    expect(gridOffice(port()).fontFamily).toBe('Arial');
+    editor.setFontFamily('Roboto Mono');
+    editor.setFontFamily('Arial');
+    expect(vi.mocked(p.act.format).mock.calls).toEqual([[{ ff: 'Roboto Mono' }], [{ ff: null }]]);
+    const participant = port({ canShape: false });
+    const office = gridOffice(participant);
+    expect(office.fontFamily).toBeNull();
+    office.setFontFamily('Lora');
+    expect(participant.act.format).not.toHaveBeenCalled();
+  });
 });
 
 describe('historyBindings', () => {
