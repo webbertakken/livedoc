@@ -167,3 +167,20 @@ export const PDF_FIND_SETTLE_MS = 250;
 export const PDF_FIND_CONTEXT_CHARS = 40;
 /** (default) Find results listed; the count still says there are more (reading-surface.md "Find", "Limits"). */
 export const PDF_FIND_MAX_RESULTS = 10_000;
+/** (default) The bend of Dark pages' lightness mirror: a grey at 4.5:1 on white stays at 4.5:1 or more on dark paper
+ *  (dark-pages.md "The recolouring", "Limits"). Safe range: 0.5 to 0.7. */
+export const DARK_PAGES_CURVE = 0.65;
+/** (default) Distinct colours, five bits a channel, that make a picture a photograph. Safe range: 32 to 128. */
+export const DARK_PAGES_PICTURE_COLOURS = 48;
+/** (default) A picture covering more of its page than this is a scanned page, mirrored like the rest. Safe range:
+ *  0.7 to 0.95. */
+export const DARK_PAGES_PAGE_PICTURE_SHARE = 0.85;
+/** (default) A tile's step past which it should move to the GPU; set by measurement. Safe range: 8 to 50. */
+export const DARK_PAGES_STEP_BUDGET_MS = 16;
+/** (default) The longer side, in pixels, a picture is drawn at to count its colours. Safe range: 64 to 256. */
+export const DARK_PAGES_PICTURE_SAMPLE_PX = 96;
+/** (default) Pixels a side, in the file, of the least picture judged a photograph. Safe range: 32 to 128. */
+export const DARK_PAGES_PICTURE_MIN_SIDE = 64;
+/** (default) Dark pages' steps logged: the first, then one in this many (dark-pages.md "Telemetry and
+ *  observability"). Safe range: 1 to 1,000. */
+export const DARK_PAGES_LOG_EVERY = 50;

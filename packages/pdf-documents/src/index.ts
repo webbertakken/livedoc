@@ -26,6 +26,7 @@ export type {
   PageMatrix,
   PagePoint,
   PageTurns,
+  PageLook,
   TileRect,
   PdfEngine,
   PdfEngineLog,
@@ -75,3 +76,4 @@ export {
 export { PageText, type TextBox } from './page-text';
 export { TextRange, type TextSpan } from './text-range';
 export { TextFind, type TextFindOptions } from './text-find';
+export { DARK_INK, DARK_PAPER, DarkPages, type PixelBox } from './dark-pages';

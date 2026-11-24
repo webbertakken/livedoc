@@ -3,6 +3,7 @@
 import type { PDF } from '@libpdf/core';
 import type { BakeResult, PageInfo, PdfEngine, PdfEngineLog, PdfOpened } from '../engine-contract';
 import { FileSignature } from '../file-signature';
+import { DARK_PAGES_LOG_EVERY } from '../limits';
 import { PdfLiveChanges } from '../live-changes';
 import { bakeChanges } from './bake';
 import { cutPages } from './cut-pages';
@@ -25,6 +26,16 @@ export function pdfEngineOver(
     for (const [what, count] of reader.takeClamped())
       log(`[pdf] value-clamped what=${what} count=${count}`);
     return answer;
+  };
+  // Dark pages (dark-pages.md "Telemetry and observability"): a step's time logged for the first and then one in
+  // DARK_PAGES_LOG_EVERY; a failed step always.
+  let darkSteps = 0;
+  const stepped = <T>(drawer: PdfReader, drawn: T): T => {
+    const step = drawer.takeDarkStep();
+    if (step && 'failed' in step) log('[pdf] dark-pages step-failed');
+    else if (step && darkSteps++ % DARK_PAGES_LOG_EVERY === 0)
+      log(`[pdf] dark-pages step ms=${Math.round(step.ms)} pictures=${step.pictures}`);
+    return drawn;
   };
   let stored: Uint8Array<ArrayBuffer> | null = null;
   // The file held while its password is asked, and the password it opened with: both the engine's alone.
@@ -123,10 +134,14 @@ export function pdfEngineOver(
       if (before.stored) opening(before.stored, before.password);
       return { ...opened, wrong: true };
     },
-    drawPage: async (index, scale, turns, hidden) =>
-      (await drawerFor(hidden)).drawPage(index, scale, undefined, turns),
-    drawTile: async (index, scale, turns, rect, hidden) =>
-      (await drawerFor(hidden)).drawTile(index, scale, turns, rect),
+    drawPage: async (index, scale, turns, hidden, look) => {
+      const drawer = await drawerFor(hidden);
+      return stepped(drawer, drawer.drawPage(index, scale, undefined, turns, look));
+    },
+    drawTile: async (index, scale, turns, rect, hidden, look) => {
+      const drawer = await drawerFor(hidden);
+      return stepped(drawer, drawer.drawTile(index, scale, turns, rect, look));
+    },
     pageMatrix: async (index, turns) => said(reader.pageMatrix(index, turns)),
     outline: async () => said(reader.outline()),
     links: async (index) => said(reader.links(index)),

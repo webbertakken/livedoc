@@ -78,6 +78,9 @@ export type PdfOpened =
 /** How far a page is drawn turned, in quarters clockwise: Rotate view (reading-surface.md "The pages"). */
 export type PageTurns = 0 | 1 | 2 | 3;
 
+/** How a page is shown: as the file says, or one person's Dark pages (dark-pages.md). */
+export type PageLook = 'paper' | 'dark';
+
 /** A part of a page in pixels of the whole page drawn at a scale and a turn: its left, its top and its size. */
 export type TileRect = {
   readonly x: number;
@@ -205,13 +208,15 @@ export type PdfEngine = {
   /**
    * The page at that place in the order, drawn at `scale` (1 is 72 dpi), the file's own marks included, turned
    * `turns` quarters clockwise (none unless asked). `hidden`: the PDF layers one person hides, by id, every other
-   * layer shown; none given draws the layers as the file sets them (reading-surface.md "Layers").
+   * layer shown; none given draws the layers as the file sets them (reading-surface.md "Layers"). `look`: 'dark' shows
+   * it as one person's Dark pages, photographs as drawn (dark-pages.md); paper unless asked.
    */
   drawPage(
     index: number,
     scale: number,
     turns?: PageTurns,
     hidden?: readonly string[],
+    look?: PageLook,
   ): Promise<PageBitmap | null>;
   /**
    * A tile: the part `rect` of the page drawn at `scale` and turned `turns` quarters, as the same pixels of the
@@ -223,6 +228,7 @@ export type PdfEngine = {
     turns: PageTurns,
     rect: TileRect,
     hidden?: readonly string[],
+    look?: PageLook,
   ): Promise<PageBitmap | null>;
   /**
    * The matrix the page at that place is drawn with, turned `turns` quarters (none unless asked), whatever the scale:
