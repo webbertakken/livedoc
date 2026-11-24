@@ -197,7 +197,8 @@ export function judgeClass(className: string): string | null {
   const utility = raw.replace(/^!|!$/g, '');
   if (isPhoneFieldFloor(variants, utility)) return null;
 
-  if (utility === 'uppercase') return NO_TRACKED_CAPITALS;
+  // text-optical-caps is uppercase with its tracking (theme.css), so it is tracked capitals too.
+  if (utility === 'uppercase' || utility === 'text-optical-caps') return NO_TRACKED_CAPITALS;
   if (utility === 'rounded') return judgeRadius(undefined, undefined);
   const side = RADIUS_SIDE.exec(utility);
   if (side) return judgeRadius(side[1], side[2]);
