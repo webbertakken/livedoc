@@ -27,6 +27,8 @@ export type PdfPrintSource = {
   pages: readonly PageInfo[];
   permissions: PdfPermissions;
   marksOn: (page: PageInfo) => readonly Mark[];
+  /** The stored file's bytes, read again from where they are held. */
+  readStored: () => Promise<Uint8Array<ArrayBuffer>>;
 };
 
 /** Whether this browser draws a PDF it is handed; one that says it does not prints pictures (files-print-and-sync.md). */
@@ -35,13 +37,11 @@ const printsPdf = (): boolean => navigator.pdfViewerEnabled !== false;
 export function usePdfPrint({
   source,
   documentName,
-  readStored,
   onProblem,
 }: {
   // The open PDF; null while none is.
   source: PdfPrintSource | null;
   documentName: string;
-  readStored: () => Promise<Uint8Array<ArrayBuffer>>;
   onProblem: (problem: string) => void;
 }) {
   const [asking, setAsking] = useState(false);
@@ -65,7 +65,7 @@ export function usePdfPrint({
         engine: source.engine,
         doc: source.doc,
         documentName,
-        readStored,
+        readStored: source.readStored,
         pages: source.pages,
         pictures: !source.permissions.printSharp || !printsPdf(),
         marksOn: source.marksOn,
@@ -81,7 +81,7 @@ export function usePdfPrint({
         onProblem(PRINT_FAILED_COPY);
       });
     },
-    [source, documentName, readStored, onProblem],
+    [source, documentName, onProblem],
   );
 
   const actions = useMemo<OfficeActions>(

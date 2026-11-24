@@ -39,6 +39,7 @@ function source(permissions = PdfPermissions.all()): PdfPrintSource {
     pages: [PAGE],
     permissions,
     marksOn: () => [],
+    readStored: async () => Uint8Array.of(1),
   };
 }
 
@@ -48,7 +49,6 @@ function printing(given: PdfPrintSource | null = source()) {
     usePdfPrint({
       source: given,
       documentName: 'Lease',
-      readStored: async () => Uint8Array.of(1),
       onProblem,
     }),
   );
