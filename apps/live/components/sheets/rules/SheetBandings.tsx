@@ -4,7 +4,7 @@
 // banding the selection touches, its range, its Header and Footer switches, the default styles and a custom one, and
 // Remove Alternating Colours. Each control writes at once; a selection with none offers to add one.
 import { useEffect, useState } from 'react';
-import { Button, TextInput } from '@livedoc/ui';
+import { Button, Switch, TextInput } from '@livedoc/ui';
 import {
   BANDING_STYLES,
   bandingWith,
@@ -120,11 +120,11 @@ export function SheetBandingsBody({
       <div className="flex gap-4">
         {(['header', 'footer'] as const).map((key) => (
           <label key={key} className="flex cursor-pointer items-center gap-2">
-            <input
-              type="checkbox"
-              role="switch"
+            <Switch
+              size="sm"
               checked={!!band[key]}
               onChange={() => toggle(key)}
+              label={key === 'header' ? 'Header' : 'Footer'}
             />
             {key === 'header' ? 'Header' : 'Footer'}
           </label>
