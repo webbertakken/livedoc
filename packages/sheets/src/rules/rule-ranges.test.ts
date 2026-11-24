@@ -12,12 +12,7 @@ import type { SheetClip } from '../clipboard';
 import type { FormatRule, IdRange, Sheet } from '../sheet';
 import type { Value } from '../formula/values';
 import { formatRuleStyle, formatRulesAt, mixColour } from './format-rules';
-import {
-  ruleRangeText,
-  parseRuleRangeText,
-  ruleRectangles,
-  ruleTouches,
-} from './rule-ranges';
+import { ruleRangeText, parseRuleRangeText, ruleRectangles, ruleTouches } from './rule-ranges';
 
 const shownOf = (v: Value): string =>
   typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? String(v) : '';
@@ -217,9 +212,9 @@ describe('the range as text', () => {
   it('prints and reads rectangles with commas', () => {
     expect(ruleRangeText(layout, fr({}))).toBe('A1:A3,C2:C4');
     expect(ruleRangeText(layout, fr({}, []))).toBe('A1:A3');
-    expect(
-      ruleRangeText(layout, { ...fr({}), also: [{ ...box(0, 0, 0, 0), r1: 'gone00' }] }),
-    ).toBe('A1:A3');
+    expect(ruleRangeText(layout, { ...fr({}), also: [{ ...box(0, 0, 0, 0), r1: 'gone00' }] })).toBe(
+      'A1:A3',
+    );
     expect(parseRuleRangeText(' A1:A3 , C2:C4 ')).toEqual([
       { r1: 0, c1: 0, r2: 2, c2: 0 },
       { r1: 1, c1: 2, r2: 3, c2: 2 },

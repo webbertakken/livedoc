@@ -286,12 +286,10 @@ describe('a rule of several ranges', () => {
     const { h, anchor, actions } = await open();
     act(() => h.select('A2:A4'));
     act(() =>
-      h
-        .ctl()
-        .setSelection({
-          ...h.ctl().selection,
-          ranges: [...h.ctl().selection.ranges, { r1: 1, c1: 2, r2: 3, c2: 2 }],
-        }),
+      h.ctl().setSelection({
+        ...h.ctl().selection,
+        ranges: [...h.ctl().selection.ranges, { r1: 1, c1: 2, r2: 3, c2: 2 }],
+      }),
     );
     act(() => actions().openFormatRules(anchor));
     const dialog = await screen.findByRole('dialog', { name: 'Conditional Formatting' });
