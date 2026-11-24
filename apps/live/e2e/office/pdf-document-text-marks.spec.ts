@@ -60,6 +60,21 @@ test('the four text marks are made from the menus, the chevron, the keys and a s
   await dragAcrossFirstLine(page, first, { from: 140, to: 200 });
   await expect.poll(kinds).toEqual(['squiggly', 'strikeout', 'underline']);
 
+  // The Colour control is the tool in hand's: a strong Violet chosen for Underline from the one colour picker.
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+  const colour = toolbar.getByRole('button', { name: 'Colour', exact: true });
+  const firstUnderline = await colour.locator('[data-colour-bar]').getAttribute('data-colour-bar');
+  await colour.click();
+  await page
+    .getByRole('group', { name: 'Colour' })
+    .getByRole('group', { name: 'Dark' })
+    .getByRole('button', { name: 'Violet' })
+    .click();
+  const violet = (await colour.locator('[data-colour-bar]').getAttribute('data-colour-bar'))!;
+  expect(violet).toMatch(/^#[0-9a-f]{6}$/);
+  expect(violet).not.toBe(firstUnderline);
+  await page.screenshot({ path: test.info().outputPath('pdf-text-marks-colour.png') });
+
   // With Select in hand, text selected and U pressed: the selection is highlighted, and Select stays in hand.
   await page.keyboard.press('v');
   await expect(tool).toHaveAttribute('data-pdf-tool', 'select');
@@ -77,6 +92,16 @@ test('the four text marks are made from the menus, the chevron, the keys and a s
   await expect
     .poll(kinds)
     .toEqual(['highlight', 'squiggly', 'strikeout', 'underline', 'underline']);
+  // The underline made after Violet was chosen is Violet; the one before keeps its first colour.
+  await expect
+    .poll(() =>
+      page
+        .locator(`${PAGE_ONE} [data-pdf-mark-kind="underline"]`)
+        .evaluateAll((all) => all.map((mark) => mark.getAttribute('stroke')).sort()),
+    )
+    .toEqual([firstUnderline, violet].sort());
+  // With Select in hand there is no tool colour to choose.
+  await expect(colour).toHaveCount(0);
   await page.screenshot({ path: test.info().outputPath('pdf-text-marks.png') });
 
   // Downloaded: a valid PDF holding each kind as its standard annotation, appended to the file.

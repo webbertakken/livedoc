@@ -943,6 +943,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Added|Mark.Underline': 'Someone underlined text on a PDF page.',
   'Pdf|Added|Mark.Strikethrough': 'Someone struck through text on a PDF page.',
   'Pdf|Added|Mark.SquigglyUnderline': 'Someone gave text on a PDF page a squiggly underline.',
+  'Pdf|Changed|ToolColour':
+    'Someone chose a colour, or reset it, for the mark tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Underline': 'Someone took the Underline tool in hand on a PDF document.',

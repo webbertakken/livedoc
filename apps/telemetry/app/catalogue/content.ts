@@ -1346,6 +1346,14 @@ export const PDF_REDOS = chart(
   { rising: 'neutral' },
 );
 
+export const PDF_TOOL_COLOURS = chart(
+  'Pdf',
+  'Changed',
+  'PDF Tool Colours Chosen',
+  'A colour chosen, or reset, for the mark tool in hand on a PDF document.',
+  { types: ['ToolColour'], rising: 'neutral' },
+);
+
 export const PDF_PAGE_DISPLAYS = chart(
   'Pdf',
   'Changed',
@@ -1463,6 +1471,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDFS_IMPORTED,
     PDF_MARKS_ADDED,
     PDF_TOOLS_SELECTED,
+    PDF_TOOL_COLOURS,
     PDF_UNDOS,
     PDF_REDOS,
     PDFS_EXPORTED,

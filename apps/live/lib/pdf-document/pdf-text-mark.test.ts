@@ -67,6 +67,14 @@ describe('addTextMark', () => {
     expect(PdfLiveChanges.marks(doc)).toHaveLength(MARK_KINDS.length);
   });
 
+  // marks.md "Making a mark": a new mark takes the tool's look.
+  it('makes a mark in the look the tool has', () => {
+    const doc = PdfLiveChanges.load();
+    const look = { colour: '#7c3aed', opacity: 1 };
+    const made = addTextMark(doc, 'underline', { page, stored }, selection, by('m1'), look);
+    expect(made.ok && made.mark.colour).toBe('#7c3aed');
+  });
+
   // "A highlight drag that covers no text": no mark, and nothing changed.
   it('makes no mark where the drag covered no text', () => {
     const doc = PdfLiveChanges.load();

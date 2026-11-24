@@ -131,6 +131,8 @@ const EVERY_MODE: OfficeToolbar = [
 
 /** Highlight, holding Underline and Strikethrough behind its chevron: the last of them taken in hand ("The toolbar"). */
 export const TEXT_MARK_TOOLS = 'text-mark-tools';
+/** The tool in hand's colour ("The toolbar"): the one colour picker's swatch button, while a mark tool is in hand. */
+export const TOOL_COLOUR = 'colour-control';
 
 // The mode's own, each control at the level its mode is drawn for.
 const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
@@ -161,7 +163,13 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
       list('sign-control', 'Sign', 'participate', lucideSignature),
     ]),
     group('tool-in-hand', 'Tool in hand', [
-      list('colour-control', 'Colour', 'participate', lucidePalette),
+      {
+        id: TOOL_COLOUR,
+        label: 'Colour',
+        level: 'participate',
+        status: 'built',
+        look: { kind: 'colour', icon: lucidePalette },
+      },
       list('line-width-control', 'Line width', 'participate', lucideMinus),
     ]),
   ],
