@@ -7,6 +7,7 @@ import { NodeSelection, type Command, type Transaction } from 'prosemirror-state
 import { CONTENTS, Contents, type ContentsLook, type Style } from '@livedoc/text-documents';
 import { caretParagraph } from './text-document-breaks';
 import { giveHeadingIdIn, headingIdOf, pendingHeadingId } from './text-document-heading-links';
+import { LINK_COLOUR } from './text-document-links';
 import { headingLevel } from './text-document-outline';
 
 /** Insert > Table of contents' items, each the look it puts in. */
@@ -99,6 +100,14 @@ function contentsBlock(
   before: Map<string, string>,
 ): PmNode {
   const { look } = attrs;
+  // With blue links, each entry in the link look: the link colour, underlined.
+  const linkLook =
+    look === 'links'
+      ? [
+          schema.marks.color!.create({ value: LINK_COLOUR }),
+          schema.marks.underline!.create({ value: true }),
+        ]
+      : [];
   const entries = headings.map((heading) => {
     const id = heading.id!;
     const { pages } = build;
@@ -123,7 +132,7 @@ function contentsBlock(
     const text = page === null ? heading.text : `${heading.text}\t${page}`;
     return schema.nodes.paragraph!.create(
       { style: build.styleOf(heading.level), props: stops },
-      schema.text(text, [schema.marks.link!.create({ href: `#${id}` })]),
+      schema.text(text, [schema.marks.link!.create({ href: `#${id}` }), ...linkLook]),
     );
   });
   const content = entries.length > 0 ? entries : [schema.nodes.paragraph!.create()];
@@ -168,7 +177,8 @@ export function insertContents(look: ContentsLook, build: ContentsBuild): Comman
     giveIds(tr, build.styles, levels);
     const headings = contentsHeadings(tr.doc, build.styles, levels);
     const block = contentsBlock(state.schema, { look, levels }, headings, build, new Map());
-    const $caret = tr.doc.resolve(tr.mapping.slice(steps).map(caret));
+    // Before an id given at the caret (a heading's start), so the id stays in its heading.
+    const $caret = tr.doc.resolve(tr.mapping.slice(steps).map(caret, -1));
     let at: number;
     if ($caret.parentOffset === 0) at = $caret.before();
     else if ($caret.parentOffset === $caret.parent.content.size) at = $caret.after();

@@ -9,6 +9,7 @@ import type { Node as PmNode } from 'prosemirror-model';
 import type { Style } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { headingIdOf } from './text-document-heading-links';
+import { LINK_COLOUR } from './text-document-links';
 import {
   CONTENTS_LOOK_ITEMS,
   contentsHeadings,
@@ -117,6 +118,17 @@ describe('insertContents', () => {
     expect(after.child(1).type.name).toBe('table_of_contents');
   });
 
+  it('goes before a heading whose start holds the caret, the heading keeping the id it gains', () => {
+    const d = doc(para(1, 'One'));
+    let state = EditorState.create({ doc: d, selection: TextSelection.create(d, 1) });
+    insertContents('plain', build())(state, (tr) => (state = state.apply(tr)));
+    expect(state.doc.childCount).toBe(2);
+    expect(state.doc.child(0).type.name).toBe('table_of_contents');
+    const id = headingIdOf(state.doc.child(1));
+    expect(state.doc.child(1).textContent).toBe('One');
+    expect(entriesOf(state.doc.child(0))[0]!.href).toBe(`#${id}`);
+  });
+
   it('writes no page numbers With blue links, nor pageless', () => {
     for (const [look, pages] of [
       ['links', undefined],
@@ -146,6 +158,26 @@ describe('insertContents', () => {
       selection: NodeSelection.create(inTable, 0),
     });
     expect(insertContents('plain', build())(selected)).toBe(false);
+  });
+});
+
+describe('the link look', () => {
+  it('draws With blue links entries in the link look, the others as their style', () => {
+    const marksOf = (look: 'links' | 'plain') => {
+      let state = EditorState.create({ doc: doc(para(1, 'One')) });
+      insertContents(look, build())(state, (tr) => (state = state.apply(tr)));
+      return state.doc
+        .child(0)
+        .child(0)
+        .firstChild!.marks.map((m) => [m.type.name, (m.attrs as { value?: unknown }).value ?? null])
+        .sort();
+    };
+    expect(marksOf('links')).toEqual([
+      ['color', LINK_COLOUR],
+      ['link', null],
+      ['underline', true],
+    ]);
+    expect(marksOf('plain')).toEqual([['link', null]]);
   });
 });
 
