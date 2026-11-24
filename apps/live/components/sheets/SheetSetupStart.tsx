@@ -72,7 +72,7 @@ export function columnsForCards(
   return out;
 }
 
-const HEADING = 'text-[11px] font-semibold uppercase tracking-wider';
+const HEADING = 'text-supporting';
 
 const G = (prims: Parameters<typeof lucideGlyph>[0]) => lucideGlyph(prims, 15);
 const BlankGlyph = G(lucideTable);
@@ -121,7 +121,7 @@ const TEMPLATE_GROUPS = SHEET_TEMPLATE_GROUPS.map((group) => ({
 }));
 
 const iconChip = (icon: ReactNode) => (
-  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+  <span className="flex size-row items-center justify-center rounded-control bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
     {icon}
   </span>
 );
@@ -145,7 +145,7 @@ export function SheetSetupStart({
     rows.map((s) => ({ id: s.id, label: s.label, detail: s.hint, icon: iconChip(s.icon) }));
   return (
     <div className="flex flex-col gap-4">
-      <section className="flex flex-col gap-1.5" aria-labelledby="setup-sheet-start">
+      <section className="flex flex-col gap-2" aria-labelledby="setup-sheet-start">
         <h3 id="setup-sheet-start" className={HEADING} style={{ color: palette.muted }}>
           Start From
         </h3>
@@ -162,7 +162,7 @@ export function SheetSetupStart({
         {TEMPLATE_GROUPS.map(({ group, rows }) => {
           const id = `setup-sheet-${group.replace(/\W+/g, '-').toLowerCase()}`;
           return (
-            <section key={group} className="flex min-w-0 flex-col gap-1.5" aria-labelledby={id}>
+            <section key={group} className="flex min-w-0 flex-col gap-2" aria-labelledby={id}>
               <h3 id={id} className={HEADING} style={{ color: palette.muted }}>
                 {group}
               </h3>
@@ -196,11 +196,11 @@ export function SheetSetupCards({
   search: CardSearch;
 }) {
   return (
-    <section className="flex flex-col gap-2.5" aria-labelledby="setup-sheet-cards">
+    <section className="flex flex-col gap-2" aria-labelledby="setup-sheet-cards">
       <h3 id="setup-sheet-cards" className={HEADING} style={{ color: palette.muted }}>
         Cards
       </h3>
-      <p className="text-[12px]" style={{ color: palette.muted }}>
+      <p className="text-supporting" style={{ color: palette.muted }}>
         Search and filter as the Cards panel does; each card found becomes a row.
       </p>
       <CardSearchControls plan={plan} live={live} search={search} />
@@ -220,7 +220,7 @@ export function SheetSetupCards({
           }}
         />
       ) : (
-        <p role="status" className="text-[12px]" style={{ color: palette.muted }}>
+        <p role="status" className="text-supporting" style={{ color: palette.muted }}>
           {`${search.found.length} ${search.found.length === 1 ? 'card' : 'cards'}`}
         </p>
       )}
@@ -250,7 +250,7 @@ function CardsPreview({
     <div>
       <ul
         aria-label="Cards found"
-        className="divide-y overflow-hidden rounded-lg border"
+        className="divide-y overflow-hidden rounded-menu border"
         style={{ borderColor: palette.border }}
       >
         {shown.map((card) => {
@@ -259,7 +259,7 @@ function CardsPreview({
           return (
             <li
               key={card.id}
-              className="flex items-center gap-2 px-2.5 py-1.5 text-[12px]"
+              className="flex min-h-row items-center gap-2 px-3 py-1 text-body"
               style={{ borderColor: palette.border }}
             >
               <span className={`shrink-0 ${ACCENT_TEXT}`} style={accentVars(type.color)}>
@@ -271,7 +271,7 @@ function CardsPreview({
               <span className="min-w-0 flex-1 truncate" style={{ color: palette.text }}>
                 {itemTitle(card)}
               </span>
-              <span className="shrink-0 text-[11px]" style={{ color: palette.muted }}>
+              <span className="shrink-0 text-supporting" style={{ color: palette.muted }}>
                 {status ? (plan.statusNames.get(status) ?? status) : 'No status'}
               </span>
             </li>
@@ -279,7 +279,7 @@ function CardsPreview({
         })}
       </ul>
       {more > 0 ? (
-        <p className="mt-1.5 text-[12px]" style={{ color: palette.muted }}>
+        <p className="mt-1.5 text-supporting" style={{ color: palette.muted }}>
           and {more} more
         </p>
       ) : null}
@@ -302,11 +302,11 @@ export function SheetSetupColumns({
   onColumns: (c: string[]) => void;
 }) {
   return (
-    <section className="flex flex-col gap-1.5" aria-labelledby="setup-sheet-columns">
+    <section className="flex flex-col gap-2" aria-labelledby="setup-sheet-columns">
       <h3 id="setup-sheet-columns" className={HEADING} style={{ color: palette.muted }}>
         Columns
       </h3>
-      <p className="text-[12px]" style={{ color: palette.muted }}>
+      <p className="text-supporting" style={{ color: palette.muted }}>
         The fields your cards have, one column each. Number, Title, Type and State are always there.
       </p>
       <OptionRows

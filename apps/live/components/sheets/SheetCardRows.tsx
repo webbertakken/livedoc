@@ -273,7 +273,7 @@ function ActiveCellChoice({ c, plan }: { c: SheetController; plan: PlanContextVa
           onClose={() => setAnchor(null)}
         >
           <div
-            className="max-h-72 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900"
+            className="max-h-72 overflow-y-auto rounded-menu border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
             onPointerDown={stop}
             onKeyDown={stop}
           >

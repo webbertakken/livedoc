@@ -177,12 +177,14 @@ function CellPreview({
   return (
     <div
       role="tooltip"
-      className="pointer-events-none absolute z-[10] w-56 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-[12px] text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      className="pointer-events-none absolute z-[10] w-56 rounded-menu border border-slate-200 bg-white px-3 py-2 text-supporting text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
       style={{ left: box.x + box.w + 4, top: box.y }}
     >
-      <p className="font-semibold text-slate-900 dark:text-slate-100">{author}</p>
+      <p className="text-slate-900 dark:text-slate-100">{author}</p>
       <p className="mt-0.5 whitespace-pre-wrap break-words">{text}</p>
-      {more ? <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{more}</p> : null}
+      {more ? (
+        <p className="mt-1 text-supporting text-slate-500 dark:text-slate-400">{more}</p>
+      ) : null}
     </div>
   );
 }

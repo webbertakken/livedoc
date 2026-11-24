@@ -189,7 +189,7 @@ describe('the formula input', () => {
     edit('type', '=');
     fireEvent.change(editor(), { target: { value: '=COUN', selectionStart: 5 } });
     const names = () =>
-      screen.getAllByRole('option').map((o) => o.querySelector('.font-semibold')!.textContent);
+      screen.getAllByRole('option').map((o) => o.querySelector('[data-function-name]')!.textContent);
     const picked = () =>
       screen.getAllByRole('option').findIndex((o) => o.getAttribute('aria-selected') === 'true');
     const all = names();

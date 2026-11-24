@@ -344,11 +344,11 @@ function SheetParts({
         <div
           role="dialog"
           aria-label="Import CSV"
-          className="absolute left-1/2 top-1/2 z-40 w-72 -translate-x-1/2 -translate-y-1/2 rounded-lg border px-4 py-3 text-[13px] shadow-lg"
+          className="absolute left-1/2 top-1/2 z-40 w-72 -translate-x-1/2 -translate-y-1/2 rounded-menu border px-4 py-3 text-body shadow-lg"
           style={{ backgroundColor: c.palette.surface, borderColor: c.palette.border }}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <p className="font-semibold">Import CSV</p>
+          <p className="text-panel-title">Import CSV</p>
           <p className="mt-1" style={{ color: c.palette.muted }}>
             This sheet already has cells.
           </p>

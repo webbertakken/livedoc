@@ -16,7 +16,7 @@ export const LOOKS: readonly { id: SheetLook; label: string; hint: string }[] = 
   { id: 'plain', label: 'Plain', hint: 'No fills or borders' },
 ];
 
-const HEADING = 'text-[11px] font-semibold uppercase tracking-wider';
+const HEADING = 'text-supporting';
 
 // A look drawn small, each look's one trait made plain: Header's solid header row; Banded's striped rows; Boxed's
 // border round every cell; Minimal's bold header with no gridlines at all; Plain's bare grid, header like any row.
@@ -29,7 +29,7 @@ function LookPreview({ look, palette }: { look: SheetLook; palette: PlanPalette 
   const colW = W / 3;
   const brand = 'var(--color-brand-500)';
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-9 w-full" aria-hidden>
+    <svg viewBox={`0 0 ${W} ${H}`} className="block h-prominent w-full" aria-hidden>
       {/* Fills: the header row, then Banded's stripes. */}
       {head ? <rect x={0} y={0} width={W} height={rowH} fill={brand} fillOpacity={0.55} /> : null}
       {look === 'banded'
@@ -128,7 +128,7 @@ export function SheetSetupStyle({
   return (
     // On a wide screen (Setup Sheet's wide card): Look on the left, Cell Size and Freeze on the right.
     <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-6">
-      <section className="flex flex-col gap-1.5 lg:row-span-2" aria-labelledby="setup-sheet-look">
+      <section className="flex flex-col gap-2 lg:row-span-2" aria-labelledby="setup-sheet-look">
         <h3 id="setup-sheet-look" className={HEADING} style={{ color: palette.muted }}>
           Look
         </h3>
@@ -144,7 +144,7 @@ export function SheetSetupStyle({
             detail: l.hint,
             icon: (
               <span
-                className="block w-14 overflow-hidden rounded-md border"
+                className="block w-14 overflow-hidden rounded-control border"
                 style={{ borderColor: palette.cardBorder }}
               >
                 <LookPreview look={l.id} palette={palette} />
@@ -153,7 +153,7 @@ export function SheetSetupStyle({
           }))}
         />
       </section>
-      <section className="flex flex-col gap-1.5" aria-labelledby="setup-sheet-size">
+      <section className="flex flex-col gap-2" aria-labelledby="setup-sheet-size">
         <h3 id="setup-sheet-size" className={HEADING} style={{ color: palette.muted }}>
           Cell Size
         </h3>
@@ -172,10 +172,10 @@ export function SheetSetupStyle({
           style={{ borderColor: palette.border }}
         >
           <SwitchRow checked={freeze} onChange={onFreeze} className="cursor-pointer">
-            <span className="block text-[13px] font-semibold" style={{ color: palette.text }}>
+            <span className="block text-body" style={{ color: palette.text }}>
               Freeze Header Row
             </span>
-            <span className="block text-[12px]" style={{ color: palette.muted }}>
+            <span className="block text-supporting" style={{ color: palette.muted }}>
               The first row stays put while the rest scrolls.
             </span>
           </SwitchRow>

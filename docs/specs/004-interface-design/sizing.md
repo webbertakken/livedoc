@@ -17,6 +17,12 @@ respondents see it and a slide keep the sizes their author chose.
   `-note`, `-answer`), so the builder draws the same sizes as the page respondents fill in, off the scale.
 - The form's chrome is on the scale: its status bar, strips, warnings and problems, Share Form, the Preview button,
   and the builder's own controls (add bar, settings, menus, destination pickers).
+- A sheet's grid is content with everything drawn in it at the sheet's zoom: cells, row and column headers, the
+  selection's labels, a rule's marks, card rows' buttons, the outline's group buttons, Add Rows and charts (D238,
+  default).
+- A sheet's tab window face is its picture, drawn as the sheet looks.
+- A sheet's chrome is on the scale: its bars, menus, popovers and dialogs, and what floats over the grid (Smart Fill,
+  Import CSV, a cell's tooltip).
 
 ## Why
 
@@ -172,3 +178,5 @@ The code cites each by its id.
 - **D237** A form as respondents see it is content: [Forms](../030-forms/forms.md#building-a-form) draws it in the
   Form tab exactly as it is filled in, with its own Finish look, so its answer controls and the page respondents
   fill in keep their own sizes (default).
+- **D238** A sheet's grid is content: it zooms as one surface and its rows set its headers' heights, so what is
+  drawn in it keeps the sizes the grid gives it, as a canvas's elements do (default).

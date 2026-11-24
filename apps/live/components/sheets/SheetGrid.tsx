@@ -507,7 +507,7 @@ export function SheetGrid({
               <SheetCellSlot r={hovered.r} c={hovered.c}>
                 <div
                   role="tooltip"
-                  className="pointer-events-none absolute z-[10] max-w-64 rounded-md bg-slate-800 px-2 py-1 text-[11px] text-white shadow"
+                  className="pointer-events-none absolute z-[10] max-w-64 rounded-control bg-slate-800 px-2 py-1 text-supporting text-white shadow"
                   style={{
                     left: c.geometry.headW + hoverBox.x,
                     top: c.geometry.headH + hoverBox.y + hoverBox.h + 2,
