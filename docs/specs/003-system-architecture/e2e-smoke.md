@@ -267,6 +267,11 @@ saved again and opened back unchanged. LibreOffice's Writer and Calc are the one
 install needs; every other job keeps its no-install image. Each call to `soffice` has its own profile, so the specs
 run in parallel.
 
+- The job checks the written files first (about 3.5 minutes), then runs the specs (about 10.5 minutes).
+- It runs 11 to 15 minutes in all, so its job timeout is 25 minutes: a guard against a hung run, not a budget.
+- **Open:** the job misses the gate's 5-minute wall time ([When it runs](#when-it-runs)).
+- Sharding it, as the smoke shards are, renames its required check, so it waits on a change to the `main` ruleset.
+
 ## No uncaught errors
 
 The suite's standing assertion is that a flow produces **no uncaught

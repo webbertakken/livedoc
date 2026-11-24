@@ -167,7 +167,9 @@ jobs:
   office:
     name: Office files
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # A guard against a hung run, sized above the job's measured 11 to 15 minutes (docs/specs/003-system-architecture/
+    # e2e-smoke.md "Office files"); the job's 5-minute gate gap is open there.
+    timeout-minutes: 25
     container:
       image: mcr.microsoft.com/playwright:v1.65.1-noble
       options: --ipc=host
