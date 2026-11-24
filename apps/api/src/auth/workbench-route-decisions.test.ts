@@ -71,6 +71,7 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'POST /documents/{id}/workbook/imports': 'confined',
   'POST /documents/{id}/workbook/sheets': 'allow',
   'POST /documents/{id}/workbook/sheets/{sheetId}/rename': 'allow',
+  'POST /documents/{id}/workbook/sheets/{sheetId}/move': 'allow',
   'DELETE /documents/{id}/workbook/sheets/{sheetId}': 'allow',
   // A text document.
   'GET /documents/{id}/text-documents/{tabId}/state': 'allow',
