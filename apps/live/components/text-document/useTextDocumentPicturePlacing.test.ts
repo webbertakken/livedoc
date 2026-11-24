@@ -110,6 +110,16 @@ describe('useTextDocumentPicturePlacing', () => {
     expect(placementOf(view)).toEqual(wrapPlacement);
   });
 
+  it('writes a drag let go, counted as Position, for the selected picture alone', () => {
+    const { hook, view } = setup({ placement: wrapPlacement });
+    act(() => hook.result.current.drag(1, { dx: 5, dy: -10 }));
+    expect(placementOf(view)).toMatchObject({ x: 15, y: 10 });
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImagePosition');
+    act(() => hook.result.current.drag(7, { dx: 5, dy: 5 }));
+    expect(placementOf(view)).toMatchObject({ x: 15, y: 10 });
+    expect(track).toHaveBeenCalledTimes(1);
+  });
+
   it('changes nothing for a reader', () => {
     spot.mockReturnValue({ x: 5, y: -3 });
     const { hook, view } = setup({ canEdit: false });

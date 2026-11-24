@@ -8,6 +8,8 @@ export type WorkerIssueTrigger = (typeof WORKER_ISSUE_TRIGGERS)[number];
 export type WorkerIssue = {
   trigger: WorkerIssueTrigger;
   worker?: string;
+  // Cloudflare's issue type, `ISSUE_TYPE_` and case apart: `exception`, `log`, `security`, or one it adds later.
+  issueType?: string;
   issueId?: string;
   title?: string;
   error?: string;
@@ -27,6 +29,7 @@ export type WorkerIssue = {
 // Cloudflare; a stack's first 6,000 characters hold its frames that matter.
 export const WORKER_ISSUE_LIMITS = {
   worker: 64,
+  issueType: 64,
   issueId: 128,
   title: 300,
   error: 500,
@@ -43,6 +46,9 @@ export const WORKER_ISSUE_LIMITS = {
 export const WORKER_ISSUE_LABEL = 'Worker Issue';
 // The card's Reporter line: Cloudflare's product, never a person.
 export const WORKER_ISSUES_REPORTER = 'Workers Issues';
+// Cloudflare's type for a vulnerability scan, and the label and board column its cards take.
+export const WORKER_ISSUE_SECURITY_TYPE = 'security';
+export const WORKER_ISSUE_SECURITY_LABEL = 'Security';
 
 const UNNAMED = 'Unnamed worker error';
 // A board label's longest (`ITEM_LABEL_MAX` in @livedoc/items).
@@ -57,6 +63,7 @@ const TRIGGER_WORDS: Readonly<Record<WorkerIssueTrigger, string>> = {
 type TextField = Exclude<keyof typeof WORKER_ISSUE_LIMITS, 'time'>;
 const TEXT_FIELDS: readonly TextField[] = [
   'worker',
+  'issueType',
   'issueId',
   'title',
   'error',
@@ -76,11 +83,22 @@ export function workerIssueTitle(issue: WorkerIssue): string {
   return issue.worker ? `${issue.worker}: ${what}` : what;
 }
 
+export const isSecurityIssue = (issue: WorkerIssue) =>
+  issue.issueType === WORKER_ISSUE_SECURITY_TYPE;
+
 export function workerIssueLabels(issue: WorkerIssue): string[] {
-  return issue.worker
-    ? [WORKER_ISSUE_LABEL, issue.worker.slice(0, LABEL_MAX)]
-    : [WORKER_ISSUE_LABEL];
+  return [
+    WORKER_ISSUE_LABEL,
+    ...(issue.worker ? [issue.worker.slice(0, LABEL_MAX)] : []),
+    ...(isSecurityIssue(issue) ? [WORKER_ISSUE_SECURITY_LABEL] : []),
+  ];
 }
+
+// The board column an issue card is filed in by name, or undefined for the board's first column.
+export const workerIssueColumnName = (issue: WorkerIssue): string | undefined =>
+  isSecurityIssue(issue) ? WORKER_ISSUE_SECURITY_LABEL : undefined;
+
+const capitalised = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
 
 // "2026-11-10 22:11 UTC" from an ISO time, or the text as it came.
 function minuteOf(iso: string): string {
@@ -97,6 +115,7 @@ export function workerIssueContextLines(issue: WorkerIssue): WorkerIssueLine[] {
     if (value !== undefined && value !== '') lines.push({ label, value: String(value) });
   };
   add('Worker', issue.worker);
+  add('Type', issue.issueType && capitalised(issue.issueType));
   add('Trigger', TRIGGER_WORDS[issue.trigger]);
   add('Error', issue.error);
   add('Route', issue.route);

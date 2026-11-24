@@ -113,3 +113,57 @@ test('a Text in Hebrew and Arabic is drawn right to left and downloaded in their
   execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
   expectNoPageErrors(pageErrors);
 });
+
+test('a Text in Japanese is drawn and downloaded in Noto Sans JP, slice by slice', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  const faces: string[] = [];
+  page.context().on('request', (request) => {
+    if (/\.woff$/.test(new URL(request.url()).pathname)) faces.push(request.url());
+  });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  const stored = await textPdf(1);
+  await dropPdf(page, 'Japanese.pdf', stored);
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('x');
+  await pressAt(page, first, [0.12, 0.14]);
+  const typing = page.locator(`${PAGE_ONE} textarea[data-pdf-typing]`);
+  await expect(typing).toBeFocused();
+  await page.keyboard.type('東京で会いましょう');
+  await page.keyboard.press('Escape');
+  const words = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"] text`);
+  await expect(words).toHaveText(['東京で会いましょう']);
+  // Its region's family alone: kana shows the words to be Japanese.
+  const family = words.first().locator('..');
+  await expect(family).toHaveAttribute('font-family', /"LiveDoc Noto Sans JP"/);
+  await expect(family).not.toHaveAttribute('font-family', /Noto Sans SC/);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        document.fonts.check('16px "LiveDoc Noto Sans JP"', '東京で会いましょう'),
+      ),
+    )
+    .toBe(true);
+  // A few slices of the region, from LiveDoc's own origin.
+  const slices = faces.filter((url) => /noto-sans-jp-\d+-400-normal/.test(url));
+  expect(slices.length).toBeGreaterThan(0);
+  expect(slices.length).toBeLessThan(12);
+  expect(faces.every((url) => new URL(url).origin === new URL(page.url()).origin)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('pdf-japanese.png') });
+
+  const item = await officeMenuItem(page, ['File', 'Download', 'PDF']);
+  const [download] = await Promise.all([page.waitForEvent('download'), item.click()]);
+  const file = test.info().outputPath('Japanese.pdf');
+  await download.saveAs(file);
+  const added = readFileSync(file).subarray(stored.length).toString('latin1');
+  for (const entry of ['+NotoSansJP-Regular', '/ToUnicode']) expect(added).toContain(entry);
+  execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
+  expectNoPageErrors(pageErrors);
+});

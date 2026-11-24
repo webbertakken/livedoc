@@ -89,3 +89,30 @@ export const markFaceRange = (ranges: Readonly<Record<string, string>>, subset: 
   if (range === undefined) throw new Error(`no unicode range for the subset ${subset}`);
   return range;
 };
+
+/** A region of Chinese, Japanese and Korean: Simplified Chinese, Japanese or Korean. */
+export type MarkFaceRegion = 'sc' | 'jp' | 'kr';
+
+/** A region's family: Fontsource's numbered slices of it, regular only, one face a region in the table. */
+export type MarkFaceRegionFamily = {
+  readonly region: MarkFaceRegion;
+  readonly family: string;
+  readonly package: string;
+};
+
+/** Chinese, Japanese and Korean, a mark's one region looked through just before this family. */
+export const MARK_FACE_REGIONS_BEFORE = 'Noto Sans Symbols';
+
+export const MARK_FACE_REGIONS: readonly MarkFaceRegionFamily[] = [
+  { region: 'sc', family: 'Noto Sans SC', package: 'noto-sans-sc' },
+  { region: 'jp', family: 'Noto Sans JP', package: 'noto-sans-jp' },
+  { region: 'kr', family: 'Noto Sans KR', package: 'noto-sans-kr' },
+];
+
+/** A slice of a region's family: its face id, its file, its unicode range, and its file as an asset. */
+export type MarkFaceSlice = {
+  readonly id: string;
+  readonly file: string;
+  readonly range: string;
+  readonly url: () => URL;
+};

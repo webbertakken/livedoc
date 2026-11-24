@@ -10,6 +10,7 @@ import {
   type SheetWrite,
   CellMap,
   SheetLimits,
+  SPREADSHEET_THEMES,
 } from '@livedoc/sheets';
 import { ApiError } from '@/lib/api/core';
 import { setApiErrorReporter } from '@/lib/api/error-report';
@@ -151,6 +152,15 @@ describe('the sheet store client', () => {
     cols = srv.sheet.layout.cols;
     s = store(srv.api);
     await s.loadTab('t1');
+  });
+
+  // formatting.md "Themes": the engine draws in the workbook's theme, the views told once a theme changes.
+  it('sets the engine’s theme, telling the views only of a new one', () => {
+    const before = s.getVersion();
+    s.setTheme('t1', SPREADSHEET_THEMES[2]!);
+    s.setTheme('t1', SPREADSHEET_THEMES[2]!);
+    expect(s.workbook('t1').theme).toBe(SPREADSHEET_THEMES[2]);
+    expect(s.getVersion()).toBe(before + 1);
   });
 
   it('loads a tab once and computes values', async () => {

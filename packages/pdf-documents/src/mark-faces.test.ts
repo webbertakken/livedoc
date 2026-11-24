@@ -156,4 +156,32 @@ describe('the faces a mark is set in', () => {
     expect(MarkFaces.width(regular('ΩΩ'))).toBe(2 * omega);
     expect(MarkFaces.width(regular(''))).toBe(0);
   });
+
+  it('reads the region from the words: kana Japanese, else Hangul Korean, else Simplified Chinese', () => {
+    expect(MarkFaces.regionOf([regular('東京'), regular('とうきょう')])).toBe('jp');
+    expect(MarkFaces.regionOf([regular('서울 漢字')])).toBe('kr');
+    expect(MarkFaces.regionOf([regular('カナ 한글')])).toBe('jp');
+    expect(MarkFaces.regionOf([regular('北京')])).toBe('sc');
+  });
+
+  it('sets Chinese, Japanese and Korean in the mark region alone, before symbols', () => {
+    expect(MarkFaces.runs(regular('北京'))).toEqual([{ face: 'noto-sans-sc-400', text: '北京' }]);
+    expect(MarkFaces.runs({ text: '東京です', bold: false, region: 'jp' })).toEqual([
+      { face: 'noto-sans-jp-400', text: '東京です' },
+    ]);
+    // A bold line in it set regular; a space after it stays in it.
+    expect(MarkFaces.runs({ text: 'A 서울 B', bold: true, region: 'kr' })).toEqual([
+      { face: 'noto-sans-latin-700', text: 'A ' },
+      { face: 'noto-sans-kr-400', text: '서울 ' },
+      { face: 'noto-sans-latin-700', text: 'B' },
+    ]);
+  });
+
+  it('measures a region by its own advances', () => {
+    // A Han character is a full em; Hangul a little narrower in Noto Sans KR.
+    expect(MarkFaces.width({ text: '東', bold: false, region: 'jp' })).toBe(1000);
+    const hangul = MarkFaces.width({ text: '한', bold: false, region: 'kr' });
+    expect(hangul).toBeGreaterThan(800);
+    expect(hangul).toBeLessThan(1000);
+  });
 });

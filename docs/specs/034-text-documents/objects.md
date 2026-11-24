@@ -261,6 +261,12 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   Edit (Open for anyone who cannot edit) before them; a picture that is not a drawing has no bar for anyone who
   cannot edit. Alt+F10 goes to the bar's first button; Left and Right move along it; Escape goes back to the
   writing, the picture still selected.
+- **Dragging a placed picture**: a selected picture out of its line, pressed anywhere but its handles, follows the
+  pointer; its place is written once, on release, as one undo step, keeping its anchor and how it moves, its offsets
+  changed by the drag `(default; Google moves its anchor to the paragraph it is dropped on)`. Escape while dragging
+  leaves it as it was. A picture in line is dragged as the text is.
+- **Guides** while dragging: its left edge, centre or right edge snaps to its column's left edge, centre or right edge
+  within 4 px on the screen, a line drawn along the column's where it snaps, as Google's; across only `(default)`.
 - **Recolour** (look and order `(default)`, until a capture): a grid of choices, **No recolour**, then **Light 1** to
   **Light 8** and **Dark 1** to **Dark 8**, each drawn as its duotone. Light N lays the picture from its colour (dark)
   to white, Dark N from black to its colour; the colours, 1 to 8, are grey `#666666`, red `#ff0000`, orange

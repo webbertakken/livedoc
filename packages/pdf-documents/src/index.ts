@@ -55,6 +55,13 @@ export { MarkFaces, type FacedLine, type MarkFaceSet, type MarkRun } from './mar
 export { MARK_FACE_DATA, type MarkFaceData } from './mark-face-data';
 export { MARK_FACE_URLS } from './mark-face-urls';
 export {
+  MARK_FACE_REGIONS,
+  MARK_FACE_REGIONS_BEFORE,
+  type MarkFaceRegion,
+  type MarkFaceSlice,
+} from './mark-face-families';
+export { MarkFaceSlices } from './mark-face-slices';
+export {
   PDF_ROOTS,
   PdfLiveChanges,
   type PdfLimitRefusal,

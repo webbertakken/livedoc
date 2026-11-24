@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WORKER_ISSUE_LIMITS } from '@livedoc/api-schema';
 import { readWorkerIssuePayload, redactAddresses } from './payload';
-import { sampleDelivery } from './test-delivery';
+import { realTimeDelivery, sampleDelivery } from './test-delivery';
 
 // docs/specs/016-platform/worker-issues.md "The receiver" steps 7-8 and "Reading the payload".
 
@@ -33,6 +33,64 @@ describe('readWorkerIssuePayload', () => {
       other:
         'alert_type: workers_observability_issue\nalert_event: ALERT_STATE_EVENT_START\npolicy_name: First sight',
     });
+  });
+
+  // "What a delivery carries": the first real delivery, card 49 on docs.nu's Bug Tracker.
+  it('reads what a real delivery carries: the worker, the run, the type and the count', () => {
+    const { issue, runId } = read(realTimeDelivery());
+    expect(runId).toBe('e50f27fa-9839-4fd8-88dc-cd5b74e667a2');
+    expect(issue).toEqual({
+      trigger: 'first_sight',
+      worker: 'docs-nu-router',
+      issueType: 'exception',
+      issueId: '1234fa22-84a6-407f-b3de-cf1b73e13e85',
+      title: 'HttpServerError · HTTP 500',
+      count: 1,
+      firstSeen: '2026-11-24T18:03:21.636Z',
+      lastSeen: '2026-11-24T18:03:21.636Z',
+      link: 'https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/docs-nu-router/production/issues?status=active',
+      summary: realTimeDelivery().text,
+      other: [
+        'alert_type: workers_observability_real_time_issue',
+        'alert_event: ALERT_STATE_EVENT_START',
+        'policy_name: Workers Issues: docs.nu Bug Tracker',
+        'issue.fingerprint: b660f90e385b980521d1f72ecced7b68',
+        'issue.status: ISSUE_STATUS_ACTIVE',
+        'state_event: ALERT_STATE_EVENT_START',
+      ].join('\n'),
+    });
+  });
+
+  it('reads a service named by an object in the list, and skips what names none', () => {
+    const named = (services: unknown[]) => read(realTimeDelivery({ services })).issue.worker;
+    expect(named([{ name: 'docs-nu-api' }])).toBe('docs-nu-api');
+    expect(named([{ service: 'docs-nu-mcp' }])).toBe('docs-nu-mcp');
+    expect(named([{ scriptName: 'docs-nu-live' }])).toBe('docs-nu-live');
+    expect(named([3, '', 'docs-nu-router'])).toBe('docs-nu-router');
+    expect(named([])).toBeUndefined();
+  });
+
+  it('reads the issue type, its prefix and case apart', () => {
+    const typed = (type: string) => read(realTimeDelivery({ type })).issue.issueType;
+    expect(typed('ISSUE_TYPE_SECURITY')).toBe('security');
+    expect(typed('security')).toBe('security');
+    expect(typed('ISSUE_TYPE_LOG')).toBe('log');
+    expect(typed('ISSUE_TYPE_SOMETHING_NEW')).toBe('something_new');
+    expect(read({ data: { issue: { type: 3 } } }).issue.issueType).toBeUndefined();
+  });
+
+  it('leaves the trigger unknown for an unnamed trigger once the issue was seen again', () => {
+    const { issue } = read(realTimeDelivery({ occurrences: 4 }));
+    expect(issue).toMatchObject({ trigger: 'unknown', count: 4 });
+  });
+
+  it('keeps a named trigger whatever the count', () => {
+    expect(read(sampleDelivery({ trigger: 'recurrence_after_inactivity' })).issue.trigger).toBe(
+      'recurrence',
+    );
+    const once = sampleDelivery({ trigger: 'recurrence_after_inactivity' });
+    once.data.issue.count = 1;
+    expect(read(once).issue.trigger).toBe('recurrence');
   });
 
   it('reads snake case names as their camel case twins', () => {

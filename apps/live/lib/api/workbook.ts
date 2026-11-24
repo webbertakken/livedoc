@@ -3,9 +3,10 @@
 import type {
   WorkbookConversionResponse,
   WorkbookConvertRequest,
+  WorkbookSettingsRequest,
   WorkbookSettingsResponse,
 } from '@livedoc/api-schema';
-import type { WorkbookFormat } from '@livedoc/sheets';
+import type { WorkbookFormat, WorkbookSettings } from '@livedoc/sheets';
 import { isOfflineId } from '../offline/offline-store';
 import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
@@ -75,4 +76,26 @@ export async function apiConvertWorkbook(
     body: JSON.stringify(body),
   });
   return expectOk<WorkbookSettingsResponse>(res, 'convert workbook');
+}
+
+/** An Editor saves the workbook's settings whole (its theme, formatting.md "Themes"); the room sends them to everyone. */
+export async function apiSaveWorkbookSettings(
+  scope: WorkbookScope,
+  settings: WorkbookSettings,
+): Promise<WorkbookSettingsResponse> {
+  if (await isOfflineId(scope.documentId))
+    return (await import('../offline/offline-workbook-settings')).offlineSaveWorkbookSettings(
+      scope.documentId,
+      settings,
+    );
+  const body: WorkbookSettingsRequest = { settings };
+  const res = await apiFetch(
+    `${API_BASE}/documents/${encodeURIComponent(scope.documentId)}/workbook/settings`,
+    {
+      method: 'PUT',
+      headers: await apiHeaders(scope.ownerId, { share: scope.shareCode, body: true }),
+      body: JSON.stringify(body),
+    },
+  );
+  return expectOk<WorkbookSettingsResponse>(res, 'save workbook settings');
 }

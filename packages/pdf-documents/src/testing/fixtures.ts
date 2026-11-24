@@ -555,7 +555,10 @@ export const markFaceFiles = async (file: string): Promise<Uint8Array<ArrayBuffe
 
 /** A typesetter with the faces named loaded from the Fontsource packages. */
 export async function typesetterOf(ids: readonly string[]) {
-  const loaded = await loadTypesetter(ids, markFaceFiles);
+  const loaded = await loadTypesetter(
+    ids.map((face) => ({ face, text: '' })),
+    markFaceFiles,
+  );
   if (!loaded.ok) throw new Error(`${loaded.face} did not load`);
   return loaded.typesetter;
 }

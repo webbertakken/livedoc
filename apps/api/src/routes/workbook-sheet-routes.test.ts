@@ -6,7 +6,7 @@ import type {
   WorkbookSheetAddResponse,
   WorkbookSheetRenameResponse,
 } from '@livedoc/api-schema';
-import { WorkbookRecord, type WorkbookSettings } from '@livedoc/sheets';
+import { WorkbookRecord, type WorkbookSettings, SPREADSHEET_THEMES } from '@livedoc/sheets';
 import { workbookKit, type WorkbookKit } from './workbook-test-kit';
 
 // docs/specs/029-sheets/sheet-store.md "Changing the workbook": a spreadsheet's sheets added, renamed and deleted with
@@ -481,6 +481,14 @@ describe('saving the settings', () => {
     expect(kit.relayed).toEqual([
       { kind: 'workbook', workbook: { format: 'ods', settings: changed }, rev: 1 },
     ]);
+  });
+
+  // formatting.md "Themes": the theme rides in the settings.
+  it('saves a theme with them, and refuses one that is not', async () => {
+    const theme = SPREADSHEET_THEMES[2]!;
+    const res = await save({ ...changed, theme });
+    expect((await res.json<WorkbookSettingsResponse>()).workbook.settings.theme).toEqual(theme);
+    expect((await save({ ...changed, theme: { ...theme, id: 'nope' } })).status).toBe(400);
   });
 
   it.each([

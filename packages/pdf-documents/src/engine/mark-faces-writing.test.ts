@@ -138,6 +138,35 @@ describe('writing words in every script', () => {
     expect(redIn((await engine.drawPage(0, 1))!, [72, 400, 540, 500])).toBeGreaterThan(400);
   });
 
+  it('sets Japanese slice by slice in Noto Sans JP, each slice a face of its own', async () => {
+    const { engine, logs, page } = await engineWith(markFaceFiles);
+    const words = '東京で会いましょう';
+    const result = await bake(engine, [text(page, words)]);
+    if (!result.ok) throw new Error(result.refusal);
+    const loaded = logs.find((line) => line.startsWith('[pdf] faces-loaded'))!;
+    expect(Number(/count=(\d+)/.exec(loaded)![1])).toBeGreaterThan(1);
+    expect(logs.some((line) => line.startsWith('[pdf] glyphs-missing'))).toBe(false);
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('+NotoSansJP-Regular');
+    expect(await engine.open(result.bytes)).toMatchObject({ ok: true });
+    expect((await engine.fileMarks(0))[0]!.words).toBe(words);
+    expect(redIn((await engine.drawPage(0, 1))!, [72, 440, 540, 500])).toBeGreaterThan(400);
+  });
+
+  it('refuses the bake by the slice that does not load', async () => {
+    const { engine, logs, page } = await engineWith(async (file) => {
+      if (file.startsWith('noto-sans-kr/')) throw new Error('offline');
+      return markFaceFiles(file);
+    });
+    expect(await bake(engine, [text(page, '서울')])).toEqual({
+      ok: false,
+      refusal: 'faces-unavailable',
+    });
+    expect(logs.some((line) => /^\[pdf\] faces-failed face=noto-sans-kr-\d+-400$/.test(line))).toBe(
+      true,
+    );
+  });
+
   it('bakes the same bytes twice', async () => {
     const { engine, page } = await engineWith(markFaceFiles);
     const first = await bake(engine, [text(page, 'Ωμέγα')]);

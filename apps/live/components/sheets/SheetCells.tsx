@@ -14,6 +14,7 @@ import {
   displayValue,
   bandingFillAt,
   formatRuleStyle,
+  themedFormat,
   inputAsText,
   isPending,
   numberText,
@@ -179,7 +180,8 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
       const styled: CellFormat | undefined = met ? { ...cell?.format, ...met } : cell?.format;
       // Alternating colours shade under a cell's own fill and a met rule's (formatting.md "Alternating colours").
       const band = hasBands && !styled?.bg ? bandingFillAt(sheet.layout, r, c) : null;
-      const f: CellFormat | undefined = band ? { ...styled, bg: band } : styled;
+      // Theme colours drawn in the workbook's theme (formatting.md "Themes").
+      const f = themedFormat(band ? { ...styled, bg: band } : styled, workbook.theme);
       const vRule = hasRules ? validationRuleAt(sheet.layout, r, c) : null;
       const pending = formula === null ? shownValue(value) : { text: '', pending: false };
       // A value whose new one is on its way from the engine (formulas.md "Recalculation").

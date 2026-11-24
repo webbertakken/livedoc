@@ -9,7 +9,12 @@ import type { IconPrim } from '@livedoc/icons';
 import { Glyph, Prims } from '@livedoc/ui';
 import { useDocumentColours } from '@/hooks/ui/useDocumentColours';
 import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
-import { noColour, standardOptions, type ColourGroup } from '@/components/colour/colour-options';
+import {
+  noColour,
+  standardOptions,
+  type ColourGroup,
+  type ColourOption,
+} from '@/components/colour/colour-options';
 
 /** What the kind hands a colour control: the colour now, how to set one, and its leading option's name. */
 export type OfficeColour = {
@@ -21,6 +26,8 @@ export type OfficeColour = {
   leading: string;
   // What text with no colour of its own draws in, for the bar (black ink); none draws the bar as no colour.
   none?: string;
+  // A spreadsheet's theme colours, the picker's first row, each picked by its id (formatting.md "Themes").
+  theme?: readonly ColourOption[];
 };
 
 /** The kind's colour controls, by control id. */
@@ -55,7 +62,9 @@ export function OfficeColourControl({
   className: string;
 }) {
   const yours = useDocumentColours();
-  const shown = value === undefined ? colour.none : (value ?? undefined);
+  // A theme colour shows as the colour it is in the theme.
+  const named = colour.theme?.find((o) => o.id === value)?.colour;
+  const shown = value === undefined ? colour.none : (named ?? value ?? undefined);
   return (
     <ColourSwatchButton
       label={label}
@@ -63,7 +72,7 @@ export function OfficeColourControl({
       none={shown === undefined}
       value={value === undefined ? LEADING_ID : value}
       leading={[noColour(LEADING_ID, colour.leading)]}
-      theme={NO_THEME}
+      theme={colour.theme ?? NO_THEME}
       standard={OFFICE_COLOUR_ROWS}
       yours={yours}
       preserveFocus

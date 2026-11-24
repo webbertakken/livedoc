@@ -8,6 +8,11 @@ import {
   columnLetters,
   groupedWithin,
   outlineOf,
+  STANDARD_THEME,
+  THEME_COLOUR_KEYS,
+  THEME_COLOUR_LABELS,
+  themeColourRef,
+  type SpreadsheetTheme,
   type SheetLayout,
   type CellFormat,
   type Border,
@@ -20,6 +25,7 @@ import {
 } from '@livedoc/sheets';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficeColours } from '@/components/office/OfficeColourControl';
+import type { ColourOption } from '@/components/colour/colour-options';
 import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadsheet-menus';
 import { lineSpan } from './line-span';
 import { recentFormatItemId } from './recent-formats';
@@ -108,6 +114,8 @@ export type GridMenuPort = {
   // The colour and line the borders draw in, and keeping a new one (formatting.md "Borders", D209).
   borderLine: BorderLineChoice;
   chooseBorderLine: (next: BorderLineChoice) => void;
+  // The workbook's theme, whose colours lead Text Colour and Fill Colour (formatting.md "Themes"); Standard if none.
+  theme?: SpreadsheetTheme;
   act: GridMenuActions;
 };
 
@@ -368,22 +376,34 @@ export type GridOffice = {
   borders: OfficeBorders | null;
 };
 
+/** A theme's nine colours as the picker's Theme row: each picked by name, shown in the theme. */
+export function themeColourOptions(theme: SpreadsheetTheme): ColourOption[] {
+  return THEME_COLOUR_KEYS.map((key) => ({
+    id: themeColourRef(key),
+    colour: theme.colours[key],
+    label: THEME_COLOUR_LABELS[key],
+  }));
+}
+
 /**
- * Text Colour and Fill Colour over the selection (formatting.md "Text and colour", D199): each reads the active cell's
- * own colour and sets the selection's, Reset taking it away.
+ * Text Colour and Fill Colour over the selection (formatting.md "Text and colour", "Themes"): each reads the active
+ * cell's own colour and sets the selection's, Reset taking it away; the theme's colours first.
  */
-export function gridColours({ format: f, act }: GridMenuPort): OfficeColours {
+export function gridColours({ format: f, act, theme }: GridMenuPort): OfficeColours {
+  const row = themeColourOptions(theme ?? STANDARD_THEME);
   return {
     'text-colour': {
       read: () => f?.fc,
       set: (colour) => act.format({ fc: colour }),
       leading: 'Reset',
       none: '#000000',
+      theme: row,
     },
     'fill-colour': {
       read: () => f?.bg,
       set: (colour) => act.format({ bg: colour }),
       leading: 'Reset',
+      theme: row,
     },
   };
 }

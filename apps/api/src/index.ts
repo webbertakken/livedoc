@@ -98,6 +98,7 @@ import { withServerRelease } from './server-release-header';
 import { apiIsolate, ServerTiming, withServerTiming } from './server-timing';
 import { backgroundWaitUntil } from './background';
 import type { Env } from './types';
+import { discardUnreadBody } from './unread-body';
 
 export { DocumentRoom, LegacyDocumentRoom, WorkerIssuesLedger };
 
@@ -502,6 +503,7 @@ const worker = {
     } catch (err) {
       response = failedRequestResponse(err, request, env, executionCtx);
     }
+    await discardUnreadBody(request);
     return withServerRelease(withServerTiming(response, timing), env.BUILD_ID);
   },
 

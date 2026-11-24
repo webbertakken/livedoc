@@ -2,6 +2,7 @@
 // whole rather than to one of its sheets. One per spreadsheet, in its room; a document holds one exactly when it is
 // a spreadsheet (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
 import type { FileMeaning } from './formula/meaning';
+import { readTheme, type SpreadsheetTheme } from './themes/spreadsheet-theme';
 import type { Rand } from './ids';
 import { emptyLayout, type SheetLayout } from './sheet';
 
@@ -50,6 +51,8 @@ export type WorkbookSettings = {
   readonly timeZone: string;
   readonly recalc: WorkbookRecalc;
   readonly iterate: { readonly on: boolean; readonly max: number; readonly threshold: number };
+  // The theme (formatting.md "Themes"); absent, Standard.
+  readonly theme?: SpreadsheetTheme;
 };
 
 export type WorkbookRecord = {
@@ -100,13 +103,15 @@ function readIterate(raw: unknown): WorkbookSettings['iterate'] | null {
 
 function readSettings(raw: unknown): WorkbookSettings | null {
   if (typeof raw !== 'object' || raw === null) return null;
-  const { locale, timeZone, recalc, iterate } = raw as Record<string, unknown>;
+  const { locale, timeZone, recalc, iterate, theme } = raw as Record<string, unknown>;
   const text = (v: unknown): v is string =>
     typeof v === 'string' && v !== '' && v.length <= WORKBOOK_SETTING_TEXT_MAX;
   if (!text(locale) || !text(timeZone)) return null;
   if (!isRecalc(recalc)) return null;
   const it = readIterate(iterate);
-  return it ? { locale, timeZone, recalc, iterate: it } : null;
+  const t = theme === undefined ? undefined : readTheme(theme);
+  if (!it || t === null) return null;
+  return { locale, timeZone, recalc, iterate: it, ...(t ? { theme: t } : {}) };
 }
 
 export const WorkbookRecord = {

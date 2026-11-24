@@ -90,8 +90,33 @@ const TRIGGERS: Readonly<Record<string, WorkerIssueTrigger>> = {
   recurrenceafterinactivity: 'recurrence',
 };
 
-function triggerOf(raw: string | undefined): WorkerIssueTrigger {
-  return (raw && TRIGGERS[norm(raw)]) || 'unknown';
+// A named trigger; else, from the count, first sight for an issue seen once ("What a delivery carries").
+function triggerOf(raw: string | undefined, count: number | undefined): WorkerIssueTrigger {
+  const named = raw && TRIGGERS[norm(raw)];
+  if (named) return named;
+  return count === 1 ? 'first_sight' : 'unknown';
+}
+
+const ISSUE_TYPE_PREFIX = /^issue_type_/;
+
+function issueTypeOf(raw: string | undefined): string | undefined {
+  const type = raw?.toLowerCase().replace(ISSUE_TYPE_PREFIX, '');
+  return type || undefined;
+}
+
+// The worker an issue's `services` list names first: an entry that is a name, or an object naming one.
+function serviceOf(services: unknown): string | undefined {
+  if (!Array.isArray(services)) return undefined;
+  for (const entry of services) {
+    const name = firstText(
+      entry,
+      field(entry, 'name'),
+      field(entry, 'service'),
+      field(entry, 'scriptName'),
+    );
+    if (name) return name;
+  }
+  return undefined;
 }
 
 // The path of a URL, never its query; or nothing for text that is not one.
@@ -129,10 +154,13 @@ const READ = new Set(
     'id',
     'issueId',
     'title',
+    'type',
     'service',
+    'services',
     'scriptName',
     'count',
     'issueCount',
+    'stateCorrelationId',
     'firstObserved',
     'lastObserved',
     'name',
@@ -235,9 +263,15 @@ function issueOf(payload: Obj, data: Obj): WorkerIssue {
     field(data, 'trigger'),
     at(data, 'trigger', 'type'),
   );
+  const count = whole(
+    field(issue, 'count') ?? field(run, 'issueCount') ?? field(issue, 'occurrences'),
+    0,
+    Number.MAX_SAFE_INTEGER,
+  );
   const worker = kept(
     firstText(
       field(issue, 'service'),
+      serviceOf(field(issue, 'services')),
       field(issue, 'scriptName'),
       at(occurrence, 'worker', 'scriptName'),
       field(data, 'worker'),
@@ -251,11 +285,12 @@ function issueOf(payload: Obj, data: Obj): WorkerIssue {
     at(occurrence, 'worker', 'version', 'id'),
     field(issue, 'versionId'),
   );
-  const out: WorkerIssue = { trigger: triggerOf(trigger) };
+  const out: WorkerIssue = { trigger: triggerOf(trigger, count) };
   const put = <K extends keyof WorkerIssue>(key: K, value: WorkerIssue[K] | undefined) => {
     if (value !== undefined) out[key] = value;
   };
   put('worker', worker);
+  put('issueType', kept(issueTypeOf(text(field(issue, 'type'))), 'issueType'));
   put(
     'issueId',
     kept(firstText(field(issue, 'id'), field(issue, 'issueId'), field(run, 'issueId')), 'issueId'),
@@ -265,10 +300,7 @@ function issueOf(payload: Obj, data: Obj): WorkerIssue {
   put('stack', kept(text(at(occurrence, 'error', 'stack')), 'stack'));
   put('route', kept(routeOf(occurrence), 'route'));
   put('status', whole(at(occurrence, 'invocation', 'statusCode'), 100, 599));
-  put(
-    'count',
-    whole(field(issue, 'count') ?? field(run, 'issueCount'), 0, Number.MAX_SAFE_INTEGER),
-  );
+  put('count', count);
   put('firstSeen', isoTime(field(issue, 'firstObserved')));
   put('lastSeen', isoTime(field(issue, 'lastObserved') ?? field(occurrence, 'timestamp')));
   put('version', kept(version, 'version'));
@@ -286,6 +318,10 @@ export function readWorkerIssuePayload(raw: unknown): WorkerIssuePayload {
   const issue = issueOf(raw, data ?? {});
   const run =
     data && firstObj(field(data, 'run'), field(data, 'activity'), field(data, 'automationRun'));
-  const runId = text(field(run, 'id')) ?? text(field(data, 'runId')) ?? null;
+  const runId =
+    text(field(run, 'id')) ??
+    text(field(data, 'runId')) ??
+    text(field(data, 'stateCorrelationId')) ??
+    null;
   return { kind: 'delivery', issue, runId, payload: raw };
 }

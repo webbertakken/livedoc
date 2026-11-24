@@ -1,6 +1,6 @@
 # Worker logs
 
-The api, mcp and router workers keep their own log lines in Workers Logs, so a failure that already happened can
+The api, mcp, router and live workers keep their own log lines in Workers Logs, so a failure that already happened can
 still be read: which route, which error, which stack.
 
 ## Why
@@ -25,6 +25,8 @@ still be read: which route, which error, which stack.
   they carry time zones, tickets and codes. Cloudflare replaces path segments it reads as ids with `REDACTED`
   (measured: a participant id); that is its heuristic, not a guarantee, so a path must never be the only place a
   secret is kept out of.
+- **Not a failing request's details: [Worker issues](worker-issues.md#what-cloudflare-keeps) keeps those**, apart
+  from these lines, for 7 days, with some of its headers.
 - **Every invocation, unsampled.** A rare failure is the one worth reading; sampling would drop it.
 
 ## What a log line may carry
@@ -57,7 +59,9 @@ invocation_logs = false
 ```
 
 - Beside it, `[observability.issues]` turns on Cloudflare Workers Issues ([Worker issues](worker-issues.md)).
-- The frontends (marketing, live, help, telemetry) serve static files and run no code of ours, so they log nothing.
+- The live worker writes no log lines of its own (it maps `/document/<id>` onto the editor's page and sets the
+  security headers), so it keeps only its exceptions.
+- The other frontends (marketing, help, telemetry) serve files with no worker code of ours, so there is nothing to log.
 - Pull request previews are generated from these files and keep the block
   ([Pull request previews](preview-deployments.md)).
 
@@ -65,7 +69,7 @@ invocation_logs = false
 
 - The block ships on, and writes to the self-hoster's own Cloudflare account. It costs nothing on either plan at
   the volumes above.
-- To keep no logs, set `enabled = false` under `[observability]` in the three files before deploying.
+- To keep no logs, set `enabled = false` under `[observability]` in the four files before deploying.
 
 ## Share roles
 

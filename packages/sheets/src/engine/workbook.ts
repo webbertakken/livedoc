@@ -4,6 +4,7 @@
 // out first, from the top, and the read is tried again. Cells are held by number (cell-numbers.ts), their values and
 // dependencies in typed columns (cell-values.ts, dependencies.ts).
 import type { CardSource } from '../cards';
+import { STANDARD_THEME, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { workbookClock, type ArrayDialect, type WorkbookOptions } from './workbook-options';
 import { SheetLimits, type GridSize } from '../sheet-limits';
 import { formatA1 } from '../address';
@@ -122,9 +123,18 @@ export class Workbook {
   };
   // What a formula's frame reads of the workbook (cell-frame.ts).
   private readonly frameSource: FrameSource;
+  // The workbook's theme (formatting.md "Themes"), which cells' theme colours are drawn in.
+  theme: SpreadsheetTheme = STANDARD_THEME;
   // Raised on every change, so views know to read again.
   version = 0;
   truncated = false;
+
+  /** Draws cells in another theme: every view reads again. */
+  setTheme(theme: SpreadsheetTheme): void {
+    if (theme === this.theme) return;
+    this.theme = theme;
+    this.version++;
+  }
 
   constructor(opts: WorkbookOptions) {
     this.locale = opts.locale;

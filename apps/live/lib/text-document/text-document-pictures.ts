@@ -29,6 +29,7 @@ import {
   type AttachDrawing,
 } from './text-document-picture-drawing-layer';
 import { pictureBarHost } from './text-document-picture-bar';
+import { movePlacedPicture, type PictureMove } from './text-document-picture-move';
 
 /** What a picture shows when its media is not in the state. */
 export const PICTURE_MISSING_TEXT = 'Picture, not loaded';
@@ -124,10 +125,17 @@ export type PictureSizingHooks = {
   readonly resize: (pos: number, size: PictureSize) => void;
   readonly crop: (pos: number, next: CroppedPicture) => void;
   readonly rotate: (pos: number, rotation: number) => void;
+  // A placed picture dragged (objects.md "Dragging a placed picture"): what it moved by, written on release.
+  readonly move: (pos: number, by: PictureMove) => void;
 };
 
 /** Told, bubbling from a picture, once its image is drawn and its own pixels noted. */
 export const PICTURE_DRAWN_EVENT = 'text-document-picture-drawn';
+// The events a selected placed picture's drag owns.
+const MOVE_EVENTS = new Set(['pointerdown', 'mousedown', 'dragstart']);
+
+/** The line a dragged placed picture snaps to (objects.md "Guides"), drawn along its column. */
+export const PICTURE_GUIDE_CLASS = 'text-document-picture-guide';
 
 /**
  * The node view drawing each picture from its media: held bytes as an object URL, a gallery image as its URL, clipped
@@ -322,13 +330,57 @@ export function pictureView(
       endDrag = dragPicture(down, handle, {
         attrs: current.attrs,
         cropping,
-        dom,
+        box: turn,
         room: sizing.room(),
         preview: (attrs) => fit(attrs, turning),
         done: write,
       });
       dom.classList.add('text-document-picture-sizing');
     };
+    // A selected placed picture pressed anywhere but its handles: it follows the pointer, its guide shown, its move
+    // written on release.
+    let guide: HTMLElement | null = null;
+    const showGuide = (at: number | null) => {
+      if (at === null) {
+        guide?.remove();
+        guide = null;
+        return;
+      }
+      if (!guide) {
+        guide = document.createElement('span');
+        guide.className = PICTURE_GUIDE_CLASS;
+        guide.setAttribute('aria-hidden', 'true');
+        dom.append(guide);
+      }
+      guide.style.left = `${at}pt`;
+    };
+    const startMove = (down: PointerEvent) => {
+      const from = placed;
+      if (!sizing?.can() || !from || cropping || down.button !== 0 || endDrag) return;
+      if (!dom.classList.contains('ProseMirror-selectednode')) return;
+      if (down.target instanceof Element && down.target.closest('[data-picture-handle]')) return;
+      down.preventDefault();
+      down.stopPropagation();
+      endDrag = movePlacedPicture(down, {
+        turn,
+        start: { ...from.picture, width: pictureBox(current.attrs).width },
+        preview: (left, top, at) => {
+          turn.style.left = `${left}pt`;
+          turn.style.top = `${top}pt`;
+          showGuide(at);
+        },
+        done: (moved) => {
+          endDrag = null;
+          showGuide(null);
+          dom.classList.remove('text-document-picture-moving');
+          const pos = getPos();
+          if (!moved || pos === undefined || destroyed) fit(current.attrs);
+          else sizing.move(pos, moved);
+        },
+      });
+      dom.classList.add('text-document-picture-moving');
+    };
+    turn.addEventListener('pointerdown', startMove);
     const showHandles = () => {
       if (handles || !sizing?.can()) return;
       handles = document.createElement('span');
@@ -371,8 +423,13 @@ export function pictureView(
       // The handles, the picture's bar and a drawing's Retry are the picture's own: the editor neither selects nor drags from them.
       stopEvent: (event) =>
         event.target instanceof Element &&
-        event.target.closest(`[data-picture-handle], [data-picture-bar], ${DRAWING_CONTROL}`) !==
-          null,
+        (event.target.closest(`[data-picture-handle], [data-picture-bar], ${DRAWING_CONTROL}`) !==
+          null ||
+          // A selected placed picture pressed is dragged by the picture, never by the editor.
+          (placed !== null &&
+            dom.classList.contains('ProseMirror-selectednode') &&
+            MOVE_EVENTS.has(event.type) &&
+            turn.contains(event.target))),
       ignoreMutation: () => true,
       destroy: () => {
         destroyed = true;

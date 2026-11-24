@@ -6,8 +6,11 @@
 import type { Mark } from '../mark';
 import { MarkFaces, type MarkRun } from '../mark-faces';
 import { MARK_FACE_DATA } from '../mark-face-data';
+import type { MarkFaceSlice } from '../mark-face-families';
+import { MarkFaceSlices } from '../mark-face-slices';
 import { MarkWords } from '../mark-words';
 import { Sfnt, type FaceMetrics, type SfntTables } from './sfnt';
+import { sliceIndex, splitRun } from './region-slices';
 import { woffTables } from './woff';
 
 /** Answers a mark face's file, as a path within the Fontsource packages (`noto-sans/files/…`). */
@@ -58,6 +61,10 @@ export type Typesetter = {
   readonly levels: (text: string, rtl: boolean) => readonly number[];
   /** How many bytes the faces loaded were. */
   readonly bytes: number;
+  /** How many faces were loaded, each slice of a region one. */
+  readonly count: number;
+  /** A run as the faces it is shaped in: a region's cut slice by slice, any other as it is. */
+  readonly split: (run: MarkRun) => readonly MarkRun[];
 };
 
 type HarfBuzz = typeof import('harfbuzzjs');
@@ -93,16 +100,20 @@ function levelsBy(bidi: Bidi, text: string, rtl: boolean): number[] {
   return levels;
 }
 
-/** The mark faces the marks' words are set in: none where Helvetica writes every mark. */
-export function markFacesOf(marks: readonly Mark[]): ReadonlySet<string> {
-  const faces = new Set<string>();
+/** The runs the marks' words are set in, in the mark faces: none where Helvetica writes every mark. */
+export function markRunsOf(marks: readonly Mark[]): MarkRun[] {
+  const runs: MarkRun[] = [];
   for (const mark of marks) {
     const words = MarkWords.of(mark);
     if (words?.faces !== 'noto') continue;
-    for (const line of words.lines) for (const run of MarkFaces.runs(line)) faces.add(run.face);
+    for (const line of words.lines) runs.push(...MarkFaces.runs({ ...line, region: words.region }));
   }
-  return faces;
+  return runs;
 }
+
+/** The mark faces the marks' words are set in, a region's as its one face. */
+export const markFacesOf = (marks: readonly Mark[]): ReadonlySet<string> =>
+  new Set(markRunsOf(marks).map((run) => run.face));
 
 /** The faces loaded, or the first that did not load: `shaper` where HarfBuzz itself did not. */
 export type TypesetterLoad =
@@ -110,8 +121,7 @@ export type TypesetterLoad =
   | { readonly ok: false; readonly face: string };
 
 /** A face's file read and its tables taken apart; null where it did not load or does not read. */
-async function readFace(id: string, source: MarkFaceSource) {
-  const file = MARK_FACE_DATA.find((face) => face.id === id)?.file;
+async function readFace(id: string, file: string | undefined, source: MarkFaceSource) {
   if (!file) return null;
   try {
     const woff = await source(file);
@@ -130,13 +140,44 @@ async function readFace(id: string, source: MarkFaceSource) {
   }
 }
 
-/** The faces named, loaded and ready to shape (marks.md "Loading"). */
+/** A region's slices and which holds each character. */
+type RegionSlices = {
+  readonly slices: readonly MarkFaceSlice[];
+  readonly index: ReadonlyMap<number, MarkFaceSlice>;
+};
+
+/** The slices of each region the runs set; the first region whose slices did not load, where one did not. */
+async function regionSlicesOf(runs: readonly MarkRun[]) {
+  const regions = new Map<string, RegionSlices>();
+  for (const face of new Set(runs.map((run) => run.face))) {
+    const region = MarkFaceSlices.regionOf(face);
+    if (!region) continue;
+    const slices = await MarkFaceSlices.load(region).catch(() => null);
+    if (!slices) return { ok: false as const, face };
+    regions.set(face, { slices, index: sliceIndex(slices) });
+  }
+  return { ok: true as const, regions };
+}
+
+/** The faces the runs are set in, loaded and ready to shape (marks.md "Loading"): a region's, the slices it uses. */
 export async function loadTypesetter(
-  ids: Iterable<string>,
+  runs: Iterable<MarkRun>,
   source: MarkFaceSource,
 ): Promise<TypesetterLoad> {
-  const wanted = [...new Set(ids)];
-  const read = await Promise.all(wanted.map((id) => readFace(id, source)));
+  const all = [...runs];
+  const sliced = await regionSlicesOf(all);
+  if (!sliced.ok) return { ok: false, face: sliced.face };
+  const { regions } = sliced;
+  const split = (run: MarkRun): readonly MarkRun[] => {
+    const region = regions.get(run.face);
+    return region ? splitRun(run, region.index, region.slices) : [run];
+  };
+  const files = new Map<string, string>();
+  for (const face of MARK_FACE_DATA) files.set(face.id, face.file);
+  for (const { slices } of regions.values())
+    for (const slice of slices) files.set(slice.id, slice.file);
+  const wanted = [...new Set(all.flatMap((run) => split(run).map((each) => each.face)))];
+  const read = await Promise.all(wanted.map((id) => readFace(id, files.get(id), source)));
   const failed = wanted.find((_, at) => read[at] === null);
   if (failed !== undefined) return { ok: false, face: failed };
   const [hb, bidiFactory] = await Promise.all([
@@ -160,6 +201,8 @@ export async function loadTypesetter(
   const typesetter: Typesetter = {
     face: (id) => loaded(id).face,
     bytes: read.reduce((sum, each) => sum + each!.bytes, 0),
+    count: wanted.length,
+    split,
     levels: (text, rtl) => levelsBy(bidi, text, rtl),
     shape: ({ face: id, text }, rtl) => {
       const { font, per } = loaded(id);
