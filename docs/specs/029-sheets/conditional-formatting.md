@@ -56,11 +56,18 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
 
 ## In a spreadsheet
 
-**Status: specified.** Nothing is built. The rules above carry into the [spreadsheet](spreadsheet.md), with these
-changes ([Formatting](formatting.md#conditional-formatting)):
+**Status: in progress.** The side panel is built; several ranges, other sheets in a formula and the files are not.
+The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
+([Formatting](formatting.md#conditional-formatting)):
 
-- The Conditional Format Rules **side panel** replaces the popover: the sheet's rules in order, dragged to reorder,
-  **Add Another Rule**; a rule's range may be several ranges (`A1:A10,C1:C10`).
+- The **Conditional Format Rules** side panel replaces the popover: the office shell's right panel
+  ([Side panels](../004-interface-design/office-shell.md#side-panels)), opened by **Format › Conditional Formatting**,
+  an on/off check, an Editor's alone. Its body is the popover's: the rule list for the selection (or every rule),
+  Move Up, Move Down and Delete Rule, **Add Another Rule**, and the rule form drawing its preview.
+  - It follows the selection while it stays open: a new selection lists the rules touching it (default, D213).
+  - Done in the form returns to the list and keeps the panel open; Escape or × closes it and the keys go back to the
+    grid.
+- A rule's range may be several ranges (`A1:A10,C1:C10`).
 - **Custom Formula Is** may read other sheets of the workbook, and named ranges.
 - ODF keeps rules as `calcext:conditional-formats`, XLSX as `conditionalFormatting` ([Standard mapping](standard-mapping.md)).
 

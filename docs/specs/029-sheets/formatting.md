@@ -167,7 +167,9 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 Iterated from today's spec ([Conditional formatting](conditional-formatting.md)) to Google's panel: **Single
 Colour** (every condition of Google's list, including Custom Formula Is) and **Colour Scale** (min, mid, max points by
-value, number, percent or percentile), rules in order, the first matching rule drawing a cell.
+value, number, percent or percentile), rules in order, the first matching rule drawing a cell. **Format › Conditional
+Formatting** opens them in the Conditional Format Rules side panel
+([Conditional formatting](conditional-formatting.md#in-a-spreadsheet), D213).
 
 ## Alternating colours
 
@@ -225,6 +227,8 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   width; borders stay square, where Google slants a tilted cell's (default).
 - **D211** Custom Angle: the shell's dialog with a whole number of degrees, where Google's menu holds the field; 0
   clears (default).
+- **D213** The Conditional Format Rules panel: the office shell's right panel holding the Plan Sheet popover's list and
+  form, following the selection while open; Done keeps it open (default).
 
 ## Telemetry
 
