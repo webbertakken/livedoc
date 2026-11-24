@@ -180,3 +180,16 @@ describe('ActionsGroup', () => {
     expect(onOpenAccount).toHaveBeenCalledOnce();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md "The editor's toolbars": a document action hides its label on a phone, so
+// it turns square there rather than shrinking to its padded glyph under the 24px floor.
+describe('the document actions on a phone', () => {
+  it('turn square where their label hides', async () => {
+    const { TOOLBAR_SQUARE_ON_PHONE } = await import('@/components/chrome/toolbar-surface');
+    renderGroup();
+    const share = screen.getByRole('button', { name: /^Share/ });
+    expect(share.className.split(' ')).toEqual(
+      expect.arrayContaining(TOOLBAR_SQUARE_ON_PHONE.split(' ')),
+    );
+  });
+});

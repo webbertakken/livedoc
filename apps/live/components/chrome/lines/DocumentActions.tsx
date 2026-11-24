@@ -2,7 +2,11 @@
 
 import { Glyph, HoverCard } from '@livedoc/ui';
 import { useFormShareHost } from '@/lib/form-share-store';
-import { TOOLBAR_BUTTON, TOOLBAR_BUTTON_ON } from '@/components/chrome/toolbar-surface';
+import {
+  TOOLBAR_BUTTON,
+  TOOLBAR_BUTTON_ON,
+  TOOLBAR_SQUARE_ON_PHONE,
+} from '@/components/chrome/toolbar-surface';
 import { WorkshopControl } from './WorkshopControl';
 
 // The present button's deck (docs/specs/012-collaboration/presentation-mode.md "The header's Present button"): given
@@ -54,7 +58,7 @@ export function DocumentActions({
             type="button"
             onClick={onMakeCopy}
             disabled={copying}
-            className={`${TOOLBAR_BUTTON} disabled:cursor-not-allowed disabled:opacity-50`}
+            className={`${TOOLBAR_BUTTON} ${TOOLBAR_SQUARE_ON_PHONE} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             <CopyIcon />
             <span className={LABEL}>{copying ? 'Copying' : 'Copy'}</span>
@@ -73,7 +77,7 @@ export function DocumentActions({
             onClick={present.onPresent}
             disabled={present.starting}
             data-presentation-start="header"
-            className={`${TOOLBAR_BUTTON} disabled:cursor-wait disabled:opacity-60`}
+            className={`${TOOLBAR_BUTTON} ${TOOLBAR_SQUARE_ON_PHONE} disabled:cursor-wait disabled:opacity-60`}
           >
             <PresentIcon />
             <span className={LABEL}>{present.starting ? 'Starting' : 'Present'}</span>
@@ -95,7 +99,7 @@ export function DocumentActions({
             data-tour-id="share-form"
             onClick={formShare.open}
             aria-pressed={formShare.published}
-            className={`${TOOLBAR_BUTTON} ${formShare.published ? SHARED : ''}`}
+            className={`${TOOLBAR_BUTTON} ${TOOLBAR_SQUARE_ON_PHONE} ${formShare.published ? SHARED : ''}`}
           >
             <ShareIcon />
             <span className={LABEL}>Share Form</span>
@@ -111,7 +115,7 @@ export function DocumentActions({
             data-tour-id="share"
             onClick={onOpenShare}
             aria-pressed={shareable}
-            className={`${TOOLBAR_BUTTON} ${shareable ? SHARED : ''}`}
+            className={`${TOOLBAR_BUTTON} ${TOOLBAR_SQUARE_ON_PHONE} ${shareable ? SHARED : ''}`}
           >
             <ShareIcon />
             {/* "Share" in both states: the fill, aria-pressed and the share-state icon by the name carry the state. */}

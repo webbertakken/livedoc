@@ -34,3 +34,6 @@ export const TOOLBAR_ICON_BUTTON = `${TOOLBAR_BUTTON} w-row tool-line:w-field px
 // A toggle in the actions group while on (a shared document's Share, the Workshop control): the brand fill, so the state
 // reads at a glance.
 export const TOOLBAR_BUTTON_ON = `bg-brand-700 text-white hover:bg-brand-800 hover:text-white dark:hover:text-white ${SOLID_BRAND_DARK_CONTROL}`;
+
+/** A labelled button whose label hides on a phone: square there, as its icon-alone twin, never its padded glyph. */
+export const TOOLBAR_SQUARE_ON_PHONE = 'phone:w-row tool-line:phone:w-field phone:px-0';
