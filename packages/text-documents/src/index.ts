@@ -200,6 +200,14 @@ export {
   type SectionStart,
 } from './model/sections';
 export {
+  CODE_BLOCK_FONT,
+  CODE_BLOCK_LANGUAGES,
+  CODE_BLOCK_SHADING,
+  CODE_STYLE_NAME,
+  CodeBlocks,
+  type CodeBlockLanguage,
+} from './model/code-blocks';
+export {
   ROLE_IDS,
   roleOfStyleName,
   STYLE_ROLES,
