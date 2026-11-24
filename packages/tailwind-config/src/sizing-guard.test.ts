@@ -237,6 +237,23 @@ describe('checkSizing', () => {
     expect(violations.map((v) => v.file)).toEqual(['ui/Button.tsx']);
   });
 
+  it('leaves a moved folder’s excepted files alone (drawn art, or a part moving later)', () => {
+    write('moved/Row.tsx', "export const a = 'text-sm';");
+    write('moved/Picture.tsx', "export const a = 'text-[7px]';");
+
+    const violations = checkSizing({ root, paths: ['moved'], except: ['moved/Picture.tsx'] });
+
+    expect(violations.map((v) => v.file)).toEqual(['moved/Row.tsx']);
+  });
+
+  it('throws on an exception that does not exist, so a stale one never lingers', () => {
+    write('moved/Row.tsx', "export const a = 'h-row';");
+
+    expect(() => checkSizing({ root, paths: ['moved'], except: ['moved/Gone.tsx'] })).toThrow(
+      /sizing guard: no path moved\/Gone\.tsx/,
+    );
+  });
+
   it('checks nothing for an empty list', () => {
     write('later/Row.tsx', "export const a = 'text-sm';");
 
