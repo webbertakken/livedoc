@@ -103,3 +103,52 @@ test('a file’s table of contents opens as one read-only block and is kept', as
   }
   expectNoPageErrors(pageErrors);
 });
+
+// Insert > Table of contents: built from the headings, each entry's page number the page its heading starts on; a press
+// on an entry of the selected block goes to its heading; one undo step takes it away.
+test('Insert puts a table of contents in, whose entries go to their headings', async ({
+  page,
+  pageErrors,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('Introduction');
+  await page.keyboard.press('Control+Alt+1');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Control+Enter');
+  await page.keyboard.type('Findings');
+  await page.keyboard.press('Control+Alt+2');
+  await page.keyboard.press('Control+Home');
+
+  const insert = await officeMenuItem(page, ['Insert', 'Table of contents', 'Dotted']);
+  await insert.click();
+  const contents = body.getByRole('navigation', { name: 'Table of contents' });
+  await expect(contents).toHaveClass(/ProseMirror-selectednode/);
+  await expect(contents.locator('p')).toHaveText(['Introduction\t1', 'Findings\t2']);
+  const tab = contents.locator('.text-document-tab').first();
+  await expect(tab).toHaveAttribute('data-leader', 'dot');
+  await expect.poll(async () => (await tab.boundingBox())?.width ?? 0).toBeGreaterThan(200);
+  await page.screenshot({ path: test.info().outputPath('table-of-contents-inserted.png') });
+
+  // Selected, a press on an entry goes to its heading, on the next page.
+  await contents.locator('p', { hasText: 'Findings' }).click();
+  await expect(contents).not.toHaveClass(/ProseMirror-selectednode/);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const at = getSelection()?.anchorNode;
+        const element = at instanceof Element ? at : at?.parentElement;
+        return element?.closest('p')?.textContent;
+      }),
+    )
+    .toBe('Findings');
+
+  // One undo step takes it away.
+  await page.keyboard.press('Control+z');
+  await expect(contents).toHaveCount(0);
+  await expect(body.locator('p', { hasText: /^Findings$/ })).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});

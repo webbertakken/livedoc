@@ -18,6 +18,7 @@ import { storyKey } from './pagination-headers';
 import {
   noteWidthAt,
   pageIndexAt,
+  shownPageOfBlock,
   paginationPlugin,
   refreshPages,
   relayoutPages,
@@ -176,6 +177,17 @@ describe('paginationPlugin', () => {
     view.destroy();
     const unlaid = await mount([p('a')], false);
     expect(pageIndexAt(unlaid.view, 1)).toBe(0);
+    unlaid.view.destroy();
+  });
+
+  // links-and-navigation.md "Table of contents": an entry shows the number of the page its heading starts on.
+  it('tells the number each block starts on, as the pages show it; none before pages are laid out', async () => {
+    const { view } = await mount([p('a'.repeat(40)), p('b'.repeat(20)), p('c')]);
+    const shown = shownPageOfBlock(view)!;
+    expect([0, 1, 2].map(shown)).toEqual([1, 2, 2]);
+    view.destroy();
+    const unlaid = await mount([p('a')], false);
+    expect(shownPageOfBlock(unlaid.view)).toBeNull();
     unlaid.view.destroy();
   });
 

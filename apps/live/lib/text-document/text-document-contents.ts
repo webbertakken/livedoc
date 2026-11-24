@@ -3,9 +3,12 @@
 // numbers); a press selects it whole.
 import type { NodeSpec, Node as PmNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
-import { NodeSelection, Plugin } from 'prosemirror-state';
+import { NodeSelection, Plugin, TextSelection } from 'prosemirror-state';
 import { CONTENTS, CONTENTS_ATTRIBUTES, Contents } from '@livedoc/text-documents';
+import { debugLog } from '@/lib/debug-log';
+import { track } from '@/lib/telemetry';
 import { nullAttributes } from './text-document-attributes';
+import { bookmarkPosition } from './text-document-bookmarks';
 
 /** The node's class. */
 export const CONTENTS_CLASS = 'text-document-contents';
@@ -69,6 +72,36 @@ export function contentsView(node: PmNode): NodeView {
   };
 }
 
+// The heading an entry links to: the start of the paragraph its bookmark is in; none for an entry linking elsewhere.
+function entryHeading(doc: PmNode, pos: number): number | null {
+  const $pos = doc.resolve(pos);
+  if ($pos.parent.type.name !== 'paragraph') return null;
+  let href: unknown = null;
+  $pos.parent.descendants((child) => {
+    href ??= child.marks.find((m) => m.type.name === 'link')?.attrs.href ?? null;
+    return href === null;
+  });
+  if (typeof href !== 'string' || !href.startsWith('#')) return null;
+  const at = bookmarkPosition(doc, decodeURIComponent(href.slice(1)));
+  return at === null ? null : doc.resolve(at).start();
+}
+
+// A press on an entry of a selected table of contents (any, where the writing is read only) goes to its heading.
+function followEntry(view: EditorView, pos: number, nodePos: number): boolean {
+  const { selection } = view.state;
+  const selected = selection instanceof NodeSelection && selection.from === nodePos;
+  if (!selected && view.editable) return false;
+  const heading = entryHeading(view.state.doc, pos);
+  debugLog('[text-document] contents followed', { found: heading !== null });
+  if (heading === null) return false;
+  view.dispatch(
+    view.state.tr.setSelection(TextSelection.create(view.state.doc, heading)).scrollIntoView(),
+  );
+  view.focus();
+  track('UI', 'Used', 'TextDocumentTableOfContentsFollowed');
+  return true;
+}
+
 // Selects the table of contents a press landed on.
 const selectWhole = (view: EditorView, _pos: number, node: PmNode, nodePos: number): boolean => {
   if (node.type.name !== CONTENTS) return false;
@@ -77,13 +110,16 @@ const selectWhole = (view: EditorView, _pos: number, node: PmNode, nodePos: numb
 };
 
 /**
- * A press anywhere on a table of contents selects it whole, a double or triple one too (a block with content takes no
+ * A press anywhere on a table of contents selects it whole, a double or triple one too; once selected (or where the
+ * writing is read only), a press on an entry goes to its heading (a block with content takes no
  * selection by itself, and the browser would select words inside it).
  */
 export function contentsPressPlugin(): Plugin {
   return new Plugin({
     props: {
-      handleClickOn: selectWhole,
+      handleClickOn: (view, pos, node, nodePos) =>
+        node.type.name === CONTENTS &&
+        (followEntry(view, pos, nodePos) || selectWhole(view, pos, node, nodePos)),
       handleDoubleClickOn: selectWhole,
       handleTripleClickOn: selectWhole,
     },

@@ -150,6 +150,14 @@ export function pageIndexAt(view: EditorView, pos: number): number {
 }
 
 /**
+ * The number of the page each body block starts on, as the pages show it (links-and-navigation.md "Table of
+ * contents"); null while no pages are laid out (pageless, a phone, before the first layout).
+ */
+export function shownPageOfBlock(view: EditorView): ((block: number) => number) | null {
+  return pagers.get(view)?.shownOfBlock ?? null;
+}
+
+/**
  * The width a note whose mark stands at `pos` is drawn at: its section's text width (page-layout.md "Footnotes");
  * null before pages are laid out.
  */
@@ -178,6 +186,8 @@ class Pager {
   private generation = 0;
   private scheduled = false;
   private pages = '';
+  /** The number each block's page shows, from the last layout; null when none is laid out. */
+  shownOfBlock: ((block: number) => number) | null = null;
 
   private readonly view: EditorView;
   private readonly options: PaginationOptions;
@@ -272,6 +282,7 @@ class Pager {
     const { setup, pages, headers, numberStart, lineNumbers } = this.options.read();
     if (!pages) {
       this.previous = null;
+      this.shownOfBlock = null;
       this.nodes = [];
       this.apply([]);
       this.tellPages([]);
@@ -524,6 +535,7 @@ class Pager {
     const shown = shownPageNumbers(pagination, sections);
     const pagesLaid = pageCountOf(pagination);
     const startOf = startOfBlocks(pagination, nodes.length);
+    this.shownOfBlock = (block) => shown[startOf[Math.min(block, startOf.length - 1)] ?? 0] ?? 1;
     decorations.push(
       ...fieldDecorations(nodes, positions, (block) => shown[startOf[block]!]!, pagesLaid),
     );
