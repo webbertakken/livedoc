@@ -1,6 +1,6 @@
 // docs/specs/034-text-documents/links-and-navigation.md "Bookmarks", standard-mapping.md "The model": a named point is a
-// bookmark in either format (ODF `text:bookmark`, OOXML a start its end follows at once); a hidden one (`_…`) and one
-// that spans text stay kept; a new name is 12 lowercase letters and digits, the first a letter; written bookmarks are
+// bookmark in either format (ODF `text:bookmark`, OOXML a start its end follows at once), a hidden one (`_…`, a
+// heading's id) too; one that spans text stays kept; a new name is 12 lowercase letters and digits, the first a letter; written bookmarks are
 // numbered after the kept ones; links to them, the live state and conversion carry them; Google's files read so.
 import { readFileSync } from 'node:fs';
 import { readOoxmlPackage } from '@livedoc/office-packages';
@@ -42,14 +42,27 @@ function written(document: TextDocument, type: 'fodt' | 'odt' | 'docx'): Uint8Ar
 }
 
 describe('Bookmarks', () => {
-  it('holds a name both formats accept, never a hidden one', () => {
+  it('holds a name both formats accept, hidden ones too', () => {
     expect(Bookmarks.held('ncjrh2a1zcpq')).toBe(true);
     expect(Bookmarks.held('bookmark=id.ncjrh2a1zcpq')).toBe(true);
-    expect(Bookmarks.held('_heading=h.i5swhapfxgy1')).toBe(false);
-    expect(Bookmarks.held('_GoBack')).toBe(false);
+    expect(Bookmarks.held('_heading=h.i5swhapfxgy1')).toBe(true);
+    expect(Bookmarks.held('_GoBack')).toBe(true);
+    expect(Bookmarks.held('_')).toBe(false);
     expect(Bookmarks.held('')).toBe(false);
     expect(Bookmarks.held('two words')).toBe(false);
     expect(Bookmarks.held('a'.repeat(41))).toBe(false);
+  });
+
+  it("tells a hidden name, as Word and Google hide a heading's", () => {
+    expect(Bookmarks.hidden('_i5swhapfxgy1')).toBe(true);
+    expect(Bookmarks.hidden('ncjrh2a1zcpq')).toBe(false);
+  });
+
+  it('makes a heading id: _ and a new name, none taken', () => {
+    expect(Bookmarks.newHeadingId(new Set())).toMatch(/^_[a-z][a-z0-9]{11}$/);
+    let n = 0;
+    const random = () => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.5][n++ % 13]!;
+    expect(Bookmarks.newHeadingId(new Set(['_aaaaaaaaaaaa']), random)).not.toBe('_aaaaaaaaaaaa');
   });
 
   it('makes a new name of 12 lowercase letters and digits, the first a letter, none taken', () => {
@@ -64,7 +77,7 @@ describe('Bookmarks', () => {
 });
 
 describe('a bookmark in ODF', () => {
-  it('is a point of the model; a hidden one and a spanning one stay kept', async () => {
+  it('is a point of the model, a hidden one too; a spanning one stays kept', async () => {
     const paragraph = await first(
       fodt(
         '<text:p><text:bookmark text:name="bookmark=id.x1"/>Go <text:bookmark text:name="_heading=h.y"/>on <text:bookmark-start text:name="r"/>span<text:bookmark-end text:name="r"/></text:p>',
@@ -73,7 +86,7 @@ describe('a bookmark in ODF', () => {
     expect(shape(paragraph.inlines)).toEqual([
       '#bookmark=id.x1',
       'Go ',
-      '[bookmark]',
+      '#_heading=h.y',
       'on ',
       '[bookmark-start]',
       'span',
@@ -88,7 +101,7 @@ describe('a bookmark in ODF', () => {
 });
 
 describe('a bookmark in OOXML', () => {
-  it('is a start its end follows at once; a hidden or spanning one stays kept', async () => {
+  it('is a start its end follows at once, a hidden one too; a spanning one stays kept', async () => {
     const paragraph = await first(
       docx(
         W_P(
@@ -99,8 +112,7 @@ describe('a bookmark in OOXML', () => {
     expect(shape(paragraph.inlines)).toEqual([
       '#ncjrh2a1zcpq',
       'Go ',
-      '[bookmarkStart]',
-      '[bookmarkEnd]',
+      '#_i5',
       '[bookmarkStart]',
       'span',
       '[bookmarkEnd]',
@@ -111,7 +123,7 @@ describe('a bookmark in OOXML', () => {
     const document = await read(
       docx(
         W_P(
-          `<w:bookmarkStart w:name="new1" w:id="7"/><w:bookmarkEnd w:id="7"/><w:bookmarkStart w:name="_Toc1" w:id="5"/><w:bookmarkEnd w:id="5"/>${W_R('x')}`,
+          `<w:bookmarkStart w:name="new1" w:id="7"/><w:bookmarkEnd w:id="7"/><w:bookmarkStart w:name="_Toc1" w:id="5"/>${W_R('x')}<w:bookmarkEnd w:id="5"/>`,
         ),
       ),
     );
@@ -165,16 +177,17 @@ describe('Google Docs files', () => {
     new Uint8Array(readFileSync(new URL(`../corpus/google/${name}`, import.meta.url)));
 
   for (const name of ['features-gdocs.odt', 'features-gdocs.docx']) {
-    it(`read their bookmark, its link, and keep their headings’ hidden ones (${name})`, async () => {
+    it(`read their bookmark, its link, and their headings’ ids (${name})`, async () => {
       const document = await read(corpus(name));
       const inlines = document.body.flatMap((b) => (b.type === 'paragraph' ? b.inlines : []));
       const bookmarks = inlines.flatMap((i) => (i.type === 'bookmark' ? [i.name] : []));
-      expect(bookmarks).toHaveLength(1);
-      expect(bookmarks[0]).toMatch(/ncjrh2a1zcpq$/);
-      expect(inlines.some((i) => i.link === `#${bookmarks[0]}`)).toBe(true);
-      expect(
-        inlines.filter((i) => i.type === 'kept' && /^bookmark/.test(i.name)).length,
-      ).toBeGreaterThan(0);
+      const shown = bookmarks.filter((b) => !Bookmarks.hidden(b));
+      expect(shown).toHaveLength(1);
+      expect(shown[0]).toMatch(/ncjrh2a1zcpq$/);
+      expect(inlines.some((i) => i.link === `#${shown[0]}`)).toBe(true);
+      // Every heading's id: ODF `_heading=h.<id>`, OOXML `_<id>`.
+      expect(bookmarks).toContainEqual(expect.stringMatching(/^_(heading=h\.)?i5swhapfxgy1$/));
+      expect(inlines.some((i) => i.type === 'kept' && /^bookmark/.test(i.name))).toBe(false);
     });
   }
 });

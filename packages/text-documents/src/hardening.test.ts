@@ -261,7 +261,7 @@ describe('import security', () => {
   it('keeps no more than the kept-content limit, dropping the rest in reading order and saying so', async () => {
     const read = await readTextDocumentFile(
       fodt(
-        '<text:p>a<text:bookmark text:name="_one"/></text:p><text:p>b<text:bookmark text:name="_two"/></text:p><text:sequence-decls/>',
+        '<text:p>a<text:bookmark-start text:name="one"/></text:p><text:p>b<text:bookmark-start text:name="two"/></text:p><text:sequence-decls/>',
       ),
       { keptBytes: 40 },
     );
