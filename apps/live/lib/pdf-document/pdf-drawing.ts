@@ -53,9 +53,9 @@ function joinable(
   page: PageName,
   stroke: Stroke,
   last: LastDrawing | null,
-  now: number,
+  begunAt: number,
 ): DrawingMark | null {
-  if (!last || last.page !== page || now - last.endedAt > PDF_DRAWING_JOIN_MS) return null;
+  if (!last || last.page !== page || begunAt - last.endedAt > PDF_DRAWING_JOIN_MS) return null;
   const mark = PdfLiveChanges.marks(doc).find((made) => made.id === last.id);
   if (!mark || mark.kind !== 'drawing') return null;
   return Mark.points(mark) + stroke.length / 2 <= PDF_DRAWING_MAX_POINTS ? mark : null;
@@ -65,10 +65,18 @@ export function addStroke(
   doc: Y.Doc,
   where: { page: PageName; stored: { blob: BlobKey; pages: number } },
   stroke: Stroke,
-  by: { author: string; now: number; id: string; look: TextMarkLook; last: LastDrawing | null },
+  by: {
+    author: string;
+    now: number;
+    // When the stroke began: within PDF_DRAWING_JOIN_MS of the last one's end, it joins it.
+    begunAt: number;
+    id: string;
+    look: TextMarkLook;
+    last: LastDrawing | null;
+  },
 ): DrawingMade {
   if (stroke.length < 2) return { ok: false, reason: 'no_stroke' };
-  const onto = joinable(doc, where.page, stroke, by.last, by.now);
+  const onto = joinable(doc, where.page, stroke, by.last, by.begunAt);
   const mark = onto
     ? Mark.parse({ ...onto, strokes: [...onto.strokes, stroke], modifiedAt: by.now })
     : Mark.drawing({

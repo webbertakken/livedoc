@@ -23,7 +23,7 @@ export function usePdfPageInk({
 }) {
   const [stroke, setStroke] = useState<Stroke>(NO_STROKE);
   // The pointer drawing, and the stroke so far, read as events arrive between renders.
-  const drawing = useRef<{ pointer: number; stroke: Stroke } | null>(null);
+  const drawing = useRef<{ pointer: number; stroke: Stroke; begunAt: number } | null>(null);
 
   const at = (event: PointerEvent<HTMLElement>) => pointAt({ x: event.clientX, y: event.clientY });
 
@@ -40,7 +40,11 @@ export function usePdfPageInk({
     if (!point) return true;
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    drawing.current = { pointer: event.pointerId, stroke: extendStroke(NO_STROKE, point) };
+    drawing.current = {
+      pointer: event.pointerId,
+      stroke: extendStroke(NO_STROKE, point),
+      begunAt: Date.now(),
+    };
     setStroke(drawing.current.stroke);
     return true;
   };
@@ -63,7 +67,7 @@ export function usePdfPageInk({
     if (!now || now.pointer !== event.pointerId) return ink !== null;
     drawing.current = null;
     setStroke(NO_STROKE);
-    if (made && ink) ink.onDraw(index, now.stroke);
+    if (made && ink) ink.onDraw(index, now.stroke, now.begunAt);
     return true;
   };
 

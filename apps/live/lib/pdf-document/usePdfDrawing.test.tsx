@@ -50,8 +50,8 @@ beforeEach(() => {
 describe('the Drawing tool’s strokes', () => {
   it('makes a Drawing of a stroke, and joins the next one to it, each a step of undo', () => {
     const { draw, doc, steps, onProblem } = drawing();
-    act(() => draw(0, [10, 10, 20, 20]));
-    act(() => draw(0, [30, 30]));
+    act(() => draw(0, [10, 10, 20, 20], Date.now()));
+    act(() => draw(0, [30, 30], Date.now()));
     const marks = PdfLiveChanges.marks(doc) as DrawingMark[];
     expect(marks).toHaveLength(1);
     expect(marks[0]!.strokes).toEqual([
@@ -68,11 +68,11 @@ describe('the Drawing tool’s strokes', () => {
 
   it('draws nothing before the PDF is open, on a page that is not there, or of no stroke', () => {
     const closed = drawing(undefined, false);
-    act(() => closed.draw(0, [1, 1]));
+    act(() => closed.draw(0, [1, 1], 0));
     expect(PdfLiveChanges.isEmpty(closed.doc)).toBe(true);
     const open = drawing();
-    act(() => open.draw(4, [1, 1]));
-    act(() => open.draw(0, []));
+    act(() => open.draw(4, [1, 1], 0));
+    act(() => open.draw(0, [], 0));
     expect(PdfLiveChanges.isEmpty(open.doc)).toBe(true);
     expect(open.onProblem).not.toHaveBeenCalled();
   });
@@ -84,7 +84,7 @@ describe('the Drawing tool’s strokes', () => {
       for (let n = 0; n < PDF_MAX_MARKS; n += 1) marks.set(`m${n}`, 1);
     });
     const { draw, onProblem } = drawing(doc);
-    act(() => draw(0, [1, 1]));
+    act(() => draw(0, [1, 1], 0));
     expect(onProblem).toHaveBeenLastCalledWith(TOO_MANY_MARKS_COPY);
     expect(debugLog).toHaveBeenCalledWith('[pdf] limit-refused name=pdf_too_many_marks');
   });

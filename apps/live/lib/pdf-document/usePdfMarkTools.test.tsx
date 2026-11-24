@@ -364,7 +364,7 @@ describe('the Drawing tool', () => {
     act(() => hook.result.current.make(0, { text: 'Lease', quads: [QUAD] }));
     expect(PdfLiveChanges.marks(doc)).toEqual([]);
     act(() => hook.result.current.colours[TOOL_COLOUR]!.set('#7c3aed'));
-    act(() => hook.result.current.ink!.onDraw(0, [1, 1, 5, 5]));
+    act(() => hook.result.current.ink!.onDraw(0, [1, 1, 5, 5], Date.now()));
     expect(PdfLiveChanges.marks(doc)).toEqual([
       expect.objectContaining({ kind: 'drawing', colour: '#7c3aed' }),
     ]);

@@ -287,7 +287,7 @@ describe('drawing on a page', () => {
     fireEvent.pointerMove(box, at(100.1, 92));
     expect(view.container.querySelector('[data-pdf-ink-preview]')).not.toBeNull();
     fireEvent.pointerUp(box, at(100, 92));
-    expect(onDraw).toHaveBeenCalledWith(1, [72, 700, 100, 700]);
+    expect(onDraw).toHaveBeenCalledWith(1, [72, 700, 100, 700], expect.any(Number));
     expect(view.container.querySelector('[data-pdf-ink-preview]')).toBeNull();
     expect(onMark).not.toHaveBeenCalled();
   });

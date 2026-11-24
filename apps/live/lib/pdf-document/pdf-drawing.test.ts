@@ -20,11 +20,13 @@ const other = PageName.ofObject(9);
 const T = 1_795_000_000_000;
 const by = (
   id: string,
-  now = T,
+  begunAt = T,
   last: { id: string; page: PageName; endedAt: number } | null = null,
+  now = begunAt,
 ) => ({
   author: 'Ada',
   now,
+  begunAt,
   id,
   look: DRAWING_LOOK,
   last,
@@ -95,6 +97,15 @@ describe('addStroke', () => {
     addStroke(doc, { page: other, stored }, [50, 50], by('d4', T + 1, last));
     addStroke(doc, { page, stored }, [60, 60], by('d5', T + 1, { ...last, id: 'gone' }));
     expect(drawings(doc).map((mark) => mark.id)).toEqual(['d1', 'd3', 'd4', 'd5']);
+  });
+
+  // Joining is decided by when a stroke began: a long stroke begun in time joins, however long it took.
+  it('joins a stroke begun in time though it ends long after', () => {
+    const doc = PdfLiveChanges.load();
+    addStroke(doc, { page, stored }, [10, 10], by('d1'));
+    const last = { id: 'd1', page, endedAt: T };
+    const long = by('d2', T + PDF_DRAWING_JOIN_MS, last, T + 10 * PDF_DRAWING_JOIN_MS);
+    expect(addStroke(doc, { page, stored }, [20, 20], long)).toMatchObject({ joined: true });
   });
 
   it('starts a new Drawing where the stroke would take the last past the most points one holds', () => {

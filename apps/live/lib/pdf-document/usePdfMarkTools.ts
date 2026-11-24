@@ -52,7 +52,8 @@ export type PdfPageInk = {
   readonly colour: string;
   readonly opacity: number;
   readonly width: number;
-  readonly onDraw: (index: number, stroke: Stroke) => void;
+  // `begunAt`: when the stroke began, which decides whether it joins the Drawing before it.
+  readonly onDraw: (index: number, stroke: Stroke, begunAt: number) => void;
 };
 
 type Ready = Pick<

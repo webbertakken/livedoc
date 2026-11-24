@@ -31,7 +31,7 @@ export function usePdfDrawing({
   // The Drawing the next stroke may join.
   const last = useRef<LastDrawing | null>(null);
   return useCallback(
-    (index: number, stroke: Stroke) => {
+    (index: number, stroke: Stroke, begunAt: number) => {
       const page = ready?.pages[index];
       if (!ready || !page) return;
       const now = Date.now();
@@ -40,7 +40,7 @@ export function usePdfDrawing({
           ready.binding.doc,
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
           stroke,
-          { author, now, id: crypto.randomUUID(), look, last: last.current },
+          { author, now, begunAt, id: crypto.randomUUID(), look, last: last.current },
         ),
       );
       if (made.ok) {
