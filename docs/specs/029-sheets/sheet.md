@@ -511,13 +511,12 @@ A row is **automatic** until it is given a size of its own; then it is **sized**
 - A character outside the table is measured by its kind (default, **D98**): an accented letter as its letter, a
   CJK character a full em, an emoji 1.25 em, anything else the font's average letter.
 - A cell with no font of its own is measured in its tab's font.
-- A tab with no font draws its cells in the device's own font, which differs by device and which no table holds.
-- Such text is measured as Inter (default, **D99**), which is as wide as the fonts most devices name, or wider.
-- So a line on such a tab fits its cell on those devices, and breaks where it would in Inter on every device.
+- A cell on a tab with no font is measured and drawn in Inter (**D99**), so it reads the same on every device.
+- The grid, its cell editor, images and exports all draw such cells in Inter; the sheet's own chrome does not change.
 - The grid, images and exports draw exactly the lines that were measured, so an automatic row cuts no line off.
 - They place a measured line by its font's own widths, never snapped to whole px, so it is as wide as measured.
-- Where a browser draws a font wider than was measured (a fallback while the font loads, or a device's font wider
-  than Inter), a line may reach past its cell's edge.
+- Where a browser draws a font wider than was measured (a fallback while the font loads, or the device's own font
+  where Google Fonts is blocked), a line may reach past its cell's edge.
 - An Editor sizes a row and returns it to automatic, by hand or through an agent.
 - An agent acting for a Participant or a Viewer is refused both, as that person is.
 - A Participant's typing and an agent's cells grow an automatic row all the same: that is no change of shape.
@@ -1061,5 +1060,5 @@ The code cites each by its id.
 - **D97** The room an automatic row keeps round its text: 1 px for one line, 8 px for two or more (default).
 - **D98** How a character outside a font's width table is measured: an accented letter as its letter, a CJK
   character 1 em, an emoji 1.25 em, anything else the font's average letter (default).
-- **D99** What text with no font is measured in: Inter, whose prose is as wide as Noto Sans's and 4% to 7% wider
-  than Ubuntu's, Segoe UI's, Arial's and Roboto's; DejaVu Sans, 7% wider than Inter, runs past its cell (default).
+- **D99** What a cell with no font is measured and drawn in: Inter, chosen over the device's own font, a wider
+  system face, and seven other faces shown side by side (ruled 2026-11-22).

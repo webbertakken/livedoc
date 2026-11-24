@@ -26,6 +26,7 @@ import {
   type Sheet,
   type Value,
   type Workbook,
+  SHEET_TEXT_FONT,
 } from '@livedoc/sheets';
 import { RULE_ARROW_PX, ruleCellDraw } from './rules/sheet-rule-draw';
 import type { PlanPalette } from '@/components/plan/plan-palette';
@@ -403,7 +404,8 @@ function SheetCellsInner(props: CellsProps) {
       aria-hidden
       data-sheet-cells
       className="absolute inset-0"
-      style={props.fontFamily ? { fontFamily: props.fontFamily } : undefined}
+      // The tab's font; with none, Inter, the font the cells are measured in (sheet.md "Row height", D99).
+      style={{ fontFamily: props.fontFamily ?? resolveFontStack(SHEET_TEXT_FONT) }}
     >
       {regions.map((region, i) => (
         <RegionCells key={i} {...props} region={region} />

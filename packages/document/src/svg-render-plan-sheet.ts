@@ -50,6 +50,8 @@ export type SheetRenderModel = {
     link?: string;
     spark?: readonly SparkShape[];
   }[];
+  // The font the cells were measured in, which a cell with no font of its own is drawn in (sheet.md "Row height").
+  font?: string;
   // The sheet's look (Sheet Settings): gridlines and headers left out.
   hideGrid?: true;
   hideHeaders?: true;
@@ -211,8 +213,8 @@ export function svgPlanSheet(
       const deco = [cell.underline ? 'underline' : '', cell.strike ? 'line-through' : '']
         .filter(Boolean)
         .join(' ');
-      // A cell's own font (an id the editor no longer offers draws in the sheet's).
-      const stack = resolveFontStack(cell.font);
+      // A cell's own font, else the one its sheet was measured in (an id the editor no longer offers draws in that).
+      const stack = resolveFontStack(cell.font) ?? resolveFontStack(model.font);
       const face = stack ? ` font-family="${xmlEscape(stack)}"` : '';
       const clip = `${id}-${cell.r}-${cell.c}`;
       out += `<clipPath id="${clip}"><rect x="${r2(cx)}" y="${r2(cy)}" width="${r2(cell.wrap === 'o' || !cell.wrap ? Math.max(cw, right - cx) : cw)}" height="${r2(ch)}"/></clipPath>`;

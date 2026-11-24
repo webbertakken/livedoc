@@ -3,6 +3,7 @@
 import { columnLetters } from '../address';
 import { colWidth, layoutIndex, posRangeOf } from '../layout';
 import { cellLines, rowHeights } from '../row-fit';
+import { measuredFont } from '../text/text-measure';
 import { displayValue } from '../number-format';
 import { cellKey, type Border, type CellFormat } from '../sheet';
 import { Workbook } from './workbook';
@@ -55,6 +56,8 @@ export type SheetRenderModel = {
   frozenRows: number;
   frozenCols: number;
   cells: RenderCell[];
+  // The font the cells were measured in, which a cell with no font of its own is drawn in (sheet.md "Row height").
+  font: string;
   // The sheet's look (Sheet Settings): gridlines and headers left out.
   hideGrid?: true;
   hideHeaders?: true;
@@ -207,6 +210,7 @@ export function renderWindow(
     frozenRows: Math.min(layout.frozenRows ?? 0, rows.length),
     frozenCols: Math.min(layout.frozenCols ?? 0, cols.length),
     cells,
+    font: measuredFont(font),
     ...(layout.showGrid === false ? { hideGrid: true as const } : {}),
     ...(layout.showHeaders === false ? { hideHeaders: true as const } : {}),
   };

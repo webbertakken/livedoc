@@ -165,7 +165,7 @@ test('rows fit their text, a sized row keeps its height, and Fit to Data hands i
   page,
   baseURL,
 }) => {
-  // A tab with no font, as most are: its cells draw in the device's own font.
+  // A tab with no font, as most are: its cells are measured and drawn in Inter (sheet.md "Row height", D99).
   const { grid, rowSizes } = await openSheet(page, page.request, baseURL!, {
     cells: [
       cell(0, 0, 'Topic', { b: true }),
@@ -183,6 +183,13 @@ test('rows fit their text, a sized row keeps its height, and Fit to Data hands i
       cell(3, 2, 'Lee'),
     ],
   });
+
+  expect(
+    await page
+      .locator('[data-sheet-cells]')
+      .first()
+      .evaluate((node) => getComputedStyle(node).fontFamily),
+  ).toMatch(/^"?Inter\b/);
 
   // A sheet nobody sized fits at once: the rows that wrap are taller, the rest keep the sheet's row height.
   await expect.poll(() => rowHeight(page, 2)).toBeGreaterThan(ROW_HEIGHT_PX * 2);

@@ -363,6 +363,15 @@ describe('the cells', () => {
     expect(textBox('Loading…').style.color).not.toBe(RED);
   });
 
+  // docs/specs/029-sheets/sheet.md "Row height", D99: cells with no font are drawn in Inter, as they are measured.
+  it('draws in Inter on a tab with no font', () => {
+    const { container } = draw(sheetOf({}));
+    // jsdom drops the quotes round a family name.
+    expect((container.firstElementChild as HTMLElement).style.fontFamily).toMatch(
+      /^"?Inter"?, ui-sans-serif, system-ui, sans-serif$/,
+    );
+  });
+
   it('uses the element’s font', () => {
     const { container } = draw(sheetOf({}), { fontFamily: 'Georgia' });
     expect((container.firstElementChild as HTMLElement).style.fontFamily).toBe('Georgia');

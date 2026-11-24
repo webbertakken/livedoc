@@ -13,12 +13,13 @@ import type { SheetActions } from './useSheetActions';
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
 let actions: SheetActions;
-function show(h: SheetHarness, at = 'B2') {
+// `fontFamily` is the tab's font stack; null for a tab with none.
+function show(h: SheetHarness, at = 'B2', fontFamily: string | null = 'Inter') {
   return renderSheet(
     h,
     (p) => {
       actions = p.actions;
-      return <SheetCellEditor input={p.input} fontFamily="Inter" />;
+      return <SheetCellEditor input={p.input} fontFamily={fontFamily ?? undefined} />;
     },
     { at },
   );
@@ -63,6 +64,14 @@ describe('the cell editor', () => {
     expect(document.activeElement).toBe(editor());
     expect(editor().selectionStart).toBe(5);
     expect(editor().style.fontFamily).toBe('Inter');
+  });
+
+  // docs/specs/029-sheets/sheet.md "Row height", D99: on a tab with no font, typing is drawn as the cell is, in Inter.
+  it('types in Inter on a tab with no font', () => {
+    show(h, 'B2', null);
+    act(() => actions.startEdit('cell'));
+    // jsdom drops the quotes round a family name.
+    expect(editor().style.fontFamily).toMatch(/^"?Inter"?, ui-sans-serif, system-ui, sans-serif$/);
   });
 
   // docs/specs/029-sheets/sheet.md "Editing": editing a cell that wraps keeps its width and grows down.

@@ -12,6 +12,7 @@ import {
   formulaSyntaxOf,
   formulaToLocale,
   wrapLines,
+  SHEET_TEXT_FONT,
 } from '@livedoc/sheets';
 import { argumentAt, argumentSlot, refSpans } from './formula-assist';
 import { useSheetController } from './sheet-controller';
@@ -208,7 +209,7 @@ export function SheetCellEditor({
   const text = {
     fontSize: px,
     lineHeight: `${lineH}px`,
-    fontFamily: resolveFontStack(f?.ff) ?? fontFamily,
+    fontFamily: resolveFontStack(f?.ff) ?? fontFamily ?? resolveFontStack(SHEET_TEXT_FONT),
     fontWeight: f?.b ? 700 : undefined,
     fontStyle: f?.i ? ('italic' as const) : undefined,
   };

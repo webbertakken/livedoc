@@ -156,10 +156,10 @@ Font`.
 - The widths of the eleven are a generated table: `pnpm --filter @livedoc/live fonts:advances` writes
   `packages/sheets/src/text/font-advances.ts`.
 - A font added to or dropped from the eleven regenerates it; a test fails while the table and the eleven differ.
-- Text with no font is drawn in the device's own font and measured as Inter
+- A Sheet's cells with no font, on a tab with none, are measured and drawn in Inter
   ([Row height](../029-sheets/sheet.md#row-height), D99).
-- `pnpm --filter @livedoc/live fonts:system` reports how the fonts installed on a machine draw such text: the lines
-  that run past their cell.
+- `pnpm --filter @livedoc/live fonts:system` reports how the fonts installed on a machine would draw such text where
+  Inter cannot load: the lines that run past their cell.
 
 ## Loading
 
