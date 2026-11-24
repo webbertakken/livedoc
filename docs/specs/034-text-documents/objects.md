@@ -559,6 +559,6 @@ the gallery's limit.
 a building block as `TextDocumentBuildingBlock<Block>` (MeetingNotes, EmailDraft, ProductRoadmap, ReviewTracker,
 ProjectAssets, ContentLaunchTracker), a code block as `TextDocumentCodeBlock`,
 with the image source as the type's suffix (ImageUpload, ImageUrl, ImageGallery, ImageCamera, ImageSearch);
-`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust); a new equation from the
-equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·
+`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust); a new equation from
+the equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·
 TextDocumentEquationToolbar`, counted before it flips. Never content.
