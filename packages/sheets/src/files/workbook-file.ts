@@ -25,7 +25,7 @@ import { storedKept } from './kept-anchors';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
 import { bandingRules } from '../rules/bandings';
-import { themedFormat } from '../themes/spreadsheet-theme';
+import { STANDARD_THEME, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { fileFormatRulesOf, formatRulesFromFile, type FileFormatRule } from './file-format-rules';
 
 export type FileValue =
@@ -61,8 +61,11 @@ export type FileSheet = {
   formatRules?: FileFormatRule[];
 };
 
-/** A workbook as a file holds it, and what it holds that the model does not (standard-mapping.md "Unknown content"). */
-export type WorkbookFile = { sheets: FileSheet[]; kept?: KeptContent };
+/**
+ * A workbook as a file holds it, what it holds that the model does not (standard-mapping.md "Unknown content"), and
+ * its theme ("The theme in the file"); absent, Standard.
+ */
+export type WorkbookFile = { sheets: FileSheet[]; kept?: KeptContent; theme?: SpreadsheetTheme };
 
 /** A file read: its sheets and what could not be carried, or the package's named rejection. */
 export type FileRead = { ok: true; file: WorkbookFile; losses: FileLoss[] } | PackageRefusal;
@@ -167,8 +170,8 @@ export function workbookFileOf(
       const cells: FileCell[] = [];
       for (const [key, cell] of sheet.cells) {
         const format = formatCodeOf(cell.format, locale) ?? undefined;
-        // A file holds the colour a theme colour is now (formatting.md "Themes").
-        const style = cellStyleOf(themedFormat(cell.format, engine.theme));
+        // A theme colour stays one: XLSX holds it by its theme, ODF as the colour it is (D218).
+        const style = cellStyleOf(cell.format);
         if (!cell.input && format === undefined && !style) continue;
         const { r: rowId, c: colId } = splitCellKey(key);
         const r = index.rowPos.get(rowId);
@@ -208,6 +211,7 @@ export function workbookFileOf(
         ...(formatRules ? { formatRules } : {}),
       };
     }),
+    ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
   };
 }
 

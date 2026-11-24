@@ -420,9 +420,9 @@ export function gridOffice(port: GridMenuPort): GridOffice {
       if (editor) setFontSize(port.act, pt);
     },
     borders: editor ? gridBorders(port.borderLine, port.act.borders, port.chooseBorderLine) : null,
-    fontFamily: editor ? cellFamilyOf(port.format) : null,
+    fontFamily: editor ? cellFamilyOf(port.format, (port.theme ?? STANDARD_THEME).font) : null,
     setFontFamily: (family) => {
-      if (editor) port.act.format(cellFontPatch(family));
+      if (editor) port.act.format(cellFontPatch(family, (port.theme ?? STANDARD_THEME).font));
     },
   };
 }

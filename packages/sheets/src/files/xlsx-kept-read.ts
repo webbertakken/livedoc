@@ -35,6 +35,8 @@ const WRITTEN_TYPES: ReadonlySet<string> = new Set([
   `${RELS}/extended-properties`,
   'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
   `${RELS}/styles`,
+  // The theme is the workbook's, read and written (standard-mapping.md "The theme in the file").
+  `${RELS}/theme`,
   `${RELS}/sharedStrings`,
   `${RELS}/sheetMetadata`,
   `${RELS}/calcChain`,
@@ -42,7 +44,7 @@ const WRITTEN_TYPES: ReadonlySet<string> = new Set([
 
 // The parts LiveDoc writes, whatever a kept part's relationship says (a link back to a worksheet is not followed).
 const WRITTEN_PARTS =
-  /^(xl\/workbook\.xml|xl\/worksheets\/[^/]*\.xml|xl\/styles\.xml|xl\/sharedStrings\.xml|xl\/metadata\.xml|docProps\/(core|app)\.xml)$/;
+  /^(xl\/workbook\.xml|xl\/theme\/theme1\.xml|xl\/worksheets\/[^/]*\.xml|xl\/styles\.xml|xl\/sharedStrings\.xml|xl\/metadata\.xml|docProps\/(core|app)\.xml)$/;
 
 /** Whether the XLSX writer writes a part of this name itself (relationships and content types too): none is kept. */
 export const isWrittenXlsxPart = (name: string): boolean =>

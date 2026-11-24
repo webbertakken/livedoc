@@ -142,11 +142,19 @@ export const WorkbookRecord = {
   /** The meaning a format's file has: OOXML's for `.xlsx`, OpenFormula's for `.ods` and `.fods`. */
   meaningOf: (format: WorkbookFormat): FileMeaning => (format === 'xlsx' ? 'ooxml' : 'openformula'),
 
-  /** A new spreadsheet's record opened from a file: the file's format and that format's meaning. */
-  opened: (made: WorkbookRecord, format: WorkbookFormat): WorkbookRecord => ({
+  /**
+   * A new spreadsheet's record opened from a file: the file's format, that format's meaning and the file's theme
+   * (standard-mapping.md "The theme in the file").
+   */
+  opened: (
+    made: WorkbookRecord,
+    format: WorkbookFormat,
+    theme?: SpreadsheetTheme,
+  ): WorkbookRecord => ({
     ...made,
     format,
     meaning: WorkbookRecord.meaningOf(format),
+    ...(theme ? { settings: { ...made.settings, theme } } : {}),
   }),
 
   /**

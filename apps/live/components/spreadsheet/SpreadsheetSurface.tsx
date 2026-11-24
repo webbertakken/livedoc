@@ -21,7 +21,6 @@ import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useShe
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
 import { shownTabs } from '@/lib/spreadsheet/sheet-bar-places';
-import { SPREADSHEET_DEFAULT_FONT } from '@/lib/spreadsheet/spreadsheet-fonts';
 // The served document fonts' faces, which a cell's family draws in (formatting.md "Font").
 import '@/app/document-fonts.css';
 import type { SpreadsheetHistory } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
@@ -291,8 +290,8 @@ function SheetWorkspace({
     canShape: bridge.canEdit && bridge.canShape,
     // The grid fills the surface, as a Sheet filling its tab lays out.
     maximised: true,
-    // A cell with no font of its own is measured and drawn in Arial (formatting.md "Font", D201).
-    font: SPREADSHEET_DEFAULT_FONT,
+    // A cell with no font of its own is measured and drawn in the theme's (formatting.md "Themes"; Arial, D201).
+    font: theme.font,
     locale: bridge.locale,
     announce: setAnnouncement,
     toast: bridge.toast,

@@ -19,6 +19,7 @@ import type { Border, BorderStyle } from '../sheet';
 import type { Rotation } from '../text/rotation';
 import { FILE_DEFAULT_FONT, cellStyleKey, type CellStyle } from './cell-style';
 import { xlsxColourOf, xlsxColourXml } from './xlsx-colours';
+import { themeColourRefOf, xlsxColourOrThemeXml } from './xlsx-theme';
 
 /** The parts of a styles part a cell style names, and the theme its colours may come from. */
 export type XlsxStylesheet = {
@@ -28,6 +29,10 @@ export type XlsxStylesheet = {
   theme: readonly string[];
   // The default font's colour (font 0's), which reads as none (D203).
   ink: string | null;
+  // The family a cell's font reads as none for: the theme's font (font 0's) in a file with a theme, else Arial (D218).
+  font: string;
+  // The file has a theme: a cell's untinted theme colour reads as that theme colour (D218).
+  themed: boolean;
 };
 
 /** A styles part's fonts, fills and borders. */
@@ -48,7 +53,18 @@ export function readXlsxStylesheet(
         theme,
       )
     : null;
-  return { fonts, fills: listed('fills'), borders: listed('borders'), theme, ink };
+  const named = font0 && childElements(font0).find((e) => e.local === 'name');
+  const family = named && attributeOf(named, '', 'val');
+  const themed = theme.length > 0 && !!family;
+  return {
+    fonts,
+    fills: listed('fills'),
+    borders: listed('borders'),
+    theme,
+    ink,
+    font: themed ? family : FILE_DEFAULT_FONT,
+    themed,
+  };
 }
 
 const on = (e: XmlElement | undefined) =>
@@ -110,6 +126,10 @@ const PROTECTION_DEFAULTS: Readonly<Record<string, readonly string[]>> = {
 
 type Read = { style: CellStyle; lost: boolean };
 
+// A cell's colour: its theme colour by name in a file with a theme (untinted), else the colour it draws (D218).
+const colourOf = (element: XmlElement | undefined, drawn: string, sheet: XlsxStylesheet) =>
+  (sheet.themed && themeColourRefOf(element)) || drawn;
+
 function readFont(font: XmlElement | undefined, sheet: XlsxStylesheet, read: Read) {
   const parts = new Map((font ? childElements(font) : []).map((e) => [e.local, e]));
   if (on(parts.get('b'))) read.style.b = true;
@@ -118,9 +138,9 @@ function readFont(font: XmlElement | undefined, sheet: XlsxStylesheet, read: Rea
   const u = parts.get('u');
   if (u && (attributeOf(u, '', 'val') ?? 'single') !== 'none') read.style.u = true;
   const colour = xlsxColourOf(parts.get('color'), sheet.theme);
-  if (colour && colour !== sheet.ink) read.style.fc = colour;
+  if (colour && colour !== sheet.ink) read.style.fc = colourOf(parts.get('color'), colour, sheet);
   const name = parts.get('name') && attributeOf(parts.get('name')!, '', 'val');
-  if (name && name.toLowerCase() !== FILE_DEFAULT_FONT.toLowerCase()) {
+  if (name && name.toLowerCase() !== sheet.font.toLowerCase()) {
     if (validFormatValue('ff', name)) read.style.ff = name;
     else read.lost = true;
   }
@@ -140,11 +160,9 @@ function readFill(fill: XmlElement | undefined, sheet: XlsxStylesheet, read: Rea
     read.lost = true;
     return;
   }
-  const colour = xlsxColourOf(
-    childElements(pattern).find((e) => e.local === 'fgColor'),
-    sheet.theme,
-  );
-  if (colour) read.style.bg = colour;
+  const fg = childElements(pattern).find((e) => e.local === 'fgColor');
+  const colour = xlsxColourOf(fg, sheet.theme);
+  if (colour) read.style.bg = colourOf(fg, colour, sheet);
 }
 
 const SIDES = [
@@ -235,12 +253,22 @@ const WRITE_BORDERS: Readonly<Record<BorderStyle, readonly string[]>> = {
 const WRITE_HORIZONTAL = { l: 'left', c: 'center', r: 'right' } as const;
 const WRITE_VERTICAL = { t: 'top', m: 'center' } as const;
 
-/** The fonts, fills and borders a written styles part lists, each distinct one once, LiveDoc's defaults first. */
+/**
+ * The fonts, fills and borders a written styles part lists, each distinct one once, LiveDoc's defaults first: the
+ * default font the theme's (standard-mapping.md "The theme in the file"), a theme colour by its theme.
+ */
 export class XlsxStyleParts {
   private readonly fonts = new Map<string, number>([['', 0]]);
-  private readonly fontXml = [
-    `<font><sz val="${FONT_SIZE_DEFAULT}"/><name val="${FILE_DEFAULT_FONT}"/></font>`,
-  ];
+  private readonly fontXml: string[];
+  private readonly base: string;
+
+  constructor(base = FILE_DEFAULT_FONT) {
+    this.base = base;
+    this.fontXml = [
+      `<font><sz val="${FONT_SIZE_DEFAULT}"/><name val="${escapeXmlAttribute(base)}"/></font>`,
+    ];
+  }
+
   private readonly fills = new Map<string, number>([['', 0]]);
   private readonly fillXml = [
     '<fill><patternFill patternType="none"/></fill>',
@@ -255,7 +283,7 @@ export class XlsxStyleParts {
     for (const key of ['b', 'i', 'st', 'u', 'fs', 'fc', 'ff'] as const)
       if (style?.[key] !== undefined) Object.assign(own, { [key]: style[key] });
     return this.listed(this.fonts, this.fontXml, cellStyleKey(own), () => {
-      const family = own.ff ? fontFamilyName(own.ff) : FILE_DEFAULT_FONT;
+      const family = own.ff ? fontFamilyName(own.ff) : this.base;
       return (
         '<font>' +
         (own.b ? '<b/>' : '') +
@@ -263,7 +291,7 @@ export class XlsxStyleParts {
         (own.st ? '<strike/>' : '') +
         (own.u ? '<u/>' : '') +
         `<sz val="${own.fs ?? FONT_SIZE_DEFAULT}"/>` +
-        (own.fc ? xlsxColourXml('color', own.fc) : '') +
+        (own.fc ? xlsxColourOrThemeXml('color', own.fc) : '') +
         `<name val="${escapeXmlAttribute(family)}"/></font>`
       );
     });
@@ -279,7 +307,7 @@ export class XlsxStyleParts {
         this.fillXml,
         bg,
         () =>
-          `<fill><patternFill patternType="solid">${xlsxColourXml('fgColor', bg)}<bgColor indexed="64"/></patternFill></fill>`,
+          `<fill><patternFill patternType="solid">${xlsxColourOrThemeXml('fgColor', bg)}<bgColor indexed="64"/></patternFill></fill>`,
       ) + 1
     );
   }

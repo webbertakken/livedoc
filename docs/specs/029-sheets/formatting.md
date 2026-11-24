@@ -159,8 +159,8 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 ## Themes
 
-**Status: in progress.** The theme, the Themes panel, Customise and theme colours in cells are built; the theme's font
-and the files' theme part are not.
+**Status: built.** The theme, the Themes panel, Customise, theme colours in cells, the theme's font and the files'
+theme part ([Standard mapping](standard-mapping.md#the-theme-in-the-file)).
 
 A spreadsheet's **theme** is the workbook's: a **font** and nine **theme colours**, **Text**, **Background**,
 **Accent 1** to **Accent 6** and **Link**. A cell coloured with a theme colour follows the theme: picking another
@@ -177,11 +177,11 @@ theme restyles it.
     names the theme **Custom**; **Done** returns to the list.
 - **Theme colours in cells**: Text Colour's and Fill Colour's picker gains a **Theme** row before the standard rows
   (retiring D199), its nine colours named as above; a pick stores the colour's name (`theme:accent1`), drawn in
-  the workbook's theme wherever the cell draws or leaves: the grid, images, the clipboard and files (which hold the
-  colour it is then, until the files' theme part is built). A standard or custom pick stores its `#rrggbb`, as before.
+  the workbook's theme wherever the cell draws or leaves: the grid, images, the clipboard and files (XLSX by its
+  theme, ODF as the colour it is). A standard or custom pick stores its `#rrggbb`, as before.
 - Alternating colours and format rules keep colours of their own (default, D217).
-- The theme's **font** is the font of every cell that sets none (Standard's Arial, D201), written as the files' default
-  font (not built yet).
+- The theme's **font** is the font of every cell that sets none (Standard's Arial, D201): drawn and measured in it,
+  shown by the toolbar's Font, and written as the files' default font; choosing it in Font sets none.
 - A theme change is the workbook's, not a cell's: Undo does not take it back, as File › Settings' do not (default,
   D217).
 - Telemetry: `UI · Opened · SpreadsheetPanelThemes`; `Spreadsheet · Changed · Theme` for each pick or customisation.

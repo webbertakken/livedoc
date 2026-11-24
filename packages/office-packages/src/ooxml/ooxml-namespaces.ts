@@ -62,5 +62,6 @@ export const OOXML_CONTENT_TYPES = {
   worksheet: 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml',
   sharedStrings: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml',
   spreadsheetStyles: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml',
+  theme: 'application/vnd.openxmlformats-officedocument.theme+xml',
   sheetMetadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
 } as const;

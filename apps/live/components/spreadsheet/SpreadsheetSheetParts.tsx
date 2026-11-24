@@ -12,7 +12,6 @@ import { useFormulaPointing } from '@/components/sheets/useFormulaPointing';
 import { useSheetActions } from '@/components/sheets/useSheetActions';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
-import { SPREADSHEET_DEFAULT_FONT } from '@/lib/spreadsheet/spreadsheet-fonts';
 import { SPREADSHEET_PANELS, withBandingOnOpen } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SheetBarSummary } from './SheetBarSummary';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
@@ -20,16 +19,17 @@ import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
 import { SpreadsheetRightPanel } from './SpreadsheetRightPanel';
 import { useSpreadsheetSurfaceKeys } from './spreadsheet-surface-keys';
 import { useSpreadsheetZoomScale } from './spreadsheet-zoom';
+import { useSpreadsheetTheme } from './spreadsheet-theme-context';
 import { useCellGoogleFonts } from './useCellGoogleFonts';
 import { useCustomAngleDialog } from './useCustomAngleDialog';
 import { useGridMenuBindings } from './useGridMenuBindings';
 import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 
-const DEFAULT_FONT_STACK = DocumentFonts.stack(SPREADSHEET_DEFAULT_FONT);
-
 export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const actions = useSheetActions();
+  // Cells setting no font draw in the theme's (formatting.md "Themes").
+  const { theme } = useSpreadsheetTheme();
   const input = useFormulaInput(actions);
   const c = useSheetController();
   const pointRef = useFormulaPointing(c, input);
@@ -94,7 +94,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
               peers={bridge.peers}
               zoom={zoom}
               surfaceKeys={surfaceKeys}
-              fontFamily={DEFAULT_FONT_STACK}
+              fontFamily={DocumentFonts.stack(theme.font)}
             />
           </div>
         </div>

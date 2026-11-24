@@ -514,6 +514,11 @@ describe('gridColours', () => {
       label: 'Accent 1',
     });
     expect(gridOffice(port()).colours!['text-colour']!.theme![0]!.colour).toBe('#000000');
+    // The theme's font is the cells' default: shown for none, set as none.
+    const themed = port({ theme: ocean });
+    expect(gridOffice(themed).fontFamily).toBe('Roboto');
+    gridOffice(themed).setFontFamily('Roboto');
+    expect(themed.act.format).toHaveBeenCalledWith({ ff: null });
   });
 
   it('gives no one but an Editor the colours', () => {
