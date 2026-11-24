@@ -112,7 +112,9 @@ export function boxDeclarations(p: ParagraphProps): string[] {
     `--text-document-box-inline: calc(var(${INDENT_START}, 0pt) + var(${INDENT_END}, 0pt))`,
     ...SIDES.flatMap((side) => {
       const line = borders[side];
-      const drawn = borderCss(line);
+      // A line of the box's own fill is drawn as that fill, so it melts into the box on either paper.
+      const fill = shading !== undefined && line?.color.toLowerCase() === shading.toLowerCase();
+      const drawn = borderCss(line, fill ? paperFill : paperInk);
       return [
         `border-${side}: ${drawn}`,
         `padding-${side}: ${drawn !== 'none' ? (pt(line!.space, 72) ?? '0pt') : '0pt'}`,
