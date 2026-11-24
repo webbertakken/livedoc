@@ -20,8 +20,11 @@ const isText = (children: ReactNode): boolean =>
   typeof children === 'number' ||
   (Array.isArray(children) && children.length > 0 && children.every(isText));
 
-const textOf = (children: ReactNode): string =>
-  Array.isArray(children) ? children.map(textOf).join('') : String(children);
+const textOf = (children: ReactNode): string => {
+  if (typeof children === 'string') return children;
+  if (typeof children === 'number') return String(children);
+  return Array.isArray(children) ? children.map(textOf).join('') : '';
+};
 
 // The text glyph, moved by its ink.
 function TextGlyph({ text }: { text: string }) {
