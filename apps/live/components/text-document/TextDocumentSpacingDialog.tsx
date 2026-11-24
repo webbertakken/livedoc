@@ -23,7 +23,7 @@ export function readSpacingField(text: string, { min, max }: Range): number | nu
 }
 
 const FIELD =
-  'h-prominent w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400';
+  'h-field w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400';
 
 function SpacingField({
   label,
@@ -125,7 +125,7 @@ export function TextDocumentSpacingDialog({
           range={LINE_SPACING_RANGE}
           onChange={setLine}
         />
-        <h3 className="col-span-2 pt-2 text-body font-medium">Paragraph spacing</h3>
+        <h3 className="col-span-2 pt-2 text-panel-title">Paragraph spacing</h3>
         <SpacingField
           label="Before"
           unit="pt"

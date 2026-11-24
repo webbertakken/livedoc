@@ -30,7 +30,7 @@ export function TextDocumentAltTextDialog({
       primary={{ label: 'OK', onPress: () => onApply({ alt: text, decorative: marked }) }}
     >
       <div className="flex flex-col gap-3 pt-1">
-        <label htmlFor={description} className="text-body font-medium">
+        <label htmlFor={description} className="text-body">
           Description
         </label>
         <textarea
@@ -44,7 +44,7 @@ export function TextDocumentAltTextDialog({
         <label className="flex items-center gap-3 text-body">
           <input
             type="checkbox"
-            className="size-4 shrink-0 accent-(--office-primary)"
+            className="size-icon-row shrink-0 accent-(--office-primary)"
             checked={marked}
             onChange={(event) => {
               setMarked(event.target.checked);

@@ -17,7 +17,7 @@ type Props<T> = {
   draw: (item: T) => ReactNode;
   onPick: (item: T) => void;
   onShow: (item: T) => void;
-  // The cell's glyph size, a Tailwind text class.
+  // The cell's glyph size, a class of app/office-glyphs.css.
   size?: string;
   // A set number of cells to a row (the Borders panel's five); else as many as the width takes.
   columns?: number;
@@ -31,7 +31,7 @@ function Grid<T>({
   draw,
   onPick,
   onShow,
-  size = 'text-xl',
+  size = 'office-glyph',
   columns,
 }: Props<T>) {
   // The cell that is the grid's one Tab stop.

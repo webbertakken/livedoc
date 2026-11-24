@@ -34,7 +34,7 @@ const PADDING_RANGE = { min: 0, max: BORDER_PADDING_MAX_PT } as const;
 export const NO_BETWEEN_IN_ODF = 'OpenDocument files have no line between paragraphs';
 
 const CONTROL =
-  'h-prominent rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 const shownNumber = (value: number | null) =>
   value === null ? '' : String(Math.round(value * 100) / 100);

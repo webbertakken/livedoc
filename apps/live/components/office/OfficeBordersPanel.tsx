@@ -87,7 +87,7 @@ export function OfficeBordersPanel({
       ref={panel}
       role="dialog"
       aria-label="Borders"
-      className="flex w-[18rem] flex-col gap-2 rounded-control border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
+      className="flex w-[18rem] flex-col gap-2 rounded-menu border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
     >
       <div className="h-[5.5rem]">
         <OfficeGlyphGrid
@@ -101,7 +101,6 @@ export function OfficeBordersPanel({
             borders.apply(p.placement);
           }}
           onShow={NOTHING}
-          size="text-base"
           columns={5}
         />
       </div>
@@ -115,7 +114,7 @@ export function OfficeBordersPanel({
           <span
             aria-hidden="true"
             data-colour-bar={borders.colour}
-            className="size-3.5 rounded-[2px] border border-(--office-line)"
+            className="size-icon-row rounded-control border border-(--office-line)"
             style={{ background: borders.colour }}
           />
           Border Colour

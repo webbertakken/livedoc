@@ -81,7 +81,7 @@ export function ImageRecolour({
     <div role="radiogroup" aria-label="Recolour" className="flex flex-col gap-2">
       <button
         {...choiceProps(0)}
-        className={`${CHOICE} min-h-prominent border border-(--office-line) px-3 text-left text-body text-(--office-ink) hover:bg-(--office-hover) ${look(0)}`}
+        className={`${CHOICE} min-h-field border border-(--office-line) px-3 text-left text-body text-(--office-ink) hover:bg-(--office-hover) ${look(0)}`}
       >
         {PICTURE_RECOLOURS[0]!.label}
       </button>

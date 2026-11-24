@@ -39,7 +39,7 @@ export function TextDocumentPageOrientationDialog({
             <input
               type="radio"
               name={name}
-              className="size-4 shrink-0 accent-(--office-primary)"
+              className="size-icon-row shrink-0 accent-(--office-primary)"
               checked={chosen === value}
               onChange={() => setChosen(value)}
             />

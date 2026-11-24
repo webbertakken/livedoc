@@ -188,7 +188,11 @@ export function TextDocumentLinkEditor({
           </button>
         </div>
         {problem !== null ? (
-          <p id={`${id}-problem`} role="alert" className="mt-2 ml-7 text-supporting text-(--office-error)">
+          <p
+            id={`${id}-problem`}
+            role="alert"
+            className="mt-2 ml-7 text-supporting text-(--office-error)"
+          >
             {problem}
           </p>
         ) : null}
@@ -207,7 +211,7 @@ export function TextDocumentLinkEditor({
                   <div
                     id={`${listId}-${group}`}
                     role="presentation"
-                    className="px-2 pt-1 pb-0.5 text-supporting font-medium text-(--office-muted)"
+                    className="px-2 pt-1 pb-0.5 text-supporting text-(--office-muted)"
                   >
                     {heading}
                   </div>
@@ -226,7 +230,7 @@ export function TextDocumentLinkEditor({
                           take(offer);
                         }}
                         onMouseEnter={() => setChosen(at)}
-                        className="flex h-field cursor-default items-center gap-2 rounded-control px-2 aria-selected:bg-(--office-menu-hover)"
+                        className="flex h-row cursor-default items-center gap-2 rounded-control px-2 aria-selected:bg-(--office-menu-hover)"
                       >
                         <span aria-hidden="true" className="text-(--office-muted)">
                           <Glyph />

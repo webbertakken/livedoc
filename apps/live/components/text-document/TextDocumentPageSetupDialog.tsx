@@ -60,9 +60,9 @@ const ORIENTATIONS: readonly { value: Orientation; label: string }[] = [
 ];
 
 const CONTROL =
-  'h-prominent rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
-const RADIO = 'size-4 shrink-0 accent-(--office-primary)';
-const HEADING = 'mb-2 text-body font-medium';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+const RADIO = 'size-icon-row shrink-0 accent-(--office-primary)';
+const HEADING = 'mb-2 text-panel-title';
 
 /** A paper's sides as its option reads them: "8.5 × 11 in". */
 export const sidesText = (width: number, height: number, unit: IndentUnit): string =>
@@ -216,7 +216,7 @@ export function TextDocumentPageSetupDialog({
       ) : (
         <div
           {...officeTabPanel(ids.tabs, 'pages')}
-          className="grid gap-x-10 gap-y-6 pt-1 sm:grid-cols-[minmax(0,1fr)_auto]"
+          className="grid gap-x-6 gap-y-6 pt-1 sm:grid-cols-[minmax(0,1fr)_auto]"
         >
           <div className="flex min-w-0 flex-col gap-6">
             <div className="flex flex-col">

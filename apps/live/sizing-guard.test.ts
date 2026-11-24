@@ -134,6 +134,8 @@ const SIZING_EXCEPTIONS = [
   'components/palette/animation-set-previews.tsx',
   'components/palette/palette-icons.tsx',
   'components/palette/sankey-menu-glyphs.tsx',
+  // Drawn art: the office choice grid's pictures of a list style and a stamp, drawn as the page draws them in small.
+  'components/office/OfficeChoicePictures.tsx',
   // The sign-in stage's pitch is display type (D243).
   'components/chrome/AuthStage.tsx',
 ];

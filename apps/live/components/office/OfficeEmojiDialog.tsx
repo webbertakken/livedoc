@@ -197,7 +197,7 @@ export function OfficeEmojiDialog({
                 draw={draw}
                 onPick={pick}
                 onShow={setShown}
-                size="text-2xl"
+                size="office-glyph-emoji"
               />
             )}
             <Preview cell={shown} />
@@ -215,7 +215,7 @@ export function OfficeEmojiDialog({
                 setCatalogue({ state: 'loading' });
                 setAttempt((n) => n + 1);
               }}
-              className="touch-target relative mt-2 rounded-full px-4 py-2 text-body font-medium text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+              className="touch-target relative mt-2 flex h-field items-center rounded-full px-4 text-body text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
             >
               Try again
             </button>
@@ -237,7 +237,7 @@ function Preview({ cell }: { cell: Cell | null }) {
     >
       {cell ? (
         <>
-          <span className="flex size-12 shrink-0 items-center justify-center text-3xl sm:size-24 sm:text-6xl">
+          <span className="flex size-12 shrink-0 items-center justify-center office-glyph-preview sm:size-24 sm:office-glyph-preview-wide">
             {cell.text}
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">

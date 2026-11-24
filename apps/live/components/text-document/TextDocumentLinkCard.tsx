@@ -23,7 +23,7 @@ const EditGlyph = lucideGlyph(lucidePencil, 18);
 const RemoveGlyph = lucideGlyph(lucideLink2Off, 18);
 
 export const ICON_BUTTON =
-  'grid size-8 shrink-0 place-items-center rounded-full text-(--office-icon) hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none';
+  'grid size-row shrink-0 place-items-center rounded-full text-(--office-icon) hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none';
 
 export function CardButton({
   label,

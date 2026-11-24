@@ -20,6 +20,8 @@ const noShortcuts = () => null;
 
 // The drop line's indent for into, one depth deeper, in px.
 const INTO_INDENT_PX = 12;
+// The room the row keeps clear at its end for its options button: the chip step (24 px), its 4 px inset and 4 more.
+const OPTIONS_ROOM_PX = 32;
 
 export function TextDocumentOutlineTab({
   tab,
@@ -95,8 +97,8 @@ export function TextDocumentOutlineTab({
         aria-current={current ? 'page' : undefined}
         {...(start ? { [OFFICE_PANEL_START]: '' } : {})}
         onClick={() => tabs.show(tab.id)}
-        style={{ paddingLeft: 8 + indent }}
-        className={`${rowClass} pr-9 ${current ? 'bg-(--office-pressed) font-medium text-(--office-pressed-ink)' : ''}`}
+        style={{ paddingLeft: 8 + indent, paddingRight: OPTIONS_ROOM_PX }}
+        className={`${rowClass} ${current ? 'bg-(--office-pressed) font-medium text-(--office-pressed-ink)' : ''}`}
       >
         {tab.emoji && (
           <span aria-hidden className="mr-1.5">
@@ -113,11 +115,11 @@ export function TextDocumentOutlineTab({
           aria-haspopup="menu"
           aria-expanded={open}
           onClick={() => setOpen((was) => !was)}
-          className={`absolute right-1 grid size-7 place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-(--office-focus) group-hover:opacity-100 ${
+          className={`absolute right-1 grid size-chip place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-(--office-focus) group-hover:opacity-100 ${
             current || open ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <EllipsisIcon className="size-4" aria-hidden />
+          <EllipsisIcon className="size-icon-row" aria-hidden />
         </button>
       </Tooltip>
       {open ? (

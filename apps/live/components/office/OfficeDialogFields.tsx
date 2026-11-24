@@ -45,7 +45,7 @@ export function OfficeDialogSearch({
         placeholder={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-(--office-muted)"
+        className="h-field min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-(--office-muted)"
       />
     </div>
   );
@@ -78,7 +78,7 @@ export function OfficeDialogSelect<T extends string>({
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value as T)}
-          className="h-10 w-full min-w-0 cursor-pointer appearance-none truncate rounded-control border border-(--office-line) bg-transparent pr-8 pl-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40 [&>option]:bg-(--office-menu)"
+          className="h-field w-full min-w-0 cursor-pointer appearance-none truncate rounded-control border border-(--office-line) bg-transparent pr-6 pl-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40 [&>option]:bg-(--office-menu)"
         >
           {options.map((option) => (
             <option key={option} value={option}>
@@ -88,7 +88,7 @@ export function OfficeDialogSelect<T extends string>({
         </select>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-(--office-icon)"
+          className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-(--office-icon)"
         >
           <ChevronDownIcon size={14} />
         </span>

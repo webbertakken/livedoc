@@ -77,7 +77,7 @@ export function OfficeSizeGrid({
                 data-filled={filled || undefined}
                 onPointerEnter={() => setSize({ columns: c + 1, rows: r + 1 })}
                 style={{ width: CELL_PX, height: CELL_PX }}
-                className={`rounded-[2px] border ${
+                className={`rounded-none border ${
                   filled
                     ? 'border-(--office-focus) bg-(--office-pressed)'
                     : 'border-(--office-line) bg-(--office-menu)'

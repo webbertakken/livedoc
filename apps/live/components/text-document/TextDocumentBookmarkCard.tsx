@@ -29,7 +29,7 @@ export function TextDocumentBookmarkCard({
         data-text-document-bookmark-card
         className="flex items-center gap-1 rounded-menu border border-(--office-line) bg-(--office-menu) py-1 pr-1 pl-3 text-body text-(--office-ink) shadow-lg"
       >
-        <span className="mr-2 font-medium">Bookmark</span>
+        <span className="mr-2">Bookmark</span>
         <CardButton label="Copy link" onPress={onCopy}>
           <CopyGlyph />
         </CardButton>

@@ -33,7 +33,7 @@ export function OfficeFontSizeField({
       onTake={size.set}
       tabIndex={tabIndex}
       chevron={false}
-      inputClass="mx-0.5 h-6 w-9 rounded-sm border border-(--office-line) text-center"
+      inputClass="mx-0.5 h-chip w-9 rounded-control border border-(--office-line) text-center"
     />
   );
 }

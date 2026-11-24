@@ -92,7 +92,7 @@ export function TextDocumentHeaderBar({
       aria-label={label}
       data-header-bar={kind}
       onKeyDown={onKeyDown}
-      className={`absolute left-0 flex items-center gap-2 text-supporting text-(--text-document-mark-ink) ${
+      className={`absolute left-0 flex items-center gap-2 text-body text-(--text-document-mark-ink) ${
         kind === 'header' ? 'top-full mt-1' : 'bottom-full mb-1'
       }`}
       style={{ paddingLeft: 'inherit' }}
@@ -100,7 +100,7 @@ export function TextDocumentHeaderBar({
       <label className={CONTROL}>
         <input
           type="checkbox"
-          className="size-3.5 accent-(--office-primary)"
+          className="size-icon-row accent-(--office-primary)"
           checked={differentFirst}
           onChange={onFirst}
         />
@@ -110,7 +110,7 @@ export function TextDocumentHeaderBar({
         <label className={CONTROL}>
           <input
             type="checkbox"
-            className="size-3.5 accent-(--office-primary)"
+            className="size-icon-row accent-(--office-primary)"
             checked={linked}
             onChange={onLink}
           />

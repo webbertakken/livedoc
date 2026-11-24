@@ -13,7 +13,7 @@ import type { OfficePanelSpec } from '@/lib/office/office-panels';
 export type OfficeRailPanel = { spec: OfficePanelSpec; icon: readonly IconPrim[] };
 
 const BUTTON =
-  'relative flex size-8 shrink-0 items-center justify-center rounded-control text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink)';
+  'relative flex size-row shrink-0 items-center justify-center rounded-control text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink)';
 
 export function OfficePanelRail({
   panels,

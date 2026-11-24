@@ -14,13 +14,14 @@ import {
 } from '@/lib/text-document/indent-units';
 
 export const PANEL_CONTROL =
-  'h-prominent rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40';
 const SELECT = `${PANEL_CONTROL} w-full cursor-pointer [&>option]:bg-(--office-menu)`;
 export const PANEL_LABEL = 'mb-1 text-body';
-export const PANEL_CHECK_ROW = 'flex min-h-prominent cursor-pointer items-center gap-3 text-body';
-export const PANEL_CHECK = 'size-4 shrink-0 accent-(--office-primary) disabled:cursor-default';
+export const PANEL_CHECK_ROW = 'flex min-h-row cursor-pointer items-center gap-3 text-body';
+export const PANEL_CHECK =
+  'size-icon-row shrink-0 accent-(--office-primary) disabled:cursor-default';
 const SUMMARY =
-  'flex cursor-pointer list-none items-center justify-between rounded-control px-2 py-2 text-body font-medium outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) [&::-webkit-details-marker]:hidden';
+  'flex cursor-pointer list-none items-center justify-between rounded-control px-2 py-2 text-panel-title outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) [&::-webkit-details-marker]:hidden';
 
 // The value a list shows where what it changes differs.
 const MIXED = '';

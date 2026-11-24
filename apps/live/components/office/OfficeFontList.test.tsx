@@ -20,7 +20,7 @@ describe('OfficeFontList', () => {
   it('draws the rows in view and a few past them, each telling its place', () => {
     render(<OfficeFontList rows={ROWS} chosen={[]} onToggle={() => {}} onPreview={() => {}} />);
     const options = screen.getAllByRole('option');
-    expect(options).toHaveLength(15);
+    expect(options).toHaveLength(18);
     expect(options[0]!.getAttribute('aria-posinset')).toBe('1');
     expect(options[0]!.getAttribute('aria-setsize')).toBe('200');
   });
@@ -58,13 +58,13 @@ describe('OfficeFontList', () => {
     const list = screen.getByRole('listbox');
     Object.defineProperty(list, 'clientHeight', { configurable: true, value: 720 });
     act(() => resized());
-    expect(screen.getAllByRole('option')).toHaveLength(25);
+    expect(screen.getAllByRole('option')).toHaveLength(31);
     fireEvent.keyDown(list, { key: 'PageDown' });
-    expect(list.getAttribute('aria-activedescendant')).toMatch(/-20$/);
+    expect(list.getAttribute('aria-activedescendant')).toMatch(/-25$/);
     Object.defineProperty(list, 'clientHeight', { configurable: true, value: 0 });
     act(() => resized());
     // Back to 360 px, one row down since the move scrolled.
-    expect(screen.getAllByRole('option')).toHaveLength(16);
+    expect(screen.getAllByRole('option')).toHaveLength(19);
   });
 
   it('scrolls the active row into view, either way', () => {

@@ -33,7 +33,7 @@ export function TextDocumentClipboardDialog({
           const text = keys(id);
           return text ? (
             <li key={id} className="flex gap-3">
-              <kbd aria-label={text.aria} className="min-w-24 font-sans font-medium">
+              <kbd aria-label={text.aria} className="min-w-24 font-sans">
                 {text.shown}
               </kbd>
               <span>{label}</span>

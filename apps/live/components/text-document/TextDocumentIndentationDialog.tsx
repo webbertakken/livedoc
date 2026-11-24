@@ -94,7 +94,7 @@ export function TextDocumentIndentationDialog({
               // A first-line or hanging indent starts at one step, 0.5 in, as Google's does.
               if (next !== 'none' && size === '') setSize(shown(INDENT_STEP_PT, unit));
             }}
-            className="h-prominent cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)"
+            className="h-field cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)"
           >
             {special === '' ? <option value="">Mixed</option> : null}
             {SPECIALS.map((s) => (

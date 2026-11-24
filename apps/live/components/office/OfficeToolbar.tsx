@@ -197,7 +197,7 @@ export function OfficeToolbar({
           const index = placed.findIndex((p) => p.control.id === slot?.dataset.controlSlot);
           if (index >= 0 && index < fit) setFocusIndex(index);
         }}
-        className={`flex h-10 items-center rounded-3xl bg-(--office-toolbar) px-2 pointer-coarse:h-11 ${
+        className={`flex h-10 items-center rounded-full bg-(--office-toolbar) px-2 pointer-coarse:h-11 ${
           phone ? 'overflow-x-auto [scrollbar-width:none]' : 'overflow-hidden'
         }`}
       >
@@ -232,7 +232,7 @@ export function OfficeToolbar({
           role="toolbar"
           aria-label="More tools"
           onKeyDown={onKeyDown}
-          className="mt-1 ml-auto flex w-fit max-w-full flex-wrap items-center rounded-3xl bg-(--office-toolbar) px-2 py-1.5"
+          className="mt-1 ml-auto flex w-fit max-w-full flex-wrap items-center rounded-full bg-(--office-toolbar) px-2 py-1.5"
         >
           {moved.map((p, i) => (
             <span key={p.control.id} className="flex items-center">
@@ -263,7 +263,7 @@ function Slot({ id, hidden, children }: { id: string; hidden: boolean; children:
 }
 
 function Divider() {
-  return <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-(--office-line)" />;
+  return <span aria-hidden className="mx-1 h-icon-title w-px shrink-0 bg-(--office-line)" />;
 }
 
 function ControlView({

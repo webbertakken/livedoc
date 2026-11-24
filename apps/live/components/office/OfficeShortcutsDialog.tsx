@@ -53,7 +53,7 @@ export function OfficeShortcutsDialog({
           placeholder="Search keyboard shortcuts"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="h-10 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-(--office-muted)"
+          className="h-field min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-(--office-muted)"
         />
       </div>
       <p role="status" aria-live="polite" className="sr-only">
@@ -72,7 +72,7 @@ export function OfficeShortcutsDialog({
         ) : null}
         {groups.map((group, index) => (
           <section key={group.name} aria-labelledby={`${idBase}-${index}`} className="pt-4">
-            <h3 id={`${idBase}-${index}`} className="pb-1 text-panel-title font-medium">
+            <h3 id={`${idBase}-${index}`} className="pb-1 text-panel-title">
               {group.name}
             </h3>
             <dl>
@@ -86,7 +86,9 @@ export function OfficeShortcutsDialog({
                   <dt className="min-w-0">
                     {row.action}
                     {row.comingSoon ? (
-                      <span className="ml-2 text-supporting text-(--office-muted)">Coming soon</span>
+                      <span className="ml-2 text-supporting text-(--office-muted)">
+                        Coming soon
+                      </span>
                     ) : null}
                   </dt>
                   <dd className="shrink-0 text-right">

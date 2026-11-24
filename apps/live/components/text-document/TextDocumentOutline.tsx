@@ -31,7 +31,7 @@ export const ADD_TAB_LABEL = 'Add tab';
 // Indent per heading level below the first, and per tab depth, in px.
 const LEVEL_INDENT_PX = 12;
 const ROW =
-  'block w-full truncate rounded-control py-1.5 pr-2 text-left text-body outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'block w-full truncate rounded-control py-1 pr-2 text-left text-body outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 function goTo(view: EditorView, heading: TextDocumentHeading) {
   const { doc } = view.state;
@@ -110,7 +110,7 @@ export function TextDocumentOutline({
       <TextDocumentOutlineSummary summary={summary} />
       <section aria-labelledby={titleId}>
         <div className="flex items-center justify-between gap-2 px-2 pb-1">
-          <h3 id={titleId} className="text-supporting font-medium text-(--office-muted)">
+          <h3 id={titleId} className="text-panel-title text-(--office-muted)">
             {OUTLINE_TABS_TITLE}
           </h3>
           {tabs.canAdd && (
@@ -119,9 +119,9 @@ export function TextDocumentOutline({
                 type="button"
                 aria-label={ADD_TAB_LABEL}
                 onClick={tabs.add}
-                className="grid size-7 place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+                className="grid size-row place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
               >
-                <PlusIcon className="size-4" aria-hidden />
+                <PlusIcon className="size-icon-row" aria-hidden />
               </button>
             </Tooltip>
           )}

@@ -73,7 +73,7 @@ function EquationMenuButton({
         className={BUTTON}
       >
         {label}
-        <ChevronDownIcon className="size-4 text-(--office-icon)" />
+        <ChevronDownIcon className="size-icon-chevron text-(--office-icon)" />
       </button>
       {open ? (
         <OfficePopup anchor={anchor}>
@@ -89,7 +89,6 @@ function EquationMenuButton({
                 setOpen(false);
                 onPick(cell.node);
               }}
-              size="text-lg"
             />
           </div>
         </OfficePopup>

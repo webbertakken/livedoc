@@ -17,8 +17,8 @@ const PRESET_NAMES: Record<number, string> = {
 };
 
 const CONTROL =
-  'h-prominent rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
-const HEADING = 'mb-2 text-body font-medium';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+const HEADING = 'mb-2 text-panel-title';
 
 /** The message a spacing past the most reads, in the person's unit. */
 export const spacingTooWide = (mostPt: number, unit: IndentUnit): string =>
@@ -123,7 +123,7 @@ export function TextDocumentColumnsDialog({
             ))}
           </div>
         </fieldset>
-        <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+        <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
           <div className="flex flex-col">
             <label htmlFor={ids.count} className={HEADING}>
               Number of columns
@@ -162,7 +162,7 @@ export function TextDocumentColumnsDialog({
           <input
             id={ids.line}
             type="checkbox"
-            className="size-4 shrink-0 accent-(--office-primary)"
+            className="size-icon-row shrink-0 accent-(--office-primary)"
             checked={many && line}
             disabled={!many}
             onChange={(e) => setLine(e.target.checked)}

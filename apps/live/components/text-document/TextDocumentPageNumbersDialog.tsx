@@ -25,10 +25,10 @@ export type PageNumberOptions = {
 };
 
 const CONTROL =
-  'h-prominent rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 const FIELD = `${CONTROL} w-24 tabular-nums aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400 disabled:opacity-40`;
-const HEADING = 'mb-2 text-body font-medium';
-const CHOICE = 'size-4 shrink-0 accent-(--office-primary)';
+const HEADING = 'mb-2 text-panel-title';
+const CHOICE = 'size-icon-row shrink-0 accent-(--office-primary)';
 
 /** Start at as typed: a whole number from 0 to the most, else null. */
 export function readStart(text: string): number | null {

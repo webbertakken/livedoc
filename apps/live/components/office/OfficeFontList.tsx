@@ -16,7 +16,8 @@ import { CheckIcon } from '@livedoc/ui';
 import { MyFonts } from '@/lib/office/office-my-fonts';
 import { rowFace, type MoreFontsFamily } from '@/lib/office/office-more-fonts';
 
-export const FONT_ROW_PX = 36;
+// A font is a row of the list: the sizing scale's row step (docs/specs/004-interface-design/sizing.md "Heights").
+export const FONT_ROW_PX = 28;
 // The list's height until it is measured: the room the dialog gives it, less its search row.
 export const FONT_LIST_PX = 360;
 // Rows drawn past each end of the view, so a fast scroll never shows a gap.
@@ -130,7 +131,7 @@ export function OfficeFontList({
                 onToggle(family.name);
               }}
               style={{ top: index * FONT_ROW_PX, height: FONT_ROW_PX }}
-              className={`absolute inset-x-0 flex cursor-pointer items-center gap-3 px-3 text-panel-title hover:bg-(--office-menu-hover) ${
+              className={`absolute inset-x-0 flex cursor-pointer items-center gap-3 px-3 text-body hover:bg-(--office-menu-hover) ${
                 index === active && focused
                   ? 'bg-(--office-menu-hover) ring-2 ring-(--office-focus) ring-inset'
                   : ''
@@ -138,9 +139,9 @@ export function OfficeFontList({
             >
               <span
                 aria-hidden="true"
-                className="flex size-5 shrink-0 items-center justify-center text-(--office-focus)"
+                className="flex size-icon-row shrink-0 items-center justify-center text-(--office-focus)"
               >
-                {on ? <CheckIcon size={18} /> : null}
+                {on ? <CheckIcon size={16} /> : null}
               </span>
               <span className="min-w-0 truncate" style={{ fontFamily: rowFace(family.name) }}>
                 {family.name}

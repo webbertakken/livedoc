@@ -107,7 +107,7 @@ export function OfficeToolFinder({
               aria-selected={index === active}
               aria-disabled={soon || undefined}
               data-office-result={found.item.id}
-              className={`flex cursor-default items-baseline gap-3 px-3 py-1.5 text-body ${index === active ? 'bg-(--office-menu-hover)' : ''} ${soon ? 'opacity-50' : ''}`}
+              className={`flex cursor-default items-baseline gap-3 px-3 py-1 text-body ${index === active ? 'bg-(--office-menu-hover)' : ''} ${soon ? 'opacity-50' : ''}`}
               onPointerDown={(e) => e.preventDefault()}
               onPointerEnter={() => setActive(index)}
               onClick={() => choose(found)}

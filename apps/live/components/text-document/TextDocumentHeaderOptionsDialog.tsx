@@ -15,9 +15,9 @@ import {
 import { TextDocumentLengthField } from './TextDocumentLengthField';
 
 const CONTROL =
-  'h-prominent rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
-const HEADING = 'mb-2 text-body font-medium';
-const CHECK = 'size-4 shrink-0 accent-(--office-primary)';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+const HEADING = 'mb-2 text-panel-title';
+const CHECK = 'size-icon-row shrink-0 accent-(--office-primary)';
 
 type Margin = 'header' | 'footer';
 const MARGINS: readonly { margin: Margin; label: string }[] = [
@@ -90,7 +90,7 @@ export function TextDocumentHeaderOptionsDialog({
       <div className="flex flex-col gap-6 pt-1">
         <fieldset>
           <legend className={HEADING}>Margins ({unit === 'in' ? 'inches' : 'centimetres'})</legend>
-          <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
             {MARGINS.map(({ margin, label }) => (
               <div key={margin} className="flex items-start gap-3">
                 <span aria-hidden="true" className="w-14 pt-2 text-body">

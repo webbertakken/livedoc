@@ -1246,7 +1246,7 @@ export function TextDocumentSurface({
             onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
             data-pages={paginated ? pageList.length : undefined}
             data-laid-out={paginated ? 'pages' : 'flow'}
-            className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-[calc((var(--pages-width)-var(--page-width))/2+var(--page-right))] sm:pb-(--page-bottom) sm:pl-[calc((var(--pages-width)-var(--page-width))/2+var(--page-left))] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
+            className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
           >
             <TextDocumentSheets
               pages={paginated && state === 'ready' ? pageList : null}

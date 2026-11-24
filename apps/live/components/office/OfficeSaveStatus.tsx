@@ -48,8 +48,8 @@ export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus })
         {ANNOUNCED.includes(status) ? words : ''}
       </span>
       {open ? (
-        <div className="absolute top-full left-0 z-30 mt-1 w-72 rounded-control bg-(--office-menu) px-4 py-3 text-body text-(--office-ink) shadow-lg">
-          <p className={`font-medium ${failed ? 'text-(--office-error)' : ''}`}>{words}</p>
+        <div className="absolute top-full left-0 z-30 mt-1 w-72 rounded-menu bg-(--office-menu) px-4 py-3 text-body text-(--office-ink) shadow-lg">
+          <p className={failed ? 'text-(--office-error)' : undefined}>{words}</p>
           <p className="mt-1 text-(--office-muted)">{meaning}</p>
         </div>
       ) : null}

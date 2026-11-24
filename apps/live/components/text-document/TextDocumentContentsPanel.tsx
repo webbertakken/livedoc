@@ -11,11 +11,11 @@ import {
 } from '@/lib/text-document/text-document-contents-build';
 import { ContentsLookPicture } from './ContentsLookPicture';
 
-const CHOICE = 'size-4 shrink-0 accent-(--office-primary)';
-const HEADING = 'mb-2 text-body font-medium';
+const CHOICE = 'size-icon-row shrink-0 accent-(--office-primary)';
+const HEADING = 'mb-2 text-panel-title';
 const ROW = 'flex cursor-pointer items-center gap-3 text-body';
 const SELECT =
-  'h-prominent w-full cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)';
+  'h-field w-full cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)';
 
 const LOOKS: readonly ContentsLook[] = ['plain', 'dotted', 'links'];
 const LEVELS = Array.from({ length: CONTENTS_LEVELS_MAX }, (_, i) => i + 1);

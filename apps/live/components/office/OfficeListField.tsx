@@ -65,7 +65,10 @@ export function OfficeListField<T>({
   };
 
   return (
-    <div ref={attach} className="relative flex h-row items-center rounded-control hover:bg-(--office-hover)">
+    <div
+      ref={attach}
+      className="relative flex h-row items-center rounded-control hover:bg-(--office-hover)"
+    >
       <input
         role="combobox"
         aria-label={label}
@@ -122,7 +125,7 @@ export function OfficeListField<T>({
             id={listId}
             role="listbox"
             aria-label={label}
-            className="max-h-80 min-w-24 overflow-y-auto rounded-control bg-(--office-menu) py-1 text-body text-(--office-ink) shadow-lg"
+            className="max-h-80 min-w-24 overflow-y-auto rounded-menu bg-(--office-menu) py-1 text-body text-(--office-ink) shadow-lg"
           >
             {options.map((option, i) => (
               <li
@@ -132,7 +135,7 @@ export function OfficeListField<T>({
                 aria-selected={i === selected}
                 onPointerDown={(e) => e.preventDefault()}
                 onClick={() => take(option.value)}
-                className={`cursor-default px-4 py-1.5 ${i === active ? 'bg-(--office-menu-hover)' : ''}`}
+                className={`flex h-row cursor-default items-center px-4 ${i === active ? 'bg-(--office-menu-hover)' : ''}`}
               >
                 {option.label}
               </li>

@@ -23,10 +23,10 @@ import { OfficeSizeGrid } from './OfficeSizeGrid';
 import type { ShortcutText } from '@/lib/office/shortcut-notation';
 
 const PANEL =
-  'z-40 min-w-64 rounded-control border border-(--office-line) bg-(--office-menu) py-1.5 text-body text-(--office-ink) shadow-lg animate-fade-in motion-reduce:animate-none';
+  'z-40 min-w-64 rounded-menu border border-(--office-line) bg-(--office-menu) py-1.5 text-body text-(--office-ink) shadow-lg animate-fade-in motion-reduce:animate-none';
 
 const ROW =
-  'flex w-full items-center gap-3 py-1.5 pr-4 pl-2 text-left outline-none hover:bg-(--office-menu-hover) focus-visible:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--office-focus)';
+  'flex min-h-row w-full items-center gap-3 py-1 pr-4 pl-2 text-left outline-none hover:bg-(--office-menu-hover) focus-visible:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--office-focus)';
 
 function Check({ on }: { on: boolean }) {
   return (

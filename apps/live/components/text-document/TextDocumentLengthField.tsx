@@ -11,7 +11,7 @@ import {
 } from '@/lib/text-document/indent-units';
 
 const FIELD =
-  'h-prominent w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400 disabled:opacity-40';
+  'h-field w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400 disabled:opacity-40';
 
 export function TextDocumentLengthField({
   label,

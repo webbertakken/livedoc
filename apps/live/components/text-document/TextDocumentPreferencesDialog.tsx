@@ -35,7 +35,9 @@ const TABS: readonly [Tab, string][] = [
   ['substitutions', 'Substitutions'],
 ];
 
-const CHECKBOX = 'size-4 shrink-0 accent-(--office-primary)';
+// What sits under a checkbox's words starts where they do: the box (16 px) and its gap (12 px).
+const UNDER_CHECKBOX = { paddingInlineStart: 28 } as const;
+const CHECKBOX = 'size-icon-row shrink-0 accent-(--office-primary)';
 const FIELD =
   'h-field min-w-0 flex-1 rounded-control border border-(--office-line) bg-transparent px-2 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
@@ -113,7 +115,11 @@ export function TextDocumentPreferencesDialog({
                   />
                   {label}
                 </label>
-                <span id={`${id}-soon-${i}`} className="ps-7 text-supporting text-(--office-muted)">
+                <span
+                  id={`${id}-soon-${i}`}
+                  style={UNDER_CHECKBOX}
+                  className="text-supporting text-(--office-muted)"
+                >
                   Coming soon
                 </span>
               </div>
@@ -131,7 +137,7 @@ export function TextDocumentPreferencesDialog({
             />
             Automatic substitution
           </label>
-          <div className="flex items-end gap-2 pl-7">
+          <div style={UNDER_CHECKBOX} className="flex items-end gap-2">
             <label className="flex min-w-0 flex-1 flex-col gap-1 text-supporting text-(--office-muted)">
               Replace
               <input
@@ -157,13 +163,14 @@ export function TextDocumentPreferencesDialog({
                 }}
               />
             </label>
-            <span className="w-8 shrink-0" />
+            <span className="w-7 shrink-0" />
           </div>
           {problem ? (
             <p
               id={`${id}-problem`}
               role="alert"
-              className="pl-7 text-supporting text-red-700 dark:text-red-300"
+              style={UNDER_CHECKBOX}
+              className="text-supporting text-red-700 dark:text-red-300"
             >
               {problem}
             </p>
@@ -202,7 +209,7 @@ export function TextDocumentPreferencesDialog({
                   onClick={() =>
                     setDraft((d) => ({ ...d, pairs: d.pairs.filter((_, i) => i !== index) }))
                   }
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+                  className="flex size-row shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
                 >
                   <CloseIcon size={16} />
                 </button>

@@ -12,6 +12,17 @@
 .text-document-page-gap-paper {
   background: var(--page-colour, light-dark(#ffffff, #1e1f20));
 }
+/*
+ * The page's margins (docs/specs/034-text-documents/page-layout.md "Page setup"), content off the sizing scale: from
+ * the phone breakpoint up the writing sits inside the page's own margins, centred in the pages' width; below it the
+ * page keeps its 24 px sides.
+ */
+@media (width >= 40rem) {
+  .text-document-page {
+    padding: var(--page-top) calc((var(--pages-width) - var(--page-width)) / 2 + var(--page-right))
+      var(--page-bottom) calc((var(--pages-width) - var(--page-width)) / 2 + var(--page-left));
+  }
+}
 .dark .text-document-page {
   color-scheme: dark;
 }

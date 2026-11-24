@@ -18,7 +18,7 @@ import { OfficePeople } from './OfficePeople';
 
 // A round icon button of the title row: 32 px, 44 px reach on touch.
 export const OFFICE_ICON_BUTTON =
-  'relative flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:text-(--office-ink)';
+  'relative flex size-field shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:text-(--office-ink)';
 
 const PILL =
   'relative flex h-10 shrink-0 touch-target items-center gap-2 rounded-full px-6 phone:size-10 phone:justify-center phone:px-0 text-body font-medium outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2 focus-visible:ring-offset-(--office-chrome) disabled:cursor-wait disabled:opacity-60';

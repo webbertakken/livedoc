@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export const OFFICE_NAME_EMPTY = 'Give the document a name';
 
-const TEXT = 'text-name leading-[26px] text-(--office-ink)';
+const TEXT = 'text-name text-(--office-ink)';
 
 export function OfficeNameField({
   name,
@@ -119,7 +119,7 @@ export function OfficeNameField({
       {refused ? (
         <p
           role="alert"
-          className="absolute top-full left-0 z-10 mt-1 whitespace-nowrap rounded-control bg-(--office-menu) px-2 py-1 text-body text-(--office-ink) shadow"
+          className="absolute top-full left-0 z-10 mt-1 whitespace-nowrap rounded-menu bg-(--office-menu) px-2 py-1 text-body text-(--office-ink) shadow"
         >
           {OFFICE_NAME_EMPTY}
         </p>

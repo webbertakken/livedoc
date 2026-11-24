@@ -78,7 +78,7 @@ export function OfficePanel({
         />
       ) : null}
       <div className="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
-        <h2 id={titleId} className="min-w-0 flex-1 truncate text-panel-title font-medium">
+        <h2 id={titleId} className="min-w-0 flex-1 truncate text-panel-title">
           {spec.title}
         </h2>
         <button
@@ -86,7 +86,7 @@ export function OfficePanel({
           type="button"
           aria-label={`Close ${spec.title}`}
           onClick={onClose}
-          className="touch-target relative flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+          className="touch-target relative flex size-row shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
         >
           <CloseIcon size={18} />
         </button>

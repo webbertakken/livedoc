@@ -46,7 +46,7 @@ export function OfficeDialogColourField({
       <span
         aria-hidden="true"
         data-colour-chip={none ? 'none' : value}
-        className="size-4 rounded-control border border-(--office-line)"
+        className="size-icon-row rounded-control border border-(--office-line)"
         style={none ? undefined : { background: value }}
       />
       <span className="text-supporting text-(--office-muted)">

@@ -1,0 +1,30 @@
+/*
+ * The office shell's glyphs to pick (docs/specs/004-interface-design/sizing.md "Shapes"): a character, an emoji or a
+ * symbol shown in a picker is a picture of what is inserted, drawn art like a dashboard's figure, so it keeps its own
+ * size off the chrome's sizing scale. Named once here.
+ */
+
+/* A glyph in a picker's grid: special characters, equation symbols. */
+@utility office-glyph {
+  @apply text-[20px] leading-none;
+}
+
+/* An emoji in the emoji grid, a step larger so its colours read. */
+@utility office-glyph-emoji {
+  @apply text-[24px] leading-none;
+}
+
+/* The glyph a picker shows beside its grid, as large again as the cell it came from. */
+@utility office-glyph-preview {
+  @apply text-[30px] leading-none;
+}
+
+/* The preview on a wider screen, where the panel beside the grid has room. */
+@utility office-glyph-preview-wide {
+  @apply text-[60px] leading-none;
+}
+
+/* A character with no ink of its own (a space, a joiner) drawn as its abbreviation in a dashed box. */
+@utility office-glyph-abbreviation {
+  @apply rounded-[2px] text-[9px] leading-3 font-medium tracking-tight;
+}

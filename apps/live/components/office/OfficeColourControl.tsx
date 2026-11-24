@@ -78,7 +78,7 @@ export function OfficeColourControl({
         <span
           aria-hidden="true"
           data-colour-bar={shown ?? 'none'}
-          className={`mt-px h-1 w-4 rounded-[1px] ${shown === undefined ? 'border border-(--office-line)' : ''}`}
+          className={`mt-px h-1 w-4 rounded-none ${shown === undefined ? 'border border-(--office-line)' : ''}`}
           style={shown === undefined ? undefined : { background: shown }}
         />
       </span>

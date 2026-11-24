@@ -50,12 +50,12 @@ export function OfficePeople({
             aria-label={`${rest.length} more ${rest.length === 1 ? 'person' : 'people'}`}
             aria-expanded={moreOpen}
             onClick={() => setMoreOpen((open) => !open)}
-            className={`relative flex size-7 items-center justify-center bg-(--office-hover) text-supporting font-medium text-(--office-ink) touch-target ${RING}`}
+            className={`relative flex size-row items-center justify-center bg-(--office-hover) text-supporting text-(--office-ink) touch-target ${RING}`}
           >
             +{rest.length}
           </button>
           {moreOpen ? (
-            <ul className="absolute top-full right-0 z-30 mt-1 min-w-48 rounded-control bg-(--office-menu) py-1 text-body text-(--office-ink) shadow-lg">
+            <ul className="absolute top-full right-0 z-30 mt-1 min-w-48 rounded-menu bg-(--office-menu) py-1 text-body text-(--office-ink) shadow-lg">
               {rest.map((person) => (
                 <li key={person.participant.id}>
                   <button
@@ -64,7 +64,7 @@ export function OfficePeople({
                       setMoreOpen(false);
                       onFollow(person);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left outline-none hover:bg-(--office-menu-hover) focus-visible:bg-(--office-menu-hover)"
+                    className="flex h-row w-full items-center gap-2 px-3 text-left outline-none hover:bg-(--office-menu-hover) focus-visible:bg-(--office-menu-hover)"
                   >
                     <ParticipantAvatar participant={person.participant} size={20} />
                     <span className="truncate">{person.participant.name}</span>
