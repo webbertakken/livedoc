@@ -78,7 +78,7 @@ Left to right, a hairline between the groups:
 - Each control reads the active cell (Bold pressed when it is bold) and acts on the whole selection, one undo step.
 - A control shares its menu item's id and binding: Format as Currency and Format as Percent are Format › Number's,
   Bold is Format › Text's, Create a Filter is Data's (pressed while the sheet has one).
-- **Font Size** shows the active cell's size (10 where it sets none); a size typed is kept within 6 to 96, and minus
+- **Font Size** shows the active cell's size (10 where it sets none); a size typed is kept within 6 to 400, and minus
   and plus take one point off or on, as Google's do (default, D128).
 - **More Formats**, **Horizontal Align**, **Vertical Align** and **Text Wrapping** open the choices of Format ›
   Number, Alignment and Wrapping, the one in force ticked; the control's glyph shows the alignment or wrapping there.
@@ -213,7 +213,7 @@ Phone and tablet are the office shell's ([Office shell](../004-interface-design/
   a submenu of them, a `;` a separator (default).
 - **D126** A menu row naming Google: Matched by LiveDoc's own words, Sheets Help as **Help** (default).
 - **D127** The menus' telemetry: The shell's events with the kind's name, Spreadsheet, never one per item (default).
-- **D128** The toolbar's font size steps: One point a press, within 6 to 96 (default).
+- **D128** The toolbar's font size steps: One point a press, within 6 to 400 (default).
 - **D129** The name box's list: The open sheet's named ranges, each with its range, as names are a sheet's own
   (default).
 - **D130** The formula bar's height: Up to three lines by its input; a drag on its foot from one line to a third of

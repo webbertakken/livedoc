@@ -1,6 +1,6 @@
 # Formatting
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** Number formats, Font Size, Text Colour and Fill Colour are built.
 
 How a [spreadsheet](spreadsheet.md)'s cells are drawn: number formats, text, colours, borders, alignment, merges,
 themes, conditional formatting and alternating colours, as Google Sheets does. Its rows of the
@@ -77,8 +77,11 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 ## Text and colour
 
-- **Font**: the document fonts (0019's shared catalogue), with **More Fonts** and the recently used; **Font Size** 6
-  to 400 points, with minus and plus.
+- **Font**: the document fonts (0019's shared catalogue), with **More Fonts** and the recently used.
+- **Font Size**: any whole size from 6 to 400 points, 10 by default, Plan Sheets' cells alike (one engine).
+  - The toolbar's field shows the active cell's size; a size typed is rounded whole and kept within 6 to 400.
+  - Its minus and plus take one point off or on (D128); Format › Font Size lists Google's sizes.
+  - A Plan Sheet's stepper steps through its presets, then by ten points from 80 to 400 (default, D200).
 - **Bold** (Ctrl+B), **Italic** (Ctrl+I), **Underline** (Ctrl+U), **Strikethrough** (Alt+Shift+5).
 - **Text Colour** and **Fill Colour**: the one colour picker, with the theme's colours, the standard grid,
   **Custom** and **Reset**.
@@ -163,6 +166,8 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   `hh:mm`, `hh:mm:ss`, `h:mm AM/PM`, `dd/mm/yyyy hh:mm:ss` (default).
 - **D199** Text Colour and Fill Colour before Themes: Reset, the standard Light and Dark rows and Custom Colours, the
   office kinds' picker (default).
+- **D200** A Plan Sheet's Font Size stepper past its last preset (72): by ten points, 80, 90, ... 400, as Word's grow
+  steps (default).
 
 ## Telemetry
 

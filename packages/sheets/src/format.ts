@@ -25,14 +25,24 @@ export const FONT_SIZES: readonly FontSize[] = [
 ];
 // Any whole size between these is taken (typed into the toolbar's Font Size).
 export const FONT_SIZE_MIN = 6;
-export const FONT_SIZE_MAX = 96;
+// Google Sheets' own ceiling (docs/specs/029-sheets/formatting.md "Font Size").
+export const FONT_SIZE_MAX = 400;
 // The default a cell without a size of its own is drawn at.
 export const FONT_SIZE_DEFAULT = 10;
+// Past the last preset the stepper moves by this many points, as Word's grow does (D200).
+const FONT_SIZE_STEP_PAST_PRESETS = 10;
+const FONT_STEPS: readonly number[] = [
+  ...FONT_SIZES,
+  ...Array.from(
+    { length: (FONT_SIZE_MAX - 80) / FONT_SIZE_STEP_PAST_PRESETS + 1 },
+    (_, i) => 80 + i * FONT_SIZE_STEP_PAST_PRESETS,
+  ),
+];
 
-// The next preset size up or down from `size` (Word's grow and shrink), kept within the limits.
+// The next step up or down from `size` (Word's grow and shrink), kept within the limits.
 export function stepFontSize(size: number, dir: 1 | -1): number {
   const next =
-    dir > 0 ? FONT_SIZES.find((s) => s > size) : [...FONT_SIZES].reverse().find((s) => s < size);
+    dir > 0 ? FONT_STEPS.find((s) => s > size) : [...FONT_STEPS].reverse().find((s) => s < size);
   return next ?? (dir > 0 ? FONT_SIZE_MAX : FONT_SIZE_MIN);
 }
 // A font id as the editor's fonts name them (`space-grotesk`): this package knows no catalogue, so it checks the
