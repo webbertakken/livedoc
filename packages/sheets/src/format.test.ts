@@ -28,7 +28,8 @@ describe('format validation', () => {
     ['fs', 13, true],
     ['fs', 15, true],
     ['fs', 5, false],
-    ['fs', 97, false],
+    ['fs', 400, true],
+    ['fs', 401, false],
     ['fs', 12.5, false],
     ['ha', 'c', true],
     ['ha', 'x', false],
@@ -78,6 +79,19 @@ describe('font size steps', () => {
       stepFontSize(15, 1),
       stepFontSize(15, -1),
     ]).toEqual([11, 9, 16, 14]);
-    expect([stepFontSize(72, 1), stepFontSize(8, -1)]).toEqual([FONT_SIZE_MAX, FONT_SIZE_MIN]);
+    expect([stepFontSize(400, 1), stepFontSize(8, -1)]).toEqual([FONT_SIZE_MAX, FONT_SIZE_MIN]);
+    expect(FONT_SIZE_MAX).toBe(400);
+  });
+
+  it('steps by ten points past the last preset, up to 400 (D200)', async () => {
+    const { stepFontSize } = await import('./format');
+    expect([
+      stepFontSize(72, 1),
+      stepFontSize(80, 1),
+      stepFontSize(85, 1),
+      stepFontSize(85, -1),
+      stepFontSize(80, -1),
+      stepFontSize(390, 1),
+    ]).toEqual([80, 90, 90, 80, 72, 400]);
   });
 });

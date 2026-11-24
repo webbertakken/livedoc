@@ -565,8 +565,8 @@ view gets the header and **Copy** alone.
   fill colour, font (one of the editor's [fonts](../004-interface-design/fonts.md), by id; unset, the tab's font; the
   toolbar's **Font** is a button naming the active cell's font in its own face, left of Font Size, opening a menu of
   **Default** then every font, each named in its own face, the active cell's ticked; an id the editor no longer
-  offers draws in the tab's font), font size (any whole size from 6 to 96 points, 10 by default; the toolbar's Font Size is a number between − and +, worn in the Sheet's own colours as the Font button beside it is
-  that step through 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 36, 48 and 72, and takes a typed size, kept within the
+  offers draws in the tab's font), font size (any whole size from 6 to 400 points, 10 by default; the toolbar's Font Size is a number between − and +, worn in the Sheet's own colours as the Font button beside it is
+  that step through 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 36, 48 and 72, then by ten points to 400 (D200 in [Formatting](formatting.md#defaults)), and takes a typed size, kept within the
   limits; folded into More it is a menu of those sizes), horizontal alignment, vertical alignment (top, middle,
   bottom; middle when unset), wrap (overflow, wrap, clip), a border on each side (thin, medium, thick, dashed or dotted, in a colour) and,
   for the Custom number format, its format code.

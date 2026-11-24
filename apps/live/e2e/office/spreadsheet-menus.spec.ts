@@ -99,6 +99,20 @@ test('the menus run what the grid does, and dim what is still to come', async ({
   );
   await page.screenshot({ path: test.info().outputPath('toolbar.png'), animations: 'disabled' });
 
+  // Font Size runs to Google's 400 points (formatting.md "Font Size"), where plus stops.
+  await size.fill('400');
+  await size.press('Enter');
+  await select(page, 'A3');
+  await expect(size).toHaveValue('400');
+  await expect(toolbar.getByRole('button', { name: /^Increase Font Size/ })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await page.screenshot({
+    path: test.info().outputPath('font-size-400.png'),
+    animations: 'disabled',
+  });
+
   // The menu's Alt key opens it (surface.md "Menu bar"): Chrome's Alt+D for Data.
   await select(page, 'B1');
   await page.keyboard.press('Alt+d');

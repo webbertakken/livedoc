@@ -265,9 +265,9 @@ describe('the sheet toolbar', () => {
     fireEvent.keyDown(field, { key: 'Enter' });
     expect(h.cell('A1')?.format?.fs).toBe(15);
     // Out of range is kept within the limits.
-    fireEvent.change(field, { target: { value: '400' } });
+    fireEvent.change(field, { target: { value: '500' } });
     fireEvent.blur(field);
-    expect(h.cell('A1')?.format?.fs).toBe(96);
+    expect(h.cell('A1')?.format?.fs).toBe(400);
   });
 
   it('sets the font from a menu naming each font in its own face, left of Font Size, Default clearing it', () => {

@@ -454,7 +454,7 @@ describe('the toolbar’s own bindings', () => {
     expect(gridMenuBindings(port({ format: { fs: 6 } }))['font-size-decrease']!.disabled).toBe(
       true,
     );
-    expect(gridMenuBindings(port({ format: { fs: 96 } }))['font-size-increase']!.disabled).toBe(
+    expect(gridMenuBindings(port({ format: { fs: 400 } }))['font-size-increase']!.disabled).toBe(
       true,
     );
     expect(b['font-size-increase']!.disabled).toBe(false);
@@ -465,11 +465,12 @@ describe('the toolbar’s own bindings', () => {
     expect(gridMenuBindings(port())['create-a-filter']!.checked).toBe(false);
   });
 
-  it('keeps a typed size whole, within 6 to 96, the default clearing the cell’s own (D128)', () => {
+  it('keeps a typed size whole, within 6 to 400, the default clearing the cell’s own (D128)', () => {
     expect(sheetFontSize(14)).toBe(14);
     expect(sheetFontSize(13.6)).toBe(14);
     expect(sheetFontSize(2)).toBe(6);
-    expect(sheetFontSize(400)).toBe(96);
+    expect(sheetFontSize(400)).toBe(400);
+    expect(sheetFontSize(401)).toBe(400);
     expect(sheetFontSize(10)).toBeNull();
   });
 });
