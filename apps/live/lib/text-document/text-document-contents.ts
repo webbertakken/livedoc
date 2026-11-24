@@ -22,10 +22,10 @@ export const contentsNodeSpec: NodeSpec = {
     {
       tag: `nav.${CONTENTS_CLASS}`,
       getAttrs: (dom) => {
-        const look = (dom as HTMLElement).dataset.look ?? '';
+        const look = dom.dataset.look ?? '';
         return {
           look: LOOKS.has(look) ? look : 'plain',
-          levels: Contents.levelsOf(Number((dom as HTMLElement).dataset.levels)),
+          levels: Contents.levelsOf(Number(dom.dataset.levels)),
         };
       },
     },
