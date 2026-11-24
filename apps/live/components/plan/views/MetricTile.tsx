@@ -55,28 +55,25 @@ export function MetricTile({
     <div className="flex min-w-0 items-center gap-2">
       <span
         aria-hidden
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+        className="flex size-row shrink-0 items-center justify-center rounded-control"
         style={{ backgroundColor: palette.column, color: palette.focus }}
       >
         <BoardWidgetArt kind={kind} size={15} />
       </span>
-      <span
-        className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider"
-        style={{ color: palette.muted }}
-      >
+      <span className="min-w-0 truncate text-body" style={{ color: palette.muted }}>
         {label}
       </span>
     </div>
   );
   const hero = loading ? (
-    <span className="text-[13px]" style={{ color: palette.muted }}>
+    <span className="text-body" style={{ color: palette.muted }}>
       Loading cards…
     </span>
   ) : (
     <div className="min-w-0">
-      <div className="flex min-w-0 items-baseline gap-1.5">
+      <div className="flex min-w-0 items-baseline gap-2">
         <span
-          className="font-semibold leading-none tabular-nums tracking-tight"
+          className="dashboard-figure"
           style={{ fontSize: size, color: model.tone ?? palette.text }}
         >
           {model.hero}
@@ -90,7 +87,7 @@ export function MetricTile({
           </span>
         ) : null}
       </div>
-      <p className="mt-1.5 truncate text-[12px] leading-snug" style={{ color: palette.muted }}>
+      <p className="mt-1.5 truncate text-supporting" style={{ color: palette.muted }}>
         {model.line}
       </p>
     </div>
@@ -108,7 +105,7 @@ export function MetricTile({
     <div
       role="group"
       aria-label={`${label}: ${model.hero}${model.unit ? ` ${model.unit}` : ''}, ${model.line}`}
-      className="absolute inset-0 flex flex-col overflow-hidden rounded-xl border p-4"
+      className="absolute inset-0 flex flex-col overflow-hidden rounded-surface border p-4"
       style={frame}
     >
       {tier === 'compact' ? (
@@ -171,9 +168,9 @@ function Visual({
       );
     case 'people':
       return (
-        <div className="flex min-w-0 flex-col gap-1.5">
+        <div className="flex min-w-0 flex-col gap-2">
           {visual.rows.slice(0, full ? PEOPLE_ROWS : 1).map(({ person, count }) => (
-            <div key={person.id} className="flex min-w-0 items-center gap-2 text-[12px]">
+            <div key={person.id} className="flex min-w-0 items-center gap-2 text-supporting">
               <PersonDisc person={person} />
               <span className="min-w-0 flex-1 truncate">{person.name}</span>
               <span className="tabular-nums" style={{ color: palette.muted }}>
@@ -188,7 +185,7 @@ function Visual({
         <button
           type="button"
           onClick={() => onOpenItem?.(visual.itemId)}
-          className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-left text-[13px] transition hover:brightness-110"
+          className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-menu border px-3 py-2 text-left text-body transition hover:brightness-110"
           style={{ borderColor: palette.cardBorder, backgroundColor: palette.card }}
         >
           <span className="min-w-0 flex-1 truncate font-medium">
@@ -207,7 +204,7 @@ function Visual({
               <button
                 type="button"
                 onClick={() => onOpenItem?.(r.itemId)}
-                className="w-full min-w-0 cursor-pointer truncate rounded-md px-2 py-1 text-left text-[12px] transition hover:bg-black/5 dark:hover:bg-white/10"
+                className="w-full min-w-0 cursor-pointer truncate rounded-control px-2 py-1 text-left text-body transition hover:bg-black/5 dark:hover:bg-white/10"
               >
                 {r.title}
               </button>
@@ -230,7 +227,7 @@ function Ring({ pct, palette }: { pct: number; palette: PlanPalette }) {
       }}
     >
       <div
-        className="flex h-[74%] w-[74%] items-center justify-center rounded-full text-[13px] font-semibold tabular-nums"
+        className="flex h-[74%] w-[74%] items-center justify-center rounded-full text-body tabular-nums"
         style={{ backgroundColor: palette.surface, color: palette.text }}
       >
         <span className="text-optical-centre">{pct}%</span>
@@ -286,11 +283,11 @@ function Split({
       </div>
       {legend ? (
         <div
-          className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]"
+          className="flex flex-wrap gap-x-3 gap-y-1 text-supporting"
           style={{ color: palette.muted }}
         >
           {parts.map((p) => (
-            <span key={p.key} className="flex items-center gap-1.5">
+            <span key={p.key} className="flex items-center gap-2">
               <span
                 aria-hidden
                 className="h-2 w-2 rounded-full"
@@ -318,9 +315,9 @@ function Bars({
 }) {
   const max = Math.max(1, ...rows.map((r) => r.count));
   return (
-    <div className="flex w-full min-w-0 flex-col gap-1.5">
+    <div className="flex w-full min-w-0 flex-col gap-2">
       {rows.slice(0, 6).map((r) => (
-        <div key={r.key} className="flex min-w-0 items-center gap-2 text-[11px]">
+        <div key={r.key} className="flex min-w-0 items-center gap-2 text-supporting">
           <span className="w-20 shrink-0 truncate" style={{ color: palette.muted }}>
             {r.label}
           </span>

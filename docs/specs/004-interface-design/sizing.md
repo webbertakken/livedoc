@@ -23,6 +23,11 @@ respondents see it and a slide keep the sizes their author chose.
 - A sheet's tab window face is its picture, drawn as the sheet looks.
 - A sheet's chrome is on the scale: its bars, menus, popovers and dialogs, and what floats over the grid (Smart Fill,
   Import CSV, a cell's tooltip).
+- A Plan view's drawing is content, drawn at the canvas's zoom as a sheet's grid is: a Gantt's timeline, rows,
+  bars and marks, a Calendar's day grid, the Priority Matrix's quadrants, Workload's bars and Status Mix (D240,
+  default).
+- A Plan view's frame is chrome on the scale: its header, legend, search, scale controls, Add Card and settings.
+- A metric tile reads its name and line on the scale; its figure and picture are drawn art (D239).
 - A Dashboard tab is a page, never zoomed, so it is chrome on the scale: its cards' names, lines and controls, its
   slots' toolbars and its menus (D239, default).
 - A dashboard's Title card is the page's title (`text-page-title`, its line `text-body`); a Note card's title is a
@@ -195,3 +200,5 @@ The code cites each by its id.
   drawn in it keeps the sizes the grid gives it, as a canvas's elements do (default).
 - **D239** A Dashboard tab is chrome: it is drawn as a page the canvas never zooms, so what it reads is on the
   scale, but for drawn art that grows with its tile or frame (default).
+- **D240** A Plan view's drawing is content: it zooms with the canvas and lays its rows, days and quadrants out at
+  the sizes it draws, so what is drawn in it keeps them, as a sheet's grid does (default).

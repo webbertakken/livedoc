@@ -72,7 +72,7 @@ export function GanttAddCard({
           aria-expanded={!!anchor}
           onClick={(e) => setAnchor(anchor ? null : e.currentTarget)}
           onPointerDown={(e) => e.stopPropagation()}
-          className="flex h-full w-full cursor-pointer items-center gap-1.5 px-3 text-left text-[12px] font-medium transition hover:bg-black/5 dark:hover:bg-white/10"
+          className="flex h-full w-full cursor-pointer items-center gap-2 px-3 text-left text-supporting transition hover:bg-black/5 dark:hover:bg-white/10"
           style={{ color: palette.muted }}
         >
           <PlusGlyph />
