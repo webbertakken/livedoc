@@ -5,13 +5,14 @@
 // ProseMirror's binding load only when a text document tab is open. `readOnly`: the other pane of a split shows the
 // tab live without editing it ("Side by side").
 import dynamic from 'next/dynamic';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { textDocumentFormatOf, type Tab } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
 import { useSelectTab } from '@/app/document/[id]/useSelectTab';
 import { useLatest } from '@/hooks/ui/useLatest';
+import type { DrawingTabs } from '@/lib/text-document/text-document-drawing-open-plugin';
 
 const TextDocumentSurface = dynamic(
   () => import('./TextDocumentSurface').then((m) => m.TextDocumentSurface),
@@ -30,9 +31,22 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
   const { addDrawingTab } = ctx;
   const mayDraw = !readOnly && can.textDocumentEdits;
   const createDrawing = useCallback(() => addDrawingTab(tab.id), [addDrawingTab, tab.id]);
-  // A drawing's picture opens its drawing tab, for anyone who sees the text document (objects.md "Opening it again").
-  const selectTab = useLatest(useSelectTab());
-  const openDrawing = useCallback((id: string) => selectTab.current(id), [selectTab]);
+  // A drawing's picture opens its drawing tab, for anyone who sees the text document and is shared the tab (objects.md
+  // "Opening it again"). Read as the tabs are when asked, so the value holds still as they change.
+  const latest = useLatest({
+    select: useSelectTab(),
+    tabs: ctx.tabs,
+    isOutOfScope: ctx.isOutOfScope,
+  });
+  const drawingTabs = useMemo<DrawingTabs>(
+    () => ({
+      opens: (id) =>
+        latest.current.tabs.some((t) => t.id === id && t.drawingOf !== undefined) &&
+        !latest.current.isOutOfScope(id),
+      open: (id) => latest.current.select(id),
+    }),
+    [latest],
+  );
   if (!documentId) return null;
   return (
     <TextDocumentSurface
@@ -52,7 +66,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       chrome={readOnly ? null : office}
       documents={ctx.documentList}
       createDrawing={mayDraw ? createDrawing : null}
-      openDrawing={openDrawing}
+      drawingTabs={drawingTabs}
     />
   );
 }

@@ -47,9 +47,10 @@ beforeEach(() => {
 function setup({
   canEdit = true,
   open = vi.fn<OpenDrawing>(),
-}: { canEdit?: boolean; open?: OpenDrawing | null } = {}) {
+  drawing = 'd1',
+}: { canEdit?: boolean; open?: OpenDrawing | null; drawing?: string } = {}) {
   const store = drawingHostStore();
-  const pictures = ['d1', null].map((drawing) =>
+  const pictures = [drawing, null].map((drawing) =>
     schema.nodes[PICTURE]!.create({ media: 'm', width: 60, height: 30, drawing }),
   );
   const doc = schema.node('doc', null, [schema.nodes.paragraph!.create(null, pictures)]);
@@ -71,7 +72,8 @@ function setup({
     return () => listeners.delete(l);
   };
   function Harness() {
-    return <>{useTextDocumentDrawingPictures({ store, view, canEdit, subscribe, open })}</>;
+    const opens = (id: string) => id !== 'gone';
+    return <>{useTextDocumentDrawingPictures({ store, view, canEdit, subscribe, open, opens })}</>;
   }
   const harness = render(<Harness />);
   const select = (pos: number) =>
@@ -104,6 +106,12 @@ describe('useTextDocumentDrawingPictures', () => {
     select(1);
     expect(screen.getByRole('button', { name: 'Open' })).toBeTruthy();
     select(2);
+    expect(screen.queryByRole('toolbar', { name: 'Drawing' })).toBeNull();
+  });
+
+  it('draws no bar for a drawing whose tab is not there to open', () => {
+    const { select } = setup({ drawing: 'gone' });
+    select(1);
     expect(screen.queryByRole('toolbar', { name: 'Drawing' })).toBeNull();
   });
 

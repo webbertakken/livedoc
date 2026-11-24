@@ -318,7 +318,8 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
   drawing's picture is cropped from Format > Image or the context menu, its double-click being the drawing's
   `(default)`. Every change in the drawing tab is live (everyone's, as on any canvas).
 - **The picture's bar**: under a selected drawing's picture, as Google's, a bar holds **Edit** (**Open** for anyone
-  who cannot edit) `(default)`.
+  who cannot edit) `(default)`; a drawing whose tab is gone or outside the person's share has no bar and does not
+  open.
 - **Its picture again**: Save and close on a drawing already placed puts its new PNG in every picture naming it in
   the document tab it was opened from, each keeping its width, its height following the drawing's shape and its crop
   dropped, as Replace image does, one undo step `(default)`; a drawing whose picture was deleted meanwhile is placed

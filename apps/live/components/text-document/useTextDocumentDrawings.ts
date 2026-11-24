@@ -20,7 +20,10 @@ import {
   drawingPicturesIn,
   refreshDrawingPictures,
 } from '@/lib/text-document/text-document-drawing-pictures';
-import type { OpenDrawing } from '@/lib/text-document/text-document-drawing-open-plugin';
+import type {
+  DrawingTabs,
+  OpenDrawing,
+} from '@/lib/text-document/text-document-drawing-open-plugin';
 import {
   insertedPictureSize,
   insertPicture,
@@ -54,7 +57,7 @@ export function useTextDocumentDrawings({
   showTab,
   placing,
   create,
-  openDrawing,
+  drawingTabs,
 }: {
   view: EditorView | null;
   // The text document tab this surface shows.
@@ -67,8 +70,8 @@ export function useTextDocumentDrawings({
   placing: PicturePlacing;
   // Adds an empty drawing tab of this text document tab and opens it; its id, or null when none may be added.
   create: (() => string | null) | null;
-  // Opens a drawing tab in the canvas editor; null where none may be opened (outside an editor).
-  openDrawing: ((drawingTabId: string) => void) | null;
+  // The editor's drawing tabs, opened in the canvas editor; null where none may be opened (outside an editor).
+  drawingTabs: DrawingTabs | null;
 }): { actions: OfficeActions; open: OpenDrawing | null } {
   // Placed once each: a re-render while its upload settles must not place it twice.
   const placingNow = useRef<string | null>(null);
@@ -137,10 +140,15 @@ export function useTextDocumentDrawings({
     };
   }, [canEdit, create, view, tabId, shownTab]);
 
-  // Opening a drawing again: an Editor's Save and close comes back to where its picture is.
+  // Opening a drawing again: an Editor's Save and close comes back to where its picture is. A drawing whose tab is not
+  // there to open (gone, or outside this person's share) stays its picture.
   const open = useMemo<OpenDrawing | null>(() => {
-    if (!openDrawing || !view) return null;
+    if (!drawingTabs || !view) return null;
     return (drawing, pos) => {
+      if (!drawingTabs.opens(drawing)) {
+        debugLog('[text-document] drawing not opened', { drawing });
+        return;
+      }
       if (canEdit)
         putDrawingPending(drawing, {
           textDocumentTabId: tabId,
@@ -148,9 +156,9 @@ export function useTextDocumentDrawings({
           anchor: anchorOf(view.state, pos),
         });
       debugLog('[text-document] drawing opened', { drawing, editing: canEdit });
-      openDrawing(drawing);
+      drawingTabs.open(drawing);
     };
-  }, [openDrawing, view, canEdit, tabId, shownTab]);
+  }, [drawingTabs, view, canEdit, tabId, shownTab]);
 
   return { actions, open };
 }

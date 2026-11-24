@@ -144,6 +144,7 @@ import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocum
 import {
   drawingBarKeys,
   drawingOpenPlugin,
+  type DrawingTabs,
   type OpenDrawing,
 } from '@/lib/text-document/text-document-drawing-open-plugin';
 import {
@@ -230,13 +231,14 @@ export type TextDocumentSurfaceProps = {
   documents?: readonly LinkDocument[];
   // Adds an empty drawing tab of this tab and opens it (objects.md "Drawings"); absent where none may be added.
   createDrawing?: (() => string | null) | null;
-  // Opens a drawing tab (objects.md "Opening it again"); absent outside an editor, where drawings stay their PNGs.
-  openDrawing?: ((drawingTabId: string) => void) | null;
+  // The editor's drawing tabs (objects.md "Opening it again"); absent outside an editor, where drawings stay their PNGs.
+  drawingTabs?: DrawingTabs | null;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
 
 const NO_DOCUMENTS: readonly LinkDocument[] = [];
+const NO_DRAWING = () => false;
 
 export function TextDocumentSurface({
   scope,
@@ -249,7 +251,7 @@ export function TextDocumentSurface({
   chrome = null,
   documents = NO_DOCUMENTS,
   createDrawing = null,
-  openDrawing = null,
+  drawingTabs = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -277,7 +279,7 @@ export function TextDocumentSurface({
   // Drawings' pictures drawn live (objects.md "Drawn"): their hosts, handed in by the pictures' node view; and how a
   // picture opens its drawing, made by the hook below.
   const [drawingHosts] = useState(drawingHostStore);
-  const drawsDrawings = openDrawing !== null;
+  const drawsDrawings = drawingTabs !== null;
   const openDrawingAt = useRef<OpenDrawing | null>(null);
   const pictureSizing = useRef<PictureSizingHooks>({
     can: () => false,
@@ -921,7 +923,7 @@ export function TextDocumentSurface({
     showTab,
     placing: pictures.placing,
     create: createDrawing,
-    openDrawing,
+    drawingTabs,
   });
   useLayoutEffect(() => {
     openDrawingAt.current = drawings.open;
@@ -932,6 +934,7 @@ export function TextDocumentSurface({
     canEdit: bodyWrites,
     subscribe: changes.subscribeCaret,
     open: drawings.open,
+    opens: drawingTabs?.opens ?? NO_DRAWING,
   });
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({

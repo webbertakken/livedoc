@@ -6,6 +6,12 @@ import { NodeSelection, Plugin } from 'prosemirror-state';
 import { PICTURE_BAR_CLASS } from './text-document-picture-drawing-layer';
 import { drawingOfPicture } from './text-document-drawing-pictures';
 
+/** The editor's drawing tabs: whether one is there to open (shared with this person), and opening it. */
+export type DrawingTabs = {
+  readonly opens: (drawingTabId: string) => boolean;
+  readonly open: (drawingTabId: string) => void;
+};
+
 /** Opens a drawing: its tab, and where its picture is (its position in the writing). */
 export type OpenDrawing = (drawingTabId: string, pos: number) => void;
 

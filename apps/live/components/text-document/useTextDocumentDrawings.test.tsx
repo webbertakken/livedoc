@@ -57,6 +57,7 @@ function setup(
   };
   const showTab = { current: vi.fn() };
   const openDrawing = vi.fn();
+  const drawingTabs = { opens: (id: string) => id !== 'gone', open: openDrawing };
   const create = options.create ?? vi.fn(() => 'd1');
   const hook = renderHook(() =>
     useTextDocumentDrawings({
@@ -67,7 +68,7 @@ function setup(
       showTab,
       placing,
       create,
-      openDrawing,
+      drawingTabs,
     }),
   );
   return { hook, view, showTab, create, liveDoc, openDrawing };
@@ -134,6 +135,13 @@ describe('useTextDocumentDrawings', () => {
     const where = drawingPending('d1')!;
     expect(where).toMatchObject({ textDocumentTabId: 'w', documentTab: 't.0' });
     expect(view.state.doc.nodeAt(6)!.type.name).toBe(PICTURE);
+  });
+
+  it('opens nothing, keeping nothing, for a drawing whose tab is not there to open', () => {
+    const { hook, openDrawing } = setup({ pictures: ['gone'] });
+    hook.result.current.open!('gone', 6);
+    expect(openDrawing).not.toHaveBeenCalled();
+    expect(drawingPending('gone')).toBeNull();
   });
 
   it('opens a drawing to look, keeping nothing, for anyone who may not edit', () => {

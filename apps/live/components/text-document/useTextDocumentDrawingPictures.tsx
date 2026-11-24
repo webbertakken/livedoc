@@ -91,14 +91,16 @@ export function useTextDocumentDrawingPictures({
   canEdit,
   subscribe,
   open,
+  opens,
 }: {
   store: DrawingHostStore;
   view: EditorView | null;
   canEdit: boolean;
   // Told when the caret moves or the writing changes.
   subscribe: (listener: () => void) => () => void;
-  // Opens a drawing from its picture; null where none may be opened.
+  // Opens a drawing from its picture; null where none may be opened. Whether one is there to open: its bar shows then.
   open: OpenDrawing | null;
+  opens: (drawingTabId: string) => boolean;
 }): ReactNode {
   const inEditor = useOptionalEditorContext() !== null;
   const hosts = useSyncExternalStore(store.subscribe, store.hosts, store.hosts);
@@ -126,7 +128,7 @@ export function useTextDocumentDrawingPictures({
             h.key,
           ),
         )}
-        {open && selected?.bar
+        {open && selected?.bar && opens(selected.drawingTabId)
           ? createPortal(
               <TextDocumentPictureBar
                 canEdit={canEdit}
@@ -138,7 +140,7 @@ export function useTextDocumentDrawingPictures({
           : null}
       </>
     ),
-    [hosts, open, selected, canEdit, back],
+    [hosts, open, opens, selected, canEdit, back],
   );
 
   return inEditor ? portals : null;
