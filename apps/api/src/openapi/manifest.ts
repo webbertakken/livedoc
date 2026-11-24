@@ -1168,7 +1168,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      'Add a sheet tab: its tab and a blank sheet of 1,000 rows by 26 columns, made as one, after the tab named, first for an empty name, or last. Named as asked, or Sheet<n>. With copyOf, a copy of that sheet (layout and cells) after it, named Copy of <name>. Naming a deleted sheet and its tab puts it back as it was. 400 write_invalid or sheet_name_invalid; 404 workbook_not_found, tab_not_found or sheet_not_found; 409 sheet_exists or sheet_name_taken; 413 sheets_full or workbook_full. Edit access; never on a tab-scoped link.',
+      'Add a sheet tab: its tab and a blank sheet of 1,000 rows by 26 columns, made as one, after the tab named, first for an empty name, or last. Named as asked, or Sheet<n>. With copyOf, a copy of that sheet (layout and cells) after it, named Copy of <name>. With seed, a sheet carried in whole from another spreadsheet (its layout and cells, checked as a new sheet), named from name by the sheet name rules. Naming a deleted sheet and its tab puts it back as it was. 400 write_invalid or sheet_name_invalid; 404 workbook_not_found, tab_not_found or sheet_not_found; 409 sheet_exists or sheet_name_taken; 413 sheets_full or workbook_full. Edit access; never on a tab-scoped link.',
     auth: 'guest-or-session',
     tokenUsable: true,
     requestSchema: 'WorkbookSheetAddRequest',

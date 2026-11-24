@@ -4,7 +4,7 @@
 
 import type { WorkbookFormat, WorkbookRecord, WorkbookSettings } from '@livedoc/sheets';
 import type { ConversionLoss } from '@livedoc/sheets/files';
-import type { SheetDto } from './sheets';
+import type { SheetCellDto, SheetDto, SheetLayout } from './sheets';
 
 export type { WorkbookSettings } from '@livedoc/sheets';
 
@@ -18,7 +18,13 @@ export type WorkbookSheetAddRequest = {
   // Duplicate: the live sheet copied, layout and cells whole, after its tab unless `after` names one (sheet-store.md
   // "Changing the workbook").
   copyOf?: string;
+  // Copy To from another spreadsheet: the sheet whole, its layout and the cells one request carries (the rest sent as
+  // writes after), named from `name` by the sheet name's rules (sheet-store.md "Changing the workbook").
+  seed?: WorkbookSheetSeed;
 };
+
+// A sheet carried in whole: its layout and its cells, as a new spreadsheet's seed sheets are.
+export type WorkbookSheetSeed = { layout: SheetLayout; cells: SheetCellDto[] };
 
 // The sheet tab as it landed: its place in the document's tabs, and its sheet whole.
 export type WorkbookSheetTabDto = { id: string; name: string; orderIndex: number };

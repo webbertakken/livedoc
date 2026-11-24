@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { listDocumentsByOwner } from '../db/documents';
 import { workbookKit, type WorkbookKit } from './workbook-test-kit';
 
 // docs/specs/006-document/document-storage.md "The content summary": a spreadsheet's sheet tab counts its sheet's
@@ -48,5 +49,20 @@ describe("a spreadsheet's content summary", () => {
       body: kit.document('plan', false, [{ r: r0, c: c0, i: { n: 1 } }]),
     });
     expect(await summaryOf('plan')).toMatchObject({ firstTabCount: 0, hasContent: false });
+  });
+
+  // spreadsheet.md "Sheets in the sheet bar": Copy To's picker lists the person's spreadsheets (D183).
+  it('says a spreadsheet is one, in the summary and in the document list', async () => {
+    await kit.call({ path: '', body: kit.document('book', true) });
+    await kit.call({ path: '', body: kit.document('plan', false) });
+    expect(await summaryOf('book')).toMatchObject({ spreadsheet: true });
+    expect(await summaryOf('plan')).not.toHaveProperty('spreadsheet');
+    const listed = await listDocumentsByOwner(kit.sql.env as never, 'owner');
+    expect(listed.map((d) => [d.id, d.spreadsheet])).toEqual(
+      expect.arrayContaining([
+        ['book', true],
+        ['plan', undefined],
+      ]),
+    );
   });
 });

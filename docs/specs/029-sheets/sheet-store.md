@@ -135,11 +135,14 @@ Built in the api; the sheet bar and File › Settings call it with the grid surf
   cells copied whole, after the sheet copied unless `after` names a tab, named "Copy of <name>" by the sheet name's
   rules unless a name is given ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar), D171); the workbook's cells
   and grid limits as any add's.
+- **Copy a sheet in**: an add carrying its sheet whole (`seed`: its layout and the cells one request carries, the rest
+  sent as writes after), checked as a new spreadsheet's seed sheets are; Copy To from another spreadsheet
+  ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar), D183).
 - **Move a sheet**: its tab after the tab named, or first for an empty name (`tab_not_found` for one not there); the
   order is the document's tab order, which every engine counts sheets in (`SHEET`).
 - **Rename a sheet**: its title and its tab's name as one write, by the sheet name's rules.
 - **Delete a sheet**: its tab removed, its sheet left unreferenced and kept for Undo until it expires; never the last
-  visible sheet (`sheet_last_visible`); until a sheet can be hidden, every sheet is visible.
+  visible sheet (`sheet_last_visible`), nor a sheet hidden when no other is shown.
 - **Settings**: saved whole, as the dialog's Save Settings writes them; one that is not a setting is refused
   (`settings_invalid`); the file format is not a setting, converting is ([Files and print](files-and-print.md#converting)).
 - **Allow Access** for the imports: once, for good, as a `workbook` op ([Imports](imports.md#allow-access)).

@@ -128,6 +128,20 @@ tab's menu holds:
   open them, yet a download holds them (default, D178).
 - **Move Right**, **Move Left**, Alt+Up and Alt+Down pass the hidden sheets: each steps to the next sheet shown
   (default, D181).
+- **Copy To** › **New Spreadsheet** makes an untitled spreadsheet, in this one's format and settings, holding the
+  sheet as "Copy of <name>"; **Existing Spreadsheet** opens a picker of the spreadsheets the person owns, newest
+  first, with a search by name, and puts the copy last in the one picked, named by the sheet name's rules
+  (default, D183).
+- A copy holds the sheet's cells, formats and layout (sizes, hidden lines, groups, freeze, merges, filter, rules), not
+  its named ranges or card tables, which belong to its spreadsheet; a formula naming another sheet keeps the name and
+  reads the sheet of that name where it lands, `#REF!` while there is none, as Google's does (default, D184).
+- A large sheet goes in parts, as a file opened does ([Files and print](files-and-print.md#a-file-sent-in-parts)); a
+  part refused takes the half-made copy back out (or bins the new spreadsheet) and says the copy failed.
+- Once copied, a dialog says so, with **Open Spreadsheet** opening it in a new browser tab (default, D185).
+- Copy To is everyone's who may read the sheet: it changes nothing here, and a download carries the same; the copy
+  lands only where the person may edit (default, D186).
+- **Protect Sheet** waits for protected sheets and ranges ([Data tools](data-tools.md#protected-ranges), plan 0020
+  Phase 10) and **View Comments** for comments (Phase 11): both stay in their places, dimmed.
 - Each is one undo step on the person's one timeline ([Undo](grid-and-editing.md#undo)) and is sent live to everyone
   on the workbook: undoing an add or a duplicate deletes the sheet, kept, and redoing puts it back with its ids;
   undoing a delete puts the sheet back with its ids where it was; undoing a move puts it back after the sheet it
@@ -135,7 +149,7 @@ tab's menu holds:
 - Only an Editor changes the sheets: Add Sheet shows for an Editor alone; a tab's menu opens for everyone, the items
   their role may not use dimmed, as the menu bar's are (default, D174).
 - Telemetry: the kinds of change `AddSheet`, `DuplicateSheet`, `DeleteSheet`, `MoveSheet`, `SheetColour`,
-  `HideSheet` and `ShowSheet` ([Telemetry](#telemetry)); a rename is `Title`.
+  `HideSheet`, `ShowSheet` and `CopySheet` ([Telemetry](#telemetry)); a rename is `Title`.
 
 ## Plan's Sheet tab becomes a spreadsheet
 
