@@ -4,7 +4,7 @@
 // rest `comingSoon`, drawn dimmed until its phase lands. What an item does is bound by its id (spreadsheet-menu-bindings).
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { NumberFormatKind, WorkbookFormat } from '@livedoc/sheets';
-import { formatNumber, serialFromParts } from '@livedoc/sheets';
+import { formatCodeDraw, formatNumber, serialFromParts } from '@livedoc/sheets';
 import { convertedFormat } from '@livedoc/sheets/files';
 import type {
   OfficeCatalogue,
@@ -13,6 +13,7 @@ import type {
   OfficeMenu,
 } from '@/lib/office/office-catalogue';
 import { ZOOM_ITEMS } from './spreadsheet-zoom';
+import { recentFormatItemId } from './recent-formats';
 
 /** File › Download's native formats, in Google's order: each item's id, the format it writes, its words. */
 export const DOWNLOAD_ITEMS: readonly { id: string; format: WorkbookFormat; label: string }[] = [
@@ -128,7 +129,9 @@ export const FREEZE_ITEMS: readonly { id: string; axis: 'r' | 'c'; count: number
   { id: 'freeze-up-to-column', axis: 'c', count: 'active' },
 ];
 
-type ItemOptions = Partial<Pick<OfficeItem, 'keywords' | 'checkable' | 'status' | 'shortcut'>>;
+type ItemOptions = Partial<
+  Pick<OfficeItem, 'keywords' | 'checkable' | 'status' | 'shortcut' | 'note'>
+>;
 
 const item = (
   id: string,
@@ -331,7 +334,21 @@ const INSERT_MENU = menu('insert', 'Insert', [
 ]);
 
 // Format, its Number items each with its example in `locale` (D190); none without one (the context menus' lookup).
-const formatMenu = (locale: string | null) =>
+// The recently used codes (D194) follow Duration, each an item with its example; none, no separator for them.
+const recentEntries = (codes: readonly string[]): OfficeEntry[] =>
+  codes.length === 0
+    ? []
+    : [
+        SEPARATOR,
+        ...codes.map((code, i) =>
+          built(recentFormatItemId(i), code, 'edit', {
+            checkable: 'radio',
+            note: formatCodeDraw(EXAMPLE, code).text,
+          }),
+        ),
+      ];
+
+const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
   menu('format', 'Format', [
     item('theme', 'Theme', 'edit'),
     SEPARATOR,
@@ -346,6 +363,7 @@ const formatMenu = (locale: string | null) =>
             : {}),
         }),
       ),
+      ...recentEntries(recentCodes),
       SEPARATOR,
       item('custom-currency', 'Custom Currency', 'edit'),
       item('custom-date-and-time', 'Custom Date and Time', 'edit'),
@@ -488,18 +506,25 @@ export const SPREADSHEET_GRID_MENUS: OfficeCatalogue = [
   EDIT_MENU,
   VIEW_MENU,
   INSERT_MENU,
-  formatMenu(null),
+  formatMenu(null, []),
   DATA_MENU,
 ];
 
-/** The spreadsheet's menus for its file's format, the Number menu's examples drawn in its locale (D190). */
-export function spreadsheetMenus(format: WorkbookFormat, locale: string): OfficeCatalogue {
+/**
+ * The spreadsheet's menus for its file's format, the Number menu's examples drawn in its locale (D190), its recently
+ * used codes after Duration (D194).
+ */
+export function spreadsheetMenus(
+  format: WorkbookFormat,
+  locale: string,
+  recentCodes: readonly string[] = [],
+): OfficeCatalogue {
   return [
     fileMenu(format),
     EDIT_MENU,
     VIEW_MENU,
     INSERT_MENU,
-    formatMenu(locale),
+    formatMenu(locale, recentCodes),
     DATA_MENU,
     TOOLS_MENU,
     HELP_MENU,

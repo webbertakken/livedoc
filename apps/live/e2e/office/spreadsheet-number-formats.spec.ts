@@ -76,5 +76,14 @@ test('Custom Number Formats applies a code with a colour and refuses one it cann
   await dialog.getByRole('button', { name: 'Apply' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(grid(page).getByText('-42.00', { exact: true })).toBeVisible();
+
+  // The code now heads the Number menu's recently used, ticked for this cell (D194).
+  const recent = await officeMenuItem(page, ['Format', 'Number', '#,##0.00;[Red]-#,##0.00']);
+  await expect(recent).toHaveAttribute('aria-checked', 'true');
+  await page.screenshot({
+    path: test.info().outputPath('recent-formats.png'),
+    animations: 'disabled',
+  });
+  await page.keyboard.press('Escape');
   expectNoPageErrors(pageErrors);
 });

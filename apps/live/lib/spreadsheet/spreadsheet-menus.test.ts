@@ -255,3 +255,29 @@ describe('the Number menu’s examples', () => {
     expect(status('number-currency-rounded')).toBe('built');
   });
 });
+
+// formatting.md "Number formats" (D194): the recently used follow Duration, each with its example.
+describe('the Number menu\u2019s recently used', () => {
+  const numberEntries = (codes: readonly string[]) => {
+    const format = spreadsheetMenus('ods', 'en-GB', codes).find((m) => m.id === 'format')!;
+    const number = format.entries.find((e) => e.kind === 'submenu' && e.id === 'number');
+    return number?.kind === 'submenu' ? number.entries : [];
+  };
+
+  it('lists each code after Duration, with its example, and nothing for none', () => {
+    const entries = numberEntries(['0.0"kg"']);
+    const at = entries.findIndex((e) => e.kind === 'item' && e.id === 'number-duration');
+    expect(entries[at + 1]).toEqual({ kind: 'separator' });
+    expect(entries[at + 2]).toMatchObject({
+      id: 'number-recent-0',
+      label: '0.0"kg"',
+      note: '1000.1kg',
+      status: 'built',
+      checkable: 'radio',
+    });
+    expect(entries[at + 3]).toEqual({ kind: 'separator' });
+    const none = numberEntries([]);
+    const end = none.findIndex((e) => e.kind === 'item' && e.id === 'number-duration');
+    expect(none[end + 2]).toMatchObject({ id: 'custom-currency' });
+  });
+});

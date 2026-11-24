@@ -15,9 +15,11 @@ const office = (
   actions: OfficeActions,
   fontSize: number | null = null,
   setFontSize: (pt: number) => void = () => {},
-): GridOffice => ({ actions, fontSize, setFontSize });
+  recentCodes: readonly string[] = [],
+): GridOffice => ({ actions, recentCodes, fontSize, setFontSize });
 
 // docs/specs/029-sheets/surface.md "Menu bar", "Toolbar": the open sheet's bindings reach the title row above it.
+// formatting.md "Number formats" (D194): a change of the recently used codes alone is heard.
 describe('createOfficeBindingsChannel', () => {
   it('tells its listeners only of a change the shell would draw, and runs the latest binding', () => {
     const channel = createOfficeBindingsChannel();
@@ -103,5 +105,16 @@ describe('usePublishedBindings', () => {
 
   it('publishes nothing outside a channel', () => {
     expect(() => render(<Publisher actions={{ copy: { run: () => {} } }} />)).not.toThrow();
+  });
+
+  it('hears a change of the recently used codes alone, and carries them', () => {
+    const channel = createOfficeBindingsChannel();
+    const heard = vi.fn();
+    channel.subscribe(heard);
+    channel.set(office({}, null, () => {}, ['0.0']));
+    channel.set(office({}, null, () => {}, ['0.0']));
+    channel.set(office({}, null, () => {}, ['0.00']));
+    expect(heard).toHaveBeenCalledTimes(2);
+    expect(channel.get().recentCodes).toEqual(['0.00']);
   });
 });

@@ -116,8 +116,11 @@ export function SpreadsheetTitleRow({
   const chrome = useEditorLines()?.office ?? null;
   const [problem, setProblem] = useState<string | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
-  const catalogue = useMemo(() => spreadsheetMenus(format, locale), [format, locale]);
   const grid = useChannelBindings(channel);
+  const catalogue = useMemo(
+    () => spreadsheetMenus(format, locale, grid.recentCodes),
+    [format, locale, grid.recentCodes],
+  );
   const fontSize = useMemo(
     () => (grid.fontSize === null ? null : { read: () => grid.fontSize, set: grid.setFontSize }),
     [grid],

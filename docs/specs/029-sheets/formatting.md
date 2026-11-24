@@ -22,8 +22,11 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 - **Format › Number** and the toolbar's **More Formats**: Automatic, Plain Text, Number (`#,##0.00`), Percent
   (`0.00%`), Scientific (`0.00E+00`), Accounting, Financial, Currency, Currency Rounded, Date, Time, Date Time,
-  Duration, then **Custom Currency**, **Custom Date and Time**, **Custom Number Format**, and the formats recently
-  used in the workbook. Each shows an example of itself.
+  Duration, then the formats recently used, then **Custom Currency**, **Custom Date and Time**, **Custom Number
+  Format**. Each shows an example of itself.
+- The **recently used** are the Custom codes the open sheet's cells hold, up to five, the most cells first, each item
+  its code with its example of 1000.12 beside it; one picked formats the selection with it, ticked while the active
+  cell holds it. A sheet with none shows none, and no separator for them (default, D194).
 - Each item's example is drawn beside it in the workbook's locale, as the grid would draw 1000.12, 26 September
   2008 15:59:00 or 24:01:00: **Number** 1,000.12, **Financial** (1,000.12), **Currency Rounded** £1,000 (D190).
 - **Financial** draws a negative in brackets, `#,##0.00;(#,##0.00)`; **Currency Rounded** is Currency with no
@@ -127,6 +130,8 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
 - **D193** The Custom Number Formats dialog's examples: `0.00`, `#,##0`, `#,##0.00`, `0%`, `0.00%`, `0.00E+00`,
   `£#,##0.00`, `#,##0.00;[Red]-#,##0.00`, `#,##0.00;(#,##0.00)`, `[<1000]0;[<1000000]0.0,"K";0.0,,"M"`,
   `dd/mm/yyyy`, `hh:mm`, `[h]:mm:ss`, `"Total: "@` (default).
+- **D194** The Number menu's recently used: The Custom codes the open sheet's cells hold, up to five, the most cells
+  first; nothing new is saved for them (default).
 
 ## Telemetry
 

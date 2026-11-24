@@ -27,6 +27,9 @@ const openCustomFormat = vi.fn();
 const open = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/open-hyperlink', () => ({ openHyperlink: open }));
 
+let cells = new Map<string, object>();
+let recent: readonly string[] = [];
+
 function bound(
   sheetLayout: object,
   roles = { canEdit: true, canShape: true },
@@ -43,7 +46,7 @@ function bound(
       ],
       active: { r: 1, c: 1 },
     },
-    sheet: { id: 's1', layout: sheetLayout },
+    sheet: { id: 's1', layout: sheetLayout, cells },
     viewLayout: sheetLayout,
   };
   const channel = createOfficeBindingsChannel();
@@ -51,6 +54,7 @@ function bound(
     <OfficeBindingsContext.Provider value={channel}>{children}</OfficeBindingsContext.Provider>
   );
   renderHook(() => useGridMenuBindings(actions, { openCustomFormat }), { wrapper });
+  recent = channel.get().recentCodes;
   return channel.get().actions;
 }
 
@@ -110,5 +114,13 @@ describe('useGridMenuBindings', () => {
     expect(openCustomFormat).toHaveBeenCalledOnce();
     b['open-link']!.run();
     expect(open).toHaveBeenCalledWith('https://example.com/');
+  });
+
+  // formatting.md "Number formats" (D194): the open sheet's Custom codes reach the title row.
+  it('publishes the open sheet\u2019s recently used codes', () => {
+    cells = new Map([['a', { format: { nf: 'custom', nc: '0.0' } }]]);
+    bound(layout());
+    expect(recent).toEqual(['0.0']);
+    cells = new Map();
   });
 });
