@@ -118,11 +118,10 @@ describe('appearanceOf', () => {
 describe('words in an appearance', () => {
   const words = {
     lines: [
-      { text: 'Hello (1)', width: 40, rtl: false, x: 102, y: 590.5 },
-      { text: '', width: 0, rtl: false, x: 102, y: 576 },
-      { text: 'café € \\ א', width: 30, rtl: false, x: 102, y: 561.6 },
+      { text: 'Hello (1)', width: 40, rtl: false, x: 102, y: 590.5, size: 12, bold: false },
+      { text: '', width: 0, rtl: false, x: 102, y: 576, size: 12, bold: false },
+      { text: 'café € \\ א', width: 30, rtl: false, x: 102, y: 561.6, size: 12, bold: false },
     ],
-    size: 12,
     box: [100, 550, 300, 600] as const,
   };
 
@@ -140,6 +139,31 @@ describe('words in an appearance', () => {
       ].join('\n'),
     );
     expect(drawn.box).toEqual([100, 550, 300, 600]);
+    expect(drawn.fonts).toEqual(['Helv']);
+  });
+
+  // marks.md "Stamps": the name in Helvetica Bold, the second line in Helvetica, each at its own size.
+  it('sets each line in its face and size, naming the fonts it sets', () => {
+    const drawn = appearanceOf({ fills: [], strokes: [] }, look, {
+      lines: [
+        { text: 'APPROVED', width: 90, rtl: false, x: 110, y: 620, size: 18, bold: true },
+        { text: 'by Ada', width: 30, rtl: false, x: 140, y: 605, size: 8, bold: false },
+      ],
+      box: [100, 600, 220, 640],
+    });
+    expect(drawn.content).toBe(
+      [
+        'q',
+        'BT',
+        '/HeBo 18 Tf 0.853 0.19 0.147 rg',
+        '1 0 0 1 110 620 Tm (APPROVED) Tj',
+        '/Helv 8 Tf',
+        '1 0 0 1 140 605 Tm (by Ada) Tj',
+        'ET',
+        'Q',
+      ].join('\n'),
+    );
+    expect(drawn.fonts).toEqual(['HeBo', 'Helv']);
   });
 
   it('writes the font, size and colour as the file’s DA', () => {

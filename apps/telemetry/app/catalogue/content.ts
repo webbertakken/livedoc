@@ -1319,6 +1319,8 @@ export const PDF_MARKS_ADDED = chart(
       'Mark.Ellipse',
       'Mark.Text',
       'Mark.Callout',
+      'Stamp.Standard',
+      'Stamp.Dynamic',
     ],
   },
 );
@@ -1342,6 +1344,7 @@ export const PDF_TOOLS_SELECTED = chart(
       'Tool.Ellipse',
       'Tool.Text',
       'Tool.Callout',
+      'Tool.Stamp',
     ],
     rising: 'neutral',
   },

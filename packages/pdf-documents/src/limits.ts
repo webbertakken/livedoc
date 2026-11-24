@@ -73,6 +73,9 @@ export const PDF_TEXT_SIZE_MIN_PT = 4;
 export const PDF_TEXT_SIZE_MAX_PT = 144;
 /** (default) How far a Callout's knee stands out from its box, in points. Safe range: 6 to 24. */
 export const PDF_CALLOUT_KNEE_PT = 12;
+/** (default) A stamp's line as placed, in characters: a display name and a time fit (marks.md "Limits"). Safe range:
+ *  100 to 1,000. */
+export const PDF_STAMP_LINE_MAX_CHARS = 300;
 /** (default) Past it the stored file is replaced (saving.md "Limits"); the room refuses a state beyond it. */
 export const PDF_LIVE_CHANGES_MAX_BYTES = 4_194_304;
 /** (default) Past it an idle Editor's surface replaces the stored file: three quarters of the ceiling, so ordinary use

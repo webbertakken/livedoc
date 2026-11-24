@@ -35,6 +35,8 @@ import {
   ROTATE_VIEW_CLOCKWISE,
   ROTATE_VIEW_COUNTERCLOCKWISE,
   SELECT_ALL,
+  STAMP_DYNAMIC,
+  STAMP_STANDARD,
   TOOL_ARROW,
   TOOL_CALLOUT,
   TOOL_DRAWING,
@@ -62,6 +64,7 @@ import {
   pdfToolbar,
   SHAPE_TOOLS,
   TEXT_MARK_TOOLS,
+  STAMP_TOOLS,
   TYPED_TOOLS,
 } from './pdf-toolbar';
 
@@ -121,6 +124,9 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_ARROW,
     TOOL_RECTANGLE,
     TOOL_ELLIPSE,
+    // usePdfStampTool.ts: Insert > Stamp's categories built (marks.md "Stamps").
+    STAMP_STANDARD,
+    STAMP_DYNAMIC,
     COPY,
     SELECT_ALL,
     FIND,
@@ -207,7 +213,10 @@ describe("a PDF document's menus and toolbar", () => {
   // reading-surface.md "Share roles": an item above the session's level is not drawn.
   it('shows a Viewer the download and no tool that marks', () => {
     const actions = Object.fromEntries(
-      [...BOUND, TEXT_MARK_TOOLS, TYPED_TOOLS, SHAPE_TOOLS].map((id) => [id, { run: () => {} }]),
+      [...BOUND, TEXT_MARK_TOOLS, TYPED_TOOLS, SHAPE_TOOLS, STAMP_TOOLS].map((id) => [
+        id,
+        { run: () => {} },
+      ]),
     );
     const seen = (level: 'view' | 'participate') =>
       catalogueItems(visibleMenus(PDF_MENUS, level, actions)).map(({ item }) => item.id);
@@ -243,6 +252,7 @@ describe("a PDF document's menus and toolbar", () => {
       TYPED_TOOLS,
       TOOL_DRAWING,
       SHAPE_TOOLS,
+      STAMP_TOOLS,
     ]);
     // "The toolbar": a mode's own tools are not another mode's.
     const labels = (mode: PdfMode) =>
@@ -256,9 +266,15 @@ describe("a PDF document's menus and toolbar", () => {
     expect(labels('editing')).not.toContain('Highlight');
   });
 
-  // keyboard-shortcuts.md "Tools": Select V, Highlight U, Drawing D, Text X; the modes' keys are a text document's.
+  // keyboard-shortcuts.md "Tools": Select V, Highlight U, Drawing D, Text X, Stamp K; the modes' keys are a text document's.
   it('keeps the tools’ own keys and the modes’ shared ones', () => {
-    expect(PDF_TOOL_KEYS).toEqual({ select: 'v', highlight: 'u', drawing: 'd', text: 'x' });
+    expect(PDF_TOOL_KEYS).toEqual({
+      select: 'v',
+      highlight: 'u',
+      drawing: 'd',
+      text: 'x',
+      stamp: 'k',
+    });
     const keys = Object.fromEntries(PDF_SHORTCUTS.map((row) => [row.id, row.keys.pc]));
     expect(keys['switch-to-reviewing']).toBe('Ctrl+Alt+Shift+X');
     expect(keys['switch-to-editing']).toBe('Ctrl+Alt+Shift+Z');

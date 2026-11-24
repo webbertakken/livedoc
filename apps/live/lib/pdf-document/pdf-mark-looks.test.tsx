@@ -41,15 +41,23 @@ describe('the text tools’ looks', () => {
     expect(localStorage.getItem(KEY)).toBeNull();
   });
 
-  it('passes over what is kept that is no colour of a kind, or no JSON at all', () => {
+  // marks.md "Stamps": a stamp's colour is its own, never a kept look.
+  it('passes over what is kept that is no colour of a kind with a look, or no JSON at all', () => {
     localStorage.setItem(
       KEY,
-      JSON.stringify({ squiggly: '#00ff00', ink: '#000000', strikeout: 'url(x)', underline: 3 }),
+      JSON.stringify({
+        squiggly: '#00ff00',
+        ink: '#000000',
+        stamp: '#000000',
+        strikeout: 'url(x)',
+        underline: 3,
+      }),
     );
     expect(markLooks()).toEqual({
       ...FIRST_LOOKS,
       squiggly: { colour: '#00ff00', opacity: 1 },
     });
+    expect(markLooks()).not.toHaveProperty('stamp');
     for (const raw of ['not json', 'null', '7']) {
       resetMarkLooks();
       localStorage.setItem(KEY, raw);

@@ -209,3 +209,31 @@ describe('a Text or a Callout over a page', () => {
     expect(svg.querySelectorAll('[data-pdf-mark="c1"] polygon')).toHaveLength(1);
   });
 });
+
+// marks.md "Stamps": LiveDoc's style, its rounded border and its name bold, its second line plain and smaller.
+describe('a stamp over a page', () => {
+  it('draws its border and sets its name bold, each line at its own size', () => {
+    const stamp = Mark.stamp({
+      id: 's1',
+      page: PageName.ofObject(1),
+      colour: '#086f1e',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 0,
+      rect: [10, 40, 90, 70],
+      stamp: 'approved-by',
+      lines: ['APPROVED', 'by Ada'],
+    })!;
+    const svg = render(
+      <PdfMarksOverlay matrix={[1, 0, 0, -1, 0, 100]} width={100} height={100} marks={[stamp]} />,
+    ).container;
+    expect(svg.querySelectorAll('[data-pdf-mark="s1"] polygon')).toHaveLength(1);
+    const [name, detail] = [...svg.querySelectorAll('[data-pdf-mark="s1"] text')];
+    expect(name!.textContent).toBe('APPROVED');
+    expect(name!.getAttribute('font-weight')).toBe('bold');
+    expect(detail!.getAttribute('font-weight')).toBeNull();
+    expect(Number(name!.getAttribute('font-size'))).toBeGreaterThan(
+      Number(detail!.getAttribute('font-size')),
+    );
+  });
+});

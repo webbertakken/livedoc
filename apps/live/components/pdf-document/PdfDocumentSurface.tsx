@@ -503,6 +503,7 @@ export function PdfDocumentSurface({
                 onMark={tools.make}
                 ink={tools.ink}
                 shaping={tools.shaping}
+                stamping={tools.stamping}
                 typing={tools.typing}
                 selection={textSelection.selected}
                 onText={textSelection.gesture}

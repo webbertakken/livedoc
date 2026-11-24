@@ -165,3 +165,64 @@ describe('a split toggle’s grid of tools', () => {
     expect(cell.textContent).toBe('Underline');
   });
 });
+
+// office-shell.md "Toolbar"; docs/specs/035-pdf-documents/marks.md "Stamps": the Stamp control's grid, a section a
+// category, each stamp a badge in its colour.
+describe('a split toggle’s grid in sections', () => {
+  const badge = (id: string, detail: string | null = null) => ({
+    id,
+    label: id,
+    badge: { text: id.toUpperCase(), detail, colour: '#086f1e' },
+  });
+
+  it('heads each section as a group, draws each badge, and steps by row across the sections', () => {
+    const run = vi.fn();
+    const cells = [badge('a'), badge('b'), badge('c'), badge('d', 'by Ada')];
+    const choice: OfficeChoice = {
+      read: () => 'a',
+      entries: [],
+      actions: Object.fromEntries(cells.map((cell) => [cell.id, { run: () => void run(cell.id) }])),
+      grid: {
+        columns: 2,
+        wide: true,
+        cells,
+        sections: [
+          { label: 'Standard', count: 3 },
+          { label: 'Dynamic', count: 1 },
+        ],
+      },
+    };
+    render(
+      <OfficeSplitToggle
+        id="stamps"
+        label="Stamp"
+        icon={ICON}
+        action={{ run: () => {} }}
+        pressed={false}
+        inert={false}
+        shortcut={null}
+        choice={choice}
+        tabIndex={0}
+        className=""
+        chevronClassName=""
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Stamp styles' }));
+    const standard = screen.getByRole('group', { name: 'Standard' });
+    expect(standard.querySelectorAll('[role="menuitemradio"]')).toHaveLength(3);
+    expect(screen.getByRole('group', { name: 'Dynamic' }).textContent).toContain('D');
+    const dynamic = screen.getByRole('menuitemradio', { name: 'd' });
+    expect(dynamic.querySelector('[data-office-grid-badge]')!.textContent).toBe('Dby Ada');
+    expect(
+      (screen.getByRole('menuitemradio', { name: 'a' }).firstChild as HTMLElement).style.color,
+    ).toBe('rgb(8, 111, 30)');
+    expect(focused()).toBe('a');
+    // Down from the last row of Standard, which starts no row of Dynamic's, into Dynamic.
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(focused()).toBe('c');
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(focused()).toBe('d');
+    fireEvent.click(dynamic);
+    expect(run).toHaveBeenCalledWith('d');
+  });
+});

@@ -41,7 +41,8 @@ import { DRAWING_LOOK, DRAWING_WIDTH_PT } from './pdf-drawing';
 import { resetMarkLooks } from './pdf-mark-looks';
 import { SHAPE_LOOK, SHAPE_WIDTH_PT } from './pdf-shape';
 import { resetShapePick, shapePick } from './pdf-shape-pick';
-import { SHAPE_TOOLS, TEXT_MARK_TOOLS, TOOL_COLOUR, TYPED_TOOLS } from './pdf-toolbar';
+import { resetStampPick } from './pdf-stamp-pick';
+import { SHAPE_TOOLS, STAMP_TOOLS, TEXT_MARK_TOOLS, TOOL_COLOUR, TYPED_TOOLS } from './pdf-toolbar';
 import { TYPED_LOOK, TYPED_SIZE_PT } from './pdf-typed';
 import { resetTypedPick } from './pdf-typed-pick';
 import { usePdfMarkTools } from './usePdfMarkTools';
@@ -133,6 +134,7 @@ afterEach(() => {
   resetTextMarkPick();
   resetShapePick();
   resetTypedPick();
+  resetStampPick();
 });
 
 describe('the text tools', () => {
@@ -591,5 +593,29 @@ describe('the typing tools', () => {
     const { hook } = tools({ marking: false });
     expect(hook.result.current.actions[TYPED_TOOLS]).toBeUndefined();
     expect(hook.result.current.onKey(key({ key: 'x' }).event)).toBe(false);
+  });
+});
+
+// marks.md "Stamps": K takes the Stamp tool; a stamp's colour is its own, so no Colour; keyboard-shortcuts.md "Tools".
+describe('the Stamp tool', () => {
+  it('is taken by K or its control, counted, gives the pages a press and offers no colour', () => {
+    const { hook, run } = tools();
+    expect(hook.result.current.stamping).toBeNull();
+    act(() => void hook.result.current.onKey(key({ key: 'k' }).event));
+    expect(hook.result.current.inHand).toBe('stamp');
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Selected', 'Tool.Stamp');
+    expect(hook.result.current.stamping).not.toBeNull();
+    expect(hook.result.current.colours).toEqual({});
+    expect(hook.result.current.actions[STAMP_TOOLS]!.checked).toBe(true);
+    expect(hook.result.current.choices[STAMP_TOOLS]!.grid!.cells).toHaveLength(23);
+    run(STAMP_TOOLS);
+    expect(hook.result.current.inHand).toBe('select');
+  });
+
+  it('takes nothing with ⇧K, or outside Reviewing', () => {
+    expect(tools().hook.result.current.onKey(key({ key: 'K', shiftKey: true }).event)).toBe(false);
+    const { hook } = tools({ marking: false });
+    expect(hook.result.current.actions[STAMP_TOOLS]).toBeUndefined();
+    expect(hook.result.current.onKey(key({ key: 'k' }).event)).toBe(false);
   });
 });

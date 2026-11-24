@@ -14,13 +14,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                                             | Means                                                                            | Rows |
 | -------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`                                        | In, by the spec named                                                            | 112  |
+| `specified`                                        | In, by the spec named                                                            | 110  |
 | `specified, in part`                               | In, but for the part its rule names as left out                                  | 49   |
 | `left out (<ruling>)`                              | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`                                   | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`                                   | Built, with the test that proves it                                              | 17   |
 | `built, in part (<test>)`                          | Built, but for the part its rule names as left out                               | 3    |
-| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 8    |
+| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 10   |
 
 - Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 101 `left out (F5)`.
 - **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
@@ -475,13 +475,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Stamps
 
-| Topic                               | Rule                                                                    | Mode      | Status    | Spec                     |
-| ----------------------------------- | ----------------------------------------------------------------------- | --------- | --------- | ------------------------ |
-| Add or modify stamps                | Standard stamps, placed, resized, rotated                               | Reviewing | specified | [Marks](marks.md#stamps) |
-| Create custom stamps                | Custom stamps from a picture or a PDF page                              | Reviewing | specified | [Marks](marks.md#stamps) |
-| Create custom dynamic stamps        | Dynamic stamps with the stamper's name and the time                     | Reviewing | specified | [Marks](marks.md#stamps) |
-| Delete custom stamps and categories | Manage stamps: rename, delete, categories                               | Reviewing | specified | [Marks](marks.md#stamps) |
-| Update digital stamp identities     | Stamp identity: display name, title and organisation for dynamic stamps | Reviewing | specified | [Marks](marks.md#stamps) |
+| Topic                               | Rule                                                                    | Mode      | Status                                                                                                                                                     | Spec                     |
+| ----------------------------------- | ----------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Add or modify stamps                | Standard stamps, placed, resized, rotated                               | Reviewing | built so far: standard stamps placed (`stamps.test.ts`, `usePdfStampTool.test.tsx`, `pdf-document-stamps.spec.ts`); the rest: resized and rotated, Phase 8 | [Marks](marks.md#stamps) |
+| Create custom stamps                | Custom stamps from a picture or a PDF page                              | Reviewing | specified                                                                                                                                                  | [Marks](marks.md#stamps) |
+| Create custom dynamic stamps        | Dynamic stamps with the stamper's name and the time                     | Reviewing | built so far: dynamic stamps with the stamper's name and the time (`pdf-stamp.test.ts`, `pdf-document-stamps.spec.ts`); the rest: custom ones, Phase 8     | [Marks](marks.md#stamps) |
+| Delete custom stamps and categories | Manage stamps: rename, delete, categories                               | Reviewing | specified                                                                                                                                                  | [Marks](marks.md#stamps) |
+| Update digital stamp identities     | Stamp identity: display name, title and organisation for dynamic stamps | Reviewing | specified                                                                                                                                                  | [Marks](marks.md#stamps) |
 
 ## Manage reviews
 

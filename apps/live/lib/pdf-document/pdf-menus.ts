@@ -76,6 +76,9 @@ export const TOOL_SQUIGGLY = 'tool-squiggly-underline';
 export const TOOL_TEXT = 'tool-text';
 export const TOOL_CALLOUT = 'tool-callout';
 export const TOOL_DRAWING = 'tool-drawing';
+/** Insert > Stamp's categories built so far (marks.md "Stamps"): each takes the Stamp tool with a stamp of it. */
+export const STAMP_STANDARD = 'stamp-standard-stamps';
+export const STAMP_DYNAMIC = 'stamp-dynamic-stamps';
 /** Insert > Shape's tools (marks.md "Making a mark": The shape tools). */
 export const TOOL_LINE = 'shape-line';
 export const TOOL_ARROW = 'shape-arrow';
@@ -333,11 +336,11 @@ export const PDF_MENUS: OfficeCatalogue = [
       item('shape-cloud', 'Cloud', 'participate'),
       item('shape-connected-lines', 'Connected lines', 'participate'),
     ]),
-    choices('stamp', 'Stamp', 'participate', [
-      'Standard stamps',
-      'Dynamic stamps',
-      'Custom stamps',
-      'Manage stamps',
+    submenu('stamp', 'Stamp', [
+      item(STAMP_STANDARD, 'Standard stamps', 'participate', BUILT),
+      item(STAMP_DYNAMIC, 'Dynamic stamps', 'participate', BUILT),
+      item('stamp-custom-stamps', 'Custom stamps', 'participate'),
+      item('stamp-manage-stamps', 'Manage stamps', 'participate'),
     ]),
     SEPARATOR,
     item(TOOL_TICK, 'Tick', 'participate', ONE_OF),

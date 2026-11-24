@@ -2,12 +2,13 @@
 
 **Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
 Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection; the
-Drawing, made by freehand strokes; the Line, Arrow, Rectangle and Ellipse, made by a drag; and the Text and Callout,
-typed onto the page; each live in the document's changes once made, drawn over the page, written into the file as
+Drawing, made by freehand strokes; the Line, Arrow, Rectangle and Ellipse, made by a drag; the Text and Callout,
+typed onto the page; and the standard and dynamic stamps, placed by a press; each live in the document's changes once made, drawn over the page, written into the file as
 standard annotations under their own ids and read back by them; each tool's colour, chosen from the one colour picker
 and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A stroke shown to
 others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
-snapping, every other kind made here, changing a mark, and the room's own-marks check are not built.
+snapping, every other kind made here, custom stamps and Manage stamps, changing a mark, and the room's own-marks check
+are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -162,6 +163,21 @@ written into the file as a standard annotation, so any reader shows it. The rese
   in **Manage stamps**. A custom stamp's picture is a blob named in the mark.
 - The Stamp control shows the last stamp used; its menu shows categories, each a grid of stamps with names.
 - A stamp is placed at its natural size, at most a third of the page's width, and resized by its handles.
+- **LiveDoc's style** for a standard or dynamic stamp: a box with rounded corners and a 2-point border, the stamp's
+  name in capitals in Helvetica Bold at 18 points, and a dynamic stamp's second line in Helvetica at 8 points, each
+  line centred, in the stamp's colour `(default)`.
+- **A stamp's colour** is its own, the colour picker's strong tone for light paper: Green for Approved, Final, For
+  public release, Sold and Accepted; Red for Not approved, Confidential, Not for public release, Expired, Top secret
+  and Rejected; Blue for the rest `(default)`. The Colour control is not offered while the Stamp tool is in hand.
+- **A dynamic stamp's second line** reads "by Ada Lovelace, 21 Nov 2026, 14:02": the display name, then the
+  browser's date and 24-hour time, the month cut to its first three letters in English `(default)`.
+- A stamp's words are fixed when it is placed: a dynamic stamp keeps its name and time however often it is read.
+- **Placing a stamp**: with the Stamp tool in hand (K), a press places the stamp the Stamp control shows, centred on
+  the press; a stamp that would leave its page is moved onto it. The tool stays in hand, as every tool does.
+- **The Stamp control** holds the stamps behind its chevron as Highlight holds the text tools: a grid headed Standard
+  and a grid headed Dynamic, each stamp drawn as it looks; Approved until another is taken `(default)`.
+- **Insert > Stamp > Standard stamps** and **Dynamic stamps** take the Stamp tool in hand with the stamp the control
+  shows where it is of that category, else that category's first, Approved `(default)`.
 - No stamp carries another company's artwork.
 
 ## In the file
@@ -184,6 +200,12 @@ written into the file as a standard annotation, so any reader shows it. The rese
   shows them, line for line, in Helvetica, the standard's own face every reader holds.
 - A character Helvetica cannot write (outside its Latin set) is kept whole in `Contents` and set in the appearance as
   a question mark, until LiveDoc writes a face for every script `(default)`.
+- **A stamp** is written as a `Stamp` with `Name` the standard's name for it (`Approved`, `NotApproved`, `Draft`,
+  `Final`, `Confidential`, `ForComment`, `ForPublicRelease`, `NotForPublicRelease`, `AsIs`, `Expired`,
+  `Experimental`, `Departmental`, `Sold`, `TopSecret`), or LiveDoc's own name for the rest (`SignHere`,
+  `InitialHere`, `Witness`, `Accepted`, `Rejected`, `Received`, `Reviewed`, `Revised`); `Contents` its words, a
+  line each; `Rect` its box grown by its border; and its appearance in Helvetica Bold and Helvetica, as the page
+  shows it.
 - **Read back the same**: a mark LiveDoc wrote and another reader changed is read by its `NM`; one without `NM` gets
   an id from its object number.
 - **What is read of a mark a file holds**: its id, the file's own word for its kind, its rectangle and the
@@ -229,6 +251,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 | `PDF_CALLOUT_KNEE_PT`       | 12                  | `(default)` How far a Callout's knee stands out from its box, in points; safe range 6 to 24    |
 | `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
 | `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4          |
+| `PDF_STAMP_LINE_MAX_CHARS`  | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000   |
 | `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
 | `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES` |
 
@@ -257,8 +280,9 @@ a mark another person made is refused with `not_your_mark`.
 
 - `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Locked>`,
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
-  `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). Never a mark's words,
-  a stamp's name or a file's name.
+  `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). A stamp placed is
+  counted as `Stamp.<…>` alone, never also as `Mark.Stamp`; the tool taken in hand is `Tool.Stamp`. Never a mark's
+  words, a stamp's name or a file's name.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).

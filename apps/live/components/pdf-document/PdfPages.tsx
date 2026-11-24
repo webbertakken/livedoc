@@ -24,6 +24,7 @@ import { HELD_MARGIN, NEAR_MARGIN, useWithin } from '@/lib/pdf-document/useWithi
 import type { PdfTileSource } from './PdfPageTiles';
 import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
+import type { PdfPageStamping } from '@/lib/pdf-document/usePdfStampTool';
 import type { PdfPageTyping } from '@/lib/pdf-document/usePdfTyping';
 import { PdfPage } from './PdfPage';
 import type { PdfTextGesture, PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
@@ -49,6 +50,7 @@ export function PdfPages({
   onMark,
   ink,
   shaping,
+  stamping,
   typing,
   selection,
   onText,
@@ -79,6 +81,7 @@ export function PdfPages({
   ink: PdfPageInk | null;
   // A shape tool's look and where its lines and shapes go; null while another tool is in hand.
   shaping: PdfPageShaping | null;
+  stamping: PdfPageStamping | null;
   // The Text or the Callout tool's look and where its marks go; null while another tool is in hand.
   typing: PdfPageTyping | null;
   // The person's text selection, and where a page's gestures go (usePdfTextSelection.ts).
@@ -162,6 +165,7 @@ export function PdfPages({
                   onMark={onMark}
                   ink={ink}
                   shaping={shaping}
+                  stamping={stamping}
                   typing={typing}
                   selected={selection?.page === box.index ? selection.quads : NOTHING_SELECTED}
                   handles={selection?.page === box.index && selection.touch}

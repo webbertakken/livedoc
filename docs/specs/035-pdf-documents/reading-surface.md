@@ -256,6 +256,8 @@ rest are the mode's own. A control past the width goes into the shell's overflow
   another is taken `(default)`.
 - **Text** holds Text and Callout behind its chevron the same way, remembered apart, Text until another is taken
   `(default)`.
+- **Stamp** holds the stamps behind its chevron, in grids by category, each drawn as it looks; Approved until another
+  is taken ([Marks](marks.md#stamps)).
 - **Colour** and **Line width** are the tool in hand's; Editing's **Text** group shows while a text box holds the
   caret. **Dark pages** is offered in the dark scheme only.
 - **Select** selects text and whatever the mode may change; **Hand** drags the view. Holding Space is the hand for as

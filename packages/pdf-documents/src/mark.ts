@@ -2,7 +2,8 @@
 // alone. A value object: made and checked here, held in the live changes one property a whole value, written into the
 // file as one annotation by the bake. The kinds join as they are built: the four that mark text, named by the file's
 // own word for each (`Highlight`, `Underline`, `StrikeOut`, `Squiggly`); the Drawing (`Ink`); the Line and the Arrow
-// (`Line`); the Rectangle and the Ellipse (`Square`, `Circle`); the Text and the Callout (`FreeText`).
+// (`Line`); the Rectangle and the Ellipse (`Square`, `Circle`); the Text and the Callout (`FreeText`); the stamp
+// (`Stamp`).
 import {
   PDF_DRAWING_MAX_POINTS,
   PDF_MARK_MAX_QUADS,
@@ -10,6 +11,7 @@ import {
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
   PDF_MAX_COORDINATE,
+  PDF_STAMP_LINE_MAX_CHARS,
   PDF_TEXT_SIZE_MAX_PT,
   PDF_TEXT_SIZE_MIN_PT,
 } from './limits';
@@ -41,6 +43,7 @@ export const MARK_KINDS = [
   ...LINE_MARK_KINDS,
   ...SHAPE_MARK_KINDS,
   ...TYPED_MARK_KINDS,
+  'stamp',
 ] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
@@ -113,9 +116,23 @@ export type CalloutMark = TypedBase & { readonly kind: 'callout'; readonly callo
 /** A Text or a Callout: words typed straight onto the page. */
 export type TypedMark = TextBoxMark | CalloutMark;
 
-export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | TypedMark;
+/** A stamp: ready-made words in a box, placed by a press (marks.md "Stamps"). */
+export type StampMark = MarkBase & {
+  readonly kind: 'stamp';
+  /** The box it is drawn in. */
+  readonly rect: Box;
+  /** Which stamp it is: a LiveDoc id (stamps.ts), any such id, so a stamp of a person's own fits too. */
+  readonly stamp: string;
+  /** Its words as drawn, fixed when placed: its name in capitals, and a dynamic stamp's who and when. */
+  readonly lines: readonly string[];
+};
+
+export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | TypedMark | StampMark;
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
+const STAMP_ID = /^[a-z0-9-]{1,64}$/;
+/** A stamp's lines: its name, and a dynamic stamp's second. */
+const STAMP_MAX_LINES = 2;
 const COLOUR = /^#[0-9a-f]{6}$/;
 /** A display name, cut as every name shown from a file is (security.md "Limits": PDF_NAME_MAX_CHARS). */
 const AUTHOR_MAX_CHARS = 255;
@@ -160,6 +177,7 @@ export type LineInput = Omit<LineMark, 'kind' | 'modifiedAt'>;
 export type ShapeInput = Omit<ShapeMark, 'kind' | 'modifiedAt'>;
 export type TextBoxInput = Omit<TextBoxMark, 'kind' | 'modifiedAt'>;
 export type CalloutInput = Omit<CalloutMark, 'kind' | 'modifiedAt'>;
+export type StampInput = Omit<StampMark, 'kind' | 'modifiedAt'>;
 
 /** What every kind holds, checked and bounded; null where any of it is not what a mark holds. */
 function baseOf(v: Record<string, unknown>): MarkBase | null {
@@ -239,6 +257,22 @@ function typedOf(base: MarkBase, v: Record<string, unknown>): TypedMark | null {
   return { ...typed, kind: 'callout', callout: [x1, y1, x2, y2, x3, y3] };
 }
 
+function stampOf(base: MarkBase, v: Record<string, unknown>): StampMark | null {
+  if (!isFour(v.rect) || typeof v.stamp !== 'string' || !STAMP_ID.test(v.stamp)) return null;
+  const [left, bottom, right, top] = v.rect;
+  if (left >= right || bottom >= top) return null;
+  const { lines } = v;
+  if (!Array.isArray(lines) || lines.length === 0 || lines.length > STAMP_MAX_LINES) return null;
+  if (!lines.every((line) => isWords(line) && line.length <= PDF_STAMP_LINE_MAX_CHARS)) return null;
+  return {
+    ...base,
+    kind: 'stamp',
+    rect: [left, bottom, right, top],
+    stamp: v.stamp,
+    lines: [...(lines as string[])],
+  };
+}
+
 /** How each kind past the base is checked. */
 const KIND_OF: Readonly<
   Record<MarkKind, (base: MarkBase, v: Record<string, unknown>) => Mark | null>
@@ -254,6 +288,7 @@ const KIND_OF: Readonly<
   ellipse: shapeOf,
   text: typedOf,
   callout: typedOf,
+  stamp: stampOf,
 };
 
 /** Every x, y of a mark's geometry, flat. */
@@ -291,6 +326,10 @@ export const Mark = {
   /** A Callout in a box, its line to what is meant, or null when what is given is no Callout. */
   callout: (input: CalloutInput): CalloutMark | null =>
     Mark.parse({ ...input, kind: 'callout', modifiedAt: input.createdAt }) as CalloutMark | null,
+
+  /** A stamp in a box, or null when what is given is no stamp. */
+  stamp: (input: StampInput): StampMark | null =>
+    Mark.parse({ ...input, kind: 'stamp', modifiedAt: input.createdAt }) as StampMark | null,
 
   /** Whether a mark is a Text or a Callout. */
   isTyped: (mark: Mark): mark is TypedMark =>
