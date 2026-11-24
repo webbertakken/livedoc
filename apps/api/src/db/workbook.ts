@@ -156,6 +156,8 @@ export async function tabPlaceAfter(
   documentId: string,
   after: string | undefined,
 ): Promise<number | null> {
+  // Empty: first, as an undone delete of the first sheet goes back.
+  if (after === '') return 0;
   if (after === undefined) {
     const last = await env.DOCUMENT_DB.prepare(
       'SELECT MAX(order_index) AS at FROM document_tabs WHERE document_id = ?',

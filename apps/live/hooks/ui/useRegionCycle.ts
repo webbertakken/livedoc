@@ -49,6 +49,11 @@ export function shownRegions(doc: Document): HTMLElement[] {
  *  its own (not one of a region inside it) in the tab order, so a menu bar or toolbar lands on its tab stop. */
 export function regionTarget(root: HTMLElement): HTMLElement | null {
   if (root.tabIndex >= 0 && root.hasAttribute('tabindex')) return root;
+  // A tab list's region lands on its selected tab, as Tab would: a spreadsheet's sheet bar on the open sheet.
+  const selected = root.querySelector<HTMLElement>(
+    '[role="tab"][aria-selected="true"][tabindex="0"]',
+  );
+  if (selected && selected.closest('[data-region]') === root && shown(selected)) return selected;
   return (
     [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].find(
       (el) => el.tabIndex >= 0 && el.closest('[data-region]') === root && shown(el),

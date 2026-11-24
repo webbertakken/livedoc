@@ -7,6 +7,7 @@ import {
   gridOffice,
   sheetFontSize,
   historyBindings,
+  sheetBarBindings,
   type GridMenuActions,
   type GridMenuPort,
 } from './spreadsheet-menu-bindings';
@@ -411,6 +412,17 @@ describe('historyBindings', () => {
     expect(history.redo).toHaveBeenCalled();
     expect(historyBindings(history, false)).toEqual({});
     expect(historyBindings(null, true)).toEqual({});
+  });
+});
+
+// spreadsheet.md "Sheets in the sheet bar": Insert › Sheet adds after the open sheet (D170), for an Editor.
+describe('sheetBarBindings', () => {
+  it('binds Insert › Sheet for an Editor alone', () => {
+    const add = vi.fn();
+    sheetBarBindings({ canChange: true, add })['insert-sheet']!.run();
+    expect(add).toHaveBeenCalledWith('afterOpen');
+    expect(sheetBarBindings({ canChange: false, add })).toEqual({});
+    expect(sheetBarBindings(null)).toEqual({});
   });
 });
 

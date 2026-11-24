@@ -594,6 +594,10 @@ export const SHEET_CHANGE_KINDS = [
   'Resize',
   'Hide',
   'Group',
+  // A spreadsheet's sheets (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar").
+  'AddSheet',
+  'DuplicateSheet',
+  'DeleteSheet',
 ] as const;
 export type SheetChangeKind = (typeof SHEET_CHANGE_KINDS)[number];
 

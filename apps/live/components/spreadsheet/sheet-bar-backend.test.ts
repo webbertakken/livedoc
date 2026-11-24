@@ -1,0 +1,138 @@
+// docs/specs/029-sheets/sheet-store.md "Changing the workbook", "Offline documents": the sheet bar's changes land
+// through the workbook routes on LiveDoc, and in the editor's tabs and sheet store in This Browser.
+import { describe, expect, it, vi } from 'vitest';
+import type { Tab } from '@livedoc/document';
+import { emptyLayout, sheetFromJson, type SheetJson } from '@livedoc/sheets';
+import { apiAddWorkbookSheet, apiDeleteWorkbookSheet } from '@/lib/api/workbook-sheets';
+import type { CreateOpts } from '@/components/sheets/sheet-store-client';
+import { cloudSheetBar, offlineSheetBar } from './sheet-bar-backend';
+
+vi.mock('@/lib/api/workbook-sheets', () => ({
+  apiAddWorkbookSheet: vi.fn(async () => ({})),
+  apiDeleteWorkbookSheet: vi.fn(async () => {}),
+}));
+
+const scope = { documentId: 'd1', ownerId: 'o', shareCode: null };
+const entry = { tabId: 't2', sheetId: 'sheetTwo1', name: 'Sheet2', after: 't1' };
+
+describe('cloudSheetBar', () => {
+  it('adds through the workbook route, first when it follows no tab', async () => {
+    const settle = vi.fn(async () => {});
+    const bar = cloudSheetBar(scope, settle);
+    await bar.put(entry);
+    expect(apiAddWorkbookSheet).toHaveBeenLastCalledWith(scope, {
+      tabId: 't2',
+      sheetId: 'sheetTwo1',
+      after: 't1',
+      name: 'Sheet2',
+    });
+    expect(settle).not.toHaveBeenCalled();
+    // A copy waits for this page's writes to land first.
+    await bar.put({ ...entry, after: null, copyOf: 'sheetOne1' });
+    expect(settle).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(apiAddWorkbookSheet).mock.lastCall![1]).toMatchObject({
+      after: '',
+      copyOf: 'sheetOne1',
+    });
+  });
+
+  it('puts a kept sheet back under its own name, and deletes by the sheet', async () => {
+    const bar = cloudSheetBar(scope, async () => {});
+    await bar.put({ ...entry, restore: true });
+    expect(vi.mocked(apiAddWorkbookSheet).mock.lastCall![1]).not.toHaveProperty('name');
+    await bar.take(entry);
+    expect(apiDeleteWorkbookSheet).toHaveBeenCalledWith(scope, 'sheetTwo1');
+  });
+});
+
+const source: SheetJson = {
+  id: 'sheetOne1',
+  tabId: 't1',
+  title: 'Sheet1',
+  layout: emptyLayout(Math.random, 2, 2),
+  cells: [],
+  rev: 4,
+  createdAt: 1,
+  updatedAt: 1,
+  updatedBy: { id: 'o', name: 'O', color: '#000000' },
+};
+
+function offline(answer: 'made' | 'refused' = 'made') {
+  let tabs: Tab[] = [{ id: 't1', name: 'Sheet1', kind: 'sheet', elements: [] }];
+  const land = (opts: CreateOpts) =>
+    answer === 'made' ? opts.onCreated?.() : opts.onRefused?.('sheets_full');
+  const store = {
+    create: vi.fn((_c: unknown, _seed: SheetJson | undefined, opts: CreateOpts = {}) => land(opts)),
+    release: vi.fn(),
+    restoreReleased: vi.fn((_id: string, opts: CreateOpts = {}) => {
+      land(opts);
+      return true;
+    }),
+    sheet: vi.fn((id: string) => (id === source.id ? sheetFromJson(source) : undefined)),
+  };
+  const bar = offlineSheetBar(store, (map) => (tabs = map(tabs)));
+  return { bar, store, names: () => tabs.map((t) => t.name) };
+}
+
+describe('offlineSheetBar', () => {
+  it('puts the tab in and makes its sheet, as a spreadsheet’s new sheet', async () => {
+    const o = offline();
+    await o.bar.put(entry);
+    expect(o.names()).toEqual(['Sheet1', 'Sheet2']);
+    const [create, seed] = o.store.create.mock.calls[0]!;
+    expect(create).toMatchObject({ id: 'sheetTwo1', tabId: 't2', title: 'Sheet2' });
+    expect((create as { layout: { colWidth: number } }).layout.colWidth).toBe(100);
+    expect(seed).toBeUndefined();
+  });
+
+  it('copies a sheet it holds, seeded with its layout and cells', async () => {
+    const o = offline();
+    await o.bar.put({ ...entry, copyOf: 'sheetOne1' });
+    const [create, seed] = o.store.create.mock.calls[0]!;
+    expect(create).toEqual({ id: 'sheetTwo1', tabId: 't2', title: 'Sheet2', copyOf: 'sheetOne1' });
+    expect(seed).toMatchObject({ id: 'sheetTwo1', tabId: 't2', title: 'Sheet2', rev: 0 });
+    expect(seed!.layout.rows).toEqual(source.layout.rows);
+  });
+
+  it('refuses a copy of a sheet it does not hold, taking the tab back out', async () => {
+    const o = offline();
+    await expect(o.bar.put({ ...entry, copyOf: 'sheetGone1' })).rejects.toMatchObject({
+      code: 'sheet_not_found',
+    });
+    expect(o.names()).toEqual(['Sheet1']);
+  });
+
+  it('takes the tab back out when the store refuses the sheet', async () => {
+    const o = offline('refused');
+    await expect(o.bar.put(entry)).rejects.toMatchObject({ code: 'sheets_full' });
+    expect(o.names()).toEqual(['Sheet1']);
+  });
+
+  it('takes a sheet out with its tab, kept, and puts it back', async () => {
+    const o = offline();
+    await o.bar.put(entry);
+    await o.bar.take(entry);
+    expect(o.names()).toEqual(['Sheet1']);
+    expect(o.store.release).toHaveBeenCalledWith(['sheetTwo1']);
+    await o.bar.put({ ...entry, after: null, restore: true });
+    expect(o.names()).toEqual(['Sheet2', 'Sheet1']);
+    expect(o.store.restoreReleased.mock.calls[0]![0]).toBe('sheetTwo1');
+  });
+
+  it('refuses to put back a sheet no longer kept', async () => {
+    const o = offline();
+    o.store.restoreReleased.mockReturnValueOnce(false);
+    await expect(o.bar.put({ ...entry, restore: true })).rejects.toMatchObject({
+      code: 'sheet_not_found',
+    });
+    expect(o.names()).toEqual(['Sheet1']);
+  });
+
+  it('says a refusal without a code as an invalid write', async () => {
+    const o = offline();
+    o.store.create.mockImplementationOnce((_c, _s, opts: CreateOpts = {}) =>
+      opts.onRefused?.(null),
+    );
+    await expect(o.bar.put(entry)).rejects.toMatchObject({ code: 'write_invalid' });
+  });
+});

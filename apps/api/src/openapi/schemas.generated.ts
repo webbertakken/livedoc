@@ -18906,6 +18906,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "after": {
         "type": "string"
       },
+      "copyOf": {
+        "type": "string"
+      },
       "name": {
         "type": "string"
       },

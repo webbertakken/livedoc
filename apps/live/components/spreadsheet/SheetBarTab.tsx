@@ -1,0 +1,174 @@
+'use client';
+
+// One sheet tab of the sheet bar (docs/specs/029-sheets/surface.md "Sheet bar"): the sheet's name, who else is on
+// it, and its menu arrow (on the open tab and the tab under the pointer, D175). A double-click, Rename or Alt+1 turns
+// the name into a field: Enter or leaving it saves, Escape keeps the name (D172).
+import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { Tooltip } from '@livedoc/ui';
+import type { SheetBarPeer, SheetBarTab as Tab } from './SheetBar';
+
+// Faces a tab shows before the rest are counted ("+2").
+export const SHEET_BAR_FACES_MAX = 3;
+
+function Faces({ peers }: { peers: readonly SheetBarPeer[] }) {
+  if (!peers.length) return null;
+  const shown = peers.slice(0, SHEET_BAR_FACES_MAX);
+  const more = peers.length - shown.length;
+  return (
+    <span aria-hidden="true" className="ml-2 inline-flex items-center -space-x-1">
+      {shown.map((p) => (
+        <span
+          key={p.id}
+          data-sheet-peer={p.id}
+          className="inline-block size-2.5 rounded-full ring-2 ring-white dark:ring-slate-900"
+          style={{ backgroundColor: p.color }}
+        />
+      ))}
+      {more > 0 ? (
+        <span className="pl-1.5 text-[11px] text-slate-600 dark:text-slate-300">+{more}</span>
+      ) : null}
+    </span>
+  );
+}
+
+// What a screen reader hears for a tab: its name, and who is on it.
+export function sheetTabLabel(name: string, peers: readonly SheetBarPeer[]): string {
+  return peers.length ? `${name}, also here: ${peers.map((p) => p.name).join(', ')}` : name;
+}
+
+function RenameField({
+  name,
+  onDone,
+}: {
+  name: string;
+  // The name typed, or null to keep the old one.
+  onDone: (typed: string | null) => void;
+}) {
+  const field = useRef<HTMLInputElement | null>(null);
+  const done = useRef(false);
+  // Focused once the menu that asked for it has closed and handed focus back.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      field.current?.focus();
+      field.current?.select();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  const finish = (typed: string | null) => {
+    if (done.current) return;
+    done.current = true;
+    onDone(typed);
+  };
+  return (
+    <input
+      ref={field}
+      aria-label="Sheet name"
+      defaultValue={name}
+      maxLength={100}
+      data-sheet-rename=""
+      className="my-1 w-32 rounded-sm border border-emerald-600 bg-white px-1 text-sm text-slate-900 outline-none dark:bg-slate-900 dark:text-slate-100"
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') finish(e.currentTarget.value);
+        else if (e.key === 'Escape') finish(null);
+      }}
+      onBlur={(e) => finish(e.currentTarget.value)}
+    />
+  );
+}
+
+export function SheetBarTab({
+  tab,
+  active,
+  peers,
+  renaming,
+  canRename,
+  onSelect,
+  onKey,
+  onMenu,
+  onRename,
+  onRenamed,
+}: {
+  tab: Tab;
+  active: boolean;
+  peers: readonly SheetBarPeer[];
+  renaming: boolean;
+  canRename: boolean;
+  onSelect: () => void;
+  onKey: (e: KeyboardEvent<HTMLButtonElement>) => void;
+  // Open the tab's menu at a point; `fromBar` when opened from the tab itself (it then opens upwards).
+  onMenu: (x: number, y: number, fromBar: boolean) => void;
+  onRename: () => void;
+  onRenamed: (typed: string | null) => void;
+}) {
+  // Who is here, named on hover as the tab is named to a screen reader.
+  const label = peers.length ? sheetTabLabel(tab.name, peers) : '';
+  const fromTab = (el: HTMLElement) => {
+    const box = el.getBoundingClientRect();
+    onMenu(box.left, box.top, true);
+  };
+  return (
+    <div
+      className={`group flex max-w-56 items-stretch ${
+        active
+          ? 'bg-white text-emerald-800 shadow-sm dark:bg-slate-800 dark:text-emerald-300'
+          : 'text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800'
+      }`}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onMenu(e.clientX, e.clientY, false);
+      }}
+    >
+      {renaming ? (
+        <span className="flex items-center px-2">
+          <RenameField name={tab.name} onDone={onRenamed} />
+        </span>
+      ) : (
+        <Tooltip label={label}>
+          <button
+            type="button"
+            role="tab"
+            data-sheet-tab={tab.id}
+            aria-selected={active}
+            aria-label={label || undefined}
+            aria-haspopup="menu"
+            tabIndex={active ? 0 : -1}
+            onClick={onSelect}
+            onDoubleClick={() => {
+              if (canRename) onRename();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) {
+                e.preventDefault();
+                fromTab(e.currentTarget);
+                return;
+              }
+              onKey(e);
+            }}
+            className={`flex min-w-0 items-center py-0 pl-4 text-sm focus-visible:outline-2 ${
+              active ? 'pr-1 font-medium' : 'pr-1'
+            }`}
+          >
+            <span className="truncate">{tab.name}</span>
+            <Faces peers={peers} />
+          </button>
+        </Tooltip>
+      )}
+      {renaming ? null : (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label={`${tab.name} menu`}
+          aria-haspopup="menu"
+          data-sheet-tab-menu={tab.id}
+          onClick={(e) => fromTab(e.currentTarget)}
+          className={`mr-1 flex w-5 items-center justify-center rounded-sm text-[10px] text-slate-500 hover:bg-slate-300 dark:text-slate-400 dark:hover:bg-slate-700 ${
+            active ? '' : 'opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          ▾
+        </button>
+      )}
+    </div>
+  );
+}

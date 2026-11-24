@@ -46,6 +46,7 @@ const surface = (): SheetSurfaceKeys & {
     stepSheet: (step: -1 | 1) => void out.steps.push(step),
     focusSummary: () => void (out.summaries += 1),
     leaveGrid: () => void (out.leaves += 1),
+    renameSheet: () => undefined,
   };
   return out;
 };

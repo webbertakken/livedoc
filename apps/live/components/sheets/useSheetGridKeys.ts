@@ -39,6 +39,8 @@ export type SheetSurfaceKeys = {
   leaveGrid: () => void;
   // F4 outside an edit: the person's timeline redoes (grid-and-editing.md "Formulas").
   redo: () => void;
+  // Alt+1: the open sheet's tab becomes its name's field (spreadsheet.md "Sheets in the sheet bar").
+  renameSheet: () => void;
 };
 
 export function useSheetGridKeys({
@@ -138,6 +140,8 @@ export function useSheetGridKeys({
         return reveal();
       case 'sheet':
         return surface?.stepSheet(cmd.step);
+      case 'renameSheet':
+        return c.canShape ? surface?.renameSheet() : undefined;
       case 'summary':
         return surface?.focusSummary();
       case 'leave':

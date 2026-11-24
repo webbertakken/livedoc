@@ -11,6 +11,7 @@ import {
   useSpreadsheetSurfaceKeys,
 } from './spreadsheet-surface-keys';
 import { SummarySlotContext } from './summary-slot';
+import { SheetBarActionsContext, type SheetBarActions } from './useSheetBarActions';
 
 const tabs = [
   { id: 'a', name: 'Sheet1' },
@@ -85,6 +86,20 @@ describe('useSpreadsheetSurfaceKeys', () => {
       result.current.focusSummary();
       result.current.leaveGrid();
       result.current.redo();
+      result.current.renameSheet();
     }).not.toThrow();
+  });
+
+  // spreadsheet.md "Sheets in the sheet bar": Alt+1 names the open sheet in place.
+  it('renames the open sheet through the sheet bar', () => {
+    const renameOpen = vi.fn();
+    const bar = { renameOpen } as unknown as SheetBarActions;
+    const { result } = renderHook(() => useSpreadsheetSurfaceKeys(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <SheetBarActionsContext.Provider value={bar}>{children}</SheetBarActionsContext.Provider>
+      ),
+    });
+    result.current.renameSheet();
+    expect(renameOpen).toHaveBeenCalledTimes(1);
   });
 });

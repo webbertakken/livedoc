@@ -253,7 +253,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
     built('insert-columns-left', 'Insert 1 Column Left', 'edit'),
     built('insert-columns-right', 'Insert 1 Column Right', 'edit'),
   ]),
-  item('insert-sheet', 'Sheet', 'edit', { shortcut: 'insert-new-sheet' }),
+  built('insert-sheet', 'Sheet', 'edit', { shortcut: 'insert-new-sheet' }),
   SEPARATOR,
   item('insert-table', 'Table', 'edit'),
   item('insert-timeline', 'Timeline', 'edit'),

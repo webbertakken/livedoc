@@ -15,6 +15,9 @@ export type WorkbookSheetAddRequest = {
   after?: string;
   tabId?: string;
   sheetId?: string;
+  // Duplicate: the live sheet copied, layout and cells whole, after its tab unless `after` names one (sheet-store.md
+  // "Changing the workbook").
+  copyOf?: string;
 };
 
 // The sheet tab as it landed: its place in the document's tabs, and its sheet whole.

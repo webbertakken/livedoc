@@ -5,7 +5,7 @@
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { planPalette } from '@livedoc/document';
+import { planPalette, type Tab } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
@@ -43,6 +43,7 @@ import {
   useSpreadsheetZoomScale,
 } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
+import { SheetBarActionsContext, useSheetBarActions } from './useSheetBarActions';
 import {
   SheetStepContext,
   SurfaceRedoContext,
@@ -59,6 +60,7 @@ export function SpreadsheetSurface({
   documentName,
   workbook,
   onSelectTab,
+  editTabs,
   sync,
   onWorkbook,
   history = null,
@@ -69,6 +71,8 @@ export function SpreadsheetSurface({
   documentName: string;
   workbook: WorkbookRecord;
   onSelectTab: (tabId: string) => void;
+  // The editor's tabs changed quietly, for the sheet bar of a spreadsheet in This Browser.
+  editTabs: (map: (tabs: Tab[]) => Tab[]) => void;
   // The document's Sync Document, for a spreadsheet in This Browser (imports.md "A spreadsheet in This Browser").
   sync?: ImportSync;
   // A workbook record this page saved (Allow Access), applied without waiting for the room.
@@ -89,6 +93,8 @@ export function SpreadsheetSurface({
   const formulas = useShowFormulas();
   // Alt+Up and Alt+Down in the grid: the previous and next sheet, none past either end.
   const stepSheet = useSheetStep(tabs, tabId, onSelectTab);
+  // Add, duplicate, rename and delete, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
+  const sheetBar = useSheetBarActions({ bridge, scope, tabs, tabId, onSelectTab, editTabs });
   return (
     <section
       ref={root}
@@ -111,30 +117,38 @@ export function SpreadsheetSurface({
         onWorkbook={onWorkbook}
         pushUndo={(step) => bridge?.pushUndo(step)}
       />
-      <OfficeBindingsContext.Provider value={channel}>
-        <SummarySlotContext.Provider value={summarySlot}>
-          <SpreadsheetZoomProvider value={scale}>
-            <SheetStepContext.Provider value={stepSheet}>
-              <SurfaceRedoContext.Provider value={history?.redo ?? null}>
-                <ShowFormulasContext.Provider value={formulas.shown}>
-                  {bridge ? (
-                    <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
-                  ) : (
-                    <Status state="loading" />
-                  )}
-                </ShowFormulasContext.Provider>
-              </SurfaceRedoContext.Provider>
-            </SheetStepContext.Provider>
-          </SpreadsheetZoomProvider>
-        </SummarySlotContext.Provider>
-      </OfficeBindingsContext.Provider>
-      <SheetBar
-        tabs={tabs}
-        activeId={tabId}
-        onSelect={onSelectTab}
-        peers={sheetBarPeers}
-        summarySlot={setSummarySlot}
-      />
+      <SheetBarActionsContext.Provider value={sheetBar}>
+        <OfficeBindingsContext.Provider value={channel}>
+          <SummarySlotContext.Provider value={summarySlot}>
+            <SpreadsheetZoomProvider value={scale}>
+              <SheetStepContext.Provider value={stepSheet}>
+                <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                  <ShowFormulasContext.Provider value={formulas.shown}>
+                    {bridge ? (
+                      <OpenSheet
+                        bridge={bridge}
+                        tabId={tabId}
+                        sync={sync}
+                        onWorkbook={onWorkbook}
+                      />
+                    ) : (
+                      <Status state="loading" />
+                    )}
+                  </ShowFormulasContext.Provider>
+                </SurfaceRedoContext.Provider>
+              </SheetStepContext.Provider>
+            </SpreadsheetZoomProvider>
+          </SummarySlotContext.Provider>
+        </OfficeBindingsContext.Provider>
+        <SheetBar
+          tabs={tabs}
+          activeId={tabId}
+          onSelect={onSelectTab}
+          peers={sheetBarPeers}
+          summarySlot={setSummarySlot}
+          actions={bridge ? sheetBar : null}
+        />
+      </SheetBarActionsContext.Provider>
       <ImportReportDialog documentId={scope.documentId} />
     </section>
   );

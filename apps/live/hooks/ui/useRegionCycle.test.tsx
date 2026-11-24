@@ -212,6 +212,64 @@ describe('the areas of a spreadsheet', () => {
     expect(focused()).toBe('Name box');
   });
 
+  // surface.md "Sheet bar": F6 reaches the sheet bar on its open sheet, past Add Sheet.
+  it('lands on the selected tab of a tab list, else its first control', () => {
+    render(
+      <>
+        <div data-region="formulabar">
+          <input aria-label="Name box" />
+        </div>
+        <div data-region="tabs">
+          <button>Add Sheet</button>
+          <div role="tablist">
+            <button role="tab" aria-selected="false" tabIndex={-1}>
+              Sheet1
+            </button>
+            <button role="tab" aria-selected="true" tabIndex={0}>
+              Sheet2
+            </button>
+          </div>
+        </div>
+      </>,
+    );
+    renderHook(() => useRegionCycle());
+    press();
+    press();
+    expect(focused()).toBe('Sheet2');
+  });
+
+  it('passes over a selected tab of a region inside it', () => {
+    render(
+      <div data-region="canvas">
+        <button>Shapes</button>
+        <div data-region="palette" className="hidden">
+          <button role="tab" aria-selected="true" tabIndex={0}>
+            Inner
+          </button>
+        </div>
+      </div>,
+    );
+    renderHook(() => useRegionCycle());
+    press();
+    expect(focused()).toBe('Shapes');
+  });
+
+  it('passes over a hidden selected tab', () => {
+    render(
+      <div data-region="tabs">
+        <button>Add Sheet</button>
+        <div className="hidden">
+          <button role="tab" aria-selected="true" tabIndex={0}>
+            Sheet1
+          </button>
+        </div>
+      </div>,
+    );
+    renderHook(() => useRegionCycle());
+    press();
+    expect(focused()).toBe('Add Sheet');
+  });
+
   it('passes over a region with nothing to focus, and finds none among no regions', () => {
     render(
       <>

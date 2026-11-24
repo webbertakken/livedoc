@@ -4184,6 +4184,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     // A workbook record this page saved (Allow Access), shown at once: the room's echo misses a connection still
     // joining, as after Sync Document in place (docs/specs/029-sheets/imports.md "Allow access").
     receiveWorkbookRecord: setDocumentWorkbook,
+    // The tabs changed quietly, saved and sent with no undo step: a spreadsheet in This Browser's sheet bar.
+    tickTabs,
     takeOfflineInPlace,
     // Tab-scoped share session (docs/specs/013-workspace/tab-scoped-share-links.md).
     sessionTabScope,

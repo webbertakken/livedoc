@@ -132,6 +132,8 @@ const EXPECTED: Record<string, unknown[]> = {
   'expand-grouped': [{ kind: 'fold', collapse: false }],
   'collapse-grouped': [{ kind: 'fold', collapse: true }],
   'read-row': [{ kind: 'read', axis: 'r' }],
+  // spreadsheet.md "Sheets in the sheet bar": the open sheet renamed in place.
+  'rename-sheet': [{ kind: 'renameSheet' }],
 };
 
 const PLATFORMS: OfficePlatform[] = ['pc', 'mac', 'chromeos'];
