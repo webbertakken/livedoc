@@ -128,10 +128,28 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   style's parents); it shows its text, or **Untitled heading** while it has none `(default)`. The list follows the
   writing as it changes, everyone's edits included.
 - With no heading it reads: **Headings you add to the document will appear here.**
-- The panel shows **Summary** (a free text the editor writes, as Google's) above the headings.
+- The panel shows **Summary** above the document tabs ([The summary](#the-summary)).
 - Document tabs are listed above the headings ([Document tabs in the outline](#document-tabs-in-the-outline)).
 - Hidden by a press on its close; personal and remembered. Opened from its menu item or shortcut, it starts at the
   shown tab's first heading, else at the shown tab `(default)`.
+
+### The summary
+
+The look below is LiveDoc's reading of Google's outline until a capture confirms it `(default)`.
+
+- **What it is**: a free text about the whole text document, written by its Editors; one for the text document, not
+  one per document tab `(default)`.
+- **In the file** it is the document's description: ODF `dc:description` in `office:meta`, OOXML `dc:description`
+  in `docProps/core.xml`. A file's description arrives as its summary, and the summary leaves as its description.
+- **The look**: the outline titles it **Summary**, its text under the title, line breaks kept. With none, an Editor
+  sees **Summary** with **+** (**Add summary**) beside it, and anyone else sees no Summary at all.
+- **Writing it**: + or **Edit summary** (beside the title while it has text) makes it a text field in place, labelled
+  **Summary**, its text kept and the caret at its end. Leaving the field or Ctrl+Enter keeps what was typed, Escape
+  gives the old text back, Enter starts a new line. The text is trimmed; an empty summary removes it.
+  At most `TEXT_DOCUMENT_SUMMARY_MAX` characters.
+- **Writes**: one write when the field is kept, never undone with the writing; another person's write shows at once
+  unless the field is open, and the last write is kept `(default)`.
+- **Who may**: Editors write it; everyone else reads it; a Participant's suggestions never reach it `(default)`.
 
 ### Document tabs in the outline
 
@@ -197,9 +215,9 @@ the keyboard layer ([Editing surface](editing-surface.md#keyboard-shortcuts)).
 
 ## Share roles
 
-Editors add and change links, bookmarks, the table of contents and document tabs; a Participant the first three only
-as suggestions (D7), and document tabs not at all `(default)`; everyone may follow links and use the outline. The
-link card, and a tab's menu, of a session that may not edit offer only Copy link.
+Editors add and change links, bookmarks, the table of contents, document tabs and the summary; a Participant the
+first three only as suggestions (D7), and document tabs and the summary not at all `(default)`; everyone may follow
+links and use the outline. The link card, and a tab's menu, of a session that may not edit offer only Copy link.
 
 ## Telemetry
 
@@ -215,4 +233,5 @@ link card, and a tab's menu, of a session that may not edit offer only Copy link
 `Element · Changed · TextDocumentTab` (renamed, given or cleared an emoji, moved, indented, outdented or dragged);
 `Element · Duplicated · TextDocumentTab`; `Element · Removed · TextDocumentTab`;
 `UI · Used · TextDocumentTabLinkCopied`;
+`Tab · Changed · TextDocumentSummary` (the summary written, changed or removed: the text document's, as its watermark);
 `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never content.

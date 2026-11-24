@@ -1250,6 +1250,16 @@ export const TEXT_DOCUMENT_WATERMARK = chart(
   { types: ['TextDocumentWatermark'] },
 );
 
+// A text document's summary written, changed or removed (docs/specs/034-text-documents/links-and-navigation.md "The
+// summary"), in the outline.
+export const TEXT_DOCUMENT_SUMMARY = chart(
+  'Tab',
+  'Changed',
+  'Text Document Summary',
+  "A text document's summary written, changed or removed in the outline.",
+  { types: ['TextDocumentSummary'] },
+);
+
 // A text document's header or footer made or taken away (docs/specs/034-text-documents/page-layout.md "Headers and
 // footers"): made by entering a page that shows none, removed by leaving one empty.
 export const TEXT_DOCUMENT_HEADER_FOOTER = chart(
