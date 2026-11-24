@@ -6,7 +6,10 @@ import { DASHBOARD_CARD_TITLE_MAX } from '@livedoc/document';
 import { useSlotDraft } from './useSlotDraft';
 
 export const CARD_BODY = 'flex h-full flex-col gap-2 overflow-hidden p-4';
-const HEADING_TEXT = 'text-[15px] font-semibold text-slate-800 dark:text-slate-100';
+// The slot's menu sits 8 px in from the card's corner, 32 px wide: a card's top line keeps this margin inside its
+// 16 px padding, so it ends 4 px clear of the menu (44 px from the card's edge).
+export const CLEAR_OF_SLOT_MENU = 'mr-7';
+const HEADING_TEXT = 'text-panel-title text-slate-800 dark:text-slate-100';
 
 export function CardHeading({
   value,
@@ -23,7 +26,7 @@ export function CardHeading({
 }) {
   const [draft, setDraft] = useSlotDraft(value);
   return (
-    <div className="flex min-w-0 items-baseline gap-2 pr-8">
+    <div className={`flex min-w-0 items-baseline gap-2 ${CLEAR_OF_SLOT_MENU}`}>
       {canEdit ? (
         <input
           aria-label={label}

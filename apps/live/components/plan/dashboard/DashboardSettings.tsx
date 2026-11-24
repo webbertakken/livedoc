@@ -183,7 +183,7 @@ function DashboardSettingsPanel({
   return (
     <>
       {/* The title row: Show Me, then Help on dashboards. */}
-      <div className="flex items-center justify-end gap-0.5 border-b border-slate-100 px-1.5 pb-1 dark:border-slate-800">
+      <div className="flex items-center justify-end gap-0.5 border-b border-slate-100 px-2 pb-1 dark:border-slate-800">
         {showMe}
         <HelpArticleLink article="planDashboards" variant="labelled" />
       </div>
@@ -194,7 +194,7 @@ function DashboardSettingsPanel({
               <NameField name={name} onRename={onRename} />
             </SettingsField>
           ) : null}
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             <SettingsActionTile
               icon={<AddRowGlyph />}
               label="Add Row"
@@ -225,7 +225,7 @@ function DashboardSettingsPanel({
             />
           </div>
           {full ? (
-            <p className="px-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="px-0.5 text-supporting text-slate-500 dark:text-slate-400">
               A dashboard holds {DASHBOARD_ROWS_MAX} rows at most.
             </p>
           ) : null}
@@ -245,15 +245,15 @@ function DashboardSettingsPanel({
                   onClick={() =>
                     actions.changeDashboard((l) => setDashboardBackground(l, b.id), 'DashboardLook')
                   }
-                  className={`flex cursor-pointer flex-col gap-1.5 rounded-xl border p-1.5 text-left transition ${
+                  className={`flex cursor-pointer flex-col gap-2 rounded-surface border p-2 text-left transition ${
                     on
-                      ? 'border-brand-400 ring-1 ring-brand-400'
+                      ? 'border-brand-400 font-medium ring-1 ring-brand-400'
                       : 'border-slate-200 hover:border-brand-300 dark:border-slate-700 dark:hover:border-brand-500/60'
                   }`}
                 >
                   <span
                     aria-hidden
-                    className="h-12 rounded-lg border border-slate-200 dark:border-slate-700"
+                    className="h-12 rounded-menu border border-slate-200 dark:border-slate-700"
                     style={{
                       backgroundColor:
                         b.id === 'tint'
@@ -261,10 +261,10 @@ function DashboardSettingsPanel({
                           : palette.surface,
                     }}
                   />
-                  <span className="px-1 text-xs font-medium text-slate-700 dark:text-slate-200">
+                  <span className="px-1 text-body text-slate-700 dark:text-slate-200">
                     {b.label}
                   </span>
-                  <span className="px-1 pb-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                  <span className="px-1 pb-0.5 text-supporting font-normal text-slate-500 dark:text-slate-400">
                     {b.detail}
                   </span>
                 </button>
@@ -275,7 +275,7 @@ function DashboardSettingsPanel({
       </BoardSettingsSection>
       <BoardSettingsSection title="Layouts" icon={<LayoutGlyph />} {...section('layout')}>
         <SettingsBody>
-          <p className="px-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+          <p className="px-0.5 text-supporting text-slate-500 dark:text-slate-400">
             Start over from a layout: its empty slots take the place of these.
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -285,13 +285,13 @@ function DashboardSettingsPanel({
                 type="button"
                 onClick={(e) => startOver(p.id, e.currentTarget)}
                 aria-label={`${p.name}: ${p.line}`}
-                className="flex cursor-pointer flex-col gap-1 rounded-xl border border-slate-200 p-1.5 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
+                className="flex cursor-pointer flex-col gap-1 rounded-surface border border-slate-200 p-2 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
               >
                 {/* The layout drawn small, in its own frame, kept short in the popover. */}
                 <span className="block [&>span]:!h-16">
                   <DashboardLayoutPicture rows={p.rows} palette={palette} />
                 </span>
-                <span className="px-1 pb-0.5 text-xs font-medium text-slate-700 dark:text-slate-200">
+                <span className="px-1 pb-0.5 text-body text-slate-700 dark:text-slate-200">
                   {p.name}
                 </span>
               </button>

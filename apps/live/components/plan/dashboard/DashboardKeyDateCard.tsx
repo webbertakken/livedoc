@@ -51,20 +51,20 @@ export function DashboardKeyDateCard({
       />
       <div className="flex min-h-0 flex-1 items-center">
         {count ? (
-          <p className="flex items-baseline gap-1.5">
+          <p className="flex items-baseline gap-2">
             <span
-              className={`text-[34px] font-semibold leading-none tracking-tight tabular-nums ${
+              className={`dashboard-figure ${
                 count.past ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-50'
               }`}
             >
               {count.figure}
             </span>
             {count.unit ? (
-              <span className="text-[13px] text-slate-500 dark:text-slate-400">{count.unit}</span>
+              <span className="text-body text-slate-500 dark:text-slate-400">{count.unit}</span>
             ) : null}
           </p>
         ) : (
-          <p className="text-[13px] text-slate-500 dark:text-slate-400">No date set.</p>
+          <p className="text-body text-slate-500 dark:text-slate-400">No date set.</p>
         )}
       </div>
       {canEdit ? (
@@ -77,10 +77,10 @@ export function DashboardKeyDateCard({
           onKeyDown={(e) => {
             if (e.key === 'Enter') commitDate();
           }}
-          className="w-fit cursor-pointer rounded-md border border-slate-200 bg-transparent px-2 py-0.5 text-[12px] text-slate-600 outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:text-slate-300 dark:[color-scheme:dark]"
+          className="h-chip w-fit cursor-pointer rounded-control border border-slate-200 bg-transparent px-2 text-supporting text-slate-600 outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:text-slate-300 dark:[color-scheme:dark]"
         />
       ) : keyDate.date ? (
-        <span className="text-[12px] text-slate-500 dark:text-slate-400">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           {longDate(keyDate.date)}
         </span>
       ) : null}

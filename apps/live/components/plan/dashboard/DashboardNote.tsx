@@ -7,6 +7,7 @@ import {
   DASHBOARD_NOTE_TITLE_MAX,
   type DashboardCardStyle,
 } from '@livedoc/document';
+import { CLEAR_OF_SLOT_MENU } from './card-parts';
 import { useDashboard } from './dashboard-context';
 import { useSlotDraft } from './useSlotDraft';
 
@@ -27,17 +28,15 @@ export function DashboardNote({
   };
   if (!canEdit)
     return (
-      <div className="flex h-full flex-col gap-1.5 overflow-y-auto p-4">
-        <h3 className="text-[15px] font-semibold text-slate-800 dark:text-slate-100">
-          {note.title}
-        </h3>
-        <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+      <div className="flex h-full flex-col gap-2 overflow-y-auto p-4">
+        <h3 className="text-panel-title text-slate-800 dark:text-slate-100">{note.title}</h3>
+        <p className="whitespace-pre-wrap text-body text-slate-600 dark:text-slate-300">
           {note.text}
         </p>
       </div>
     );
   return (
-    <div className="flex h-full flex-col gap-1.5 p-4 pr-11">
+    <div className="flex h-full flex-col gap-2 p-4">
       <input
         aria-label="Note heading"
         value={title}
@@ -45,7 +44,7 @@ export function DashboardNote({
         onChange={(e) => setTitle(e.target.value)}
         onBlur={save}
         placeholder="Heading"
-        className="w-full bg-transparent text-[15px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100"
+        className={`${CLEAR_OF_SLOT_MENU} min-w-0 bg-transparent text-panel-title text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100`}
       />
       <textarea
         aria-label="Note text"
@@ -54,7 +53,7 @@ export function DashboardNote({
         onChange={(e) => setText(e.target.value)}
         onBlur={save}
         placeholder="Write a note…"
-        className="min-h-0 w-full flex-1 resize-none bg-transparent text-[13px] leading-relaxed text-slate-600 outline-none placeholder:text-slate-400 dark:text-slate-300"
+        className="min-h-0 w-full flex-1 resize-none bg-transparent text-body text-slate-600 outline-none placeholder:text-slate-400 dark:text-slate-300"
       />
     </div>
   );

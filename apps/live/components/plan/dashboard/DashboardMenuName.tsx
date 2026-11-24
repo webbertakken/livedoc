@@ -51,7 +51,7 @@ export function DashboardMenuName({
           type="button"
           aria-label={`Rename ${kindLabel} ${tab.name}`}
           onClick={() => setEditing(true)}
-          className={`${IN_BOX_TITLE_CLASS} cursor-text rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500`}
+          className={`${IN_BOX_TITLE_CLASS} cursor-text rounded-control text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500`}
         >
           {tab.name}
         </button>
@@ -89,7 +89,7 @@ function NameField({ name, onDone }: { name: string; onDone: (next: string | nul
         else if (e.key === 'Escape') finish(false);
       }}
       onBlur={() => finish(true)}
-      className={`${IN_BOX_TITLE_CLASS} w-40 rounded-md border border-brand-400 bg-transparent px-1.5 py-0.5 outline-none`}
+      className={`${IN_BOX_TITLE_CLASS} w-40 rounded-control border border-brand-400 bg-transparent px-2 py-0.5 outline-none`}
     />
   );
 }
