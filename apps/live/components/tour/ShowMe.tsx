@@ -30,7 +30,7 @@ export function ShowMeButton<Api>({
     <button
       type="button"
       aria-pressed={tour.active}
-      className="relative touch-target inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+      className="relative touch-target inline-flex h-row shrink-0 items-center gap-1 rounded-control px-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
       onClick={() => {
         if (tour.active || loading.current) return;
         const ready = onStart();

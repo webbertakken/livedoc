@@ -40,8 +40,8 @@ const CHIP_FLOOR_REM = 3;
 const FIXED = 'shrink-0';
 const SHRINKS = 'min-w-12';
 const CHIP_SIZE = {
-  sm: 'max-w-[9rem] px-1.5 py-px text-[11px] leading-4',
-  md: 'max-w-[16rem] px-2.5 py-0.5 text-[13px] leading-5',
+  sm: 'max-w-[9rem] px-2 py-px text-supporting',
+  md: 'max-w-[16rem] px-2 py-0.5 text-body',
 } as const;
 
 /** One tag as a chip; a button when `onOpen` is given (it opens the tag's page, never the row under it). */
@@ -148,7 +148,7 @@ export function DocumentTagChips({
             tabIndex={0}
             role="img"
             aria-label={`${rest.length} more tags: ${rest.map((t) => t.name).join(', ')}`}
-            className="inline-flex shrink-0 items-center rounded-full border border-slate-200 px-1.5 py-px text-[11px] font-medium leading-4 text-slate-500 dark:border-slate-700 dark:text-slate-400"
+            className="inline-flex shrink-0 items-center rounded-full border border-slate-200 px-2 py-px text-supporting text-slate-500 dark:border-slate-700 dark:text-slate-400"
           >
             +{rest.length}
           </span>

@@ -27,8 +27,10 @@ export function ReportABugPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
       <Brand href="/" size="lg" />
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{COPY.name}</h1>
-      <p className="max-w-sm text-sm text-slate-600 dark:text-slate-300">{COPY.entryDescription}</p>
+      <h1 className="text-page-title text-slate-900 dark:text-slate-100">{COPY.name}</h1>
+      <p className="max-w-sm text-body text-slate-600 dark:text-slate-300">
+        {COPY.entryDescription}
+      </p>
       <Button
         ref={reopenRef}
         variant="secondary"

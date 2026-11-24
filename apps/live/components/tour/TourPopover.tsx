@@ -18,6 +18,8 @@ import type { TourTargetRect } from './useTourEngine';
 
 // The last card's help link wears the help icon beside its label.
 const HelpIcon = lucideGlyph(lucideCircleHelp, 14);
+// Half the caret's side: the caret is the popover arrow step, `size-arrow`, 12 px (sizing.md "Shapes").
+const CARET_HALF_PX = 6;
 
 /** What the last card shows in place of the step count and Next: its eyebrow, the help link and the finish button. */
 export type TourOutroCard = { eyebrow: string; helpHref: string; finish: string };
@@ -154,7 +156,7 @@ export function TourPopover({
       }
       data-tour-card={outro ? 'outro' : 'step'}
       onPointerDown={(e) => e.stopPropagation()}
-      className="pointer-events-auto fixed z-[var(--z-toast)] flex w-[22rem] max-w-[calc(100vw-1.5rem)] animate-tour-card-in flex-col rounded-2xl border border-[var(--tour-border)] bg-[var(--tour-card)] p-5 text-[var(--tour-text)] shadow-2xl shadow-slate-900/20 outline-none dark:shadow-black/40"
+      className="pointer-events-auto fixed z-[var(--z-toast)] flex w-[22rem] max-w-[calc(100vw-1.5rem)] animate-tour-card-in flex-col rounded-surface border border-[var(--tour-border)] bg-[var(--tour-card)] p-4 text-[var(--tour-text)] shadow-2xl shadow-slate-900/20 outline-none dark:shadow-black/40"
       style={{
         ...tourColourVars(palette),
         transition: glideTransition(gliding, ['left', 'top']),
@@ -171,19 +173,25 @@ export function TourPopover({
       {pos?.caret ? (
         <span
           aria-hidden
-          className={`absolute h-3.5 w-3.5 rotate-45 bg-[var(--tour-card)] ${
+          className={`absolute size-arrow rotate-45 bg-[var(--tour-card)] ${
             pos.caret.edge === 'top'
-              ? '-top-[7px] rounded-tl-sm border-l border-t'
+              ? '-top-[6px] border-l border-t'
               : pos.caret.edge === 'bottom'
-                ? '-bottom-[7px] rounded-br-sm border-b border-r'
+                ? '-bottom-[6px] border-b border-r'
                 : pos.caret.edge === 'left'
-                  ? '-left-[7px] rounded-bl-sm border-b border-l'
-                  : '-right-[7px] rounded-tr-sm border-r border-t'
+                  ? '-left-[6px] border-b border-l'
+                  : '-right-[6px] border-r border-t'
           } border-[var(--tour-border)]`}
           style={
             pos.caret.edge === 'top' || pos.caret.edge === 'bottom'
-              ? { left: pos.caret.offset - 7, transition: glideTransition(gliding, ['left']) }
-              : { top: pos.caret.offset - 7, transition: glideTransition(gliding, ['top']) }
+              ? {
+                  left: pos.caret.offset - CARET_HALF_PX,
+                  transition: glideTransition(gliding, ['left']),
+                }
+              : {
+                  top: pos.caret.offset - CARET_HALF_PX,
+                  transition: glideTransition(gliding, ['top']),
+                }
           }
         />
       ) : null}
@@ -197,21 +205,21 @@ export function TourPopover({
       >
         <>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--tour-accent)]">
+            <span className="text-supporting text-[var(--tour-accent)]">
               {outro ? outro.eyebrow : `${stepNumber} of ${stepCount}`}
             </span>
             {outro ? null : (
               <button
                 type="button"
                 onClick={onSkip}
-                className="rounded-md px-1.5 py-0.5 text-xs font-medium text-[var(--tour-muted)] transition hover:bg-[var(--tour-hover)] hover:text-[var(--tour-text)]"
+                className="inline-flex min-h-row items-center rounded-control px-2 text-body text-[var(--tour-muted)] transition hover:bg-[var(--tour-hover)] hover:text-[var(--tour-text)]"
               >
                 Skip tour
               </button>
             )}
           </div>
-          <h3 className="mt-2 text-[15px] font-semibold leading-snug">{title}</h3>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--tour-muted)]">{body}</p>
+          <h3 className="mt-2 text-panel-title">{title}</h3>
+          <p className="mt-1.5 text-body text-[var(--tour-muted)]">{body}</p>
           <div className="mt-4 flex items-center justify-between gap-2">
             {outro ? (
               // The help centre, in a new tab: the tour is over, so nothing is lost by going.
@@ -219,7 +227,7 @@ export function TourPopover({
                 href={outro.helpHref}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-[var(--tour-muted)] transition hover:text-[var(--tour-text)]"
+                className="inline-flex items-center gap-1 rounded-control text-body text-[var(--tour-muted)] transition hover:text-[var(--tour-text)]"
               >
                 <HelpIcon aria-hidden />
                 Learn More
@@ -243,7 +251,7 @@ export function TourPopover({
                 <button
                   type="button"
                   onClick={onBack}
-                  className="inline-flex h-8 items-center rounded-lg px-3 text-[13px] font-medium text-[var(--tour-muted)] transition hover:bg-[var(--tour-hover)] hover:text-[var(--tour-text)]"
+                  className="inline-flex h-field items-center rounded-control px-3 text-body text-[var(--tour-muted)] transition hover:bg-[var(--tour-hover)] hover:text-[var(--tour-text)]"
                 >
                   Back
                 </button>
@@ -264,7 +272,7 @@ function AccentButton({ onClick, children }: { onClick: () => void; children: Re
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-8 cursor-pointer items-center justify-center rounded-lg bg-[var(--tour-accent)] px-3.5 text-[13px] font-medium text-[var(--tour-on-accent)] transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tour-accent)]"
+      className="inline-flex h-field cursor-pointer items-center justify-center rounded-control bg-[var(--tour-accent)] px-4 text-body font-medium text-[var(--tour-on-accent)] transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tour-accent)]"
     >
       {children}
     </button>

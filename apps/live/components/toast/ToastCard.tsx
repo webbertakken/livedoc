@@ -16,7 +16,7 @@ import type { ToastTone } from './toast-queue';
 
 /** The toast's card look, shared with the notices that are not in the stack (the new-version prompt). */
 export const TOAST_SURFACE =
-  'rounded-xl border bg-white text-slate-800 shadow-lg shadow-slate-900/10 dark:bg-slate-900 dark:text-slate-100 dark:shadow-black/40';
+  'rounded-surface border bg-white text-slate-800 shadow-lg shadow-slate-900/10 dark:bg-slate-900 dark:text-slate-100 dark:shadow-black/40';
 
 const BORDER: Record<ToastTone, string> = {
   info: 'border-slate-200 dark:border-slate-700',
@@ -40,9 +40,9 @@ const ICONS: Record<ToastTone, ReturnType<typeof lucideGlyph>> = {
 };
 
 const ACTION_BASE =
-  'touch-target relative inline-flex h-8 shrink-0 items-center rounded-lg px-2.5 text-sm font-semibold whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 disabled:cursor-not-allowed disabled:opacity-50';
+  'touch-target relative inline-flex h-field shrink-0 items-center rounded-control px-3 text-body whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 disabled:cursor-not-allowed disabled:opacity-50';
 const ACTION_PRIMARY =
-  'text-brand-700 enabled:hover:bg-brand-50 dark:text-brand-300 dark:enabled:hover:bg-brand-500/15';
+  'font-medium text-brand-700 enabled:hover:bg-brand-50 dark:text-brand-300 dark:enabled:hover:bg-brand-500/15';
 const ACTION_SECONDARY =
   'text-slate-600 enabled:hover:bg-slate-100 enabled:hover:text-slate-900 dark:text-slate-300 dark:enabled:hover:bg-slate-800 dark:enabled:hover:text-white';
 
@@ -77,14 +77,14 @@ export function ToastCard({
     <div
       role={tone === 'error' ? 'alert' : 'status'}
       data-toast-tone={tone}
-      className={`flex w-full items-start gap-3 py-1.5 pl-3 pr-1.5 sm:w-auto sm:max-w-[36rem] ${TOAST_SURFACE} ${BORDER[tone]} ${leaving ? 'pointer-events-none animate-toast-out' : full ? 'pointer-events-auto animate-toast-in-full' : 'pointer-events-auto animate-toast-in'} ${className}`}
+      className={`flex w-full items-start gap-3 py-1.5 pl-3 pr-2 sm:w-auto sm:max-w-[36rem] ${TOAST_SURFACE} ${BORDER[tone]} ${leaving ? 'pointer-events-none animate-toast-out' : full ? 'pointer-events-auto animate-toast-in-full' : 'pointer-events-auto animate-toast-in'} ${className}`}
       {...rest}
     >
-      <span className={`flex h-8 shrink-0 items-center ${ICON_TINT[tone]}`} aria-hidden>
+      <span className={`flex h-field shrink-0 items-center ${ICON_TINT[tone]}`} aria-hidden>
         <Icon />
       </span>
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-0.5">
-        <p className="min-w-0 flex-[1_1_auto] py-1.5 text-sm leading-5">{message}</p>
+        <p className="min-w-0 flex-[1_1_auto] py-1.5 text-body">{message}</p>
         {actions.length > 0 ? (
           <div className="ml-auto flex shrink-0 items-center gap-1">
             {actions.map((action) => (
@@ -106,7 +106,7 @@ export function ToastCard({
         type="button"
         onClick={onClose}
         aria-label="Dismiss"
-        className="touch-target relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        className="touch-target relative my-0.5 flex size-row shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
       >
         <CloseIcon size={12} />
       </button>

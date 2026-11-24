@@ -56,10 +56,10 @@ export function BugScreenshotPage() {
         <img
           src={fetched.url}
           alt="Bug report screenshot"
-          className="max-h-[85vh] max-w-full rounded border border-slate-200 object-contain dark:border-slate-700"
+          className="max-h-[85vh] max-w-full rounded-control border border-slate-200 object-contain dark:border-slate-700"
         />
       ) : (
-        <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+        <p role="status" className="text-body text-slate-600 dark:text-slate-300">
           {missing
             ? 'This screenshot has expired, or only the Bug Tracker’s owner can see it.'
             : 'Loading the screenshot…'}

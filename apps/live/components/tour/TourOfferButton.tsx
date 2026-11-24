@@ -49,18 +49,18 @@ export function TourOfferButton({ labelled = true }: { labelled?: boolean }) {
         className={
           inGroup
             ? `${TOOLBAR_BUTTON} ${labelled ? '' : 'w-9 px-0'}`
-            : `relative touch-target ml-0.5 flex h-7 min-w-7 shrink-0 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-1.5 text-slate-600 transition duration-micro hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 sm:ml-1 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white ${labelled ? 'sm:pl-1 sm:pr-2.5' : ''}`
+            : `relative touch-target ml-0.5 flex h-row min-w-row shrink-0 items-center justify-center gap-1 rounded-full border border-slate-200 bg-white px-1 text-slate-600 transition duration-micro hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 sm:ml-1 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white ${labelled ? 'sm:pl-1 sm:pr-2' : ''}`
         }
       >
         <span
           aria-hidden
-          className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-brand-700 text-white dark:bg-brand-600"
+          className="flex size-icon-toolbar shrink-0 items-center justify-center rounded-full bg-brand-700 text-white dark:bg-brand-600"
         >
           <PlayGlyph style={{ translate: `${PLAY_GLYPH_SHIFT_PX}px 0` }} />
         </span>
         {labelled ? (
           <span
-            className={`hidden whitespace-nowrap sm:inline ${inGroup ? 'text-optical-centre' : 'text-xs font-medium'}`}
+            className={`hidden whitespace-nowrap sm:inline ${inGroup ? 'text-optical-centre' : 'text-body'}`}
           >
             {label}
           </span>
