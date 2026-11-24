@@ -52,7 +52,7 @@ export function PhotoReviewShowMe({
 }) {
   return (
     <div
-      className="pointer-events-auto absolute left-2 top-2 flex items-center gap-0.5 rounded-lg bg-white/95 p-0.5 shadow-lg dark:bg-slate-900/95"
+      className="pointer-events-auto absolute left-2 top-2 flex items-center gap-0.5 rounded-menu bg-white/95 p-0.5 shadow-lg dark:bg-slate-900/95"
       onPointerDown={(e) => e.stopPropagation()}
     >
       <ShowMeButton

@@ -5,7 +5,8 @@ import type { Viewport } from 'next';
 // and iOS focus-zoom on a sub-16px field misaligned the chrome with the canvas coordinates. Only the routes that
 // draw the canvas export it (/document/<id>, /new, /embed, /embed/workbench); every other page keeps the root
 // layout's zoomable viewport, so a phone can pinch to read it (WCAG 1.4.4). iOS has no focus-zoom to do on them:
-// globals.css already holds every field at 16px on a phone.
+// globals.css already holds every field at 16px on a phone. A PDF tab drops the pin while it shows
+// (lib/pdf-document/usePdfZoomablePage.ts).
 export const EDITOR_VIEWPORT: Viewport = {
   width: 'device-width',
   initialScale: 1,

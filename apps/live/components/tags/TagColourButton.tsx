@@ -60,7 +60,7 @@ export function TagColourButton({
         onPick={onPick}
         // Quiet until its row is hovered or focused (the dot already shows the colour); always there on touch, and
         // while its picker is open.
-        className="h-6 w-6 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100 aria-expanded:opacity-100 pointer-coarse:opacity-100"
+        className="size-chip opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100 aria-expanded:opacity-100 pointer-coarse:opacity-100"
       />
     </TagColourIsolation>
   );

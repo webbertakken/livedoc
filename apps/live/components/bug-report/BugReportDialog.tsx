@@ -125,10 +125,8 @@ export function BugReportDialog({ onClose }: { onClose: () => void }) {
         {phase.kind === 'sent' ? (
           <>
             <div className="px-6 py-6" role="status">
-              <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                {COPY.thanks}
-              </p>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              <p className="text-panel-title text-slate-900 dark:text-slate-100">{COPY.thanks}</p>
+              <p className="mt-1 text-body text-slate-600 dark:text-slate-300">
                 {phase.result.kind === 'filed' ? COPY.filed(phase.result.number) : COPY.stored}
               </p>
             </div>
@@ -147,7 +145,7 @@ export function BugReportDialog({ onClose }: { onClose: () => void }) {
             className="flex min-h-0 flex-1 flex-col"
           >
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
-              <label className="flex flex-col gap-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <label className="flex flex-col gap-1 text-body text-slate-700 dark:text-slate-200">
                 {COPY.titleLabel}
                 <TextInput
                   value={title}
@@ -161,12 +159,12 @@ export function BugReportDialog({ onClose }: { onClose: () => void }) {
                 <span
                   id="bug-report-title-count"
                   aria-live="polite"
-                  className="self-end text-xs font-normal text-slate-500 dark:text-slate-400"
+                  className="self-end text-supporting text-slate-500 dark:text-slate-400"
                 >
                   {title.length >= COUNTER_FROM ? `${title.length}/${BUG_REPORT_LIMITS.title}` : ''}
                 </span>
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <label className="flex flex-col gap-1 text-body text-slate-700 dark:text-slate-200">
                 <span>
                   {COPY.detailsLabel}{' '}
                   <span className="font-normal text-slate-500 dark:text-slate-400">
@@ -186,7 +184,7 @@ export function BugReportDialog({ onClose }: { onClose: () => void }) {
             </div>
             <DialogFooter>
               {phase.kind === 'editing' && phase.error ? (
-                <p role="alert" className="mr-auto text-sm text-rose-700 dark:text-rose-300">
+                <p role="alert" className="mr-auto text-body text-rose-700 dark:text-rose-300">
                   {phase.error}
                 </p>
               ) : null}

@@ -85,6 +85,11 @@ Every function is reachable without a pointer ([Keyboard shortcuts](keyboard-sho
 
 - **Zoom** to 6400% is the pages' own. The chrome reflows to 400% browser zoom at 1280 px wide; the pages, being a
   fixed layout, scroll in two directions, which WCAG's reflow criterion allows.
+- **A PDF tab's page zooms with the browser** (WCAG 1.4.4): the editor's route pins its viewport at scale 1 for the
+  canvas ([Live app](../007-editor/live-app.md)), so while a PDF's surface shows, the viewport drops that pin, and the
+  pin comes back as the surface goes. On a phone a pinch on the chrome enlarges it; the pages' own pinch is handled
+  inside the zoomable page ([Reading surface](reading-surface.md)).
+- **Open item**: the canvas routes still pin the viewport at scale 1; the director has raised it with Webber.
 - **Contrast** of the chrome is the shell's tokens, AA in both schemes. Dark pages keeps every text that met 4.5:1 on
   paper at or above it ([Dark pages](dark-pages.md#accessibility)).
 - **Marks never rely on colour alone**: each kind has its shape (a highlight a fill, an underline a line, a
@@ -146,5 +151,6 @@ none is pointer-only for one level and not another.
 - Fingerprints: `[pdf] tree source=<tags|geometry|recognised|none> page=<n> nodes=<n> tags=<used|absent|partial|cut>`,
   once a page's tree is built (`tags` says why a page did or did not read from its tags);
   `[pdf] page-tags-failed page=<n>` where the engine could not read a page's tags (the page reads from geometry);
+  `[pdf] viewport zoomable` as a PDF's surface drops the editor's viewport pin;
   `[pdf] claim-removed
 claim=<pdfua|pdfa> reason=<reason>`.

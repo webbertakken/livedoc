@@ -72,22 +72,20 @@ export function TagDialog({
       >
         <div className="border-b border-slate-100 px-6 pb-5 pt-5 dark:border-slate-800">
           <div className="flex items-start justify-between gap-3">
-            <h2 id={titleId} className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+            <h2 id={titleId} className="text-dialog-title text-slate-900 dark:text-slate-50">
               {tag ? 'Edit Tag' : 'New Tag'}
             </h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="-mr-1.5 -mt-0.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+              className="-mr-1.5 -mt-0.5 flex size-row cursor-pointer items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             >
               <CloseIcon size={16} />
             </button>
           </div>
           <label className="mt-4 block">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Name
-            </span>
+            <span className="text-body text-slate-700 dark:text-slate-200">Name</span>
             <TextInput
               ref={field}
               value={name}
@@ -103,14 +101,12 @@ export function TagDialog({
             />
           </label>
           {touched && problem ? (
-            <p id={errorId} className="mt-1.5 text-xs text-rose-600 dark:text-rose-400">
+            <p id={errorId} className="mt-1.5 text-supporting text-rose-600 dark:text-rose-400">
               {problem}
             </p>
           ) : null}
           <div className="mt-4">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Colour
-            </span>
+            <span className="text-body text-slate-700 dark:text-slate-200">Colour</span>
             <div className="mt-2">
               <TagColourIsolation>
                 <ColourPicker
@@ -124,7 +120,7 @@ export function TagDialog({
               </TagColourIsolation>
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-4 flex items-center gap-2 text-supporting text-slate-500 dark:text-slate-400">
             <span>Looks like</span>
             <TagChip tag={preview} />
           </div>

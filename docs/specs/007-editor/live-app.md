@@ -335,6 +335,8 @@ page `/form/<code>`, the Explorer, sign-in, get-started, join and the rest) keep
 (`width: device-width`, `initialScale: 1`), so a phone can pinch to read it (WCAG 1.4.4 Resize Text). They have no
 focus-zoom to do: `globals.css` already holds every field at 16px on a phone.
 
+A PDF tab drops the pin while its surface shows, so its page zooms with the browser (WCAG 1.4.4), and the pin comes back as the surface goes (`usePdfZoomablePage`, [Accessibility](../035-pdf-documents/accessibility.md#seeing)). The canvas routes still pin: an open item the director has raised with Webber.
+
 **Menus are bottom sheets on a phone.** Every context menu (an element's, a selection's: the
 shared `ContextMenu`; and the tab menu, from a tab's `⋯` or a long-press on the canvas:
 `TabPortalMenu`) opens as a sheet (`BottomSheet`) docked to the bottom edge instead of a
