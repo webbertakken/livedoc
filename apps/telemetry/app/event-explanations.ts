@@ -1224,7 +1224,7 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Tab|Created|Dashboard':
     'Someone added a Dashboard tab from the + menu, opening Start Planning on its dashboards.',
   'Tab|Created|TextDocument': 'Someone added a text document tab from the + menu.',
-  'Tab|Added|TextDocumentTab':
+  'Element|Added|TextDocumentTab':
     'Someone added a tab inside a text document, from its outline or Insert > Tab.',
   'UI|Used|TextDocumentTabShown':
     "Someone showed another of a text document's tabs, from its outline or the keyboard.",
@@ -2814,7 +2814,6 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Tab|Duplicated': 'A tab was duplicated.',
   'Tab|Ended': 'Someone ended a live activity on a tab, such as a poll or a timer.',
   'Tab|Imported': 'Someone imported a tab from a file.',
-  'Tab|Added': 'Someone added a part to a tab.',
   'Tab|Linked': 'A tab was linked into another document.',
   'Tab|Loaded':
     "A tab's content was fetched for viewing (the first tab when a document opens, then each tab switched to).",

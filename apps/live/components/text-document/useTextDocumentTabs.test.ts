@@ -69,7 +69,7 @@ describe('useTextDocumentTabs', () => {
     expect(added?.id).toMatch(/^t\.[a-z0-9]{12}$/);
     expect(TextDocumentState.tabBody(doc, added!.id).length).toBe(1);
     expect(showTab.current).toHaveBeenCalledWith(added!.id);
-    expect(track).toHaveBeenCalledWith('Tab', 'Added', 'TextDocumentTab');
+    expect(track).toHaveBeenCalledWith('Element', 'Added', 'TextDocumentTab');
   });
 
   it('binds Insert > Tab for an Editor, dimmed for anyone else and past the most', () => {

@@ -1447,7 +1447,7 @@ export const TEXT_DOCUMENT_CONTENTS_FOLLOWED = chart(
 // A document tab added to a text document with the outline's + or Insert > Tab (docs/specs/034-text-documents/
 // links-and-navigation.md "Telemetry").
 export const TEXT_DOCUMENT_TABS_ADDED = chart(
-  'Tab',
+  'Element',
   'Added',
   'Text Document Tabs Added',
   'A document tab added to a text document from the outline’s + or Insert > Tab.',

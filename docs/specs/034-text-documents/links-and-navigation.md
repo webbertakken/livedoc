@@ -180,6 +180,6 @@ Copy link.
 `Element · Changed · TextDocumentLink` (an edited link), `Element · Removed · TextDocumentLink` (Remove link);
 `UI · Used · TextDocumentLinkOpened` (Alt+Enter or the card's title);
 `UI · Used · TextDocumentHeadingLinkCopied` (Copy heading link);
-`Tab · Added · TextDocumentTab` (+ or Insert > Tab); `UI · Used · TextDocumentTabShown` (a tab shown from the
-outline or the keys); `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never
-content.
+`Element · Added · TextDocumentTab` (+ or Insert > Tab: a document tab is content, no tab of the document's);
+`UI · Used · TextDocumentTabShown` (a tab shown from the outline or the keys);
+`UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never content.

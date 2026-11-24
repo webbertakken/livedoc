@@ -70,7 +70,7 @@ export function useTextDocumentTabs({
     const id = DocumentTabs.newId();
     const name = newTabName(list);
     addLiveTab(store.doc, { id, name, style: normalStyle() });
-    track('Tab', 'Added', 'TextDocumentTab');
+    track('Element', 'Added', 'TextDocumentTab');
     debugLog('[text-document] tab added', { tab: id, count: list.length + 1 });
     show(id, true);
   }, [canAdd, list, normalStyle, show, store]);
