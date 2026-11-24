@@ -44,6 +44,10 @@ test('Dark pages shows a PDF’s pages dark for one person, the photograph as dr
   await page.waitForURL(/\/document\//, { timeout: 30_000 });
   await pageOneDrawn(page);
 
+  // The toolbar's toggle is Viewing's.
+  await page.getByRole('button', { name: /^Mode: / }).click();
+  await page.getByRole('menuitemradio', { name: /Viewing/ }).click();
+
   // Off until answered: the pages are as the file says.
   await expect(page.locator(SURFACE)).toHaveAttribute('data-pdf-look', 'paper');
   await expect.poll(() => colourAt(page, ...PAPER)).toEqual([255, 255, 255]);
