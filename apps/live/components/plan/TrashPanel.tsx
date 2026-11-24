@@ -59,8 +59,8 @@ export function TrashPanel({
           />
         ) : (
           <>
-            <div className="flex items-center justify-between px-0.5 text-[12px] text-slate-500 dark:text-slate-400">
-              <span className="inline-flex items-center gap-1.5">
+            <div className="flex items-center justify-between px-0.5 text-supporting text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-2">
                 {/* Grey, as every neutral count: the Trash holds nothing urgent (destructive-actions.md). */}
                 <CountBadge size="md" background="#64748b26" color="#64748b">
                   {trashed.length}
@@ -70,7 +70,7 @@ export function TrashPanel({
             </div>
             <ul
               aria-label="Cards in the Trash"
-              className="flex max-h-96 flex-col gap-1.5 overflow-y-auto"
+              className="flex max-h-96 flex-col gap-2 overflow-y-auto"
             >
               {trashed.map((it) => {
                 const type = typeIn(plan.types, it.type);
@@ -78,26 +78,26 @@ export function TrashPanel({
                 return (
                   <li
                     key={it.id}
-                    className="relative overflow-hidden rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-2.5 dark:border-slate-700 dark:bg-slate-900"
+                    className="relative overflow-hidden rounded-menu border border-slate-200 bg-white py-2.5 pl-4 pr-3 dark:border-slate-700 dark:bg-slate-900"
                   >
                     <span
                       aria-hidden
                       className={`absolute inset-y-0 left-0 w-1 ${ACCENT_BG}`}
                       style={accentVars(type.color)}
                     />
-                    <div className="flex items-start gap-2.5">
+                    <div className="flex items-start gap-3">
                       <span
                         aria-hidden
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${ACCENT_TINT} ${ACCENT_TEXT}`}
+                        className={`flex size-row shrink-0 items-center justify-center rounded-control ${ACCENT_TINT} ${ACCENT_TEXT}`}
                         style={accentVars(type.color)}
                       >
                         <PlanTypeGlyph glyph={type.glyph} size={14} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="break-words text-[13px] font-medium leading-snug text-slate-800 dark:text-slate-100">
+                        <p className="break-words text-body text-slate-800 dark:text-slate-100">
                           {itemTitle(it) || 'Untitled'}
                         </p>
-                        <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
                           {type.label} #{it.key}
                           {typeof from === 'string' && plan.statusNames.has(from)
                             ? ` · from ${statusLabel(from, plan.statusNames)}`
@@ -107,11 +107,11 @@ export function TrashPanel({
                       </div>
                     </div>
                     {canEdit ? (
-                      <div className="mt-2 flex items-center justify-end gap-1.5">
+                      <div className="mt-2 flex items-center justify-end gap-2">
                         <button
                           type="button"
                           aria-label={`Delete #${it.key} for good`}
-                          className="flex h-7 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          className="flex h-row items-center gap-1 rounded-control px-2 text-supporting text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                           onClick={(e) =>
                             setPurging({ id: it.id, key: it.key, anchor: e.currentTarget })
                           }
@@ -123,7 +123,7 @@ export function TrashPanel({
                           variant="secondary"
                           size="xs"
                           aria-label={`Restore #${it.key}`}
-                          className="h-7 px-2.5 font-semibold"
+                          className="h-row px-3"
                           onClick={() => {
                             plan.restoreItem(it.id);
                             plan.announce(`#${it.key} restored`);
@@ -140,7 +140,7 @@ export function TrashPanel({
             {canEdit ? (
               <Button
                 variant="secondary"
-                className="gap-1.5 rounded-lg py-2 text-[13px] font-semibold"
+                className="gap-2 rounded-menu py-2 text-body"
                 // At once, no confirm: pressing Empty Trash in the Trash is the intent (items.md "Trash").
                 onClick={() => {
                   plan.emptyTrash();

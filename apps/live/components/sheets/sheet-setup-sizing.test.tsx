@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // docs/specs/004-interface-design/sizing.md (D238): a Sheet's header and Setup Sheet are chrome on the sizing scale;
 // its grid is content and keeps its own sizes.
-import { cleanup } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { makeSheet, renderSheet, stubResizeObserver } from './sheet-ui-test-utils';
 import { SheetHeader } from './SheetHeader';
@@ -24,6 +24,8 @@ describe('a Sheet’s header and setup on the sizing scale', () => {
     );
 
     expect(container.querySelector('[data-sheet-title]')!.className).toContain('text-panel-title');
+    // Its icon buttons are the row step, as every element header's are.
+    expect(screen.getByRole('button', { name: 'Sheet Settings' }).className).toContain('size-row');
     expect(container.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
   });
 

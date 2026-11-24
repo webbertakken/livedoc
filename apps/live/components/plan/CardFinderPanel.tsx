@@ -126,12 +126,12 @@ function CardFinderBody({
       dismissOnOutside
       onPopoverClose={onPopoverClose}
     >
-      <div className="flex flex-col gap-2.5 px-3 pb-3">
+      <div className="flex flex-col gap-3 px-3 pb-3">
         <CardSearchControls plan={plan} live={live} search={search} autoFocus={finePointer}>
           <div
             role="radiogroup"
             aria-label="Which cards"
-            className="flex gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800"
+            className="flex gap-1 rounded-menu bg-slate-100 p-0.5 dark:bg-slate-800"
           >
             {SHOWS.map((s) => (
               <button
@@ -140,9 +140,9 @@ function CardFinderBody({
                 role="radio"
                 aria-checked={show === s.id}
                 onClick={() => setShow(s.id)}
-                className={`flex ${s.id === 'all' ? 'min-w-0 flex-1' : 'shrink-0 whitespace-nowrap px-4'} items-center justify-center gap-1.5 rounded-md py-1.5 text-[12px] font-medium transition ${
+                className={`flex ${s.id === 'all' ? 'min-w-0 flex-1' : 'shrink-0 whitespace-nowrap px-4'} items-center justify-center gap-2 rounded-control py-1.5 text-supporting transition ${
                   show === s.id
-                    ? 'bg-white text-slate-800 shadow-sm dark:bg-slate-900 dark:text-slate-100'
+                    ? 'bg-white font-medium text-slate-800 shadow-sm dark:bg-slate-900 dark:text-slate-100'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
                 }`}
               >
@@ -170,7 +170,7 @@ function CardFinderBody({
           <ul
             aria-label="Cards"
             // The same height however many cards: the panel never shrinks as a search narrows it.
-            className={`flex ${LIST_HEIGHT} flex-col gap-1.5 overflow-y-auto p-0.5`}
+            className={`flex ${LIST_HEIGHT} flex-col gap-2 overflow-y-auto p-0.5`}
           >
             {found.slice(0, CARD_FINDER_ROWS_MAX).map((it) => {
               const type = typeIn(plan.types, it.type);
@@ -183,7 +183,7 @@ function CardFinderBody({
                       plan.openItem(it.id);
                     }}
                     aria-label={`Open ${itemTitle(it) || 'Untitled'}, ${type.label} #${it.key}`}
-                    className="min-w-0 flex-1 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                    className="min-w-0 flex-1 rounded-surface text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                   >
                     {/* The card as a board draws it at Compact size, laid out as its type's Display says. */}
                     <PlanCardFace item={it} palette={palette} fields={CARD_FIELDS} size="compact" />
@@ -197,7 +197,7 @@ function CardFinderBody({
                           plan.trashItem(it.id);
                           plan.announce(`#${it.key} moved to the Trash`);
                         }}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover/row:opacity-100 sm:[@media(hover:none)]:opacity-100"
+                        className="flex size-row shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover/row:opacity-100 sm:[@media(hover:none)]:opacity-100"
                       >
                         <TrashIcon size={14} />
                       </button>
@@ -207,7 +207,7 @@ function CardFinderBody({
               );
             })}
             {found.length > CARD_FINDER_ROWS_MAX ? (
-              <li className="px-2 py-2 text-center text-[11px] text-slate-500 dark:text-slate-400">
+              <li className="px-2 py-2 text-center text-supporting text-slate-500 dark:text-slate-400">
                 Showing {CARD_FINDER_ROWS_MAX} of {found.length}. Search to narrow them down.
               </li>
             ) : null}

@@ -24,7 +24,7 @@ const POPOVER_PX = 260;
 const NARROW_AT = 8;
 
 const ROW =
-  'flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800';
+  'flex w-full cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-left text-body text-slate-700 transition hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800';
 
 export function AddFilterPicker({
   fields,
@@ -59,10 +59,10 @@ export function AddFilterPicker({
         type="button"
         aria-haspopup="dialog"
         aria-expanded={anchor !== null}
-        className={`inline-flex cursor-pointer items-center gap-1 text-[12px] font-medium text-slate-600 transition hover:text-brand-700 dark:text-slate-300 dark:hover:text-brand-200 ${
+        className={`inline-flex cursor-pointer items-center gap-1 text-supporting text-slate-600 transition hover:text-brand-700 dark:text-slate-300 dark:hover:text-brand-200 ${
           inBox
-            ? 'h-6 whitespace-nowrap rounded-md px-1.5 hover:bg-brand-50 dark:hover:bg-brand-500/10'
-            : 'rounded-full border border-dashed border-slate-300 px-2.5 py-0.5 hover:border-brand-400 hover:bg-brand-50 dark:border-slate-600 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10'
+            ? 'h-chip whitespace-nowrap rounded-control px-2 hover:bg-brand-50 dark:hover:bg-brand-500/10'
+            : 'rounded-full border border-dashed border-slate-300 px-3 py-0.5 hover:border-brand-400 hover:bg-brand-50 dark:border-slate-600 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10'
         } ${className}`}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => (anchor ? close() : setAnchor(e.currentTarget))}
@@ -73,7 +73,7 @@ export function AddFilterPicker({
       {anchor ? (
         <AnchoredPopover anchor={anchor} name="Add Filter" width={POPOVER_PX} onClose={close}>
           <div
-            className="flex max-h-80 flex-col gap-1 rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900"
+            className="flex max-h-80 flex-col gap-1 rounded-menu border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900"
             onPointerDown={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-1 px-1 pb-1 pt-0.5">
@@ -81,7 +81,7 @@ export function AddFilterPicker({
                 <button
                   type="button"
                   aria-label="Back to the fields"
-                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                  className="flex size-chip cursor-pointer items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                   onClick={() => {
                     setField(null);
                     setQuery('');
@@ -90,13 +90,13 @@ export function AddFilterPicker({
                   <ChevronLeftIcon size={14} />
                 </button>
               ) : null}
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-supporting text-slate-500 dark:text-slate-400">
                 {field ? `${field.label} is` : 'Filter by'}
               </span>
             </div>
             {long ? (
               <div className="relative px-1 pb-1">
-                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                   <SearchIcon size={13} />
                 </span>
                 <TextInput
@@ -104,7 +104,7 @@ export function AddFilterPicker({
                   placeholder={
                     field ? `Find ${withArticle(field.label.toLowerCase())}` : 'Find a field'
                   }
-                  className="pl-7"
+                  className="pl-6"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -123,7 +123,7 @@ export function AddFilterPicker({
                         }}
                       >
                         <span className="min-w-0 flex-1 truncate">{v.label}</span>
-                        <span className="shrink-0 rounded-full bg-slate-100 px-1.5 text-[11px] tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        <span className="shrink-0 rounded-full bg-slate-100 px-2 text-supporting tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                           {v.count}
                         </span>
                       </button>
