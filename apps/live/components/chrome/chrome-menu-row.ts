@@ -5,9 +5,9 @@ import { MODE_SWITCH_FOCUS } from './editor-mode/editor-mode-copy';
 
 // The panel: the shared menu surface (MENU_PANEL's colours and shadow) with mock-up B's 12px radius and 4px padding.
 export const CHROME_MENU_SURFACE =
-  'flex animate-fade-in flex-col gap-px rounded-xl border border-slate-200/80 bg-white p-1 shadow-xl shadow-slate-900/10 outline-none motion-reduce:animate-none dark:border-slate-700/80 dark:bg-slate-900 dark:shadow-slate-950/60';
+  'flex animate-fade-in flex-col gap-0.5 rounded-surface border border-slate-200/80 bg-white p-1 shadow-xl shadow-slate-900/10 outline-none motion-reduce:animate-none dark:border-slate-700/80 dark:bg-slate-900 dark:shadow-slate-950/60';
 
-export const CHROME_MENU_ROW = `flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[13px] font-medium transition-colors motion-reduce:transition-none ${MODE_SWITCH_FOCUS}`;
+export const CHROME_MENU_ROW = `flex h-row w-full items-center gap-3 rounded-control px-3 text-left text-body transition-colors motion-reduce:transition-none ${MODE_SWITCH_FOCUS}`;
 
 export const CHROME_MENU_ROW_IDLE =
   'text-slate-700 hover:bg-slate-100/70 focus-visible:bg-slate-100/70 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:focus-visible:bg-slate-800/60';

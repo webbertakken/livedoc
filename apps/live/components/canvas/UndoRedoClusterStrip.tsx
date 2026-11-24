@@ -38,7 +38,7 @@ export function UndoRedoClusterStrip({
           onClick={onUndo}
           disabled={!canUndo}
           aria-label="Undo"
-          className="relative flex h-9 w-9 touch-target items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent"
+          className="relative flex h-row w-row touch-target items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent"
         >
           <UndoIcon />
         </button>
@@ -50,7 +50,7 @@ export function UndoRedoClusterStrip({
           onClick={onRedo}
           disabled={!canRedo}
           aria-label="Redo"
-          className="relative flex h-9 w-9 touch-target items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent"
+          className="relative flex h-row w-row touch-target items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent"
         >
           <RedoIcon />
         </button>

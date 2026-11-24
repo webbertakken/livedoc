@@ -67,7 +67,7 @@ export function IsometricOrbitButton({
           onOrbit(startX, startY);
         }}
         aria-label="Orbit isometric view"
-        className="flex h-9 w-9 cursor-grab items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 active:cursor-grabbing dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        className="flex h-row w-row cursor-grab items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 active:cursor-grabbing dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
       >
         <OrbitGlyph />
       </button>

@@ -31,8 +31,8 @@ const TOGGLE_HINT: Record<Role, string> = {
 
 // The word sits in text-optical-line + text-optical-caps (optical-alignment.md), so the pill carries no case. Pinned to
 // the visibility badge's height with a resting ring like it, so the two pills beside the title read as a pair.
-// h-[19px] is STATE_CHIP_HEIGHT_PX, written out so Tailwind sees the class.
-const PILL = 'inline-flex h-[19px] items-center rounded-full px-2 text-[10px] font-semibold ring-1';
+// h-chip is STATE_CHIP_HEIGHT_PX, the chip step.
+const PILL = 'inline-flex h-chip items-center rounded-full px-2 text-supporting ring-1';
 const PILL_TONE: Record<Role, string> = {
   edit: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30',
   participate:
@@ -97,7 +97,7 @@ const ICON_LABEL: Record<Role, string> = {
 // The status bar control's box (chrome-button's CHROME_BTN), in the role's own
 // colour rather than the bar's slate.
 const ICON_BOX =
-  'flex h-7 min-w-7 shrink-0 items-center justify-center rounded-md transition hover:bg-slate-100 dark:hover:bg-slate-800';
+  'flex h-row min-w-7 shrink-0 items-center justify-center rounded-control transition hover:bg-slate-100 dark:hover:bg-slate-800';
 const ICON_TONE: Record<Role, string> = {
   edit: 'text-emerald-700 dark:text-emerald-300',
   participate: 'text-teal-700 dark:text-teal-300',

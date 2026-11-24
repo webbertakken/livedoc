@@ -16,7 +16,7 @@ type OpenerProps = {
 };
 
 const COUNT =
-  'flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-slate-100 px-1.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200';
+  'flex h-icon-toolbar min-w-icon-toolbar items-center justify-center rounded-full bg-slate-100 px-1 text-glyph text-slate-700 dark:bg-slate-800 dark:text-slate-200';
 
 // The tab stack (docs/specs/007-editor/toolbar-layout.md "The bottom line", "The tab's name"): one button inside the
 // active tab, holding the tab's name, a stack glyph and the number of tabs in the session's scope. Always drawn, one
@@ -38,7 +38,7 @@ export function TabStackButton({
       aria-expanded={open}
       data-tab-stack=""
       onClick={(e) => onToggle(e.currentTarget)}
-      className={`relative flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded px-1.5 outline-none transition touch-target-y focus-visible:ring-2 focus-visible:ring-brand-400 ${
+      className={`relative flex h-row shrink-0 items-center gap-2 whitespace-nowrap rounded-control px-2 outline-none transition touch-target-y focus-visible:ring-2 focus-visible:ring-brand-400 ${
         open ? 'bg-black/10 dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10'
       }`}
     >

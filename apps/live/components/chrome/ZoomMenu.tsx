@@ -44,7 +44,7 @@ export function ZoomMenu({ zoom, onSetZoom, onFitToScreen, offReason, range }: Z
             type="button"
             disabled
             aria-label="Fit to screen"
-            className="flex h-9 min-w-[3.5rem] cursor-not-allowed items-center justify-center rounded-md px-2 text-center text-xs font-semibold tabular-nums text-slate-700 opacity-40 dark:text-slate-200"
+            className="flex h-row min-w-[3.5rem] cursor-not-allowed items-center justify-center rounded-control px-2 text-center text-body tabular-nums text-slate-700 opacity-40 dark:text-slate-200"
           >
             {percent}%
           </button>
@@ -105,7 +105,7 @@ function ZoomMenuLive({ zoom, onSetZoom, onFitToScreen, range }: Omit<ZoomMenuPr
         aria-label="Fit to screen"
         aria-haspopup="menu"
         aria-expanded={open !== null}
-        className="flex h-9 min-w-[3.5rem] items-center justify-center rounded-md px-2 text-center text-xs font-semibold tabular-nums text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="flex h-row min-w-[3.5rem] items-center justify-center rounded-control px-2 text-center text-body tabular-nums text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         {percent}%
       </button>
@@ -157,7 +157,7 @@ function ZoomPresets({
         <div
           ref={attach}
           {...surfaceProps}
-          className="relative flex w-36 flex-col gap-px overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 p-1.5 shadow-xl shadow-slate-900/10 outline-none ring-1 ring-white/60 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/95 dark:shadow-slate-950/60 dark:ring-white/5"
+          className="relative flex w-36 flex-col gap-0.5 overflow-hidden rounded-surface border border-slate-200/80 bg-white/95 p-2 shadow-xl shadow-slate-900/10 outline-none ring-1 ring-white/60 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/95 dark:shadow-slate-950/60 dark:ring-white/5"
         >
           {levels.map((level) => {
             const levelPercent = Math.round(level * 100);
@@ -173,9 +173,9 @@ function ZoomPresets({
                   onClose();
                   onSetZoom(level);
                 }}
-                className={`group flex items-center justify-between rounded-lg px-3 py-1.5 text-xs font-medium tabular-nums transition ${
+                className={`group flex items-center justify-between h-row rounded-control px-3 text-body tabular-nums transition ${
                   active
-                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                    ? 'bg-brand-50 font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
                     : TOOLBAR_CONTROL_REST
                 }`}
               >
@@ -195,7 +195,7 @@ function ZoomPresets({
               onClose();
               onFitToScreen();
             }}
-            className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            className="flex items-center gap-3 h-row rounded-control px-3 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             <FitGlyph />
             Fit to screen
@@ -204,7 +204,7 @@ function ZoomPresets({
         {/* Caret pointing back at the percentage button. */}
         <div
           aria-hidden
-          className="absolute -bottom-[5px] left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 rounded-[2px] border-b border-r border-slate-200/80 bg-white/95 dark:border-slate-700/80 dark:bg-slate-900/95"
+          className="absolute -bottom-1.5 left-1/2 size-arrow -translate-x-1/2 rotate-45 rounded-none border-b border-r border-slate-200/80 bg-white/95 dark:border-slate-700/80 dark:bg-slate-900/95"
         />
       </div>
     </div>

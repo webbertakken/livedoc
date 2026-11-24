@@ -49,7 +49,7 @@ export function FloatingToolbar({
       }}
       role="toolbar"
       aria-label={title}
-      className="pointer-events-auto absolute z-[var(--z-toolbar)] flex animate-fade-in items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40"
+      className="pointer-events-auto absolute z-[var(--z-toolbar)] flex animate-fade-in items-center gap-1 rounded-menu border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40"
       style={style}
     >
       {title && !minimalChrome ? <FloatingTitle title={title} placeAbove={placeAbove} /> : null}

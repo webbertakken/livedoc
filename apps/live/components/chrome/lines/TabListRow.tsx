@@ -12,12 +12,12 @@ import { useSplitViewContext } from '@/components/split/SplitViewContext';
 import { legibleTabAccent } from '@/lib/tab-accent';
 import type { TabsChrome, TabsChromeProps } from './tabs-chrome';
 
-// A row's look: a 34px run, the hover fill; the active one tinted with the tab's accent and its inset ring, the
+// A row's look: the row step, the hover fill; the active one tinted with the tab's accent and its inset ring, the
 // same segment the document group draws for it (never a bordered box).
 const ROW =
-  'relative flex h-[34px] items-center gap-2 rounded-md px-2 text-[13px] text-slate-700 dark:text-slate-300';
+  'relative flex h-row items-center gap-2 rounded-control px-2 text-body text-slate-700 dark:text-slate-300';
 const ROW_BUTTON =
-  'flex min-w-0 flex-1 items-center gap-2 self-stretch rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400';
+  'flex min-w-0 flex-1 items-center gap-2 self-stretch rounded-control text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400';
 
 export function activeTabTint(tab: Tab, isDark: boolean) {
   const accent = legibleTabAccent(tab, isDark);
@@ -126,7 +126,7 @@ export function TabListRow({
             chrome.setEditingId(null);
           }}
           onCancel={() => chrome.setEditingId(null)}
-          className="h-7 min-w-0 flex-1 rounded-md bg-white px-2 text-[13px] text-slate-800 outline-none ring-1 ring-brand-300 dark:bg-slate-800 dark:text-slate-100 dark:ring-brand-400"
+          className="h-row min-w-0 flex-1 rounded-control bg-white px-2 text-body text-slate-800 outline-none ring-1 ring-brand-300 dark:bg-slate-800 dark:text-slate-100 dark:ring-brand-400"
         />
       ) : (
         <button

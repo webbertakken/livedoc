@@ -167,7 +167,7 @@ describe('the palette tray', () => {
     expect(slot.className).toContain('z-[calc(var(--z-toolbar)-1)]');
     expect(slot.className).toContain('overflow-hidden');
     // A recessed drawer: bordered all round, darker than the strip, sliding down as it comes.
-    expect(tray.className).toContain('rounded-b-xl');
+    expect(tray.className).toContain('rounded-b-surface');
     expect(tray.className).not.toContain('border-t-0');
     expect(tray.className).toContain('bg-slate-100');
     expect(tray.className).toContain('dark:bg-slate-950');

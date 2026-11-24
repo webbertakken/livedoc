@@ -45,7 +45,7 @@ export function ActiveTabSegment({
             }
       }
       style={isEditing ? undefined : activeTabTint(tab, chrome.isDark)}
-      className={`flex h-9 shrink-0 items-center gap-0.5 rounded-md text-[13px] font-medium ${
+      className={`flex h-row shrink-0 items-center gap-0.5 rounded-control text-body font-medium ${
         isEditing ? '' : `bg-slate-100 pr-1 dark:bg-slate-800 ${readOnly ? 'pl-2' : 'pl-1'}`
       }`}
     >
@@ -60,7 +60,7 @@ export function ActiveTabSegment({
               chrome.setEditingId(null);
             }}
             onCancel={() => chrome.setEditingId(null)}
-            className="h-9 w-40 rounded-md bg-white px-2 text-[13px] font-medium text-slate-800 outline-none ring-1 ring-brand-300 dark:bg-slate-800 dark:text-slate-100 dark:ring-brand-400"
+            className="h-row w-40 rounded-control bg-white px-2 text-body text-slate-800 outline-none ring-1 ring-brand-300 dark:bg-slate-800 dark:text-slate-100 dark:ring-brand-400"
           />
         </>
       ) : (
@@ -73,7 +73,7 @@ export function ActiveTabSegment({
                 type="button"
                 aria-label={`Rename ${tabKindNoun(tab)}`}
                 onClick={() => chrome.setEditingId(tab.id)}
-                className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded outline-none transition touch-target hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-brand-400 dark:hover:bg-white/10"
+                className="relative flex size-row shrink-0 items-center justify-center rounded-control outline-none transition touch-target hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-brand-400 dark:hover:bg-white/10"
               >
                 <TabModeIcon tab={tab} />
               </button>

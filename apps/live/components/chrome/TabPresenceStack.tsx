@@ -116,7 +116,7 @@ export function TabPresenceStack({
                   <span
                     role="img"
                     aria-label={`${followed} following you`}
-                    className="pointer-events-none absolute -right-1 -top-1.5 flex h-3 min-w-3 items-center justify-center rounded-full bg-brand-700 px-0.5 text-[8px] font-semibold leading-none text-white dark:bg-brand-500"
+                    className="pointer-events-none absolute -right-1.5 -top-2 flex h-icon-row min-w-icon-row items-center justify-center rounded-full bg-brand-700 px-0.5 text-glyph leading-none text-white dark:bg-brand-500"
                   >
                     <span className="text-optical-centre">{followed}</span>
                   </span>
@@ -150,7 +150,7 @@ export function TabPresenceStack({
           disabled={!onOpenCollaborators}
           aria-haspopup="dialog"
           aria-label={`${overflow} more participant${overflow === 1 ? '' : 's'} on this tab`}
-          className="animate-pop-in cursor-pointer border-2 border-white bg-slate-200 text-[8px] font-semibold text-slate-600 shadow-sm transition hover:bg-slate-300 disabled:cursor-default disabled:hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+          className="animate-pop-in cursor-pointer border-2 border-white bg-slate-200 text-glyph text-slate-600 shadow-sm transition hover:bg-slate-300 disabled:cursor-default disabled:hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
         >
           +{overflow}
         </GlyphDisc>

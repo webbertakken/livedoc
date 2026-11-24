@@ -52,7 +52,7 @@ function ShareStateRound({
   return (
     <span
       data-share-state-icon={state}
-      className={`grid size-7 shrink-0 place-items-center rounded-full [&_svg]:block ${STATE_ICON_TONE[state]} ${className}`}
+      className={`grid size-row shrink-0 place-items-center rounded-full [&_svg]:block ${STATE_ICON_TONE[state]} ${className}`}
       {...rest}
     >
       <StateIcon state={state} />

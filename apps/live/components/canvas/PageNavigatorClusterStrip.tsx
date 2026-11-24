@@ -12,7 +12,7 @@ import { useCurrentPageId } from '@/lib/current-page-kind';
 const Prev = lucideGlyph(lucideChevronLeft, 18);
 const Next = lucideGlyph(lucideChevronRight, 18);
 
-const ARROW = `relative flex h-9 w-9 touch-target items-center justify-center rounded-md transition disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent ${CLUSTER_CONTROL_REST}`;
+const ARROW = `relative flex h-row w-row touch-target items-center justify-center rounded-control transition disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:disabled:text-slate-600 dark:disabled:hover:bg-transparent ${CLUSTER_CONTROL_REST}`;
 
 export function PageNavigatorClusterStrip({
   pageIds,
@@ -51,7 +51,7 @@ export function PageNavigatorClusterStrip({
           <Prev />
         </button>
       </HoverCard>
-      <span className="flex min-w-[4.5rem] items-center justify-center px-2 text-[13px] font-medium tabular-nums text-slate-600 dark:border-slate-800 dark:text-slate-300">
+      <span className="flex min-w-[4.5rem] items-center justify-center px-2 text-body tabular-nums text-slate-600 dark:border-slate-800 dark:text-slate-300">
         {at + 1} of {count}
       </span>
       <HoverCard title="Next Page" description="Go to the page after this one.">

@@ -90,7 +90,7 @@ export function TopCenterChrome({
               for ITSELF. Built by hand, this one never did: Stop could not be
               clicked and did not even take the pointer cursor, so the only
               exit from being followed was a canvas gesture. */}
-          <TopCenterBanner tone="live" className="gap-2 px-3 py-1 text-[11px] font-medium">
+          <TopCenterBanner tone="live" className="gap-2 px-3 py-1 text-supporting">
             <span className="relative flex h-1.5 w-1.5" aria-hidden>
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
@@ -99,7 +99,7 @@ export function TopCenterChrome({
             <button
               type="button"
               onClick={onStopFollowing}
-              className="cursor-pointer rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold transition hover:bg-white/30"
+              className="cursor-pointer rounded-full bg-white/20 px-2 py-0.5 text-supporting transition hover:bg-white/30"
             >
               Stop
             </button>

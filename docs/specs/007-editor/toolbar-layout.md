@@ -29,8 +29,8 @@ on two lines over the canvas, a top line and a bottom line, each a single row wh
     in a new tab, named "Back to the Explorer (opens in a new tab)", its hover card saying so.
   - The caret is a chevron 8 × 14 px, a 1.75 px round stroke in the chrome's muted ink (slate-500, slate-400 in dark),
     8 px before the logo; the logo is the brand mark alone, 24 px, **without the wordmark**, tinted by the tab's theme
-    as today ([Brand mark](../004-interface-design/brand-mark.md)). Caret and mark are one 36 px tall hit area with
-    the group's hover fill.
+    as today ([Brand mark](../004-interface-design/brand-mark.md)). Caret and mark are one hit area, the tool line's 32 px tall
+    ([Sizing](../004-interface-design/sizing.md#the-editors-toolbars)), with the group's hover fill.
   - Back looks and answers the same wherever the editor runs, the app or either workbench frame: the caret, the hover
     fill and ink, the focus ring, and the logo's assembly, fan and press across the whole hit area.
 - **Centre: the Palette strip** (below), or Sketch's dock when it sits at the top ([Sketch mode](../023-draw-mode/draw-mode.md)).
@@ -65,7 +65,7 @@ on two lines over the canvas, a top line and a bottom line, each a single row wh
      same tab list. Not drawn while nobody else is here;
   4. **Add tab** (+), for someone who may add tabs: it opens the **add menu**, **Tab**, **Board**, **Sheet**,
      **Dashboard** and, in a document stored on LiveDoc, **Text document** and **PDF from a file**
-     ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)), below or above it as there is room, styled as the mode menu (36 px rows with each one's mark)
+     ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)), below or above it as there is room, styled as the mode menu (28 px rows with each one's mark)
      ([Editor modes](editor-modes.md#where-the-mode-lives)). A menu button (`aria-haspopup="menu"`, named "Add
      tab"), its rows `menuitem`s, arrow keys, Home, End, Enter, Space and Escape as every menu.
 
@@ -515,7 +515,7 @@ their bottom-row buttons. What changes to fit the width:
   group, it takes its own row just under the top line, starting at the left gutter, left-aligned rather than
   centred.
 - **The category picker is icon-only**, like the selection mode, and the two sit together with no divider between
-  them, each caret 4px from its glyph. The strip's tiles are 32px wide (36px elsewhere), so more fit in view.
+  them, each caret 4px from its glyph. The strip's tiles are 28px wide (32px elsewhere), so more fit in view.
 - **The tiles swipe.** The strip holds the whole current category and fills the row to the
   right gutter; only its tiles scroll sideways, under a finger, while the selection mode, the
   category picker and More stay put. The scrollbar is hidden ([Scrollbars](../004-interface-design/scrollbars.md)):

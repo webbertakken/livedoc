@@ -26,21 +26,21 @@ export const SHARE_STATE_META: Record<
     label: 'Private',
     description: 'Only visible to you.',
     badge:
-      'bg-slate-100 px-2 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700',
+      'bg-slate-100 px-2 text-supporting text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700',
     dot: 'text-slate-400',
   },
   shared: {
     label: 'Shared',
     description: 'Anyone with a link can open it.',
     badge:
-      'bg-emerald-50 px-2 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30',
+      'bg-emerald-50 px-2 text-supporting text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30',
     dot: 'text-emerald-500',
   },
   team: {
     label: 'Team',
     description: 'In a team library: every member of the team can open it.',
     badge:
-      'bg-brand-50 px-2 text-[10px] font-semibold text-brand-700 ring-1 ring-brand-200 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-500/30',
+      'bg-brand-50 px-2 text-supporting text-brand-700 ring-1 ring-brand-200 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-500/30',
     dot: 'text-brand-700 dark:text-brand-400',
   },
   // Offline Mode (docs/specs/006-document/offline-mode.md): saved only in this browser, never on the
@@ -48,14 +48,14 @@ export const SHARE_STATE_META: Record<
   offline: {
     label: THIS_BROWSER_LABEL,
     description: THIS_BROWSER_DESCRIPTION,
-    badge: `px-2 text-[10px] font-semibold ${THIS_BROWSER_TONE}`,
+    badge: `px-2 text-supporting ${THIS_BROWSER_TONE}`,
     dot: '',
   },
 };
 
 // The pill's rendered height, pinned: its caps label is trimmed to cap height, so padding alone would
 // shrink it (docs/specs/004-interface-design/optical-alignment.md).
-export const STATE_CHIP_HEIGHT_PX = 19;
+export const STATE_CHIP_HEIGHT_PX = 24;
 
 // The top bar's share-state icon (docs/specs/007-editor/live-app.md "The top bar's middle"): one glyph per state, drawn
 // at 14 px on a 28 px round in the state's tone.

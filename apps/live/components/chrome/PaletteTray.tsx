@@ -115,7 +115,7 @@ export function PaletteTrayAction({ label, onAction }: { label: string; onAction
     <button
       type="button"
       onClick={onAction}
-      className="shrink-0 cursor-pointer rounded-md px-2 py-1 text-[12px] font-medium text-slate-600 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      className="shrink-0 cursor-pointer rounded-control px-2 py-1 text-body text-slate-600 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
     >
       {label}
     </button>
@@ -171,7 +171,7 @@ export function PaletteTray({
         data-palette-tray=""
         {...(standing ? { 'data-yields-to-mode': '' } : { 'data-mode-message': '' })}
         role="status"
-        className="pointer-events-auto flex min-w-0 max-w-full animate-tray-drawer-in items-center gap-2 rounded-b-xl border border-slate-300 bg-slate-100 pb-1 pl-3 pr-1 text-[13px] text-slate-700 shadow-[inset_0_10px_8px_-8px_rgba(15,23,42,0.18),0_6px_10px_-6px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:shadow-[inset_0_12px_8px_-8px_rgba(0,0,0,0.7),0_6px_10px_-6px_rgba(0,0,0,0.5)]"
+        className="pointer-events-auto flex min-w-0 max-w-full animate-tray-drawer-in items-center gap-2 rounded-b-surface border border-slate-300 bg-slate-100 pb-1 pl-3 pr-1 text-body text-slate-700 shadow-[inset_0_10px_8px_-8px_rgba(15,23,42,0.18),0_6px_10px_-6px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:shadow-[inset_0_12px_8px_-8px_rgba(0,0,0,0.7),0_6px_10px_-6px_rgba(0,0,0,0.5)]"
         // The tucked part sits behind the strip: the row keeps its own padding below it.
         style={{ paddingTop: `calc(0.25rem + ${TRAY_TUCK}px)` }}
         onPointerDown={(e) => e.stopPropagation()}
