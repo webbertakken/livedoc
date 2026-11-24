@@ -20,7 +20,12 @@ afterEach(() => vi.unstubAllGlobals());
 // marks.md "Laying out": the surface draws the mark faces too, from the same files, added once.
 describe('the mark faces on the surface', () => {
   it('draws a mark in the mark faces, or in Helvetica', () => {
-    expect(MARK_FACES_STACK).toBe('"LiveDoc Noto Sans", sans-serif');
+    // Each family once, in the order a character is looked for: Noto Sans first, the further scripts, then symbols
+    // and emoji, then the browser's own.
+    expect(MARK_FACES_STACK).toMatch(
+      /^"LiveDoc Noto Sans", "LiveDoc Noto Sans Hebrew", "LiveDoc Noto Sans Arabic", .+, "LiveDoc Noto Sans Symbols", "LiveDoc Noto Sans Symbols 2", "LiveDoc Noto Emoji", sans-serif$/,
+    );
+    expect(MARK_FACES_STACK.split(', ')).toHaveLength(23);
     expect(facesStackOf({ faces: 'noto' })).toBe(MARK_FACES_STACK);
     expect(facesStackOf({ faces: 'helvetica' })).toBe(TYPED_FACES);
   });

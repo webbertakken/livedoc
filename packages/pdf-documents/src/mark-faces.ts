@@ -56,6 +56,26 @@ function faceOf(code: number, bold: boolean): string {
   return (bold ? first[700].get(code) : undefined) ?? first[400].get(code) ?? order[400][0]!;
 }
 
+/** Whether a face has every character of a cluster. */
+const hasAll = (face: string, codes: readonly number[]): boolean => {
+  const own = table().advances.get(face)!;
+  return codes.every((code) => own.has(code));
+};
+
+/** The first face that has every character of a cluster, bold first where the line is bold; null where none has. */
+function faceOfCluster(codes: readonly number[], bold: boolean): string | null {
+  const { order } = table();
+  const weights: readonly Weight[] = bold ? [700, 400] : [400];
+  for (const weight of weights)
+    for (const face of order[weight]) if (hasAll(face, codes)) return face;
+  return null;
+}
+
+/** A line's clusters: the characters read as one (a letter and its accents, an emoji and its modifiers). */
+const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+const clustersOf = (text: string): string[] =>
+  Array.from(segmenter.segment(text), ({ segment }) => segment);
+
 export const MarkFaces = {
   /** The faces a mark's lines are set in: Helvetica where it writes every character of each, else the mark faces. */
   setOf: (lines: readonly FacedLine[]): MarkFaceSet =>
@@ -66,21 +86,41 @@ export const MarkFaces = {
       : 'noto',
 
   /**
-   * A line cut into runs of one mark face each. A character of no script of its own stays in the face of the one
-   * before it where that face has it: an accent is shaped onto its letter, and a space does not change the font.
+   * A line cut into runs of one mark face each. A cluster (a letter and its accents, an emoji and its modifiers) is
+   * set whole in the first face that has all of it, so it is shaped as one; one of no script of its own (a space, a
+   * digit) stays in the face before it where that face has it, so a space does not change the font. A cluster no
+   * face has whole is set character by character.
    */
   runs: ({ text, bold }: FacedLine): readonly MarkRun[] => {
-    const { advances } = table();
     const runs: { face: string; text: string }[] = [];
-    for (const character of Array.from(text)) {
-      const code = character.codePointAt(0)!;
+    const put = (face: string, part: string) => {
       const before = runs.at(-1);
+      if (before?.face === face) before.text += part;
+      else runs.push({ face, text: part });
+    };
+    for (const cluster of clustersOf(text)) {
+      const characters = Array.from(cluster);
+      const codes = characters.map((character) => character.codePointAt(0)!);
+      const before = runs.at(-1);
+      const shared = characters.every((character) => SHARED.test(character));
       const face =
-        before && SHARED.test(character) && advances.get(before.face)!.has(code)
+        before && shared && hasAll(before.face, codes)
           ? before.face
-          : faceOf(code, bold);
-      if (before?.face === face) before.text += character;
-      else runs.push({ face, text: character });
+          : codes.length === 1
+            ? faceOf(codes[0]!, bold)
+            : faceOfCluster(codes, bold);
+      if (face !== null) put(face, cluster);
+      else
+        for (const character of characters) {
+          const code = character.codePointAt(0)!;
+          const last = runs.at(-1);
+          put(
+            last && SHARED.test(character) && hasAll(last.face, [code])
+              ? last.face
+              : faceOf(code, bold),
+            character,
+          );
+        }
     }
     return runs;
   },

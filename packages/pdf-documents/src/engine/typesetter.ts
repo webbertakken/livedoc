@@ -1,7 +1,8 @@
 // Sets a mark's runs in the mark faces (docs/specs/035-pdf-documents/marks.md "Laying out", "Loading"): the faces a
 // bake's marks use are loaded through a source (a browser fetches LiveDoc's own assets, Node reads the packages), and
 // each run is shaped by HarfBuzz into glyphs placed where shaping puts them, each glyph with the characters it was
-// shaped from. HarfBuzz is loaded only here, the first time a bake needs a face.
+// shaped from; a line's embedding levels (UAX 9) come from bidi-js. HarfBuzz and bidi-js are loaded only here, the
+// first time a bake needs a face.
 import type { Mark } from '../mark';
 import { MarkFaces, type MarkRun } from '../mark-faces';
 import { MARK_FACE_DATA } from '../mark-face-data';
@@ -50,11 +51,47 @@ export type Typesetter = {
   readonly face: (id: string) => LoadedFace;
   /** A run in its face, in visual order. */
   readonly shape: (run: MarkRun, rtl: boolean) => ShapedRun;
+  /**
+   * A line's embedding level for each code unit (UAX 9), from its own direction: odd reads right to left; spaces at
+   * its end at the line's own level (rule L1).
+   */
+  readonly levels: (text: string, rtl: boolean) => readonly number[];
   /** How many bytes the faces loaded were. */
   readonly bytes: number;
 };
 
 type HarfBuzz = typeof import('harfbuzzjs');
+type Bidi = ReturnType<(typeof import('bidi-js'))['default']>;
+
+/** The kinds of character UAX 9's rule L1 sets back to the line's level at its end. */
+const LINE_END = new Set([
+  'WS',
+  'S',
+  'B',
+  'BN',
+  'LRI',
+  'RLI',
+  'FSI',
+  'PDI',
+  'LRE',
+  'RLE',
+  'LRO',
+  'RLO',
+  'PDF',
+]);
+
+/** A line's levels by bidi-js, rule L1 applied. */
+function levelsBy(bidi: Bidi, text: string, rtl: boolean): number[] {
+  const base = rtl ? 1 : 0;
+  const levels = Array.from(bidi.getEmbeddingLevels(text, rtl ? 'rtl' : 'ltr').levels);
+  for (
+    let at = text.length - 1;
+    at >= 0 && LINE_END.has(bidi.getBidiCharTypeName(text[at]!));
+    at -= 1
+  )
+    levels[at] = base;
+  return levels;
+}
 
 /** The mark faces the marks' words are set in: none where Helvetica writes every mark. */
 export function markFacesOf(marks: readonly Mark[]): ReadonlySet<string> {
@@ -102,8 +139,12 @@ export async function loadTypesetter(
   const read = await Promise.all(wanted.map((id) => readFace(id, source)));
   const failed = wanted.find((_, at) => read[at] === null);
   if (failed !== undefined) return { ok: false, face: failed };
-  const hb: HarfBuzz | null = await import('harfbuzzjs').catch(() => null);
-  if (!hb) return { ok: false, face: 'shaper' };
+  const [hb, bidiFactory] = await Promise.all([
+    import('harfbuzzjs').catch((): HarfBuzz | null => null),
+    import('bidi-js').then((module) => module.default).catch(() => null),
+  ]);
+  if (!hb || !bidiFactory) return { ok: false, face: 'shaper' };
+  const bidi = bidiFactory();
   const faces = new Map(
     read.map((each) => {
       const { face, per } = each!;
@@ -119,6 +160,7 @@ export async function loadTypesetter(
   const typesetter: Typesetter = {
     face: (id) => loaded(id).face,
     bytes: read.reduce((sum, each) => sum + each!.bytes, 0),
+    levels: (text, rtl) => levelsBy(bidi, text, rtl),
     shape: ({ face: id, text }, rtl) => {
       const { font, per } = loaded(id);
       const buffer = new hb.Buffer();

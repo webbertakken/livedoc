@@ -196,6 +196,7 @@ describe('words in an appearance', () => {
 // marks.md "Words in every script": words in the mark faces set run by run, glyph by glyph, as shaping places them.
 describe('appearanceOf, words in the mark faces', () => {
   const line = { text: 'Ωא', width: 30, rtl: false, x: 102, y: 590, size: 10, bold: false };
+  const HEBREW = 'noto-sans-hebrew-hebrew-400';
   const glyph = (id: number, advance: number, xOffset = 0, yOffset = 0) => ({
     glyph: id,
     advance,
@@ -203,13 +204,22 @@ describe('appearanceOf, words in the mark faces', () => {
     yOffset,
     text: 'x',
   });
-  /** A setter shaping each run as given, each glyph's own advance 500. */
-  const setter = (shaped: Record<string, ShapedRun['glyphs']>): RunSetter => ({
-    shape: ({ face }: MarkRun) => {
+  /**
+   * A setter shaping each run as given, each glyph's own advance 500; a Hebrew letter at level 1 within a line, every
+   * other character at the line's own level. Each run shaped is noted with its direction.
+   */
+  const setter = (
+    shaped: Record<string, ShapedRun['glyphs']>,
+    asked: string[] = [],
+  ): RunSetter => ({
+    shape: ({ face, text }: MarkRun, rtl: boolean) => {
+      asked.push(`${text}:${rtl ? 'rtl' : 'ltr'}`);
       const glyphs = shaped[face]!;
       return { face, glyphs, width: glyphs.reduce((sum, each) => sum + each.advance, 0) };
     },
     advance: () => 500,
+    levels: (text, rtl) =>
+      Array.from(text, (unit) => (/[\u0590-\u05FF]/.test(unit) ? 1 : rtl ? 2 : 0)),
   });
   const faced = (lines: (typeof line)[]) => ({
     lines,
@@ -224,7 +234,7 @@ describe('appearanceOf, words in the mark faces', () => {
       faced([line]),
       setter({
         'noto-sans-greek-400': [glyph(5, 500), glyph(6, 450, 20)],
-        'noto-sans-latin-400': [glyph(0, 600)],
+        [HEBREW]: [glyph(0, 600)],
       }),
     );
     expect(drawn.content).toBe(
@@ -244,7 +254,7 @@ describe('appearanceOf, words in the mark faces', () => {
     expect(drawn.fonts).toEqual([]);
     expect(drawn.faces.map(({ name, face, glyphs }) => [name, face, glyphs.length])).toEqual([
       ['LDf0', 'noto-sans-greek-400', 2],
-      ['LDf1', 'noto-sans-latin-400', 1],
+      ['LDf1', HEBREW, 1],
     ]);
   });
 
@@ -274,7 +284,7 @@ describe('appearanceOf, words in the mark faces', () => {
       { fills: [], strokes: [] },
       look,
       faced([{ ...line, text: 'ΩאΩ' }]),
-      setter({ 'noto-sans-greek-400': [glyph(5, 500)], 'noto-sans-latin-400': [glyph(0, 500)] }),
+      setter({ 'noto-sans-greek-400': [glyph(5, 500)], [HEBREW]: [glyph(0, 500)] }),
     );
     expect(drawn.faces.map(({ name, glyphs }) => [name, glyphs.length])).toEqual([
       ['LDf0', 2],
@@ -293,15 +303,28 @@ describe('appearanceOf, words in the mark faces', () => {
   });
 
   it('sets a right-to-left line from its right side, its runs in visual order', () => {
+    const asked: string[] = [];
     const drawn = appearanceOf(
       { fills: [], strokes: [] },
       look,
       faced([{ ...line, rtl: true }]),
-      setter({ 'noto-sans-greek-400': [glyph(5, 500)], 'noto-sans-latin-400': [glyph(0, 500)] }),
+      setter({ 'noto-sans-greek-400': [glyph(5, 500)], [HEBREW]: [glyph(0, 500)] }, asked),
     );
     expect(drawn.content).toContain(
       '100 Tz 1 0 0 1 122 590 Tm\n/LDf0 10 Tf\n[<0000>] TJ\n/LDf1 10 Tf\n[<0005>] TJ',
     );
+    expect(asked).toEqual(['א:rtl', 'Ω:ltr']);
+  });
+
+  it('keeps a right-to-left word where it was typed within a left-to-right line, shaped right to left', () => {
+    const asked: string[] = [];
+    appearanceOf(
+      { fills: [], strokes: [] },
+      look,
+      faced([{ ...line, text: 'Ωאב' }]),
+      setter({ 'noto-sans-greek-400': [glyph(5, 500)], [HEBREW]: [glyph(0, 500)] }, asked),
+    );
+    expect(asked).toEqual(['Ω:ltr', 'אב:rtl']);
   });
 
   it('refuses words in the mark faces without a typesetter', () => {

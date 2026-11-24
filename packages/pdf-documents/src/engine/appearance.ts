@@ -7,6 +7,7 @@ import { Helvetica } from '../helvetica';
 import type { Box } from '../mark';
 import type { MarkDrawing } from '../mark-drawing';
 import { MarkFaces, type MarkRun } from '../mark-faces';
+import { inVisualOrder } from './bidi-order';
 import type { MarkWords, WordLine } from '../mark-words';
 import type { ShapedGlyph, ShapedRun } from './typesetter';
 
@@ -27,10 +28,14 @@ export type AppearanceFace = {
   readonly glyphs: readonly ShapedGlyph[];
 };
 
-/** How a bake sets runs in the mark faces: each shaped, and each glyph's advance as the font's `W` says it. */
+/**
+ * How a bake sets runs in the mark faces: each shaped, each glyph's advance as the font's `W` says it, and a line's
+ * embedding levels, one per code unit, so its runs are set in visual order.
+ */
 export type RunSetter = {
   readonly shape: (run: MarkRun, rtl: boolean) => ShapedRun;
   readonly advance: (face: string, glyph: number) => number;
+  readonly levels: (text: string, rtl: boolean) => readonly number[];
 };
 
 export type Appearance = {
@@ -120,16 +125,17 @@ function shownRun(run: ShapedRun, size: number, setter: RunSetter): string[] {
 }
 
 /**
- * A line in the mark faces: its runs shaped, in visual order, from its own side; narrowed to its measured width
- * where shaping set it wider (marks.md "Laying out").
+ * A line in the mark faces: its runs in visual order (UAX 9), each shaped in its own direction, set from the line's
+ * own side; narrowed to its measured width where shaping set it wider (marks.md "Laying out").
  */
 function facedLine(
   line: WordLine,
   setter: RunSetter,
   fontOf: (run: ShapedRun) => string,
 ): string[] {
-  const runs = MarkFaces.runs(line).map((run) => setter.shape(run, line.rtl));
-  const ordered = line.rtl ? runs.reverse() : runs;
+  const ordered = inVisualOrder(MarkFaces.runs(line), setter.levels(line.text, line.rtl)).map(
+    ({ face, text, level }) => setter.shape({ face, text }, level % 2 === 1),
+  );
   const shaped = (ordered.reduce((sum, run) => sum + run.width, 0) * line.size) / 1000;
   const scale = shaped > line.width ? line.width / shaped : 1;
   const x = line.rtl ? line.x + line.width - shaped * scale : line.x;

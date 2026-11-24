@@ -83,4 +83,24 @@ describe('setting runs in the mark faces', () => {
     const setter = await typesetterOf([]);
     expect(() => setter.face('noto-sans-greek-400')).toThrow(FaceNotLoaded);
   });
+
+  it('joins Arabic letters as they are read, each in its joined form', async () => {
+    const setter = await typesetterOf(['noto-sans-arabic-arabic-400']);
+    const face = 'noto-sans-arabic-arabic-400';
+    const word = setter.shape({ face, text: 'بب' }, true);
+    const alone = setter.shape({ face, text: 'ب' }, true);
+    // Two beh joined are an initial and a final form, not the letter on its own twice; every character kept.
+    const ids = (run: typeof word) => run.glyphs.map((glyph) => glyph.glyph);
+    expect(ids(word)).not.toEqual([...ids(alone), ...ids(alone)]);
+    expect(word.glyphs.map((glyph) => glyph.text).join('')).toBe('بب');
+  });
+
+  it('mirrors a bracket in a right-to-left run', async () => {
+    const setter = await typesetterOf(['noto-sans-latin-400']);
+    const face = 'noto-sans-latin-400';
+    const glyph = (text: string, rtl: boolean) => setter.shape({ face, text }, rtl).glyphs[0]!;
+    expect(glyph(')', true).glyph).toBe(glyph('(', false).glyph);
+    // Kept as the character typed, so copying reads it as typed.
+    expect(glyph(')', true).text).toBe(')');
+  });
 });

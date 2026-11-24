@@ -65,3 +65,51 @@ test('a Text in Greek, Cyrillic and Devanagari is drawn and downloaded in Noto S
   execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
   expectNoPageErrors(pageErrors);
 });
+
+test('a Text in Hebrew and Arabic is drawn right to left and downloaded in their faces', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  const stored = await textPdf(1);
+  await dropPdf(page, 'Right to left.pdf', stored);
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('x');
+  await pressAt(page, first, [0.12, 0.14]);
+  const typing = page.locator(`${PAGE_ONE} textarea[data-pdf-typing]`);
+  await expect(typing).toBeFocused();
+  await page.keyboard.type('שלום עולם (PDF 2)');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('مرحبا بالعالم');
+  await page.keyboard.press('Escape');
+  const words = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"] text`);
+  await expect(words).toHaveText(['שלום עולם (PDF 2)', 'مرحبا بالعالم']);
+  // Each line is a right-to-left line, set from the box's right side.
+  for (const line of await words.all()) await expect(line).toHaveAttribute('direction', 'rtl');
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        ['"LiveDoc Noto Sans Hebrew"', '"LiveDoc Noto Sans Arabic"'].map((family, at) =>
+          document.fonts.check(`16px ${family}`, at === 0 ? 'שלום' : 'مرحبا'),
+        ),
+      ),
+    )
+    .toEqual([true, true]);
+  await page.screenshot({ path: test.info().outputPath('pdf-right-to-left.png') });
+
+  const item = await officeMenuItem(page, ['File', 'Download', 'PDF']);
+  const [download] = await Promise.all([page.waitForEvent('download'), item.click()]);
+  const file = test.info().outputPath('Right to left.pdf');
+  await download.saveAs(file);
+  const added = readFileSync(file).subarray(stored.length).toString('latin1');
+  for (const entry of ['+NotoSansHebrew-Regular', '+NotoSansArabic-Regular', '/ToUnicode'])
+    expect(added).toContain(entry);
+  execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
+  expectNoPageErrors(pageErrors);
+});
