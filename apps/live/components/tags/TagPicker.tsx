@@ -85,10 +85,10 @@ export function TagPicker({ target, onClose }: { target: TagPickerTarget; onClos
       <div
         ref={panel}
         data-tag-picker=""
-        className="flex flex-col rounded-lg border border-slate-200 bg-white text-sm dark:border-slate-700 dark:bg-slate-900"
+        className="flex flex-col rounded-menu border border-slate-200 bg-white text-body dark:border-slate-700 dark:bg-slate-900"
       >
         <div className="border-b border-slate-100 px-3 pb-2 pt-2.5 dark:border-slate-800">
-          <p className="mb-1.5 truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
+          <p className="mb-1.5 truncate text-body text-slate-700 dark:text-slate-200">
             Tags
             <span className="font-normal text-slate-500 dark:text-slate-400">
               {' '}
@@ -104,7 +104,7 @@ export function TagPicker({ target, onClose }: { target: TagPickerTarget; onClos
             placeholder="Find or create a tag"
             aria-label="Find or create a tag"
             maxLength={64}
-            className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+            className="h-field w-full rounded-control border border-slate-200 bg-white px-2 text-body text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
           />
         </div>
         <div
@@ -114,7 +114,7 @@ export function TagPicker({ target, onClose }: { target: TagPickerTarget; onClos
           onKeyDown={(e) => moveFocus(e, panel.current, field.current)}
         >
           {status === 'loading' && tags.length === 0 ? (
-            <p className="px-3 py-3 text-[12px] text-slate-500 dark:text-slate-400">
+            <p className="px-3 py-3 text-supporting text-slate-500 dark:text-slate-400">
               Loading your tags…
             </p>
           ) : null}
@@ -139,11 +139,11 @@ export function TagPicker({ target, onClose }: { target: TagPickerTarget; onClos
                   aria-checked={checked}
                   {...{ [ROW]: '' }}
                   onClick={() => toggle(tag.id)}
-                  className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-1.5 pl-3 text-left text-[13px] text-slate-700 outline-none focus-visible:bg-slate-100 dark:text-slate-200 dark:focus-visible:bg-slate-800"
+                  className="flex min-h-row min-w-0 flex-1 cursor-pointer items-center gap-2 py-1 pl-3 text-left text-body text-slate-700 outline-none focus-visible:bg-slate-100 dark:text-slate-200 dark:focus-visible:bg-slate-800"
                 >
                   <span
                     aria-hidden
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
+                    className={`flex size-icon-row shrink-0 items-center justify-center rounded-control border transition ${
                       checked
                         ? 'border-brand-700 bg-brand-700 text-white dark:border-brand-600 dark:bg-brand-600'
                         : 'border-slate-300 dark:border-slate-600'
@@ -163,7 +163,7 @@ export function TagPicker({ target, onClose }: { target: TagPickerTarget; onClos
             );
           })}
           {query.trim() && !clean ? (
-            <p className="px-3 py-2 text-[12px] text-slate-500 dark:text-slate-400">
+            <p className="px-3 py-2 text-supporting text-slate-500 dark:text-slate-400">
               Keep a tag's name to 32 characters.
             </p>
           ) : null}
@@ -172,32 +172,32 @@ export function TagPicker({ target, onClose }: { target: TagPickerTarget; onClos
               type="button"
               {...{ [ROW]: '' }}
               onClick={create}
-              className="flex w-full cursor-pointer items-center gap-2.5 py-1.5 pl-3 pr-3 text-left text-[13px] text-slate-700 outline-none hover:bg-slate-50 focus-visible:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/60 dark:focus-visible:bg-slate-800"
+              className="flex min-h-row w-full cursor-pointer items-center gap-2 py-1 pl-3 pr-3 text-left text-body text-slate-700 outline-none hover:bg-slate-50 focus-visible:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/60 dark:focus-visible:bg-slate-800"
             >
               <span
                 aria-hidden
-                className="flex h-4 w-4 shrink-0 items-center justify-center text-brand-700 dark:text-brand-300"
+                className="flex size-icon-row shrink-0 items-center justify-center text-brand-700 dark:text-brand-300"
               >
                 +
               </span>
               <TagDot colour={newColour} />
               <span className="truncate">
-                Create <span className="font-semibold">“{clean}”</span>
+                Create <span className="font-medium">“{clean}”</span>
               </span>
             </button>
           ) : null}
           {clean && !exact && atLimit ? (
-            <p className="px-3 py-2 text-[12px] leading-snug text-slate-500 dark:text-slate-400">
+            <p className="px-3 py-2 text-supporting text-slate-500 dark:text-slate-400">
               You have {TAG_LIMIT} tags, the most there can be. Delete one on the Tags page to make
               room.
             </p>
           ) : null}
         </div>
-        <div className="border-t border-slate-100 px-1.5 py-1 dark:border-slate-800">
+        <div className="border-t border-slate-100 px-1 py-1 dark:border-slate-800">
           <button
             type="button"
             onClick={manage}
-            className="flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1.5 text-[12px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="flex min-h-row w-full cursor-pointer items-center gap-2 rounded-control px-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <TagIcon />
             Manage Tags

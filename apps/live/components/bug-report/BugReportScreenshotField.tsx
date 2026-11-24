@@ -18,7 +18,7 @@ export function BugReportScreenshotField({ shot }: { shot: BugReportScreenshotSt
   };
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+      <legend className="mb-1 text-body text-slate-700 dark:text-slate-200">
         {COPY.screenshotLabel}{' '}
         <span className="font-normal text-slate-500 dark:text-slate-400">{COPY.optional}</span>
       </legend>
@@ -59,16 +59,16 @@ export function BugReportScreenshotField({ shot }: { shot: BugReportScreenshotSt
           }}
         />
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400">{COPY.pasteHint}</p>
-      <p className="text-xs text-slate-500 dark:text-slate-400">{COPY.screenshotNote}</p>
+      <p className="text-supporting text-slate-500 dark:text-slate-400">{COPY.pasteHint}</p>
+      <p className="text-supporting text-slate-500 dark:text-slate-400">{COPY.screenshotNote}</p>
       {shot.prepared ? (
         <figure className="flex items-start gap-3">
           <img
             src={shot.prepared.previewUrl}
             alt={COPY.screenshotPreview}
-            className="max-h-48 w-auto max-w-[70%] rounded border border-slate-200 object-contain dark:border-slate-700"
+            className="max-h-48 w-auto max-w-[70%] rounded-control border border-slate-200 object-contain dark:border-slate-700"
           />
-          <figcaption className="flex flex-col items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+          <figcaption className="flex flex-col items-start gap-2 text-supporting text-slate-600 dark:text-slate-300">
             {COPY.screenshotPreview}
             <Button variant="secondary" size="xs" onClick={remove}>
               {COPY.removeScreenshot}
@@ -77,7 +77,7 @@ export function BugReportScreenshotField({ shot }: { shot: BugReportScreenshotSt
         </figure>
       ) : null}
       {shot.error ? (
-        <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">
+        <p role="alert" className="text-body text-rose-700 dark:text-rose-300">
           {shot.error}
         </p>
       ) : null}

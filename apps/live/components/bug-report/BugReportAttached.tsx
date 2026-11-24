@@ -26,8 +26,8 @@ export function BugReportAttached({
     ...(screenshot ? [{ label: 'Screenshot', value: 'Attached' }] : []),
   ];
   return (
-    <details className="rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300">
-      <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-200">
+    <details className="rounded-control border border-slate-200 px-3 py-2 text-supporting text-slate-600 dark:border-slate-700 dark:text-slate-300">
+      <summary className="cursor-pointer text-body text-slate-700 dark:text-slate-200">
         {COPY.attached}
       </summary>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
