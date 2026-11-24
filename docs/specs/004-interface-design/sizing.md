@@ -13,6 +13,8 @@ respondents see it and a slide keep the sizes their author chose.
 
 - A form as respondents see it is its title, description, questions, answer controls and its Finish look, wherever
   it is drawn: the page respondents fill in, Preview and the builder's picture of a question (D237, default).
+- A form's own type is named once in `apps/live/app/forms.css` (`form-type-title`, `-lead`, `-section`, `-question`,
+  `-note`, `-answer`), so the builder draws the same sizes as the page respondents fill in, off the scale.
 - The form's chrome is on the scale: its status bar, strips, warnings and problems, Share Form, the Preview button,
   and the builder's own controls (add bar, settings, menus, destination pickers).
 

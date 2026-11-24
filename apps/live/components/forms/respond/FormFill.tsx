@@ -112,19 +112,19 @@ export function FormFill({
               </div>
             </div>
           ) : null}
-          <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-slate-900 max-sm:text-[24px] dark:text-slate-50">
+          <h1 className="form-type-title leading-tight text-slate-900 dark:text-slate-50">
             {first ? form.heading : fill.current.title || `Section ${fill.section + 1}`}
           </h1>
           {first && form.description ? (
             <LinkedText
               text={form.description}
-              className="mt-2 text-[15px] leading-relaxed text-slate-600 dark:text-slate-300"
+              className="mt-2 form-type-lead text-slate-600 dark:text-slate-300"
             />
           ) : null}
           {!first && fill.current.description ? (
             <LinkedText
               text={fill.current.description}
-              className="mt-2 text-[15px] leading-relaxed text-slate-600 dark:text-slate-300"
+              className="mt-2 form-type-lead text-slate-600 dark:text-slate-300"
             />
           ) : null}
           {questions.some((q) => q.required) ? (

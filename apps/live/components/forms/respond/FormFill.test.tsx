@@ -193,3 +193,16 @@ describe('what Submit can be told', () => {
     );
   });
 });
+
+// docs/specs/004-interface-design/sizing.md D237: the page respondents fill in draws the form's own type, the same
+// named sizes the builder draws (forms.css form-type-*).
+describe('the form’s own type', () => {
+  it('heads the form and names its questions in the form’s own type', () => {
+    fill();
+
+    expect(screen.getByRole('heading', { name: 'Event RSVP' }).className).toContain(
+      'form-type-title',
+    );
+    expect(screen.getByText('Name').className).toContain('form-type-question');
+  });
+});

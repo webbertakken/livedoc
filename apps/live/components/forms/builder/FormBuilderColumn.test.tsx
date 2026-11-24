@@ -199,3 +199,41 @@ describe('an Editor', () => {
     }
   });
 });
+
+// docs/specs/004-interface-design/sizing.md D237: the form as respondents see it keeps the form's own type (forms.css
+// form-type-*); the builder's own controls are on the sizing scale.
+describe('the builder on the sizing scale', () => {
+  const TRACKED_OR_HEAVY = /\buppercase\b|tracking-wider|font-semibold|font-bold/;
+
+  it('draws the form in the form’s own type for someone who may not edit', () => {
+    render(<Harness canEdit={false} />);
+
+    expect(screen.getByRole('heading', { name: 'Bug Report' }).className).toContain(
+      'form-type-title',
+    );
+    expect(screen.getByText('Summary').className).toContain('form-type-question');
+  });
+
+  it('edits the form in its own type and draws the Editor’s controls from the scale', () => {
+    render(<Harness canEdit />);
+    expect(screen.getByRole('textbox', { name: 'Form heading' }).className).toContain(
+      'form-type-title',
+    );
+    expect(screen.getByRole('textbox', { name: 'Form description' }).className).toContain(
+      'form-type-lead',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit question: Summary' }));
+
+    expect(screen.getByRole('textbox', { name: 'Question' }).className).toContain(
+      'form-type-question',
+    );
+    const type = screen.getByRole('button', { name: /Question type/ }).className;
+    expect(type).toContain('h-field');
+    expect(type).toContain('text-body');
+    expect(type).not.toContain('font-medium');
+    expect(screen.getByRole('button', { name: 'Move Down' }).className).toContain('size-row');
+    expect(screen.getByRole('button', { name: 'Delete question' }).className).toContain('size-row');
+    expect(document.body.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
+  });
+});

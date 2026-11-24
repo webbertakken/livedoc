@@ -35,12 +35,12 @@ export function OptionsEditor({
   const mark = multi ? (
     <span
       aria-hidden
-      className="h-4 w-4 shrink-0 rounded border-2 border-slate-300 dark:border-slate-600"
+      className="size-icon-row shrink-0 rounded-control border-2 border-slate-300 dark:border-slate-600"
     />
   ) : (
     <span
       aria-hidden
-      className="h-4 w-4 shrink-0 rounded-full border-2 border-slate-300 dark:border-slate-600"
+      className="size-icon-row shrink-0 rounded-full border-2 border-slate-300 dark:border-slate-600"
     />
   );
   const full = options.length >= OPTIONS_MAX;
@@ -76,7 +76,7 @@ export function OptionsEditor({
         <div
           key={i}
           role="listitem"
-          className="group/opt flex min-h-9 items-center gap-2.5 rounded-md px-1 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+          className="group/opt flex min-h-field items-center gap-2 rounded-control px-1 hover:bg-slate-50 dark:hover:bg-slate-800/50"
         >
           {mark}
           <DraftText
@@ -87,7 +87,7 @@ export function OptionsEditor({
             maxLength={OPTION_MAX}
             label={`Option ${i + 1}`}
             selectOnFocus={/^Option \d+$/.test(o)}
-            className="border-b border-transparent py-1 text-[15px] text-slate-800 focus:border-[var(--form-accent)] dark:text-slate-100"
+            className="border-b border-transparent py-1 form-type-answer text-slate-800 focus:border-[var(--form-accent)] dark:text-slate-100"
             onSave={(text) => rename(i, text)}
             onPaste={(text) => {
               const next = pastedOptions(options, i, text);
@@ -113,29 +113,29 @@ export function OptionsEditor({
             aria-label={`Remove ${o}`}
             disabled={options.length <= 1}
             onClick={() => remove(i)}
-            className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:opacity-100 group-hover/opt:opacity-100 [@media(hover:none)]:opacity-100 disabled:hidden dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="flex size-row shrink-0 cursor-pointer items-center justify-center rounded-control text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:opacity-100 group-hover/opt:opacity-100 [@media(hover:none)]:opacity-100 disabled:hidden dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <CloseIcon size={14} />
           </button>
         </div>
       ))}
       {question.other ? (
-        <div className="flex min-h-9 items-center gap-2.5 px-1">
+        <div className="flex min-h-field items-center gap-2 px-1">
           {mark}
-          <span className="flex-1 border-b border-dashed border-slate-300 py-1 text-[15px] text-slate-500 dark:border-slate-600 dark:text-slate-400">
+          <span className="flex-1 border-b border-dashed border-slate-300 py-1 form-type-answer text-slate-500 dark:border-slate-600 dark:text-slate-400">
             Other…
           </span>
           <button
             type="button"
             aria-label="Remove Other"
             onClick={() => onOther(false)}
-            className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="flex size-row shrink-0 cursor-pointer items-center justify-center rounded-control text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <CloseIcon size={14} />
           </button>
         </div>
       ) : null}
-      <div className="flex items-center gap-2.5 px-1 pt-1 text-[14px]">
+      <div className="flex items-center gap-2 px-1 pt-1 text-body">
         {mark}
         <button
           type="button"

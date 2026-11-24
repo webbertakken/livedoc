@@ -44,7 +44,7 @@ const GripIcon = lucideGlyph(lucideGripVertical, 16);
 const newId = (prefix: 'q' | 's') => newFormPartId(prefix);
 
 const ICON_BUTTON =
-  'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
+  'flex size-row cursor-pointer items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
 
 export function FormQuestionCard({
   question: q,
@@ -106,7 +106,7 @@ export function FormQuestionCard({
         data-form-question={q.id}
         onClick={b.canEdit ? () => b.select(q.id) : undefined}
         // The card wears its edit button's keyboard focus: that button lies under the question's picture.
-        className={`group/q relative rounded-xl outline-none transition ${b.canEdit ? 'cursor-pointer has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-[var(--form-accent)]' : ''} ${dragging ? 'opacity-40' : ''}`}
+        className={`group/q relative rounded-surface outline-none transition ${b.canEdit ? 'cursor-pointer has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-[var(--form-accent)]' : ''} ${dragging ? 'opacity-40' : ''}`}
       >
         {b.canEdit ? (
           // The card opens for editing through one button stretched across it, with the grip above it as a control of
@@ -127,7 +127,7 @@ export function FormQuestionCard({
             aria-label={`Move ${promptOf(q)}`}
             onPointerDown={(e) => onGrab(e, q.id)}
             onClick={(e) => e.stopPropagation()}
-            className="absolute left-1/2 top-0 z-[1] flex h-6 w-10 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded text-slate-300 opacity-0 transition hover:text-slate-500 group-hover/q:opacity-100 [@media(hover:none)]:opacity-100 dark:text-slate-600 dark:hover:text-slate-400"
+            className="absolute left-1/2 top-0 z-[1] flex h-chip w-10 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded-control text-slate-300 opacity-0 transition hover:text-slate-500 group-hover/q:opacity-100 [@media(hover:none)]:opacity-100 dark:text-slate-600 dark:hover:text-slate-400"
           >
             <GripIcon className="rotate-90" />
           </button>
@@ -145,7 +145,7 @@ export function FormQuestionCard({
         </div>
         {/* A sheet takes every answer in a column of its own: nothing maps, so nothing breaks. */}
         {b.canEdit && target.broken && !b.form.sheet ? (
-          <p className="pointer-events-none absolute bottom-2 right-3 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
+          <p className="pointer-events-none absolute bottom-2 right-3 rounded-control bg-amber-50 px-2 py-0.5 text-supporting text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
             Goes to Description
           </p>
         ) : null}
@@ -168,20 +168,20 @@ export function FormQuestionCard({
           change((f) => moveQuestion(f, q.id, e.key === 'ArrowUp' ? -1 : 1));
         }
       }}
-      className={`form-box form-ink relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md ring-1 ring-black/[0.02] dark:border-slate-700 dark:bg-slate-900 ${dragging ? 'opacity-40' : ''}`}
+      className={`form-box form-ink relative overflow-hidden rounded-surface border border-slate-200 bg-white shadow-md ring-1 ring-black/[0.02] dark:border-slate-700 dark:bg-slate-900 ${dragging ? 'opacity-40' : ''}`}
     >
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-[var(--form-accent)]" />
       <button
         type="button"
         aria-label={`Move ${promptOf(q)}`}
         onPointerDown={(e) => onGrab(e, q.id)}
-        className="absolute left-1/2 top-0.5 flex h-5 w-10 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400"
+        className="absolute left-1/2 top-0.5 flex h-chip w-10 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded-control text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400"
       >
         <GripIcon className="rotate-90" />
       </button>
       <div className="flex flex-col gap-3 px-6 pb-3 pt-6 max-sm:px-4">
         <div className="flex items-start gap-3 max-sm:flex-col">
-          <div className="min-w-0 flex-1 rounded-md bg-slate-50 px-3 py-2 ring-[var(--form-accent)] focus-within:ring-2 dark:bg-slate-800/60">
+          <div className="min-w-0 flex-1 rounded-control bg-slate-50 px-3 py-2 ring-[var(--form-accent)] focus-within:ring-2 dark:bg-slate-800/60">
             <DraftText
               ref={promptRef}
               value={q.prompt}
@@ -189,7 +189,7 @@ export function FormQuestionCard({
               maxLength={PROMPT_MAX}
               multiline
               label="Question"
-              className="text-[16px] font-medium text-slate-900 dark:text-slate-50"
+              className="form-type-question text-slate-900 dark:text-slate-50"
               onSave={(text) => change((f) => updateQuestion(f, q.id, { prompt: text.trim() }))}
             />
           </div>
@@ -197,7 +197,7 @@ export function FormQuestionCard({
             value={q.type}
             label="Question type"
             onPick={(t) => change((f) => setQuestionType(f, q.id, t))}
-            className="flex h-10 w-48 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-700 hover:border-slate-300 max-sm:w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500"
+            className="flex h-field w-48 shrink-0 cursor-pointer items-center gap-2 rounded-control border border-slate-200 bg-white px-3 text-body text-slate-700 hover:border-slate-300 max-sm:w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500"
           >
             <TypeButtonFace type={q.type} />
           </QuestionTypeMenu>
@@ -208,7 +208,7 @@ export function FormQuestionCard({
           maxLength={HELP_MAX}
           multiline
           label="Description"
-          className="px-3 text-[14px] text-slate-600 dark:text-slate-300"
+          className="px-3 form-type-note text-slate-600 dark:text-slate-300"
           onSave={(text) =>
             change((f) => updateQuestion(f, q.id, { help: text.trim() || undefined }))
           }
@@ -245,7 +245,7 @@ export function FormQuestionCard({
           )}
         </div>
         {hasQuestionSettings(q) ? (
-          <div className="mx-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
+          <div className="mx-3 rounded-menu bg-slate-50 p-3 dark:bg-slate-800/50">
             <QuestionSettings question={q} />
           </div>
         ) : null}
@@ -253,7 +253,7 @@ export function FormQuestionCard({
       <div className="flex flex-wrap items-center gap-1 border-t border-slate-100 px-4 py-2 dark:border-slate-800">
         {/* A Sheet takes every answer in its own column: nothing to map. */}
         {b.form.sheet ? (
-          <span className="mr-auto text-[12px] text-slate-500 dark:text-slate-400">
+          <span className="mr-auto text-supporting text-slate-500 dark:text-slate-400">
             Its own column in the sheet
           </span>
         ) : (
@@ -265,7 +265,7 @@ export function FormQuestionCard({
               const button = e.currentTarget;
               setGoesTo((open) => (open ? null : button));
             }}
-            className={`mr-auto flex min-h-8 min-w-0 max-w-[60%] cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium leading-5 transition max-sm:max-w-full ${
+            className={`mr-auto flex min-h-row min-w-0 max-w-[60%] cursor-pointer items-center gap-2 rounded-full border px-3 py-0.5 text-body transition max-sm:max-w-full ${
               target.broken
                 ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200'
                 : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:border-slate-500'
@@ -334,14 +334,14 @@ export function FormQuestionCard({
             <TrashIcon size={16} />
           </button>
         </Tooltip>
-        <span aria-hidden className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700" />
+        <span aria-hidden className="mx-1 h-chip w-px bg-slate-200 dark:bg-slate-700" />
         <SwitchRow
           checked={!!q.required}
           onChange={() =>
             change((f) => updateQuestion(f, q.id, { required: q.required ? undefined : true }))
           }
-          layout="flex h-8 items-center gap-2 rounded-md"
-          className="px-2 text-[13px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+          layout="flex h-row items-center gap-2 rounded-control"
+          className="px-2 text-body text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Required
         </SwitchRow>

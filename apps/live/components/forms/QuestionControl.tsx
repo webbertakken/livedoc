@@ -33,7 +33,7 @@ type QuestionControlProps = {
 };
 
 const FIELD =
-  'form-box w-full rounded-lg border bg-white px-3 py-2.5 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--form-accent)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--form-accent)_30%,transparent)] disabled:cursor-not-allowed disabled:bg-slate-50 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 dark:disabled:bg-slate-900/60';
+  'form-box w-full rounded-lg border bg-white px-3 py-2.5 form-type-answer text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--form-accent)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--form-accent)_30%,transparent)] disabled:cursor-not-allowed disabled:bg-slate-50 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 dark:disabled:bg-slate-900/60';
 const FIELD_OK = 'form-ink border-slate-300 dark:border-slate-600';
 // A text answer's box as respondents see it, for the builder's placeholder field to wear the same.
 export const ANSWER_FIELD = `${FIELD} ${FIELD_OK}`;
@@ -227,7 +227,7 @@ export function QuestionControl({
       );
     case 'checkbox':
       return (
-        <label className="flex cursor-pointer items-start gap-3 text-[15px] text-slate-800 dark:text-slate-100">
+        <label className="flex cursor-pointer items-start gap-3 form-type-answer text-slate-800 dark:text-slate-100">
           <input
             {...common}
             type="checkbox"
@@ -312,7 +312,7 @@ function Choices({
           : `Pick up to ${q.max}`
       : null;
   const row = (on: boolean) =>
-    `form-box flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-[15px] transition ${
+    `form-box flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 form-type-answer transition ${
       on
         ? 'border-[var(--form-accent)] bg-[color-mix(in_srgb,var(--form-accent)_8%,transparent)] text-slate-900 dark:text-slate-50'
         : `${invalid ? 'border-red-300 dark:border-red-500/50' : 'form-ink border-slate-200 dark:border-slate-700'} text-slate-800 hover:border-slate-300 hover:bg-slate-50 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-800/60`
@@ -359,7 +359,7 @@ function Choices({
           <input
             type="text"
             aria-label="Other, your answer"
-            className="min-w-0 flex-1 border-b border-slate-300 bg-transparent py-0.5 text-[15px] outline-none focus:border-[var(--form-accent)] dark:border-slate-600"
+            className="min-w-0 flex-1 border-b border-slate-300 bg-transparent py-0.5 form-type-answer outline-none focus:border-[var(--form-accent)] dark:border-slate-600"
             value={other}
             maxLength={OTHER_MAX}
             disabled={disabled}

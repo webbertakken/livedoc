@@ -14,9 +14,9 @@ const BoardIcon = lucideGlyph(lucideSquareKanban, 18);
 const SheetIcon = lucideGlyph(lucideTable, 18);
 
 const CHOICE =
-  'group/choice flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-[var(--form-accent)] hover:bg-[color-mix(in_srgb,var(--form-accent)_5%,white)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--form-accent)] dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800';
+  'group/choice flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-menu border border-slate-200 bg-white p-3 text-left transition hover:border-[var(--form-accent)] hover:bg-[color-mix(in_srgb,var(--form-accent)_5%,white)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--form-accent)] dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800';
 const CHOICE_ICON =
-  'flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 transition group-hover/choice:bg-[var(--form-accent)] group-hover/choice:text-white dark:bg-slate-800 dark:text-slate-300';
+  'flex size-prominent shrink-0 items-center justify-center rounded-control bg-slate-100 text-slate-600 transition group-hover/choice:bg-[var(--form-accent)] group-hover/choice:text-white dark:bg-slate-800 dark:text-slate-300';
 
 export function FormConnectCard({
   hasExisting,
@@ -33,16 +33,13 @@ export function FormConnectCard({
     <section
       aria-labelledby="form-connect-title"
       data-form-connect=""
-      className="form-box form-ink relative overflow-hidden rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm max-sm:px-4 dark:border-slate-700/80 dark:bg-slate-900"
+      className="form-box form-ink relative overflow-hidden rounded-surface border border-slate-200 bg-white px-6 py-5 shadow-sm max-sm:px-4 dark:border-slate-700/80 dark:bg-slate-900"
     >
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-[var(--form-accent)]" />
-      <h2
-        id="form-connect-title"
-        className="text-[15px] font-semibold text-slate-900 dark:text-slate-50"
-      >
+      <h2 id="form-connect-title" className="text-panel-title text-slate-900 dark:text-slate-50">
         Where Should Responses Go?
       </h2>
-      <p className="mt-1 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+      <p className="mt-1 text-body text-slate-600 dark:text-slate-300">
         {problem && !nowhere
           ? DESTINATION_PROBLEM_TEXT[problem]
           : 'Choose before you publish: the form can’t take responses until it has somewhere to put them.'}
@@ -60,10 +57,10 @@ export function FormConnectCard({
             <BoardIcon aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block text-[14px] font-semibold text-slate-900 dark:text-slate-50">
+            <span className="block text-body text-slate-900 dark:text-slate-50">
               Cards on a Board
             </span>
-            <span className="mt-0.5 block text-[12px] leading-snug text-slate-500 dark:text-slate-400">
+            <span className="mt-0.5 block text-supporting text-slate-500 dark:text-slate-400">
               A card for each response, to work through. Makes a new board.
             </span>
           </span>
@@ -80,10 +77,10 @@ export function FormConnectCard({
             <SheetIcon aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block text-[14px] font-semibold text-slate-900 dark:text-slate-50">
+            <span className="block text-body text-slate-900 dark:text-slate-50">
               Rows in a Sheet
             </span>
-            <span className="mt-0.5 block text-[12px] leading-snug text-slate-500 dark:text-slate-400">
+            <span className="mt-0.5 block text-supporting text-slate-500 dark:text-slate-400">
               A row for each response, to count and compare. Makes a new sheet.
             </span>
           </span>
@@ -96,7 +93,7 @@ export function FormConnectCard({
             track('Form', 'Linked', 'ConnectChoose');
             b.openSettings('destination');
           }}
-          className="mt-3 cursor-pointer text-[13px] font-medium text-slate-600 underline-offset-2 hover:text-slate-900 hover:underline dark:text-slate-300 dark:hover:text-slate-50"
+          className="mt-3 h-row cursor-pointer text-body text-slate-600 underline-offset-2 hover:text-slate-900 hover:underline dark:text-slate-300 dark:hover:text-slate-50"
         >
           Or use a board or sheet you already have
         </button>
