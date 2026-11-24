@@ -10,3 +10,16 @@
   --pdf-found-current: #f97316;
   --pdf-mark-preview: #bae6fd;
 }
+
+/*
+ * Dark pages (docs/specs/035-pdf-documents/dark-pages.md "The recolouring"): the same tokens as the step shows them,
+ * each the paper look's colour mirrored (DarkPages.hex), so what LiveDoc draws matches the page under it.
+ */
+.office-shell[data-pdf-look='dark'],
+[data-pdf-look='dark'] {
+  --pdf-paper: #1f1f1f;
+  --pdf-paper-ink: #9bacc4;
+  --pdf-found: #694300;
+  --pdf-found-current: #c13e00;
+  --pdf-mark-preview: #224a5d;
+}

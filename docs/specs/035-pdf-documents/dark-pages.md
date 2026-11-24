@@ -1,6 +1,7 @@
 # Dark pages
 
-**Status: specified; the recolouring is built.** Built: the step in the engine's worker, photographs put back.
+**Status: specified; the recolouring and the setting are built.** Built: the step in the engine's worker, photographs
+put back; the setting in Settings, View and the toolbar, live. Not built: the first-time question.
 
 The look (photographs kept as drawn) and the first-time question (a card, once per person) are `(default)`: the
 director chose them on 2026-11-24 while Webber's answer is open; the drawn options are in the plan's assets.
@@ -51,12 +52,13 @@ to be shown:
 
 - **One setting, a person's**: Dark pages on or off. It follows the account when signed in, and this browser
   otherwise, as the colour scheme's preference does ([Preferences](../007-editor/user-preferences.md)).
-- **Three places, one value**: Settings > Appearance > **Dark pages** ("Show PDF pages dark in the dark colour
-  scheme"), the surface's **View > Dark pages** check, and the toolbar's Dark pages toggle in Viewing.
+- **Three places, one value**: Settings > Appearance > **Dark Pages** ("Show PDF pages dark in the dark colour
+  scheme. Only your view changes."), the surface's **View > Dark pages** check, and the toolbar's Dark pages toggle in
+  Viewing.
 - **Live**: flipping it recolours the open pages without a reload, in every open PDF document of that person's
   browser.
 - It is **off until answered** ([The first-time question](#the-first-time-question)).
-- The toolbar toggle carries `aria-pressed`; its tooltip is "Dark pages: on" or "Dark pages: off".
+- The toolbar toggle carries `aria-pressed`, and its name and tooltip are "Dark pages" `(default)`.
 
 ## The first-time question
 
@@ -108,7 +110,7 @@ Dark pages is a view, so every role has it alike; it changes nothing anyone else
 - `Pdf · Opened · DarkPagesQuestion` when the card shows; `Pdf · Selected · DarkPagesQuestion.<Use|Keep|Dismissed>`
   when it closes.
 - Fingerprints: `[pdf] dark-pages step ms=<n> pictures=<n>` (the first, then one in `DARK_PAGES_LOG_EVERY`),
-  `[pdf] dark-pages asked`.
+  `[pdf] dark-pages asked`, `[pdf] dark-pages on=<yes|no>` (a choice), `[pdf] dark-pages not-saved`.
 
 ## Errors
 

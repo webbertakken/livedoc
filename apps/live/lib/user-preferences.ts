@@ -296,6 +296,9 @@ export type UserPreferences = {
   // A text document's typing aids (docs/specs/034-text-documents/text-and-paragraphs.md "Typing aids"): only what
   // differs from Google's. Read through TypingAids.parse.
   textDocumentTypingAids?: Record<string, unknown>;
+  // Dark pages (docs/specs/035-pdf-documents/dark-pages.md "The setting"): a PDF's pages shown dark in the dark
+  // scheme. Missing === not yet asked: the first-time question stands, and the pages show as paper.
+  pdfDarkPages?: boolean;
   // A text document's default page setup (docs/specs/034-text-documents/page-layout.md "Page setup"): sides,
   // orientation, margins and colour in points. Read through PageSetup.parse.
   textDocumentPageSetup?: Record<string, unknown>;

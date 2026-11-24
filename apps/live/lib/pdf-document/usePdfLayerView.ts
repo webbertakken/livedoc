@@ -6,7 +6,7 @@
 // another drawer, so everything drawn with the earlier one is drawn again; the browser's thumbnail, a download and a
 // print never pass through here.
 import { useCallback, useMemo, useState } from 'react';
-import type { PdfEngine } from '@livedoc/pdf-documents';
+import type { PageLook, PdfEngine } from '@livedoc/pdf-documents';
 import { track } from '@/lib/telemetry';
 import { pdfPageDrawer, type PdfPageDrawer } from './pdf-page-drawer';
 
@@ -25,18 +25,21 @@ export type PdfLayerView = {
 export function usePdfLayerView(
   engine: Pick<PdfEngine, 'drawPage' | 'drawTile' | 'layerView'> | null,
   fileDrawer: PdfPageDrawer | null,
+  // Dark pages (dark-pages.md): the look the pages are drawn in, the file's own unless the person has it on.
+  look: PageLook = 'paper',
 ): PdfLayerView {
   const [hidden, setHidden] = useState<readonly string[] | null>(null);
   const drawer = useMemo(
     () =>
-      hidden === null || !engine
+      (hidden === null && look === 'paper') || !engine
         ? fileDrawer
         : pdfPageDrawer({
-            drawPage: (index, scale, turns) => engine.drawPage(index, scale, turns, hidden),
+            drawPage: (index, scale, turns) =>
+              engine.drawPage(index, scale, turns, hidden ?? undefined, look),
             drawTile: (index, scale, turns, rect) =>
-              engine.drawTile(index, scale, turns, rect, hidden),
+              engine.drawTile(index, scale, turns, rect, hidden ?? undefined, look),
           }),
-    [hidden, engine, fileDrawer],
+    [hidden, look, engine, fileDrawer],
   );
   const setLayer = useCallback(
     async (id: string, shown: boolean, before: readonly string[]) => {

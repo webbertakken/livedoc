@@ -42,7 +42,9 @@ import {
   TOO_MANY_MARKS_COPY,
 } from '@/lib/pdf-document/pdf-surface-copy';
 import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
+import { usePdfDarkPages } from '@/lib/pdf-document/usePdfDarkPages';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
+import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
 import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
@@ -164,8 +166,9 @@ export function PdfDocumentSurface({
   const marking = canReview && mode !== 'viewing' && ready !== null;
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
-  // "Layers": this person's, and the drawer their pages are drawn with.
-  const layerView = usePdfLayerView(ready?.engine ?? null, ready?.drawer ?? null);
+  // "Dark pages": this person's look; "Layers": theirs too, and the drawer their pages are drawn with.
+  const darkPages = usePdfDarkPages({ ownerId: scope.ownerId, onProblem: setProblem });
+  const layerView = usePdfLayerView(ready?.engine ?? null, ready?.drawer ?? null, darkPages.look);
 
   // "Replacing the stored file": an Editor's idle surface replaces it for the budget. The room's alone: in This
   // Browser the stored file is not replaced.
@@ -380,6 +383,7 @@ export function PdfDocumentSurface({
             ...reading.actions,
             ...printing.actions,
             ...readMode.actions,
+            ...darkPages.actions,
             ...fullScreen.actions,
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -418,6 +422,7 @@ export function PdfDocumentSurface({
       readMode.on,
       readMode.actions,
       fullScreen.actions,
+      darkPages.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -450,6 +455,7 @@ export function PdfDocumentSurface({
       className="office-shell flex min-h-0 flex-1 flex-col bg-(--office-ground)"
       data-pdf-surface={state}
       data-pdf-tool={inHand}
+      data-pdf-look={darkPages.look}
       onKeyDown={onKeyDown}
     >
       <OfficeTitleRow
@@ -502,79 +508,81 @@ export function PdfDocumentSurface({
         </div>
       ) : null}
       {ready && marks ? (
-        <OfficePanelLayout
-          left={
-            readMode.on ? null : (
-              <PdfLeftPanel
-                panels={panels}
-                tabId={tabId}
+        <PdfLookContext.Provider value={darkPages.look}>
+          <OfficePanelLayout
+            left={
+              readMode.on ? null : (
+                <PdfLeftPanel
+                  panels={panels}
+                  tabId={tabId}
+                  pages={ready.pages}
+                  page={viewer.page}
+                  engine={ready.engine}
+                  drawer={layerView.drawer ?? ready.drawer}
+                  marks={marks}
+                  onGoTo={jump}
+                  onFollow={links.follow}
+                  onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
+                  layerView={layerView}
+                />
+              )
+            }
+            right={
+              !readMode.on && find.open && find.listOpen ? (
+                <PdfFindResults find={find} pages={ready.pages} focusNonce={0} />
+              ) : null
+            }
+          >
+            <div
+              ref={setColumn}
+              className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-(--office-ground)"
+            >
+              <PdfPages
+                attach={viewer.attach}
+                layout={viewer.layout}
+                scale={viewer.scale}
+                turns={viewer.view.turns}
+                viewStore={viewer.viewStore}
+                sized={viewer.viewport.width > 0}
+                onKeyDown={pagesInput.onKeyDown}
                 pages={ready.pages}
-                page={viewer.page}
                 engine={ready.engine}
                 drawer={layerView.drawer ?? ready.drawer}
                 marks={marks}
-                onGoTo={jump}
+                tool={inHand}
+                onHighlight={onHighlight}
+                selection={textSelection.selected}
+                onText={textSelection.gesture}
+                texts={textSelection.texts}
                 onFollow={links.follow}
-                onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
-                layerView={layerView}
+                found={find.tints}
+                onDoubleTap={zoomToColumn}
               />
-            )
-          }
-          right={
-            !readMode.on && find.open && find.listOpen ? (
-              <PdfFindResults find={find} pages={ready.pages} focusNonce={0} />
-            ) : null
-          }
-        >
-          <div
-            ref={setColumn}
-            className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-(--office-ground)"
-          >
-            <PdfPages
-              attach={viewer.attach}
-              layout={viewer.layout}
-              scale={viewer.scale}
-              turns={viewer.view.turns}
-              viewStore={viewer.viewStore}
-              sized={viewer.viewport.width > 0}
-              onKeyDown={pagesInput.onKeyDown}
-              pages={ready.pages}
-              engine={ready.engine}
-              drawer={layerView.drawer ?? ready.drawer}
-              marks={marks}
-              tool={inHand}
-              onHighlight={onHighlight}
-              selection={textSelection.selected}
-              onText={textSelection.gesture}
-              texts={textSelection.texts}
-              onFollow={links.follow}
-              found={find.tints}
-              onDoubleTap={zoomToColumn}
-            />
-            <PdfSelectionBar
-              selected={textSelection.selected}
-              actions={actions}
-              pages={pagesElement}
-              view={viewer.viewStore}
-            />
-            {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
-            {fullScreen.on ? null : (
-              <PdfPageBar
-                page={viewer.page}
-                labels={labels}
-                atFirst={viewer.atFirst}
-                atLast={viewer.atLast}
-                zoom={viewer.view.zoom}
-                scale={viewer.scale}
-                onPrevious={() => viewer.turn(-1)}
-                onNext={() => viewer.turn(1)}
-                onGoTo={jump}
-                onZoom={viewer.zoomTo}
-                pageField={pageField}
+              <PdfSelectionBar
+                selected={textSelection.selected}
+                actions={actions}
+                pages={pagesElement}
+                view={viewer.viewStore}
               />
-            )}
-          </div>
-        </OfficePanelLayout>
+              {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
+              {fullScreen.on ? null : (
+                <PdfPageBar
+                  page={viewer.page}
+                  labels={labels}
+                  atFirst={viewer.atFirst}
+                  atLast={viewer.atLast}
+                  zoom={viewer.view.zoom}
+                  scale={viewer.scale}
+                  onPrevious={() => viewer.turn(-1)}
+                  onNext={() => viewer.turn(1)}
+                  onGoTo={jump}
+                  onZoom={viewer.zoomTo}
+                  pageField={pageField}
+                />
+              )}
+            </div>
+          </OfficePanelLayout>
+        </PdfLookContext.Provider>
       ) : null}
       <PdfOpenNotices
         open={open}
