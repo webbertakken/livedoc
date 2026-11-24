@@ -14,7 +14,7 @@ import {
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { buildingBlockActions } from './text-document-building-blocks';
 import { codeBlockActions } from './text-document-code-blocks';
-import { TEXT_DOCUMENT_LISTS_ORIGIN } from './text-document-undo';
+import { TEXT_DOCUMENT_LISTS_ORIGIN, TEXT_DOCUMENT_STYLES_ORIGIN } from './text-document-undo';
 
 export function useTextDocumentBuildingBlocks(
   view: EditorView | null,
@@ -29,8 +29,10 @@ export function useTextDocumentBuildingBlocks(
       liveDoc.current
         ? TextDocumentState.styles(liveDoc.current, format)
         : TextDocument.blank({ format }).styles;
+    // Written with the format's set where the document still stands on it, on the undo timeline.
     const addStyle = (style: Style) => {
-      if (liveDoc.current) TextDocumentState.addStyle(liveDoc.current, style);
+      if (liveDoc.current)
+        TextDocumentState.setStyles(liveDoc.current, format, [style], TEXT_DOCUMENT_STYLES_ORIGIN);
     };
     return {
       ...buildingBlockActions({
