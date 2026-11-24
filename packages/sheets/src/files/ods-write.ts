@@ -215,13 +215,19 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
     return { from, xml };
   });
   return [
-    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${kept.tableAttributes(index)}>`,
+    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${kept.tableAttributes(index)}>`,
     ...kept.table('table-before', index),
     ...columnsXml(cols, colAxis),
     ...rowAxis.nest(runs, 'table-row-group'),
     ...kept.table('table-after', index),
     '</table:table>',
   ];
+}
+
+// A table's style, when its tab has a look (standard-mapping.md "Sheet name, hidden, tab colour").
+function tableStyleAttribute(sheet: FileSheet, styles: OdsStyles): string {
+  const name = styles.tableStyle(sheet);
+  return name ? ` table:style-name="${name}"` : '';
 }
 
 // How the file's formulas compare and match: as Google's do, text ignoring case, criteria with `*` and `?` over the
