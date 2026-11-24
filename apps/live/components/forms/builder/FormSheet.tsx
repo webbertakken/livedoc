@@ -32,14 +32,14 @@ export function FormSheet({
         zClassName="z-[var(--z-overlay)]"
       >
         <div className="px-4 pb-4">
-          <p className="pb-2 text-[13px] font-semibold text-slate-900 dark:text-slate-50">{name}</p>
+          <p className="pb-2 text-panel-title text-slate-900 dark:text-slate-50">{name}</p>
           {children}
         </div>
       </BottomSheet>
     );
   return (
     <AnchoredPopover anchor={anchor} name={name} width={width} onClose={onClose}>
-      <div className="rounded-xl border border-slate-200 bg-white p-3 text-[13px] shadow-lg dark:border-slate-700 dark:bg-slate-900">
+      <div className="rounded-menu border border-slate-200 bg-white p-3 text-body shadow-lg dark:border-slate-700 dark:bg-slate-900">
         {children}
       </div>
     </AnchoredPopover>

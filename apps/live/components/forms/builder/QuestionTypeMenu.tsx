@@ -42,9 +42,9 @@ export function QuestionTypeList({
               e.preventDefault();
               refs.current[(to + QUESTION_TYPE_ORDER.length) % QUESTION_TYPE_ORDER.length]?.focus();
             }}
-            className={`flex h-9 w-full cursor-pointer items-center gap-3 rounded-md px-2.5 text-left text-[13px] outline-none transition focus-visible:bg-slate-100 dark:focus-visible:bg-slate-800 ${
+            className={`flex h-row w-full cursor-pointer items-center gap-3 rounded-control px-2 text-left text-body outline-none transition focus-visible:bg-slate-100 dark:focus-visible:bg-slate-800 ${
               on
-                ? 'bg-brand-50 font-semibold text-brand-800 dark:bg-brand-500/15 dark:text-brand-100'
+                ? 'bg-brand-50 font-medium text-brand-800 dark:bg-brand-500/15 dark:text-brand-100'
                 : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
             }`}
           >
@@ -91,7 +91,7 @@ export function QuestionTypeMenu({
       </button>
       {open && anchor ? (
         <AnchoredPopover anchor={anchor} name={label} width={220} onClose={() => setOpen(false)}>
-          <div className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          <div className="rounded-menu border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
             <QuestionTypeList
               value={value}
               label={label}

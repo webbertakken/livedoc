@@ -40,7 +40,7 @@ export function FormAddBar() {
     track('Form', 'Added', QUESTION_TYPE_TELEMETRY[type]);
   };
   const button =
-    'flex h-10 cursor-pointer items-center gap-2 px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800';
+    'flex h-prominent cursor-pointer items-center gap-2 px-4 text-body font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800';
   return (
     <div className="flex justify-center py-1">
       <div
@@ -64,7 +64,7 @@ export function FormAddBar() {
           aria-expanded={open}
           disabled={!canAddQuestion(b.form)}
           onClick={() => setOpen((o) => !o)}
-          className={`${button} border-l border-slate-200 px-2.5 dark:border-slate-700`}
+          className={`${button} border-l border-slate-200 px-2 dark:border-slate-700`}
         >
           <ChevronDownIcon />
         </button>
@@ -89,7 +89,7 @@ export function FormAddBar() {
           width={220}
           onClose={() => setOpen(false)}
         >
-          <div className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          <div className="rounded-menu border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
             <QuestionTypeList
               value={null}
               label="Add Question"

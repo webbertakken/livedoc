@@ -18,7 +18,7 @@ import { DraftText } from './DraftText';
 import { useFormBuilder } from './form-builder-context';
 
 const FIELD_BOX =
-  'rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-800 focus-within:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
+  'rounded-control border border-slate-200 bg-white px-3 py-1.5 text-body text-slate-800 focus-within:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
 
 // A whole number typed in, or none.
 function NumberField({
@@ -82,7 +82,7 @@ export function QuestionSettings({ question: q }: { question: FormQuestion }) {
           <SwitchRow
             checked={!!q.whole}
             onChange={(on) => set({ whole: on || undefined })}
-            className="py-1 text-[13px]"
+            className="py-1 text-body"
           >
             Whole Numbers Only
           </SwitchRow>
@@ -108,7 +108,7 @@ export function QuestionSettings({ question: q }: { question: FormQuestion }) {
         <SwitchRow
           checked={!!q.dropdown}
           onChange={(on) => set({ dropdown: on || undefined })}
-          className="py-1 text-[13px]"
+          className="py-1 text-body"
         >
           Show as Dropdown
         </SwitchRow>
@@ -119,7 +119,7 @@ export function QuestionSettings({ question: q }: { question: FormQuestion }) {
             <SettingsField label="Scale">
               <Select
                 className="w-full"
-                selectClassName="text-[13px]"
+                selectClassName="text-body"
                 value={q.scale ?? RATING_SCALE_DEFAULT}
                 onChange={(e) => set({ scale: Number(e.target.value) })}
               >
@@ -136,7 +136,7 @@ export function QuestionSettings({ question: q }: { question: FormQuestion }) {
             <SettingsField label="Style">
               <Select
                 className="w-full"
-                selectClassName="text-[13px]"
+                selectClassName="text-body"
                 value={q.style ?? 'stars'}
                 onChange={(e) =>
                   set(

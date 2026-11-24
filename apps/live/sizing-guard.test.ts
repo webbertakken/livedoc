@@ -33,13 +33,8 @@ const SIZED_PATHS = [
   'components/forms/NewResponseMark.tsx',
   'components/forms/PendingFormStart.tsx',
   'components/forms/ShareFormDialog.tsx',
-  // The builder's picture of the form draws the form's own type (forms.css form-type-*); its controls are chrome.
-  'components/forms/builder/FormBuilderColumn.tsx',
-  'components/forms/builder/FormConnectCard.tsx',
-  'components/forms/builder/FormHeaderCard.tsx',
-  'components/forms/builder/FormQuestionCard.tsx',
-  'components/forms/builder/OptionsEditor.tsx',
-  'components/forms/builder/PlaceholderField.tsx',
+  // The builder: its picture of the form draws the form's own type (forms.css form-type-*); its controls are chrome.
+  'components/forms/builder',
 ];
 
 describe('live sizing', () => {

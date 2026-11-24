@@ -17,7 +17,7 @@ import { DraftText } from './DraftText';
 import { useFormBuilder } from './form-builder-context';
 
 const BOX =
-  'rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-800 focus-within:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
+  'rounded-control border border-slate-200 bg-white px-3 py-1.5 text-body text-slate-800 focus-within:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
 
 // A time as a datetime-local field writes it, in the person's own zone.
 function localValue(ms: number | undefined): string {
@@ -46,11 +46,11 @@ export function FormSettingsTab({ link }: { link: FormLinkState }) {
           checked={open}
           onChange={(on) => void link.setOpen(on)}
           disabled={!published || blocked}
-          className="py-1 text-[13px] font-medium"
+          className="py-1 text-body"
         >
           Accepting Responses
         </SwitchRow>
-        <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
+        <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
           {blocked
             ? 'Fix this form’s problems first: Share Form lists them.'
             : published
@@ -76,7 +76,7 @@ export function FormSettingsTab({ link }: { link: FormLinkState }) {
               <button
                 type="button"
                 onClick={() => set({ closesAt: undefined })}
-                className="cursor-pointer text-[12px] font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+                className="h-row cursor-pointer text-body text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
               >
                 Clear
               </button>
@@ -105,7 +105,7 @@ export function FormSettingsTab({ link }: { link: FormLinkState }) {
         </SettingsField>
       </div>
       {past ? (
-        <p className="-mt-2 text-[12px] text-amber-700 dark:text-amber-300">
+        <p className="-mt-2 text-supporting text-amber-700 dark:text-amber-300">
           That time has passed: the form is closed.
         </p>
       ) : null}
