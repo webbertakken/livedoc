@@ -28,7 +28,9 @@ import {
   type TextSelection,
 } from '@livedoc/pdf-documents';
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
-import { PdfMarksOverlay } from './PdfMarksOverlay';
+import { PdfMarkHandles } from './PdfMarkHandles';
+import { PdfMarksOverlay, type PdfMarkReshaping } from './PdfMarksOverlay';
+import { keyResize } from '@/lib/pdf-document/pdf-mark-handles';
 import { PdfPageLinks } from './PdfPageLinks';
 import { PdfPageReading, pageRegionName } from './PdfPageReading';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
@@ -277,6 +279,27 @@ export const PdfPage = memo(function PdfPage({
         ?.querySelector<HTMLElement>(`[data-pdf-mark-control="${id}"]`)
         ?.focus({ preventScroll: true }),
   });
+  // One selected mark has handles; the mark as a handle's drag has it, while it lasts (marks.md "Changing a mark").
+  const [reshaping, setReshaping] = useState<PdfMarkReshaping | null>(null);
+  const sizing = tool === 'select' && current && choosing && chosen.length === 1 ? choosing : null;
+  const sized = sizing ? marks.find((mark) => mark.id === chosen[0]) : undefined;
+  // A point of the window in view space.
+  const viewAt = (client: { x: number; y: number }): PagePoint | null => {
+    const rect = box?.getBoundingClientRect();
+    return rect
+      ? {
+          x: ((client.x - rect.left) / rect.width) * shown.width,
+          y: ((client.y - rect.top) / rect.height) * shown.height,
+        }
+      : null;
+  };
+  // ⌥ with an arrow key on a mark's control: the mark resized from its right or foot as it shows.
+  const resizeBy = (id: string, step: PagePoint) => {
+    const mark = marks.find((each) => each.id === id);
+    const page = pageBox();
+    const place = mark && current && page ? keyResize(mark, current.toView, step, page) : null;
+    if (place) choosing?.reshape(index, id, place);
+  };
   // A drag across text marks it with a text tool in hand: not with a drawing, shape or typing tool.
   const marking = tool !== 'select' && !inking.active && !typing && current !== null;
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
@@ -391,6 +414,7 @@ export const PdfPage = memo(function PdfPage({
           chosen={chosen}
           outline={PDF_MARK_OUTLINE_PX / cssPerPoint}
           moving={markPress.moving}
+          reshaping={reshaping}
         />
       ) : null}
       {matrix ? (
@@ -403,6 +427,20 @@ export const PdfPage = memo(function PdfPage({
           chosen={chosen}
           choosing={tool === 'select' ? choosing : null}
           onNudge={markPress.nudge}
+          onResize={resizeBy}
+        />
+      ) : null}
+      {matrix && sizing && sized && !markPress.moving ? (
+        <PdfMarkHandles
+          key={sized.id}
+          mark={sized}
+          matrix={matrix}
+          width={shown.width}
+          height={shown.height}
+          toView={viewAt}
+          pageBox={pageBox}
+          onPreview={(place) => setReshaping(place ? { id: sized.id, place } : null)}
+          onReshape={(place) => sizing.reshape(index, sized.id, place)}
         />
       ) : null}
       {matrix && typing ? (

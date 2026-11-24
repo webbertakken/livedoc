@@ -112,9 +112,18 @@ export function MarkShapes({ matrix, shape }: { matrix: PageMatrix; shape: MarkS
   );
 }
 
-/** A mark where a drag has it: moved by the drag's offset while among the marks dragged. */
-const placed = (mark: Mark, moving: PdfMarksMoving | null): Mark =>
-  moving?.ids.includes(mark.id) ? { ...mark, ...MarkPlace.moved(mark, moving.by) } : mark;
+/** A mark being resized, and its geometry as the handle's drag has it. */
+export type PdfMarkReshaping = { readonly id: string; readonly place: MarkPlace };
+
+/** A mark where a drag has it: moved by the drag's offset while among the marks dragged, or resized by a handle. */
+function placed(
+  mark: Mark,
+  moving: PdfMarksMoving | null,
+  reshaping: PdfMarkReshaping | null,
+): Mark {
+  if (reshaping?.id === mark.id) return { ...mark, ...reshaping.place };
+  return moving?.ids.includes(mark.id) ? { ...mark, ...MarkPlace.moved(mark, moving.by) } : mark;
+}
 
 /** The outline round a selected mark, in view space: the box holding it and its line, `gap` points out. */
 function MarkOutline({ matrix, mark, gap }: { matrix: PageMatrix; mark: Mark; gap: number }) {
@@ -153,6 +162,7 @@ export function PdfMarksOverlay({
   chosen = [],
   outline = 0,
   moving = null,
+  reshaping = null,
 }: {
   // Page space to view space, as the picture under it was drawn.
   matrix: PageMatrix;
@@ -173,8 +183,10 @@ export function PdfMarksOverlay({
   outline?: number;
   // The marks being dragged, and how far.
   moving?: PdfMarksMoving | null;
+  // The mark being resized by a handle, as the drag has it.
+  reshaping?: PdfMarkReshaping | null;
 }) {
-  const shown = moving ? marks.map((mark) => placed(mark, moving)) : marks;
+  const shown = moving || reshaping ? marks.map((mark) => placed(mark, moving, reshaping)) : marks;
   const dark = useContext(PdfLookContext) === 'dark';
   return (
     <svg

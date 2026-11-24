@@ -30,9 +30,11 @@ function marks(chosen: readonly string[] = [], choose = true) {
     letGo: vi.fn(),
     leave: vi.fn(),
     move: vi.fn(),
+    reshape: vi.fn(),
     remove: vi.fn(),
   };
   const onNudge = vi.fn();
+  const onResize = vi.fn();
   render(
     <PdfPageMarks
       index={3}
@@ -43,9 +45,10 @@ function marks(chosen: readonly string[] = [], choose = true) {
       chosen={chosen}
       choosing={choose ? choosing : null}
       onNudge={onNudge}
+      onResize={onResize}
     />,
   );
-  return { choosing, onNudge };
+  return { choosing, onNudge, onResize };
 }
 
 describe('the marks of a page as controls', () => {
@@ -94,11 +97,25 @@ describe('the marks of a page as controls', () => {
     expect(choosing.leave).toHaveBeenCalled();
   });
 
-  it('leaves other keys, and keys with ⌘, Ctrl or ⌥, to the pages', () => {
-    const { choosing, onNudge } = marks(['r1']);
+  // marks.md "Changing a mark": ⌥ with the arrow keys resizes the mark, ⇧⌥ farther.
+  it('resizes the mark with ⌥ and the arrow keys', () => {
+    const { onResize, onNudge } = marks(['r1']);
+    const control = screen.getByRole('button', { name: 'Rectangle by Ada Lovelace' });
+    fireEvent.keyDown(control, { key: 'ArrowRight', altKey: true });
+    fireEvent.keyDown(control, { key: 'ArrowUp', altKey: true, shiftKey: true });
+    expect(onResize.mock.calls).toEqual([
+      ['r1', { x: PDF_MARK_NUDGE_PT, y: 0 }],
+      ['r1', { x: 0, y: -PDF_MARK_NUDGE_FAR_PT }],
+    ]);
+    expect(onNudge).not.toHaveBeenCalled();
+  });
+
+  it('leaves other keys, and keys with ⌘, Ctrl or ⌥ but no arrow, to the pages', () => {
+    const { choosing, onNudge, onResize } = marks(['r1']);
     const control = screen.getByRole('button', { name: 'Rectangle by Ada Lovelace' });
     const plain = fireEvent.keyDown(control, { key: 'v' });
-    fireEvent.keyDown(control, { key: 'ArrowRight', altKey: true });
+    fireEvent.keyDown(control, { key: 'Delete', altKey: true });
+    expect(onResize).not.toHaveBeenCalled();
     fireEvent.keyDown(control, { key: 'Delete', metaKey: true });
     fireEvent.keyDown(control, { key: 'ArrowRight', ctrlKey: true });
     expect(plain).toBe(true);

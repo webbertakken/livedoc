@@ -8,7 +8,7 @@ standard annotations under their own ids and read back by them; each tool's colo
 and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A stroke shown to
 others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
 snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
-Of changing a mark, selecting, moving and deleting a mark made here are built; resizing, restyling, rotating,
+Of changing a mark, selecting, moving, resizing and deleting a mark made here are built; restyling, rotating,
 arranging, grouping, locking, copying, Properties, Erase and the file's own marks are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
@@ -142,6 +142,21 @@ written into the file as a standard annotation, so any reader shows it. The rese
   made one step of undo once let go; a pointer moved less than `PDF_DRAG_SLOP_PX` is a press `(default)`.
 - **Arrow keys** move the selected marks `PDF_MARK_NUDGE_PT` the way the arrow points on screen, whatever the page's
   turn, ⇧ `PDF_MARK_NUDGE_FAR_PT`, held on their page; each press one step of undo `(default)`.
+- **Handles**: one selected mark shows them, a text mark none: a box's eight, its corners and sides, round a
+  Rectangle, an Ellipse, a Text, a Callout's box, a stamp and a Drawing; a Line's and an Arrow's two ends; and a
+  Callout's tip and knee besides its box's; each a small square in the shell's focus colour `(default)`.
+- **Dragging a box's handle** moves the sides it sits on, as they show on screen; ⇧ with a corner keeps the box's
+  proportions; the box stays at least `PDF_SHAPE_MIN_PT` each way and on its page `(default)`.
+- **What a box's new size does** `(default)`: a Rectangle's, an Ellipse's and a Drawing's lines stretch with it, their
+  width kept; a Text's and a Callout's words wrap at its new width, and the box is never narrower than one character
+  nor lower than its words, growing down to hold them; a stamp's words scale with it, in proportion; a Callout's line
+  runs again from its tip, through a knee, to the middle of the side facing it, as when it was made.
+- **Dragging a line's end** moves that end alone; **a Callout's tip** moves what is meant, its line following; **its
+  knee** moves the knee alone; each held on the page `(default)`.
+- **⌥ with the arrow keys** resizes the selected mark from its right or foot as it shows: → and ↓ larger, ← and
+  ↑ smaller, by `PDF_MARK_NUDGE_PT`, ⇧⌥ by `PDF_MARK_NUDGE_FAR_PT`; for a Line or an Arrow they move its second end
+  the way they point `(default)`.
+- A resize is shown as it goes and made once let go, one step of undo.
 - **Delete** or **Backspace**, or Edit > Delete, deletes every selected mark as one step of undo, and gives the
   pages the keys.
 - **Move** by dragging; **resize** by its handles (⇧ keeps proportions); a line by its ends; a polygon by its
@@ -398,9 +413,11 @@ a mark another person made is refused with `not_your_mark`.
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). A stamp placed is
   counted as `Stamp.<…>` alone, never also as `Mark.Stamp`; the tool taken in hand is `Tool.Stamp`. Never a mark's
   words, a stamp's name or a file's name.
-- A move is counted once a drag or a key press, `Mark.Moved`; a deletion once a mark, `Mark.<Kind>` of its kind.
+- A move is counted once a drag or a key press, `Mark.Moved`; a resize the same, `Mark.Resized`; a deletion once a
+  mark, `Mark.<Kind>` of its kind.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
-  `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] marks-deleted count=<n>`,
+  `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] mark-resized kind=<kind>`,
+  `[pdf] marks-deleted count=<n>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).
 

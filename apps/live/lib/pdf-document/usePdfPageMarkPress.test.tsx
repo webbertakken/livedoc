@@ -58,6 +58,7 @@ function pressing({
     letGo: vi.fn(),
     leave: vi.fn(),
     move: vi.fn(),
+    reshape: vi.fn(),
     remove: vi.fn(),
   };
   const onTextPress = vi.fn();

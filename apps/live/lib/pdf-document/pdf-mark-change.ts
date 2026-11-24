@@ -7,6 +7,7 @@ import {
   PdfChange,
   PdfLiveChanges,
   type MarkKind,
+  type MarkPlace as Place,
   type PagePoint,
 } from '@livedoc/pdf-documents';
 import { PDF_LOCAL_ORIGIN } from './pdf-undo';
@@ -62,6 +63,14 @@ export function moveMarks(doc: Y.Doc, ids: readonly string[], by: PagePoint, now
       for (const move of moves) PdfChange.apply(doc, move, PDF_LOCAL_ORIGIN);
     }, PDF_LOCAL_ORIGIN);
   return moves.length;
+}
+
+/** A mark given new geometry as one change, `now` its time of change; answers its kind, or null where it is gone. */
+export function reshapeMark(doc: Y.Doc, id: string, place: Place, now: number): MarkKind | null {
+  const mark = PdfLiveChanges.mark(doc, id);
+  if (!mark) return null;
+  PdfChange.apply(doc, PdfChange.changeMark(id, { ...place, modifiedAt: now }), PDF_LOCAL_ORIGIN);
+  return mark.kind;
 }
 
 /** The marks of `ids` deleted as one change; answers the kind of each deleted, in the order named. */

@@ -4,7 +4,7 @@
 // a mark"): one over each mark made here, in the order the marks are drawn, named for its kind and author, pressed
 // while selected. The pointer passes through them to the page, which finds the mark a press reaches itself; the keys
 // reach them by Tab, which selects the mark. On a selected mark, arrow keys move the selection the way they point on
-// screen, ⇧ farther; Delete or Backspace deletes it; Escape lets it go.
+// screen, ⇧ farther, and with ⌥ resize the mark; Delete or Backspace deletes it; Escape lets it go.
 import type { KeyboardEvent } from 'react';
 import {
   Mark,
@@ -34,6 +34,7 @@ export function PdfPageMarks({
   chosen,
   choosing,
   onNudge,
+  onResize,
 }: {
   index: number;
   // Page space to view space, as the picture under it was drawn.
@@ -48,12 +49,17 @@ export function PdfPageMarks({
   choosing: PdfPageChoosing | null;
   // An arrow key: the selection moved this far in view space, in points.
   onNudge: (step: PagePoint) => void;
+  // ⌥ with an arrow key: the mark of `id` resized from its right or foot this far in view space, in points.
+  onResize: (id: string, step: PagePoint) => void;
 }) {
-  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (!choosing || event.ctrlKey || event.metaKey || event.altKey) return;
+  const onKeyDown = (id: string) => (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (!choosing || event.ctrlKey || event.metaKey) return;
     const arrow = ARROWS[event.key];
     const far = event.shiftKey ? PDF_MARK_NUDGE_FAR_PT : PDF_MARK_NUDGE_PT;
-    if (arrow) onNudge({ x: arrow.x * far, y: arrow.y * far });
+    const step = arrow ? { x: arrow.x * far, y: arrow.y * far } : null;
+    if (event.altKey && !step) return;
+    if (step && event.altKey) onResize(id, step);
+    else if (step) onNudge(step);
     else if (event.key === 'Delete' || event.key === 'Backspace') choosing.remove();
     else if (event.key === 'Escape') choosing.leave();
     else return;
@@ -81,7 +87,7 @@ export function PdfPageMarks({
         onFocus={() => {
           if (choosing && !selected) choosing.choose(index, mark.id, false);
         }}
-        onKeyDown={onKeyDown}
+        onKeyDown={onKeyDown(mark.id)}
       />
     );
   });
