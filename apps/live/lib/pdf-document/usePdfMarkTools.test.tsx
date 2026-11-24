@@ -22,6 +22,7 @@ import {
 } from './pdf-context-menu';
 import {
   TOOL_ARROW,
+  TOOL_CALLOUT,
   TOOL_DRAWING,
   TOOL_ELLIPSE,
   TOOL_HIGHLIGHT,
@@ -30,6 +31,7 @@ import {
   TOOL_SELECT,
   TOOL_SQUIGGLY,
   TOOL_STRIKETHROUGH,
+  TOOL_TEXT,
   TOOL_UNDERLINE,
 } from './pdf-menus';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
@@ -39,7 +41,9 @@ import { DRAWING_LOOK, DRAWING_WIDTH_PT } from './pdf-drawing';
 import { resetMarkLooks } from './pdf-mark-looks';
 import { SHAPE_LOOK, SHAPE_WIDTH_PT } from './pdf-shape';
 import { resetShapePick, shapePick } from './pdf-shape-pick';
-import { SHAPE_TOOLS, TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
+import { SHAPE_TOOLS, TEXT_MARK_TOOLS, TOOL_COLOUR, TYPED_TOOLS } from './pdf-toolbar';
+import { TYPED_LOOK, TYPED_SIZE_PT } from './pdf-typed';
+import { resetTypedPick } from './pdf-typed-pick';
 import { usePdfMarkTools } from './usePdfMarkTools';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
@@ -128,6 +132,7 @@ afterEach(() => {
   localStorage.clear();
   resetTextMarkPick();
   resetShapePick();
+  resetTypedPick();
 });
 
 describe('the text tools', () => {
@@ -319,7 +324,7 @@ describe('the tools’ keys', () => {
     expect(press({ key: 'u', ctrlKey: true })).toEqual({ taken: false, prevented: false });
     expect(press({ key: 'u', metaKey: true }).taken).toBe(false);
     expect(press({ key: 'u', altKey: true }).taken).toBe(false);
-    expect(press({ key: 'x' }).taken).toBe(false);
+    expect(press({ key: 'q' }).taken).toBe(false);
     expect(hook.result.current.inHand).toBe('select');
   });
 
@@ -475,5 +480,116 @@ describe('the shape tools', () => {
     const { hook } = tools({ marking: false });
     expect(hook.result.current.actions[SHAPE_TOOLS]).toBeUndefined();
     expect(hook.result.current.onKey(key({ key: 'D', shiftKey: true }).event)).toBe(false);
+  });
+});
+
+// marks.md "Making a mark": the typing tools, Text and Callout; reading-surface.md "The toolbar": Text holds them and
+// remembers the last; keyboard-shortcuts.md "Tools": X and ⇧X; "Telemetry and observability".
+describe('the typing tools', () => {
+  const typed = {
+    kind: 'text',
+    rect: [10, 10, 90, 30],
+    words: 'Check',
+    size: 12,
+    callout: null,
+  } as const;
+
+  it('are taken by their items, counted, and give the pages a typing in the kind’s look', () => {
+    const { hook, run, doc, steps } = tools();
+    expect(hook.result.current.typing).toBeNull();
+    run(TOOL_TEXT);
+    expect(hook.result.current.inHand).toBe('text');
+    expect(hook.result.current.actions[TOOL_TEXT]!.checked).toBe(true);
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Selected', 'Tool.Text');
+    expect(hook.result.current.typing).toMatchObject({
+      kind: 'text',
+      ...TYPED_LOOK,
+      size: TYPED_SIZE_PT,
+      tip: null,
+    });
+    // A text drag with a typing tool in hand marks nothing.
+    act(() => hook.result.current.make(0, { text: 'Lease', quads: [QUAD] }));
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    act(() => hook.result.current.colours[TOOL_COLOUR]!.set('#1a73e8'));
+    act(() => hook.result.current.typing!.onTyped(1, 'text', typed));
+    expect(PdfLiveChanges.marks(doc)).toEqual([
+      expect.objectContaining({
+        kind: 'text',
+        words: 'Check',
+        colour: '#1a73e8',
+        page: PAGES[1]!.name,
+      }),
+    ]);
+    expect(steps).toEqual([{ page: PAGES[1]!.name }]);
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Added', 'Mark.Text');
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] mark-added kind=text');
+  });
+
+  it('makes nothing of a box ended with nothing typed, or on no page, and says so', () => {
+    const { hook, run, doc, steps } = tools();
+    run(TOOL_TEXT);
+    act(() => hook.result.current.typing!.onTyped(0, 'text', null));
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] typing-dropped kind=text');
+    act(() => hook.result.current.typing!.onTyped(5, 'text', typed));
+    // A Callout with no line is no Callout.
+    act(() => hook.result.current.typing!.onTyped(0, 'callout', { ...typed, kind: 'callout' }));
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] mark-refused name=no_words');
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    expect(steps).toHaveLength(1);
+  });
+
+  it('is refused past PDF_MAX_MARKS, which the title row says', () => {
+    const { hook, run, doc, onProblem } = tools();
+    doc.transact(() => {
+      const marks = doc.getMap('marks');
+      for (let n = 0; n < PDF_MAX_MARKS; n += 1) marks.set(`m${n}`, 1);
+    });
+    run(TOOL_TEXT);
+    act(() => hook.result.current.typing!.onTyped(0, 'text', typed));
+    expect(onProblem).toHaveBeenLastCalledWith(TOO_MANY_MARKS_COPY);
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] limit-refused name=pdf_too_many_marks');
+  });
+
+  it('keeps a Callout’s first press across the pages until another tool is taken', () => {
+    const { hook, run } = tools();
+    run(TOOL_CALLOUT);
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Selected', 'Tool.Callout');
+    act(() => hook.result.current.typing!.onTip(1, { x: 5, y: 6 }));
+    expect(hook.result.current.typing!.tip).toEqual({ index: 1, at: { x: 5, y: 6 } });
+    act(() => hook.result.current.typing!.onTip(1, null));
+    expect(hook.result.current.typing!.tip).toBeNull();
+    act(() => hook.result.current.typing!.onTip(0, { x: 1, y: 1 }));
+    run(TOOL_TEXT);
+    expect(hook.result.current.typing!.tip).toBeNull();
+  });
+
+  it('shows the last taken on the Text control, and takes it with X, the other with ⇧X', () => {
+    const { hook, run } = tools();
+    const control = () => hook.result.current.actions[TYPED_TOOLS]!;
+    expect(control().label).toBe('Text');
+    const choice = hook.result.current.choices[TYPED_TOOLS]!;
+    expect(choice.grid!.cells.map((cell) => [cell.id, cell.label])).toEqual([
+      [TOOL_TEXT, 'Text'],
+      [TOOL_CALLOUT, 'Callout'],
+    ]);
+    const press = (shiftKey: boolean) =>
+      act(() => void hook.result.current.onKey(key({ key: shiftKey ? 'X' : 'x', shiftKey }).event));
+    press(false);
+    expect(hook.result.current.inHand).toBe('text');
+    press(true);
+    expect(hook.result.current.inHand).toBe('callout');
+    expect(control().label).toBe('Callout');
+    press(true);
+    expect(hook.result.current.inHand).toBe('text');
+    run(TOOL_CALLOUT);
+    run(TOOL_SELECT);
+    press(false);
+    expect(hook.result.current.inHand).toBe('callout');
+  });
+
+  it('takes no typing tool outside Reviewing', () => {
+    const { hook } = tools({ marking: false });
+    expect(hook.result.current.actions[TYPED_TOOLS]).toBeUndefined();
+    expect(hook.result.current.onKey(key({ key: 'x' }).event)).toBe(false);
   });
 });

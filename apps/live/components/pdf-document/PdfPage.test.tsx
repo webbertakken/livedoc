@@ -17,6 +17,7 @@ import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
+import type { PdfPageTyping } from '@/lib/pdf-document/usePdfTyping';
 import { PdfPage } from './PdfPage';
 
 vi.mock('@/lib/pdf-document/pdf-paint', () => ({ paintPicture: vi.fn(), REDRAW_SETTLE_MS: 0 }));
@@ -54,6 +55,7 @@ async function page(
   marked: TextSelection | null = null,
   ink: PdfPageInk | null = null,
   shaping: PdfPageShaping | null = null,
+  typing: PdfPageTyping | null = null,
 ) {
   const onText = vi.fn();
   const onMark = vi.fn();
@@ -82,6 +84,7 @@ async function page(
       onMark={onMark}
       ink={ink}
       shaping={shaping}
+      typing={typing}
       selected={selected}
       handles={handles}
       onText={onText}
@@ -354,6 +357,29 @@ describe('dragging a shape on a page', () => {
     fireEvent.pointerDown(box, at(72, 92));
     fireEvent.pointerCancel(box, at(72, 92));
     expect(onShape).toHaveBeenCalledOnce();
+    expect(onMark).not.toHaveBeenCalled();
+  });
+});
+
+// marks.md "Making a mark": with the Text tool in hand a press opens a box for typing at once; a drag marks no text.
+describe('typing on a page', () => {
+  it('lays a typing layer over the page with Text in hand, which opens a box and marks no text', async () => {
+    const typing: PdfPageTyping = {
+      kind: 'text',
+      colour: '#d93025',
+      opacity: 1,
+      size: 12,
+      tip: null,
+      onTip: vi.fn(),
+      onTyped: vi.fn(),
+    };
+    const { view, onMark } = await page('text', [], [], false, null, null, null, typing);
+    const layer = view.container.querySelector<HTMLElement>('[data-pdf-typing-layer="text"]')!;
+    layer.setPointerCapture = vi.fn();
+    const at = { button: 0, pointerId: 1, clientX: 72, clientY: 92 };
+    fireEvent.pointerDown(layer, at);
+    fireEvent.pointerUp(layer, at);
+    expect(view.container.querySelector('textarea[data-pdf-typing="text"]')).not.toBeNull();
     expect(onMark).not.toHaveBeenCalled();
   });
 });

@@ -948,6 +948,9 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Added|Mark.Arrow': 'Someone drew an arrow on a PDF page.',
   'Pdf|Added|Mark.Rectangle': 'Someone drew a rectangle on a PDF page.',
   'Pdf|Added|Mark.Ellipse': 'Someone drew an ellipse on a PDF page.',
+  'Pdf|Added|Mark.Text': 'Someone typed words straight onto a PDF page.',
+  'Pdf|Added|Mark.Callout':
+    'Someone added a callout to a PDF page: words with a line pointing at what they mean.',
   'Pdf|Changed|ToolColour':
     'Someone chose a colour, or reset it, for the mark tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
@@ -962,6 +965,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Selected|Tool.Arrow': 'Someone took the Arrow tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Rectangle': 'Someone took the Rectangle tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Ellipse': 'Someone took the Ellipse tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Text': 'Someone took the Text tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Callout': 'Someone took the Callout tool in hand on a PDF document.',
   'Pdf|Exported|Print':
     'Someone printed a PDF document: LiveDoc made the pages they chose and handed them to the browser to print.',
   'Pdf|Exported|Pdf':

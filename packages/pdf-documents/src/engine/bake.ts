@@ -103,9 +103,9 @@ function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
     }
     holdList(pdf, page);
     const annotation = annotate(pdf, page, mark);
-    annotation.setName(mark.id);
-    annotation.setModificationDate(pdfDate(mark.modifiedAt));
-    annotation.dict.set('CreationDate', PdfString.fromString(pdfDate(mark.createdAt)));
+    annotation.set('NM', PdfString.fromString(mark.id));
+    annotation.set('M', PdfString.fromString(pdfDate(mark.modifiedAt)));
+    annotation.set('CreationDate', PdfString.fromString(pdfDate(mark.createdAt)));
   }
   return lost;
 }

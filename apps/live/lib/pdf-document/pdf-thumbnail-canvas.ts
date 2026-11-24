@@ -3,8 +3,17 @@
 // surface draws them (PdfMarksOverlay.tsx: each mark as MarkDrawing says, multiplied onto the page). Always light paper: nothing of Dark
 // pages, of what a person holds or of anyone's presence is ever drawn here. The browser's canvas does the work, so
 // this half is proven in a browser (e2e/office/pdf-document-thumbnail.spec.ts), never in jsdom.
-import { MarkDrawing, PageView, type PageMatrix, type PagePoint } from '@livedoc/pdf-documents';
+import {
+  Mark,
+  MarkDrawing,
+  PageView,
+  TypedLayout,
+  type PageMatrix,
+  type PagePoint,
+  type TypedMark,
+} from '@livedoc/pdf-documents';
 import type { PdfThumbnailPicture } from './pdf-thumbnail';
+import { TYPED_FACES } from './pdf-typed';
 
 // A path through points of page space, in the picture's points.
 function trace(
@@ -18,6 +27,23 @@ function trace(
     if (at === 0) context.moveTo(x, y);
     else context.lineTo(x, y);
   });
+}
+
+/** A Text's or a Callout's words, each line from its baseline along the page's own across, as the overlay sets them. */
+function setWords(context: CanvasRenderingContext2D, toView: PageMatrix, mark: TypedMark) {
+  const [a, b, c, d] = toView;
+  context.font = `${mark.size}px ${TYPED_FACES}`;
+  for (const line of TypedLayout.place(mark)) {
+    const start = PageView.toView(toView, {
+      x: line.rtl ? line.x + line.width : line.x,
+      y: line.y,
+    });
+    context.save();
+    context.transform(a, b, -c, -d, start.x, start.y);
+    context.direction = line.rtl ? 'rtl' : 'ltr';
+    context.fillText(line.text, 0, 0);
+    context.restore();
+  }
 }
 
 export async function encodePdfThumbnail(
@@ -61,6 +87,7 @@ export async function encodePdfThumbnail(
       context.lineJoin = stroke.round ? 'round' : 'miter';
       context.stroke();
     }
+    if (Mark.isTyped(mark)) setWords(context, bitmap.toView, mark);
   }
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, 'image/jpeg', quality),

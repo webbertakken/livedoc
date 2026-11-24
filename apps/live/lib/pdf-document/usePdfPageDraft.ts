@@ -6,6 +6,7 @@
 import type { PointerEvent } from 'react';
 import type { MarkShape, PagePoint } from '@livedoc/pdf-documents';
 import type { PdfPageInk } from './usePdfMarkTools';
+import { screenBoxOf } from './pdf-shape';
 import { usePdfPageInk } from './usePdfPageInk';
 import { usePdfPageShape, type PdfPageShaping } from './usePdfPageShape';
 
@@ -34,17 +35,7 @@ export function usePdfPageDraft({
     index,
     shaping,
     pointAt,
-    screenBox: () => {
-      const rect = box?.getBoundingClientRect();
-      return rect
-        ? {
-            left: rect.left,
-            top: rect.top,
-            right: rect.left + rect.width,
-            bottom: rect.top + rect.height,
-          }
-        : null;
-    },
+    screenBox: () => screenBoxOf(box),
   });
   const draft: PdfPageDraft | null =
     ink && inking.stroke.length > 0

@@ -36,6 +36,7 @@ import {
   ROTATE_VIEW_COUNTERCLOCKWISE,
   SELECT_ALL,
   TOOL_ARROW,
+  TOOL_CALLOUT,
   TOOL_DRAWING,
   TOOL_ELLIPSE,
   TOOL_LINE,
@@ -44,6 +45,7 @@ import {
   TOOL_SELECT,
   TOOL_SQUIGGLY,
   TOOL_STRIKETHROUGH,
+  TOOL_TEXT,
   TOOL_UNDERLINE,
   UNDO,
   ZOOM_ACTUAL_SIZE,
@@ -55,7 +57,13 @@ import {
 } from './pdf-menus';
 import { PDF_MODES, type PdfMode } from './pdf-modes';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
-import { PAGE_DISPLAY_CONTROL, pdfToolbar, SHAPE_TOOLS, TEXT_MARK_TOOLS } from './pdf-toolbar';
+import {
+  PAGE_DISPLAY_CONTROL,
+  pdfToolbar,
+  SHAPE_TOOLS,
+  TEXT_MARK_TOOLS,
+  TYPED_TOOLS,
+} from './pdf-toolbar';
 
 // The toolbar lists the surface binds (pdf-view-actions.ts).
 const CHOICES = [PAGE_DISPLAY_CONTROL];
@@ -106,7 +114,9 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_STRIKETHROUGH,
     TOOL_SQUIGGLY,
     TOOL_DRAWING,
-    // usePdfShapeTools.ts: the shape tools.
+    TOOL_TEXT,
+    TOOL_CALLOUT,
+    // usePdfToolControl.ts: the shape tools.
     TOOL_LINE,
     TOOL_ARROW,
     TOOL_RECTANGLE,
@@ -197,7 +207,7 @@ describe("a PDF document's menus and toolbar", () => {
   // reading-surface.md "Share roles": an item above the session's level is not drawn.
   it('shows a Viewer the download and no tool that marks', () => {
     const actions = Object.fromEntries(
-      [...BOUND, TEXT_MARK_TOOLS, SHAPE_TOOLS].map((id) => [id, { run: () => {} }]),
+      [...BOUND, TEXT_MARK_TOOLS, TYPED_TOOLS, SHAPE_TOOLS].map((id) => [id, { run: () => {} }]),
     );
     const seen = (level: 'view' | 'participate') =>
       catalogueItems(visibleMenus(PDF_MENUS, level, actions)).map(({ item }) => item.id);
@@ -230,6 +240,7 @@ describe("a PDF document's menus and toolbar", () => {
       FIND,
       TOOL_SELECT,
       TEXT_MARK_TOOLS,
+      TYPED_TOOLS,
       TOOL_DRAWING,
       SHAPE_TOOLS,
     ]);
@@ -245,9 +256,9 @@ describe("a PDF document's menus and toolbar", () => {
     expect(labels('editing')).not.toContain('Highlight');
   });
 
-  // keyboard-shortcuts.md "Tools": Select V, Highlight U; the modes' keys are a text document's for the same places.
+  // keyboard-shortcuts.md "Tools": Select V, Highlight U, Drawing D, Text X; the modes' keys are a text document's.
   it('keeps the tools’ own keys and the modes’ shared ones', () => {
-    expect(PDF_TOOL_KEYS).toEqual({ select: 'v', highlight: 'u', drawing: 'd' });
+    expect(PDF_TOOL_KEYS).toEqual({ select: 'v', highlight: 'u', drawing: 'd', text: 'x' });
     const keys = Object.fromEntries(PDF_SHORTCUTS.map((row) => [row.id, row.keys.pc]));
     expect(keys['switch-to-reviewing']).toBe('Ctrl+Alt+Shift+X');
     expect(keys['switch-to-editing']).toBe('Ctrl+Alt+Shift+Z');

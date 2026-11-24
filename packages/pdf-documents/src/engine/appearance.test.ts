@@ -1,7 +1,7 @@
 // docs/specs/035-pdf-documents/marks.md "In the file": a line's and a shape's appearance stream is drawn from what the
 // page shows of them (MarkDrawing), line for line, in the mark's colour and opacity.
 import { describe, expect, it } from 'vitest';
-import { appearanceOf } from './appearance';
+import { appearanceOf, defaultAppearanceOf, winAnsiString } from './appearance';
 
 const look = { colour: '#d93025', opacity: 1 };
 
@@ -110,5 +110,51 @@ describe('appearanceOf', () => {
       look,
     );
     expect(drawn.box).toEqual([6, 16, 114, 64]);
+  });
+});
+
+// marks.md "In the file": a Text's and a Callout's appearance sets its words line for line in Helvetica, a character
+// Helvetica cannot write set as a question mark.
+describe('words in an appearance', () => {
+  const words = {
+    lines: [
+      { text: 'Hello (1)', width: 40, rtl: false, x: 102, y: 590.5 },
+      { text: '', width: 0, rtl: false, x: 102, y: 576 },
+      { text: 'café € \\ א', width: 30, rtl: false, x: 102, y: 561.6 },
+    ],
+    size: 12,
+    box: [100, 550, 300, 600] as const,
+  };
+
+  it('sets each line with words at its place, in the font at the size, in the mark’s colour', () => {
+    const drawn = appearanceOf({ fills: [], strokes: [] }, look, words);
+    expect(drawn.content).toBe(
+      [
+        'q',
+        'BT',
+        '/Helv 12 Tf 0.853 0.19 0.147 rg',
+        '1 0 0 1 102 590.5 Tm (Hello \\(1\\)) Tj',
+        '1 0 0 1 102 561.6 Tm (caf\\351 \\200 \\\\ ?) Tj',
+        'ET',
+        'Q',
+      ].join('\n'),
+    );
+    expect(drawn.box).toEqual([100, 550, 300, 600]);
+  });
+
+  it('writes the font, size and colour as the file’s DA', () => {
+    expect(defaultAppearanceOf(9.5, '#000000')).toBe('/Helv 9.5 Tf 0.002 0.002 0.002 rg');
+  });
+
+  it('writes WinAnsi bytes past ASCII in octal and escapes brackets and backslashes', () => {
+    expect(winAnsiString('a(b)c\\d\u00a0“')).toBe('(a\\(b\\)c\\\\d\\240\\223)');
+  });
+
+  it('sets no words where every line is empty', () => {
+    const drawn = appearanceOf({ fills: [], strokes: [] }, look, {
+      ...words,
+      lines: [words.lines[1]!],
+    });
+    expect(drawn.content).toBe('q\nQ');
   });
 });

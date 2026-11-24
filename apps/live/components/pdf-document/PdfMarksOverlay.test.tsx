@@ -3,7 +3,7 @@
 // the file's own, so under Dark pages it takes the step's colour and lightens the dark page rather than multiplying.
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { DarkPages, Mark, PageName, type Quad } from '@livedoc/pdf-documents';
+import { DarkPages, Mark, PageName, type PageMatrix, type Quad } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { PdfMarksOverlay } from './PdfMarksOverlay';
 
@@ -157,5 +157,55 @@ describe('a shape over a page', () => {
     expect(outline.getAttribute('fill')).toBe('none');
     expect(outline.getAttribute('stroke-width')).toBe('2');
     expect(container.querySelectorAll('[data-pdf-draft="arrow"] polyline')).toHaveLength(2);
+  });
+});
+
+// marks.md "Making a mark": a Text's words set line for line in Helvetica's widths, upright on the page as the file has
+// it; a right-to-left paragraph set from its right end; a Callout's line and border with them.
+describe('a Text or a Callout over a page', () => {
+  const base = {
+    page: PageName.ofObject(1),
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 0,
+    rect: [10, 40, 90, 90] as const,
+    size: 10,
+  };
+  const words = (marks: readonly Mark[], matrix: PageMatrix = [1, 0, 0, -1, 0, 100]) =>
+    render(<PdfMarksOverlay matrix={matrix} width={100} height={100} marks={marks} />).container;
+
+  it('sets each line with words from its baseline, held to Helvetica’s width, unstroked', () => {
+    const text = Mark.text({ ...base, id: 't1', words: 'Hello\n\nשלום' })!;
+    const svg = words([text]);
+    const lines = [...svg.querySelectorAll('[data-pdf-mark="t1"] text')];
+    expect(lines.map((line) => line.textContent)).toEqual(['Hello', 'שלום']);
+    expect(lines[0]!.parentElement!.getAttribute('stroke')).toBe('none');
+    // Its baseline 2 points in and 8.555 down from the box's top, which is 10 down the view.
+    const [, , , , x, y] = lines[0]!
+      .getAttribute('transform')!
+      .match(/-?[\d.]+/g)!
+      .map(Number);
+    expect(x).toBe(12);
+    expect(y).toBeCloseTo(10 + 2 + 8.555, 6);
+    expect(Number(lines[0]!.getAttribute('textLength'))).toBeCloseTo(22.78, 6);
+    expect(lines[0]!.getAttribute('lengthAdjust')).toBe('spacingAndGlyphs');
+    // A line Helvetica cannot write is the face's own width, read right to left.
+    expect(lines[1]!.getAttribute('textLength')).toBeNull();
+    expect(lines[1]!.getAttribute('direction')).toBe('rtl');
+  });
+
+  it('turns its words with a turned view, and draws a Callout’s line and border', () => {
+    const callout = Mark.callout({
+      ...base,
+      id: 'c1',
+      words: 'Why?',
+      callout: [0, 0, 1, 1, 10, 65],
+    })!;
+    const svg = words([callout], [0, 1, 1, 0, 0, 0]);
+    const line = svg.querySelector('[data-pdf-mark="c1"] text')!;
+    expect(line.getAttribute('transform')).toMatch(/^matrix\(0 1 -1 -?0 /);
+    expect(svg.querySelectorAll('[data-pdf-mark="c1"] polyline')).toHaveLength(2);
+    expect(svg.querySelectorAll('[data-pdf-mark="c1"] polygon')).toHaveLength(1);
   });
 });

@@ -1317,6 +1317,8 @@ export const PDF_MARKS_ADDED = chart(
       'Mark.Arrow',
       'Mark.Rectangle',
       'Mark.Ellipse',
+      'Mark.Text',
+      'Mark.Callout',
     ],
   },
 );
@@ -1338,6 +1340,8 @@ export const PDF_TOOLS_SELECTED = chart(
       'Tool.Arrow',
       'Tool.Rectangle',
       'Tool.Ellipse',
+      'Tool.Text',
+      'Tool.Callout',
     ],
     rising: 'neutral',
   },

@@ -74,6 +74,7 @@ export const TOOL_UNDERLINE = 'tool-underline';
 export const TOOL_STRIKETHROUGH = 'tool-strikethrough';
 export const TOOL_SQUIGGLY = 'tool-squiggly-underline';
 export const TOOL_TEXT = 'tool-text';
+export const TOOL_CALLOUT = 'tool-callout';
 export const TOOL_DRAWING = 'tool-drawing';
 /** Insert > Shape's tools (marks.md "Making a mark": The shape tools). */
 export const TOOL_LINE = 'shape-line';
@@ -304,8 +305,12 @@ export const PDF_MENUS: OfficeCatalogue = [
       keywords: ['wavy'],
     }),
     SEPARATOR,
-    item(TOOL_TEXT, 'Text', 'participate', { ...ONE_OF, keywords: ['typewriter'] }),
-    item('tool-callout', 'Callout', 'participate', ONE_OF),
+    item(TOOL_TEXT, 'Text', 'participate', {
+      ...ONE_OF,
+      ...BUILT,
+      keywords: ['typewriter', 'text box'],
+    }),
+    item(TOOL_CALLOUT, 'Callout', 'participate', { ...ONE_OF, ...BUILT }),
     item(TOOL_DRAWING, 'Drawing', 'participate', {
       ...ONE_OF,
       ...BUILT,

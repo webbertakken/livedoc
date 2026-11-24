@@ -52,7 +52,6 @@ import {
   TOOL_DRAWING,
   TOOL_HAND,
   TOOL_SELECT,
-  TOOL_TEXT,
   TOOL_TICK,
   UNDO,
 } from './pdf-menus';
@@ -133,6 +132,8 @@ const EVERY_MODE: OfficeToolbar = [
 export const TEXT_MARK_TOOLS = 'text-mark-tools';
 /** Shape, holding Line, Arrow, Rectangle and Ellipse behind its chevron: the last of them taken in hand. */
 export const SHAPE_TOOLS = 'shape-tools';
+/** Text, holding Text and Callout behind its chevron: the last of them taken in hand. */
+export const TYPED_TOOLS = 'typed-tools';
 /** The tool in hand's colour ("The toolbar"): the one colour picker's swatch button, while a mark tool is in hand. */
 export const TOOL_COLOUR = 'colour-control';
 
@@ -157,7 +158,10 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
         ...toggle(TEXT_MARK_TOOLS, 'Highlight', 'participate', lucideHighlighter, BUILT),
         look: { kind: 'icon', icon: lucideHighlighter, toggle: true, split: true },
       },
-      toggle(TOOL_TEXT, 'Text', 'participate', lucideType),
+      {
+        ...toggle(TYPED_TOOLS, 'Text', 'participate', lucideType, BUILT),
+        look: { kind: 'icon', icon: lucideType, toggle: true, split: true },
+      },
       toggle(TOOL_DRAWING, 'Drawing', 'participate', lucidePencilLine, BUILT),
       {
         ...toggle(SHAPE_TOOLS, 'Shape', 'participate', lucideShapes, BUILT),
