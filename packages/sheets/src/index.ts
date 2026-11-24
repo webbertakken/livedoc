@@ -84,6 +84,7 @@ export {
   type TextFace,
 } from './text/text-measure';
 export { wrapLines } from './text/wrap-lines';
+export * from './text/rotation';
 export * from './sheet-starters';
 export * from './hyperlink';
 export * from './sparkline/sparkline-shapes';

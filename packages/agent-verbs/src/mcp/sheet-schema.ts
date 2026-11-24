@@ -11,6 +11,8 @@ import {
   ROW_HEIGHT_NEW,
   CURRENCY_SYMBOLS,
   FONT_SIZE_MIN,
+  ROTATION_MAX,
+  ROTATION_MIN,
   FONT_SIZE_MAX,
   NUMBER_FORMATS,
   SHEET_ACCENTS,
@@ -75,6 +77,13 @@ const formatArg = z
       .optional()
       .describe(
         'Long text runs over empty neighbours, wraps, or is clipped; null for overflow. A cell that wraps makes its row as tall as its lines need, unless the row was given a height (resize with px; resize with fit hands it back).',
+      ),
+    rotation: z
+      .union([z.number().int().min(ROTATION_MIN).max(ROTATION_MAX), z.literal('stacked')])
+      .nullable()
+      .optional()
+      .describe(
+        `Text turned counterclockwise by a whole angle from ${ROTATION_MIN} to ${ROTATION_MAX} degrees (45 tilts up, -90 reads downwards), or stacked one character per line; 0 or null for none. Turned text makes its row as tall as it turns to.`,
       ),
     numberFormat: z
       .string()

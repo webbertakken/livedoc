@@ -16,6 +16,7 @@ import {
   validFormatValue,
 } from '../format';
 import type { Border, BorderStyle } from '../sheet';
+import type { Rotation } from '../text/rotation';
 import { FILE_DEFAULT_FONT, cellStyleKey, type CellStyle } from './cell-style';
 import { xlsxColourOf, xlsxColourXml } from './xlsx-colours';
 
@@ -82,7 +83,6 @@ const VERTICAL: Readonly<Record<string, CellStyle['va'] | null>> = {
 };
 // An alignment's attributes the model has no form for, and the value that says nothing.
 const ALIGNMENT_DEFAULTS: Readonly<Record<string, readonly string[]>> = {
-  textRotation: ['0'],
   indent: ['0'],
   relativeIndent: ['0'],
   shrinkToFit: ['0', 'false'],
@@ -90,7 +90,19 @@ const ALIGNMENT_DEFAULTS: Readonly<Record<string, readonly string[]>> = {
   readingOrder: ['0'],
 };
 // The alignment's attributes the model reads.
-const READ_ALIGNMENT = new Set(['horizontal', 'vertical', 'wrapText']);
+const READ_ALIGNMENT = new Set(['horizontal', 'vertical', 'wrapText', 'textRotation']);
+// textRotation's stacked (ECMA-376 §18.8.1); 1 to 90 turn up, 91 to 180 down by the angle less 90.
+const XLSX_STACKED = 255;
+
+/** A file's textRotation as a rotation: none at 0, undefined past what it can say. */
+function rotationOf(value: string): Rotation | null | undefined {
+  const n = /^\d+$/.test(value) ? Number(value) : NaN;
+  if (n === 0) return null;
+  if (n === XLSX_STACKED) return 'v';
+  if (n >= 1 && n <= 90) return n;
+  if (n > 90 && n <= 180) return 90 - n;
+  return undefined;
+}
 const PROTECTION_DEFAULTS: Readonly<Record<string, readonly string[]>> = {
   locked: ['1', 'true'],
   hidden: ['0', 'false'],
@@ -172,6 +184,9 @@ function readAlignment(alignment: XmlElement | undefined, read: Read) {
   if (va) read.style.va = va;
   if (va === undefined) read.lost = true;
   if (['1', 'true'].includes(get('wrapText') ?? '')) read.style.wr = 'w';
+  const ro = rotationOf(get('textRotation') ?? '0');
+  if (ro) read.style.ro = ro;
+  if (ro === undefined) read.lost = true;
   for (const { uri, local, value } of alignment?.attributes ?? []) {
     const plain = ALIGNMENT_DEFAULTS[local];
     const mapped = uri === '' && (READ_ALIGNMENT.has(local) || plain?.includes(value));
@@ -291,6 +306,9 @@ export class XlsxStyleParts {
     const va = style?.va ?? 'm';
     if (va !== 'b') attrs.push(`vertical="${WRITE_VERTICAL[va]}"`);
     if (style?.wr === 'w') attrs.push('wrapText="1"');
+    const ro = style?.ro;
+    if (ro !== undefined)
+      attrs.push(`textRotation="${ro === 'v' ? XLSX_STACKED : ro > 0 ? ro : 90 - ro}"`);
     return `<alignment ${attrs.join(' ')}/>`;
   }
 

@@ -61,6 +61,7 @@ export const lucideApple: readonly IconPrim[] = [{"t":"path","d":"M12 6.528V3a1 
 export const lucideArmchair: readonly IconPrim[] = [{"t":"path","d":"M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"},{"t":"path","d":"M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"},{"t":"path","d":"M5 18v2"},{"t":"path","d":"M19 18v2"}];
 export const lucideArrowDown: readonly IconPrim[] = [{"t":"path","d":"M12 5v14"},{"t":"path","d":"m19 12-7 7-7-7"}];
 export const lucideArrowDownAZ: readonly IconPrim[] = [{"t":"path","d":"m3 16 4 4 4-4"},{"t":"path","d":"M7 20V4"},{"t":"path","d":"M20 8h-5"},{"t":"path","d":"M15 10V6.5a2.5 2.5 0 0 1 5 0V10"},{"t":"path","d":"M15 14h5l-5 6h5"}];
+export const lucideArrowDownRight: readonly IconPrim[] = [{"t":"path","d":"m7 7 10 10"},{"t":"path","d":"M17 7v10H7"}];
 export const lucideArrowDownToLine: readonly IconPrim[] = [{"t":"path","d":"M12 17V3"},{"t":"path","d":"m6 11 6 6 6-6"},{"t":"path","d":"M19 21H5"}];
 export const lucideArrowLeft: readonly IconPrim[] = [{"t":"path","d":"m12 19-7-7 7-7"},{"t":"path","d":"M19 12H5"}];
 export const lucideArrowRight: readonly IconPrim[] = [{"t":"path","d":"M5 12h14"},{"t":"path","d":"m12 5 7 7-7 7"}];

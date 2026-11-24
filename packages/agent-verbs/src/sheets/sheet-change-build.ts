@@ -53,6 +53,8 @@ export interface SheetFormatInput {
   align?: 'left' | 'center' | 'right' | null;
   verticalAlign?: 'top' | 'middle' | 'bottom' | null;
   wrap?: 'overflow' | 'wrap' | 'clip' | null;
+  // A whole angle from −90 to 90, counterclockwise, or stacked; 0 or null for none.
+  rotation?: number | 'stacked' | null;
   // auto, number, percent, currency, accounting, scientific, date, time, datetime, duration or text.
   numberFormat?: string | null;
   decimals?: number | null;
@@ -122,6 +124,7 @@ export function formatPatchOf(input: SheetFormatInput): FormatPatch | null {
     ha: mapped(ALIGN, input.align),
     va: mapped(VALIGN, input.verticalAlign),
     wr: mapped(WRAP, input.wrap),
+    ro: input.rotation === 'stacked' ? 'v' : input.rotation === 0 ? null : input.rotation,
     nf: input.numberFormat,
     dp: input.decimals,
     cur: input.currency,

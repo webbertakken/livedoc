@@ -2,7 +2,7 @@
 // PDFs and api or MCP renders draw, with no DOM. Only the cells inside the window are worked out.
 import { columnLetters } from '../address';
 import { colWidth, layoutIndex, posRangeOf } from '../layout';
-import { cellLines, rowHeights } from '../row-fit';
+import { cellLines, cellTurn, rowHeights } from '../row-fit';
 import { measuredFont } from '../text/text-measure';
 import { displayValue } from '../number-format';
 import { cellKey, type Border, type CellFormat } from '../sheet';
@@ -36,6 +36,9 @@ type RenderCell = {
   numeric?: true;
   size?: number;
   wrap?: 'o' | 'w' | 'c';
+  // Turned text (formatting.md "Alignment, wrapping, rotation"): its angle, counterclockwise, and the box it turns to,
+  // placed in the cell by its alignment. Stacked text is upright, its characters as lines.
+  turn?: { deg: number; w: number; h: number };
   rowSpan?: number;
   colSpan?: number;
   borders?: { t?: Border; r?: Border; b?: Border; l?: Border };
@@ -166,7 +169,12 @@ export function renderWindow(
         align: f.ha ?? shown.align,
         valign: f.va ?? 'm',
       };
-      if (shown.kind === 'text' && (f.wr === 'w' || shown.text.includes('\n'))) {
+      const turn = shown.text ? cellTurn(wb, sheetId, r, c, shown.text, font) : null;
+      if (turn) {
+        if (turn.lines.length > 1) out.lines = [...turn.lines];
+        else out.text = turn.lines[0] ?? '';
+        if (turn.deg) out.turn = { deg: turn.deg, w: turn.w, h: turn.h };
+      } else if (shown.kind === 'text' && (f.wr === 'w' || shown.text.includes('\n'))) {
         const lines = cellLines(wb, sheetId, r, c, shown.text, font);
         if (lines.length > 1) out.lines = [...lines];
         else out.text = lines[0] ?? '';

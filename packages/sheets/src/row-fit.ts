@@ -10,7 +10,8 @@ import { displayValue } from './number-format';
 import { ruleIndex, rulesAt } from './rules/rule-index';
 import { validationRuleAt } from './rules/validation';
 import { cellKey, type CellFormat, type FormatRule, type Sheet, type SheetLayout } from './sheet';
-import { fontPx, lineHeightPx } from './text/text-measure';
+import { fontPx, lineHeightPx, textWidth } from './text/text-measure';
+import { turnedBox, turnedLines } from './text/rotation';
 import { wrapLines } from './text/wrap-lines';
 
 // The room a cell keeps either side of its text, and at its right for a dropdown's arrow or a filter button.
@@ -223,6 +224,25 @@ function measure(
   return lines;
 }
 
+/** Turned text (formatting.md "Alignment, wrapping, rotation"): its lines, its angle (stacked, 0) and its turned box. */
+export type CellTurn = { deg: number; lines: readonly string[]; w: number; h: number };
+
+function turnOf(
+  text: string,
+  f: CellFormat,
+  typed: boolean,
+  bold: boolean,
+  face: string | undefined,
+): CellTurn {
+  const ro = f.ro!;
+  const px = fontPx(f.fs);
+  const lines = turnedLines(text, ro, typed);
+  let widest = 0;
+  for (const line of lines) widest = Math.max(widest, textWidth(line, px, { font: face, bold }));
+  const deg = ro === 'v' ? 0 : ro;
+  return { deg, lines, ...turnedBox(widest, lines.length, lineHeightPx(px), deg) };
+}
+
 function needOf(lines: number, px: number): number {
   return lines * lineHeightPx(px) + (lines > 1 ? ROW_FIT_LINES_PAD_PX : ROW_FIT_PAD_PX);
 }
@@ -257,7 +277,7 @@ function fitNeeds(
     const typed = !!input && 's' in input;
     // Only a cell that wraps, whose font is too tall for the row, or whose own text holds a line break can need more
     // than the sheet's row height: everything else is one line that fits, and is passed by unread.
-    if (!wraps && !tall && !(typed && input.s.includes('\n'))) continue;
+    if (!wraps && !tall && f?.ro === undefined && !(typed && input.s.includes('\n'))) continue;
     if (!input && !spills) continue;
     const colon = key.indexOf(':');
     const rowId = key.slice(0, colon);
@@ -265,6 +285,21 @@ function fitNeeds(
     const r = ix.rowPos.get(rowId);
     const c = ix.colPos.get(key.slice(colon + 1));
     if (r === undefined || c === undefined || facts.merged.has(r * span + c)) continue;
+    // Turned text needs the height of the box it turns to, whatever its value (sheet.md "Row height").
+    if (f?.ro !== undefined) {
+      const value = typed ? input.s : wb.value(sheet.id, r, c);
+      if (value === null || value === '') continue;
+      const place = { layout, facts, r, c, width: 0 };
+      const turn = turnOf(
+        displayValue(value, f, wb.locale).text,
+        f,
+        typed,
+        measuredBold(place, f),
+        f.ff ?? font,
+      );
+      need(rowId, Math.ceil(turn.h) + ROW_FIT_LINES_PAD_PX);
+      continue;
+    }
     // Text typed in is its own value and a number or a true/false is one line: only a formula or a spill is read.
     if (input && !typed && !('f' in input)) {
       need(rowId, needOf(1, px));
@@ -345,4 +380,25 @@ export function cellLines(
   const typed = !!cell?.input && 's' in cell.input;
   const place = { layout, facts, r, c, width };
   return measure(memo, memo.get(key), key, place, { text, format: cell?.format, typed, font });
+}
+
+// The turned lines and box of the cell at (r, c) showing `text`, or null where its text is upright: the very box its row
+// was sized by, which the grid and the images place in the cell.
+export function cellTurn(
+  wb: Workbook,
+  sheetId: string,
+  r: number,
+  c: number,
+  text: string,
+  font?: string,
+): CellTurn | null {
+  const sheet = wb.sheet(sheetId);
+  if (!sheet) return null;
+  const { layout } = sheet;
+  const cell = sheet.cells.get(cellKey(layout.rows[r]!, layout.cols[c]!));
+  const f = cell?.format;
+  if (f?.ro === undefined) return null;
+  const typed = !!cell?.input && 's' in cell.input;
+  const place = { layout, facts: factsOf(layout), r, c, width: 0 };
+  return turnOf(text, f, typed, measuredBold(place, f), f.ff ?? font);
 }

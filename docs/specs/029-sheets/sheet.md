@@ -499,6 +499,9 @@ A row is **automatic** until it is given a size of its own; then it is **sized**
 - A line break typed into a cell (Alt+Enter) starts a line whether the cell wraps or not.
 - A line break a formula makes starts a line only where the cell wraps; elsewhere it is drawn as a space.
 - Only text wraps: a number, a date, a true/false, an error, a dropdown chip and a checkbox are one line.
+- Turned text ([Formatting](formatting.md#alignment-wrapping-rotation)) needs the height of the box it turns to: its
+  widest line's width times the angle's sine, plus its lines' height times its cosine; stacked text needs a line per
+  character; either keeps 8 px, as lines do.
 - A merged cell never makes a row taller, across columns or down rows; its text has the room its rows give.
 - A row is at most 2,000 px tall; text past that is cut off there.
 - A hidden row, and a row a filter leaves out, has no height.
@@ -568,7 +571,7 @@ view gets the header and **Copy** alone.
   offers draws in the tab's font), font size (any whole size from 6 to 400 points, 10 by default; the toolbar's Font Size is a number between − and +, worn in the Sheet's own colours as the Font button beside it is
   that step through 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 36, 48 and 72, then by ten points to 400 (D200 in [Formatting](formatting.md#defaults)), and takes a typed size, kept within the
   limits; folded into More it is a menu of those sizes), horizontal alignment, vertical alignment (top, middle,
-  bottom; middle when unset), wrap (overflow, wrap, clip), a border on each side (thin, medium, thick, dashed or dotted, in a colour) and,
+  bottom; middle when unset), wrap (overflow, wrap, clip), rotation (a whole angle from −90° to 90°, or stacked; [Formatting](formatting.md#alignment-wrapping-rotation)), a border on each side (thin, medium, thick, dashed or dotted, in a colour) and,
   for the Custom number format, its format code.
 - Colours are picked from the one [colour picker](../004-interface-design/colour-picker.md): the toolbar's quick rows draw its swatch and follow its keyboard, and their last button (four coloured dots, as Quick Style's More colours) opens it in full (Theme Palette,
   Standard Colours, Custom Colours).

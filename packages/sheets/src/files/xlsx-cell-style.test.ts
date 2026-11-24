@@ -78,9 +78,45 @@ describe('xlsxCellStyleOf', () => {
   });
 
   it('leaves out what the model cannot hold and says so', () => {
-    expect(xfOf(3)).toEqual({ lost: true });
+    expect(xfOf(3)).toEqual({ style: { ro: 45 }, lost: true });
     expect(xfOf(4)).toEqual({ style: { u: true, fs: 400, va: 'b' }, lost: true });
     expect(xfOf(5)).toEqual({ style: { ha: 'l', va: 'b' }, lost: true });
+  });
+});
+
+// standard-mapping.md "Cell styles in the file": textRotation 1 to 90 up, 91 to 180 down, 255 stacked.
+describe("a style's rotation", () => {
+  const xfOf = sheetOf(
+    '<cellXfs>' +
+      ['0', '1', '90', '91', '135', '180', '255', '181', 'x']
+        .map((v) => `<xf><alignment vertical="center" textRotation="${v}"/></xf>`)
+        .join('') +
+      '<xf><alignment vertical="center" textRotation="0" shrinkToFit="1"/></xf>' +
+      '</cellXfs>',
+  );
+  it('reads an angle up, down and stacked, and leaves out one past them', () => {
+    expect([0, 1, 2, 3, 4, 5, 6].map((i) => xfOf(i).style?.ro)).toEqual([
+      undefined,
+      1,
+      90,
+      -1,
+      -45,
+      -90,
+      'v',
+    ]);
+    expect(xfOf(0).lost).toBe(false);
+    expect(xfOf(6).lost).toBe(false);
+    expect(xfOf(7)).toEqual({ lost: true });
+    expect(xfOf(8)).toEqual({ lost: true });
+    // What else an alignment says is still more than the model holds.
+    expect(xfOf(9)).toEqual({ lost: true });
+  });
+  it('writes an angle up, down and stacked', () => {
+    const parts = new XlsxStyleParts();
+    expect(parts.alignment({ ro: 45 })).toBe('<alignment vertical="center" textRotation="45"/>');
+    expect(parts.alignment({ ro: -1 })).toBe('<alignment vertical="center" textRotation="91"/>');
+    expect(parts.alignment({ ro: -90 })).toBe('<alignment vertical="center" textRotation="180"/>');
+    expect(parts.alignment({ ro: 'v' })).toBe('<alignment vertical="center" textRotation="255"/>');
   });
 });
 

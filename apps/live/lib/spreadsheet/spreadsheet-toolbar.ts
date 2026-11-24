@@ -206,7 +206,7 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
         menu: true,
         built: true,
       }),
-      icon('text-rotation', 'Text Rotation', 'edit', lucideRotateCcw, { menu: true }),
+      icon('text-rotation', 'Text Rotation', 'edit', lucideRotateCcw, { menu: true, built: true }),
     ],
   },
   {

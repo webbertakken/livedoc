@@ -186,6 +186,47 @@ describe('the static render', () => {
     expect(svgPlanSheet(sheet, MODEL, 'light')).not.toContain('<tspan');
   });
 
+  // docs/specs/029-sheets/formatting.md "Alignment, wrapping, rotation": turned text is placed by its alignment as the
+  // box it turns to, and turned about that box's centre.
+  it("turns a cell's text about the centre of its turned box, placed as the cell is aligned", () => {
+    const centreOf = (align: 'l' | 'c' | 'r', valign: 't' | 'm' | 'b', lines?: string[]) => {
+      const svg = svgPlanSheet(
+        sheet,
+        {
+          ...MODEL,
+          rowHeights: [100, 24],
+          cells: [
+            {
+              r: 0,
+              c: 0,
+              text: 'Up',
+              align,
+              valign,
+              turn: { deg: 90, w: 20, h: 40 },
+              ...(lines ? { lines } : {}),
+            },
+          ],
+        },
+        'light',
+      );
+      const m = /transform="rotate\((-?[\d.]+) ([\d.]+) ([\d.]+)\)"/.exec(svg)!;
+      expect(svg).toMatch(/<text[^>]*text-anchor="middle"/);
+      return { deg: Number(m[1]), x: Number(m[2]), y: Number(m[3]), svg };
+    };
+    const left = centreOf('l', 't');
+    const centre = centreOf('c', 'm');
+    const right = centreOf('r', 'b');
+    expect(left.deg).toBe(-90);
+    expect(centre.x - left.x).toBeGreaterThan(0);
+    expect(right.x - centre.x).toBeGreaterThan(0);
+    expect(centre.y - left.y).toBeGreaterThan(0);
+    expect(right.y - centre.y).toBeGreaterThan(0);
+    // Its lines, each centred on the box, 1.3 font sizes apart.
+    const lined = centreOf('l', 'm', ['ab', 'cd']).svg;
+    const ys = [...lined.matchAll(/<tspan x="[\d.]+" y="([\d.]+)">/g)].map((m) => Number(m[1]));
+    expect(ys[1]! - ys[0]!).toBe(17);
+  });
+
   // A browser that snaps each character to whole px draws a line wider than it was measured (sheet.md "Row height").
   it("places measured text by its font's own widths: several lines, and a cell that wraps", () => {
     const textOf = (cell: Partial<SheetRenderModel['cells'][number]> & { text: string }) => {

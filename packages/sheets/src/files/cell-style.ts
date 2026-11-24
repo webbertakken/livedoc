@@ -15,6 +15,7 @@ export const CELL_STYLE_KEYS = [
   'ha',
   'va',
   'wr',
+  'ro',
   'bt',
   'br',
   'bb',

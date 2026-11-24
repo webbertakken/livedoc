@@ -2319,6 +2319,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "nf": {
         "$ref": "#/components/schemas/NumberFormatKind"
       },
+      "ro": {
+        "$ref": "#/components/schemas/Rotation"
+      },
       "st": {
         "const": true,
         "type": "boolean"
@@ -7424,6 +7427,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "i": {},
       "nc": {},
       "nf": {},
+      "ro": {},
       "st": {},
       "u": {},
       "va": {},
@@ -13418,6 +13422,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "none"
     ],
     "type": "string"
+  },
+  "Rotation": {
+    "anyOf": [
+      {
+        "type": "number"
+      },
+      {
+        "const": "v",
+        "type": "string"
+      }
+    ],
+    "description": "A cell's rotation: a whole, non-zero angle in degrees, counterclockwise; or 'v', stacked."
   },
   "RowAt": {
     "additionalProperties": false,

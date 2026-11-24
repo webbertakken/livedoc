@@ -18,6 +18,7 @@ import {
   validFormatValue,
 } from '../format';
 import type { Border, BorderStyle } from '../sheet';
+import { ROTATION_MAX, ROTATION_MIN, type Rotation } from '../text/rotation';
 import { FILE_DEFAULT_FONT, cellStyleKey, type CellStyle } from './cell-style';
 import { pxFromOdfLength } from './line-units';
 
@@ -182,6 +183,26 @@ function readParagraph(p: Properties, read: Read) {
   if (margin !== undefined && pxFromOdfLength(margin) !== 0) read.lost = true;
 }
 
+// An angle's units in degrees (ODF 1.2 §18.3: a bare angle is in degrees).
+const ANGLE_UNITS: Readonly<Record<string, number>> = {
+  '': 1,
+  deg: 1,
+  rad: 180 / Math.PI,
+  grad: 0.9,
+};
+
+/** An ODF angle as a rotation, to the whole degree: none at 0, undefined upside down (90° to 270°, D212) or unread. */
+function rotationOf(value: string): Rotation | null | undefined {
+  const m = /^(-?\d+(?:\.\d+)?)(deg|rad|grad)?$/.exec(value);
+  if (!m) return undefined;
+  const turned = Math.round(Number(m[1]) * ANGLE_UNITS[m[2] ?? '']!);
+  const deg = ((turned % 360) + 360) % 360;
+  if (deg === 0) return null;
+  if (deg <= ROTATION_MAX) return deg;
+  if (deg >= 360 + ROTATION_MIN) return deg - 360;
+  return undefined;
+}
+
 // `automatic`, the absent vertical alignment, is the maker's bottom where a file has a default style (D204).
 function readCell(p: Properties, read: Read, absent: string) {
   const fill = p.get(CELL(FO, 'background-color'));
@@ -197,12 +218,17 @@ function readCell(p: Properties, read: Read, absent: string) {
   if (va) read.style.va = va;
   if (va === undefined) read.lost = true;
   if (p.get(CELL(FO, 'wrap-option')) === 'wrap') read.style.wr = 'w';
+  const ro =
+    p.get(CELL(STYLE, 'direction')) === 'ttb'
+      ? 'v'
+      : rotationOf(p.get(CELL(STYLE, 'rotation-angle')) ?? '0');
+  if (ro) read.style.ro = ro;
+  if (ro === undefined) read.lost = true;
   const said = (local: string, plain: readonly string[]) => {
     const value = p.get(CELL(STYLE, local));
     return value !== undefined && !plain.includes(value);
   };
   if (
-    said('rotation-angle', ['0', '0deg']) ||
     said('shrink-to-fit', ['false']) ||
     said('diagonal-bl-tr', ['none']) ||
     said('diagonal-tl-br', ['none']) ||
@@ -311,6 +337,12 @@ export function odsStyleProperties(style: CellStyle | undefined): string {
   }
   if (style.va) cell.push(`style:vertical-align="${WRITE_VERTICAL[style.va]}"`);
   if (style.wr === 'w') cell.push('fo:wrap-option="wrap"');
+  // Counterclockwise, from 0 to 359, as LibreOffice writes it (315 is −45°); stacked text runs top to bottom.
+  if (style.ro === 'v') cell.push('style:direction="ttb"');
+  else if (style.ro)
+    cell.push(
+      `style:rotation-angle="${style.ro < 0 ? 360 + style.ro : style.ro}" style:rotation-align="none"`,
+    );
   const text: string[] = [];
   if (style.b) text.push('fo:font-weight="bold"');
   if (style.i) text.push('fo:font-style="italic"');

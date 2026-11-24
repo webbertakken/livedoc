@@ -44,6 +44,9 @@ export type SheetRenderModel = {
     font?: string;
     size?: number;
     wrap?: 'o' | 'w' | 'c';
+    // Turned text (docs/specs/029-sheets/formatting.md "Alignment, wrapping, rotation"): its angle, counterclockwise,
+    // and the box it turns to, placed by the cell's alignment.
+    turn?: { deg: number; w: number; h: number };
     rowSpan?: number;
     colSpan?: number;
     borders?: { t?: RenderBorder; r?: RenderBorder; b?: RenderBorder; l?: RenderBorder };
@@ -200,21 +203,40 @@ export function svgPlanSheet(
     if (cell.arrow) out += chevron(cx + cw - 10, cy + ch / 2, p.muted);
     if (cell.text) {
       const size = cell.size ? Math.round((cell.size * 4) / 3) : 13;
-      const tx =
-        textX ??
-        (cell.align === 'r'
-          ? cx + cw - CELL_PAD - (cell.arrow ? CHIP_ARROW : 0)
+      // Turned text is placed as the box it turns to, by the cell's alignment, and turned about that box's centre.
+      const turn = textX === null ? cell.turn : undefined;
+      const turnX = turn
+        ? cell.align === 'r'
+          ? cx + cw - CELL_PAD - turn.w / 2
           : cell.align === 'c'
             ? cx + cw / 2
-            : cx + CELL_PAD);
-      const ty =
-        cell.valign === 't'
+            : cx + CELL_PAD + turn.w / 2
+        : 0;
+      const turnY = turn
+        ? cell.valign === 't'
+          ? cy + CELL_PAD + turn.h / 2
+          : cell.valign === 'b'
+            ? cy + ch - CELL_PAD - turn.h / 2
+            : cy + ch / 2
+        : 0;
+      const tx = turn
+        ? turnX
+        : (textX ??
+          (cell.align === 'r'
+            ? cx + cw - CELL_PAD - (cell.arrow ? CHIP_ARROW : 0)
+            : cell.align === 'c'
+              ? cx + cw / 2
+              : cx + CELL_PAD));
+      const ty = turn
+        ? turnY + size / 3
+        : cell.valign === 't'
           ? cy + size + 2
           : cell.valign === 'm'
             ? cy + ch / 2 + size / 3
             : cy + ch - 6;
-      const anchor =
-        textX !== null
+      const anchor = turn
+        ? ' text-anchor="middle"'
+        : textX !== null
           ? ''
           : cell.align === 'r'
             ? ' text-anchor="end"'
@@ -233,7 +255,8 @@ export function svgPlanSheet(
       const lines = textX === null && cell.lines && cell.lines.length > 1 ? cell.lines : null;
       const lineH = Math.round(size * LINE_HEIGHT_EM);
       const rise = lines ? (lines.length - 1) * lineH : 0;
-      const firstY = cell.valign === 't' ? ty : cell.valign === 'm' ? ty - rise / 2 : ty - rise;
+      const firstY =
+        cell.valign === 't' && !turn ? ty : cell.valign === 'm' || turn ? ty - rise / 2 : ty - rise;
       const body = lines
         ? lines
             .map(
@@ -246,13 +269,17 @@ export function svgPlanSheet(
       // line wider than the room it was broken for.
       const precise = lines || cell.wrap === 'w' ? ' text-rendering="geometricPrecision"' : '';
       const figures = cell.numeric ? ' font-variant-numeric="tabular-nums"' : '';
-      const text = `<text clip-path="url(#${clip})" x="${r2(tx)}" y="${r2(ty)}" font-size="${size}"${face}${cell.bold ? ' font-weight="700"' : ''}${
+      const turned = turn ? ` transform="rotate(${r2(-turn.deg)} ${r2(turnX)} ${r2(turnY)})"` : '';
+      // A turned text's clip stays the cell's: on a group round it, which the turn does not move.
+      const clipped = turn ? '' : ` clip-path="url(#${clip})"`;
+      const text = `<text${clipped}${turned} x="${r2(tx)}" y="${r2(ty)}" font-size="${size}"${face}${cell.bold ? ' font-weight="700"' : ''}${
         cell.italic ? ' font-style="italic"' : ''
       }${deco ? ` text-decoration="${deco}"` : ''} fill="${ink}"${anchor}${precise}${figures}>${body}</text>`;
       // A link stays one in an SVG export: its target was allow-listed (safeHyperlink), and is escaped like all text.
-      out += cell.link
+      const drawn = cell.link
         ? `<a href="${xmlEscape(cell.link)}" target="_blank" rel="noopener noreferrer">${text}</a>`
         : text;
+      out += turn ? `<g clip-path="url(#${clip})">${drawn}</g>` : drawn;
     }
     const b = cell.borders;
     if (b?.t) out += line(cx, cy, cx + cw, cy, b.t);
