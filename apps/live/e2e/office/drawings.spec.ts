@@ -40,7 +40,7 @@ test('a new drawing is drawn in the canvas and placed in the writing', async ({
   // Its one listed tab is the text document: no tab strip, drawing or not.
   await expect(page.getByRole('button', { name: /Drawing 1/ })).toHaveCount(0);
   // Drawn live from its tab over its PNG (objects.md "Drawn").
-  await expect(picture.locator('[data-drawing-svg]')).toHaveCount(1);
+  await expect(picture.locator('[data-drawing-svg] > svg > g')).toHaveCount(1);
   await page.waitForTimeout(300);
   await page.screenshot({ path: test.info().outputPath('drawing-placed.png') });
 
@@ -61,7 +61,8 @@ test('a new drawing is drawn in the canvas and placed in the writing', async ({
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
   await expect(picture).toHaveCount(1);
   await expect(picture).not.toHaveAttribute('data-media', firstMedia ?? '');
-  await expect(picture.locator('[data-drawing-svg]')).toHaveCount(1);
+  // Both squares drawn live once the redraw has caught up (each element is a group of the drawing).
+  await expect(picture.locator('[data-drawing-svg] > svg > g')).toHaveCount(2);
   await page.waitForTimeout(300);
   await page.screenshot({ path: test.info().outputPath('drawing-again.png') });
   expectNoPageErrors(pageErrors);
