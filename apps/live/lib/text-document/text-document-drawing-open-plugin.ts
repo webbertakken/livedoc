@@ -6,10 +6,21 @@ import { NodeSelection, Plugin } from 'prosemirror-state';
 import { PICTURE_BAR_CLASS } from './text-document-picture-drawing-layer';
 import { drawingOfPicture } from './text-document-drawing-pictures';
 
-/** The editor's drawing tabs: whether one is there to open (shared with this person), and opening it. */
+/** The editor's drawing tabs (objects.md "Drawings"), as a text document works them. */
 export type DrawingTabs = {
+  /** Whether one is there to open (here, and shared with this person). */
   readonly opens: (drawingTabId: string) => boolean;
   readonly open: (drawingTabId: string) => void;
+  /** The text document tab it belongs to, or null when it is no drawing tab here. */
+  readonly drawingOf: (drawingTabId: string) => string | null;
+  /** A new drawing tab of this text document tab copied from it, unopened: its id, or null when none was made. */
+  readonly copy: (drawingTabId: string, textDocumentTabId: string) => string | null;
+  /** A text document tab's drawing tabs. */
+  readonly ids: (textDocumentTabId: string) => readonly string[];
+  /** Whether anyone else is in it. */
+  readonly someoneIn: (drawingTabId: string) => boolean;
+  /** Drops drawing tabs in one change of the document's tabs. */
+  readonly remove: (drawingTabIds: readonly string[]) => void;
 };
 
 /** Opens a drawing: its tab, and where its picture is (its position in the writing). */

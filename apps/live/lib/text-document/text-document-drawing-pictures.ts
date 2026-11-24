@@ -50,3 +50,13 @@ export const refreshDrawingPictures =
     dispatch?.(tr);
     return true;
   };
+
+/** Points the picture at `pos` from one drawing tab to another (its own copy); false where it names another. */
+export const repointDrawingPicture =
+  (pos: number, from: string, to: string): Command =>
+  (state, dispatch) => {
+    const node = state.doc.nodeAt(pos);
+    if (!node || drawingOfPicture(node) !== from) return false;
+    dispatch?.(state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, drawing: to }));
+    return true;
+  };

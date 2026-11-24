@@ -2777,6 +2777,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   const {
     addTab,
     addDrawingTab,
+    copyDrawingTab,
+    removeDrawingTabs,
     importIntoActiveTab,
     importTextIntoActiveTab,
     importSceneIntoActiveTab,
@@ -4310,6 +4312,10 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     getViewportCenter,
     addTab,
     addDrawingTab,
+    copyDrawingTab,
+    removeDrawingTabs,
+    // Who is in which tab, by participant id: a text document keeps a drawing someone is in (objects.md "Deleting").
+    remoteTabFocus,
     addText,
     aiCapable,
     anyWelcomeOpen,

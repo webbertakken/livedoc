@@ -183,6 +183,39 @@ export function useTabActions(deps: TabActionsDeps) {
     return tab.id;
   };
 
+  // A drawing's own copy (docs/specs/034-text-documents/objects.md "One drawing, one picture"): a new drawing tab of the
+  // text document tab, named as a new drawing is, the source's elements copied with fresh ids, after the source; not
+  // opened. Its id, or null when this session may not add tabs or the source is not here and loaded.
+  const copyDrawingTab = (sourceId: string, textDocumentTabId: string): string | null => {
+    const source = tabs.find((t) => t.id === sourceId);
+    if (!deps.canEditStructure || !source || !isTabLoaded(sourceId)) return null;
+    const reminted = remintTabElements({
+      ...source,
+      elements: source.elements.map((el) => ({ ...el })),
+    });
+    const copy: Tab = {
+      ...reminted,
+      id: crypto.randomUUID(),
+      name: nextDrawingName(tabs, textDocumentTabId),
+      drawingOf: textDocumentTabId,
+    };
+    commitTabs((ts) => {
+      const at = ts.findIndex((t) => t.id === sourceId);
+      return at < 0 ? [...ts, copy] : [...ts.slice(0, at + 1), copy, ...ts.slice(at + 1)];
+    });
+    markTabLoaded(copy.id);
+    debugLog('[tabs] drawing copied', { from: sourceId, to: copy.id, textDocumentTabId });
+    return copy.id;
+  };
+
+  // Drawing tabs no picture names any more (objects.md "Deleting"): dropped in one change of the document's tabs.
+  const removeDrawingTabs = (ids: readonly string[]) => {
+    const gone = new Set(ids.filter((id) => tabs.some((t) => t.id === id && t.drawingOf)));
+    if (!deps.canEditStructure || gone.size === 0) return;
+    commitTabs((ts) => ts.filter((t) => !gone.has(t.id)));
+    debugLog('[tabs] drawing tabs removed', { count: gone.size });
+  };
+
   const addTab = (choice: AddTabChoice = 'tab') => {
     // A session that cannot change the document's tabs adds none, whichever row asked.
     if (!deps.canEditStructure) return;
@@ -508,6 +541,8 @@ export function useTabActions(deps: TabActionsDeps) {
   return {
     addTab,
     addDrawingTab,
+    copyDrawingTab,
+    removeDrawingTabs,
     importIntoActiveTab: guardedImport(importIntoActiveTab),
     importTextIntoActiveTab: guardedImport(importTextIntoActiveTab),
     importSceneIntoActiveTab,

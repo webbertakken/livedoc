@@ -5,6 +5,7 @@ import {
   listedTabIdFor,
   listedTabs,
   nextDrawingName,
+  presenceOnListedTabs,
 } from './drawing-tabs';
 
 const text = { id: 'doc', name: 'Notes', kind: 'text-document' as const };
@@ -58,5 +59,41 @@ describe('nextDrawingName', () => {
       { id: 'd', name: 'Sketch', drawingOf: 'doc' },
     ];
     expect(nextDrawingName(tabs, 'doc')).toBe('Drawing 4');
+  });
+});
+
+// objects.md "Presence": someone in a drawing tab shows as in its text document tab.
+describe('presenceOnListedTabs', () => {
+  const tabs = [
+    { id: 'w' },
+    { id: 'd1', drawingOf: 'w' },
+    { id: 'gone', drawingOf: 'nowhere' },
+    { id: 'c' },
+  ];
+  const ann = { id: 'ann' };
+  const bo = { id: 'bo' };
+  const cy = { id: 'cy' };
+
+  it("puts a drawing tab's people in its text document tab, once each", () => {
+    const byTab = new Map([
+      ['d1', [ann, bo]],
+      ['w', [bo]],
+      ['c', [cy]],
+    ]);
+    expect([...presenceOnListedTabs(byTab, tabs)]).toEqual([
+      ['w', [ann, bo]],
+      ['c', [cy]],
+    ]);
+  });
+
+  it('leaves a drawing tab whose text document tab is gone, and a tab it does not know', () => {
+    const byTab = new Map([
+      ['gone', [ann]],
+      ['stray', [bo]],
+    ]);
+    expect([...presenceOnListedTabs(byTab, tabs)]).toEqual([
+      ['gone', [ann]],
+      ['stray', [bo]],
+    ]);
   });
 });

@@ -140,6 +140,7 @@ import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
 import { useTextDocumentDrawings } from './useTextDocumentDrawings';
+import { useTextDocumentDrawingOrphans } from './useTextDocumentDrawingOrphans';
 import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
 import {
   drawingBarKeys,
@@ -927,6 +928,14 @@ export function TextDocumentSurface({
   });
   useLayoutEffect(() => {
     openDrawingAt.current = drawings.open;
+  });
+  // Drawings no picture names, removed once its writing has loaded (objects.md "Deleting").
+  useTextDocumentDrawingOrphans({
+    ready: state === 'ready',
+    canEdit: bodyWrites,
+    tabId: scope.tabId,
+    liveDoc,
+    drawingTabs,
   });
   const drawingPictures = useTextDocumentDrawingPictures({
     store: drawingHosts,

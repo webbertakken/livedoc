@@ -40,3 +40,20 @@ export function nextDrawingName(
     .map((t) => Number(DRAWING_NAME.exec(t.name.trim())?.[1] ?? 0));
   return `Drawing ${Math.max(0, ...numbers) + 1}`;
 }
+
+/**
+ * People by the tab they are on, as the document's lists show tabs (objects.md "Presence"): someone in a drawing tab is
+ * in its text document tab (once each), the drawing tab's entry dropped; one whose text document tab is gone stays put.
+ */
+export function presenceOnListedTabs<P extends { id: string }>(
+  byTab: ReadonlyMap<string, readonly P[]>,
+  tabs: readonly TabLike[],
+): Map<string, P[]> {
+  const out = new Map<string, P[]>();
+  for (const [tabId, people] of byTab) {
+    const listed = listedTabIdFor(tabs, tabId) ?? tabId;
+    const there = out.get(listed) ?? [];
+    out.set(listed, [...there, ...people.filter((p) => !there.some((q) => q.id === p.id))]);
+  }
+  return out;
+}
