@@ -34,9 +34,9 @@ test('a heading’s link is copied, linked to, gone to and kept in the file', as
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   const id = decodeURIComponent(copied.split('#heading=')[1]!);
 
-  // A link to it, from the link editor's headings.
-  await body.focus();
-  await page.keyboard.press('Control+Home');
+  // A link to it, from the link editor's headings, after "See" (the menu gone, the caret put there by a press).
+  await expect(page.getByRole('menuitem', { name: 'Copy heading link' })).toBeHidden();
+  await body.locator('p').first().click();
   await page.keyboard.press('End');
   await page.keyboard.press('Control+k');
   const editor = page.locator('[data-text-document-link-editor]');
@@ -46,8 +46,9 @@ test('a heading’s link is copied, linked to, gone to and kept in the file', as
   await page.screenshot({ path: test.info().outputPath('heading-links.png') });
   await page.keyboard.press('Enter');
   await page.keyboard.press('Enter');
-  const link = body.locator('a').first();
+  const link = body.locator('p').first().locator('a');
   await expect(link).toHaveText('Chapter one');
+  await expect(body.locator('p', { hasText: /^Chapter one$/ })).toHaveCount(1);
 
   // Alt+Enter on it goes to the heading, far down the page.
   await expect(page.locator('[data-text-document-link-card]').getByRole('link')).toHaveText(
