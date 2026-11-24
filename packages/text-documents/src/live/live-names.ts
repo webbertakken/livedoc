@@ -119,3 +119,5 @@ export const LISTS_MAP = 'lists';
 export const SOURCE_MAP = 'source';
 /** The pictures' media by key, each `{ mediaType, bytes, part }` (live-editing-and-storage.md "The layout"). */
 export const MEDIA_MAP = 'media';
+/** The document tabs by id, each `{ name, emoji, depth, order }` (live-editing-and-storage.md "The layout"). */
+export const TABS_MAP = 'tabs';

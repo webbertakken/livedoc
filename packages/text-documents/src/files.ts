@@ -9,6 +9,7 @@ import {
 } from '@livedoc/office-packages';
 import type { Block, Inline } from './model/blocks';
 import { TextDocument } from './model/text-document';
+import { DocumentTabs } from './model/document-tabs';
 import { KEPT_CONTENT_MAX_BYTES, TEXT_DOCUMENT_MAX_CHARS } from './limits';
 import { readOdfFile } from './odf/odf-file';
 import { writeOdf } from './odf/odf-write';
@@ -59,10 +60,10 @@ function withinKeptLimit(
       });
       return [inlines.length === block.inlines.length ? block : { ...block, inlines }];
     });
-  const body = within(document.body);
+  const held = DocumentTabs.mapBodies(document, within);
   if (dropped === 0) return document;
   report.drop('kept-limit', 'kept content', dropped);
-  return { ...document, body };
+  return held;
 }
 
 /** `maxObjects`: the most pictures a text document holds (objects.md "In the formats"); past it, the rest stay kept. */

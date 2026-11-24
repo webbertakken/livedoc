@@ -57,6 +57,7 @@ import { Watermarks } from '../model/watermark';
 import { odfWatermarkStyles } from './odf-watermark';
 import { odfTableXml, type OdfTableHost } from './odf-tables';
 import { Blocks } from '../model/tables';
+import { DocumentTabs, type DocumentTab } from '../model/document-tabs';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -437,9 +438,24 @@ class OdfWriter {
   }
 }
 
-/** The body as `office:text`'s content. */
-function bodyXml(w: OdfWriter): string {
-  return contentXml(w, w.document.body, false);
+/**
+ * The body as `office:text`'s content: with document tabs, each a top-level `text:section` carrying its id, name, depth
+ * and emoji, a tab after one that turned the page starting on the first section's master page (standard-mapping.md
+ * "Document tabs").
+ */
+function bodyXml(w: OdfWriter, tabs: readonly DocumentTab[] | undefined): string {
+  if (!tabs) return contentXml(w, w.document.body, false);
+  const names = new Map<string, number>();
+  return tabs
+    .map((tab, k) => {
+      const seen = (names.get(tab.name) ?? 0) + 1;
+      names.set(tab.name, seen);
+      const name = seen === 1 ? tab.name : `${tab.name} ${seen}`;
+      const open = `<text:section${attr('text:name', name)}${attr('livedoc:tab-id', tab.id)}${attr('livedoc:tab-name', tab.name)}${attr('livedoc:tab-depth', String(tab.depth))}${attr('livedoc:tab-emoji', tab.emoji)}>`;
+      const later = k === 0 ? undefined : { restore: DocumentTabs.turnsPage(tabs[k - 1]!) };
+      return `${open}${contentXml(w, tab.body, false, later)}</text:section>`;
+    })
+    .join('\n');
 }
 
 // Paragraph properties with the number a page starts at, as `style:page-number`.
@@ -460,14 +476,28 @@ function storyContentXml(w: OdfWriter, blocks: readonly Block[]): string {
   return xml;
 }
 
-/** Blocks as `office:text`'s content, or, for a header (`story`), without master pages. */
-function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): string {
+/**
+ * Blocks as `office:text`'s content, or, for a header (`story`), without master pages. A document tab after the first
+ * (`later`) starts on no page of the document's own, unless it must turn the page setup back (`restore`).
+ */
+function contentXml(
+  w: OdfWriter,
+  blocks: readonly Block[],
+  story: boolean,
+  later?: { restore: boolean },
+): string {
   const doc = w.document;
   const out: string[] = [];
   const firstMaster = story ? undefined : w.master(doc.section);
-  let pendingMaster: string | undefined = firstMaster === 'Standard' ? undefined : firstMaster;
-  let pendingStart = story ? undefined : doc.section.numberStart;
-  let isFirstParagraph = !story;
+  let pendingMaster: string | undefined = later
+    ? later.restore
+      ? firstMaster
+      : undefined
+    : firstMaster === 'Standard'
+      ? undefined
+      : firstMaster;
+  let pendingStart = story || later ? undefined : doc.section.numberStart;
+  let isFirstParagraph = !story && !later;
   // Line numbers (page-layout.md "Line numbers"): the section each paragraph is in, and whether it is its first.
   const anyNumbered =
     !story && [doc.section, ...doc.body].some((b) => (b as Section).lineNumbers !== undefined);
@@ -706,10 +736,14 @@ export type OdfWritten = {
   flat: string;
 };
 
-function writeParts(document: TextDocument, generator: string, asFlat: boolean): OdfWritten {
+function writeParts(tabbed: TextDocument, generator: string, asFlat: boolean): OdfWritten {
+  // Whole-document walks (notes, sections, tables) read every tab's blocks, in the outline's order.
+  const tabs = DocumentTabs.isPlain(tabbed) ? undefined : DocumentTabs.all(tabbed);
+  const { tabs: _, ...rest } = tabbed;
+  const document: TextDocument = tabs ? { ...rest, body: DocumentTabs.blocks(tabbed) } : tabbed;
   const w = new OdfWriter(document, asFlat);
   w.storyXml = (blocks) => storyContentXml(w, blocks);
-  const text = bodyXml(w);
+  const text = bodyXml(w, tabs);
   const sections = [
     document.section,
     ...document.body.filter((b): b is SectionBreak => b.type === 'section'),

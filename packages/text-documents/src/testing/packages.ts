@@ -4,6 +4,7 @@ import { writeTestZip } from '@livedoc/office-packages/testing';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+const LIVEDOC = 'urn:livedoc:xmlns:text:1.0';
 const RELS = (rels: string) =>
   `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels}</Relationships>`;
 
@@ -31,7 +32,7 @@ export function docx(
     },
     {
       name: 'word/document.xml',
-      data: `<?xml version="1.0"?><w:document xmlns:w="${W}" xmlns:r="${R}"><w:body>${body}</w:body></w:document>`,
+      data: `<?xml version="1.0"?><w:document xmlns:w="${W}" xmlns:r="${R}" xmlns:livedoc="${LIVEDOC}"><w:body>${body}</w:body></w:document>`,
     },
     ...(rels ? [{ name: 'word/_rels/document.xml.rels', data: RELS(rels) }] : []),
     ...entries,
@@ -39,7 +40,7 @@ export function docx(
 }
 
 const ODF =
-  'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"';
+  'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:livedoc="urn:livedoc:xmlns:text:1.0"';
 
 /** An `.odt` whose `office:text` holds `body`, with extra entries. */
 export function odt(

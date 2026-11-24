@@ -12,8 +12,8 @@ branched, copied, versioned, searched and listed. The research is
 - The text document is a **sequence CRDT**, Yjs: the body of each document tab a tree of paragraphs and tables holding
   text with formatting attributes; styles, page setups, lists, comments and suggestions in maps beside it. ProseMirror
   is a view bound to it.
-- The first document tab's body is the root XML fragment `body`, in y-prosemirror's layout (a `paragraph` element
-  holding text) (default). A root type exists in every replica, so no two people ever make it twice.
+- The first document tab's (`t.0`) body is the root XML fragment `body`, in y-prosemirror's layout (a `paragraph`
+  element holding text) (default). A root type exists in every replica, so no two people ever make it twice.
 - **The seed**: every state is read as one empty paragraph, written by client 0, merged with what is stored; the seed
   is the same bytes everywhere, so it merges with itself, and a surface binds only after it has loaded the state, so
   no surface ever invents a first paragraph.
@@ -55,6 +55,11 @@ api, agents) reads and writes one shape (default):
   `styles` and `lists` are root maps by id, so two people changing two styles never collide; `source` holds what a
   file brought around the model (`json`) and its package entries by name (`entries`, as bytes), written once when the
   file is opened and replaced only by a conversion.
+- **Document tabs** ([Text document](text-document.md#what-a-document-tab-is)): the root map `tabs` holds each document
+  tab by id as a whole value, `{ name, emoji, depth, order }`, the outline's order by `order` (then id); the tab
+  `t.0`'s body is the root fragment `body`, any other's the root fragment `tab:<id>` (default). A map without entries
+  is one tab, `t.0`, Tab 1. Two people adding tabs at once both keep theirs; changing one tab at once, the later
+  write wins; typing in a tab's body merges by character as in the first. A deleted tab's fragment is emptied.
 - **The format is the tab's**, never in the state: reading the state as the model takes the tab's `format`.
 - **Both ways**: a model written as a state reads back as the same model. A state without the maps beside the body
   (a new text document's) reads them as a blank text document of the tab's format has them, and a paragraph without a

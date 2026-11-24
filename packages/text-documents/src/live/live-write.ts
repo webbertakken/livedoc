@@ -32,6 +32,8 @@ import {
 import { writeSource } from './live-source';
 import { StoryWriter, type LiveHeaders } from './live-stories';
 import { BODY_FRAGMENT } from './live-root';
+import { writeLiveTabs } from './live-tabs';
+import { DocumentTabs, FIRST_DOCUMENT_TAB_ID } from '../model/document-tabs';
 import { tableElement } from './live-tables';
 
 /** A value as the state holds it: plain JSON, undefined fields left out. */
@@ -184,11 +186,16 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
   const media = doc.getMap<unknown>(MEDIA_MAP);
   doc.transact(() => {
     const stories: StoryWriter = new StoryWriter(doc, (block) => blockNode(block, stories));
-    body.delete(0, body.length);
-    body.insert(
-      0,
-      document.body.map((block) => blockNode(block, stories)),
-    );
+    // Each document tab's body in its own fragment; one plain tab's in `body` alone (standard-mapping.md "Document tabs").
+    const tabs = DocumentTabs.isPlain(document) ? undefined : DocumentTabs.all(document);
+    writeLiveTabs(doc, tabs, (blocks) => blocks.map((block) => blockNode(block, stories)));
+    if (!tabs) {
+      body.delete(0, body.length);
+      body.insert(
+        0,
+        document.body.map((block) => blockNode(block, stories)),
+      );
+    } else if (!tabs.some((t) => t.id === FIRST_DOCUMENT_TAB_ID)) body.delete(0, body.length);
     meta.set('metadata', plain(document.metadata));
     meta.set('defaults', plain(document.defaults));
     const { headers, ...section } = document.section;

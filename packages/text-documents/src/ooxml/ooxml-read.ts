@@ -51,6 +51,29 @@ import type { Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
 import { Bookmarks, type Bookmark } from '../model/bookmarks';
 import { Contents, type TableOfContents } from '../model/contents';
+import { DocumentTabs, type DocumentTabStart } from '../model/document-tabs';
+
+/** What a `w:sectPr` says of the document tab it ends, when it ends one. */
+function tabOf(sectPr: XmlElement): DocumentTabStart['head'] | undefined {
+  const id = attributeOf(sectPr, LIVEDOC_NS, 'tab-id');
+  if (id === undefined) return undefined;
+  return {
+    id,
+    name: attributeOf(sectPr, LIVEDOC_NS, 'tab-name'),
+    emoji: attributeOf(sectPr, LIVEDOC_NS, 'tab-emoji'),
+    depth: attributeOf(sectPr, LIVEDOC_NS, 'tab-depth'),
+  };
+}
+
+/** Each tab's start from where the tabs end: the writing after the last end is the last tab, the body's own. */
+function tabStartsOf(
+  ends: readonly DocumentTabStart[],
+  last: DocumentTabStart['head'] | undefined,
+): DocumentTabStart[] {
+  if (ends.length === 0 && !last) return [];
+  const starts = ends.map((end, k) => ({ at: k === 0 ? 0 : ends[k - 1]!.at, head: end.head }));
+  return [...starts, { at: ends.at(-1)?.at ?? 0, head: last ?? {} }];
+}
 import { firstMathRunProps, M_NS, readOmml } from './ooxml-equations';
 import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import { FootnotesReader, markProps } from './ooxml-notes';
@@ -517,6 +540,8 @@ class OoxmlReader {
     };
     const blocks: Block[] = [];
     let sectionAt = 0;
+    // Where each document tab ends, its section break saying which (standard-mapping.md "Document tabs").
+    const tabEnds: DocumentTabStart[] = [];
     // A TOC field opened in a paragraph of the body, standing alone: the paragraphs to the one closing it.
     let open: { instruction: string; paragraphs: XmlElement[]; depth: number } | undefined;
     for (const e of elements) {
@@ -549,10 +574,13 @@ class OoxmlReader {
         continue;
       }
       if (isW(e, 'p')) {
-        const ends = childElement(childElement(e, W_NS, 'pPr') ?? e, W_NS, 'sectPr') !== undefined;
+        const sectPr = childElement(childElement(e, W_NS, 'pPr') ?? e, W_NS, 'sectPr');
+        const ends = sectPr !== undefined;
         // A paragraph holding a `w:sectPr` ends the section that sectPr describes; the next one starts after it.
         const next = ends ? sections[sectionAt + 1] : undefined;
         blocks.push(this.paragraph(e, ends ? sections[sectionAt] : undefined));
+        const tab = sectPr && tabOf(sectPr);
+        if (tab) tabEnds.push({ at: blocks.length, head: tab });
         if (ends) {
           sectionAt += 1;
           if (next) blocks.push({ type: 'section', ...next });
@@ -638,7 +666,10 @@ class OoxmlReader {
       ...compact({ media: this.taken.held() }),
       source,
     };
-    return adoptOoxmlMedia(document, this.taken);
+    return adoptOoxmlMedia(
+      DocumentTabs.split(document, tabStartsOf(tabEnds, finalSectPr && tabOf(finalSectPr))),
+      this.taken,
+    );
   }
 
   paragraph(p: XmlElement, endsWith: Section | undefined): Paragraph {

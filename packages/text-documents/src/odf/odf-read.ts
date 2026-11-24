@@ -73,6 +73,10 @@ import {
   type ParagraphLines,
 } from './odf-lines';
 import { readOdfTable } from './odf-tables';
+import { DocumentTabs, type DocumentTabStart } from '../model/document-tabs';
+
+/** What a document tab's `text:section` says in the `livedoc:` extension. */
+const said = (e: XmlElement, name: string): string | undefined => attributeOf(e, NS.livedoc, name);
 import { keptShownText } from '../live/kept-presence';
 
 export type OdfParts = {
@@ -476,18 +480,21 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
       masterStyles,
     ]),
   };
-  return {
-    format: 'odf',
-    metadata: parts.meta ? readOdfMeta(parts.meta) : {},
-    defaults,
-    styles,
-    lists: reader.lists,
-    section: body.section,
-    ...(pagelessIn(settingsRoot) ? { pageless: true as const } : {}),
-    body: body.blocks,
-    ...compact({ media: reader.taken.held() }),
-    source,
-  };
+  return DocumentTabs.split(
+    {
+      format: 'odf',
+      metadata: parts.meta ? readOdfMeta(parts.meta) : {},
+      defaults,
+      styles,
+      lists: reader.lists,
+      section: body.section,
+      ...(pagelessIn(settingsRoot) ? { pageless: true as const } : {}),
+      body: body.blocks,
+      ...compact({ media: reader.taken.held() }),
+      source,
+    },
+    body.tabStarts,
+  );
 }
 
 /** Bindings sorted by prefix, without `xml` and those every written part declares anyway, so the same declarations read as the same value. */
@@ -504,6 +511,8 @@ const KEPT_INLINE_SKIP = new Set(['soft-page-break']);
 
 class BodyReader {
   readonly blocks: Block[] = [];
+  /** Where each document tab starts among the blocks (standard-mapping.md "Document tabs"). */
+  readonly tabStarts: DocumentTabStart[] = [];
   section: Section | undefined;
   /** The first section's start at (page-layout.md "Page numbers"), from the body's first paragraph. */
   firstStart: number | undefined;
@@ -537,12 +546,12 @@ class BodyReader {
     this.defaults = defaults;
   }
 
-  read(): { blocks: Block[]; section: Section } {
+  read(): { blocks: Block[]; section: Section; tabStarts: readonly DocumentTabStart[] } {
     const body = childElement(this.r.parts.content.root, NS.office, 'body');
     const text = body && childElement(body, NS.office, 'text');
     if (text) this.container(text);
     // A region's end that nothing follows ends no section (page-layout.md "Breaks").
-    while (isRegionEnd(this.blocks[this.blocks.length - 1])) this.blocks.pop();
+    while (isRegionEnd(this.blocks[this.blocks.length - 1])) this.popTail();
     const normal = Styles.idOfRole(this.styles, 'normal') ?? 'Standard';
     if (!this.blocks.some((b) => b.type === 'paragraph'))
       this.blocks.push({ type: 'paragraph', style: normal, props: {}, inlines: [] });
@@ -552,7 +561,10 @@ class BodyReader {
         start: 'next-page',
         setup: this.#setup,
       };
-    return this.linked(this.numbered({ ...first, ...compact({ numberStart: this.firstStart }) }));
+    const read = this.linked(
+      this.numbered({ ...first, ...compact({ numberStart: this.firstStart }) }),
+    );
+    return { ...read, tabStarts: this.tabStarts };
   }
 
   /** Each section's line numbers, from what its first paragraph says (page-layout.md "Line numbers"). */
@@ -600,10 +612,35 @@ class BodyReader {
     return { blocks: this.blocks, section: withHeaders(first, own[0]) };
   }
 
+  /** The last block taken away; a tab that started after it starts where it stood. */
+  popTail(): void {
+    this.blocks.pop();
+    const length = this.blocks.length;
+    this.tabStarts.forEach((start, i) => {
+      if (start.at > length) this.tabStarts[i] = { ...start, at: length };
+    });
+  }
+
+  /** A document tab: a `text:section` at the body's top level carrying `livedoc:tab-id`. */
+  tab(e: XmlElement): void {
+    this.tabStarts.push({
+      at: this.blocks.length,
+      head: {
+        id: said(e, 'tab-id'),
+        name: said(e, 'tab-name'),
+        emoji: said(e, 'tab-emoji'),
+        depth: said(e, 'tab-depth'),
+      },
+    });
+    this.container(e);
+  }
+
   container(parent: XmlElement): void {
+    const top = !this.story && !this.cell && is(parent, NS.office, 'text');
     for (const e of childElements(parent)) {
       if (is(e, NS.text, 'p') || is(e, NS.text, 'h')) this.paragraph(e, undefined);
       else if (is(e, NS.text, 'list')) this.list(e, 0, undefined);
+      else if (top && is(e, NS.text, 'section') && said(e, 'tab-id') !== undefined) this.tab(e);
       else if (is(e, NS.text, 'section') && !this.cell) this.region(e);
       else if (is(e, NS.table, 'table')) this.table(e);
       else if (is(e, NS.text, 'table-of-content') && !this.story) this.contents(e);
@@ -775,7 +812,7 @@ class BodyReader {
       if (isFirst && !this.section && section) this.section = section;
       else if (section) {
         // A region's end straight before a new section is that section's start.
-        if (isRegionEnd(this.blocks[this.blocks.length - 1])) this.blocks.pop();
+        if (isRegionEnd(this.blocks[this.blocks.length - 1])) this.popTail();
         this.blocks.push({
           type: 'section',
           ...section,

@@ -50,7 +50,8 @@ are no others. A text document only changes format when a person converts it ([C
 
 The model is plain values in `@livedoc/text-documents`, each a namespace of pure functions over immutable data.
 
-- **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, its watermark
+- **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, its document tabs
+  ([Document tabs](#document-tabs)), its watermark
   ([Watermark](page-layout.md#watermark)), its pictures' media ([Objects](objects.md#the-model)) and its kept parts.
 - **Body**: blocks in order, each a **paragraph**, a **table**, a **section break**, a **table of contents** or a
   **kept block**.
@@ -117,6 +118,28 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
   named `toc N` as Word's own; based on Normal text, indented 0.5 cm a level below the first `(default)`. Each
   entry with a page number holds its own right tab stop at the text width, dotted in Dotted `(default)`.
 
+## Document tabs
+
+[Document tabs](text-document.md#tabs-inside-one-text-document) in the model: `TextDocument.body` is the first
+document tab's body, and `tabs`, when present, names the first (`first`: id, name, emoji) and holds the others in the
+outline's order (`more`: id, name, emoji, depth and body each). Absent, the text document has one tab, `t.0`, Tab 1.
+
+- **Written plainly** when the text document has one document tab, `t.0`, named Tab 1, with no emoji: no extension.
+- **ODF**: each document tab is a `text:section` at the body's top level holding its body, with `livedoc:tab-id`,
+  `livedoc:tab-name`, `livedoc:tab-depth` (0 to 2) and `livedoc:tab-emoji` when it has one; its `text:name` is its
+  name, made unique by a following space and number `(default)`. A tab following one that ends in another page setup
+  starts with a paragraph naming the first section's master page.
+- **OOXML**: each document tab but the last ends at a section break whose `w:sectPr` carries the same attributes for
+  the tab it ends, continuous while the page setup stays the first section's, else on a new page; the body's own
+  `w:sectPr` carries the last tab's. The next tab starts in the first section's page setup.
+- **Read**: a top-level `text:section` with `livedoc:tab-id`, or a `w:sectPr` with it, makes a document tab; writing
+  outside any (another suite's) joins the tab before it, or the first. A section break that opens a tab and only
+  returns to the first section's setup is no section break of its own. An id that is not `t.` and 1 to 24 lower-case
+  letters and digits, or repeats one before it, is made `t.<n>`, n the tab's place; a missing name is Tab N; a depth
+  is held to the outline's rule.
+- **Fallback**: another suite shows the tabs' writing one after another; in ODF each tab is a named section of its
+  navigator. Converting keeps the tabs.
+
 ## Extensions
 
 What Google Docs does and neither standard has an element for is written in LiveDoc's extension namespace,
@@ -126,7 +149,7 @@ What Google Docs does and neither standard has an element for is written in Live
 | Construct                        | Written as                                                                                                                                | Fallback another suite shows                             |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | Reactions, assignee on a comment | `livedoc:reactions`, `livedoc:assignee` on the comment                                                                                    | The comment's text                                       |
-| Document tabs                    | `livedoc:tab-*` on a top-level ODF `text:section`, or a section break with `livedoc:tab-*` in OOXML                                       | The tabs' writing one after another                      |
+| Document tabs                    | `livedoc:tab-*` on a top-level ODF `text:section`, or a section break with `livedoc:tab-*` in OOXML ([Document tabs](#document-tabs))     | The tabs' writing one after another                      |
 | Pageless                         | ODF: config item `livedoc:pageless` (boolean) in a `livedoc:settings` set in `settings.xml`; OOXML: `<livedoc:pageless/>` in `w:settings` | Pages                                                    |
 | Drawings                         | `livedoc:drawing` beside the drawing's picture                                                                                            | The picture                                              |
 | Checklist without strikethrough  | `livedoc:strike-checked="false"` on its list levels (ODF level styles, OOXML `w:lvl`)                                                     | A checklist struck through or not as that suite draws it |

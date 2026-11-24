@@ -12,6 +12,7 @@ import {
 } from './headers';
 import type { PageSetup, Section } from './sections';
 import type { TextDocument } from './text-document';
+import { DocumentTabs } from './document-tabs';
 
 export type WatermarkLayout = 'diagonal' | 'horizontal';
 
@@ -91,11 +92,10 @@ export const Watermarks = {
     };
     const headers = (own: SectionHeaders | undefined) => mapStories(own, story);
     const section = <S extends Section>(s: S): S => withHeaders(s, headers(s.headers));
-    const lifted: TextDocument = {
-      ...document,
-      section: section(document.section),
-      body: document.body.map((b) => (b.type === 'section' ? section(b) : b)),
-    };
+    const lifted: TextDocument = DocumentTabs.mapBodies(
+      { ...document, section: section(document.section) },
+      (body) => body.map((b) => (b.type === 'section' ? section(b) : b)),
+    );
     if (!found) return document;
     return { ...lifted, watermark: found };
   },
@@ -131,11 +131,9 @@ export const Watermarks = {
       if (Object.keys(header).length === 0) return s;
       return withHeaders(s, { ...own, header });
     };
-    return {
-      ...document,
-      section: section(document.section, true),
-      body: document.body.map((b) => (b.type === 'section' ? section(b, false) : b)),
-    };
+    return DocumentTabs.mapBodies({ ...document, section: section(document.section, true) }, (body) =>
+      body.map((b) => (b.type === 'section' ? section(b, false) : b)),
+    );
   },
 } as const;
 

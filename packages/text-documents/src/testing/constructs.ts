@@ -763,4 +763,35 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       ),
     ]);
   },
+  // text-document.md "Tabs inside one text document": three document tabs, the second with an emoji and a subtab,
+  // its writing ending in landscape, so the third starts back in the first section's setup.
+  tabs: (format) => {
+    const portrait = PageSetup.of('a4', format);
+    const landscape = PageSetup.oriented(portrait, 'landscape');
+    return base(format, [paragraph(format, 'heading1', [run('Overview')])], {
+      section: { start: 'next-page', setup: portrait },
+      tabs: {
+        first: { id: 't.0', name: 'Overview' },
+        more: [
+          {
+            id: 't.k3x9q2m7p1zz',
+            name: 'Details',
+            emoji: '📌',
+            depth: 0,
+            body: [
+              paragraph(format, 'normal', [run('Details, portrait')]),
+              { type: 'section', start: 'next-page', setup: landscape },
+              paragraph(format, 'normal', [run('Details, landscape')]),
+            ],
+          },
+          {
+            id: 't.a1b2c3d4e5f6',
+            name: 'Details',
+            depth: 1,
+            body: [paragraph(format, 'normal', [run('A subtab of the same name')])],
+          },
+        ],
+      },
+    });
+  },
 };
