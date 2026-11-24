@@ -99,10 +99,25 @@ div.text-document-kept {
 }
 /* A table of contents (docs/specs/034-text-documents/links-and-navigation.md "Table of contents"): one read-only block. */
 .text-document-contents {
+  position: relative;
   display: block;
   cursor: default;
   user-select: none;
   outline-offset: 2px;
+}
+/* Its Update and options bar, above its top-left corner while it is selected. */
+.text-document-contents-bar {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: -2px;
+  z-index: 5;
+}
+.text-document-contents-bar:empty {
+  display: none;
+}
+/* A table of contents' look in its picture: With blue links' entries in the link colour (Insert, the options panel). */
+.contents-look-picture .contents-look-link {
+  stroke: light-dark(#1155cc, #8ab4f8);
 }
 .text-document-kept-hidden {
   display: none;

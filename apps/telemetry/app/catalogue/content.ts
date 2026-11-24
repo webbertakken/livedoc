@@ -554,7 +554,8 @@ export const ELEMENTS_CHANGED = chart(
   // An article's writing formatted (`Article…`) is its own card (Article Formatting, features.ts), as is a text
   // document's (`TextDocumentFormat…`, Text Document Formatting; its styles, Text Document Paragraph Style),
   // as are a logo page's tools (Logo Tools Used), a text document's tables' changes (Text Document Table Changes),
-  // its pictures' (Text Document Picture Changes) and its links' (Text Document Links Edited).
+  // its pictures' (Text Document Picture Changes), its links' (Text Document Links Edited) and its tables of contents'
+  // (Text Document Tables of Contents Changed).
   // An entity's fields and a relationship's cardinality are Data Models'.
   {
     typeIn: (t) =>

@@ -71,7 +71,11 @@ import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialo
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
 import { useTextDocumentHeadingLinks } from './useTextDocumentHeadingLinks';
-import { contentsPressPlugin, contentsView } from '@/lib/text-document/text-document-contents';
+import {
+  contentsBarKeys,
+  contentsPressPlugin,
+  contentsView,
+} from '@/lib/text-document/text-document-contents';
 import { useTextDocumentContents } from './useTextDocumentContents';
 import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
@@ -115,7 +119,11 @@ import { watermarkLook } from '@/lib/text-document/text-document-watermark';
 import { useTextDocumentLineNumbers } from './useTextDocumentLineNumbers';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
-import { OUTLINE_PANEL, TEXT_DOCUMENT_PANELS } from '@/lib/text-document/text-document-panels';
+import {
+  OUTLINE_PANEL,
+  TABLE_OF_CONTENTS_PANEL,
+  TEXT_DOCUMENT_PANELS,
+} from '@/lib/text-document/text-document-panels';
 import { TextDocumentOutline } from './TextDocumentOutline';
 import { useTextDocumentParagraphs } from './useTextDocumentParagraphs';
 import {
@@ -444,6 +452,8 @@ export function TextDocumentSurface({
               codeHighlightPlugin({ readStyles: () => readFormatting().styles }),
               // A press on a table of contents selects it whole (links-and-navigation.md "Table of contents").
               contentsPressPlugin(),
+              // Alt+F10 from a selected table of contents to its bar.
+              contentsBarKeys(),
               // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
               // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
               tableKeysPlugin(),
@@ -783,7 +793,7 @@ export function TextDocumentSurface({
     Columns.width(page.caret.section.setup),
   );
   // Insert > Table of contents (links-and-navigation.md "Table of contents").
-  const contentsActions = useTextDocumentContents({
+  const contents = useTextDocumentContents({
     view: editorView,
     writes: bodyWrites,
     liveDoc,
@@ -791,6 +801,7 @@ export function TextDocumentSurface({
     pageless: page.pageless,
     textWidth: Columns.width(page.caret.section.setup),
     subscribe: changes.subscribeCaret,
+    openOptions: () => panels.reveal(TABLE_OF_CONTENTS_PANEL),
   });
   // Insert > Image, and picture files pasted or dropped, in the room the caret's text has (objects.md "Inserting").
   const pictureRoom = useMemo(
@@ -863,7 +874,7 @@ export function TextDocumentSurface({
       ...headingLinks.actions,
       ...tableActions,
       ...buildingBlocks,
-      ...contentsActions,
+      ...contents.actions,
       ...pictures.actions,
       ...pictureEditing.actions,
       ...pictureSize.actions,
@@ -880,7 +891,7 @@ export function TextDocumentSurface({
       headingLinks.actions,
       tableActions,
       buildingBlocks,
-      contentsActions,
+      contents.actions,
       pictures.actions,
       pictureEditing.actions,
       pictureSize.actions,
@@ -982,6 +993,7 @@ export function TextDocumentSurface({
       {links.card}
       {links.status}
       {bookmarks.card}
+      {contents.bar}
       {bookmarks.status}
       {headingLinks.status}
       <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />
@@ -1026,6 +1038,7 @@ export function TextDocumentSurface({
               turn: pictureSize.turn,
               reset: pictureSize.reset,
             }}
+            contents={contents}
           />
         }
       >

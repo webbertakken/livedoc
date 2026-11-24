@@ -1,6 +1,7 @@
 // The text document's menus (docs/specs/034-text-documents/editing-surface.md "The menu bar"): Google Docs' menus in
 // Google's order and words, less the rows the parity matrix leaves out, plus LiveDoc's own (Convert, the flat file,
 // Agents). Each item names the least share level that sees it; an item whose phase has not landed is `comingSoon`.
+import { CONTENTS_LOOK_ITEMS, CONTENTS_LOOK_LABELS } from './text-document-contents-build';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
@@ -246,9 +247,9 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       item('bookmark', 'Bookmark', 'edit', BUILT),
       submenu('table-of-contents', 'Table of contents', [
-        item('toc-plain', 'Plain text', 'edit', BUILT),
-        item('toc-dotted', 'Dotted', 'edit', BUILT),
-        item('toc-links', 'With blue links', 'edit', BUILT),
+        ...Object.entries(CONTENTS_LOOK_ITEMS).map(([id, look]) =>
+          item(id, CONTENTS_LOOK_LABELS[look], 'edit', BUILT),
+        ),
       ]),
       SEPARATOR,
       item('comment', 'Comment', 'participate', { shortcut: 'insert-comment' }),

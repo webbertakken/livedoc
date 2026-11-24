@@ -155,3 +155,50 @@ test('Insert puts a table of contents in, whose entries go to their headings', a
   await expect(body.locator('p', { hasText: /^Findings$/ })).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
+
+// The selected block's bar: Update lists a heading added since (Alt+F10 reaches it); its options panel changes the look
+// and the levels at once.
+test('Update and the options panel rebuild a table of contents', async ({ page, pageErrors }) => {
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('Introduction');
+  await page.keyboard.press('Control+Alt+1');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Detail');
+  await page.keyboard.press('Control+Alt+2');
+  await page.keyboard.press('Control+Home');
+  await (await officeMenuItem(page, ['Insert', 'Table of contents', 'Plain text'])).click();
+  const contents = body.getByRole('navigation', { name: 'Table of contents' });
+  await expect(contents.locator('p')).toHaveText(['Introduction\t1', 'Detail\t1']);
+
+  // A heading added after it, then Update from its bar.
+  await page.keyboard.press('Control+End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Findings');
+  await page.keyboard.press('Control+Alt+1');
+  await contents.locator('p').first().click();
+  const bar = contents.getByRole('toolbar', { name: 'Table of contents' });
+  await expect(bar).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('table-of-contents-bar.png') });
+  await page.keyboard.press('Alt+F10');
+  await expect(bar.getByRole('button', { name: 'Update table of contents' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(contents.locator('p')).toHaveText(['Introduction\t1', 'Detail\t1', 'Findings\t1']);
+
+  // Its options: With blue links, then Levels 1.
+  await bar.getByRole('button', { name: 'Table of contents options' }).click();
+  const panel = page.getByRole('complementary', { name: 'Table of contents' });
+  await expect(panel.getByRole('radio', { name: 'Plain text' })).toBeChecked();
+  await panel.getByRole('radio', { name: 'With blue links' }).click();
+  await expect(contents).toHaveAttribute('data-look', 'links');
+  await expect(contents.locator('p')).toHaveText(['Introduction', 'Detail', 'Findings']);
+  await panel.getByRole('combobox', { name: 'Levels' }).selectOption('1');
+  await expect(contents.locator('p')).toHaveText(['Introduction', 'Findings']);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('table-of-contents-panel.png') });
+  expectNoPageErrors(pageErrors);
+});

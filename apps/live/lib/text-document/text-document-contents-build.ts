@@ -17,6 +17,13 @@ export const CONTENTS_LOOK_ITEMS: Readonly<Record<string, ContentsLook>> = {
   'toc-links': 'links',
 };
 
+/** Each look's name, as Insert and the options panel say it. */
+export const CONTENTS_LOOK_LABELS: Readonly<Record<ContentsLook, string>> = {
+  plain: 'Plain text',
+  dotted: 'Dotted',
+  links: 'With blue links',
+};
+
 /**
  * The pages entries are numbered by: as laid out (each block's shown page number), none (pageless), or not drawn on
  * this screen (a phone), where an entry keeps the number it had.
@@ -139,14 +146,25 @@ function contentsBlock(
   return schema.nodes[CONTENTS]!.create(attrs, content);
 }
 
-/** Rebuilds the table of contents starting at `pos` from the headings and pages as they are now; false for none. */
-export function rebuildContents(pos: number, build: ContentsBuild): Command {
+/** A new look or levels for a table of contents (its options panel). */
+export type ContentsChange = { readonly look?: ContentsLook; readonly levels?: number };
+
+/**
+ * Rebuilds the table of contents starting at `pos` from the headings and pages as they are now, with `change`'s look and
+ * levels where it gives them; false where none starts.
+ */
+export function rebuildContents(
+  pos: number,
+  build: ContentsBuild,
+  change: ContentsChange = {},
+): Command {
   return (state, dispatch) => {
     const node = state.doc.nodeAt(pos);
     if (node?.type.name !== CONTENTS) return false;
     if (!dispatch) return true;
-    const attrs = node.attrs as { look: ContentsLook; levels: number };
-    const levels = Contents.levelsOf(attrs.levels);
+    const was = node.attrs as { look: ContentsLook; levels: number };
+    const levels = Contents.levelsOf(change.levels ?? was.levels);
+    const attrs = { look: change.look ?? was.look, levels };
     const tr = state.tr;
     giveIds(tr, build.styles, levels);
     const at = tr.mapping.map(pos);

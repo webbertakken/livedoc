@@ -1329,7 +1329,12 @@ export const TEXT_DOCUMENT_TABLE_CHANGES = chart(
   'Changed',
   'Text Document Table Changes',
   "A text document's table reshaped: rows and columns added or deleted, cells merged, sorted and the rest.",
-  { typeIn: (t) => (t ?? '').startsWith('TextDocumentTable') },
+  // A table of contents (`TextDocumentTableOfContents`) is no table: Text Document Tables of Contents Changed.
+  {
+    typeIn: (t) =>
+      (t ?? '').startsWith('TextDocumentTable') &&
+      !(t ?? '').startsWith('TextDocumentTableOfContents'),
+  },
 );
 
 // A page, column or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
@@ -1417,6 +1422,16 @@ export const TEXT_DOCUMENT_TABLES_OF_CONTENTS = chart(
   'Added',
   'Text Document Tables of Contents',
   'A table of contents put in a text document from Insert > Table of contents, in any of its three looks.',
+  { types: ['TextDocumentTableOfContents'] },
+);
+
+// A text document's table of contents updated, or given another look or levels in its panel (links-and-navigation.md
+// "Telemetry").
+export const TEXT_DOCUMENT_TABLES_OF_CONTENTS_CHANGED = chart(
+  'Element',
+  'Changed',
+  'Text Document Tables of Contents Changed',
+  "A text document's table of contents updated from its bar, or given another look or levels in its options panel.",
   { types: ['TextDocumentTableOfContents'] },
 );
 
