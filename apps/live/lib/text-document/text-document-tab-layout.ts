@@ -192,9 +192,12 @@ function layOut(view: EditorView, which: number[] | 'all', readFormatting: () =>
   const formatting = readFormatting();
   const started = performance.now();
   const positions: number[] = [];
+  // Every paragraph holding a tab, those inside a table or a table of contents too.
   if (which === 'all')
-    view.state.doc.forEach((node, pos) => {
-      if (node.type.name === 'paragraph' && node.textContent.includes('\t')) positions.push(pos);
+    view.state.doc.descendants((node, pos) => {
+      if (node.type.name !== 'paragraph') return true;
+      if (node.textContent.includes('\t')) positions.push(pos);
+      return false;
     });
   else positions.push(...which);
   let tabs = 0;

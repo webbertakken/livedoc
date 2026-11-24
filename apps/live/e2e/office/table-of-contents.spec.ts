@@ -69,15 +69,15 @@ test('a file’s table of contents opens as one read-only block and is kept', as
   await expect(contents).toHaveAttribute('data-look', 'dotted');
   await expect(contents.locator('p')).toHaveText(['Introduction\t1', 'Findings\t1']);
 
-  // The page number sits at the right margin, past the entry's text.
-  const entry = contents.locator('p').first();
-  const line = (await entry.boundingBox())!;
-  const text = (await entry.locator('a, span').first().boundingBox()) ?? line;
-  expect(line.width).toBeGreaterThan(text.width * 2);
+  // The tab leads to the page number at the right margin, dotted.
+  const tab = contents.locator('.text-document-tab').first();
+  await expect(tab).toHaveAttribute('data-leader', 'dot');
+  await expect.poll(async () => (await tab.boundingBox())?.width ?? 0).toBeGreaterThan(300);
 
   // A press selects it whole.
   await contents.locator('p').first().click();
   await expect(contents).toHaveClass(/ProseMirror-selectednode/);
+  await expect(contents).toHaveCSS('outline-style', 'solid');
   await page.waitForTimeout(300);
   await page.screenshot({ path: test.info().outputPath('table-of-contents.png') });
 
