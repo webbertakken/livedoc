@@ -19,10 +19,12 @@ export type PdfToolControl<T extends PdfPageTool> = {
   readonly labels: Readonly<Record<T, string>>;
   readonly icons: Readonly<Record<T, readonly IconPrim[]>>;
   readonly pick: ToolPick<T>;
+  /** The pick as a hook: the tool the control shows now. */
+  readonly usePick: () => T;
 };
 
 export function usePdfToolControl<T extends PdfPageTool>(
-  { control, tools, items, labels, icons, pick: picked }: PdfToolControl<T>,
+  { control, tools, items, labels, icons, pick: picked, usePick }: PdfToolControl<T>,
   {
     offered,
     inHand,
@@ -34,7 +36,7 @@ export function usePdfToolControl<T extends PdfPageTool>(
     pickTool: (tool: PdfPageTool) => void;
   },
 ) {
-  const pick = picked.use();
+  const pick = usePick();
 
   const actions = useMemo<OfficeActions>(() => {
     if (!offered) return {};

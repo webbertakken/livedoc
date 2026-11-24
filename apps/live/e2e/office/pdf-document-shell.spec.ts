@@ -50,9 +50,9 @@ test('a PDF’s title row, menus and toolbar are its own, and follow the editing
   const highlight = page.getByRole('menuitemradio', { name: 'Highlight', exact: true });
   await expect(highlight).toBeVisible();
   await expect(highlight).not.toHaveAttribute('aria-disabled', 'true');
-  const callout = page.getByRole('menuitemradio', { name: 'Callout', exact: true });
-  await expect(callout).toHaveAttribute('aria-disabled', 'true');
-  await expect(callout).toHaveAccessibleDescription('Coming soon');
+  const tick = page.getByRole('menuitemradio', { name: 'Tick', exact: true });
+  await expect(tick).toHaveAttribute('aria-disabled', 'true');
+  await expect(tick).toHaveAccessibleDescription('Coming soon');
   // An `edit` item is Editing's: not in Reviewing's menus.
   await expect(page.getByRole('menuitem', { name: 'Text box', exact: true })).toHaveCount(0);
   await menuShown(page);

@@ -39,4 +39,5 @@ export const SHAPE_CONTROL: PdfToolControl<ShapeToolKind> = {
     ellipse: lucideCircle,
   },
   pick,
+  usePick: pick.use,
 };

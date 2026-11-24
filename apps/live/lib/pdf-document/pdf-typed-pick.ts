@@ -23,4 +23,5 @@ export const TYPED_CONTROL: PdfToolControl<TypedMarkKind> = {
   labels: { text: 'Text', callout: 'Callout' },
   icons: { text: lucideType, callout: lucideMessageSquareText },
   pick,
+  usePick: pick.use,
 };
