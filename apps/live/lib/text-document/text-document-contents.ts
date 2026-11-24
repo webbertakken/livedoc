@@ -2,7 +2,8 @@
 // one block of the body, read only, its entries paragraphs drawn as the writing's (their tab stops lead to the page
 // numbers); a press selects it whole.
 import type { NodeSpec } from 'prosemirror-model';
-import { CONTENTS_ATTRIBUTES, Contents } from '@livedoc/text-documents';
+import { NodeSelection, Plugin } from 'prosemirror-state';
+import { CONTENTS, CONTENTS_ATTRIBUTES, Contents } from '@livedoc/text-documents';
 import { nullAttributes } from './text-document-attributes';
 
 /** The node's class. */
@@ -44,3 +45,16 @@ export const contentsNodeSpec: NodeSpec = {
     ];
   },
 };
+
+/** A press anywhere on a table of contents selects it whole (a block with content takes no selection by itself). */
+export function contentsPressPlugin(): Plugin {
+  return new Plugin({
+    props: {
+      handleClickOn: (view, _pos, node, nodePos) => {
+        if (node.type.name !== CONTENTS) return false;
+        view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos)));
+        return true;
+      },
+    },
+  });
+}

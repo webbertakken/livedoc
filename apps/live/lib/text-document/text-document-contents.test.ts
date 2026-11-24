@@ -7,7 +7,8 @@ import { DOMParser as PmDOMParser, DOMSerializer, type Node as PmNode } from 'pr
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { baseKeymap } from 'prosemirror-commands';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { CONTENTS_CLASS } from './text-document-contents';
+import { CONTENTS_CLASS, contentsPressPlugin } from './text-document-contents';
+import type { EditorView } from 'prosemirror-view';
 
 const p = (text: string) => schema.nodes.paragraph!.create({}, text ? schema.text(text) : null);
 const contents = (look = 'dotted', levels = 3, ...entries: string[]) =>
@@ -52,5 +53,24 @@ describe('the table of contents node', () => {
     const cut = state;
     expect(cut.doc.childCount).toBe(1);
     expect(cut.doc.textContent).toBe('Body');
+  });
+});
+
+describe('a press on a table of contents', () => {
+  it('selects it whole, wherever in it', () => {
+    const doc = schema.node('doc', null, [contents('plain', 6, 'A', 'B'), p('Body')]);
+    let state = EditorState.create({ doc, plugins: [contentsPressPlugin()] });
+    const view = {
+      state,
+      dispatch: (tr: Parameters<EditorState['apply']>[0]) => (state = state.apply(tr)),
+    } as unknown as EditorView;
+    const press = contentsPressPlugin().props.handleClickOn!;
+    expect(
+      press.call(null as never, view, 4, doc.child(0).child(1), 3, new MouseEvent('click'), false),
+    ).toBe(false);
+    expect(
+      press.call(null as never, view, 4, doc.child(0), 0, new MouseEvent('click'), false),
+    ).toBe(true);
+    expect((state.selection as NodeSelection).node.type.name).toBe('table_of_contents');
   });
 });

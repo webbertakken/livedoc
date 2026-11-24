@@ -70,6 +70,7 @@ import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialo
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
 import { useTextDocumentHeadingLinks } from './useTextDocumentHeadingLinks';
+import { contentsPressPlugin } from '@/lib/text-document/text-document-contents';
 import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
@@ -439,6 +440,8 @@ export function TextDocumentSurface({
               // Code blocks: Enter in one, and each drawn with its language's colours (objects.md "Code blocks").
               codeBlockKeysPlugin(() => readFormatting().styles),
               codeHighlightPlugin({ readStyles: () => readFormatting().styles }),
+              // A press on a table of contents selects it whole (links-and-navigation.md "Table of contents").
+              contentsPressPlugin(),
               // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
               // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
               tableKeysPlugin(),
