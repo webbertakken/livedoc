@@ -55,7 +55,7 @@ export function FormStatusBar({
   const responses = data?.responses ?? 0;
   const pill = (tone: 'green' | 'slate' | 'amber' | 'red', text: string) => (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${
+      className={`inline-flex h-chip items-center gap-2 rounded-full px-2 text-supporting ${
         tone === 'green'
           ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200'
           : tone === 'amber'
@@ -86,12 +86,10 @@ export function FormStatusBar({
               : pill('slate', 'Closed');
   const count = (
     <>
-      <strong className="font-semibold text-slate-900 dark:text-slate-50">{responses}</strong>{' '}
+      <strong className="font-normal text-slate-900 dark:text-slate-50">{responses}</strong>{' '}
       {responses === 1 ? 'response' : 'responses'}
       {data?.unseen ? (
-        <span className="ml-1 font-semibold text-brand-700 dark:text-brand-300">
-          · {data.unseen} new
-        </span>
+        <span className="ml-1 text-brand-700 dark:text-brand-300">· {data.unseen} new</span>
       ) : null}
     </>
   );
@@ -99,7 +97,7 @@ export function FormStatusBar({
     <div className="flex flex-col gap-2">
       <div
         data-form-status=""
-        className="flex items-center gap-x-3 gap-y-2 rounded-xl border max-sm:flex-wrap border-slate-200 bg-white px-4 py-2.5 text-[13px] dark:border-slate-700/80 dark:bg-slate-900"
+        className="flex items-center gap-x-3 gap-y-2 rounded-surface border max-sm:flex-wrap border-slate-200 bg-white px-4 py-2.5 text-body dark:border-slate-700/80 dark:bg-slate-900"
       >
         {state}
         {/* The count opens the board (or sheet) the responses go to. */}
@@ -108,7 +106,7 @@ export function FormStatusBar({
             <button
               type="button"
               onClick={onOpenResponses}
-              className="shrink-0 cursor-pointer rounded text-slate-600 underline-offset-2 hover:underline dark:text-slate-300"
+              className="shrink-0 cursor-pointer rounded-control text-slate-600 underline-offset-2 hover:underline dark:text-slate-300"
             >
               {count}
             </button>
@@ -128,7 +126,7 @@ export function FormStatusBar({
               aria-label="Problems with this Form"
               type="button"
               onClick={onProblems}
-              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-0.5 font-medium text-amber-800 hover:bg-amber-50 dark:text-amber-200 dark:hover:bg-amber-500/10"
+              className="flex h-field shrink-0 cursor-pointer items-center gap-2 rounded-control px-2 text-amber-800 hover:bg-amber-50 dark:text-amber-200 dark:hover:bg-amber-500/10"
             >
               <WarningIcon aria-hidden />
               {/* One flex item, so the button's gap falls after the icon and never inside the words. */}
@@ -143,14 +141,14 @@ export function FormStatusBar({
       {live && problem ? (
         <div
           role="status"
-          className="rounded-xl bg-amber-50 px-4 py-2.5 text-[13px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"
+          className="rounded-surface bg-amber-50 px-4 py-2.5 text-body text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"
         >
           Responses are paused. {DESTINATION_PROBLEM_TEXT[problem]}{' '}
           {canEdit ? (
             <button
               type="button"
               onClick={onFix}
-              className="cursor-pointer font-semibold underline underline-offset-2"
+              className="cursor-pointer underline underline-offset-2"
             >
               Choose Where Responses Go
             </button>
@@ -160,7 +158,7 @@ export function FormStatusBar({
       {live && full ? (
         <div
           role="status"
-          className="rounded-xl bg-amber-50 px-4 py-2.5 text-[13px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"
+          className="rounded-surface bg-amber-50 px-4 py-2.5 text-body text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"
         >
           Responses are paused: this document holds as many cards as it can.
         </div>
@@ -168,7 +166,7 @@ export function FormStatusBar({
       {data?.suspendedAt && !live ? (
         <div
           role="status"
-          className="rounded-xl bg-red-50 px-4 py-2.5 text-[13px] text-red-900 dark:bg-red-500/10 dark:text-red-100"
+          className="rounded-surface bg-red-50 px-4 py-2.5 text-body text-red-900 dark:bg-red-500/10 dark:text-red-100"
         >
           This form’s link was suspended after reports from respondents.
         </div>

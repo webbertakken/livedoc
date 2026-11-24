@@ -8,8 +8,13 @@ Power user mode keeps no denser rows of its own: a denser row for some people wo
 So the Explorer's half-height Details rows retired with that ruling (director, 2026-11-22).
 
 Chrome is everything that is not content: toolbars, menus, rows, fields, buttons, dialogs, panels and pages' own text.
-Content is never on the scale: elements and text on the canvas, a text document's page, a sheet's cells, a form's
-answers and a slide keep the sizes their author chose.
+Content is never on the scale: elements and text on the canvas, a text document's page, a sheet's cells, a form as
+respondents see it and a slide keep the sizes their author chose.
+
+- A form as respondents see it is its title, description, questions, answer controls and its Finish look, wherever
+  it is drawn: the page respondents fill in, Preview and the builder's picture of a question (D237, default).
+- The form's chrome is on the scale: its status bar, strips, warnings and problems, Share Form, the Preview button,
+  and the builder's own controls (add bar, settings, menus, destination pickers).
 
 ## Why
 
@@ -162,3 +167,6 @@ The code cites each by its id.
 - **D235** The tokens' unit: rem at a 16 px root, so a browser set to larger text grows the chrome with it (default).
 - **D236** A colour's drawn parts: a swatch's chip, the picker's handle and its hue track take the icon steps (16 or
   20, 12 px), the nearest to what they drew, rather than sizes of their own (default).
+- **D237** A form as respondents see it is content: [Forms](../030-forms/forms.md#building-a-form) draws it in the
+  Form tab exactly as it is filled in, with its own Finish look, so its answer controls and the page respondents
+  fill in keep their own sizes (default).

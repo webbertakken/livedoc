@@ -25,7 +25,7 @@ function Faces({ peers }: { peers: readonly SheetBarPeer[] }) {
         />
       ))}
       {more > 0 ? (
-        <span className="pl-1.5 text-[11px] text-slate-600 dark:text-slate-300">+{more}</span>
+        <span className="pl-2 text-supporting text-slate-600 dark:text-slate-300">+{more}</span>
       ) : null}
     </span>
   );
@@ -66,7 +66,7 @@ function RenameField({
       defaultValue={name}
       maxLength={100}
       data-sheet-rename=""
-      className="my-1 w-32 rounded-sm border border-emerald-600 bg-white px-1 text-sm text-slate-900 outline-none dark:bg-slate-900 dark:text-slate-100"
+      className="my-auto h-field w-32 rounded-control border border-emerald-600 bg-white px-2 text-body text-slate-900 outline-none dark:bg-slate-900 dark:text-slate-100"
       onKeyDown={(e) => {
         e.stopPropagation();
         if (e.key === 'Enter') finish(e.currentTarget.value);
@@ -145,7 +145,7 @@ export function SheetBarTab({
               }
               onKey(e);
             }}
-            className={`flex min-w-0 items-center py-0 pl-4 text-sm focus-visible:outline-2 ${
+            className={`flex min-w-0 items-center py-0 pl-4 text-body focus-visible:outline-2 ${
               active ? 'pr-1 font-medium' : 'pr-1'
             }`}
           >
@@ -162,7 +162,7 @@ export function SheetBarTab({
           aria-haspopup="menu"
           data-sheet-tab-menu={tab.id}
           onClick={(e) => fromTab(e.currentTarget)}
-          className={`mr-1 flex w-5 items-center justify-center rounded-sm text-[10px] text-slate-500 hover:bg-slate-300 dark:text-slate-400 dark:hover:bg-slate-700 ${
+          className={`mr-1 flex w-chip items-center justify-center rounded-control text-glyph text-slate-500 hover:bg-slate-300 dark:text-slate-400 dark:hover:bg-slate-700 ${
             active ? '' : 'opacity-0 group-hover:opacity-100'
           }`}
         >

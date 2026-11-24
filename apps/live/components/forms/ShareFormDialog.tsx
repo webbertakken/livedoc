@@ -75,7 +75,7 @@ export function ShareFormDialog({
       ) : (
         <div className="flex flex-col gap-4 px-6 pb-6 pt-4">
           {link.status === 'offline' ? (
-            <p className="text-[14px] text-slate-600 dark:text-slate-300">
+            <p className="text-body text-slate-600 dark:text-slate-300">
               Forms are published from documents saved to LiveDoc. This one is kept on this device
               only.
             </p>
@@ -87,7 +87,7 @@ export function ShareFormDialog({
                   aria-label="Form link"
                   value={url}
                   onFocus={(e) => e.target.select()}
-                  className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-[13px] text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="h-field min-w-0 flex-1 rounded-control border border-slate-200 bg-slate-50 px-3 font-mono text-body text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
                 <Button
                   onClick={() => {
@@ -106,17 +106,17 @@ export function ShareFormDialog({
               <span role="status" className="sr-only">
                 {copied ? 'Link copied' : ''}
               </span>
-              <div className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700">
+              <div className="rounded-menu border border-slate-200 px-3 py-2 dark:border-slate-700">
                 <SwitchRow
                   checked={live.open}
                   onChange={(on) => void link.setOpen(on)}
                   // Reopening waits on the problems listed below (forms.md "A live form is locked").
                   disabled={!live.open && formProblemCount(problem, notReady) > 0}
-                  className="py-1 text-[14px] font-medium"
+                  className="py-1 text-body"
                 >
                   Accepting Responses
                 </SwitchRow>
-                <p className="text-[12px] text-slate-500 dark:text-slate-400">
+                <p className="text-supporting text-slate-500 dark:text-slate-400">
                   {live.open
                     ? `${link.link?.responses ?? 0} ${link.link?.responses === 1 ? 'response' : 'responses'} so far.`
                     : formProblemCount(problem, notReady)
@@ -136,7 +136,7 @@ export function ShareFormDialog({
                 <button
                   type="button"
                   onClick={(e) => setConfirmAt(e.currentTarget)}
-                  className="cursor-pointer text-[13px] font-medium text-red-700 hover:underline dark:text-red-400"
+                  className="h-row cursor-pointer text-body text-red-700 hover:underline dark:text-red-400"
                 >
                   Delete Link
                 </button>
@@ -145,13 +145,13 @@ export function ShareFormDialog({
           ) : (
             <>
               {suspended ? (
-                <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-900 dark:bg-red-500/10 dark:text-red-100">
+                <p className="rounded-menu bg-red-50 px-3 py-2 text-body text-red-900 dark:bg-red-500/10 dark:text-red-100">
                   This form’s link was suspended after reports from respondents. Publishing again
                   makes a new link.
                 </p>
               ) : null}
               {!canPublish ? (
-                <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-900 dark:bg-red-500/10 dark:text-red-100">
+                <p className="rounded-menu bg-red-50 px-3 py-2 text-body text-red-900 dark:bg-red-500/10 dark:text-red-100">
                   This document can’t publish more forms: its form links were suspended after
                   reports.
                 </p>
@@ -164,7 +164,7 @@ export function ShareFormDialog({
                   onShow={onShow}
                 />
               ) : (
-                <p className="text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="text-body text-slate-600 dark:text-slate-300">
                   Publishing makes a link you can send to anyone. Each response becomes{' '}
                   {toSheet ? 'a row in your sheet' : 'a card on your board'}, and you can close the
                   form at any time.
@@ -187,7 +187,7 @@ export function ShareFormDialog({
             </>
           )}
           {link.error ? (
-            <p role="alert" className="text-[13px] text-red-700 dark:text-red-400">
+            <p role="alert" className="text-body text-red-700 dark:text-red-400">
               {link.error}
             </p>
           ) : null}

@@ -215,9 +215,9 @@ export function FormPage({
         type="button"
         aria-pressed={preview}
         onClick={() => setPreview((p) => !p)}
-        className={`flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium transition ${
+        className={`flex h-field shrink-0 cursor-pointer items-center gap-2 rounded-control px-3 text-body transition ${
           preview
-            ? 'bg-brand-700 text-white hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700'
+            ? 'bg-brand-700 font-medium text-white hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700'
             : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
         }`}
       >
@@ -293,7 +293,7 @@ export function FormPage({
                         <FormLockedStrip onEdit={() => void link.setOpen(false)} busy={link.busy} />
                       ) : null}
                       {!canEdit ? (
-                        <p className="rounded-xl bg-white/80 px-4 py-2.5 text-[13px] text-slate-600 dark:bg-slate-900/80 dark:text-slate-300">
+                        <p className="rounded-surface bg-white/80 px-4 py-2.5 text-body text-slate-600 dark:bg-slate-900/80 dark:text-slate-300">
                           This is a form. Its responses become {form.sheet ? 'rows in' : 'cards on'}{' '}
                           <strong>{destTab?.name ?? (form.sheet ? 'a sheet' : 'a board')}</strong>.
                         </p>

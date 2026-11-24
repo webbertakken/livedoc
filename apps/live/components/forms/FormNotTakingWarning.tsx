@@ -29,7 +29,7 @@ export function FormNotTakingWarning({
       Not Taking Responses
     </>
   );
-  const tone = 'flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 font-semibold';
+  const tone = 'flex h-field shrink-0 items-center gap-2 rounded-control px-2';
   const colour = 'text-red-700 dark:text-red-300';
   return (
     <Tooltip label={text}>

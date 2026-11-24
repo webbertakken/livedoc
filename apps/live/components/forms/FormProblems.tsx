@@ -16,7 +16,7 @@ export const formProblemCount = (
   notReady: readonly PublishProblem[],
 ): number => (problem ? 1 : 0) + notReady.length;
 
-const LINK = 'shrink-0 cursor-pointer font-semibold underline underline-offset-2';
+const LINK = 'shrink-0 cursor-pointer underline underline-offset-2';
 
 export function FormProblems({
   title,
@@ -35,9 +35,9 @@ export function FormProblems({
   return (
     <div
       role="status"
-      className="rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"
+      className="rounded-menu bg-amber-50 px-3 py-2 text-body text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"
     >
-      <p className="font-semibold">{title}</p>
+      <p className="text-amber-950 dark:text-amber-50">{title}</p>
       <ul className="mt-1 flex flex-col gap-1">
         {problem ? (
           <li className="flex items-baseline justify-between gap-3">

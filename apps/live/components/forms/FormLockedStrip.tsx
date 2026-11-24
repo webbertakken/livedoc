@@ -14,11 +14,13 @@ export function FormLockedStrip({ onEdit, busy }: { onEdit: () => void; busy: bo
     <div
       role="status"
       data-form-locked=""
-      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] text-slate-700 max-sm:flex-wrap dark:border-slate-700/80 dark:bg-slate-900 dark:text-slate-200"
+      className="flex items-center gap-3 rounded-surface border border-slate-200 bg-white px-4 py-2.5 text-body text-slate-700 max-sm:flex-wrap dark:border-slate-700/80 dark:bg-slate-900 dark:text-slate-200"
     >
       <LockGlyph aria-hidden className="shrink-0 text-slate-500 dark:text-slate-400" />
       <p className="min-w-0 flex-1 leading-snug">
-        <span className="font-semibold">Taking responses, so it can’t be changed.</span>{' '}
+        <span className="text-slate-900 dark:text-slate-50">
+          Taking responses, so it can’t be changed.
+        </span>{' '}
         <span className="text-slate-500 dark:text-slate-400">
           Edit Form stops it taking responses while you edit; its link stays the same.
         </span>
@@ -27,7 +29,7 @@ export function FormLockedStrip({ onEdit, busy }: { onEdit: () => void; busy: bo
         type="button"
         disabled={busy}
         onClick={onEdit}
-        className="shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[13px] font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-700"
+        className="h-field shrink-0 cursor-pointer rounded-control border border-slate-200 bg-white px-3 text-body text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-700"
       >
         Edit Form
       </button>

@@ -6,10 +6,14 @@
 // is on that sheet, in their colour (sheet-store.md "Live for everyone"). Its end keeps room for the selection's
 // summary, drawn there by the open sheet (SheetBarSummary).
 import { useRef, useState, type KeyboardEvent } from 'react';
-import { Tooltip } from '@livedoc/ui';
+import { lucidePlus } from '@livedoc/icons/lucide';
+import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { SheetBarTab as TabFace } from './SheetBarTab';
 import { SheetTabMenu, type SheetTabMenuAt } from './SheetTabMenu';
 import type { SheetBarActions } from './useSheetBarActions';
+
+// The icon step for a row (sizing.md "Icons", icon-row).
+const PlusIcon = lucideGlyph(lucidePlus, 16);
 
 export type SheetBarTab = { id: string; name: string };
 export type SheetBarPeer = { id: string; name: string; color: string };
@@ -57,9 +61,9 @@ export function SheetBar({
             aria-label="Add Sheet"
             data-sheet-add=""
             onClick={() => actions.add('end')}
-            className="my-1 mr-1 flex w-8 items-center justify-center rounded-sm text-lg text-slate-600 hover:bg-slate-200 focus-visible:outline-2 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="my-auto mr-1 flex size-field items-center justify-center rounded-control text-slate-600 hover:bg-slate-200 focus-visible:outline-2 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            +
+            <PlusIcon aria-hidden />
           </button>
         </Tooltip>
       ) : null}

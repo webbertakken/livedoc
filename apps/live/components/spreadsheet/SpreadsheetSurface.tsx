@@ -170,7 +170,7 @@ function Status({
     <div
       data-spreadsheet-surface={state}
       role={state === 'loading' ? 'status' : 'alert'}
-      className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-300"
+      className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-body text-slate-600 dark:text-slate-300"
     >
       <p>{copy}</p>
       {retry ? (
