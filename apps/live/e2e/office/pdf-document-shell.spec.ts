@@ -79,7 +79,8 @@ test('a PDF’s title row, menus and toolbar are its own, and follow the editing
     'aria-disabled',
     'true',
   );
-  await expect(toolbar(page, 'Dark pages')).toHaveAttribute('aria-disabled', 'true');
+  // dark-pages.md "The setting": in the dark scheme the toolbar's Dark pages toggle runs, off until answered.
+  await expect(toolbar(page, 'Dark pages')).toHaveAttribute('aria-pressed', 'false');
   await expect(toolbar(page, 'Select')).toHaveAttribute('aria-pressed', 'true');
   // "The toolbar never changes height between modes, so the pages do not jump."
   expect((await page.locator('[data-pdf-pages]').boundingBox())!.y).toBe(barTop);

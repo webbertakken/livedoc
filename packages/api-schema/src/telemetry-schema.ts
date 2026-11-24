@@ -183,7 +183,7 @@ export const TELEMETRY_CATEGORIES = [
   // ('Imported', `type` the way: 'Explorer'), a mark made ('Added', 'Mark.Highlight'), a tool taken in hand
   // ('Selected', 'Tool.Highlight'), a person's own change taken back or made again ('Undone', 'Redone'), a
   // download ('Exported', 'Pdf'), a print handed to the browser ('Exported', 'Print'), and a person's view: its page display ('Changed', 'PageDisplay.Single') and how
-  // it was zoomed ('Zoomed', 'FitWidth'), a PDF layer shown or hidden for them ('Toggled', 'Layer.Hidden'), Read mode or Full screen entered ('Toggled', 'ReadMode'), text copied ('Copied', 'Text'), a search of its text ('Searched', 'Find'),
+  // it was zoomed ('Zoomed', 'FitWidth'), a PDF layer shown or hidden for them ('Toggled', 'Layer.Hidden'), Read mode or Full screen entered ('Toggled', 'ReadMode'), Dark pages turned on or off ('Toggled', 'DarkPagesOn'), text copied ('Copied', 'Text'), a search of its text ('Searched', 'Find'),
   // and how each open came out ('Opened', 'Read', 'PasswordGiven', 'Repaired' or 'Refused.Damaged').
   // Never a name, a password or any text of a file.
   'Pdf',

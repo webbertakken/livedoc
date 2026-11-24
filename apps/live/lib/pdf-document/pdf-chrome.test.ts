@@ -7,6 +7,7 @@ import { visibleToolbar } from '@/lib/office/office-toolbar';
 import { SHELL_BOUND_ITEMS } from '@/lib/office/office-catalogue';
 import {
   COPY,
+  DARK_PAGES,
   DOWNLOAD_PDF,
   FIND,
   GO_TO_FIRST_PAGE,
@@ -127,6 +128,8 @@ describe("a PDF document's menus and toolbar", () => {
     // usePdfReadMode.ts, usePdfFullScreen.ts: one person's room for the pages.
     READ_MODE,
     FULL_SCREEN,
+    // usePdfDarkPages.ts: bound in the dark scheme.
+    DARK_PAGES,
   ];
 
   it('has no built item nothing runs, no shortcut its registry lacks, no id twice', () => {
@@ -198,6 +201,7 @@ describe("a PDF document's menus and toolbar", () => {
       TOOL_SELECT,
       PAGE_DISPLAY_CONTROL,
       ROTATE_VIEW_CLOCKWISE,
+      DARK_PAGES,
     ]);
     expect(controls('reviewing', 'participate')).toEqual([
       UNDO,

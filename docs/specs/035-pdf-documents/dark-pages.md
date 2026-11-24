@@ -1,6 +1,10 @@
 # Dark pages
 
-**Status: specified.** Nothing is built.
+**Status: specified; the recolouring and the setting are built.** Built: the step in the engine's worker, photographs
+put back; the setting in Settings, View and the toolbar, live. Not built: the first-time question.
+
+The look (photographs kept as drawn) and the first-time question (a card, once per person) are `(default)`: the
+director chose them on 2026-11-24 while Webber's answer is open; the drawn options are in the plan's assets.
 
 **Dark pages** is one person's view of a [PDF document](pdf-document.md)'s pages shown dark: lightness inverted, hue
 kept, pictures untouched. The file, Download, print and what anyone else sees never change (ruling C3). Webber: "Dark
@@ -27,28 +31,34 @@ to be shown:
 
 - **Lightness is mirrored**, hue and chroma kept: in OKLab, a pixel's lightness `L` becomes
   `paper + (1 - L)^DARK_PAGES_CURVE × (ink - paper)`, where paper is the text document's dark paper (`#1e1f20`) and
-  ink its ink (`#e3e3e3`). White paper becomes dark paper, black text becomes ink, a red heading stays red.
+  ink its ink (`#e3e3e3`). White paper takes dark paper's lightness, neutral as white is (`#1f1f1f`); black text
+  becomes ink; a red heading stays red.
 - **The curve keeps contrast**: a straight mirror would turn a grey that meets 4.5:1 on white into one that does not
   on dark paper. With the curve, every grey that met 4.5:1 on white stays at or above it on dark paper.
-- **Photographs are put back.** A picture is copied back as the file drew it when it covers less than
+- **Photographs are put back** `(default)`. A picture is copied back as the file drew it when it covers less than
   `DARK_PAGES_PAGE_PICTURE_SHARE` of the page and shows at least `DARK_PAGES_PICTURE_COLOURS` distinct colours;
-  otherwise it is ink and paper like the rest. So a photograph, a logo and a screenshot stay as they are; a chart
+  otherwise it is ink and paper like the rest.
+- **A picture is judged once a page**, never a tile: its colours are counted on it drawn alone, its longer side
+  `DARK_PAGES_PICTURE_SAMPLE_PX`, so every tile and scale of one picture decides alike `(default)`.
+- Only a picture of more than one bit a pixel and at least `DARK_PAGES_PICTURE_MIN_SIDE` pixels a side is judged. So a photograph, a logo and a screenshot stay as they are; a chart
   whose bars are tiny pictures, and a scanned page that is one picture, are mirrored.
 - **Marks, fields, signatures and selections** made in LiveDoc pass through the same step, so a yellow highlight is
   the same deep yellow whether it came with the file or was made a second ago.
-- **Tiles are cached per look** (paper or dark): switching re-runs the step, never the engine.
+- **Tiles are kept per look** (paper or dark): switching draws the pages in view again, the latest asked first.
+- **The left panel's thumbnails** are this person's view too, so they show dark with the pages `(default)`.
 - The page's edge and the ground are the shell's tokens, unchanged by the step.
 
 ## The setting
 
 - **One setting, a person's**: Dark pages on or off. It follows the account when signed in, and this browser
   otherwise, as the colour scheme's preference does ([Preferences](../007-editor/user-preferences.md)).
-- **Three places, one value**: Settings > Appearance > **Dark pages** ("Show PDF pages dark in the dark colour
-  scheme"), the surface's **View > Dark pages** check, and the toolbar's Dark pages toggle in Viewing.
+- **Three places, one value**: Settings > Appearance > **Dark Pages** ("Show PDF pages dark in the dark colour
+  scheme. Only your view changes."), the surface's **View > Dark pages** check, and the toolbar's Dark pages toggle in
+  Viewing.
 - **Live**: flipping it recolours the open pages without a reload, in every open PDF document of that person's
   browser.
 - It is **off until answered** ([The first-time question](#the-first-time-question)).
-- The toolbar toggle carries `aria-pressed`; its tooltip is "Dark pages: on" or "Dark pages: off".
+- The toolbar toggle carries `aria-pressed`, and its name and tooltip are "Dark pages" `(default)`.
 
 ## The first-time question
 
@@ -78,6 +88,9 @@ Fork F13 `(default)`.
 | `DARK_PAGES_PICTURE_COLOURS`    | 48    | 32 to 128   | `(default)` Distinct colours, 5 bits a channel, sampled: a photograph has more, a chart's bar fewer |
 | `DARK_PAGES_PAGE_PICTURE_SHARE` | 0.85  | 0.7 to 0.95 | `(default)` A picture covering more of the page is a scanned page, not a photograph                 |
 | `DARK_PAGES_STEP_BUDGET_MS`     | 16    | 8 to 50     | `(default)` A tile's step; past it the step moves to the GPU. Set by measurement                    |
+| `DARK_PAGES_PICTURE_SAMPLE_PX`  | 96    | 64 to 256   | `(default)` The longer side a picture is drawn at to count its colours                              |
+| `DARK_PAGES_PICTURE_MIN_SIDE`   | 64    | 32 to 128   | `(default)` Pixels a side, in the file, of the least picture judged a photograph                    |
+| `DARK_PAGES_LOG_EVERY`          | 50    | 1 to 1,000  | `(default)` A step is logged for the first, then one in this many                                   |
 
 ## Share roles
 
@@ -96,7 +109,8 @@ Dark pages is a view, so every role has it alike; it changes nothing anyone else
 - `Pdf · Toggled · <DarkPagesOn|DarkPagesOff>` wherever it is flipped, fired before the setting is persisted.
 - `Pdf · Opened · DarkPagesQuestion` when the card shows; `Pdf · Selected · DarkPagesQuestion.<Use|Keep|Dismissed>`
   when it closes.
-- Fingerprints: `[pdf] dark-pages step ms=<n> pictures=<n>` (sampled), `[pdf] dark-pages asked`.
+- Fingerprints: `[pdf] dark-pages step ms=<n> pictures=<n>` (the first, then one in `DARK_PAGES_LOG_EVERY`),
+  `[pdf] dark-pages asked`, `[pdf] dark-pages on=<yes|no>` (a choice), `[pdf] dark-pages not-saved`.
 
 ## Errors
 

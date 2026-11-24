@@ -139,7 +139,7 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
         ...BUILT,
         shortcut: ROTATE_VIEW_CLOCKWISE,
       }),
-      toggle(DARK_PAGES, 'Dark pages', 'view', lucideMoon),
+      toggle(DARK_PAGES, 'Dark pages', 'view', lucideMoon, { ...BUILT, shortcut: DARK_PAGES }),
     ]),
   ],
   reviewing: [

@@ -38,16 +38,38 @@ describe('a person’s layers', () => {
     expect(track).toHaveBeenCalledWith('Pdf', 'Toggled', 'Layer.Hidden');
     await result.current.drawer!.draw(0, 1, 1);
     await result.current.drawer!.drawTile('t', 0, 1, 0, { x: 0, y: 0, width: 1, height: 1 });
-    expect(pdf.drawPage).toHaveBeenCalledWith(0, 1, 1, ['o:6', 'o:5']);
-    expect(pdf.drawTile).toHaveBeenCalledWith(0, 1, 0, { x: 0, y: 0, width: 1, height: 1 }, [
-      'o:6',
-      'o:5',
-    ]);
+    expect(pdf.drawPage).toHaveBeenCalledWith(0, 1, 1, ['o:6', 'o:5'], 'paper');
+    expect(pdf.drawTile).toHaveBeenCalledWith(
+      0,
+      1,
+      0,
+      { x: 0, y: 0, width: 1, height: 1 },
+      ['o:6', 'o:5'],
+      'paper',
+    );
     await act(async () => {
       await result.current.setLayer('o:6', true, ['o:6', 'o:5']);
     });
     expect(result.current.hidden).toEqual(['o:5']);
     expect(track).toHaveBeenCalledWith('Pdf', 'Toggled', 'Layer.Shown');
+  });
+
+  // dark-pages.md "The recolouring": Dark pages is another drawer, the file's layers as it sets them.
+  it('draws with a drawer of its own under Dark pages, every page and tile asked dark', async () => {
+    const pdf = engine();
+    const { result } = renderHook(() => usePdfLayerView(pdf, fileDrawer, 'dark'));
+    expect(result.current.drawer).not.toBe(fileDrawer);
+    await result.current.drawer!.draw(0, 1, 0);
+    await result.current.drawer!.drawTile('t', 0, 1, 0, { x: 0, y: 0, width: 1, height: 1 });
+    expect(pdf.drawPage).toHaveBeenCalledWith(0, 1, 0, undefined, 'dark');
+    expect(pdf.drawTile).toHaveBeenCalledWith(
+      0,
+      1,
+      0,
+      { x: 0, y: 0, width: 1, height: 1 },
+      undefined,
+      'dark',
+    );
   });
 
   it('changes nothing where the engine cannot draw the layers so', async () => {

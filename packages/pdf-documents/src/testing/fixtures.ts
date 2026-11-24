@@ -484,3 +484,66 @@ export async function pageTextsOf(bytes: Uint8Array): Promise<string[]> {
   const pdf = await PDF.load(bytes);
   return pdf.getPages().map((page) => page.extractText().text);
 }
+
+/** Where `darkPagesPdf`'s first page draws its parts, in page points: left, bottom, width, height. */
+export const DARK_PAGES_PARTS = {
+  ink: [72, 700, 200, 40],
+  photograph: [72, 400, 200, 200],
+  chart: [340, 400, 200, 100],
+} as const;
+
+/** A picture's samples as hex: 64 by 64, RGB, each pixel `colour(x, y)`. */
+const pictureHex = (colour: (x: number, y: number) => [number, number, number]): string => {
+  let out = '';
+  for (let y = 0; y < 64; y += 1)
+    for (let x = 0; x < 64; x += 1)
+      out += colour(x, y)
+        .map((value) => value.toString(16).padStart(2, '0'))
+        .join('');
+  return `${out}>`;
+};
+const PICTURE =
+  '/Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /ASCIIHexDecode';
+
+/**
+ * Dark pages' file (dark-pages.md "The recolouring"): on page one, a black bar of ink on white paper, a photograph (a
+ * picture of thousands of colours) and a chart's bar (a picture of two, drawn through a form); pictures never judged:
+ * one too small, one of a bit a pixel, one off the page; on page two the photograph covering the page, as a scan does.
+ */
+export function darkPagesPdf(): Uint8Array<ArrayBuffer> {
+  const at = (part: readonly number[]) => part.join(' ');
+  const [inkX, inkY, inkW, inkH] = DARK_PAGES_PARTS.ink;
+  const photograph = pictureHex((x, y) => [x * 4, y * 4, (x * y) % 256]);
+  const chart = pictureHex((x) => (x < 32 ? [51, 102, 204] : [255, 255, 255]));
+  const page = (contents: number) =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Photo 7 0 R /Form 8 0 R /Small 9 0 R /Mask 10 0 R >> >> /Contents ${contents} 0 R >>`;
+  const placed = (part: readonly number[], name: string) => {
+    const [x, y, w, h] = part;
+    return `q ${w} 0 0 ${h} ${x} ${y} cm /${name} Do Q`;
+  };
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
+    page(5),
+    page(6),
+    stream(
+      '',
+      `0 0 0 rg ${at([inkX, inkY, inkW, inkH])} re f ${placed(DARK_PAGES_PARTS.photograph, 'Photo')} ${placed(DARK_PAGES_PARTS.chart, 'Form')} ${placed([500, 650, 30, 30], 'Small')} ${placed([400, 600, 100, 100], 'Mask')} ${placed([700, 100, 100, 100], 'Photo')}`,
+    ),
+    stream('', placed([0, 0, 612, 792], 'Photo')),
+    stream(PICTURE, photograph),
+    stream(
+      '/Type /XObject /Subtype /Form /BBox [0 0 1 1] /Resources << /XObject << /Chart 11 0 R >> >>',
+      '/Chart Do',
+    ),
+    stream(
+      PICTURE.replace('/Width 64 /Height 64', '/Width 8 /Height 8'),
+      `${'ff0000'.repeat(64)}>`,
+    ),
+    stream(
+      '/Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /ASCIIHexDecode',
+      `${'aa'.repeat(512)}>`,
+    ),
+    stream(PICTURE, chart),
+  ]);
+}

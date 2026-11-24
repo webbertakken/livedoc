@@ -968,6 +968,9 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Zoomed|Out': 'Someone zoomed out of a PDF document by a step.',
   'Pdf|Toggled|Layer.Shown':
     'Someone showed a PDF layer for themselves, in a PDF document’s Layers panel.',
+  'Pdf|Toggled|DarkPagesOn':
+    'Someone turned on Dark pages: PDF pages shown dark for them alone, in the dark colour scheme.',
+  'Pdf|Toggled|DarkPagesOff': 'Someone turned off Dark pages: PDF pages shown as the file says.',
   'Pdf|Toggled|ReadMode':
     'Someone turned on Read mode in a PDF document, hiding the menus, toolbar and panels for themselves.',
   'Pdf|Toggled|FullScreen': 'Someone showed a PDF document’s pages full screen, one page a screen.',

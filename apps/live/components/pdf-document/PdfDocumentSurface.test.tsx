@@ -507,9 +507,8 @@ describe('a PDF document’s surface', () => {
       expect(
         screen.getByRole('button', { name: 'Rotate view' }).getAttribute('aria-disabled'),
       ).toBeNull();
-      expect(screen.getByRole('button', { name: 'Dark pages' }).getAttribute('aria-disabled')).toBe(
-        'true',
-      );
+      // dark-pages.md "What it is, and is not": offered in the dark scheme only, so not drawn in the light one.
+      expect(screen.queryByRole('button', { name: 'Dark pages' })).toBeNull();
       fireEvent.click(screen.getByRole('button', { name: 'Mode: Viewing' }));
       fireEvent.click(screen.getByRole('menuitemradio', { name: /Reviewing/ }));
       expect(screen.getByRole('button', { name: 'Highlight' })).toBeTruthy();

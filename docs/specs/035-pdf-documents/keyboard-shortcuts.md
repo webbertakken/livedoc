@@ -43,7 +43,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Next result, previous result            | ⌘G or Enter, ⌘⇧G or ⇧Enter            | F3 or ⌘G                              | built     |
 | Print                                   | ⌘P                                    | The same                              | built     |
 | Properties                              | ⌘D                                    | The same                              | specified |
-| Dark pages on and off                   | ⌘⌥D `(default)`                       | None                                  | specified |
+| Dark pages on and off                   | ⌘⌥N `(default)`                       | None                                  | built     |
 | Show or hide marks                      | ⌘⇧8                                   | The same                              | specified |
 
 - † A key Acrobat shows in its menus, not on its shortcut page (assumed, from the product as known; checked against
@@ -52,6 +52,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
   browser's own reader.
 - ⌘L is the browser's address bar and ⌃⌥L locks a Linux screen, so full screen is ⌘⌥F.
 - ⌘H and ⌘⌥H hide apps on a Mac before a page hears them, so Read mode is ⌘⌥R.
+- ⌥⌘D shows and hides a Mac's Dock before a page hears it, so Dark pages is ⌘⌥N.
 - ↑, ↓, ←, →, Home, End, the Page keys and Space are heard while focus is on the pages, as a single-key tool is: in a
   field or on a toolbar they keep their own meaning.
 - Where the pages are wider than the view, ← and → scroll them sideways, as a browser does; where they fit, ← and →

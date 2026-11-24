@@ -247,7 +247,12 @@ export const PDF_MENUS: OfficeCatalogue = [
     SEPARATOR,
     item('panel-comments', 'Comments', 'view', CHECK),
     item('show-marks', 'Marks', 'view', { ...CHECK, keywords: ['annotations', 'hide'] }),
-    item(DARK_PAGES, 'Dark pages', 'view', { ...CHECK, keywords: ['night', 'invert'] }),
+    item(DARK_PAGES, 'Dark pages', 'view', {
+      ...BUILT,
+      ...CHECK,
+      shortcut: DARK_PAGES,
+      keywords: ['night', 'invert'],
+    }),
     SEPARATOR,
     item(READ_MODE, 'Read mode', 'view', { ...BUILT, ...CHECK, shortcut: READ_MODE }),
     item(FULL_SCREEN, 'Full screen', 'view', {

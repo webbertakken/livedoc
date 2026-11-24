@@ -31,6 +31,12 @@ export const clampSide = (points: number): number =>
  * What of a file was held back on its way out (security.md "The boundary"): a coordinate out of reach, a page's
  * size out of bounds, a text cut to its limit, a list cut to its limit.
  */
+/** A box of a page, in its own points (PDF user space). */
+export type PageBox = { left: number; bottom: number; right: number; top: number };
+
+/** One Dark pages step: how long it took, the photographs it put back, or that it failed. */
+export type DarkStep = { ms: number; pictures: number } | { failed: true };
+
 export type Clamped = 'coordinate' | 'size' | 'text' | 'list';
 
 export class ReaderFile {
@@ -45,6 +51,10 @@ export class ReaderFile {
   private formInfo = 0;
   // How many values of each sort were held back since the tally was last taken.
   private tally = new Map<Clamped, number>();
+  /** Dark pages: each page's photographs, by index, judged once while the file is open (dark-step.ts). */
+  readonly photographs = new Map<number, readonly PageBox[]>();
+  /** Dark pages: what the last step took, for the engine to log; taken once. */
+  darkStep: DarkStep | null = null;
 
   constructor(pdfium: Pdfium) {
     this.p = pdfium;
@@ -182,6 +192,7 @@ export class ReaderFile {
 
   /** Lets go of the file without a word to the reader: after a trap it answers nothing more. */
   forget(): void {
+    this.photographs.clear();
     this.doc = 0;
     this.memory = 0;
     this.count = 0;

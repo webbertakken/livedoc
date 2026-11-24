@@ -145,6 +145,13 @@ export const APPEARANCE_SETTINGS = settingsStack('Appearance Settings', 'How the
     'Button Labels',
     'Names beside the bottom-right buttons\u2019 icons on a wide desktop.',
   ),
+  toggle(
+    'Pdf',
+    'DarkPagesOn',
+    'DarkPagesOff',
+    'Dark Pages',
+    'PDF pages shown dark in the dark scheme, from Settings, a PDF\u2019s View menu or its toolbar.',
+  ),
   changed('PanelOpacity', 'Panel Opacity', 'The panels\u2019 transparency slider.', true),
   changed('UiScale', 'UI Scale', 'The panels, toolbar and corner buttons\u2019 size slider.', true),
   changed('UiScalePanels', 'Panel Scale', 'The panels\u2019 own size slider.', true),

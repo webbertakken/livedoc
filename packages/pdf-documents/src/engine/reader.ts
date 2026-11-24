@@ -8,6 +8,7 @@ import type {
   FileMark,
   Outline,
   PageBitmap,
+  PageLook,
   PageMatrix,
   PageTurns,
   TileRect,
@@ -21,6 +22,7 @@ import type { EmbeddedFiles } from '../embedded-file';
 import type { PageField } from '../file-field';
 import type { PageTags } from '../page-tags';
 import type { PageText } from '../page-text';
+import { darkened, pagePlace } from './dark-step';
 import { drawPage, drawTile, pageMatrix } from './draw-page';
 import { readDocument, readPages } from './read-document';
 import { readEmbeddedFile, readEmbeddedFiles } from './read-embedded-files';
@@ -30,7 +32,7 @@ import { readLinks, readOutline } from './read-outline';
 import { readSignatures, type SignatureHeld } from './read-signatures';
 import { readPageTags, type TagLimits } from './read-tags';
 import { readPageText, selectText } from './read-text';
-import { ReaderFile, type Clamped, type Pdfium } from './reader-file';
+import { ReaderFile, type Clamped, type DarkStep, type Pdfium } from './reader-file';
 
 export type { Pdfium } from './reader-file';
 
@@ -96,12 +98,37 @@ export class PdfReader {
     scale: number,
     ceiling?: number,
     turns: PageTurns = 0,
+    look: PageLook = 'paper',
   ): PageBitmap | null {
-    return drawPage(this.file, index, scale, ceiling, turns);
+    const { file } = this;
+    const drawn = drawPage(file, index, scale, ceiling, turns);
+    if (!drawn || look === 'paper') return drawn;
+    return darkened(file, index, drawn, pagePlace(file, index, turns, drawn.width));
   }
 
-  drawTile(index: number, scale: number, turns: PageTurns, rect: TileRect): PageBitmap | null {
-    return drawTile(this.file, index, scale, turns, rect);
+  drawTile(
+    index: number,
+    scale: number,
+    turns: PageTurns,
+    rect: TileRect,
+    look: PageLook = 'paper',
+  ): PageBitmap | null {
+    const { file } = this;
+    const drawn = drawTile(file, index, scale, turns, rect);
+    if (!drawn || look === 'paper') return drawn;
+    const place = {
+      factor: scale,
+      x: Math.max(0, Math.floor(rect.x)),
+      y: Math.max(0, Math.floor(rect.y)),
+    };
+    return darkened(file, index, drawn, place);
+  }
+
+  /** What the last Dark pages step took, once: the engine logs it. */
+  takeDarkStep(): DarkStep | null {
+    const step = this.file.darkStep;
+    this.file.darkStep = null;
+    return step;
   }
 
   pageMatrix(index: number, turns: PageTurns = 0): PageMatrix | null {

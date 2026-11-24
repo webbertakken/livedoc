@@ -1005,6 +1005,19 @@ export const SETTINGS_CATEGORIES: SettingsCategorySpec[] = [
         description: 'Undo and Redo, Layers, Style and zoom.',
         changed: 'UiScaleCornerButtons',
       }),
+      {
+        // docs/specs/035-pdf-documents/dark-pages.md "The setting": one of its three places, one value.
+        kind: 'toggle',
+        key: 'pdfDarkPages',
+        keywords: 'dark pages pdf night invert colour scheme reading',
+        section: 'PDF Documents',
+        label: 'Dark Pages',
+        description: 'Show PDF pages dark in the dark colour scheme. Only your view changes.',
+        alsoIn: 'a PDF’s View menu and its toolbar',
+        read: (p) => p.pdfDarkPages === true,
+        write: (p, v) => ({ ...p, pdfDarkPages: v }),
+        event: { category: 'Pdf', on: 'DarkPagesOn', off: 'DarkPagesOff' },
+      },
     ],
   },
   {

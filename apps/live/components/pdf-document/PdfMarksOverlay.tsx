@@ -1,8 +1,12 @@
 // LiveDoc's marks over a page's picture (docs/specs/035-pdf-documents/marks.md "Making a mark"): each mark's quads,
 // placed through the matrix the page was drawn with, multiplied onto the page so the words under a highlight keep
 // their own colour. Geometry LiveDoc draws itself, never markup of the file. The page and its thumbnail share it.
+// Under Dark pages (dark-pages.md "The recolouring") a mark takes the colour the step gives the file's own marks, and
+// lightens the dark page as multiplying darkens the white one, so the words under it keep their ink.
+import { useContext } from 'react';
 import type { Mark, PageMatrix, Quad } from '@livedoc/pdf-documents';
-import { PageView } from '@livedoc/pdf-documents';
+import { DarkPages, PageView } from '@livedoc/pdf-documents';
+import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 
 /** A quad as an SVG polygon's points, in view space. */
@@ -35,19 +39,21 @@ export function PdfMarksOverlay({
   // Find's results on the page, the current one stronger (reading-surface.md "Find").
   found?: PdfFindTints | null;
 }) {
+  const dark = useContext(PdfLookContext) === 'dark';
   return (
     <svg
+      data-pdf-look={dark ? 'dark' : 'paper'}
       aria-hidden="true"
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      className="pointer-events-none absolute inset-0 h-full w-full mix-blend-multiply"
+      className={`pointer-events-none absolute inset-0 h-full w-full ${dark ? 'mix-blend-lighten' : 'mix-blend-multiply'}`}
     >
       {marks.map((mark) => (
         <g
           key={mark.id}
           data-pdf-mark={mark.id}
           data-pdf-mark-kind={mark.kind}
-          fill={mark.colour}
+          fill={dark ? DarkPages.hex(mark.colour) : mark.colour}
           opacity={mark.opacity}
         >
           {mark.quads.map((quad, at) => (

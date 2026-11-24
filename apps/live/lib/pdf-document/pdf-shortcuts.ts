@@ -6,6 +6,7 @@ import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
 import {
   COPY,
+  DARK_PAGES,
   FIND,
   FULL_SCREEN,
   GO_TO_NEXT_VIEW,
@@ -84,6 +85,8 @@ const READING: readonly ShortcutRow[] = [
   // ⌘⌥H hides apps on a Mac, and ⌃⌥L locks a Linux screen, before a page hears either.
   reading(READ_MODE, 'Read mode', 'Ctrl+Alt+R', '⌘+Option+R'),
   reading(FULL_SCREEN, 'Full screen', 'Ctrl+Alt+F', '⌘+Option+F'),
+  // ⌥⌘D shows and hides a Mac's Dock before a page hears it.
+  reading(DARK_PAGES, 'Dark pages on and off', 'Ctrl+Alt+N', '⌘+Option+N'),
 ];
 
 /** Not a menu item's: the surface binds it under this id (keyboard-shortcuts.md "Panels"). */
