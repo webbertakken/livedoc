@@ -25,6 +25,7 @@ import { shortHash } from '../hash';
 import { Pictures, type Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
 import type { Bookmark } from '../model/bookmarks';
+import type { TableOfContents } from '../model/contents';
 import { odfEquationXml } from './odf-equations';
 import {
   isPictureParentStyleXml,
@@ -58,6 +59,30 @@ import { odfTableXml, type OdfTableHost } from './odf-tables';
 import { Blocks } from '../model/tables';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
+
+/**
+ * A table of contents as ODF writes one (standard-mapping.md "Tables of contents"): protected, its source naming its
+ * levels and a template per level (the link, the text, then the page number after a right tab, dotted when Dotted),
+ * its body the entries as written.
+ */
+export function odfContentsXml(
+  block: TableOfContents,
+  n: number,
+  styles: readonly Style[],
+  entries: readonly string[],
+): string {
+  const normal = Styles.idOfRole(styles, 'normal') ?? 'Standard';
+  const pages =
+    block.look === 'links'
+      ? ''
+      : `<text:index-entry-tab-stop style:type="right"${block.look === 'dotted' ? ' style:leader-char="."' : ''}/><text:index-entry-page-number/>`;
+  const templates = Array.from({ length: block.levels }, (_, i) => {
+    const own = `Contents_20_${i + 1}`;
+    const style = styles.some((s) => s.id === own) ? own : normal;
+    return `<text:table-of-content-entry-template text:outline-level="${i + 1}" text:style-name="${escapeXmlAttribute(style)}"><text:index-entry-link-start/><text:index-entry-text/>${pages}<text:index-entry-link-end/></text:table-of-content-entry-template>`;
+  }).join('');
+  return `<text:table-of-content text:name="Table of Contents${n}" text:protected="true"><text:table-of-content-source text:outline-level="${block.levels}" text:use-index-marks="false">${templates}</text:table-of-content-source><text:index-body>${entries.join('')}</text:index-body></text:table-of-content>`;
+}
 
 /** A bookmark as the point ODF names; one without a name writes nothing (links-and-navigation.md "Bookmarks"). */
 export const odfBookmarkXml = (bookmark: Bookmark): string =>
@@ -499,6 +524,7 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
     return `<${tag}${attr('text:style-name', style)}${level}>${paragraphContentXml(segments)}</${tag}>`;
   };
 
+  let contentsCount = 0;
   for (let i = 0; i < blocks.length; i += 1) {
     const block = blocks[i]!;
     if (block.type === 'paragraph' && block.list) {
@@ -509,7 +535,10 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
     if (block.type === 'paragraph') out.push(paragraphXml(block));
     else if (block.type === 'kept') out.push(w.kept(block.xml));
     else if (block.type === 'table') out.push(odfTableXml(tables, block));
-    else {
+    else if (block.type === 'contents') {
+      contentsCount += 1;
+      out.push(odfContentsXml(block, contentsCount, doc.styles, block.entries.map(paragraphXml)));
+    } else {
       section = block;
       firstInSection = true;
       if (regionOpen) {

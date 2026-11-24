@@ -39,7 +39,9 @@ const withCells = (blocks: readonly Block[]): Block[] =>
   blocks.flatMap((b) =>
     b.type === 'table'
       ? [b, ...withCells(b.rows.flatMap((row) => row.cells.flatMap((cell) => cell.blocks)))]
-      : [b],
+      : b.type === 'contents'
+        ? [b, ...b.entries]
+        : [b],
   );
 
 /** Whether a table keeps a table style the model does not map: `table:template-name`, `w:tblStyle`, `w:tblLook`. */
@@ -238,6 +240,10 @@ export function convertTextDocument(
     blocks.flatMap((block): Block[] => {
       if (block.type === 'kept') return [];
       if (block.type === 'table') return [tableOf(block)];
+      if (block.type === 'contents')
+        return [
+          { ...block, entries: blocksOf(block.entries).filter((b) => b.type === 'paragraph') },
+        ];
       if (block.type === 'section') {
         const { region: _, headers, ...rest } = withoutKept(block);
         const own = headersOf(headers);

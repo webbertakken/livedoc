@@ -37,6 +37,8 @@ import {
   TABLE_ROW,
   TABLE_ROW_ATTRIBUTES,
   TextDocumentState,
+  CONTENTS,
+  CONTENTS_ATTRIBUTES,
 } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
 
@@ -57,6 +59,7 @@ describe('textDocumentSchema', () => {
       [TABLE_ROW]: TABLE_ROW_ATTRIBUTES,
       [TABLE_CELL]: TABLE_CELL_ATTRIBUTES,
       [TABLE_HEADER]: TABLE_CELL_ATTRIBUTES,
+      [CONTENTS]: CONTENTS_ATTRIBUTES,
     };
     for (const name of [
       ...BODY_BLOCKS,

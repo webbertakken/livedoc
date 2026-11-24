@@ -93,8 +93,16 @@ div.text-document-kept {
 .ProseMirror-selectednode.text-document-kept,
 .ProseMirror-selectednode.text-document-picture > .text-document-picture-turn,
 .ProseMirror-selectednode.text-document-section-break,
+.ProseMirror-selectednode.text-document-contents,
 .ProseMirror-selectednode.text-document-equation:not([data-editing]) {
   outline: 2px solid light-dark(#0284c7, #38bdf8);
+}
+/* A table of contents (docs/specs/034-text-documents/links-and-navigation.md "Table of contents"): one read-only block. */
+.text-document-contents {
+  display: block;
+  cursor: default;
+  user-select: none;
+  outline-offset: 2px;
 }
 .text-document-kept-hidden {
   display: none;

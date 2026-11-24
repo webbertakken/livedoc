@@ -52,7 +52,8 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 
 - **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, its watermark
   ([Watermark](page-layout.md#watermark)), its pictures' media ([Objects](objects.md#the-model)) and its kept parts.
-- **Body**: blocks in order, each a **paragraph**, a **table**, a **section break** or a **kept block**.
+- **Body**: blocks in order, each a **paragraph**, a **table**, a **section break**, a **table of contents** or a
+  **kept block**.
 - **`Table`**: column widths, rows of cells with their spans, header rows, alignment and indent; each cell holds blocks
   as the body does ([Tables](tables.md#the-model)).
 - **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
@@ -96,6 +97,25 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 - Lengths are points, read from either format's units and rounded to three decimals; colours are `#rrggbb`.
 - Text holds tabs as `\t` and line breaks as `\n`.
 
+### Tables of contents
+
+- **`TableOfContents`**: its look (`plain`, `dotted`, `links`), its levels (1 up to 1 to 6) and its entries,
+  paragraphs as the body's, each an entry's text, a tab and its page number (none with blue links), linked to its
+  heading; what a file's table of contents holds that the model does not read stays kept with it.
+- ODF: `text:table-of-content` named `Table of Contents<n>`, protected; its `text:table-of-content-source` with
+  `text:outline-level` the levels, no index marks, and per level a `text:table-of-content-entry-template` of its
+  `Contents_20_N` style: `text:index-entry-link-start`, `-text`, then for page numbers `-tab-stop` (`style:type`
+  right, `style:leader-char` `.` when dotted) and `-page-number`, and `-link-end`; its `text:index-body` the
+  entries, each its runs in one `text:a` to `#<id>`. Read: no page number in the first template's entry, or none
+  in the entries, is With blue links; a dot leader is Dotted.
+- OOXML: a `w:sdt` whose `w:sdtPr` names `w:docPartGallery` `Table of Contents` (`w:docPartUnique`), its content the
+  entries: the first opens a complex field `TOC \o "1-N" \h \z \u` (`\n` too with blue links), the last closes it,
+  each entry a `w:hyperlink w:anchor` around its text, tab and page number, styled `TOCN`. Read: a `TOC` field in
+  such a `w:sdt`, or standing alone, is one; `\n` without a range, or no page numbers, is With blue links; an entry
+  style's or paragraph's dot leader is Dotted; a `PAGEREF` field's shown text is the page number.
+- The `Contents N` and `TOCN` styles are LiveDoc's own when a file has none: based on Normal text, indented
+  0.5 cm a level below the first, a right tab stop at the text width (dotted in Dotted) `(default)`.
+
 ## Extensions
 
 What Google Docs does and neither standard has an element for is written in LiveDoc's extension namespace,
@@ -119,9 +139,9 @@ A file can hold what the model does not: other suites' extensions, form controls
 mail-merge fields, indexes other than the table of contents, smart chips, embedded objects other than equations, custom
 shapes and text boxes, and constructs of newer versions of either standard.
 
-- **Four grains of keeping.** A **kept block** is a body-level element the model does not map (a table until tables
-  are built, a table of contents); a **kept inline** is one inside a paragraph (a spanning bookmark, another field, an endnote),
-  with the formatting of the run it sat in; **kept properties** are the file's own formatting element of a paragraph,
+- **Four grains of keeping.** A **kept block** is a body-level element the model does not map (another index, a
+  text box); a **kept inline** is one inside a paragraph (a spanning bookmark, another field, an endnote), with the
+  formatting of the run it sat in; **kept properties** are the file's own formatting element of a paragraph,
   run, style, list or section, written back as it was while the model's values read from it are unchanged, and
   rebuilt from the model, its unmapped children kept, once they change; **kept parts** are the package's other
   entries (pictures, themes, settings, endnotes), written back with their relationships and media types.

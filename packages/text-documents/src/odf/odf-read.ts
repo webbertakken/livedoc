@@ -61,6 +61,7 @@ import { keptXmlTexts, MediaTaken } from '../picture-media';
 import type { Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
 import { Bookmarks, type Bookmark } from '../model/bookmarks';
+import { Contents } from '../model/contents';
 import { readOdfEquation } from './odf-equations';
 import { TEXT_DOCUMENT_MAX_OBJECTS } from '../limits';
 import {
@@ -605,6 +606,8 @@ class BodyReader {
       else if (is(e, NS.text, 'list')) this.list(e, 0, undefined);
       else if (is(e, NS.text, 'section') && !this.cell) this.region(e);
       else if (is(e, NS.table, 'table')) this.table(e);
+      else if (is(e, NS.text, 'table-of-content') && !this.story) this.contents(e);
+      else if (is(e, NS.text, 'index-title')) this.r.report.drop('layout-hint', e.local);
       else if (is(e, NS.text, 'soft-page-break')) this.r.report.drop('layout-hint', e.local);
       else if (isDde(e)) this.r.report.drop('field', e.local);
       else {
@@ -616,6 +619,38 @@ class BodyReader {
         this.r.report.keep(e.local);
       }
     }
+  }
+
+  /**
+   * A table of contents (standard-mapping.md "Tables of contents"): its levels from its source, its look from the first
+   * entry template's page number and leader (from its entries' tabs when it has none), its entries its body's
+   * paragraphs, its index title left out.
+   */
+  contents(e: XmlElement): void {
+    const source = childElement(e, NS.text, 'table-of-content-source');
+    const template = source
+      ? childElements(source).find((c) => is(c, NS.text, 'table-of-content-entry-template'))
+      : undefined;
+    const parts = template ? childElements(template) : [];
+    const tab = parts.find((c) => is(c, NS.text, 'index-entry-tab-stop'));
+    const reader = new BodyReader(this.r, this.styles, this.defaults, true, { notes: this.notes });
+    const body = childElement(e, NS.text, 'index-body');
+    if (body) reader.container(body);
+    const entries = reader.blocks.filter((b): b is Paragraph => b.type === 'paragraph');
+    const pages = template
+      ? parts.some((c) => is(c, NS.text, 'index-entry-page-number'))
+      : entries.some((p) => p.inlines.some((i) => i.type === 'run' && i.text.includes('\t')));
+    this.blocks.push({
+      type: 'contents',
+      look: Contents.lookOf({
+        pages,
+        dotted: tab !== undefined && attributeOf(tab, NS.style, 'leader-char') === '.',
+      }),
+      levels: Contents.levelsOf(
+        source ? Number(attributeOf(source, NS.text, 'outline-level')) : undefined,
+      ),
+      entries,
+    });
   }
 
   table(e: XmlElement): void {

@@ -158,6 +158,48 @@ describe('the layout pass', () => {
     ]);
   });
 
+  // links-and-navigation.md "Table of contents": an entry's tab leads to its page number, as any paragraph's.
+  it('lays out the tabs of a paragraph inside a block, a table of contents’ entry', () => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const left = this.classList.contains(TAB_CLASS) ? 120 : 100;
+      return { left, top: 0, width: 600, height: 10, right: 700, bottom: 10 } as DOMRect;
+    });
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ width: '600px' } as CSSStyleDeclaration);
+    vi.spyOn(EditorView.prototype, 'coordsAtPos').mockReturnValue({
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 10,
+    });
+    const stops: TabStop[] = [{ position: 60, align: 'end', leader: 'dot' }];
+    const contents = schema.nodes.table_of_contents!.create({ look: 'dotted', levels: 3 }, [
+      p('Alpha\t1', { tabStops: stops }),
+    ]);
+    view = new EditorView(document.body.appendChild(document.createElement('div')), {
+      state: EditorState.create({
+        doc: schema.node('doc', null, [contents, p('Body')]),
+        plugins: [tabStopsPlugin(() => formatting)],
+      }),
+    });
+    relayTextDocumentTabs(view);
+    const box = view.dom.querySelector<HTMLElement>(`.${TAB_CLASS}`)!;
+    expect([box.style.width, box.dataset.leader]).toEqual(['60px', 'dot']);
+
+    // The editor's own redraw (after something else wrote to its elements) gives the entry a new, unsized box.
+    box.removeAttribute('style');
+    view.updateState(view.state);
+    expect(view.dom.querySelector<HTMLElement>(`.${TAB_CLASS}`)!.style.width).toBe('60px');
+  });
+
   it('measures nothing while the writing is hidden', () => {
     vi.stubGlobal(
       'ResizeObserver',
