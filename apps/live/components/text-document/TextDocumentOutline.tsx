@@ -1,7 +1,8 @@
 'use client';
 
 // The outline's body (docs/specs/034-text-documents/links-and-navigation.md "The outline", "Document tabs in the
-// outline"): the document tabs, indented by depth, the shown one marked, + adding one for an Editor; under the shown tab
+// outline"): the document tabs, indented by depth, the shown one marked, + adding one for an Editor, dragged to reorder
+// or nest them ("A tab's menu", Dragging); under the shown tab
 // its headings, indented by level, following the writing as anyone changes it; a press on a tab shows it, and a press
 // on a heading puts the caret at its start and brings it to the top of the view. The office shell's left panel frames it.
 import { useCallback, useId, useMemo, useSyncExternalStore } from 'react';
@@ -17,6 +18,7 @@ import {
 } from '@/lib/text-document/text-document-outline';
 import type { TextDocumentTabs } from './useTextDocumentTabs';
 import { TextDocumentOutlineTab } from './TextDocumentOutlineTab';
+import { useTextDocumentTabDrag } from './useTextDocumentTabDrag';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
 import { OfficeEmojiDialog } from '@/components/office/OfficeEmojiDialog';
 
@@ -86,6 +88,7 @@ export function TextDocumentOutline({
   tabs: TextDocumentTabs;
 }) {
   const titleId = useId();
+  const drag = useTextDocumentTabDrag(tabs);
   // The shown tab's body as it is now, read again whenever anyone changes it; drawn with the panel, so its first
   // entry can take the focus the panel hands it.
   const doc = useSyncExternalStore(
@@ -118,7 +121,7 @@ export function TextDocumentOutline({
         )}
       </div>
       <ul aria-labelledby={titleId}>
-        {tabs.list.map((tab) => {
+        {tabs.list.map((tab, i) => {
           const current = tab.id === tabs.shown;
           const indent = tab.depth * LEVEL_INDENT_PX;
           return (
@@ -128,6 +131,9 @@ export function TextDocumentOutline({
                 tabs={tabs}
                 indent={indent}
                 rowClass={ROW}
+                drag={drag.row(tab.id, DocumentTabList.subtreeEnd(tabs.list, i) > i + 1)}
+                dragged={drag.dragging === tab.id}
+                dropLine={drag.line?.target === tab.id ? drag.line.place : null}
                 // Opening the outline starts at the shown tab when it has no heading.
                 start={current && headings.length === 0}
               />

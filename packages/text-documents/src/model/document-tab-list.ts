@@ -8,6 +8,9 @@ import {
   type DocumentTabHead,
 } from './document-tabs';
 
+/** Where a dragged tab lands against another (links-and-navigation.md "A tab's menu", Dragging). */
+export type DocumentTabDropPlace = 'before' | 'after' | 'into';
+
 /** A document tab as the list holds it: its head and its depth. */
 export type DocumentTabEntry = DocumentTabHead & { readonly depth: DocumentTabDepth };
 
@@ -133,4 +136,30 @@ export const DocumentTabList = {
       removed: list.slice(i, end).map((t) => t.id),
     };
   },
+  /**
+   * `id` with its subtabs dropped against `target`: before takes its place and depth, after goes right after its
+   * subtabs at its depth, into makes it the first subtab; null into its own subtabs or past the deepest depth.
+   */
+  drop: <T extends DocumentTabEntry>(
+    list: List<T>,
+    id: string,
+    target: string,
+    place: DocumentTabDropPlace,
+  ): T[] | null => {
+    const i = at(list, id);
+    if (i < 0 || at(list, target) < 0) return null;
+    const end = subtreeEnd(list, i);
+    const subtree = list.slice(i, end);
+    if (subtree.some((t) => t.id === target)) return null;
+    const rest = [...list.slice(0, i), ...list.slice(end)];
+    const j = at(rest, target);
+    const depth = rest[j]!.depth + (place === 'into' ? 1 : 0);
+    const by = depth - list[i]!.depth;
+    if (subtree.some((t) => t.depth + by > DEEPEST)) return null;
+    const index = place === 'before' ? j : place === 'into' ? j + 1 : subtreeEnd(rest, j);
+    return [...rest.slice(0, index), ...deepened(subtree, by), ...rest.slice(index)];
+  },
+  /** Whether two lists hold the same tabs in the same order at the same depths. */
+  same: (a: List<DocumentTabEntry>, b: List<DocumentTabEntry>): boolean =>
+    a.length === b.length && a.every((t, k) => t.id === b[k]!.id && t.depth === b[k]!.depth),
 } as const;

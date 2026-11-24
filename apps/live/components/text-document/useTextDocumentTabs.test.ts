@@ -161,6 +161,31 @@ describe('useTextDocumentTabs', () => {
       expect(names(hook)).toEqual(['Tab 2:0', 'Tab 1:0']);
     });
 
+    // links-and-navigation.md "A tab's menu" (Dragging): one write, counted; refused or unchanged, nothing written.
+    it('drops a dragged tab into another, refusing its own subtabs', () => {
+      const { hook } = withTwo();
+      expect(hook.result.current.canDrop('t.b', 't.0', 'into')).toBe(true);
+      expect(hook.result.current.canDrop('t.b', 't.b', 'into')).toBe(false);
+      let dropped = false;
+      act(() => {
+        dropped = hook.result.current.drop('t.b', 't.0', 'into');
+      });
+      expect(dropped).toBe(true);
+      expect(names(hook)).toEqual(['Tab 1:0', 'Tab 2:1']);
+      expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentTab');
+      expect(hook.result.current.canDrop('t.0', 't.b', 'before')).toBe(false);
+    });
+
+    it('writes nothing for a drop where the tab already is', () => {
+      const { hook } = withTwo();
+      track.mockClear();
+      expect(hook.result.current.canDrop('t.b', 't.0', 'after')).toBe(false);
+      act(() => {
+        expect(hook.result.current.drop('t.b', 't.0', 'after')).toBe(false);
+      });
+      expect(track).not.toHaveBeenCalled();
+    });
+
     it('deletes after asking, showing the tab before the one shown', () => {
       const { doc, hook, showTab } = withTwo();
       hook.rerender({ shown: 't.b' });
@@ -196,6 +221,7 @@ describe('useTextDocumentTabs', () => {
       expect(Object.keys(hook.result.current.menuActions('t.0'))).toEqual([
         TAB_MENU_ITEMS.copyLink,
       ]);
+      expect(hook.result.current.canDrop('t.0', 't.0', 'before')).toBe(false);
     });
   });
 });

@@ -119,7 +119,8 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
 
 ## The outline
 
-- View > Show outline (⌘⌥A then H, holding the modifiers) or the outline button at the top left opens the outline,
+- View > Show outline (⌘⌥A then H, holding the modifiers), View > Show tabs & outlines (the same panel, both items
+  checked while it is open `(default)`) or the outline button at the top left opens the outline,
   the shell's [left panel](../004-interface-design/office-shell.md#side-panels), titled **Outline**: the document tabs,
   and under the current tab, its headings, indented by level. A press on a heading puts the caret at its start and
   scrolls it into view.
@@ -181,6 +182,10 @@ In this order, with separators between the groups `(default)`; an item that cann
   is shown, else the one after.
 - **Dragging**: a tab dragged by its row drops before, after or into another tab (the drop line indented for into);
   a drop that would pass the depth of 3, or into its own subtabs, is refused, nothing shown for it.
+  Before takes the other tab's place and depth; after goes right after its subtabs, at its depth; into makes it the
+  other tab's first subtab. The row's top quarter is before, its bottom quarter after (into, when it has subtabs),
+  the rest into; the subtabs move with the tab, keeping their depths under it; a drop where it is changes nothing
+  `(default)`.
 - Each change is one write of the tab list, and none is undone with the writing `(default)`.
 
 ## Keyboard navigation

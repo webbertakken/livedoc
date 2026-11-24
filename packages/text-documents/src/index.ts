@@ -322,4 +322,8 @@ export {
   setLiveTabList,
   type LiveTab,
 } from './live/live-tabs';
-export { DocumentTabList, type DocumentTabEntry } from './model/document-tab-list';
+export {
+  DocumentTabList,
+  type DocumentTabDropPlace,
+  type DocumentTabEntry,
+} from './model/document-tab-list';

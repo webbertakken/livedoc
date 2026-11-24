@@ -10,6 +10,7 @@ import {
   DocumentTabs,
   setLiveTabList,
   type DocumentTab,
+  type DocumentTabDropPlace,
   type DocumentTabEntry,
 } from '@livedoc/text-documents';
 import { documentAddress } from '@/lib/text-document/text-document-links';
@@ -57,6 +58,10 @@ export type TextDocumentTabs = {
   pickEmoji: (emoji: string) => void;
   confirmDelete: () => void;
   cancelAsking: () => void;
+  /** Whether a drag of `id` may drop there: an Editor's, a change, not refused (A tab's menu, Dragging). */
+  canDrop: (id: string, target: string, place: DocumentTabDropPlace) => boolean;
+  /** Drops a dragged tab there; false when it may not or nothing changes. */
+  drop: (id: string, target: string, place: DocumentTabDropPlace) => boolean;
   /** What was last said aloud (Link copied). */
   readonly said: string;
 };
@@ -64,13 +69,14 @@ export type TextDocumentTabs = {
 export type TabAsking = { readonly kind: 'emoji' | 'delete'; readonly id: string };
 
 // What a menu change is counted as, and logged as.
-const CHANGES: Record<TabMove | 'renamed' | 'emoji', string> = {
+const CHANGES: Record<TabMove | 'renamed' | 'emoji' | 'dragged', string> = {
   moveUp: 'moved up',
   moveDown: 'moved down',
   indent: 'indented',
   outdent: 'outdented',
   renamed: 'renamed',
   emoji: 'emoji',
+  dragged: 'dragged',
 };
 
 export function useTextDocumentTabs({
@@ -259,6 +265,26 @@ export function useTextDocumentTabs({
 
   const cancelAsking = useCallback(() => setAsking(null), []);
 
+  // A drop's list, or null where it is refused, changes nothing, or the session may not change the tabs.
+  const dropped = useCallback(
+    (id: string, target: string, place: DocumentTabDropPlace) => {
+      if (!store || !canEdit) return null;
+      const next = DocumentTabList.drop(entries, id, target, place);
+      return next && !DocumentTabList.same(entries, next) ? next : null;
+    },
+    [canEdit, entries, store],
+  );
+  const canDrop = useCallback(
+    (id: string, target: string, place: DocumentTabDropPlace) =>
+      dropped(id, target, place) !== null,
+    [dropped],
+  );
+  const drop = useCallback(
+    (id: string, target: string, place: DocumentTabDropPlace) =>
+      write(dropped(id, target, place), CHANGES.dragged),
+    [dropped, write],
+  );
+
   return {
     list,
     shown,
@@ -275,6 +301,8 @@ export function useTextDocumentTabs({
     pickEmoji,
     confirmDelete,
     cancelAsking,
+    canDrop,
+    drop,
     said,
   };
 }

@@ -180,7 +180,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         shortcut: 'show-outline',
         status: 'built',
       }),
-      item('show-tabs-and-outlines', 'Show tabs & outlines', 'view', { checkable: 'checkbox' }),
+      item('show-tabs-and-outlines', 'Show tabs & outlines', 'view', {
+        checkable: 'checkbox',
+        status: 'built',
+      }),
       item('show-equation-toolbar', 'Show equation toolbar', 'edit', {
         checkable: 'checkbox',
         status: 'built',
