@@ -287,6 +287,28 @@ describe('the live layout', () => {
     },
   );
 
+  // objects.md "Drawings": a drawing's picture names its drawing tab, kept through the live state.
+  it('reads a drawing’s picture back with its drawing tab', () => {
+    const document = CONSTRUCTS.pictures!('odf');
+    const first = document.body[0]! as Paragraph;
+    const drawn = {
+      ...document,
+      body: [
+        {
+          ...first,
+          inlines: first.inlines.map((inline) =>
+            inline.type === 'picture' ? { ...inline, drawing: 'tab-d1' } : inline,
+          ),
+        },
+      ],
+    };
+    const back = live(drawn).body[0] as Paragraph;
+    expect(back.inlines.filter((i) => i.type === 'picture').map((i) => i.drawing)).toEqual([
+      'tab-d1',
+      'tab-d1',
+    ]);
+  });
+
   // objects.md "Equations in the editor": an equation an atom of its own, its maths one whole value; maths the model
   // cannot hold read as an empty equation; a body holding only an equation has content.
   it.each(['odf', 'ooxml'] as const)('reads equations back as written (%s)', (format) => {

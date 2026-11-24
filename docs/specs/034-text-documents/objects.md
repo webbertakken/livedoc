@@ -285,13 +285,14 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
 ## Drawings
 
 A drawing is a LiveDoc canvas inside the text document: never a second drawing tool. It is a **drawing tab**, a
-Sketch tab of the same LiveDoc document that belongs to one text document tab, shown in the writing as a picture and
+general tab of the same LiveDoc document that belongs to one text document tab, shown in the writing as a picture and
 worked on in the canvas editor. The rules below are LiveDoc's own where Google's dialog has no counterpart `(default)`.
 
 ### A drawing tab
 
-- A general tab worked on in Sketch with the Structured palette, named **Drawing N** (N the next free number in its
-  text document), its `drawingOf` the text document tab's id. It lives in the tab's body, so it goes wherever its
+- A general tab that opens in Structured mode, as Google's drawings are shapes, lines and text (its mode switch still
+  offers Sketch), named **Drawing N** (N the next free number in its text document), its `drawingOf` the text
+  document tab's id. It lives in the tab's body, so it goes wherever its
   text document tab goes.
 - **Not listed**: the tab strip, the tab list and its stack, tab folders, Choose a Tab, Side by Side, the link
   picker's tabs, a Links card's tabs, the embed's tab switcher and a share's tab scope never show a drawing tab.
@@ -307,6 +308,11 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
   a Mac) goes back to the text document, where the drawing is placed at the caret as an inline picture at its drawn
   size, at most the text's width, as one undo step. Closing a drawing with nothing on it places nothing and removes
   the tab.
+- **Where it goes**: the caret's place (its document tab and a position that follows others' edits) is kept in this
+  browser's session from New until Save and close, so a reload in between still places it `(default)`.
+- **Its picture** is a PNG of the drawing at twice its size on a transparent ground, stored as an inserted picture is
+  (the gallery, or its bytes in the document where the gallery cannot hold it); a drawing whose picture cannot be
+  stored stays open and says why, in the words a picture refused on insert has.
 - **Opening it again**: a double-click on the picture, or **Edit** on its bar, opens its drawing tab; Save and close
   goes back to the text document at the picture, selected. Every change in the drawing tab is live (everyone's, as on
   any canvas); Save and close only leaves.

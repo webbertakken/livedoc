@@ -27,3 +27,16 @@ export function listedTabIdFor(tabs: readonly TabLike[], id: string): string | n
   if (!isDrawingTab(tab)) return tab.id;
   return tabs.some((t) => t.id === tab.drawingOf && !isDrawingTab(t)) ? tab.drawingOf! : null;
 }
+
+const DRAWING_NAME = /^Drawing (\d+)$/;
+
+/** A new drawing tab's name in a text document: Drawing N, N one past the highest its drawings are named with. */
+export function nextDrawingName(
+  tabs: readonly (TabLike & { name: string })[],
+  textDocumentTabId: string,
+): string {
+  const numbers = tabs
+    .filter((t) => t.drawingOf === textDocumentTabId)
+    .map((t) => Number(DRAWING_NAME.exec(t.name.trim())?.[1] ?? 0));
+  return `Drawing ${Math.max(0, ...numbers) + 1}`;
+}

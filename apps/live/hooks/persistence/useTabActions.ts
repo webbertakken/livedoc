@@ -21,6 +21,7 @@ import {
   isDefaultTabName,
   listedTabIdFor,
   listedTabs,
+  nextDrawingName,
 } from '@livedoc/document';
 import { boardsRenamedWithTab, planTitledWithTab, sheetIdsOn } from '@/lib/tab-named-plan';
 import { withFormHeading } from '@/lib/form-tab';
@@ -161,6 +162,27 @@ export function useTabActions(deps: TabActionsDeps) {
   // The add menu's choice (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab"): a Tab in the active
   // tab's mode, so a Pages tab's + makes a Pages tab, or a Board, Sheet or Dashboard, a Plan start landing on that
   // choice (newTabOpening, plan-start-landing.ts).
+  // A drawing tab of a text document tab (docs/specs/034-text-documents/objects.md "A drawing tab"): empty, named Drawing
+  // N, in Structured mode (no opensIn), the text document tab's look; opened at once. Its id, or null when this session
+  // may not add tabs.
+  const addDrawingTab = (textDocumentTabId: string): string | null => {
+    if (!deps.canEditStructure) return null;
+    const source = tabs.find((t) => t.id === textDocumentTabId);
+    const tab: Tab = {
+      ...createTab(nextDrawingName(tabs, textDocumentTabId)),
+      ...newTabSeed(source),
+      drawingOf: textDocumentTabId,
+    };
+    commitTabs((ts) => [...ts, tab]);
+    markTabLoaded(tab.id);
+    debugLog('[tabs] drawing added', { tabId: tab.id, textDocumentTabId });
+    setActiveId(tab.id);
+    setSelectedId(null);
+    setEditingId(null);
+    setFormatSourceId(null);
+    return tab.id;
+  };
+
   const addTab = (choice: AddTabChoice = 'tab') => {
     // A session that cannot change the document's tabs adds none, whichever row asked.
     if (!deps.canEditStructure) return;
@@ -372,9 +394,9 @@ export function useTabActions(deps: TabActionsDeps) {
     // A text document's drawing tabs never count, and go with it (docs/specs/034-text-documents/objects.md
     // "Never counted", "Deleting").
     const listed = listedTabs(tabs);
-    if (listed.length <= 1) return;
     const idx = listed.findIndex((t) => t.id === id);
-    if (idx < 0 && !tabs.some((t) => t.id === id)) return;
+    // A drawing tab goes whatever else the document holds; a listed tab never as the document's last.
+    if (idx < 0 ? !tabs.some((t) => t.id === id) : listed.length <= 1) return;
     const gone = new Set([id, ...drawingTabIdsOf(tabs, id)]);
     // A locked tab is protected: its elements can't be deleted, so the
     // tab that holds them can't be deleted out from under them either.
@@ -485,6 +507,7 @@ export function useTabActions(deps: TabActionsDeps) {
 
   return {
     addTab,
+    addDrawingTab,
     importIntoActiveTab: guardedImport(importIntoActiveTab),
     importTextIntoActiveTab: guardedImport(importTextIntoActiveTab),
     importSceneIntoActiveTab,

@@ -139,6 +139,7 @@ import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
+import { useTextDocumentDrawings } from './useTextDocumentDrawings';
 import {
   initialTab,
   TAB_STEP_KEYS,
@@ -221,6 +222,8 @@ export type TextDocumentSurfaceProps = {
   chrome?: OfficeChrome | null;
   // The person's LiveDoc documents, which the link editor offers and the link card names (links-and-navigation.md).
   documents?: readonly LinkDocument[];
+  // Adds an empty drawing tab of this tab and opens it (objects.md "Drawings"); absent where none may be added.
+  createDrawing?: (() => string | null) | null;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
@@ -237,6 +240,7 @@ export function TextDocumentSurface({
   local = false,
   chrome = null,
   documents = NO_DOCUMENTS,
+  createDrawing = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -878,6 +882,16 @@ export function TextDocumentSurface({
   useLayoutEffect(() => {
     takePictureFiles.current = pictures.take;
   });
+  // Insert > Drawing > New, and a drawing placed once made (objects.md "Drawings").
+  const drawings = useTextDocumentDrawings({
+    view: editorView,
+    tabId: scope.tabId,
+    canEdit: bodyWrites,
+    shownTab,
+    showTab,
+    placing: pictures.placing,
+    create: createDrawing,
+  });
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({
     view: editorView,
@@ -936,6 +950,7 @@ export function TextDocumentSurface({
       ...buildingBlocks,
       ...contents.actions,
       ...pictures.actions,
+      ...drawings,
       ...pictureEditing.actions,
       ...pictureSize.actions,
       ...tableProperties.actions,
@@ -954,6 +969,7 @@ export function TextDocumentSurface({
       buildingBlocks,
       contents.actions,
       pictures.actions,
+      drawings,
       pictureEditing.actions,
       pictureSize.actions,
       tableProperties.actions,

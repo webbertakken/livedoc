@@ -213,5 +213,5 @@ export function useTextDocumentPictures({
     [chooseFile],
   );
 
-  return { actions, choices, dialog, notice: noticeBar, take, bring };
+  return { actions, choices, dialog, notice: noticeBar, take, bring, placing };
 }

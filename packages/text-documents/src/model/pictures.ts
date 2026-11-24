@@ -40,6 +40,8 @@ export type Picture = PictureColouring & {
   readonly props: TextProps;
   readonly style?: string;
   readonly link?: string;
+  /** A drawing's picture: the id of the drawing tab it shows (objects.md "Drawings"); absent on any other picture. */
+  readonly drawing?: string;
   readonly kept?: KeptProperties;
 };
 

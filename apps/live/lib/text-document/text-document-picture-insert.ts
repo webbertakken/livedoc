@@ -68,14 +68,18 @@ export function pictureMediaOf(
     : { mediaType, bytes };
 }
 
-/** Places the picture at the caret (replacing a selection) or at `at`, and selects it. */
+/** Places the picture at the caret (replacing a selection) or at `at`, and selects it; a drawing's names its tab. */
 export const insertPicture =
-  (picture: { key: string; width: number; height: number }, at?: number): Command =>
+  (
+    picture: { key: string; width: number; height: number; drawing?: string },
+    at?: number,
+  ): Command =>
   (state, dispatch) => {
     const node = schema.nodes[PICTURE]!.create({
       media: picture.key,
       width: picture.width,
       height: picture.height,
+      ...(picture.drawing ? { drawing: picture.drawing } : {}),
     });
     const tr = state.tr;
     if (at === undefined) {

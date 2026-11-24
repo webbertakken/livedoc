@@ -1290,16 +1290,18 @@ export const TEXT_DOCUMENT_FOOTNOTES = chart(
   { types: ['TextDocumentFootnote'] },
 );
 
-// A picture put in a text document (docs/specs/034-text-documents/objects.md "Inserting"): by where it came from.
+// A picture put in a text document (docs/specs/034-text-documents/objects.md "Inserting"): by where it came from; and a
+// drawing placed from Insert > Drawing > New ("Drawings").
 export const TEXT_DOCUMENT_PICTURES = chart(
   'Element',
   'Added',
   'Text Document Pictures',
-  'A picture put in a text document: uploaded, from the gallery or a web search, pasted or dropped.',
+  'A picture put in a text document: uploaded, from the gallery or a web search, pasted or dropped; or a drawing from Insert > Drawing > New.',
   {
-    types: ['Upload', 'Gallery', 'Search', 'Paste', 'Drop'].map(
-      (from) => `TextDocumentImage${from}`,
-    ),
+    types: [
+      ...['Upload', 'Gallery', 'Search', 'Paste', 'Drop'].map((from) => `TextDocumentImage${from}`),
+      'TextDocumentDrawing',
+    ],
   },
 );
 

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { drawingTabIdsOf, isDrawingTab, listedTabIdFor, listedTabs } from './drawing-tabs';
+import {
+  drawingTabIdsOf,
+  isDrawingTab,
+  listedTabIdFor,
+  listedTabs,
+  nextDrawingName,
+} from './drawing-tabs';
 
-const text = { id: 'doc', kind: 'text-document' as const };
+const text = { id: 'doc', name: 'Notes', kind: 'text-document' as const };
 const drawing = { id: 'd1', drawingOf: 'doc' };
 const other = { id: 'd2', drawingOf: 'elsewhere' };
 const board = { id: 'b' };
@@ -34,5 +40,23 @@ describe('drawing tabs', () => {
     const tabs = [board, text, other];
     expect(listedTabIdFor(tabs, 'd2')).toBeNull();
     expect(listedTabIdFor(tabs, 'missing')).toBeNull();
+  });
+});
+
+// docs/specs/034-text-documents/objects.md "A drawing tab": named Drawing N, N the next free number in its text document.
+describe('nextDrawingName', () => {
+  it('names the first drawing Drawing 1', () => {
+    expect(nextDrawingName([text], 'doc')).toBe('Drawing 1');
+  });
+
+  it('numbers past the highest of the text document’s own drawings, whatever their order', () => {
+    const tabs = [
+      text,
+      { id: 'a', name: 'Drawing 3', drawingOf: 'doc' },
+      { id: 'b', name: 'Drawing 1', drawingOf: 'doc' },
+      { id: 'c', name: 'Drawing 9', drawingOf: 'elsewhere' },
+      { id: 'd', name: 'Sketch', drawingOf: 'doc' },
+    ];
+    expect(nextDrawingName(tabs, 'doc')).toBe('Drawing 4');
   });
 });

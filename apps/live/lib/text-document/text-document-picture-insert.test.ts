@@ -137,6 +137,18 @@ describe('insertPicture', () => {
     expect((state.selection as NodeSelection).node.attrs.media).toBe('k1');
   });
 
+  // objects.md "Drawings": a drawing's picture names its drawing tab.
+  it('names the drawing tab of a drawing’s picture, and none for any other', () => {
+    let state = EditorState.create({ doc, selection: TextSelection.create(doc, 6) });
+    insertPicture({ ...picture, drawing: 'tab-d1' })(state, (tr) => {
+      state = state.apply(tr);
+    });
+    expect(state.doc.firstChild!.child(1).attrs.drawing).toBe('tab-d1');
+    expect(schema.nodes[PICTURE]!.create({ media: 'k', width: 1, height: 1 }).attrs.drawing).toBe(
+      null,
+    );
+  });
+
   it('replaces a selection', () => {
     let state = EditorState.create({ doc, selection: TextSelection.create(doc, 1, 7) });
     insertPicture(picture)(state, (tr) => {

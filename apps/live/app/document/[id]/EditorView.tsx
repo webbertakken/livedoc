@@ -7,6 +7,7 @@ import { CommentBadgesContext } from '@/components/canvas/CommentBadgesContext';
 import { SuppressElementIndicators } from '@/components/canvas/ElementIndicatorStyleContext';
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
 import { listedTabs, surfaceOf, tabKindOf } from '@livedoc/document';
+import { TextDocumentDrawingBar } from '@/components/text-document/TextDocumentDrawingBar';
 import { TextDocumentHost } from '@/components/text-document/TextDocumentHost';
 import { PdfDocumentHost } from '@/components/pdf-document/PdfDocumentHost';
 import { applyDocumentRename } from './editor-page-helpers';
@@ -586,6 +587,8 @@ export function EditorView() {
                                     <AreaErrorBoundary area="Presentation">
                                       <PresentationHost />
                                     </AreaErrorBoundary>
+                                    {/* A drawing tab's bar (docs/specs/034-text-documents/objects.md "Inserting and editing"). */}
+                                    {activeTab.drawingOf ? <TextDocumentDrawingBar /> : null}
                                     {embedMode ? (
                                       // Embed chrome (docs/specs/013-workspace/embeds.md): the link-out badge + a minimal tab
                                       // switcher replace the full TabBar. Same selection clears as
