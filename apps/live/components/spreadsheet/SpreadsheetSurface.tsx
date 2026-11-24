@@ -44,6 +44,7 @@ import {
   useSpreadsheetZoomScale,
 } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
+import { useSheetCopyTo } from './useSheetCopyTo';
 import { hiddenTabIds, useSheetTabLooks } from './useSheetTabLooks';
 import { SheetBarActionsContext, useSheetBarActions } from './useSheetBarActions';
 import {
@@ -100,6 +101,8 @@ export function SpreadsheetSurface({
   // Alt+Up and Alt+Down in the grid: the previous and next sheet shown, none past either end (D181).
   const stepSheet = useSheetStep(shown, tabId, onSelectTab);
   // The sheet bar's changes, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
+  // Copy To, everyone's who may read the sheets (spreadsheet.md D186).
+  const copyTo = useSheetCopyTo(bridge, workbook);
   const sheetBar = useSheetBarActions({
     bridge,
     scope,
@@ -162,6 +165,7 @@ export function SpreadsheetSurface({
           summarySlot={setSummarySlot}
           actions={bridge ? sheetBar : null}
           looks={looks}
+          copyTo={copyTo}
         />
       </SheetBarActionsContext.Provider>
       <ImportReportDialog documentId={scope.documentId} />

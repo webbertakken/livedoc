@@ -144,6 +144,16 @@ export const WorkbookRecord = {
     meaning: WorkbookRecord.meaningOf(format),
   }),
 
+  /**
+   * A new spreadsheet's record for a sheet copied out of `record` (Copy To, spreadsheet.md D183): its format, meaning
+   * and settings; never the imports it allowed or the spreadsheets it connected, which are its own.
+   */
+  copied: (record: WorkbookRecord): WorkbookRecord => ({
+    format: record.format,
+    settings: record.settings,
+    ...(record.meaning ? { meaning: record.meaning } : {}),
+  }),
+
   /** The record converted to `format`: a file's meaning becomes the new format's (D100); Google's stays Google's. */
   converted: (record: WorkbookRecord, format: WorkbookFormat): WorkbookRecord => ({
     ...record,

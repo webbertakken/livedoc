@@ -5,6 +5,10 @@ import { stubResizeObserver } from '@/components/sheets/sheet-ui-test-utils';
 import { SheetBar } from './SheetBar';
 import { SHEET_BAR_FACES_MAX, sheetTabLabel } from './SheetBarTab';
 import type { SheetBarActions } from './useSheetBarActions';
+import type { DocumentSummary } from '@livedoc/api-schema';
+import { apiListDocuments } from '@/lib/api/documents';
+
+vi.mock('@/lib/api/documents', () => ({ apiListDocuments: vi.fn() }));
 
 // docs/specs/029-sheets/surface.md "Sheet bar"; sheet-store.md "Live for everyone": each tab shows who else is on it.
 
@@ -314,6 +318,61 @@ describe('SheetBar colours and hidden sheets', () => {
     expect(notes.getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(notes);
     expect(viewer.show).not.toHaveBeenCalled();
+  });
+});
+
+// spreadsheet.md "Sheets in the sheet bar": Copy To, everyone's (D183, D186).
+describe('SheetBar Copy To', () => {
+  beforeAll(stubResizeObserver);
+
+  it('copies to a new spreadsheet, or opens the picker and copies to the one picked', async () => {
+    vi.mocked(apiListDocuments).mockResolvedValue([
+      { id: 'p1', name: 'Plans', spreadsheet: true } as DocumentSummary,
+    ]);
+    const copyTo = {
+      ownerId: 'o',
+      documentId: 'here',
+      picking: null,
+      pick: vi.fn(),
+      copy: vi.fn(),
+    };
+    const { rerender } = render(
+      <SheetBar
+        tabs={tabs}
+        activeId="t1"
+        onSelect={vi.fn()}
+        actions={bar({ canChange: false })}
+        copyTo={copyTo}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Costs menu' }));
+    fireEvent.click(menuItem('Copy To'));
+    fireEvent.click(menuItem('New Spreadsheet'));
+    expect(copyTo.copy).toHaveBeenCalledWith('t2', { kind: 'new' });
+    fireEvent.click(screen.getByRole('button', { name: 'Costs menu' }));
+    fireEvent.click(menuItem('Copy To'));
+    fireEvent.click(menuItem('Existing Spreadsheet'));
+    expect(copyTo.pick).toHaveBeenCalledWith('t2');
+    const picking = { ...copyTo, picking: 't2' };
+    rerender(
+      <SheetBar
+        tabs={tabs}
+        activeId="t1"
+        onSelect={vi.fn()}
+        actions={bar({ canChange: false })}
+        copyTo={picking}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: 'Copy Costs to' })).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Plans' }));
+    expect(copyTo.pick).toHaveBeenLastCalledWith(null);
+    expect(copyTo.copy).toHaveBeenLastCalledWith('t2', {
+      kind: 'existing',
+      documentId: 'p1',
+      name: 'Plans',
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(copyTo.pick).toHaveBeenCalledTimes(3);
   });
 });
 

@@ -11,10 +11,12 @@ import { lucideMenu, lucidePlus } from '@livedoc/icons/lucide';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { shownTabs } from '@/lib/spreadsheet/sheet-bar-places';
 import { AllSheetsMenu } from './AllSheetsMenu';
+import { CopyToDialog } from './CopyToDialog';
 import { SheetBarTab as TabFace } from './SheetBarTab';
 import { SheetTabColour } from './SheetTabColour';
 import { SheetTabMenu, type SheetTabMenuAt } from './SheetTabMenu';
 import type { SheetBarActions } from './useSheetBarActions';
+import type { SheetCopyTo } from './useSheetCopyTo';
 import { useSheetTabDrag } from './useSheetTabDrag';
 import { hiddenTabIds, type SheetTabLooks } from './useSheetTabLooks';
 
@@ -35,6 +37,7 @@ export function SheetBar({
   summarySlot,
   actions = null,
   looks = NO_LOOKS,
+  copyTo = null,
 }: {
   // Every sheet tab, hidden ones too (All Sheets lists them).
   tabs: readonly SheetBarTab[];
@@ -48,6 +51,8 @@ export function SheetBar({
   actions?: SheetBarActions | null;
   // Each tab's colour and whether it is hidden (D177).
   looks?: SheetTabLooks;
+  // Copy To, everyone's who may read the sheets (D186).
+  copyTo?: SheetCopyTo | null;
 }) {
   const list = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState<SheetTabMenuAt | null>(null);
@@ -68,6 +73,7 @@ export function SheetBar({
   };
   const menuTab = menu ? shown.find((t) => t.id === menu.tabId) : undefined;
   const colourTab = colouring ? tabs.find((t) => t.id === colouring.tabId) : undefined;
+  const pickingTab = copyTo?.picking ? tabs.find((t) => t.id === copyTo.picking) : undefined;
   const allAt = allButton?.getBoundingClientRect();
   const drag = useSheetTabDrag({
     list,
@@ -163,7 +169,25 @@ export function SheetBar({
               )!,
             })
           }
+          onCopyTo={
+            copyTo
+              ? (to) =>
+                  to === 'new' ? copyTo.copy(menuTab.id, { kind: 'new' }) : copyTo.pick(menuTab.id)
+              : undefined
+          }
           onClose={() => setMenu(null)}
+        />
+      ) : null}
+      {copyTo?.picking && pickingTab ? (
+        <CopyToDialog
+          ownerId={copyTo.ownerId}
+          currentId={copyTo.documentId}
+          sheetName={pickingTab.name}
+          onPick={(target) => {
+            copyTo.pick(null);
+            copyTo.copy(pickingTab.id, { kind: 'existing', ...target });
+          }}
+          onClose={() => copyTo.pick(null)}
         />
       ) : null}
       {colouring && colourTab && actions ? (

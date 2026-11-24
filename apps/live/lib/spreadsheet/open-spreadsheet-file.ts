@@ -4,16 +4,17 @@
 // here, under the office packages' guards, into sheets the api's create stores as it stores any seed sheets; a named
 // rejection is worded for the person.
 import type { SheetCreateRequest } from '@livedoc/api-schema';
-import { NOBODY, WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
+import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
 import { PACKAGE_MAX_BYTES, type PackageRejection } from '@livedoc/office-packages';
-import type { FileParts, SheetsFromFile } from '@livedoc/sheets/files';
+import type { SheetsFromFile } from '@livedoc/sheets/files';
 import { ApiError, apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
-import { writeSheet, type SheetsScope } from '@/lib/api/sheets';
+import type { SheetsScope } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
 import { debugLog } from '@/lib/debug-log';
 import { importReportLine } from './import-report-copy';
 import { keepImportReport } from './import-report-handoff';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
+import { sendFileParts, type PartsProgress } from './send-file-parts';
 import { UNTITLED_SPREADSHEET } from './spreadsheet-name';
 
 /** What was opened: a native format, or a CSV or TSV (files-and-print.md "Import"). */
@@ -50,22 +51,7 @@ export function openingNotice(name: string, share: number): string {
 }
 
 /** How far a file is sent, from 0 to 1 (files-and-print.md "A file sent in parts"). */
-export type OpenProgress = (share: number) => void;
-
-// The writes after the create, in order; any refusal stops them (files-and-print.md "A file sent in parts").
-async function sendParts(
-  scope: SheetsScope,
-  parts: FileParts,
-  onProgress: OpenProgress,
-): Promise<void> {
-  let sent = parts.seededUnits;
-  onProgress(sent / parts.totalUnits);
-  for (const part of parts.parts) {
-    await writeSheet(scope, part.sheetId, { write: part.write, unchecked: true }, NOBODY);
-    sent += part.units;
-    onProgress(sent / parts.totalUnits);
-  }
-}
+export type OpenProgress = PartsProgress;
 
 export async function openSpreadsheetFile(
   ownerId: string,
@@ -130,7 +116,7 @@ export async function openSpreadsheetFile(
     });
     created = true;
     const scope: SheetsScope = { ownerId, documentId, shareCode: null, tabId: null };
-    await sendParts(scope, parts, onProgress);
+    await sendFileParts(scope, parts, onProgress);
     // Then what the file holds that the model does not (standard-mapping.md "Unknown content"); a refusal bins it too.
     const left = sheetsMade.kept ? await sendKept(scope, sheetsMade.kept) : 0;
     if (left > 0) losses.push({ k: 'kept_too_large', count: left });

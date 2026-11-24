@@ -4,6 +4,17 @@ import { WorkbookRecord, WORKBOOK_RANGE_SOURCES_MAX } from './workbook-record';
 const made = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'Europe/Amsterdam' });
 
 describe('WorkbookRecord', () => {
+  it('gives a copied sheet a new spreadsheet with the format, meaning and settings, never the imports', () => {
+    const made = WorkbookRecord.create({ locale: 'nl-NL', timeZone: 'Europe/Amsterdam' });
+    const opened = { ...WorkbookRecord.opened(made, 'xlsx'), importsAllowed: true as const };
+    expect(WorkbookRecord.copied(opened)).toEqual({
+      format: 'xlsx',
+      settings: made.settings,
+      meaning: 'ooxml',
+    });
+    expect(WorkbookRecord.copied(made)).toEqual(made);
+  });
+
   // spreadsheet.md "Making a spreadsheet": born in ODF (C5); settings.md "Calculation" defaults.
   it('is born in ODF with the maker settings and Google defaults', () => {
     expect(made).toEqual({
