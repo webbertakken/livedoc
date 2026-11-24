@@ -22,10 +22,7 @@ import {
   applySheetWrite,
   cellKey,
   cellsWithPage,
-  formatA1,
-  layoutIndex,
   rangeOptions,
-  splitCellKey,
   inverseLayoutChanges,
   inverseSheetWrite,
   mergeSheetChange,
@@ -48,6 +45,7 @@ import {
   type ImportAsk,
   type FileMeaning,
 } from '@livedoc/sheets';
+import { sheetRefusalMessage, writeRefusalMessage } from './sheet-refusals';
 import { engineLink, type EngineLink } from './sheet-engine-link';
 import type { CardData } from './sheet-engine-hosts';
 import { VolatileTicker, volatileTickMs } from './volatile-ticker';
@@ -128,6 +126,8 @@ type SheetStoreDeps = {
 };
 
 type Pending = { wid: string; write: SheetWrite };
+// `onRefused` may take a create's refusal over (returning true): the default says it in a toast.
+export type CreateOpts = { onRefused?: (code: string | null) => boolean; onCreated?: () => void };
 // One sheet's part of an undo step; a deletion's also keeps the layout it was made on and what it did, to be undone
 // against the sheet as it is at the undo.
 type Inverse = { sheetId: string; write: SheetWrite; before?: SheetLayout; applied?: SheetWrite };
@@ -138,51 +138,6 @@ export type StoreRejection = SheetRejection | 'sheet_loading';
 
 const NOBODY: SheetPerson = { id: '', name: 'Someone', color: '#94a3b8' };
 export const SHEET_REFETCH_DEBOUNCE_MS = 400;
-
-const REFUSALS: Partial<Record<string, string>> = {
-  sheet_full: 'This sheet holds the most cells it can',
-  sheets_full: 'This document holds the most sheets it can',
-  sheet_too_large: 'A sheet holds up to 10,000 rows and 200 columns',
-  sheet_title_taken: 'Another sheet on this tab is called that',
-  sheet_name_taken: 'Another sheet in this spreadsheet is called that',
-  sheet_name_invalid: "A sheet's name can't hold [ ] * ? / \\ : or start or end with '",
-  input_too_long: 'A cell holds up to 10,000 characters',
-  sheet_not_found: 'This sheet is no longer in this document',
-  rules_full: 'This sheet holds the most rules it can',
-  sheet_loading: 'This sheet is still loading',
-};
-
-// A spreadsheet's own words where its limits differ (spreadsheet.md "Limits").
-const SPREADSHEET_REFUSALS: Partial<Record<string, string>> = {
-  sheet_too_large: 'A sheet holds up to 18,278 columns (A to ZZZ)',
-  input_too_long: 'A cell holds up to 50,000 characters',
-  workbook_full: 'This spreadsheet holds up to 1,000,000 rows and 20,000,000 cells',
-};
-
-// What a refused write says: a value a validation rule refuses names its cell and what the rule allows.
-export function writeRefusalMessage(
-  check: { error: string; at?: string; line?: string },
-  layout?: SheetLayout,
-  spreadsheet = false,
-): string {
-  if (check.error === 'value_invalid' && check.line) {
-    const ix = layout && check.at ? layoutIndex(layout) : null;
-    const { r, c } = check.at ? splitCellKey(check.at) : { r: '', c: '' };
-    const row = ix?.rowPos.get(r);
-    const col = ix?.colPos.get(c);
-    return row !== undefined && col !== undefined
-      ? `${formatA1(row, col)}: ${check.line}`
-      : check.line;
-  }
-  return sheetRefusalMessage(check.error, spreadsheet);
-}
-
-export function sheetRefusalMessage(code: string | null, spreadsheet = false): string {
-  return (
-    (code && ((spreadsheet ? SPREADSHEET_REFUSALS[code] : undefined) ?? REFUSALS[code])) ??
-    "Couldn't save that change"
-  );
-}
 
 // The scope of a spreadsheet's one workbook: every tab's sheets together (docs/specs/029-sheets/spreadsheet.md "The
 // workbook shape"). A Plan Sheet's scope is its tab.
@@ -609,11 +564,10 @@ export class SheetStore {
   // ---- Writing -----------------------------------------------------------------------------------------
 
   // Make a sheet (placing a Sheet element, a copy, a CSV drop): in the store at once, then sent.
-  // `onRefused` may take a refusal over (returning true): the default says it in a toast.
   create(
     create: SheetCreateRequest & { id: string },
     seed?: SheetJson,
-    opts: { onRefused?: (code: string | null) => boolean; onCreated?: () => void } = {},
+    opts: CreateOpts = {},
   ): void {
     const now = Date.now();
     const json: SheetJson = seed ?? {
@@ -636,7 +590,7 @@ export class SheetStore {
   // is retried, a little later each time, before it counts as refused.
   private sendCreate(
     create: SheetCreateRequest & { id: string },
-    opts: { onRefused?: (code: string | null) => boolean; onCreated?: () => void },
+    opts: CreateOpts,
     attempt: number,
   ): void {
     this.enqueue(create.id, async () => {
@@ -820,8 +774,8 @@ export class SheetStore {
   }
 
   // A Sheet whose sheet this person deleted with it is back (Undo): make the sheet again as it was, under the next
-  // free title if its own is taken now. False when there is nothing to put back.
-  restoreReleased(sheetId: string): boolean {
+  // free title if its own is taken now. False when there is nothing to put back. `opts` as a create's.
+  restoreReleased(sheetId: string, opts: CreateOpts = {}): boolean {
     const json = this.released.get(sheetId);
     if (!json) return false;
     this.released.delete(sheetId);
@@ -836,6 +790,7 @@ export class SheetStore {
         restore: true,
       },
       { ...json, title },
+      opts,
     );
     return true;
   }

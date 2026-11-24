@@ -51,13 +51,13 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Paste                          | `Ctrl+V`                       | `⌘+V`                        | `Ctrl+V`                 | the browser's                                           |
 | Paste values only              | `Ctrl+Shift+V`                 | `⌘+Shift+V`                  | `Ctrl+Shift+V`           | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Show common keyboard shortcuts | `Ctrl+/`                       | `⌘+/`                        | `Ctrl+/`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
-| Insert new sheet               | `Shift+F11`                    | `Shift+Fn+F11`               | —                        | specified                                               |
+| Insert new sheet               | `Shift+F11`                    | `Shift+Fn+F11`               | —                        | built (`spreadsheet-shortcuts.test.tsx`)                |
 | Compact controls               | `Ctrl+Shift+F`                 | `Ctrl+Shift+F`               | `Ctrl+Shift+F`           | specified                                               |
 | Show or hide the menus         | —                              | `⌘+Option+R or Ctrl+Shift+F` | —                        | specified                                               |
 | Input tools on or off          | `Ctrl+Shift+K`                 | `⌘+Shift+K`                  | `Ctrl+Shift+K`           | specified                                               |
 | Select input tools             | `Ctrl+Alt+Shift+K`             | `⌘+Option+Shift+K`           | `Ctrl+Alt+Shift+K`       | specified                                               |
 | Tool finder                    | `Alt+/`                        | `Option+/`                   | `Alt+/`                  | built (`spreadsheet-shortcuts.test.tsx`)                |
-| Rename sheet                   | `Alt+1`                        | —                            | —                        | specified                                               |
+| Rename sheet                   | `Alt+1`                        | —                            | —                        | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Convert range to table         | `Ctrl+Alt+T`                   | `⌘+Option+T`                 | `Alt+Shift+T`            | specified                                               |
 
 ## Format cells

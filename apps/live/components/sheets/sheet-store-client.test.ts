@@ -15,13 +15,12 @@ import { ApiError } from '@/lib/api/core';
 import { setApiErrorReporter } from '@/lib/api/error-report';
 import {
   SheetStore,
-  sheetRefusalMessage,
   sheetStoreFor,
   forgetSheetStores,
   SHEET_REFETCH_DEBOUNCE_MS,
-  writeRefusalMessage,
 } from './sheet-store-client';
 import { inPlaceLink, type EngineLink } from './sheet-engine-link';
+import { sheetRefusalMessage, writeRefusalMessage } from './sheet-refusals';
 
 const by = { id: 'me', name: 'Me', color: '#000000' };
 let seq = 3;

@@ -123,8 +123,11 @@ Left to right:
 - **Add Sheet** (+): adds "Sheet<n+1>" after the last sheet and opens it.
 - **All Sheets** (☰, Alt+Shift+K): a menu of every sheet, the active one ticked, hidden ones dimmed with "Hidden".
 - **Sheet tabs**: each the sheet's name on its colour's underline; the active one raised. A click opens it; a
-  double-click renames it in place; a drag reorders; its arrow (and a right-click) opens its menu
-  ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar)). Tabs past the bar's width scroll with arrows at its end.
+  double-click renames it in place; a drag reorders; its arrow (and a right-click, and Shift+F10 or the context menu
+  key on a focused tab) opens its menu ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar)). Tabs past the bar's
+  width scroll with arrows at its end.
+  - The arrow shows on the open tab, and on any tab while the pointer is over it, as Google's does; it is a menu
+    button named "<name> menu" (default, D175).
 - **Summary**, at the right, for a selection of more than one cell: **Sum: 1,234** (numbers only), its arrow a menu
   of Sum, Average, Min, Max, Count and Count Numbers, each with its value; the pick is the person's, kept in their
   browser. It counts the cells a filter shows, and gives up past 100,000 cells ("Too many cells").
@@ -237,3 +240,14 @@ Version History (the shell's). Each is specified with its area.
   none; the bands stay when the sheet hides its headers (default).
 - **D169** Google's line sizes: Held by each new spreadsheet sheet as its own (100 by 21); a sheet made before keeps
   120 by 28 (default).
+- **D170** Where a new sheet goes: Add Sheet after the last sheet, Insert › Sheet and Shift+F11 after the open one,
+  as Google's do.
+- **D171** A duplicate's name: "Copy of <name>", then "Copy of <name> 2" and up when taken (default).
+- **D172** Renaming in place: Enter or leaving the field saves, Escape keeps the name; a refused name says why and
+  keeps the old one (default).
+- **D173** Deleting a sheet: Asked first, naming it and saying its references become `#REF!`; the open sheet deleted
+  opens the sheet after it, else the one before (default).
+- **D174** Who changes the sheets: An Editor; Add Sheet shows for an Editor alone, a tab's menu opens for everyone
+  with what their role may not use dimmed (default).
+- **D175** A tab's menu arrow: On the open tab and on a tab under the pointer; a menu button named "<name> menu"
+  (default).

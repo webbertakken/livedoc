@@ -44,6 +44,8 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     [k('PageUp', { ctrlKey: true, shiftKey: true }), { kind: 'sheet', step: -1 }],
     [k('PageDown', { ctrlKey: true, shiftKey: true }), { kind: 'sheet', step: 1 }],
     [k('Q', { altKey: true, shiftKey: true, code: 'KeyQ' }), { kind: 'summary' }],
+    // spreadsheet.md "Sheets in the sheet bar": Alt+1 renames the open sheet.
+    [k('1', { altKey: true, code: 'Digit1' }), { kind: 'renameSheet' }],
     [k(' ', { ctrlKey: true, shiftKey: true }), { kind: 'selectAll' }],
     [k('M', { ctrlKey: true, altKey: true, shiftKey: true, code: 'KeyM' }), { kind: 'leave' }],
     [k('a', { metaKey: true }), { kind: 'selectAll' }],
@@ -100,6 +102,13 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     ).toBeNull();
     expect(sheetKey(k('Shift'))).toBeNull();
     expect(sheetKey(k('x', { altKey: true }))).toBeNull();
+    expect(sheetKey(k('!', { altKey: true, shiftKey: true, code: 'Digit1' }))).not.toEqual({
+      kind: 'renameSheet',
+    });
+    expect(sheetKey(k('¡', { altKey: true, code: 'Digit1' }), 'mac')).toEqual({
+      kind: 'type',
+      text: '¡',
+    });
   });
 
   it('types a character composed with Alt, and still not a bare Alt+letter', () => {

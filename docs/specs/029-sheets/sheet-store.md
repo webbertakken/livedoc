@@ -126,10 +126,15 @@ by viewport, the limits, the workbook's doors, offline and copies; in Phase 7, u
 
 Built in the api; the sheet bar and File › Settings call it with the grid surface (plan 0020 Phase 8).
 
-- **Add a sheet**: a sheet tab and its sheet made as one, after the tab named, or last when none is.
+- **Add a sheet**: a sheet tab and its sheet made as one, after the tab named, first when the name is empty (an undone
+  delete of the first sheet), or last when none is.
 - A new sheet takes the name given, by the sheet name's rules, or `Sheet<n>`, n the first number from the sheets'
   count plus one that no sheet has (default); it holds 1,000 rows by 26 columns, as a new spreadsheet's (default).
 - A sheet added may name its tab and sheet ids (an undo, a sync), a taken one refused (`sheet_exists`).
+- **Duplicate a sheet**: an add naming the live sheet it copies (`copyOf`, else `sheet_not_found`): its layout and
+  cells copied whole, after the sheet copied unless `after` names a tab, named "Copy of <name>" by the sheet name's
+  rules unless a name is given ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar), D171); the workbook's cells
+  and grid limits as any add's.
 - **Rename a sheet**: its title and its tab's name as one write, by the sheet name's rules.
 - **Delete a sheet**: its tab removed, its sheet left unreferenced and kept for Undo until it expires; never the last
   visible sheet (`sheet_last_visible`); until a sheet can be hidden, every sheet is visible.

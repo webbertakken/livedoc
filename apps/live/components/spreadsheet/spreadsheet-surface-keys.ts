@@ -2,7 +2,8 @@
 
 // The grid's keys only a workbook has (docs/specs/029-sheets/grid-and-editing.md "Moving around"): Alt+Up and
 // Alt+Down, Ctrl+Shift+Page Up and Page Down open the previous and next sheet; Alt+Shift+Q puts focus on the
-// selection's summary; Ctrl+Alt+Shift+M takes it out to the toolbar (D137); F4 redoes ("Formulas"). The surface
+// selection's summary; Ctrl+Alt+Shift+M takes it out to the toolbar (D137); F4 redoes ("Formulas"); Alt+1 renames
+// the open sheet (spreadsheet.md "Sheets in the sheet bar"). The surface
 // knows the sheets and the timeline; the open sheet's grid hears the keys.
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { SheetSurfaceKeys } from '@/components/sheets/useSheetGridKeys';
@@ -10,6 +11,7 @@ import { regionTarget, shownRegions } from '@/hooks/ui/useRegionCycle';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetBarTab } from './SheetBar';
 import { useSummarySlot } from './summary-slot';
+import { useSheetBarActionsContext } from './useSheetBarActions';
 
 /** The tab a step from the open one lands on, or null past either end. */
 export function tabAfter(
@@ -48,6 +50,7 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
   const step = useContext(SheetStepContext);
   const slot = useSummarySlot();
   const redo = useContext(SurfaceRedoContext);
+  const bar = useSheetBarActionsContext();
   return useMemo(
     () => ({
       stepSheet: (by) => step?.(by),
@@ -60,6 +63,10 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
         debugLog('[workbook] summary focus', { shown: !!summary });
         summary?.focus();
       },
+      renameSheet: () => {
+        debugLog('[workbook] rename by Alt+1', { bound: !!bar?.canChange });
+        bar?.renameOpen();
+      },
       leaveGrid: () => {
         const toolbar = shownRegions(document).find((root) => root.dataset.region === 'toolbar');
         const target = toolbar ? regionTarget(toolbar) : null;
@@ -67,6 +74,6 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
         target?.focus();
       },
     }),
-    [step, slot, redo],
+    [step, slot, redo, bar],
   );
 }

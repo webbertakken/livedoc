@@ -66,6 +66,14 @@ describe('adding a sheet', () => {
     expect(third.tab.name).toBe('Costs');
   });
 
+  it('goes first when the tab it follows is empty', async () => {
+    const { tab } = await (
+      await add({ name: 'Front', after: '' })
+    ).json<WorkbookSheetAddResponse>();
+    expect(tab.orderIndex).toBe(0);
+    expect((await tabsOf('book1')).map((t) => t.name)).toEqual(['Front', 'Sheet1']);
+  });
+
   it('takes the ids it is given', async () => {
     const res = await add({ tabId: 'tab-two', sheetId: 'sheetTwo1' });
     const { tab, sheet } = await res.json<WorkbookSheetAddResponse>();
@@ -136,6 +144,70 @@ describe('adding a sheet', () => {
       body: {},
     });
     expect(editor.status).toBe(201);
+  });
+});
+
+describe('duplicating a sheet', () => {
+  it('copies its layout and cells after it, named Copy of <name>, then Copy of <name> 2', async () => {
+    const cell = { r: kit.layout.rows[0]!, c: kit.layout.cols[0]!, i: { n: 7 } };
+    await kit.call({ path: '', body: kit.document('book2', true, [cell]) });
+    await add({ name: 'Last' }, 'book2');
+    const res = await add({ copyOf: 'book2Sheet' }, 'book2');
+    expect(res.status).toBe(201);
+    const { tab, sheet } = await res.json<WorkbookSheetAddResponse>();
+    expect(tab).toMatchObject({ name: 'Copy of Sheet1', orderIndex: 1 });
+    expect(sheet).toMatchObject({ title: 'Copy of Sheet1', tabId: tab.id, rev: 0 });
+    expect(sheet.cells).toEqual([cell]);
+    expect(sheet.layout.rows).toEqual(kit.layout.rows);
+    const again = await (
+      await add({ copyOf: 'book2Sheet' }, 'book2')
+    ).json<WorkbookSheetAddResponse>();
+    expect(again.tab.name).toBe('Copy of Sheet1 2');
+    expect((await tabsOf('book2')).map((t) => t.name)).toEqual([
+      'Sheet1',
+      'Copy of Sheet1 2',
+      'Copy of Sheet1',
+      'Last',
+    ]);
+    // Referenced by its tab, the copy never waits to expire.
+    const row = kit.sql.sql
+      .prepare('SELECT unreferenced_since FROM sheets WHERE id = ?')
+      .get(sheet.id) as { unreferenced_since: number | null };
+    expect(row.unreferenced_since).toBeNull();
+  });
+
+  it('takes the name, the place and the ids it is given', async () => {
+    const res = await add({
+      copyOf: 'book1Sheet',
+      name: 'Plan B',
+      after: 'book1t',
+      sheetId: 'sheetDup1',
+    });
+    const { tab, sheet } = await res.json<WorkbookSheetAddResponse>();
+    expect([tab.name, sheet.id]).toEqual(['Plan B', 'sheetDup1']);
+  });
+
+  it('refuses a sheet that is not on a tab, or a copy id that is no sheet id', async () => {
+    const gone = await add({ copyOf: 'missing00' });
+    expect(gone.status).toBe(404);
+    expect(await gone.json()).toEqual({ error: 'sheet_not_found' });
+    expect((await add({ copyOf: 'x' })).status).toBe(400);
+    expect(await tabsOf('book1')).toHaveLength(1);
+  });
+
+  it('refuses a copy past the grid, leaving no tab', async () => {
+    storedSheet('bigSheet1', 'Big1', 1_000, 10_000);
+    const res = await add({ copyOf: 'bigSheet1' });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: 'workbook_full' });
+    expect(await tabsOf('book1')).toHaveLength(2);
+  });
+
+  it("refuses a copy whose cells pass the document's", async () => {
+    kit.sql.sql.exec("UPDATE sheets SET cell_count = 20000000 WHERE id = 'book1Sheet'");
+    const res = await add({ copyOf: 'book1Sheet' });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: 'sheets_full' });
   });
 });
 

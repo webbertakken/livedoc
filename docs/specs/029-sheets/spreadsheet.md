@@ -102,9 +102,24 @@ tab's menu holds:
 | **View Comments**                                           | Opens the comments of that sheet                                                       |
 | **Move Right**, **Move Left**                               | Reorders it; dragging a tab does the same                                              |
 
+- **Add Sheet** adds `Sheet<n>` after the last sheet; **Insert** › **Sheet** (Shift+F11) adds it after the open
+  sheet, as Google's does (D170); either opens it.
+- **Duplicate** names the copy "Copy of <name>", or when that is taken "Copy of <name> 2" and up, by the sheet
+  name's rules (default, D171); the copy holds the sheet's cells and its layout (sizes, hidden lines, groups,
+  freeze, merges, filter, rules, names), and opens.
+- **Rename** (and a double-click on a tab, and Alt+1 on the open one) turns the tab into a field: Enter or leaving it
+  saves, Escape keeps the name; a name the rules refuse says why and keeps the old one (default, D172).
 - Renaming a sheet rewrites every formula that names it, as today ([Formulas](formulas.md#other-sheets)).
+- **Delete** asks "Delete <name>?", saying every reference to it becomes `#REF!`; deleting the open sheet opens the
+  sheet after it, else the one before (default, D173).
 - Deleting a sheet makes every reference to it `#REF!`; Undo puts it back with its id.
-- Each is one undo step and is sent live to everyone on the workbook.
+- Each is one undo step on the person's one timeline ([Undo](grid-and-editing.md#undo)) and is sent live to everyone
+  on the workbook: undoing an add or a duplicate deletes the sheet, kept, and redoing puts it back with its ids;
+  undoing a delete puts the sheet back with its ids where it was; undoing a rename gives the old name back.
+- Only an Editor changes the sheets: Add Sheet shows for an Editor alone; a tab's menu opens for everyone, the items
+  their role may not use dimmed, as the menu bar's are (default, D174).
+- Telemetry: the kinds of change `AddSheet`, `DuplicateSheet` and `DeleteSheet` ([Telemetry](#telemetry)); a
+  rename is `Title`.
 
 ## Plan's Sheet tab becomes a spreadsheet
 

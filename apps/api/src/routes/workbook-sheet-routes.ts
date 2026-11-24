@@ -1,5 +1,6 @@
 // A spreadsheet's sheets changed with their tabs (docs/specs/029-sheets/sheet-store.md "Changing the workbook"):
-//   POST   /api/documents/<id>/workbook/sheets                    add a sheet tab: its tab and sheet in one batch
+//   POST   /api/documents/<id>/workbook/sheets                    add a sheet tab: its tab and sheet in one batch, or
+//                                                                 a copy of a sheet (`copyOf`, Duplicate)
 //   POST   /api/documents/<id>/workbook/sheets/<sheetId>/rename   the sheet's title and its tab's name as one write
 //   DELETE /api/documents/<id>/workbook/sheets/<sheetId>          its tab removed, its sheet kept for Undo; never the
 //                                                                 last visible sheet
@@ -20,6 +21,7 @@ import {
   type SheetJson,
 } from '@livedoc/sheets';
 import {
+  copySheetStatements,
   documentSheetTotals,
   getDocument,
   getTab,
@@ -75,17 +77,19 @@ async function liveSheets(ctx: DocumentRouteContext, documentId: string): Promis
 
 function readAdd(raw: Record<string, unknown> | Response): WorkbookSheetAddRequest | null {
   if (raw instanceof Response) return null;
-  const { name, after, tabId, sheetId } = raw;
+  const { name, after, tabId, sheetId, copyOf } = raw;
   if (name !== undefined && typeof name !== 'string') return null;
   if (after !== undefined && typeof after !== 'string') return null;
   if (tabId !== undefined && (typeof tabId !== 'string' || !TAB_ID_PATTERN.test(tabId)))
     return null;
   if (sheetId !== undefined && !isSheetId(sheetId)) return null;
+  if (copyOf !== undefined && !isSheetId(copyOf)) return null;
   return {
     ...(name !== undefined ? { name } : {}),
     ...(after !== undefined ? { after } : {}),
     ...(tabId !== undefined ? { tabId } : {}),
     ...(sheetId !== undefined ? { sheetId } : {}),
+    ...(copyOf !== undefined ? { copyOf } : {}),
   };
 }
 
@@ -102,7 +106,9 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
   const add = readAdd(await readBody(ctx));
   if (!add) return workbookRefused('write_invalid', 400);
   const live = await liveSheets(ctx, documentId);
-  const orderIndex = await tabPlaceAfter(ctx.env, documentId, add.after);
+  const source = add.copyOf ? live.find((h) => h.id === add.copyOf) : undefined;
+  if (add.copyOf && !source) return workbookRefused('sheet_not_found', 404);
+  const orderIndex = await tabPlaceAfter(ctx.env, documentId, add.after ?? source?.tabId);
   if (orderIndex === null) return workbookRefused('tab_not_found', 404);
   const kept = add.sheetId ? await readSheetHead(ctx.env, documentId, add.sheetId) : null;
   // A sheet still kept from its deleted tab, named with that tab: put back as it was (an undo of its delete).
@@ -110,7 +116,7 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
   const tabId = add.tabId ?? crypto.randomUUID();
   if (await getTab(ctx.env, documentId, tabId)) return workbookRefused('sheet_exists', 409);
   const titles = live.map((h) => h.title);
-  let name = SheetName.next(titles);
+  let name = source ? SheetName.fit(`Copy of ${source.title}`, titles) : SheetName.next(titles);
   if (add.name !== undefined) {
     const named = SheetName.check(add.name, titles);
     if (!named.ok)
@@ -120,6 +126,22 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
   const totals = await documentSheetTotals(ctx.env, documentId);
   if (totals.sheets >= SheetLimits.spreadsheet.sheets) return workbookRefused('sheets_full', 413);
   const now = Date.now();
+  const by = await writer(ctx, caller.owner);
+  if (source) {
+    if (totals.cells + source.cellCount > SheetLimits.spreadsheet.documentCells)
+      return workbookRefused('sheets_full', 413);
+    const id = add.sheetId ?? makeSheetId();
+    const grid = await newGridProblem(ctx, documentId, id, source.layout);
+    if (grid) return grid;
+    const tab: Tab = { id: tabId, name, kind: 'sheet', elements: [] };
+    // The tab first: the copy is referenced as it lands, so it never waits to expire.
+    await ctx.env.DOCUMENT_DB.batch([
+      tabOrderOpenStatement(ctx.env, documentId, orderIndex),
+      ...tabWriteStatements(ctx.env, documentId, tab, orderIndex, { advance: true }, now),
+      ...copySheetStatements(ctx.env, documentId, source.id, { id, tabId, title: name, by }, now),
+    ]);
+    return added(ctx, documentId, tab, id, orderIndex, started, 'copied');
+  }
   const sheet: SheetJson = {
     id: add.sheetId ?? makeSheetId(),
     tabId,
@@ -129,7 +151,7 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
     rev: 0,
     createdAt: now,
     updatedAt: now,
-    updatedBy: await writer(ctx, caller.owner),
+    updatedBy: by,
   };
   const grid = await newGridProblem(ctx, documentId, sheet.id, sheet.layout);
   if (grid) return grid;
@@ -139,7 +161,7 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
     ...tabWriteStatements(ctx.env, documentId, tab, orderIndex, { advance: true }, now),
     ...insertSheetStatements(ctx.env, documentId, sheet, now),
   ]);
-  return added(ctx, documentId, tab, sheet.id, orderIndex, started, false);
+  return added(ctx, documentId, tab, sheet.id, orderIndex, started, 'made');
 }
 
 // The tab of a kept sheet made again, with the sheet's id and title, and the sheet referenced again.
@@ -170,7 +192,7 @@ async function restoreSheet(
     sheetKeepStatement(ctx.env, documentId, kept.id),
     ...sheetSettleStatements(ctx.env, documentId, now),
   ]);
-  return added(ctx, documentId, tab, kept.id, orderIndex, started, true);
+  return added(ctx, documentId, tab, kept.id, orderIndex, started, 'restored');
 }
 
 async function added(
@@ -180,7 +202,7 @@ async function added(
   sheetId: string,
   orderIndex: number,
   started: number,
-  restored: boolean,
+  how: 'made' | 'copied' | 'restored',
 ): Promise<Response> {
   const [stored] = await listSheets(ctx.env, documentId, { ids: [sheetId] });
   // The tab first, so a client that learns of the sheet already holds its tab.
@@ -193,7 +215,7 @@ async function added(
     created: true,
   });
   console.info(
-    `[workbook] sheet added document=${documentId} at=${orderIndex} restored=${restored} ms=${Date.now() - started}`,
+    `[workbook] sheet added document=${documentId} at=${orderIndex} how=${how} ms=${Date.now() - started}`,
   );
   const body: WorkbookSheetAddResponse = {
     tab: { id: tab.id, name: tab.name, orderIndex },

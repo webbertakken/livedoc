@@ -116,7 +116,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Shift+F11',
     'Shift+Fn+F11',
     '—',
-    'specified',
+    'built',
   ),
   row(
     'compact-controls',
@@ -155,7 +155,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'specified',
   ),
   row('tool-finder', 'Common actions', 'Tool finder', 'Alt+/', 'Option+/', 'Alt+/', 'built'),
-  row('rename-sheet', 'Common actions', 'Rename sheet', 'Alt+1', '—', '—', 'specified'),
+  row('rename-sheet', 'Common actions', 'Rename sheet', 'Alt+1', '—', '—', 'surface'),
   row(
     'convert-range-to-table',
     'Common actions',

@@ -298,6 +298,14 @@ export function gridMenuBindings(port: GridMenuPort): OfficeActions {
   };
 }
 
+/** The sheet bar's items, for an Editor: Insert › Sheet adds a sheet after the open one (D170). */
+export function sheetBarBindings(
+  bar: { canChange: boolean; add: (place: 'afterOpen') => void } | null,
+): OfficeActions {
+  if (!bar?.canChange) return {};
+  return { 'insert-sheet': run(() => bar.add('afterOpen')) };
+}
+
 /** Undo and Redo for anyone who writes, dimmed without a step to take. */
 export function historyBindings(
   history: SpreadsheetHistory | null,
