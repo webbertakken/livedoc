@@ -30,7 +30,7 @@ delete, undo, label edit via Space) that already work on a selection.
   **Header** (the top line's brand group and actions group, [Toolbar layout](../007-editor/toolbar-layout.md#the-top-line)),
   **Palette** (the strip or the Draw dock), **Canvas**, **Controls** (the tools group: Undo, Layers, the Theme &
   Canvas brush, zoom) and **Tabs** (the document group: the document, the active tab, the tab stack). A region lands on its first
-  control (the Canvas on the canvas itself); a region not on screen (a viewer has no Palette, Zen hides the chrome)
+  control (the Canvas on the canvas itself, a tab list on its selected tab, as a spreadsheet's sheet bar on its open sheet); a region not on screen (a viewer has no Palette, Zen hides the chrome)
   is skipped. It works from anywhere on the page but a modal dialog (whose focus trap keeps it) and with focus in a
   text field, where F6 still moves on: typing never uses it. Each region is marked `data-region` with its name, and
   the tab order inside a region is unchanged. Ctrl+Alt+. and Ctrl+Alt+, move as F6 and Shift+F6 do, as Google's
