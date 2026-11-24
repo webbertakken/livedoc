@@ -159,7 +159,10 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
     id: 'insert',
     label: 'Insert',
     controls: [
-      icon('link', 'Insert link', 'edit', lucideLink, { shortcut: 'insert-or-edit-link' }),
+      icon('link', 'Insert link', 'edit', lucideLink, {
+        shortcut: 'insert-or-edit-link',
+        built: true,
+      }),
       icon('comment', 'Add comment', 'participate', lucideMessageSquarePlus, {
         shortcut: 'insert-comment',
       }),

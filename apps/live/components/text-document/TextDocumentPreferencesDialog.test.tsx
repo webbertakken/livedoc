@@ -53,6 +53,15 @@ describe('TextDocumentPreferencesDialog', () => {
     expect(onSave.mock.calls[0]![0]).toMatchObject({ emojiColon: false });
   });
 
+  // links-and-navigation.md "Links": the link card at the caret, on by default.
+  it('switches Show link details', () => {
+    const { onSave } = open();
+    expect(box('Show link details').checked).toBe(true);
+    fireEvent.click(box('Show link details'));
+    ok();
+    expect(onSave.mock.calls[0]![0]).toMatchObject({ linkDetails: false });
+  });
+
   // tools.md "Preferences": Google's General options in Google's order; Smart Reply left out (C3); an option whose
   // feature is not built yet dimmed, "Coming soon" under it.
   it("lists Google's General options in its order, those not built yet dimmed", () => {
@@ -71,7 +80,7 @@ describe('TextDocumentPreferencesDialog', () => {
       'Show link details',
       'Insert emoji using the colon character',
     ]);
-    for (const name of ['Automatically correct spelling', 'Show link details']) {
+    for (const name of ['Automatically correct spelling']) {
       const soon = screen.getByRole<HTMLInputElement>('checkbox', { name: new RegExp(`^${name}`) });
       expect(soon.disabled).toBe(true);
       expect(soon.getAttribute('aria-describedby')).not.toBeNull();

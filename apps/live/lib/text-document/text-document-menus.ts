@@ -21,7 +21,10 @@ import { BUILDING_BLOCKS } from './text-document-building-blocks';
 import { CODE_BLOCK_ITEMS } from './text-document-code-blocks';
 
 type ItemOptions = Partial<
-  Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status' | 'sizeGrid'>
+  Pick<
+    OfficeItem,
+    'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status' | 'sizeGrid' | 'contextual'
+  >
 >;
 
 const item = (
@@ -203,7 +206,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       submenu('building-blocks', 'Building blocks', BUILDING_BLOCK_ENTRIES),
       SEPARATOR,
-      item('link', 'Link', 'edit', { shortcut: 'insert-or-edit-link' }),
+      item('link', 'Link', 'edit', { shortcut: 'insert-or-edit-link', ...BUILT }),
       submenu('drawing', 'Drawing', [
         item('drawing-new', 'New', 'edit'),
         item('drawing-from-document', 'From a LiveDoc document', 'edit'),
@@ -449,7 +452,20 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
     'comment',
     { id: 'mode-suggesting', label: 'Suggest edits', level: 'participate' },
     SEPARATOR,
-    { id: 'link', label: 'Insert link' },
+    // On a link, Edit link in place of Insert link, then Copy link and Remove link (links-and-navigation.md "Links");
+    // the order is (default) until a capture.
+    item('link-insert', 'Insert link', 'edit', {
+      shortcut: 'insert-or-edit-link',
+      contextual: true,
+      ...BUILT,
+    }),
+    item('link-edit', 'Edit link', 'edit', {
+      shortcut: 'insert-or-edit-link',
+      contextual: true,
+      ...BUILT,
+    }),
+    item('link-copy', 'Copy link', 'view', { contextual: true, ...BUILT }),
+    item('link-remove', 'Remove link', 'edit', { contextual: true, ...BUILT }),
     SEPARATOR,
     item('format-options', 'Format options', 'edit'),
     'clear-formatting',

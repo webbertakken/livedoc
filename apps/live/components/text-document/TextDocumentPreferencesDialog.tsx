@@ -25,7 +25,7 @@ const GENERAL: readonly (readonly [TypingAidSwitch | null, string])[] = [
   ['lists', 'Automatically detect lists'],
   ['markdown', 'Enable Markdown'],
   [null, 'Automatically correct spelling'],
-  [null, 'Show link details'],
+  ['linkDetails', 'Show link details'],
   ['emojiColon', 'Insert emoji using the colon character'],
 ];
 

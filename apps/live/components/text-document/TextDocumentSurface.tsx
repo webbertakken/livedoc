@@ -67,6 +67,7 @@ import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
 import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
+import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
@@ -123,6 +124,7 @@ import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
+import type { LinkDocument } from '@/lib/text-document/text-document-links';
 import { equationActions } from '@/lib/text-document/text-document-equation-insert';
 import {
   newEquationFromToolbar,
@@ -194,9 +196,13 @@ export type TextDocumentSurfaceProps = {
   local?: boolean;
   // The title row's document parts (editing-surface.md "The title row"); null in the read-only pane of a split.
   chrome?: OfficeChrome | null;
+  // The person's LiveDoc documents, which the link editor offers and the link card names (links-and-navigation.md).
+  documents?: readonly LinkDocument[];
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
+
+const NO_DOCUMENTS: readonly LinkDocument[] = [];
 
 export function TextDocumentSurface({
   scope,
@@ -207,6 +213,7 @@ export function TextDocumentSurface({
   sequence,
   local = false,
   chrome = null,
+  documents = NO_DOCUMENTS,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -717,6 +724,14 @@ export function TextDocumentSurface({
     }),
     [editorView, bodyWrites, equationToolbar.actions],
   );
+  // Insert > Link, the link card and Open link (links-and-navigation.md "Links"), in whichever writing has the caret.
+  const links = useTextDocumentLinks({
+    view: activeView,
+    writes,
+    documents,
+    subscribe: changes.subscribeCaret,
+    showCard: preferences.aids.linkDetails,
+  });
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, writes);
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
@@ -799,6 +814,7 @@ export function TextDocumentSurface({
       ...lineActions,
       ...equationInsert,
       ...characterDialogs.actions,
+      ...links.actions,
       ...tableActions,
       ...buildingBlocks,
       ...pictures.actions,
@@ -812,6 +828,7 @@ export function TextDocumentSurface({
       lineActions,
       equationInsert,
       characterDialogs.actions,
+      links.actions,
       tableActions,
       buildingBlocks,
       pictures.actions,
@@ -918,6 +935,9 @@ export function TextDocumentSurface({
       {headers.pageNumbersDialog}
       {lists.dialog}
       {characterDialogs.dialog}
+      {links.editor}
+      {links.card}
+      {links.status}
       <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />
       {limitReached ? (
         <p

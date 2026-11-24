@@ -18,6 +18,8 @@ export type TypingAids = {
   readonly markdown: boolean;
   /** Insert emoji using the colon character (objects.md "Emoji"). */
   readonly emojiColon: boolean;
+  /** Show link details: the card at the caret in a link (links-and-navigation.md "Links"). */
+  readonly linkDetails: boolean;
   /** Automatic substitution: the list below on at all. */
   readonly substitution: boolean;
   readonly pairs: readonly Substitution[];
@@ -30,6 +32,7 @@ export const TYPING_AID_SWITCHES = [
   'lists',
   'markdown',
   'emojiColon',
+  'linkDetails',
 ] as const;
 export type TypingAidSwitch = (typeof TYPING_AID_SWITCHES)[number];
 
@@ -89,6 +92,7 @@ const DEFAULT_ON: Record<TypingAidSwitch, boolean> = {
   lists: true,
   markdown: false,
   emojiColon: true,
+  linkDetails: true,
 };
 
 const DEFAULT_PAIRS = new Map(DEFAULT_SUBSTITUTIONS);

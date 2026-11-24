@@ -341,7 +341,7 @@ default as Google has them but Markdown:
   another opening quote, or at the paragraph's start), else `”` or `’`.
 - **Automatically detect links**: a word that is a web address (`https://…`, `http://…`, `www.….…`) or an email
   address becomes a link as it ends, its trailing `. , ; : ! ? ) "` left out; `www.` links to `https://`, an email to
-  `mailto:`. A word already a link is left alone.
+  `mailto:`, with the [link look](links-and-navigation.md#links). A word already a link is left alone.
 - **Automatically detect lists**: `1.`, `1)`, `a.`, `A.`, `i.`, `I.` (any number or letter of their kind) and `-` or
   `*` typed at the start of a paragraph outside a list, then a space, make it a numbered list in that format starting
   at that number, or a bulleted list; the typed marker goes.

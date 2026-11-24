@@ -1365,6 +1365,42 @@ export const TEXT_DOCUMENT_CHARACTERS_AND_LINES = chart(
   },
 );
 
+// A link put in a text document from the link editor (docs/specs/034-text-documents/links-and-navigation.md
+// "Telemetry").
+export const TEXT_DOCUMENT_LINKS = chart(
+  'Element',
+  'Added',
+  'Text Document Links',
+  'A link put in a text document from Insert > Link, the toolbar, Ctrl+K or the context menu.',
+  { types: ['TextDocumentLink'] },
+);
+
+// A text document's link edited or taken off (links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_LINK_CHANGES = chart(
+  'Element',
+  'Changed',
+  'Text Document Links Edited',
+  "A text document's link given another text or address in the link editor.",
+  { types: ['TextDocumentLink'] },
+);
+
+export const TEXT_DOCUMENT_LINKS_REMOVED = chart(
+  'Element',
+  'Removed',
+  'Text Document Links Removed',
+  "A text document's link taken off its text with Remove link, or by emptying Link in the link editor.",
+  { types: ['TextDocumentLink'], rising: 'neutral' },
+);
+
+// A text document's link opened from the link card or with Alt+Enter (links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_LINKS_OPENED = chart(
+  'UI',
+  'Used',
+  'Text Document Links Opened',
+  "A text document's link opened from the link card under it or with Alt+Enter.",
+  { types: ['TextDocumentLinkOpened'] },
+);
+
 // A building block put in a text document (docs/specs/034-text-documents/objects.md "Building blocks").
 export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
   'Element',
