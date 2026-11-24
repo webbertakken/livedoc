@@ -30,7 +30,8 @@ import {
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
 import { TEXT_MARK_LOOKS } from './pdf-text-mark';
 import { resetTextMarkPick, textMarkPick } from './pdf-text-mark-pick';
-import { TEXT_MARK_TOOLS } from './pdf-toolbar';
+import { resetTextMarkLooks } from './pdf-mark-looks';
+import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import { usePdfMarkTools } from './usePdfMarkTools';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
@@ -318,5 +319,27 @@ describe('the tools’ keys', () => {
     hook.rerender({ selected: null, marking: false });
     expect(hook.result.current.onKey(key({ key: 'u' }).event)).toBe(false);
     expect(hook.result.current.inHand).toBe('select');
+  });
+});
+
+// marks.md "Making a mark": a tool's colour, from the toolbar's Colour, while a mark tool is in hand.
+describe('the tool in hand’s colour', () => {
+  afterEach(() => resetTextMarkLooks());
+
+  it('is none with Select in hand, and the tool’s own colour, set and reset, with a tool', () => {
+    const { hook, run, doc } = tools();
+    expect(hook.result.current.colours).toEqual({});
+    run(TOOL_UNDERLINE);
+    const colour = () => hook.result.current.colours[TOOL_COLOUR]!;
+    expect(colour().leading).toBe('Reset');
+    expect(colour().read()).toBe(TEXT_MARK_LOOKS.underline.colour);
+    act(() => colour().set('#7c3aed'));
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Changed', 'ToolColour');
+    expect(colour().read()).toBe('#7c3aed');
+    // A new mark takes it.
+    act(() => hook.result.current.make(0, { text: 'Lease', quads: [QUAD] }));
+    expect(PdfLiveChanges.marks(doc)[0]!.colour).toBe('#7c3aed');
+    act(() => colour().set(null));
+    expect(colour().read()).toBe(TEXT_MARK_LOOKS.underline.colour);
   });
 });

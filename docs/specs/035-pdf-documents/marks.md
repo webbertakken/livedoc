@@ -3,8 +3,9 @@
 **Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
 Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection, live in
 the document's changes, drawn over the page, written into the file as standard annotations under their own ids and
-read back by them; and the engine reads every mark a file holds, of any kind, as the file says it. A tool's chosen
-look, every other kind made here, changing a mark, and the room's own-marks check are not built.
+read back by them; each text tool's colour, chosen from the one colour picker and remembered; and the engine reads
+every mark a file holds, of any kind, as the file says it. A tool's other looks, every other kind made here, changing
+a mark, and the room's own-marks check are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -53,6 +54,9 @@ written into the file as a standard annotation, so any reader shows it. The rese
   and (Editing) Edit text; the context menu offers the same.
 - **The tool's look is remembered** per kind, per person, in this browser: colour, opacity, width, line style, line
   ends, fill, font and size. A new mark takes it.
+- **A tool's colour** is chosen from the toolbar's Colour, the one colour picker's swatch button: the soft and strong
+  rows for light paper, then the person's own colours. **Reset** returns the kind's first look. Colour shows while a
+  mark tool is in hand, and its bar is that tool's colour `(default)`.
 - **A highlight's first look** is the colour picker's soft Yellow for light paper, at full opacity `(default)`. A
   highlight is drawn multiplied onto the page, so the words under it keep their own colour, here as in the file's
   appearance stream.
@@ -193,7 +197,8 @@ a mark another person made is refused with `not_your_mark`.
 
 - `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Locked>`,
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
-  `Pdf · Created · CustomStamp`. Never a mark's words, a stamp's name or a file's name.
+  `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). Never a mark's words,
+  a stamp's name or a file's name.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open).
 

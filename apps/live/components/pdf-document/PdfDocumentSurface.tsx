@@ -441,6 +441,7 @@ export function PdfDocumentSurface({
         saveStatus={ready?.binding.saveStatus ?? null}
         toolbar={pdfToolbar(mode)}
         choices={ready ? { ...viewChrome.choices, ...tools.choices } : null}
+        colours={ready ? tools.colours : null}
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
         bare={readMode.on ? { leave: 'Leave read mode', onLeave: readMode.leave } : null}

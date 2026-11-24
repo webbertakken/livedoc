@@ -10,6 +10,7 @@ import type { IconPrim } from '@livedoc/icons';
 import { lucideHighlighter, lucideStrikethrough, lucideUnderline } from '@livedoc/icons/lucide';
 import type { TextMarkKind, TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
+import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
@@ -35,7 +36,8 @@ import {
   useTextMarkPick,
   type HeldTextMark,
 } from './pdf-text-mark-pick';
-import { TEXT_MARK_TOOLS } from './pdf-toolbar';
+import { setTextMarkColour, useTextMarkLooks } from './pdf-mark-looks';
+import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
@@ -107,6 +109,7 @@ export function usePdfMarkTools({
   const [tool, setTool] = useState<PdfPageTool>('select');
   const inHand: PdfPageTool = marking ? tool : 'select';
   const pick = useTextMarkPick();
+  const looks = useTextMarkLooks();
 
   /** One mark of a kind over a page's text: one step of the person's undo, made on that page. */
   const mark = useCallback(
@@ -120,6 +123,7 @@ export function usePdfMarkTools({
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
           selection,
           { author, now: Date.now(), id: crypto.randomUUID() },
+          looks[kind],
         ),
       );
       if (made.ok) {
@@ -131,7 +135,7 @@ export function usePdfMarkTools({
         onProblem(TOO_MANY_MARKS_COPY);
       }
     },
-    [ready, author, onProblem],
+    [ready, author, looks, onProblem],
   );
 
   const pickTool = useCallback((next: PdfPageTool) => {
@@ -213,6 +217,24 @@ export function usePdfMarkTools({
     [ready, marking, pick, actions],
   );
 
+  // "A tool's colour": the one colour picker, for the mark tool in hand; with Select in hand there is none.
+  const colours = useMemo<OfficeColours>(
+    (): OfficeColours =>
+      inHand === 'select'
+        ? {}
+        : {
+            [TOOL_COLOUR]: {
+              read: () => looks[inHand].colour,
+              set: (colour) => {
+                track('Pdf', 'Changed', 'ToolColour');
+                setTextMarkColour(inHand, colour);
+              },
+              leading: 'Reset',
+            },
+          },
+    [inHand, looks],
+  );
+
   /** The tools' own keys, outside a field: U, ⇧U, V and Escape; true where one was taken. */
   const onKey = (event: KeyboardEvent<HTMLElement>): boolean => {
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
@@ -226,5 +248,5 @@ export function usePdfMarkTools({
     return true;
   };
 
-  return { inHand, make, actions, choices, onKey };
+  return { inHand, make, actions, choices, colours, onKey };
 }
