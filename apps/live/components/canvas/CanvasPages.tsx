@@ -404,7 +404,7 @@ export function CanvasPages({
                     if (!drag.endsDrag()) goToPage(page);
                   }}
                   onDoubleClick={(e) => e.stopPropagation()}
-                  className={`pointer-events-auto block max-w-full truncate whitespace-nowrap rounded px-1 py-0.5 text-xs font-medium text-slate-500 transition hover:bg-white/80 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-100 ${
+                  className={`pointer-events-auto block max-w-full truncate whitespace-nowrap rounded-control px-1 py-0.5 text-supporting text-slate-500 transition hover:bg-white/80 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-100 ${
                     edit && reorderable ? 'cursor-grab active:cursor-grabbing' : ''
                   }`}
                 >
@@ -510,7 +510,7 @@ export function CanvasPages({
               <span
                 aria-hidden
                 data-page-number=""
-                className="pointer-events-none absolute inset-x-0 text-center text-[12px] tabular-nums"
+                className="pointer-events-none absolute inset-x-0 text-center text-supporting tabular-nums"
                 style={{
                   bottom: number.bottom,
                   color: pageIsDark(page) ? 'rgb(255 255 255 / 0.55)' : 'rgb(71 85 105 / 0.8)',
@@ -668,7 +668,7 @@ function PageCog({
           // The Pages tour's anchor (docs/specs/007-editor/pages-tour.md); the first page's leads.
           data-tour-id="page-cog"
           onClick={() => onToggle()}
-          className={`touch-target-y relative flex h-6 w-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-white hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 ${
+          className={`touch-target-y relative flex size-chip items-center justify-center rounded-control text-slate-500 transition hover:bg-white hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 ${
             open ? 'bg-white text-slate-800 shadow-sm dark:bg-slate-800 dark:text-slate-100' : ''
           }`}
         >
@@ -693,7 +693,7 @@ function LayoutInvite({ wide, onOpen }: { wide: boolean; onOpen: () => void }) {
           type="button"
           aria-label="Start From a Layout"
           onClick={onOpen}
-          className="flex h-6 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium text-slate-500 transition hover:bg-white hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          className="flex h-chip items-center gap-2 rounded-control px-2 text-supporting text-slate-500 transition hover:bg-white hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
         >
           <LayoutIcon />
           {wide ? (

@@ -41,7 +41,7 @@ export function AgentFocusOverlay({ elements }: { elements: Element[] }) {
             <div
               key={`${id}:${index}`}
               data-agent-focus-id={id}
-              className="absolute rounded-md"
+              className="absolute rounded-control"
               style={{
                 left: box.x - outset,
                 top: box.y - outset,

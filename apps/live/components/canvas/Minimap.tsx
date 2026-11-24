@@ -363,7 +363,7 @@ export function Minimap({
     >
       {/* Clip the map to the panel's rounded bottom so its corners don't
           square off past the border. */}
-      <div className="overflow-hidden rounded-b-lg">
+      <div className="overflow-hidden rounded-b-menu">
         <svg
           ref={svgBox}
           viewBox={vb}

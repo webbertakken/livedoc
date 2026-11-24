@@ -41,7 +41,7 @@ export function CanvasArea({ paper }: { paper: string }) {
     return (
       <div
         role="alert"
-        className="flex flex-1 flex-wrap items-center justify-center gap-3 p-4 text-sm text-slate-600 dark:text-slate-300"
+        className="flex flex-1 flex-wrap items-center justify-center gap-3 p-4 text-body text-slate-600 dark:text-slate-300"
         style={{ backgroundColor: paper }}
       >
         <span>This tab couldn’t load.</span>

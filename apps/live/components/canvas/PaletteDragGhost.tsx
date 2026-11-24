@@ -59,7 +59,7 @@ export function PaletteDragGhost({ zoom }: { zoom: number }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed z-[var(--z-overlay)] flex animate-fade-in items-center justify-center rounded-lg border-2 border-dashed border-brand-500/70 bg-brand-500/5 text-brand-500/80 dark:border-brand-400/70 dark:bg-brand-400/10 dark:text-brand-300/90"
+      className="pointer-events-none fixed z-[var(--z-overlay)] flex animate-fade-in items-center justify-center rounded-menu border-2 border-dashed border-brand-500/70 bg-brand-500/5 text-brand-500/80 dark:border-brand-400/70 dark:bg-brand-400/10 dark:text-brand-300/90"
       style={{
         left: at.x + (snap?.dx ?? 0) * zoom,
         top: at.y + (snap?.dy ?? 0) * zoom,

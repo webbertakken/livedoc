@@ -46,7 +46,10 @@ Four looks were drawn for D2, each in light and dark, desktop and phone; Webber 
 - A PDF's pages are the exception: they are their author's, drawn as the file says in both schemes, until the person
   turns on [Dark pages](../035-pdf-documents/dark-pages.md), their own view of them.
 - Every token pair meets WCAG 2.2 AA in both schemes: 4.5:1 for text, 3:1 for a control's outline and focus ring.
-- The shell's sizes are the source of LiveDoc's one [sizing scale](sizing.md), which every other surface moves to.
+- The shell's sizes are the source of LiveDoc's one [sizing scale](sizing.md), one step lower in height: its parts take
+  the shared tokens (`packages/tailwind-config/theme.css`), and `office-shell.css` carries only the look's colours.
+- Where look C names a size the scale does not have, the shell keeps it and names the part as an exception in the
+  sizing guard, citing look C; the shell's parts move onto the tokens with plan 0019.
 
 ## Menus as data
 
