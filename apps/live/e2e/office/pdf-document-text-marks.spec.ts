@@ -27,15 +27,18 @@ test('the four text marks are made from the menus, the chevron, the keys and a s
   const first = await pageOneDrawn(page);
   const marks = page.locator(`${PAGE_ONE} [data-pdf-mark]`);
   const tool = page.locator('[data-pdf-tool]');
+  // The kinds on page one, in no order: the marks are drawn as the document's changes hold them.
+  const kinds = () =>
+    marks.evaluateAll((all) => all.map((mark) => mark.getAttribute('data-pdf-mark-kind')).sort());
 
   // Insert > Squiggly underline takes the tool in hand; a drag across the line marks it with a zigzag.
   await (await officeMenuItem(page, ['Insert', 'Squiggly underline'])).click();
   await expect(tool).toHaveAttribute('data-pdf-tool', 'squiggly');
   await dragAcrossFirstLine(page, first, { from: 2, to: 60 });
   await expect(marks).toHaveCount(1);
-  await expect(marks.last()).toHaveAttribute('data-pdf-mark-kind', 'squiggly');
+  await expect(marks).toHaveAttribute('data-pdf-mark-kind', 'squiggly');
   expect(
-    (await marks.last().locator('polyline').first().getAttribute('points'))!.split(' ').length,
+    (await marks.locator('polyline').first().getAttribute('points'))!.split(' ').length,
   ).toBeGreaterThan(4);
 
   // The chevron beside Highlight holds Underline and Strikethrough; the one taken shows on the button.
@@ -46,8 +49,7 @@ test('the four text marks are made from the menus, the chevron, the keys and a s
   await expect(control).toHaveAccessibleName('Strikethrough');
   await expect(control).toHaveAttribute('aria-pressed', 'true');
   await dragAcrossFirstLine(page, first, { from: 70, to: 130 });
-  await expect(marks).toHaveCount(2);
-  await expect(marks.last()).toHaveAttribute('data-pdf-mark-kind', 'strikeout');
+  await expect.poll(kinds).toEqual(['squiggly', 'strikeout']);
   await page.screenshot({ path: test.info().outputPath('pdf-text-marks-strikethrough.png') });
 
   // ⇧U cycles Highlight, Underline, Strikethrough: from Strikethrough, Highlight, then Underline.
@@ -56,8 +58,7 @@ test('the four text marks are made from the menus, the chevron, the keys and a s
   await page.keyboard.press('Shift+U');
   await expect(tool).toHaveAttribute('data-pdf-tool', 'underline');
   await dragAcrossFirstLine(page, first, { from: 140, to: 200 });
-  await expect(marks).toHaveCount(3);
-  await expect(marks.last()).toHaveAttribute('data-pdf-mark-kind', 'underline');
+  await expect.poll(kinds).toEqual(['squiggly', 'strikeout', 'underline']);
 
   // With Select in hand, text selected and U pressed: the selection is highlighted, and Select stays in hand.
   await page.keyboard.press('v');
@@ -65,8 +66,7 @@ test('the four text marks are made from the menus, the chevron, the keys and a s
   await dragAcrossFirstLine(page, first, { from: 2, to: 100 });
   await expect(page.locator(`${PAGE_ONE} [data-pdf-text-selection]`)).toHaveCount(1);
   await page.keyboard.press('u');
-  await expect(marks).toHaveCount(4);
-  await expect(marks.last()).toHaveAttribute('data-pdf-mark-kind', 'highlight');
+  await expect.poll(kinds).toEqual(['highlight', 'squiggly', 'strikeout', 'underline']);
   await expect(tool).toHaveAttribute('data-pdf-tool', 'select');
   await expect(page.locator(`${PAGE_ONE} [data-pdf-text-selection]`)).toHaveCount(0);
 
@@ -74,8 +74,9 @@ test('the four text marks are made from the menus, the chevron, the keys and a s
   await dragAcrossFirstLine(page, first, { from: 100, to: 200 });
   await first.click({ button: 'right', position: { x: 120, y: 80 } });
   await page.getByRole('menuitem', { name: 'Underline', exact: true }).click();
-  await expect(marks).toHaveCount(5);
-  await expect(marks.last()).toHaveAttribute('data-pdf-mark-kind', 'underline');
+  await expect
+    .poll(kinds)
+    .toEqual(['highlight', 'squiggly', 'strikeout', 'underline', 'underline']);
   await page.screenshot({ path: test.info().outputPath('pdf-text-marks.png') });
 
   // Downloaded: a valid PDF holding each kind as its standard annotation, appended to the file.
