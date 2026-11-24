@@ -2,12 +2,16 @@
 
 // The Image options side panel's body (docs/specs/034-text-documents/objects.md "Working with a picture"): its Size &
 // rotation section, Width and Height in the person's unit, Scale width and height in percent of the picture's own size
-// (dimmed while that is not known), Lock aspect ratio (on at first), Rotate (Angle and a quarter turn either way), and
-// Reset. Each field applies on Enter or when left. Without a selected picture it says to select one.
+// (dimmed while that is not known), Lock aspect ratio (on at first), Rotate (Angle and a quarter turn either way);
+// Recolour and Adjustments (TextDocumentImageColours); then Reset. Each field applies on Enter or when left. Without a
+// selected picture it says to select one.
 import { useId, useState } from 'react';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { lucideRotateCcwSquare, lucideRotateCwSquare } from '@livedoc/icons/lucide';
+import type { PictureColouring } from '@livedoc/text-documents';
 import type { IndentUnit } from '@/lib/text-document/indent-units';
+import type { PictureColoursChange } from '@/lib/text-document/text-document-picture-edit';
+import { ImageAdjustments, ImageRecolour } from './TextDocumentImageColours';
 import {
   PICTURE_SCALE_MOST,
   type PictureSize,
@@ -25,7 +29,12 @@ import {
 } from './TextDocumentPanelFields';
 
 /** What the panel shows of the selected picture: its size and own size in points, its turn in degrees clockwise. */
-export type PictureSizing = PictureSize & { own: PictureSize | null; rotation: number };
+export type PictureSizing = PictureSize & {
+  own: PictureSize | null;
+  rotation: number;
+  // Its recolour and adjustments (Recolour, Adjustments).
+  colours: PictureColouring;
+};
 
 /** A turn asked for: an angle typed, or a quarter turn either way (degrees clockwise). */
 export type PictureTurn = { angle: number } | { by: number };
@@ -43,6 +52,7 @@ export function TextDocumentImageOptionsPanel({
   onChange,
   onTurn,
   onReset,
+  onColour,
 }: {
   // The selected picture's, or null.
   picture: PictureSizing | null;
@@ -50,6 +60,7 @@ export function TextDocumentImageOptionsPanel({
   onChange: (change: PictureSizeChange, lock: boolean) => void;
   onTurn: (turn: PictureTurn) => void;
   onReset: () => void;
+  onColour: (change: PictureColoursChange) => void;
 }) {
   const [lock, setLock] = useState(true);
   const rotateLabel = useId();
@@ -142,17 +153,23 @@ export function TextDocumentImageOptionsPanel({
             </Tooltip>
           </div>
         </div>
-        <div>
-          <button
-            type="button"
-            disabled={!own}
-            onClick={onReset}
-            className={`${PANEL_CONTROL} cursor-pointer font-medium hover:bg-(--office-hover)`}
-          >
-            Reset
-          </button>
-        </div>
       </PanelSection>
+      <PanelSection title="Recolour">
+        <ImageRecolour recolour={picture.colours.recolour} onColour={onColour} />
+      </PanelSection>
+      <PanelSection title="Adjustments">
+        <ImageAdjustments colours={picture.colours} onColour={onColour} />
+      </PanelSection>
+      <div className="px-2 pt-2">
+        <button
+          type="button"
+          disabled={!own}
+          onClick={onReset}
+          className={`${PANEL_CONTROL} cursor-pointer font-medium hover:bg-(--office-hover)`}
+        >
+          Reset
+        </button>
+      </div>
     </div>
   );
 }

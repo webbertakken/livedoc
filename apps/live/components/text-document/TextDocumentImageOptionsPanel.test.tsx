@@ -2,7 +2,7 @@
 // docs/specs/034-text-documents/objects.md "Working with a picture": Image options' Size & rotation holds Width and
 // Height in the person's unit, Scale in percent of its own size (dimmed while that is unknown) and Lock aspect ratio,
 // on at first; Rotate's Angle and a quarter turn either way; each field applies on Enter or when left, an invalid one
-// says so; Reset; without a picture, a hint.
+// says so; Recolour and Adjustments under it, written through onColour; Reset; without a picture, a hint.
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { TextDocumentImageOptionsPanel, type PictureSizing } from './TextDocumentImageOptionsPanel';
@@ -12,12 +12,14 @@ const SHOWN: PictureSizing = {
   height: 36,
   own: { width: 144, height: 72 },
   rotation: 30,
+  colours: { recolour: { kind: 'duotone', dark: '#000000', light: '#ff0000' }, contrast: 15 },
 };
 
 const panel = (picture: PictureSizing | null = SHOWN) => {
   const onChange = vi.fn();
   const onReset = vi.fn();
   const onTurn = vi.fn();
+  const onColour = vi.fn();
   render(
     <TextDocumentImageOptionsPanel
       picture={picture}
@@ -25,9 +27,10 @@ const panel = (picture: PictureSizing | null = SHOWN) => {
       onChange={onChange}
       onTurn={onTurn}
       onReset={onReset}
+      onColour={onColour}
     />,
   );
-  return { onChange, onReset, onTurn };
+  return { onChange, onReset, onTurn, onColour };
 };
 
 const field = (name: string) => screen.getByRole<HTMLInputElement>('textbox', { name });
@@ -41,6 +44,8 @@ describe('TextDocumentImageOptionsPanel', () => {
     panel();
     expect([...document.querySelectorAll('summary')].map((s) => s.textContent)).toEqual([
       'Size & rotation▾',
+      'Recolour▾',
+      'Adjustments▾',
     ]);
     expect(field('Width').value).toBe('1');
     expect(field('Height').value).toBe('0.5');
@@ -102,10 +107,18 @@ describe('TextDocumentImageOptionsPanel', () => {
   });
 
   it('dims Scale and Reset while its own size is unknown', () => {
-    panel({ width: 72, height: 36, own: null, rotation: 0 });
+    panel({ width: 72, height: 36, own: null, rotation: 0, colours: {} });
     expect(field('Scale width').disabled).toBe(true);
     expect(field('Scale width').value).toBe('');
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Reset' }).disabled).toBe(true);
+  });
+
+  it('holds Recolour and Adjustments, the picture’s checked and shown', () => {
+    const { onColour } = panel();
+    expect(screen.getByRole('radio', { name: 'Dark 2' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole<HTMLInputElement>('slider', { name: 'Contrast' }).value).toBe('15');
+    fireEvent.click(screen.getByRole('radio', { name: 'No recolour' }));
+    expect(onColour).toHaveBeenCalledWith({ recolour: undefined });
   });
 
   it('resets', () => {

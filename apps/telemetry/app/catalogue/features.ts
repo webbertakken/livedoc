@@ -1319,7 +1319,7 @@ export const TEXT_DOCUMENT_PICTURE_CHANGES = chart(
   'Element',
   'Changed',
   'Text Document Picture Changes',
-  "A text document's picture changed: its alt text written, its picture replaced, sized, reset, cropped or turned.",
+  "A text document's picture changed: its alt text written, its picture replaced, sized, reset, cropped, turned, recoloured or adjusted.",
   {
     types: [
       'TextDocumentImageAltText',
@@ -1328,6 +1328,8 @@ export const TEXT_DOCUMENT_PICTURE_CHANGES = chart(
       'TextDocumentImageReset',
       'TextDocumentImageCrop',
       'TextDocumentImageRotate',
+      'TextDocumentImageRecolour',
+      'TextDocumentImageAdjust',
     ],
   },
 );

@@ -120,3 +120,54 @@ test('a recoloured and adjusted picture is drawn so, and leaves as it came', asy
   expect(shape(left.document)).toEqual(shape(document));
   expectNoPageErrors(pageErrors);
 });
+
+// "Working with a picture" (Recolour, Adjustments): Image options' Dark 3 lays the picture from black to orange; the
+// Transparency slider moved to its end by the keys is written once let go.
+test('a picture is recoloured and adjusted from Image options', async ({ page, pageErrors }) => {
+  const blank = TextDocument.blank({ format: 'odf', title: 'Plain' });
+  const document: TextDocument = {
+    ...blank,
+    body: [
+      {
+        ...(blank.body[0] as Extract<TextDocument['body'][number], { type: 'paragraph' }>),
+        inlines: [picture('Red field', {})],
+      },
+    ],
+    media: { red: { mediaType: 'image/png', bytes: new Uint8Array(RED) } },
+  };
+  const written = writeTextDocumentFile(document, 'odt');
+  if (!written.ok) throw new Error(written.rejection);
+  const file = test.info().outputPath('Plain.odt');
+  writeFileSync(file, written.bytes);
+
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
+  await chooser.setFiles(file);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plain');
+
+  const red = page.locator(BODY).getByRole('img', { name: 'Red field' });
+  await red.click();
+  await (await officeMenuItem(page, ['Format', 'Image', 'Image options'])).click();
+  const recolour = page.getByRole('radiogroup', { name: 'Recolour' });
+  await expect(recolour.getByRole('radio', { name: 'No recolour' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await recolour.getByRole('radio', { name: 'Dark 3' }).click();
+  await expect(recolour.getByRole('radio', { name: 'Dark 3' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  // Red's luminance (0.299) laid from black to #ff9900.
+  await expect.poll(() => middleColour(page, red).then((c) => near(c, [76, 46, 0]))).toBe(true);
+
+  const transparency = page.getByRole('slider', { name: 'Transparency' });
+  await transparency.focus();
+  await page.keyboard.press('End');
+  await expect(transparency).toHaveAttribute('aria-valuetext', '100%');
+  await expect.poll(() => red.evaluate((e) => getComputedStyle(e).opacity)).toBe('0');
+  expectNoPageErrors(pageErrors);
+});

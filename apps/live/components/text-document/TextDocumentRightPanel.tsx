@@ -25,6 +25,7 @@ import {
   type PictureSizing,
   type PictureTurn,
 } from './TextDocumentImageOptionsPanel';
+import type { PictureColoursChange } from '@/lib/text-document/text-document-picture-edit';
 import { TextDocumentTablePropertiesPanel } from './TextDocumentTablePropertiesPanel';
 import { TextDocumentContentsPanel } from './TextDocumentContentsPanel';
 import type { ContentsChange } from '@/lib/text-document/text-document-contents-build';
@@ -58,6 +59,7 @@ export function TextDocumentRightPanel({
     apply: (change: PictureSizeChange, lock: boolean) => void;
     turn: (turn: PictureTurn) => void;
     reset: () => void;
+    colour: (change: PictureColoursChange) => void;
   };
   contents: {
     selected: { look: ContentsLook; levels: number } | null;
@@ -90,6 +92,7 @@ export function TextDocumentRightPanel({
           onChange={imageOptions.apply}
           onTurn={imageOptions.turn}
           onReset={imageOptions.reset}
+          onColour={imageOptions.colour}
         />
       ) : spec === TABLE_PROPERTIES_PANEL ? (
         <TextDocumentTablePropertiesPanel

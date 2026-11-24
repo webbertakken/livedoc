@@ -5,7 +5,12 @@ import { describe, expect, it } from 'vitest';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { PICTURE } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { replacePictureMedia, selectedPicture, setPictureAlt } from './text-document-picture-edit';
+import {
+  replacePictureMedia,
+  selectedPicture,
+  setPictureAlt,
+  setPictureColours,
+} from './text-document-picture-edit';
 
 const picture = schema.nodes[PICTURE]!.create({
   media: 'old',
@@ -87,5 +92,41 @@ describe('replacePictureMedia', () => {
     expect(
       replacePictureMedia(0, { key: 'new', pixels: { width: 1, height: 1 } })(selected()),
     ).toBe(false);
+  });
+});
+
+// objects.md "Working with a picture" (Recolour, Adjustments): one write each, the picture staying selected.
+describe('setPictureColours', () => {
+  it('writes a recolour, and takes it away', () => {
+    const duotone = { kind: 'duotone' as const, dark: '#FF0000', light: '#ffffff' };
+    const { ran, next, attrs } = run(selected(), setPictureColours(2, { recolour: duotone }));
+    expect(ran).toBe(true);
+    expect(attrs.recolour).toEqual({ kind: 'duotone', dark: '#ff0000', light: '#ffffff' });
+    expect(selectedPicture(next)?.pos).toBe(2);
+    expect(run(next, setPictureColours(2, { recolour: undefined })).attrs.recolour).toBeNull();
+  });
+
+  it('writes an adjustment to three decimals, none for 0', () => {
+    const { attrs, next } = run(
+      selected(),
+      setPictureColours(2, { adjustment: 'contrast', value: -12.34567 }),
+    );
+    expect(attrs.contrast).toBe(-12.346);
+    expect(
+      run(next, setPictureColours(2, { adjustment: 'brightness', value: 0 })).attrs.brightness,
+    ).toBeNull();
+  });
+
+  it('refuses a value out of range, an unchanged one, or no picture there', () => {
+    expect(
+      run(selected(), setPictureColours(2, { adjustment: 'transparency', value: 101 })).ran,
+    ).toBe(false);
+    expect(run(selected(), setPictureColours(2, { adjustment: 'brightness', value: 20 })).ran).toBe(
+      false,
+    );
+    expect(run(selected(), setPictureColours(2, { recolour: { kind: 'greyscale' } })).ran).toBe(
+      false,
+    );
+    expect(run(selected(), setPictureColours(1, { recolour: undefined })).ran).toBe(false);
   });
 });

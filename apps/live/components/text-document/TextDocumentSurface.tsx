@@ -1104,6 +1104,7 @@ export function TextDocumentSurface({
               apply: pictureSize.apply,
               turn: pictureSize.turn,
               reset: pictureSize.reset,
+              colour: pictureSize.colour,
             }}
             contents={contents}
           />

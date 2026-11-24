@@ -18,7 +18,9 @@ import {
   resetPicture,
   selectedPicture,
   setPictureCrop,
+  setPictureColours,
   setPictureRotation,
+  type PictureColoursChange,
   setPictureSize,
 } from '@/lib/text-document/text-document-picture-edit';
 import { PICTURE_TURN_KEYS, turnedBy } from '@/lib/text-document/text-document-picture-rotate';
@@ -32,6 +34,7 @@ import {
   type PictureSizeChange,
 } from '@/lib/text-document/text-document-picture-size';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
+import { pictureColouring } from '@/lib/text-document/text-document-picture-colours';
 import type { PictureSizing, PictureTurn } from './TextDocumentImageOptionsPanel';
 
 /** The panel's item, Reset image's and Crop image's. */
@@ -73,7 +76,8 @@ export function useTextDocumentPictureSize({
   const read = useCallback((): Selected | null => {
     const found = view && !view.isDestroyed ? selectedPicture(view.state) : null;
     if (!view || !found) return null;
-    const { media, width, height, rotation } = found.node.attrs;
+    const { media, width, height, rotation, recolour, transparency, brightness, contrast } =
+      found.node.attrs;
     const held =
       typeof media === 'string' && liveDoc.current
         ? TextDocumentState.media(liveDoc.current, media)
@@ -87,6 +91,7 @@ export function useTextDocumentPictureSize({
       width: typeof width === 'number' ? width : 0,
       height: typeof height === 'number' ? height : 0,
       rotation: Pictures.rotation(rotation) ?? 0,
+      colours: pictureColouring({ recolour, transparency, brightness, contrast }),
       pixels,
       own: pixels ? ownPictureSize(pixels) : null,
     };
@@ -172,6 +177,25 @@ export function useTextDocumentPictureSize({
     [read, resize, room],
   );
 
+  /** Writes Image options' Recolour choice or an adjustment let go, as one undo step. */
+  const colour = useCallback(
+    (change: PictureColoursChange) => {
+      const now = read();
+      if (!canEdit || !view || view.isDestroyed || !now) return;
+      startUndoStep(view);
+      const done = setPictureColours(now.pos, change)(view.state, view.dispatch);
+      startUndoStep(view);
+      debugLog('[text-document] picture colours', { done, change });
+      if (done)
+        track(
+          'Element',
+          'Changed',
+          'recolour' in change ? 'TextDocumentImageRecolour' : 'TextDocumentImageAdjust',
+        );
+    },
+    [canEdit, read, view],
+  );
+
   const reset = useCallback(() => {
     const now = read();
     if (!canEdit || !view || view.isDestroyed || !now?.pixels) return;
@@ -217,5 +241,5 @@ export function useTextDocumentPictureSize({
             : {}),
         }
       : {};
-  return { picture: selected, apply, reset, resize, crop, rotate, turn, actions };
+  return { picture: selected, apply, reset, resize, crop, rotate, turn, colour, actions };
 }

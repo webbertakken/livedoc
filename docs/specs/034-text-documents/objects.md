@@ -241,8 +241,17 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
 - **Image options** (Format > Image, the context menu) opens the right side panel with its sections in Google's order;
   **Size & rotation** holds Width and Height in the document's length unit, Scale width and Scale height in percent of
   its own size, and Lock aspect ratio (on by default, as Google's), then **Rotate**: Angle in degrees, with Rotate
-  counter-clockwise 90° and Rotate clockwise 90° buttons, as Google's; each change is one undo step. Text wrapping,
-  Position, Recolour and Adjustments wait for their parts.
+  counter-clockwise 90° and Rotate clockwise 90° buttons, as Google's; each change is one undo step. Text wrapping
+  and Position wait for their parts.
+- **Recolour** (look and order `(default)`, until a capture): a grid of choices, **No recolour**, then **Light 1** to
+  **Light 8** and **Dark 1** to **Dark 8**, each drawn as its duotone. Light N lays the picture from its colour (dark)
+  to white, Dark N from black to its colour; the colours, 1 to 8, are grey `#666666`, red `#ff0000`, orange
+  `#ff9900`, yellow `#ffff00`, green `#00ff00`, cyan `#00ffff`, cornflower blue `#4a86e8` and purple `#9900ff`
+  `(default)`. A picture recoloured otherwise (greyscale, or another duotone from a file) has none checked. A choice
+  is one undo step.
+- **Adjustments**: **Transparency**, **Brightness** and **Contrast** sliders in percent, each showing its value, in
+  their ranges (above), stepping by 1; a slider shows its value as it moves, and the change is written, and the picture
+  drawn so, once it is let go (the pointer released, the key released, or the slider left), one undo step `(default)`.
 - A field applies on Enter or when left; Scale takes 1 to 1000 percent (default); Angle takes any number, written
   as its turn from 0 to below 360 (-90 is 270), to two decimals. Its **own size** is its pixels at 96
   an inch, read from its bytes, or from the gallery image once drawn; until then Scale and Reset are dimmed.
@@ -537,7 +546,8 @@ files of one are read): a grey block of monospace lines, highlighted by its lang
   One undo step, for an Editor; dimmed for anyone else, and while a header, footer or note is edited.
 - **Writing in one**: Enter starts a new line in the block, keeping the line's leading spaces and tabs; Enter on a
   last line of nothing but spaces and tabs leaves the block, that line taken away and a Normal text paragraph started
-  after it; Tab types a tab. Typing aids (smart quotes, substitutions, automatic lists and links, capitals) are off in a block.
+  after it; Tab types a tab. Typing aids (smart quotes, substitutions, automatic lists and links, capitals) are off in
+  a block.
 - **Drawn**: by its style, with rounded corners, and the language's name in small grey type at its top left;
   highlighting colours keywords, strings, comments and numbers, drawn by the editor only and never written, so a file
   holds plain monospace text. Colours are drawn for the paper (editing-surface.md "The page in the dark scheme").
