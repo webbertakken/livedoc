@@ -103,7 +103,7 @@ describe('formatFromStyle', () => {
           'border-left:1px;font-size:1em;mso-number-format:General;font-weight:400',
         none,
       ),
-    ).toEqual({ fs: 400, ha: 'r', bt: { w: 3, s: 'solid', c: '#ff0000' } });
+    ).toEqual({ fs: 400, ha: 'r', bt: { w: 3, s: 'double', c: '#ff0000' } });
     expect(formatFromStyle('font-size:2pt;border-right:solid', none)).toEqual({
       fs: 6,
       br: { w: 1, s: 'solid', c: '#000000' },

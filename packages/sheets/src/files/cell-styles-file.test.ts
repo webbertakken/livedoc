@@ -21,7 +21,7 @@ const EVERY: CellStyle = {
   ha: 'c',
   va: 't',
   wr: 'w',
-  bt: { w: 1, s: 'solid', c: '#000000' },
+  bt: { w: 3, s: 'double', c: '#000000' },
   br: { w: 2, s: 'dashed', c: '#0000ff' },
   bb: { w: 3, s: 'solid', c: '#00ff00' },
   bl: { w: 1, s: 'dotted', c: '#000000' },

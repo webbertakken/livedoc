@@ -10,6 +10,8 @@ import {
   outlineOf,
   type SheetLayout,
   type CellFormat,
+  type Border,
+  type BorderMode,
   type FormatPatch,
   type MergeMode,
   type GridRange,
@@ -22,6 +24,8 @@ import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadshee
 import { lineSpan } from './line-span';
 import { recentFormatItemId } from './recent-formats';
 import { mergeBindings } from './merge-bindings';
+import { borderBindings, gridBorders, type BorderLineChoice } from './border-bindings';
+import type { OfficeBorders } from '@/components/office/OfficeBordersPanel';
 import { cellFamilyOf, cellFontPatch } from './spreadsheet-fonts';
 
 type Axis = 'r' | 'c';
@@ -61,6 +65,8 @@ export type GridMenuActions = {
   openCustomCurrency: () => void;
   // Format › Number › Custom Date and Time's dialog.
   openCustomDateTime: () => void;
+  // The Borders panel and the border shortcuts (formatting.md "Borders").
+  borders: (mode: BorderMode, border: Border) => void;
   // Format › Merge Cells (formatting.md "Merges"): asking first where a merge would clear values.
   merge: (mode: MergeMode) => void;
   unmerge: () => void;
@@ -90,6 +96,9 @@ export type GridMenuPort = {
   recentCodes: readonly string[];
   // Whether the selection holds a merge (formatting.md "Merges").
   merged: boolean;
+  // The colour and line the borders draw in, and keeping a new one (formatting.md "Borders", D209).
+  borderLine: BorderLineChoice;
+  chooseBorderLine: (next: BorderLineChoice) => void;
   act: GridMenuActions;
 };
 
@@ -346,6 +355,8 @@ export type GridOffice = {
   // The active cell's family (Arial where it sets none); null while no sheet is open or the session may not format.
   fontFamily: string | null;
   setFontFamily: (family: string) => void;
+  // The toolbar's Borders panel, for an Editor (formatting.md "Borders").
+  borders: OfficeBorders | null;
 };
 
 /**
@@ -379,6 +390,7 @@ export function gridOffice(port: GridMenuPort): GridOffice {
     setFontSize: (pt) => {
       if (editor) setFontSize(port.act, pt);
     },
+    borders: editor ? gridBorders(port.borderLine, port.act.borders, port.chooseBorderLine) : null,
     fontFamily: editor ? cellFamilyOf(port.format) : null,
     setFontFamily: (family) => {
       if (editor) port.act.format(cellFontPatch(family));
@@ -398,6 +410,7 @@ export function gridMenuBindings(port: GridMenuPort): OfficeActions {
     ...foldBindings(port),
     ...(port.canWrite ? writeBindings(port) : {}),
     ...(port.canWrite && port.canShape ? shapeBindings(port) : {}),
+    ...(port.canWrite && port.canShape ? borderBindings(port.borderLine, port.act.borders) : {}),
     ...(port.canWrite && port.canShape
       ? mergeBindings({
           range: port.range,

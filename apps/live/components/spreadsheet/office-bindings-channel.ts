@@ -27,6 +27,7 @@ export const NO_GRID_OFFICE: GridOffice = {
   setFontSize: () => {},
   fontFamily: null,
   setFontFamily: () => {},
+  borders: null,
 };
 
 // What the colour controls show now: each one's colour, so a change of the active cell's redraws them.
@@ -38,7 +39,7 @@ const coloursSignature = (colours: OfficeColours | null) =>
     : '';
 
 const signatureOf = (office: GridOffice) =>
-  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.fontFamily ?? ''}#${office.recentCodes.join('\n')}#${coloursSignature(office.colours)}`;
+  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.fontFamily ?? ''}#${office.borders ? `${office.borders.colour} ${office.borders.line}` : ''}#${office.recentCodes.join('\n')}#${coloursSignature(office.colours)}`;
 
 export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let latest: GridOffice = NO_GRID_OFFICE;
@@ -52,6 +53,7 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
     recentCodes,
     fontSize,
     fontFamily,
+    borders,
   }: GridOffice): GridOffice => ({
     actions: Object.fromEntries(
       Object.entries(actions).map(([id, action]): [string, OfficeAction] => [
@@ -77,6 +79,15 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
     setFontSize: (pt) => latest.setFontSize(pt),
     fontFamily,
     setFontFamily: (family) => latest.setFontFamily(family),
+    // The panel reads its colour and line as published; what it runs reaches the latest sheet.
+    borders: borders
+      ? {
+          ...borders,
+          apply: (placement) => latest.borders?.apply(placement),
+          setColour: (colour) => latest.borders?.setColour(colour),
+          setLine: (line) => latest.borders?.setLine(line),
+        }
+      : null,
   });
   return {
     get: () => shown,

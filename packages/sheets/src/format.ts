@@ -72,7 +72,7 @@ export function fontFamilyName(ff: string): string {
 const isFontName = (v: unknown): boolean =>
   typeof v === 'string' && v.length <= FONT_FAMILY_MAX && FONT_FAMILY_RE.test(v);
 
-export const BORDER_STYLES: readonly BorderStyle[] = ['solid', 'dashed', 'dotted'];
+export const BORDER_STYLES: readonly BorderStyle[] = ['solid', 'dashed', 'dotted', 'double'];
 export const FORMAT_KEYS = [
   'nf',
   'dp',

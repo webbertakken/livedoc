@@ -162,7 +162,19 @@ export function stepDecimals(
   return Math.max(0, Math.min(10, base + delta));
 }
 
-export type BorderMode = 'all' | 'outer' | 'inner' | 'top' | 'bottom' | 'left' | 'right' | 'none';
+// Which lines a range's borders set (formatting.md "Borders"): Inner those between cells, Horizontal those between
+// rows, Vertical those between columns.
+export type BorderMode =
+  | 'all'
+  | 'outer'
+  | 'inner'
+  | 'horizontal'
+  | 'vertical'
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'none';
 
 // Borders for a range: each cell gets the sides the mode gives it (inner lines on both neighbours' shared sides).
 export function borderRange(
@@ -189,22 +201,22 @@ export function borderRange(
           mode === 'all' ||
           (mode === 'outer' && top) ||
           (mode === 'top' && top) ||
-          (mode === 'inner' && !top),
+          ((mode === 'inner' || mode === 'horizontal') && !top),
         bb:
           mode === 'all' ||
           (mode === 'outer' && bottom) ||
           (mode === 'bottom' && bottom) ||
-          (mode === 'inner' && !bottom),
+          ((mode === 'inner' || mode === 'horizontal') && !bottom),
         bl:
           mode === 'all' ||
           (mode === 'outer' && left) ||
           (mode === 'left' && left) ||
-          (mode === 'inner' && !left),
+          ((mode === 'inner' || mode === 'vertical') && !left),
         br:
           mode === 'all' ||
           (mode === 'outer' && right) ||
           (mode === 'right' && right) ||
-          (mode === 'inner' && !right),
+          ((mode === 'inner' || mode === 'vertical') && !right),
       };
       const f: FormatPatch = {};
       for (const [k, on] of Object.entries(sides) as [keyof typeof sides, boolean][]) {

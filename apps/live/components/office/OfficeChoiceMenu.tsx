@@ -4,7 +4,7 @@
 // value at the caret as text with a chevron, blank over a mixed selection, opening a menu of the kind's choices over
 // the page, the one at the caret checked. The Styles control is one; the font control draws its own value and menu on
 // it. A choice runs the kind's action, which gives focus back to the writing.
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ChevronDownIcon, Glyph, HoverCard, Prims } from '@livedoc/ui';
 import type { IconPrim } from '@livedoc/icons';
 import { noShortcuts, type OfficeActions, type OfficeEntry } from '@/lib/office/office-catalogue';
@@ -21,6 +21,8 @@ export type OfficeChoice = {
   iconOf?: (value: string | null) => readonly IconPrim[];
   // A split toggle's grid of choices in place of a menu: its cells run `actions` by id, `read` names the one in force.
   grid?: OfficeGrid;
+  // An icon control's own panel in place of its menu (the Borders panel), told how to close.
+  panel?: (close: () => void) => ReactNode;
 };
 
 /** The kind's choice controls, by control id. */
@@ -39,6 +41,7 @@ export function OfficeChoiceMenu({
   tabIndex,
   className,
   onOpen,
+  panel,
 }: {
   // The control's id, which the toolbar finds it by.
   id: string;
@@ -58,6 +61,8 @@ export function OfficeChoiceMenu({
   className: string;
   // Read what the menu shows afresh as it opens.
   onOpen?: () => void;
+  // A panel of the kind's own in place of the menu (OfficeChoice.panel).
+  panel?: (close: () => void) => ReactNode;
 }) {
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -72,7 +77,7 @@ export function OfficeChoiceMenu({
           ref={setTrigger}
           type="button"
           aria-label={value ? `${label}: ${value}` : label}
-          aria-haspopup="menu"
+          aria-haspopup={panel ? 'dialog' : 'menu'}
           aria-expanded={open}
           data-office-control={id}
           tabIndex={tabIndex}
@@ -95,7 +100,16 @@ export function OfficeChoiceMenu({
           <ChevronDownIcon size={12} />
         </button>
       </HoverCard>
-      {open ? (
+      {open && panel ? (
+        <OfficePopup anchor={trigger}>
+          {panel(() => {
+            // Escape or a press outside from inside the panel hands focus back to the control.
+            const inside = document.activeElement?.closest('[data-office-popup]');
+            setOpen(false);
+            if (inside) trigger?.focus({ preventScroll: true });
+          })}
+        </OfficePopup>
+      ) : open ? (
         <OfficePopup anchor={trigger}>
           <OfficeMenuPanel
             entries={entries}

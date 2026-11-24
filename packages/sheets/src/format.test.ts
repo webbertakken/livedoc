@@ -50,6 +50,8 @@ describe('format validation', () => {
     ['b', false, false],
     ['bt', { w: 1, s: 'solid', c: '#000000' }, true],
     ['bt', { w: 4, s: 'solid', c: '#000000' }, false],
+    ['bt', { w: 3, s: 'double', c: '#000000' }, true],
+    ['bt', { w: 1, s: 'wavy', c: '#000000' }, false],
     ['bt', { w: 1, s: 'solid', c: '#000000', x: 1 }, false],
     ['bt', null, false],
     ['zz', 1, false],

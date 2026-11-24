@@ -37,6 +37,7 @@ import { SheetBar, type SheetBarTab } from './SheetBar';
 import { SheetBarSummary } from './SheetBarSummary';
 import { SummarySlotContext } from './summary-slot';
 import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
+import { BorderLineContext, useBorderLineState } from './border-line-context';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { SpreadsheetFullScreenProvider, useSpreadsheetFullScreen } from './spreadsheet-full-screen';
@@ -95,6 +96,8 @@ export function SpreadsheetSurface({
   const root = useRef<HTMLElement | null>(null);
   // The open sheet's menu bindings, published up to the title row (surface.md "Menu bar").
   const [channel] = useState(createOfficeBindingsChannel);
+  // The colour and line its borders draw in, kept as sheets are switched (formatting.md "Borders", D209).
+  const borderLine = useBorderLineState();
   // The sheet bar's room for the summary, filled from inside the open sheet (surface.md "Sheet bar").
   const [summarySlot, setSummarySlot] = useState<HTMLElement | null>(null);
   // The person's zoom on the grid, kept as sheets are switched (surface.md "Grid", D133).
@@ -150,28 +153,30 @@ export function SpreadsheetSurface({
       </div>
       <SheetBarActionsContext.Provider value={sheetBar}>
         <OfficeBindingsContext.Provider value={channel}>
-          <SummarySlotContext.Provider value={summarySlot}>
-            <SpreadsheetZoomProvider value={scale}>
-              <SheetStepContext.Provider value={stepSheet}>
-                <SurfaceRedoContext.Provider value={history?.redo ?? null}>
-                  <ShowFormulasContext.Provider value={formulas.shown}>
-                    <SpreadsheetFullScreenProvider value={fullScreen}>
-                      {bridge ? (
-                        <OpenSheet
-                          bridge={bridge}
-                          tabId={tabId}
-                          sync={sync}
-                          onWorkbook={onWorkbook}
-                        />
-                      ) : (
-                        <Status state="loading" />
-                      )}
-                    </SpreadsheetFullScreenProvider>
-                  </ShowFormulasContext.Provider>
-                </SurfaceRedoContext.Provider>
-              </SheetStepContext.Provider>
-            </SpreadsheetZoomProvider>
-          </SummarySlotContext.Provider>
+          <BorderLineContext.Provider value={borderLine}>
+            <SummarySlotContext.Provider value={summarySlot}>
+              <SpreadsheetZoomProvider value={scale}>
+                <SheetStepContext.Provider value={stepSheet}>
+                  <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                    <ShowFormulasContext.Provider value={formulas.shown}>
+                      <SpreadsheetFullScreenProvider value={fullScreen}>
+                        {bridge ? (
+                          <OpenSheet
+                            bridge={bridge}
+                            tabId={tabId}
+                            sync={sync}
+                            onWorkbook={onWorkbook}
+                          />
+                        ) : (
+                          <Status state="loading" />
+                        )}
+                      </SpreadsheetFullScreenProvider>
+                    </ShowFormulasContext.Provider>
+                  </SurfaceRedoContext.Provider>
+                </SheetStepContext.Provider>
+              </SpreadsheetZoomProvider>
+            </SummarySlotContext.Provider>
+          </BorderLineContext.Provider>
         </OfficeBindingsContext.Provider>
         <SheetBar
           tabs={tabs}

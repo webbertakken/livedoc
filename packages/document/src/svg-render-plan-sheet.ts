@@ -12,7 +12,7 @@ import { wrapLines } from './svg-render-face-kit';
 
 type Shape = BoxedElement & { type: 'shape' };
 
-type RenderBorder = { w: 1 | 2 | 3; s: 'solid' | 'dashed' | 'dotted'; c: string };
+type RenderBorder = { w: 1 | 2 | 3; s: 'solid' | 'dashed' | 'dotted' | 'double'; c: string };
 
 // @livedoc/sheets SheetRenderModel (engine/render.ts), restated.
 export type SheetRenderModel = {
@@ -103,6 +103,15 @@ function dash(s: RenderBorder['s'], w: number): string {
 }
 
 function line(x1: number, y1: number, x2: number, y2: number, b: RenderBorder): string {
+  // A double: two 1 px lines, a pixel either side of where one runs (formatting.md "Borders").
+  if (b.s === 'double') {
+    const [dx, dy] = y1 === y2 ? [0, 1] : [1, 0];
+    const thin: RenderBorder = { ...b, w: 1, s: 'solid' };
+    return (
+      line(x1 - dx, y1 - dy, x2 - dx, y2 - dy, thin) +
+      line(x1 + dx, y1 + dy, x2 + dx, y2 + dy, thin)
+    );
+  }
   return `<line x1="${r2(x1)}" y1="${r2(y1)}" x2="${r2(x2)}" y2="${r2(y2)}" stroke="${b.c}" stroke-width="${b.w}"${dash(b.s, b.w)}/>`;
 }
 

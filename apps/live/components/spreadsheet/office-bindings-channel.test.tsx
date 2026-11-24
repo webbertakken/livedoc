@@ -27,6 +27,7 @@ const office = (
   setFontSize,
   fontFamily,
   setFontFamily,
+  borders: null,
 });
 
 // docs/specs/029-sheets/surface.md "Menu bar", "Toolbar": the open sheet's bindings reach the title row above it.
@@ -78,6 +79,40 @@ describe('createOfficeBindingsChannel', () => {
     channel.set(office({}, 14, after));
     expect(heard).toHaveBeenCalledTimes(2);
     expect(channel.get().fontSize).toBe(14);
+  });
+
+  it('carries the Borders panel, its colour and line heard, its runs reaching the latest sheet', () => {
+    const channel = createOfficeBindingsChannel();
+    const heard = vi.fn();
+    channel.subscribe(heard);
+    const panel = (colour: string) => ({
+      apply: vi.fn(),
+      colour,
+      setColour: vi.fn(),
+      line: 'thin' as const,
+      setLine: vi.fn(),
+    });
+    const before = panel('#000000');
+    const after = panel('#000000');
+    channel.set({ ...office({}), borders: before });
+    const shown = channel.get().borders!;
+    channel.set({ ...office({}), borders: after });
+    expect(heard).toHaveBeenCalledTimes(1);
+    shown.apply('outer');
+    shown.setColour('#ff0000');
+    shown.setLine('double');
+    expect(after.apply).toHaveBeenCalledWith('outer');
+    expect(after.setColour).toHaveBeenCalledWith('#ff0000');
+    expect(after.setLine).toHaveBeenCalledWith('double');
+    expect(before.apply).not.toHaveBeenCalled();
+    channel.set({ ...office({}), borders: panel('#ff0000') });
+    expect(heard).toHaveBeenCalledTimes(2);
+    expect(channel.get().borders!.colour).toBe('#ff0000');
+    channel.set(office({}));
+    shown.apply('all');
+    shown.setColour('#00ff00');
+    shown.setLine('thin');
+    expect(after.apply).toHaveBeenCalledTimes(1);
   });
 
   it('carries the active cell’s family, set through the latest sheet (formatting.md "Font")', () => {

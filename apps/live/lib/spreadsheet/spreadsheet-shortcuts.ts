@@ -220,7 +220,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+1',
     'Option+Shift+1',
     'Alt+Shift+1',
-    'specified',
+    'built',
   ),
   row(
     'apply-right-border',
@@ -229,7 +229,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+2',
     'Option+Shift+2',
     'Alt+Shift+2',
-    'specified',
+    'built',
   ),
   row(
     'apply-bottom-border',
@@ -238,7 +238,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+3',
     'Option+Shift+3',
     'Alt+Shift+3',
-    'specified',
+    'built',
   ),
   row(
     'apply-left-border',
@@ -247,7 +247,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+4',
     'Option+Shift+4',
     'Alt+Shift+4',
-    'specified',
+    'built',
   ),
   row(
     'remove-borders',
@@ -256,7 +256,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+6',
     'Option+Shift+6',
     'Alt+Shift+6',
-    'specified',
+    'built',
   ),
   row(
     'apply-outer-border',
@@ -265,7 +265,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+7 or Ctrl+Shift+7',
     'Option+Shift+7 or ⌘+Shift+7 or Ctrl+Shift+7',
     'Alt+Shift+7 or Ctrl+Shift+7',
-    'specified',
+    'built',
   ),
   row('insert-link', 'Format cells', 'Insert link', 'Ctrl+K', '⌘+K', 'Ctrl+K', 'specified'),
   row(

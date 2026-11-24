@@ -168,6 +168,12 @@ describe('clearing and formatting', () => {
     expect(fmt(b, 'A1')).toEqual({ bt: border, bl: border, bb: border, br: border });
     run(b, borderRange(b.wb, id, range, 'none', border));
     expect(fmt(b, 'A1')).toBeUndefined();
+    // formatting.md "Borders": Horizontal the lines between rows, Vertical those between columns.
+    run(b, borderRange(b.wb, id, range, 'horizontal', border));
+    expect([fmt(b, 'A1'), fmt(b, 'A2')]).toEqual([{ bb: border }, { bt: border }]);
+    run(b, borderRange(b.wb, id, range, 'none', border));
+    run(b, borderRange(b.wb, id, range, 'vertical', border));
+    expect([fmt(b, 'A1'), fmt(b, 'B1')]).toEqual([{ br: border }, { bl: border }]);
     for (const mode of ['all', 'top', 'bottom', 'left', 'right'] as const)
       expect(borderRange(b.wb, id, range, mode, border)?.kind).toBe('cells');
     expect(borderRange(b.wb, 'nope', range, 'all', border)).toBeNull();

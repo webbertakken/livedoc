@@ -62,7 +62,7 @@ describe('xlsxCellStyleOf', () => {
         bg: '#ffff00',
         bl: { w: 1, s: 'solid', c: '#0000ff' },
         br: { w: 2, s: 'dashed', c: '#000000' },
-        bt: { w: 3, s: 'solid', c: '#000000' },
+        bt: { w: 3, s: 'double', c: '#000000' },
         bb: { w: 1, s: 'dotted', c: '#000000' },
         ha: 'c',
         va: 't',

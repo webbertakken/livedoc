@@ -57,7 +57,7 @@ const READ_BORDERS: Readonly<Record<string, Omit<Border, 'c'>>> = {
   thin: { w: 1, s: 'solid' },
   medium: { w: 2, s: 'solid' },
   thick: { w: 3, s: 'solid' },
-  double: { w: 3, s: 'solid' },
+  double: { w: 3, s: 'double' },
   hair: { w: 1, s: 'dotted' },
   dotted: { w: 1, s: 'dotted' },
   dashed: { w: 1, s: 'dashed' },
@@ -214,6 +214,7 @@ const WRITE_BORDERS: Readonly<Record<BorderStyle, readonly string[]>> = {
   solid: ['thin', 'medium', 'thick'],
   dashed: ['dashed', 'mediumDashed', 'mediumDashed'],
   dotted: ['dotted', 'dotted', 'dotted'],
+  double: ['double', 'double', 'double'],
 };
 
 const WRITE_HORIZONTAL = { l: 'left', c: 'center', r: 'right' } as const;

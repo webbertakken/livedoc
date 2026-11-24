@@ -285,3 +285,52 @@ describe('OfficeToolbar choices', () => {
     expect(screen.getByRole('menu', { name: 'Align & indent' })).toBeTruthy();
   });
 });
+
+// formatting.md "Borders": an icon control may open a panel of the kind's own in place of its menu.
+describe('OfficeChoiceMenu with a panel', () => {
+  function withPanel() {
+    render(
+      <OfficeChoiceMenu
+        id="borders"
+        label="Borders"
+        value={null}
+        icon={[]}
+        entries={[]}
+        actions={{}}
+        width={0}
+        tabIndex={0}
+        className=""
+        panel={(close) => (
+          <div role="dialog" aria-label="Panel">
+            <button type="button" onClick={close}>
+              Shut
+            </button>
+          </div>
+        )}
+      />,
+    );
+    return screen.getByRole('button', { name: 'Borders' });
+  }
+
+  it('opens its panel, a dialog, and hands focus back to the control as the panel closes', () => {
+    const trigger = withPanel();
+    expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
+    fireEvent.click(trigger);
+    const shut = screen.getByRole('button', { name: 'Shut' });
+    shut.focus();
+    fireEvent.click(shut);
+    expect(screen.queryByRole('dialog', { name: 'Panel' })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('leaves focus where it went when the panel closes without it', () => {
+    const trigger = withPanel();
+    fireEvent.click(trigger);
+    const elsewhere = document.createElement('button');
+    document.body.append(elsewhere);
+    elsewhere.focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Shut' }));
+    expect(document.activeElement).toBe(elsewhere);
+    elsewhere.remove();
+  });
+});

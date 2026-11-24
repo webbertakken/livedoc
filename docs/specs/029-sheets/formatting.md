@@ -107,6 +107,16 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 - **Borders**: All, Inner, Horizontal, Vertical, Outer, Left, Top, Right, Bottom, Clear; a colour; a style (thin,
   medium, thick, dashed, dotted, double). Shortcuts Alt+Shift+1 to 7 as the matrix lists.
+  - The toolbar's **Borders** opens Google's panel: the ten placements as a grid of two rows (All, Inner, Horizontal,
+    Vertical, Outer; Left, Top, Right, Bottom, Clear), then **Border Colour** (the one colour picker, its swatch
+    skin) and **Border Style** (the six lines, each drawn), the chosen ones marked.
+  - A placement sets those lines of the selection in the chosen colour and style, one undo step: Inner the lines
+    between cells, Horizontal those between rows, Vertical those between columns; Clear takes every line away.
+  - The colour and style chosen stay for the open spreadsheet until the page closes, as Google's do; they start
+    black and thin (default, D209). The shortcuts draw in them too.
+  - **Double** is a line of three pixels drawn as two; the others are thin 1 px, medium 2 px, thick 3 px, dashed and
+    dotted 1 px.
+  - An Editor's, as every format is; the panel is a menu: arrows move through the placements and the two tools.
 
 ## Alignment, wrapping, rotation
 
@@ -195,6 +205,8 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   stand-in (default).
 - **D208** Merge Cells: the ask titled Merge Cells; the toolbar's button merges all or unmerges a selection holding a
   merge, as Google's does, its arrow listing the four (default).
+- **D209** The Borders panel's colour and style: kept for the open spreadsheet until the page closes, black and thin
+  to start; the shortcuts draw in them (default).
 
 ## Telemetry
 
