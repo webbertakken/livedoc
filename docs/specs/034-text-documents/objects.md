@@ -313,9 +313,16 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 - **Its picture** is a PNG of the drawing at twice its size on a transparent ground, stored as an inserted picture is
   (the gallery, or its bytes in the document where the gallery cannot hold it); a drawing whose picture cannot be
   stored stays open and says why, in the words a picture refused on insert has.
-- **Opening it again**: a double-click on the picture, or **Edit** on its bar, opens its drawing tab; Save and close
-  goes back to the text document at the picture, selected. Every change in the drawing tab is live (everyone's, as on
-  any canvas); Save and close only leaves.
+- **Opening it again**: a double-click on the picture, or **Edit** on the picture's bar, opens its drawing tab, for
+  anyone who sees the text document; Save and close goes back to the text document at the picture, selected. A
+  drawing's picture is cropped from Format > Image or the context menu, its double-click being the drawing's
+  `(default)`. Every change in the drawing tab is live (everyone's, as on any canvas).
+- **The picture's bar**: under a selected drawing's picture, as Google's, a bar holds **Edit** (**Open** for anyone
+  who cannot edit) `(default)`.
+- **Its picture again**: Save and close on a drawing already placed puts its new PNG in every picture naming it in
+  the document tab it was opened from, each keeping its width, its height following the drawing's shape and its crop
+  dropped, as Replace image does, one undo step `(default)`; a drawing whose picture was deleted meanwhile is placed
+  again where the picture was.
 - **Its bar**: while a drawing tab is open, a bar over the canvas names its text document (**Drawing in <name>**) with
   **Save and close**; the canvas editor's tab strip shows nothing for it.
 - **One drawing, one picture**: copying a drawing's picture (copy and paste, a duplicated document tab) shares its
@@ -328,8 +335,9 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 
 - In the writing, a drawing is drawn live from its tab as a [tab window](../009-elements/tab-window.md#the-element)
   draws a tab (its content fitted, following every change), without the window's frame or its paper: the drawing's
-  elements on a transparent ground, inside the picture's box. Its states (loading, failed with Retry, not available)
-  are the tab window's, in the picture's box.
+  elements on a transparent ground, inside the picture's box, cropped and turned as the picture is.
+- While its tab loads, or where it cannot be shown (its load failed, its tab gone or outside a share), the picture
+  shows the PNG last saved; a failed load offers **Retry** over it, as a tab window does `(default)`.
 - Its picture is otherwise a picture: size, crop, rotation, wrapping, position and alternative text as any; Recolour,
   Adjustments and Replace image are dimmed for a drawing.
 
@@ -635,6 +643,7 @@ the gallery's limit.
 a building block as `TextDocumentBuildingBlock<Block>` (MeetingNotes, EmailDraft, ProductRoadmap, ReviewTracker,
 ProjectAssets, ContentLaunchTracker), a code block as `TextDocumentCodeBlock`,
 with the image source as the type's suffix (ImageUpload, ImageUrl, ImageGallery, ImageCamera, ImageSearch);
-`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust); a new equation from
+`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust, and Drawing
+for a drawing's picture made again by Save and close); a new equation from
 the equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·
 TextDocumentEquationToolbar`, counted before it flips. Never content.

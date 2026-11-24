@@ -1316,12 +1316,13 @@ export const TEXT_DOCUMENT_TABLES = chart(
 );
 
 // A text document's picture changed (docs/specs/034-text-documents/objects.md "Working with a picture"): its alt text
-// written, its picture replaced, its size set by its handles or Image options, reset, or cropped.
+// written, its picture replaced, its size set by its handles or Image options, reset, or cropped; a drawing's picture
+// made again by its drawing's Save and close.
 export const TEXT_DOCUMENT_PICTURE_CHANGES = chart(
   'Element',
   'Changed',
   'Text Document Picture Changes',
-  "A text document's picture changed: its alt text written, its picture replaced, sized, reset, cropped, turned, recoloured or adjusted.",
+  "A text document's picture changed: its alt text written, its picture replaced, sized, reset, cropped, turned, recoloured or adjusted, or a drawing's picture made again.",
   {
     types: [
       'TextDocumentImageAltText',
@@ -1332,6 +1333,7 @@ export const TEXT_DOCUMENT_PICTURE_CHANGES = chart(
       'TextDocumentImageRotate',
       'TextDocumentImageRecolour',
       'TextDocumentImageAdjust',
+      'TextDocumentImageDrawing',
     ],
   },
 );

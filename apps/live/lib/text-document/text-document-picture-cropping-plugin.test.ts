@@ -59,6 +59,17 @@ describe('pictureCroppingPlugin', () => {
     expect(croppingAt(reader.state)).toBeNull();
   });
 
+  // objects.md "Opening it again": a drawing's double-click is the drawing's; it is cropped from the menus.
+  it("leaves a drawing's picture to the drawing on a double-click", () => {
+    const view = setup();
+    const node = schema.nodes[PICTURE]!.create({ media: 'm', width: 60, height: 30, drawing: 'd' });
+    const done = view.someProp('handleDoubleClickOn', (f) =>
+      f(view, PICTURE_AT, node, PICTURE_AT, new MouseEvent('dblclick'), true),
+    );
+    expect(done).toBeFalsy();
+    expect(croppingAt(view.state)).toBeNull();
+  });
+
   it('refuses where no picture is', () => {
     const view = setup();
     expect(beginCropping(view, 1)).toBe(false);

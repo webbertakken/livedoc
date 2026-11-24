@@ -72,7 +72,11 @@ export function pictureCroppingPlugin({ can }: { can: () => boolean }): Plugin<n
         return true;
       },
       handleDoubleClickOn: (view, _pos, node, nodePos, _event, direct) =>
-        direct && node.type.name === PICTURE && can() && beginCropping(view, nodePos),
+        direct &&
+        node.type.name === PICTURE &&
+        !node.attrs.drawing &&
+        can() &&
+        beginCropping(view, nodePos),
     },
   });
 }

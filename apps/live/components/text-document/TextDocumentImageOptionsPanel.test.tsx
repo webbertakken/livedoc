@@ -13,6 +13,7 @@ const SHOWN: PictureSizing = {
   own: { width: 144, height: 72 },
   rotation: 30,
   colours: { recolour: { kind: 'duotone', dark: '#000000', light: '#ff0000' }, contrast: 15 },
+  drawing: false,
 };
 
 const panel = (picture: PictureSizing | null = SHOWN) => {
@@ -107,7 +108,7 @@ describe('TextDocumentImageOptionsPanel', () => {
   });
 
   it('dims Scale and Reset while its own size is unknown', () => {
-    panel({ width: 72, height: 36, own: null, rotation: 0, colours: {} });
+    panel({ width: 72, height: 36, own: null, rotation: 0, colours: {}, drawing: false });
     expect(field('Scale width').disabled).toBe(true);
     expect(field('Scale width').value).toBe('');
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Reset' }).disabled).toBe(true);
@@ -119,6 +120,18 @@ describe('TextDocumentImageOptionsPanel', () => {
     expect(screen.getByRole<HTMLInputElement>('slider', { name: 'Contrast' }).value).toBe('15');
     fireEvent.click(screen.getByRole('radio', { name: 'No recolour' }));
     expect(onColour).toHaveBeenCalledWith({ recolour: undefined });
+  });
+
+  // objects.md "Drawn": a drawing's Recolour and Adjustments are dimmed.
+  it("dims Recolour and Adjustments for a drawing's picture", () => {
+    const { onColour } = panel({ ...SHOWN, drawing: true });
+    const none = screen.getByRole<HTMLButtonElement>('radio', { name: 'No recolour' });
+    expect(none.closest('fieldset')!.disabled).toBe(true);
+    expect(
+      screen.getByRole<HTMLInputElement>('slider', { name: 'Contrast' }).matches(':disabled'),
+    ).toBe(true);
+    expect(field('Width').disabled).toBe(false);
+    expect(onColour).not.toHaveBeenCalled();
   });
 
   it('resets', () => {
