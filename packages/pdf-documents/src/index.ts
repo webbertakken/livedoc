@@ -4,19 +4,35 @@ export * from './limits';
 export { isPdfBytes } from './sniff';
 export { PageName } from './page-name';
 export {
+  LINE_MARK_KINDS,
   MARK_KINDS,
   Mark,
+  SHAPE_MARK_KINDS,
   TEXT_MARK_KINDS,
+  type Box,
   type DrawingInput,
   type DrawingMark,
   type HighlightInput,
+  type LineInput,
+  type LineMark,
+  type LineMarkKind,
   type MarkKind,
   type Quad,
+  type Segment,
+  type ShapeInput,
+  type ShapeMark,
+  type ShapeMarkKind,
   type Stroke,
   type TextMark,
   type TextMarkKind,
 } from './mark';
-export { MarkDrawing, type MarkShape, type MarkStroke } from './mark-drawing';
+export {
+  MarkDrawing,
+  type BoxShape,
+  type LineShape,
+  type MarkShape,
+  type MarkStroke,
+} from './mark-drawing';
 export {
   PDF_ROOTS,
   PdfLiveChanges,

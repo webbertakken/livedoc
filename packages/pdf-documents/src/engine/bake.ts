@@ -8,18 +8,15 @@ import {
   PdfDict,
   PdfRef,
   PdfString,
-  rgb,
   type PDF,
   type PdfObject,
   type PDFPage,
-  type PDFAnnotation,
-  type PDFTextMarkupAnnotation,
-  type TextMarkupAnnotationOptions,
 } from '@libpdf/core';
 import type { FieldValue } from '../field-value';
-import { Mark, type Stroke, type TextMarkKind } from '../mark';
+import type { Mark } from '../mark';
 import { PageName } from '../page-name';
 import type { RemovedKind } from '../pdf-change';
+import { annotate } from './annotate';
 import { openWriter } from './writer';
 
 /** What a bake writes: the live changes as plain values. */
@@ -47,11 +44,6 @@ export function pdfDate(ms: number): string {
   const d = new Date(ms);
   return `D:${d.getUTCFullYear()}${two(d.getUTCMonth() + 1)}${two(d.getUTCDate())}${two(d.getUTCHours())}${two(d.getUTCMinutes())}${two(d.getUTCSeconds())}Z`;
 }
-
-// A channel as the file holds it, a fraction: the middle of its byte's step, so a reader that cuts the fraction back to
-// a byte (PDFium does) reads the byte it was, and the colour comes back as it was made.
-const channel = (colour: string, at: number): number =>
-  Math.min(1, (parseInt(colour.slice(at, at + 2), 16) + 0.5) / 255);
 
 const startsWith = (bytes: Uint8Array, prefix: Uint8Array): boolean =>
   bytes.length >= prefix.length && prefix.every((byte, at) => bytes[at] === byte);
@@ -100,40 +92,6 @@ function nameOf(pdf: PDF, entry: PdfObject): string | null {
   return entry instanceof PdfRef ? `o:${entry.objectNumber}` : null;
 }
 
-/** Each kind of text mark as the writer adds it to a page: the standard's own subtype, with its appearance. */
-const ANNOTATE_TEXT = {
-  highlight: (page, look) => page.addHighlightAnnotation(look),
-  underline: (page, look) => page.addUnderlineAnnotation(look),
-  strikeout: (page, look) => page.addStrikeOutAnnotation(look),
-  squiggly: (page, look) => page.addSquigglyAnnotation(look),
-} satisfies Record<
-  TextMarkKind,
-  (page: PDFPage, look: TextMarkupAnnotationOptions) => PDFTextMarkupAnnotation
->;
-
-// A stroke's flat x, y pairs as the writer's points.
-const pathOf = (stroke: Stroke) =>
-  Array.from({ length: stroke.length / 2 }, (_, at) => ({
-    x: stroke[at * 2]!,
-    y: stroke[at * 2 + 1]!,
-  }));
-
-/** One mark as its annotation on its page: a text mark as its kind's, a Drawing as `Ink`. */
-function annotate(page: PDFPage, mark: Mark): PDFAnnotation {
-  const color = rgb(channel(mark.colour, 1), channel(mark.colour, 3), channel(mark.colour, 5));
-  if (Mark.isText(mark))
-    return ANNOTATE_TEXT[mark.kind](page, {
-      quadPoints: mark.quads.map((quad) => [...quad]),
-      color,
-      opacity: mark.opacity,
-      title: mark.author,
-    });
-  const ink = page.addInkAnnotation({ paths: mark.strokes.map(pathOf), color, width: mark.width });
-  ink.setTitle(mark.author);
-  ink.setOpacity(mark.opacity);
-  return ink;
-}
-
 /** Appends each mark to its page as one annotation (marks.md "In the file"); answers how many have no page. */
 function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
   let lost = 0;
@@ -144,7 +102,7 @@ function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
       continue;
     }
     holdList(pdf, page);
-    const annotation = annotate(page, mark);
+    const annotation = annotate(pdf, page, mark);
     annotation.setName(mark.id);
     annotation.setModificationDate(pdfDate(mark.modifiedAt));
     annotation.dict.set('CreationDate', PdfString.fromString(pdfDate(mark.createdAt)));

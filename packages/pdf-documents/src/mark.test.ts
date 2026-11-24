@@ -6,7 +6,14 @@ import {
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
 } from './limits';
-import { Mark, type DrawingInput, type HighlightInput, type Quad } from './mark';
+import {
+  Mark,
+  type DrawingInput,
+  type HighlightInput,
+  type LineInput,
+  type Quad,
+  type ShapeInput,
+} from './mark';
 
 const QUAD: Quad = [72, 716, 300, 716, 72, 700, 300, 700];
 const input = (over: Partial<HighlightInput> = {}): HighlightInput => ({
@@ -121,5 +128,68 @@ describe('a Drawing', () => {
     ['an author that is no string', { author: 7 }],
   ])('refuses %s', (_, over) => {
     expect(Mark.parse({ ...drawing(over), kind: 'drawing', modifiedAt: 0 })).toBeNull();
+  });
+});
+
+// marks.md "Making a mark": a Line or an Arrow is its two ends; a Rectangle or an Ellipse the box a drag spans.
+describe('a line or a shape', () => {
+  const base = {
+    id: 's1',
+    page: 'p:4',
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+  };
+  const line = (over: Record<string, unknown> = {}) => ({
+    ...base,
+    line: [100, 600, 200, 650],
+    ...over,
+  });
+  const shape = (over: Record<string, unknown> = {}) => ({
+    ...base,
+    rect: [100, 600, 200, 650],
+    ...over,
+  });
+
+  it.each(['line', 'arrow'] as const)('makes a %s of its two ends, read back unchanged', (kind) => {
+    const mark = Mark.line(kind, line() as unknown as LineInput)!;
+    expect(mark).toEqual({ ...line(), kind, modifiedAt: base.createdAt });
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(
+      Mark.bounds(Mark.line(kind, line({ line: [200, 650, 100, 600] }) as unknown as LineInput)!),
+    ).toEqual([100, 600, 200, 650]);
+    expect(Mark.isText(mark)).toBe(false);
+  });
+
+  it.each(['rectangle', 'ellipse'] as const)(
+    'makes a %s of its box, read back unchanged',
+    (kind) => {
+      const mark = Mark.shape(kind, shape() as unknown as ShapeInput)!;
+      expect(mark).toEqual({ ...shape(), kind, modifiedAt: base.createdAt });
+      expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+      expect(Mark.bounds(mark)).toEqual([100, 600, 200, 650]);
+    },
+  );
+
+  it.each([
+    ['no ends', { line: undefined }],
+    ['three numbers', { line: [1, 2, 3] }],
+    ['an end far off any page', { line: [1e9, 2, 3, 4] }],
+    ['a width too wide', { width: PDF_MARK_WIDTH_MAX_PT + 1 }],
+  ])('refuses a line of %s', (_, over) => {
+    expect(Mark.parse({ ...line(over), kind: 'arrow', modifiedAt: 0 })).toBeNull();
+  });
+
+  it.each([
+    ['no box', { rect: undefined }],
+    ['a box of five numbers', { rect: [1, 2, 3, 4, 5] }],
+    ['a box turned inside out', { rect: [200, 600, 100, 650] }],
+    ['a box upside down', { rect: [100, 650, 200, 600] }],
+    ['a box that is not finite', { rect: [100, 600, Number.NaN, 650] }],
+    ['a width too thin', { width: PDF_MARK_WIDTH_MIN_PT / 2 }],
+  ])('refuses a shape of %s', (_, over) => {
+    expect(Mark.parse({ ...shape(over), kind: 'ellipse', modifiedAt: 0 })).toBeNull();
   });
 });

@@ -1,7 +1,8 @@
 // A mark (docs/specs/035-pdf-documents/marks.md): something placed on top of a PDF page that leaves its page content
 // alone. A value object: made and checked here, held in the live changes one property a whole value, written into the
 // file as one annotation by the bake. The kinds join as they are built: the four that mark text, named by the file's
-// own word for each (`Highlight`, `Underline`, `StrikeOut`, `Squiggly`), and the Drawing (`Ink`).
+// own word for each (`Highlight`, `Underline`, `StrikeOut`, `Squiggly`); the Drawing (`Ink`); the Line and the Arrow
+// (`Line`); the Rectangle and the Ellipse (`Square`, `Circle`).
 import {
   PDF_DRAWING_MAX_POINTS,
   PDF_MARK_MAX_QUADS,
@@ -19,12 +20,29 @@ export type Quad = readonly [number, number, number, number, number, number, num
 /** One stroke of a Drawing in page space: the points it passed, each an x and a y, flat as the file's InkList. */
 export type Stroke = readonly number[];
 
+/** A Line's or an Arrow's two ends, the file's `L`: `[x1, y1, x2, y2]`, an Arrow's head at the second. */
+export type Segment = readonly [number, number, number, number];
+
+/** An upright box in page space: `[left, bottom, right, top]`. */
+export type Box = readonly [number, number, number, number];
+
 export const TEXT_MARK_KINDS = ['highlight', 'underline', 'strikeout', 'squiggly'] as const;
-export const MARK_KINDS = [...TEXT_MARK_KINDS, 'drawing'] as const;
+export const LINE_MARK_KINDS = ['line', 'arrow'] as const;
+export const SHAPE_MARK_KINDS = ['rectangle', 'ellipse'] as const;
+export const MARK_KINDS = [
+  ...TEXT_MARK_KINDS,
+  'drawing',
+  ...LINE_MARK_KINDS,
+  ...SHAPE_MARK_KINDS,
+] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
 /** The kinds made by selecting text (marks.md "Kinds"): each is the glyphs it covers. */
 export type TextMarkKind = (typeof TEXT_MARK_KINDS)[number];
+/** The kinds made by a drag from one end to the other. */
+export type LineMarkKind = (typeof LINE_MARK_KINDS)[number];
+/** The kinds made by a drag across a box. */
+export type ShapeMarkKind = (typeof SHAPE_MARK_KINDS)[number];
 
 type MarkBase = {
   readonly id: string;
@@ -55,7 +73,22 @@ export type DrawingMark = MarkBase & {
   readonly width: number;
 };
 
-export type Mark = TextMark | DrawingMark;
+export type LineMark = MarkBase & {
+  readonly kind: LineMarkKind;
+  readonly line: Segment;
+  /** The line's width in points. */
+  readonly width: number;
+};
+
+export type ShapeMark = MarkBase & {
+  readonly kind: ShapeMarkKind;
+  /** The box the line runs along: its middle, so half the line falls outside it. */
+  readonly rect: Box;
+  /** The line's width in points. */
+  readonly width: number;
+};
+
+export type Mark = TextMark | DrawingMark | LineMark | ShapeMark;
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 const COLOUR = /^#[0-9a-f]{6}$/;
@@ -74,6 +107,12 @@ const isQuad = (value: unknown): value is Quad =>
 const isStroke = (value: unknown): value is Stroke =>
   Array.isArray(value) && value.length >= 2 && value.length % 2 === 0 && value.every(isCoordinate);
 
+const isFour = (value: unknown): value is Segment =>
+  Array.isArray(value) && value.length === 4 && value.every(isCoordinate);
+
+const isWidth = (value: unknown): value is number =>
+  typeof value === 'number' && value >= PDF_MARK_WIDTH_MIN_PT && value <= PDF_MARK_WIDTH_MAX_PT;
+
 const isTime = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= TIME_MAX;
 
@@ -83,6 +122,8 @@ const pointsOf = (strokes: readonly Stroke[]): number =>
 
 export type HighlightInput = Omit<TextMark, 'kind' | 'modifiedAt'>;
 export type DrawingInput = Omit<DrawingMark, 'kind' | 'modifiedAt'>;
+export type LineInput = Omit<LineMark, 'kind' | 'modifiedAt'>;
+export type ShapeInput = Omit<ShapeMark, 'kind' | 'modifiedAt'>;
 
 /** What every kind holds, checked and bounded; null where any of it is not what a mark holds. */
 function baseOf(v: Record<string, unknown>): MarkBase | null {
@@ -119,13 +160,53 @@ function drawingOf(base: MarkBase, v: Record<string, unknown>): DrawingMark | nu
   if (!Array.isArray(v.strokes) || v.strokes.length === 0 || !v.strokes.every(isStroke))
     return null;
   if (pointsOf(v.strokes) > PDF_DRAWING_MAX_POINTS) return null;
-  const width = v.width;
-  if (
-    typeof width !== 'number' ||
-    !(width >= PDF_MARK_WIDTH_MIN_PT && width <= PDF_MARK_WIDTH_MAX_PT)
-  )
-    return null;
-  return { ...base, kind: 'drawing', strokes: v.strokes.map((stroke) => [...stroke]), width };
+  if (!isWidth(v.width)) return null;
+  return {
+    ...base,
+    kind: 'drawing',
+    strokes: v.strokes.map((stroke) => [...stroke]),
+    width: v.width,
+  };
+}
+
+function lineOf(base: MarkBase, v: Record<string, unknown>): LineMark | null {
+  if (!isFour(v.line) || !isWidth(v.width)) return null;
+  const [x1, y1, x2, y2] = v.line;
+  return { ...base, kind: v.kind as LineMarkKind, line: [x1, y1, x2, y2], width: v.width };
+}
+
+function shapeOf(base: MarkBase, v: Record<string, unknown>): ShapeMark | null {
+  if (!isFour(v.rect) || !isWidth(v.width)) return null;
+  const [left, bottom, right, top] = v.rect;
+  if (left > right || bottom > top) return null;
+  return {
+    ...base,
+    kind: v.kind as ShapeMarkKind,
+    rect: [left, bottom, right, top],
+    width: v.width,
+  };
+}
+
+/** How each kind past the base is checked. */
+const KIND_OF: Readonly<
+  Record<MarkKind, (base: MarkBase, v: Record<string, unknown>) => Mark | null>
+> = {
+  highlight: textMarkOf,
+  underline: textMarkOf,
+  strikeout: textMarkOf,
+  squiggly: textMarkOf,
+  drawing: drawingOf,
+  line: lineOf,
+  arrow: lineOf,
+  rectangle: shapeOf,
+  ellipse: shapeOf,
+};
+
+/** Every x, y of a mark's geometry, flat. */
+function pointsAll(mark: Mark): readonly number[] {
+  if (Mark.isText(mark)) return mark.quads.flat();
+  if (mark.kind === 'drawing') return mark.strokes.flat();
+  return 'line' in mark ? mark.line : mark.rect;
 }
 
 export const Mark = {
@@ -140,8 +221,17 @@ export const Mark = {
   drawing: (input: DrawingInput): DrawingMark | null =>
     Mark.parse({ ...input, kind: 'drawing', modifiedAt: input.createdAt }) as DrawingMark | null,
 
+  /** A Line or an Arrow from end to end, or null when what is given is no such mark. */
+  line: (kind: LineMarkKind, input: LineInput): LineMark | null =>
+    Mark.parse({ ...input, kind, modifiedAt: input.createdAt }) as LineMark | null,
+
+  /** A Rectangle or an Ellipse along a box, or null when what is given is no such mark. */
+  shape: (kind: ShapeMarkKind, input: ShapeInput): ShapeMark | null =>
+    Mark.parse({ ...input, kind, modifiedAt: input.createdAt }) as ShapeMark | null,
+
   /** Whether a mark is one of the kinds made by selecting text. */
-  isText: (mark: Mark): mark is TextMark => mark.kind !== 'drawing',
+  isText: (mark: Mark): mark is TextMark =>
+    (TEXT_MARK_KINDS as readonly MarkKind[]).includes(mark.kind),
 
   /** How many points a Drawing's strokes hold, all told. */
   points: (mark: DrawingMark): number => pointsOf(mark.strokes),
@@ -156,12 +246,12 @@ export const Mark = {
     if (!MARK_KINDS.includes(v.kind as MarkKind)) return null;
     const base = baseOf(v);
     if (!base) return null;
-    return v.kind === 'drawing' ? drawingOf(base, v) : textMarkOf(base, v);
+    return KIND_OF[v.kind as MarkKind](base, v);
   },
 
   /** The smallest upright rectangle holding all of the mark: `[left, bottom, right, top]` in page space. */
   bounds: (mark: Mark): readonly [number, number, number, number] => {
-    const flat = Mark.isText(mark) ? mark.quads.flat() : mark.strokes.flat();
+    const flat = pointsAll(mark);
     const xs = flat.filter((_, at) => at % 2 === 0);
     const ys = flat.filter((_, at) => at % 2 === 1);
     return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
