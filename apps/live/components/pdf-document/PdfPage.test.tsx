@@ -15,7 +15,7 @@ import {
 } from '@livedoc/pdf-documents';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
-import type { PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
+import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
 import { PdfPage } from './PdfPage';
 
 vi.mock('@/lib/pdf-document/pdf-paint', () => ({ paintPicture: vi.fn(), REDRAW_SETTLE_MS: 0 }));
@@ -51,6 +51,7 @@ async function page(
   links: readonly PageLink[] = [],
   handles = false,
   marked: TextSelection | null = null,
+  ink: PdfPageInk | null = null,
 ) {
   const onText = vi.fn();
   const onMark = vi.fn();
@@ -77,6 +78,7 @@ async function page(
       marks={[]}
       tool={tool}
       onMark={onMark}
+      ink={ink}
       selected={selected}
       handles={handles}
       onText={onText}
@@ -255,5 +257,56 @@ describe('marking text on a page', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
     expect(onMark).toHaveBeenCalledWith(1, covered);
+  });
+});
+
+// marks.md "Making a mark": A Drawing: a stroke of the pointer, shown as it is drawn, handed over as it ends.
+describe('drawing on a page', () => {
+  const ink = (onDraw = vi.fn()): PdfPageInk => ({
+    colour: '#d93025',
+    opacity: 1,
+    width: 2,
+    onDraw,
+  });
+  const at = (x: number, y: number, pointerId = 1) => ({
+    button: 0,
+    pointerType: 'pen',
+    pointerId,
+    clientX: x,
+    clientY: y,
+  });
+
+  it('hands a stroke over in the page’s points once it ends, shown as it is drawn', async () => {
+    const onDraw = vi.fn();
+    const { box, view, onMark } = await page('drawing', [], [], false, null, ink(onDraw));
+    expect(box.className).toContain('cursor-crosshair touch-none');
+    fireEvent.pointerDown(box, at(72, 92));
+    fireEvent.pointerMove(box, at(100, 92));
+    // Another pointer moving is not this stroke.
+    fireEvent.pointerMove(box, at(300, 300, 2));
+    fireEvent.pointerMove(box, at(100.1, 92));
+    expect(view.container.querySelector('[data-pdf-ink-preview]')).not.toBeNull();
+    fireEvent.pointerUp(box, at(100, 92));
+    expect(onDraw).toHaveBeenCalledWith(1, [72, 700, 100, 700], expect.any(Number));
+    expect(view.container.querySelector('[data-pdf-ink-preview]')).toBeNull();
+    // The next stroke is a stroke of its own.
+    fireEvent.pointerDown(box, at(80, 92));
+    fireEvent.pointerMove(box, at(90, 92));
+    fireEvent.pointerUp(box, at(90, 92));
+    expect(onDraw).toHaveBeenLastCalledWith(1, [80, 700, 90, 700], expect.any(Number));
+    expect(onMark).not.toHaveBeenCalled();
+  });
+
+  it('lets a stroke go on a cancel, a second finger, or a press that is not the main one', async () => {
+    const onDraw = vi.fn();
+    const { box } = await page('drawing', [], [], false, null, ink(onDraw));
+    fireEvent.pointerDown(box, at(72, 92));
+    fireEvent.pointerCancel(box, at(72, 92));
+    fireEvent.pointerDown(box, at(72, 92));
+    fireEvent.pointerDown(box, at(80, 92, 2));
+    fireEvent.pointerUp(box, at(72, 92));
+    fireEvent.pointerDown(box, { ...at(72, 92), button: 2 });
+    fireEvent.pointerUp(box, { ...at(72, 92), button: 2 });
+    expect(onDraw).not.toHaveBeenCalled();
   });
 });

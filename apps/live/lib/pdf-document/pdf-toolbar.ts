@@ -156,7 +156,7 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
         look: { kind: 'icon', icon: lucideHighlighter, toggle: true, split: true },
       },
       toggle(TOOL_TEXT, 'Text', 'participate', lucideType),
-      toggle(TOOL_DRAWING, 'Drawing', 'participate', lucidePencilLine),
+      toggle(TOOL_DRAWING, 'Drawing', 'participate', lucidePencilLine, BUILT),
       list('shape-control', 'Shape', 'participate', lucideShapes),
       list('stamp-control', 'Stamp', 'participate', lucideStamp),
       toggle(TOOL_TICK, 'Tick', 'participate', lucideCheck),

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { PDF_MARK_MAX_QUADS, PDF_MARK_TEXT_MAX_CHARS } from './limits';
-import { Mark, type HighlightInput, type Quad } from './mark';
+import {
+  PDF_DRAWING_MAX_POINTS,
+  PDF_MARK_MAX_QUADS,
+  PDF_MARK_TEXT_MAX_CHARS,
+  PDF_MARK_WIDTH_MAX_PT,
+  PDF_MARK_WIDTH_MIN_PT,
+} from './limits';
+import { Mark, type DrawingInput, type HighlightInput, type Quad } from './mark';
 
 const QUAD: Quad = [72, 716, 300, 716, 72, 700, 300, 700];
 const input = (over: Partial<HighlightInput> = {}): HighlightInput => ({
@@ -69,5 +75,51 @@ describe('Mark', () => {
     const value =
       over === null || typeof over === 'string' ? over : { ...Mark.highlight(input()), ...over };
     expect(Mark.parse(value)).toBeNull();
+  });
+});
+
+// marks.md "Making a mark": A Drawing, its strokes checked and bounded as every mark's geometry is.
+describe('a Drawing', () => {
+  const drawing = (over: Record<string, unknown> = {}) => ({
+    id: 'd1',
+    page: 'p:4',
+    strokes: [
+      [100, 600, 150, 650],
+      [10, 10],
+    ],
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+    ...over,
+  });
+
+  it('is made of its strokes, read back unchanged, bounded by every point', () => {
+    const mark = Mark.drawing(drawing() as unknown as DrawingInput)!;
+    expect(mark).toEqual({ ...drawing(), kind: 'drawing', modifiedAt: 1_795_000_000_000 });
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(Mark.bounds(mark)).toEqual([10, 10, 150, 650]);
+    expect(Mark.points(mark)).toBe(3);
+    expect(Mark.isText(mark)).toBe(false);
+  });
+
+  it.each([
+    ['no strokes', { strokes: [] }],
+    ['strokes that are no list', { strokes: 'all' }],
+    ['a stroke of one number', { strokes: [[1]] }],
+    ['a stroke of an odd count', { strokes: [[1, 2, 3]] }],
+    ['a point far off any page', { strokes: [[1e9, 2]] }],
+    ['a point that is not finite', { strokes: [[Number.NaN, 2]] }],
+    [
+      'more points than one Drawing holds',
+      { strokes: [Array.from({ length: (PDF_DRAWING_MAX_POINTS + 1) * 2 }, () => 1)] },
+    ],
+    ['no width', { width: undefined }],
+    ['a width too thin', { width: PDF_MARK_WIDTH_MIN_PT / 2 }],
+    ['a width too wide', { width: PDF_MARK_WIDTH_MAX_PT + 1 }],
+    ['an author that is no string', { author: 7 }],
+  ])('refuses %s', (_, over) => {
+    expect(Mark.parse({ ...drawing(over), kind: 'drawing', modifiedAt: 0 })).toBeNull();
   });
 });

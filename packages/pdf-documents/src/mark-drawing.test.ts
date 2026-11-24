@@ -35,6 +35,7 @@ describe('MarkDrawing', () => {
             { x: 200, y: 700 },
           ],
           width: PDF_MARK_LINE_PT,
+          round: false,
         },
         {
           points: [
@@ -42,6 +43,7 @@ describe('MarkDrawing', () => {
             { x: 200, y: 710 },
           ],
           width: PDF_MARK_LINE_PT,
+          round: false,
         },
       ],
     });
@@ -56,6 +58,7 @@ describe('MarkDrawing', () => {
           { x: 200, y: 718 },
         ],
         width: PDF_MARK_LINE_PT,
+        round: false,
       },
     ]);
   });
@@ -74,6 +77,7 @@ describe('MarkDrawing', () => {
         { x: 108, y: 700 },
       ],
       width: PDF_MARK_LINE_PT,
+      round: false,
     });
   });
 
@@ -112,5 +116,42 @@ describe('MarkDrawing', () => {
       { x: 100, y: 700 },
       { x: 100, y: 700 },
     ]);
+  });
+});
+
+// marks.md "Making a mark": A Drawing is its strokes, each a line through the points it passed, its ends round.
+describe('a Drawing’s drawing', () => {
+  it('strokes each stroke through its points, round, at its own width; one point a dot', () => {
+    expect(
+      MarkDrawing.of({
+        kind: 'drawing',
+        strokes: [
+          [10, 20, 30, 40, 50, 20],
+          [5, 5],
+        ],
+        width: 2,
+      }),
+    ).toEqual({
+      fills: [],
+      strokes: [
+        {
+          points: [
+            { x: 10, y: 20 },
+            { x: 30, y: 40 },
+            { x: 50, y: 20 },
+          ],
+          width: 2,
+          round: true,
+        },
+        {
+          points: [
+            { x: 5, y: 5 },
+            { x: 5, y: 5 },
+          ],
+          width: 2,
+          round: true,
+        },
+      ],
+    });
   });
 });

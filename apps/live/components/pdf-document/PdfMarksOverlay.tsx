@@ -4,7 +4,7 @@
 // Under Dark pages (dark-pages.md "The recolouring") a mark takes the colour the step gives the file's own marks, and
 // lightens the dark page as multiplying darkens the white one, so the words under it keep their ink.
 import { useContext } from 'react';
-import type { Mark, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
+import type { Mark, PageMatrix, PagePoint, Quad, Stroke } from '@livedoc/pdf-documents';
 import { DarkPages, MarkDrawing, PageView } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
@@ -30,6 +30,7 @@ export function PdfMarksOverlay({
   height,
   marks,
   preview = [],
+  ink = null,
   selected = [],
   found = null,
 }: {
@@ -41,6 +42,8 @@ export function PdfMarksOverlay({
   marks: readonly Mark[];
   // The text a drag would mark, drawn while the drag lasts.
   preview?: readonly Quad[];
+  // The Drawing tool's stroke, drawn as it is drawn, in the tool's look.
+  ink?: { stroke: Stroke; colour: string; opacity: number; width: number } | null;
   // The text selected on the page, in the shell's focus colour (reading-surface.md "The pages": Selecting text).
   selected?: readonly Quad[];
   // Find's results on the page, the current one stronger (reading-surface.md "Find").
@@ -75,6 +78,8 @@ export function PdfMarksOverlay({
                 key={at}
                 points={viewPoints(matrix, stroke.points)}
                 strokeWidth={stroke.width}
+                strokeLinecap={stroke.round ? 'round' : undefined}
+                strokeLinejoin={stroke.round ? 'round' : undefined}
               />
             ))}
           </g>
@@ -100,6 +105,22 @@ export function PdfMarksOverlay({
             <polygon key={at} points={pointsOf(matrix, quad)} />
           ))}
         </g>
+      ) : null}
+      {ink ? (
+        <polyline
+          data-pdf-ink-preview="true"
+          points={viewPoints(
+            matrix,
+            MarkDrawing.of({ kind: 'drawing', strokes: [ink.stroke], width: ink.width }).strokes[0]!
+              .points,
+          )}
+          fill="none"
+          stroke={dark ? DarkPages.hex(ink.colour) : ink.colour}
+          opacity={ink.opacity}
+          strokeWidth={ink.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       ) : null}
       {preview.length > 0 ? (
         <g data-pdf-mark-preview="true" className="fill-(--pdf-mark-preview)">

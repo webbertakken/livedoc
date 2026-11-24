@@ -48,6 +48,15 @@ export const PDF_MARK_MAX_QUADS = 2_000;
 export const PDF_MARK_LINE_PT = 1;
 /** (default) A squiggly underline's tooth, wide and high, in points (marks.md "Limits"). Safe range: 1 to 4. */
 export const PDF_SQUIGGLE_STEP_PT = 2;
+/** (default) The points of one Drawing; a stroke past it starts a new one (marks.md "Limits"). */
+export const PDF_DRAWING_MAX_POINTS = 20_000;
+/** (default) Strokes begun closer in time to the last one's end are one Drawing. Safe range: 300 to 3,000. */
+export const PDF_DRAWING_JOIN_MS = 1_000;
+/** (default) A stroke's points closer than this, in points, are kept as one. Safe range: 0.25 to 2. */
+export const PDF_DRAWING_STEP_PT = 0.5;
+/** A line's width, in points (marks.md "Changing a mark": width 0.5 to 12). */
+export const PDF_MARK_WIDTH_MIN_PT = 0.5;
+export const PDF_MARK_WIDTH_MAX_PT = 12;
 /** (default) Past it the stored file is replaced (saving.md "Limits"); the room refuses a state beyond it. */
 export const PDF_LIVE_CHANGES_MAX_BYTES = 4_194_304;
 /** (default) Past it an idle Editor's surface replaces the stored file: three quarters of the ceiling, so ordinary use

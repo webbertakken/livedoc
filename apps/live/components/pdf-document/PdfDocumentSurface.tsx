@@ -501,6 +501,7 @@ export function PdfDocumentSurface({
                 marks={marks}
                 tool={tools.inHand}
                 onMark={tools.make}
+                ink={tools.ink}
                 selection={textSelection.selected}
                 onText={textSelection.gesture}
                 texts={textSelection.texts}

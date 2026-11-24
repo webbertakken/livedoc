@@ -153,7 +153,7 @@ describe('writing field values', () => {
 
 // marks.md "In the file": a mark deleted in LiveDoc is written as the removed annotation in the same addition.
 // marks.md "Kinds", "In the file": each kind that marks text is written as the standard's own subtype, under its id.
-describe('writing the marks of text', () => {
+describe('writing marks', () => {
   it('writes a highlight, an underline, a strikethrough and a squiggle, each read back as its kind', async () => {
     const pages = opened(await engine.open(stored));
     const selection = await engine.selectText(0, { x: 74, y: 724 }, { x: 180, y: 724 });
@@ -184,6 +184,33 @@ describe('writing the marks of text', () => {
     expect(read.map((mark) => [mark.colour, mark.quads.length])).toEqual(
       kinds.map(() => ['#d93025', 1]),
     );
+  });
+
+  // marks.md "Kinds": a Drawing is written as an Ink annotation, its strokes, colour, opacity and author with it.
+  it('writes a Drawing as an Ink annotation, read back by its id', async () => {
+    const pages = opened(await engine.open(stored));
+    const drawing = Mark.drawing({
+      id: 'sketch',
+      page: pages[0]!.name,
+      strokes: [
+        [100, 600, 150, 650, 200, 600],
+        [120, 580, 180, 580],
+      ],
+      width: 2,
+      colour: '#7c3aed',
+      opacity: 0.5,
+      author: 'Ada',
+      createdAt: at,
+    })!;
+    const result = await bakeWith([PdfChange.addMark(drawing)]);
+    expect(result.kind).toBe('addition');
+    expect(Buffer.from(result.bytes).toString('latin1')).toContain('/InkList');
+    opened(await engine.open(result.bytes));
+    const [read] = await engine.fileMarks(0);
+    expect(read).toMatchObject({ id: 'sketch', subtype: 'ink', colour: '#7c3aed', author: 'Ada' });
+    expect(read!.opacity).toBeCloseTo(0.5, 2);
+    expect(read!.rect[0]).toBeLessThanOrEqual(100);
+    expect(read!.rect[2]).toBeGreaterThanOrEqual(200);
   });
 });
 

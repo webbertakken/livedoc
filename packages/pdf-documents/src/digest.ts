@@ -3,6 +3,7 @@
 // outbox drains the tab. The file's own text reaches search from the api Worker, never from the room.
 import type * as Y from 'yjs';
 import { PdfLiveChanges } from './live-changes';
+import { Mark } from './mark';
 
 export type PdfDigest = {
   readonly characters: number;
@@ -24,7 +25,7 @@ export function pdfDigest(doc: Y.Doc): PdfDigest {
     pages: PdfLiveChanges.stored(doc)?.pages ?? 0,
     hasContent: true,
     searchText: marks
-      .map((mark) => mark.text)
+      .map((mark) => (Mark.isText(mark) ? mark.text : ''))
       .filter((text) => text !== '')
       .join('\n'),
     marks: marks.length,

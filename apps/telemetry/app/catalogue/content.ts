@@ -1302,7 +1302,15 @@ export const PDF_MARKS_ADDED = chart(
   'Added',
   'PDF Marks Made',
   'A mark made on a PDF page, by its kind.',
-  { types: ['Mark.Highlight', 'Mark.Underline', 'Mark.Strikethrough', 'Mark.SquigglyUnderline'] },
+  {
+    types: [
+      'Mark.Highlight',
+      'Mark.Underline',
+      'Mark.Strikethrough',
+      'Mark.SquigglyUnderline',
+      'Mark.Drawing',
+    ],
+  },
 );
 
 export const PDF_TOOLS_SELECTED = chart(
@@ -1317,6 +1325,7 @@ export const PDF_TOOLS_SELECTED = chart(
       'Tool.Underline',
       'Tool.Strikethrough',
       'Tool.SquigglyUnderline',
+      'Tool.Drawing',
     ],
     rising: 'neutral',
   },

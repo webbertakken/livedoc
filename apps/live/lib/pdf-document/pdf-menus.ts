@@ -301,7 +301,11 @@ export const PDF_MENUS: OfficeCatalogue = [
     SEPARATOR,
     item(TOOL_TEXT, 'Text', 'participate', { ...ONE_OF, keywords: ['typewriter'] }),
     item('tool-callout', 'Callout', 'participate', ONE_OF),
-    item(TOOL_DRAWING, 'Drawing', 'participate', { ...ONE_OF, keywords: ['freehand', 'pen'] }),
+    item(TOOL_DRAWING, 'Drawing', 'participate', {
+      ...ONE_OF,
+      ...BUILT,
+      keywords: ['freehand', 'pen'],
+    }),
     choices('shape', 'Shape', 'participate', [
       'Line',
       'Arrow',

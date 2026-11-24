@@ -40,7 +40,8 @@ import { usePdfPageFingers } from '@/lib/pdf-document/usePdfPageFingers';
 import { PdfSelectionHandles } from './PdfSelectionHandles';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 
-import type { PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
+import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
+import { usePdfPageInk } from '@/lib/pdf-document/usePdfPageInk';
 
 // `by`: the drawer that drew it. A replaced stored file comes with another, and the page is then drawn again,
 // its picture staying until the new one arrives (live-editing-and-storage.md "Replacing the stored file").
@@ -68,6 +69,7 @@ export const PdfPage = memo(function PdfPage({
   marks,
   tool,
   onMark,
+  ink,
   selected,
   handles,
   onText,
@@ -99,6 +101,8 @@ export const PdfPage = memo(function PdfPage({
   tool: PdfPageTool;
   // A drag across the page's text with a text tool in hand: the text it covered, to mark.
   onMark: (index: number, selection: TextSelection) => void;
+  // The Drawing tool's look and where its strokes go; null while another tool is in hand.
+  ink: PdfPageInk | null;
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
   selected: readonly Quad[];
   // A finger made the selection: it has handles (reading-surface.md "Phone and tablet").
@@ -236,12 +240,15 @@ export const PdfPage = memo(function PdfPage({
     });
   };
 
-  const marking = tool !== 'select' && current !== null;
+  // A stroke of the Drawing tool, while it is in hand.
+  const inking = usePdfPageInk({ index, ink: current ? ink : null, pointAt });
+  const marking = tool !== 'select' && tool !== 'drawing' && current !== null;
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
   const selectingText = (event: PointerEvent<HTMLElement>) =>
     tool === 'select' && event.button === 0 && event.pointerType !== 'touch';
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     fingers.down(event);
+    if (inking.down(event)) return;
     if (selectingText(event)) {
       const at = pagePoint(event);
       if (!at) return;
@@ -257,6 +264,7 @@ export const PdfPage = memo(function PdfPage({
     drag.current = { from, asking: false, next: null };
   };
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (inking.move(event)) return;
     const at = selecting.current ? pagePoint(event) : null;
     if (at) return onText(index, { kind: 'drag', at });
     const to = drag.current ? pagePoint(event) : null;
@@ -292,18 +300,24 @@ export const PdfPage = memo(function PdfPage({
       data-pdf-page-turns={drawn?.turns ?? ''}
       data-pdf-file-marks={drawn?.fileMarks.join(' ') ?? ''}
       className={`absolute bg-(--pdf-paper) shadow-sm outline outline-1 outline-(--office-line) select-none ${
-        marking ? 'cursor-text touch-none' : tool === 'select' && current ? 'cursor-text' : ''
+        marking
+          ? 'cursor-text touch-none'
+          : inking.active
+            ? 'cursor-crosshair touch-none'
+            : tool === 'select' && current
+              ? 'cursor-text'
+              : ''
       }`}
       style={{ left, top, width: shown.width * cssPerPoint, height: shown.height * cssPerPoint }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => {
         fingers.up(event);
-        endDrag(event, true);
+        if (!inking.up(event, true)) endDrag(event, true);
       }}
       onPointerCancel={(event) => {
         fingers.cancel(event);
-        endDrag(event, false);
+        if (!inking.up(event, false)) endDrag(event, false);
       }}
       onClick={onClick}
     >
@@ -337,6 +351,7 @@ export const PdfPage = memo(function PdfPage({
           height={shown.height}
           marks={marks}
           preview={preview}
+          ink={ink && inking.stroke.length > 0 ? { ...ink, stroke: inking.stroke } : null}
           selected={selected}
           found={found}
         />

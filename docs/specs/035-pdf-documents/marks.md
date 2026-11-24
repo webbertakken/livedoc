@@ -1,11 +1,12 @@
 # Marks
 
 **Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
-Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection, live in
-the document's changes, drawn over the page, written into the file as standard annotations under their own ids and
-read back by them; each text tool's colour, chosen from the one colour picker and remembered; and the engine reads
-every mark a file holds, of any kind, as the file says it. A tool's other looks, every other kind made here, changing
-a mark, and the room's own-marks check are not built.
+Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection, and the
+Drawing, made by freehand strokes; each live in the document's changes once made, drawn over the page, written into
+the file as standard annotations under their own ids and read back by them; each tool's colour, chosen from the one
+colour picker and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A
+stroke shown to others as it is drawn, a tool's other looks, every other kind made here, changing a mark, and the
+room's own-marks check are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -70,6 +71,13 @@ written into the file as a standard annotation, so any reader shows it. The rese
   ⇧U cycles Highlight, Underline, Strikethrough.
 - **A text tool chosen with text selected** marks the selection at once and clears it, leaving the tool in hand as
   it was `(default)`; with nothing selected it takes the tool in hand.
+- **A Drawing** is made by dragging with the Drawing tool in hand (D), by a mouse, a pen or one finger; each stroke is
+  a line through the points it passed, its ends and corners round. A stroke begun within `PDF_DRAWING_JOIN_MS` of the
+  last one's end, on the same page, joins that Drawing, as one step of undo of its own; any other starts a new one.
+- A point of a stroke within `PDF_DRAWING_STEP_PT` of the one kept before it is not kept `(default)`; a stroke that
+  would take a Drawing past `PDF_DRAWING_MAX_POINTS` starts a new one; a stroke of one point is a dot.
+- **A Drawing's first look** is the colour picker's strong Red for light paper, 2 points wide, at full opacity
+  `(default)`; its colour is chosen as a text tool's is.
 - A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it. Its writing
   direction is taken from what is typed, as a [field](fields.md#filling)'s is `(default)`.
 - **Snapping**: a line or shape snaps to the page's own lines and edges within `PDF_SNAP_PX`; ⌘ held turns snapping
@@ -167,6 +175,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 | `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                      |
 | `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                         |
 | `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000               |
+| `PDF_DRAWING_STEP_PT`       | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2       |
 | `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
 | `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4          |
 | `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
@@ -200,7 +209,8 @@ a mark another person made is refused with `not_your_mark`.
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). Never a mark's words,
   a stamp's name or a file's name.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
-  `[pdf] marks-read count=<n> unknown=<n>` (per open).
+  `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
+  Drawing).
 
 ## Errors
 

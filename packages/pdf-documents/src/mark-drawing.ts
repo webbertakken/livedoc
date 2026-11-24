@@ -1,12 +1,21 @@
-// How a text mark is drawn (docs/specs/035-pdf-documents/marks.md "Making a mark": How a text mark is drawn), in page
-// space, each glyph quadrilateral on its own: a fill for a Highlight, a line for the others. Pure geometry, so the
+// How a mark is drawn (docs/specs/035-pdf-documents/marks.md "Making a mark": How a text mark is drawn; A Drawing),
+// in page space: a text mark each glyph quadrilateral on its own, a fill for a Highlight, a line for the others; a
+// Drawing its strokes, round. Pure geometry, so the
 // surface's overlay and the canvas pictures (a thumbnail, a print) draw one mark the same way.
 import type { PagePoint } from './engine-contract';
 import { PDF_MARK_LINE_PT, PDF_SQUIGGLE_STEP_PT } from './limits';
-import type { Mark, Quad } from './mark';
+import type { DrawingMark, Quad, Stroke, TextMark, TextMarkKind } from './mark';
 
-/** A line through its points, `width` points wide. */
-export type MarkStroke = { readonly points: readonly PagePoint[]; readonly width: number };
+/** What of a mark its drawing reads. */
+export type MarkShape =
+  Pick<TextMark, 'kind' | 'quads'> | Pick<DrawingMark, 'kind' | 'strokes' | 'width'>;
+
+/** A line through its points, `width` points wide; `round` its ends and corners (a Drawing's). */
+export type MarkStroke = {
+  readonly points: readonly PagePoint[];
+  readonly width: number;
+  readonly round: boolean;
+};
 
 export type MarkDrawing = {
   /** Closed outlines to fill, each a quad's corners around its edge. */
@@ -45,7 +54,7 @@ function teeth(from: PagePoint, to: PagePoint, top: PagePoint): PagePoint[] {
   });
 }
 
-const LINES: Readonly<Record<Exclude<Mark['kind'], 'highlight'>, (quad: Quad) => PagePoint[]>> = {
+const LINES: Readonly<Record<Exclude<TextMarkKind, 'highlight'>, (quad: Quad) => PagePoint[]>> = {
   underline: (quad) => [corner(quad, 4), corner(quad, 6)],
   strikeout: (quad) => [
     middle(corner(quad, 0), corner(quad, 4)),
@@ -54,13 +63,37 @@ const LINES: Readonly<Record<Exclude<Mark['kind'], 'highlight'>, (quad: Quad) =>
   squiggly: (quad) => teeth(corner(quad, 4), corner(quad, 6), corner(quad, 0)),
 };
 
+// A stroke's flat x, y pairs as points; a stroke of one point is that point twice, so its round ends draw a dot.
+const pointsOf = (stroke: Stroke): PagePoint[] => {
+  const points = Array.from({ length: stroke.length / 2 }, (_, at) => ({
+    x: stroke[at * 2]!,
+    y: stroke[at * 2 + 1]!,
+  }));
+  return points.length === 1 ? [points[0]!, points[0]!] : points;
+};
+
 export const MarkDrawing = {
-  /** What a text mark draws, in page space. */
-  of: ({ kind, quads }: Pick<Mark, 'kind' | 'quads'>): MarkDrawing =>
-    kind === 'highlight'
+  /** What a mark draws, in page space. */
+  of: (mark: MarkShape): MarkDrawing => {
+    if (mark.kind === 'drawing')
+      return {
+        fills: [],
+        strokes: mark.strokes.map((stroke) => ({
+          points: pointsOf(stroke),
+          width: mark.width,
+          round: true,
+        })),
+      };
+    const { kind, quads } = mark;
+    return kind === 'highlight'
       ? { fills: quads.map(around), strokes: [] }
       : {
           fills: [],
-          strokes: quads.map((quad) => ({ points: LINES[kind](quad), width: PDF_MARK_LINE_PT })),
-        },
+          strokes: quads.map((quad) => ({
+            points: LINES[kind](quad),
+            width: PDF_MARK_LINE_PT,
+            round: false,
+          })),
+        };
+  },
 } as const;

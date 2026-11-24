@@ -6,12 +6,17 @@ export { PageName } from './page-name';
 export {
   MARK_KINDS,
   Mark,
+  TEXT_MARK_KINDS,
+  type DrawingInput,
+  type DrawingMark,
   type HighlightInput,
   type MarkKind,
   type Quad,
+  type Stroke,
+  type TextMark,
   type TextMarkKind,
 } from './mark';
-export { MarkDrawing, type MarkStroke } from './mark-drawing';
+export { MarkDrawing, type MarkShape, type MarkStroke } from './mark-drawing';
 export {
   PDF_ROOTS,
   PdfLiveChanges,
