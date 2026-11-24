@@ -2,7 +2,7 @@
 // advance from a table of its font's own (font-advances.ts), so every browser, the api, an agent's write and an
 // export measure the same line. A character outside the table is measured by its kind (D98). Text with no font of
 // its own is measured, and drawn, in Inter (D99). Pure.
-import { ADVANCE_FIRST, FONT_ADVANCES } from './font-advances';
+import { ADVANCE_FIRST, FONT_ADVANCES, TABULAR_DIGITS } from './font-advances';
 
 // A cell's text with no font size of its own, in px (sheet.md "The grid"), and a line's height in font sizes.
 export const TEXT_BASE_PX = 13;
@@ -16,7 +16,12 @@ const ADVANCE_LAST = 0x7e;
 export const MEASURED_FONTS: readonly string[] = Object.keys(FONT_ADVANCES);
 
 // What a text is measured in: a font by its id (the editor's fonts) and whether it is bold.
-export type TextFace = { font?: string | undefined; bold?: boolean | undefined };
+// `tabular`: a number, drawn in tabular figures where the face has them.
+export type TextFace = {
+  font?: string | undefined;
+  bold?: boolean | undefined;
+  tabular?: boolean | undefined;
+};
 
 export function fontPx(fontSize: number | undefined): number {
   return fontSize ? Math.round((fontSize * 4) / 3) : TEXT_BASE_PX;
@@ -42,12 +47,20 @@ export function measuredFont(font: string | undefined): string {
   return font && Object.hasOwn(FONT_ADVANCES, font) ? font : SHEET_TEXT_FONT;
 }
 
+// The digits 0 to 9 in a table of advances.
+const DIGITS_AT = 0x30 - ADVANCE_FIRST;
+
 function tableOf(face: TextFace): Table {
   const font = measuredFont(face.font);
-  const key = face.bold ? `${font}*` : font;
+  // A number asks for tabular figures (sheet.md "The grid"): every digit the face's one figure, where it has one.
+  const figure = face.tabular ? TABULAR_DIGITS[font]![face.bold ? 'bold' : 'regular'] : null;
+  const key = `${font}${face.bold ? '*' : ''}${figure ? '#' : ''}`;
   let table = TABLES.get(key);
   if (!table) {
-    const units = face.bold ? FONT_ADVANCES[font]!.bold : FONT_ADVANCES[font]!.regular;
+    const own = face.bold ? FONT_ADVANCES[font]!.bold : FONT_ADVANCES[font]!.regular;
+    const units = figure
+      ? own.map((u, i) => (i >= DIGITS_AT && i < DIGITS_AT + 10 ? figure : u))
+      : own;
     table = { units, lower: mean(units, 'a', 'z'), upper: mean(units, 'A', 'Z') };
     TABLES.set(key, table);
   }

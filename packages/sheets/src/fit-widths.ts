@@ -7,6 +7,7 @@ import { FONT_SIZE_DEFAULT } from './format';
 import { splitCellKey } from './sheet';
 import type { SheetWrite } from './store';
 import type { Workbook } from './engine/workbook';
+import { textWidth } from './text/text-measure';
 
 // An average glyph's advance as a share of the font size, bold a little wider (the static render's chip estimate).
 const FIT_CHAR_EM = 0.56;
@@ -52,14 +53,18 @@ export function fittedWidths(
     const c = ix.colPos.get(colId);
     if (r === undefined || c === undefined || !wanted.has(c) || spanning.has(`${r},${c}`)) continue;
     if (skip?.(r, c)) continue;
-    const text = displayValue(wb.value(sheetId, r, c), cell.format, wb.locale).text;
+    const shown = displayValue(wb.value(sheetId, r, c), cell.format, wb.locale);
+    const { text } = shown;
     if (!text) continue;
     const px = ((cell.format?.fs ?? FONT_SIZE_DEFAULT) * 4) / 3;
     const longest = Math.max(...text.split('\n').map((line) => line.length));
-    const width =
-      longest * px * FIT_CHAR_EM * (cell.format?.b ? FIT_BOLD : 1) +
-      FIT_PAD_PX +
-      (chipCols.has(c) ? FIT_CHIP_PX : 0);
+    const estimate = longest * px * FIT_CHAR_EM * (cell.format?.b ? FIT_BOLD : 1);
+    // A number is drawn in tabular figures (sheet.md "The grid"): its room is measured from them, never less.
+    const figures =
+      shown.kind === 'number'
+        ? textWidth(text, px, { font: cell.format?.ff, bold: !!cell.format?.b, tabular: true })
+        : 0;
+    const width = Math.max(estimate, figures) + FIT_PAD_PX + (chipCols.has(c) ? FIT_CHIP_PX : 0);
     out.set(c, Math.max(out.get(c) ?? 0, width));
   }
   for (const [c, w] of out) out.set(c, Math.round(Math.min(FIT_MAX_PX, Math.max(FIT_MIN_PX, w))));

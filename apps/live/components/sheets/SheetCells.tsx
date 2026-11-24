@@ -27,6 +27,7 @@ import {
   type Value,
   type Workbook,
   SHEET_TEXT_FONT,
+  textWidth,
 } from '@livedoc/sheets';
 import { RULE_ARROW_PX, ruleCellDraw } from './rules/sheet-rule-draw';
 import type { PlanPalette } from '@/components/plan/plan-palette';
@@ -50,25 +51,29 @@ export function roughWidth(text: string, px: number): number {
   return w * px;
 }
 
-// A number that does not fit: fewer significant digits (Automatic), then scientific, then ####.
+// A number that does not fit: fewer significant digits (Automatic), then scientific, then ####. Measured as drawn
+// (sheet.md "The grid"): in its font, the cell's own else the tab's, with tabular figures.
 export function fitNumber(
   text: string,
   value: number,
   f: CellFormat | undefined,
   width: number,
   px: number,
+  font?: string,
 ): string {
   const room = width - CELL_PAD * 2;
-  if (roughWidth(text, px) <= room) return text;
+  const face = { font: f?.ff ?? font, bold: !!f?.b, tabular: true };
+  const fits = (t: string) => textWidth(t, px, face) <= room;
+  if (fits(text)) return text;
   if (!f?.nf || f.nf === 'auto') {
     for (let digits = 10; digits >= 2; digits--) {
       const t = numberText(Number(value.toPrecision(digits)));
-      if (roughWidth(t, px) <= room) return t;
+      if (fits(t)) return t;
     }
     const sci = value.toExponential(1).replace('e+', 'E+').replace('e-', 'E-');
-    if (roughWidth(sci, px) <= room) return sci;
+    if (fits(sci)) return sci;
   }
-  return '#'.repeat(Math.max(1, Math.floor(room / (px * 0.6))));
+  return '#'.repeat(Math.max(1, Math.floor(room / textWidth('#', px, face))));
 }
 
 function borderCss(b: Border | undefined): string | undefined {
@@ -185,6 +190,8 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
         fontWeight: f?.b ? 700 : undefined,
         fontStyle: f?.i ? 'italic' : undefined,
         textDecoration: deco || undefined,
+        // Numbers, dates and times in tabular figures, so a column of them lines up (sheet.md "The grid").
+        fontVariantNumeric: shown.kind === 'number' ? 'tabular-nums' : undefined,
       };
       const ruled = vRule
         ? ruleCellDraw({
@@ -206,7 +213,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
         p.filterHead?.r === r && p.filterHead.cols.has(c) ? FILTER_PAD_PX : 0,
       );
       if (shown.kind === 'number' && typeof value === 'number')
-        text = fitNumber(text, value, f, box.w - padEnd, px);
+        text = fitNumber(text, value, f, box.w - padEnd, px, p.font);
       const align = f?.ha ?? (pending.pending ? 'l' : shown.align);
       const wrap = f?.wr ?? 'o';
       // Text of more than one line is drawn on the lines the engine broke it into, the very lines its row was sized

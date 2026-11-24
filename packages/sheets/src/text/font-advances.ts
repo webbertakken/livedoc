@@ -199,3 +199,21 @@ export const FONT_ADVANCES: Readonly<Record<string, FontAdvances>> = {
     ],
   },
 };
+
+// Each editor font's figure with tabular figures asked for, in thousandths of an em, regular and bold, rounded up;
+// null where the face has none and its digits keep their own widths.
+export type TabularDigits = { readonly regular: number | null; readonly bold: number | null };
+
+export const TABULAR_DIGITS: Readonly<Record<string, TabularDigits>> = {
+  inter: { regular: 650, bold: 650 },
+  poppins: { regular: null, bold: null },
+  nunito: { regular: 600, bold: 600 },
+  oswald: { regular: null, bold: null },
+  'space-grotesk': { regular: 620, bold: 620 },
+  lora: { regular: 650, bold: 650 },
+  'abril-fatface': { regular: null, bold: null },
+  'roboto-slab': { regular: null, bold: null },
+  'roboto-mono': { regular: 600, bold: 600 },
+  caveat: { regular: 450, bold: null },
+  'permanent-marker': { regular: null, bold: null },
+};

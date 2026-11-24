@@ -9,6 +9,7 @@ import {
   sheetFromJson,
   sheetToJson,
   single,
+  textWidth,
   type SheetJson,
   type SheetWrite,
 } from '@livedoc/sheets';
@@ -461,6 +462,15 @@ describe('rows and columns', () => {
     const h = await rich();
     h.typeAt(5, 0, 'one\ntwo\nthree');
     expect(h.view.result.current.actions.sizeOf('r', 5)).toBe(3 * 17 + 8);
+  });
+
+  // sheet.md "The grid": Fit to Data leaves a column room for its numbers' digits as drawn, in tabular figures.
+  it('fits a column of numbers to their tabular figures', async () => {
+    const h = await rich();
+    h.typeAt(0, 2, '88888888.88');
+    h.run((a) => a.autofit('c', [2]));
+    const need = textWidth('88888888.88', 13, { tabular: true });
+    expect(h.view.result.current.actions.sizeOf('c', 2)).toBe(Math.ceil(need + 14));
   });
 
   it('resizes, autofits by the widest value, and reads sizes', async () => {

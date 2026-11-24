@@ -125,9 +125,24 @@ describe('the helpers', () => {
     expect(roughWidth('ab 1', 10)).toBeCloseTo(20.3);
   });
 
+  // sheet.md "The grid": whether a number fits is measured from its font's widths, its digits tabular as drawn.
+  it('measures a number as drawn, in tabular figures, so it shortens before it reaches the edge', () => {
+    // 88888888.88 is 88 px in Inter's tabular figures, past the 80 px a 88 px column leaves: a guess of half an
+    // em a digit would let it run over.
+    expect(fitNumber('88888888.88', 88888888.88, undefined, 88, 13)).toBe('88888888.9');
+    expect(fitNumber('88888888.88', 88888888.88, undefined, 97, 13)).toBe('88888888.88');
+    // In a font with narrower figures it fits; bold Caveat has no tabular figures and keeps its own.
+    expect(fitNumber('88888888.88', 88888888.88, undefined, 88, 13, 'caveat')).toBe('88888888.88');
+    expect(fitNumber('88888888.88', 88888888.88, { ff: 'nunito' }, 88, 13, 'caveat')).toBe(
+      '88888888.9',
+    );
+  });
+
   it('keeps a number that fits, else fewer digits, then scientific, then ####', () => {
     expect(fitNumber('42', 42, undefined, 100, 13)).toBe('42');
-    expect(fitNumber(String(Math.PI), Math.PI, undefined, 60, 13)).toBe('3.14159');
+    // 3.14159 is 54 px in tabular figures, past the 52 px of room: one digit fewer.
+    expect(fitNumber(String(Math.PI), Math.PI, undefined, 60, 13)).toBe('3.1416');
+    expect(fitNumber(String(Math.PI), Math.PI, undefined, 64, 13)).toBe('3.14159');
     expect(fitNumber('123456789012', 123456789012, undefined, 70, 13)).toBe('1.2E+11');
     expect(fitNumber('123456789012', 123456789012, undefined, 50, 13)).toBe('#####');
     expect(fitNumber('0.000000000001234', 1.234e-12, { nf: 'auto' }, 70, 13)).toBe('1.23E-12');
@@ -361,6 +376,15 @@ describe('the cells', () => {
   it('draws a value that is still loading muted, not as an error', () => {
     draw(sheetOf({ A1: '=CARDCOUNT()' }));
     expect(textBox('Loading…').style.color).not.toBe(RED);
+  });
+
+  // sheet.md "The grid": numbers, dates and times in tabular figures, so a column of them lines up; text keeps its own.
+  it('draws a number and a date in tabular figures, and text and errors in the font’s own', () => {
+    draw(sheetOf({ A1: '1111.1', A2: '24/11/2026', A3: 'Total 11', A4: '=1/0' }));
+    expect(textBox('1111.1').style.fontVariantNumeric).toBe('tabular-nums');
+    expect(textBox('24/11/2026').style.fontVariantNumeric).toBe('tabular-nums');
+    expect(textBox('Total 11').style.fontVariantNumeric).toBe('');
+    expect(textBox('#DIV/0!').style.fontVariantNumeric).toBe('');
   });
 
   // docs/specs/029-sheets/sheet.md "Row height", D99: cells with no font are drawn in Inter, as they are measured.

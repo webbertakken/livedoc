@@ -90,6 +90,22 @@ describe('the static render', () => {
     expect(svg.match(/font-family="&#39;Inter&#39;/g)).toHaveLength(MODEL.cells.length - 1);
     expect(svg).toContain('font-family="&#39;Lora&#39;');
   });
+  // docs/specs/029-sheets/sheet.md "Exports and images": an SVG asks for tabular figures as the grid does.
+  it('asks for tabular figures on a cell showing a number, and only there', () => {
+    const svg = svgPlanSheet(
+      sheet,
+      {
+        ...MODEL,
+        cells: [
+          { r: 0, c: 0, text: '1,111.10', align: 'r', valign: 'm', numeric: true },
+          { r: 0, c: 1, text: 'Total 11', align: 'l', valign: 'm' },
+        ],
+      },
+      'light',
+    );
+    expect(svg.match(/font-variant-numeric="tabular-nums"/g)).toHaveLength(1);
+    expect(svg).toMatch(/font-variant-numeric="tabular-nums"[^>]*>1,111\.10</);
+  });
   it('draws a dropdown chip as a pill in its option’s colour, inked to read, and an arrow dropdown’s chevron', () => {
     const cells = (extra: SheetRenderModel['cells']) =>
       svgPlanSheet(sheet, { ...MODEL, cells: extra }, 'light');
