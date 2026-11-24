@@ -4,6 +4,7 @@
 // on, whose controls take the tools' 32px so it reads as one height (D242).
 
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { TopLine } from './TopLine';
@@ -19,7 +20,7 @@ describe('TopLine', () => {
   });
 
   it('is what the tool-line variant matches, inside it', () => {
-    const css = readFileSync(new URL('../../../app/globals.css', import.meta.url), 'utf8');
+    const css = readFileSync(join(__dirname, '../../../app/globals.css'), 'utf8');
     expect(css).toContain('@custom-variant tool-line (&:where([data-tool-line] *));');
   });
 });
