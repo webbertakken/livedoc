@@ -55,9 +55,11 @@ function drawnAttributes(node: PmNode): Record<string, string> {
  */
 export function contentsView(node: PmNode): NodeView {
   const dom = document.createElement('nav');
+  // Its class is added, never set: the editor marks it selected by a class of its own.
   const draw = (next: PmNode) => {
     for (const [name, value] of Object.entries(drawnAttributes(next)))
-      dom.setAttribute(name, value);
+      if (name === 'class') dom.classList.add(value);
+      else dom.setAttribute(name, value);
   };
   draw(node);
   return {

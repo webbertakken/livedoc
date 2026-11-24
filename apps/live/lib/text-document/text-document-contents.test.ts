@@ -148,6 +148,14 @@ describe('the table of contents view', () => {
     expect(view.update!(p('x'), [], DecorationSet.empty)).toBe(false);
   });
 
+  it('stays drawn as selected as its entries are rebuilt', () => {
+    const view = contentsView(contents('dotted', 3, 'A'));
+    view.dom.classList.add('ProseMirror-selectednode');
+    view.update!(contents('dotted', 3, 'A', 'B'), [], DecorationSet.empty);
+    expect(view.dom.classList.contains('ProseMirror-selectednode')).toBe(true);
+    expect(view.dom.classList.contains(CONTENTS_CLASS)).toBe(true);
+  });
+
   // Another hand writing to its attributes (a browser extension, a screenshot tool) never has it drawn anew.
   it('ignores writes to its own attributes, never to its entries', () => {
     const view = contentsView(contents('dotted', 3, 'A'));
