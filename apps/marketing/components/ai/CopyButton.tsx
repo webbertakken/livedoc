@@ -46,7 +46,7 @@ export function CopyButton({
       'bg-brand-700 text-white shadow-sm hover:bg-brand-800 dark:bg-brand-500 dark:text-slate-950 dark:hover:bg-brand-400',
   } as const;
 
-  const sizes = { sm: 'py-1.5 text-sm', xs: 'py-1 text-xs' } as const;
+  const sizes = { sm: 'py-1.5 text-body', xs: 'py-1 text-supporting' } as const;
 
   return (
     <>
@@ -54,7 +54,7 @@ export function CopyButton({
         type="button"
         onClick={() => void copy()}
         aria-label={label === 'Copy' ? `Copy ${what}` : `${label}: ${what}`}
-        className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md px-3 font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 touch-target-y relative ${sizes[size]} ${tones[tone]} ${className}`}
+        className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-control px-3 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 touch-target-y relative ${sizes[size]} ${tones[tone]} ${className}`}
       >
         {copied ? <CheckIcon aria-hidden /> : <CopyIcon aria-hidden />}
         <span className="text-optical-line">{copied ? 'Copied' : label}</span>

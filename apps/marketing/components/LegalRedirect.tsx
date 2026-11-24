@@ -26,7 +26,7 @@ export function LegalRedirect({
 
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-3 px-6 text-center">
-      <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{heading}</h1>
+      <h1 className="text-dialog-title text-slate-900 dark:text-slate-100">{heading}</h1>
       <p className="text-slate-600 dark:text-slate-400">
         {lead} If you are not redirected automatically,{' '}
         <a

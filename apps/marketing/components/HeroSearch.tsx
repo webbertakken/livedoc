@@ -85,7 +85,7 @@ export function HeroSearch() {
           placeholder ("Search templates") beside Start Blank, instead of "Search templat". */}
       <div
         data-hero-anchor="target"
-        className="flex h-16 items-center gap-2 rounded-2xl bg-white pl-4 pr-2 sm:gap-3 sm:pl-5 shadow-[0_0_0_4px_var(--hero-ring)] transition-shadow focus-within:shadow-[0_0_0_4px_var(--hero-ring-focus)]"
+        className="flex h-16 items-center gap-2 rounded-surface bg-white pl-4 pr-2 sm:gap-3 sm:pl-6 shadow-[0_0_0_4px_var(--hero-ring)] transition-shadow focus-within:shadow-[0_0_0_4px_var(--hero-ring-focus)]"
       >
         <Glyph size={20} units={24} className="shrink-0 text-slate-500">
           <circle cx="11" cy="11" r="7" />
@@ -104,12 +104,12 @@ export function HeroSearch() {
           autoComplete="off"
           aria-controls={listId}
           aria-describedby={statusId}
-          className="min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-500 sm:text-lg [&::-webkit-search-cancel-button]:hidden"
+          className="min-w-0 flex-1 bg-transparent text-panel-title text-slate-900 outline-none placeholder:text-slate-500 sm:text-name [&::-webkit-search-cancel-button]:hidden"
         />
         <a
           href={ctaHref(START_BLANK_HREF, 'Home.HeroBlank')}
           data-hero-blank=""
-          className="inline-flex h-12 shrink-0 items-center rounded-xl bg-(--hero-cta) px-3 text-sm font-semibold text-white transition-colors hover:bg-(--hero-cta-hover) sm:px-5 sm:text-base"
+          className="inline-flex h-12 shrink-0 items-center rounded-surface bg-(--hero-cta) px-3 text-body font-medium text-white transition-colors hover:bg-(--hero-cta-hover) sm:px-6 sm:text-panel-title"
         >
           <span className="text-optical-centre">Start Blank</span>
         </a>
@@ -127,7 +127,7 @@ export function HeroSearch() {
       <div
         id={listId}
         hidden={!open}
-        className="absolute inset-x-0 top-[4.75rem] z-30 rounded-2xl bg-white p-2 text-slate-900 border border-sky-100 shadow-[0_30px_60px_-20px_var(--hero-card-shadow)] dark:border-transparent"
+        className="absolute inset-x-0 top-[4.75rem] z-30 rounded-surface bg-white p-2 text-slate-900 border border-sky-100 shadow-[0_30px_60px_-20px_var(--hero-card-shadow)] dark:border-transparent"
       >
         {matches.length > 0 ? (
           <ul aria-label="Matching templates" className="flex flex-col">
@@ -138,16 +138,18 @@ export function HeroSearch() {
                   <a
                     data-hero-result=""
                     href={createHref(t.kind)}
-                    className="flex items-center gap-4 rounded-xl px-3 py-2.5 outline-none hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-sky-500"
+                    className="flex items-center gap-4 rounded-surface px-3 py-2.5 outline-none hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-sky-500"
                   >
-                    <span className="flex h-12 w-[4.5rem] shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 [&>svg]:h-9 [&>svg]:w-auto">
+                    <span className="flex h-12 w-[4.5rem] shrink-0 items-center justify-center rounded-menu border border-slate-200 bg-slate-50 [&>svg]:h-prominent [&>svg]:w-auto">
                       <TemplatePreview kind={t.kind} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-semibold">{t.title}</span>
-                      <span className="block truncate text-sm text-slate-600">{t.description}</span>
+                      <span className="block truncate text-panel-title">{t.title}</span>
+                      <span className="block truncate text-body text-slate-600">
+                        {t.description}
+                      </span>
                     </span>
-                    <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 sm:inline-flex">
+                    <span className="hidden shrink-0 items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-supporting text-slate-700 sm:inline-flex">
                       <ModeIcon size={13} aria-hidden />
                       {tabOpeningLabel(t.mode)}
                     </span>
@@ -157,7 +159,7 @@ export function HeroSearch() {
             })}
           </ul>
         ) : (
-          <p className="px-3 py-3 text-[15px] text-slate-700">
+          <p className="px-3 py-3 text-panel-title text-slate-700">
             Nothing matches &ldquo;{shown.trim()}&rdquo;. Start blank, or browse every template
             below.
           </p>
@@ -165,7 +167,7 @@ export function HeroSearch() {
         <a
           data-hero-result=""
           href="#templates"
-          className="mt-1 flex items-center justify-between rounded-xl border-t border-slate-100 px-3 py-3 text-sm font-medium text-blue-700 outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-500"
+          className="mt-1 flex items-center justify-between rounded-surface border-t border-slate-100 px-3 py-3 text-body text-blue-700 outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-500"
         >
           Browse every template
           <span aria-hidden>↓</span>

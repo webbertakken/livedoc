@@ -31,16 +31,14 @@ export function HowItWorks() {
       {STEPS.map(({ icon: Icon, title, body }, i) => (
         <li
           key={title}
-          className="relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xs dark:border-slate-700 dark:bg-slate-900"
+          className="relative rounded-surface border border-slate-200 bg-white p-6 text-center shadow-xs dark:border-slate-700 dark:bg-slate-900"
         >
-          <span className="relative mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand-700 text-white shadow-sm ring-4 ring-white dark:bg-brand-500 dark:text-slate-950 dark:ring-slate-900">
+          <span className="relative mx-auto flex size-12 items-center justify-center rounded-surface bg-brand-700 text-white shadow-sm ring-4 ring-white dark:bg-brand-500 dark:text-slate-950 dark:ring-slate-900">
             <Icon aria-hidden />
           </span>
-          <p className="mt-4 text-xs font-semibold tracking-wider text-brand-700 uppercase dark:text-brand-300">
-            Step {i + 1}
-          </p>
-          <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{body}</p>
+          <p className="mt-4 text-supporting text-brand-700 dark:text-brand-300">Step {i + 1}</p>
+          <h3 className="mt-1 text-name text-slate-900 dark:text-slate-100">{title}</h3>
+          <p className="mt-2 text-body text-slate-600 dark:text-slate-300">{body}</p>
         </li>
       ))}
     </ol>

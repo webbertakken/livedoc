@@ -80,7 +80,7 @@ function LicenceTextBox({
         <a
           href={url}
           aria-label={`Plain text of ${label} for ${work}`}
-          className="lic-link text-xs"
+          className="lic-link text-supporting"
         >
           Plain text
         </a>

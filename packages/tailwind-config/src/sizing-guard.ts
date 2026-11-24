@@ -15,9 +15,19 @@ import {
   type Node,
 } from 'typescript/unstable/ast';
 import { isTypeScriptSource, listSourceFiles } from './source-files';
-import { GAP_STEPS, ROOT_PX, SIDE_PADDING_STEPS, SIZING_SCALE } from './sizing';
+import {
+  DISPLAY_TYPE_MIN_PX,
+  GAP_STEPS,
+  LAYOUT_GAP_STEPS,
+  ROOT_PX,
+  SIDE_PADDING_STEPS,
+  SIZING_SCALE,
+} from './sizing';
 
 export type SizingViolation = { file: string; line: number; className: string; advice: string };
+
+/** Where the guard reads: the app by default; a marketing site's pages also take display type and layout steps (D244). */
+export type SizingOptions = { readonly marketingPages?: boolean };
 
 // The smallest and largest box the scale names; outside them a box is layout (a hairline, an avatar, a panel).
 const SCALE_FLOOR_PX = Math.min(...Object.values(SIZING_SCALE.icon));
@@ -83,13 +93,14 @@ function stepFor(px: number, steps: Record<string, number>): string | undefined 
   return Object.entries(steps).find(([, size]) => size === px)?.[0];
 }
 
-function judgeType(value: string): string | null {
+function judgeType(value: string, options: SizingOptions): string | null {
   const [size = '', line] = value.split('/');
   if (TYPE_TOKENS.includes(`text-${size}`)) {
     return line === undefined ? null : `a type token carries its own line: use text-${size}`;
   }
   const px = TAILWIND_TYPE_PX[size] ?? bracketPx(size);
   if (px === undefined || px === null) return null;
+  if (options.marketingPages && px >= DISPLAY_TYPE_MIN_PX) return null;
   const step = Object.entries(SIZING_SCALE.type).find(([, [s]]) => s === px)?.[0];
   return step
     ? `use text-${step}`
@@ -154,8 +165,11 @@ const isCoarsePointer = (variant: string): boolean =>
 const RADIUS_SIDE = /^rounded-(t|r|b|l|s|e|ss|se|ee|es|tl|tr|bl|br)(?:-(.+))?$/;
 
 // Each sized family's prefixes, longest first so `min-h-` is never read as `h-`.
-const FAMILIES: readonly (readonly [string, (prefix: string, value: string) => string | null])[] = [
-  ['text', (_, value) => judgeType(value)],
+const FAMILIES: readonly (readonly [
+  string,
+  (prefix: string, value: string, options: SizingOptions) => string | null,
+])[] = [
+  ['text', (_, value, options) => judgeType(value, options)],
   ['font', (_, value) => judgeWeight(value)],
   ['tracking', (_, value) => judgeTracking(value)],
   ...(['min-h', 'size', 'h'] as const).map(
@@ -163,7 +177,15 @@ const FAMILIES: readonly (readonly [string, (prefix: string, value: string) => s
   ),
   ...(['gap-x', 'gap-y', 'gap', 'space-x', 'space-y'] as const).map(
     (prefix) =>
-      [prefix, (_: string, value: string) => judgeSpacingStep(value, GAP_STEPS, 'gap')] as const,
+      [
+        prefix,
+        (_: string, value: string, options: SizingOptions) =>
+          judgeSpacingStep(
+            value,
+            options.marketingPages ? [...GAP_STEPS, ...LAYOUT_GAP_STEPS] : GAP_STEPS,
+            'gap',
+          ),
+      ] as const,
   ),
   ...(['px', 'pl', 'pr', 'ps', 'pe', 'p'] as const).map(
     (prefix) =>
@@ -191,7 +213,7 @@ function judgeTracking(value: string): string | null {
  * Why a class is off the sizing scale, naming the token to use instead, or null when it is on the scale or is not a
  * size at all.
  */
-export function judgeClass(className: string): string | null {
+export function judgeClass(className: string, options: SizingOptions = {}): string | null {
   const { variants, utility: raw } = splitVariants(className);
   if (variants.some(isCoarsePointer)) return null;
   const utility = raw.replace(/^!|!$/g, '');
@@ -209,7 +231,7 @@ export function judgeClass(className: string): string | null {
     // A prefix with nothing after it is a word being built (`gap-${n}`), not a class.
     if (utility.startsWith(`${prefix}-`)) {
       const value = utility.slice(prefix.length + 1);
-      return value === '' ? null : judge(prefix, value);
+      return value === '' ? null : judge(prefix, value, options);
     }
   }
   return null;
@@ -240,11 +262,12 @@ export function checkSizing({
   root,
   paths,
   except = [],
+  marketingPages = false,
 }: {
   root: string;
   paths: readonly string[];
   except?: readonly string[];
-}): SizingViolation[] {
+} & SizingOptions): SizingViolation[] {
   const existing = (path: string): string => {
     const full = join(root, path);
     if (!existsSync(full)) throw new Error(`sizing guard: no path ${path} under ${root}`);
@@ -264,7 +287,7 @@ export function checkSizing({
   for (const sf of parseSourceFiles(files)) {
     staticStrings(sf, (text, at) => {
       for (const className of text.split(/\s+/)) {
-        const advice = judgeClass(className);
+        const advice = judgeClass(className, { marketingPages });
         if (advice === null) continue;
         violations.push({
           file: relative(root, sf.fileName).split(sep).join('/'),

@@ -9,7 +9,7 @@ import { HeroSearch } from './HeroSearch';
 // badge, the question, the template search, then a fan along its foot:
 // templates dealt every few seconds, or a returning visitor's own documents (HeroFanMine).
 const BADGE =
-  'inline-flex items-center gap-2 rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-3.5 py-1.5 text-sm font-medium text-(--hero-chip-text)';
+  'inline-flex items-center gap-2 rounded-full border border-(--hero-chip-border) bg-(--hero-chip-bg) px-4 py-1.5 text-body text-(--hero-chip-text)';
 
 export function Hero() {
   return (
@@ -24,7 +24,7 @@ export function Hero() {
             phone keeps the first only, so the row stays one line. */}
         {/* The mark, its page cycling through the kinds of document LiveDoc makes. */}
         <HeroKinds />
-        <ul aria-label="Our promises" className="mt-6 flex justify-center gap-2.5">
+        <ul aria-label="Our promises" className="mt-6 flex justify-center gap-3">
           <li className={BADGE}>
             <span aria-hidden className="h-2 w-2 rounded-full bg-emerald-500" />
             Free and open source
@@ -36,13 +36,13 @@ export function Hero() {
         </ul>
         <h1
           data-hero-anchor="title"
-          className="mx-auto mt-7 max-w-4xl text-balance text-[clamp(2.5rem,7vw,5rem)] font-semibold leading-[1.02] tracking-tight"
+          className="mx-auto mt-7 max-w-4xl text-balance text-[clamp(2.5rem,7vw,5rem)] tracking-tight leading-[1.02]"
         >
           What are you making today?
         </h1>
         <p
           data-hero-anchor="lead"
-          className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-(--hero-muted) sm:text-xl"
+          className="mx-auto mt-6 max-w-2xl text-pretty text-name text-(--hero-muted)"
         >
           Pick a starting point and release what&rsquo;s inside your mind. Diagram, sketch, plan,
           run a session or publish, then share one link and build it together.

@@ -193,6 +193,41 @@ describe('judgeClass', () => {
   });
 });
 
+// docs/specs/004-interface-design/sizing.md "The other apps" (D244): a marketing page sets its section headlines as
+// display type and spaces its sections and columns on layout steps; everything else stays on the scale.
+describe('judgeClass for marketing pages', () => {
+  const pages = { marketingPages: true } as const;
+
+  it('lets display type through at 30 px and up, and holds every smaller size to the scale', () => {
+    expect(judgeClass('text-3xl', pages)).toBeNull();
+    expect(judgeClass('sm:text-5xl', pages)).toBeNull();
+    expect(judgeClass('md:text-[2.75rem]', pages)).toBeNull();
+    expect(judgeClass('text-2xl', pages)).toMatch(/use text-page-title/);
+    expect(judgeClass('text-sm', pages)).toMatch(/use text-body/);
+    expect(judgeClass('text-[29px]', pages)).toMatch(/type size off the scale/);
+  });
+
+  it('lets the 32, 48 and 64 px layout steps through for gaps, and no others', () => {
+    for (const ok of ['gap-8', 'gap-12', 'lg:gap-16', 'space-y-16', 'gap-x-8'])
+      expect(judgeClass(ok, pages)).toBeNull();
+    expect(judgeClass('gap-10', pages)).toMatch(/gap off the scale/);
+    expect(judgeClass('gap-14', pages)).toMatch(/gap off the scale/);
+    expect(judgeClass('gap-6', pages)).toBeNull();
+  });
+
+  it('keeps weight, capitals, side padding and boxes on the scale', () => {
+    expect(judgeClass('font-semibold', pages)).toMatch(/weight off the scale/);
+    expect(judgeClass('uppercase', pages)).toMatch(/no tracked capitals/);
+    expect(judgeClass('px-8', pages)).toMatch(/side padding off the scale/);
+    expect(judgeClass('h-9', pages)).toMatch(/use h-prominent/);
+  });
+
+  it('changes nothing for the app', () => {
+    expect(judgeClass('text-3xl')).toMatch(/type size off the scale/);
+    expect(judgeClass('gap-8')).toMatch(/gap off the scale/);
+  });
+});
+
 describe('checkSizing', () => {
   let root: string;
   const write = (path: string, source: string): void => {
@@ -270,6 +305,14 @@ describe('checkSizing', () => {
     expect(() => checkSizing({ root, paths: ['moved'], except: ['moved/Gone.tsx'] })).toThrow(
       /sizing guard: no path moved\/Gone\.tsx/,
     );
+  });
+
+  it('holds a marketing site to its layout steps and display type when asked', () => {
+    write('pages/Section.tsx', "export const a = 'gap-12 text-4xl'; export const b = 'gap-10';");
+
+    const violations = checkSizing({ root, paths: ['pages'], marketingPages: true });
+
+    expect(violations.map((v) => v.className)).toEqual(['gap-10']);
   });
 
   it('checks nothing for an empty list', () => {

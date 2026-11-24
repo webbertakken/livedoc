@@ -31,7 +31,7 @@ export function RecentPreview({
         <img
           src={thumb.url}
           alt=""
-          className="hero-recent-thumb absolute inset-0 h-full w-full object-contain p-1.5"
+          className="hero-recent-thumb absolute inset-0 h-full w-full object-contain p-2"
         />
       ) : thumb.status === 'none' ? (
         <span className="absolute inset-0 flex items-center justify-center text-(--hero-icon)">

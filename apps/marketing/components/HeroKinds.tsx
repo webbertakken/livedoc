@@ -52,7 +52,7 @@ export function HeroKinds() {
   return (
     <div
       ref={root}
-      className="hero-kinds flex flex-col items-center gap-1.5"
+      className="hero-kinds flex flex-col items-center gap-2"
       data-paused={paused ? '' : undefined}
     >
       <div role="img" aria-label="Pages, sheets, boards and forms">
@@ -72,10 +72,7 @@ export function HeroKinds() {
           }
         />
       </div>
-      <span
-        aria-hidden="true"
-        className="relative h-5 w-16 text-sm font-semibold text-(--hero-muted)"
-      >
+      <span aria-hidden="true" className="relative h-icon-title w-16 text-body text-(--hero-muted)">
         {BRAND_KINDS.map((kind) => (
           <span key={kind.key} data-kind-name={kind.key} className="absolute inset-0 text-center">
             {kind.name}

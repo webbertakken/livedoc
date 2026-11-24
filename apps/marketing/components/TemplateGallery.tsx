@@ -58,7 +58,7 @@ export function TemplateGallery() {
           </p>
         </div>
 
-        <div className="mt-12 flex flex-col gap-10">
+        <div className="mt-12 flex flex-col gap-12">
           <div ref={shelfRef}>
             {open.map((shelf) => (
               <TemplateCarousel

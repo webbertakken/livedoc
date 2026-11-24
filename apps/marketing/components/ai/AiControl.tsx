@@ -31,14 +31,12 @@ export function AiControl() {
     <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
       {FACTS.map(({ icon: Icon, title, body }) => (
         <li key={title} className="flex gap-4">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-brand-300 dark:ring-slate-700">
+          <span className="flex size-prominent shrink-0 items-center justify-center rounded-menu bg-white text-brand-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-brand-300 dark:ring-slate-700">
             <Icon aria-hidden />
           </span>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              {body}
-            </p>
+            <h3 className="text-slate-900 dark:text-slate-100">{title}</h3>
+            <p className="mt-1 text-body text-slate-600 dark:text-slate-300">{body}</p>
           </div>
         </li>
       ))}

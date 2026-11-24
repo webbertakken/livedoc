@@ -16,7 +16,7 @@ export function AlternativeCard({ alt }: { alt: Alternative }) {
   return (
     <a
       href={`/about/alternatives/${alt.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-700"
+      className="group flex h-full flex-col overflow-hidden rounded-surface border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-700"
     >
       <span
         className={`relative flex h-36 items-center justify-center bg-gradient-to-br ${look?.panel ?? 'from-slate-100 to-white dark:from-slate-800 dark:to-slate-900'}`}
@@ -30,21 +30,17 @@ export function AlternativeCard({ alt }: { alt: Alternative }) {
         </span>
       </span>
       <span className="flex flex-1 flex-col p-6">
-        <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          vs {alt.name}
-        </span>
-        <span className="mt-2 block text-lg leading-snug font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {alt.h1}
-        </span>
-        <span className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">vs {alt.name}</span>
+        <span className="mt-2 block text-name text-slate-900 dark:text-slate-100">{alt.h1}</span>
+        <span className="mt-2 line-clamp-3 text-body text-slate-600 dark:text-slate-300">
           {alt.description}
         </span>
         {look && (
-          <span className="mt-4 flex flex-wrap gap-1.5">
+          <span className="mt-4 flex flex-wrap gap-2">
             {look.highlights.map((chip) => (
               <span
                 key={chip}
-                className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-supporting text-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
                 <span className="text-brand-700 dark:text-brand-300">
                   <CheckIcon />
@@ -54,9 +50,9 @@ export function AlternativeCard({ alt }: { alt: Alternative }) {
             ))}
           </span>
         )}
-        <span className="mt-auto flex items-center justify-between pt-6 text-sm font-medium text-slate-900 dark:text-slate-100">
+        <span className="mt-auto flex items-center justify-between pt-6 text-body text-slate-900 dark:text-slate-100">
           Read the comparison
-          <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition group-hover:bg-brand-700 group-hover:text-white motion-reduce:transition-none dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-brand-600">
+          <span className="flex size-field items-center justify-center rounded-full bg-slate-100 text-slate-600 transition group-hover:bg-brand-700 group-hover:text-white motion-reduce:transition-none dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-brand-600">
             <ArrowIcon />
           </span>
         </span>

@@ -119,7 +119,7 @@ export function ClientPicker() {
                 <p
                   aria-hidden
                   id={groupId(client.group)}
-                  className={`hidden px-3 text-xs font-semibold tracking-wider text-slate-600 uppercase lg:block dark:text-slate-400 ${
+                  className={`hidden px-3 text-supporting text-slate-600 lg:block dark:text-slate-400 ${
                     i === 0 ? '' : 'mt-4'
                   }`}
                 >
@@ -141,14 +141,14 @@ export function ClientPicker() {
                 tabIndex={selected ? 0 : -1}
                 onClick={() => select(client.id)}
                 onKeyDown={onKeyDown}
-                className={`group flex shrink-0 cursor-pointer snap-start items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 lg:w-full ${
+                className={`group flex shrink-0 cursor-pointer snap-start items-center gap-3 rounded-surface border px-3 py-2.5 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 lg:w-full ${
                   selected
                     ? 'border-brand-300 bg-white shadow-sm dark:border-brand-500/50 dark:bg-slate-900'
                     : 'border-transparent bg-white/60 hover:border-slate-200 hover:bg-white max-lg:border-slate-200 dark:bg-slate-900/40 dark:hover:border-slate-700 dark:hover:bg-slate-900 max-lg:dark:border-slate-800'
                 }`}
               >
                 <span
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-lg transition ${
+                  className={`flex size-prominent shrink-0 items-center justify-center rounded-menu transition ${
                     selected
                       ? 'bg-brand-700 text-white dark:bg-brand-500 dark:text-slate-950'
                       : 'bg-slate-100 text-slate-600 group-hover:text-brand-700 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:text-brand-300'
@@ -157,10 +157,10 @@ export function ClientPicker() {
                   <Icon aria-hidden />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold whitespace-nowrap text-slate-900 dark:text-slate-100">
+                  <span className="block text-body whitespace-nowrap text-slate-900 dark:text-slate-100">
                     {client.name}
                   </span>
-                  <span className="hidden truncate text-xs text-slate-500 lg:block dark:text-slate-400">
+                  <span className="hidden truncate text-supporting text-slate-500 lg:block dark:text-slate-400">
                     {client.blurb}
                   </span>
                 </span>
@@ -185,24 +185,24 @@ function ClientPanel({ client, hidden }: { client: AiClient; hidden: boolean }) 
       aria-labelledby={`tab-${client.id}`}
       hidden={hidden}
       tabIndex={0}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 sm:p-8 dark:border-slate-700 dark:bg-slate-900"
+      className="rounded-surface border border-slate-200 bg-white p-6 shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 sm:p-6 dark:border-slate-700 dark:bg-slate-900"
     >
-      <h3 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+      <h3 className="text-dialog-title text-slate-900 dark:text-slate-100">
         Connect {client.name}
       </h3>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{client.blurb}</p>
+      <p className="mt-1 text-body text-slate-500 dark:text-slate-400">{client.blurb}</p>
 
       <ol className="mt-6 space-y-6">
         {client.steps.map((step, i) => (
           <li key={i} className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3">
             <span
               aria-hidden
-              className="flex size-8 items-center justify-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700 ring-1 ring-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-500/20"
+              className="flex size-field items-center justify-center rounded-full bg-brand-50 text-body text-brand-700 ring-1 ring-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-500/20"
             >
               <span className="text-optical-centre">{i + 1}</span>
             </span>
             <div className="min-w-0 space-y-3 pt-1">
-              <p className="leading-relaxed text-slate-700 dark:text-slate-200">
+              <p className="text-slate-700 dark:text-slate-200">
                 <StepText text={step.text} />
               </p>
               {step.action ? (
@@ -211,7 +211,7 @@ function ClientPanel({ client, hidden }: { client: AiClient; hidden: boolean }) 
                   {...(step.action.external
                     ? { target: '_blank', rel: 'noopener noreferrer' }
                     : {})}
-                  className="inline-flex items-center gap-2 rounded-md bg-brand-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 dark:bg-brand-500 dark:text-slate-950 dark:hover:bg-brand-400"
+                  className="inline-flex items-center gap-2 rounded-control bg-brand-700 px-4 py-2 text-body font-medium text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 dark:bg-brand-500 dark:text-slate-950 dark:hover:bg-brand-400"
                 >
                   <span className="text-optical-line">{step.action.label}</span>
                   {step.action.external ? (
@@ -231,14 +231,14 @@ function ClientPanel({ client, hidden }: { client: AiClient; hidden: boolean }) 
       </ol>
 
       {client.note ? (
-        <p className="mt-6 rounded-xl bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+        <p className="mt-6 rounded-surface bg-slate-50 px-4 py-3 text-body text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
           {client.note}
         </p>
       ) : null}
 
       <a
         href="#prompts"
-        className="mt-6 inline-flex min-h-6 items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
+        className="mt-6 inline-flex min-h-chip items-center gap-2 text-body text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
       >
         Connected? Try a prompt
         <DownIcon aria-hidden />

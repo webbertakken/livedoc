@@ -61,15 +61,13 @@ export function AiCapabilities() {
       {CAPABILITIES.map(({ icon: Icon, title, body }) => (
         <li
           key={title}
-          className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900"
+          className="rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900"
         >
-          <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+          <span className="flex size-10 items-center justify-center rounded-surface bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
             <Icon aria-hidden />
           </span>
-          <h3 className="mt-4 font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            {body}
-          </p>
+          <h3 className="mt-4 text-slate-900 dark:text-slate-100">{title}</h3>
+          <p className="mt-1.5 text-body text-slate-600 dark:text-slate-300">{body}</p>
         </li>
       ))}
     </ul>

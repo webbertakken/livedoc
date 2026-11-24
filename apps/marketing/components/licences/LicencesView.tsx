@@ -30,10 +30,10 @@ const UPSTREAM_REPO_URL = 'https://github.com/livediagram-app/livediagram.app';
 export function LicencesView({ manifest }: { manifest: LicencesManifest }) {
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
+      <h1 className="text-3xl tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
         Open-source licences
       </h1>
-      <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
+      <p className="mt-3 text-name text-slate-600 dark:text-slate-300">
         LiveDoc is MIT licensed and built on the work of many open-source projects. These are the
         ones our apps ship, generated from what each app actually bundles every time the site is
         built.
@@ -64,22 +64,22 @@ function Section({ section, manifest }: { section: LicencesSection; manifest: Li
       <div className="flex items-baseline justify-between gap-4">
         <h2
           id={`${section.side}-heading`}
-          className="text-xl font-semibold text-slate-900 dark:text-slate-100"
+          className="text-dialog-title text-slate-900 dark:text-slate-100"
         >
           {copy.title}
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-body text-slate-600 dark:text-slate-300">
           {count} {count === 1 ? 'work' : 'works'}
         </p>
       </div>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mt-1 text-body text-slate-600 dark:text-slate-300">
         {sectionIntro(
           section.side,
           section.apps.map((app) => app.label),
         )}
       </p>
       {count === 0 ? (
-        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mt-4 text-body text-slate-600 dark:text-slate-300">
           Nothing third-party ships here.
         </p>
       ) : (

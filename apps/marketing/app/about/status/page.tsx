@@ -86,44 +86,44 @@ export default function StatusPage() {
       <BreadcrumbJsonLd name="Status" path="/about/status" />
       <Header surface="Status" />
       <main className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
+        <h1 className="text-3xl tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
           Service status
         </h1>
-        <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
+        <p className="mt-3 text-name text-slate-600 dark:text-slate-300">
           The pieces LiveDoc runs on, and how they&rsquo;re doing.
         </p>
 
-        <div className="mt-8 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+        <div className="mt-8 flex items-center gap-3 rounded-surface border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-500/30 dark:bg-emerald-500/10">
           <span className="relative inline-flex">
-            <span className="absolute inline-flex h-3 w-3 motion-safe:animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+            <span className="absolute inline-flex size-icon-chevron motion-safe:animate-ping rounded-full bg-emerald-400 opacity-60" />
+            <span className="relative inline-flex size-icon-chevron rounded-full bg-emerald-500" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+            <p className="text-body text-emerald-900 dark:text-emerald-200">
               All systems operational
             </p>
-            <p className="text-xs text-emerald-800/80 dark:text-emerald-200/80">
+            <p className="text-supporting text-emerald-800/80 dark:text-emerald-200/80">
               No incidents reported. If you can read this page, the marketing site is up.
             </p>
           </div>
         </div>
 
-        <ul className="mt-8 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-700 dark:bg-slate-900">
+        <ul className="mt-8 divide-y divide-slate-200 rounded-surface border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-700 dark:bg-slate-900">
           {COMPONENTS.map((c) => (
             <li
               key={c.name}
-              className="flex flex-col items-start gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+              className="flex flex-col items-start gap-2 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
             >
               {/* On a phone the badge sits under the text, so the description keeps the card's full
                   width instead of wrapping a host mid-word in a narrow column; min-w-0 + break-words
                   still wrap a long host rather than pushing the badge off a 320px phone. */}
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{c.name}</p>
-                <p className="mt-0.5 break-words text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-body text-slate-800 dark:text-slate-100">{c.name}</p>
+                <p className="mt-0.5 break-words text-supporting text-slate-500 dark:text-slate-400">
                   {c.description}
                 </p>
               </div>
-              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
+              <span className="flex shrink-0 items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-supporting text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 Operational
               </span>
@@ -131,7 +131,7 @@ export default function StatusPage() {
           ))}
         </ul>
 
-        <p className="mt-8 text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-8 text-supporting text-slate-500 dark:text-slate-400">
           This page reflects the latest deployed state. Spotted something wrong? Tell us through the{' '}
           <a
             href={CONTACT_FORM_URL}

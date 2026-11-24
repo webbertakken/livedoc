@@ -132,10 +132,10 @@ export function PromisePrism() {
     >
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-24 sm:py-28 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div className="text-center lg:text-left">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-sky-300">No catch</p>
+          <p className="text-body text-sky-300">No catch</p>
           <h2
             id="promises-heading"
-            className="mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-5xl"
+            className="mt-4 text-balance text-4xl tracking-tight sm:text-5xl"
           >
             Built with your values in mind
           </h2>

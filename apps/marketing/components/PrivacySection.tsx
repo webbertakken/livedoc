@@ -70,19 +70,15 @@ export function PrivacySection() {
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PROMISES.map((p) => (
-            <article key={p.title} className={`flex flex-col p-5 ${BAND_CARD}`}>
+            <article key={p.title} className={`flex flex-col p-6 ${BAND_CARD}`}>
               {p.art}
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                {p.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                {p.description}
-              </p>
+              <h3 className="text-panel-title text-slate-900 dark:text-slate-100">{p.title}</h3>
+              <p className="mt-2 text-body text-slate-600 dark:text-slate-300">{p.description}</p>
             </article>
           ))}
         </div>
 
-        <p className="mt-12 text-center text-xs text-slate-600 dark:text-slate-400">
+        <p className="mt-12 text-center text-supporting text-slate-600 dark:text-slate-400">
           Read the full{' '}
           <a
             href="/help/policies/privacy-policy/"
