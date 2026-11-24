@@ -34,7 +34,7 @@ const pagesOf = (count: number): PageInfo[] =>
 
 function selection(pages = pagesOf(2)) {
   const pageText = vi.fn(async (index: number) => (index === 0 ? PAGE_ONE : PageText.of([], [])));
-  const engine = { pageText };
+  const engine = { pageText, pageTags: async () => null };
   const hook = renderHook(({ pages: shown }) => usePdfTextSelection(engine, shown), {
     initialProps: { pages },
   });
@@ -173,7 +173,9 @@ describe('selecting with nothing to select from', () => {
 
   it('selects nothing on a page the engine answers no text for', async () => {
     const pageText = vi.fn(async () => null);
-    const hook = renderHook(() => usePdfTextSelection({ pageText }, pagesOf(1)));
+    const hook = renderHook(() =>
+      usePdfTextSelection({ pageText, pageTags: async () => null }, pagesOf(1)),
+    );
     act(() => hook.result.current.selectAll(0));
     await waitFor(() => expect(pageText).toHaveBeenCalled());
     expect(hook.result.current.selected).toBeNull();

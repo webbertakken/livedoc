@@ -598,6 +598,7 @@ describe("a page's text", () => {
       boxes: new Float32Array(0),
       unmapped: [],
       cut: false,
+      marked: null,
     });
   });
 

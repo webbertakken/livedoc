@@ -450,3 +450,4 @@ export async function signedPdf(reason = 'I approve'): Promise<Uint8Array<ArrayB
   });
   return signed.bytes as Uint8Array<ArrayBuffer>;
 }
+export { taggedPdf } from './tagged';

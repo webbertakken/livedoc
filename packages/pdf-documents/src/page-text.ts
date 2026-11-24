@@ -14,6 +14,11 @@ export type PageText = {
   readonly unmapped: readonly number[];
   /** Whether the page holds more text than was read (`PDF_PAGE_TEXT_MAX_CHARS`). */
   readonly cut: boolean;
+  /**
+   * For every unit of `text`, the marked content its character is drawn in: its id, `PageText.UNMARKED` or
+   * `PageText.ARTIFACT`. Null where the file is untagged.
+   */
+  readonly marked: Int32Array | null;
 };
 
 export type TextBox = {
@@ -38,7 +43,11 @@ export const PageText = {
   of: (
     codes: ArrayLike<number>,
     boxes: ArrayLike<number>,
-    { unmapped = [], cut = false }: { unmapped?: readonly number[]; cut?: boolean } = {},
+    {
+      unmapped = [],
+      cut = false,
+      marked = null,
+    }: { unmapped?: readonly number[]; cut?: boolean; marked?: ArrayLike<number> | null } = {},
   ): PageText => {
     const parts: string[] = [];
     const starts: number[] = [];
@@ -55,13 +64,24 @@ export const PageText = {
         for (let side = 0; side < 4; side += 1) spread[unit * 4 + side] = boxes[at * 4 + side] ?? 0;
       }
     }
+    const marks = marked ? new Int32Array(units) : null;
+    if (marks && marked) {
+      for (let at = 0; at < codes.length; at += 1) {
+        marks.fill(marked[at]!, starts[at], starts[at]! + parts[at]!.length);
+      }
+    }
     return {
       text: parts.join(''),
       boxes: spread,
       unmapped: unmapped.flatMap((at) => (at < starts.length ? [starts[at]!] : [])),
       cut,
+      marked: marks,
     };
   },
+  /** A unit drawn in no marked content, or the reader's own. */
+  UNMARKED: -1,
+  /** A unit drawn as an artifact: a page number, a running header, nothing the page's content reads. */
+  ARTIFACT: -2,
   /** The box of the unit at `index` of the text, or null past its end. */
   boxAt: (page: PageText, index: number): TextBox | null => {
     if (!Number.isInteger(index) || index < 0 || index >= page.text.length) return null;

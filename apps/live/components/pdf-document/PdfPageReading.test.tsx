@@ -3,7 +3,7 @@
 // the same text Copy gives, visually hidden; a page far from view is an empty region; the build is logged.
 import { act, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PageText } from '@livedoc/pdf-documents';
+import { PageText, type PageTags } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 import { PdfPageReading, pageRegionName } from './PdfPageReading';
@@ -30,7 +30,10 @@ function lines(...texts: string[]): PageText {
   return PageText.of(codes, boxes);
 }
 
-const textsOf = (page: PageText | null): PdfPageTexts => ({ read: vi.fn(async () => page) });
+const textsOf = (page: PageText | null, tags: PageTags | null = null): PdfPageTexts => ({
+  read: vi.fn(async () => page),
+  tags: vi.fn(async () => tags),
+});
 
 // "One landmark a page": named by its number of the count, with the file's own label where it gives one.
 describe('pageRegionName', () => {
@@ -49,7 +52,7 @@ describe('a page’s reading order', () => {
     expect(paragraphs).toEqual(['Heading', 'A paragraph.']);
     expect(view.container.firstElementChild!.className).toContain('sr-only');
     expect(texts.read).toHaveBeenCalledWith(2);
-    expect(debugLog).toHaveBeenCalledWith('[pdf] tree source=geometry page=3 nodes=2');
+    expect(debugLog).toHaveBeenCalledWith('[pdf] tree source=geometry page=3 nodes=2 tags=absent');
   });
 
   it('holds nothing for a page far from view, and lets it go when the page leaves', async () => {
@@ -69,12 +72,15 @@ describe('a page’s reading order', () => {
     const view = render(<PdfPageReading index={0} texts={textsOf(null)} wanted />);
     await act(async () => {});
     expect(view.container.innerHTML).toBe('');
-    expect(debugLog).toHaveBeenCalledWith('[pdf] tree source=none page=1 nodes=0');
+    expect(debugLog).toHaveBeenCalledWith('[pdf] tree source=none page=1 nodes=0 tags=absent');
   });
 
   it('shows nothing of a read that lands after the page left view', async () => {
     let land: (page: PageText) => void = () => {};
-    const texts: PdfPageTexts = { read: () => new Promise((resolve) => (land = resolve)) };
+    const texts: PdfPageTexts = {
+      read: () => new Promise((resolve) => (land = resolve)),
+      tags: async () => null,
+    };
     const view = render(<PdfPageReading index={0} texts={texts} wanted />);
     view.rerender(<PdfPageReading index={0} texts={texts} wanted={false} />);
     await act(async () => land(lines('Late')));
@@ -84,5 +90,33 @@ describe('a page’s reading order', () => {
   it('reads nothing while the pages have no text source', () => {
     const view = render(<PdfPageReading index={0} texts={null} wanted />);
     expect(view.container.innerHTML).toBe('');
+  });
+
+  it('reads a page its tags cover from its tags, and logs the build', async () => {
+    const page = PageText.of([72, 105], [0, 700, 6, 708, 6, 700, 12, 708], { marked: [0, 0] });
+    const tags = {
+      elements: [{ type: 'H1', alt: '', actual: '', lang: '', kids: [0] }],
+      cut: false,
+    };
+    const texts = textsOf(page, tags);
+    const view = render(<PdfPageReading index={1} texts={texts} wanted />);
+    await act(async () => {});
+    expect(view.getByRole('heading', { level: 1 }).textContent).toBe('Hi');
+    expect(view.container.querySelectorAll('p')).toHaveLength(0);
+    expect(view.container.firstElementChild!.className).toContain('sr-only');
+    expect(texts.tags).toHaveBeenCalledWith(1);
+    expect(debugLog).toHaveBeenCalledWith('[pdf] tree source=tags page=2 nodes=2 tags=used');
+  });
+
+  it('reads a page its tags do not wholly cover from geometry, and says why', async () => {
+    const page = PageText.of([72, 105], [0, 700, 6, 708, 6, 700, 12, 708], { marked: [0, -1] });
+    const tags = {
+      elements: [{ type: 'H1', alt: '', actual: '', lang: '', kids: [0] }],
+      cut: false,
+    };
+    const view = render(<PdfPageReading index={0} texts={textsOf(page, tags)} wanted />);
+    await act(async () => {});
+    expect(view.container.querySelector('p')!.textContent).toBe('Hi');
+    expect(debugLog).toHaveBeenCalledWith('[pdf] tree source=geometry page=1 nodes=1 tags=partial');
   });
 });

@@ -19,6 +19,7 @@ import type {
 } from '../engine-contract';
 import type { EmbeddedFiles } from '../embedded-file';
 import type { PageField } from '../file-field';
+import type { PageTags } from '../page-tags';
 import type { PageText } from '../page-text';
 import { drawPage, drawTile, pageMatrix } from './draw-page';
 import { readDocument, readPages } from './read-document';
@@ -27,6 +28,7 @@ import { readFields } from './read-fields';
 import { readMarks } from './read-marks';
 import { readLinks, readOutline } from './read-outline';
 import { readSignatures, type SignatureHeld } from './read-signatures';
+import { readPageTags, type TagLimits } from './read-tags';
 import { readPageText, selectText } from './read-text';
 import { ReaderFile, type Clamped, type Pdfium } from './reader-file';
 
@@ -116,6 +118,10 @@ export class PdfReader {
 
   pageText(index: number, most?: number): PageText | null {
     return readPageText(this.file, index, most);
+  }
+
+  pageTags(index: number, limits?: TagLimits): PageTags | null {
+    return readPageTags(this.file, index, limits);
   }
 
   selectText(index: number, from: PagePoint, to: PagePoint): TextSelection | null {

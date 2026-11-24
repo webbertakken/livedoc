@@ -30,7 +30,7 @@ export const PDF_PAGE_TEXT_MAX_CHARS = 200_000;
 export const PDF_MAX_PAGE_POINTS = 14_400;
 /** (default) An address longer than this is shown cut and never opened (security.md "Limits"). */
 export const PDF_LINK_MAX_CHARS = 2_048;
-/** (default) Deeper than any honest outline, page tree or field tree: a walk stops there. */
+/** (default) Deeper than any honest outline, page tree, field tree or tag tree: a walk stops there. */
 export const PDF_MAX_TREE_DEPTH = 256;
 /** (default) Bookmarks read from one file; past it the outline is cut and says so. Safe range: 1,000 to 100,000. */
 export const PDF_OUTLINE_MAX_ITEMS = 20_000;

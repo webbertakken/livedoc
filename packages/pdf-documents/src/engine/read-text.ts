@@ -5,6 +5,7 @@ import { type Quad } from '../mark';
 import { PageText } from '../page-text';
 import { PDF_MARK_MAX_QUADS, PDF_MARK_TEXT_MAX_CHARS, PDF_PAGE_TEXT_MAX_CHARS } from '../limits';
 import type { ReaderFile } from './reader-file';
+import { markedContent } from './read-tags';
 
 // How far from a glyph a point still picks it, in points: half a line of body text.
 const PICK_TOLERANCE = 6;
@@ -27,8 +28,11 @@ export function readPageText(
       const codes = new Uint32Array(count);
       const boxes = new Float32Array(count * 4);
       const unmapped: number[] = [];
+      const markOf = p.FPDFCatalog_IsTagged(file.doc) ? markedContent(file, text) : null;
+      const marked = markOf ? new Int32Array(count) : null;
       for (let at = 0; at < count; at += 1) {
         codes[at] = p.FPDFText_GetUnicode(text, at);
+        if (marked) marked[at] = markOf!(at);
         if (p.FPDFText_HasUnicodeMapError(text, at) === 1) unmapped.push(at);
         if (!p.FPDFText_GetCharBox(text, at, out, out + 8, out + 16, out + 24)) continue;
         boxes[at * 4] = file.held(file.runtime.getValue(out, 'double'));
@@ -37,7 +41,7 @@ export function readPageText(
         boxes[at * 4 + 3] = file.held(file.runtime.getValue(out + 24, 'double'));
       }
       if (held > count) file.clamped('list');
-      return PageText.of(codes, boxes, { unmapped, cut: held > count });
+      return PageText.of(codes, boxes, { unmapped, cut: held > count, marked });
     } finally {
       file.free(out);
       p.FPDFText_ClosePage(text);

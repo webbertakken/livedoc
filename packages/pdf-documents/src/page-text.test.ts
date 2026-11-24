@@ -37,6 +37,18 @@ describe('PageText', () => {
     expect(PageText.boxAt(page, 0.5)).toBeNull();
   });
 
+  // accessibility.md "The accessible tree": the file's tags reach its text through marked content.
+  it('holds no marked content for an untagged file', () => {
+    expect(PageText.of([0x41], [1, 2, 3, 4]).marked).toBeNull();
+  });
+
+  it('marks every unit with its character’s marked content, both halves of a wide one alike', () => {
+    const page = PageText.of([0x41, 0x1f3e0, 0x42], new Array<number>(12).fill(0), {
+      marked: [PageText.ARTIFACT, 3, PageText.UNMARKED],
+    });
+    expect(page.marked).toEqual(new Int32Array([-2, 3, 3, -1]));
+  });
+
   it('points an unmapped character at its place in the text, past wider characters before it', () => {
     const page = PageText.of([0x1f3e0, 0x41], new Array<number>(8).fill(0), { unmapped: [1] });
     expect(page.unmapped).toEqual([2]);

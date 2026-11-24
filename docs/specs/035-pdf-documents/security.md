@@ -93,7 +93,7 @@ rule is a test with a named rejection. The research is [Security](../../research
 | Remote references (pictures, fonts, forms by URL)                         | The engine has no network                                                                                                   | Drawn as absent; `[pdf] remote-ignored`                 |
 | A decompression bomb                                                      | `PDF_MAX_PAGE_PIXELS` a draw; a picture is decoded a row at a time, never whole; the engine's time limit and memory ceiling | The page still shows, or `pdf_stopped`                  |
 | A parser crash or hang                                                    | A trap, `PDF_ENGINE_TIMEOUT_MS` or the memory ceiling ends the worker; a fresh one serves the next file                     | `pdf_stopped`                                           |
-| Circular structure (an outline, a page tree, a field tree)                | Every walk keeps a visited set and a depth limit (`PDF_MAX_TREE_DEPTH`)                                                     | The walk stops; what was read shows                     |
+| Circular structure (an outline, a page tree, a field tree, a tag tree)    | Every walk keeps a visited set and a depth limit (`PDF_MAX_TREE_DEPTH`)                                                     | The walk stops; what was read shows                     |
 | Font and image decoders                                                   | Run inside the same WebAssembly; a decoded picture is only pixels                                                           | A picture that fails draws as absent                    |
 | A dangerous embedded file                                                 | Saved only by a person; never opened                                                                                        | The warning line                                        |
 | A password kept, logged or sent                                           | Held in the worker's memory for the session only                                                                            | No route or log carries it, by test                     |
@@ -121,7 +121,7 @@ rule is a test with a named rejection. The research is [Security](../../research
 
 | Constant                 | Value  | Why                                                                                               |
 | ------------------------ | ------ | ------------------------------------------------------------------------------------------------- |
-| `PDF_MAX_TREE_DEPTH`     | 256    | `(default)` Deeper than any honest outline, page tree or field tree                               |
+| `PDF_MAX_TREE_DEPTH`     | 256    | `(default)` Deeper than any honest outline, page tree, field tree or tag tree                     |
 | `PDF_LINK_MAX_CHARS`     | 2,048  | `(default)` A longer address is shown cut and never opened                                        |
 | `PDF_NAME_MAX_CHARS`     | 255    | `(default)` A file's strings shown as names (embedded files, PDF layers, bookmarks) are cut to it |
 | `PDF_PROPERTY_MAX_CHARS` | 2,048  | `(default)` A property of the file (title, author, subject, keywords, producer) is cut to it      |

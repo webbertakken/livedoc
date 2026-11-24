@@ -58,6 +58,13 @@ const press = (key: string) =>
   });
 const options = () => screen.queryAllByRole('option');
 const text = () => view!.state.doc.textContent;
+// The list shown and its keys handed to the writing: the option chosen is the writing's active descendant once the
+// effects that hand the keys over have run, which a catalogue read outside `act` can leave a moment behind the options.
+const listReady = () =>
+  waitFor(() => {
+    expect(options().length).toBeGreaterThan(0);
+    expect(view!.dom.hasAttribute('aria-activedescendant')).toBe(true);
+  });
 
 beforeEach(() => {
   enabled = true;
@@ -70,7 +77,7 @@ describe('the emoji colon list', () => {
   it('lists the emoji whose shortcodes begin with what was typed, the first chosen', async () => {
     render(<Harness />);
     type(':thumbs');
-    await waitFor(() => expect(options().length).toBeGreaterThan(0));
+    await listReady();
     expect(screen.getByRole('listbox', { name: 'Emoji' })).toBeTruthy();
     expect(options()[0]!.getAttribute('aria-label')).toBe('Thumbs up');
     expect(options()[0]!.getAttribute('aria-selected')).toBe('true');
@@ -110,11 +117,11 @@ describe('the emoji colon list', () => {
     saveEmojiTone('dark');
     render(<Harness />);
     type(':wave');
-    await waitFor(() => expect(options().length).toBeGreaterThan(0));
+    await listReady();
     press('Tab');
     expect(text()).toBe('Hi 👋🏿');
     type(' :ok_h');
-    await waitFor(() => expect(options().length).toBeGreaterThan(0));
+    await listReady();
     fireEvent.mouseDown(options()[0]!);
     expect(text()).toBe('Hi 👋🏿 👌🏿');
   });
@@ -122,14 +129,14 @@ describe('the emoji colon list', () => {
   it('goes away on Escape until the word is left, the text as typed', async () => {
     render(<Harness />);
     type(':smil');
-    await waitFor(() => expect(options().length).toBeGreaterThan(0));
+    await listReady();
     press('Escape');
     expect(options()).toHaveLength(0);
     type('e');
     expect(options()).toHaveLength(0);
     expect(text()).toBe('Hi :smile');
     type(' :smil');
-    await waitFor(() => expect(options().length).toBeGreaterThan(0));
+    await listReady();
   });
 
   it('shows nothing for no match, or with the preference off, and leaves Enter to the writing', async () => {
