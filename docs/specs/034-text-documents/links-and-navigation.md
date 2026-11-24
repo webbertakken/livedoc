@@ -1,6 +1,6 @@
 # Links and navigation
 
-**Status: partly built.** The outline's headings, the link editor and the link card are built; the rest is specified.
+**Status: partly built.** The outline's headings, links and bookmarks are built; the rest is specified.
 
 Links, bookmarks, heading links, the table of contents, the outline and document tabs' navigation in a
 [text document](text-document.md). Smart chips are left out (fork C3, ruled): a chip in an arriving file is kept as
@@ -40,8 +40,22 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
 
 ## Bookmarks
 
-Insert > Bookmark at the caret: a marker in the margin when shown; its card offers **Link**, **Copy link** (the
-document's address with `#bookmark=<id>`), **Remove**. Navigating with ⌘⌥ N then B / P then B.
+- A **bookmark** is a named place in the writing, a point between two characters. Insert > Bookmark puts one at the
+  caret, at the start of a selection `(default)`, in the body only.
+- Its name is made once: 12 lowercase letters and digits, the first a letter, a name both formats accept. A file's
+  bookmarks keep the names they arrive with.
+- It takes no room in the text; a small blue ribbon in the left margin beside its line shows it, never printed.
+  The caret beside it, with nothing selected, shows its card: **Bookmark**, **Copy link** and **Remove**
+  (Remove for whoever may edit) `(default)`.
+- **Copy link** copies the document's address with `#bookmark=<name>`; opening that address scrolls the bookmark
+  into view once the document is drawn, the caret at it.
+- The link editor's list offers this document's bookmarks under the documents, each named by the text after it (its
+  first 40 characters, "Bookmark" when none), those holding every typed word, at most 8. A link to one is `#<name>`;
+  opening it scrolls the bookmark into view, the caret at it. A link to a bookmark that is gone opens nothing.
+- Remove on its card takes it away; so does deleting the text around it, as one character would.
+- A hidden bookmark (its name starting with `_`, as Word and Google hide theirs, headings' among them) and a bookmark
+  that spans text (a start and an end apart) are kept as the file has them, never drawn `(default)`.
+- Navigating with ⌘⌥ N then B / P then B.
 
 ## Heading links
 
@@ -85,6 +99,7 @@ Copy link.
 ## Telemetry
 
 `Element · Added · TextDocumentLink`, `TextDocumentBookmark`, `TextDocumentTableOfContents`;
+`Element · Removed · TextDocumentBookmark` (Remove on its card);
 `Element · Changed · TextDocumentLink` (an edited link), `Element · Removed · TextDocumentLink` (Remove link);
 `UI · Used · TextDocumentLinkOpened` (Alt+Enter or the card's title);
 `Tab · Added · TextDocumentTab`; `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never
