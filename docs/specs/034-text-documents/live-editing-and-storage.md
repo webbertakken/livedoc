@@ -10,7 +10,8 @@ branched, copied, versioned, searched and listed. The research is
 ## The live model
 
 - The text document is a **sequence CRDT**, Yjs: the body of each document tab a tree of paragraphs and tables holding
-  text with formatting attributes; styles, page setups, lists, comments and suggestions in maps beside it. ProseMirror
+  text with formatting attributes; styles, page setups and lists in maps beside it, comment threads in `threads`
+  ([Review](review.md#how-a-comment-is-kept)), suggestions in the writing. ProseMirror
   is a view bound to it.
 - The first document tab's (`t.0`) body is the root XML fragment `body`, in y-prosemirror's layout (a `paragraph`
   element holding text) (default). A root type exists in every replica, so no two people ever make it twice.

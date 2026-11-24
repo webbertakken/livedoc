@@ -1,6 +1,7 @@
 # Review
 
-**Status: specified.** Nothing is built.
+**Status: being built.** Comment threads are kept beside the writing and the room judges a Participant's; nothing
+is drawn yet, and suggestions, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -39,6 +40,40 @@ office kinds; this spec says what a text document puts in them.
 - **Deleting the text** a comment is on keeps the thread, marked "Original content deleted", as Google does.
 - In the file: comments, replies, resolved state, assignees and reactions as
   [Standard mapping](standard-mapping.md#what-the-model-holds) and its extensions say.
+
+### How a comment is kept
+
+- **Beside the writing, never in it**: a document's threads are one map, `threads`, beside the bodies
+  ([Live editing and storage](live-editing-and-storage.md#the-live-model)), as a PDF document's are; adding, replying
+  to, resolving or deleting a comment never changes the writing, so it is never an undo step of the writing, never
+  copied with the text it is on, and never merges with anyone's typing.
+- **The anchor** is a stretch of one document tab's writing: its start and end as positions that follow the text
+  (a Yjs relative position each), the start kept before text typed at it and the end before text typed after it, so
+  typing at either edge of a commented stretch never stretches it, as Google's does not. Threads overlap freely.
+- **Original content deleted**: when every character of the stretch is gone the anchor reads as empty and the thread
+  is kept, marked so; undoing the delete brings the anchor back with its text.
+- **A thread**: its id, its document tab, its anchor, its quoted text (the stretch as it read when the thread began,
+  shown once its text is gone), resolved or open, and its comments in the order they were made.
+- **A comment**: its id, text, time, author, mentions, assignee and reactions; edited comments keep their first time
+  and note the time of the edit.
+- **The author** of a comment made here is its author's adder key on the document
+  ([Share roles](../013-workspace/share-roles.md#integrity), SR4) with their name and colour as they wrote it: the key
+  says whose it is without saying who, the same person on every device, and different on every document. Every
+  session with an identity that may comment carries its key on its ticket, an Editor's as a Participant's.
+- **A comment from a file** is never credited to a LiveDoc person: it has the file's name for its author, no key, a
+  neutral avatar and the line "From the file", never anyone's picture or colour, and it never reaches an Inbox as
+  anyone's ([Comments](../035-pdf-documents/comments.md#authors) on a PDF document holds the same rule).
+- **The room judges a Participant's update** (fork D7) by what it touches: only `threads`, and in it only comments
+  carrying the sender's own key added, edited or deleted, threads begun with one, resolved or reopened, and the
+  sender's own key added to or taken from a reaction; anything else asks for Editing and is refused whole
+  ([Share roles](live-editing-and-storage.md#share-roles)). A session with no key may read and never comment.
+- **An Editor's update is not judged** (default): an Editor may rewrite the whole document, comments included, as
+  Google's editor may delete any comment; the editor writes only its own key on what it adds, and a key written for
+  someone else by a crafted update is an Editor's to make, as any other edit is.
+- **Limits**: a comment's text at most `COMMENT_TEXT_MAX` (2,000) characters, as LiveDoc's comments; at most
+  `TEXT_DOCUMENT_THREADS_MAX` threads (2,000, (default)) and `TEXT_DOCUMENT_THREAD_COMMENTS_MAX` comments in one
+  (500, (default)). The editor never makes more; the room refuses a Participant's update past them as its judge reads
+  it, and an Editor's is bounded by the state's size, as all its writing is.
 
 ## Suggesting
 
