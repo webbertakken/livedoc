@@ -77,7 +77,19 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 ## Text and colour
 
-- **Font**: the document fonts (0019's shared catalogue), with **More Fonts** and the recently used.
+- **Font**: the toolbar's Font control, the office kinds' ([Fonts](../004-interface-design/fonts.md#the-font-menu)):
+  **More Fonts**, the families recently chosen, then My Fonts, each in its own face.
+  - A spreadsheet cell's font is a family by name, as files write it (`Roboto Mono`); a Plan Sheet's stays an editor
+    font by id ([Sheet](sheet.md#formatting)). One key holds either: a name shaped as an editor font's id (lower case,
+    digits and hyphens) is read as one, any other name as a family.
+  - A cell with none draws in the spreadsheet's default family, Arial, Google Sheets' own, and the control shows
+    "Arial"; choosing Arial stores none (default, D201).
+  - A family draws through its stack ([Substitution](../004-interface-design/fonts.md#substitution)): a served family
+    in LiveDoc's faces, a named one in itself then its stand-in, any other from Google Fonts where reachable, else as
+    Arial.
+  - Lines break by the family's own widths, as every cell's do ([Row height](sheet.md#row-height)): a served family
+    by its own, a named one by its stand-in's, any other family by Arial's stand-in's, Arimo (default, D202).
+  - Choosing one sets the selection's font, one undo step; an Editor's, as every format is.
 - **Font Size**: any whole size from 6 to 400 points, 10 by default, Plan Sheets' cells alike (one engine).
   - The toolbar's field shows the active cell's size; a size typed is rounded whole and kept within 6 to 400.
   - Its minus and plus take one point off or on (D128); Format › Font Size lists Google's sizes.
@@ -168,6 +180,10 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   office kinds' picker (default).
 - **D200** A Plan Sheet's Font Size stepper past its last preset (72): by ten points, 80, 90, ... 400, as Word's grow
   steps (default).
+- **D201** A spreadsheet cell's font when it sets none: Arial, Google Sheets' default and the family its files write
+  (default).
+- **D202** The widths a family outside the served ones breaks lines by: its stand-in's, else Arimo's, Arial's
+  stand-in (default).
 
 ## Telemetry
 

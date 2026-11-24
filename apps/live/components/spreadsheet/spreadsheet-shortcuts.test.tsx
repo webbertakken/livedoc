@@ -67,7 +67,15 @@ function renderOn(platform: OfficePlatform) {
   const toggle = actions['show-formulas']!.run;
   render(<Row channel={channel} formulas={{ shown: false, toggle }} />);
   act(() => {
-    channel.set({ actions, recentCodes: [], colours: null, fontSize: 10, setFontSize: () => {} });
+    channel.set({
+      actions,
+      recentCodes: [],
+      colours: null,
+      fontSize: 10,
+      setFontSize: () => {},
+      fontFamily: null,
+      setFontFamily: () => {},
+    });
   });
   return { actions, items, surface: screen.getByTestId('surface') };
 }

@@ -82,6 +82,24 @@ describe('textWidth', () => {
     expect(textWidth('Budget', 13, { font: 'constructor' })).toBe(textWidth('Budget', 13, INTER));
   });
 
+  it('measures a document family by its own widths, its stand-in’s, else Arimo’s (formatting.md D202)', () => {
+    expect(measuredFont('Roboto Mono')).toBe('Roboto Mono');
+    expect(measuredFont('roboto mono')).toBe('Roboto Mono');
+    expect(measuredFont('Arial')).toBe('Arimo');
+    expect(measuredFont('Calibri')).toBe('Carlito');
+    expect(measuredFont('Verdana')).toBe('Arimo');
+    expect(measuredFont('Bitter')).toBe('Arimo');
+    expect(measuredFont('Constructor')).toBe('Arimo');
+    // The editor font of a name keeps its own table: an id is matched exactly, before any family.
+    expect(measuredFont('nunito')).toBe('nunito');
+    expect(measuredFont('Nunito')).toBe('Nunito');
+    // Arimo shares Arial's metrics: a lower case a is 556 thousandths of an em.
+    expect(textWidth('a', 1000, { font: 'Arial' })).toBe(556);
+    expect(textWidth('Total', 13, { font: 'Arial' })).toBe(
+      textWidth('Total', 13, { font: 'Arimo' }),
+    );
+  });
+
   it('measures an accented letter as its letter and a mark on its own as nothing (D98)', () => {
     expect(textWidth('é', 13, INTER)).toBeCloseTo(em('e') * 13, 6);
     expect(textWidth('Å', 13, INTER)).toBeCloseTo(em('A') * 13, 6);

@@ -45,9 +45,20 @@ export function stepFontSize(size: number, dir: 1 | -1): number {
     dir > 0 ? FONT_STEPS.find((s) => s > size) : [...FONT_STEPS].reverse().find((s) => s < size);
   return next ?? (dir > 0 ? FONT_SIZE_MAX : FONT_SIZE_MIN);
 }
-// A font id as the editor's fonts name them (`space-grotesk`): this package knows no catalogue, so it checks the
-// shape; the drawing side resolves the id, and one it no longer offers draws in the tab's font.
+// A cell's font (formatting.md "Font"): an editor font's id (`space-grotesk`, a Plan Sheet's) or a family by name
+// (`Roboto Mono`, a spreadsheet's). This package knows no catalogue, so it checks the shape: a name shaped as an id is
+// read as one, and the drawing side draws one it no longer offers in the tab's font.
 const FONT_ID_RE = /^[a-z][a-z0-9-]{0,31}$/;
+// A family's name: letters, digits, spaces, dots, hyphens and underscores, never a quote, comma or semicolon that
+// would end it in a CSS stack or a style attribute; no space at either end.
+const FONT_FAMILY_RE = /^[\p{L}\p{N}](?:[\p{L}\p{N} ._-]*[\p{L}\p{N}._-])?$/u;
+const FONT_FAMILY_MAX = 64;
+
+/** Whether a cell's font names an editor font by id (else a family by name). */
+export const isFontId = (font: string): boolean => FONT_ID_RE.test(font);
+
+const isFontName = (v: unknown): boolean =>
+  typeof v === 'string' && v.length <= FONT_FAMILY_MAX && FONT_FAMILY_RE.test(v);
 
 export const BORDER_STYLES: readonly BorderStyle[] = ['solid', 'dashed', 'dotted'];
 export const FORMAT_KEYS = [
@@ -105,7 +116,7 @@ export function validFormatValue(key: string, v: unknown): boolean {
     case 'bg':
       return isColour(v);
     case 'ff':
-      return typeof v === 'string' && FONT_ID_RE.test(v);
+      return isFontName(v);
     case 'fs':
       return (
         Number.isInteger(v) && (v as number) >= FONT_SIZE_MIN && (v as number) <= FONT_SIZE_MAX

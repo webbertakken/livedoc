@@ -125,6 +125,13 @@ export function SpreadsheetTitleRow({
     () => (grid.fontSize === null ? null : { read: () => grid.fontSize, set: grid.setFontSize }),
     [grid],
   );
+  const fontFamily = useMemo(
+    () =>
+      grid.fontFamily === null
+        ? null
+        : { read: () => grid.fontFamily, set: grid.setFontFamily, telemetryKind: 'Spreadsheet' },
+    [grid],
+  );
   const download = async (asked: DownloadFormat) => {
     setProblem(null);
     try {
@@ -203,6 +210,7 @@ export function SpreadsheetTitleRow({
         tabId={tabId}
         toolbar={SPREADSHEET_TOOLBAR}
         fontSize={fontSize}
+        fontFamily={fontFamily}
         colours={grid.colours}
         zoom={zoom}
         choices={spreadsheetChoices(catalogue, actions)}

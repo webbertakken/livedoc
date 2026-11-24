@@ -20,6 +20,7 @@ import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadsheet-menus';
 import { lineSpan } from './line-span';
 import { recentFormatItemId } from './recent-formats';
+import { cellFamilyOf, cellFontPatch } from './spreadsheet-fonts';
 
 type Axis = 'r' | 'c';
 
@@ -335,6 +336,9 @@ export type GridOffice = {
   // The active cell's size in points; null while no sheet is open or the session may not format.
   fontSize: number | null;
   setFontSize: (pt: number) => void;
+  // The active cell's family (Arial where it sets none); null while no sheet is open or the session may not format.
+  fontFamily: string | null;
+  setFontFamily: (family: string) => void;
 };
 
 /**
@@ -357,7 +361,7 @@ export function gridColours({ format: f, act }: GridMenuPort): OfficeColours {
   };
 }
 
-/** The grid's menu and toolbar bindings, and its font size for an Editor. */
+/** The grid's menu and toolbar bindings, and its font size and family for an Editor. */
 export function gridOffice(port: GridMenuPort): GridOffice {
   const editor = port.canWrite && port.canShape;
   return {
@@ -367,6 +371,10 @@ export function gridOffice(port: GridMenuPort): GridOffice {
     fontSize: editor ? fontSizeOf(port.format) : null,
     setFontSize: (pt) => {
       if (editor) setFontSize(port.act, pt);
+    },
+    fontFamily: editor ? cellFamilyOf(port.format) : null,
+    setFontFamily: (family) => {
+      if (editor) port.act.format(cellFontPatch(family));
     },
   };
 }

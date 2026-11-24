@@ -2,7 +2,7 @@
 
 // How the open sheet's menu and toolbar bindings reach the title row above it (docs/specs/029-sheets/surface.md
 // "Menu bar", "Toolbar"): the grid lives below the title row, inside the sheet's controller, and publishes what its
-// items run and the active cell's font size here; the title row reads them. Subscribers hear only a change the shell
+// items run and the active cell's font size and family here; the title row reads them. Subscribers hear only a change the shell
 // would draw (ids, ticks, dimmed items, words, the size); a run always reaches the grid's latest binding, so a
 // selection moved since never acts on the old one.
 import { createContext, useContext, useLayoutEffect, useSyncExternalStore } from 'react';
@@ -25,6 +25,8 @@ export const NO_GRID_OFFICE: GridOffice = {
   recentCodes: [],
   fontSize: null,
   setFontSize: () => {},
+  fontFamily: null,
+  setFontFamily: () => {},
 };
 
 // What the colour controls show now: each one's colour, so a change of the active cell's redraws them.
@@ -36,7 +38,7 @@ const coloursSignature = (colours: OfficeColours | null) =>
     : '';
 
 const signatureOf = (office: GridOffice) =>
-  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.recentCodes.join('\n')}#${coloursSignature(office.colours)}`;
+  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.fontFamily ?? ''}#${office.recentCodes.join('\n')}#${coloursSignature(office.colours)}`;
 
 export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let latest: GridOffice = NO_GRID_OFFICE;
@@ -44,7 +46,13 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let signature = signatureOf(NO_GRID_OFFICE);
   const listeners = new Set<() => void>();
   // What the title row holds: each binding's look now, its run the latest one.
-  const delegating = ({ actions, colours, recentCodes, fontSize }: GridOffice): GridOffice => ({
+  const delegating = ({
+    actions,
+    colours,
+    recentCodes,
+    fontSize,
+    fontFamily,
+  }: GridOffice): GridOffice => ({
     actions: Object.fromEntries(
       Object.entries(actions).map(([id, action]): [string, OfficeAction] => [
         id,
@@ -67,6 +75,8 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
     recentCodes,
     fontSize,
     setFontSize: (pt) => latest.setFontSize(pt),
+    fontFamily,
+    setFontFamily: (family) => latest.setFontFamily(family),
   });
   return {
     get: () => shown,
