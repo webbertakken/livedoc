@@ -114,6 +114,7 @@ describe('SpreadsheetTitleRow', () => {
     render(<Row channel={channel} />);
     act(() =>
       channel.set({
+        recentCodes: [],
         actions: { bold: { run: bold, checked: true } },
         fontSize: 10,
         setFontSize: () => {},
@@ -134,6 +135,7 @@ describe('SpreadsheetTitleRow', () => {
     render(<Row channel={channel} />);
     act(() =>
       channel.set({
+        recentCodes: [],
         actions: {
           bold: { run: bold, checked: true },
           'align-left': { run: vi.fn(), checked: true },

@@ -18,10 +18,15 @@ export type OfficeBindingsChannel = {
   subscribe: (listener: () => void) => () => void;
 };
 
-export const NO_GRID_OFFICE: GridOffice = { actions: {}, fontSize: null, setFontSize: () => {} };
+export const NO_GRID_OFFICE: GridOffice = {
+  actions: {},
+  recentCodes: [],
+  fontSize: null,
+  setFontSize: () => {},
+};
 
 const signatureOf = (office: GridOffice) =>
-  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}`;
+  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.recentCodes.join('\n')}`;
 
 export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let latest: GridOffice = NO_GRID_OFFICE;
@@ -29,13 +34,14 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let signature = signatureOf(NO_GRID_OFFICE);
   const listeners = new Set<() => void>();
   // What the title row holds: each binding's look now, its run the latest one.
-  const delegating = ({ actions, fontSize }: GridOffice): GridOffice => ({
+  const delegating = ({ actions, recentCodes, fontSize }: GridOffice): GridOffice => ({
     actions: Object.fromEntries(
       Object.entries(actions).map(([id, action]): [string, OfficeAction] => [
         id,
         { ...action!, run: () => latest.actions[id]?.run() },
       ]),
     ),
+    recentCodes,
     fontSize,
     setFontSize: (pt) => latest.setFontSize(pt),
   });

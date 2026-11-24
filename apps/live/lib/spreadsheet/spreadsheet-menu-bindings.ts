@@ -18,6 +18,7 @@ import {
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
 import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadsheet-menus';
 import { lineSpan } from './line-span';
+import { recentFormatItemId } from './recent-formats';
 
 type Axis = 'r' | 'c';
 
@@ -74,6 +75,8 @@ export type GridMenuPort = {
   outline: Record<Axis, GridMenuOutline>;
   // The active cell's link (a HYPERLINK), or null.
   link: string | null;
+  // The Number menu's recently used codes, ranked (formatting.md "Number formats", D194).
+  recentCodes: readonly string[];
   act: GridMenuActions;
 };
 
@@ -193,6 +196,14 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     strikethrough: run(() => act.toggle('st'), { checked: !!f?.st }),
     'clear-formatting': run(() => act.clear('formats')),
     'custom-number-format': run(act.openCustomFormat),
+    ...Object.fromEntries(
+      port.recentCodes.map((nc, i) => [
+        recentFormatItemId(i),
+        run(() => act.format({ nf: 'custom', nc, dp: null }), {
+          checked: f?.nf === 'custom' && f.nc === nc,
+        }),
+      ]),
+    ),
     'sort-sheet-a-to-z': run(() => act.sortColumn(true)),
     'sort-sheet-z-to-a': run(() => act.sortColumn(false)),
     'sort-range-a-to-z': run(() => act.sortRange([{ col: port.active.c, ascending: true }], false)),
@@ -310,6 +321,8 @@ function setFontSize(act: GridMenuActions, pt: number) {
 /** What the open sheet offers the title row: its items' bindings and the active cell's font size. */
 export type GridOffice = {
   actions: OfficeActions;
+  // The Number menu's recently used codes (D194), for the title row's catalogue.
+  recentCodes: readonly string[];
   // The active cell's size in points; null while no sheet is open or the session may not format.
   fontSize: number | null;
   setFontSize: (pt: number) => void;
@@ -320,6 +333,7 @@ export function gridOffice(port: GridMenuPort): GridOffice {
   const editor = port.canWrite && port.canShape;
   return {
     actions: gridMenuBindings(port),
+    recentCodes: port.recentCodes,
     fontSize: editor ? fontSizeOf(port.format) : null,
     setFontSize: (pt) => {
       if (editor) setFontSize(port.act, pt);

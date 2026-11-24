@@ -66,6 +66,7 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
   filtered: false,
   outline: { r: noGroups, c: noGroups },
   link: null,
+  recentCodes: [],
   act: actions(),
   ...over,
 });
@@ -268,6 +269,17 @@ describe('gridMenuBindings', () => {
     const two = gridMenuBindings(port({ format: { nf: 'currency' } }));
     expect(two['number-currency']!.checked).toBe(true);
     expect(two['number-currency-rounded']!.checked).toBe(false);
+  });
+
+  // formatting.md "Number formats" (D194): a recently used code formats the selection, ticked where the cell holds it.
+  it('applies a recently used code, ticked while the active cell holds it', () => {
+    const p = port({ recentCodes: ['0.0', '#,##0'], format: { nf: 'custom', nc: '#,##0' } });
+    const b = gridMenuBindings(p);
+    expect(b['number-recent-0']!.checked).toBe(false);
+    expect(b['number-recent-1']!.checked).toBe(true);
+    b['number-recent-0']!.run();
+    expect(p.act.format).toHaveBeenCalledWith({ nf: 'custom', nc: '0.0', dp: null });
+    expect(gridOffice(p).recentCodes).toEqual(['0.0', '#,##0']);
   });
 
   it('opens the Custom Number Formats dialog', () => {

@@ -9,7 +9,9 @@ import {
   sheetBarBindings,
   type GridOffice,
 } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
+import { useMemo } from 'react';
 import { openHyperlink } from '@/lib/open-hyperlink';
+import { recentFormatCodes } from '@/lib/spreadsheet/recent-formats';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import type { SheetActions } from '@/components/sheets/useSheetActions';
 import { useSheetClipboard } from '@/components/sheets/useSheetClipboard';
@@ -27,6 +29,8 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
   const { layout } = sheet;
   const range = selection.ranges[selection.ranges.length - 1]!;
   const link = c.workbook.hyperlinkOf(sheet.id, selection.active.r, selection.active.c);
+  // One pass over the open sheet's cells per change of it (D194).
+  const recentCodes = useMemo(() => recentFormatCodes(sheet.cells.values()), [sheet]);
   const office = gridOffice({
     canWrite: c.canEdit,
     canShape: c.canShape,
@@ -41,6 +45,7 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
     filtered: !!layout.filter,
     outline: gridMenuOutline(c.viewLayout, range),
     link,
+    recentCodes,
     act: {
       ...actions,
       cut: () => clip.copyNow(true),
