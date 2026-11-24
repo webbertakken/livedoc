@@ -31,7 +31,7 @@ describe('BrandBack', () => {
     // The caret leads, the mark (24px) follows.
     expect(link.firstElementChild?.hasAttribute('data-back-caret')).toBe(true);
     expect(link.querySelector('svg:not([data-back-caret])')?.getAttribute('class')).toContain(
-      'size-6',
+      'size-chip',
     );
   });
 

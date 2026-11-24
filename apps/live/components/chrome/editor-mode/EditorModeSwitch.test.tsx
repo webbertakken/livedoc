@@ -59,7 +59,7 @@ describe('EditorModeSwitch', () => {
     expect(chip().getAttribute('aria-haspopup')).toBe('menu');
     expect(chip().getAttribute('aria-keyshortcuts')).toBe('Shift+D');
     expect(chip().textContent).toBe('Sketch');
-    expect(chip().className).toContain('h-9');
+    expect(chip().className).toContain('tool-line:h-field');
   });
 
   it('shows its icon alone on a phone, keeping its accessible name', () => {

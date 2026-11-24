@@ -436,7 +436,7 @@ export function ToolbarPalette(props: Props) {
         if (moreShown) setMoreOpen(false);
         else openMore(e.currentTarget);
       }}
-      className={`flex h-9 items-center gap-1 rounded-md px-2 transition ${
+      className={`flex h-field items-center gap-1 rounded-control px-2 transition ${
         moreShown
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
           : TOOLBAR_TRIGGER_TONE

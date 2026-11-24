@@ -21,7 +21,7 @@ export function EditCardsStripButton() {
           track('Plan', 'Opened', 'EditCards');
           openCardTypes();
         }}
-        className={`flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition focus-visible:outline-2 focus-visible:outline-brand-600 ${TOOLBAR_CONTROL_REST}`}
+        className={`flex h-field shrink-0 items-center justify-center gap-2 rounded-control px-3 text-body transition focus-visible:outline-2 focus-visible:outline-brand-600 ${TOOLBAR_CONTROL_REST}`}
       >
         <PencilIcon />
         Edit Cards

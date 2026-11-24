@@ -236,8 +236,8 @@ export function CategoryBarButtons({
               if (e.pointerType === 'mouse') bar.leave();
             }}
             onKeyDown={(e) => onKeyDown(e, i)}
-            className={`relative flex h-9 shrink-0 touch-target-y items-center gap-1.5 rounded-lg transition ${
-              labels ? 'pl-2 pr-2.5' : 'w-9 justify-center phone:w-11'
+            className={`relative flex h-field shrink-0 touch-target-y items-center gap-2 rounded-menu transition ${
+              labels ? 'pl-2 pr-3' : 'w-field justify-center phone:w-11'
             } ${
               open
                 ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
@@ -246,13 +246,11 @@ export function CategoryBarButtons({
           >
             <span
               aria-hidden
-              className="flex h-[18px] w-[18px] items-center justify-center [&>svg]:max-h-full [&>svg]:max-w-full"
+              className="flex size-icon-toolbar items-center justify-center [&>svg]:max-h-full [&>svg]:max-w-full"
             >
               {c.icon}
             </span>
-            {labels ? (
-              <span className="text-[13px] font-medium leading-none">{c.label}</span>
-            ) : null}
+            {labels ? <span className="text-body leading-none">{c.label}</span> : null}
             {/* The open category's marker, under its button. */}
             <span
               aria-hidden

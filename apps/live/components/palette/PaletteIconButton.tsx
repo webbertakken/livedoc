@@ -234,12 +234,12 @@ export function IconButton({
       }}
       className={
         hideCaption
-          ? `relative flex h-9 w-9 items-center justify-center rounded-md transition disabled:cursor-not-allowed disabled:opacity-50 ${stripTile ? 'phone:w-8' : ''} ${tone}`
+          ? `relative flex h-field w-field items-center justify-center rounded-control transition disabled:cursor-not-allowed disabled:opacity-50 ${stripTile ? 'phone:w-8' : ''} ${tone}`
           : minimalChrome
             ? // Keeps its grid cell's width, so the icon stays centred where the
               // captioned tile had it.
-              `relative flex h-9 w-full items-center justify-center rounded-md transition disabled:cursor-not-allowed disabled:opacity-50 ${tone}`
-            : `relative flex w-full flex-col items-center justify-start gap-0.5 rounded-md px-0.5 py-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${tone}`
+              `relative flex h-field w-full items-center justify-center rounded-control transition disabled:cursor-not-allowed disabled:opacity-50 ${tone}`
+            : `relative flex w-full flex-col items-center justify-start gap-0.5 rounded-control px-0.5 py-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${tone}`
       }
     >
       {captionHidden ? (
@@ -248,18 +248,22 @@ export function IconButton({
         </span>
       ) : (
         <>
-          <span style={glyphStyle} className={`${glyphClass}flex h-6 items-center justify-center`}>
+          <span
+            style={glyphStyle}
+            className={`${glyphClass}flex h-chip items-center justify-center`}
+          >
             {children}
           </span>
-          {/* 10px, not 9: at 9px the caption's stems fell under a pixel wide
-              and anti-aliased to grey, which read as blur beside the glyph. */}
-          <span className="w-full truncate text-center text-[10px] leading-none">{caption}</span>
+          {/* Words, so the supporting step: nothing in the chrome reads under 12px. */}
+          <span className="w-full truncate text-center text-supporting leading-none">
+            {caption}
+          </span>
         </>
       )}
       {showBadge ? (
         <kbd
           aria-hidden
-          className="pointer-events-none absolute right-0.5 top-0.5 flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-[3px] border border-slate-300 bg-white px-0.5 text-[8px] font-semibold leading-none text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+          className="pointer-events-none absolute right-0.5 top-0.5 flex h-icon-row min-w-icon-row items-center justify-center rounded-control border border-slate-300 bg-white px-0.5 text-glyph leading-none text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
         >
           <span className="text-optical-line text-optical-caps [--optical-tracking:0em]">
             {shortcut}
@@ -269,7 +273,7 @@ export function IconButton({
       {showCornerLetter ? (
         <span
           aria-hidden
-          className="pointer-events-none absolute bottom-0 right-0.5 text-[8px] font-medium uppercase leading-none text-slate-500 dark:text-slate-400 pointer-coarse:hidden"
+          className="pointer-events-none absolute bottom-0 right-0.5 text-glyph leading-none text-slate-500 dark:text-slate-400 pointer-coarse:hidden"
         >
           {shortcut}
         </span>

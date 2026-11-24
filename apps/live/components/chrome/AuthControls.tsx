@@ -122,7 +122,7 @@ function AuthControlsEnabled({ onOpenAccount }: AuthControlsProps) {
             pictureUrl={user?.pictureUrl}
             size={discSize}
             aria-hidden
-            className={`bg-brand-700 text-[10px] font-semibold text-white ${SOLID_BRAND_DARK}`}
+            className={`bg-brand-700 text-supporting text-white ${SOLID_BRAND_DARK}`}
           >
             {accountInitial(user)}
           </PictureDisc>
@@ -138,7 +138,7 @@ function AuthControlsEnabled({ onOpenAccount }: AuthControlsProps) {
               data-menu-label=""
               id={nameId}
               aria-hidden
-              className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400"
+              className="px-3 py-2 text-supporting text-slate-500 dark:text-slate-400"
             >
               <p className="truncate font-medium text-slate-900 dark:text-slate-100">
                 {displayName}
@@ -160,7 +160,7 @@ function AuthControlsEnabled({ onOpenAccount }: AuthControlsProps) {
                 closeMenu();
                 onOpenAccount();
               }}
-              className="block w-full rounded px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="block w-full rounded-control px-3 py-2 text-left text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               Account
             </button>
@@ -170,7 +170,7 @@ function AuthControlsEnabled({ onOpenAccount }: AuthControlsProps) {
               role="menuitem"
               tabIndex={-1}
               onClick={closeMenu}
-              className="block w-full rounded px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="block w-full rounded-control px-3 py-2 text-left text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               Account
             </Link>
@@ -187,7 +187,7 @@ function AuthControlsEnabled({ onOpenAccount }: AuthControlsProps) {
               closeMenu();
               openBugReport({ trigger });
             }}
-            className="block w-full rounded px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="block w-full rounded-control px-3 py-2 text-left text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             Report a Bug
           </button>
@@ -203,7 +203,7 @@ function AuthControlsEnabled({ onOpenAccount }: AuthControlsProps) {
               // is the wrong default, the landing page is.
               void signOut({ redirectUrl: '/' });
             }}
-            className="block w-full rounded px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="block w-full rounded-control px-3 py-2 text-left text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             Sign out
           </button>
@@ -227,7 +227,7 @@ function AccountMenu({
     <div
       ref={attach}
       {...surfaceProps}
-      className="absolute right-0 top-full z-[var(--z-popover)] mt-1 w-56 rounded-md border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 outline-none dark:border-slate-700 dark:bg-slate-800 dark:shadow-black/30"
+      className="absolute right-0 top-full z-[var(--z-popover)] mt-1 w-56 rounded-control border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 outline-none dark:border-slate-700 dark:bg-slate-800 dark:shadow-black/30"
     >
       {children}
     </div>
