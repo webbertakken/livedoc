@@ -133,7 +133,7 @@ export function SheetBarTab({
       {colour ? (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-1 bottom-0 h-[3px] rounded-t-sm"
+          className="pointer-events-none absolute inset-x-1 bottom-0 h-[3px] rounded-t-control"
           style={{ backgroundColor: colour }}
         />
       ) : null}
