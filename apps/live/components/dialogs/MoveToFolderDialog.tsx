@@ -110,12 +110,12 @@ export function MoveToFolderDialog({
       closeOnEscape={false}
       className="max-h-[80vh]"
     >
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 pb-3 pt-5 dark:border-slate-800">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-6 pb-3 pt-5 dark:border-slate-800">
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
+          <h2 className="truncate text-dialog-title text-slate-900 dark:text-slate-100">
             Move &ldquo;{subjectName}&rdquo;
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
             {subjectKind === 'folder'
               ? 'Pick the folder it should live inside.'
               : teamList.length > 0
@@ -128,7 +128,7 @@ export function MoveToFolderDialog({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         <PlacementBrowser
           placement={placement}
           onPlacement={setPlacement}
@@ -146,7 +146,7 @@ export function MoveToFolderDialog({
         />
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+      <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-3 dark:border-slate-800">
         <Button variant="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>

@@ -325,7 +325,7 @@ export function MindOutlineRows({
           <LineBreakIcon />
         </MindOutlineToolButton>
       </div>
-      <div className="max-h-[50vh] min-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white px-2 py-1.5 max-sm:max-h-[40dvh] dark:border-slate-700 dark:bg-slate-900">
+      <div className="max-h-[50vh] min-h-48 overflow-y-auto rounded-menu border border-slate-200 bg-white px-2 py-1.5 max-sm:max-h-[40dvh] dark:border-slate-700 dark:bg-slate-900">
         {rows.map((row) => {
           const look = levelLook(row.level);
           return (
@@ -347,7 +347,7 @@ export function MindOutlineRows({
               {row.level > 0 ? (
                 <span
                   aria-hidden
-                  className="flex h-7 shrink-0 items-center justify-center"
+                  className="flex h-row shrink-0 items-center justify-center"
                   style={{ width: BULLET_PX }}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${look.bullet}`} />
@@ -358,8 +358,8 @@ export function MindOutlineRows({
                 marks={row.marks}
                 label={row.level === 0 ? 'Root' : `Level ${row.level}`}
                 placeholder={row.level === 0 ? 'Main idea' : 'Idea'}
-                className={`min-h-7 min-w-0 flex-1 whitespace-pre-wrap break-words rounded px-1 py-0.5 leading-6 outline-none focus:bg-slate-50 dark:focus:bg-slate-800/60 ${look.text} ${
-                  row.level === 0 ? 'text-base font-medium' : 'text-sm'
+                className={`min-h-row min-w-0 flex-1 whitespace-pre-wrap break-words rounded-control px-1 py-0.5 leading-6 outline-none focus:bg-slate-50 dark:focus:bg-slate-800/60 ${look.text} ${
+                  row.level === 0 ? 'text-panel-title' : 'text-body'
                 }`}
                 register={register}
                 onMarks={onMarks}

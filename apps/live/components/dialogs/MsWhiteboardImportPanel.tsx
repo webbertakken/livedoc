@@ -86,7 +86,7 @@ export function MsWhiteboardImportPanel({
       ) : (
         <p
           role="status"
-          className="py-10 text-center text-sm text-slate-600 tabular-nums dark:text-slate-300"
+          className="py-10 text-center text-body text-slate-600 tabular-nums dark:text-slate-300"
         >
           {progressText(state)}
         </p>
@@ -114,7 +114,7 @@ function PickStep({
 }) {
   return (
     <>
-      <p className="mb-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+      <p className="mb-3 text-body text-slate-600 dark:text-slate-300">
         Pick a Microsoft Whiteboard board export: a board folder, a folder of boards, or their .zip.
         Each board becomes its own document with one whiteboard tab, named and dated as the board;
         nothing here changes.

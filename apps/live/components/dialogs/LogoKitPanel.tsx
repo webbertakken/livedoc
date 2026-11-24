@@ -74,14 +74,14 @@ export function LogoKitPanel({
   return (
     <div className="flex flex-col gap-4">
       <BackBar label="All formats" current="Logo Kit" onClick={onBack} disabled={busy} />
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-body text-slate-600 dark:text-slate-300">
         An SVG, PNGs at {LOGO_KIT_PNG_SIZES[0]} to{' '}
         {LOGO_KIT_PNG_SIZES[LOGO_KIT_PNG_SIZES.length - 1]} px and a favicon.ico, in one .zip. Plain
         paper stays see-through.
       </p>
       {logoPages.length > 1 ? (
         // Each page by its full label, as the page picker of every other format names it.
-        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+        <label className="flex items-center gap-2 text-body text-slate-700 dark:text-slate-200">
           Logo page
           <Select
             size="sm"
@@ -98,7 +98,7 @@ export function LogoKitPanel({
         </label>
       ) : null}
       <div
-        className="mx-auto flex h-56 w-56 items-center justify-center overflow-hidden rounded-lg ring-1 ring-slate-200 dark:ring-slate-700"
+        className="mx-auto flex h-56 w-56 items-center justify-center overflow-hidden rounded-menu ring-1 ring-slate-200 dark:ring-slate-700"
         style={{ background: PREVIEW_CHECKER }}
       >
         {previewSvg ? (
@@ -108,11 +108,13 @@ export function LogoKitPanel({
             className="h-full w-full object-contain"
           />
         ) : (
-          <span className="text-xs text-slate-500 dark:text-slate-400">Preparing the preview…</span>
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
+            Preparing the preview…
+          </span>
         )}
       </div>
       {error ? (
-        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+        <p role="alert" className="text-body text-rose-600 dark:text-rose-400">
           {error}
         </p>
       ) : null}

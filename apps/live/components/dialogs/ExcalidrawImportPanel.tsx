@@ -43,7 +43,7 @@ export function ExcalidrawImportPanel({
     return (
       <p
         role="status"
-        className="py-10 text-center text-sm text-slate-600 tabular-nums dark:text-slate-300"
+        className="py-10 text-center text-body text-slate-600 tabular-nums dark:text-slate-300"
       >
         {progressText(state)}
       </p>
@@ -67,7 +67,7 @@ function PickStep({ error, onPicked }: { error?: string; onPicked: (files: File[
   const choose = () => input.current?.click();
   return (
     <>
-      <p className="mb-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+      <p className="mb-3 text-body text-slate-600 dark:text-slate-300">
         Pick boards saved in Excalidraw (.excalidraw files), or PNG and SVG images exported with the
         scene embedded. Each file becomes its own document with one whiteboard tab, named and dated
         after the file.

@@ -46,9 +46,9 @@ export function DialogTabs<T extends string>({
                 onChange(next);
                 document.getElementById(`${idPrefix}-tab-${next}`)?.focus();
               }}
-              className={`relative cursor-pointer px-2 py-2.5 text-[13px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
+              className={`relative min-h-row cursor-pointer px-2 py-2 text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
                 on
-                  ? 'text-slate-900 dark:text-slate-50'
+                  ? 'font-medium text-slate-900 dark:text-slate-50'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >

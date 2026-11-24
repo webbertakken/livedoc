@@ -35,19 +35,17 @@ export function FormatCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-start gap-1.5 rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
+      className="flex flex-col items-start gap-1 rounded-menu border border-slate-200 bg-white p-3 text-left transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
     >
       {/* The format glyphs are light-canvas art like the template previews,
           so they take the same re-lighting in dark chrome rather than sitting
           on a light plate (`.preview-art-tile`, globals.css). */}
-      <div className="preview-art-tile flex h-12 w-full items-center justify-center rounded-md bg-slate-50">
+      <div className="preview-art-tile flex h-12 w-full items-center justify-center rounded-control bg-slate-50">
         {children}
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">{title}</p>
-        <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-          {description}
-        </p>
+        <p className="truncate text-body text-slate-900 dark:text-slate-100">{title}</p>
+        <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">{description}</p>
       </div>
     </button>
   );
