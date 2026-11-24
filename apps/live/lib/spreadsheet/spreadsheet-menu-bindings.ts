@@ -50,6 +50,8 @@ export type GridMenuActions = {
   hide: (axis: Axis) => void;
   resize: (axis: Axis, from: number, to: number) => void;
   openLink: (url: string) => void;
+  // Format › Number › Custom Number Format's dialog (formatting.md "Number formats").
+  openCustomFormat: () => void;
 };
 
 /** An axis's groups as the menus read them: any in the selection's lines, any collapsed, any expanded. */
@@ -190,6 +192,7 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     underline: run(() => act.toggle('u'), { checked: !!f?.u }),
     strikethrough: run(() => act.toggle('st'), { checked: !!f?.st }),
     'clear-formatting': run(() => act.clear('formats')),
+    'custom-number-format': run(act.openCustomFormat),
     'sort-sheet-a-to-z': run(() => act.sortColumn(true)),
     'sort-sheet-z-to-a': run(() => act.sortColumn(false)),
     'sort-range-a-to-z': run(() => act.sortRange([{ col: port.active.c, ascending: true }], false)),

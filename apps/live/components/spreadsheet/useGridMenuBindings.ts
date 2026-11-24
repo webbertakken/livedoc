@@ -16,7 +16,10 @@ import { useSheetClipboard } from '@/components/sheets/useSheetClipboard';
 import { usePublishedBindings } from './office-bindings-channel';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 
-export function useGridMenuBindings(actions: SheetActions): GridOffice {
+/** The dialogs the open sheet hosts that its menu items open. */
+export type GridDialogs = { openCustomFormat: () => void };
+
+export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs): GridOffice {
   const c = useSheetController();
   const clip = useSheetClipboard();
   const bar = useSheetBarActionsContext();
@@ -47,6 +50,7 @@ export function useGridMenuBindings(actions: SheetActions): GridOffice {
       hide: (axis) => actions.hide(axis, true),
       resize: (axis, from, to) => c.setMenu({ kind: 'resize', axis, from, to }),
       openLink: openHyperlink,
+      openCustomFormat: dialogs.openCustomFormat,
     },
   });
   const published = { ...office, actions: { ...office.actions, ...sheetBarBindings(bar) } };

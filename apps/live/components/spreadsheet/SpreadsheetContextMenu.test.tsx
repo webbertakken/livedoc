@@ -27,7 +27,7 @@ vi.mock('@/components/sheets/useSheetClipboard', () => ({ useSheetClipboard: () 
 beforeAll(stubResizeObserver);
 
 function Menus({ actions }: { actions: SheetActions }) {
-  const office = useGridMenuBindings(actions);
+  const office = useGridMenuBindings(actions, { openCustomFormat: vi.fn() });
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;
 }
 

@@ -18,3 +18,4 @@ export * from './kept-sizes';
 export * from './kept-check';
 export * from './csv-file';
 export * from './import-report';
+export { formatCodeOf } from './number-format-code';
