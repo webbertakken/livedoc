@@ -7,6 +7,10 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 // The editor's parts that have moved to the sizing scale (docs/specs/004-interface-design/sizing.md "The guard").
 const SIZED_PATHS = [
   'components/primitives',
+  'components/colour',
+  'components/drive',
+  'components/placement',
+  'components/split',
   'components/bug-report',
   'components/tags',
   'components/toast',

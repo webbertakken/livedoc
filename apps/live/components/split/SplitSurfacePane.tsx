@@ -29,7 +29,7 @@ export function SplitSurfacePane({
       ) : surface === 'pdf' ? (
         <PdfDocumentHost tab={tab} readOnly />
       ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-1 bg-slate-100 p-4 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <div className="flex h-full flex-col items-center justify-center gap-1 bg-slate-100 p-4 text-body text-slate-700 dark:bg-slate-900 dark:text-slate-200">
           <p className="font-medium">{tab.name}</p>
           <p>Click to edit.</p>
         </div>

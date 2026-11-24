@@ -77,9 +77,9 @@ function InlineCreateTile({
         style={enter.style}
         className={`group ${enter.className} ${
           row
-            ? 'flex items-center gap-2.5 px-3 py-2 text-left'
-            : 'flex flex-col items-center justify-center gap-1.5 p-3 text-center'
-        } rounded-lg border border-dashed border-slate-200 bg-slate-50/60 text-slate-400 transition hover:border-brand-400 hover:bg-brand-50/40 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/10 dark:hover:text-brand-200`}
+            ? 'flex items-center gap-2 px-3 py-2 text-left'
+            : 'flex flex-col items-center justify-center gap-1 p-3 text-center'
+        } rounded-menu border border-dashed border-slate-200 bg-slate-50/60 text-slate-400 transition hover:border-brand-400 hover:bg-brand-50/40 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/10 dark:hover:text-brand-200`}
       >
         {/* Quieter than a destination row at rest (lighter border, a faint
             fill, grey text): it is an action, not one of the options, and
@@ -87,10 +87,8 @@ function InlineCreateTile({
         <span className="shrink-0 text-slate-300 transition group-hover:text-brand-700 dark:text-slate-600">
           {icon}
         </span>
-        <span className={`${row ? 'min-w-0 flex-1' : 'w-full'} truncate text-xs font-medium`}>
-          {label}
-        </span>
-        <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">{sub}</span>
+        <span className={`${row ? 'min-w-0 flex-1' : 'w-full'} truncate text-body`}>{label}</span>
+        <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">{sub}</span>
       </button>
     );
   }
@@ -98,9 +96,9 @@ function InlineCreateTile({
     <div
       className={`${
         row
-          ? 'flex items-center gap-2.5 px-3 py-2'
-          : 'flex flex-col items-center justify-center gap-1.5 p-3'
-      } rounded-lg border border-brand-300 bg-brand-50/40 dark:border-brand-500/50 dark:bg-brand-500/10`}
+          ? 'flex items-center gap-2 px-3 py-2'
+          : 'flex flex-col items-center justify-center gap-1 p-3'
+      } rounded-menu border border-brand-300 bg-brand-50/40 dark:border-brand-500/50 dark:bg-brand-500/10`}
     >
       <span className="shrink-0 text-brand-700 dark:text-brand-400">{icon}</span>
       <input
@@ -140,10 +138,10 @@ function InlineCreateTile({
         // height that made this row taller than its neighbours. A 16px
         // line box keeps the row at the same height as a 12px label row.
         className={`${
-          row ? 'h-4 min-w-0 flex-1 py-0 text-left leading-4' : 'w-full py-1 text-center'
-        } bg-transparent px-0 text-xs text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400`}
+          row ? 'min-w-0 flex-1 py-0 text-left' : 'w-full py-1 text-center'
+        } bg-transparent px-0 text-body text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400`}
       />
-      <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
+      <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
         {busy ? 'Creating…' : 'Enter to create'}
       </span>
     </div>
@@ -247,7 +245,7 @@ export function PlacementCard({
   const enter = enterProps(layout, enterIndex);
   const badge = count ? (
     <span
-      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
+      className={`shrink-0 rounded-full px-2 py-0.5 text-supporting ${
         selected
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/25 dark:text-brand-200'
           : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'
@@ -266,9 +264,9 @@ export function PlacementCard({
       style={enter.style}
       className={`${enter.className} ${
         row
-          ? 'flex items-center gap-2.5 px-3 py-2 text-left'
-          : 'flex flex-col items-center gap-1.5 p-3 text-center'
-      } rounded-lg border transition ${
+          ? 'flex items-center gap-2 px-3 py-2 text-left'
+          : 'flex flex-col items-center gap-1 p-3 text-center'
+      } rounded-menu border transition ${
         selected
           ? 'border-brand-400 bg-brand-50 ring-1 ring-brand-200 dark:border-brand-500 dark:bg-brand-500/10 dark:ring-brand-500/30'
           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600 dark:hover:bg-slate-700/60'
@@ -280,8 +278,10 @@ export function PlacementCard({
         {icon}
       </span>
       <span
-        className={`${row ? 'min-w-0 flex-1' : 'w-full'} truncate text-xs font-medium ${
-          selected ? 'text-brand-800 dark:text-brand-200' : 'text-slate-700 dark:text-slate-200'
+        className={`${row ? 'min-w-0 flex-1' : 'w-full'} truncate text-body ${
+          selected
+            ? 'font-medium text-brand-800 dark:text-brand-200'
+            : 'text-slate-700 dark:text-slate-200'
         }`}
       >
         {label}
@@ -289,7 +289,7 @@ export function PlacementCard({
       {/* In a row the badge sits beside the name; on a tile it takes its own
           line between name and caption, where the narrow track has room. */}
       {badge}
-      <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">{sub}</span>
+      <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">{sub}</span>
     </button>
   );
 }

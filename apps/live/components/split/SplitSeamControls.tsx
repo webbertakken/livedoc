@@ -24,7 +24,7 @@ export function SplitSeamControls({
           aria-label="Fit Both Sides"
           disabled={!canFit}
           onClick={onFit}
-          className="flex size-7 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+          className="flex size-row items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
         >
           <FitViewIcon />
         </button>
@@ -34,7 +34,7 @@ export function SplitSeamControls({
           type="button"
           aria-label="Close Side by Side"
           onClick={onClose}
-          className="flex size-7 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+          className="flex size-row items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
         >
           <CloseIcon />
         </button>

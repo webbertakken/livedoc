@@ -26,7 +26,7 @@ export const ColourSwatch = forwardRef<HTMLButtonElement, Props>(function Colour
         aria-label={label}
         aria-pressed={picked}
         data-colour-key=""
-        className={`group flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+        className={`group flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
         {...button}
       >
         <SwatchChip colour={colour} none={none} picked={picked} />
@@ -46,7 +46,7 @@ export function SwatchChip({
   colour: string;
   none?: boolean;
   picked?: boolean;
-  // 14px, for a field trigger's leading chip.
+  // The row icon step (16px), for a field trigger's leading chip (sizing.md D236).
   small?: boolean;
   // A corner dot, drawn to contrast with the colour: Quick Style's custom colour in a theme slot.
   marked?: boolean;
@@ -57,7 +57,7 @@ export function SwatchChip({
       data-swatch-chip=""
       style={none ? undefined : { backgroundColor: colour }}
       className={`relative block shrink-0 border border-black/15 transition forced-color-adjust-none motion-reduce:transition-none dark:border-white/20 ${
-        small ? 'h-3.5 w-3.5 rounded-[4px]' : 'h-5 w-5 rounded-[5px]'
+        small ? 'size-icon-row rounded-control' : 'size-icon-title rounded-control'
       } ${none ? 'overflow-hidden bg-white' : ''} ${
         picked
           ? 'ring-2 ring-brand-500 ring-offset-1 dark:ring-brand-300 dark:ring-offset-slate-900'

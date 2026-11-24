@@ -63,12 +63,10 @@ export function DefaultFolderPickerDialog({
       closeOnEscape={false}
       className="max-h-[80vh]"
     >
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 pb-3 pt-5 dark:border-slate-800">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-6 pb-3 pt-5 dark:border-slate-800">
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
-            {title}
-          </h2>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          <h2 className="truncate text-dialog-title text-slate-900 dark:text-slate-100">{title}</h2>
+          <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
             New {entry.noun} you create without choosing a place are saved here.
           </p>
         </div>
@@ -76,7 +74,7 @@ export function DefaultFolderPickerDialog({
           <DialogCloseButton onClick={onClose} />
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         <PlacementBrowser
           placement={placement}
           onPlacement={setPlacement}
@@ -88,9 +86,9 @@ export function DefaultFolderPickerDialog({
           layout="list"
         />
       </div>
-      <div className="flex min-h-14 items-center justify-end gap-2 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+      <div className="flex min-h-14 items-center justify-end gap-2 border-t border-slate-100 px-6 py-3 dark:border-slate-800">
         {teamRoot ? (
-          <p role="note" className="mr-auto text-xs text-slate-600 dark:text-slate-300">
+          <p role="note" className="mr-auto text-supporting text-slate-600 dark:text-slate-300">
             Choose a folder inside the team.
           </p>
         ) : null}

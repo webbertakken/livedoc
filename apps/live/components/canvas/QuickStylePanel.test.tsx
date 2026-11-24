@@ -137,7 +137,7 @@ describe('QuickRadioRow: custom swatches', () => {
     renderSwatches();
     const button = screen.getByRole('button', { name: 'Theme default' });
     expect(button.className).toContain('h-6 w-6');
-    expect(button.firstElementChild!.className).toContain('h-5 w-5');
+    expect(button.firstElementChild!.className).toContain('size-icon-title');
   });
 });
 

@@ -102,7 +102,7 @@ export function DocumentSyncMark({
         tabIndex={0}
         aria-label={label}
         data-document-sync={state}
-        className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm text-slate-400 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-400"
+        className="inline-flex size-icon-row shrink-0 items-center justify-center rounded-control text-slate-400 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-400"
       >
         {/* Finer than the house weight: a quiet mark beside quiet metadata. */}
         <SyncGlyph state={state} weight={DOCUMENT_SYNC_WEIGHT} />

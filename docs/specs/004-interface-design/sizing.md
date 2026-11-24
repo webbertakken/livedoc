@@ -81,6 +81,9 @@ A surface names the token, never the number, so the scale changes in one place.
 - A count badge sits where an icon would: 16 or 18 px (`size-icon-row`, `size-icon-toolbar`), its figure in
   `text-glyph`.
 - A switch's track and knob are drawn art, sized by the switch itself; the row that holds a switch is on the scale.
+- A colour's drawn parts take the icon steps: a swatch's chip 16 or 20 px, the picker's handle and hue track 12 px
+  (D236, default).
+- A colour swatch button is the chip step, 24 px, so a row of swatches keeps the chip rhythm.
 
 ### Gaps, padding and radii
 
@@ -157,3 +160,5 @@ The code cites each by its id.
 - **D234** What the guard reads: every static string in a source file outside tests, so a size in a constant (a
   variant table, a shared class list) is held to the scale as one in markup is (default).
 - **D235** The tokens' unit: rem at a 16 px root, so a browser set to larger text grows the chrome with it (default).
+- **D236** A colour's drawn parts: a swatch's chip, the picker's handle and its hue track take the icon steps (16 or
+  20, 12 px), the nearest to what they drew, rather than sizes of their own (default).
