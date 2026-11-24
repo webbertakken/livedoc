@@ -10,6 +10,7 @@ import {
   DROPDOWN_OPTIONS_MAX,
   DROPDOWN_OPTION_MAX,
   FORMAT_RULE_FORMULA_MAX,
+  FORMAT_RULE_RANGES_MAX,
   VALIDATION_HELP_MAX,
 } from '../limits';
 import type { SheetLayout, StoredFormula } from '../sheet';
@@ -49,6 +50,7 @@ const FORMAT_RULE_KEYS = new Set([
   'c1',
   'r2',
   'c2',
+  'also',
   'is',
   'op',
   'a',
@@ -80,6 +82,16 @@ function rangeOnSheet(r: unknown, layout: SheetLayout): boolean {
     ix.rowPos.has(r.r2) &&
     ix.colPos.has(r.c1) &&
     ix.colPos.has(r.c2)
+  );
+}
+
+// A format rule's rectangles after its anchor: at least one, and with the anchor at most FORMAT_RULE_RANGES_MAX.
+function moreOnSheet(v: unknown, layout: SheetLayout): boolean {
+  return (
+    Array.isArray(v) &&
+    v.length > 0 &&
+    v.length < FORMAT_RULE_RANGES_MAX &&
+    v.every((r) => rangeOnSheet(r, layout))
   );
 }
 
@@ -184,6 +196,7 @@ export function isFormatRule(
   if (!isObj(v) || v.id !== id || !isAxisId(id)) return false;
   if (!Object.keys(v).every((k) => FORMAT_RULE_KEYS.has(k))) return false;
   if (!rangeOnSheet(v, layout)) return false;
+  if (v.also !== undefined && !moreOnSheet(v.also, layout)) return false;
   const text = (x: unknown) =>
     x === undefined || (typeof x === 'string' && x.length <= OPERAND_MAX);
   if (v.is === 'when') {

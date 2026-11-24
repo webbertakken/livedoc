@@ -144,6 +144,7 @@ Ctrl+Alt+Shift+M moves focus out of the grid to the toolbar (default, D137).
   - **Conditional Formatting Only** and **Data Validation Only**: the rules over the copied cells, cut to them, set
     again over the pasted cells as new rules; a custom formula shifts with them, a dropdown's source range stays
     (default, D143).
+    A format rule of several rectangles stays one rule: the pieces of its rectangles over the copied cells.
   - **Transposed**: inputs and formats with rows turned into columns, once, never repeated over a larger selection;
     a formula shifts by where its cell lands (default, D142).
   - **Column Widths Only**: each pasted column takes its copied column's width.

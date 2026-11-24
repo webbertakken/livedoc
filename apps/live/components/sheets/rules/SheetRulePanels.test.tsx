@@ -253,6 +253,53 @@ describe('the Conditional Formatting popover', () => {
   });
 });
 
+describe('a rule of several ranges', () => {
+  it('takes ranges with commas, lists the rule under any of them, and edits it as typed', async () => {
+    const { h, anchor, actions } = await open({ A2: '5', C3: '5' });
+    act(() => h.select('A2:A4'));
+    act(() => actions().openFormatRules(anchor));
+    let dialog = await screen.findByRole('dialog', { name: 'Conditional Formatting' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Another Rule' }));
+    const range = () => within(dialog).getByLabelText<HTMLInputElement>('Apply to Range');
+    expect(range().value).toBe('A2:A4');
+    fireEvent.change(range(), { target: { value: 'A2:A4,' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(within(dialog).getByRole('alert').textContent).toBe(
+      'Type a range like B2:B20, or several with commas',
+    );
+    fireEvent.change(range(), { target: { value: 'A2:A4,A99' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(fRules(h)).toEqual([]);
+    fireEvent.change(range(), { target: { value: 'A2:A4, C2:C4' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(fRules(h)[0]).toMatchObject({ also: [{}] });
+    expect(screen.getAllByText('A2:A4,C2:C4')).toHaveLength(2);
+    act(() => h.select('C3'));
+    dialog = screen.getByRole('dialog', { name: 'Conditional Formatting' });
+    fireEvent.click(within(dialog).getByRole('button', { name: /Is Not Empty/ }));
+    expect(range().value).toBe('A2:A4,C2:C4');
+    act(() => h.select('E9'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(within(dialog).getByText('No format rules on these cells yet.')).toBeTruthy();
+  });
+  it('starts a new rule over each range of a selection of several', async () => {
+    const { h, anchor, actions } = await open();
+    act(() => h.select('A2:A4'));
+    act(() =>
+      h.ctl().setSelection({
+        ...h.ctl().selection,
+        ranges: [...h.ctl().selection.ranges, { r1: 1, c1: 2, r2: 3, c2: 2 }],
+      }),
+    );
+    act(() => actions().openFormatRules(anchor));
+    const dialog = await screen.findByRole('dialog', { name: 'Conditional Formatting' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Another Rule' }));
+    expect(within(dialog).getByLabelText<HTMLInputElement>('Apply to Range').value).toBe(
+      'A2:A4,C2:C4',
+    );
+  });
+});
+
 describe('the Custom Number Format popover', () => {
   it('previews a code, refuses one that cannot be read, and applies it', async () => {
     const { h, anchor, actions } = await open({ B2: '1234.5' });

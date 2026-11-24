@@ -62,6 +62,7 @@ export * from './store-layout';
 export * from './range-names';
 export * from './validate';
 export * from './rules/rule-index';
+export * from './rules/rule-ranges';
 export * from './rules/rule-shape';
 export * from './rules/validation';
 export * from './rules/validation-edit';

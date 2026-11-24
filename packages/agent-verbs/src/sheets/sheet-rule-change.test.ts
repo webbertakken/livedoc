@@ -230,6 +230,24 @@ describe('format rules for agents', () => {
     expect(AGENT_CONDITIONS).toContain('greater_than_or_equal');
     expect(AGENT_CONDITIONS).toContain('starts_with');
   });
+  it('takes a range of several rectangles, and reads and clears it by any of them', () => {
+    const { wb, id, run } = book();
+    expect(
+      run({
+        op: 'conditional_format',
+        range: 'A1:A3, C2:C4',
+        when: { condition: 'formula', formula: '=$D1>0' },
+        style: { bold: true },
+      }),
+    ).toMatchObject({ ok: true, line: 'added a format rule to A1:A3,C2:C4' });
+    expect(rulesRead(wb, id).conditionalFormats[0]).toMatchObject({ range: 'A1:A3,C2:C4' });
+    expect(run({ op: 'clear_conditional_formats', range: 'C4' })).toMatchObject({
+      line: 'cleared 1 format rule',
+    });
+    expect(
+      run({ op: 'conditional_format', range: 'A1,Q99', when: { condition: 'empty' } }),
+    ).toMatchObject({ ok: false, code: 'range_invalid' });
+  });
   it('refuses what cannot be a format rule', () => {
     const { run } = book();
     const code = (c: SheetChange) => {
@@ -237,6 +255,7 @@ describe('format rules for agents', () => {
       return r.ok ? null : r.code;
     };
     expect(code({ op: 'conditional_format', range: 'Q99' })).toBe('range_invalid');
+    expect(code({ op: 'conditional_format', range: 'nope' })).toBe('range_invalid');
     expect(code({ op: 'conditional_format', range: 'A1' })).toBe('rule_invalid');
     expect(code({ op: 'conditional_format', range: 'A1', when: { condition: 'empty' } })).toBe(
       'format_invalid',

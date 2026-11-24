@@ -136,6 +136,8 @@ A new rule replaces any rule its cells already had. **Remove Validation** takes 
 
 You see the rule on the cells while you edit it. Rules apply in list order: the first rule a cell meets colours it, so use **Move Up** and **Move Down** to choose which wins. Every rule is listed in **Sheet Settings** under **Conditional Formatting**.
 
+One rule can cover several ranges: type them with commas in **Apply to Range**, such as `A2:A20,C2:C20`. A custom formula is written for the first range's top-left cell, and can read other sheets (`=Totals!$B$1>0`) and named ranges (`=A2>Limit`).
+
 ## Charts
 
 Select some cells, then pick **Data** in the Sheet's toolbar, open **Insert Chart** and choose a chart type: **Column Chart**, **Bar Chart**, **Line Chart**, **Area Chart**, **Scatter Chart**, **Pie Chart** or **Doughnut Chart** (or right-click the cells and open **Chart**). For a scatter chart, put the numbers for the bottom axis in the first column. Select a single cell to chart the whole table it sits in. To chart columns that are not side by side, hold Ctrl (⌘ on a Mac) and drag each one: pick the labels in A and the amounts in C, and the chart leaves out B.
