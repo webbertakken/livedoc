@@ -126,3 +126,49 @@ test('a picture is wrapped from its bar', async ({ page, pageErrors }) => {
   await expect(panel.getByRole('radio', { name: 'Break text' })).toBeChecked();
   expectNoPageErrors(pageErrors);
 });
+
+// objects.md "Dragging a placed picture", "Guides": a selected placed picture follows the pointer, its left edge
+// snapping to its column's with a guide drawn, its move one undo step.
+test('a placed picture is dragged, snapping to its column', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  const { body, picture } = await documentWithPicture(page, 'Dragged:');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type(WORDS);
+  await picture.click();
+  await page
+    .getByRole('toolbar', { name: 'Image' })
+    .getByRole('button', { name: 'In front of text' })
+    .click();
+  const image = picture.locator('img');
+  await image.click();
+  const start = (await image.boundingBox())!;
+  const column = (await body.locator('p').first().boundingBox())!;
+
+  // Dragged 60 px right and 30 down: it follows.
+  await page.mouse.move(start.x + 20, start.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 50, start.y + 35, { steps: 4 });
+  await page.mouse.move(start.x + 80, start.y + 50, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(async () => Math.round((await image.boundingBox())!.x - start.x)).toBe(60);
+  const moved = (await image.boundingBox())!;
+  expect(Math.round(moved.y - start.y)).toBe(30);
+
+  // Dragged to 2 px off its column's left edge: it snaps there, the guide drawn while dragging.
+  await page.mouse.move(moved.x + 20, moved.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(column.x + 2 + 20, moved.y + 20, { steps: 6 });
+  await expect(body.locator('.text-document-picture-guide')).toHaveCount(1);
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: test.info().outputPath('picture-guide.png') });
+  await page.mouse.up();
+  await expect(body.locator('.text-document-picture-guide')).toHaveCount(0);
+  await expect
+    .poll(async () => Math.round((await image.boundingBox())!.x))
+    .toBe(Math.round(column.x));
+
+  // Undo puts it back where the first drag left it.
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect.poll(async () => Math.round((await image.boundingBox())!.x - moved.x)).toBe(0);
+  expectNoPageErrors(pageErrors);
+});

@@ -24,11 +24,13 @@ import {
 import {
   moved,
   offset as offsetBy,
+  shifted,
   withMargin,
   wrapped,
   type PictureWrapChoice,
 } from '@/lib/text-document/text-document-picture-placing';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
+import type { PictureMove } from '@/lib/text-document/text-document-picture-move';
 
 /** What Text wrapping and Position show of the selected picture: its placement (none in line), and whether pages are laid. */
 export type PicturePlacing = { placement: PicturePlacement | undefined; paged: boolean };
@@ -68,7 +70,7 @@ export function useTextDocumentPicturePlacing({
   /** Writes what `next` gives for the selected picture (null: not measured), as one undo step. */
   const write = useCallback(
     (
-      by: 'wrap' | 'margin' | 'moves' | 'offset',
+      by: 'wrap' | 'margin' | 'moves' | 'offset' | 'drag',
       next: (now: Selected, view: EditorView) => PicturePlacement | undefined | null,
     ) => {
       const now = read();
@@ -119,10 +121,19 @@ export function useTextDocumentPicturePlacing({
     [write],
   );
 
+  /** A placed picture's drag let go (objects.md "Dragging a placed picture"): moved by it, as one undo step. */
+  const drag = useCallback(
+    (pos: number, by: PictureMove) =>
+      write('drag', (now) =>
+        now.pos === pos && now.placement ? shifted(now.placement, by) : now.placement,
+      ),
+    [write],
+  );
+
   const placing: PicturePlacing | null = selected
     ? { placement: selected.placement, paged: selected.paged }
     : null;
-  return { placing, wrap, margin, moves, offset };
+  return { placing, wrap, margin, moves, offset, drag };
 }
 
 /** The selected picture's Text wrapping and Position, and their writes. */

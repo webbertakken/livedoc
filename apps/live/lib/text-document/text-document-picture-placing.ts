@@ -103,3 +103,34 @@ export const offset = (
   ...current,
   [axis]: within(pt),
 });
+
+/**
+ * Where a dragged picture's left edge snaps (objects.md "Guides"): its left edge, centre or right edge to its column's
+ * left edge, centre or right edge, the nearest within `tolerance`, and the column's line it snapped to; as it is, and
+ * no line, where none is near. Points across its column.
+ */
+export function snapAcross(
+  left: number,
+  width: number,
+  columnWidth: number,
+  tolerance: number,
+): { left: number; guide: number | null } {
+  let best: { shift: number; guide: number } | null = null;
+  for (const edge of [0, width / 2, width])
+    for (const line of [0, columnWidth / 2, columnWidth]) {
+      const shift = line - (left + edge);
+      if (Math.abs(shift) <= tolerance && (!best || Math.abs(shift) < Math.abs(best.shift)))
+        best = { shift, guide: line };
+    }
+  return best ? { left: round3(left + best.shift), guide: best.guide } : { left, guide: null };
+}
+
+/** Moved by a drag, across and down, within 22 inches either way. */
+export const shifted = (
+  current: PicturePlacement,
+  by: { readonly dx: number; readonly dy: number },
+): PicturePlacement => ({
+  ...current,
+  x: within(current.x + by.dx),
+  y: within(current.y + by.dy),
+});

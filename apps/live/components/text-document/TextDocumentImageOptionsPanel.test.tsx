@@ -28,6 +28,7 @@ const panel = (
     margin: vi.fn(),
     moves: vi.fn(),
     offset: vi.fn(),
+    drag: vi.fn(),
   };
   const onChange = vi.fn();
   const onReset = vi.fn();
