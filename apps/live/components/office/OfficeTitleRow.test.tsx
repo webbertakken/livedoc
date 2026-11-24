@@ -369,3 +369,59 @@ describe('OfficeTitleRow, the shortcut layer', () => {
     expect(keep).toHaveBeenCalledTimes(1);
   });
 });
+
+// docs/specs/004-interface-design/office-shell.md "Title row": a bare title row, the name line and one button to leave.
+describe('OfficeTitleRow, bare', () => {
+  function Bare({ onLeave, bare }: { onLeave: () => void; bare: boolean }) {
+    const root = useRef<HTMLDivElement | null>(null);
+    return (
+      <div ref={root} data-testid="surface">
+        <OfficeTitleRow
+          name="Minutes"
+          format="PDF"
+          formatTitle="PDF"
+          problem={null}
+          catalogue={CATALOGUE}
+          level="edit"
+          actions={{}}
+          shortcuts={TEXT_DOCUMENT_SHORTCUTS}
+          keyScope={root}
+          toolbar={[
+            {
+              id: 'g',
+              label: 'Group',
+              controls: [
+                {
+                  id: 'rename',
+                  label: 'Rename',
+                  level: 'edit',
+                  status: 'comingSoon',
+                  look: { kind: 'text', text: 'Rename', width: 60 },
+                },
+              ],
+            },
+          ]}
+          bare={bare ? { leave: 'Leave read mode', onLeave } : null}
+        />
+      </div>
+    );
+  }
+
+  it('hides the menu bar and the toolbar, and leaves by its one button', () => {
+    const onLeave = vi.fn();
+    const { rerender } = render(<Bare onLeave={onLeave} bare={false} />);
+    expect(screen.getByRole('menubar')).toBeTruthy();
+    expect(screen.getByRole('toolbar')).toBeTruthy();
+    rerender(<Bare onLeave={onLeave} bare />);
+    expect(screen.queryByRole('menubar')).toBeNull();
+    expect(screen.queryByRole('toolbar')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Leave read mode' }));
+    expect(onLeave).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens no menu by its access key, where there is no menu bar to open it in', () => {
+    render(<Bare onLeave={vi.fn()} bare />);
+    fireEvent.keyDown(screen.getByTestId('surface'), { code: 'KeyF', key: 'f', altKey: true });
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+});

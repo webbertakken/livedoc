@@ -30,13 +30,20 @@ import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
 import { sendBlob } from '@/lib/blob-store/send-blob';
 import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-budget-replacement';
-import { PdfStoredFiles, type PdfDocumentRefusal } from '@/lib/pdf-document/pdf-document-bus';
+import { PdfStoredFiles } from '@/lib/pdf-document/pdf-document-bus';
 import { startPdfEngineWorker } from '@/lib/pdf-document/pdf-engine-client';
 import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
 import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import {
+  droppedChangeCopy,
+  lostChangesCopy,
+  TOO_MANY_MARKS_COPY,
+} from '@/lib/pdf-document/pdf-surface-copy';
 import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
+import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
+import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
 import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
@@ -80,30 +87,9 @@ import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
 import { PdfFindResults } from './PdfFindResults';
 
-/** "This PDF holds the most marks LiveDoc keeps for one file (20,000)." (marks.md "Errors"). */
-const TOO_MANY_MARKS_COPY = 'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
-/** Said once a change the room refused for a limit has been dropped (live-editing-and-storage.md "Limits"). */
-const CHANGES_DO_NOT_FIT_COPY = 'This PDF has more unsaved changes than fit.';
-/** Said once a change refused for the level has been dropped (editing-modes.md "Errors"). */
-const VIEW_ONLY_COPY = 'You can view this PDF, but not change it.';
-const REVIEW_ONLY_COPY = 'You can review this PDF, but not edit its pages.';
-
-/** What a person is told of changes that could not be placed on a replaced stored file
- *  (live-editing-and-storage.md "A change carried across a replacement"). */
-export const lostChangesCopy = (count: number): string =>
-  count === 1
-    ? '1 change couldn’t be placed on the new file.'
-    : `${count} changes couldn’t be placed on the new file.`;
-
 const NO_STEPS: PdfUndoState = { canUndo: false, canRedo: false };
 const NO_PAGES: readonly PageInfo[] = [];
 const neverChanges = () => () => {};
-
-/** What a person is told once a change the room refused has been dropped. */
-export const droppedChangeCopy = (refusal: PdfDocumentRefusal, level: AccessLevel): string => {
-  if (refusal !== 'level_too_low') return CHANGES_DO_NOT_FIT_COPY;
-  return level === 'view' ? VIEW_ONLY_COPY : REVIEW_ONLY_COPY;
-};
 
 const typesText = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
@@ -372,6 +358,14 @@ export function PdfDocumentSurface({
   });
   const { selection: textSelection, find } = reading;
   const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);
+  // "Read mode", "Full screen": one person's room for the pages.
+  const readMode = usePdfReadMode();
+  const [column, setColumn] = useState<HTMLDivElement | null>(null);
+  const fullScreen = usePdfFullScreen({
+    element: ready ? column : null,
+    view: viewer.view,
+    setWholeView: viewer.setWholeView,
+  });
 
   const actions: OfficeActions = useMemo(
     () => ({
@@ -380,11 +374,13 @@ export function PdfDocumentSurface({
       ...(ready
         ? {
             ...viewChrome.actions,
-            ...panels.actions,
+            // In Read mode the panels are hidden, and their keys do nothing.
+            ...(readMode.on ? {} : { ...panels.actions, [OPEN_LEFT_PANEL]: { run: revealLeft } }),
             ...history.actions,
             ...reading.actions,
             ...printing.actions,
-            [OPEN_LEFT_PANEL]: { run: revealLeft },
+            ...readMode.actions,
+            ...fullScreen.actions,
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
           }
@@ -419,6 +415,9 @@ export function PdfDocumentSurface({
       history.actions,
       reading.actions,
       printing.actions,
+      readMode.on,
+      readMode.actions,
+      fullScreen.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -433,6 +432,7 @@ export function PdfDocumentSurface({
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (printing.onKey(event)) return;
     if (typesText(event.target)) return;
+    if (readMode.onKey(event)) return;
     if (reading.onKey(event)) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     const key = event.key.toLowerCase();
@@ -477,6 +477,7 @@ export function PdfDocumentSurface({
         choices={ready ? viewChrome.choices : null}
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
+        bare={readMode.on ? { leave: 'Leave read mode', onLeave: readMode.leave } : null}
       />
       {ready ? (
         <PdfFileNotices
@@ -503,27 +504,32 @@ export function PdfDocumentSurface({
       {ready && marks ? (
         <OfficePanelLayout
           left={
-            <PdfLeftPanel
-              panels={panels}
-              tabId={tabId}
-              pages={ready.pages}
-              page={viewer.page}
-              engine={ready.engine}
-              drawer={layerView.drawer ?? ready.drawer}
-              marks={marks}
-              onGoTo={jump}
-              onFollow={links.follow}
-              onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
-              layerView={layerView}
-            />
+            readMode.on ? null : (
+              <PdfLeftPanel
+                panels={panels}
+                tabId={tabId}
+                pages={ready.pages}
+                page={viewer.page}
+                engine={ready.engine}
+                drawer={layerView.drawer ?? ready.drawer}
+                marks={marks}
+                onGoTo={jump}
+                onFollow={links.follow}
+                onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
+                layerView={layerView}
+              />
+            )
           }
           right={
-            find.open && find.listOpen ? (
+            !readMode.on && find.open && find.listOpen ? (
               <PdfFindResults find={find} pages={ready.pages} focusNonce={0} />
             ) : null
           }
         >
-          <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          <div
+            ref={setColumn}
+            className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-(--office-ground)"
+          >
             <PdfPages
               attach={viewer.attach}
               layout={viewer.layout}
@@ -552,19 +558,21 @@ export function PdfDocumentSurface({
               view={viewer.viewStore}
             />
             {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
-            <PdfPageBar
-              page={viewer.page}
-              labels={labels}
-              atFirst={viewer.atFirst}
-              atLast={viewer.atLast}
-              zoom={viewer.view.zoom}
-              scale={viewer.scale}
-              onPrevious={() => viewer.turn(-1)}
-              onNext={() => viewer.turn(1)}
-              onGoTo={jump}
-              onZoom={viewer.zoomTo}
-              pageField={pageField}
-            />
+            {fullScreen.on ? null : (
+              <PdfPageBar
+                page={viewer.page}
+                labels={labels}
+                atFirst={viewer.atFirst}
+                atLast={viewer.atLast}
+                zoom={viewer.view.zoom}
+                scale={viewer.scale}
+                onPrevious={() => viewer.turn(-1)}
+                onNext={() => viewer.turn(1)}
+                onGoTo={jump}
+                onZoom={viewer.zoomTo}
+                pageField={pageField}
+              />
+            )}
           </div>
         </OfficePanelLayout>
       ) : null}

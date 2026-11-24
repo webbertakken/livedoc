@@ -91,6 +91,8 @@ reports. What each part is, its copy and who sees it:
   never shrinks, the name shortens with an ellipsis while not focused.
 - Every icon control is a 32 px round button (44 px on touch) with its name as tooltip and accessible name.
 - On a phone the title row is one line and the menus move into More ([Phone and tablet](#phone-and-tablet)).
+- A kind may draw the title row **bare** (a PDF's Read mode): the name line alone, with one button to leave, in
+  place of the menu bar, the toolbar and More; items' keys and the tool finder still work, a menu's access key not.
 
 ## Menu bar
 

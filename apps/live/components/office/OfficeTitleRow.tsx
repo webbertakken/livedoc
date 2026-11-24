@@ -56,6 +56,9 @@ export type OfficeFileOpening = {
   onFile: (file: File) => void;
 };
 
+/** A bare title row's one button: its words ("Leave read mode") and what it does. */
+export type OfficeBareTitleRow = { leave: string; onLeave: () => void };
+
 export function OfficeTitleRow({
   name,
   format,
@@ -82,6 +85,7 @@ export function OfficeTitleRow({
   refresh,
   mode = null,
   contextMenu = null,
+  bare = null,
 }: {
   name: string;
   // The format's pill (".ODT") and what it is called ("OpenDocument format").
@@ -123,6 +127,8 @@ export function OfficeTitleRow({
   mode?: OfficeModeChoice | null;
   // The document's context menu (office-shell.md "Context menus"); none: the browser's own.
   contextMenu?: OfficeContextMenuSource | null;
+  // The title row drawn bare (office-shell.md "Title row"): the name line and one button to leave; keys still heard.
+  bare?: OfficeBareTitleRow | null;
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   // A phone (office-shell.md "Phone and tablet"): the toolbar is one scrolling row, the menus live in More.
@@ -224,8 +230,10 @@ export function OfficeTitleRow({
       },
     };
     if (openAtCaret) out[CONTEXT_MENU] = openAtCaret;
-    for (const menu of menus)
-      out[accessKeyOf(menu.id)] = () => onOpenMenu({ id: menu.id, focus: 'first' });
+    // A bare row has no menu bar to open a menu in.
+    if (!bare)
+      for (const menu of menus)
+        out[accessKeyOf(menu.id)] = () => onOpenMenu({ id: menu.id, focus: 'first' });
     // A row of several items (`[1-6]`) runs the one its keys' argument names.
     const byArg: Record<string, Record<string, () => void>> = {};
     // Keys left to the browser (Copy, Paste) are never bound: its own clipboard events reach the kind. Nor are keys the
@@ -255,7 +263,7 @@ export function OfficeTitleRow({
       if (action && !action.disabled) out[id] ??= () => action.run();
     }
     return out;
-  }, [menus, items, allActions, onOpenMenu, openAtCaret, catalogue, toolbar, shortcuts]);
+  }, [menus, items, allActions, onOpenMenu, openAtCaret, catalogue, toolbar, shortcuts, bare]);
   useOfficeShortcuts({ scope: keyScope, rows: shortcuts, runs });
 
   return (
@@ -308,7 +316,18 @@ export function OfficeTitleRow({
               </p>
             ) : null}
           </div>
-          <div className="-ml-0.5 phone:hidden">
+          {bare ? (
+            <div className="py-0.5">
+              <button
+                type="button"
+                onClick={bare.onLeave}
+                className="relative rounded px-2 py-1 text-sm font-medium touch-target-y text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+              >
+                {bare.leave}
+              </button>
+            </div>
+          ) : null}
+          <div className="-ml-0.5 phone:hidden" hidden={bare !== null}>
             <OfficeMenuBar
               menus={menus}
               actions={allActions}
@@ -340,7 +359,7 @@ export function OfficeTitleRow({
             <OfficeModeSwitch {...mode} />
           </div>
         ) : null}
-        <div className="self-center">
+        <div className="self-center" hidden={bare !== null}>
           <OfficePhoneMore
             menus={menus}
             chrome={chrome}
@@ -349,7 +368,7 @@ export function OfficeTitleRow({
           />
         </div>
       </div>
-      {bar.length > 0 ? (
+      {bar.length > 0 && !bare ? (
         <OfficeToolbar
           groups={bar}
           actions={allActions}

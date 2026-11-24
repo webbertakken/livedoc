@@ -83,6 +83,9 @@ export const ORGANISE_PAGES = 'organise-pages';
 export const ROTATE_VIEW_CLOCKWISE = 'rotate-view-clockwise';
 export const ROTATE_VIEW_COUNTERCLOCKWISE = 'rotate-view-counterclockwise';
 export const DARK_PAGES = 'dark-pages';
+/** View > Read mode and Full screen: one person's room for the pages (reading-surface.md "Read mode", "Full screen"). */
+export const READ_MODE = 'read-mode';
+export const FULL_SCREEN = 'full-screen';
 /** View > Page display, Zoom and Go to: one person's view (reading-surface.md "The pages", "The page bar"). */
 export const PAGE_DISPLAY_SINGLE = 'page-display-single-page';
 export const PAGE_DISPLAY_CONTINUOUS = 'page-display-continuous';
@@ -246,8 +249,13 @@ export const PDF_MENUS: OfficeCatalogue = [
     item('show-marks', 'Marks', 'view', { ...CHECK, keywords: ['annotations', 'hide'] }),
     item(DARK_PAGES, 'Dark pages', 'view', { ...CHECK, keywords: ['night', 'invert'] }),
     SEPARATOR,
-    item('read-mode', 'Read mode', 'view', CHECK),
-    item('full-screen', 'Full screen', 'view', { ...CHECK, keywords: ['present'] }),
+    item(READ_MODE, 'Read mode', 'view', { ...BUILT, ...CHECK, shortcut: READ_MODE }),
+    item(FULL_SCREEN, 'Full screen', 'view', {
+      ...BUILT,
+      ...CHECK,
+      shortcut: FULL_SCREEN,
+      keywords: ['present'],
+    }),
     SEPARATOR,
     submenu('go-to', 'Go to', [
       item(GO_TO_FIRST_PAGE, 'First page', 'view', BUILT),
