@@ -3,7 +3,15 @@
 // the file's own, so under Dark pages it takes the step's colour and lightens the dark page rather than multiplying.
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { DarkPages, Mark, PageName, type PageMatrix, type Quad } from '@livedoc/pdf-documents';
+import {
+  DarkPages,
+  MARK_FACE_DATA,
+  Mark,
+  MarkFaceSlices,
+  PageName,
+  type PageMatrix,
+  type Quad,
+} from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { markFacesStack } from '@/lib/pdf-document/pdf-mark-faces';
 import { TYPED_FACES } from '@/lib/pdf-document/pdf-typed';
@@ -196,7 +204,7 @@ describe('a Text or a Callout over a page', () => {
   });
 
   // marks.md "Words in every script": a mark Helvetica cannot write is drawn in the mark faces, as shaped.
-  it('draws a mark Helvetica cannot write in the mark faces, unheld, a right-to-left line from its right', () => {
+  it('draws a mark Helvetica cannot write in the mark faces, unheld, a right-to-left line from its right', async () => {
     const add = vi.fn();
     vi.stubGlobal('FontFace', class {});
     Object.defineProperty(document, 'fonts', { value: { add }, configurable: true });
@@ -208,7 +216,9 @@ describe('a Text or a Callout over a page', () => {
     expect(lines[1]!.getAttribute('direction')).toBe('rtl');
     // A script whose family has no bold is drawn regular, as the bake sets it, never made bold by the browser.
     expect((lines[0]!.parentElement as unknown as SVGGElement).style.fontSynthesis).toBe('none');
-    expect(add).toHaveBeenCalled();
+    // Its region's slices are added once their table arrives.
+    const slices = (await MarkFaceSlices.load('sc')).length;
+    await vi.waitFor(() => expect(add).toHaveBeenCalledTimes(MARK_FACE_DATA.length + slices));
     Reflect.deleteProperty(document, 'fonts');
     vi.unstubAllGlobals();
   });
