@@ -612,7 +612,8 @@ describe('changing a sheet', () => {
       bg: '#ffaa00',
     });
     expect(formatPatchOf({ fontSize: 15 })).toEqual({ fs: 15 });
-    expect(formatPatchOf({ fontSize: 97 })).toBeNull();
+    expect(formatPatchOf({ fontSize: 400 })).toEqual({ fs: 400 });
+    expect(formatPatchOf({ fontSize: 401 })).toBeNull();
   });
 });
 
