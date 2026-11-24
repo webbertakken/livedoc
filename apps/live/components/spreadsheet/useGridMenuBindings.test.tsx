@@ -24,6 +24,7 @@ const actions = {
 } as unknown as SheetActions;
 const setMenu = vi.fn();
 const openCustomFormat = vi.fn();
+const openCustomCurrency = vi.fn();
 const open = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/open-hyperlink', () => ({ openHyperlink: open }));
 
@@ -53,7 +54,9 @@ function bound(
   const wrapper = ({ children }: { children: ReactNode }) => (
     <OfficeBindingsContext.Provider value={channel}>{children}</OfficeBindingsContext.Provider>
   );
-  renderHook(() => useGridMenuBindings(actions, { openCustomFormat }), { wrapper });
+  renderHook(() => useGridMenuBindings(actions, { openCustomFormat, openCustomCurrency }), {
+    wrapper,
+  });
   recent = channel.get().recentCodes;
   return channel.get().actions;
 }
@@ -112,6 +115,8 @@ describe('useGridMenuBindings', () => {
     expect(setMenu).toHaveBeenCalledWith({ kind: 'resize', axis: 'c', from: 1, to: 1 });
     b['custom-number-format']!.run();
     expect(openCustomFormat).toHaveBeenCalledOnce();
+    b['custom-currency']!.run();
+    expect(openCustomCurrency).toHaveBeenCalledOnce();
     b['open-link']!.run();
     expect(open).toHaveBeenCalledWith('https://example.com/');
   });

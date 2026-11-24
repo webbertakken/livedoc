@@ -87,3 +87,29 @@ test('Custom Number Formats applies a code with a colour and refuses one it cann
   await page.keyboard.press('Escape');
   expectNoPageErrors(pageErrors);
 });
+
+test('Custom Currencies finds a currency and applies its format', async ({ page, pageErrors }) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  await nameBox.fill('A1');
+  await nameBox.press('Enter');
+  await page.keyboard.type('1000.12');
+  await page.keyboard.press('Enter');
+  await nameBox.fill('A1');
+  await nameBox.press('Enter');
+
+  await (await officeMenuItem(page, ['Format', 'Number', 'Custom Currency'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Custom Currencies' });
+  await dialog.getByRole('searchbox', { name: 'Search currencies' }).fill('euro');
+  await dialog.getByText('Euro', { exact: true }).click();
+  await dialog.getByText('1,000.12€', { exact: true }).click();
+  await page.screenshot({
+    path: test.info().outputPath('custom-currency.png'),
+    animations: 'disabled',
+  });
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(grid(page).getByText('1,000.12€', { exact: true })).toBeVisible();
+  expectNoPageErrors(pageErrors);
+});

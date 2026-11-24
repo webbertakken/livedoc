@@ -53,6 +53,8 @@ export type GridMenuActions = {
   openLink: (url: string) => void;
   // Format › Number › Custom Number Format's dialog (formatting.md "Number formats").
   openCustomFormat: () => void;
+  // Format › Number › Custom Currency's dialog.
+  openCustomCurrency: () => void;
 };
 
 /** An axis's groups as the menus read them: any in the selection's lines, any collapsed, any expanded. */
@@ -196,6 +198,7 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     strikethrough: run(() => act.toggle('st'), { checked: !!f?.st }),
     'clear-formatting': run(() => act.clear('formats')),
     'custom-number-format': run(act.openCustomFormat),
+    'custom-currency': run(act.openCustomCurrency),
     ...Object.fromEntries(
       port.recentCodes.map((nc, i) => [
         recentFormatItemId(i),

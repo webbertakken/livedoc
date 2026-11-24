@@ -365,7 +365,7 @@ const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
       ),
       ...recentEntries(recentCodes),
       SEPARATOR,
-      item('custom-currency', 'Custom Currency', 'edit'),
+      built('custom-currency', 'Custom Currency', 'edit'),
       item('custom-date-and-time', 'Custom Date and Time', 'edit'),
       built('custom-number-format', 'Custom Number Format', 'edit'),
     ]),

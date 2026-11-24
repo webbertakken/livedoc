@@ -19,7 +19,7 @@ import { usePublishedBindings } from './office-bindings-channel';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 
 /** The dialogs the open sheet hosts that its menu items open. */
-export type GridDialogs = { openCustomFormat: () => void };
+export type GridDialogs = { openCustomFormat: () => void; openCustomCurrency: () => void };
 
 export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs): GridOffice {
   const c = useSheetController();
@@ -56,6 +56,7 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
       resize: (axis, from, to) => c.setMenu({ kind: 'resize', axis, from, to }),
       openLink: openHyperlink,
       openCustomFormat: dialogs.openCustomFormat,
+      openCustomCurrency: dialogs.openCustomCurrency,
     },
   });
   const published = { ...office, actions: { ...office.actions, ...sheetBarBindings(bar) } };
