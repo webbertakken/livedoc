@@ -11,17 +11,20 @@ import {
 } from '@/components/sheets/sheet-ui-test-utils';
 import type { SheetActions } from '@/components/sheets/useSheetActions';
 import { cellKey } from '@livedoc/sheets';
-import { useCustomFormatDialog } from './useCustomFormatDialog';
+import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 
 beforeAll(stubResizeObserver);
 
-// The menu item's press, as a button the test presses.
+// The menu items' presses, as buttons the test presses.
 function Host({ actions }: { actions: SheetActions }) {
-  const { open, dialog } = useCustomFormatDialog(actions);
+  const { openCustomFormat, openCustomCurrency, dialog } = useNumberFormatDialogs(actions);
   return (
     <>
-      <button type="button" onClick={open}>
+      <button type="button" onClick={openCustomFormat}>
         Custom Number Format
+      </button>
+      <button type="button" onClick={openCustomCurrency}>
+        Custom Currency
       </button>
       {dialog}
     </>
@@ -30,7 +33,7 @@ function Host({ actions }: { actions: SheetActions }) {
 const openDialog = () =>
   fireEvent.click(screen.getByRole('button', { name: 'Custom Number Format' }));
 
-describe('useCustomFormatDialog', () => {
+describe('useNumberFormatDialogs', () => {
   it('opens on the active cell, applies the code to the selection, and closes', async () => {
     const h = await makeSheet({ cells: { A1: '-3', A2: '4' } });
     renderSheet(h, ({ actions }) => <Host actions={actions} />, { at: 'A1:A2' });
@@ -59,5 +62,26 @@ describe('useCustomFormatDialog', () => {
     expect(
       sheet.cells.get(cellKey(sheet.layout.rows[0]!, sheet.layout.cols[0]!))?.format,
     ).toBeUndefined();
+  });
+
+  // formatting.md "Number formats" (D195): Custom Currency's pick formats the selection as Custom.
+  it('applies a currency\u2019s format from Custom Currencies', async () => {
+    const h = await makeSheet({ cells: { A1: '1000.12' } });
+    renderSheet(h, ({ actions }) => <Host actions={actions} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Custom Currency' }));
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search currencies' }), {
+      target: { value: 'EUR' },
+    });
+    fireEvent.click(screen.getByRole('radio', { name: /^Euro/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^1,000\.12€/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    const sheet = h.store.sheet(SHEET_ID)!;
+    expect(
+      sheet.cells.get(cellKey(sheet.layout.rows[0]!, sheet.layout.cols[0]!))?.format,
+    ).toMatchObject({
+      nf: 'custom',
+      nc: '#,##0.00"€"',
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

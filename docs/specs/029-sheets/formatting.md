@@ -45,6 +45,12 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 - **Custom Date and Time**: building blocks (Day, Month, Year, Hour, Minute, Second, AM/PM) each with its variants,
   arranged by the person.
 - **Custom Currency**: a searchable list of currencies, each with its symbol placements.
+  - The dialog is the shell's, titled **Custom Currencies**: a search field, the currencies the browser knows (each
+    its name in the workbook's locale, its ISO code and its symbol), sorted by name, matched by any of the three.
+  - Picking one shows its formats, each with its preview of 1000.12: the symbol before or after, with two decimals
+    or none (`"€"#,##0.00`, `"€"#,##0`, `#,##0.00"€"`, `#,##0"€"`) (default, D195).
+  - **Apply** formats the selection with the format's code as Custom, one undo step; nothing is picked as it opens,
+    and Apply is dimmed until a currency and a format are (default, D196).
 - A code's **sections** are chosen as Google's are: with no condition, the first for a positive number, the second for
   a negative (its minus left to the code), the third for zero, the fourth for text. With a condition (`[<1000]`,
   `[>=0]`, `[=1]`, `[<>0]`), the first section whose condition holds draws the number, a section with none takes
@@ -132,6 +138,9 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   `dd/mm/yyyy`, `hh:mm`, `[h]:mm:ss`, `"Total: "@` (default).
 - **D194** The Number menu's recently used: The Custom codes the open sheet's cells hold, up to five, the most cells
   first; nothing new is saved for them (default).
+- **D195** Custom Currencies' formats: The symbol before or after, with two decimals or none (default).
+- **D196** Custom Currencies as it opens: Nothing picked, the first format ready once a currency is; Apply dimmed
+  until then (default).
 
 ## Telemetry
 

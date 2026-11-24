@@ -42,6 +42,7 @@ const actions = (): GridMenuActions => ({
   resize: vi.fn(),
   openLink: vi.fn(),
   openCustomFormat: vi.fn(),
+  openCustomCurrency: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -282,10 +283,12 @@ describe('gridMenuBindings', () => {
     expect(gridOffice(p).recentCodes).toEqual(['0.0', '#,##0']);
   });
 
-  it('opens the Custom Number Formats dialog', () => {
+  it('opens the Custom Number Formats and Custom Currencies dialogs', () => {
     const p = port();
     gridMenuBindings(p)['custom-number-format']!.run();
     expect(p.act.openCustomFormat).toHaveBeenCalledOnce();
+    gridMenuBindings(p)['custom-currency']!.run();
+    expect(p.act.openCustomCurrency).toHaveBeenCalledOnce();
   });
 
   it('aligns and wraps, the grid’s defaults clearing the cell’s own', () => {

@@ -39,7 +39,7 @@ import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { SpreadsheetFullScreenProvider, useSpreadsheetFullScreen } from './spreadsheet-full-screen';
 import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
 import { useGridMenuBindings } from './useGridMenuBindings';
-import { useCustomFormatDialog } from './useCustomFormatDialog';
+import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import {
   SpreadsheetZoomProvider,
   useSpreadsheetZoom,
@@ -343,8 +343,8 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const pointRef = useFormulaPointing(c, input);
   const zoom = useSpreadsheetZoomScale();
   const surfaceKeys = useSpreadsheetSurfaceKeys();
-  const customFormat = useCustomFormatDialog(actions);
-  const office = useGridMenuBindings(actions, { openCustomFormat: customFormat.open });
+  const formatDialogs = useNumberFormatDialogs(actions);
+  const office = useGridMenuBindings(actions, formatDialogs);
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
   useEffect(() => {
@@ -380,7 +380,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
         />
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />
-      {customFormat.dialog}
+      {formatDialogs.dialog}
       <SheetBarSummary />
     </div>
   );
