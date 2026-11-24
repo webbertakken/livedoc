@@ -63,6 +63,16 @@ export const PDF_SHAPE_MIN_PT = 2;
 export const PDF_ARROW_HEAD_WIDTHS = 4;
 /** (default) An arrowhead's side at the least, in points (marks.md "Limits"). Safe range: 4 to 10. */
 export const PDF_ARROW_HEAD_MIN_PT = 6;
+/** (default) A Text box opened by a press, in points, before it narrows to its words (marks.md "Limits"). Safe
+ *  range: 144 to 360. */
+export const PDF_TEXT_BOX_WIDTH_PT = 216;
+/** (default) Room between a Text's or a Callout's box and its words, in points. Safe range: 0 to 6. */
+export const PDF_TEXT_PADDING_PT = 2;
+/** (default) The sizes a Text's or a Callout's words are set at, in points. */
+export const PDF_TEXT_SIZE_MIN_PT = 4;
+export const PDF_TEXT_SIZE_MAX_PT = 144;
+/** (default) How far a Callout's knee stands out from its box, in points. Safe range: 6 to 24. */
+export const PDF_CALLOUT_KNEE_PT = 12;
 /** (default) Past it the stored file is replaced (saving.md "Limits"); the room refuses a state beyond it. */
 export const PDF_LIVE_CHANGES_MAX_BYTES = 4_194_304;
 /** (default) Past it an idle Editor's surface replaces the stored file: three quarters of the ceiling, so ordinary use

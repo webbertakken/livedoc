@@ -240,3 +240,36 @@ describe('a line’s and a shape’s drawing', () => {
       expect(((x - 60) / 50) ** 2 + ((y - 45) / 25) ** 2).toBeCloseTo(1);
   });
 });
+
+// marks.md "Making a mark": a Callout's line runs from what is meant, an open arrowhead there, through its knee to its
+// box's side; the line and the box's border are 1 point. A Text draws only its words.
+describe('a Text’s and a Callout’s drawing', () => {
+  it('draws nothing for a Text but its words', () => {
+    expect(MarkDrawing.of({ kind: 'text', rect: [10, 20, 110, 70] })).toEqual({
+      fills: [],
+      strokes: [],
+    });
+  });
+
+  it('draws a Callout’s line, its head at what is meant, and its box’s border', () => {
+    const { fills, strokes } = MarkDrawing.of({
+      kind: 'callout',
+      rect: [100, 20, 200, 70],
+      callout: [10, 45, 88, 45, 100, 45],
+    });
+    expect(fills).toEqual([]);
+    expect(strokes).toHaveLength(3);
+    const [line, head, border] = strokes;
+    expect(line).toMatchObject({ width: PDF_MARK_LINE_PT, closed: false });
+    expect(line!.points).toEqual([
+      { x: 10, y: 45 },
+      { x: 88, y: 45 },
+      { x: 100, y: 45 },
+    ]);
+    // The head's sides lean back from the tip towards the knee.
+    expect(head!.points[1]).toEqual({ x: 10, y: 45 });
+    expect(head!.points[0]!.x).toBeGreaterThan(10);
+    expect(border).toMatchObject({ width: PDF_MARK_LINE_PT, closed: true });
+    expect(border!.points).toHaveLength(4);
+  });
+});

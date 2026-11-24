@@ -9,7 +9,11 @@ export {
   Mark,
   SHAPE_MARK_KINDS,
   TEXT_MARK_KINDS,
+  TYPED_MARK_KINDS,
   type Box,
+  type CalloutInput,
+  type CalloutLine,
+  type CalloutMark,
   type DrawingInput,
   type DrawingMark,
   type HighlightInput,
@@ -23,8 +27,12 @@ export {
   type ShapeMark,
   type ShapeMarkKind,
   type Stroke,
+  type TextBoxInput,
+  type TextBoxMark,
   type TextMark,
   type TextMarkKind,
+  type TypedMark,
+  type TypedMarkKind,
 } from './mark';
 export {
   MarkDrawing,
@@ -32,7 +40,10 @@ export {
   type LineShape,
   type MarkShape,
   type MarkStroke,
+  type TypedShape,
 } from './mark-drawing';
+export { TYPED_LINE_HEIGHT, TypedLayout, type PlacedLine, type TypedLine } from './typed-layout';
+export { Helvetica, HELVETICA_STAND_IN } from './helvetica';
 export {
   PDF_ROOTS,
   PdfLiveChanges,

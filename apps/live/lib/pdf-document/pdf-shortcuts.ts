@@ -166,7 +166,7 @@ export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
 ];
 
 /** The tools' own keys, heard on the pages and never in a text field ("Tools"). */
-export const PDF_TOOL_KEYS = { select: 'v', highlight: 'u', drawing: 'd' } as const;
+export const PDF_TOOL_KEYS = { select: 'v', highlight: 'u', drawing: 'd', text: 'x' } as const;
 
 /** The pages' own plain keys (keyboard-shortcuts.md "Reading"), by `KeyboardEvent.key`. */
 export const PDF_PAGE_KEYS = {

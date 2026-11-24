@@ -2,11 +2,12 @@
 
 **Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
 Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection; the
-Drawing, made by freehand strokes; and the Line, Arrow, Rectangle and Ellipse, made by a drag; each live in the document's changes once made, drawn over the page, written into
-the file as standard annotations under their own ids and read back by them; each tool's colour, chosen from the one
-colour picker and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A
-stroke shown to others as it is drawn, a tool's other looks, snapping, every other kind made here, changing a mark,
-and the room's own-marks check are not built.
+Drawing, made by freehand strokes; the Line, Arrow, Rectangle and Ellipse, made by a drag; and the Text and Callout,
+typed onto the page; each live in the document's changes once made, drawn over the page, written into the file as
+standard annotations under their own ids and read back by them; each tool's colour, chosen from the one colour picker
+and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A stroke shown to
+others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
+snapping, every other kind made here, changing a mark, and the room's own-marks check are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -90,8 +91,28 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **The shape tools** are Line, Arrow, Rectangle and Ellipse (Insert > Shape); the toolbar's Shape holds them as
   Highlight holds the text tools ([Reading surface](reading-surface.md#the-toolbar)); ⇧D takes the next of them in
   that order, and from any other tool the one the Shape control shows `(default)`.
-- A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it. Its writing
-  direction is taken from what is typed, as a [field](fields.md#filling)'s is `(default)`.
+- **A Text** is made with the Text tool in hand: a press opens a box `PDF_TEXT_BOX_WIDTH_PT` wide whose top left is
+  the press, narrowed to its longest line once typed; a drag opens a box as wide as the drag and at least as high
+  `(default)`. A box opened where the page leaves too little room is moved onto it.
+- **A Callout** is made with the Callout tool in hand: a press on what is meant, then a press where its words go; the
+  box opens there, its top left at that press, or its top right where what is meant lies to the right `(default)`.
+  Escape after the first press, or a press on another page, lets the first go.
+- **A Callout's line** runs from what is meant, ending in an open arrowhead there, to a knee `PDF_CALLOUT_KNEE_PT`
+  out from the middle of the box's side facing it, then on to that side; the line and the box's border are 1 point
+  `(default)`.
+- A new **Note**, **Text** or **Callout** opens for typing at once. Enter starts a new line; Escape, or a press
+  anywhere else, ends the typing, and a press that ends it makes nothing else `(default)`. Ended with nothing typed
+  but spaces, it is removed and no mark is made; else the mark is made, one step of undo.
+- Its writing direction is taken from what is typed, as a [field](fields.md#filling)'s is: a paragraph whose first
+  letter with a direction reads right to left is set against the box's right side `(default)`.
+- **The words wrap** at the box's width, a word wider than the box broken where it meets the side, and the box grows
+  down to hold them; a box that would grow past the page's foot is moved up onto it `(default)`.
+- **Text's and Callout's first look** is the colour picker's strong Red for light paper, Helvetica at 12 points, lines
+  1.2 times the size apart, `PDF_TEXT_PADDING_PT` inside the box, with no fill `(default)`.
+- **The typing tools** are Text and Callout (Insert menu); the toolbar's Text holds both as Highlight holds the text
+  tools; X takes the one the Text control shows, and ⇧X the other `(default)`.
+- The words are upright on the page as the file has it, so in a turned view they are typed turned with the page
+  `(default)`.
 - **Snapping**: a line or shape snaps to the page's own lines and edges within `PDF_SNAP_PX`; ⌘ held turns snapping
   off for the drag.
 - A mark may not leave its page: a drag past the edge stops at it, so a line or shape dragged off the page ends on its
@@ -157,6 +178,12 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **A Line** is written with its two ends as `L` and an Arrow's head as `LE` `OpenArrow`; **a Rectangle** and
   **an Ellipse** with `Rect` the box grown by half the line's width, so the line falls where it was drawn. Their
   appearance streams are drawn from what the page shows of them, line for line.
+- **A Text** is written as a `FreeText` with `Contents` its words, `DA` its font, size and colour, and `Rect` its
+  box; **a Callout** as a `FreeText` with `IT` `FreeTextCallout`, `CL` its line's three points, `LE` `OpenArrow`,
+  `Rect` the box and the line together and `RD` the box within it. Their appearance streams set the words as the page
+  shows them, line for line, in Helvetica, the standard's own face every reader holds.
+- A character Helvetica cannot write (outside its Latin set) is kept whole in `Contents` and set in the appearance as
+  a question mark, until LiveDoc writes a face for every script `(default)`.
 - **Read back the same**: a mark LiveDoc wrote and another reader changed is read by its `NM`; one without `NM` gets
   an id from its object number.
 - **What is read of a mark a file holds**: its id, the file's own word for its kind, its rectangle and the
@@ -195,6 +222,11 @@ written into the file as a standard annotation, so any reader shows it. The rese
 | `PDF_SHAPE_MIN_PT`          | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6         |
 | `PDF_ARROW_HEAD_WIDTHS`     | 4                   | `(default)` An arrowhead's side, in line widths; safe range 3 to 6                             |
 | `PDF_ARROW_HEAD_MIN_PT`     | 6                   | `(default)` An arrowhead's side at the least, in points; safe range 4 to 10                    |
+| `PDF_TEXT_BOX_WIDTH_PT`     | 216                 | `(default)` A Text box opened by a press, in points, before it narrows; safe range 144 to 360  |
+| `PDF_TEXT_PADDING_PT`       | 2                   | `(default)` Room between a Text's or a Callout's box and its words, in points; safe 0 to 6     |
+| `PDF_TEXT_SIZE_MIN_PT`      | 4                   | `(default)` The smallest size a Text's or a Callout's words are set at, in points              |
+| `PDF_TEXT_SIZE_MAX_PT`      | 144                 | `(default)` The largest size a Text's or a Callout's words are set at, in points               |
+| `PDF_CALLOUT_KNEE_PT`       | 12                  | `(default)` How far a Callout's knee stands out from its box, in points; safe range 6 to 24    |
 | `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
 | `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4          |
 | `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
@@ -229,7 +261,7 @@ a mark another person made is refused with `not_your_mark`.
   a stamp's name or a file's name.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
-  Drawing).
+  Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).
 
 ## Errors
 

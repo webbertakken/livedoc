@@ -1,7 +1,8 @@
 // How a mark is drawn (docs/specs/035-pdf-documents/marks.md "Making a mark": How a text mark is drawn; A Drawing),
 // in page space: a text mark each glyph quadrilateral on its own, a fill for a Highlight, a line for the others; a
 // Drawing its strokes, round; a Line from end to end, an Arrow with an open head; a Rectangle round its box and an
-// Ellipse within it, each closed. Pure geometry, so the surface's overlay, the canvas pictures (a thumbnail, a print)
+// Ellipse within it, each closed; a Callout its line, its head at what is meant, and its box's border (a Text's words
+// and a Callout's are TypedLayout's). Pure geometry, so the surface's overlay, the canvas pictures (a thumbnail, a print)
 // and the appearance a bake writes draw one mark the same way.
 import type { PagePoint } from './engine-contract';
 import {
@@ -11,23 +12,28 @@ import {
   PDF_SQUIGGLE_STEP_PT,
 } from './limits';
 import type {
+  CalloutMark,
   DrawingMark,
   LineMark,
   Quad,
   ShapeMark,
   Stroke,
   TextMark,
+  TextBoxMark,
   TextMarkKind,
 } from './mark';
 
 /** What of a mark its drawing reads. */
 export type LineShape = Pick<LineMark, 'kind' | 'line' | 'width'>;
 export type BoxShape = Pick<ShapeMark, 'kind' | 'rect' | 'width'>;
+export type TypedShape =
+  Pick<TextBoxMark, 'kind' | 'rect'> | Pick<CalloutMark, 'kind' | 'rect' | 'callout'>;
 export type MarkShape =
   | Pick<TextMark, 'kind' | 'quads'>
   | Pick<DrawingMark, 'kind' | 'strokes' | 'width'>
   | LineShape
-  | BoxShape;
+  | BoxShape
+  | TypedShape;
 
 /** A line through its points, `width` points wide; `round` its ends and corners (a Drawing's); `closed` back to its
  *  first point, its last corner joined as the others are (a Rectangle's, an Ellipse's). */
@@ -147,6 +153,29 @@ function shapeDrawing({ kind, rect: [left, bottom, right, top], width }: BoxShap
   return { fills: [], strokes: [line(outline, width, true)] };
 }
 
+/** A Callout's line through its knee, an open head at what is meant, and its box's border; a Text's nothing. */
+function typedDrawing(mark: TypedShape): MarkDrawing {
+  if (mark.kind === 'text') return { fills: [], strokes: [] };
+  const [tipX, tipY, kneeX, kneeY, endX, endY] = mark.callout;
+  const tip = { x: tipX, y: tipY };
+  const knee = { x: kneeX, y: kneeY };
+  const [left, bottom, right, top] = mark.rect;
+  const border = [
+    { x: left, y: bottom },
+    { x: right, y: bottom },
+    { x: right, y: top },
+    { x: left, y: top },
+  ];
+  return {
+    fills: [],
+    strokes: [
+      line([tip, knee, { x: endX, y: endY }], PDF_MARK_LINE_PT),
+      line(head(knee, tip, PDF_MARK_LINE_PT), PDF_MARK_LINE_PT),
+      line(border, PDF_MARK_LINE_PT, true),
+    ],
+  };
+}
+
 export const MarkDrawing = {
   /** What a mark draws, in page space. */
   of: (mark: MarkShape): MarkDrawing => {
@@ -161,6 +190,7 @@ export const MarkDrawing = {
         })),
       };
     if ('line' in mark) return lineDrawing(mark);
+    if (mark.kind === 'text' || mark.kind === 'callout') return typedDrawing(mark);
     if ('rect' in mark) return shapeDrawing(mark);
     const { kind, quads } = mark;
     return kind === 'highlight'

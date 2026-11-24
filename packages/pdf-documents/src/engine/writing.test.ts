@@ -276,6 +276,75 @@ describe('writing lines and shapes', () => {
   });
 });
 
+// marks.md "In the file": a Text is a FreeText with its words as Contents and an appearance of LiveDoc's own; a Callout
+// adds IT FreeTextCallout, CL, LE OpenArrow and RD. The engine draws no FreeText without an appearance.
+describe('writing a Text and a Callout', () => {
+  const red = '#d93025';
+  const base = (id: string, page: PageName) => ({
+    id,
+    page,
+    words: 'MMMM MMMM',
+    size: 36,
+    colour: red,
+    opacity: 1,
+    author: 'Ada',
+    createdAt: at,
+  });
+  /** How many of the drawn page's pixels in a box of page space are the mark's red (the page is 612 by 792). */
+  const redIn = (
+    drawn: { width: number; height: number; rgba: Uint8ClampedArray },
+    [left, bottom, right, top]: readonly [number, number, number, number],
+  ) => {
+    let count = 0;
+    for (let y = Math.round(bottom); y < top; y += 1)
+      for (let x = Math.round(left); x < right; x += 1) {
+        const at = ((drawn.height - y) * drawn.width + x) * 4;
+        const [r, g, b] = drawn.rgba.slice(at, at + 3);
+        if (r! > 180 && g! < 110 && b! < 110) count += 1;
+      }
+    return count;
+  };
+
+  it('writes each as a FreeText, read back by its id with its words, and drawn', async ({
+    skip,
+  }) => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const marks = [
+      Mark.text({ ...base('a-text', page), rect: [100, 300, 300, 400] })!,
+      Mark.callout({
+        ...base('a-callout', page),
+        words: 'Cost (net) \\ 5 €',
+        size: 12,
+        rect: [300, 500, 450, 530],
+        callout: [100, 600, 288, 515, 300, 515],
+      })!,
+    ];
+    const result = await bakeWith(marks.map((mark) => PdfChange.addMark(mark)));
+    expect(result.kind).toBe('addition');
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('/IT /FreeTextCallout');
+    expect(added).toContain('/LE /OpenArrow');
+    expect(added).toContain('/DA (/Helv 36 Tf');
+    expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
+    opened(await engine.open(result.bytes));
+    const read = await engine.fileMarks(0);
+    expect(read.map(({ id, subtype, words }) => [id, subtype, words])).toEqual([
+      ['a-callout', 'freetext', 'Cost (net) \\ 5 €'],
+      ['a-text', 'freetext', 'MMMM MMMM'],
+    ]);
+    // The Callout's Rect takes in its line, from what is meant to the box, grown by its 1-point line.
+    expect(read[0]!.rect[0]).toBeLessThan(100);
+    expect(read[0]!.rect[3]).toBeGreaterThan(600);
+    const drawn = (await engine.drawPage(0, 1))!;
+    // The Text's words, in its box; nothing outside it.
+    expect(redIn(drawn, [100, 300, 300, 400])).toBeGreaterThan(200);
+    expect(redIn(drawn, [100, 200, 300, 290])).toBe(0);
+    // The Callout's line, half way between what is meant and its knee.
+    expect(redIn(drawn, [190, 552, 198, 562])).toBeGreaterThan(0);
+  });
+});
+
 describe('writing a deletion of the file’s own mark', () => {
   it('removes the marks named, by their own name or by their object, as an addition', async () => {
     const file = marksPdf();

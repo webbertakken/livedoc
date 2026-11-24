@@ -8,6 +8,7 @@ import { readLocalStorageSafe, writeLocalStorageSafe } from '@/lib/local-storage
 import { DRAWING_LOOK } from './pdf-drawing';
 import { SHAPE_LOOK } from './pdf-shape';
 import { TEXT_MARK_LOOKS, type TextMarkLook } from './pdf-text-mark';
+import { TYPED_LOOK } from './pdf-typed';
 
 export type MarkLooks = Readonly<Record<MarkKind, TextMarkLook>>;
 
@@ -19,6 +20,8 @@ export const FIRST_LOOKS: MarkLooks = {
   arrow: SHAPE_LOOK,
   rectangle: SHAPE_LOOK,
   ellipse: SHAPE_LOOK,
+  text: TYPED_LOOK,
+  callout: TYPED_LOOK,
 };
 
 const LOOKS_KEY = 'livedoc:v2:pdf-mark-looks';

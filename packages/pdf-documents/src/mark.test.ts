@@ -5,6 +5,8 @@ import {
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
+  PDF_TEXT_SIZE_MAX_PT,
+  PDF_TEXT_SIZE_MIN_PT,
 } from './limits';
 import {
   Mark,
@@ -12,7 +14,9 @@ import {
   type HighlightInput,
   type LineInput,
   type Quad,
+  type CalloutInput,
   type ShapeInput,
+  type TextBoxInput,
 } from './mark';
 
 const QUAD: Quad = [72, 716, 300, 716, 72, 700, 300, 700];
@@ -191,5 +195,67 @@ describe('a line or a shape', () => {
     ['a width too thin', { width: PDF_MARK_WIDTH_MIN_PT / 2 }],
   ])('refuses a shape of %s', (_, over) => {
     expect(Mark.parse({ ...shape(over), kind: 'ellipse', modifiedAt: 0 })).toBeNull();
+  });
+});
+
+// marks.md "Kinds": a Text and a Callout are words typed straight onto the page, in a box; a Callout's line points.
+describe('a Text or a Callout', () => {
+  const text = (over: Record<string, unknown> = {}) => ({
+    id: 't1',
+    page: 'p:4',
+    rect: [100, 600, 200, 650],
+    words: 'Check this figure',
+    size: 12,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+    ...over,
+  });
+  const CALLOUT = [40, 500, 88, 625, 100, 625] as const;
+
+  it('makes a Text of its box and words, read back unchanged', () => {
+    const mark = Mark.text(text() as unknown as TextBoxInput)!;
+    expect(mark).toEqual({ ...text(), kind: 'text', modifiedAt: text().createdAt });
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(Mark.bounds(mark)).toEqual([100, 600, 200, 650]);
+    expect(Mark.isTyped(mark)).toBe(true);
+    expect(Mark.isText(mark)).toBe(false);
+  });
+
+  it('makes a Callout whose bounds take in its line', () => {
+    const mark = Mark.callout(text({ callout: CALLOUT }) as unknown as CalloutInput)!;
+    expect(mark.kind).toBe('callout');
+    expect(mark.callout).toEqual(CALLOUT);
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(Mark.bounds(mark)).toEqual([40, 500, 200, 650]);
+  });
+
+  it('cuts words past their limit rather than refusing the mark', () => {
+    const long = 'w'.repeat(PDF_MARK_TEXT_MAX_CHARS + 5);
+    expect(Mark.text(text({ words: long }) as unknown as TextBoxInput)!.words).toHaveLength(
+      PDF_MARK_TEXT_MAX_CHARS,
+    );
+  });
+
+  it.each([
+    ['no words', { words: '' }],
+    ['only spaces', { words: '  \n ' }],
+    ['words that are no string', { words: 42 }],
+    ['a size too small', { size: PDF_TEXT_SIZE_MIN_PT / 2 }],
+    ['a size too large', { size: PDF_TEXT_SIZE_MAX_PT + 1 }],
+    ['no box', { rect: undefined }],
+    ['a box turned inside out', { rect: [200, 600, 100, 650] }],
+    ['a box upside down', { rect: [100, 650, 200, 600] }],
+  ])('refuses a Text of %s', (_, over) => {
+    expect(Mark.parse({ ...text(over), kind: 'text', modifiedAt: 0 })).toBeNull();
+  });
+
+  it.each([
+    ['no line', {}],
+    ['a line of four numbers', { callout: [1, 2, 3, 4] }],
+    ['a line far off any page', { callout: [1e9, 2, 3, 4, 5, 6] }],
+  ])('refuses a Callout of %s', (_, over) => {
+    expect(Mark.parse({ ...text(over), kind: 'callout', modifiedAt: 0 })).toBeNull();
   });
 });

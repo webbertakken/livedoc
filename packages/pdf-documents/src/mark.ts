@@ -2,7 +2,7 @@
 // alone. A value object: made and checked here, held in the live changes one property a whole value, written into the
 // file as one annotation by the bake. The kinds join as they are built: the four that mark text, named by the file's
 // own word for each (`Highlight`, `Underline`, `StrikeOut`, `Squiggly`); the Drawing (`Ink`); the Line and the Arrow
-// (`Line`); the Rectangle and the Ellipse (`Square`, `Circle`).
+// (`Line`); the Rectangle and the Ellipse (`Square`, `Circle`); the Text and the Callout (`FreeText`).
 import {
   PDF_DRAWING_MAX_POINTS,
   PDF_MARK_MAX_QUADS,
@@ -10,6 +10,8 @@ import {
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
   PDF_MAX_COORDINATE,
+  PDF_TEXT_SIZE_MAX_PT,
+  PDF_TEXT_SIZE_MIN_PT,
 } from './limits';
 import { PageName } from './page-name';
 
@@ -26,14 +28,19 @@ export type Segment = readonly [number, number, number, number];
 /** An upright box in page space: `[left, bottom, right, top]`. */
 export type Box = readonly [number, number, number, number];
 
+/** A Callout's line, the file's `CL`: what is meant (the arrowhead's tip), the knee, and the end on the box's side. */
+export type CalloutLine = readonly [number, number, number, number, number, number];
+
 export const TEXT_MARK_KINDS = ['highlight', 'underline', 'strikeout', 'squiggly'] as const;
 export const LINE_MARK_KINDS = ['line', 'arrow'] as const;
 export const SHAPE_MARK_KINDS = ['rectangle', 'ellipse'] as const;
+export const TYPED_MARK_KINDS = ['text', 'callout'] as const;
 export const MARK_KINDS = [
   ...TEXT_MARK_KINDS,
   'drawing',
   ...LINE_MARK_KINDS,
   ...SHAPE_MARK_KINDS,
+  ...TYPED_MARK_KINDS,
 ] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
@@ -43,6 +50,8 @@ export type TextMarkKind = (typeof TEXT_MARK_KINDS)[number];
 export type LineMarkKind = (typeof LINE_MARK_KINDS)[number];
 /** The kinds made by a drag across a box. */
 export type ShapeMarkKind = (typeof SHAPE_MARK_KINDS)[number];
+/** The kinds whose words are typed straight onto the page. */
+export type TypedMarkKind = (typeof TYPED_MARK_KINDS)[number];
 
 type MarkBase = {
   readonly id: string;
@@ -88,7 +97,23 @@ export type ShapeMark = MarkBase & {
   readonly width: number;
 };
 
-export type Mark = TextMark | DrawingMark | LineMark | ShapeMark;
+type TypedBase = MarkBase & {
+  /** The box the words are set in. */
+  readonly rect: Box;
+  /** What was typed: never only spaces. */
+  readonly words: string;
+  /** The words' size in points. */
+  readonly size: number;
+};
+
+export type TextBoxMark = TypedBase & { readonly kind: 'text' };
+
+export type CalloutMark = TypedBase & { readonly kind: 'callout'; readonly callout: CalloutLine };
+
+/** A Text or a Callout: words typed straight onto the page. */
+export type TypedMark = TextBoxMark | CalloutMark;
+
+export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | TypedMark;
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 const COLOUR = /^#[0-9a-f]{6}$/;
@@ -110,6 +135,15 @@ const isStroke = (value: unknown): value is Stroke =>
 const isFour = (value: unknown): value is Segment =>
   Array.isArray(value) && value.length === 4 && value.every(isCoordinate);
 
+const isSix = (value: unknown): value is CalloutLine =>
+  Array.isArray(value) && value.length === 6 && value.every(isCoordinate);
+
+/** Words typed: a string with more than spaces in it. */
+const isWords = (value: unknown): value is string => typeof value === 'string' && /\S/.test(value);
+
+const isSize = (value: unknown): value is number =>
+  typeof value === 'number' && value >= PDF_TEXT_SIZE_MIN_PT && value <= PDF_TEXT_SIZE_MAX_PT;
+
 const isWidth = (value: unknown): value is number =>
   typeof value === 'number' && value >= PDF_MARK_WIDTH_MIN_PT && value <= PDF_MARK_WIDTH_MAX_PT;
 
@@ -124,6 +158,8 @@ export type HighlightInput = Omit<TextMark, 'kind' | 'modifiedAt'>;
 export type DrawingInput = Omit<DrawingMark, 'kind' | 'modifiedAt'>;
 export type LineInput = Omit<LineMark, 'kind' | 'modifiedAt'>;
 export type ShapeInput = Omit<ShapeMark, 'kind' | 'modifiedAt'>;
+export type TextBoxInput = Omit<TextBoxMark, 'kind' | 'modifiedAt'>;
+export type CalloutInput = Omit<CalloutMark, 'kind' | 'modifiedAt'>;
 
 /** What every kind holds, checked and bounded; null where any of it is not what a mark holds. */
 function baseOf(v: Record<string, unknown>): MarkBase | null {
@@ -187,6 +223,22 @@ function shapeOf(base: MarkBase, v: Record<string, unknown>): ShapeMark | null {
   };
 }
 
+function typedOf(base: MarkBase, v: Record<string, unknown>): TypedMark | null {
+  if (!isFour(v.rect) || !isWords(v.words) || !isSize(v.size)) return null;
+  const [left, bottom, right, top] = v.rect;
+  if (left > right || bottom > top) return null;
+  const typed = {
+    ...base,
+    rect: [left, bottom, right, top] as const,
+    words: v.words.slice(0, PDF_MARK_TEXT_MAX_CHARS),
+    size: v.size,
+  };
+  if (v.kind === 'text') return { ...typed, kind: 'text' };
+  if (!isSix(v.callout)) return null;
+  const [x1, y1, x2, y2, x3, y3] = v.callout;
+  return { ...typed, kind: 'callout', callout: [x1, y1, x2, y2, x3, y3] };
+}
+
 /** How each kind past the base is checked. */
 const KIND_OF: Readonly<
   Record<MarkKind, (base: MarkBase, v: Record<string, unknown>) => Mark | null>
@@ -200,13 +252,16 @@ const KIND_OF: Readonly<
   arrow: lineOf,
   rectangle: shapeOf,
   ellipse: shapeOf,
+  text: typedOf,
+  callout: typedOf,
 };
 
 /** Every x, y of a mark's geometry, flat. */
 function pointsAll(mark: Mark): readonly number[] {
   if (Mark.isText(mark)) return mark.quads.flat();
   if (mark.kind === 'drawing') return mark.strokes.flat();
-  return 'line' in mark ? mark.line : mark.rect;
+  if ('line' in mark) return mark.line;
+  return mark.kind === 'callout' ? [...mark.rect, ...mark.callout] : mark.rect;
 }
 
 export const Mark = {
@@ -228,6 +283,18 @@ export const Mark = {
   /** A Rectangle or an Ellipse along a box, or null when what is given is no such mark. */
   shape: (kind: ShapeMarkKind, input: ShapeInput): ShapeMark | null =>
     Mark.parse({ ...input, kind, modifiedAt: input.createdAt }) as ShapeMark | null,
+
+  /** A Text in a box, or null when what is given is no Text. */
+  text: (input: TextBoxInput): TextBoxMark | null =>
+    Mark.parse({ ...input, kind: 'text', modifiedAt: input.createdAt }) as TextBoxMark | null,
+
+  /** A Callout in a box, its line to what is meant, or null when what is given is no Callout. */
+  callout: (input: CalloutInput): CalloutMark | null =>
+    Mark.parse({ ...input, kind: 'callout', modifiedAt: input.createdAt }) as CalloutMark | null,
+
+  /** Whether a mark is a Text or a Callout. */
+  isTyped: (mark: Mark): mark is TypedMark =>
+    (TYPED_MARK_KINDS as readonly MarkKind[]).includes(mark.kind),
 
   /** Whether a mark is one of the kinds made by selecting text. */
   isText: (mark: Mark): mark is TextMark =>

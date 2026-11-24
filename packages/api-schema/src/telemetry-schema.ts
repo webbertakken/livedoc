@@ -180,8 +180,8 @@ export const TELEMETRY_CATEGORIES = [
   // 'Converted' with the format it went to ('Xlsx', 'Ods'). Never content.
   'Spreadsheet',
   // PDF documents (docs/specs/035-pdf-documents/pdf-document.md "Telemetry and observability"): a PDF arriving
-  // ('Imported', `type` the way: 'Explorer'), a mark made ('Added', 'Mark.Highlight', 'Mark.Arrow'), a tool taken in
-  // hand ('Selected', 'Tool.Highlight', 'Tool.Ellipse'), its colour chosen ('Changed', 'ToolColour'), a person's own change taken back or made again ('Undone', 'Redone'), a
+  // ('Imported', `type` the way: 'Explorer'), a mark made ('Added', 'Mark.Highlight', 'Mark.Callout'), a tool taken in
+  // hand ('Selected', 'Tool.Highlight', 'Tool.Text'), its colour chosen ('Changed', 'ToolColour'), a person's own change taken back or made again ('Undone', 'Redone'), a
   // download ('Exported', 'Pdf'), a print handed to the browser ('Exported', 'Print'), and a person's view: its page display ('Changed', 'PageDisplay.Single') and how
   // it was zoomed ('Zoomed', 'FitWidth'), a PDF layer shown or hidden for them ('Toggled', 'Layer.Hidden'), Read mode or Full screen entered ('Toggled', 'ReadMode'), Dark pages turned on or off ('Toggled', 'DarkPagesOn'), its first-time question shown ('Opened', 'DarkPagesQuestion') and answered ('Selected', 'DarkPagesQuestion.Use'), text copied ('Copied', 'Text'), a search of its text ('Searched', 'Find'),
   // and how each open came out ('Opened', 'Read', 'PasswordGiven', 'Repaired' or 'Refused.Damaged').

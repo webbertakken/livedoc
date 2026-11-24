@@ -40,6 +40,19 @@ export type ScreenBox = {
   readonly bottom: number;
 };
 
+/** An element's box on screen; null before it is laid out. */
+export function screenBoxOf(element: HTMLElement | null): ScreenBox | null {
+  const rect = element?.getBoundingClientRect();
+  return rect
+    ? {
+        left: rect.left,
+        top: rect.top,
+        right: rect.left + rect.width,
+        bottom: rect.top + rect.height,
+      }
+    : null;
+}
+
 /** The shapes a drag spans as a box, which ⇧ keeps square or round. */
 const isBox = (kind: ShapeToolKind): boolean => kind === 'rectangle' || kind === 'ellipse';
 

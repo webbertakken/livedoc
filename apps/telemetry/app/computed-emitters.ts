@@ -63,6 +63,13 @@ const PDF_SHAPE_NAMES = tokensAfter(
   '}',
 ).filter((token) => /^[A-Z]/.test(token));
 
+// A PDF's Text and Callout, each kind's name in telemetry.
+const PDF_TYPED_NAMES = tokensAfter(
+  read('live/lib/pdf-document/pdf-typed.ts'),
+  'export const TYPED_NAMES',
+  '}',
+).filter((token) => /^[A-Z]/.test(token));
+
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
 const TIMELINE_CATEGORIES = [
@@ -509,12 +516,18 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     ),
   },
   // A text mark made and a text tool taken in hand (docs/specs/035-pdf-documents/marks.md "Telemetry and
-  // observability"), each kind's name read from the tools' own table; a shape tool's from the shapes'.
+  // observability"), each kind's name read from the tools' own table; a shape tool's from the shapes', a typing tool's
+  // from the Text and Callout's.
   'apps/live/lib/pdf-document/usePdfMarkTools.ts Pdf·Added': {
     values: PDF_TEXT_MARK_NAMES.map((name) => `Mark.${name}`),
   },
   'apps/live/lib/pdf-document/usePdfMarkTools.ts Pdf·Selected': {
-    values: [...PDF_TEXT_MARK_NAMES, ...PDF_SHAPE_NAMES].map((name) => `Tool.${name}`),
+    values: [...PDF_TEXT_MARK_NAMES, ...PDF_SHAPE_NAMES, ...PDF_TYPED_NAMES].map(
+      (name) => `Tool.${name}`,
+    ),
+  },
+  'apps/live/lib/pdf-document/usePdfTyping.ts Pdf·Added': {
+    values: PDF_TYPED_NAMES.map((name) => `Mark.${name}`),
   },
   'apps/live/lib/pdf-document/usePdfShapes.ts Pdf·Added': {
     values: PDF_SHAPE_NAMES.map((name) => `Mark.${name}`),
