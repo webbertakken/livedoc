@@ -50,6 +50,8 @@ import {
 } from './live-names';
 import { BODY_FRAGMENT } from './live-root';
 import { tableOf } from './live-tables';
+import { readLiveTabs } from './live-tabs';
+import { DocumentTabs } from '../model/document-tabs';
 import { readSource } from './live-source';
 import { StoryReader, type LiveHeaders } from './live-stories';
 
@@ -319,17 +321,17 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
   const styles = stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? blank.styles;
   const normal = Styles.idOfRole(styles, 'normal') ?? Styles.idOfRole(blank.styles, 'normal')!;
   const stories: StoryReader = new StoryReader(doc, (node) => blockOf(node, normal, stories));
-  const body = doc
-    .getXmlFragment(BODY_FRAGMENT)
-    .toArray()
-    .flatMap((node) => {
+  const blocksOf = (fragment: Y.XmlFragment): Block[] =>
+    fragment.toArray().flatMap((node) => {
       const block = node instanceof Y.XmlElement ? blockOf(node, normal, stories) : null;
       return block ? [block] : [];
     });
+  const tabs = readLiveTabs(doc, blocksOf);
+  const body = tabs.length > 0 ? [] : blocksOf(doc.getXmlFragment(BODY_FRAGMENT));
   const held = meta.get('section') as LiveSection | undefined;
   const source = readSource(doc.getMap<unknown>(SOURCE_MAP));
   const media = readLiveMedia(doc.getMap<unknown>(MEDIA_MAP));
-  return defined({
+  const read: TextDocument = defined({
     format,
     metadata: (meta.get('metadata') as TextDocument['metadata'] | undefined) ?? blank.metadata,
     defaults: (meta.get('defaults') as TextDocument['defaults'] | undefined) ?? blank.defaults,
@@ -342,4 +344,5 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
     body,
     source,
   });
+  return tabs.length > 0 ? DocumentTabs.withAll(read, DocumentTabs.held(tabs)) : read;
 }

@@ -16,6 +16,7 @@ import {
 } from './model/headers';
 import { ROLE_IDS, type Style } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
+import { DocumentTabs } from './model/document-tabs';
 import type { ReportItem } from './report';
 import type { CellProps, Table } from './model/tables';
 
@@ -56,7 +57,9 @@ function count(map: Map<string, number>, name: string): void {
 /** Every section of the document: the first, then each section break's. */
 const sectionsOf = (document: TextDocument): Section[] => [
   document.section,
-  ...document.body.filter((b): b is Extract<Block, { type: 'section' }> => b.type === 'section'),
+  ...DocumentTabs.blocks(document).filter(
+    (b): b is Extract<Block, { type: 'section' }> => b.type === 'section',
+  ),
 ];
 
 /** Each header's and footer's blocks a section holds of its own. */
@@ -77,7 +80,7 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
   // A continuous section has no master page in an OpenDocument file: its own headers and footers, and the number its
   // pages start at, are a loss.
   if (to === 'odf')
-    for (const block of document.body)
+    for (const block of DocumentTabs.blocks(document))
       if (block.type === 'section' && block.start === 'continuous') {
         for (let i = 0; i < storiesOf(block.headers).length; i += 1) count(other, 'header-footer');
         if (block.numberStart !== undefined) count(other, 'page-number-start');
@@ -86,8 +89,9 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
   if (to === 'odf')
     for (let i = 0; i < restartLosses(sectionsOf(document)); i += 1)
       count(other, 'line-number-restart');
-  const notes = Notes.all(document.body).flatMap((note) => note.blocks);
-  for (const block of withCells([...document.body, ...stories.flat(), ...notes])) {
+  const blocks = DocumentTabs.blocks(document);
+  const notes = Notes.all(blocks).flatMap((note) => note.blocks);
+  for (const block of withCells([...blocks, ...stories.flat(), ...notes])) {
     if (block.type === 'kept') count(kept, block.name);
     if (block.type === 'table' && keepsTableStyle(block)) count(other, 'table-style');
     if (block.type === 'section' && block.region) count(other, 'section-name');
@@ -310,7 +314,6 @@ export function convertTextDocument(
             ),
         })
       : p;
-  const body = blocksOf(document.body);
   const lists: Record<string, ListDefinition> = Object.fromEntries(
     Object.entries(document.lists).map(([k, l]) => [k, withoutKept(l)]),
   );
@@ -332,8 +335,9 @@ export function convertTextDocument(
           : { mediaType: m.mediaType, image: m.image },
       ] as const,
   );
-  return {
-    document: {
+  // Each document tab's body converts as the first's; the tabs themselves carry over (standard-mapping.md "Document tabs").
+  const converted: TextDocument = DocumentTabs.mapBodies(
+    {
       format: to,
       metadata,
       defaults: withoutKept(document.defaults),
@@ -343,8 +347,10 @@ export function convertTextDocument(
       ...(document.pageless ? { pageless: true as const } : {}),
       ...(document.watermark ? { watermark: document.watermark } : {}),
       ...(media.length > 0 ? { media: Object.fromEntries(media) } : {}),
-      body,
+      body: document.body,
+      ...(document.tabs ? { tabs: document.tabs } : {}),
     },
-    losses,
-  };
+    blocksOf,
+  );
+  return { document: converted, losses };
 }

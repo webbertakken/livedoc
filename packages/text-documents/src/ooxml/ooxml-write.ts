@@ -38,6 +38,7 @@ import { ooxmlFieldXml } from './ooxml-fields';
 import { footnoteIds, footnotesPartXml } from './ooxml-notes';
 import { ooxmlTableXml } from './ooxml-tables';
 import { Blocks, type Table } from '../model/tables';
+import { DocumentTabs, type DocumentTab, type DocumentTabFlow } from '../model/document-tabs';
 import {
   abstractNumXml,
   ordered,
@@ -68,8 +69,26 @@ function mergeNamespaces(
   return { ...WRITTEN_W_NS, ...Object.fromEntries(extra) };
 }
 
+// A document tab's attributes on a `w:sectPr`, by any prefix (standard-mapping.md "Document tabs").
+const TAB_ATTRIBUTE = /\s[\w.-]+:tab-(?:id|name|depth|emoji)="[^"]*"/g;
+const SECTPR_OPEN = /^<((?:[\w.-]+:)?sectPr)\b([^>]*?)(\/?)>/;
+
+/** The `w:sectPr` carrying the tab it ends, and no other's: a kept one may still name the tab it ended when read. */
+function withTab(sectPr: string, tab: DocumentTab | undefined): string {
+  return sectPr.replace(SECTPR_OPEN, (_m, name: string, attributes: string, close: string) => {
+    const own = tab
+      ? ` livedoc:tab-id="${escapeXmlAttribute(tab.id)}" livedoc:tab-name="${escapeXmlAttribute(tab.name)}" livedoc:tab-depth="${tab.depth}"${tab.emoji === undefined ? '' : ` livedoc:tab-emoji="${escapeXmlAttribute(tab.emoji)}"`}`
+      : '';
+    return `<${name}${attributes.replace(TAB_ATTRIBUTE, '')}${own}${close}>`;
+  });
+}
+
 class OoxmlWriter {
   readonly doc: TextDocument;
+  /** The document tabs as one flow, each after the first opened by a section break; none when written plainly. */
+  readonly flow: DocumentTabFlow | undefined;
+  /** The tab the section being written ends, when it ends one. */
+  #tabEnding: DocumentTab | undefined;
   readonly source: OoxmlSource | undefined;
   readonly ns: Record<string, string>;
   readonly mainPart: string;
@@ -95,7 +114,11 @@ class OoxmlWriter {
   /** Each section's place among the sections, by the section itself. */
   readonly #sectionAt = new Map<Section, number>();
 
-  constructor(doc: TextDocument) {
+  constructor(tabbed: TextDocument) {
+    // Whole-document walks (sections, notes, lists) read every tab's blocks as one flow.
+    this.flow = DocumentTabs.isPlain(tabbed) ? undefined : DocumentTabs.flow(tabbed);
+    const { tabs: _, ...rest } = tabbed;
+    const doc: TextDocument = this.flow ? { ...rest, body: this.flow.blocks } : tabbed;
     this.doc = doc;
     const source = doc.source?.format === 'ooxml' ? doc.source : undefined;
     this.source = source;
@@ -167,6 +190,16 @@ class OoxmlWriter {
   }
 
   sectPr(section: Section): string {
+    return withTab(this.ownSectPr(section), this.#tabEnding);
+  }
+
+  /** The tab ending where this section break opens the next one. */
+  tabEndingAt(block: Block | undefined): DocumentTab | undefined {
+    const k = block?.type === 'section' ? (this.flow?.opens.indexOf(block) ?? -1) : -1;
+    return k < 0 ? undefined : this.flow!.tabs[k];
+  }
+
+  ownSectPr(section: Section): string {
     const at = this.#sectionAt.get(section) ?? 0;
     const values = {
       start: section.start,
@@ -209,7 +242,8 @@ class OoxmlWriter {
         references: this.headerParts.signature(ends),
       },
     };
-    if (p.kept && keptStillHolds(p.kept, values)) {
+    // A paragraph ending a document tab writes its section's tab afresh.
+    if (p.kept && !(ends && this.#tabEnding) && keptStillHolds(p.kept, values)) {
       if (ends) this.headerParts.referencesXml(ends, this.#sectionAt.get(ends) ?? 0);
       return this.kept(p.kept.xml);
     }
@@ -393,6 +427,7 @@ class OoxmlWriter {
     blocks.forEach((block, i) => {
       const next = blocks[i + 1];
       const ends = next?.type === 'section' ? current : undefined;
+      this.#tabEnding = this.tabEndingAt(block.type === 'section' ? block : next);
       if (block.type === 'paragraph') out.push(this.paragraphXml(block, ends));
       else if (block.type === 'kept' || block.type === 'table' || block.type === 'contents') {
         out.push(
@@ -410,7 +445,9 @@ class OoxmlWriter {
         current = block satisfies SectionBreak;
       }
     });
+    this.#tabEnding = this.flow?.tabs.at(-1);
     out.push(this.sectPr(current));
+    this.#tabEnding = undefined;
     return out.join('');
   }
 

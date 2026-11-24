@@ -9,6 +9,7 @@ import type { KeptProperties, TextProps } from './props';
 import type { Block, Inline } from './blocks';
 import { HEADER_FOOTER_KINDS, HEADER_FOOTER_SLOTS, type SectionHeaders } from './headers';
 import type { TextDocument } from './text-document';
+import { DocumentTabs } from './document-tabs';
 
 /** The share of the picture's own width or height cut from each side, each from 0 to below 1. */
 export type PictureCrop = {
@@ -100,7 +101,7 @@ export const Pictures = {
     [...inlinesOf(blocks)].filter((i): i is Picture => i.type === 'picture'),
   /** Every picture of the document: its body's, and its first section's headers' and footers'. */
   ofDocument: (document: TextDocument): Picture[] => [
-    ...Pictures.in(document.body),
+    ...Pictures.in(DocumentTabs.blocks(document)),
     ...[...headerInlines(document.section.headers)].filter(
       (i): i is Picture => i.type === 'picture',
     ),

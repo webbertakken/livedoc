@@ -301,3 +301,17 @@ export {
   type ContentsLook,
   type TableOfContents,
 } from './model/contents';
+export {
+  DOCUMENT_TAB_EMOJI_MAX,
+  DocumentTabs,
+  FIRST_DOCUMENT_TAB_ID,
+  TEXT_DOCUMENT_MAX_TABS,
+  TEXT_DOCUMENT_TAB_DEPTH,
+  TEXT_DOCUMENT_TAB_NAME_MAX,
+  type DocumentTab,
+  type DocumentTabDepth,
+  type DocumentTabHead,
+} from './model/document-tabs';
+export { TAB_FRAGMENT_PREFIX, tabFragment, tabFragmentName } from './live/live-root';
+export { TABS_MAP } from './live/live-names';
+export type { LiveTab } from './live/live-tabs';

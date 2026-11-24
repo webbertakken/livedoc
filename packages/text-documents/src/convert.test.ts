@@ -98,6 +98,7 @@ describe('conversion', () => {
       'footnotes',
       'links',
       'metadata',
+      'tabs',
     ])
       it(`converts ${name} from ${from} to ${to}, holding the same model in the other format`, async () => {
         const { document } = convertTextDocument(CONSTRUCTS[name]!(from), to);

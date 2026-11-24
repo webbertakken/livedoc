@@ -125,16 +125,31 @@ panel with their headings; they nest three levels deep (assumed, from the produc
   tab's body.
 - In the file, a text document with one document tab is an ordinary text document. With more, each document tab is a
   `text:section` at the body's top level, carrying its name and nesting in the `livedoc:` extension, so any suite
-  shows every tab's writing one after another ([Standard mapping](standard-mapping.md#extensions)).
+  shows every tab's writing one after another ([Standard mapping](standard-mapping.md#document-tabs)).
+
+### What a document tab is
+
+- **Its id**: fixed for its life, as links to it name it. The first document tab of every text document is `t.0`;
+  one added later is `t.` and 12 lower-case letters and digits, chosen at random `(default, Google's form)`.
+- **Its name**: at most 100 characters (`TEXT_DOCUMENT_TAB_NAME_MAX`), never empty; a new one is **Tab N**, N one more
+  than the number of document tabs `(default)`. Names may repeat.
+- **Its emoji**: none, or one emoji shown before its name.
+- **Its depth**: 0 at the top level, 1 for a subtab, 2 for a subtab's subtab. The document tabs are one list in the
+  outline's order; a tab's subtabs are the tabs right after it that are deeper, so the first is at depth 0 and each
+  one is at most one deeper than the one before it. A list read that breaks this is made to hold it: each depth is
+  cut to one more than the one before it, and to 2.
+- **Its body**: blocks as any body. Each document tab's writing starts in the text document's first section, on a page
+  of its own; its section breaks are its own, and its pages number from 1 `(default)`.
 
 ## Limits
 
-| Constant                    | Value     | Why                                                                                    |
-| --------------------------- | --------- | -------------------------------------------------------------------------------------- |
-| `TEXT_DOCUMENT_MAX_CHARS`   | 1,020,000 | Google Docs' own limit, 1.02 million characters (verified in the research's inventory) |
-| `TEXT_DOCUMENT_TAB_DEPTH`   | 3         | Google Docs' nesting depth (assumed, to confirm with the captures)                     |
-| `TEXT_DOCUMENT_MAX_TABS`    | 100       | (default) A ceiling far past use; each document tab is a body the outline lists        |
-| `TEXT_DOCUMENT_MAX_OBJECTS` | 2,000     | (default) Pictures and drawings per text document, each a package entry                |
+| Constant                     | Value     | Why                                                                                    |
+| ---------------------------- | --------- | -------------------------------------------------------------------------------------- |
+| `TEXT_DOCUMENT_MAX_CHARS`    | 1,020,000 | Google Docs' own limit, 1.02 million characters (verified in the research's inventory) |
+| `TEXT_DOCUMENT_TAB_DEPTH`    | 3         | Google Docs' nesting depth (assumed, to confirm with the captures)                     |
+| `TEXT_DOCUMENT_MAX_TABS`     | 100       | (default) A ceiling far past use; each document tab is a body the outline lists        |
+| `TEXT_DOCUMENT_TAB_NAME_MAX` | 100       | (default) A name the outline shows on one or two lines                                 |
+| `TEXT_DOCUMENT_MAX_OBJECTS`  | 2,000     | (default) Pictures and drawings per text document, each a package entry                |
 
 An edit that would pass a limit is refused as a whole, with the limit named
 ([Live editing and storage](live-editing-and-storage.md#limits)).

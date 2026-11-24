@@ -1,5 +1,5 @@
 // The text document as plain values (docs/specs/034-text-documents/standard-mapping.md "The model"): its format,
-// metadata, styles, lists, first section, body, and what its file kept that the model does not map.
+// metadata, styles, lists, first section, body and document tabs, and what its file kept that the model does not map.
 import type {
   DocumentMetadata,
   KeptXml,
@@ -13,6 +13,7 @@ import { PageSetup, type PaperName, type Section } from './sections';
 import { Styles, type Style, type StyleDefaults } from './styles';
 import type { Watermark } from './watermark';
 import type { DocumentMedia } from './pictures';
+import { DocumentTabs } from './document-tabs';
 
 export type TextDocumentFormat = 'odf' | 'ooxml';
 
@@ -87,7 +88,10 @@ export type TextDocument = {
   readonly watermark?: Watermark;
   /** Its pictures' bytes by key (objects.md "The model"). */
   readonly media?: DocumentMedia;
+  /** The first document tab's body (standard-mapping.md "Document tabs"). */
   readonly body: readonly Block[];
+  /** The document tabs: absent is one tab, `t.0`, Tab 1, whose body is `body`. */
+  readonly tabs?: DocumentTabs;
   readonly source?: OdfSource | OoxmlSource;
 };
 
@@ -120,8 +124,9 @@ export const TextDocument = {
       body: (texts.length > 0 ? texts : ['']).map((t) => Paragraph.of(t, normal)),
     };
   },
-  /** Every paragraph of the body in reading order, those in table cells included. */
-  paragraphs: (document: TextDocument): Paragraph[] => Blocks.paragraphs(document.body),
+  /** Every paragraph of every document tab in reading order, those in table cells included. */
+  paragraphs: (document: TextDocument): Paragraph[] =>
+    Blocks.paragraphs(DocumentTabs.blocks(document)),
   /** Each paragraph's characters, in order. */
   paragraphTexts: (document: TextDocument): string[] =>
     TextDocument.paragraphs(document).map(Paragraph.text),
