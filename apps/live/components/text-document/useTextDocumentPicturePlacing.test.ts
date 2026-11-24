@@ -30,7 +30,11 @@ const wrapPlacement = {
   y: 20,
 } as const;
 
-function setup({ selected = true, canEdit = true, placement = null as PicturePlacement | null } = {}) {
+function setup({
+  selected = true,
+  canEdit = true,
+  placement = null as PicturePlacement | null,
+} = {}) {
   const picture = schema.nodes[PICTURE]!.create({ media: 'm', width: 60, height: 30, placement });
   const doc = schema.node('doc', null, [schema.nodes.paragraph!.create(null, [picture])]);
   const view = new EditorView(document.createElement('div'), {
