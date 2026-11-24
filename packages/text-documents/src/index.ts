@@ -314,4 +314,4 @@ export {
 } from './model/document-tabs';
 export { TAB_FRAGMENT_PREFIX, tabFragment, tabFragmentName } from './live/live-root';
 export { TABS_MAP } from './live/live-names';
-export type { LiveTab } from './live/live-tabs';
+export { addLiveTab, liveTabIds, liveTabList, type LiveTab } from './live/live-tabs';
