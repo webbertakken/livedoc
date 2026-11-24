@@ -23,6 +23,8 @@ const inWord = (unit: string): boolean => unit === BROKEN_WORD || LETTER_OR_DIGI
 const ACROSS_WEIGHT = 1_000;
 // A break to the next line is a space when that line starts within this many line heights below (reading-surface.md).
 const PARAGRAPH_LINE_HEIGHTS = 2;
+// A line runs on in a column within this many line heights of its left and of a line of it.
+const COLUMN_LINE_HEIGHTS = 2;
 // A full line ends within this many line heights of the furthest right of it and the lines either side of it.
 const FULL_LINE_HEIGHTS = 2;
 
@@ -61,18 +63,18 @@ const quadOf = ({ left, bottom, right, top }: TextBox): Quad => [
   bottom,
 ];
 
-/** One line of a span: its text and the box of its drawn characters (null where it has none). */
-type SpanLine = { text: string; box: TextBox | null };
+/** One line of a span: where it starts, its text and the box of its drawn characters (null where it has none). */
+type SpanLine = { start: number; text: string; box: TextBox | null };
 
 function linesOf(page: PageText, [start, end]: TextSpan): SpanLine[] {
-  const lines: SpanLine[] = [{ text: '', box: null }];
+  const lines: SpanLine[] = [{ start, text: '', box: null }];
   for (let at = start; at < end; at += 1) {
     const unit = page.text[at]!;
     const line = lines[lines.length - 1]!;
     if (isBreak(unit)) {
       // A `\r\n` is one break: a new line starts once, at its first unit.
       if (!(unit === '\n' && page.text[at - 1] === '\r' && at > start))
-        lines.push({ text: '', box: null });
+        lines.push({ start: at + 1, text: '', box: null });
       continue;
     }
     line.text += unit;
@@ -92,6 +94,39 @@ function joint(before: SpanLine, after: SpanLine, rightEnd: number): string {
   const near = drop > 0 && drop <= PARAGRAPH_LINE_HEIGHTS * height;
   const full = a.right >= rightEnd - FULL_LINE_HEIGHTS * height;
   return near && full ? ' ' : '\n';
+}
+
+const heightOf = (box: TextBox): number => box.top - box.bottom;
+
+// How far apart two lines are down the page: nothing where they overlap.
+const gapBetween = (a: TextBox, b: TextBox): number =>
+  Math.max(0, a.bottom - b.top, b.bottom - a.top);
+
+// The column around a line (reading-surface.md "Phone and tablet"): the lines that start within two line heights of
+// its left and lie within two line heights of a line of it; its left the least, its right the larger middle right.
+function columnFrom(seed: TextBox, lines: readonly TextBox[]): TextBox {
+  const joined = [seed];
+  let edge = seed.left;
+  let waiting = lines.filter((line) => line !== seed);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const line of waiting) {
+      const reach = COLUMN_LINE_HEIGHTS * Math.max(heightOf(line), heightOf(seed));
+      const starts = Math.abs(line.left - edge) <= reach;
+      if (!starts || !joined.some((near) => gapBetween(near, line) <= reach)) continue;
+      joined.push(line);
+      edge = Math.min(edge, line.left);
+      grew = true;
+    }
+    waiting = waiting.filter((line) => !joined.includes(line));
+  }
+  const rights = joined.map((line) => line.right).sort((a, b) => a - b);
+  return {
+    left: edge,
+    right: rights[Math.floor(rights.length / 2)]!,
+    bottom: Math.min(...joined.map((line) => line.bottom)),
+    top: Math.max(...joined.map((line) => line.top)),
+  };
 }
 
 function copiedSpan(page: PageText, span: TextSpan): string {
@@ -170,6 +205,24 @@ export const TextRange = {
       else spans.push([at, at + 1]);
     }
     return spans;
+  },
+  /**
+   * The box of the column under a point (reading-surface.md "Phone and tablet"): the line holding the drawn character
+   * nearest it, the point within a line height of that line, and the lines that run on from it. Null where none is.
+   */
+  columnAt: (page: PageText, point: PagePoint): TextBox | null => {
+    const nearest = TextRange.nearest(page, point);
+    if (nearest === null) return null;
+    const lines = linesOf(page, TextRange.all(page));
+    const seed = lines.findLast((line) => line.start <= nearest)!.box!;
+    const height = heightOf(seed);
+    const off = Math.max(
+      outside(point.x, seed.left, seed.right),
+      outside(point.y, seed.bottom, seed.top),
+    );
+    if (off > height) return null;
+    const boxes = lines.flatMap((line) => (line.box ? [line.box] : []));
+    return columnFrom(seed, boxes);
   },
   /** The rectangles the spans are drawn with: one a line, a new one where a character leaves the line's height. */
   quads: (page: PageText, spans: readonly TextSpan[]): Quad[] => {

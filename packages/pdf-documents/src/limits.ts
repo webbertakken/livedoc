@@ -126,6 +126,12 @@ export const PDF_WHEEL_TURN_MS = 300;
 /** (default) How long a wheel's or a pinch's zoom rests before it is told to telemetry, once a gesture. Safe range:
  *  200 to 1,000. */
 export const PDF_ZOOM_SETTLE_MS = 400;
+/** (default) How long a tap is down, and the pause between a double tap's two (reading-surface.md "Phone and tablet").
+ *  Safe range: 200 to 500. */
+export const PDF_DOUBLE_TAP_MS = 300;
+/** (default) How far, in CSS pixels, a tap moves while down, and how far apart a double tap's two are. Safe range: 10
+ *  to 40. */
+export const PDF_DOUBLE_TAP_PX = 24;
 /** (default) A tile's side in CSS pixels (reading-surface.md "The pages", "Limits"). Safe range: 256 to 1,024. */
 export const PDF_TILE_PX = 512;
 /** (default) The tiles a desktop keeps, in bytes of their pictures; least lately shown let go first. */
