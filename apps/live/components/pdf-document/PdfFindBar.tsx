@@ -25,7 +25,7 @@ export const PDF_FIND_OPTION_NAMES: readonly (readonly [keyof PdfFindOptions, st
 ];
 
 const BUTTON =
-  'relative flex h-7 w-7 touch-target-y shrink-0 items-center justify-center rounded text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40 disabled:hover:bg-transparent aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-expanded:bg-(--office-pressed) aria-expanded:text-(--office-pressed-ink)';
+  'relative flex size-row touch-target-y shrink-0 items-center justify-center rounded-control text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40 disabled:hover:bg-transparent aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-expanded:bg-(--office-pressed) aria-expanded:text-(--office-pressed-ink)';
 
 function BarButton({
   label,
@@ -83,7 +83,7 @@ export function PdfFindBar({ find, onClosed }: { find: PdfFind; onClosed: () => 
     <div
       role="search"
       aria-label="Find in this PDF"
-      className="absolute top-2 right-4 z-20 w-[22rem] max-w-[calc(100%-2rem)] rounded-lg bg-(--office-toolbar) p-1.5 text-sm text-(--office-ink) shadow-md outline outline-1 outline-(--office-line)"
+      className="absolute top-2 right-4 z-20 w-[22rem] max-w-[calc(100%-2rem)] rounded-menu bg-(--office-toolbar) p-1 text-body text-(--office-ink) shadow-md outline outline-1 outline-(--office-line)"
       onKeyDown={(event) => {
         if (event.key !== 'Escape') return;
         event.preventDefault();
@@ -104,12 +104,12 @@ export function PdfFindBar({ find, onClosed }: { find: PdfFind; onClosed: () => 
             event.preventDefault();
             find.step(event.shiftKey ? -1 : 1);
           }}
-          className="h-8 min-w-0 flex-1 rounded border border-(--office-line) bg-transparent px-2 text-(--office-ink) pointer-coarse:h-11 pointer-coarse:text-base outline-none placeholder:text-(--office-muted) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+          className="h-field min-w-0 flex-1 rounded-control border border-(--office-line) bg-transparent px-2 text-(--office-ink) pointer-coarse:h-11 pointer-coarse:text-base outline-none placeholder:text-(--office-muted) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
         />
         <span
           role="status"
           aria-live="polite"
-          className="min-w-16 shrink-0 px-1 text-right text-xs text-(--office-muted) tabular-nums"
+          className="min-w-16 shrink-0 px-1 text-right text-supporting text-(--office-muted) tabular-nums"
         >
           {find.count}
         </span>
@@ -146,13 +146,13 @@ export function PdfFindBar({ find, onClosed }: { find: PdfFind; onClosed: () => 
           {PDF_FIND_OPTION_NAMES.map(([name, words]) => (
             <label
               key={name}
-              className="flex h-7 cursor-pointer items-center gap-2 pointer-coarse:h-11"
+              className="flex h-row cursor-pointer items-center gap-2 pointer-coarse:h-11"
             >
               <input
                 type="checkbox"
                 checked={find.options[name] ?? false}
                 onChange={(event) => find.setOption(name, event.target.checked)}
-                className="size-4 accent-(--office-primary)"
+                className="size-icon-row accent-(--office-primary)"
               />
               {words}
             </label>

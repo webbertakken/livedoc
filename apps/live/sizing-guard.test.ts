@@ -147,6 +147,8 @@ const SIZED_PATHS = [
   'components/canvas/ask',
   'components/canvas/article',
   'components/canvas/whiteboard',
+  // A PDF's chrome; its pages and what is drawn on them at the zoom are content (sizing.md).
+  'components/pdf-document',
 ];
 
 // Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.

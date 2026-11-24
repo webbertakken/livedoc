@@ -389,7 +389,7 @@ export const PdfPage = memo(function PdfPage({
         />
       ) : null}
       {failed ? (
-        <p className="absolute inset-0 flex items-center justify-center text-sm text-(--pdf-paper-ink)">
+        <p className="absolute inset-0 flex items-center justify-center text-body text-(--pdf-paper-ink)">
           This page couldn’t be drawn.
         </p>
       ) : null}

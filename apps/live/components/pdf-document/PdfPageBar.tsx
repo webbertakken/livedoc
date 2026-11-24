@@ -52,7 +52,7 @@ const wayOf = (zoom: PdfZoom): PdfZoomWay =>
         : 'Custom';
 
 const BUTTON =
-  'relative flex h-7 w-7 shrink-0 items-center justify-center rounded text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40 disabled:hover:bg-transparent';
+  'relative flex size-row shrink-0 items-center justify-center rounded-control text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40 disabled:hover:bg-transparent';
 
 function BarButton({
   label,
@@ -135,7 +135,7 @@ export function PdfPageBar({
       {problem ? (
         <p
           role="status"
-          className="pointer-events-auto rounded-md bg-(--office-menu) px-3 py-1.5 text-sm text-(--office-ink) shadow-lg"
+          className="pointer-events-auto rounded-control bg-(--office-menu) px-3 py-1.5 text-body text-(--office-ink) shadow-lg"
         >
           {problem}
         </p>
@@ -149,7 +149,7 @@ export function PdfPageBar({
         data-region="pagebar"
         onKeyDownCapture={() => setProblem(null)}
         onPointerDownCapture={() => setProblem(null)}
-        className="pointer-events-auto flex h-10 items-center gap-0.5 rounded-3xl bg-(--office-toolbar) px-2 shadow-md outline outline-1 outline-(--office-line)"
+        className="pointer-events-auto flex h-prominent items-center gap-0.5 rounded-full bg-(--office-toolbar) px-2 shadow-md outline outline-1 outline-(--office-line)"
       >
         <BarButton
           label="Previous page"
@@ -157,7 +157,7 @@ export function PdfPageBar({
           disabled={atFirst}
           onPress={onPrevious}
         />
-        <label className="relative flex h-7 items-center gap-1 px-1 text-sm text-(--office-ink) touch-target-y">
+        <label className="relative flex h-row items-center gap-1 px-1 text-body text-(--office-ink) touch-target-y">
           <input
             ref={pageField}
             aria-label="Page"
@@ -181,7 +181,7 @@ export function PdfPageBar({
                 setDraft(null);
               }
             }}
-            className="rounded bg-transparent px-1 text-right text-(--office-ink) tabular-nums outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+            className="rounded-control bg-transparent px-1 text-right text-(--office-ink) tabular-nums outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
           />
           <span aria-hidden="true" className="text-(--office-muted) tabular-nums">
             / {count}
@@ -189,7 +189,7 @@ export function PdfPageBar({
           <span className="sr-only">of {count}</span>
         </label>
         <BarButton label="Next page" icon={lucideChevronRight} disabled={atLast} onPress={onNext} />
-        <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-(--office-line)" />
+        <span aria-hidden className="mx-1 h-chip w-px shrink-0 bg-(--office-line)" />
         <BarButton
           label="Zoom out"
           icon={lucideMinus}

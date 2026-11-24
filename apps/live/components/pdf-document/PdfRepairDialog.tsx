@@ -14,8 +14,8 @@ export function PdfRepairDialog({
 }) {
   return (
     <OfficeDialog open onClose={onClose} title={PDF_REPAIRED_COPY.title}>
-      <p className="text-sm">{PDF_REPAIRED_COPY.rebuilt}</p>
-      {canChange ? <p className="mt-2 text-sm">{PDF_REPAIRED_COPY.saved}</p> : null}
+      <p className="text-body">{PDF_REPAIRED_COPY.rebuilt}</p>
+      {canChange ? <p className="mt-2 text-body">{PDF_REPAIRED_COPY.saved}</p> : null}
     </OfficeDialog>
   );
 }

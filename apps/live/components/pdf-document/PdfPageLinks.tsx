@@ -57,7 +57,7 @@ export function PdfPageLinks({
           type="button"
           aria-label={name}
           data-pdf-link={at + 1}
-          className="absolute cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+          className="absolute cursor-pointer rounded-control outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
           style={{
             left: `${box.left}%`,
             top: `${box.top}%`,

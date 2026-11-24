@@ -76,7 +76,7 @@ export function PdfSelectionHandles({
         onPointerCancel={onLift}
       >
         <span className="h-2 w-0.5 bg-(--office-focus)" />
-        <span className="absolute top-2 size-3 rounded-full bg-(--office-focus)" />
+        <span className="absolute top-2 size-icon-chevron rounded-full bg-(--office-focus)" />
       </span>
     );
   };
