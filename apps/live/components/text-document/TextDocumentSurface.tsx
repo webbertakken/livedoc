@@ -68,6 +68,7 @@ import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
 import { useTextDocumentLinks } from './useTextDocumentLinks';
+import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
 import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
@@ -724,6 +725,14 @@ export function TextDocumentSurface({
     }),
     [editorView, bodyWrites, equationToolbar.actions],
   );
+  // Insert > Bookmark, a bookmark's card, and going to one (links-and-navigation.md "Bookmarks"), in the body.
+  const bookmarks = useTextDocumentBookmarks({
+    view: editorView,
+    writes: bodyWrites,
+    ready: state === 'ready',
+    documentId,
+    subscribe: changes.subscribeCaret,
+  });
   // Insert > Link, the link card and Open link (links-and-navigation.md "Links"), in whichever writing has the caret.
   const links = useTextDocumentLinks({
     view: activeView,
@@ -731,6 +740,7 @@ export function TextDocumentSurface({
     documents,
     subscribe: changes.subscribeCaret,
     showCard: preferences.aids.linkDetails,
+    inDocument: bookmarks.places,
   });
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, writes);
@@ -815,6 +825,7 @@ export function TextDocumentSurface({
       ...equationInsert,
       ...characterDialogs.actions,
       ...links.actions,
+      ...bookmarks.actions,
       ...tableActions,
       ...buildingBlocks,
       ...pictures.actions,
@@ -829,6 +840,7 @@ export function TextDocumentSurface({
       equationInsert,
       characterDialogs.actions,
       links.actions,
+      bookmarks.actions,
       tableActions,
       buildingBlocks,
       pictures.actions,
@@ -938,6 +950,8 @@ export function TextDocumentSurface({
       {links.editor}
       {links.card}
       {links.status}
+      {bookmarks.card}
+      {bookmarks.status}
       <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />
       {limitReached ? (
         <p

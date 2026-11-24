@@ -77,6 +77,7 @@ import { FOOTNOTE_ITEM } from './text-document-footnotes-edit';
 import { FOOTNOTE_KEY_ACTIONS } from '@/components/text-document/useTextDocumentNoteEditing';
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { LINK_ITEM, OPEN_LINK } from './text-document-links';
+import { BOOKMARK_ITEM } from './text-document-bookmarks';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
@@ -175,6 +176,8 @@ describe('the text document menus', () => {
         FOOTNOTE_ITEM,
         // Insert > Link (useTextDocumentLinks), bound by the surface.
         LINK_ITEM,
+        // Insert > Bookmark (useTextDocumentBookmarks), bound by the surface.
+        BOOKMARK_ITEM,
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {

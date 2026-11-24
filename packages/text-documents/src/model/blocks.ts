@@ -7,6 +7,7 @@ import type { Section } from './sections';
 import type { Table } from './tables';
 import type { Picture } from './pictures';
 import type { Equation } from './equations';
+import type { Bookmark } from './bookmarks';
 
 /** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
 export type Run = {
@@ -20,7 +21,7 @@ export type Run = {
   readonly kept?: KeptProperties;
 };
 
-/** Something inside a paragraph the model does not map (a bookmark, another field, an endnote, a picture), kept as the file has it. */
+/** Something inside a paragraph the model does not map (a hidden bookmark, another field, an endnote, a picture), kept as the file has it. */
 export type KeptInline = {
   readonly type: 'kept';
   /** What it is, for the placeholder and the reports: the element's local name. */
@@ -62,7 +63,7 @@ export type Note = {
   readonly kept?: KeptProperties;
 };
 
-export type Inline = Run | Field | Note | Picture | Equation | KeptInline;
+export type Inline = Run | Field | Note | Picture | Equation | Bookmark | KeptInline;
 
 export type Paragraph = {
   readonly type: 'paragraph';

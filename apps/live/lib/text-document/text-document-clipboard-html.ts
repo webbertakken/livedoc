@@ -249,6 +249,8 @@ export function clipboardSerializer(read: () => ClipboardHtmlContext): DOMSerial
     section_break: () => omitted('div'),
     kept_block: () => omitted('div'),
     kept_inline: () => omitted('span'),
+    // A bookmark is a place in this document alone (links-and-navigation.md "Bookmarks").
+    bookmark: () => omitted('span'),
     // A table as other editors read one: its columns' widths, its cells' spans and formatting.
     table: (node) => [
       'table',

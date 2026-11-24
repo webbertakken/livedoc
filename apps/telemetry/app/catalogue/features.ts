@@ -1365,14 +1365,14 @@ export const TEXT_DOCUMENT_CHARACTERS_AND_LINES = chart(
   },
 );
 
-// A link put in a text document from the link editor (docs/specs/034-text-documents/links-and-navigation.md
+// A link put in a text document from the link editor, or a bookmark from Insert > Bookmark (docs/specs/034-text-documents/links-and-navigation.md
 // "Telemetry").
 export const TEXT_DOCUMENT_LINKS = chart(
   'Element',
   'Added',
   'Text Document Links',
-  'A link put in a text document from Insert > Link, the toolbar, Ctrl+K or the context menu.',
-  { types: ['TextDocumentLink'] },
+  'A link put in a text document from Insert > Link, the toolbar, Ctrl+K or the context menu, or a bookmark from Insert > Bookmark.',
+  { types: ['TextDocumentLink', 'TextDocumentBookmark'] },
 );
 
 // A text document's link edited or taken off (links-and-navigation.md "Telemetry").
@@ -1388,8 +1388,8 @@ export const TEXT_DOCUMENT_LINKS_REMOVED = chart(
   'Element',
   'Removed',
   'Text Document Links Removed',
-  "A text document's link taken off its text with Remove link, or by emptying Link in the link editor.",
-  { types: ['TextDocumentLink'], rising: 'neutral' },
+  "A text document's link taken off its text with Remove link, or by emptying Link in the link editor; a bookmark removed from its card.",
+  { types: ['TextDocumentLink', 'TextDocumentBookmark'], rising: 'neutral' },
 );
 
 // A text document's link opened from the link card or with Alt+Enter (links-and-navigation.md "Telemetry").

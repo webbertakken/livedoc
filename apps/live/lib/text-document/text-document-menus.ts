@@ -244,7 +244,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('section-break-continuous', 'Section break (continuous)', 'edit', BUILT),
         item('column-break', 'Column break', 'edit', BUILT),
       ]),
-      item('bookmark', 'Bookmark', 'edit'),
+      item('bookmark', 'Bookmark', 'edit', BUILT),
       submenu('table-of-contents', 'Table of contents', [
         item('toc-plain', 'Plain text', 'edit'),
         item('toc-dotted', 'Dotted', 'edit'),

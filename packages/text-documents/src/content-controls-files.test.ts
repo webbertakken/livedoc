@@ -27,7 +27,7 @@ describe('a content control in ODF', () => {
   it('is kept, shows its text, and keeps the space after it', async () => {
     const paragraph = await first(
       ODF(
-        '<text:p>Due <loext:content-control loext:date="true">Nov 24</loext:content-control> ok <text:bookmark text:name="b"/> end</text:p>',
+        '<text:p>Due <loext:content-control loext:date="true">Nov 24</loext:content-control> ok <text:bookmark text:name="_b"/> end</text:p>',
       ),
     );
     expect(shape(paragraph.inlines)).toEqual(['Due ', '[Nov 24]', ' ok ', '[null]', 'end']);

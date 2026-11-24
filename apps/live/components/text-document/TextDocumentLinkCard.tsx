@@ -4,6 +4,7 @@
 // the caret in it, its title, a press on which opens it, then Copy link, Edit link and Remove link; a session that may
 // not edit has Copy link alone. It never takes the focus from the writing.
 import {
+  lucideBookmark,
   lucideCopy,
   lucideFileText,
   lucideGlobe,
@@ -16,14 +17,15 @@ import type { Box } from '@/lib/office/popup-place';
 
 const DocumentGlyph = lucideGlyph(lucideFileText, 16);
 const WebGlyph = lucideGlyph(lucideGlobe, 16);
+const PlaceGlyph = lucideGlyph(lucideBookmark, 16);
 const CopyGlyph = lucideGlyph(lucideCopy, 18);
 const EditGlyph = lucideGlyph(lucidePencil, 18);
 const RemoveGlyph = lucideGlyph(lucideLink2Off, 18);
 
-const ICON_BUTTON =
+export const ICON_BUTTON =
   'grid size-8 shrink-0 place-items-center rounded-full text-(--office-icon) hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none';
 
-function CardButton({
+export function CardButton({
   label,
   onPress,
   children,
@@ -52,7 +54,7 @@ export function TextDocumentLinkCard({
   anchor,
   title,
   href,
-  isDocument,
+  kind,
   onOpen,
   onCopy,
   onEdit,
@@ -61,8 +63,8 @@ export function TextDocumentLinkCard({
   anchor: Box;
   title: string;
   href: string;
-  // A LiveDoc document's link draws a document's glyph, a web address a globe.
-  isDocument: boolean;
+  // A LiveDoc document's link draws a document's glyph, a place in this document a bookmark, a web address a globe.
+  kind: 'document' | 'place' | 'web';
   onOpen: () => void;
   onCopy: () => void;
   // Null for a session that may not edit.
@@ -78,7 +80,13 @@ export function TextDocumentLinkCard({
         className="flex max-w-[min(28rem,calc(100vw-1rem))] items-center gap-1 rounded-lg border border-(--office-line) bg-(--office-menu) py-1 pr-1 pl-3 text-sm text-(--office-ink) shadow-lg"
       >
         <span aria-hidden="true" className="shrink-0 text-(--office-muted)">
-          {isDocument ? <DocumentGlyph /> : <WebGlyph />}
+          {kind === 'document' ? (
+            <DocumentGlyph />
+          ) : kind === 'place' ? (
+            <PlaceGlyph />
+          ) : (
+            <WebGlyph />
+          )}
         </span>
         <a
           href={href}

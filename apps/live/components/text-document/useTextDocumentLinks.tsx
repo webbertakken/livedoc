@@ -30,8 +30,18 @@ import {
   type LinkStretch,
 } from '@/lib/text-document/text-document-links';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
+import type { BookmarkTarget } from '@/lib/text-document/text-document-bookmarks';
 import { TextDocumentLinkCard } from './TextDocumentLinkCard';
 import { TextDocumentLinkEditor } from './TextDocumentLinkEditor';
+
+/** This document's places a link may lead to. */
+export type InDocument = {
+  goTo: (name: string) => boolean;
+  targets: (typed: string) => readonly BookmarkTarget[];
+  // What names a place, for the link card; null when it is gone.
+  label: (name: string) => string | null;
+};
+const NO_PLACES: InDocument = { goTo: () => false, targets: () => [], label: () => null };
 
 // The link at the caret, where the caret is in it, and the box under it.
 type AtCaret = { link: LinkStretch; head: number; anchor: Box } | null;
@@ -70,6 +80,7 @@ export function useTextDocumentLinks({
   documents,
   subscribe,
   showCard,
+  inDocument = NO_PLACES,
 }: {
   // The writing with the caret: the body, or a header, footer or footnote being edited.
   view: EditorView | null;
@@ -79,6 +90,8 @@ export function useTextDocumentLinks({
   subscribe: (listener: () => void) => () => void;
   // Show link details.
   showCard: boolean;
+  // This document's places: going to a bookmark, and the ones the link editor offers.
+  inDocument?: InDocument;
 }) {
   const [editing, setEditing] = useState<{ nonce: number; edit: LinkEditing; anchor: Box } | null>(
     null,
@@ -168,11 +181,17 @@ export function useTextDocumentLinks({
     [view, writes],
   );
 
-  const follow = useCallback((link: LinkStretch) => {
-    const opened = openLink(link.href);
-    if (opened) track('UI', 'Used', 'TextDocumentLinkOpened');
-    debugLog('[text-document] link opened', { opened, scheme: link.href.split(':')[0] });
-  }, []);
+  const follow = useCallback(
+    (link: LinkStretch) => {
+      // A link to a place in this document goes there; any other opens in a new tab.
+      const opened = link.href.startsWith('#')
+        ? inDocument.goTo(link.href.slice(1))
+        : openLink(link.href);
+      if (opened) track('UI', 'Used', 'TextDocumentLinkOpened');
+      debugLog('[text-document] link opened', { opened, scheme: link.href.split(':')[0] });
+    },
+    [inDocument],
+  );
 
   const copy = useCallback((link: LinkStretch) => {
     navigator.clipboard?.writeText(link.href).then(
@@ -221,6 +240,7 @@ export function useTextDocumentLinks({
       text={editing.edit.text}
       href={editing.edit.href}
       documents={documents}
+      bookmarks={inDocument.targets}
       origin={origin()}
       onApply={apply}
       onClose={close}
@@ -231,9 +251,19 @@ export function useTextDocumentLinks({
     cardShown && shownAt ? (
       <TextDocumentLinkCard
         anchor={shownAt.anchor}
-        title={linkTitle(shownAt.link.href, documents, origin())}
+        title={
+          shownAt.link.href.startsWith('#')
+            ? (inDocument.label(shownAt.link.href.slice(1)) ?? shownAt.link.href)
+            : linkTitle(shownAt.link.href, documents, origin())
+        }
         href={shownAt.link.href}
-        isDocument={documentIdOf(shownAt.link.href, origin()) !== null}
+        kind={
+          shownAt.link.href.startsWith('#')
+            ? 'place'
+            : documentIdOf(shownAt.link.href, origin()) !== null
+              ? 'document'
+              : 'web'
+        }
         onOpen={() => follow(shownAt.link)}
         onCopy={() => copy(shownAt.link)}
         onEdit={writes ? open : null}

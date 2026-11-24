@@ -10,6 +10,7 @@ import {
 } from 'prosemirror-model';
 import {
   EQUATION,
+  BOOKMARK,
   FIELD,
   FIELD_ATTRIBUTES,
   FOOTNOTE,
@@ -32,11 +33,10 @@ import { paperFill, paperInk } from './text-document-paper';
 import { tableNodeSpecs } from './text-document-table-dom';
 import { pictureNodeSpec } from './text-document-pictures';
 import { equationNodeSpec } from './text-document-equations';
+import { nullAttributes } from './text-document-attributes';
+import { bookmarkNodeSpec } from './text-document-bookmarks';
 
 const fieldText = (text: unknown): string => (typeof text === 'string' ? text : '');
-
-const nullAttributes = (names: readonly string[]) =>
-  Object.fromEntries(names.map((name) => [name, { default: null }]));
 
 // A value the model holds as `#rrggbb` (or a highlight's name), checked before it reaches a style attribute.
 const COLOUR = /^(#[0-9a-f]{6}|[a-z]+)$/i;
@@ -203,6 +203,8 @@ const nodes: Record<string, NodeSpec> = {
   [PICTURE]: pictureNodeSpec,
   // An equation (objects.md "Equations in the editor"), drawn as MathML.
   [EQUATION]: equationNodeSpec,
+  // A bookmark (links-and-navigation.md "Bookmarks"): no width, its ribbon in the left margin.
+  [BOOKMARK]: bookmarkNodeSpec,
   // A page number or page count (page-layout.md "Page numbers"): one character to the caret, drawn in its own
   // formatting with the text it last showed; copied as that text.
   [FIELD]: {

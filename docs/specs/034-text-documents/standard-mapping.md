@@ -59,7 +59,9 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
   and inlines: **runs** (characters with direct text formatting and an optional link), **fields** (a page number or
   the page count, with the formatting of a run and the text last drawn), **notes** (a footnote's mark with its
   formatting, holding the note's blocks), **pictures** in line ([Objects](objects.md#the-model)), **equations**
-  ([Objects](objects.md#the-equation-model)) and **kept inlines**.
+  ([Objects](objects.md#the-equation-model)), **bookmarks** (a named point: ODF `text:bookmark`, OOXML a
+  `w:bookmarkStart` its `w:bookmarkEnd` follows at once; [Bookmarks](links-and-navigation.md#bookmarks)) and
+  **kept inlines**.
 - **`Style`**: a named paragraph or text style, its parent and next style, its formatting; the built-in styles are
   known by role (Normal text, Title, Subtitle, Heading 1 to 6) in either format's names.
 - **`ListDefinition`**: nine levels, each bullet (with its character), numbered (with its format, its label pattern
@@ -117,7 +119,7 @@ mail-merge fields, indexes other than the table of contents, smart chips, embedd
 shapes and text boxes, and constructs of newer versions of either standard.
 
 - **Four grains of keeping.** A **kept block** is a body-level element the model does not map (a table until tables
-  are built, a table of contents); a **kept inline** is one inside a paragraph (a bookmark, another field, an endnote, an anchored picture),
+  are built, a table of contents); a **kept inline** is one inside a paragraph (a hidden or spanning bookmark, another field, an endnote),
   with the formatting of the run it sat in; **kept properties** are the file's own formatting element of a paragraph,
   run, style, list or section, written back as it was while the model's values read from it are unchanged, and
   rebuilt from the model, its unmapped children kept, once they change; **kept parts** are the package's other

@@ -41,6 +41,7 @@ import { textDocumentSchema } from './text-document-schema';
 import { startUndoStep } from './text-document-undo';
 import { looksLikeMarkdown } from './text-document-markdown';
 import { markdownSlice } from './text-document-markdown-slice';
+import { withoutTakenBookmarks } from './text-document-bookmarks';
 import { lastStretch, StretchSelection } from './text-document-stretches';
 
 /** What a paste read: a fragment, HTML or plain text. */
@@ -268,7 +269,11 @@ export function clipboardPlugin({
         reading = { source: 'Plain', lists: {}, left: 0 };
         return plainTextSlice(text, $context);
       },
-      transformPasted: (slice) => {
+      transformPasted: (arriving, view) => {
+        // A bookmark copied is no second place of its name (links-and-navigation.md "Bookmarks"); one dragged moves.
+        const slice = view.dragging?.move
+          ? arriving
+          : withoutTakenBookmarks(arriving, view.state.doc);
         const pasted = (): Slice => {
           if (!reading) return slice;
           if (reading.slice) return reading.slice;

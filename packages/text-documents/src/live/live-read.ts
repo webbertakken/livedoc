@@ -22,6 +22,7 @@ import { Pictures, type DocumentMedia, type Picture, type PictureMedia } from '.
 import { PictureColours } from '../model/picture-colours';
 import { PicturePlacements } from '../model/picture-placement';
 import { Equations, type Equation } from '../model/equations';
+import { Bookmarks, type Bookmark } from '../model/bookmarks';
 import { Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
@@ -29,6 +30,7 @@ import {
   KEPT_BLOCK,
   TABLE,
   EQUATION,
+  BOOKMARK,
   FIELD,
   FOOTNOTE,
   KEPT_INLINE,
@@ -149,6 +151,22 @@ function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): I
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Equation['kept'],
+        }),
+      );
+      continue;
+    }
+    if (child instanceof Y.XmlElement && child.nodeName === BOOKMARK) {
+      const a = child.getAttributes() as Attributes;
+      // A name the model cannot hold reads as an empty one, so the atom and every position after it stay.
+      const name = typeof a.name === 'string' && Bookmarks.held(a.name) ? a.name : '';
+      inlines.push(
+        defined<Bookmark>({
+          type: 'bookmark',
+          name,
+          props: a.props ?? {},
+          style: a.style as string | undefined,
+          link: a.link as string | undefined,
+          kept: a.kept as Bookmark['kept'],
         }),
       );
       continue;

@@ -13,11 +13,9 @@ import {
   type MathRow,
 } from '@livedoc/text-documents';
 import { cssText, textDeclarations } from './text-document-style-sheet';
+import { nullAttributes } from './text-document-attributes';
 
 export const EQUATION_CLASS = 'text-document-equation';
-
-const nullAttributes = (names: readonly string[]) =>
-  Object.fromEntries(names.map((name) => [name, { default: null }]));
 
 /** The maths an equation's attribute holds; maths the model cannot hold draw as an empty equation. */
 export const equationMath = (value: unknown): MathRow => Equations.of(value) ?? [];
