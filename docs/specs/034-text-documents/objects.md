@@ -241,8 +241,20 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
 - **Image options** (Format > Image, the context menu) opens the right side panel with its sections in Google's order;
   **Size & rotation** holds Width and Height in the document's length unit, Scale width and Scale height in percent of
   its own size, and Lock aspect ratio (on by default, as Google's), then **Rotate**: Angle in degrees, with Rotate
-  counter-clockwise 90° and Rotate clockwise 90° buttons, as Google's; each change is one undo step. Text wrapping
-  and Position wait for their parts.
+  counter-clockwise 90° and Rotate clockwise 90° buttons, as Google's; each change is one undo step.
+- **Text wrapping** (look and order `(default)`, until a capture): **In line**, **Wrap text**, **Break text**, **Behind
+  text** and **In front of text**, as Google's, the one in force checked; under Wrap text and Break text, **Margin
+  from text** in the document's length unit, 0 to 1 in, set on all four sides as Google's; a picture whose sides
+  differ (from a file) shows it blank until one is typed `(default)`. Each choice is one undo step.
+- A picture leaving In line stays where it is drawn: it moves with text, its place measured from its paragraph's top
+  and its column's left edge; Wrap text and Break text set a margin of ⅛ in when chosen from In line, Behind or In
+  front, as Google's, and keep it between the two; Behind and In front keep the margin it had (none from In line)
+  `(default)`. Choosing In line drops its placement: it stands at its anchor.
+- **Position** (look and order `(default)`, until a capture), dimmed for a picture in line, as Google's: **Move with
+  text** or **Fix position on page**, then **X** and **Y** in the document's length unit, from its paragraph's top and
+  its column's left edge, or from the page's top left corner, as the choice says, within 22 in either way; a field
+  applies on Enter or when left. Switching between the two keeps the picture where it is drawn. Fix position on page
+  is dimmed in a pageless document, which has no page to fix it on `(default)`. Each change is one undo step.
 - **Recolour** (look and order `(default)`, until a capture): a grid of choices, **No recolour**, then **Light 1** to
   **Light 8** and **Dark 1** to **Dark 8**, each drawn as its duotone. Light N lays the picture from its colour (dark)
   to white, Dark N from black to its colour; the colours, 1 to 8, are grey `#666666`, red `#ff0000`, orange
@@ -280,7 +292,8 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
   D7).
 - Telemetry: `Element · Changed · TextDocumentImageAltText`, `TextDocumentImageReplace`, `TextDocumentImageSize`
   (handles and the panel), `TextDocumentImageReset`, `TextDocumentImageCrop` (each crop written),
-  `TextDocumentImageRotate` (each rotation written: the handle, the panel, the keys).
+  `TextDocumentImageRotate` (each rotation written: the handle, the panel, the keys), `TextDocumentImageWrap` (each
+  Text wrapping choice or margin written), `TextDocumentImagePosition` (each Position change written).
 
 ## Drawings
 
@@ -665,7 +678,7 @@ the gallery's limit.
 a building block as `TextDocumentBuildingBlock<Block>` (MeetingNotes, EmailDraft, ProductRoadmap, ReviewTracker,
 ProjectAssets, ContentLaunchTracker), a code block as `TextDocumentCodeBlock`,
 with the image source as the type's suffix (ImageUpload, ImageUrl, ImageGallery, ImageCamera, ImageSearch);
-`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust, and Drawing
+`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, Position, AltText, Replace, Recolour, Adjust, and Drawing
 for a drawing's picture made again by Save and close); a new equation from
 the equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·
 TextDocumentEquationToolbar`, counted before it flips. Never content.

@@ -205,6 +205,7 @@ import {
 } from '@/lib/text-document/text-document-picture-paste';
 import { pictureRoom as roomForPictures } from '@/lib/text-document/text-document-picture-insert';
 import { useTextDocumentPictureSize, IMAGE_OPTIONS_ITEM } from './useTextDocumentPictureSize';
+import { useTextDocumentPicturePlacing } from './useTextDocumentPicturePlacing';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -971,6 +972,13 @@ export function TextDocumentSurface({
     toggle: panels.actions[IMAGE_OPTIONS_ITEM],
     room: pictureRoom,
   });
+  // Image options' Text wrapping and Position (objects.md "In the editor").
+  const picturePlacing = useTextDocumentPicturePlacing({
+    view: editorView,
+    canEdit: bodyWrites,
+    subscribe: changes.subscribeCaret,
+    paged: !page.pageless,
+  });
   useLayoutEffect(() => {
     pictureSizing.current = {
       can: () => bodyWrites,
@@ -1187,6 +1195,7 @@ export function TextDocumentSurface({
               turn: pictureSize.turn,
               reset: pictureSize.reset,
               colour: pictureSize.colour,
+              placing: picturePlacing,
             }}
             contents={contents}
           />

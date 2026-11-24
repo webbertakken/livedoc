@@ -26,6 +26,7 @@ import {
   type PictureTurn,
 } from './TextDocumentImageOptionsPanel';
 import type { PictureColoursChange } from '@/lib/text-document/text-document-picture-edit';
+import type { PicturePlacingControls } from './useTextDocumentPicturePlacing';
 import { TextDocumentTablePropertiesPanel } from './TextDocumentTablePropertiesPanel';
 import { TextDocumentContentsPanel } from './TextDocumentContentsPanel';
 import type { ContentsChange } from '@/lib/text-document/text-document-contents-build';
@@ -60,6 +61,7 @@ export function TextDocumentRightPanel({
     turn: (turn: PictureTurn) => void;
     reset: () => void;
     colour: (change: PictureColoursChange) => void;
+    placing: PicturePlacingControls;
   };
   contents: {
     selected: { look: ContentsLook; levels: number } | null;
@@ -93,6 +95,7 @@ export function TextDocumentRightPanel({
           onTurn={imageOptions.turn}
           onReset={imageOptions.reset}
           onColour={imageOptions.colour}
+          placing={imageOptions.placing}
         />
       ) : spec === TABLE_PROPERTIES_PANEL ? (
         <TextDocumentTablePropertiesPanel

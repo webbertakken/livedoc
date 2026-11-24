@@ -12,6 +12,8 @@ import type { PictureColouring } from '@livedoc/text-documents';
 import type { IndentUnit } from '@/lib/text-document/indent-units';
 import type { PictureColoursChange } from '@/lib/text-document/text-document-picture-edit';
 import { ImageAdjustments, ImageRecolour } from './TextDocumentImageColours';
+import { ImagePosition, ImageTextWrapping } from './TextDocumentImagePlacement';
+import type { PicturePlacingControls } from './useTextDocumentPicturePlacing';
 import {
   PICTURE_SCALE_MOST,
   type PictureSize,
@@ -58,6 +60,7 @@ export function TextDocumentImageOptionsPanel({
   onTurn,
   onReset,
   onColour,
+  placing,
 }: {
   // The selected picture's, or null.
   picture: PictureSizing | null;
@@ -66,6 +69,8 @@ export function TextDocumentImageOptionsPanel({
   onTurn: (turn: PictureTurn) => void;
   onReset: () => void;
   onColour: (change: PictureColoursChange) => void;
+  // Text wrapping and Position: the selected picture's placement and its writes.
+  placing: PicturePlacingControls;
 }) {
   const [lock, setLock] = useState(true);
   const rotateLabel = useId();
@@ -161,6 +166,26 @@ export function TextDocumentImageOptionsPanel({
           </div>
         </div>
       </PanelSection>
+      {placing.placing ? (
+        <>
+          <PanelSection title="Text wrapping">
+            <ImageTextWrapping
+              placing={placing.placing}
+              unit={unit}
+              onWrap={placing.wrap}
+              onMargin={placing.margin}
+            />
+          </PanelSection>
+          <PanelSection title="Position">
+            <ImagePosition
+              placing={placing.placing}
+              unit={unit}
+              onMoves={placing.moves}
+              onOffset={placing.offset}
+            />
+          </PanelSection>
+        </>
+      ) : null}
       <PanelSection title="Recolour">
         <fieldset disabled={picture.drawing} className={DIMMED_FIELDS}>
           <ImageRecolour recolour={picture.colours.recolour} onColour={onColour} />

@@ -2,9 +2,10 @@
 // docs/specs/034-text-documents/objects.md "Working with a picture": Image options' Size & rotation holds Width and
 // Height in the person's unit, Scale in percent of its own size (dimmed while that is unknown) and Lock aspect ratio,
 // on at first; Rotate's Angle and a quarter turn either way; each field applies on Enter or when left, an invalid one
-// says so; Recolour and Adjustments under it, written through onColour; Reset; without a picture, a hint.
+// says so; Text wrapping and Position; Recolour and Adjustments under it, written through onColour; Reset; without a picture, a hint.
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { PicturePlacements, type PicturePlacement } from '@livedoc/text-documents';
 import { TextDocumentImageOptionsPanel, type PictureSizing } from './TextDocumentImageOptionsPanel';
 
 const SHOWN: PictureSizing = {
@@ -16,7 +17,18 @@ const SHOWN: PictureSizing = {
   drawing: false,
 };
 
-const panel = (picture: PictureSizing | null = SHOWN) => {
+const panel = (
+  picture: PictureSizing | null = SHOWN,
+  placement: PicturePlacement | undefined = undefined,
+  paged = true,
+) => {
+  const placing = {
+    placing: picture ? { placement, paged } : null,
+    wrap: vi.fn(),
+    margin: vi.fn(),
+    moves: vi.fn(),
+    offset: vi.fn(),
+  };
   const onChange = vi.fn();
   const onReset = vi.fn();
   const onTurn = vi.fn();
@@ -29,9 +41,10 @@ const panel = (picture: PictureSizing | null = SHOWN) => {
       onTurn={onTurn}
       onReset={onReset}
       onColour={onColour}
+      placing={placing}
     />,
   );
-  return { onChange, onReset, onTurn, onColour };
+  return { onChange, onReset, onTurn, onColour, placing };
 };
 
 const field = (name: string) => screen.getByRole<HTMLInputElement>('textbox', { name });
@@ -45,6 +58,8 @@ describe('TextDocumentImageOptionsPanel', () => {
     panel();
     expect([...document.querySelectorAll('summary')].map((s) => s.textContent)).toEqual([
       'Size & rotation▾',
+      'Text wrapping▾',
+      'Position▾',
       'Recolour▾',
       'Adjustments▾',
     ]);
@@ -143,5 +158,62 @@ describe('TextDocumentImageOptionsPanel', () => {
   it('says to select an image when none is', () => {
     panel(null);
     expect(screen.getByText('Select an image to see its options.')).toBeTruthy();
+  });
+
+  it('shows a picture in line, its Position dimmed', () => {
+    const { placing } = panel();
+    expect(screen.getByRole<HTMLInputElement>('radio', { name: 'In line' }).checked).toBe(true);
+    expect(screen.queryByRole('textbox', { name: 'Margin from text' })).toBeNull();
+    const fix = screen.getByRole<HTMLInputElement>('radio', { name: 'Fix position on page' });
+    expect(fix.matches(':disabled')).toBe(true);
+    expect(field('X').matches(':disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('radio', { name: 'Wrap text' }));
+    expect(placing.wrap).toHaveBeenCalledWith('wrap');
+  });
+
+  it('sets a wrapped picture’s margin and position', () => {
+    const placement = {
+      wrap: 'wrap',
+      margin: PicturePlacements.margin(9),
+      moves: 'with-text',
+      x: 36,
+      y: -18,
+    } as const;
+    const { placing } = panel(SHOWN, placement);
+    expect(field('Margin from text').value).toBe('0.13');
+    type('Margin from text', '0.5');
+    expect(placing.margin).toHaveBeenCalledWith(36);
+    expect(screen.getByRole<HTMLInputElement>('radio', { name: 'Move with text' }).checked).toBe(
+      true,
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'Fix position on page' }));
+    expect(placing.moves).toHaveBeenCalledWith('page');
+    expect(field('Y').value).toBe('-0.25');
+    type('X', '-1');
+    expect(placing.offset).toHaveBeenCalledWith('x', -72);
+    fireEvent.click(screen.getByRole('radio', { name: 'Break text' }));
+    expect(placing.wrap).toHaveBeenCalledWith('break');
+  });
+
+  it('leaves a margin blank where its sides differ, and the page out of reach pageless', () => {
+    const margin = { top: 0, right: 9, bottom: 9, left: 9 };
+    panel(SHOWN, { wrap: 'break', margin, moves: 'with-text', x: 0, y: 0 }, false);
+    expect(field('Margin from text').value).toBe('');
+    const fix = screen.getByRole<HTMLInputElement>('radio', { name: 'Fix position on page' });
+    expect(fix.disabled).toBe(true);
+  });
+
+  it('refuses an offset past 22 inches', () => {
+    const { placing } = panel(SHOWN, {
+      wrap: 'front',
+      margin: PicturePlacements.margin(0),
+      moves: 'page',
+      x: 0,
+      y: 0,
+    });
+    expect(screen.queryByRole('textbox', { name: 'Margin from text' })).toBeNull();
+    type('Y', '23');
+    expect(placing.offset).not.toHaveBeenCalled();
+    expect(screen.getByText('Enter a number from -22 to 22.')).toBeTruthy();
   });
 });

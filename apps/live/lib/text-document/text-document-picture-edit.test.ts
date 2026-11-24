@@ -3,13 +3,14 @@
 // following the new picture's ratio and its crop dropped.
 import { describe, expect, it } from 'vitest';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
-import { PICTURE } from '@livedoc/text-documents';
+import { PICTURE, PicturePlacements } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
   replacePictureMedia,
   selectedPicture,
   setPictureAlt,
   setPictureColours,
+  setPicturePlacement,
 } from './text-document-picture-edit';
 
 const picture = schema.nodes[PICTURE]!.create({
@@ -128,5 +129,32 @@ describe('setPictureColours', () => {
       false,
     );
     expect(run(selected(), setPictureColours(1, { recolour: undefined })).ran).toBe(false);
+  });
+});
+
+describe('setPicturePlacement', () => {
+  const placement = {
+    wrap: 'break',
+    margin: PicturePlacements.margin(9),
+    moves: 'page',
+    x: 10,
+    y: -20,
+  } as const;
+
+  it('writes a placement, the picture still selected', () => {
+    const { ran, next, attrs } = run(selected(), setPicturePlacement(2, placement));
+    expect(ran).toBe(true);
+    expect(attrs.placement).toEqual(placement);
+    expect(selectedPicture(next)).toMatchObject({ pos: 2 });
+  });
+
+  it('puts a picture back in line, and changes nothing when nothing would', () => {
+    const placedState = run(selected(), setPicturePlacement(2, placement)).next;
+    const back = run(placedState, setPicturePlacement(2, undefined));
+    expect(back.ran).toBe(true);
+    expect(back.attrs.placement).toBeNull();
+    expect(run(selected(), setPicturePlacement(2, undefined)).ran).toBe(false);
+    expect(run(placedState, setPicturePlacement(2, placement)).ran).toBe(false);
+    expect(run(selected(), setPicturePlacement(1, placement)).ran).toBe(false);
   });
 });
