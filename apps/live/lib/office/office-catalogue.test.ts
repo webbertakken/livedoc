@@ -213,6 +213,20 @@ describe('contextEntries', () => {
     expect(entries[2]).toMatchObject({ id: 'download-odt', status: 'built', level: 'view' });
   });
 
+  it("holds a submenu of its own, its entries resolved by id as the menu's are", () => {
+    const [sub] = contextEntries(CATALOGUE, [
+      { kind: 'submenu', id: 'more', label: 'More', entries: ['copy-doc', { kind: 'separator' }] },
+    ]);
+    expect(sub).toMatchObject({ kind: 'submenu', id: 'more', label: 'More' });
+    expect(sub?.kind === 'submenu' && sub.entries.map((e) => e.kind)).toEqual([
+      'item',
+      'separator',
+    ]);
+    expect(() =>
+      contextEntries(CATALOGUE, [{ kind: 'submenu', id: 'm', label: 'M', entries: ['nowhere'] }]),
+    ).toThrow(/nowhere/);
+  });
+
   it('refuses an id no menu holds', () => {
     expect(() => contextEntries(CATALOGUE, ['nowhere'])).toThrow(/nowhere/);
   });

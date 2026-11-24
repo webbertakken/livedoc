@@ -1702,6 +1702,14 @@ export const TEXT_DOCUMENT_CONTEXT_MENU_OPENED = opened(
   (t) => t === 'TextDocumentContextMenu',
 );
 
+// A spreadsheet's context menu opened on a cell, a row number or a column letter (docs/specs/029-sheets/surface.md
+// "Context menus").
+export const SPREADSHEET_CONTEXT_MENU_OPENED = opened(
+  'Spreadsheet Context Menu',
+  "The context menu on a spreadsheet's cell, row number or column letter opened, by a right-click or from the keyboard.",
+  (t) => t === 'SpreadsheetContextMenu',
+);
+
 // The Fonts dialog of a text document opened from its font menu's More fonts (fonts.md "More fonts").
 export const TEXT_DOCUMENT_MORE_FONTS_OPENED = opened(
   'Text Document More Fonts',
@@ -1735,6 +1743,7 @@ export const PANELS_OPENED: MetricStack = {
     TEXT_DOCUMENT_PANELS_OPENED,
     PDF_DOCUMENT_PANELS_OPENED,
     TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
+    SPREADSHEET_CONTEXT_MENU_OPENED,
     TEXT_DOCUMENT_MORE_FONTS_OPENED,
     OTHER_OPENED,
   ],

@@ -4,7 +4,7 @@
 // and a header's menu at the pointer, a filter column's values and condition, and Custom Sort. Rows in the shared
 // context menu; every row that changes something only for someone who may edit.
 import { Button } from '@livedoc/ui';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   CONDITION_OPS,
   columnLetters,
@@ -14,7 +14,7 @@ import {
 } from '@livedoc/sheets';
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { MenuActionRow } from '@/components/primitives/PortalMenu';
-import { useSheetController } from './sheet-controller';
+import { useSheetController, type OpenMenu } from './sheet-controller';
 import type { SheetActions } from './useSheetActions';
 import { SheetCellMenu } from './SheetCellMenu';
 import { FilterIcon, SortIcon } from './sheet-icons';
@@ -44,7 +44,16 @@ const CONDITION_LABELS: Record<NonNullable<FilterCondition['op']>, string> = {
   neq: 'Is not equal to',
 };
 
-export function SheetMenus({ actions }: { actions: SheetActions }) {
+/** A cell's or a header's menu: a spreadsheet draws its own (surface.md "Context menus"), a Plan Sheet these. */
+export type GridContextMenu = Extract<OpenMenu, { kind: 'cell' | 'header' }>;
+
+export function SheetMenus({
+  actions,
+  contextMenu,
+}: {
+  actions: SheetActions;
+  contextMenu?: (menu: GridContextMenu, onClose: () => void) => ReactNode;
+}) {
   const c = useSheetController();
   const menu = c.menu;
   if (!menu) return null;
@@ -52,6 +61,8 @@ export function SheetMenus({ actions }: { actions: SheetActions }) {
     c.setMenu(null);
     c.focusGrid();
   };
+  if (contextMenu && (menu.kind === 'cell' || menu.kind === 'header'))
+    return contextMenu(menu, close);
   if (menu.kind === 'cell')
     return <SheetCellMenu at={{ x: menu.x, y: menu.y }} actions={actions} onClose={close} />;
   if (menu.kind === 'lines')

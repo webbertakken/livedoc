@@ -16,7 +16,6 @@ import {
 } from '@/components/sheets/sheet-controller';
 import { SheetFormulaBar } from '@/components/sheets/SheetFormulaBar';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
-import { SheetMenus } from '@/components/sheets/SheetMenus';
 import type { SheetStore } from '@/components/sheets/sheet-store-client';
 import { useAttachedSheetStore } from '@/components/sheets/useAttachedSheetStore';
 import { useFormulaInput } from '@/components/sheets/useFormulaInput';
@@ -37,6 +36,7 @@ import { SheetBarSummary } from './SheetBarSummary';
 import { SummarySlotContext } from './summary-slot';
 import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
+import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { useGridMenuBindings } from './useGridMenuBindings';
 import {
   SpreadsheetZoomProvider,
@@ -332,7 +332,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const pointRef = useFormulaPointing(c, input);
   const zoom = useSpreadsheetZoomScale();
   const surfaceKeys = useSpreadsheetSurfaceKeys();
-  useGridMenuBindings(actions);
+  const office = useGridMenuBindings(actions);
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
   useEffect(() => {
@@ -369,7 +369,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
           surfaceKeys={surfaceKeys}
         />
       </div>
-      <SheetMenus actions={actions} />
+      <SpreadsheetGridMenus actions={actions} bound={office.actions} />
       <SheetBarSummary />
     </div>
   );

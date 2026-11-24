@@ -427,6 +427,15 @@ const HELP_MENU = menu('help', 'Help', [
   }),
 ]);
 
+/** The menus over the grid, whatever the file: the context menus take their items from these by id. */
+export const SPREADSHEET_GRID_MENUS: OfficeCatalogue = [
+  EDIT_MENU,
+  VIEW_MENU,
+  INSERT_MENU,
+  FORMAT_MENU,
+  DATA_MENU,
+];
+
 export function spreadsheetMenus(format: WorkbookFormat): OfficeCatalogue {
   return [
     fileMenu(format),
