@@ -216,5 +216,5 @@ CommentsSummary|Print|Email|KeptFromTextDocument|KeptFromSpreadsheet|KeptFromCan
 | The upload stops                           | "Upload paused. It continues when you are back online." The pages stay open |
 | The upload is refused after the pages show | The refusal's copy, with **Download** of the local bytes; nothing is stored |
 | A download or print's bake fails           | "This PDF couldn't be written. Your changes are safe." **Try again**        |
-| A download's mark font does not load       | [Marks](marks.md#loading)' copy, with **Try again**                           |
+| A download's mark font does not load       | [Marks](marks.md#loading)' copy, with **Try again**                         |
 | The browser blocks the download            | "Your browser blocked the download." **Download again**                     |

@@ -5,7 +5,18 @@
 import { Sfnt, type SfntTables } from './sfnt';
 
 /** The tables a PDF's TrueType font program keeps: the outlines, their metrics, the face's names and hinting. */
-const KEPT = new Set(['head', 'hhea', 'maxp', 'hmtx', 'OS/2', 'name', 'cvt ', 'fpgm', 'prep', 'gasp']);
+const KEPT = new Set([
+  'head',
+  'hhea',
+  'maxp',
+  'hmtx',
+  'OS/2',
+  'name',
+  'cvt ',
+  'fpgm',
+  'prep',
+  'gasp',
+]);
 
 // A composite glyph's component flags (the OpenType `glyf` table).
 const ARGS_ARE_WORDS = 0x0001;
@@ -18,7 +29,8 @@ const HAS_TWO_BY_TWO = 0x0080;
 function locations(tables: SfntTables): number[] {
   const loca = tables.get('loca')!;
   const data = new DataView(loca.buffer, loca.byteOffset, loca.byteLength);
-  const long = new DataView(tables.get('head')!.buffer, tables.get('head')!.byteOffset).getInt16(50) === 1;
+  const long =
+    new DataView(tables.get('head')!.buffer, tables.get('head')!.byteOffset).getInt16(50) === 1;
   return Array.from({ length: Sfnt.glyphCount(tables) + 1 }, (_, glyph) =>
     long ? data.getUint32(glyph * 4) : data.getUint16(glyph * 2) * 2,
   );

@@ -34,9 +34,13 @@ describe('the faces a mark is set in', () => {
   it('keeps a space, a digit or an accent in the face before it where that face has it', () => {
     // The rupee sign is Latin Extended's first, and Devanagari's too.
     expect(MarkFaces.runs(regular('₹'))).toEqual([{ face: 'noto-sans-latin-ext-400', text: '₹' }]);
-    expect(MarkFaces.runs(regular('न₹'))).toEqual([{ face: 'noto-sans-devanagari-400', text: 'न₹' }]);
+    expect(MarkFaces.runs(regular('न₹'))).toEqual([
+      { face: 'noto-sans-devanagari-400', text: 'न₹' },
+    ]);
     // A combining acute after a Cyrillic letter: Cyrillic's subset has it.
-    expect(MarkFaces.runs(regular('и\u0301'))).toEqual([{ face: 'noto-sans-cyrillic-400', text: 'и\u0301' }]);
+    expect(MarkFaces.runs(regular('и\u0301'))).toEqual([
+      { face: 'noto-sans-cyrillic-400', text: 'и\u0301' },
+    ]);
     // A space at the start has no face before it.
     expect(MarkFaces.runs(regular(' Ω'))[0]).toEqual({ face: 'noto-sans-latin-400', text: ' ' });
   });

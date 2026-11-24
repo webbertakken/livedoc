@@ -117,9 +117,7 @@ export const Sfnt = {
     const unicode = (platform: number, encoding: number) =>
       (platform === 3 && (encoding === 1 || encoding === 10)) || platform === 0;
     const chosen =
-      subtables.find(
-        (s) => unicode(s.platform, s.encoding) && cmap.getUint16(s.offset) === 12,
-      ) ??
+      subtables.find((s) => unicode(s.platform, s.encoding) && cmap.getUint16(s.offset) === 12) ??
       subtables.find((s) => unicode(s.platform, s.encoding) && cmap.getUint16(s.offset) === 4);
     if (!chosen) return map;
     const at = chosen.offset;

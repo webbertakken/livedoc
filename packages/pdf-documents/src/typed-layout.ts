@@ -38,7 +38,10 @@ const readsRightToLeft = (paragraph: string): boolean => {
 /** How wide words are set at a size in a mark's faces, in points. */
 const widthOf = (text: string, size: number, faces: MarkFaceSet): number =>
   (faces === 'helvetica'
-    ? Array.from(text).reduce((sum, character) => sum + Helvetica.width(character.codePointAt(0)!), 0)
+    ? Array.from(text).reduce(
+        (sum, character) => sum + Helvetica.width(character.codePointAt(0)!),
+        0,
+      )
     : MarkFaces.width({ text, bold: false })) *
   (size / 1000);
 

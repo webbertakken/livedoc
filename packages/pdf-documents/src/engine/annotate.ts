@@ -78,7 +78,11 @@ const boxArray = (box: Box): PdfArray => new PdfArray(box.map((n) => PdfNumber.o
 const FACES = { [APPEARANCE_FONT]: 'Helvetica', [APPEARANCE_BOLD_FONT]: 'Helvetica-Bold' } as const;
 
 /** An appearance as the stream an annotation's `AP` names: its box, its graphics state, the fonts it sets words in. */
-function streamOf(pdf: PDF, appearance: Appearance, writing: MarkFaceWriting | null = null): PdfDict {
+function streamOf(
+  pdf: PDF,
+  appearance: Appearance,
+  writing: MarkFaceWriting | null = null,
+): PdfDict {
   const resources = new PdfDict();
   const standard = appearance.fonts.map((font): [string, PdfObject] => [
     font,
