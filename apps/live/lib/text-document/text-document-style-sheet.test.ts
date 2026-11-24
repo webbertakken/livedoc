@@ -150,6 +150,17 @@ describe('paragraphDeclarations, borders and shading', () => {
     );
   });
 
+  // editing-surface.md "The page in the dark scheme": a line of the box's own fill is drawn as that fill.
+  it('draws a line in the box’s own fill colour as the fill, so it melts into it on either paper', () => {
+    const css = cssText(
+      paragraphDeclarations({
+        borders: { top: { width: 1, dash: 'solid', color: '#F1F3F4', space: 4 } },
+        shading: '#f1f3f4',
+      }),
+    );
+    expect(css).toContain(`border-top: 1pt solid ${paperFill('#F1F3F4')}`);
+  });
+
   it('draws no box without borders or a background, and nothing unsafe in one', () => {
     expect(cssText(paragraphDeclarations({ borders: undefined }))).toBe('');
     const css = cssText(

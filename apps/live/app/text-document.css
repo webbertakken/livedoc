@@ -943,3 +943,17 @@ div.text-document-kept {
   width: 4px;
   margin: -7px 0 0 -4px;
 }
+/* A code block (objects.md "Code blocks"): its style draws the font, grey and padding; the editor rounds its corners
+   and names its language above its first line, in small grey type (5.6:1 on the block's grey in either scheme). */
+.text-document-code-block {
+  border-radius: 6px;
+}
+.text-document-code-block[data-code-language]::before {
+  content: attr(data-code-language);
+  display: block;
+  margin-bottom: 2pt;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 8pt;
+  color: light-dark(#5f6368, #9aa0a6);
+  user-select: none;
+}

@@ -4,7 +4,7 @@
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
 A horizontal line, special characters and emoji are inserted, emoji also from the colon list; so are the six
-building blocks.
+building blocks and code blocks.
 An equation is held, read and written in both formats, kept in the live state, drawn, inserted and written in its
 box, with its toolbar.
 The rest is specified.
@@ -487,7 +487,8 @@ Insert > Building blocks puts one of six ready-made stretches of writing in at t
 written as its text (C3), so it opens alike in every suite and nothing in it needs an outside service.
 
 - **The menu**, in Google's order: Meeting notes, Email draft, then a line, then Product roadmap, Review tracker,
-  Project assets, Content launch tracker. Custom building blocks (saving one's own) is not here (an either-way row).
+  Project assets, Content launch tracker, then a line, then Code blocks ([Code blocks](#code-blocks)).
+  Custom building blocks (saving one's own) is not here (an either-way row).
 - **Meeting notes**: a Heading 2 line of today's date (written in the person's locale, month abbreviated, as Google's
   date chip shows it) and `|`, the caret after it for the meeting's name; a line `Attendees: `; a Heading 3
   `Notes` with one empty bulleted item; a Heading 3 `Action items` with one empty checklist item.
@@ -516,8 +517,32 @@ written as its text (C3), so it opens alike in every suite and nothing in it nee
 
 ## Code blocks
 
-Not in Google Docs' menus as a block (assumed: Google has "Code blocks" under Insert > Building blocks in some
-locales); an arriving paragraph styled as code keeps its style.
+Insert > Building blocks > Code blocks > a language puts a code block in, as Google's does (default, until Google's
+files of one are read): a grey block of monospace lines, highlighted by its language.
+
+- **Languages**, in Google's order: C/C++, CSharp, CSS, Go, HTML, Java, JavaScript, JSON, Kotlin, PHP, Protobuf,
+  Python, Rust, Shell, SQL, Textproto, TypeScript, XML.
+- **The model**: a code block is one paragraph in a code style, its lines separated by line breaks; nothing else marks
+  it, so both formats hold it as they hold any paragraph.
+- **Code styles**: `Code`, Roboto Mono 10 pt, single line spacing, 6 pt before and after, shaded `#f1f3f4` with a line
+  of the same grey 4 pt clear of the text on every side, so other suites draw it as a padded grey block; and for each
+  language `Code (<Language>)` based on `Code` and carrying the same formatting itself, so a suite that drops the
+  parent still draws it. The language travels in the file as its style's name; a suite shows it as that style.
+- **Reading**: a paragraph whose style is named `Code` is a code block of no language, drawn without highlighting;
+  `Code (<Language>)` names one of the list; another name in the brackets reads as no language. The style keeps its
+  id and formatting as the file has them.
+- **Putting one in**: a selection's paragraphs become one block, their texts joined by line breaks; at a caret in an
+  empty paragraph, that paragraph becomes the block; elsewhere an empty block goes in at the caret as a table does
+  ([Tables](tables.md#inserting)). The caret goes into the block. A code style the document lacks is added first.
+  One undo step, for an Editor; dimmed for anyone else, and while a header, footer or note is edited.
+- **Writing in one**: Enter starts a new line in the block, keeping the line's leading spaces and tabs; Enter on a
+  last line of nothing but spaces and tabs leaves the block, that line taken away and a Normal text paragraph started
+  after it; Tab types a tab. Typing aids (smart quotes, substitutions, automatic lists and links, capitals) are off in a block.
+- **Drawn**: by its style, with rounded corners, and the language's name in small grey type at its top left;
+  highlighting colours keywords, strings, comments and numbers, drawn by the editor only and never written, so a file
+  holds plain monospace text. Colours are drawn for the paper (editing-surface.md "The page in the dark scheme").
+- The highlighter is LiveDoc's own tokenizer, shared with the canvas's code block, loaded only when a document holds a
+  code block; until it loads, a block is drawn without colours.
 
 ## Share roles
 
@@ -532,8 +557,8 @@ the gallery's limit.
 
 `Element · Added · TextDocument<Object>` (Image, Drawing, Chart, Equation, SpecialCharacter, Emoji, HorizontalLine),
 a building block as `TextDocumentBuildingBlock<Block>` (MeetingNotes, EmailDraft, ProductRoadmap, ReviewTracker,
-ProjectAssets, ContentLaunchTracker),
+ProjectAssets, ContentLaunchTracker), a code block as `TextDocumentCodeBlock`,
 with the image source as the type's suffix (ImageUpload, ImageUrl, ImageGallery, ImageCamera, ImageSearch);
-`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust); a new equation from the
-equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·
+`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust); a new equation from
+the equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·
 TextDocumentEquationToolbar`, counted before it flips. Never content.

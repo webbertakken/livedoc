@@ -36,7 +36,7 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
   near white and a pale yellow highlight as a deep yellow. A light text colour and a dark fill are drawn as written.
 - Text on dark paper meets 4.5:1 against what is behind it: a mirrored ink still short of it is lifted toward white.
 - Borders, list markers, ticked checklist items and kept-content placeholders follow the same rules; pictures and
-  drawings are drawn as they are.
+  drawings are drawn as they are. A paragraph's border in its own background colour is drawn as that fill.
 - Printing, PDFs, previews and thumbnails are always light paper (default).
 
 ## The title row

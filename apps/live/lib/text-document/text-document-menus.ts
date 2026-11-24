@@ -18,6 +18,7 @@ import {
 import { BORDERS_ITEM, LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
 import { PAGE_NUMBER_PRESETS } from './text-document-page-numbers';
 import { BUILDING_BLOCKS } from './text-document-building-blocks';
+import { CODE_BLOCK_ITEMS } from './text-document-code-blocks';
 
 type ItemOptions = Partial<
   Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status' | 'sizeGrid'>
@@ -56,11 +57,20 @@ export const IMAGE_ENTRIES: readonly OfficeEntry[] = [
   item('image-by-url', 'By URL', 'edit'),
 ];
 
-// Insert > Building blocks in Google's order: the two of writing, a line, the four trackers (objects.md).
-const BUILDING_BLOCK_ENTRIES: OfficeEntry[] = BUILDING_BLOCKS.flatMap((block, index) => [
-  ...(index === 2 ? [SEPARATOR] : []),
-  item(block.item, block.label, 'edit', BUILT),
-]);
+// Insert > Building blocks in Google's order: the two of writing, a line, the four trackers, a line, Code blocks by
+// language (objects.md).
+const BUILDING_BLOCK_ENTRIES: OfficeEntry[] = [
+  ...BUILDING_BLOCKS.flatMap((block, index): OfficeEntry[] => [
+    ...(index === 2 ? [SEPARATOR] : []),
+    item(block.item, block.label, 'edit', BUILT),
+  ]),
+  SEPARATOR,
+  submenu(
+    'code-blocks',
+    'Code blocks',
+    CODE_BLOCK_ITEMS.map(({ item: id, label }) => item(id, label, 'edit', BUILT)),
+  ),
+];
 
 // A text document downloads in its own format; the other format's file is a converted copy, built with conversion.
 function downloads(format: TextDocumentFormat): OfficeEntry[] {
