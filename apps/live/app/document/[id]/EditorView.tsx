@@ -7,7 +7,6 @@ import { CommentBadgesContext } from '@/components/canvas/CommentBadgesContext';
 import { SuppressElementIndicators } from '@/components/canvas/ElementIndicatorStyleContext';
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
 import { listedTabs, surfaceOf, tabKindOf } from '@livedoc/document';
-import { TextDocumentDrawingBar } from '@/components/text-document/TextDocumentDrawingBar';
 import { TextDocumentHost } from '@/components/text-document/TextDocumentHost';
 import { PdfDocumentHost } from '@/components/pdf-document/PdfDocumentHost';
 import { applyDocumentRename } from './editor-page-helpers';
@@ -85,6 +84,14 @@ const EditorSearchPanel = dynamic(loadEditorSearchPanel, { ssr: false });
 // Plan pays nothing for it.
 const PlanSheetsHost = dynamic(
   () => import('@/components/plan/PlanSheetsHost').then((m) => m.PlanSheetsHost),
+  { ssr: false },
+);
+// A drawing tab's bar loads only over a drawing tab (docs/specs/034-text-documents/objects.md "Drawings").
+const TextDocumentDrawingBar = dynamic(
+  () =>
+    import('@/components/text-document/TextDocumentDrawingBar').then(
+      (m) => m.TextDocumentDrawingBar,
+    ),
   { ssr: false },
 );
 
