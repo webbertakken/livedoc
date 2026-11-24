@@ -1,7 +1,8 @@
 // The table of contents in the editor (docs/specs/034-text-documents/links-and-navigation.md "Table of contents"):
 // one block of the body, read only, its entries paragraphs drawn as the writing's (their tab stops lead to the page
 // numbers); a press selects it whole.
-import type { NodeSpec } from 'prosemirror-model';
+import type { NodeSpec, Node as PmNode } from 'prosemirror-model';
+import type { NodeView } from 'prosemirror-view';
 import { NodeSelection, Plugin } from 'prosemirror-state';
 import { CONTENTS, CONTENTS_ATTRIBUTES, Contents } from '@livedoc/text-documents';
 import { nullAttributes } from './text-document-attributes';
@@ -30,21 +31,41 @@ export const contentsNodeSpec: NodeSpec = {
       },
     },
   ],
-  toDOM: (node) => {
-    const { look, levels } = node.attrs as { look: unknown; levels: unknown };
-    return [
-      'nav',
-      {
-        class: CONTENTS_CLASS,
-        'aria-label': 'Table of contents',
-        contenteditable: 'false',
-        'data-look': typeof look === 'string' ? look : 'plain',
-        'data-levels': String(Contents.levelsOf(typeof levels === 'number' ? levels : undefined)),
-      },
-      0,
-    ];
-  },
+  toDOM: (node) => ['nav', drawnAttributes(node), 0],
 };
+
+function drawnAttributes(node: PmNode): Record<string, string> {
+  const { look, levels } = node.attrs as { look: unknown; levels: unknown };
+  return {
+    class: CONTENTS_CLASS,
+    'aria-label': 'Table of contents',
+    contenteditable: 'false',
+    'data-look': typeof look === 'string' ? look : 'plain',
+    'data-levels': String(Contents.levelsOf(typeof levels === 'number' ? levels : undefined)),
+  };
+}
+
+/**
+ * The block as the editor draws it: one element kept while it stays a table of contents (a blur or a selection never
+ * draws it anew, so its entries' laid-out tabs stay), its look and levels set on it as they change.
+ */
+export function contentsView(node: PmNode): NodeView {
+  const dom = document.createElement('nav');
+  const draw = (next: PmNode) => {
+    for (const [name, value] of Object.entries(drawnAttributes(next)))
+      dom.setAttribute(name, value);
+  };
+  draw(node);
+  return {
+    dom,
+    contentDOM: dom,
+    update: (next) => {
+      if (next.type !== node.type) return false;
+      draw(next);
+      return true;
+    },
+  };
+}
 
 /** A press anywhere on a table of contents selects it whole (a block with content takes no selection by itself). */
 export function contentsPressPlugin(): Plugin {

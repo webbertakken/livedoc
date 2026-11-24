@@ -22,6 +22,7 @@ import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
   Columns,
+  CONTENTS,
   EQUATION,
   liveFirstHeaders,
   PICTURE,
@@ -70,7 +71,7 @@ import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialo
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
 import { useTextDocumentHeadingLinks } from './useTextDocumentHeadingLinks';
-import { contentsPressPlugin } from '@/lib/text-document/text-document-contents';
+import { contentsPressPlugin, contentsView } from '@/lib/text-document/text-document-contents';
 import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
@@ -503,6 +504,8 @@ export function TextDocumentSurface({
           nodeViews: {
             ...FIELD_NODE_VIEWS,
             table: tableView,
+            // A table of contents kept as one element (links-and-navigation.md "Table of contents").
+            [CONTENTS]: contentsView,
             [EQUATION]: equationView,
             [PICTURE]: pictureView(
               {

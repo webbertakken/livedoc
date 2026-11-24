@@ -7,7 +7,8 @@ import { DOMParser as PmDOMParser, DOMSerializer, type Node as PmNode } from 'pr
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { baseKeymap } from 'prosemirror-commands';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { CONTENTS_CLASS, contentsPressPlugin } from './text-document-contents';
+import { CONTENTS_CLASS, contentsPressPlugin, contentsView } from './text-document-contents';
+import { DecorationSet } from 'prosemirror-view';
 import type { EditorView } from 'prosemirror-view';
 
 const p = (text: string) => schema.nodes.paragraph!.create({}, text ? schema.text(text) : null);
@@ -72,5 +73,20 @@ describe('a press on a table of contents', () => {
       press.call(null as never, view, 4, doc.child(0), 0, new MouseEvent('click'), false),
     ).toBe(true);
     expect((state.selection as NodeSelection).node.type.name).toBe('table_of_contents');
+  });
+});
+
+// Its entries' tab boxes are laid out once and kept: the block is never drawn anew while it stays a table of contents.
+describe('the table of contents view', () => {
+  it('keeps its element as it changes, its look and levels updated on it', () => {
+    const first = contents('dotted', 3, 'A');
+    const view = contentsView(first);
+    const dom = view.dom as HTMLElement;
+    expect(dom.tagName).toBe('NAV');
+    expect(view.contentDOM).toBe(dom);
+    expect(dom.getAttribute('aria-label')).toBe('Table of contents');
+    expect(view.update!(contents('links', 2, 'A', 'B'), [], DecorationSet.empty)).toBe(true);
+    expect([dom.dataset.look, dom.dataset.levels]).toEqual(['links', '2']);
+    expect(view.update!(p('x'), [], DecorationSet.empty)).toBe(false);
   });
 });
