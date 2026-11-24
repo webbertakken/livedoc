@@ -120,20 +120,32 @@ export function WhiteboardFlyout({
   // one frame rather than flashing at the corner). Layout sizes, not the bounding rect: the pop-in
   // starts at scale(0).
   const [place, setPlace] = useState<Place | null>(null);
+  // Placed again whenever it changes size (a section opening inside it), so one above a dock at the bottom keeps its
+  // bottom edge off the dock and grows up, never under the dock or off the screen.
   useLayoutEffect(() => {
     const node = ref.current;
     const wrapEl = document.querySelector<HTMLElement>(scope);
     const opener = wrapEl?.querySelector<HTMLElement>(`[data-dock-item="${anchor}"]`);
     if (!node || !wrapEl || !opener) return;
-    const wrap = wrapEl.getBoundingClientRect();
-    const btn = opener.getBoundingClientRect();
     const below = placement === 'below';
-    const at = offDock(wrap, btn, node, below);
-    setPlace({
-      left: at.left,
-      top: at.top,
-      tip: { edge: below ? 'top' : 'bottom', offset: at.tipLeft },
-    });
+    const place = () => {
+      const at = offDock(
+        wrapEl.getBoundingClientRect(),
+        opener.getBoundingClientRect(),
+        node,
+        below,
+      );
+      setPlace({
+        left: at.left,
+        top: at.top,
+        tip: { edge: below ? 'top' : 'bottom', offset: at.tipLeft },
+      });
+    };
+    place();
+    if (typeof ResizeObserver === 'undefined') return;
+    const resized = new ResizeObserver(place);
+    resized.observe(node);
+    return () => resized.disconnect();
   }, [anchor, placement, revision, scope]);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
