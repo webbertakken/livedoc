@@ -214,7 +214,7 @@ export function SelectionPopover({
                   }}
                   aria-label="More actions"
                   aria-haspopup="dialog"
-                  className="flex size-field items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                  className="flex size-row items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                 >
                   <EllipsisIcon />
                 </button>
@@ -360,8 +360,8 @@ export function SelectionPopover({
                 aria-pressed={locked}
                 className={
                   locked
-                    ? 'flex size-field items-center justify-center rounded-control bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
-                    : 'flex size-field items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                    ? 'flex size-row items-center justify-center rounded-control bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
+                    : 'flex size-row items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                 }
               >
                 <LockIcon closed={locked} />
@@ -383,8 +383,8 @@ export function SelectionPopover({
                   aria-label="Delete"
                   className={
                     locked
-                      ? 'flex size-field items-center justify-center rounded-control text-slate-300 dark:text-slate-400'
-                      : 'flex size-field items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                      ? 'flex size-row items-center justify-center rounded-control text-slate-300 dark:text-slate-400'
+                      : 'flex size-row items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                   }
                 >
                   <TrashIcon />

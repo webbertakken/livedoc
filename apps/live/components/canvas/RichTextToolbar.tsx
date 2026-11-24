@@ -28,7 +28,7 @@ import { useDocumentColours } from '@/hooks/ui/useDocumentColours';
 // What the swatch shows while the selection has no colour of its own.
 const DEFAULT_TEXT_COLOUR = '#0f172a';
 
-// Matches the element toolbar's PopoverButton (size-field rounded-md, same
+// Matches the element toolbar's PopoverButton (size-row rounded-control, same
 // active + hover tones) so the two toolbars read as one system.
 export function RichTextToolbar({
   active,
@@ -113,7 +113,7 @@ export function RichTextToolbar({
           standard={[standardGroup('strong', appearance, 'hex')]}
           yours={yours}
           preserveFocus
-          className={`size-field text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800`}
+          className={`size-row text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800`}
           onPick={onColor}
         />
       </HoverCard>

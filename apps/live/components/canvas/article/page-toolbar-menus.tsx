@@ -141,7 +141,7 @@ export function LinkField({
       />
       <button
         type="submit"
-        className="h-field rounded-control bg-brand-700 px-3 text-supporting text-white transition hover:bg-brand-800 dark:bg-brand-600"
+        className="h-field rounded-control bg-brand-700 px-3 text-body font-medium text-white transition hover:bg-brand-800 dark:bg-brand-600"
       >
         Apply
       </button>
