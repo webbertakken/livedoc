@@ -306,6 +306,22 @@ describe('the column under a point', () => {
     });
   });
 
+  it('splits a row the file wrote as one line across both columns at its gutter', () => {
+    const rows = pageOf(
+      [0, 1, 2].map((row) => ({
+        text: 'l'.repeat(30) + ' '.repeat(10) + 'r'.repeat(30),
+        x: 100,
+        y: 700 - row * 11,
+      })),
+    );
+    expect(TextRange.columnAt(rows, { x: 400, y: 693 })).toEqual({
+      left: 340,
+      right: 520,
+      bottom: 678,
+      top: 708,
+    });
+  });
+
   it('is found from a point in the space between two lines', () => {
     expect(TextRange.columnAt(page, { x: 400, y: 699 })?.left).toBe(320);
   });

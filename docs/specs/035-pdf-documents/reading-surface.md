@@ -568,6 +568,7 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
   - A tap moves less than `PDF_DOUBLE_TAP_PX` while down; a second finger, or a scroll the browser takes, ends it.
   - It is heard with Select in hand alone; with a mark tool in hand a finger draws `(default)`.
   - The column is the line under the finger and the lines that run on from it, read by geometry `(default)`:
+    - a line is split where its characters lie more than a line height apart, as a row across two columns often is;
     - the line under the finger holds the character nearest it, the finger within a line height of the line's box;
     - a line runs on from the column when it starts within two line heights of the column's left and lies within two
       line heights above or below a line of it, so a column beside it, starting elsewhere, never joins;

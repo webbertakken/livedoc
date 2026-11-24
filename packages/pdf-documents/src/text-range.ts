@@ -63,18 +63,18 @@ const quadOf = ({ left, bottom, right, top }: TextBox): Quad => [
   bottom,
 ];
 
-/** One line of a span: where it starts, its text and the box of its drawn characters (null where it has none). */
-type SpanLine = { start: number; text: string; box: TextBox | null };
+/** One line of a span: its text and the box of its drawn characters (null where it has none). */
+type SpanLine = { text: string; box: TextBox | null };
 
 function linesOf(page: PageText, [start, end]: TextSpan): SpanLine[] {
-  const lines: SpanLine[] = [{ start, text: '', box: null }];
+  const lines: SpanLine[] = [{ text: '', box: null }];
   for (let at = start; at < end; at += 1) {
     const unit = page.text[at]!;
     const line = lines[lines.length - 1]!;
     if (isBreak(unit)) {
       // A `\r\n` is one break: a new line starts once, at its first unit.
       if (!(unit === '\n' && page.text[at - 1] === '\r' && at > start))
-        lines.push({ start: at + 1, text: '', box: null });
+        lines.push({ text: '', box: null });
       continue;
     }
     line.text += unit;
@@ -97,6 +97,28 @@ function joint(before: SpanLine, after: SpanLine, rightEnd: number): string {
 }
 
 const heightOf = (box: TextBox): number => box.top - box.bottom;
+
+/** A run of drawn characters on one line, none further from the one before than a line height. */
+type LinePiece = { start: number; box: TextBox };
+
+// The page's lines in pieces: a reader often writes a row of two columns as one line, a gutter wide apart in it.
+function piecesOf(page: PageText): LinePiece[] {
+  const pieces: LinePiece[] = [];
+  let piece: LinePiece | null = null;
+  for (let at = 0; at < page.text.length; at += 1) {
+    if (isBreak(page.text[at])) piece = null;
+    const box = boxOf(page, at);
+    if (!box) continue;
+    const apart =
+      piece !== null &&
+      (box.left - piece.box.right > heightOf(piece.box) || !overlapsVertically(piece.box, box));
+    if (piece === null || apart) {
+      piece = { start: at, box };
+      pieces.push(piece);
+    } else piece.box = union(piece.box, box);
+  }
+  return pieces;
+}
 
 // How far apart two lines are down the page: nothing where they overlap.
 const gapBetween = (a: TextBox, b: TextBox): number =>
@@ -208,21 +230,24 @@ export const TextRange = {
   },
   /**
    * The box of the column under a point (reading-surface.md "Phone and tablet"): the line holding the drawn character
-   * nearest it, the point within a line height of that line, and the lines that run on from it. Null where none is.
+   * nearest it, the point within a line height of that line, and the lines that run on from it. A line is split where
+   * its characters lie more than a line height apart. Null where none is.
    */
   columnAt: (page: PageText, point: PagePoint): TextBox | null => {
     const nearest = TextRange.nearest(page, point);
     if (nearest === null) return null;
-    const lines = linesOf(page, TextRange.all(page));
-    const seed = lines.findLast((line) => line.start <= nearest)!.box!;
+    const pieces = piecesOf(page);
+    const seed = pieces.findLast((piece) => piece.start <= nearest)!.box;
     const height = heightOf(seed);
     const off = Math.max(
       outside(point.x, seed.left, seed.right),
       outside(point.y, seed.bottom, seed.top),
     );
     if (off > height) return null;
-    const boxes = lines.flatMap((line) => (line.box ? [line.box] : []));
-    return columnFrom(seed, boxes);
+    return columnFrom(
+      seed,
+      pieces.map((piece) => piece.box),
+    );
   },
   /** The rectangles the spans are drawn with: one a line, a new one where a character leaves the line's height. */
   quads: (page: PageText, spans: readonly TextSpan[]): Quad[] => {
