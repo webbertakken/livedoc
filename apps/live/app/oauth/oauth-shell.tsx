@@ -11,7 +11,7 @@ import { ConnectPitch } from '@/components/chrome/auth-pitches';
 // The primary action of every page in the shell (Allow, Approve, Continue). White on brand-700 in light
 // (about 5.9:1; brand-600 was 4.1:1, under WCAG 2.2 AA), darker still on hover; the shared solid brand
 // control in dark.
-export const OAUTH_PRIMARY = `min-h-11 rounded-menu bg-brand-700 px-4 py-2 text-body text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`;
+export const OAUTH_PRIMARY = `min-h-11 rounded-menu bg-brand-700 px-4 py-2 text-body font-medium text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`;
 
 export function OauthShell({ children }: { children: React.ReactNode }) {
   return <AuthStage aside={<ConnectPitch />}>{children}</AuthStage>;
