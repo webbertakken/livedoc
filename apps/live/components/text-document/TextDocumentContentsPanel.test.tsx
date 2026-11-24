@@ -18,10 +18,10 @@ describe('TextDocumentContentsPanel', () => {
     );
     const looks = screen.getByRole('radiogroup', { name: 'Look' });
     expect(looks.querySelectorAll('svg')).toHaveLength(3);
-    expect((screen.getByRole('radio', { name: 'Dotted' }) as HTMLInputElement).checked).toBe(true);
+    expect(screen.getByRole<HTMLInputElement>('radio', { name: 'Dotted' }).checked).toBe(true);
     fireEvent.click(screen.getByRole('radio', { name: 'With blue links' }));
     expect(onChange).toHaveBeenLastCalledWith({ look: 'links' });
-    const levels = screen.getByRole('combobox', { name: 'Levels' }) as HTMLSelectElement;
+    const levels = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Levels' });
     expect(levels.value).toBe('3');
     expect([...levels.options].map((o) => o.textContent)).toEqual(['1', '2', '3', '4', '5', '6']);
     fireEvent.change(levels, { target: { value: '1' } });
