@@ -11,7 +11,7 @@ import { browser } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { CLI_CLIENT_ID } from '@livedoc/api-schema';
 import { OAUTH_PRIMARY, OauthHelpLink, OauthShell, ReadOnlyAccessToggle } from '../oauth-shell';
-import { AUTH_TITLE } from '@/components/chrome/AuthStage';
+import { AUTH_TITLE } from '@/components/chrome/auth-card';
 import { apiExchangeOauthToken } from '@/lib/api/oauth';
 import { apiRevokeToken } from '@/lib/api/tokens';
 import { useSignInAvailable } from '@/lib/auth-config';

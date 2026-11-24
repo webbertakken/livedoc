@@ -48,7 +48,7 @@ export function TruthExport({
     .map((note) => ({ ...note, text: textOf(note.id) }));
   if (!armed) return null;
   const pill =
-    'pointer-events-auto rounded-full border border-amber-300/60 bg-amber-950/80 px-3 py-1.5 text-xs font-medium text-amber-100 shadow-lg backdrop-blur hover:bg-amber-900/90';
+    'pointer-events-auto rounded-full border border-amber-300/60 bg-amber-950/80 px-3 py-1.5 text-supporting text-amber-100 shadow-lg backdrop-blur hover:bg-amber-900/90';
   return (
     <>
       <button type="button" onClick={() => picker.current?.click()} className={pill}>

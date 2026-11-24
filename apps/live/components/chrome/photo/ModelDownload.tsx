@@ -14,7 +14,7 @@ export function ModelDownload({ download }: { download: Download }) {
   return (
     <div
       data-testid="photo-model-download"
-      className="pointer-events-auto flex w-[min(26rem,80vw)] flex-col gap-1.5 rounded-2xl bg-slate-900/90 px-3 py-2 text-xs text-white shadow-lg backdrop-blur"
+      className="pointer-events-auto flex w-[min(26rem,80vw)] flex-col gap-2 rounded-surface bg-slate-900/90 px-3 py-2 text-supporting text-white shadow-lg backdrop-blur"
     >
       <p className="flex justify-between gap-3">
         <span>Downloading the reading model (only the first time)</span>

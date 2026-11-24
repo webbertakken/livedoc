@@ -71,7 +71,7 @@ export function EmbedChrome({ tabs, activeId, onSelectTab, shareCode }: EmbedChr
         href={openUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="pointer-events-auto flex shrink-0 items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 shadow-sm transition hover:bg-white hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-white"
+        className="pointer-events-auto flex shrink-0 items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-body text-slate-700 shadow-sm transition hover:bg-white hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-white"
       >
         <OpenExternalIcon />
         Open in LiveDoc
@@ -85,7 +85,7 @@ export function EmbedChrome({ tabs, activeId, onSelectTab, shareCode }: EmbedChr
             onKeyDown={onTriggerKeyDown}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            className="flex max-w-[44vw] items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 shadow-sm transition hover:bg-white hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-white"
+            className="flex max-w-[44vw] items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-body text-slate-700 shadow-sm transition hover:bg-white hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-white"
           >
             <MenuIcon />
             <span className="min-w-0 truncate">{activeName}</span>
@@ -107,7 +107,7 @@ export function EmbedChrome({ tabs, activeId, onSelectTab, shareCode }: EmbedChr
                       closeMenu();
                     }}
                     className={
-                      'truncate px-3 py-1.5 text-left text-[11px] font-medium transition ' +
+                      'truncate px-3 py-1.5 text-left text-body transition ' +
                       (active
                         ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200'
                         : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800')
@@ -139,7 +139,7 @@ function TabMenu({
     <div
       ref={attach}
       {...surfaceProps}
-      className="absolute bottom-full left-0 mb-1 flex max-h-[50vh] w-44 max-w-[60vw] flex-col overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900"
+      className="absolute bottom-full left-0 mb-1 flex max-h-[50vh] w-44 max-w-[60vw] flex-col overflow-y-auto rounded-menu border border-slate-200 bg-white py-1 shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900"
     >
       {children}
     </div>

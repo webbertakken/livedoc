@@ -9,14 +9,7 @@ import { Brand } from '@livedoc/ui';
 import type { ReactNode } from 'react';
 import { useMidnightPalette } from '@/hooks/ui/useMidnightPalette';
 import { AuthLines } from './AuthLines';
-
-// The card's title (the page's h1), shared by the account and connect pages.
-export const AUTH_TITLE =
-  'text-2xl font-semibold tracking-tight text-indigo-950 sm:text-[1.75rem] 2xl:text-[2rem] dark:text-slate-100';
-
-// The card. Exported so a page can tell its own surface apart in tests; the classes are the look.
-export const AUTH_STAGE_CARD =
-  'w-full rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/10 sm:p-8 2xl:p-10 dark:border-slate-700 dark:bg-slate-800/95 dark:shadow-black/40';
+import { AUTH_STAGE_CARD } from './auth-card';
 
 export function AuthStage({
   children,

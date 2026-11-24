@@ -112,7 +112,7 @@ function Hero({ state, current }: { state: ShareState; current: boolean }) {
   return (
     <div
       data-legend-hero={state}
-      className={`flex items-center gap-3 rounded-t-xl bg-gradient-to-b px-4 pb-3 pt-4 transition-colors duration-short ${look.hero}`}
+      className={`flex items-center gap-3 rounded-t-surface bg-gradient-to-b px-4 pb-3 pt-4 transition-colors duration-short ${look.hero}`}
     >
       <ReachRings state={state} />
       {/* Every state's words share one grid cell, only the shown one visible, so the hero keeps the tallest's
@@ -145,16 +145,14 @@ function HeroText({
       className={`min-w-0 self-center [grid-area:1/1] ${shown ? '' : 'invisible'}`}
       aria-hidden={shown ? undefined : true}
     >
-      <p className={`text-[10.5px] font-semibold uppercase tracking-wide ${look.eyebrow}`}>
+      <p className={`text-supporting ${look.eyebrow}`}>
         {current ? 'Who Can See This' : 'If It Were'}
       </p>
-      <p className="mt-0.5 flex items-center gap-1.5 text-base font-semibold leading-tight text-slate-900 dark:text-slate-50">
+      <p className="mt-0.5 flex items-center gap-2 text-panel-title text-slate-900 dark:text-slate-50">
         <span className={look.ink}>{look.icon}</span>
         {m.label}
       </p>
-      <p className="mt-1 text-[12px] leading-snug text-slate-600 dark:text-slate-300">
-        {m.description}
-      </p>
+      <p className="mt-1 text-supporting text-slate-600 dark:text-slate-300">{m.description}</p>
     </div>
   );
 }
@@ -191,26 +189,24 @@ function ReachScale({
                 key={s}
                 data-current={on ? '' : undefined}
                 onMouseEnter={() => onPeek(s)}
-                className="group flex cursor-default flex-col items-center gap-1.5"
+                className="group flex cursor-default flex-col items-center gap-2"
               >
                 <span
                   className={`flex items-center justify-center rounded-full transition duration-micro group-hover:scale-110 ${
                     on
-                      ? `h-[30px] w-[30px] -mt-0.5 shadow-md ring-4 ${LOOK[s].stop}`
+                      ? `size-row -mt-0.5 shadow-md ring-4 ${LOOK[s].stop}`
                       : peeked
-                        ? `h-[26px] w-[26px] ring-2 ${LOOK[s].stop}`
+                        ? `size-chip ring-2 ${LOOK[s].stop}`
                         : reached
-                          ? 'h-[26px] w-[26px] bg-white text-slate-600 ring-2 ring-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-600'
-                          : 'h-[26px] w-[26px] bg-white text-slate-400 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-700'
+                          ? 'size-chip bg-white text-slate-600 ring-2 ring-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-600'
+                          : 'size-chip bg-white text-slate-400 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-700'
                   }`}
                 >
                   {LOOK[s].icon}
                 </span>
                 <span
-                  className={`text-[11px] leading-tight ${
-                    on
-                      ? 'font-semibold text-slate-900 dark:text-slate-50'
-                      : 'text-slate-500 dark:text-slate-400'
+                  className={`text-supporting ${
+                    on ? 'text-slate-900 dark:text-slate-50' : 'text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   {LOOK[s].reach}
@@ -238,14 +234,14 @@ function ThisBrowserRow({
       data-current={current ? '' : undefined}
       onMouseEnter={() => onPeek('offline')}
       onMouseLeave={() => onPeek(null)}
-      className={`mx-3 mt-3 flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors ${
+      className={`mx-3 mt-3 flex items-center gap-3 rounded-menu px-3 py-2 transition-colors ${
         current
           ? 'bg-amber-50 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30'
           : 'bg-slate-50 hover:bg-amber-50/60 dark:bg-slate-800/50 dark:hover:bg-amber-500/10'
       }`}
     >
       <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+        className={`flex size-chip shrink-0 items-center justify-center rounded-full ${
           current
             ? LOOK.offline.stop
             : 'bg-white text-amber-600 ring-1 ring-amber-200 dark:bg-slate-900 dark:text-amber-300 dark:ring-amber-500/30'
@@ -253,8 +249,8 @@ function ThisBrowserRow({
       >
         {LOOK.offline.icon}
       </span>
-      <span className="min-w-0 flex-1 text-[11.5px] leading-snug text-slate-600 dark:text-slate-300">
-        <span className="font-semibold text-slate-800 dark:text-slate-100">
+      <span className="min-w-0 flex-1 text-supporting text-slate-600 dark:text-slate-300">
+        <span className="text-slate-800 dark:text-slate-100">
           {current ? m.label : `Or ${m.label}`}
         </span>
         {': '}
@@ -293,7 +289,7 @@ export function VisibilityLegend({
             : 'absolute top-full z-10 left-1/2 -translate-x-1/2'
       }`}
     >
-      <div className="animate-dialog-in overflow-hidden rounded-xl border border-slate-200 bg-white pb-3 shadow-2xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/50">
+      <div className="animate-dialog-in overflow-hidden rounded-surface border border-slate-200 bg-white pb-3 shadow-2xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/50">
         <Hero state={shown} current={shown === current} />
         <ReachScale current={current} peek={peek} onPeek={setPeek} />
         <ThisBrowserRow current={current === 'offline'} onPeek={setPeek} />
@@ -303,7 +299,7 @@ export function VisibilityLegend({
               type="button"
               tabIndex={-1}
               onClick={onManage}
-              className={`group flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-brand-500/30 transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
+              className={`group flex w-full items-center justify-center gap-2 rounded-menu bg-brand-700 px-3 py-2 text-supporting text-white shadow-sm shadow-brand-500/30 transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
             >
               Change Who Can See This
               <span className="transition-transform duration-micro group-hover:translate-x-0.5">

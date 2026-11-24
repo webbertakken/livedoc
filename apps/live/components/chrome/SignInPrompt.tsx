@@ -71,10 +71,10 @@ function PromptShell({
     return (
       <div
         data-signin-bar=""
-        className="flex items-center gap-3 rounded-lg bg-amber-50/70 py-1.5 pl-3 pr-1.5 text-xs ring-1 ring-amber-200/70 dark:bg-amber-500/10 dark:ring-amber-400/25"
+        className="flex items-center gap-3 rounded-menu bg-amber-50/70 py-1.5 pl-3 pr-2 text-supporting ring-1 ring-amber-200/70 dark:bg-amber-500/10 dark:ring-amber-400/25"
       >
-        <p className="min-w-0 flex-1 leading-snug text-slate-600 dark:text-slate-300">
-          <span className="font-semibold text-slate-800 dark:text-white">{title}.</span>{' '}
+        <p className="min-w-0 flex-1 text-slate-600 dark:text-slate-300">
+          <span className="text-slate-800 dark:text-white">{title}.</span>{' '}
           {/* On a phone a note with an action keeps to its title and the action, so it stays one line. */}
           <span className={action ? 'max-sm:hidden' : undefined}>{body}</span>
         </p>
@@ -83,25 +83,25 @@ function PromptShell({
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="relative flex h-6 w-6 shrink-0 touch-target cursor-pointer items-center justify-center rounded text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+          className="relative flex size-chip shrink-0 touch-target cursor-pointer items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-100"
         >
           <CloseIcon size={12} />
         </button>
       </div>
     );
   return (
-    <div className="relative rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+    <div className="relative rounded-control border border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 text-supporting text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
       <button
         type="button"
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="absolute right-1.5 top-1.5 flex h-5 w-5 touch-target items-center justify-center rounded text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+        className="absolute right-1.5 top-1.5 flex size-icon-title touch-target items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
       >
         <CloseIcon size={12} />
       </button>
       {/* pr-5 keeps the title clear of the close button. */}
-      <p className="pr-5 font-medium text-slate-800 dark:text-white">{title}</p>
-      <p className="mt-1 leading-relaxed text-slate-500 dark:text-slate-200">{body}</p>
+      <p className="pr-6 text-slate-800 dark:text-white">{title}</p>
+      <p className="mt-1 text-slate-500 dark:text-slate-200">{body}</p>
       {action ? <div className="mt-3">{action}</div> : null}
     </div>
   );

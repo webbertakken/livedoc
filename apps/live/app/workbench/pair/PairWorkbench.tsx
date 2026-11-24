@@ -15,7 +15,7 @@ import { useSignInAvailable } from '@/lib/auth-config';
 import { track } from '@/lib/telemetry';
 import { useAccountApiBootstrap } from '@/hooks/persistence/useAccountApiBootstrap';
 import { OAUTH_PRIMARY, OauthShell } from '../../oauth/oauth-shell';
-import { AUTH_TITLE } from '@/components/chrome/AuthStage';
+import { AUTH_TITLE } from '@/components/chrome/auth-card';
 
 type Answer = 'approve' | 'decline';
 

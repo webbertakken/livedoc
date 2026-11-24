@@ -94,7 +94,7 @@ export function ModifierHint({
 }
 
 const KEY_CHIP =
-  'rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-sans text-[10px] font-semibold text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300';
+  'rounded-control border border-slate-300 bg-slate-50 px-2 py-0.5 font-sans text-supporting text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300';
 
 // In the Toolbar layout the hint hangs from the strip as its tray (docs/specs/007-editor/toolbar-layout.md);
 // elsewhere it is a top-centre pill.
@@ -111,7 +111,7 @@ function Hint({ modifier, children }: { modifier: string; children: React.ReactN
   }
   return (
     <div className="pointer-events-none fixed inset-x-0 top-16 z-[var(--z-modal)] flex justify-center">
-      <TopCenterBanner tone="neutral" className="gap-2 px-3 py-1.5 text-xs">
+      <TopCenterBanner tone="neutral" className="gap-2 px-3 py-1.5 text-supporting">
         <kbd className={KEY_CHIP}>{modifier}</kbd>
         <span data-mode-message="" className="font-medium">
           {children}

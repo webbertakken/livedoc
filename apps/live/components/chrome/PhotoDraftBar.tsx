@@ -60,14 +60,14 @@ export function PhotoDraftBar({
       className="pointer-events-none fixed bottom-20 left-1/2 z-[var(--z-chrome)] -translate-x-1/2"
     >
       <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/95 px-3 py-1.5 shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-        <p aria-live="polite" className="text-[11px] text-slate-600 dark:text-slate-300">
+        <p aria-live="polite" className="text-supporting text-slate-600 dark:text-slate-300">
           {line}
         </p>
         <button
           type="button"
           onClick={onDiscard}
           disabled={busy}
-          className="rounded-full border border-slate-300 px-2.5 py-1 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="rounded-full border border-slate-300 px-3 py-1 text-body text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Discard
         </button>
@@ -75,7 +75,7 @@ export function PhotoDraftBar({
           type="button"
           onClick={onAccept}
           disabled={busy || draftCount === 0}
-          className={`rounded-full bg-brand-700 px-3 py-1 text-[11px] font-semibold text-white transition hover:bg-brand-800 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`}
+          className={`rounded-full bg-brand-700 px-3 py-1 text-supporting text-white transition hover:bg-brand-800 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`}
         >
           Add {draftCount} {draftCount === 1 ? 'note' : 'notes'}
         </button>

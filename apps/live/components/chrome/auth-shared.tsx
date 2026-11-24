@@ -11,7 +11,8 @@ import { buttonClassName, TextInput, ButtonContent } from '@livedoc/ui';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { sameOriginPath } from '@/lib/same-origin-path';
-import { AUTH_TITLE, AuthStage } from './AuthStage';
+import { AuthStage } from './AuthStage';
+import { AUTH_TITLE } from './auth-card';
 import { AccountPitch } from './auth-pitches';
 
 // ---------------------------------------------------------------------
@@ -54,9 +55,7 @@ export function AuthCard({
       <div className="mb-6">
         <h1 className={AUTH_TITLE}>{title}</h1>
         {subtitle ? (
-          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            {subtitle}
-          </p>
+          <p className="mt-2 text-body text-slate-600 dark:text-slate-400">{subtitle}</p>
         ) : null}
       </div>
 
@@ -65,14 +64,14 @@ export function AuthCard({
           id={errorId}
           role="alert"
           tabIndex={-1}
-          className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+          className="mb-4 rounded-menu border border-rose-200 bg-rose-50 px-3 py-2 text-body text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
         >
           {error}
         </div>
       ) : notice ? (
         <div
           role="status"
-          className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+          className="mb-4 rounded-menu border border-emerald-200 bg-emerald-50 px-3 py-2 text-body text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
         >
           {notice}
         </div>
@@ -81,7 +80,7 @@ export function AuthCard({
       {children}
 
       {footer ? (
-        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">{footer}</p>
+        <p className="mt-6 text-center text-body text-slate-600 dark:text-slate-400">{footer}</p>
       ) : null}
     </AuthStage>
   );
@@ -96,7 +95,7 @@ export function AuthCard({
 export function RedirectingCard() {
   return (
     <AuthStage>
-      <p className="text-center text-sm text-slate-600 dark:text-slate-400">Redirecting…</p>
+      <p className="text-center text-body text-slate-600 dark:text-slate-400">Redirecting…</p>
     </AuthStage>
   );
 }
@@ -109,7 +108,7 @@ export function RedirectingCard() {
 export function AuthDisabledNotice() {
   return (
     <AuthCard title="Sign-in is off here" error="" pitch={false}>
-      <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+      <p className="text-body text-slate-600 dark:text-slate-400">
         Sign-in isn't turned on for this site. Everything works without an account.
       </p>
       <div className="mt-6 flex justify-center">
@@ -132,7 +131,7 @@ export function AuthDisabledNotice() {
 
 function GoogleGlyph() {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-icon-title" viewBox="0 0 24 24" aria-hidden>
       <path
         fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -179,10 +178,7 @@ export function AuthEmailField({
 }) {
   return (
     <div>
-      <label
-        htmlFor="email"
-        className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
-      >
+      <label htmlFor="email" className="mb-1 block text-body text-slate-700 dark:text-slate-300">
         Email
       </label>
       <TextInput
@@ -213,7 +209,7 @@ export function GoogleAuthButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-white/5 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-white/10"
+      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-menu border border-slate-300 bg-white px-4 py-2.5 text-body text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-white/5 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-white/10"
     >
       {loading ? (
         <span className="text-slate-500 dark:text-slate-400">Redirecting…</span>
@@ -231,7 +227,7 @@ export function OrDivider() {
   // Two rules either side of the word rather than a chip over one rule: the card is
   // translucent now, so a filled chip would show as a box.
   return (
-    <div className="flex items-center gap-3 text-xs tracking-wide text-slate-500 uppercase dark:text-slate-400">
+    <div className="flex items-center gap-3 text-supporting text-slate-500 dark:text-slate-400">
       <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
       or
       <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />

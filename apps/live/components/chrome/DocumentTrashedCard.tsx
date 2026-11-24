@@ -27,24 +27,22 @@ export function DocumentTrashedCard({
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
       <div
         role="alert"
-        className="pointer-events-auto flex max-w-md animate-pop-in flex-col items-center rounded-xl border border-slate-200 bg-white px-8 py-10 text-center shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900"
+        className="pointer-events-auto flex max-w-md animate-pop-in flex-col items-center rounded-surface border border-slate-200 bg-white px-6 py-10 text-center shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
           <TrashIcon size={26} />
         </div>
-        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {heading.label}
-        </p>
-        <h1 className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+        <p className="mt-4 text-supporting text-slate-500 dark:text-slate-400">{heading.label}</p>
+        <h1 className="mt-1 text-dialog-title text-slate-900 dark:text-slate-100">
           {heading.title}
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-body text-slate-600 dark:text-slate-400">
           {restorable
             ? `${trashedCardLead(restorable, now)} Restore it to put it back where it was.`
             : 'It is no longer available. If it is restored, this link works again.'}
         </p>
         {failed ? (
-          <p className="mt-3 text-xs text-rose-600 dark:text-rose-400" role="status">
+          <p className="mt-3 text-supporting text-rose-600 dark:text-rose-400" role="status">
             Could not restore it. Please try again.
           </p>
         ) : null}

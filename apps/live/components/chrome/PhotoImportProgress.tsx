@@ -36,13 +36,13 @@ export function PhotoImportProgress({
       <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/95 px-4 py-2 shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
         <span
           aria-hidden
-          className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-brand-500 dark:border-slate-600 dark:border-t-brand-400"
+          className="size-icon-chevron animate-spin rounded-full border-2 border-slate-300 border-t-brand-500 dark:border-slate-600 dark:border-t-brand-400"
         />
-        <p className="text-[11px] text-slate-600 dark:text-slate-300">Finding the stickies…</p>
+        <p className="text-supporting text-slate-600 dark:text-slate-300">Finding the stickies…</p>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-full border border-slate-300 px-2.5 py-1 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="rounded-full border border-slate-300 px-3 py-1 text-body text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Cancel
         </button>

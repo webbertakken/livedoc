@@ -31,7 +31,7 @@ function Pill({
   return (
     <p
       data-testid={testId}
-      className={`pointer-events-auto flex max-w-[min(32rem,80vw)] items-center gap-2 rounded-full px-3 py-1.5 text-xs shadow-lg backdrop-blur ${
+      className={`pointer-events-auto flex max-w-[min(32rem,80vw)] items-center gap-2 rounded-full px-3 py-1.5 text-body shadow-lg backdrop-blur ${
         tone === 'warn' ? 'bg-amber-100/95 text-amber-900' : 'bg-slate-900/85 text-white'
       }`}
     >
@@ -51,7 +51,7 @@ function Busy({ still }: { still: boolean }) {
   ) : (
     <span
       aria-hidden
-      className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-slate-500 border-t-brand-400"
+      className="size-icon-chevron shrink-0 animate-spin rounded-full border-2 border-slate-500 border-t-brand-400"
     />
   );
 }
@@ -105,7 +105,7 @@ export function PhotoStatus({
         <Pill testId="photo-finding">
           <span
             aria-hidden
-            className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-slate-500 border-t-brand-400"
+            className="size-icon-chevron shrink-0 animate-spin rounded-full border-2 border-slate-500 border-t-brand-400"
           />
           Finding the stickies…
         </Pill>
