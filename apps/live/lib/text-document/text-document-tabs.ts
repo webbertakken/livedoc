@@ -13,6 +13,9 @@ import {
 /** Insert > Tab's item. */
 export const TAB_ITEM = 'tab';
 
+/** The keyboard-shortcuts rows stepping between tabs (Ctrl+Shift+Page Down / Up), each with its direction. */
+export const TAB_STEP_KEYS = { 'move-to-next-tab': 1, 'move-to-previous-tab': -1 } as const;
+
 /** The address's query parameter naming a document tab; the hash is the editor's, naming the document's tab. */
 export const DOCUMENT_TAB_PARAM = 'doctab';
 

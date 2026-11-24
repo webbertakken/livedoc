@@ -141,6 +141,7 @@ import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
 import {
   initialTab,
+  TAB_STEP_KEYS,
   textDocumentTabsStore,
   type TextDocumentTabsStore,
 } from '@/lib/text-document/text-document-tabs';
@@ -510,8 +511,8 @@ export function TextDocumentSurface({
           // Ctrl+Shift+Page Down / Up: the next or previous document tab (links-and-navigation.md "Document tabs in the
           // outline").
           keymap({
-            'Ctrl-Shift-PageDown': () => stepTabs.current(1),
-            'Ctrl-Shift-PageUp': () => stepTabs.current(-1),
+            'Ctrl-Shift-PageDown': () => stepTabs.current(TAB_STEP_KEYS['move-to-next-tab']),
+            'Ctrl-Shift-PageUp': () => stepTabs.current(TAB_STEP_KEYS['move-to-previous-tab']),
           }),
           keymap(baseKeymap),
           // A moved selection is part of the view remembered for this tab.
