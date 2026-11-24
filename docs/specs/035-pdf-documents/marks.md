@@ -56,7 +56,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
   ends, fill, font and size. A new mark takes it.
 - **A tool's colour** is chosen from the toolbar's Colour, the one colour picker's swatch button: the soft and strong
   rows for light paper, then the person's own colours. **Reset** returns the kind's first look. Colour shows while a
-  mark tool is in hand, and its bar is that tool's colour `(default)`.
+  mark tool is in hand, its bar that tool's colour, and a pick gives the pages the keys again `(default)`.
 - **A highlight's first look** is the colour picker's soft Yellow for light paper, at full opacity `(default)`. A
   highlight is drawn multiplied onto the page, so the words under it keep their own colour, here as in the file's
   appearance stream.

@@ -213,6 +213,7 @@ export function PdfDocumentSurface({
   const { jump } = history;
   const viewChrome = useMemo(() => pdfViewActions({ ...viewer, goToPage: jump }), [viewer, jump]);
   const { showPage, goToPage, element: pagesElement } = viewer;
+  const focusPagesElement = useCallback(() => pagesElement?.focus(), [pagesElement]);
   // "The left panel": the shell's, one open at a time, remembered for every PDF; closing it gives the pages the keys.
   const panels = useOfficePanels({
     kind: 'PdfDocument',
@@ -326,6 +327,7 @@ export function PdfDocumentSurface({
     author,
     selected: textSelection.selected,
     clearSelection: textSelection.clear,
+    focusPages: focusPagesElement,
     onProblem: setProblem,
   });
   const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);

@@ -76,6 +76,7 @@ function tools({
   isOpen = true,
 } = {}) {
   const clearSelection = vi.fn();
+  const focusPages = vi.fn();
   const onProblem = vi.fn();
   const hook = renderHook(
     (props: { selected: PdfTextSelected | null; marking: boolean }) =>
@@ -85,12 +86,13 @@ function tools({
         author: 'Ada',
         selected: props.selected,
         clearSelection,
+        focusPages,
         onProblem,
       }),
     { initialProps: { selected, marking } },
   );
   const run = (id: string) => act(() => hook.result.current.actions[id]!.run());
-  return { hook, run, clearSelection, onProblem, ...open };
+  return { hook, run, clearSelection, focusPages, onProblem, ...open };
 }
 
 const key = (event: Partial<KeyboardEvent<HTMLElement>>) => {
@@ -327,7 +329,7 @@ describe('the tool in hand’s colour', () => {
   afterEach(() => resetTextMarkLooks());
 
   it('is none with Select in hand, and the tool’s own colour, set and reset, with a tool', () => {
-    const { hook, run, doc } = tools();
+    const { hook, run, doc, focusPages } = tools();
     expect(hook.result.current.colours).toEqual({});
     run(TOOL_UNDERLINE);
     const colour = () => hook.result.current.colours[TOOL_COLOUR]!;
@@ -335,6 +337,8 @@ describe('the tool in hand’s colour', () => {
     expect(colour().read()).toBe(TEXT_MARK_LOOKS.underline.colour);
     act(() => colour().set('#7c3aed'));
     expect(track).toHaveBeenLastCalledWith('Pdf', 'Changed', 'ToolColour');
+    // A pick gives the pages the keys again.
+    expect(focusPages).toHaveBeenCalledOnce();
     expect(colour().read()).toBe('#7c3aed');
     // A new mark takes it.
     act(() => hook.result.current.make(0, { text: 'Lease', quads: [QUAD] }));

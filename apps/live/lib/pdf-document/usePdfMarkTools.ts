@@ -92,6 +92,7 @@ export function usePdfMarkTools({
   author,
   selected,
   clearSelection,
+  focusPages,
   onProblem,
 }: {
   // The open PDF; null before it is.
@@ -103,6 +104,8 @@ export function usePdfMarkTools({
   // The text selected on the pages, which a text tool chosen now marks.
   selected: PdfTextSelected | null;
   clearSelection: () => void;
+  // Gives the pages the keys again, once a colour is picked.
+  focusPages: () => void;
   // What the title row says went wrong; null once a mark is made.
   onProblem: (problem: string | null) => void;
 }) {
@@ -228,11 +231,12 @@ export function usePdfMarkTools({
               set: (colour) => {
                 track('Pdf', 'Changed', 'ToolColour');
                 setTextMarkColour(inHand, colour);
+                focusPages();
               },
               leading: 'Reset',
             },
           },
-    [inHand, looks],
+    [inHand, looks, focusPages],
   );
 
   /** The tools' own keys, outside a field: U, ⇧U, V and Escape; true where one was taken. */
