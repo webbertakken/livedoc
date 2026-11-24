@@ -96,6 +96,28 @@ describe('textDocumentSchema', () => {
     });
   });
 
+  // standard-mapping.md "Shown as it reads": a content control in a paragraph (a chip, a date picker) shows its text.
+  it('shows a kept content control in a paragraph as its text, read only, and a kept block one as the placeholder', () => {
+    const xml =
+      '<w:sdt><w:sdtPr><w:date/></w:sdtPr><w:sdtContent><w:r><w:t>Nov 24</w:t></w:r></w:sdtContent></w:sdt>';
+    const inline = textDocumentSchema.nodes.kept_inline!.create({
+      name: 'sdt',
+      xml: { xml, ns: { w: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main' } },
+    });
+    expect(inline.type.spec.toDOM!(inline)).toEqual([
+      'span',
+      { contenteditable: 'false', 'data-kept': 'sdt', class: 'text-document-kept-text' },
+      'Nov 24',
+    ]);
+    const block = textDocumentSchema.nodes.kept_block!.create({
+      name: 'sdt',
+      xml: { xml, ns: {} },
+    });
+    expect((block.type.spec.toDOM!(block) as unknown as string[])[2]).toBe(
+      'sdt, kept from the file',
+    );
+  });
+
   // page-layout.md "Page numbers": a field is one character, drawn in its formatting with the text it last showed.
   it('draws a field as its text in its own formatting, read as that text', () => {
     const field = textDocumentSchema.nodes.field!.create({
