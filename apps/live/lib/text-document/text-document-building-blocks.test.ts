@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type { Mark, Node as PmNode } from 'prosemirror-model';
-import { ListDefinition, type Style } from '@livedoc/text-documents';
+import { ListDefinition, type CellProps, type Style } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
   BUILDING_BLOCK_LINE,
@@ -41,6 +41,8 @@ const markValue = (node: PmNode, name: string) =>
   (node.marks.find((m: Mark) => m.type.name === name)?.attrs as { value: unknown } | undefined)
     ?.value;
 const cellsOf = (row: PmNode) => row.content.content;
+const attrsOf = (node: PmNode) => node.attrs as Record<string, unknown>;
+const propsOf = (node: PmNode) => attrsOf(node).props as CellProps;
 
 describe('BUILDING_BLOCKS', () => {
   it('lists Google’s six in its order', () => {
@@ -66,7 +68,9 @@ describe('meeting notes', () => {
   const { nodes, caret } = buildingBlockContent('meeting-notes', context);
 
   it('is a dated heading, attendees, notes with a bullet and action items with a checklist item', () => {
-    expect(nodes.map((n) => [n.attrs.style ?? null, n.textContent, n.attrs.list])).toEqual([
+    expect(
+      nodes.map((n): unknown[] => [attrsOf(n).style ?? null, n.textContent, attrsOf(n).list]),
+    ).toEqual([
       ['Heading2', '24 Nov 2026 | ', null],
       [null, 'Attendees: ', null],
       ['Heading3', 'Notes', null],
@@ -110,7 +114,7 @@ describe('email draft', () => {
     expect(row.child(0).attrs.colwidth).toEqual([117]);
     expect(row.child(1).attrs.colwidth).toEqual([351]);
     expect(row.child(0).attrs.props).toEqual({ ...NEW_TABLE_CELL, borders: expect.any(Object) });
-    expect(row.child(0).attrs.props.borders.top).toEqual(BUILDING_BLOCK_LINE);
+    expect(propsOf(row.child(0)).borders?.top).toEqual(BUILDING_BLOCK_LINE);
   });
 
   it('puts the caret in To’s cell', () => {
@@ -135,7 +139,7 @@ describe('trackers', () => {
       expect(title.childCount).toBe(1);
       expect(title.child(0).type.name).toBe('table_header');
       expect(title.child(0).attrs.colspan).toBe(columns);
-      expect(title.child(0).attrs.props.background).toBe(BUILDING_BLOCK_SHADING);
+      expect(propsOf(title.child(0)).background).toBe(BUILDING_BLOCK_SHADING);
       expect(title.textContent).toBe(tracker.title);
       expect(markValue(title.child(0).firstChild!.firstChild!, 'size')).toBe(
         BUILDING_BLOCK_TITLE_SIZE,
@@ -153,7 +157,7 @@ describe('trackers', () => {
       }
       // Columns share the width equally.
       const width = Math.round((468 / columns) * 100) / 100;
-      expect(cellsOf(names).map((c) => c.attrs.colwidth)).toEqual(Array(columns).fill([width]));
+      expect(cellsOf(names).map((c) => attrsOf(c).colwidth)).toEqual(Array(columns).fill([width]));
       expect(caret.path.slice(0, 2)).toEqual([0, 2]);
       expect(tracker.rows[0]![caret.path[2]!]).toBe('');
     },
