@@ -673,6 +673,21 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     );
   },
+  // links-and-navigation.md "Bookmarks": a bookmark at a paragraph's start and one mid-text, a link to it, and one in
+  // a bold run.
+  bookmarks: (format) =>
+    base(format, [
+      paragraph(format, 'normal', [
+        { type: 'bookmark', name: 'a1b2c3d4e5f6', props: {} },
+        run('Start here, '),
+        { type: 'bookmark', name: 'mid', props: {} },
+        run('then on.', { bold: true }),
+      ]),
+      paragraph(format, 'normal', [
+        run('Back to the '),
+        run('start', {}, { link: '#a1b2c3d4e5f6' }),
+      ]),
+    ]),
   // objects.md "The equation model": an equation in line among text, in its run's size and colour, holding every kind
   // of node; a paragraph of one equation on its own line, centred.
   equations: (format) => {

@@ -24,6 +24,7 @@ import { TextDocument, type OdfSource } from '../model/text-document';
 import { shortHash } from '../hash';
 import { Pictures, type Picture } from '../model/pictures';
 import type { Equation } from '../model/equations';
+import type { Bookmark } from '../model/bookmarks';
 import { odfEquationXml } from './odf-equations';
 import {
   isPictureParentStyleXml,
@@ -57,6 +58,10 @@ import { odfTableXml, type OdfTableHost } from './odf-tables';
 import { Blocks } from '../model/tables';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
+
+/** A bookmark as the point ODF names; one without a name writes nothing (links-and-navigation.md "Bookmarks"). */
+export const odfBookmarkXml = (bookmark: Bookmark): string =>
+  bookmark.name ? `<text:bookmark text:name="${escapeXmlAttribute(bookmark.name)}"/>` : '';
 
 const attr = (name: string, value: string | undefined) =>
   value === undefined ? '' : ` ${name}="${escapeXmlAttribute(value)}"`;
@@ -484,7 +489,9 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
               ? w.pictureXml(i)
               : i.type === 'equation'
                 ? w.equationXml(i)
-                : w.kept(i.xml);
+                : i.type === 'bookmark'
+                  ? odfBookmarkXml(i)
+                  : w.kept(i.xml);
       return { kind: 'kept', xml, ...compact({ span, link: i.link }) };
     });
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';
