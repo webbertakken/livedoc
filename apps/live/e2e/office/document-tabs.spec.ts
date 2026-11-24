@@ -140,3 +140,37 @@ test('document tabs dragged in the outline, opened from Show tabs & outlines', a
   await expect(tabs).toBeHidden();
   expectNoPageErrors(pageErrors);
 });
+
+// "The summary": an Editor adds it from the outline, Escape keeps the old text, Ctrl+Enter keeps what was typed, and it
+// is there after a reload.
+test('the outline’s summary is written in place and kept', async ({ page, pageErrors }) => {
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await (await officeMenuItem(page, ['View', 'Show outline'])).click();
+  const outline = page.getByRole('region', { name: 'Summary' });
+
+  await outline.getByRole('button', { name: 'Add summary' }).click();
+  const field = outline.getByRole('textbox', { name: 'Summary' });
+  await expect(field).toBeFocused();
+  await page.keyboard.type('Dropped');
+  await page.keyboard.press('Escape');
+  await expect(field).toBeHidden();
+  await expect(outline.getByRole('button', { name: 'Add summary' })).toBeVisible();
+
+  await outline.getByRole('button', { name: 'Add summary' }).click();
+  await page.keyboard.type('Where the plan stands.');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Who reads it.');
+  await page.keyboard.press('Control+Enter');
+  await expect(outline.getByText('Where the plan stands.')).toBeVisible();
+  await expect(outline.getByRole('button', { name: 'Edit summary' })).toBeVisible();
+
+  await page.waitForTimeout(800);
+  await page.reload();
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Summary' })).toContainText(
+    'Where the plan stands.',
+  );
+  expectNoPageErrors(pageErrors);
+});

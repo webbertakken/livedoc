@@ -36,6 +36,9 @@ const tabsOf = (over: Partial<TextDocumentTabs> = {}): TextDocumentTabs => ({
   ...over,
 });
 
+// No summary, for an Editor: Summary with + above the tabs.
+const SUMMARY = { text: '', canEdit: true, editing: false, edit: vi.fn(), finish: vi.fn() };
+
 const STYLES = TextDocument.blank({ format: 'odf' }).styles;
 const readStyles = () => STYLES;
 const { paragraph } = textDocumentSchema.nodes;
@@ -54,7 +57,15 @@ function outlineWith(tabs: TextDocumentTabs, ...blocks: ReturnType<typeof p>[]) 
       plugins: [changes.plugin],
     }),
   });
-  render(<TextDocumentOutline view={view} changes={changes} readStyles={readStyles} tabs={tabs} />);
+  render(
+    <TextDocumentOutline
+      view={view}
+      changes={changes}
+      readStyles={readStyles}
+      tabs={tabs}
+      summary={SUMMARY}
+    />,
+  );
   return view;
 }
 

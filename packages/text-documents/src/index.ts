@@ -139,6 +139,7 @@ export {
   type Watermark,
   type WatermarkLayout,
 } from './model/watermark';
+export { Summary, TEXT_DOCUMENT_SUMMARY_MAX } from './model/summary';
 export {
   CHECK_MARKS,
   LIST_LEVELS,

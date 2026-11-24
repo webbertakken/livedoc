@@ -19,6 +19,7 @@ import { DOCUMENT_MAP, LISTS_MAP, MEDIA_MAP, STYLES_MAP } from './live/live-name
 import type { PictureMedia } from './model/pictures';
 import type { Section } from './model/sections';
 import type { Watermark } from './model/watermark';
+import { Summary } from './model/summary';
 import type { ListDefinition } from './model/lists';
 import { paragraphElementsOf } from './live/live-tables';
 import { liveGalleryImages } from './live/live-media';
@@ -90,6 +91,9 @@ function paragraphNode(paragraph: Paragraph): Y.XmlElement {
   if (paragraph.text.length > 0) element.insert(0, [new Y.XmlText(paragraph.text)]);
   return element;
 }
+
+const metadataOf = (doc: Y.Doc): TextDocument['metadata'] =>
+  (doc.getMap<unknown>(DOCUMENT_MAP).get('metadata') as TextDocument['metadata'] | undefined) ?? {};
 
 export const TextDocumentState = {
   /** The seed's bytes (a copy). */
@@ -203,6 +207,21 @@ export const TextDocumentState = {
       if (watermark) meta.set('watermark', JSON.parse(JSON.stringify(watermark)) as Watermark);
       else meta.delete('watermark');
     }, origin);
+  },
+  /** The text document's summary, its metadata's description (links-and-navigation.md "The summary"); '' for none. */
+  summary: (doc: Y.Doc): string => metadataOf(doc).description ?? '',
+  /**
+   * Writes the summary as held (removed when empty) in one transaction with `origin`, none of the writing's undo by
+   * default; false when it is unchanged.
+   */
+  setSummary: (doc: Y.Doc, text: string, origin?: unknown): boolean => {
+    const held = Summary.held(text);
+    const metadata = metadataOf(doc);
+    if (held === (metadata.description ?? '')) return false;
+    const { description: _, ...rest } = metadata;
+    const next = held ? { ...rest, description: held } : rest;
+    doc.transact(() => doc.getMap<unknown>(DOCUMENT_MAP).set('metadata', next), origin);
+    return true;
   },
   /** The live state's document map (metadata, defaults, the first section), which the editor's undo also tracks. */
   metaType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(DOCUMENT_MAP),

@@ -146,6 +146,7 @@ import {
   type TextDocumentTabsStore,
 } from '@/lib/text-document/text-document-tabs';
 import { useTextDocumentTabs } from './useTextDocumentTabs';
+import { useTextDocumentSummary } from './useTextDocumentSummary';
 import type { LinkDocument } from '@/lib/text-document/text-document-links';
 import { equationActions } from '@/lib/text-document/text-document-equation-insert';
 import {
@@ -814,6 +815,7 @@ export function TextDocumentSurface({
   useLayoutEffect(() => {
     stepTabs.current = tabs.step;
   }, [tabs.step]);
+  const summary = useTextDocumentSummary({ liveDoc, ready: state === 'ready', canEdit: writes });
   // Copy heading link, the link editor's headings, and going to one (links-and-navigation.md "Heading links").
   const headingLinks = useTextDocumentHeadingLinks({
     view: editorView,
@@ -1085,6 +1087,7 @@ export function TextDocumentSurface({
                 changes={changes}
                 readStyles={readStyles}
                 tabs={tabs}
+                summary={summary}
               />
             </OfficePanel>
           ) : null

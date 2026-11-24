@@ -1,7 +1,7 @@
 'use client';
 
 // The outline's body (docs/specs/034-text-documents/links-and-navigation.md "The outline", "Document tabs in the
-// outline"): the document tabs, indented by depth, the shown one marked, + adding one for an Editor, dragged to reorder
+// outline"): the summary ("The summary"), then the document tabs, indented by depth, the shown one marked, + adding one for an Editor, dragged to reorder
 // or nest them ("A tab's menu", Dragging); under the shown tab
 // its headings, indented by level, following the writing as anyone changes it; a press on a tab shows it, and a press
 // on a heading puts the caret at its start and brings it to the top of the view. The office shell's left panel frames it.
@@ -19,6 +19,8 @@ import {
 import type { TextDocumentTabs } from './useTextDocumentTabs';
 import { TextDocumentOutlineTab } from './TextDocumentOutlineTab';
 import { useTextDocumentTabDrag } from './useTextDocumentTabDrag';
+import { TextDocumentOutlineSummary } from './TextDocumentOutlineSummary';
+import type { TextDocumentSummary } from './useTextDocumentSummary';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
 import { OfficeEmojiDialog } from '@/components/office/OfficeEmojiDialog';
 
@@ -80,12 +82,14 @@ export function TextDocumentOutline({
   changes,
   readStyles,
   tabs,
+  summary,
 }: {
   view: EditorView | null;
   changes: TextDocumentChanges;
   // The live state's styles, read again as the writing changes.
   readStyles: () => readonly Style[];
   tabs: TextDocumentTabs;
+  summary: TextDocumentSummary;
 }) {
   const titleId = useId();
   const drag = useTextDocumentTabDrag(tabs);
@@ -102,53 +106,56 @@ export function TextDocumentOutline({
   );
 
   return (
-    <section aria-labelledby={titleId}>
-      <div className="flex items-center justify-between gap-2 px-2 pb-1">
-        <h3 id={titleId} className="text-xs font-medium text-(--office-muted)">
-          {OUTLINE_TABS_TITLE}
-        </h3>
-        {tabs.canAdd && (
-          <Tooltip label={ADD_TAB_LABEL}>
-            <button
-              type="button"
-              aria-label={ADD_TAB_LABEL}
-              onClick={tabs.add}
-              className="grid size-7 place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
-            >
-              <PlusIcon className="size-4" aria-hidden />
-            </button>
-          </Tooltip>
-        )}
-      </div>
-      <ul aria-labelledby={titleId}>
-        {tabs.list.map((tab, i) => {
-          const current = tab.id === tabs.shown;
-          const indent = tab.depth * LEVEL_INDENT_PX;
-          return (
-            <li key={tab.id}>
-              <TextDocumentOutlineTab
-                tab={tab}
-                tabs={tabs}
-                indent={indent}
-                rowClass={ROW}
-                drag={drag.row(tab.id, DocumentTabList.subtreeEnd(tabs.list, i) > i + 1)}
-                dragged={drag.dragging === tab.id}
-                dropLine={drag.line?.target === tab.id ? drag.line.place : null}
-                // Opening the outline starts at the shown tab when it has no heading.
-                start={current && headings.length === 0}
-              />
-              {current && (
-                <Headings view={view} headings={headings} indent={indent + LEVEL_INDENT_PX} />
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      <p aria-live="polite" className="sr-only">
-        {tabs.said}
-      </p>
-      <TabDialogs tabs={tabs} />
-    </section>
+    <>
+      <TextDocumentOutlineSummary summary={summary} />
+      <section aria-labelledby={titleId}>
+        <div className="flex items-center justify-between gap-2 px-2 pb-1">
+          <h3 id={titleId} className="text-xs font-medium text-(--office-muted)">
+            {OUTLINE_TABS_TITLE}
+          </h3>
+          {tabs.canAdd && (
+            <Tooltip label={ADD_TAB_LABEL}>
+              <button
+                type="button"
+                aria-label={ADD_TAB_LABEL}
+                onClick={tabs.add}
+                className="grid size-7 place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+              >
+                <PlusIcon className="size-4" aria-hidden />
+              </button>
+            </Tooltip>
+          )}
+        </div>
+        <ul aria-labelledby={titleId}>
+          {tabs.list.map((tab, i) => {
+            const current = tab.id === tabs.shown;
+            const indent = tab.depth * LEVEL_INDENT_PX;
+            return (
+              <li key={tab.id}>
+                <TextDocumentOutlineTab
+                  tab={tab}
+                  tabs={tabs}
+                  indent={indent}
+                  rowClass={ROW}
+                  drag={drag.row(tab.id, DocumentTabList.subtreeEnd(tabs.list, i) > i + 1)}
+                  dragged={drag.dragging === tab.id}
+                  dropLine={drag.line?.target === tab.id ? drag.line.place : null}
+                  // Opening the outline starts at the shown tab when it has no heading.
+                  start={current && headings.length === 0}
+                />
+                {current && (
+                  <Headings view={view} headings={headings} indent={indent + LEVEL_INDENT_PX} />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        <p aria-live="polite" className="sr-only">
+          {tabs.said}
+        </p>
+        <TabDialogs tabs={tabs} />
+      </section>
+    </>
   );
 }
 
