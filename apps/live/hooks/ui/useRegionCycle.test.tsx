@@ -80,6 +80,31 @@ describe('F6 between regions', () => {
     ]);
   });
 
+  // docs/specs/035-pdf-documents/accessibility.md "Keyboard alone": a PDF's notice under the toolbar and its page bar
+  // under the pages are regions of their own, in screen order.
+  it('orders a PDF’s notice after the toolbar and its page bar after the pages', () => {
+    render(
+      <>
+        <div data-region="pagebar">
+          <button>Next page</button>
+        </div>
+        <div data-region="document" tabIndex={0} />
+        <div data-region="notice">
+          <button>Enter permissions password</button>
+        </div>
+        <div data-region="toolbar">
+          <button>Zoom in</button>
+        </div>
+      </>,
+    );
+    expect(shownRegions(document).map((r) => r.dataset.region)).toEqual([
+      'toolbar',
+      'notice',
+      'document',
+      'pagebar',
+    ]);
+  });
+
   it('moves on from the innermost region (the palette sits inside the canvas)', () => {
     render(<Editor />);
     const regions = shownRegions(document);
