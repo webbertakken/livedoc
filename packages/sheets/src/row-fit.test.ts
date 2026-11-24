@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { parseA1 } from './address';
 import { AXIS_SIZE_MAX, ROW_HEIGHT_NEW } from './limits';
-import { cellLines, rowHeights } from './row-fit';
+import { cellLines, cellTurn, rowHeights } from './row-fit';
+import { SHEET_TEXT_FONT, textWidth } from './text/text-measure';
 import { cellKey, type CellFormat, type SheetLayout } from './sheet';
 import { book } from './testing/book';
 import { WORKBOOK_ROW_HEIGHT_NEW } from './workbook-record';
@@ -310,6 +311,75 @@ describe('rowHeights', () => {
     const b = book({ A1: 'x' });
     expect(rowHeights(b.wb, 'gone')('r1')).toBe(ROW_HEIGHT_NEW);
     expect(cellLines(b.wb, 'gone', 0, 0, 'a\nb')).toEqual(['a\nb']);
+  });
+});
+
+// sheet.md "Row height": turned text needs the height of the box it turns to; stacked, a line per character.
+describe('rowHeights of turned text', () => {
+  const TEXT = 'Quarterly results';
+  const wide = textWidth(TEXT, 13, { font: SHEET_TEXT_FONT });
+
+  it('grows a row to the turned width of its text, and 8 px', () => {
+    const b = book({ A1: TEXT, A2: TEXT, A3: TEXT, A4: TEXT });
+    format(b, 'A1', { ro: 90 });
+    format(b, 'A2', { ro: -90 });
+    format(b, 'A3', { ro: 45 });
+    expect(heightOf(b, 1)).toBe(Math.ceil(wide) + 8);
+    expect(heightOf(b, 2)).toBe(Math.ceil(wide) + 8);
+    expect(heightOf(b, 3)).toBe(Math.ceil((wide + 17) * Math.SQRT1_2) + 8);
+    expect(heightOf(b, 4)).toBe(ROW_HEIGHT_NEW);
+  });
+
+  it('stacks a line per character', () => {
+    const b = book({ A1: 'Total', A2: '', A3: '=""' });
+    format(b, 'A1', { ro: 'v' });
+    format(b, 'A2', { ro: 'v' });
+    format(b, 'A3', { ro: 'v' });
+    expect(heightOf(b, 1)).toBe(5 * 17 + 8);
+    expect([heightOf(b, 2), heightOf(b, 3)]).toEqual([ROW_HEIGHT_NEW, ROW_HEIGHT_NEW]);
+  });
+
+  it('turns a number, and starts a line at a typed line break, never a formula one', () => {
+    const b = book({ A1: '1234.5', A2: 'ab\ncd', A3: '=CONCAT("ab", CHAR(10), "cd")' });
+    for (const a1 of ['A1', 'A2', 'A3']) format(b, a1, { ro: 45 });
+    expect(heightOf(b, 1)).toBeGreaterThan(ROW_HEIGHT_NEW);
+    const two = textWidth('ab', 13, { font: SHEET_TEXT_FONT });
+    const one = textWidth('ab cd', 13, { font: SHEET_TEXT_FONT });
+    expect(heightOf(b, 2)).toBe(Math.ceil((two + 34) * Math.SQRT1_2) + 8);
+    expect(heightOf(b, 3)).toBe(Math.ceil((one + 17) * Math.SQRT1_2) + 8);
+  });
+
+  it('keeps a sized row and a merged cell as any text', () => {
+    const b = book({ A1: TEXT, A2: TEXT });
+    format(b, 'A1', { ro: 90 });
+    format(b, 'A2', { ro: 90 });
+    relayout(b, (l) => ({
+      rowSize: { [l.rows[0]!]: 40 },
+      merges: [{ r1: l.rows[1]!, c1: l.cols[0]!, r2: l.rows[1]!, c2: l.cols[1]! }],
+    }));
+    expect([heightOf(b, 1), heightOf(b, 2)]).toEqual([40, ROW_HEIGHT_NEW]);
+  });
+});
+
+describe('cellTurn', () => {
+  it('gives a turned cell its lines and the box they turn to, none for an upright one', () => {
+    const b = book({ A1: 'ab\ncd', A2: 'Total', A3: 'x' });
+    format(b, 'A1', { ro: 90, b: true });
+    format(b, 'A2', { ro: 'v' });
+    const id = sheetOf(b).id;
+    const bold = textWidth('ab', 13, { font: SHEET_TEXT_FONT, bold: true });
+    expect(cellTurn(b.wb, id, 0, 0, 'ab\ncd')).toEqual({
+      deg: 90,
+      lines: ['ab', 'cd'],
+      w: 34,
+      h:
+        Math.round(
+          Math.max(bold, textWidth('cd', 13, { font: SHEET_TEXT_FONT, bold: true })) * 100,
+        ) / 100,
+    });
+    expect(cellTurn(b.wb, id, 1, 0, 'Total')).toMatchObject({ deg: 0, lines: [...'Total'], h: 85 });
+    expect(cellTurn(b.wb, id, 2, 0, 'x')).toBeNull();
+    expect(cellTurn(b.wb, 'nope', 2, 0, 'x')).toBeNull();
   });
 });
 

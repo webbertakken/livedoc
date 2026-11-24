@@ -3,6 +3,7 @@
 import { makeAxisIds, type Rand } from './ids';
 import { SHEET_COLS_NEW, SHEET_ROWS_NEW, SHEET_TITLE_MAX } from './limits';
 import { CellMap } from './cells/cell-map';
+import type { Rotation } from './text/rotation';
 
 // A reference in a stored formula, by ids. Absent corner ids mean a whole column (no
 // rows) or a whole row (no columns).
@@ -71,6 +72,8 @@ export type CellFormat = {
   ha?: 'l' | 'c' | 'r';
   va?: 't' | 'm' | 'b';
   wr?: 'o' | 'w' | 'c';
+  // Rotation (formatting.md "Alignment, wrapping, rotation"): a whole angle, counterclockwise, or stacked.
+  ro?: Rotation;
   bt?: Border;
   br?: Border;
   bb?: Border;

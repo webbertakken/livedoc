@@ -614,6 +614,12 @@ describe('changing a sheet', () => {
     expect(formatPatchOf({ fontSize: 15 })).toEqual({ fs: 15 });
     expect(formatPatchOf({ fontSize: 400 })).toEqual({ fs: 400 });
     expect(formatPatchOf({ fontSize: 401 })).toBeNull();
+    // formatting.md "Alignment, wrapping, rotation": a whole angle from −90 to 90, stacked, 0 or null clearing.
+    expect(formatPatchOf({ rotation: 45 })).toEqual({ ro: 45 });
+    expect(formatPatchOf({ rotation: 'stacked' })).toEqual({ ro: 'v' });
+    expect(formatPatchOf({ rotation: 0 })).toEqual({ ro: null });
+    expect(formatPatchOf({ rotation: null })).toEqual({ ro: null });
+    expect(formatPatchOf({ rotation: 91 })).toBeNull();
   });
 });
 

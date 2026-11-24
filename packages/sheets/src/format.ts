@@ -4,6 +4,7 @@ import type { Border, BorderStyle, CellFormat, FontSize, NumberFormatKind } from
 import { DECIMALS_MAX } from './limits';
 import { formatCodeReads } from './format-codes';
 import { CURRENCY_SYMBOLS } from './input';
+import { isRotation } from './text/rotation';
 
 export const NUMBER_FORMATS: readonly NumberFormatKind[] = [
   'auto',
@@ -88,6 +89,7 @@ export const FORMAT_KEYS = [
   'ha',
   'va',
   'wr',
+  'ro',
   'bt',
   'br',
   'bb',
@@ -139,6 +141,8 @@ export function validFormatValue(key: string, v: unknown): boolean {
       return v === 't' || v === 'm' || v === 'b';
     case 'wr':
       return v === 'o' || v === 'w' || v === 'c';
+    case 'ro':
+      return isRotation(v);
     case 'nc':
       return typeof v === 'string' && formatCodeReads(v);
     default:

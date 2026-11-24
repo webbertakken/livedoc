@@ -82,7 +82,10 @@ describe('odsCellLooks', () => {
   });
 
   it('leaves out what the model cannot hold and says so', () => {
-    expect(looks.of('ce3')).toEqual({ style: { ff: 'Liberation Sans', va: 'b' }, lost: true });
+    expect(looks.of('ce3')).toEqual({
+      style: { ff: 'Liberation Sans', va: 'b', ro: 90 },
+      lost: true,
+    });
     expect(looks.of('ce4')).toEqual({ style: { ff: 'Liberation Sans', va: 'b' }, lost: true });
     expect(looks.of('ce5')).toEqual({ style: { fs: 7, va: 'b' }, lost: true });
     expect(looks.of('ce6')).toEqual({
@@ -124,6 +127,66 @@ describe('odsCellLooks', () => {
       root(`<office:styles>${ODS_DEFAULT_CELL_STYLES.join('')}</office:styles>`),
     ]);
     expect(own.of(undefined)).toEqual({ lost: false });
+  });
+});
+
+// standard-mapping.md "Cell styles in the file": style:rotation-angle counterclockwise, ttb stacked; past 90° either
+// way, left out (D212).
+describe("an ODF style's rotation", () => {
+  const angles = [
+    '45',
+    '315',
+    '270',
+    '45deg',
+    '1.5708rad',
+    '100grad',
+    '-45',
+    '450',
+    '180',
+    'x',
+    '89.6',
+  ];
+  const looks = odsCellLooks([
+    root(
+      '<office:automatic-styles>' +
+        angles
+          .map(
+            (a, i) =>
+              `<style:style style:name="r${i}" style:family="table-cell"><style:table-cell-properties style:rotation-angle="${a}"/></style:style>`,
+          )
+          .join('') +
+        '<style:style style:name="ttb" style:family="table-cell"><style:table-cell-properties style:direction="ttb" style:rotation-angle="0"/></style:style>' +
+        '<style:style style:name="ltr" style:family="table-cell"><style:table-cell-properties style:direction="ltr"/></style:style>' +
+        '</office:automatic-styles>',
+    ),
+  ]);
+  it('reads an angle up or down, in any unit, and stacked text', () => {
+    expect(angles.map((_, i) => looks.of(`r${i}`))).toEqual([
+      { style: { ro: 45 }, lost: false },
+      { style: { ro: -45 }, lost: false },
+      { style: { ro: -90 }, lost: false },
+      { style: { ro: 45 }, lost: false },
+      { style: { ro: 90 }, lost: false },
+      { style: { ro: 90 }, lost: false },
+      { style: { ro: -45 }, lost: false },
+      { style: { ro: 90 }, lost: false },
+      { lost: true },
+      { lost: true },
+      { style: { ro: 90 }, lost: false },
+    ]);
+    expect(looks.of('ttb')).toEqual({ style: { ro: 'v' }, lost: false });
+    expect(looks.of('ltr')).toEqual({ lost: false });
+  });
+  it('writes an angle counterclockwise, and stacked text top to bottom', () => {
+    expect(odsStyleProperties({ ro: 45 })).toBe(
+      '<style:table-cell-properties style:rotation-angle="45" style:rotation-align="none"/>',
+    );
+    expect(odsStyleProperties({ ro: -45 })).toBe(
+      '<style:table-cell-properties style:rotation-angle="315" style:rotation-align="none"/>',
+    );
+    expect(odsStyleProperties({ ro: 'v' })).toBe(
+      '<style:table-cell-properties style:direction="ttb"/>',
+    );
   });
 });
 

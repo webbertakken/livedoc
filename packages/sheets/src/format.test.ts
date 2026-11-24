@@ -46,6 +46,11 @@ describe('format validation', () => {
     ['va', 'x', false],
     ['wr', 'w', true],
     ['wr', 'x', false],
+    // formatting.md "Alignment, wrapping, rotation": a whole angle from −90 to 90, never 0, or stacked.
+    ['ro', 45, true],
+    ['ro', 'v', true],
+    ['ro', 0, false],
+    ['ro', 91, false],
     ['b', true, true],
     ['b', false, false],
     ['bt', { w: 1, s: 'solid', c: '#000000' }, true],

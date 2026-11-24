@@ -14,8 +14,9 @@ import { readXlsx } from './xlsx-read';
 
 const encode = (text: string) => new TextEncoder().encode(text);
 
+// Upside down: past what a rotation holds (D212).
 const TURNED =
-  '<style:style style:name="turned" style:family="table-cell"><style:table-cell-properties style:rotation-angle="90"/><style:text-properties fo:font-weight="bold"/></style:style>';
+  '<style:style style:name="turned" style:family="table-cell"><style:table-cell-properties style:rotation-angle="180"/><style:text-properties fo:font-weight="bold"/></style:style>';
 const PLAIN = '<style:style style:name="plain" style:family="table-cell"/>';
 
 function fods(table: string): Uint8Array<ArrayBuffer> {
