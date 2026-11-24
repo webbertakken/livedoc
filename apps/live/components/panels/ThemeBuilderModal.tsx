@@ -29,7 +29,7 @@ export function ThemeBuilderModal({
       {/* Normal modal header (title + close), since the builder's own
           BackBar is suppressed in modal variant. */}
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
+        <h2 className="text-dialog-title text-slate-800 dark:text-slate-100">{title}</h2>
         <DialogCloseButton compact onClick={onClose} />
       </div>
       <CustomThemeBuilder

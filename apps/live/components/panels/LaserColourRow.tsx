@@ -51,11 +51,9 @@ export function LaserColourRow({
         }}
         className="flex w-full cursor-pointer items-center justify-between gap-2 py-1.5 text-left"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          Colour
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+        <span className="text-body text-slate-700 dark:text-slate-200">Colour</span>
+        <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 text-body text-slate-600 dark:text-slate-300">
             <SwatchChip colour={laserColour(config, selfColour, appearance)} small />
             {label}
           </span>

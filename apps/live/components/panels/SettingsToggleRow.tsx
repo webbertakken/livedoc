@@ -41,8 +41,8 @@ export function SettingsToggleRow({
       }`}
     >
       <span className="flex min-w-0 flex-col">
-        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{label}</span>
-        <span className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">{hint}</span>
+        <span className="text-body text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-supporting text-slate-500 dark:text-slate-400">{hint}</span>
       </span>
     </SwitchRow>
   );

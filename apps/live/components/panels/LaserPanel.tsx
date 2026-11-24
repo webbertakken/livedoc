@@ -78,7 +78,7 @@ function PenPreview({ config, colour }: { config: LaserConfig; colour: string })
   return (
     <div
       data-laser-preview={play ? 'playing' : 'still'}
-      className="relative mb-1 h-14 overflow-hidden rounded-lg bg-slate-900/95 dark:bg-slate-950"
+      className="relative mb-1 h-14 overflow-hidden rounded-menu bg-slate-900/95 dark:bg-slate-950"
     >
       {/* The preview's box is dark, so a standard colour draws in its dark-canvas version. */}
       <CanvasSurfaceProvider surface="dark">
@@ -145,7 +145,7 @@ export function LaserPanel({
             onPick={(id) => onChange('effect', id)}
           />
         </div>
-        <p className="px-1 pt-1.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+        <p className="px-1 pt-1.5 text-supporting text-slate-500 dark:text-slate-400">
           Everyone in the room sees your pen, and it is remembered on this device:{' '}
           {laserStrokeWidth(config)}px, fading over {(laserLifetimeMs(config) / 1000).toFixed(1)}s.
         </p>

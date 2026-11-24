@@ -75,11 +75,9 @@ function ActionRow({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-left transition hover:bg-slate-100 dark:hover:bg-slate-800"
+        className="flex min-h-row w-full items-center justify-between gap-2 rounded-control px-1 text-left transition hover:bg-slate-100 dark:hover:bg-slate-800"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {label}
-        </span>
+        <span className="text-body text-slate-700 dark:text-slate-200">{label}</span>
         <span className="text-slate-400">
           <ChevronIcon open={open} />
         </span>
@@ -92,11 +90,11 @@ function ActionRow({
               type="button"
               onClick={() => onPick(item.id)}
               aria-keyshortcuts={item.shortcut}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-brand-500 dark:hover:bg-brand-500/10"
+              className="inline-flex min-h-row items-center gap-1 rounded-control border border-slate-200 px-2 text-body text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-brand-500 dark:hover:bg-brand-500/10"
             >
               {item.label}
               {item.shortcut ? (
-                <kbd className="rounded border border-slate-200 px-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 dark:border-slate-700">
+                <kbd className="rounded-control border border-slate-200 px-1 text-glyph text-slate-500 dark:text-slate-400 dark:border-slate-700">
                   {item.shortcut}
                 </kbd>
               ) : null}
@@ -171,7 +169,7 @@ export function AvatarPanel({
             hugs it (see AvatarSprite's `portrait`), at a fixed scale so
             switching to Small / Tall doesn't resize the panel. */}
           <div data-tour-id="avatar-character">
-            <div className="relative mb-1 flex items-end justify-center rounded-lg bg-slate-50 py-1.5 dark:bg-slate-800/60">
+            <div className="relative mb-1 flex items-end justify-center rounded-menu bg-slate-50 py-1.5 dark:bg-slate-800/60">
               <AvatarSprite
                 facing="down"
                 config={config}
@@ -193,7 +191,7 @@ export function AvatarPanel({
                   type="button"
                   onClick={onRandomise}
                   aria-label="Randomise avatar"
-                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-white hover:text-brand-700 dark:hover:bg-slate-900 dark:hover:text-brand-300"
+                  className="absolute right-1 top-1 flex size-chip items-center justify-center rounded-control text-slate-400 transition hover:bg-white hover:text-brand-700 dark:hover:bg-slate-900 dark:hover:text-brand-300"
                 >
                   <RefreshIcon />
                 </button>
@@ -291,7 +289,7 @@ export function AvatarPanel({
               <MessageIcon />
               Send a Message
               {isMobile ? null : (
-                <kbd className="ml-auto rounded border border-slate-200 px-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 dark:border-slate-700">
+                <kbd className="ml-auto rounded-control border border-slate-200 px-1 text-glyph text-slate-500 dark:text-slate-400 dark:border-slate-700">
                   Enter
                 </kbd>
               )}

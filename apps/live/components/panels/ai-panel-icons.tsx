@@ -52,7 +52,7 @@ export function Spinner({ small }: { small?: boolean }) {
 export function BlinkCursor() {
   return (
     <span
-      className="ml-0.5 inline-block h-3 w-px animate-pulse bg-slate-500 dark:bg-slate-400"
+      className="ml-0.5 inline-block h-[1em] w-px animate-pulse bg-slate-500 dark:bg-slate-400"
       aria-hidden
     />
   );

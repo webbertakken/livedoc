@@ -26,10 +26,8 @@ export function AvatarMessagePopover({
   };
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        Send a Message
-      </div>
-      <div className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900">
+      <div className="text-supporting text-slate-500 dark:text-slate-400">Send a Message</div>
+      <div className="rounded-control border border-slate-200 bg-white px-2 py-2 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900">
         <SpeechDraftField
           autoFocus
           value={draft}
@@ -41,7 +39,7 @@ export function AvatarMessagePopover({
         />
       </div>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           {coolingDown ? 'One moment…' : 'Up to 50 words. It floats up for everyone.'}
         </span>
         <SpeechCounter text={draft} />

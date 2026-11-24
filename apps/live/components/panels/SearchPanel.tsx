@@ -290,7 +290,7 @@ export function SearchPanel({
         // (docs/specs/021-event-storming/candidate-contexts.md "Selecting several and merging").
         data-keeps-context-selection=""
         tabIndex={-1}
-        className="flex w-[34rem] max-w-full animate-fly-up-in flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+        className="flex w-[34rem] max-w-full animate-fly-up-in flex-col overflow-hidden rounded-surface border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
       >
         <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800">
           <span className="text-slate-400 dark:text-slate-400" aria-hidden>
@@ -319,16 +319,16 @@ export function SearchPanel({
                 ? 'Search documents, folders, teams, tabs, elements, help...'
                 : 'Search documents, folders, teams, help...'
             }
-            className="flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400"
+            className="flex-1 bg-transparent text-body text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400"
           />
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="relative touch-target -mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="relative touch-target -mr-1 flex size-row shrink-0 items-center justify-center rounded-control text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             {/* The key that closes it, on a keyboard's screen; a touch screen has no Esc, so it shows a plain ×. */}
-            <kbd className="text-[10px] font-medium pointer-coarse:hidden">Esc</kbd>
+            <kbd className="text-glyph pointer-coarse:hidden">Esc</kbd>
             <CloseIcon size={14} aria-hidden className="hidden pointer-coarse:block" />
           </button>
         </div>
@@ -359,7 +359,7 @@ export function SearchPanel({
                 onClear={() => setQuery('')}
               />
             ) : (
-              <p className="px-3 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+              <p className="px-3 py-6 text-center text-body text-slate-500 dark:text-slate-400">
                 Start typing to search.
               </p>
             )
@@ -375,7 +375,7 @@ export function SearchPanel({
                 >
                   <p
                     aria-hidden
-                    className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                    className="px-3 pb-1 pt-2 text-supporting text-slate-500 dark:text-slate-400"
                   >
                     {group.label}
                   </p>
@@ -394,8 +394,8 @@ export function SearchPanel({
                         onMouseEnter={() => setActiveIndex(idx)}
                         className={
                           active
-                            ? 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-100'
-                            : 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800'
+                            ? 'flex min-h-row w-full items-center gap-2 px-3 py-1 text-left text-body bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-100'
+                            : 'flex min-h-row w-full items-center gap-2 px-3 py-1 text-left text-body text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800'
                         }
                       >
                         <SearchResultIcon item={item} />
@@ -407,7 +407,7 @@ export function SearchPanel({
                           <ThisBrowserPill asLabel />
                         ) : null}
                         {item.kind === 'element' ? (
-                          <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
                             on {item.tabName}
                           </span>
                         ) : null}
@@ -415,22 +415,22 @@ export function SearchPanel({
                             does not say where picking it will land you, and
                             two settings can read alike out of context. */}
                         {item.kind === 'setting' ? (
-                          <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
                             in {item.categoryLabel}
                           </span>
                         ) : null}
                         {(item.kind === 'folder' || item.kind === 'document') && item.team ? (
-                          <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
                             in {item.team.name}
                           </span>
                         ) : null}
                         {item.kind === 'template' ? (
-                          <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
                             new document
                           </span>
                         ) : null}
                         {item.kind === 'tab' && item.isCurrent ? (
-                          <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
                             current
                           </span>
                         ) : null}
