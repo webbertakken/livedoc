@@ -186,6 +186,12 @@ export async function handleShareImage(ctx: DocumentRouteContext, code: string):
   const asked = new URL(request.url).searchParams.get('tab');
   if (link.tabId !== null && asked !== null && asked !== link.tabId) return notFound();
   const tabId = link.tabId ?? asked;
+  // A drawing is drawn only inside its text document (docs/specs/034-text-documents/objects.md "The document around
+  // it"): asked for alone, it is not found.
+  if (tabId !== null && d.tabs.some((t) => t.id === tabId && t.drawingOf)) {
+    console.info('[share-image] drawing tab refused', { documentId: d.id, tabId });
+    return notFound();
+  }
   const svg = await documentImageSvg(env, d, tabId);
   return svg == null ? notFound() : svgImage(svg, SHARE_IMAGE_CACHE);
 }

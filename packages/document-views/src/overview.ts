@@ -7,12 +7,25 @@ import { headerSegments, type HeaderFacts } from './header';
 import { jsonString, plural } from './text';
 
 type OverviewDocument = { id: string; name: string; savedAt: number };
-// A tab outside a tab-scoped visitor's scope is named by its id alone; its body is never read.
+// A tab outside a tab-scoped visitor's scope is named by its id alone; its body is never read. `drawingOf` names a
+// drawing tab's text document tab, which it is listed under (E29).
 export type OverviewTabInput =
-  { id: string; outOfScope: true } | { id: string; outOfScope: false; facts: HeaderFacts };
+  | { id: string; outOfScope: true }
+  | { id: string; outOfScope: false; facts: HeaderFacts; drawingOf?: string };
 type OverviewOptions = { now: number; budget?: number; door?: ViewDoor };
 
 const TAB = { one: 'tab', many: 'tabs' };
+const DRAWING = { one: 'drawing', many: 'drawings' };
+
+const drawingOf = (tab: OverviewTabInput): string | undefined =>
+  tab.outOfScope ? undefined : tab.drawingOf;
+
+// Listed tabs in order, each followed by its drawing tabs in order; a drawing whose text document is not listed is left
+// out.
+function inListOrder(tabs: readonly OverviewTabInput[]): OverviewTabInput[] {
+  const listed = tabs.filter((t) => drawingOf(t) === undefined);
+  return listed.flatMap((t) => [t, ...tabs.filter((d) => drawingOf(d) === t.id)]);
+}
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -34,7 +47,10 @@ export function overviewView(
   options: OverviewOptions,
 ): ViewResult<OverviewView> {
   const refs = computeRefs(tabs.map((t) => t.id));
-  const entries = tabs.map((tab) => {
+  const ordered = inListOrder(tabs);
+  const drawings = ordered.filter((t) => drawingOf(t) !== undefined).length;
+  const listedCount = ordered.length - drawings;
+  const entries = ordered.map((tab) => {
     const ref = refs.refOf(tab.id);
     if (tab.outOfScope) {
       return {
@@ -43,13 +59,28 @@ export function overviewView(
       };
     }
     const facts: HeaderFacts = { ...tab.facts, tab: { ...tab.facts.tab, ref } };
-    const line: ViewLine = {
-      text: `  tab ${ref} ${jsonString(facts.tab.name)} · ${headerSegments(facts)}`,
-      noun: TAB,
+    const of = tab.drawingOf;
+    const line: ViewLine = of
+      ? {
+          text: `    drawing ${ref} ${jsonString(facts.tab.name)} · ${headerSegments(facts)}`,
+          noun: DRAWING,
+        }
+      : {
+          text: `  tab ${ref} ${jsonString(facts.tab.name)} · ${headerSegments(facts)}`,
+          noun: TAB,
+        };
+    return {
+      line,
+      json: {
+        ...facts,
+        view: 'overview' as const,
+        outOfScope: false as const,
+        ...(of ? { drawingOf: refs.refOf(of) } : {}),
+      },
     };
-    return { line, json: { ...facts, view: 'overview' as const, outOfScope: false as const } };
   });
-  const header = `doc ${document.id} ${jsonString(document.name)} · ${plural(tabs.length, 'tab', 'tabs')} · edited ${editedAge(document.savedAt, options.now)}`;
+  const drawingCount = drawings > 0 ? ` · ${plural(drawings, 'drawing', 'drawings')}` : '';
+  const header = `doc ${document.id} ${jsonString(document.name)} · ${plural(listedCount, 'tab', 'tabs')}${drawingCount} · edited ${editedAge(document.savedAt, options.now)}`;
   const fitted = fitLines({
     header,
     lines: entries.map((e) => e.line),
@@ -65,7 +96,8 @@ export function overviewView(
         id: document.id,
         name: document.name,
         savedAt: document.savedAt,
-        tabs: tabs.length,
+        tabs: listedCount,
+        ...(drawings > 0 ? { drawings } : {}),
       },
       tabs: entries.slice(0, fitted.kept).map((e) => e.json),
       elision: fitted.elision,

@@ -238,10 +238,13 @@ export type DiffView = {
   elision: Elision;
 };
 
-export type OverviewTab = { outOfScope: true; ref: string } | (ViewHeader & { outOfScope: false });
+// `drawingOf`: a drawing tab's text document tab, by ref (docs/specs/024-agents/document-views.md E29).
+export type OverviewTab =
+  { outOfScope: true; ref: string } | (ViewHeader & { outOfScope: false; drawingOf?: string });
 
 export type OverviewView = {
-  document: { id: string; name: string; savedAt: number; tabs: number };
+  // `tabs` counts listed tabs; `drawings`, when there are any, the drawing tabs listed under them.
+  document: { id: string; name: string; savedAt: number; tabs: number; drawings?: number };
   tabs: OverviewTab[];
   elision: Elision;
 };
