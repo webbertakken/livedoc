@@ -70,15 +70,13 @@ export function SheetCustomFormat({
   return (
     <AnchoredPopover anchor={anchor} name="Custom Number Format" width={WIDTH_PX} onClose={onClose}>
       <div
-        className="flex max-h-[28rem] flex-col gap-2.5 rounded-xl border border-slate-200 bg-white p-3 text-[13px] text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+        className="flex max-h-[28rem] flex-col gap-2 rounded-menu border border-slate-200 bg-white p-3 text-body text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <h2 className="text-sm font-semibold">Custom Number Format</h2>
+        <h2 className="text-panel-title">Custom Number Format</h2>
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Format Code
-          </span>
+          <span className="text-supporting text-slate-500 dark:text-slate-400">Format Code</span>
           <TextInput
             value={code}
             maxLength={FORMAT_CODE_MAX}
@@ -90,7 +88,7 @@ export function SheetCustomFormat({
             }}
           />
         </label>
-        <p className="text-[12px]" aria-live="polite">
+        <p className="text-supporting" aria-live="polite">
           {reads ? (
             <>
               <span className="text-slate-500 dark:text-slate-400">Preview: </span>
@@ -111,7 +109,7 @@ export function SheetCustomFormat({
               id: x,
               label: x,
               trailing: (
-                <span className="text-[12px] text-slate-500 dark:text-slate-400">
+                <span className="text-supporting text-slate-500 dark:text-slate-400">
                   {isError(sample)
                     ? ''
                     : displayValue(sample, { nf: 'custom', nc: x }, c.locale).text}

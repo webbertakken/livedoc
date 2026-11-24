@@ -23,6 +23,14 @@ const SIZED_PATHS = [
   'components/canvas/ImageDropZone.tsx',
   'components/notes',
   'components/spreadsheet',
+  // A sheet's rule popovers; what a rule draws in the cells (sheet-rule-draw, SheetRuleLayer) is content.
+  'components/sheets/rules/SheetCustomFormat.tsx',
+  'components/sheets/rules/SheetDropdownList.tsx',
+  'components/sheets/rules/SheetFormatRules.tsx',
+  'components/sheets/rules/SheetRuleSettings.tsx',
+  'components/sheets/rules/SheetValidationEditor.tsx',
+  // Plan's one option list, shared by Plan's pickers and the sheet's rule popovers.
+  'components/plan/OptionRows.tsx',
   // A form's chrome; the form as respondents see it is content (sizing.md, D237).
   'components/forms/FormBoardStrip.tsx',
   'components/forms/FormLockedStrip.tsx',

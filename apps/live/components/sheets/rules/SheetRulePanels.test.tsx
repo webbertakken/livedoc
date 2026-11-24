@@ -350,3 +350,40 @@ describe('who may (docs/specs/013-workspace/share-roles.md)', () => {
     expect(screen.getByText(NO_FORMAT_RULES)).toBeTruthy();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md: the rule popovers are chrome on the scale; what a rule draws in the cells
+// (sheet-rule-draw, the cell's dropdown arrow) is the sheet's content and keeps its own sizes.
+describe('the rule popovers on the sizing scale', () => {
+  const TRACKED_OR_HEAVY = /\buppercase\b|tracking-|font-semibold|font-bold/;
+
+  it('titles each popover at 16 px, reads at 14 px, and draws the style toggles as icons', async () => {
+    const { h, anchor, actions } = await open({ C2: '5' });
+    act(() => h.select('C2:C6'));
+    act(() => actions().openFormatRules(anchor));
+    const rulesDialog = await screen.findByRole('dialog', { name: 'Conditional Formatting' });
+    fireEvent.click(within(rulesDialog).getByRole('button', { name: 'Add Another Rule' }));
+
+    expect(within(rulesDialog).getByRole('heading').className).toContain('text-panel-title');
+    expect(rulesDialog.querySelector('.text-body')).not.toBeNull();
+    const bold = within(rulesDialog).getByRole('button', { name: 'Bold' });
+    expect(bold.className).toContain('size-row');
+    expect(bold.querySelector('svg')).not.toBeNull();
+    expect(rulesDialog.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
+  });
+
+  it('titles Data Validation and Custom Number Format at 16 px with labels as written', async () => {
+    const { h, anchor, actions } = await open();
+    act(() => h.select('B2:B4'));
+    act(() => actions().openValidation(anchor, { start: 'list' }));
+    const validation = await screen.findByRole('dialog', { name: 'Data Validation' });
+    expect(within(validation).getByRole('heading').className).toContain('text-panel-title');
+    expect(validation.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
+    cleanup();
+
+    const next = await open();
+    act(() => next.actions().openCustomFormat(next.anchor));
+    const custom = await screen.findByRole('dialog', { name: 'Custom Number Format' });
+    expect(within(custom).getByRole('heading').className).toContain('text-panel-title');
+    expect(custom.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
+  });
+});
