@@ -61,7 +61,7 @@ const labels = (entries: readonly OfficeEntry[]) =>
   entries.flatMap((e) => (e.kind === 'separator' ? [] : [e.label]));
 
 describe('spreadsheetMenus', () => {
-  const menus = spreadsheetMenus('ods');
+  const menus = spreadsheetMenus('ods', 'en-GB');
 
   it('draws Google’s menus in order, Extensions left out (C3)', () => {
     expect(menus.map((m) => m.label)).toEqual([
@@ -143,8 +143,9 @@ describe('spreadsheetMenus', () => {
     expect(DOWNLOAD_ITEMS.map((i) => i.format)).toEqual(['xlsx', 'ods', 'fods']);
     expect(SHEET_DOWNLOAD_ITEMS.map((i) => i.format)).toEqual(['csv', 'tsv']);
     const convert = (format: 'ods' | 'fods' | 'xlsx') =>
-      catalogueItems(spreadsheetMenus(format)).find(({ item }) => item.id === CONVERT_ITEM_ID)!
-        .item;
+      catalogueItems(spreadsheetMenus(format, 'en-GB')).find(
+        ({ item }) => item.id === CONVERT_ITEM_ID,
+      )!.item;
     expect(convert('ods').label).toBe('Convert to Excel (.xlsx)');
     expect(convert('fods').label).toBe('Convert to Excel (.xlsx)');
     expect(convert('xlsx').label).toBe('Convert to OpenDocument (.ods)');
@@ -214,5 +215,43 @@ describe('spreadsheetMenus', () => {
       'search-the-menus',
       'keyboard-shortcuts',
     ]);
+  });
+});
+
+// formatting.md "Number formats" (D190): each Number item shows its example in the workbook's locale.
+describe('the Number menu’s examples', () => {
+  const notes = (locale: string) =>
+    Object.fromEntries(
+      catalogueItems(spreadsheetMenus('ods', locale))
+        .filter(({ item }) => item.id.startsWith('number-'))
+        .map(({ item }) => [item.id, item.note]),
+    );
+
+  it('draws each example as the grid would, none for Automatic and Plain Text', () => {
+    expect(notes('en-GB')).toEqual({
+      'number-automatic': undefined,
+      'number-plain-text': undefined,
+      'number-number': '1,000.12',
+      'number-percent': '10.12%',
+      'number-scientific': '1.00E+03',
+      'number-accounting': '£ (1,000.12)',
+      'number-financial': '(1,000.12)',
+      'number-currency': '£1,000.12',
+      'number-currency-rounded': '£1,000',
+      'number-date': '26/09/2008',
+      'number-time': '15:59:00',
+      'number-date-time': '26/09/2008, 15:59',
+      'number-duration': '24:01:00',
+    });
+    expect(notes('en-US')['number-date']).toBe('09/26/2008');
+    expect(notes('de-DE')['number-number']).toBe('1.000,12');
+  });
+
+  it('builds Financial and Currency Rounded', () => {
+    const status = (id: string) =>
+      catalogueItems(spreadsheetMenus('ods', 'en-GB')).find(({ item }) => item.id === id)?.item
+        .status;
+    expect(status('number-financial')).toBe('built');
+    expect(status('number-currency-rounded')).toBe('built');
   });
 });

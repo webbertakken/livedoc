@@ -4,6 +4,7 @@
 // rest `comingSoon`, drawn dimmed until its phase lands. What an item does is bound by its id (spreadsheet-menu-bindings).
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { NumberFormatKind, WorkbookFormat } from '@livedoc/sheets';
+import { formatNumber, serialFromParts } from '@livedoc/sheets';
 import { convertedFormat } from '@livedoc/sheets/files';
 import type {
   OfficeCatalogue,
@@ -36,31 +37,80 @@ const CONVERT_LABEL: Record<WorkbookFormat, string> = {
   fods: 'Convert to OpenDocument (.ods)',
 };
 
-/** Format › Number's kinds the grid formats with, by item id, in Google's order, with their shortcut rows. */
+// The Number menu's examples (D190): 1000.12 (negative for Accounting and Financial, 0.1012 for Percent),
+// 26 September 2008 15:59:00, and 24:01:00.
+const EXAMPLE = 1000.12;
+const EXAMPLE_PERCENT = 0.1012;
+const EXAMPLE_MOMENT = serialFromParts(2008, 9, 26, 15, 59);
+const EXAMPLE_DURATION = 1 + 1 / 1440;
+
+/**
+ * Format › Number's kinds the grid formats with, by item id, in Google's order, with their shortcut rows; `dp` where the
+ * item fixes the decimals (Currency Rounded), and the value its example draws (formatting.md "Number formats", D190).
+ */
 export const NUMBER_FORMAT_ITEMS: readonly {
   id: string;
   label: string;
-  nf?: NumberFormatKind;
+  nf: NumberFormatKind;
+  dp?: number;
+  example?: number;
   shortcut?: string;
 }[] = [
   { id: 'number-automatic', label: 'Automatic', nf: 'auto' },
   { id: 'number-plain-text', label: 'Plain Text', nf: 'text' },
-  { id: 'number-number', label: 'Number', nf: 'number', shortcut: 'format-as-decimal' },
-  { id: 'number-percent', label: 'Percent', nf: 'percent', shortcut: 'format-as-percentage' },
+  {
+    id: 'number-number',
+    label: 'Number',
+    nf: 'number',
+    example: EXAMPLE,
+    shortcut: 'format-as-decimal',
+  },
+  {
+    id: 'number-percent',
+    label: 'Percent',
+    nf: 'percent',
+    example: EXAMPLE_PERCENT,
+    shortcut: 'format-as-percentage',
+  },
   {
     id: 'number-scientific',
     label: 'Scientific',
     nf: 'scientific',
+    example: EXAMPLE,
     shortcut: 'format-as-exponent',
   },
-  { id: 'number-accounting', label: 'Accounting', nf: 'accounting' },
-  { id: 'number-financial', label: 'Financial' },
-  { id: 'number-currency', label: 'Currency', nf: 'currency', shortcut: 'format-as-currency' },
-  { id: 'number-currency-rounded', label: 'Currency Rounded' },
-  { id: 'number-date', label: 'Date', nf: 'date', shortcut: 'format-as-date' },
-  { id: 'number-time', label: 'Time', nf: 'time', shortcut: 'format-as-time' },
-  { id: 'number-date-time', label: 'Date Time', nf: 'datetime' },
-  { id: 'number-duration', label: 'Duration', nf: 'duration' },
+  { id: 'number-accounting', label: 'Accounting', nf: 'accounting', example: -EXAMPLE },
+  { id: 'number-financial', label: 'Financial', nf: 'financial', example: -EXAMPLE },
+  {
+    id: 'number-currency',
+    label: 'Currency',
+    nf: 'currency',
+    example: EXAMPLE,
+    shortcut: 'format-as-currency',
+  },
+  {
+    id: 'number-currency-rounded',
+    label: 'Currency Rounded',
+    nf: 'currency',
+    dp: 0,
+    example: EXAMPLE,
+  },
+  {
+    id: 'number-date',
+    label: 'Date',
+    nf: 'date',
+    example: EXAMPLE_MOMENT,
+    shortcut: 'format-as-date',
+  },
+  {
+    id: 'number-time',
+    label: 'Time',
+    nf: 'time',
+    example: EXAMPLE_MOMENT,
+    shortcut: 'format-as-time',
+  },
+  { id: 'number-date-time', label: 'Date Time', nf: 'datetime', example: EXAMPLE_MOMENT },
+  { id: 'number-duration', label: 'Duration', nf: 'duration', example: EXAMPLE_DURATION },
 ];
 
 /** Format › Font Size's sizes, Google's list. */
@@ -280,77 +330,82 @@ const INSERT_MENU = menu('insert', 'Insert', [
   item('insert-note', 'Note', 'edit', { shortcut: 'insert-or-edit-note' }),
 ]);
 
-const FORMAT_MENU = menu('format', 'Format', [
-  item('theme', 'Theme', 'edit'),
-  SEPARATOR,
-  submenu('number', 'Number', [
-    ...NUMBER_FORMAT_ITEMS.map(({ id, label, nf, shortcut }) =>
-      item(id, label, 'edit', {
-        checkable: 'radio',
-        status: nf ? 'built' : 'comingSoon',
-        ...(shortcut ? { shortcut } : {}),
+// Format, its Number items each with its example in `locale` (D190); none without one (the context menus' lookup).
+const formatMenu = (locale: string | null) =>
+  menu('format', 'Format', [
+    item('theme', 'Theme', 'edit'),
+    SEPARATOR,
+    submenu('number', 'Number', [
+      ...NUMBER_FORMAT_ITEMS.map(({ id, label, nf, dp, example, shortcut }) =>
+        item(id, label, 'edit', {
+          checkable: 'radio',
+          status: 'built',
+          ...(shortcut ? { shortcut } : {}),
+          ...(locale && example !== undefined
+            ? { note: formatNumber(example, { nf, ...(dp === undefined ? {} : { dp }) }, locale) }
+            : {}),
+        }),
+      ),
+      SEPARATOR,
+      item('custom-currency', 'Custom Currency', 'edit'),
+      item('custom-date-and-time', 'Custom Date and Time', 'edit'),
+      item('custom-number-format', 'Custom Number Format', 'edit'),
+    ]),
+    submenu('text', 'Text', [
+      built('bold', 'Bold', 'edit', { checkable: 'checkbox', shortcut: 'bold' }),
+      built('italic', 'Italic', 'edit', { checkable: 'checkbox', shortcut: 'italic' }),
+      built('underline', 'Underline', 'edit', { checkable: 'checkbox', shortcut: 'underline' }),
+      built('strikethrough', 'Strikethrough', 'edit', {
+        checkable: 'checkbox',
+        shortcut: 'strikethrough',
       }),
-    ),
+    ]),
+    submenu('alignment', 'Alignment', [
+      built('align-left', 'Left', 'edit', { checkable: 'radio', shortcut: 'left-align' }),
+      built('align-centre', 'Centre', 'edit', { checkable: 'radio', shortcut: 'center-align' }),
+      built('align-right', 'Right', 'edit', { checkable: 'radio', shortcut: 'right-align' }),
+      SEPARATOR,
+      built('align-top', 'Top', 'edit', { checkable: 'radio' }),
+      built('align-middle', 'Middle', 'edit', { checkable: 'radio' }),
+      built('align-bottom', 'Bottom', 'edit', { checkable: 'radio' }),
+    ]),
+    submenu('wrapping', 'Wrapping', [
+      built('wrap-overflow', 'Overflow', 'edit', { checkable: 'radio' }),
+      built('wrap-wrap', 'Wrap', 'edit', { checkable: 'radio' }),
+      built('wrap-clip', 'Clip', 'edit', { checkable: 'radio' }),
+    ]),
+    submenu('rotation', 'Rotation', [
+      item('rotate-none', 'None', 'edit', { checkable: 'radio' }),
+      item('rotate-tilt-up', 'Tilt Up', 'edit', { checkable: 'radio' }),
+      item('rotate-tilt-down', 'Tilt Down', 'edit', { checkable: 'radio' }),
+      item('rotate-stack-vertically', 'Stack Vertically', 'edit', { checkable: 'radio' }),
+      item('rotate-up', 'Rotate Up', 'edit', { checkable: 'radio' }),
+      item('rotate-down', 'Rotate Down', 'edit', { checkable: 'radio' }),
+      item('rotate-custom-angle', 'Custom Angle', 'edit'),
+    ]),
     SEPARATOR,
-    item('custom-currency', 'Custom Currency', 'edit'),
-    item('custom-date-and-time', 'Custom Date and Time', 'edit'),
-    item('custom-number-format', 'Custom Number Format', 'edit'),
-  ]),
-  submenu('text', 'Text', [
-    built('bold', 'Bold', 'edit', { checkable: 'checkbox', shortcut: 'bold' }),
-    built('italic', 'Italic', 'edit', { checkable: 'checkbox', shortcut: 'italic' }),
-    built('underline', 'Underline', 'edit', { checkable: 'checkbox', shortcut: 'underline' }),
-    built('strikethrough', 'Strikethrough', 'edit', {
-      checkable: 'checkbox',
-      shortcut: 'strikethrough',
+    submenu(
+      'font-size',
+      'Font Size',
+      MENU_FONT_SIZES.map((size) =>
+        built(`font-size-${size}`, String(size), 'edit', { checkable: 'radio' }),
+      ),
+    ),
+    submenu('merge-cells', 'Merge Cells', [
+      item('merge-all', 'Merge All', 'edit'),
+      item('merge-vertically', 'Merge Vertically', 'edit'),
+      item('merge-horizontally', 'Merge Horizontally', 'edit'),
+      item('unmerge', 'Unmerge', 'edit'),
+    ]),
+    SEPARATOR,
+    item('convert-to-table', 'Convert to Table', 'edit', {
+      shortcut: 'convert-range-to-table',
     }),
-  ]),
-  submenu('alignment', 'Alignment', [
-    built('align-left', 'Left', 'edit', { checkable: 'radio', shortcut: 'left-align' }),
-    built('align-centre', 'Centre', 'edit', { checkable: 'radio', shortcut: 'center-align' }),
-    built('align-right', 'Right', 'edit', { checkable: 'radio', shortcut: 'right-align' }),
+    item('conditional-formatting', 'Conditional Formatting', 'edit'),
+    item('alternating-colours', 'Alternating Colours', 'edit'),
     SEPARATOR,
-    built('align-top', 'Top', 'edit', { checkable: 'radio' }),
-    built('align-middle', 'Middle', 'edit', { checkable: 'radio' }),
-    built('align-bottom', 'Bottom', 'edit', { checkable: 'radio' }),
-  ]),
-  submenu('wrapping', 'Wrapping', [
-    built('wrap-overflow', 'Overflow', 'edit', { checkable: 'radio' }),
-    built('wrap-wrap', 'Wrap', 'edit', { checkable: 'radio' }),
-    built('wrap-clip', 'Clip', 'edit', { checkable: 'radio' }),
-  ]),
-  submenu('rotation', 'Rotation', [
-    item('rotate-none', 'None', 'edit', { checkable: 'radio' }),
-    item('rotate-tilt-up', 'Tilt Up', 'edit', { checkable: 'radio' }),
-    item('rotate-tilt-down', 'Tilt Down', 'edit', { checkable: 'radio' }),
-    item('rotate-stack-vertically', 'Stack Vertically', 'edit', { checkable: 'radio' }),
-    item('rotate-up', 'Rotate Up', 'edit', { checkable: 'radio' }),
-    item('rotate-down', 'Rotate Down', 'edit', { checkable: 'radio' }),
-    item('rotate-custom-angle', 'Custom Angle', 'edit'),
-  ]),
-  SEPARATOR,
-  submenu(
-    'font-size',
-    'Font Size',
-    MENU_FONT_SIZES.map((size) =>
-      built(`font-size-${size}`, String(size), 'edit', { checkable: 'radio' }),
-    ),
-  ),
-  submenu('merge-cells', 'Merge Cells', [
-    item('merge-all', 'Merge All', 'edit'),
-    item('merge-vertically', 'Merge Vertically', 'edit'),
-    item('merge-horizontally', 'Merge Horizontally', 'edit'),
-    item('unmerge', 'Unmerge', 'edit'),
-  ]),
-  SEPARATOR,
-  item('convert-to-table', 'Convert to Table', 'edit', {
-    shortcut: 'convert-range-to-table',
-  }),
-  item('conditional-formatting', 'Conditional Formatting', 'edit'),
-  item('alternating-colours', 'Alternating Colours', 'edit'),
-  SEPARATOR,
-  built('clear-formatting', 'Clear Formatting', 'edit', { shortcut: 'clear-formatting' }),
-]);
+    built('clear-formatting', 'Clear Formatting', 'edit', { shortcut: 'clear-formatting' }),
+  ]);
 
 const DATA_MENU = menu('data', 'Data', [
   submenu('sort-sheet', 'Sort Sheet', [
@@ -433,17 +488,18 @@ export const SPREADSHEET_GRID_MENUS: OfficeCatalogue = [
   EDIT_MENU,
   VIEW_MENU,
   INSERT_MENU,
-  FORMAT_MENU,
+  formatMenu(null),
   DATA_MENU,
 ];
 
-export function spreadsheetMenus(format: WorkbookFormat): OfficeCatalogue {
+/** The spreadsheet's menus for its file's format, the Number menu's examples drawn in its locale (D190). */
+export function spreadsheetMenus(format: WorkbookFormat, locale: string): OfficeCatalogue {
   return [
     fileMenu(format),
     EDIT_MENU,
     VIEW_MENU,
     INSERT_MENU,
-    FORMAT_MENU,
+    formatMenu(locale),
     DATA_MENU,
     TOOLS_MENU,
     HELP_MENU,

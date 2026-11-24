@@ -61,7 +61,7 @@ describe('SPREADSHEET_TOOLBAR', () => {
 
   it('shares its menu item’s id and level where it runs one, and names only registry shortcuts', () => {
     const items = new Map(
-      catalogueItems(spreadsheetMenus('ods')).map(({ item }) => [item.id, item]),
+      catalogueItems(spreadsheetMenus('ods', 'en-GB')).map(({ item }) => [item.id, item]),
     );
     for (const id of [
       'undo',

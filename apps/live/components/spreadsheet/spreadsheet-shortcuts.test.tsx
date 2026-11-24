@@ -39,6 +39,7 @@ function Row({
         scope={SCOPE}
         tabId="t1"
         format="ods"
+        locale="en-GB"
         documentName="Budget"
         level="edit"
         history={null}
@@ -58,7 +59,7 @@ function Row({
 function renderOn(platform: OfficePlatform) {
   vi.spyOn(navigator, 'platform', 'get').mockReturnValue(NAVIGATOR_PLATFORM[platform]);
   const channel = createOfficeBindingsChannel();
-  const items = catalogueItems(spreadsheetMenus('ods')).map(({ item }) => item);
+  const items = catalogueItems(spreadsheetMenus('ods', 'en-GB')).map(({ item }) => item);
   const actions: OfficeActions = Object.fromEntries(
     items.filter((item) => item.shortcut).map((item) => [item.id, { run: vi.fn() }]),
   );
