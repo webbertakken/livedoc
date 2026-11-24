@@ -33,3 +33,45 @@ test('a pinch on a PDF’s pages zooms the pages, not the page around them', asy
 
   expectNoPageErrors(pageErrors);
 });
+
+// "Reduced motion": no animated scroll to a page; the page appears where asked, nothing on the surface moving.
+test.describe('with reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('going to a page shows it at once, nothing easing there', async ({ page, pageErrors }) => {
+    test.setTimeout(120_000);
+    await page.goto('/explorer/all');
+    await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+    await dropPdf(page, 'Annual report.pdf', taggedPdf());
+    await page.waitForURL(/\/document\//, { timeout: 30_000 });
+    await pageOneDrawn(page);
+
+    // Every frame for a quarter of a second from Enter: at most one jump, from the first page to the second, and
+    // often done before the first frame.
+    const field = page.getByRole('textbox', { name: 'Page' });
+    await field.fill('2');
+    const sampled = page.evaluate(
+      () =>
+        new Promise<{ tops: number[]; moving: number }>((done) => {
+          const pages = document.querySelector<HTMLElement>('[data-pdf-pages]')!;
+          const tops: number[] = [];
+          let moving = 0;
+          const frame = () => {
+            tops.push(Math.round(pages.scrollTop));
+            moving = Math.max(moving, document.getAnimations().length);
+            if (tops.length < 15) requestAnimationFrame(frame);
+            else done({ tops, moving });
+          };
+          requestAnimationFrame(frame);
+        }),
+    );
+    await field.press('Enter');
+    const { tops, moving } = await sampled;
+    expect(new Set(tops).size).toBeLessThanOrEqual(2);
+    expect(tops.at(-1)).toBeGreaterThan(0);
+    expect(moving).toBe(0);
+    await expect(page.locator('[data-pdf-page="2"]')).toBeInViewport();
+
+    expectNoPageErrors(pageErrors);
+  });
+});
