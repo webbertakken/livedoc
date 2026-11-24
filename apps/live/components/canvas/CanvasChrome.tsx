@@ -65,7 +65,6 @@ import { usePaletteDragGuides } from '@/hooks/canvas/usePaletteDragGuides';
 import { PANEL_CORNERS, PANEL_IDS, cornerBottomInset, type PanelCorner } from '@/lib/panel-layout';
 import type { StampGhost } from '@/components/canvas/useStampGhost';
 import { PHONE_TOOLBAR_ITEMS } from '@/components/chrome/phone-toolbar-items';
-import { PHONE_CLUSTER_BUTTON_WIDTH } from '@/components/chrome/phone-toolbar-items';
 import { useSnapHaptic } from '@/hooks/canvas/useSnapHaptic';
 import { CollaborateClusterButton } from './CollaborateClusterButton';
 import { AvatarClusterButton } from './AvatarClusterButton';
@@ -641,10 +640,10 @@ export function CanvasChrome(props: CanvasChromeProps) {
             // Drawn at the UI scale (docs/specs/007-editor/ui-scale.md).
             style={cornerScale === 1 ? undefined : uiScaleStyle(cornerScale)}
             // On a phone the group stays one row (docs/specs/012-collaboration/session-tools.md "The Session strip"): its
-            // buttons share the width there is, PHONE_CLUSTER_BUTTON_WIDTH, from 36px up to their usual size (always 44px
-            // tall to tap). It may still wrap on a narrower one, so Undo is never pushed off the screen. With nothing in
+            // buttons are the row step, each with a 44px tap area. It may still wrap on a narrower screen, so Undo is never
+            // pushed off the screen. With nothing in
             // it (the welcome flow) it is not drawn.
-            className={`pointer-events-auto relative ${lines?.embed ? 'ml-auto' : ''} phone:flex-wrap [&:not(:has([data-toolbar-part]:not(:empty)))]:hidden ${PHONE_CLUSTER_BUTTON_WIDTH} ${PHONE_TOOLBAR_ITEMS}`}
+            className={`pointer-events-auto relative ${lines?.embed ? 'ml-auto' : ''} phone:flex-wrap [&:not(:has([data-toolbar-part]:not(:empty)))]:hidden ${PHONE_TOOLBAR_ITEMS}`}
           >
             {welcomeOpen ? null : (
               <>

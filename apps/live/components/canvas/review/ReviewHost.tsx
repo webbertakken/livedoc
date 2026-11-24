@@ -87,7 +87,7 @@ export function ReviewHost({
         data-testid="review-panel"
         data-review-panel=""
         onKeyDown={onKeyDown}
-        className={`${CARD_PLACE} ${CARD_SIZE} ${CORNER_SURFACE} flex flex-col overflow-hidden rounded-xl`}
+        className={`${CARD_PLACE} ${CARD_SIZE} ${CORNER_SURFACE} flex flex-col overflow-hidden rounded-surface`}
       >
         <ReviewPanel
           tab={view.tab}

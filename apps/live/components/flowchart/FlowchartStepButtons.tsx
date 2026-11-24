@@ -31,7 +31,8 @@ export type FlowchartStepToolbar = {
   onMoveToLane?: (laneId: string) => void;
 };
 
-const OPTION_ROW = 'flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition';
+const OPTION_ROW =
+  'flex w-full items-center gap-2 px-3 py-1.5 text-left text-supporting transition';
 const OPTION_ON = 'bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100';
 const OPTION_OFF = 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800';
 
@@ -92,7 +93,7 @@ export function FlowchartStepButtons({
           menuClassName="min-w-[9rem]"
           menuAnchor={menuAnchor}
           trigger={
-            <span className="max-w-[7rem] truncate px-1 text-xs font-medium">
+            <span className="max-w-[7rem] truncate px-1 text-supporting">
               {lanes.find((l) => l.id === laneId)?.title ?? lanes[0]!.title}
             </span>
           }

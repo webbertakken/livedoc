@@ -166,6 +166,10 @@ A surface names the token, never the number, so the scale changes in one place.
 - The canvas's own panels are chrome on the scale: pages, presentation controls, an article page's toolbar, the
   layout gallery, suggestions and Ask; what is drawn on the canvas or a page at its zoom (a note's face, a
   suggestion's mark and placeholder, a flow's drop guide) is content.
+- A workshop element's face (a poll, a quiz, Q&A, an estimate, an idea box, a roll call) is content too, drawn at the
+  canvas's zoom; the dialogs and panels around them (a quiz's editor, the board review) are chrome on the scale.
+- The connect, pairing and embed pages, the global error page, the rich-text toolbar and a flowchart's step buttons
+  are chrome on the scale.
 - The palette's menus are chrome on the scale; their pictures are drawn art: animation previews, the palette's own
   glyphs and the Sankey menu's pictures.
 - The sign-in stage's pitch (`AuthStage`) is display type, as the marketing site's hero, and moves with the other

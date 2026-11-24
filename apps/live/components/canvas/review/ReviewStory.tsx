@@ -15,7 +15,7 @@ import { KindSwatch, REVIEW_HEADING, REVIEW_MUTED, ReviewEmpty, RowAct } from '.
 // highlighted, and its notes are ringed and brought into view. A pivotal event's step is followed by a rule naming
 // the phase it closes; the loose notes follow the last step, by kind.
 
-const LINE = 'flex items-baseline gap-2 text-[13px] leading-normal';
+const LINE = 'flex items-baseline gap-2 text-body';
 const ID_SEPARATOR = '\u0000';
 
 function Line({
@@ -29,7 +29,7 @@ function Line({
 }) {
   return (
     <span
-      className={`${LINE} ${strong ? 'font-semibold text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
+      className={`${LINE} ${strong ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
     >
       <span className="-translate-y-px">
         <KindSwatch kind={kind} />
@@ -138,15 +138,15 @@ export function ReviewStory({
             aria-selected={s.event === inHand}
             data-review-step={s.event}
             onClick={() => take(i)}
-            className={`mx-1 my-px cursor-pointer rounded-lg px-2.5 py-2 ${
+            className={`mx-1 my-px cursor-pointer rounded-menu px-3 py-2 ${
               s.event === inHand
                 ? 'bg-slate-100 ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:ring-slate-700'
                 : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
             }`}
           >
-            <span className="flex gap-2.5">
+            <span className="flex gap-3">
               <span
-                className={`w-3.5 shrink-0 text-right text-[11px] leading-[19px] tabular-nums ${REVIEW_MUTED}`}
+                className={`w-3.5 shrink-0 text-right text-supporting leading-[19px] tabular-nums ${REVIEW_MUTED}`}
               >
                 {i + 1}
               </span>
@@ -155,8 +155,13 @@ export function ReviewStory({
               </span>
             </span>
             {s.closesPhase ? (
-              <span className={`mt-1.5 flex items-center gap-2.5 pl-6 text-[11px] ${REVIEW_MUTED}`}>
-                <span aria-hidden className="h-3.5 w-1.5 shrink-0 rounded-full bg-slate-400/80" />
+              <span
+                className={`mt-1.5 flex items-center gap-3 pl-6 text-supporting ${REVIEW_MUTED}`}
+              >
+                <span
+                  aria-hidden
+                  className="h-icon-row w-1.5 shrink-0 rounded-full bg-slate-400/80"
+                />
                 {s.happens} closes a phase
                 <span aria-hidden className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
               </span>
@@ -170,7 +175,7 @@ export function ReviewStory({
           className="border-t border-slate-200 pb-2 dark:border-slate-800"
         >
           <h3 className={REVIEW_HEADING}>Loose notes</h3>
-          <ul className="flex flex-col px-3.5">
+          <ul className="flex flex-col px-4">
             {loose.map((n) => (
               <li key={n.id}>
                 <Line kind={n.kind}>{n.words || '(blank)'}</Line>
@@ -179,7 +184,7 @@ export function ReviewStory({
           </ul>
         </section>
       ) : null}
-      <div className="sticky bottom-0 flex items-center gap-1.5 border-t border-slate-200 bg-white py-2 pl-3.5 pr-2.5 dark:border-slate-800 dark:bg-slate-900">
+      <div className="sticky bottom-0 flex items-center gap-2 border-t border-slate-200 bg-white py-2 pl-4 pr-3 dark:border-slate-800 dark:bg-slate-900">
         <span aria-live="polite" className={`mr-auto tabular-nums ${REVIEW_MUTED}`}>
           {step
             ? `Step ${index + 1} of ${steps.length}`

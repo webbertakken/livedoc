@@ -48,7 +48,7 @@ export function BlockTypePicker({
       label="Block type"
       description="Heading level, paragraph, or a list, applied to the selected lines."
       menuClassName="min-w-[10rem]"
-      trigger={<span className="px-1 text-xs font-medium">{blockTypeLabel(blockType)}</span>}
+      trigger={<span className="px-1 text-body">{blockTypeLabel(blockType)}</span>}
     >
       {BLOCK_TYPES.map((b) => (
         <button
@@ -58,7 +58,7 @@ export function BlockTypePicker({
           aria-selected={blockType === b.id}
           onMouseDown={noFocusSteal}
           onClick={() => apply(b.id)}
-          className={`flex w-full items-center justify-between gap-3 px-2.5 py-1.5 text-left text-xs transition ${
+          className={`flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-supporting transition ${
             blockType === b.id
               ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
               : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -76,7 +76,7 @@ export function BlockTypePicker({
             aria-selected={false}
             onMouseDown={noFocusSteal}
             onClick={onApplyTitleCaption}
-            className="flex w-full items-center justify-between gap-3 px-2.5 py-1.5 text-left text-xs text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-supporting text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             Title and Caption
           </button>

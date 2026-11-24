@@ -15,7 +15,7 @@ export default function Page() {
     <Suspense
       fallback={
         <OauthShell>
-          <p role="status" className="text-sm text-slate-500 dark:text-slate-400">
+          <p role="status" className="text-body text-slate-500 dark:text-slate-400">
             Loading…
           </p>
         </OauthShell>

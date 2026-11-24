@@ -49,18 +49,16 @@ export function WorkbenchStatus({
     case 'refused':
       return (
         <StatusShell>
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          <h1 className="text-dialog-title text-slate-900 dark:text-slate-100">
             {copy.refusedHeading}
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            {copy.refusedBody}
-          </p>
+          <p className="mt-2 text-body text-slate-600 dark:text-slate-400">{copy.refusedBody}</p>
         </StatusShell>
       );
     case 'unbound':
       return (
         <StatusShell>
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          <h1 className="text-dialog-title text-slate-900 dark:text-slate-100">
             This view opens only inside <code className="font-mono">{phase.origin}</code>.
           </h1>
         </StatusShell>
@@ -74,7 +72,7 @@ export function WorkbenchStatus({
     default:
       return (
         <StatusShell>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{copy.opening}</p>
+          <p className="text-body text-slate-600 dark:text-slate-400">{copy.opening}</p>
         </StatusShell>
       );
   }
