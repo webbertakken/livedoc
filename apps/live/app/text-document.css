@@ -104,6 +104,10 @@ div.text-document-kept {
   user-select: none;
   outline-offset: 2px;
 }
+/* A table of contents' look in its picture: With blue links' entries in the link colour (Insert, the options panel). */
+.contents-look-picture .contents-look-link {
+  stroke: light-dark(#1155cc, #8ab4f8);
+}
 .text-document-kept-hidden {
   display: none;
 }

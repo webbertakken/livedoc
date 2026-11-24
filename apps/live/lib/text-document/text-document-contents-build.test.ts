@@ -194,6 +194,18 @@ describe('rebuildContents', () => {
     expect(headingIdOf(state.doc.child(2))).toBeNull();
   });
 
+  it('takes a new look and levels as it rebuilds (the options panel)', () => {
+    const d = doc(contents('plain', 6), para(1, mark('_a'), 'One'), para(2, mark('_b'), 'Two'));
+    let state = EditorState.create({ doc: d });
+    rebuildContents(0, build(), { look: 'links', levels: 1 })(
+      state,
+      (tr) => (state = state.apply(tr)),
+    );
+    const block = state.doc.child(0);
+    expect(block.attrs).toMatchObject({ look: 'links', levels: 1 });
+    expect(entriesOf(block).map((e) => [e.text, e.stops])).toEqual([['One', undefined]]);
+  });
+
   it('changes nothing when nothing moved', () => {
     const d = doc(contents('plain', 1), para(1, mark('_a'), 'One'));
     let state = EditorState.create({ doc: d });

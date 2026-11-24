@@ -26,6 +26,7 @@ import {
   rebuildContents,
   type ContentsBuild,
 } from '@/lib/text-document/text-document-contents-build';
+import { ContentsLookPicture } from './ContentsLookPicture';
 import { shownPageOfBlock } from '@/lib/text-document/pagination/pagination-plugin';
 import {
   TEXT_DOCUMENT_STYLES_ORIGIN,
@@ -133,7 +134,11 @@ export function useTextDocumentContents(deps: TextDocumentContentsDeps): OfficeA
     return Object.fromEntries(
       Object.entries(CONTENTS_LOOK_ITEMS).map(([item, look]) => [
         item,
-        { run: () => insert(look), disabled: !placeable },
+        {
+          run: () => insert(look),
+          disabled: !placeable,
+          picture: <ContentsLookPicture look={look} />,
+        },
       ]),
     );
   }, [view, writes, liveDoc, format, pageless, textWidth, placeable]);
