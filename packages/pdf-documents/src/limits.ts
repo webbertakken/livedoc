@@ -132,6 +132,9 @@ export const PDF_DOUBLE_TAP_MS = 300;
 /** (default) How far, in CSS pixels, a tap moves while down, and how far apart a double tap's two are. Safe range: 10
  *  to 40. */
 export const PDF_DOUBLE_TAP_PX = 24;
+/** (default) How long, in milliseconds, a finger is held still to select a word, Android's own (reading-surface.md
+ *  "Phone and tablet"). Safe range: 400 to 800. */
+export const PDF_LONG_PRESS_MS = 500;
 /** (default) A tile's side in CSS pixels (reading-surface.md "The pages", "Limits"). Safe range: 256 to 1,024. */
 export const PDF_TILE_PX = 512;
 /** (default) The tiles a desktop keeps, in bytes of their pictures; least lately shown let go first. */
