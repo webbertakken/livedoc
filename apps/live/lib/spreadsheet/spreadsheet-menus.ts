@@ -419,7 +419,7 @@ const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
     item('convert-to-table', 'Convert to Table', 'edit', {
       shortcut: 'convert-range-to-table',
     }),
-    item('conditional-formatting', 'Conditional Formatting', 'edit'),
+    built('conditional-formatting', 'Conditional Formatting', 'edit', { checkable: 'checkbox' }),
     item('alternating-colours', 'Alternating Colours', 'edit'),
     SEPARATOR,
     built('clear-formatting', 'Clear Formatting', 'edit', { shortcut: 'clear-formatting' }),

@@ -10,6 +10,7 @@ import {
   type GridOffice,
 } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { useMemo } from 'react';
+import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { unmergeRange, type MergeMode } from '@livedoc/sheets';
 import { openHyperlink } from '@/lib/open-hyperlink';
 import { recentFormatCodes } from '@/lib/spreadsheet/recent-formats';
@@ -29,7 +30,12 @@ export type GridDialogs = {
   openCustomAngle: () => void;
 };
 
-export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs): GridOffice {
+export function useGridMenuBindings(
+  actions: SheetActions,
+  dialogs: GridDialogs,
+  // The side panels' menu items (spreadsheet-panels.ts), bound by useOfficePanels.
+  panelActions: OfficeActions = {},
+): GridOffice {
   const c = useSheetController();
   const [borderLine, chooseBorderLine] = useBorderLine();
   const clip = useSheetClipboard();
@@ -75,7 +81,10 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
       openCustomAngle: dialogs.openCustomAngle,
     },
   });
-  const published = { ...office, actions: { ...office.actions, ...sheetBarBindings(bar) } };
+  const published = {
+    ...office,
+    actions: { ...office.actions, ...sheetBarBindings(bar), ...panelActions },
+  };
   usePublishedBindings(published);
   return published;
 }

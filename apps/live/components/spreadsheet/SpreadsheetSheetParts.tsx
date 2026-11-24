@@ -1,0 +1,105 @@
+'use client';
+
+// The open sheet's parts (docs/specs/029-sheets/surface.md): the formula bar, the grid, the right side panel beside them
+// (office-shell.md "Side panels"), the grid's menus and dialogs and the sheet bar's summary, all on the open sheet's
+// controller.
+import { useEffect } from 'react';
+import { DocumentFonts } from '@livedoc/document';
+import { useSheetController } from '@/components/sheets/sheet-controller';
+import { SheetGrid } from '@/components/sheets/SheetGrid';
+import { useFormulaInput } from '@/components/sheets/useFormulaInput';
+import { useFormulaPointing } from '@/components/sheets/useFormulaPointing';
+import { useSheetActions } from '@/components/sheets/useSheetActions';
+import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
+import { useOfficePanels } from '@/lib/office/useOfficePanels';
+import { SPREADSHEET_DEFAULT_FONT } from '@/lib/spreadsheet/spreadsheet-fonts';
+import { SPREADSHEET_PANELS } from '@/lib/spreadsheet/spreadsheet-panels';
+import { SheetBarSummary } from './SheetBarSummary';
+import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
+import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
+import { SpreadsheetRightPanel } from './SpreadsheetRightPanel';
+import { useSpreadsheetSurfaceKeys } from './spreadsheet-surface-keys';
+import { useSpreadsheetZoomScale } from './spreadsheet-zoom';
+import { useCellGoogleFonts } from './useCellGoogleFonts';
+import { useCustomAngleDialog } from './useCustomAngleDialog';
+import { useGridMenuBindings } from './useGridMenuBindings';
+import { useMergeDialog } from './useMergeDialog';
+import { useNumberFormatDialogs } from './useNumberFormatDialogs';
+
+const DEFAULT_FONT_STACK = DocumentFonts.stack(SPREADSHEET_DEFAULT_FONT);
+
+export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
+  const actions = useSheetActions();
+  const input = useFormulaInput(actions);
+  const c = useSheetController();
+  const pointRef = useFormulaPointing(c, input);
+  const zoom = useSpreadsheetZoomScale();
+  const surfaceKeys = useSpreadsheetSurfaceKeys();
+  const formatDialogs = useNumberFormatDialogs(actions);
+  const mergeDialog = useMergeDialog(actions);
+  const angleDialog = useCustomAngleDialog(actions);
+  const panels = useOfficePanels({
+    kind: 'Spreadsheet',
+    panels: SPREADSHEET_PANELS,
+    onFocusDocument: c.focusGrid,
+    writes: c.canEdit && c.canShape,
+  });
+  const office = useGridMenuBindings(
+    actions,
+    {
+      ...formatDialogs,
+      merge: mergeDialog.merge,
+      openCustomAngle: angleDialog.openCustomAngle,
+    },
+    panels.actions,
+  );
+  useCellGoogleFonts(c.sheet);
+  const { focusGrid, canEdit } = c;
+  // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
+  useEffect(() => {
+    if (!canEdit) return;
+    const frame = requestAnimationFrame(() => focusGrid());
+    return () => cancelAnimationFrame(frame);
+  }, [canEdit, focusGrid]);
+  return (
+    <div
+      className="contents"
+      onFocus={() => c.setFocused(true)}
+      onBlur={(e) => {
+        const next = e.relatedTarget;
+        if (
+          next instanceof Element &&
+          (e.currentTarget.contains(next) || next.closest('[data-menu-surface]'))
+        )
+          return;
+        c.setFocused(false);
+      }}
+    >
+      {/* The surface's areas, for F6 and Ctrl+Alt+. (grid-and-editing.md "Moving around"). */}
+      {/* The right side panel sits beside the formula bar and the grid (office-shell.md "Side panels"). */}
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <SpreadsheetFormulaBarRow actions={actions} input={input} />
+          <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
+            <SheetGrid
+              elementId={`sheet-${c.sheet.id}`}
+              actions={actions}
+              input={input}
+              pointRef={pointRef}
+              peers={bridge.peers}
+              zoom={zoom}
+              surfaceKeys={surfaceKeys}
+              fontFamily={DEFAULT_FONT_STACK}
+            />
+          </div>
+        </div>
+        <SpreadsheetRightPanel panels={panels} actions={actions} />
+      </div>
+      <SpreadsheetGridMenus actions={actions} bound={office.actions} />
+      {formatDialogs.dialog}
+      {angleDialog.dialog}
+      {mergeDialog.dialog}
+      <SheetBarSummary />
+    </div>
+  );
+}

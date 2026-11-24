@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -31,6 +32,7 @@ vi.mock('@/lib/open-hyperlink', () => ({ openHyperlink: open }));
 
 let cells = new Map<string, object>();
 let recent: readonly string[] = [];
+let panelActions: OfficeActions = {};
 
 function bound(
   sheetLayout: object,
@@ -58,13 +60,17 @@ function bound(
   );
   renderHook(
     () =>
-      useGridMenuBindings(actions, {
-        openCustomFormat,
-        openCustomCurrency,
-        openCustomDateTime,
-        merge: vi.fn(),
-        openCustomAngle: vi.fn(),
-      }),
+      useGridMenuBindings(
+        actions,
+        {
+          openCustomFormat,
+          openCustomCurrency,
+          openCustomDateTime,
+          merge: vi.fn(),
+          openCustomAngle: vi.fn(),
+        },
+        panelActions,
+      ),
     {
       wrapper,
     },
@@ -85,6 +91,17 @@ describe('useGridMenuBindings', () => {
     expect(b['create-a-filter']!.label).toBeUndefined();
     b.bold!.run();
     expect(actions.toggle).toHaveBeenCalledWith('b');
+  });
+
+  // conditional-formatting.md "In a spreadsheet": the side panels' items publish with the grid's.
+  it("publishes the side panels' items beside the grid's", () => {
+    const run = vi.fn();
+    panelActions = { 'conditional-formatting': { run, checked: true } };
+    const b = bound(layout());
+    panelActions = {};
+    expect(b['conditional-formatting']!.checked).toBe(true);
+    b['conditional-formatting']!.run();
+    expect(run).toHaveBeenCalledOnce();
   });
 
   it('reads the frozen lines, hidden gridlines and a filter from the layout', () => {
