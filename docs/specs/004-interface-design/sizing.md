@@ -161,6 +161,8 @@ A surface names the token, never the number, so the scale changes in one place.
   group.
 - Its controls take the drawing tool's 32 px (`h-field`), so the line reads as one height (D242, default).
 - Draw's dock holds drawing tools wherever it sits, so its controls are 32 px at the bottom too.
+- The selection toolbar, an element's menus, the Sheet toolbar and a Dashboard's Settings cog are toolbars too: 28 px
+  controls; their dividers the chip step.
 - The palette's menus are chrome on the scale; their pictures are drawn art: animation previews, the palette's own
   glyphs and the Sankey menu's pictures.
 - The sign-in stage's pitch (`AuthStage`) is display type, as the marketing site's hero, and moves with the other

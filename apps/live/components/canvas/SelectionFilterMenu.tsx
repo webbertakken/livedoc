@@ -96,7 +96,7 @@ export function SelectionFilterMenu({ selectedElements, onFilter }: SelectionFil
               <MenuTile
                 key={g.key}
                 icon={
-                  <span className="[&_svg]:h-5 [&_svg]:w-5">
+                  <span className="[&_svg]:size-icon-toolbar">
                     {g.key === 'all-shapes' ? <ShapesIcon /> : <FilterIcon />}
                   </span>
                 }

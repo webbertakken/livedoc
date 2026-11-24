@@ -22,7 +22,7 @@ export function LogoGuidesSettings({ pageId, tools }: { pageId: string; tools: L
       <SwitchRow
         checked={guides}
         onChange={(on) => tools.setGuides(pageId, on)}
-        className="py-1 text-xs"
+        className="py-1 text-supporting"
       >
         Show Guides
       </SwitchRow>
@@ -37,7 +37,7 @@ export function LogoGuidesSettings({ pageId, tools }: { pageId: string; tools: L
                 type="button"
                 aria-pressed={on}
                 onClick={() => tools.setGuidePart(part.id, !on)}
-                className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-left text-xs transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
+                className={`flex items-center gap-2 rounded-control border px-2 py-1 text-left text-supporting transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
                   on
                     ? 'border-cyan-500/60 bg-cyan-50 text-cyan-900 dark:bg-cyan-500/15 dark:text-cyan-100'
                     : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'
@@ -52,7 +52,7 @@ export function LogoGuidesSettings({ pageId, tools }: { pageId: string; tools: L
             );
           })}
         </div>
-        <p className="mt-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">Strength</p>
+        <p className="mt-2 text-supporting text-slate-500 dark:text-slate-400">Strength</p>
         <SegmentedRadio
           label="Guide strength"
           options={LOGO_GUIDE_STRENGTHS}

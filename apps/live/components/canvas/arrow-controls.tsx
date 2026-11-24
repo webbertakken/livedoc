@@ -75,7 +75,7 @@ const ARROWHEAD_SHAPE_DESC: Record<ArrowheadShape, string> = {
   'one-or-many': "ER: one or many (a bar and a crow's foot).",
 };
 
-const subLabel = 'text-[10px] font-medium text-slate-500 dark:text-slate-400';
+const subLabel = 'text-supporting text-slate-500 dark:text-slate-400';
 const divider = 'my-2 h-px bg-slate-100 dark:bg-slate-800';
 
 // Line: thickness + line style + line (dash) pattern. Each row hidden when
@@ -179,13 +179,13 @@ export function ArrowLineControls({
           <button
             type="button"
             onClick={() => onSetRouteBehind(!routeBehind)}
-            className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            className="flex w-full items-center justify-between gap-2 rounded-control px-1 py-1 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
           >
             <span className="flex flex-col">
-              <span className="text-[11px] text-slate-600 dark:text-slate-300">
+              <span className="text-supporting text-slate-600 dark:text-slate-300">
                 Pass Behind Boxes
               </span>
-              <span className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+              <span className="text-supporting text-slate-500 dark:text-slate-400">
                 Break the line where it crosses another box.
               </span>
             </span>
@@ -197,13 +197,13 @@ export function ArrowLineControls({
         <button
           type="button"
           onClick={() => onSetExactStart(!exactStart)}
-          className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+          className="flex w-full items-center justify-between gap-2 rounded-control px-1 py-1 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
         >
           <span className="flex flex-col">
-            <span className="text-[11px] text-slate-600 dark:text-slate-300">
+            <span className="text-supporting text-slate-600 dark:text-slate-300">
               Start at Exact Anchor
             </span>
-            <span className="text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+            <span className="text-supporting text-slate-500 dark:text-slate-400">
               Start where you connected it, not spread out from other arrows there.
             </span>
           </span>

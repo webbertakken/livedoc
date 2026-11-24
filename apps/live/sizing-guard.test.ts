@@ -80,6 +80,32 @@ const SIZED_PATHS = [
   'components/canvas/cluster-strip.ts',
   'components/palette',
   'components/chrome',
+  'components/canvas/SelectionPopover.tsx',
+  'components/canvas/SelectionPopoverButton.tsx',
+  'components/canvas/MultiSelectionToolbar.tsx',
+  'components/canvas/toolbar-buttons.ts',
+  'components/canvas/TitlePopoverButton.tsx',
+  'components/canvas/ElementEllipsisMenu.tsx',
+  'components/canvas/LockedElementMenu.tsx',
+  'components/canvas/SwatchOverridePopover.tsx',
+  'components/canvas/QuickStylePanel.tsx',
+  'components/canvas/quick-style-rows.tsx',
+  'components/canvas/QuickMoreColours.tsx',
+  'components/canvas/CanvasStyleControls.tsx',
+  'components/canvas/arrow-controls.tsx',
+  'components/canvas/TableCellMenu.tsx',
+  'components/canvas/table-menu-controls.tsx',
+  'components/canvas/TableAxisControls.tsx',
+  'components/canvas/SelectionFilterMenu.tsx',
+  'components/canvas/RichTextToolbar.tsx',
+  'components/canvas/LogoMirrorPopover.tsx',
+  'components/canvas/LogoGuidesPopover.tsx',
+  'components/canvas/TrashClusterButton.tsx',
+  'components/plan/dashboard/DashboardSettings.tsx',
+  'components/sheets/SheetFontButton.tsx',
+  'components/sheets/sheet-toolbar-categories.tsx',
+  'components/sheets/SheetToolbarMenus.tsx',
+  'components/sheets/SheetToolbar.tsx',
   'components/canvas/whiteboard',
 ];
 
@@ -123,8 +149,6 @@ const SIZING_EXCEPTIONS = [
   'components/plan/views/PriorityMatrixView.tsx',
   'components/plan/views/StatusMixView.tsx',
   'components/plan/views/WorkloadView.tsx',
-  // Its floating cog shares the canvas toolbar's frame, so it moves with the canvas chrome.
-  'components/plan/dashboard/DashboardSettings.tsx',
 ];
 
 describe('live sizing', () => {

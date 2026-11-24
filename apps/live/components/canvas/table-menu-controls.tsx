@@ -89,7 +89,7 @@ function MenuButton({
         e.stopPropagation();
         onClick();
       }}
-      className={`flex h-9 w-full items-center gap-2 whitespace-nowrap rounded-md px-2.5 text-left text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 text-slate-700 hover:bg-brand-50 dark:text-slate-200 dark:hover:bg-slate-700`}
+      className={`flex h-row w-full items-center gap-2 whitespace-nowrap rounded-control px-3 text-left text-body transition disabled:cursor-not-allowed disabled:opacity-50 text-slate-700 hover:bg-brand-50 dark:text-slate-200 dark:hover:bg-slate-700`}
     >
       <span className="shrink-0">{children}</span>
       {label}
@@ -104,7 +104,7 @@ function MenuButton({
 // Thin rule between the menu's action groups (insert · move · delete).
 function MenuSeparator() {
   return (
-    <div className="my-1 px-1.5" role="separator" aria-hidden>
+    <div className="my-1 px-2" role="separator" aria-hidden>
       <div className="h-px bg-slate-200/90 dark:bg-slate-700/80" />
     </div>
   );

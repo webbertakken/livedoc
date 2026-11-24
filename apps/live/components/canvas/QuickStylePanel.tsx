@@ -233,7 +233,7 @@ export function QuickStylePanel({
             // in the wrong spot.
             { left: 0, top: 0, visibility: 'hidden' as const }),
       }}
-      className={`pointer-events-auto fixed z-[var(--z-panel)] flex flex-col rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-900/5 motion-safe:animate-fade-in dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40 ${frame.className}`}
+      className={`pointer-events-auto fixed z-[var(--z-panel)] flex flex-col rounded-menu border border-slate-200 bg-white shadow-lg shadow-slate-900/5 motion-safe:animate-fade-in dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40 ${frame.className}`}
     >
       <div data-quick-style-body="" className="contents">
         <QuickStyleSections
@@ -248,7 +248,7 @@ export function QuickStylePanel({
             {titles ? (
               <span
                 aria-hidden
-                className="select-none px-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                className="select-none px-0.5 text-supporting text-slate-500 dark:text-slate-400"
               >
                 Actions
               </span>
@@ -258,7 +258,7 @@ export function QuickStylePanel({
                 type="button"
                 onClick={quickStyle.clearStyles}
                 data-testid="quick-style-clear"
-                className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="flex h-row w-full items-center justify-center gap-2 rounded-control text-body text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 <ClearStylesGlyph />
                 Clear Styles
@@ -292,7 +292,7 @@ export function panelFrame(): { className: string; width: number; padding: numbe
   const targets = QUICK_ROW_TARGETS;
   const border = 2 * QUICK_BORDER_PX;
   return {
-    className: 'gap-2.5',
+    className: 'gap-3',
     width: targets * QUICK_TARGET_PX + 2 * QUICK_COMPACT_PADDING_PX + border,
     padding: QUICK_COMPACT_PADDING_PX,
   };
@@ -325,7 +325,7 @@ function QuickStyleSections({
   return (
     <>
       {showSubject && caption ? (
-        <p className="px-0.5 text-xs font-medium text-slate-700 dark:text-slate-200">{caption}</p>
+        <p className="px-0.5 text-supporting text-slate-700 dark:text-slate-200">{caption}</p>
       ) : null}
       {view.pen ? (
         <QuickPenRows pen={view.pen} quickStyle={quickStyle} showTitles={showTitles} />
@@ -476,9 +476,7 @@ function QuickStyleSections({
           options={QUICK_TEXT_SIZES.map((step, i) => ({
             value: step,
             name: `${TEXT_SIZE_NAMES[step]}, ${textSize.steps[i]}px`,
-            content: (
-              <span className="text-[11px] font-semibold leading-none">{step.toUpperCase()}</span>
-            ),
+            content: <span className="text-supporting leading-none">{step.toUpperCase()}</span>,
           }))}
           value={textSize.value}
           onChoose={(step) =>

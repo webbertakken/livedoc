@@ -16,8 +16,8 @@ const TOUR_CARD = '[data-tour-popover]';
 
 /** The title-bar controls' look: the cog's size, named beside the icon when `labelled`, tinted while on. */
 export function titleButtonClass(on: boolean | undefined, labelled: boolean): string {
-  return `flex h-6 items-center justify-center rounded-md transition ${
-    labelled ? 'gap-1 px-1.5 text-[11px] font-medium' : 'w-6'
+  return `flex h-chip items-center justify-center rounded-control transition ${
+    labelled ? 'gap-1 px-2 text-body' : 'w-chip'
   } focus-visible:outline-2 focus-visible:outline-brand-600 ${
     on
       ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
@@ -101,7 +101,7 @@ export function TitlePopoverButton({
           keepOpenWithin={TOUR_CARD}
         >
           <div
-            className={`rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 ${
+            className={`rounded-menu border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 ${
               padded ? 'p-3' : 'py-1'
             }`}
           >
@@ -143,9 +143,7 @@ function TitleSheet({
       zClassName="z-[var(--z-overlay)]"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <p className="px-4 pb-1 pt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">
-        {name}
-      </p>
+      <p className="px-4 pb-1 pt-0.5 text-body text-slate-900 dark:text-slate-100">{name}</p>
       <div className="pb-2">{children}</div>
     </BottomSheet>
   );

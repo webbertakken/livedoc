@@ -42,7 +42,7 @@ export function TrashDropTarget() {
       data-plan-trash
       role="status"
       aria-live="polite"
-      className={`pointer-events-auto flex h-12 items-center gap-2 rounded-xl border-2 px-4 text-[13px] font-semibold shadow-lg transition-all duration-200 ease-out animate-fade-in motion-reduce:transition-none ${
+      className={`pointer-events-auto flex h-12 items-center gap-2 rounded-surface border-2 px-4 text-body shadow-lg transition-all duration-200 ease-out animate-fade-in motion-reduce:transition-none ${
         over
           ? 'scale-105 border-brand-700 bg-brand-700 text-white shadow-brand-500/30 motion-reduce:scale-100 dark:border-brand-600 dark:bg-brand-600'
           : 'border-dashed border-slate-300 bg-white text-slate-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300'

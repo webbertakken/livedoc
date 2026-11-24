@@ -73,14 +73,14 @@ export function TableCellMenu({
   const underlineOn = sc?.underline ?? element.textUnderline ?? false;
   const single = cells.length === 1;
   const toggleCls = (on: boolean) =>
-    `flex h-7 flex-1 items-center justify-center rounded text-sm ${
+    `flex h-row flex-1 items-center justify-center rounded-control text-body ${
       on
         ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/30 dark:text-brand-200'
         : 'text-slate-600 hover:bg-brand-50 dark:text-slate-200 dark:hover:bg-slate-700'
     }`;
   return createPortal(
     <ContextMenu position={position} label="Cell menu" onClose={onClose} flush>
-      <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+      <p className="px-3 pb-0.5 pt-2 text-supporting text-slate-500 dark:text-slate-400">
         {single ? 'Selected Cell' : `${cells.length} Cells`}
       </p>
       <MenuAccordionSection title="Text" icon={<TextGlyph />} {...section('text')}>
@@ -91,7 +91,7 @@ export function TableCellMenu({
             className={toggleCls(boldOn)}
             onClick={() => applyStyle({ bold: !boldOn })}
           >
-            <span className="font-bold">B</span>
+            <span className="font-medium">B</span>
           </button>
           <button
             type="button"

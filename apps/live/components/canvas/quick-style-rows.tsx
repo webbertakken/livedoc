@@ -108,7 +108,7 @@ export function QuickRadioRow<V extends string | number>({
       {showTitle ? (
         <span
           aria-hidden
-          className="select-none px-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+          className="select-none px-0.5 text-supporting text-slate-500 dark:text-slate-400"
         >
           {title}
         </span>
@@ -176,8 +176,8 @@ export function QuickRadioRow<V extends string | number>({
                 }}
                 className={
                   swatch
-                    ? 'group relative flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
-                    : `flex h-7 w-full items-center justify-center rounded-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                    ? 'group relative flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
+                    : `flex h-row w-full items-center justify-center rounded-control transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                         checked
                           ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-300 dark:bg-brand-500/15 dark:text-brand-200 dark:ring-brand-500/40'
                           : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'

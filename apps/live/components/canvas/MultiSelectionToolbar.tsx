@@ -85,13 +85,13 @@ export function MultiSelectionToolbar({
               <EllipsisIcon size={14} />
             </button>
           </HoverCard>
-          <span aria-hidden className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
+          <span aria-hidden className="h-chip w-px bg-slate-200 dark:bg-slate-700" />
         </>
       ) : null}
       {mindArrange ? (
         <>
           <MindArrangeButtons {...mindArrange} />
-          <span aria-hidden className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
+          <span aria-hidden className="h-chip w-px bg-slate-200 dark:bg-slate-700" />
         </>
       ) : null}
       {filterable && onFilter ? (
@@ -99,7 +99,7 @@ export function MultiSelectionToolbar({
           <SelectionFilterMenu selectedElements={selectedElements} onFilter={onFilter} />
           {/* Filter narrows WHAT is selected; everything after acts on the
               selection — the divider marks that boundary. */}
-          <span aria-hidden className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
+          <span aria-hidden className="h-chip w-px bg-slate-200 dark:bg-slate-700" />
         </>
       ) : null}
       <HoverCard title="Duplicate" description="Duplicate the selection, arrows included.">
@@ -128,7 +128,7 @@ export function MultiSelectionToolbar({
       {/* Duplicate copies the selection; everything after acts ON it
           (export, then lock / delete) — the divider marks that
           boundary, same as the one after More above. */}
-      <span aria-hidden className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
+      <span aria-hidden className="h-chip w-px bg-slate-200 dark:bg-slate-700" />
       {/* Lock sits with Delete, past the last divider: they are the two that
           decide whether these elements can still be touched, and locking is
           what makes the Delete beside it refuse. A divider between them read
@@ -143,7 +143,7 @@ export function MultiSelectionToolbar({
           <ExportIcon />
         </button>
       </HoverCard>
-      <span aria-hidden className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
+      <span aria-hidden className="h-chip w-px bg-slate-200 dark:bg-slate-700" />
       <HoverCard
         title={allLocked ? 'Unlock' : 'Lock'}
         description={allLocked ? 'Unlock so they move again.' : "Lock so they can't move."}
@@ -172,7 +172,7 @@ export function MultiSelectionToolbar({
             aria-label="Delete selected elements"
             className={
               allLocked
-                ? 'flex h-7 w-7 items-center justify-center rounded-md text-slate-300 dark:text-slate-400'
+                ? 'flex size-row items-center justify-center rounded-control text-slate-300 dark:text-slate-400'
                 : TOOLBAR_BTN
             }
           >
