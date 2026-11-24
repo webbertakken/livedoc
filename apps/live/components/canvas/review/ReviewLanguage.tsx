@@ -158,7 +158,7 @@ export function ReviewLanguage({
       }}
     >
       {contexts.length > 0 ? (
-        <div className="flex items-center gap-2 border-b border-slate-200 px-3.5 py-2 dark:border-slate-800">
+        <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-2 dark:border-slate-800">
           <label htmlFor={filterId} className={REVIEW_MUTED}>
             Used in
           </label>
@@ -193,22 +193,20 @@ export function ReviewLanguage({
                   type="button"
                   aria-pressed={on}
                   onClick={() => choose(on ? null : r.term.key)}
-                  className={`flex w-[calc(100%-0.5rem)] items-baseline gap-2 px-2.5 py-1.5 text-left ${REVIEW_ROW} ${
+                  className={`flex w-[calc(100%-0.5rem)] items-baseline gap-2 px-3 py-1.5 text-left ${REVIEW_ROW} ${
                     on ? 'bg-slate-100 dark:bg-slate-800' : ''
                   }`}
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block break-words text-[13px] font-medium text-slate-900 dark:text-slate-100">
+                    <span className="block break-words text-body text-slate-900 dark:text-slate-100">
                       {r.term.term}
                     </span>
                     {r.contexts.length > 0 ? (
-                      <span className={`block leading-snug ${REVIEW_MUTED}`}>
-                        {r.contexts.join(', ')}
-                      </span>
+                      <span className={`block ${REVIEW_MUTED}`}>{r.contexts.join(', ')}</span>
                     ) : null}
                   </span>
                   {r.term.contexts.length > 1 ? (
-                    <span className="shrink-0 rounded-full border border-slate-300 px-1.5 text-[11px] font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300">
+                    <span className="shrink-0 rounded-full border border-slate-300 px-2 text-supporting text-slate-700 dark:border-slate-600 dark:text-slate-300">
                       {r.term.contexts.length} contexts
                     </span>
                   ) : null}
@@ -217,7 +215,7 @@ export function ReviewLanguage({
                   </span>
                 </button>
                 {on && mayWrite ? (
-                  <div className="flex items-center gap-1.5 px-3.5 pb-2 pt-1">
+                  <div className="flex items-center gap-2 px-4 pb-2 pt-1">
                     {draft === null ? (
                       <RowAct data-rename-term="" onClick={() => setDraft(r.term.term)}>
                         Rename Term
@@ -236,7 +234,7 @@ export function ReviewLanguage({
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.nativeEvent.isComposing) rename();
                           }}
-                          className="h-7 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-[13px] text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                          className="h-row min-w-0 flex-1 rounded-menu border border-slate-300 bg-white px-2 text-body text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                         />
                         <RowAct disabled={!ask || !wouldChange(ask)} onClick={rename}>
                           Rename

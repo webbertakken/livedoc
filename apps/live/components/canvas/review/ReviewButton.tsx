@@ -28,7 +28,7 @@ export function ReviewButton({ tabId }: { tabId: string }) {
       aria-expanded={open}
       onClick={() => toggleReview(tabId)}
       onKeyDown={onKeyDown}
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-slate-100 dark:hover:bg-slate-800 ${
+      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-body text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-slate-100 dark:hover:bg-slate-800 ${
         open ? 'bg-slate-100 dark:bg-slate-800' : ''
       }`}
     >

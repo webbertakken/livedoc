@@ -42,7 +42,7 @@ export function ReviewCheck({
     <>
       <p
         role="status"
-        className="border-b border-slate-200 px-3.5 py-2.5 text-xs leading-normal text-slate-700 dark:border-slate-800 dark:text-slate-300"
+        className="border-b border-slate-200 px-4 py-2.5 text-supporting text-slate-700 dark:border-slate-800 dark:text-slate-300"
       >
         {formatReadiness(readinessOf(reading))}
       </p>
@@ -63,16 +63,16 @@ export function ReviewCheck({
                     onPointerLeave={() => onRing([])}
                     onFocus={() => onRing(row.gap.ids)}
                     onBlur={() => onRing([])}
-                    className={`flex items-center gap-2.5 px-2.5 py-1.5 ${REVIEW_ROW}`}
+                    className={`flex items-center gap-3 px-3 py-1.5 ${REVIEW_ROW}`}
                   >
                     <span className="mt-1.5 self-start">
                       <KindSwatch kind={row.kind} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block break-words text-[13px] font-medium text-slate-900 dark:text-slate-100">
+                      <span className="block break-words text-body text-slate-900 dark:text-slate-100">
                         {row.words}
                       </span>
-                      <span className={`block leading-snug ${REVIEW_MUTED}`}>{row.says}</span>
+                      <span className={`block ${REVIEW_MUTED}`}>{row.says}</span>
                     </span>
                     {mayWrite && row.act?.type === 'add' ? (
                       <RowAct

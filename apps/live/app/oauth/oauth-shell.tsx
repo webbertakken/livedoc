@@ -11,7 +11,7 @@ import { ConnectPitch } from '@/components/chrome/auth-pitches';
 // The primary action of every page in the shell (Allow, Approve, Continue). White on brand-700 in light
 // (about 5.9:1; brand-600 was 4.1:1, under WCAG 2.2 AA), darker still on hover; the shared solid brand
 // control in dark.
-export const OAUTH_PRIMARY = `min-h-11 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`;
+export const OAUTH_PRIMARY = `min-h-11 rounded-menu bg-brand-700 px-4 py-2 text-body font-medium text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`;
 
 export function OauthShell({ children }: { children: React.ReactNode }) {
   return <AuthStage aside={<ConnectPitch />}>{children}</AuthStage>;
@@ -25,7 +25,7 @@ export function OauthHelpLink() {
       href="/help/account-and-data/connect-ai-mcp/"
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 transition hover:text-brand-700 dark:hover:text-brand-400"
+      className="mt-5 inline-flex items-center gap-2 text-supporting text-slate-500 dark:text-slate-400 transition hover:text-brand-700 dark:hover:text-brand-400"
     >
       <Glyph size={13} units={16} strokeLinecap="butt" strokeLinejoin="miter">
         <circle cx="8" cy="8" r="6.5" />
@@ -51,7 +51,7 @@ export function ReadOnlyAccessToggle({
       type="button"
       onClick={() => onChange(!readOnly)}
       aria-pressed={readOnly}
-      className="mt-4 flex w-full cursor-pointer items-start justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5 text-left text-sm dark:border-slate-700"
+      className="mt-4 flex w-full cursor-pointer items-start justify-between gap-3 rounded-menu border border-slate-200 px-3 py-2.5 text-left text-body dark:border-slate-700"
     >
       <span className="min-w-0 text-slate-600 dark:text-slate-300">
         <span className="font-medium text-slate-800 dark:text-slate-100">Read-only access</span>:

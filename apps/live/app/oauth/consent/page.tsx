@@ -66,7 +66,7 @@ function Consent() {
     return (
       <OauthShell>
         <h1 className={AUTH_TITLE}>Connection cancelled</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-body text-slate-500 dark:text-slate-400">
           You can close this window.
         </p>
       </OauthShell>
@@ -77,7 +77,7 @@ function Consent() {
     return (
       <OauthShell>
         <h1 className={AUTH_TITLE}>Connecting apps isn’t available</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-body text-slate-500 dark:text-slate-400">
           This deployment doesn’t have accounts enabled, so there’s nothing to connect to.
         </p>
       </OauthShell>
@@ -86,7 +86,7 @@ function Consent() {
   if (!authLoaded) {
     return (
       <OauthShell>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Loading…</p>
+        <p className="text-body text-slate-500 dark:text-slate-400">Loading…</p>
       </OauthShell>
     );
   }
@@ -100,7 +100,7 @@ function Consent() {
     return (
       <OauthShell>
         <h1 className={AUTH_TITLE}>Sign in to connect {client}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-body text-slate-500 dark:text-slate-400">
           You need to be signed in to connect an app to your documents.
         </p>
         <div className="mt-5 flex items-center gap-2">
@@ -113,7 +113,7 @@ function Consent() {
           <button
             type="button"
             onClick={() => setStatus('cancelled')}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="rounded-menu border border-slate-200 px-4 py-2 text-body text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             Cancel
           </button>
@@ -130,7 +130,7 @@ function Consent() {
   if (resolved === undefined) {
     return (
       <OauthShell>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Checking this request…</p>
+        <p className="text-body text-slate-500 dark:text-slate-400">Checking this request…</p>
       </OauthShell>
     );
   }
@@ -141,7 +141,7 @@ function Consent() {
     return (
       <OauthShell>
         <h1 className={AUTH_TITLE}>This link has expired</h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-body text-slate-500 dark:text-slate-400">
           We couldn’t find the connection request this link points to. Start the connection again
           from your app.
         </p>
@@ -198,7 +198,7 @@ function Consent() {
   return (
     <OauthShell>
       <h1 className={AUTH_TITLE}>Connect {client}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+      <p className="mt-2 text-body text-slate-500 dark:text-slate-400">
         <span className="font-medium text-slate-700 dark:text-slate-200">{client}</span> wants to
         access your LiveDoc documents on your behalf. Approving creates an API token, which you can
         revoke any time from Settings, under Account › API Tokens.
@@ -208,7 +208,7 @@ function Consent() {
           answer rather than the URL's: the host the authorization code is
           delivered to, read off the redirect URI this client registered. */}
       {resolved.redirectHost ? (
-        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+        <p className="mt-3 rounded-menu bg-slate-50 px-3 py-2 text-supporting text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
           Access will be sent to{' '}
           <span className="font-medium text-slate-700 dark:text-slate-200">
             {resolved.redirectHost}
@@ -217,7 +217,7 @@ function Consent() {
         </p>
       ) : null}
       {status === 'error' ? (
-        <p role="alert" className="mt-3 text-xs text-rose-600 dark:text-rose-400">
+        <p role="alert" className="mt-3 text-supporting text-rose-600 dark:text-rose-400">
           {handoverFailureCopy(failure, 'Start the connection again from your app.')}
         </p>
       ) : null}
@@ -233,7 +233,7 @@ function Consent() {
         <button
           type="button"
           onClick={() => setStatus('cancelled')}
-          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="rounded-menu border border-slate-200 px-4 py-2 text-body text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Cancel
         </button>
@@ -250,7 +250,7 @@ export default function OauthConsentPage() {
     <Suspense
       fallback={
         <OauthShell>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Loading…</p>
+          <p className="text-body text-slate-500 dark:text-slate-400">Loading…</p>
         </OauthShell>
       }
     >

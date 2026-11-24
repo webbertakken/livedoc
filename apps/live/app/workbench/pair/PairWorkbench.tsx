@@ -34,11 +34,11 @@ type Step =
   | { kind: 'answered' };
 
 const SECONDARY =
-  'rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800';
+  'rounded-menu border border-slate-200 px-4 py-2 text-body text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800';
 const HEADING = `${AUTH_TITLE} focus:outline-none`;
-const BODY = 'mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400';
+const BODY = 'mt-2 text-body text-slate-500 dark:text-slate-400';
 const STRONG = 'font-medium text-slate-700 dark:text-slate-200';
-const MONO = 'font-mono text-[0.8125rem] break-all text-slate-700 dark:text-slate-200';
+const MONO = 'font-mono text-body break-all text-slate-700 dark:text-slate-200';
 const PAIR_COMMAND = 'livedoc workbench pair';
 
 function stepFromView(request: WorkbenchPairingRequestView): Step {
@@ -88,7 +88,7 @@ function Message({ state, title, body }: { state: string; title: string; body: R
 function Loading() {
   return (
     <OauthShell>
-      <p role="status" className="text-sm text-slate-500 dark:text-slate-400">
+      <p role="status" className="text-body text-slate-500 dark:text-slate-400">
         Loading…
       </p>
     </OauthShell>
@@ -255,7 +255,7 @@ function PendingRequest({
         You can unpair it any time in Settings, under API Tokens.
       </p>
       {failed ? (
-        <p role="alert" className="mt-3 text-xs text-rose-600 dark:text-rose-400">
+        <p role="alert" className="mt-3 text-supporting text-rose-600 dark:text-rose-400">
           Something went wrong. Please try again.
         </p>
       ) : null}

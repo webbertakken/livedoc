@@ -24,14 +24,14 @@ export default function GlobalError({
     <html lang="en">
       <body className="bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100">
         <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-          <h1 className="text-lg font-semibold">This page couldn&apos;t load</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">Reload to try again.</p>
+          <h1 className="text-name">This page couldn&apos;t load</h1>
+          <p className="text-body text-slate-600 dark:text-slate-300">Reload to try again.</p>
           <Button onClick={() => window.location.reload()}>Reload</Button>
           {/* The root failed, so no form is mounted: the form's own page (docs/specs/016-platform/bug-reports.md). */}
           <a
             href={REPORT_A_BUG_PATH}
             data-bug-report-entry=""
-            className="text-sm text-brand-700 underline underline-offset-2 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
+            className="text-body text-brand-700 underline underline-offset-2 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
           >
             Report a Bug
           </a>

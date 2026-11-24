@@ -41,9 +41,9 @@ type Step =
   | { kind: 'cancelled' };
 
 const SECONDARY =
-  'rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800';
+  'rounded-menu border border-slate-200 px-4 py-2 text-body text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800';
 const HEADING = AUTH_TITLE;
-const BODY = 'mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400';
+const BODY = 'mt-2 text-body text-slate-500 dark:text-slate-400';
 
 function Message({ heading, body }: { heading: string; body: string }) {
   return (
@@ -82,7 +82,7 @@ function Device() {
   if (!authLoaded)
     return (
       <OauthShell>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Loading…</p>
+        <p className="text-body text-slate-500 dark:text-slate-400">Loading…</p>
       </OauthShell>
     );
   if (!isSignedIn || !accountId) {
@@ -163,7 +163,7 @@ function Device() {
     case 'checking':
       return (
         <OauthShell>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Checking this code…</p>
+          <p className="text-body text-slate-500 dark:text-slate-400">Checking this code…</p>
         </OauthShell>
       );
     case 'unknown':
@@ -194,7 +194,7 @@ function Device() {
           </p>
           <ReadOnlyAccessToggle readOnly={readOnly} onChange={setReadOnly} />
           {failed ? (
-            <p role="alert" className="mt-3 text-xs text-rose-600 dark:text-rose-400">
+            <p role="alert" className="mt-3 text-supporting text-rose-600 dark:text-rose-400">
               {handoverFailureCopy(failed, deviceClient(clientId).restart)}
             </p>
           ) : null}
@@ -225,10 +225,7 @@ function Device() {
               void check();
             }}
           >
-            <label
-              htmlFor="device-code"
-              className="text-sm font-medium text-slate-700 dark:text-slate-200"
-            >
+            <label htmlFor="device-code" className="text-body text-slate-700 dark:text-slate-200">
               Code shown in your terminal
             </label>
             <input
@@ -240,9 +237,9 @@ function Device() {
               spellCheck={false}
               maxLength={9}
               placeholder="XXXX-XXXX"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-base tracking-widest text-slate-900 uppercase focus-visible:outline-2 focus-visible:outline-brand-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="rounded-menu border border-slate-300 bg-white px-3 py-2 font-mono text-panel-title text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               Only enter a code shown by a terminal you are using.
             </p>
             <div>
@@ -261,7 +258,7 @@ export default function OauthDevicePage() {
     <Suspense
       fallback={
         <OauthShell>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Loading…</p>
+          <p className="text-body text-slate-500 dark:text-slate-400">Loading…</p>
         </OauthShell>
       }
     >

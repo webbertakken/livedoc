@@ -5,7 +5,7 @@
 // already share their block-type dropdown, for the reason ToolbarDropdown
 // states: a second copy would drift on the first behaviour fix. These three
 // pieces had drifted the other way — they were copied, and the note toolbar's
-// own comment said so ("Same h-8 w-8 button as the label toolbar so the two
+// own comment said so ("Same size-field button as the label toolbar so the two
 // read as one system"). A comment promising two files stay alike is a job for
 // one file.
 //
@@ -28,7 +28,7 @@ import {
 // (flex-wrap), so its buttons take `shrink-0` to keep their square. The label
 // toolbar's row does not wrap and deliberately does not pass it.
 export function toolbarButtonClass(active: boolean, extra = ''): string {
-  return `flex h-8 w-8 ${extra ? extra + ' ' : ''}items-center justify-center rounded-md transition ${
+  return `flex size-row ${extra ? extra + ' ' : ''}items-center justify-center rounded-control transition ${
     active
       ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
       : TOOLBAR_CONTROL_REST

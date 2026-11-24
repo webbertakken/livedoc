@@ -78,7 +78,7 @@ export function ToolbarDropdown({
           aria-label={label}
           onMouseDown={noFocusSteal}
           onClick={toggle}
-          className={`flex h-8 items-center gap-0.5 rounded-md px-1.5 transition ${
+          className={`flex h-field items-center gap-0.5 rounded-control px-2 transition ${
             open
               ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
               : TOOLBAR_CONTROL_REST
@@ -95,7 +95,7 @@ export function ToolbarDropdown({
           // handler runs.
           onClick={() => setOpen(false)}
           style={menuAnchor === 'toolbar' ? { marginLeft: -scrolled } : undefined}
-          className={`absolute ${menuAnchor === 'self' ? 'left-0' : ''} top-full z-[var(--z-panel)] mt-1 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900 ${menuClassName}`}
+          className={`absolute ${menuAnchor === 'self' ? 'left-0' : ''} top-full z-[var(--z-panel)] mt-1 rounded-menu border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900 ${menuClassName}`}
         >
           {children}
         </div>

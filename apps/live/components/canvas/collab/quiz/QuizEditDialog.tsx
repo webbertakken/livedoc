@@ -25,8 +25,8 @@ import type { QuizDraft } from '@/hooks/canvas/useQuizElements';
 // before the reveal.
 
 const fieldClass =
-  'w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
-const labelClass = 'text-xs font-medium uppercase tracking-wider text-slate-500';
+  'w-full rounded-control border border-slate-200 bg-white px-3 py-1.5 text-body text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
+const labelClass = 'text-supporting text-slate-500';
 
 // The rows the dialog edits. At least two, so there is always somewhere to type.
 function seedRows(element: ShapeElement): string[] {
@@ -97,7 +97,7 @@ export function QuizEditDialog({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+              className="flex size-field items-center justify-center rounded-menu text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             >
               <CloseIcon size={16} />
             </button>
@@ -116,13 +116,13 @@ export function QuizEditDialog({
             </label>
             <fieldset>
               <legend className={labelClass}>Answers</legend>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
                 Pick the right one. Nobody else sees which until you reveal it.
               </p>
-              <div className="mt-2 flex flex-col gap-1.5">
+              <div className="mt-2 flex flex-col gap-2">
                 {rows.map((row, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <span className="w-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <span className="w-4 text-center text-supporting text-slate-500 dark:text-slate-400">
                       {quizOptionLetter(i)}
                     </span>
                     <input
@@ -136,7 +136,7 @@ export function QuizEditDialog({
                       }
                     />
                     <label
-                      className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                      className={`flex shrink-0 cursor-pointer items-center gap-2 rounded-control border px-2 py-1.5 text-body transition ${
                         correct === i
                           ? 'border-green-500 bg-green-50 text-green-700 dark:border-green-500/60 dark:bg-green-500/15 dark:text-green-300'
                           : 'border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400'
@@ -156,7 +156,7 @@ export function QuizEditDialog({
                       aria-label={`Remove answer ${quizOptionLetter(i)}`}
                       disabled={rows.length <= 2}
                       onClick={() => removeRow(i)}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-slate-400 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
+                      className="flex size-row shrink-0 items-center justify-center rounded-control text-slate-400 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
                     >
                       ×
                     </button>

@@ -84,9 +84,9 @@ export function ReviewPanel({
             aria-controls={panelId}
             tabIndex={t === tab ? 0 : -1}
             onClick={() => onTab(t)}
-            className={`-mb-px rounded-t-md border-b-2 px-2.5 pb-2 pt-2 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 ${
+            className={`-mb-px rounded-t-control border-b-2 px-3 pb-2 pt-2 text-body outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 ${
               t === tab
-                ? 'border-brand-600 font-semibold text-slate-900 dark:border-brand-300 dark:text-slate-100'
+                ? 'border-brand-600 text-slate-900 dark:border-brand-300 dark:text-slate-100'
                 : 'border-transparent font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
             }`}
           >
