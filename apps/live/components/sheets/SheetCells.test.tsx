@@ -285,6 +285,15 @@ describe('the cells', () => {
     expect([border.style.left, border.style.top]).toEqual(['99px', '23px']);
   });
 
+  // formatting.md "Borders": a double is three pixels drawn as two lines, whatever width it came with.
+  it('draws a double border at three pixels', () => {
+    const { container } = draw(sheetOf({}, { B2: { bb: { w: 1, s: 'double', c: '#000000' } } }));
+    const border = [...container.querySelectorAll<HTMLElement>('div')].find((el) =>
+      el.style.borderBottom.includes('double'),
+    )!;
+    expect(border.style.borderBottom).toBe('3px double rgb(0, 0, 0)');
+  });
+
   it('runs left-aligned text over empty neighbours, stopping at a filled one', () => {
     const long = 'a fairly long run of words that spills';
     draw(sheetOf({ A1: long, A2: long, B2: 'x' }));

@@ -34,6 +34,7 @@ import {
   type SpreadsheetHistory,
 } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { spreadsheetChoices } from '@/lib/spreadsheet/spreadsheet-choices';
+import { bordersChoice } from './borders-choice';
 import { SPREADSHEET_SHORTCUTS } from '@/lib/spreadsheet/spreadsheet-shortcuts';
 import { SPREADSHEET_TOOLBAR } from '@/lib/spreadsheet/spreadsheet-toolbar';
 import { zoomBindings } from '@/lib/spreadsheet/spreadsheet-zoom';
@@ -177,7 +178,12 @@ export function SpreadsheetTitleRow({
     ...(level === 'edit'
       ? { [CONVERT_ITEM_ID]: { run: () => conversion.open('convert', convertedFormat(format)) } }
       : {}),
+  }; // The menus' choices, and the Borders panel for an Editor (formatting.md "Borders").
+  const choices = {
+    ...spreadsheetChoices(catalogue, actions),
+    ...(grid.borders ? { borders: bordersChoice(grid.borders) } : {}),
   };
+
   const open = async (file: File) => {
     setProblem(null);
     const name = nameFromFile(file.name);
@@ -213,7 +219,7 @@ export function SpreadsheetTitleRow({
         fontFamily={fontFamily}
         colours={grid.colours}
         zoom={zoom}
-        choices={spreadsheetChoices(catalogue, actions)}
+        choices={choices}
         refresh={channel.subscribe}
       />
       <ConversionDialog

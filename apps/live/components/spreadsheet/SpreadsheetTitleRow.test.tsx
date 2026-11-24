@@ -121,6 +121,7 @@ describe('SpreadsheetTitleRow', () => {
         setFontSize: () => {},
         fontFamily: null,
         setFontFamily: () => {},
+        borders: null,
       }),
     );
     openMenu('Format');
@@ -149,6 +150,7 @@ describe('SpreadsheetTitleRow', () => {
         setFontSize,
         fontFamily: 'Arial',
         setFontFamily,
+        borders: null,
       }),
     );
     const toolbar = screen.getByRole('toolbar');
@@ -166,6 +168,33 @@ describe('SpreadsheetTitleRow', () => {
     fireEvent.click(screen.getByRole('menuitemradio', { name: 'Lora' }));
     expect(setFontFamily).toHaveBeenCalledWith('Lora');
     expect(within(toolbar).getByRole('button', { name: /Horizontal Align: Left/ })).toBeTruthy();
+  });
+
+  // formatting.md "Borders": an Editor's toolbar opens the Borders panel, a placement drawn through the sheet.
+  it('opens the Borders panel from the toolbar, a placement drawn through the open sheet', () => {
+    const channel = createOfficeBindingsChannel();
+    const apply = vi.fn();
+    render(<Row channel={channel} />);
+    act(() =>
+      channel.set({
+        recentCodes: [],
+        colours: null,
+        actions: {},
+        fontSize: 10,
+        setFontSize: () => {},
+        fontFamily: 'Arial',
+        setFontFamily: () => {},
+        borders: { apply, colour: '#000000', setColour: vi.fn(), line: 'thin', setLine: vi.fn() },
+      }),
+    );
+    fireEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Borders' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Borders' })).getByRole('button', {
+        name: 'Outer Borders',
+      }),
+    );
+    expect(apply).toHaveBeenCalledWith('outer');
+    expect(screen.queryByRole('dialog', { name: 'Borders' })).toBeNull();
   });
 
   // surface.md "Grid": View › Zoom and the toolbar's field set the one zoom, for a Viewer too.

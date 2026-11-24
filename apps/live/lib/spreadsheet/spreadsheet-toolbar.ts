@@ -177,7 +177,8 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
         { kind: 'colour', icon: lucidePaintBucket },
         BUILT,
       ),
-      icon('borders', 'Borders', 'edit', lucideGrid2x2, { menu: true }),
+      // Opens the Borders panel (formatting.md "Borders").
+      icon('borders', 'Borders', 'edit', lucideGrid2x2, { menu: true, built: true }),
       // Merges all, or unmerges a selection holding a merge; its arrow lists the four (formatting.md "Merges", D208).
       icon('merge-cells', 'Merge Cells', 'edit', lucideTableCellsMerge, {
         split: true,

@@ -84,6 +84,31 @@ describe('the static render', () => {
     expect(svg).toContain('font-family="&#39;Lora&#39;');
     expect(svg.match(/font-family="&#39;/g)).toHaveLength(1);
   });
+  // docs/specs/029-sheets/formatting.md "Borders": a double is two 1 px lines, a pixel either side of where one runs.
+  it('draws a double border as two lines', () => {
+    const svg = svgPlanSheet(
+      sheet,
+      {
+        ...MODEL,
+        cells: [
+          {
+            r: 0,
+            c: 0,
+            text: 'Total',
+            align: 'l',
+            valign: 'm',
+            borders: {
+              t: { w: 3, s: 'double', c: '#000000' },
+              l: { w: 3, s: 'double', c: '#ff0000' },
+            },
+          },
+        ],
+      },
+      'light',
+    );
+    expect(svg.match(/<line [^>]*stroke="#000000" stroke-width="1"\/>/g)).toHaveLength(2);
+    expect(svg.match(/<line [^>]*stroke="#ff0000" stroke-width="1"\/>/g)).toHaveLength(2);
+  });
   // docs/specs/029-sheets/sheet.md "Row height", D99: a cell with no font is drawn in the font it was measured in.
   it("draws a cell with no font of its own in the sheet's measured font", () => {
     const svg = svgPlanSheet(sheet, { ...MODEL, font: 'inter' }, 'light');

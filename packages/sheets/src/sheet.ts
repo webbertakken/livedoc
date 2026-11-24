@@ -30,7 +30,8 @@ export type StoredFormula = { t: string; r: StoredRef[] };
 
 export type CellInput = { n: number } | { s: string } | { b: boolean } | { f: StoredFormula };
 
-export type BorderStyle = 'solid' | 'dashed' | 'dotted';
+// A double is three pixels drawn as two lines (formatting.md "Borders").
+export type BorderStyle = 'solid' | 'dashed' | 'dotted' | 'double';
 export type Border = { w: 1 | 2 | 3; s: BorderStyle; c: string };
 
 export type NumberFormatKind =

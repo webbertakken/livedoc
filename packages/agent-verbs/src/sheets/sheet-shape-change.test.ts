@@ -242,6 +242,16 @@ describe('borders', () => {
     // Wholly past the sheet: refused, not reported as drawn.
     expect(code(b, { op: 'border', range: 'ZZ900:ZZ901' })).toBe('range_invalid');
   });
+
+  // formatting.md "Borders": Horizontal the lines between rows; a double is always three pixels.
+  it('draws the lines between rows, and a double at three pixels', () => {
+    const b = book();
+    b.run({ op: 'border', range: 'A1:A2', sides: 'horizontal', style: 'double', width: 1 });
+    const { rows, cols } = b.at().layout;
+    expect(b.at().cells.get(cellKey(rows[0]!, cols[0]!))?.format).toEqual({
+      bb: { w: 3, s: 'double', c: '#cbd5e1' },
+    });
+  });
 });
 
 describe('the filter', () => {

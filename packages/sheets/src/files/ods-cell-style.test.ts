@@ -74,7 +74,7 @@ describe('odsCellLooks', () => {
         b: true,
         ff: 'Roboto Mono',
         ha: 'r',
-        bt: { w: 1, s: 'solid', c: '#000000' },
+        bt: { w: 3, s: 'double', c: '#000000' },
         bb: { w: 2, s: 'dotted', c: '#000000' },
       },
       lost: false,
@@ -165,6 +165,11 @@ describe('odsStyleProperties', () => {
       '<style:paragraph-properties fo:text-align="end" style:text-align-source="fix"/>',
     );
     expect(odsStyleProperties(undefined)).toBe('');
+    // A double as LibreOffice draws one, which it carries into Excel's double (D206).
+    expect(odsStyleProperties({ bt: { w: 3, s: 'double', c: '#000000' } })).toBe(
+      '<style:table-cell-properties fo:border-top="1.76pt double #000000" ' +
+        'style:border-line-width-top="0.0071in 0.0102in 0.0071in"/>',
+    );
     expect(odsStyleProperties({ b: true })).toBe('<style:text-properties fo:font-weight="bold"/>');
   });
 });

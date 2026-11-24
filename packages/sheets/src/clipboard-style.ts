@@ -136,7 +136,8 @@ function borderOf(v: string): Border | null {
   const px = size ? parseFloat(size) * (size.endsWith('pt') ? 4 / 3 : 1) : 1;
   const w = px <= 1.5 ? 1 : px <= 2.5 ? 2 : 3;
   const colour = parts.map(colourOf).find(Boolean) ?? '#000000';
-  return { w, s: style === 'double' ? 'solid' : style, c: colour };
+  // A double is three pixels drawn as two lines (formatting.md "Borders").
+  return { w: style === 'double' ? 3 : w, s: style, c: colour };
 }
 
 const SIDE_KEYS: Record<string, readonly ('bt' | 'br' | 'bb' | 'bl')[]> = {

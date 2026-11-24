@@ -74,8 +74,8 @@ const BORDER_STYLES: Readonly<Record<string, BorderStyle | null>> = {
   none: null,
   hidden: null,
   solid: 'solid',
-  double: 'solid',
-  'double-thin': 'solid',
+  double: 'double',
+  'double-thin': 'double',
   groove: 'solid',
   ridge: 'solid',
   inset: 'solid',
@@ -106,7 +106,8 @@ function borderOf(text: string): Border | null | undefined {
     else return undefined;
   }
   if (!style) return style === null ? null : undefined;
-  return { w: width as Border['w'], s: style, c: colour };
+  // A double is three pixels drawn as two lines, whatever width a file gives it.
+  return { w: style === 'double' ? 3 : (width as Border['w']), s: style, c: colour };
 }
 
 // The first family of a font family list, its quotes taken off.
@@ -289,6 +290,9 @@ export function odsCellLooks(roots: readonly XmlElement[]): OdsCellLooks {
 }
 
 const WRITE_WIDTHS = ['0.74pt', '1.76pt', '2.49pt'];
+// A double as LibreOffice draws one, and carries into Excel's `double`: 1.76 pt, its two lines and their gap (D206).
+const DOUBLE_WIDTH = '1.76pt';
+const DOUBLE_LINES = '0.0071in 0.0102in 0.0071in';
 const WRITE_HORIZONTAL = { l: 'start', c: 'center', r: 'end' } as const;
 const WRITE_VERTICAL = { t: 'top', m: 'middle', b: 'bottom' } as const;
 
@@ -299,7 +303,11 @@ export function odsStyleProperties(style: CellStyle | undefined): string {
   if (style.bg) cell.push(`fo:background-color="${style.bg}"`);
   for (const [side, k] of SIDES) {
     const b = style[k];
-    if (b) cell.push(`fo:border-${side}="${WRITE_WIDTHS[b.w - 1]} ${b.s} ${b.c}"`);
+    if (b?.s === 'double')
+      cell.push(
+        `fo:border-${side}="${DOUBLE_WIDTH} double ${b.c}" style:border-line-width-${side}="${DOUBLE_LINES}"`,
+      );
+    else if (b) cell.push(`fo:border-${side}="${WRITE_WIDTHS[b.w - 1]} ${b.s} ${b.c}"`);
   }
   if (style.va) cell.push(`style:vertical-align="${WRITE_VERTICAL[style.va]}"`);
   if (style.wr === 'w') cell.push('fo:wrap-option="wrap"');

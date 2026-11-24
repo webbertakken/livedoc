@@ -14,6 +14,7 @@ import {
 import { spreadsheetMenus } from './spreadsheet-menus';
 import { SPREADSHEET_CONTEXT_MENUS } from './spreadsheet-context-menus';
 import { SPREADSHEET_TOOLBAR } from './spreadsheet-toolbar';
+import { SPREADSHEET_SHORTCUTS } from './spreadsheet-shortcuts';
 
 const actions = (): GridMenuActions => ({
   toggle: vi.fn(),
@@ -46,6 +47,7 @@ const actions = (): GridMenuActions => ({
   openCustomDateTime: vi.fn(),
   merge: vi.fn(),
   unmerge: vi.fn(),
+  borders: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -72,6 +74,8 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
   link: null,
   recentCodes: [],
   merged: false,
+  borderLine: { colour: '#000000', line: 'thin' },
+  chooseBorderLine: vi.fn(),
   act: actions(),
   ...over,
 });
@@ -88,7 +92,9 @@ describe('gridMenuBindings', () => {
     const built = catalogueItems([...spreadsheetMenus('ods', 'en-GB'), ...contexts])
       .filter(({ item }) => item.status === 'built')
       .map(({ item }) => item.id)
-      .concat(SPREADSHEET_TOOLBAR.flatMap((g) => g.controls).map((c) => c.id));
+      .concat(SPREADSHEET_TOOLBAR.flatMap((g) => g.controls).map((c) => c.id))
+      // A shortcut no item names binds under its row's id (the border shortcuts).
+      .concat(SPREADSHEET_SHORTCUTS.filter((row) => row.status === 'built').map((row) => row.id));
     for (const id of bound) expect(built, id).toContain(id);
   });
 
@@ -526,6 +532,20 @@ describe('gridOffice', () => {
     expect(office.fontFamily).toBeNull();
     office.setFontFamily('Lora');
     expect(participant.act.format).not.toHaveBeenCalled();
+  });
+});
+
+describe('gridOffice borders', () => {
+  it('gives an Editor the Borders panel in the line chosen, and no one else', () => {
+    const p = port({ borderLine: { colour: '#ff0000', line: 'thick' } });
+    const borders = gridOffice(p).borders!;
+    borders.apply('all');
+    expect(p.act.borders).toHaveBeenCalledWith('all', { w: 3, s: 'solid', c: '#ff0000' });
+    borders.setLine('dotted');
+    expect(p.chooseBorderLine).toHaveBeenCalledWith({ colour: '#ff0000', line: 'dotted' });
+    expect(gridOffice(port({ canShape: false })).borders).toBeNull();
+    gridMenuBindings(p)['apply-outer-border']!.run();
+    expect(p.act.borders).toHaveBeenLastCalledWith('outer', { w: 3, s: 'solid', c: '#ff0000' });
   });
 });
 

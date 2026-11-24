@@ -77,8 +77,10 @@ export function fitNumber(
   return '#'.repeat(Math.max(1, Math.floor(room / textWidth('#', px, face))));
 }
 
+// A cell side's CSS border; a double is three pixels drawn as two lines (formatting.md "Borders").
 function borderCss(b: Border | undefined): string | undefined {
-  return b ? `${b.w}px ${b.s} ${b.c}` : undefined;
+  if (!b) return undefined;
+  return `${b.s === 'double' ? 3 : b.w}px ${b.s} ${b.c}`;
 }
 
 type CellsProps = {

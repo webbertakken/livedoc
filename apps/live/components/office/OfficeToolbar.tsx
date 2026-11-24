@@ -380,6 +380,7 @@ function ControlView({
         icon={iconChoice.iconOf?.(value) ?? look.icon}
         entries={iconChoice.entries}
         actions={iconChoice.actions}
+        {...(iconChoice.panel ? { panel: iconChoice.panel } : {})}
         width={0}
         tabIndex={tabIndex}
         className={`${CONTROL} min-w-7`}

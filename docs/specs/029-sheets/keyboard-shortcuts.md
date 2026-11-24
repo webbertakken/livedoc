@@ -71,12 +71,12 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Center align         | `Ctrl+Shift+E`                | `⌘+Shift+E`                                   | `Ctrl+Shift+E`                | built (`spreadsheet-shortcuts.test.tsx`)                |
 | Left align           | `Ctrl+Shift+L`                | `⌘+Shift+L`                                   | `Ctrl+Shift+L`                | built (`spreadsheet-shortcuts.test.tsx`)                |
 | Right align          | `Ctrl+Shift+R`                | `⌘+Shift+R`                                   | `Ctrl+Shift+R`                | built (`spreadsheet-shortcuts.test.tsx`)                |
-| Apply top border     | `Alt+Shift+1`                 | `Option+Shift+1`                              | `Alt+Shift+1`                 | specified                                               |
-| Apply right border   | `Alt+Shift+2`                 | `Option+Shift+2`                              | `Alt+Shift+2`                 | specified                                               |
-| Apply bottom border  | `Alt+Shift+3`                 | `Option+Shift+3`                              | `Alt+Shift+3`                 | specified                                               |
-| Apply left border    | `Alt+Shift+4`                 | `Option+Shift+4`                              | `Alt+Shift+4`                 | specified                                               |
-| Remove borders       | `Alt+Shift+6`                 | `Option+Shift+6`                              | `Alt+Shift+6`                 | specified                                               |
-| Apply outer border   | `Alt+Shift+7 or Ctrl+Shift+7` | `Option+Shift+7 or ⌘+Shift+7 or Ctrl+Shift+7` | `Alt+Shift+7 or Ctrl+Shift+7` | specified                                               |
+| Apply top border     | `Alt+Shift+1`                 | `Option+Shift+1`                              | `Alt+Shift+1`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Apply right border   | `Alt+Shift+2`                 | `Option+Shift+2`                              | `Alt+Shift+2`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Apply bottom border  | `Alt+Shift+3`                 | `Option+Shift+3`                              | `Alt+Shift+3`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Apply left border    | `Alt+Shift+4`                 | `Option+Shift+4`                              | `Alt+Shift+4`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Remove borders       | `Alt+Shift+6`                 | `Option+Shift+6`                              | `Alt+Shift+6`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
+| Apply outer border   | `Alt+Shift+7 or Ctrl+Shift+7` | `Option+Shift+7 or ⌘+Shift+7 or Ctrl+Shift+7` | `Alt+Shift+7 or Ctrl+Shift+7` | built (`spreadsheet-shortcuts.test.tsx`)                |
 | Insert link          | `Ctrl+K`                      | `⌘+K`                                         | `Ctrl+K`                      | specified                                               |
 | Insert time          | `Ctrl+Shift+;`                | `⌘+Shift+;`                                   | `Ctrl+Shift+;`                | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Insert date          | `Ctrl+;`                      | `⌘+;`                                         | `Ctrl+;`                      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |

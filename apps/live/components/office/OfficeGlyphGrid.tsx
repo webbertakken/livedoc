@@ -19,6 +19,8 @@ type Props<T> = {
   onShow: (item: T) => void;
   // The cell's glyph size, a Tailwind text class.
   size?: string;
+  // A set number of cells to a row (the Borders panel's five); else as many as the width takes.
+  columns?: number;
 };
 
 function Grid<T>({
@@ -30,6 +32,7 @@ function Grid<T>({
   onPick,
   onShow,
   size = 'text-xl',
+  columns,
 }: Props<T>) {
   // The cell that is the grid's one Tab stop.
   const [active, setActive] = useState(0);
@@ -57,6 +60,9 @@ function Grid<T>({
       role="group"
       aria-label={label}
       onKeyDown={onKeyDown}
+      style={
+        columns ? { gridTemplateColumns: `repeat(${columns}, minmax(2.5rem, 1fr))` } : undefined
+      }
       className="grid min-h-0 min-w-0 flex-1 auto-rows-[2.5rem] grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] content-start overflow-y-auto rounded border border-(--office-line) p-1"
     >
       {items.map((item, index) => (

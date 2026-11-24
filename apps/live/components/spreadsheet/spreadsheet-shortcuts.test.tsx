@@ -60,9 +60,15 @@ function renderOn(platform: OfficePlatform) {
   vi.spyOn(navigator, 'platform', 'get').mockReturnValue(NAVIGATOR_PLATFORM[platform]);
   const channel = createOfficeBindingsChannel();
   const items = catalogueItems(spreadsheetMenus('ods', 'en-GB')).map(({ item }) => item);
-  const actions: OfficeActions = Object.fromEntries(
-    items.filter((item) => item.shortcut).map((item) => [item.id, { run: vi.fn() }]),
-  );
+  // A row no item names (a border shortcut) runs what the sheet binds under its own id.
+  const named = new Set(items.map((item) => item.shortcut));
+  const actions: OfficeActions = Object.fromEntries([
+    ...items.filter((item) => item.shortcut).map((item) => [item.id, { run: vi.fn() }]),
+    ...SPREADSHEET_SHORTCUTS.filter((row) => !named.has(row.id)).map((row) => [
+      row.id,
+      { run: vi.fn() },
+    ]),
+  ]);
   // Show › Formulas is the surface's own, bound in the title row: its toggle is the item's spy.
   const toggle = actions['show-formulas']!.run;
   render(<Row channel={channel} formulas={{ shown: false, toggle }} />);
@@ -75,6 +81,7 @@ function renderOn(platform: OfficePlatform) {
       setFontSize: () => {},
       fontFamily: null,
       setFontFamily: () => {},
+      borders: null,
     });
   });
   return { actions, items, surface: screen.getByTestId('surface') };
@@ -99,8 +106,8 @@ describe('the spreadsheet shortcut layer', () => {
     (platform) => {
       const { actions, items, surface } = renderOn(platform);
       for (const row of BUILT.filter((r) => !SHELL_ROWS.has(r.id) && !r.id.endsWith('-menu'))) {
-        const item = items.find((i) => i.shortcut === row.id)!;
-        const run = actions[item.id]!.run as ReturnType<typeof vi.fn>;
+        const id = items.find((i) => i.shortcut === row.id)?.id ?? row.id;
+        const run = actions[id]!.run as ReturnType<typeof vi.fn>;
         for (const way of parseShortcut(row.keys[platform])) {
           run.mockClear();
           expect(press(surface, way.steps[0]!), `${row.keys[platform]}`).toBe(false);

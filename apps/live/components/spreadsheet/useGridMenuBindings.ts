@@ -17,6 +17,7 @@ import { useSheetController } from '@/components/sheets/sheet-controller';
 import type { SheetActions } from '@/components/sheets/useSheetActions';
 import { useSheetClipboard } from '@/components/sheets/useSheetClipboard';
 import { usePublishedBindings } from './office-bindings-channel';
+import { useBorderLine } from './border-line-context';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 
 /** The dialogs the open sheet hosts that its menu items open, and the merge that asks first (useMergeDialog). */
@@ -29,6 +30,7 @@ export type GridDialogs = {
 
 export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs): GridOffice {
   const c = useSheetController();
+  const [borderLine, chooseBorderLine] = useBorderLine();
   const clip = useSheetClipboard();
   const bar = useSheetBarActionsContext();
   const { selection, sheet } = c;
@@ -53,6 +55,8 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
     link,
     recentCodes,
     merged: unmergeRange(sheet, range) !== null,
+    borderLine,
+    chooseBorderLine,
     act: {
       ...actions,
       cut: () => clip.copyNow(true),

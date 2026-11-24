@@ -196,9 +196,11 @@ The table is the contract the readers and writers are tested against, one test p
 | Borders           | `border/left`, `right`, `top`, `bottom`: `@style`, `color@rgb` | `fo:border-left`, ...: width, style, colour (`0.74pt solid #000000`)       |
 
 - **Borders**: thin, medium and thick are widths 1, 2 and 3 solid; XLSX's `dashed` and `mediumDashed` (and its
-  dash-dots) are dashed of width 1 and 2, `dotted` and `hair` dotted, `double` thick solid; ODF's width reads as 1 up
-  to 1 pt, 2 up to 2 pt, else 3, its `double` and 3-D lines as solid and its other dashes and waves as dashed. Written: thin, medium, thick;
-  dashed, mediumDashed; dotted; ODF 0.74 pt, 1.76 pt, 2.49 pt (LibreOffice's thin, medium and thick) (default, D206).
+  dash-dots) are dashed of width 1 and 2, `dotted` and `hair` dotted, `double` double; ODF's width reads as 1 up to
+  1 pt, 2 up to 2 pt, else 3, its `double` and `double-thin` as double, its 3-D lines as solid and its other dashes and
+  waves as dashed. Written: thin, medium, thick; dashed, mediumDashed; dotted; double; ODF 0.74 pt, 1.76 pt, 2.49 pt
+  (LibreOffice's thin, medium and thick), a double as LibreOffice writes one, 1.76 pt with its line widths
+  (`style:border-line-width`), which LibreOffice carries into Excel's `double` (default, D206).
 - **Colours**: XLSX's `rgb`, its `indexed` colours by ECMA-376's palette (§18.8.27) and its `theme` colours by the
   file's theme with their `tint`; a colour none of those name (`auto`, system colours) is none. ODF's are `#rrggbb`;
   `transparent` is none.
@@ -415,7 +417,7 @@ The code cites each by its id.
 - **D204** Vertical alignment in a file: the grid's middle, for a cell with none, written as middle; a file's bottom
   read as Bottom (default).
 - **D205** Clip in a file: written as Overflow, which neither format can tell apart (default).
-- **D206** Border widths and styles in a file: thin, medium, thick as widths 1 to 3; dashes and dots by their nearest;
-  ODF 0.74, 1.76 and 2.49 pt written (default).
+- **D206** Border widths and styles in a file: thin, medium, thick as widths 1 to 3; double as double; dashes and dots
+  by their nearest; ODF 0.74, 1.76 and 2.49 pt written (default).
 - **D207** ODF's default cell style: written as the default style and as "Default", every cell style its child; read
   for its text properties alone, as LibreOffice draws its cells by "Default" (default).

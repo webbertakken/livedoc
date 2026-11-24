@@ -524,15 +524,31 @@ const sheetChange = z.discriminatedUnion('op', [
     op: z.literal('border').describe('Draw borders on a range.'),
     range: rangeArg,
     sides: z
-      .enum(['all', 'outer', 'inner', 'top', 'bottom', 'left', 'right', 'none'])
+      .enum([
+        'all',
+        'outer',
+        'inner',
+        'horizontal',
+        'vertical',
+        'top',
+        'bottom',
+        'left',
+        'right',
+        'none',
+      ])
       .optional()
-      .describe('Which lines (default all); none takes them off.'),
+      .describe(
+        'Which lines (default all); inner those between cells, horizontal between rows, vertical between columns; none takes them off.',
+      ),
     color: z.string().optional().describe(`#rrggbb (default ${BORDER_COLOUR_DEFAULT}).`),
     width: z
       .union([z.literal(1), z.literal(2), z.literal(3)])
       .optional()
       .describe('1 (default) to 3 px.'),
-    style: z.enum(['solid', 'dashed', 'dotted']).optional().describe('Default solid.'),
+    style: z
+      .enum(['solid', 'dashed', 'dotted', 'double'])
+      .optional()
+      .describe('Default solid; a double is always 3 px.'),
   }),
   z.object({
     op: z

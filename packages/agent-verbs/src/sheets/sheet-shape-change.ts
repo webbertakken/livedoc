@@ -18,6 +18,7 @@ import {
   resizeAxis,
   unmergeRange,
   type BorderMode,
+  type BorderStyle,
   type CellChange,
   type Sheet,
   type SheetWrite,
@@ -36,7 +37,7 @@ export type SheetShapeChange =
       sides?: BorderMode;
       color?: string;
       width?: 1 | 2 | 3;
-      style?: 'solid' | 'dashed' | 'dotted';
+      style?: BorderStyle;
     }
   | { op: 'filter'; range?: string | null };
 
@@ -178,9 +179,11 @@ export function buildShapeChange(wb: Workbook, sheetId: string, change: SheetSha
       if (!isColour(color)) return refuse('format_invalid', 'A border colour is #rrggbb.');
       const sides = change.sides ?? 'all';
       // The range was read above, so the sheet is in the workbook.
+      const style = change.style ?? 'solid';
+      // A double is always three pixels drawn as two lines (formatting.md "Borders").
       const write = borderRange(wb, sheetId, range, sides, {
-        w: change.width ?? 1,
-        s: change.style ?? 'solid',
+        w: style === 'double' ? 3 : (change.width ?? 1),
+        s: style,
         c: color,
       })!;
       // A range wholly past the sheet is clamped to nothing: refused, as a merge or a filter there is, rather
