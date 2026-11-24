@@ -6,6 +6,7 @@ import * as Y from 'yjs';
 import { TEXT_DOCUMENT_WORDS_PER_PAGE } from './limits';
 import { liveStoryIds } from './live/live-stories';
 import { liveTabFragments } from './live/live-tabs';
+import { LiveThreads } from './live/live-threads';
 import { EQUATION, PICTURE } from './live/live-names';
 import { TextDocumentState } from './text-document-state';
 
@@ -45,6 +46,7 @@ export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
       ...liveStoryIds(doc).flatMap((id) =>
         TextDocumentState.storyParagraphs(doc, id).map((p) => p.text),
       ),
+      ...LiveThreads.read(doc).flatMap((thread) => thread.comments.map((c) => c.text)),
     ].join('\n'),
     imageIds: TextDocumentState.galleryImages(doc),
   };

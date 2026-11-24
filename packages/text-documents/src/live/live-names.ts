@@ -122,3 +122,5 @@ export const SOURCE_MAP = 'source';
 export const MEDIA_MAP = 'media';
 /** The document tabs by id, each `{ name, emoji, depth, order }` (live-editing-and-storage.md "The layout"). */
 export const TABS_MAP = 'tabs';
+/** The comment threads by id, beside the writing (review.md "How a comment is kept"). */
+export const THREADS_MAP = 'threads';

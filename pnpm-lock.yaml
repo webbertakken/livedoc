@@ -1477,6 +1477,31 @@ importers:
         specifier: ^5.0.5
         version: 5.1.1(@types/node@26.6.6)(@vitest/coverage-v8@5.1.1)(jsdom@31.0.1(@noble/hashes@2.4.0))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0))
 
+  packages/live-updates:
+    dependencies:
+      yjs:
+        specifier: ^13.6.33
+        version: 13.6.33
+    devDependencies:
+      '@livedoc/oxlint-config':
+        specifier: workspace:*
+        version: link:../oxlint-config
+      '@livedoc/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      '@vitest/coverage-v8':
+        specifier: ^5.0.5
+        version: 5.1.1(vitest@5.1.1)
+      oxlint:
+        specifier: ^1.88.0
+        version: 1.94.0(oxlint-tsgolint@7.0.2008)
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^5.0.5
+        version: 5.1.1(@types/node@26.6.6)(@vitest/coverage-v8@5.1.1)(jsdom@31.0.1(@noble/hashes@2.4.0))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0))
+
   packages/next-config:
     dependencies:
       next:
@@ -1653,6 +1678,9 @@ importers:
       '@livedoc/document':
         specifier: workspace:*
         version: link:../document
+      '@livedoc/live-updates':
+        specifier: workspace:*
+        version: link:../live-updates
       asn1js:
         specifier: ^4.0.0
         version: 4.1.0
@@ -2036,6 +2064,9 @@ importers:
       '@livedoc/document':
         specifier: workspace:*
         version: link:../document
+      '@livedoc/live-updates':
+        specifier: workspace:*
+        version: link:../live-updates
       '@livedoc/office-packages':
         specifier: workspace:*
         version: link:../office-packages

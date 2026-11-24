@@ -336,13 +336,15 @@ describe('POST room-ticket', () => {
     });
   });
 
-  it('mints an edit ticket when the caller holds edit', async () => {
+  // share-roles.md "Integrity": an Editor's key too, as a text document's comments carry their author's.
+  it('mints an edit ticket when the caller holds edit, with its adder key', async () => {
     db.getDocumentMeta.mockResolvedValue({ ownerId: 'owner-1', teamId: null });
     gates.resolveDocumentGrant.mockResolvedValue({ role: 'edit', tabScope: null, shareCode: null });
     const res = await handleDocumentRoomRoutes(
       makeTestRouteContext('POST', '/api/documents/d1/room-ticket', { owner: 'owner-1' }),
     );
-    expect(await res!.json()).toEqual({ ticket: 'TICKET-1' });
+    const adderKey = await adderKeyFor('d1', 'owner-1');
+    expect(await res!.json()).toEqual({ ticket: 'TICKET-1', adderKey });
     expect(db.createWsTicket).toHaveBeenCalledWith(expect.anything(), 'd1', {
       role: 'edit',
       tabScope: null,
@@ -350,7 +352,7 @@ describe('POST room-ticket', () => {
       account: false,
       personTag: null,
       workbenchPairing: null,
-      adderKey: null,
+      adderKey: adderKey,
       owner: true,
     });
   });
@@ -487,7 +489,7 @@ describe('WebSocket upgrade: tab scope', () => {
       account: false,
       personTag: null,
       workbenchPairing: null,
-      adderKey: null,
+      adderKey: await adderKeyFor('d1', 'visitor'),
       owner: false,
     });
   });
@@ -648,7 +650,7 @@ describe('person tag', () => {
 
   // docs/specs/013-workspace/share-roles.md "Integrity": a Participant's ticket carries its adder key, which the
   // upgrade forwards; every other leg forwards none, whatever the client sent.
-  it("mints a Participant's ticket with its adder key, and nobody else's", async () => {
+  it("mints a Participant's and an Editor's ticket with the caller's adder key, never a Viewer's", async () => {
     db.getDocumentMeta.mockResolvedValue({ ownerId: 'other', teamId: null });
     gates.resolveDocumentGrant.mockResolvedValue({
       role: 'participate',
@@ -667,6 +669,16 @@ describe('person tag', () => {
     );
     db.createWsTicket.mockClear();
     gates.resolveDocumentGrant.mockResolvedValue({ role: 'edit', tabScope: null, shareCode: 'C' });
+    await handleDocumentRoomRoutes(
+      makeTestRouteContext('POST', '/api/documents/d1/room-ticket', { owner: 'visitor' }),
+    );
+    expect(db.createWsTicket).toHaveBeenCalledWith(
+      expect.anything(),
+      'd1',
+      expect.objectContaining({ adderKey: key }),
+    );
+    db.createWsTicket.mockClear();
+    gates.resolveDocumentGrant.mockResolvedValue({ role: 'view', tabScope: null, shareCode: 'C' });
     await handleDocumentRoomRoutes(
       makeTestRouteContext('POST', '/api/documents/d1/room-ticket', { owner: 'visitor' }),
     );

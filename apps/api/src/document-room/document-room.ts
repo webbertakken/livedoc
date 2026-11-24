@@ -889,6 +889,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
           presenceId: sender.id,
           documentId: session.documentId ?? null,
           level: gate.level,
+          adderKey: session.adderKey ?? null,
         };
         const frames = this.liveTabs.get(opKind);
         if (frames) void frames.accept(from, msg.op, msg.ref);

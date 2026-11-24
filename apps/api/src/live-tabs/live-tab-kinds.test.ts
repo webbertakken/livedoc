@@ -86,7 +86,13 @@ describe('a live tab kind of its own', () => {
   it('stores, relays and reads back its updates in its own tables', async () => {
     const db = sqliteD1();
     const { room, sequence } = await roomWith(db);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame('n1', 'ab'))).toBe(true);
     expect(await room.accept(sender, frame('n1', 'cd'))).toBe(true);
     expect(sequence).toHaveBeenCalledTimes(2);
@@ -101,7 +107,13 @@ describe('a live tab kind of its own', () => {
   it('refuses a frame for a tab of another kind, one that does not decode, and one past a limit', async () => {
     const db = sqliteD1();
     const { room, sendTo } = await roomWith(db);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame('c', 'ab'))).toBe(false);
     expect(await room.accept(sender, frame('n1', 'no!'))).toBe(false);
     expect(await room.accept(sender, frame('n1', 'x'.repeat(21)))).toBe(false);
@@ -118,7 +130,13 @@ describe('a live tab kind of its own', () => {
   it('compacts its log into chunks under its row size once past its count', async () => {
     const db = sqliteD1();
     const { room } = await roomWith(db);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     for (const part of ['a', 'b', 'c', 'd']) await room.accept(sender, frame('n1', part));
     const chunks = db.sql
       .prepare('SELECT LENGTH(bytes) AS size FROM test_notes_chunks ORDER BY idx')
@@ -145,7 +163,7 @@ describe('a live tab kind of its own', () => {
     const db = sqliteD1();
     const { room } = await roomWith(db);
     await room.accept(
-      { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const },
+      { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const, adderKey: null },
       frame('n1', 'hello'),
     );
     const digest = await refreshLiveTabDigest(db.env, NOTES, 'D', 'n1');
@@ -161,7 +179,7 @@ describe('a live tab kind of its own', () => {
     const db = sqliteD1();
     const { room } = await roomWith(db);
     await room.accept(
-      { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const },
+      { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const, adderKey: null },
       frame('n1', 'hello'),
     );
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});

@@ -88,12 +88,14 @@ export type LiveTabKind = {
     readonly digest: (updates: readonly Uint8Array[]) => LiveTabDigest;
     /**
      * The level `update` asks on the state `stored` makes, for the tab whose body is `tab`. Read for a
-     * Participant's update only; a kind that declares none asks an Editor for every update.
+     * Participant's update only; a kind that declares none asks an Editor for every update. `sender`: the adder key
+     * its session holds (share-roles.md "Integrity"), none for a session without an identity.
      */
     readonly asks?: (
       stored: readonly Uint8Array[],
       update: Uint8Array,
       tab: Readonly<Record<string, unknown>>,
+      sender: { readonly adderKey: string | null },
     ) => LevelAsked;
   };
   readonly sizes: {

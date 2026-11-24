@@ -1,7 +1,9 @@
 // docs/specs/034-text-documents/live-editing-and-storage.md "The digest".
 import { describe, expect, it } from 'vitest';
+import * as Y from 'yjs';
 import { textDocumentDigest } from './digest';
 import { TEXT_DOCUMENT_WORDS_PER_PAGE } from './limits';
+import { LiveThreads } from './live/live-threads';
 import { CONSTRUCTS } from './testing/constructs';
 import { TextDocumentState } from './text-document-state';
 
@@ -59,5 +61,29 @@ describe('textDocumentDigest', () => {
       ].join('\n'),
     );
     expect(digest.words).toBe(4);
+  });
+});
+
+// review.md "How a comment is kept", live-editing-and-storage.md "Storage": the search text ends with every thread's
+// comments, open and resolved alike, in the threads' order; the counts stay the writing's.
+describe('textDocumentDigest with comment threads', () => {
+  it('searches every comment after the writing, counting the writing alone', () => {
+    const doc = stateOf('Quarterly results');
+    const run = (TextDocumentState.body(doc).get(0) as Y.XmlElement).get(0) as Y.XmlText;
+    const author = { key: 'k', name: 'Ada', colour: '#000' };
+    const start = (id: string, at: number, text: string) => ({
+      id,
+      tab: 't.0',
+      ...LiveThreads.anchorFor(run, 0, 9),
+      quote: 'Quarterly',
+      comment: { id: `${id}-1`, text, at, author },
+    });
+    LiveThreads.begin(doc, start('later', 20, 'Check the totals'), 'me');
+    LiveThreads.begin(doc, start('first', 10, 'Nice'), 'me');
+    LiveThreads.reply(doc, 'first', { id: 'r', text: 'Thanks', at: 30, author }, 'me');
+    LiveThreads.resolve(doc, 'later', true, 'me');
+    const digest = textDocumentDigest(doc);
+    expect(digest.searchText).toBe('Quarterly results\nNice\nThanks\nCheck the totals');
+    expect(digest.words).toBe(2);
   });
 });
