@@ -90,7 +90,7 @@ export function PlanSetupBoard({
             </Button>
           ) : (
             <span
-              className="flex items-center gap-1.5 text-[12px]"
+              className="flex items-center gap-2 text-supporting"
               style={{ color: palette.muted }}
             >
               <PlanCardsIcon size={14} />

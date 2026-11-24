@@ -244,7 +244,7 @@ export function LinkedCardField({
                     onClick={() => pick(card)}
                     className={`flex cursor-pointer items-start gap-2 px-2 py-1.5 text-body max-sm:text-[16px] ${
                       i === active ? 'bg-slate-100 dark:bg-slate-800' : ''
-                    } ${selected ? '' : ''}`}
+                    } ${selected ? 'font-medium' : ''}`}
                   >
                     {card && t ? (
                       <>

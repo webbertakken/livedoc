@@ -28,8 +28,7 @@ const NO_STATUSES: ReadonlyMap<string, string> = new Map();
 // How long a column just added keeps its tint before easing back.
 export const ADDED_TINT_MS = 1600;
 
-const PILL =
-  'shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide tabular-nums';
+const PILL = 'shrink-0 rounded-full px-2 py-px text-supporting tabular-nums';
 
 // The column a new one goes after: the last, or the one before the done columns that end the board (null: the end).
 export function columnsInsertAfter(
@@ -97,25 +96,25 @@ export function BoardColumnsSection({
     <div className="flex flex-col">
       <InfoNote>The board’s columns, left to right. Press one to open its settings.</InfoNote>
       <p
-        className={`${HEADING} flex items-center gap-1.5 px-3 pb-1.5 pt-2`}
+        className={`${HEADING} flex items-center gap-2 px-3 pb-1.5 pt-2`}
         id={`${element.id}-columns`}
       >
         On This Board
-        <span className="rounded-full bg-slate-100 px-1.5 text-[10px] tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+        <span className="rounded-full bg-slate-100 px-2 text-supporting tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
           {setup.columns.length}
         </span>
       </p>
       <ol
         aria-labelledby={`${element.id}-columns`}
         // A bordered box, one column to a row, as Plan's option lists are (plan-board.md "Option lists").
-        className="mx-3 flex flex-col divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
+        className="mx-3 flex flex-col divide-y divide-slate-100 overflow-hidden rounded-menu border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
       >
         {setup.columns.map((c, i) => (
           <li key={c.id} className={c.id === added ? 'animate-fade-in' : undefined}>
             <button
               type="button"
               aria-label={`Open ${c.name} settings`}
-              className={`group flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors motion-reduce:transition-none ${
+              className={`group flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors motion-reduce:transition-none ${
                 c.id === added
                   ? 'bg-brand-50 dark:bg-brand-500/15'
                   : 'hover:bg-slate-50 dark:hover:bg-slate-800/70'
@@ -125,11 +124,11 @@ export function BoardColumnsSection({
                 requestColumnSettings(c.id);
               }}
             >
-              <span className="w-3.5 shrink-0 text-right text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+              <span className="w-3.5 shrink-0 text-right text-supporting tabular-nums text-slate-500 dark:text-slate-400">
                 {i + 1}
               </span>
               <StatusSwatch colour={c.color} />
-              <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-800 dark:text-slate-100">
+              <span className="min-w-0 flex-1 truncate text-body text-slate-800 dark:text-slate-100">
                 {c.name}
               </span>
               {c.wipLimit ? (
@@ -156,7 +155,7 @@ export function BoardColumnsSection({
       </ol>
       <div className="mx-3 mt-3 border-t border-slate-100 pb-3 pt-3 dark:border-slate-800">
         {full ? (
-          <p role="status" className="text-[12px] text-slate-500 dark:text-slate-400">
+          <p role="status" className="text-supporting text-slate-500 dark:text-slate-400">
             A board holds up to {PLAN_COLUMNS_MAX} columns.
           </p>
         ) : (

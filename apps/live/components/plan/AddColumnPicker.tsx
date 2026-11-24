@@ -70,7 +70,7 @@ export function AddColumnPicker({
         : null;
   return (
     <div className="flex w-full flex-col gap-3 text-left" onPointerDown={stop} onKeyDown={stop}>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <label htmlFor={`${id}-name`} className={HEADING}>
           {combo ? 'Add a Column' : 'Name a New Status'}
         </label>
@@ -83,7 +83,7 @@ export function AddColumnPicker({
             value={name}
             autoFocus={autoFocus}
             autoComplete="off"
-            className="h-9 min-w-0 flex-1 text-[13px]"
+            className="h-prominent min-w-0 flex-1 text-body"
             {...(combo
               ? {
                   role: 'combobox',
@@ -115,7 +115,7 @@ export function AddColumnPicker({
             disabled={!name.trim() || match.kind === 'on-board'}
             onClick={addTyped}
             aria-label={short ? 'Add Column' : undefined}
-            className="h-9 shrink-0 gap-1 px-3 text-[13px] font-semibold"
+            className="h-prominent shrink-0 gap-1 px-3 text-body"
           >
             <PlusIcon size={14} />
             {short ? 'Add' : 'Add Column'}
@@ -125,7 +125,7 @@ export function AddColumnPicker({
           <p
             id={`${id}-match`}
             role="status"
-            className={`text-[12px] ${
+            className={`text-supporting ${
               note.tone === 'error'
                 ? 'text-rose-600 dark:text-rose-400'
                 : 'text-slate-500 dark:text-slate-400'
