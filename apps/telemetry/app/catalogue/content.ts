@@ -505,7 +505,7 @@ export const OTHER_ELEMENTS_ADDED: Metric = {
   // theirs (`TextDocumentBreak…`, Text Document Breaks), its page numbers too (`TextDocumentPage…`, Text Document
   // Page Numbers), its footnotes (`TextDocumentFootnote`, Text Document Footnotes), its pictures
   // (`TextDocumentImage…`, Text Document Pictures), its tables (`TextDocumentTable…`, Text Document Tables) and its
-  // links (`TextDocumentLink`, Text Document Links).
+  // links and bookmarks (`TextDocumentLink`, `TextDocumentBookmark`, Text Document Links).
   typeIn: (type) =>
     !PALETTE_KINDS.has(canonicalElementType(type)) &&
     !isTablePart(type) &&
@@ -516,7 +516,8 @@ export const OTHER_ELEMENTS_ADDED: Metric = {
     type !== 'TextDocumentFootnote' &&
     !(type ?? '').startsWith('TextDocumentImage') &&
     !(type ?? '').startsWith('TextDocumentTable') &&
-    type !== 'TextDocumentLink',
+    type !== 'TextDocumentLink' &&
+    type !== 'TextDocumentBookmark',
   title: 'Other Elements Added',
   blurb:
     'Kinds the palette catalogue does not list, such as pasted images. Table rows and columns are in Tables, entity fields in Data Models.',

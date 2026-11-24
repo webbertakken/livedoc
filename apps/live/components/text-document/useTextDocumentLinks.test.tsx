@@ -24,6 +24,7 @@ const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track }));
 
 const { useTextDocumentLinks } = await import('./useTextDocumentLinks');
+import type { InDocument } from './useTextDocumentLinks';
 
 const linked = (text: string, href: string) =>
   schema.text(text, [schema.marks.link!.create({ href })]);
@@ -44,6 +45,7 @@ function setup({
   to = undefined as number | undefined,
   writes = true,
   showCard = true,
+  inDocument = undefined as InDocument | undefined,
 } = {}) {
   const view = new EditorView(document.createElement('div'), {
     state: EditorState.create({ doc, selection: TextSelection.create(doc, from, to ?? from) }),
@@ -61,6 +63,7 @@ function setup({
         documents: DOCUMENTS,
         subscribe,
         showCard: props.showCard,
+        ...(inDocument ? { inDocument } : {}),
       }),
     { initialProps: { showCard } },
   );
@@ -288,6 +291,44 @@ describe('useTextDocumentLinks', () => {
       expect(off[LINK_EDIT_ITEM]!.disabled).toBe(true);
       expect(off[LINK_INSERT_ITEM]!.disabled).toBe(false);
       expect(off[LINK_COPY_ITEM]!.disabled).toBe(true);
+    });
+  });
+
+  // links-and-navigation.md "Bookmarks": the link editor offers this document's bookmarks; a link to one goes there.
+  describe('to a place in this document', () => {
+    const places = (): InDocument => ({
+      goTo: vi.fn(() => true),
+      targets: (typed) =>
+        'chapter one'.includes(typed.toLowerCase())
+          ? [{ name: 'chap1', label: 'Chapter one' }]
+          : [],
+      label: (name) => (name === 'chap1' ? 'Chapter one' : null),
+    });
+
+    it('offers a bookmark under the documents; taking it links to #name, naming an empty Text', () => {
+      const { view, hook, drawn } = setup({ from: 3, inDocument: places() });
+      act(() => hook.result.current.actions[LINK_ITEM]!.run());
+      drawn();
+      const link = screen.getByRole<HTMLInputElement>('combobox', { name: 'Link' });
+      fireEvent.change(link, { target: { value: 'chapter' } });
+      expect(screen.getByRole('group', { name: 'Bookmarks' })).toBeTruthy();
+      fireEvent.keyDown(link, { key: 'Enter' });
+      expect(link.value).toBe('#chap1');
+      fireEvent.submit(link.form!);
+      expect(runs(view)[1]).toEqual(['Chapter one', '#chap1']);
+    });
+
+    it('goes to the bookmark on Alt+Enter, its card naming it by its text', () => {
+      const inDocument = places();
+      const doc = schema.node('doc', null, [p('see ', linked('there', '#chap1'))]);
+      const { hook, drawn } = setup({ doc, from: 6, inDocument });
+      drawn();
+      expect(
+        screen.getByRole('group', { name: 'Link details' }).querySelector('a')?.textContent,
+      ).toBe('Chapter one');
+      act(() => hook.result.current.actions[OPEN_LINK]!.run());
+      expect(inDocument.goTo).toHaveBeenCalledWith('chap1');
+      expect(track).toHaveBeenCalledWith('UI', 'Used', 'TextDocumentLinkOpened');
     });
   });
 });

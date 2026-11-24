@@ -22,12 +22,10 @@ import {
   type PictureDragHandle,
   type PictureDragResult,
 } from './text-document-picture-drag';
+import { nullAttributes } from './text-document-attributes';
 
 /** What a picture shows when its media is not in the state. */
 export const PICTURE_MISSING_TEXT = 'Picture, not loaded';
-
-const nullAttributes = (names: readonly string[]) =>
-  Object.fromEntries(names.map((name) => [name, { default: null }]));
 
 const length = (value: unknown): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0 && value < 100_000 ? value : 0;

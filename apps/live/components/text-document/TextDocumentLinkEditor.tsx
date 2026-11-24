@@ -1,10 +1,11 @@
 'use client';
 
 // The link editor (docs/specs/034-text-documents/links-and-navigation.md "Links"): under the selection, Text and Link
-// with Apply; as Link is typed in, the person's LiveDoc documents whose names hold the words, Up and Down to move,
+// with Apply; as Link is typed in, the person's LiveDoc documents whose names hold the words and this document's
+// bookmarks, Up and Down to move,
 // Enter to take one. Enter elsewhere applies, Escape or a press outside closes. What is refused is said under Link.
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import { lucideFileText, lucideLink, lucideType } from '@livedoc/icons/lucide';
+import { lucideBookmark, lucideFileText, lucideLink, lucideType } from '@livedoc/icons/lucide';
 import { lucideGlyph, useClickOutside } from '@livedoc/ui';
 import { OfficePopup, OFFICE_POPUP } from '@/components/office/OfficePopup';
 import type { Box } from '@/lib/office/popup-place';
@@ -13,10 +14,19 @@ import {
   matchingDocuments,
   type LinkDocument,
 } from '@/lib/text-document/text-document-links';
+import type { BookmarkTarget } from '@/lib/text-document/text-document-bookmarks';
 
 const TextGlyph = lucideGlyph(lucideType, 18);
 const LinkGlyph = lucideGlyph(lucideLink, 18);
 const DocumentGlyph = lucideGlyph(lucideFileText, 16);
+const BookmarkGlyph = lucideGlyph(lucideBookmark, 16);
+
+/** One suggestion under Link: a LiveDoc document or a bookmark of this document. */
+type Offer = { group: 'documents' | 'bookmarks'; key: string; label: string; href: string };
+const GROUPS = [
+  ['documents', 'LiveDoc documents'],
+  ['bookmarks', 'Bookmarks'],
+] as const;
 
 const FIELD =
   'h-8 min-w-0 flex-1 rounded border border-(--office-line) bg-transparent px-2 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
@@ -26,6 +36,7 @@ export function TextDocumentLinkEditor({
   text: openText,
   href,
   documents,
+  bookmarks,
   origin,
   onApply,
   onClose,
@@ -35,6 +46,8 @@ export function TextDocumentLinkEditor({
   text: string | null;
   href: string;
   documents: readonly LinkDocument[];
+  // This document's bookmarks holding the typed words.
+  bookmarks: (typed: string) => readonly BookmarkTarget[];
   origin: string;
   // Applies Text and Link; answers what is refused, or null once applied.
   onApply: (text: string | null, link: string) => string | null;
@@ -48,13 +61,29 @@ export function TextDocumentLinkEditor({
   // What Link offers, for the words typed since it was last taken from.
   const [typed, setTyped] = useState('');
   const [chosen, setChosen] = useState(0);
-  const offered = matchingDocuments(documents, typed);
+  // The documents first, then this document's bookmarks, one list to move through.
+  const offered: Offer[] = [
+    ...matchingDocuments(documents, typed).map((d): Offer => ({
+      group: 'documents',
+      key: `d:${d.id}`,
+      label: d.name.trim() || 'Untitled',
+      href: documentAddress(d.id, origin),
+    })),
+    ...(typed.trim()
+      ? bookmarks(typed).map((b): Offer => ({
+          group: 'bookmarks',
+          key: `b:${b.name}`,
+          label: b.label,
+          href: `#${b.name}`,
+        }))
+      : []),
+  ];
   const index = Math.min(chosen, Math.max(0, offered.length - 1));
   useClickOutside(box, onClose, true, OFFICE_POPUP);
 
-  const take = (document: LinkDocument) => {
-    setLink(documentAddress(document.id, origin));
-    if (text === '') setText(document.name);
+  const take = (offer: Offer) => {
+    setLink(offer.href);
+    if (text === '') setText(offer.label);
     setTyped('');
     setProblem(null);
   };
@@ -78,7 +107,7 @@ export function TextDocumentLinkEditor({
     }
   };
 
-  const listId = `${id}-documents`;
+  const listId = `${id}-suggestions`;
   const listed = offered.length > 0;
   return (
     <OfficePopup anchor={anchor}>
@@ -147,33 +176,52 @@ export function TextDocumentLinkEditor({
           </p>
         ) : null}
         {listed ? (
-          <ul
+          <div
             id={listId}
             role="listbox"
-            aria-label="LiveDoc documents"
+            aria-label="Suggestions"
             className="mt-2 border-t border-(--office-line) pt-1"
           >
-            {offered.map((document, at) => (
-              <li
-                key={document.id}
-                id={`${listId}-${at}`}
-                role="option"
-                aria-selected={at === index}
-                // A press takes it without taking the focus from Link.
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  take(document);
-                }}
-                onMouseEnter={() => setChosen(at)}
-                className="flex h-8 cursor-default items-center gap-2 rounded px-2 aria-selected:bg-(--office-menu-hover)"
-              >
-                <span aria-hidden="true" className="text-(--office-muted)">
-                  <DocumentGlyph />
-                </span>
-                <span className="min-w-0 truncate">{document.name.trim() || 'Untitled'}</span>
-              </li>
-            ))}
-          </ul>
+            {GROUPS.map(([group, heading]) => {
+              const members = offered.filter((o) => o.group === group);
+              if (members.length === 0) return null;
+              return (
+                <div key={group} role="group" aria-labelledby={`${listId}-${group}`}>
+                  <div
+                    id={`${listId}-${group}`}
+                    role="presentation"
+                    className="px-2 pt-1 pb-0.5 text-xs font-medium text-(--office-muted)"
+                  >
+                    {heading}
+                  </div>
+                  {members.map((offer) => {
+                    const at = offered.indexOf(offer);
+                    const Glyph = group === 'documents' ? DocumentGlyph : BookmarkGlyph;
+                    return (
+                      <div
+                        key={offer.key}
+                        id={`${listId}-${at}`}
+                        role="option"
+                        aria-selected={at === index}
+                        // A press takes it without taking the focus from Link.
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          take(offer);
+                        }}
+                        onMouseEnter={() => setChosen(at)}
+                        className="flex h-8 cursor-default items-center gap-2 rounded px-2 aria-selected:bg-(--office-menu-hover)"
+                      >
+                        <span aria-hidden="true" className="text-(--office-muted)">
+                          <Glyph />
+                        </span>
+                        <span className="min-w-0 truncate">{offer.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
         ) : null}
       </form>
     </OfficePopup>
