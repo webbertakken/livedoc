@@ -74,6 +74,25 @@ describe('a press on a table of contents', () => {
     ).toBe(true);
     expect((state.selection as NodeSelection).node.type.name).toBe('table_of_contents');
   });
+
+  it('selects it whole on a double or triple press too, never words inside it', () => {
+    const doc = schema.node('doc', null, [contents('plain', 6, 'A', 'B'), p('Body')]);
+    const { handleDoubleClickOn, handleTripleClickOn } = contentsPressPlugin().props;
+    for (const press of [handleDoubleClickOn!, handleTripleClickOn!]) {
+      let state = EditorState.create({ doc });
+      const view = {
+        state,
+        dispatch: (tr: Parameters<EditorState['apply']>[0]) => (state = state.apply(tr)),
+      } as unknown as EditorView;
+      expect(
+        press.call(null as never, view, 4, doc.child(1), 8, new MouseEvent('click'), true),
+      ).toBe(false);
+      expect(
+        press.call(null as never, view, 4, doc.child(0), 0, new MouseEvent('click'), true),
+      ).toBe(true);
+      expect((state.selection as NodeSelection).node.type.name).toBe('table_of_contents');
+    }
+  });
 });
 
 // Its entries' tab boxes are laid out once and kept: the block is never drawn anew while it stays a table of contents.
@@ -88,5 +107,16 @@ describe('the table of contents view', () => {
     expect(view.update!(contents('links', 2, 'A', 'B'), [], DecorationSet.empty)).toBe(true);
     expect([dom.dataset.look, dom.dataset.levels]).toEqual(['links', '2']);
     expect(view.update!(p('x'), [], DecorationSet.empty)).toBe(false);
+  });
+
+  // Another hand writing to its attributes (a browser extension, a screenshot tool) never has it drawn anew.
+  it('ignores writes to its own attributes, never to its entries', () => {
+    const view = contentsView(contents('dotted', 3, 'A'));
+    const mutation = (target: Node, type: MutationRecordType) =>
+      ({ type, target }) as unknown as MutationRecord;
+    expect(view.ignoreMutation!(mutation(view.dom, 'attributes'))).toBe(true);
+    expect(view.ignoreMutation!(mutation(view.dom, 'childList'))).toBe(false);
+    expect(view.ignoreMutation!(mutation(document.createElement('p'), 'attributes'))).toBe(false);
+    expect(view.ignoreMutation!({ type: 'selection', target: view.dom })).toBe(false);
   });
 });

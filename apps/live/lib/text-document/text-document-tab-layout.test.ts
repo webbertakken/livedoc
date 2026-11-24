@@ -193,6 +193,11 @@ describe('the layout pass', () => {
     relayTextDocumentTabs(view);
     const box = view.dom.querySelector<HTMLElement>(`.${TAB_CLASS}`)!;
     expect([box.style.width, box.dataset.leader]).toEqual(['60px', 'dot']);
+
+    // The editor's own redraw (after something else wrote to its elements) gives the entry a new, unsized box.
+    box.removeAttribute('style');
+    view.updateState(view.state);
+    expect(view.dom.querySelector<HTMLElement>(`.${TAB_CLASS}`)!.style.width).toBe('60px');
   });
 
   it('measures nothing while the writing is hidden', () => {

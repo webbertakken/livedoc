@@ -2,7 +2,8 @@
 // at no width, after a box whose width takes the text after it to the next stop, worked out from where the tab starts
 // on its line. CSS draws tabs at one interval from the paragraph's edge only, so a layout pass sets each box's width
 // and leader after the writing is drawn: only for paragraphs a change touched, and for all of them when the width,
-// fonts or styles change. The boxes are widgets, whose changes the editor never reads back as edits.
+// fonts or styles change, and for those whose boxes the editor drew anew. The boxes are widgets, whose changes the
+// editor never reads back as edits.
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey, type Transaction } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
@@ -216,6 +217,20 @@ function layOut(view: EditorView, which: number[] | 'all', readFormatting: () =>
     });
 }
 
+/** The paragraphs holding a box drawn but never sized: the editor drew them anew, though nothing changed. */
+function unsizedParagraphs(view: EditorView): number[] {
+  const positions = new Set<number>();
+  for (const box of view.dom.querySelectorAll(`.${TAB_CLASS}:not([style*="width"])`)) {
+    const $pos = view.state.doc.resolve(view.posAtDOM(box, 0));
+    for (let depth = $pos.depth; depth > 0; depth--)
+      if ($pos.node(depth).type.name === 'paragraph') {
+        positions.add($pos.before(depth));
+        break;
+      }
+  }
+  return [...positions];
+}
+
 /** Lays out every paragraph's tabs again, after the styles change. */
 export function relayTextDocumentTabs(view: EditorView): void {
   view.dispatch(view.state.tr.setMeta(key, RELAY_ALL).setMeta('addToHistory', false));
@@ -246,8 +261,12 @@ export function tabStopsPlugin(readFormatting: () => TextFormatting): Plugin<Tab
       document.fonts?.addEventListener('loadingdone', relay);
       return {
         update: (updated, previous) => {
-          // Drawn again as it was (the editor's own redraw): nothing moved.
-          if (updated.state === previous) return;
+          // The editor's own redraw (after a write to its elements it reads back): only its new boxes need sizes.
+          if (updated.state === previous) {
+            const redrawn = unsizedParagraphs(updated);
+            if (redrawn.length > 0) layOut(updated, redrawn, readFormatting);
+            return;
+          }
           const dirty = key.getState(updated.state)?.dirty ?? [];
           if (dirty === 'all' || dirty.length > 0) layOut(updated, dirty, readFormatting);
         },

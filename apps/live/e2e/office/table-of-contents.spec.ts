@@ -81,9 +81,13 @@ test('a file’s table of contents opens as one read-only block and is kept', as
   // Its laid-out tabs stay as the writing loses the focus.
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await expect.poll(async () => (await tab.boundingBox())?.width ?? 0).toBeGreaterThan(300);
-  await contents.locator('p').first().click();
-  await page.waitForTimeout(300);
+  // A double press selects it whole too, never a word inside it.
+  await contents.locator('p').first().dblclick();
+  await expect(contents).toHaveClass(/ProseMirror-selectednode/);
+  expect(await page.evaluate(() => getSelection()?.toString() ?? '')).toBe('');
   await page.screenshot({ path: test.info().outputPath('table-of-contents-dotted.png') });
+  // The screenshot writes to the page's elements and takes it back; the tabs stay laid out.
+  await expect.poll(async () => (await tab.boundingBox())?.width ?? 0).toBeGreaterThan(300);
 
   // Written back as one.
   const download = await officeMenuItem(page, ['File', 'Download', 'Microsoft Word (.docx)']);

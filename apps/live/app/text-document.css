@@ -101,6 +101,7 @@ div.text-document-kept {
 .text-document-contents {
   display: block;
   cursor: default;
+  user-select: none;
   outline-offset: 2px;
 }
 .text-document-kept-hidden {

@@ -2,7 +2,7 @@
 // one block of the body, read only, its entries paragraphs drawn as the writing's (their tab stops lead to the page
 // numbers); a press selects it whole.
 import type { NodeSpec, Node as PmNode } from 'prosemirror-model';
-import type { NodeView } from 'prosemirror-view';
+import type { EditorView, NodeView } from 'prosemirror-view';
 import { NodeSelection, Plugin } from 'prosemirror-state';
 import { CONTENTS, CONTENTS_ATTRIBUTES, Contents } from '@livedoc/text-documents';
 import { nullAttributes } from './text-document-attributes';
@@ -47,7 +47,8 @@ function drawnAttributes(node: PmNode): Record<string, string> {
 
 /**
  * The block as the editor draws it: one element kept while it stays a table of contents (a blur or a selection never
- * draws it anew, so its entries' laid-out tabs stay), its look and levels set on it as they change.
+ * draws it anew, so its entries' laid-out tabs stay), its look and levels set on it as they change. Its attributes are
+ * its own: another hand writing to them (a browser extension, a screenshot tool) never has the editor draw it anew.
  */
 export function contentsView(node: PmNode): NodeView {
   const dom = document.createElement('nav');
@@ -64,18 +65,27 @@ export function contentsView(node: PmNode): NodeView {
       draw(next);
       return true;
     },
+    ignoreMutation: (mutation) => mutation.type === 'attributes' && mutation.target === dom,
   };
 }
 
-/** A press anywhere on a table of contents selects it whole (a block with content takes no selection by itself). */
+// Selects the table of contents a press landed on.
+const selectWhole = (view: EditorView, _pos: number, node: PmNode, nodePos: number): boolean => {
+  if (node.type.name !== CONTENTS) return false;
+  view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos)));
+  return true;
+};
+
+/**
+ * A press anywhere on a table of contents selects it whole, a double or triple one too (a block with content takes no
+ * selection by itself, and the browser would select words inside it).
+ */
 export function contentsPressPlugin(): Plugin {
   return new Plugin({
     props: {
-      handleClickOn: (view, _pos, node, nodePos) => {
-        if (node.type.name !== CONTENTS) return false;
-        view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos)));
-        return true;
-      },
+      handleClickOn: selectWhole,
+      handleDoubleClickOn: selectWhole,
+      handleTripleClickOn: selectWhole,
     },
   });
 }
