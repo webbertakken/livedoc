@@ -29,7 +29,7 @@ export function PointerNoteMenuSection({
             onClick={() => ops.commit((el) => detachChip(el), 'PointerDetach')}
           />
         ) : (
-          <p className="px-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+          <p className="px-1 text-supporting text-slate-500 dark:text-slate-400">
             Drag the dot at the end of the line onto a corner or edge of a shape to pin it there.
           </p>
         )}

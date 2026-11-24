@@ -69,9 +69,7 @@ export function BorderGrid({
           : 'grid-cols-2';
   return (
     <div className="mb-1.5 last:mb-0">
-      <p className="px-1 pb-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-        {label}
-      </p>
+      <p className="px-1 pb-1 text-supporting text-slate-500 dark:text-slate-400">{label}</p>
       <div className={`grid gap-1 ${colClass}`}>{children}</div>
     </div>
   );
@@ -117,7 +115,7 @@ export function MarkerTiles({
           >
             <span className="flex flex-col items-center gap-0.5">
               {v ? <ShapeMarkerGlyph marker={v} size={18} /> : <NoMarkerGlyph />}
-              <span className="text-[9px] leading-none">{v ? MARKER_LABELS[v] : 'None'}</span>
+              <span className="text-supporting leading-none">{v ? MARKER_LABELS[v] : 'None'}</span>
             </span>
           </SizeButton>
         ))}
@@ -135,7 +133,7 @@ export function MarkerTiles({
         }
         aria-hidden={marker ? undefined : true}
       >
-        <p className="px-3 pb-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">Size</p>
+        <p className="px-3 pb-1 text-supporting text-slate-500 dark:text-slate-400">Size</p>
         <MarkerSizeTiles
           current={size}
           onSet={onSetSize}
@@ -186,7 +184,7 @@ export function TextToggle({
       aria-label={label}
       aria-pressed={active}
       onClick={onClick}
-      className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
+      className={`flex size-field items-center justify-center rounded-control transition ${
         active
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
           : TOOLBAR_CONTROL_REST

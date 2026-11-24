@@ -54,9 +54,7 @@ function SizeField({
 
   return (
     <label className="flex min-w-0 flex-1 flex-col gap-1">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {label}
-      </span>
+      <span className="text-supporting text-slate-500 dark:text-slate-400">{label}</span>
       <span className="relative flex items-center">
         <input
           type="number"
@@ -80,9 +78,9 @@ function SizeField({
               (e.target as HTMLInputElement).blur();
             }
           }}
-          className="w-full rounded-md border border-slate-200 bg-white py-1 pl-2 pr-7 text-xs tabular-nums text-slate-700 outline-none transition focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          className="w-full rounded-control border border-slate-200 bg-white py-1 pl-2 pr-6 text-body tabular-nums text-slate-700 outline-none transition focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
         />
-        <span className="pointer-events-none absolute right-2 text-[10px] text-slate-500 dark:text-slate-400">
+        <span className="pointer-events-none absolute right-2 text-supporting text-slate-500 dark:text-slate-400">
           px
         </span>
       </span>

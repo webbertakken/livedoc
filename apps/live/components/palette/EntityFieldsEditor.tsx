@@ -42,7 +42,7 @@ export function EntityFieldsEditor({
                   }),
                 );
               }}
-              className={`flex h-5 w-7 shrink-0 cursor-pointer items-center justify-center rounded border text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
+              className={`flex h-chip w-7 shrink-0 cursor-pointer items-center justify-center rounded-control border text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
                 f.key
                   ? 'border-slate-200 dark:border-slate-700'
                   : 'border-dashed border-slate-200 dark:border-slate-700'
@@ -51,7 +51,7 @@ export function EntityFieldsEditor({
               {f.key ? (
                 <EntityKeyGlyph fieldKey={f.key} color="currentColor" />
               ) : (
-                <span className="text-[9px] font-medium opacity-60">key</span>
+                <span className="text-supporting opacity-60">key</span>
               )}
             </button>
             <input
@@ -90,7 +90,7 @@ export function EntityFieldsEditor({
                   removedFieldRemap(i),
                 )
               }
-              className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              className="flex size-icon-title shrink-0 cursor-pointer items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
             >
               ×
             </button>

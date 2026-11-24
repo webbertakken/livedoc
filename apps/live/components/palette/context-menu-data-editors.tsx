@@ -40,12 +40,12 @@ function DataColour({
       swatch={shown}
       standard={[standardGroup('strong', 'light', 'hex')]}
       yours={yours}
-      className="h-5 w-5"
+      className="size-icon-title"
       onPick={onPick}
     >
       <span
         aria-hidden
-        className={`h-4 w-4 border border-slate-300 dark:border-slate-600 ${shape}`}
+        className={`size-icon-row border border-slate-300 dark:border-slate-600 ${shape}`}
         style={{ backgroundColor: shown }}
       />
     </ColourSwatchButton>
@@ -81,7 +81,7 @@ export function PieDataEditor({
               label="Slice colour"
               value={s.color}
               shown={colorAt(i, s)}
-              shape="rounded-[3px]"
+              shape="rounded-control"
               onPick={(color) => onChange(rows.map((r, j) => (j === i ? { ...r, color } : r)))}
             />
             <input
@@ -105,7 +105,7 @@ export function PieDataEditor({
               aria-label="Remove slice"
               disabled={rows.length <= 1}
               onClick={() => onChange(rows.filter((_, j) => j !== i))}
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
+              className="flex size-icon-title shrink-0 items-center justify-center rounded-control text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
             >
               ×
             </button>
@@ -115,7 +115,7 @@ export function PieDataEditor({
       <button
         type="button"
         onClick={() => onChange([...rows, { label: `Item ${rows.length + 1}`, value: 10 }])}
-        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
       >
         + Add Slice
       </button>
@@ -168,7 +168,7 @@ export function LegendDataEditor({
               aria-label="Remove legend row"
               disabled={rows.length <= 1}
               onClick={() => onChange(rows.filter((_, j) => j !== i))}
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
+              className="flex size-icon-title shrink-0 items-center justify-center rounded-control text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
             >
               ×
             </button>
@@ -179,7 +179,7 @@ export function LegendDataEditor({
         type="button"
         // No colour on the new row, so it takes the next one from the ramp.
         onClick={() => onChange([...rows, { label: `Item ${rows.length + 1}` }])}
-        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
       >
         Add Row
       </button>
@@ -206,10 +206,10 @@ export function LineDataSummary({
         {series.map((s, i) => (
           <div
             key={i}
-            className="flex items-center gap-1.5 text-[11px] text-slate-700 dark:text-slate-200"
+            className="flex items-center gap-2 text-supporting text-slate-700 dark:text-slate-200"
           >
             <span
-              className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
+              className="inline-block size-icon-chevron shrink-0 rounded-none"
               style={{ backgroundColor: s.color ?? palette[i % palette.length]! }}
             />
             <span className="truncate">{s.name || `Series ${i + 1}`}</span>
@@ -222,7 +222,7 @@ export function LineDataSummary({
       <button
         type="button"
         onClick={onEdit}
-        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
       >
         Edit Data
       </button>
@@ -235,7 +235,7 @@ export function LineDataSummary({
 export function LinkedChartData({ onUnlink }: { onUnlink: () => void }) {
   return (
     <div className="px-2 py-1.5">
-      <p className="text-[11px] leading-snug text-slate-600 dark:text-slate-300">
+      <p className="text-supporting text-slate-600 dark:text-slate-300">
         Drawn live from a Sheet&apos;s cells. Change the cells to change the chart.
       </p>
       <Button variant="secondary" size="xs" className="mt-1.5 w-full" onClick={onUnlink}>
@@ -274,7 +274,7 @@ export function ChecklistRowsEditor({
                   ? onToggle(i)
                   : onChange(rows.map((r, j) => (j === i ? { ...r, done: e.target.checked } : r)))
               }
-              className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-brand-500"
+              className="size-icon-row shrink-0 cursor-pointer accent-brand-500"
             />
             <input
               className={`${MENU_CELL_INPUT} flex-1`}
@@ -291,7 +291,7 @@ export function ChecklistRowsEditor({
               aria-label="Remove row"
               disabled={rows.length <= 1}
               onClick={() => onChange(rows.filter((_, j) => j !== i))}
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
+              className="flex size-icon-title shrink-0 items-center justify-center rounded-control text-slate-400 transition enabled:cursor-pointer enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800"
             >
               ×
             </button>
@@ -332,7 +332,7 @@ export function CodeSummary({
   const lineCount = code.trim().length === 0 ? 0 : code.split('\n').length;
   return (
     <div className="px-2 py-1.5">
-      <p className="text-[11px] text-slate-700 dark:text-slate-200">
+      <p className="text-supporting text-slate-700 dark:text-slate-200">
         {lineCount === 0
           ? 'No code yet'
           : `${lineCount} ${lineCount === 1 ? 'line' : 'lines'} · ${language === 'plain' ? 'plain text' : language}`}
@@ -340,7 +340,7 @@ export function CodeSummary({
       <button
         type="button"
         onClick={onEdit}
-        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
+        className="mt-1.5 inline-flex w-full cursor-pointer items-center justify-center rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
       >
         Edit Code
       </button>

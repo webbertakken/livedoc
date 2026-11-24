@@ -108,7 +108,7 @@ function PresetLabel({ children, name }: { children: React.ReactNode; name: stri
   return (
     <span className="flex flex-col items-center gap-0.5">
       {children}
-      <span className="text-[9px] capitalize leading-none">{name}</span>
+      <span className="text-supporting capitalize leading-none">{name}</span>
     </span>
   );
 }
@@ -118,7 +118,7 @@ function PresetLabel({ children, name }: { children: React.ReactNode; name: stri
 // border colour, an "A" in the text colour overlaid for the label.
 function ColorPresetSwatch({ preset, shape }: { preset: ShapeColorPreset; shape: ShapeKind }) {
   return (
-    <span className="relative flex h-5 w-7 items-center justify-center" aria-hidden>
+    <span className="relative flex h-icon-title w-7 items-center justify-center" aria-hidden>
       <ShapeGlyph
         kind={shape}
         fill={preset.fill}
@@ -127,7 +127,7 @@ function ColorPresetSwatch({ preset, shape }: { preset: ShapeColorPreset; shape:
         dash={svgBorderDash(preset.borderStyle)}
         size={20}
       />
-      <span className="absolute text-[9px] font-bold leading-none" style={{ color: preset.text }}>
+      <span className="absolute text-glyph" style={{ color: preset.text }}>
         A
       </span>
     </span>

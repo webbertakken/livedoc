@@ -73,7 +73,7 @@ export function SpeedTiles({
     <div className="grid grid-cols-4 gap-1 px-2 pb-1.5">
       {ANIMATION_SPEEDS.map((s) => (
         <SizeButton key={s} active={value === s} onClick={() => onSet(s)}>
-          <span className="text-[10px] capitalize leading-none">{s}</span>
+          <span className="text-supporting capitalize leading-none">{s}</span>
         </SizeButton>
       ))}
     </div>
@@ -115,7 +115,7 @@ export function TileLabel({ glyph, label }: { glyph: ReactNode; label: string })
   return (
     <span className="flex flex-col items-center gap-0.5">
       {glyph}
-      <span className="text-[9px] capitalize leading-none">{label}</span>
+      <span className="text-supporting capitalize leading-none">{label}</span>
     </span>
   );
 }

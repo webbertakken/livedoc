@@ -77,7 +77,7 @@ export function ColourRow({
         onClick={onToggle}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="flex w-full cursor-pointer items-center justify-between px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="flex w-full cursor-pointer items-center justify-between px-3 py-1.5 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         <span className="flex items-center gap-2">
           {icon ? (
@@ -88,7 +88,7 @@ export function ColourRow({
           {label}
         </span>
         <span
-          className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600"
+          className="size-icon-row rounded-control border border-slate-300 dark:border-slate-600"
           style={isTransparent(value) ? { background: CHECKER } : { backgroundColor: value }}
           aria-hidden
         />
@@ -147,7 +147,7 @@ export function IconPositionGrid({
       onClick={() => onPick(key)}
       onPointerEnter={onPreview ? onMouseHover(() => onPreview(key)) : undefined}
       onPointerLeave={onPreviewEnd ? onMouseHover(onPreviewEnd) : undefined}
-      className={`flex items-center justify-center gap-1 rounded px-1.5 py-1 text-[11px] font-medium transition ${
+      className={`flex items-center justify-center gap-1 rounded-control px-2 py-1 text-body transition ${
         current === key
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
           : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
@@ -197,9 +197,9 @@ export function MenuToggleRow({
       className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-1.5 text-left transition hover:bg-slate-100 dark:hover:bg-slate-800"
     >
       <span className="flex flex-col">
-        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-body text-slate-700 dark:text-slate-200">{label}</span>
         {description ? (
-          <span className="text-[10px] text-slate-600 dark:text-slate-400">{description}</span>
+          <span className="text-supporting text-slate-600 dark:text-slate-400">{description}</span>
         ) : null}
       </span>
       <Switch presentational size="sm" checked={checked} />

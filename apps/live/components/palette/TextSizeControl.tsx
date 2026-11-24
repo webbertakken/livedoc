@@ -108,7 +108,7 @@ export function TextSizeControl({
               onClick={() => onSet('scale')}
               onPointerEnter={onPreview ? onMouseHover(() => onPreview('scale')) : undefined}
               onPointerLeave={onPreviewEnd ? onMouseHover(onPreviewEnd) : undefined}
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition ${
+              className={`flex size-row shrink-0 items-center justify-center rounded-control transition ${
                 isScale
                   ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
                   : TOOLBAR_CONTROL_REST

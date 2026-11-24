@@ -31,7 +31,7 @@ import { moveRow } from '@/lib/move-row';
 // rows are added, removed and reordered, bounded to each kind's min and max.
 
 const rowButton =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800';
+  'flex size-icon-title shrink-0 items-center justify-center rounded-control text-slate-400 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 dark:enabled:hover:bg-slate-800';
 
 // Up / down / remove for one row.
 function RowControls({

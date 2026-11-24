@@ -33,8 +33,8 @@ import { PickerIcon, RevealIcon } from '@/components/palette/palette-icons';
 import { useFollowingDraft } from '@/hooks/ui/useFollowingDraft';
 
 const fieldClass =
-  'mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200';
-const labelClass = 'text-[10px] font-medium text-slate-500 dark:text-slate-400';
+  'mt-1 w-full rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200';
+const labelClass = 'text-supporting text-slate-500 dark:text-slate-400';
 
 // A textarea of one-per-line entries, committed on blur. Used by both the
 // poll's answers and the picker's options — the same shape of list, so the
@@ -79,7 +79,7 @@ function LinesRow({
           className={`${fieldClass} resize-none`}
         />
       </label>
-      <p className="pb-1 pt-1 text-[10px] text-slate-500 dark:text-slate-400">One per line.</p>
+      <p className="pb-1 pt-1 text-supporting text-slate-500 dark:text-slate-400">One per line.</p>
     </div>
   );
 }
@@ -128,7 +128,7 @@ export function RevealMenuSection({
   const revealed = element.revealed === true;
   return (
     <MenuAccordionSection title="Reveal" icon={<RevealIcon />} {...sectionProps}>
-      <p className="px-3 pt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="px-3 pt-1 text-supporting text-slate-500 dark:text-slate-400">
         Anyone can double-click the cover to peek for themselves. This takes it off for
         <strong> everyone</strong>.
       </p>
@@ -170,21 +170,21 @@ export function ReactionMenuSection({
   return (
     <MenuAccordionSection
       title="Reaction"
-      icon={<span className="text-[13px] leading-none">{REACTION_EMOJI[current]}</span>}
+      icon={<span className="text-body leading-none">{REACTION_EMOJI[current]}</span>}
       {...sectionProps}
     >
       <MenuTileGrid cols={3}>
         {REACTIONS.map((reaction) => (
           <MenuTile
             key={reaction}
-            icon={<span className="text-[15px] leading-none">{REACTION_EMOJI[reaction]}</span>}
+            icon={<span className="text-panel-title leading-none">{REACTION_EMOJI[reaction]}</span>}
             label={REACTION_LABEL[reaction]}
             active={reaction === current}
             onClick={() => onSetReaction(reaction)}
           />
         ))}
       </MenuTileGrid>
-      <p className="px-3 pb-1.5 pt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="px-3 pb-1.5 pt-1 text-supporting text-slate-500 dark:text-slate-400">
         {REACTION_HINT[current]}. Press the pad, or walk a character onto it in Avatar mode.
       </p>
     </MenuAccordionSection>
@@ -205,9 +205,7 @@ export function PickerMenuSection({
   const source = element.pickerSource ?? DEFAULT_PICKER_SOURCE;
   return (
     <MenuAccordionSection title="Picker" icon={<PickerIcon />} {...sectionProps}>
-      <p className="px-3 pt-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-        Picks from
-      </p>
+      <p className="px-3 pt-1 text-supporting text-slate-500 dark:text-slate-400">Picks from</p>
       <MenuTileGrid cols={2}>
         <MenuTile
           icon={<ToolsMenuGlyph />}

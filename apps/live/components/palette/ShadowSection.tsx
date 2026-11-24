@@ -35,9 +35,9 @@ function ShadowPresetSwatch({ shadow }: { shadow: ElementShadow | null }) {
       }
     : null;
   return (
-    <span className="flex h-7 w-full items-center justify-center">
+    <span className="flex h-row w-full items-center justify-center">
       <span
-        className="block h-4 w-4 rounded border border-slate-300 bg-white dark:border-slate-400 dark:bg-slate-200"
+        className="block size-icon-row rounded-control border border-slate-300 bg-white dark:border-slate-400 dark:bg-slate-200"
         style={scaled ? { boxShadow: shadowBoxCss(scaled) } : undefined}
       />
     </span>

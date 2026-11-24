@@ -80,7 +80,7 @@ export function RatingPickerRow({
 }) {
   return (
     <div className="px-2 py-1.5">
-      <p className="px-1 pb-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">Stars</p>
+      <p className="px-1 pb-1 text-supporting text-slate-500 dark:text-slate-400">Stars</p>
       <div className="flex items-center justify-center gap-1 text-slate-400">
         {Array.from({ length: RATING_MAX }, (_, i) => {
           const n = i + 1;
@@ -90,7 +90,7 @@ export function RatingPickerRow({
               type="button"
               onClick={() => onChange(n)}
               aria-label={`${n} star${n > 1 ? 's' : ''}`}
-              className="cursor-pointer rounded p-0.5 transition hover:scale-110"
+              className="cursor-pointer rounded-control p-0.5 transition hover:scale-110"
             >
               <StarGlyph filled={n <= value} size={20} />
             </button>
@@ -134,7 +134,7 @@ function AnimTiles<T extends string>({
   return (
     <>
       {header ? (
-        <p className="px-3 pb-1 pt-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+        <p className="px-3 pb-1 pt-1 text-supporting text-slate-500 dark:text-slate-400">
           Animation
         </p>
       ) : null}

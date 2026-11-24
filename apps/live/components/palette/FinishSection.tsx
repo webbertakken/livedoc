@@ -61,7 +61,7 @@ const finishOfRow = (id: string): Finish | null => (isFinish(id) ? id : null);
 
 /** One line on what each finish does, under its name. */
 const FINISH_DETAILS: Record<Finish, string> = {
-  flexible: 'Soft and rounded',
+  flexible: 'Soft and rounded-control',
   professional: 'Square and fine',
   sketch: 'Drawn by hand',
   marker: 'Bold felt-tip',

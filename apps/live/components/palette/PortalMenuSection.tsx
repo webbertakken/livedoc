@@ -76,7 +76,7 @@ export function PortalMenuSection({
   return (
     <MenuAccordionSection title="Portal" icon={<ToolsMenuGlyph />} {...sectionProps}>
       <div className="px-3 pt-1">
-        <label className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+        <label className="text-supporting text-slate-500 dark:text-slate-400">
           Name
           <input
             value={name}
@@ -91,13 +91,11 @@ export function PortalMenuSection({
               e.stopPropagation();
             }}
             placeholder={ownName}
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            className="mt-1 w-full rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
           />
         </label>
       </div>
-      <p className="px-3 pt-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-        Leads to
-      </p>
+      <p className="px-3 pt-2 text-supporting text-slate-500 dark:text-slate-400">Leads to</p>
       <MenuTileGrid cols={2}>
         {candidates.map((candidate) => (
           <MenuTile
