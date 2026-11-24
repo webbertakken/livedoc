@@ -3,11 +3,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Tab } from '@livedoc/document';
 import { emptyLayout, sheetFromJson, type SheetJson } from '@livedoc/sheets';
-import { apiAddWorkbookSheet, apiDeleteWorkbookSheet } from '@/lib/api/workbook-sheets';
+import {
+  apiAddWorkbookSheet,
+  apiDeleteWorkbookSheet,
+  apiMoveWorkbookSheet,
+} from '@/lib/api/workbook-sheets';
 import type { CreateOpts } from '@/components/sheets/sheet-store-client';
 import { cloudSheetBar, offlineSheetBar } from './sheet-bar-backend';
 
 vi.mock('@/lib/api/workbook-sheets', () => ({
+  apiMoveWorkbookSheet: vi.fn(async () => {}),
   apiAddWorkbookSheet: vi.fn(async () => ({})),
   apiDeleteWorkbookSheet: vi.fn(async () => {}),
 }));
@@ -42,6 +47,10 @@ describe('cloudSheetBar', () => {
     expect(vi.mocked(apiAddWorkbookSheet).mock.lastCall![1]).not.toHaveProperty('name');
     await bar.take(entry);
     expect(apiDeleteWorkbookSheet).toHaveBeenCalledWith(scope, 'sheetTwo1');
+    await bar.move({ ...entry, after: null });
+    expect(apiMoveWorkbookSheet).toHaveBeenCalledWith(scope, 'sheetTwo1', '');
+    await bar.move(entry);
+    expect(apiMoveWorkbookSheet).toHaveBeenLastCalledWith(scope, 'sheetTwo1', 't1');
   });
 });
 
@@ -117,6 +126,15 @@ describe('offlineSheetBar', () => {
     await o.bar.put({ ...entry, after: null, restore: true });
     expect(o.names()).toEqual(['Sheet2', 'Sheet1']);
     expect(o.store.restoreReleased.mock.calls[0]![0]).toBe('sheetTwo1');
+  });
+
+  it('moves a tab among the tabs, and passes over one not there', async () => {
+    const o = offline();
+    await o.bar.put(entry);
+    await o.bar.move({ ...entry, after: null });
+    expect(o.names()).toEqual(['Sheet2', 'Sheet1']);
+    await o.bar.move({ ...entry, tabId: 'gone' });
+    expect(o.names()).toEqual(['Sheet2', 'Sheet1']);
   });
 
   it('refuses to put back a sheet no longer kept', async () => {

@@ -1,6 +1,7 @@
 // A spreadsheet's sheets changed with their tabs (docs/specs/029-sheets/sheet-store.md "Changing the workbook"):
 //   POST   /api/documents/<id>/workbook/sheets                    add a sheet tab: its tab and sheet in one batch, or
 //                                                                 a copy of a sheet (`copyOf`, Duplicate)
+//   POST   /api/documents/<id>/workbook/sheets/<sheetId>/move     its tab after the tab named, first for ''
 //   POST   /api/documents/<id>/workbook/sheets/<sheetId>/rename   the sheet's title and its tab's name as one write
 //   DELETE /api/documents/<id>/workbook/sheets/<sheetId>          its tab removed, its sheet kept for Undo; never the
 //                                                                 last visible sheet
@@ -9,6 +10,7 @@ import type {
   SheetWriteResponse,
   WorkbookSheetAddRequest,
   WorkbookSheetAddResponse,
+  WorkbookSheetMoveResponse,
   WorkbookSheetRenameResponse,
 } from '@livedoc/api-schema';
 import type { Tab } from '@livedoc/document';
@@ -34,7 +36,7 @@ import {
   type SheetHead,
 } from '../db';
 import { sheetKeepStatement, sheetSettleStatements } from '../db/sheet-refs';
-import { documentTabOrder, isSpreadsheet, tabPlaceAfter } from '../db/workbook';
+import { documentTabOrder, isSpreadsheet, tabOrderStatements, tabPlaceAfter } from '../db/workbook';
 import { forbidden, json, methodNotAllowed, noContent } from '../responses';
 import { relayDocumentMeta } from '../room-client';
 import { readBody, type DocumentRouteContext } from './context';
@@ -253,6 +255,31 @@ async function renameSheet(
   return json(body);
 }
 
+// A sheet's tab moved among the document's tabs: the order the engines count sheets in (SHEET).
+async function moveSheet(
+  ctx: DocumentRouteContext,
+  documentId: string,
+  sheetId: string,
+): Promise<Response> {
+  const caller = await workbookEditor(ctx, documentId);
+  if (caller instanceof Response) return caller;
+  const raw = await readBody(ctx);
+  if (raw instanceof Response || typeof raw.after !== 'string')
+    return workbookRefused('write_invalid', 400);
+  const after = raw.after;
+  const head = (await liveSheets(ctx, documentId)).find((h) => h.id === sheetId);
+  if (!head) return workbookRefused('sheet_not_found', 404);
+  const order = (await documentTabOrder(ctx.env, documentId)).filter((id) => id !== head.tabId);
+  const at = after === '' ? 0 : order.indexOf(after) + 1;
+  if (at === 0 && after !== '') return workbookRefused('tab_not_found', 404);
+  order.splice(at, 0, head.tabId);
+  await ctx.env.DOCUMENT_DB.batch(tabOrderStatements(ctx.env, documentId, order));
+  await relayTabs(ctx, documentId);
+  console.info(`[workbook] sheet moved document=${documentId} at=${at}`);
+  const body: WorkbookSheetMoveResponse = { tabId: head.tabId, sheetId, orderIndex: at };
+  return json(body);
+}
+
 async function deleteSheet(
   ctx: DocumentRouteContext,
   documentId: string,
@@ -293,5 +320,7 @@ export async function handleWorkbookSheetRoutes(
     return method === 'DELETE' ? deleteSheet(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 7 && segments[6] === 'rename')
     return method === 'POST' ? renameSheet(ctx, documentId, sheetId) : methodNotAllowed();
+  if (segments.length === 7 && segments[6] === 'move')
+    return method === 'POST' ? moveSheet(ctx, documentId, sheetId) : methodNotAllowed();
   return null;
 }

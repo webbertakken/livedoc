@@ -104,6 +104,11 @@ export function useSheetBarActions({
     pending.current = null;
     onSelectTab(id);
   }, [tabs, onSelectTab]);
+  // The engine counts the sheets in the tabs' order (SHEET), kept as tabs move here or for anyone else.
+  const order = tabs.map((t) => t.id).join('\n');
+  useEffect(() => {
+    if (bridge) sheetStoreOf(bridge).orderSheets(order.split('\n'));
+  }, [bridge, order]);
   const canChange = !!bridge && bridge.canEdit && bridge.canShape;
   // Made on the first change, never during render: the changes read the surface through refs.
   const made = useRef<SheetBarChanges | null>(null);
@@ -114,6 +119,8 @@ export function useSheetBarActions({
       duplicate: (id) => now().duplicate(id),
       rename: (id, name) => now().rename(id, name),
       remove: (id) => now().remove(id),
+      move: (id, after) => now().move(id, after),
+      moveBy: (id, step) => now().moveBy(id, step),
     };
   }, [latest]);
   return useMemo(

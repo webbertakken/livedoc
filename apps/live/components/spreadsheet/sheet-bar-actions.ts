@@ -1,7 +1,7 @@
 // The sheet bar's changes (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar"): add, duplicate, rename
 // and delete a sheet, each one step on the person's one timeline. An add or a duplicate undone deletes the sheet, kept,
-// and redone puts it back with its ids; a delete undone puts it back with its ids where it was; a rename is the sheet
-// store's own title write. Where a sheet goes back is worked out when it goes back: after the nearest tab that was
+// and redone puts it back with its ids; a delete undone puts it back with its ids where it was; a move undone goes back
+// after the sheet it followed; a rename is the sheet store's own title write. Where a sheet goes back is worked out when it goes back: after the nearest tab that was
 // before it and is still there. The changes land through a SheetBarBackend (sheet-bar-backend.ts).
 import { SheetName } from '@livedoc/sheets';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
@@ -29,6 +29,9 @@ export type SheetBarChanges = {
   rename: (tabId: string, name: string) => boolean;
   // Asks first; never the last sheet.
   remove: (tabId: string) => void;
+  // After the tab `after` names (null: first), or one place right or left (Move Right, Move Left).
+  move: (tabId: string, after: string | null) => void;
+  moveBy: (tabId: string, step: -1 | 1) => void;
 };
 
 export type SheetBarDeps = {
@@ -93,7 +96,46 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
     );
   };
 
+  // A tab moved after the nearest still there of the tabs `earlier` names (moved, and moved back by its undo).
+  const moveTo = (tabId: string, sheetId: string, earlier: readonly string[]) =>
+    deps.backend().move({ tabId, sheetId, after: landingAfter(deps.tabs(), earlier) });
+
+  const move = (tabId: string, after: string | null) => {
+    const tabs = deps.tabs();
+    const at = tabs.findIndex((t) => t.id === tabId);
+    const sheet = sheetOf(tabId);
+    if (at < 0 || !sheet) {
+      deps.toast(sheetRefusalMessage('sheet_loading'));
+      return;
+    }
+    const others = tabs.filter((t) => t.id !== tabId).map((t) => t.id);
+    const to = after === null ? [] : others.slice(0, others.indexOf(after) + 1);
+    const from = tabsBefore(tabs, tabId);
+    // Where it already is: nothing to do, no step.
+    if (landingAfter(tabs, to) === (from.at(-1) ?? null)) return;
+    moveTo(tabId, sheet.id, to).then(
+      () => {
+        debugLog('[workbook] sheet bar MoveSheet', { tabId, after });
+        track('Sheet', 'Changed', 'MoveSheet');
+        deps.pushUndo({
+          undo: () => replay('undo move', () => moveTo(tabId, sheet.id, from)),
+          redo: () => replay('redo move', () => moveTo(tabId, sheet.id, to)),
+        });
+      },
+      (e: unknown) => refused('MoveSheet', e),
+    );
+  };
+
   return {
+    move,
+    moveBy: (tabId, step) => {
+      const tabs = deps.tabs();
+      const at = tabs.findIndex((t) => t.id === tabId);
+      const target = at + step;
+      if (at < 0 || target < 0 || target >= tabs.length) return;
+      // Right: after the next tab; left: after the one before the previous (first when none).
+      move(tabId, step === 1 ? tabs[target]!.id : (tabs[target - 1]?.id ?? null));
+    },
     add: (place) => {
       const tabs = deps.tabs();
       const open = tabs.findIndex((t) => t.id === deps.openTabId());

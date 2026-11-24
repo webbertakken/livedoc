@@ -9,8 +9,10 @@ import { cloudSheetBar, offlineSheetBar } from './sheet-bar-backend';
 import { useSheetBarActions } from './useSheetBarActions';
 
 const put = vi.fn(async () => {});
+const orderSheets = vi.fn();
+const move = vi.fn(async () => {});
 vi.mock('./sheet-bar-backend', () => ({
-  cloudSheetBar: vi.fn(() => ({ put, take: vi.fn() })),
+  cloudSheetBar: vi.fn(() => ({ put, take: vi.fn(), move })),
   offlineSheetBar: vi.fn(() => ({ put, take: vi.fn() })),
 }));
 vi.mock('@/components/sheets/sheet-store-client', () => ({
@@ -18,6 +20,7 @@ vi.mock('@/components/sheets/sheet-store-client', () => ({
     sheetsOn: (tabId: string) => [{ id: `sheet${tabId}` }],
     write: () => null,
     settle: async () => {},
+    orderSheets,
   })),
 }));
 vi.mock('@/lib/offline/offline-store', () => ({ isOfflineIdSync: vi.fn(() => false) }));
@@ -107,6 +110,18 @@ describe('useSheetBarActions', () => {
     expect(hook.result.current.rename('t1', 'Data')).toBe(true);
     await act(async () => hook.result.current.remove('t1'));
     expect(onSelectTab).toHaveBeenCalledWith('t2');
+  });
+
+  it('keeps the engine’s sheets in the tabs’ order, and moves a sheet', async () => {
+    const hook = mount(bridge());
+    expect(orderSheets).toHaveBeenLastCalledWith(['t1']);
+    hook.rerender({ tabs: [{ id: 't2', name: 'Costs' }, ...one] });
+    expect(orderSheets).toHaveBeenLastCalledWith(['t2', 't1']);
+    await act(async () => hook.result.current.moveBy('t2', 1));
+    await act(async () => hook.result.current.move('t1', null));
+    expect(
+      move.mock.calls.map((c) => (c as unknown as [{ after: string | null }])[0].after),
+    ).toEqual(['t1', null]);
   });
 
   it('says a refusal through the bridge, and nothing without one', async () => {

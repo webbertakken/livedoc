@@ -146,7 +146,19 @@ describe('the page’s copy of the Worker’s values', () => {
     expect(v(1, 0)).toMatchObject({ e: '#REF!' });
     deliver();
     expect(v(1, 0)).toBe(9.9609375);
-    port.removeSheet(port.copy.sheetList()[1]!.id);
+    // A move reorders the Worker's sheets too, and an order that changes nothing sends nothing.
+    const [first, second] = port.copy.sheetList().map((s) => s.id);
+    port.orderSheets([second!, first!]);
+    expect(wire.toHost.at(-1)).toEqual({
+      t: 'order',
+      rev: expect.any(Number),
+      sheetIds: [second, first],
+    });
+    const sent = wire.toHost.length;
+    port.orderSheets([second!]);
+    expect(wire.toHost.length).toBe(sent);
+    deliver();
+    port.removeSheet(second!);
     deliver();
     expect(v(0, 1)).toMatchObject({ e: '#REF!' });
     // TODAY moves on: the Worker says it waits, then sends it again.

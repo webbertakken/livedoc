@@ -18992,6 +18992,38 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "WorkbookSheetMoveRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "after": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "after"
+    ],
+    "type": "object"
+  },
+  "WorkbookSheetMoveResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "orderIndex": {
+        "type": "number"
+      },
+      "sheetId": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "tabId",
+      "sheetId",
+      "orderIndex"
+    ],
+    "type": "object"
+  },
   "WorkbookSheetRenameRequest": {
     "additionalProperties": false,
     "properties": {

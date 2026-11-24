@@ -23,6 +23,7 @@ const SPREADSHEET_REFUSALS: Partial<Record<string, string>> = {
   sheets_full: 'A spreadsheet holds up to 200 sheets',
   sheet_last_visible: 'A spreadsheet keeps at least one sheet',
   sheet_exists: 'That sheet is already back in this spreadsheet',
+  tab_not_found: 'The sheet it went beside is no longer in this spreadsheet',
 };
 
 // What a refused write says: a value a validation rule refuses names its cell and what the rule allows.

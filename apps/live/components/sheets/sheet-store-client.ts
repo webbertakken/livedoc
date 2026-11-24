@@ -159,6 +159,8 @@ export class SheetStore {
   private readonly tabStatus = new Map<string, TabStatus>();
   // Each scope's engine, behind one link: the page reads each port's copy (formulas.md "Recalculation").
   private readonly ports = new Map<string, EnginePort>();
+  // A spreadsheet's tabs in their order: its engine counts the sheets so (SHEET).
+  private tabOrder: readonly string[] = [];
   private link: EngineLink | null = null;
   private answered = false;
   private readonly queues = new Map<string, Promise<void>>();
@@ -329,7 +331,9 @@ export class SheetStore {
       const link = this.engineLink();
       const access = this.importAccessHere();
       port = new EnginePort({
-        sheets: [...this.entries.values()].map((e) => e.view).filter((s) => this.inScope(s, scope)),
+        sheets: this.inTabOrder([...this.entries.values()].map((e) => e.view)).filter((s) =>
+          this.inScope(s, scope),
+        ),
         locale: this.deps.locale,
         ...(this.deps.timeZone ? { timeZone: this.deps.timeZone } : {}),
         ...(this.deps.meaning ? { meaning: this.deps.meaning } : {}),
@@ -368,6 +372,20 @@ export class SheetStore {
       this.answered = false;
       this.notify();
     });
+  }
+
+  // A spreadsheet's tabs moved (spreadsheet.md "Sheets in the sheet bar"): its engine counts the sheets in their order.
+  orderSheets(tabIds: readonly string[]): void {
+    this.tabOrder = tabIds;
+    const ids = this.inTabOrder([...this.entries.values()].map((e) => e.view)).map((s) => s.id);
+    for (const port of this.ports.values()) port.orderSheets(ids);
+  }
+
+  // Sheets in the tabs' order, those on a tab not in it after, as they were.
+  private inTabOrder(sheets: Sheet[]): Sheet[] {
+    const at = new Map(this.tabOrder.map((id, i) => [id, i]));
+    const place = (s: Sheet) => at.get(s.tabId) ?? at.size;
+    return sheets.sort((a, b) => place(a) - place(b));
   }
 
   // The loaded sheets of a tab: a spreadsheet's sheet tab holds one (docs/specs/029-sheets/spreadsheet.md).

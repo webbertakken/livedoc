@@ -10,6 +10,7 @@ import { Tooltip } from '@livedoc/ui';
 import { SheetBarTab as TabFace } from './SheetBarTab';
 import { SheetTabMenu, type SheetTabMenuAt } from './SheetTabMenu';
 import type { SheetBarActions } from './useSheetBarActions';
+import { useSheetTabDrag } from './useSheetTabDrag';
 
 export type SheetBarTab = { id: string; name: string };
 export type SheetBarPeer = { id: string; name: string; color: string };
@@ -45,6 +46,12 @@ export function SheetBar({
     focusTab(next.id);
   };
   const menuTab = menu ? tabs.find((t) => t.id === menu.tabId) : undefined;
+  const drag = useSheetTabDrag({
+    list,
+    ids: tabs.map((t) => t.id),
+    canDrag: actions?.canChange ?? false,
+    onMove: (tabId, after) => actions?.move(tabId, after),
+  });
   return (
     <div
       data-region="tabs"
@@ -67,8 +74,16 @@ export function SheetBar({
         ref={list}
         role="tablist"
         aria-label="Sheets"
-        className="flex items-stretch gap-0.5 overflow-x-auto"
+        className="relative flex items-stretch gap-0.5 overflow-x-auto"
       >
+        {drag.lineX !== null ? (
+          <span
+            aria-hidden="true"
+            data-sheet-drop-line=""
+            className="pointer-events-none absolute inset-y-1 w-0.5 bg-emerald-600"
+            style={{ left: drag.lineX }}
+          />
+        ) : null}
         {tabs.map((tab, i) => (
           <TabFace
             key={tab.id}
@@ -81,6 +96,8 @@ export function SheetBar({
             onKey={(e) => move(e, i)}
             onMenu={(x, y, fromBar) => setMenu({ tabId: tab.id, x, y, fromBar })}
             onRename={() => actions?.startRename(tab.id)}
+            onPointerDown={(e) => drag.onPointerDown(tab.id, e)}
+            dragged={drag.dragging === tab.id}
             onRenamed={(typed) => {
               actions?.startRename(null);
               if (typed !== null) actions?.rename(tab.id, typed);
@@ -95,6 +112,7 @@ export function SheetBar({
           at={menu}
           name={menuTab.name}
           sheetCount={tabs.length}
+          index={tabs.findIndex((t) => t.id === menuTab.id)}
           actions={actions}
           onClose={() => setMenu(null)}
         />
