@@ -25,13 +25,13 @@ export function LogoMirrorSettings({ pageId, tools }: { pageId: string; tools: L
       <SwitchRow
         checked={on}
         onChange={(next) => tools.setMirror(pageId, next)}
-        className="py-1 text-xs"
+        className="py-1 text-supporting"
       >
         Mirror While Drawing
       </SwitchRow>
       {/* The settings, dimmed while off: choosing an axis turns it on. */}
       <div className={on ? '' : 'opacity-50'}>
-        <p className="mt-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">Axis</p>
+        <p className="mt-2 text-supporting text-slate-500 dark:text-slate-400">Axis</p>
         <div role="radiogroup" aria-label="Mirror axis" className="mt-1 grid grid-cols-2 gap-1">
           {MIRROR_AXES.map((axis) => {
             const chosen = settings.axis === axis.id;
@@ -42,7 +42,7 @@ export function LogoMirrorSettings({ pageId, tools }: { pageId: string; tools: L
                 role="radio"
                 aria-checked={chosen}
                 onClick={() => tools.setMirrorSettings(pageId, { axis: axis.id })}
-                className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-left text-xs transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
+                className={`flex items-center gap-2 rounded-control border px-2 py-1 text-left text-supporting transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
                   chosen
                     ? 'border-cyan-500/60 bg-cyan-50 text-cyan-900 dark:bg-cyan-500/15 dark:text-cyan-100'
                     : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'
@@ -56,9 +56,7 @@ export function LogoMirrorSettings({ pageId, tools }: { pageId: string; tools: L
         </div>
         {settings.axis === 'radial' ? (
           <>
-            <p className="mt-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              Copies
-            </p>
+            <p className="mt-2 text-supporting text-slate-500 dark:text-slate-400">Copies</p>
             <SegmentedRadio
               label="Radial copies"
               options={COPIES}
@@ -71,11 +69,11 @@ export function LogoMirrorSettings({ pageId, tools }: { pageId: string; tools: L
         <SwitchRow
           checked={settings.merge}
           onChange={(merge) => tools.setMirrorSettings(pageId, { merge })}
-          className="mt-2 py-1 text-xs"
+          className="mt-2 py-1 text-supporting"
         >
           Merge Into One
         </SwitchRow>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="text-supporting text-slate-500 dark:text-slate-400">
           {settings.merge
             ? 'Each drawing and its copies become one element.'
             : 'Each copy is its own element.'}

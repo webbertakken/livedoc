@@ -84,7 +84,7 @@ function Swatch({
         onClick={onPick}
         onPointerEnter={onPreview}
         onFocus={onPreview}
-        className={`relative flex h-7 w-7 items-center justify-center rounded-full ring-1 ring-inset ring-slate-900/10 transition hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 motion-reduce:hover:scale-100 dark:ring-white/15 ${
+        className={`relative flex size-row items-center justify-center rounded-full ring-1 ring-inset ring-slate-900/10 transition hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 motion-reduce:hover:scale-100 dark:ring-white/15 ${
           background ? '' : 'bg-white dark:bg-slate-900'
         } ${active ? 'outline outline-2 outline-offset-2 outline-brand-500' : ''}`}
         style={background ? { background } : undefined}
@@ -97,7 +97,7 @@ function Swatch({
 
 function SwatchCheck({ fill }: { fill: PageFill | undefined }) {
   const dark = pageIsDark({ background: { fill } });
-  return <CheckIcon className={`h-3.5 w-3.5 ${dark ? 'text-white' : 'text-slate-800'}`} />;
+  return <CheckIcon className={`size-icon-row ${dark ? 'text-white' : 'text-slate-800'}`} />;
 }
 
 // A labelled group of gradient swatches, seven across, headed as the colour picker heads its rows.
@@ -112,13 +112,10 @@ function GradientGroup({
 }) {
   return (
     <div className="mb-2 last:mb-0">
-      <p
-        aria-hidden
-        className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-      >
+      <p aria-hidden className="mb-1.5 text-supporting text-slate-500 dark:text-slate-400">
         {heading}
       </p>
-      <div role="radiogroup" aria-label={label} className="grid grid-cols-7 gap-1.5">
+      <div role="radiogroup" aria-label={label} className="grid grid-cols-7 gap-2">
         {children}
       </div>
     </div>
@@ -296,7 +293,7 @@ export function BackgroundSection({
                 >
                   <span
                     aria-hidden
-                    className="h-6 w-9 rounded-sm bg-white text-slate-900/25 ring-1 ring-inset ring-slate-900/10 dark:bg-slate-900 dark:text-white/25 dark:ring-white/15"
+                    className="h-chip w-9 rounded-control bg-white text-slate-900/25 ring-1 ring-inset ring-slate-900/10 dark:bg-slate-900 dark:text-white/25 dark:ring-white/15"
                     style={{
                       ...pageSheetStyle(PATTERN_PREVIEW[p]),
                       backgroundSize: p === 'lines' ? '100% 6px' : '6px 6px',

@@ -31,7 +31,7 @@ export function AskButton({ tabId, onAsk }: { tabId: string; onAsk: () => void }
       aria-haspopup="dialog"
       aria-expanded={open}
       onClick={() => (open ? closeAsk(tabId) : onAsk())}
-      className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-900 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+      className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-body text-slate-900 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
     >
       <SparkleIcon size={14} className="text-brand-700 dark:text-brand-300" />
       <span className="text-optical-centre">Ask</span>

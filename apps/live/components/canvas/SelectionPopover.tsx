@@ -176,7 +176,7 @@ export function SelectionPopover({
         e.preventDefault();
         e.stopPropagation();
       }}
-      className={`pointer-events-none absolute z-[var(--z-toolbar)] flex w-max max-w-[calc(100vw-1rem)] items-center justify-center gap-x-2 gap-y-7 ${placeAbove ? 'flex-wrap' : 'flex-wrap-reverse'}`}
+      className={`pointer-events-none absolute z-[var(--z-toolbar)] flex w-max max-w-[calc(100vw-1rem)] items-center justify-center gap-x-2 gap-y-6 ${placeAbove ? 'flex-wrap' : 'flex-wrap-reverse'}`}
       style={style}
     >
       {aside}
@@ -184,9 +184,9 @@ export function SelectionPopover({
         data-testid="selection-popover"
         role="toolbar"
         aria-label={title}
-        // Its 32px buttons sit 4px apart, so on a touch screen each tap area reaches to 44px tall only
+        // Its 28px buttons sit 4px apart, so on a touch screen each tap area reaches to 44px tall only
         // (touch-target-y, touch-targets.md), never sideways into its neighbour's.
-        className="pointer-events-auto relative max-w-[95vw] animate-fade-in rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40 [&_.h-8]:relative [&_.h-8]:touch-target-y"
+        className="pointer-events-auto relative max-w-[95vw] animate-fade-in rounded-menu border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40 [&_.size-row]:relative [&_.size-row]:touch-target-y"
       >
         {title && !minimalChrome ? <FloatingTitle title={title} placeAbove={placeAbove} /> : null}
         {/* The toolbar is at most 95vw wide; its buttons ride a strip that scrolls sideways when they outgrow it (a
@@ -214,7 +214,7 @@ export function SelectionPopover({
                   }}
                   aria-label="More actions"
                   aria-haspopup="dialog"
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                  className="flex size-row items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                 >
                   <EllipsisIcon />
                 </button>
@@ -360,8 +360,8 @@ export function SelectionPopover({
                 aria-pressed={locked}
                 className={
                   locked
-                    ? 'flex h-8 w-8 items-center justify-center rounded-md bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
-                    : 'flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                    ? 'flex size-row items-center justify-center rounded-control bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
+                    : 'flex size-row items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                 }
               >
                 <LockIcon closed={locked} />
@@ -383,8 +383,8 @@ export function SelectionPopover({
                   aria-label="Delete"
                   className={
                     locked
-                      ? 'flex h-8 w-8 items-center justify-center rounded-md text-slate-300 dark:text-slate-400'
-                      : 'flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                      ? 'flex size-row items-center justify-center rounded-control text-slate-300 dark:text-slate-400'
+                      : 'flex size-row items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                   }
                 >
                   <TrashIcon />

@@ -69,13 +69,13 @@ export function LockedElementMenu({
           onClick={(e) => e.stopPropagation()}
           onDoubleClick={(e) => e.stopPropagation()}
           style={{ left, top, width: WIDTH }}
-          className="fixed z-[var(--z-overlay,50)] rounded-lg outline-none border border-slate-200 bg-white py-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          className="fixed z-[var(--z-overlay,50)] rounded-menu outline-none border border-slate-200 bg-white py-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
           <p
             {...{ [MENU_LABEL_ATTR]: '' }}
             id={`${noteId}-label`}
             aria-hidden
-            className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+            className="px-3 pb-1 text-supporting text-slate-500 dark:text-slate-400"
           >
             In use
           </p>
@@ -89,7 +89,7 @@ export function LockedElementMenu({
                 onRelease(holder.id);
                 onClose();
               }}
-              className="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-xs text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-supporting text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <span
                 aria-hidden
@@ -104,7 +104,7 @@ export function LockedElementMenu({
           <p
             id={noteId}
             aria-hidden
-            className="px-3 pt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400"
+            className="px-3 pt-1 text-supporting text-slate-500 dark:text-slate-400"
           >
             They keep their work; it just stops being theirs to edit.
           </p>

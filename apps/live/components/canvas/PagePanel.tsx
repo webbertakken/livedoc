@@ -201,7 +201,7 @@ export function PagePanel({
       {locked ? (
         <p
           role="status"
-          className="mx-3 mt-2 rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900 dark:bg-amber-500/15 dark:text-amber-100"
+          className="mx-3 mt-2 rounded-control bg-amber-50 px-3 py-1.5 text-supporting text-amber-900 dark:bg-amber-500/15 dark:text-amber-100"
         >
           {selfLocked
             ? 'This page is locked. Unlock it beside the cog to change it.'
@@ -318,7 +318,7 @@ export function PagePanel({
         data-article-keep-active=""
         tabIndex={-1}
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-overlay)] flex outline-none animate-fade-in flex-col overflow-y-auto rounded-xl border border-slate-200 bg-white pb-1 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
+        className="fixed z-[var(--z-overlay)] flex outline-none animate-fade-in flex-col overflow-y-auto rounded-surface border border-slate-200 bg-white pb-1 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
         style={{
           left: pos?.left ?? -9999,
           top: pos?.top ?? -9999,
@@ -348,7 +348,7 @@ function PanelTabs({
       <div
         role="group"
         aria-label="Page panel section"
-        className={`relative grid ${GRID_COLS[tabs.length - 1]} rounded-lg p-0.5 ${SEGMENT_TRACK}`}
+        className={`relative grid ${GRID_COLS[tabs.length - 1]} rounded-menu p-0.5 ${SEGMENT_TRACK}`}
       >
         <SegmentSlider count={tabs.length} index={tabs.indexOf(tab)} className={ACTIVE_SEGMENT} />
         {tabs.map((id) => (
@@ -357,7 +357,7 @@ function PanelTabs({
             type="button"
             aria-pressed={tab === id}
             onClick={() => onTab(id)}
-            className={`relative z-10 rounded-md py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
+            className={`relative z-10 rounded-control py-1.5 text-supporting transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
               tab === id
                 ? 'text-white'
                 : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
@@ -411,7 +411,7 @@ function NameField({
         onKeyDown={(e) => {
           if (e.key === 'Enter') e.currentTarget.blur();
         }}
-        className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-medium placeholder:text-slate-400 hover:border-slate-200 focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-100 dark:text-slate-100 dark:hover:border-slate-700 dark:focus:bg-slate-900 dark:focus:ring-brand-500/30"
+        className="w-full rounded-control border border-transparent bg-transparent px-2 py-1 text-body text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-200 focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-100 dark:text-slate-100 dark:hover:border-slate-700 dark:focus:bg-slate-900 dark:focus:ring-brand-500/30"
       />
     </div>
   );
@@ -433,7 +433,7 @@ function ActionButton({
         aria-label={label}
         disabled={!onClick}
         onClick={onClick}
-        className={`flex h-8 flex-1 items-center justify-center rounded-md transition focus-visible:outline-2 focus-visible:outline-brand-600 disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100`}
+        className={`flex h-field flex-1 items-center justify-center rounded-control transition focus-visible:outline-2 focus-visible:outline-brand-600 disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100`}
       >
         {children}
       </button>
@@ -465,7 +465,7 @@ function PageActions({
           label="Split Into Pages"
           onClick={!locked ? () => edit.splitPage(page.id) : undefined}
         >
-          <SplitPagesIcon className="h-4 w-4" />
+          <SplitPagesIcon className="size-icon-row" />
         </ActionButton>
       )}
       <ActionButton
@@ -474,19 +474,19 @@ function PageActions({
           duplicatePage && edit.canDuplicate(page.id) ? () => duplicatePage(page.id) : undefined
         }
       >
-        <DuplicateIcon className="h-4 w-4" />
+        <DuplicateIcon className="size-icon-row" />
       </ActionButton>
       <ActionButton
         label={`Move ${noun} left`}
         onClick={edit.canMove(page.id, -1) ? () => edit.movePage(page.id, -1) : undefined}
       >
-        <ChevronLeftIcon className="h-4 w-4" />
+        <ChevronLeftIcon className="size-icon-row" />
       </ActionButton>
       <ActionButton
         label={`Move ${noun} right`}
         onClick={edit.canMove(page.id, 1) ? () => edit.movePage(page.id, 1) : undefined}
       >
-        <ChevronRightIcon className="h-4 w-4" />
+        <ChevronRightIcon className="size-icon-row" />
       </ActionButton>
       <ActionButton
         label={`Delete ${noun}`}
@@ -499,7 +499,7 @@ function PageActions({
             : undefined
         }
       >
-        <TrashIcon className="h-4 w-4" />
+        <TrashIcon className="size-icon-row" />
       </ActionButton>
     </div>
   );

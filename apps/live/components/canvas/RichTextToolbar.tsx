@@ -28,7 +28,7 @@ import { useDocumentColours } from '@/hooks/ui/useDocumentColours';
 // What the swatch shows while the selection has no colour of its own.
 const DEFAULT_TEXT_COLOUR = '#0f172a';
 
-// Matches the element toolbar's PopoverButton (h-8 w-8 rounded-md, same
+// Matches the element toolbar's PopoverButton (size-row rounded-control, same
 // active + hover tones) so the two toolbars read as one system.
 export function RichTextToolbar({
   active,
@@ -60,7 +60,7 @@ export function RichTextToolbar({
   const yours = useDocumentColours();
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40">
+    <div className="flex items-center gap-1 rounded-menu border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40">
       {toggles.map((t) => (
         <HoverCard key={t.key} title={t.label} description={t.description}>
           <button
@@ -95,7 +95,7 @@ export function RichTextToolbar({
       <ToolbarDropdown
         label="Alignment"
         description="Align the label inside the element."
-        menuClassName="w-28 p-1.5"
+        menuClassName="w-28 p-1"
         trigger={<AlignLinesIcon dir={alignX} />}
       >
         <AlignmentGrid alignX={alignX} alignY={alignY} onChange={onSetAlign} />
@@ -113,7 +113,7 @@ export function RichTextToolbar({
           standard={[standardGroup('strong', appearance, 'hex')]}
           yours={yours}
           preserveFocus
-          className={`h-8 w-8 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800`}
+          className={`size-row text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800`}
           onPick={onColor}
         />
       </HoverCard>

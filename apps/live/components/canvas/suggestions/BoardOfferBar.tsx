@@ -14,8 +14,8 @@ export type OfferAction = { label: string; onSelect: () => void; primary?: boole
 
 const FOCUS =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600';
-const SECONDARY = `rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 ${FOCUS}`;
-const PRIMARY = `rounded-full bg-brand-700 px-3 py-1 text-xs font-semibold text-white hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL} ${FOCUS}`;
+const SECONDARY = `rounded-full border border-slate-300 px-3 py-1 text-supporting text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 ${FOCUS}`;
+const PRIMARY = `rounded-full bg-brand-700 px-3 py-1 text-supporting text-white hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL} ${FOCUS}`;
 
 export function BoardOfferBar({
   line,
@@ -52,14 +52,16 @@ export function BoardOfferBar({
         <div
           role="group"
           aria-label={refused ? 'Board not arranged' : 'Board preview'}
-          className={`pointer-events-auto border border-slate-200 bg-white/95 text-xs text-slate-700 shadow-lg shadow-slate-900/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:shadow-slate-950/40 ${
-            refused ? 'max-w-md rounded-xl p-3' : 'flex items-center gap-3 rounded-full px-4 py-1.5'
+          className={`pointer-events-auto border border-slate-200 bg-white/95 text-supporting text-slate-700 shadow-lg shadow-slate-900/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:shadow-slate-950/40 ${
+            refused
+              ? 'max-w-md rounded-surface p-3'
+              : 'flex items-center gap-3 rounded-full px-4 py-1.5'
           }`}
         >
           <p
             role="status"
             aria-live="polite"
-            className={refused ? 'font-semibold text-slate-900 dark:text-slate-50' : undefined}
+            className={refused ? 'text-slate-900 dark:text-slate-50' : undefined}
           >
             <span className="text-optical-centre">{line}</span>
           </p>
@@ -73,7 +75,7 @@ export function BoardOfferBar({
                       type="button"
                       aria-label={`Show on the board: ${way.words}`}
                       onClick={() => onWay?.(way.id)}
-                      className={`w-full rounded-md px-2 py-1 text-left hover:bg-slate-100 dark:hover:bg-slate-800 ${FOCUS}`}
+                      className={`w-full rounded-control px-2 py-1 text-left hover:bg-slate-100 dark:hover:bg-slate-800 ${FOCUS}`}
                     >
                       {way.words}
                     </button>

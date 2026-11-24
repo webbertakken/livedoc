@@ -420,8 +420,8 @@ export function PresentationOverlay({
       {atEnd ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-2 text-center">
-            <span className="text-sm font-semibold text-white/90">End of the deck</span>
-            <span className="text-[11px] text-white/70">
+            <span className="text-body text-white/90">End of the deck</span>
+            <span className="text-supporting text-white/70">
               Click, press Space, or hit Esc to go back to the document.
             </span>
           </div>

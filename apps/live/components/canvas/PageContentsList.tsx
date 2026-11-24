@@ -47,7 +47,7 @@ export function ContentsFind({ contents }: { contents: PageContents }) {
   const { pages, query, setQuery, focusFirst } = contents;
   if (pages.length <= CONTENTS_FIND_AFTER) return null;
   return (
-    <label className="mx-3 mb-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-400 focus-within:border-brand-400 dark:border-slate-700 dark:bg-slate-900">
+    <label className="mx-3 mb-2 flex items-center gap-2 rounded-menu border border-slate-200 bg-white px-3 py-1.5 text-slate-400 focus-within:border-brand-400 dark:border-slate-700 dark:bg-slate-900">
       <FindIcon />
       <input
         type="search"
@@ -64,7 +64,7 @@ export function ContentsFind({ contents }: { contents: PageContents }) {
             focusFirst();
           }
         }}
-        className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100"
+        className="min-w-0 flex-1 bg-transparent text-body text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100"
       />
     </label>
   );
@@ -112,7 +112,7 @@ export function ContentsList({
       style={style}
     >
       {shown.length === 0 ? (
-        <p className="px-2 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+        <p className="px-2 py-6 text-center text-body text-slate-500 dark:text-slate-400">
           No page matches “{query}”.
         </p>
       ) : null}
@@ -174,7 +174,7 @@ export function ContentsList({
                     onPointerDown={(e) => {
                       if (e.pointerType === 'touch') reorder.beginDrag(e, row.id);
                     }}
-                    className={`relative z-10 flex h-8 w-5 shrink-0 cursor-grab touch-none items-center justify-center text-slate-400 transition ${
+                    className={`relative z-10 flex h-field w-5 shrink-0 cursor-grab touch-none items-center justify-center text-slate-400 transition ${
                       touch ? '' : 'opacity-0 group-hover:opacity-100'
                     }`}
                   >
@@ -192,11 +192,11 @@ export function ContentsList({
 }
 
 const LIST_ROW_CLASS = (here: boolean) =>
-  `items-center gap-3 rounded-xl px-2 py-1.5 ${
+  `items-center gap-3 rounded-surface px-2 py-1.5 ${
     here ? 'bg-brand-50 dark:bg-brand-500/15' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
   }`;
 const FILM_ROW_CLASS = (here: boolean) =>
-  `items-start gap-1.5 rounded-xl py-2 pl-1 pr-2 ${
+  `items-start gap-2 rounded-surface py-2 pl-1 pr-2 ${
     here
       ? 'bg-brand-50/80 dark:bg-brand-500/10'
       : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/70'
@@ -226,7 +226,7 @@ function Picture({
   return (
     <span
       className={`block overflow-hidden bg-white transition dark:bg-slate-800 ${
-        large ? 'rounded-lg' : 'rounded-md'
+        large ? 'rounded-menu' : 'rounded-control'
       } ${
         here
           ? `ring-brand-500 ${large ? 'shadow-md ring-2' : 'shadow-sm ring-1 ring-brand-400'}`
@@ -260,9 +260,9 @@ function NameLine({
   actions: React.ReactNode;
 }) {
   return (
-    <span className="flex h-6 min-w-0 items-center gap-1.5">
+    <span className="flex h-chip min-w-0 items-center gap-2">
       <span
-        className={`truncate font-medium text-slate-800 dark:text-slate-100 ${small ? 'text-xs' : 'text-sm'}`}
+        className={`truncate text-slate-800 dark:text-slate-100 ${small ? 'text-supporting' : 'text-body'}`}
       >
         {row.name}
       </span>
@@ -318,7 +318,7 @@ function PageToolbar({
       role="toolbar"
       aria-label={`${row.name} actions`}
       data-page-toolbar=""
-      className={`flex items-center gap-px transition-opacity duration-micro ${
+      className={`flex items-center gap-0.5 transition-opacity duration-micro ${
         shown ? '' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
       }`}
     >
@@ -335,7 +335,7 @@ function PageToolbar({
               tool.run();
             }}
             onKeyDown={(e) => e.stopPropagation()}
-            className={`flex h-6 w-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-900/5 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 ${
+            className={`flex size-chip items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-900/5 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 ${
               tool.key === 'delete' ? 'hover:text-red-700 dark:hover:text-red-300' : ''
             }`}
           >
@@ -414,7 +414,7 @@ function ListRow({ row, here, thumb, actions, grip }: RowProps) {
       ) : null}
       <span className="flex w-7 shrink-0 flex-col items-center">
         <span
-          className={`text-sm font-semibold tabular-nums ${here ? 'text-brand-700 dark:text-brand-200' : 'text-slate-500 dark:text-slate-400'}`}
+          className={`text-body tabular-nums ${here ? 'text-brand-700 dark:text-brand-200' : 'text-slate-500 dark:text-slate-400'}`}
         >
           {row.number}
         </span>
@@ -440,13 +440,13 @@ function FilmRow({ row, here, thumb, actions, grip }: RowProps) {
     <>
       <span className="flex w-6 shrink-0 flex-col items-center gap-1 pt-0.5">
         <span
-          className={`text-xs font-semibold tabular-nums ${here ? 'text-brand-700 dark:text-brand-300' : 'text-slate-500 dark:text-slate-400'}`}
+          className={`text-supporting tabular-nums ${here ? 'text-brand-700 dark:text-brand-300' : 'text-slate-500 dark:text-slate-400'}`}
         >
           {row.number}
         </span>
         {grip}
       </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <span className="flex min-w-0 flex-1 flex-col gap-2">
         <span className="flex" style={{ width: FILM_MAX_W }}>
           <Picture thumb={thumb} w={w} h={h} here={here} large />
         </span>

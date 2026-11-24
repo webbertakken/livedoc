@@ -711,7 +711,7 @@ function PageLimitNotice({ page }: { page: LaidOutPage }) {
         height: 32,
       }}
     >
-      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30">
+      <span className="rounded-control bg-amber-50 px-2 py-1 text-supporting text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30">
         This tab has reached {MAX_PAGES} pages: the writing below this line is hidden
       </span>
     </div>

@@ -18,9 +18,7 @@ import {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <>
-      <span className="px-2 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
-        {title}
-      </span>
+      <span className="px-2 pb-0.5 pt-1.5 text-supporting text-white/60">{title}</span>
       {children}
     </>
   );
@@ -47,7 +45,7 @@ function Segmented<T extends string | number>({
               e.stopPropagation();
               onPick(o.id);
             }}
-            className={`flex-1 cursor-pointer rounded-md px-1.5 py-1 text-[11px] font-medium transition ${
+            className={`flex-1 cursor-pointer rounded-control px-2 py-1 text-body transition ${
               value === o.id
                 ? 'bg-white/25 text-white'
                 : 'text-white/60 hover:bg-white/10 hover:text-white/90'
@@ -82,12 +80,12 @@ function Toggle({
       track="start"
       onColor="var(--color-brand-400)"
       offColor="rgb(255 255 255 / 0.25)"
-      layout="flex w-full items-start gap-2 rounded-md text-left"
+      layout="flex w-full items-start gap-2 rounded-control text-left"
       className="px-2 py-1.5 transition hover:bg-white/10 [&>[data-switch]]:mt-0.5"
     >
       <span className="flex min-w-0 flex-col">
-        <span className="text-[11px] font-medium text-white/90">{label}</span>
-        <span className="text-[10px] leading-tight text-white/45">{hint}</span>
+        <span className="text-supporting text-white/90">{label}</span>
+        <span className="text-supporting text-white/45">{hint}</span>
       </span>
     </SwitchRow>
   );
@@ -106,7 +104,7 @@ export function PresentationSettings({
       aria-label="Presentation settings"
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
-      className="pointer-events-auto fixed right-4 top-16 z-[66] flex max-h-[75vh] w-64 flex-col gap-1 overflow-y-auto rounded-xl bg-slate-900/90 p-2 shadow-2xl backdrop-blur"
+      className="pointer-events-auto fixed right-4 top-16 z-[66] flex max-h-[75vh] w-64 flex-col gap-1 overflow-y-auto rounded-surface bg-slate-900/90 p-2 shadow-2xl backdrop-blur"
     >
       <Group title="Transition">
         <Segmented
@@ -144,7 +142,7 @@ export function PresentationSettings({
       </Group>
 
       {/* Everything else is set before the talk (docs/specs/012-collaboration/presentation-mode.md "Settings"). */}
-      <p className="px-2 pb-1 pt-2 text-[11px] leading-snug text-white/60">
+      <p className="px-2 pb-1 pt-2 text-supporting text-white/60">
         Playback, slide size and what shows while presenting are in Settings, under Presenting.
       </p>
     </div>

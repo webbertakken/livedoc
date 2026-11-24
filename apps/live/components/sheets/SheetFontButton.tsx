@@ -5,8 +5,9 @@
 import { FONTS, resolveFontStack } from '@livedoc/document';
 import { ChevronDownIcon, Tooltip } from '@livedoc/ui';
 
-// The button's width on the toolbar: room for the longest name (Permanent Marker) at 12px, and the chevron.
-export const FONT_BUTTON_PX = 132;
+// The button's width on the toolbar: room for the longest name (Permanent Marker) at 14px (text-body), and the
+// chevron: 132px held it at 12px, its name's 100px grown by 14 / 12. Safe range 140 to 176.
+export const FONT_BUTTON_PX = 152;
 
 export function fontLabel(id: string | undefined): string {
   return (id && FONTS.find((f) => f.id === id)?.label) || 'Default';
@@ -29,7 +30,7 @@ export function SheetFontButton({
         type="button"
         aria-label={`Font: ${label}`}
         aria-haspopup="menu"
-        className={`flex h-7 shrink-0 cursor-pointer items-center justify-between gap-1 rounded-md border px-2 text-[12px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+        className={`flex h-row shrink-0 cursor-pointer items-center justify-between gap-1 rounded-control border px-2 text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
           tone
             ? 'hover:bg-black/5 dark:hover:bg-white/10'
             : 'border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'

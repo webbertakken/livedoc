@@ -56,7 +56,7 @@ export function ArticleStyleSection({
       {part === 'style' ? (
         <>
           <PanelSection title="Looks">
-            <div role="radiogroup" aria-label="Article look" className="grid grid-cols-5 gap-1.5">
+            <div role="radiogroup" aria-label="Article look" className="grid grid-cols-5 gap-2">
               {ARTICLE_LOOK_IDS.map((id) => (
                 <LookCard
                   key={id}
@@ -214,7 +214,7 @@ function LookCard({
         onClick={onPick}
         onPointerEnter={onHover}
         onFocus={onHover}
-        className={`relative flex flex-col items-stretch overflow-hidden rounded-md bg-white px-1.5 pb-1.5 pt-1 text-left shadow-sm ring-1 transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-brand-600 motion-reduce:hover:translate-y-0 dark:bg-slate-100 ${
+        className={`relative flex flex-col items-stretch overflow-hidden rounded-control bg-white px-2 pb-1.5 pt-1 text-left shadow-sm ring-1 transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-brand-600 motion-reduce:hover:translate-y-0 dark:bg-slate-100 ${
           selected ? 'ring-2 ring-brand-500' : 'ring-slate-900/10'
         }`}
         style={
@@ -228,7 +228,7 @@ function LookCard({
         }
       >
         <span
-          className="block truncate text-[11px] leading-tight"
+          className="block truncate text-supporting"
           style={{
             fontFamily: resolveFontStack(look.headingFont),
             fontWeight: 700,
@@ -245,10 +245,10 @@ function LookCard({
             style={{ width: `${w}%` }}
           />
         ))}
-        <span className="mt-1 block text-[9px] font-medium text-slate-500">{look.label}</span>
+        <span className="mt-1 block text-supporting text-slate-500">{look.label}</span>
         {selected ? (
           <span className="absolute right-0.5 top-0.5 text-brand-700 dark:text-brand-600">
-            <CheckIcon className="h-3 w-3" />
+            <CheckIcon className="size-icon-chevron" />
           </span>
         ) : null}
       </button>
@@ -266,7 +266,7 @@ function FontSelect({
   onChange: (font: string) => void;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+    <label className="flex flex-col gap-1 text-supporting text-slate-500 dark:text-slate-400">
       {label}
       <Select
         aria-label={`${label} font`}
@@ -294,7 +294,7 @@ function Toggle({
   onChange: (on: boolean) => void;
 }) {
   return (
-    <label className="mt-2 flex cursor-pointer items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">
+    <label className="mt-2 flex cursor-pointer items-center justify-between gap-2 text-supporting text-slate-700 dark:text-slate-200">
       {label}
       <Switch size="sm" checked={on} label={label} onChange={onChange} />
     </label>
@@ -316,11 +316,11 @@ function Segmented<T extends string>({
 }): ReactNode {
   return (
     <div className="mt-2 first:mt-0">
-      <p className="mb-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mb-1 text-supporting text-slate-500 dark:text-slate-400">{label}</p>
       <div
         role="radiogroup"
         aria-label={label}
-        className={`relative grid rounded-lg p-0.5 ${SEGMENT_TRACK}`}
+        className={`relative grid rounded-menu p-0.5 ${SEGMENT_TRACK}`}
         style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
       >
         <SegmentSlider
@@ -336,7 +336,7 @@ function Segmented<T extends string>({
             aria-checked={value === id}
             onClick={() => onChange(id)}
             onPointerEnter={() => onHover(id)}
-            className={`relative z-10 rounded-md py-1 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
+            className={`relative z-10 rounded-control py-1 text-supporting transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
               value === id
                 ? 'text-white'
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'

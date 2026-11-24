@@ -62,7 +62,7 @@ function Body({
     <div data-page-layouts-popover="" className={wide ? '' : 'px-3'}>
       <div className="mb-2.5 flex items-center justify-between gap-2">
         {wide ? (
-          <p className="pl-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">Layouts</p>
+          <p className="pl-0.5 text-body text-slate-900 dark:text-slate-100">Layouts</p>
         ) : (
           <span />
         )}
@@ -82,7 +82,7 @@ function Body({
                 type="button"
                 aria-label="Close"
                 onClick={onClose}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                className="flex size-row items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               >
                 <CloseIcon size={12} />
               </button>

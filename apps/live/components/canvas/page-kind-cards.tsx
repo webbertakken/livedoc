@@ -80,12 +80,12 @@ export function PageKindCard({
       ref={ref}
       type="button"
       onClick={onChoose}
-      className={`group relative flex items-stretch gap-2 rounded-lg border p-2 text-left transition ${
+      className={`group relative flex items-stretch gap-2 rounded-menu border p-2 text-left transition ${
         wide ? 'col-span-2 flex-row items-center' : 'flex-col'
       } hover:border-brand-400 hover:bg-brand-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:hover:border-brand-400 dark:hover:bg-brand-500/10 border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900`}
     >
       <span
-        className={`flex h-24 shrink-0 items-center justify-center rounded-md bg-slate-50 dark:bg-slate-800/70 ${
+        className={`flex h-24 shrink-0 items-center justify-center rounded-control bg-slate-50 dark:bg-slate-800/70 ${
           wide ? 'w-[calc(50%-0.25rem)]' : ''
         }`}
       >
@@ -102,10 +102,8 @@ export function PageKindCard({
         )}
       </span>
       <span className="px-0.5">
-        <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {choice.name}
-        </span>
-        <span className="mt-0.5 block text-xs leading-snug text-slate-500 dark:text-slate-400">
+        <span className="block text-body text-slate-900 dark:text-slate-100">{choice.name}</span>
+        <span className="mt-0.5 block text-supporting text-slate-500 dark:text-slate-400">
           {choice.line}
         </span>
       </span>

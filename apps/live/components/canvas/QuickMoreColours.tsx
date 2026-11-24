@@ -33,7 +33,7 @@ export function QuickMoreColours({
       yours={yours}
       onPick={onPick}
       triggerProps={{ tabIndex: -1, 'data-colour-key': '', 'data-quick-more': '' }}
-      className="h-6 w-6 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+      className="size-chip text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
     >
       <MoreColoursGlyph />
     </ColourSwatchButton>

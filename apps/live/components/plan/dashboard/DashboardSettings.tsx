@@ -102,7 +102,7 @@ export function DashboardSettings({
           ? undefined
           : { ...uiScaleStyle(scale), top: toSurfacePx(12, scale), right: toSurfacePx(12, scale) }
       }
-      className={`pointer-events-auto absolute right-3 top-3 z-[var(--z-toolbar)] [&_button]:h-9 [&_button]:w-9 ${TOOLBAR_CARD}`}
+      className={`pointer-events-auto absolute right-3 top-3 z-[var(--z-toolbar)] [&_button]:size-row ${TOOLBAR_CARD}`}
     >
       <SettingsCog
         label="Dashboard Settings"

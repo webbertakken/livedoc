@@ -28,7 +28,7 @@ export function FirstPageChoice({
         role="group"
         aria-labelledby="first-page-choice-title"
         data-first-page-choice=""
-        className="pointer-events-auto w-[420px] animate-fade-in rounded-xl border border-slate-200 bg-white p-3 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900"
+        className="pointer-events-auto w-[420px] animate-fade-in rounded-surface border border-slate-200 bg-white p-3 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900"
         style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'center' }}
         onPointerDown={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
@@ -45,11 +45,11 @@ export function FirstPageChoice({
           <>
             <p
               id="first-page-choice-title"
-              className="px-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100"
+              className="px-0.5 text-body text-slate-900 dark:text-slate-100"
             >
               What Is This Page For?
             </p>
-            <p className="mb-2.5 mt-0.5 px-0.5 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mb-2.5 mt-0.5 px-0.5 text-supporting text-slate-500 dark:text-slate-400">
               Choose now: a page keeps its kind once you start.
             </p>
             <div

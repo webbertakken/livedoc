@@ -64,7 +64,7 @@ function HudButton({
         onPress();
       }}
       onPointerDown={(e) => e.stopPropagation()}
-      className={`relative flex h-7 w-7 items-center justify-center rounded-md transition ${
+      className={`relative flex size-row items-center justify-center rounded-control transition ${
         disabled
           ? 'cursor-default text-white/25'
           : active
@@ -142,7 +142,7 @@ export function PresentationHud({
   return (
     <>
       <div
-        className={`pointer-events-auto fixed right-4 top-4 z-[65] flex items-center gap-2 rounded-xl bg-slate-900/70 px-3 py-1.5 backdrop-blur transition-opacity duration-long ${
+        className={`pointer-events-auto fixed right-4 top-4 z-[65] flex items-center gap-2 rounded-surface bg-slate-900/70 px-3 py-1.5 backdrop-blur transition-opacity duration-long ${
           hidden ? 'opacity-0' : 'opacity-100'
         }`}
         // Hidden means hidden: an invisible HUD must not eat a click meant for
@@ -151,10 +151,10 @@ export function PresentationHud({
       >
         {showPosition ? (
           <>
-            <span className="select-none text-[11px] font-semibold tabular-nums text-white/90">
+            <span className="select-none text-supporting tabular-nums text-white/90">
               {position} / {total}
             </span>
-            <span className="max-w-[14rem] select-none truncate text-[11px] text-white/90">
+            <span className="max-w-[14rem] select-none truncate text-supporting text-white/90">
               {name}
             </span>
           </>
@@ -167,7 +167,7 @@ export function PresentationHud({
             the same words, visually hidden, for a screen reader. */}
         {elapsedMs !== null ? (
           <Tooltip label={ELAPSED_LABEL}>
-            <span className="select-none text-[11px] font-semibold tabular-nums text-white/70">
+            <span className="select-none text-supporting tabular-nums text-white/70">
               <span className="sr-only">{ELAPSED_LABEL}: </span>
               {formatElapsed(elapsedMs)}
             </span>
@@ -176,7 +176,7 @@ export function PresentationHud({
         {budget ? (
           <Tooltip label={budgetLabel(budget.minutes)}>
             <span
-              className={`select-none rounded px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+              className={`select-none rounded-control px-2 py-0.5 text-supporting tabular-nums ${
                 budget.onSlideMs > budget.minutes * 60_000
                   ? 'bg-amber-400/20 text-amber-200'
                   : 'text-white/70'
@@ -239,7 +239,7 @@ export function PresentationHud({
           aria-label="Jump to a slide"
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          className="pointer-events-auto fixed right-4 top-16 z-[66] max-h-[60vh] w-72 overflow-y-auto rounded-xl bg-slate-900/90 p-1.5 shadow-2xl backdrop-blur"
+          className="pointer-events-auto fixed right-4 top-16 z-[66] max-h-[60vh] w-72 overflow-y-auto rounded-surface bg-slate-900/90 p-2 shadow-2xl backdrop-blur"
         >
           {slides.map((s, i) => {
             const current = i + 1 === position;
@@ -249,11 +249,13 @@ export function PresentationHud({
                 type="button"
                 onClick={() => onJump(i)}
                 aria-current={current ? 'true' : undefined}
-                className={`flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12px] transition ${
+                className={`flex w-full cursor-pointer items-center gap-2 rounded-menu px-2 py-1.5 text-left text-supporting transition ${
                   current ? 'bg-white/15 text-white' : 'text-white/75 hover:bg-white/10'
                 }`}
               >
-                <span className="w-6 shrink-0 tabular-nums text-[11px] text-white/45">{i + 1}</span>
+                <span className="w-6 shrink-0 tabular-nums text-supporting text-white/45">
+                  {i + 1}
+                </span>
                 <span className="min-w-0 flex-1 truncate">{s.label}</span>
               </button>
             );
@@ -266,7 +268,7 @@ export function PresentationHud({
           aria-label="Presenter notes"
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          className="pointer-events-auto fixed right-4 top-16 z-[66] max-h-[50vh] w-80 overflow-y-auto rounded-xl bg-slate-900/90 p-3 text-[12px] leading-relaxed text-white/85 shadow-2xl backdrop-blur"
+          className="pointer-events-auto fixed right-4 top-16 z-[66] max-h-[50vh] w-80 overflow-y-auto rounded-surface bg-slate-900/90 p-3 text-supporting text-white/85 shadow-2xl backdrop-blur"
         >
           {hasNotes ? (
             <p className="whitespace-pre-wrap">{notes}</p>

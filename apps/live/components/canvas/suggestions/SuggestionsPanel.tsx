@@ -62,20 +62,20 @@ type RowFace = {
 const CONTEXT_SWATCH = (
   <span
     aria-hidden
-    className="mt-0.5 size-4 shrink-0 rounded-[5px] border-2 border-dashed border-slate-500 dark:border-slate-400"
+    className="mt-0.5 size-icon-row shrink-0 rounded-control border-2 border-dashed border-slate-500 dark:border-slate-400"
   />
 );
 const NOTE_SWATCH = (
   <span
     aria-hidden
-    className={`mt-0.5 size-4 shrink-0 rounded-[3px] border-2 border-dashed ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER}`}
+    className={`mt-0.5 size-icon-row shrink-0 rounded-control border-2 border-dashed ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER}`}
   />
 );
 // A lane plan: the dashed outline ruled in two lanes.
 const LANES_SWATCH = (
   <span
     aria-hidden
-    className="mt-0.5 flex size-4 shrink-0 items-center rounded-[5px] border-2 border-dashed border-slate-500 dark:border-slate-400"
+    className="mt-0.5 flex size-icon-row shrink-0 items-center rounded-control border-2 border-dashed border-slate-500 dark:border-slate-400"
   >
     <span className="w-full border-t-2 border-dashed border-slate-500 dark:border-slate-400" />
   </span>
@@ -83,10 +83,10 @@ const LANES_SWATCH = (
 /** What a plan made for an older board says (lane-plans.md "What must stay true"). */
 export const STALE_PLAN = 'The board changed since this plan was made. Ask again.';
 const contextKind = (word: string) => (
-  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{word}</span>
+  <span className="text-supporting text-slate-600 dark:text-slate-300">{word}</span>
 );
 const noteKind = (word: string) => (
-  <span className={`text-xs font-semibold ${SUGGESTION_STROKE_TEXT}`}>{word}</span>
+  <span className={`text-supporting ${SUGGESTION_STROKE_TEXT}`}>{word}</span>
 );
 
 // One row's face: its swatch, what it is, its words, and the reason or the names beneath.
@@ -162,7 +162,7 @@ function rowFace(row: PanelRow): RowFace {
 }
 
 const ICON_BUTTON =
-  'flex size-7 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-brand-600';
+  'flex size-row items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-brand-600';
 const DISMISS_BUTTON = `${ICON_BUTTON} text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800`;
 
 export function SuggestionsPanel({
@@ -216,7 +216,7 @@ export function SuggestionsPanel({
       aria-expanded={open}
       aria-controls={listId}
       onClick={() => onOpenChange(!open)}
-      className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-slate-100 dark:hover:bg-slate-800"
+      className="flex items-center gap-2 rounded-full px-3 py-1.5 text-body text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-slate-100 dark:hover:bg-slate-800"
     >
       {ask ? null : <SparkleIcon size={14} className="text-brand-700 dark:text-brand-300" />}
       {countLabel(rows.length)}
@@ -247,12 +247,12 @@ export function SuggestionsPanel({
         data-corner=""
         style={{ top: cornerTop, maxHeight: `calc(100vh - ${cornerTop}px - 6rem)` }}
         className={`${CORNER_PLACE} ${CORNER_SURFACE} flex flex-col ${
-          listed ? 'w-[320px] rounded-xl' : 'rounded-full'
+          listed ? 'w-[320px] rounded-surface' : 'rounded-full'
         }`}
       >
         <div
           ref={headRef}
-          className={`flex items-center gap-0.5 ${listed ? 'border-b border-slate-200 p-1.5 dark:border-slate-800' : 'p-0.5'}`}
+          className={`flex items-center gap-0.5 ${listed ? 'border-b border-slate-200 p-1 dark:border-slate-800' : 'p-0.5'}`}
         >
           {ask}
           {rows.length > 0 ? toggle : null}
@@ -267,18 +267,18 @@ export function SuggestionsPanel({
                 const chosen = row.type === 'names' || row.type === 'merge';
                 const words = (
                   <>
-                    <p className="text-sm">
+                    <p className="text-body">
                       {face.kind} <span className="font-medium">{face.words}</span>
                     </p>
                     {face.detail ? (
                       <p
-                        className={`mt-0.5 text-xs text-slate-600 dark:text-slate-300 ${face.whole ? '' : 'line-clamp-2'}`}
+                        className={`mt-0.5 text-supporting text-slate-600 dark:text-slate-300 ${face.whole ? '' : 'line-clamp-2'}`}
                       >
                         {face.detail}
                       </p>
                     ) : null}
                     {face.by ? (
-                      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                      <p className="mt-0.5 text-supporting text-slate-600 dark:text-slate-400">
                         Suggested by {face.by}
                       </p>
                     ) : null}
@@ -303,7 +303,7 @@ export function SuggestionsPanel({
                         type="button"
                         aria-label={`Show ${face.holds}`}
                         onClick={() => onChoose(row)}
-                        className="min-w-0 flex-1 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                        className="min-w-0 flex-1 rounded-control text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
                       >
                         {words}
                       </button>
@@ -315,7 +315,7 @@ export function SuggestionsPanel({
                             type="button"
                             aria-label={`Apply everywhere: ${face.name}`}
                             onClick={() => onApply(row, true)}
-                            className="mt-1 rounded-md text-xs font-medium text-brand-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-brand-300"
+                            className="mt-1 rounded-control text-supporting text-brand-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-brand-300"
                           >
                             Everywhere
                           </button>
@@ -352,7 +352,7 @@ export function SuggestionsPanel({
               <SwitchRow
                 checked={showAll}
                 onChange={onShowAllChange}
-                className="px-1 text-sm text-slate-800 dark:text-slate-100"
+                className="px-1 text-body text-slate-800 dark:text-slate-100"
               >
                 Show All Suggestions
               </SwitchRow>

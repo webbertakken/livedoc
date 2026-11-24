@@ -42,13 +42,13 @@ export function EmptyCanvasBanner({
       <div
         role="region"
         aria-label={`${tabName} is empty`}
-        className="pointer-events-auto relative flex w-full max-w-sm animate-fly-up-in flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 px-6 py-6 text-center shadow-lg shadow-slate-900/5 backdrop-blur phone:max-w-[18rem] phone:gap-2.5 phone:px-5 phone:py-5 dark:border-slate-700 dark:bg-slate-900/95"
+        className="pointer-events-auto relative flex w-full max-w-sm animate-fly-up-in flex-col items-center gap-3 rounded-surface border border-slate-200 bg-white/95 px-6 py-6 text-center shadow-lg shadow-slate-900/5 backdrop-blur phone:max-w-[18rem] phone:gap-3 phone:px-6 phone:py-5 dark:border-slate-700 dark:bg-slate-900/95"
       >
         <Tooltip label="Close">
           <button
             type="button"
             aria-label="Close"
-            className="touch-target absolute right-2 top-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="touch-target absolute right-2 top-2 flex size-row cursor-pointer items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             onClick={() => {
               dismissEmptyCard(tabId);
               setClosed(true);
@@ -63,10 +63,8 @@ export function EmptyCanvasBanner({
           <EmptyCanvasArt workshop={workshop} />
         </div>
         <div className="flex flex-col gap-1">
-          <p className="text-[15px] font-semibold text-slate-800 dark:text-slate-100">
-            {tabName} is empty
-          </p>
-          <p className="text-[13px] leading-snug text-slate-500 dark:text-slate-400">
+          <p className="text-panel-title text-slate-800 dark:text-slate-100">{tabName} is empty</p>
+          <p className="text-body text-slate-500 dark:text-slate-400">
             {participant
               ? 'Nothing here yet. Add a sticky, text or an image from the Palette to get it going.'
               : readOnly

@@ -65,7 +65,9 @@ const PanelIcons = {
 };
 
 const Keys = ({ k }: { k?: string }) =>
-  k ? <span className="text-[10px] text-slate-500 dark:text-slate-400">{keyLabel(k)}</span> : null;
+  k ? (
+    <span className="text-supporting text-slate-500 dark:text-slate-400">{keyLabel(k)}</span>
+  ) : null;
 
 const Row = ({
   label,
@@ -99,26 +101,26 @@ export const STYLE_OPTIONS: {
   preview: string;
   keys?: string;
 }[] = [
-  { id: 'body', label: 'Text', preview: 'text-sm', keys: 'Mod-Alt-0' },
-  { id: 'title', label: 'Title', preview: 'text-xl font-bold' },
-  { id: 'subtitle', label: 'Subtitle', preview: 'text-base text-slate-500' },
-  { id: 'h1', label: 'Heading 1', short: 'H1', preview: 'text-lg font-bold', keys: 'Mod-Alt-1' },
+  { id: 'body', label: 'Text', preview: 'text-body', keys: 'Mod-Alt-0' },
+  { id: 'title', label: 'Title', preview: 'text-dialog-title' },
+  { id: 'subtitle', label: 'Subtitle', preview: 'text-panel-title text-slate-500' },
+  { id: 'h1', label: 'Heading 1', short: 'H1', preview: 'text-name', keys: 'Mod-Alt-1' },
   {
     id: 'h2',
     label: 'Heading 2',
     short: 'H2',
-    preview: 'text-base font-semibold',
+    preview: 'text-panel-title',
     keys: 'Mod-Alt-2',
   },
   {
     id: 'h3',
     label: 'Heading 3',
     short: 'H3',
-    preview: 'text-sm font-semibold',
+    preview: 'text-body',
     keys: 'Mod-Alt-3',
   },
-  { id: 'quote', label: 'Quote', preview: 'text-sm italic border-l-2 border-brand-500 pl-2' },
-  { id: 'code', label: 'Code', preview: 'font-mono text-xs' },
+  { id: 'quote', label: 'Quote', preview: 'text-body italic border-l-2 border-brand-500 pl-2' },
+  { id: 'code', label: 'Code', preview: 'font-mono text-supporting' },
 ];
 
 export function StylePanel({
@@ -291,7 +293,7 @@ export function ColourPanel({
   const textValue =
     color === null ? DEFAULT_COLOUR : color.toLowerCase() === accent.toLowerCase() ? ACCENT : color;
   return (
-    <div className="flex flex-col gap-3 p-1.5">
+    <div className="flex flex-col gap-3 p-2">
       <PickerTitle>Text Colour</PickerTitle>
       <ColourPicker
         label="Text colour"
@@ -326,7 +328,7 @@ function PickerTitle({ children, divided = false }: { children: ReactNode; divid
     <p
       aria-hidden
       data-picker-title=""
-      className={`-mb-1 text-[12px] font-semibold text-slate-700 dark:text-slate-200 ${
+      className={`-mb-1 text-supporting text-slate-700 dark:text-slate-200 ${
         divided ? 'border-t border-slate-200 pt-3 dark:border-slate-700' : ''
       }`}
     >
@@ -444,16 +446,14 @@ function InsertRow({
       type="button"
       role="menuitem"
       onClick={onPick}
-      className="group flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800"
+      className="group flex w-full items-center gap-3 rounded-menu px-2 py-1.5 text-left transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800"
     >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 transition group-hover:bg-white group-hover:text-brand-700 group-hover:shadow-sm dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700 dark:group-hover:text-brand-100">
+      <span className="flex size-field shrink-0 items-center justify-center rounded-control bg-slate-100 text-slate-600 transition group-hover:bg-white group-hover:text-brand-700 group-hover:shadow-sm dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700 dark:group-hover:text-brand-100">
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-semibold text-slate-900 dark:text-slate-100">
-          {label}
-        </span>
-        <span className="block truncate text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+        <span className="block text-body text-slate-900 dark:text-slate-100">{label}</span>
+        <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
           {blurb}
         </span>
       </span>
@@ -462,7 +462,7 @@ function InsertRow({
 }
 
 const InsertHeading = ({ children }: { children: ReactNode }) => (
-  <p className="px-2 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 first:pt-0.5 dark:text-slate-400">
+  <p className="px-2 pb-0.5 pt-1.5 text-supporting text-slate-500 first:pt-0.5 dark:text-slate-400">
     {children}
   </p>
 );

@@ -123,7 +123,7 @@ export function PageContentsSidebar({
           data-contents-drop=""
           style={{ ...uiScaleStyle(scale), top: px(top), width: CONTENTS_SIDEBAR_WIDTH }}
           className={`pointer-events-none absolute bottom-0 z-[var(--z-panel)] border-2 border-dashed border-brand-400 bg-brand-500/10 ${
-            drag.to === 'left' ? 'left-0 rounded-r-2xl' : 'right-0 rounded-l-2xl'
+            drag.to === 'left' ? 'left-0 rounded-r-surface' : 'right-0 rounded-l-surface'
           }`}
         />
       ) : null}
@@ -150,8 +150,8 @@ export function PageContentsSidebar({
         // through it.
         className={`pointer-events-auto absolute bottom-0 z-[var(--z-panel)] flex cursor-default flex-col overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 ${
           side === 'left'
-            ? 'rounded-tr-2xl border-r shadow-[4px_0_16px_-8px_rgb(15_23_42/0.12)] motion-safe:starting:-translate-x-3'
-            : 'rounded-tl-2xl border-l shadow-[-4px_0_16px_-8px_rgb(15_23_42/0.12)] motion-safe:starting:translate-x-3'
+            ? 'rounded-tr-surface border-r shadow-[4px_0_16px_-8px_rgb(15_23_42/0.12)] motion-safe:starting:-translate-x-3'
+            : 'rounded-tl-surface border-l shadow-[-4px_0_16px_-8px_rgb(15_23_42/0.12)] motion-safe:starting:translate-x-3'
         } ${drag ? 'opacity-90 shadow-xl' : 'motion-safe:transition-[opacity,translate] motion-safe:duration-200 motion-safe:ease-out motion-safe:starting:opacity-0'}`}
       >
         <div
@@ -176,11 +176,11 @@ export function PageContentsSidebar({
         >
           <span
             aria-hidden
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+            className="flex size-chip shrink-0 items-center justify-center rounded-control bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
           >
             <ContentsIcon />
           </span>
-          <h2 className="min-w-0 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+          <h2 className="min-w-0 truncate text-body text-slate-900 dark:text-slate-100">
             Contents
           </h2>
           <span className="ml-auto flex items-center gap-0.5">
@@ -208,7 +208,7 @@ export function PageContentsSidebar({
           contents={contents}
           variant="film"
           touch={false}
-          className="flex-1 gap-0.5 px-1.5 pb-2"
+          className="flex-1 gap-0.5 px-2 pb-2"
         />
         <ContentsAddPage contents={contents} />
       </aside>
@@ -217,4 +217,4 @@ export function PageContentsSidebar({
 }
 
 const HEADER_BUTTON =
-  'relative flex h-6 w-6 touch-target items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100';
+  'relative flex size-chip touch-target items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100';

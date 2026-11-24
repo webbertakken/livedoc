@@ -128,7 +128,7 @@ export function CanvasStyleControls({
         </div>
       ) : (
         <>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-300">Pattern</p>
+          <p className="text-supporting text-slate-500 dark:text-slate-300">Pattern</p>
           <PatternGrid
             patterns={visibleStatic}
             gridClass={patternGridClass}
@@ -138,7 +138,7 @@ export function CanvasStyleControls({
           {!showAllPatterns && staticList.hasMore && !staticList.showAll ? (
             <ShowMoreButton label="Show More Patterns" onClick={staticList.reveal} />
           ) : null}
-          <p className="mt-3 border-t border-slate-100 pt-3 text-[10px] font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <p className="mt-3 border-t border-slate-100 pt-3 text-supporting text-slate-500 dark:border-slate-800 dark:text-slate-400">
             Animated
           </p>
           <PatternGrid
@@ -149,7 +149,7 @@ export function CanvasStyleControls({
           />
         </>
       )}
-      <p className="mt-3 border-t border-slate-100 pt-3 text-[10px] font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
+      <p className="mt-3 border-t border-slate-100 pt-3 text-supporting text-slate-500 dark:border-slate-800 dark:text-slate-400">
         Colours
       </p>
       <div className="mt-1 flex items-stretch gap-1">
@@ -167,8 +167,8 @@ export function CanvasStyleControls({
       </div>
       <div className="mt-3 flex flex-col gap-1 border-t border-slate-100 pt-3 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Opacity</p>
-          <span className="text-[10px] font-medium text-slate-500 dark:text-slate-300">
+          <p className="text-supporting text-slate-500 dark:text-slate-400">Opacity</p>
+          <span className="text-supporting text-slate-500 dark:text-slate-300">
             {Math.round(backgroundOpacity * 100)}%
           </span>
         </div>
@@ -184,8 +184,8 @@ export function CanvasStyleControls({
       </div>
       <div className="mt-3 flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Size</p>
-          <span className="text-[10px] font-medium text-slate-500 dark:text-slate-300">
+          <p className="text-supporting text-slate-500 dark:text-slate-400">Size</p>
+          <span className="text-supporting text-slate-500 dark:text-slate-300">
             {Math.round(backgroundPatternScale * 100)}%
           </span>
         </div>
@@ -205,8 +205,8 @@ export function CanvasStyleControls({
       {isAnimatedPattern(backgroundPattern) ? (
         <div className="mt-3 flex flex-col gap-1">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Speed</p>
-            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-300">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">Speed</p>
+            <span className="text-supporting text-slate-500 dark:text-slate-300">
               {Math.round(backgroundAnimationSpeed * 100)}%
             </span>
           </div>

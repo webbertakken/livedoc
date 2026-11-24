@@ -12,7 +12,7 @@ import { PagedCarousel } from '@/components/primitives/PagedCarousel';
 import type { PatternEntry } from '@/components/palette/palette-controls';
 import { tabBackgroundStyle } from '@/lib/canvas-backgrounds';
 
-const headingClass = 'text-[10px] font-medium text-slate-500 dark:text-slate-300';
+const headingClass = 'text-supporting text-slate-500 dark:text-slate-300';
 
 export function PatternCarousel({
   heading,
@@ -80,7 +80,7 @@ function PatternPreviewTile({
       onClick={onClick}
       aria-pressed={active}
       aria-label={label}
-      className={`flex w-full cursor-pointer flex-col gap-1 rounded-lg p-1 text-left transition ${
+      className={`flex w-full cursor-pointer flex-col gap-1 rounded-menu p-1 text-left transition ${
         active
           ? 'bg-brand-100 text-brand-700 ring-2 ring-brand-500 dark:bg-brand-500/20 dark:text-brand-200 dark:ring-brand-400'
           : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -88,12 +88,12 @@ function PatternPreviewTile({
     >
       <span
         aria-hidden
-        className="flex h-16 w-full items-center justify-center rounded-md border border-slate-200 dark:border-slate-700"
+        className="flex h-16 w-full items-center justify-center rounded-control border border-slate-200 dark:border-slate-700"
         style={style}
       >
         {children}
       </span>
-      <span className="w-full truncate px-0.5 text-center text-[11px] font-medium">{label}</span>
+      <span className="w-full truncate px-0.5 text-center text-supporting">{label}</span>
     </button>
   );
 }

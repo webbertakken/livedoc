@@ -54,10 +54,8 @@ export function PageGalleryPicker({
           width={POPOVER_WIDTH}
           onClose={() => setOpen(false)}
         >
-          <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              My Images
-            </p>
+          <div className="rounded-menu border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <p className="mb-2 text-supporting text-slate-500 dark:text-slate-400">My Images</p>
             <GalleryChoices
               ownerId={ownerId}
               documentId={documentId}
@@ -89,7 +87,7 @@ function GalleryChoices({
   };
   if (error) {
     return (
-      <p className="rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
+      <p className="rounded-control bg-rose-50 px-3 py-2 text-supporting text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
         {error}
       </p>
     );
@@ -100,7 +98,7 @@ function GalleryChoices({
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <li
             key={i}
-            className="aspect-square animate-pulse rounded-md bg-slate-100 dark:bg-slate-800"
+            className="aspect-square animate-pulse rounded-control bg-slate-100 dark:bg-slate-800"
           />
         ))}
       </ul>

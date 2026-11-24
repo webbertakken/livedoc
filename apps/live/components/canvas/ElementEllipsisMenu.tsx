@@ -101,7 +101,7 @@ export function ElementEllipsisMenu({
         // Three drawn dots rather than the `…` character. A text ellipsis
         // sits on the baseline, so in a 20px button it rode the bottom edge
         // instead of the middle however the box was aligned.
-        className="flex h-5 w-5 cursor-pointer items-center justify-center rounded transition hover:bg-black/10 dark:hover:bg-white/10"
+        className="flex size-icon-title cursor-pointer items-center justify-center rounded-control transition hover:bg-black/10 dark:hover:bg-white/10"
         style={color ? { color } : undefined}
       >
         <Glyph size={14} units={16} filled>
@@ -211,7 +211,7 @@ function SurfaceFrame({
         // browser's menu still opens. contextmenu is what arms it, so
         // pointerup can keep bubbling to the window-level drag listeners.
         onContextMenu={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-popover,60)] min-w-[10rem] max-h-[60vh] overflow-y-auto overflow-x-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+        className="fixed z-[var(--z-popover,60)] min-w-[10rem] max-h-[60vh] overflow-y-auto overflow-x-hidden rounded-menu border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
         style={{
           top: at.y,
           // Anchored by the edge it opened from, so a menu near the right
@@ -243,7 +243,7 @@ export function ElementMenuItem({
         e.stopPropagation();
         onPress();
       }}
-      className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-1.5 text-left text-xs text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+      className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-1.5 text-left text-supporting text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
     >
       {children}
     </button>
@@ -295,7 +295,7 @@ export function ElementSettingsButton({
           const r = trigger.current?.getBoundingClientRect();
           if (r) onOpen({ x: r.right, y: r.bottom + 4 });
         }}
-        className="flex h-5 w-5 cursor-pointer items-center justify-center rounded transition hover:bg-black/10 dark:hover:bg-white/10"
+        className="flex size-icon-title cursor-pointer items-center justify-center rounded-control transition hover:bg-black/10 dark:hover:bg-white/10"
         style={color ? { color } : undefined}
       >
         <Glyph size={14} units={16} filled>

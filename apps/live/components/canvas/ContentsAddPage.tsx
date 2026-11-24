@@ -18,7 +18,7 @@ const ChooseIcon = lucideGlyph(lucideLayoutGrid, 16);
 const AddIcon = lucideGlyph(lucidePlus, 16);
 
 const BUTTON =
-  'flex items-center justify-center gap-1.5 rounded-lg border text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-brand-600 disabled:opacity-40';
+  'flex items-center justify-center gap-2 rounded-menu border text-body transition focus-visible:outline-2 focus-visible:outline-brand-600 disabled:opacity-40';
 const IDLE =
   'border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-400/60 dark:hover:bg-brand-500/20 dark:hover:text-brand-100';
 const PRESSED =

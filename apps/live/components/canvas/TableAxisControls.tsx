@@ -210,7 +210,7 @@ export function TableAxisMenuPortal({
   return createPortal(
     <div
       data-table-ui
-      className={`pointer-events-auto fixed z-[var(--z-overlay)] w-36 animate-pop-in rounded-lg border border-slate-200 bg-white/90 p-1 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90 ${
+      className={`pointer-events-auto fixed z-[var(--z-overlay)] w-36 animate-pop-in rounded-menu border border-slate-200 bg-white/90 p-1 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90 ${
         menu.axis === 'col' ? '-translate-x-1/2' : '-translate-y-1/2'
       }`}
       style={{ left: menu.x, top: menu.y }}

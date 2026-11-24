@@ -20,7 +20,7 @@ floor at 24px; the editor aims past it, because a diagram editor is used with a 
   fails a class list that names either utility without a position.
 - **`touch-target-y` for packed rows.** Where neighbours sit closer than 44px apart (the palette
   strip's tiles, 2px apart) the pad reaches vertically only, so two pads never compete for one tap.
-  The toolbar cards apply it to their 36px items (`PHONE_TOOLBAR_ITEMS`).
+  The toolbar cards apply it to their items, 28 or 32px as drawn (`PHONE_TOOLBAR_ITEMS`).
 - **Shared controls carry it**, so every caller does: the chrome buttons (`CHROME_BTN`), the
   `⋯` triggers (`EllipsisTriggerButton`, the tab menu), the help `?` (`HelpArticleLink`), panel
   header buttons (`MovablePanelHeader`, `SettingsPopover`), the dialog close in both shapes
@@ -28,7 +28,7 @@ floor at 24px; the editor aims past it, because a diagram editor is used with a 
   own 16px pad on a coarse pointer (canvas element parts).
 - **Every canvas toolbar pads its items.** The Palette strip, the Draw dock's pills (`DockToolbar`)
   and the menu button's own card in Sketch (`ToolbarExplorerButton`) all carry `PHONE_TOOLBAR_ITEMS`;
-  the selection toolbar's 32px buttons (`SelectionPopover`) get `touch-target-y`, as do the tab pill,
+  the selection toolbar's 28px buttons (`SelectionPopover`) get `touch-target-y`, as do the tab pill,
   the role pill (Editing / Viewing), the tour card's buttons and a page's lock and cog.
   The Plan cogs (a column's, Board Settings, a Sheet's) and the empty-tab card's close take the
   full `touch-target`.
@@ -65,7 +65,8 @@ floor at 24px; the editor aims past it, because a diagram editor is used with a 
   pixels a pad reaches past it. Such a scroller hides its other axis (`overflow-y-hidden` on the
   strip's rail, `overflow-x-hidden` on the Explorer tree), which clips
   the pads at that edge by a few pixels.
-- **Toolbars keep their drawn sizes on a phone:** 36px items in every [toolbar group](toolbar-group.md), each with a 44px tap area.
+- **Toolbars keep their drawn sizes on a phone:** items at the scale's 28 or 32px in every
+  [toolbar group](toolbar-group.md), each with a 44px tap area.
   Fitting more tiles is the strip's swipe's job ([Toolbar layout](../007-editor/toolbar-layout.md)),
   not smaller targets.
 

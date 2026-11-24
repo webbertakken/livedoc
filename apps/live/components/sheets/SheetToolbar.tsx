@@ -166,7 +166,7 @@ export function SheetToolbar({ actions }: { actions: SheetActions }) {
           aria-pressed={b.pressed === undefined ? undefined : b.pressed}
           aria-haspopup={b.menu ? 'menu' : undefined}
           aria-expanded={b.menu ? menu?.kind === b.menu : undefined}
-          className="flex h-9 min-w-9 cursor-pointer items-center justify-center gap-0.5 rounded-md px-1.5 transition hover:bg-black/5 dark:hover:bg-white/10"
+          className="flex h-row min-w-row cursor-pointer items-center justify-center gap-0.5 rounded-control px-2 transition hover:bg-black/5 dark:hover:bg-white/10"
           style={
             b.pressed ? { backgroundColor: c.palette.column, color: c.palette.focus } : undefined
           }
@@ -179,19 +179,21 @@ export function SheetToolbar({ actions }: { actions: SheetActions }) {
           }}
         >
           {b.text && !phone ? (
-            <span className="flex items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold">
+            <span className="flex items-center gap-2 whitespace-nowrap text-body">
               {b.icon ? (
-                <span aria-hidden className="flex items-center [&_svg]:size-4">
+                <span aria-hidden className="flex items-center [&_svg]:size-icon-row">
                   {b.icon}
                 </span>
               ) : null}
               {b.text}
             </span>
           ) : (
-            <span className="flex items-center [&_svg]:size-5 [&>span]:text-[17px]">{b.icon}</span>
+            <span className="flex items-center [&_svg]:size-icon-toolbar [&>span]:text-panel-title">
+              {b.icon}
+            </span>
           )}
           {labels && !b.text && !b.glyphOnly ? (
-            <span className="ml-1 whitespace-nowrap text-[12px] font-medium">{b.label}</span>
+            <span className="ml-1 whitespace-nowrap text-supporting">{b.label}</span>
           ) : null}
           {b.menu && !phone ? <ChevronIcon /> : null}
         </button>
@@ -208,7 +210,7 @@ export function SheetToolbar({ actions }: { actions: SheetActions }) {
       onPointerDown={stop}
       onDoubleClick={stop}
     >
-      <div ref={switcher} className={`flex shrink-0 items-center ${phone ? 'pr-1' : 'pr-1.5'}`}>
+      <div ref={switcher} className={`flex shrink-0 items-center ${phone ? 'pr-1' : 'pr-2'}`}>
         <PaletteDropdown
           ariaLabel="Toolbar category"
           value={category.id}
@@ -235,7 +237,7 @@ export function SheetToolbar({ actions }: { actions: SheetActions }) {
             {b.separatorBefore ? (
               <span
                 aria-hidden
-                className={`${phone ? 'mx-0.5' : 'mx-1'} h-5 w-px shrink-0`}
+                className={`${phone ? 'mx-0.5' : 'mx-1'} h-chip w-px shrink-0`}
                 style={{ backgroundColor: c.palette.cardBorder }}
               />
             ) : null}
@@ -249,7 +251,7 @@ export function SheetToolbar({ actions }: { actions: SheetActions }) {
             type="button"
             aria-label="More"
             aria-haspopup="menu"
-            className="ml-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-xl leading-none hover:bg-black/5 dark:hover:bg-white/10"
+            className="ml-auto flex size-row cursor-pointer items-center justify-center rounded-control text-panel-title leading-none hover:bg-black/5 dark:hover:bg-white/10"
             onClick={(e) => setMenu({ kind: 'more', anchor: e.currentTarget })}
           >
             ⋯
@@ -261,7 +263,7 @@ export function SheetToolbar({ actions }: { actions: SheetActions }) {
         <>
           <span
             aria-hidden
-            className={`${folded.length ? '' : 'ml-auto '}mx-1 h-5 w-px shrink-0`}
+            className={`${folded.length ? '' : 'ml-auto '}mx-1 h-chip w-px shrink-0`}
             style={{ backgroundColor: c.palette.cardBorder }}
           />
           <Tooltip label="Search for a function">
@@ -271,10 +273,10 @@ export function SheetToolbar({ actions }: { actions: SheetActions }) {
               aria-label="Search"
               aria-haspopup="menu"
               aria-expanded={searchAt !== null}
-              className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2 text-[13px] font-semibold transition hover:bg-black/5 dark:hover:bg-white/10"
+              className="flex h-row shrink-0 cursor-pointer items-center gap-2 rounded-control px-2 text-body transition hover:bg-black/5 dark:hover:bg-white/10"
               onClick={(e) => setSearchAt(e.currentTarget)}
             >
-              <span aria-hidden className="flex items-center [&_svg]:size-4">
+              <span aria-hidden className="flex items-center [&_svg]:size-icon-row">
                 <SearchIcon />
               </span>
               Search
