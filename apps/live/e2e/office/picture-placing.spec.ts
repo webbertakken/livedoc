@@ -117,7 +117,8 @@ test('a picture is wrapped from its bar', async ({ page, pageErrors }) => {
   await page.screenshot({ path: test.info().outputPath('picture-bar.png') });
 
   // Alt+F10 reaches the bar from the picture; Image options opens the panel on it.
-  await picture.click();
+  // Placed, its anchor has no size: the picture is pressed where it is drawn.
+  await picture.locator('img').click();
   await page.keyboard.press('Alt+F10');
   await expect(bar.getByRole('button', { name: 'In line' })).toBeFocused();
   await bar.getByRole('button', { name: 'Image options' }).click();
