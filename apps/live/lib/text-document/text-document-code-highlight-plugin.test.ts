@@ -79,4 +79,25 @@ describe('codeHighlightPlugin', () => {
     expect(view.dom.querySelector('.text-document-code-keyword')!.textContent).toBe('return');
     view.destroy();
   });
+
+  it('asks a failed tokenizer again only when the writing changes, never in a loop', async () => {
+    const load = vi.fn(() => Promise.resolve());
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        doc: schema.node('doc', null, [p('def', 'CodePython')]),
+        plugins: [
+          codeHighlightPlugin({
+            readStyles: () => STYLES,
+            tokenizer: { ranges: () => undefined, load },
+          }),
+        ],
+      }),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(load).toHaveBeenCalledTimes(1);
+    view.dispatch(view.state.tr.insertText('x', 2));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(load).toHaveBeenCalledTimes(2);
+    view.destroy();
+  });
 });

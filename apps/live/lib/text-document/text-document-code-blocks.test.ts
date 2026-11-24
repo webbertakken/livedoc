@@ -105,6 +105,14 @@ describe('enterInCodeBlock', () => {
     expect(next.selection.$from.parent).toBe(next.doc.child(1));
   });
 
+  it('leaves the block on a last line of nothing but its indent', () => {
+    const next = run(enter, stateAt(doc(p('if x:\n    ', 'CodePython')), 11));
+    expect(shape(next)).toEqual([
+      ['CodePython', 'if x:'],
+      [null, ''],
+    ]);
+  });
+
   it('is no code block’s Enter elsewhere', () => {
     expect(enter(stateAt(doc(p('abc')), 2))).toBe(false);
   });

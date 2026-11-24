@@ -94,15 +94,17 @@ export function codeHighlightPlugin({
   tokenizer?: CodeTokenizer;
 }): Plugin<DecorationSet> {
   let view: EditorView | null = null;
-  let loading = false;
+  // Whether the tokenizer was asked for since the writing last changed: a failed load is tried again on the next
+  // change, never in a loop of redraws.
+  let asked = false;
   const draw = (state: EditorState | { doc: PmNode }) => {
     const { decorations, waiting } = codeDecorations(state.doc, readStyles(), tokenizer);
-    if (waiting && !loading) {
-      loading = true;
+    if (waiting && !asked) {
+      asked = true;
       void tokenizer.load().then(() => {
-        loading = false;
-        debugLog('[text-document] code tokenizer loaded');
-        if (view && !view.isDestroyed) view.dispatch(view.state.tr.setMeta(key, 'loaded'));
+        const ready = view && !view.isDestroyed;
+        debugLog('[text-document] code tokenizer settled', { redraw: Boolean(ready) });
+        if (ready) view.dispatch(view.state.tr.setMeta(key, 'loaded'));
       });
     }
     return decorations;
@@ -111,7 +113,10 @@ export function codeHighlightPlugin({
     key,
     state: {
       init: (_, state) => draw(state),
-      apply: (tr, old, _, state) => (tr.docChanged || tr.getMeta(key) ? draw(state) : old),
+      apply: (tr, old, _, state) => {
+        if (tr.docChanged) asked = false;
+        return tr.docChanged || tr.getMeta(key) ? draw(state) : old;
+      },
     },
     props: { decorations: (state) => key.getState(state) },
     view: (editorView) => {

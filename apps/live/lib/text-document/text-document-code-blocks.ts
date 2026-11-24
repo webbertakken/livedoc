@@ -111,8 +111,8 @@ export const insertCodeBlock =
   };
 
 /**
- * Enter in a code block: a new line keeping the line's leading spaces and tabs; on an empty last line, that line taken
- * away and a Normal text paragraph started after the block.
+ * Enter in a code block: a new line keeping the line's leading spaces and tabs; on a last line of nothing but spaces
+ * and tabs, that line taken away and a Normal text paragraph started after the block.
  */
 export const enterInCodeBlock =
   (readStyles: () => readonly Style[]): Command =>
@@ -124,9 +124,11 @@ export const enterInCodeBlock =
     const atEnd = $to.parentOffset === $to.parent.content.size;
     if (dispatch) {
       const tr = state.tr;
-      if (atEnd && line === '' && before.endsWith('\n') && state.selection.empty) {
-        tr.delete($from.pos - 1, $from.pos);
-        tr.split($from.pos - 1, 1, [{ type: schema.nodes.paragraph!, attrs: { style: null } }]);
+      if (atEnd && /^[ \t]*$/.test(line) && before.length > line.length && state.selection.empty) {
+        // The blank last line and its break go; the caret starts a Normal text paragraph after the block.
+        const from = $from.pos - line.length - 1;
+        tr.delete(from, $from.pos);
+        tr.split(from, 1, [{ type: schema.nodes.paragraph!, attrs: { style: null } }]);
       } else {
         const indent = /^[ \t]*/.exec(line)![0];
         tr.insertText(`\n${indent}`, $from.pos, $to.pos);

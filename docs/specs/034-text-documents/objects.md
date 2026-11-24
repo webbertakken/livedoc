@@ -535,9 +535,9 @@ files of one are read): a grey block of monospace lines, highlighted by its lang
   empty paragraph, that paragraph becomes the block; elsewhere an empty block goes in at the caret as a table does
   ([Tables](tables.md#inserting)). The caret goes into the block. A code style the document lacks is added first.
   One undo step, for an Editor; dimmed for anyone else, and while a header, footer or note is edited.
-- **Writing in one**: Enter starts a new line in the block, keeping the line's leading spaces and tabs; Enter on an
-  empty last line leaves the block, the empty line taken away and a Normal text paragraph started after it; Tab types
-  a tab. Typing aids (smart quotes, substitutions, automatic lists and links, capitals) are off in a block.
+- **Writing in one**: Enter starts a new line in the block, keeping the line's leading spaces and tabs; Enter on a
+  last line of nothing but spaces and tabs leaves the block, that line taken away and a Normal text paragraph started
+  after it; Tab types a tab. Typing aids (smart quotes, substitutions, automatic lists and links, capitals) are off in a block.
 - **Drawn**: by its style, with rounded corners, and the language's name in small grey type at its top left;
   highlighting colours keywords, strings, comments and numbers, drawn by the editor only and never written, so a file
   holds plain monospace text. Colours are drawn for the paper (editing-surface.md "The page in the dark scheme").
