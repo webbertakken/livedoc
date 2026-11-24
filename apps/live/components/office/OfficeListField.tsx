@@ -103,7 +103,7 @@ export function OfficeListField<T>({
             setDraft(null);
           }
         }}
-        className={`bg-transparent text-sm text-(--office-ink) outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-(--office-focus) ${inputClass}`}
+        className={`bg-transparent text-sm text-(--office-ink) outline-none pointer-coarse:h-11 focus-visible:rounded focus-visible:ring-2 focus-visible:ring-(--office-focus) ${inputClass}`}
       />
       {chevron ? (
         <button
@@ -111,7 +111,7 @@ export function OfficeListField<T>({
           tabIndex={-1}
           aria-label={listLabel}
           onClick={() => (open ? setOpen(false) : openList())}
-          className="flex h-7 w-6 items-center justify-center text-(--office-icon) outline-none"
+          className="flex h-7 w-6 items-center justify-center text-(--office-icon) outline-none pointer-coarse:h-11"
         >
           <ChevronDownIcon size={12} />
         </button>

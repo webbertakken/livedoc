@@ -200,3 +200,50 @@ export async function pinch(page: Page, at: { x: number; y: number }): Promise<v
 /** How far the browser has zoomed the page itself, 1 where it has not. */
 export const pageScale = (page: Page): Promise<number> =>
   page.evaluate(() => window.visualViewport?.scale ?? 1);
+
+/** A control as the tap-reach audit found it: its name and how far a finger reaches it, across and down, in px. */
+export type TapReach = { name: string; across: number; down: number };
+
+/**
+ * How far a finger reaches every control showing outside the pages (touch-targets.md; reading-surface.md "Phone and
+ * tablet"): from each one's middle, the run of points across and down that land on it, its touch pad included; past the
+ * window's edge, a finger lands on what is at the edge. A control covered at its middle is skipped: it is not where
+ * a finger can reach it now. A field inside its label is reached through the label.
+ */
+export const tapReaches = (page: Page): Promise<TapReach[]> =>
+  page.evaluate(() => {
+    const CONTROLS =
+      'button, a[href], input:not([type="checkbox"]):not([type="radio"]), select, label:has(input), [role="menuitem"], [role="menuitemcheckbox"], [role="treeitem"], [role="tab"], [role="option"]';
+    const LIMIT = 40;
+    const hits = (control: Element, x: number, y: number) => {
+      const found = document.elementFromPoint(
+        Math.min(Math.max(x, 0), window.innerWidth - 1),
+        Math.min(Math.max(y, 0), window.innerHeight - 1),
+      );
+      return found !== null && (found === control || control.contains(found));
+    };
+    const run = (control: Element, x: number, y: number, dx: number, dy: number) => {
+      let steps = 0;
+      while (steps < LIMIT && hits(control, x + dx * (steps + 1), y + dy * (steps + 1))) steps += 1;
+      return steps;
+    };
+    return [...document.querySelectorAll(CONTROLS)].flatMap((control) => {
+      if (control.closest('[data-pdf-pages]')) return [];
+      if (control.matches('label input')) return [];
+      const box = control.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) return [];
+      const [x, y] = [box.left + box.width / 2, box.top + box.height / 2];
+      if (!hits(control, x, y)) return [];
+      const name =
+        control.getAttribute('aria-label') ??
+        control.textContent?.trim().slice(0, 40) ??
+        control.tagName;
+      return [
+        {
+          name: `${control.tagName.toLowerCase()} ${name}`,
+          across: run(control, x, y, -1, 0) + run(control, x, y, 1, 0) + 1,
+          down: run(control, x, y, 0, -1) + run(control, x, y, 0, 1) + 1,
+        },
+      ];
+    });
+  });

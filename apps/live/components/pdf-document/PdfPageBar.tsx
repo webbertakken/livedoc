@@ -157,7 +157,7 @@ export function PdfPageBar({
           disabled={atFirst}
           onPress={onPrevious}
         />
-        <label className="flex h-7 items-center gap-1 px-1 text-sm text-(--office-ink)">
+        <label className="relative flex h-7 items-center gap-1 px-1 text-sm text-(--office-ink) touch-target-y">
           <input
             ref={pageField}
             aria-label="Page"

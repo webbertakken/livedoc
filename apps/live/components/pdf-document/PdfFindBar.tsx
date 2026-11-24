@@ -25,7 +25,7 @@ export const PDF_FIND_OPTION_NAMES: readonly (readonly [keyof PdfFindOptions, st
 ];
 
 const BUTTON =
-  'flex h-7 w-7 shrink-0 items-center justify-center rounded text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40 disabled:hover:bg-transparent aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-expanded:bg-(--office-pressed) aria-expanded:text-(--office-pressed-ink)';
+  'relative flex h-7 w-7 touch-target-y shrink-0 items-center justify-center rounded text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40 disabled:hover:bg-transparent aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-expanded:bg-(--office-pressed) aria-expanded:text-(--office-pressed-ink)';
 
 function BarButton({
   label,
@@ -104,7 +104,7 @@ export function PdfFindBar({ find, onClosed }: { find: PdfFind; onClosed: () => 
             event.preventDefault();
             find.step(event.shiftKey ? -1 : 1);
           }}
-          className="h-8 min-w-0 flex-1 rounded border border-(--office-line) bg-transparent px-2 text-(--office-ink) outline-none placeholder:text-(--office-muted) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+          className="h-8 min-w-0 flex-1 rounded border border-(--office-line) bg-transparent px-2 text-(--office-ink) pointer-coarse:h-11 pointer-coarse:text-base outline-none placeholder:text-(--office-muted) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
         />
         <span
           role="status"
@@ -141,10 +141,13 @@ export function PdfFindBar({ find, onClosed }: { find: PdfFind; onClosed: () => 
         <BarButton label="Close find" icon={lucideX} onPress={close} />
       </div>
       {showOptions ? (
-        <fieldset id={optionsId} className="mt-1.5 grid gap-1 px-1 pb-0.5">
+        <fieldset id={optionsId} className="mt-1.5 grid gap-1 px-1 pb-0.5 pointer-coarse:gap-0">
           <legend className="sr-only">Options</legend>
           {PDF_FIND_OPTION_NAMES.map(([name, words]) => (
-            <label key={name} className="flex h-7 cursor-pointer items-center gap-2">
+            <label
+              key={name}
+              className="flex h-7 cursor-pointer items-center gap-2 pointer-coarse:h-11"
+            >
               <input
                 type="checkbox"
                 checked={find.options[name] ?? false}

@@ -197,7 +197,7 @@ export function OfficeToolbar({
           const index = placed.findIndex((p) => p.control.id === slot?.dataset.controlSlot);
           if (index >= 0 && index < fit) setFocusIndex(index);
         }}
-        className={`flex h-10 items-center rounded-3xl bg-(--office-toolbar) px-2 ${
+        className={`flex h-10 items-center rounded-3xl bg-(--office-toolbar) px-2 pointer-coarse:h-11 ${
           phone ? 'overflow-x-auto [scrollbar-width:none]' : 'overflow-hidden'
         }`}
       >

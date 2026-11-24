@@ -68,14 +68,14 @@ export function PdfFindResults({
             <h3 className="px-2 py-1 text-xs font-semibold text-(--office-muted)">
               {group.heading}
             </h3>
-            <ul className="grid gap-0.5">
+            <ul className="grid gap-0.5 pointer-coarse:gap-0">
               {group.results.map(({ result, at }) => (
                 <li key={at}>
                   <button
                     type="button"
                     aria-current={at === find.current ? 'true' : undefined}
                     onClick={() => find.choose(at)}
-                    className="w-full rounded px-2 py-1.5 text-left text-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-current:bg-(--office-pressed) aria-current:text-(--office-pressed-ink)"
+                    className="w-full rounded px-2 py-1.5 text-left pointer-coarse:min-h-11 text-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-current:bg-(--office-pressed) aria-current:text-(--office-pressed-ink)"
                   >
                     {result.snippet.before}
                     <mark className="bg-transparent font-semibold text-inherit underline decoration-(--office-focus) decoration-2 underline-offset-2">
