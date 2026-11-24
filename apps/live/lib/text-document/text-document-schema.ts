@@ -101,8 +101,12 @@ const marks: Record<string, MarkSpec> = {
 function keptPlaceholder(tag: string, raw: unknown, xml?: unknown): DOMOutputSpec {
   const name = typeof raw === 'string' ? raw : '';
   const attributes = { contenteditable: 'false', 'data-kept': name };
-  const source = (xml as { xml?: unknown } | null | undefined)?.xml;
-  const shown = tag === 'span' && typeof source === 'string' ? keptShownText(name, source) : null;
+  const kept = xml as { xml?: unknown; ns?: unknown } | null | undefined;
+  const source = kept?.xml;
+  const shown =
+    tag === 'span' && typeof source === 'string' && kept?.ns && typeof kept.ns === 'object'
+      ? keptShownText(name, { xml: source, ns: kept.ns as Record<string, string> })
+      : null;
   if (shown !== null) return [tag, { ...attributes, class: 'text-document-kept-text' }, shown];
   switch (keptPresenceOf(name)) {
     case 'hidden':

@@ -39,25 +39,40 @@ describe('keptBreakOf (page-layout.md "Breaks")', () => {
 });
 
 // "Shown as it reads": a content control inside a paragraph (a date picker, a dropdown, a chip) shows its text.
+const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const LOEXT = 'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0';
+const TEXT = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+
 describe('keptShownText', () => {
   it('reads a Word content control’s text from its content, not its properties', () => {
     const xml =
       '<w:sdt><w:sdtPr><w:dropDownList><w:listItem w:displayText="No" w:value="No"/></w:dropDownList></w:sdtPr>' +
       '<w:sdtContent><w:r><w:t>Nov 24,</w:t></w:r><w:r><w:tab/><w:t xml:space="preserve"> 2026 &amp; on</w:t></w:r></w:sdtContent></w:sdt>';
-    expect(keptShownText('sdt', xml)).toBe('Nov 24,\t 2026 & on');
+    expect(keptShownText('sdt', { xml, ns: { w: W } })).toBe('Nov 24,\t 2026 & on');
   });
 
   it('reads a LibreOffice content control’s text, its list items left out', () => {
     const xml =
       '<loext:content-control loext:dropdown="true"><loext:list-item loext:display-text="A" loext:value="A"/>' +
       '<text:span text:style-name="T1">Approved</text:span> &lt;ok&gt;</loext:content-control>';
-    expect(keptShownText('content-control', xml)).toBe('Approved <ok>');
+    expect(keptShownText('content-control', { xml, ns: { loext: LOEXT, text: TEXT } })).toBe(
+      'Approved <ok>',
+    );
+  });
+
+  it('shows nothing for XML that does not parse', () => {
+    expect(keptShownText('sdt', { xml: '<w:sdt><w:sdtContent>', ns: { w: W } })).toBeNull();
   });
 
   it('shows nothing as text for anything else, or a control with no text', () => {
     expect(
-      keptShownText('fldSimple', '<w:fldSimple><w:r><w:t>x</w:t></w:r></w:fldSimple>'),
+      keptShownText('fldSimple', {
+        xml: '<w:fldSimple><w:r><w:t>x</w:t></w:r></w:fldSimple>',
+        ns: { w: W },
+      }),
     ).toBeNull();
-    expect(keptShownText('sdt', '<w:sdt><w:sdtContent/></w:sdt>')).toBeNull();
+    expect(
+      keptShownText('sdt', { xml: '<w:sdt><w:sdtContent/></w:sdt>', ns: { w: W } }),
+    ).toBeNull();
   });
 });

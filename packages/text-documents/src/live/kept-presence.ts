@@ -1,3 +1,5 @@
+import { keptXmlWithin, parseXml, type KeptXml, type XmlElement } from '@livedoc/office-packages';
+
 // How a kept construct shows on the page (docs/specs/034-text-documents/standard-mapping.md "Kept content", "Shown as
 // it reads"), by its element's local name in either format: nothing for what has nothing to see, a line break for a
 // break, the grey placeholder for the rest. It is kept and written back whichever it is.
@@ -50,35 +52,39 @@ export function keptBreakOf(name: string, xml: string): 'page' | 'column' | null
   return type === 'page' || type === 'column' ? type : null;
 }
 
-const ENTITIES: Readonly<Record<string, string>> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-};
-const unescape = (text: string) =>
-  text.replace(/&(amp|lt|gt|quot|apos);/g, (_, name: string) => ENTITIES[name]!);
+const elements = (node: XmlElement) =>
+  node.children.filter((c): c is XmlElement => typeof c !== 'string');
+
+// A Word control's runs' text in reading order: each `w:t`'s characters, a `w:tab` as a tab.
+function wordText(node: XmlElement): string {
+  if (node.local === 't') return node.children.filter((c) => typeof c === 'string').join('');
+  if (node.local === 'tab') return '\t';
+  return elements(node).map(wordText).join('');
+}
+
+// A LibreOffice control's text: every character in it, its list items (the choices) left out.
+function odfText(node: XmlElement): string {
+  return node.children
+    .map((c) => (typeof c === 'string' ? c : c.local === 'list-item' ? '' : odfText(c)))
+    .join('');
+}
 
 /**
  * The text a kept content control inside a paragraph shows (docs/specs/034-text-documents/standard-mapping.md "Shown
  * as it reads"): a Word `w:sdt`'s runs' text in its content, or a LibreOffice `loext:content-control`'s text,
- * its list items left out; null for anything else, or a control showing no text. Reads the kept element's own
- * serialised XML.
+ * its list items left out; null for anything else, a control showing no text, or XML that does not parse.
  */
-export function keptShownText(name: string, xml: string): string | null {
-  let text: string;
-  if (name === 'sdt') {
-    const content =
-      /<(?:[\w.-]+:)?sdtContent\b[^>]*>([\s\S]*)<\/(?:[\w.-]+:)?sdtContent>/.exec(xml)?.[1] ?? '';
-    text = [
-      ...content.matchAll(/<(?:[\w.-]+:)?(t|tab)\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:[\w.-]+:)?t>)/g),
-    ]
-      .map(([, element, inner]) => (element === 'tab' ? '\t' : (inner ?? '')))
-      .join('');
-  } else if (name === 'content-control') {
-    text = xml.replace(/<(?:[\w.-]+:)?list-item\b[^>]*\/>/g, '').replace(/<[^>]*>/g, '');
-  } else return null;
-  const shown = unescape(text);
-  return shown === '' ? null : shown;
+export function keptShownText(name: string, kept: KeptXml): string | null {
+  if (name !== 'sdt' && name !== 'content-control') return null;
+  const parsed = parseXml(keptXmlWithin(kept, {}));
+  if (!parsed.ok) return null;
+  const root = parsed.root;
+  const text =
+    name === 'sdt'
+      ? elements(root)
+          .filter((e) => e.local === 'sdtContent')
+          .map(wordText)
+          .join('')
+      : odfText(root);
+  return text === '' ? null : text;
 }

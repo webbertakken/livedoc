@@ -910,7 +910,7 @@ class InlineReader {
     this.out.push(kept);
     // A kept control showing text counts as those characters for the white space after it (standard-mapping.md
     // "Shown as it reads"); a kept marker holds none.
-    const shown = keptShownText(node.local, kept.xml.xml);
+    const shown = keptShownText(node.local, kept.xml);
     if (shown !== null) this.#afterSpace = /\s$/.test(shown);
   }
 

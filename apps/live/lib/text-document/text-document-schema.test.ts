@@ -102,7 +102,7 @@ describe('textDocumentSchema', () => {
       '<w:sdt><w:sdtPr><w:date/></w:sdtPr><w:sdtContent><w:r><w:t>Nov 24</w:t></w:r></w:sdtContent></w:sdt>';
     const inline = textDocumentSchema.nodes.kept_inline!.create({
       name: 'sdt',
-      xml: { xml, ns: {} },
+      xml: { xml, ns: { w: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main' } },
     });
     expect(inline.type.spec.toDOM!(inline)).toEqual([
       'span',

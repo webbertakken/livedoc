@@ -14,7 +14,7 @@ const ODF = (inner: string) =>
 
 const shape = (inlines: readonly Inline[]) =>
   inlines.map((i) =>
-    i.type === 'run' ? i.text : i.type === 'kept' ? `[${keptShownText(i.name, i.xml.xml)}]` : '?',
+    i.type === 'run' ? i.text : i.type === 'kept' ? `[${keptShownText(i.name, i.xml)}]` : '?',
   );
 
 async function first(bytes: Uint8Array): Promise<Paragraph> {
