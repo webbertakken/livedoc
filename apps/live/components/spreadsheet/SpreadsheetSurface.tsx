@@ -14,7 +14,6 @@ import {
   useSheetController,
   useSheetControllerState,
 } from '@/components/sheets/sheet-controller';
-import { SheetFormulaBar } from '@/components/sheets/SheetFormulaBar';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
 import type { SheetStore } from '@/components/sheets/sheet-store-client';
 import { useAttachedSheetStore } from '@/components/sheets/useAttachedSheetStore';
@@ -37,11 +36,8 @@ import { SummarySlotContext } from './summary-slot';
 import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
-import {
-  SpreadsheetFullScreenProvider,
-  useFullScreenContext,
-  useSpreadsheetFullScreen,
-} from './spreadsheet-full-screen';
+import { SpreadsheetFullScreenProvider, useSpreadsheetFullScreen } from './spreadsheet-full-screen';
+import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
 import { useGridMenuBindings } from './useGridMenuBindings';
 import {
   SpreadsheetZoomProvider,
@@ -346,7 +342,6 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const zoom = useSpreadsheetZoomScale();
   const surfaceKeys = useSpreadsheetSurfaceKeys();
   const office = useGridMenuBindings(actions);
-  const fullScreen = useFullScreenContext();
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
   useEffect(() => {
@@ -369,17 +364,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
       }}
     >
       {/* The surface's areas, for F6 and Ctrl+Alt+. (grid-and-editing.md "Moving around"). */}
-      <div data-region="formulabar" className="flex items-center">
-        <div className="min-w-0 flex-1">
-          <SheetFormulaBar actions={actions} input={input} />
-        </div>
-        {/* The way back from Full Screen without a key, beside the formula bar (D187). */}
-        {fullScreen?.on ? (
-          <Button variant="secondary" size="xs" className="mx-2 shrink-0" onClick={fullScreen.exit}>
-            Exit Full Screen
-          </Button>
-        ) : null}
-      </div>
+      <SpreadsheetFormulaBarRow actions={actions} input={input} />
       <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
         <SheetGrid
           elementId={`sheet-${c.sheet.id}`}

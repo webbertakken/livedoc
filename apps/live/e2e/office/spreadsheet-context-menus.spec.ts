@@ -116,6 +116,24 @@ for (const [name, size] of [
     await expect(page.getByRole('tablist', { name: 'Sheets' })).toBeVisible();
     await expect(grid(page)).toBeVisible();
     await page.screenshot({ path: test.info().outputPath(`${name}.png`), animations: 'disabled' });
+    // A phone's formula bar shows only while a cell is edited (surface.md "Phone and tablet").
+    const nameBox = page.getByRole('textbox', { name: 'Name box' });
+    if (name === 'tablet') {
+      await expect(nameBox).toBeVisible();
+      expectNoPageErrors(pageErrors);
+      return;
+    }
+    await expect(nameBox).toHaveCount(0);
+    await grid(page).click({ position: { x: 120, y: 60 } });
+    await page.keyboard.type('pear');
+    await expect(nameBox).toBeVisible();
+    await page.screenshot({
+      path: test.info().outputPath('phone-editing.png'),
+      animations: 'disabled',
+    });
+    await page.keyboard.press('Enter');
+    await expect(nameBox).toHaveCount(0);
+    await expect(grid(page).getByText('pear', { exact: true })).toBeVisible();
     expectNoPageErrors(pageErrors);
   });
 }

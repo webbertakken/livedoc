@@ -192,9 +192,13 @@ Version History (the shell's). Each is specified with its area.
 
 ## Phone and tablet
 
-- A tablet (768 px and up) keeps every band; the toolbar folds into More sooner.
-- A phone shows the title row (name and a menu button holding the menus), the formula bar when a cell is edited,
-  the grid and the sheet bar; formatting opens as a sheet from the foot (Text, Cell tabs, as Google's app).
+Phone and tablet are the office shell's ([Office shell](../004-interface-design/office-shell.md#phone-and-tablet)).
+
+- A tablet keeps every band; the toolbar folds into More sooner.
+- A phone shows the shell's one-line title row (its menus in More), the shell's toolbar as one row that scrolls
+  sideways, the grid and the sheet bar. Formatting is the toolbar's, as every office kind formats on a phone.
+- On a phone the formula bar shows only while a cell is edited, giving the grid the room; it comes and goes with the
+  edit (ruled by the director, 2026-11-24).
 
 ## Accessibility
 
