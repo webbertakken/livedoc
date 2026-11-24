@@ -144,7 +144,7 @@ export function DebouncedText({
     left !== null && maxLength !== undefined && draft.length >= maxLength * 0.9 ? (
       <span
         aria-live="polite"
-        className={`mt-1 block text-right text-[11px] tabular-nums ${left === 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400'}`}
+        className={`mt-1 block text-right text-supporting tabular-nums ${left === 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400'}`}
       >
         {left === 0
           ? `${maxLength} characters, the most it takes`
@@ -195,7 +195,7 @@ export function PersonPicker({
     <Select
       id={id}
       className="w-full"
-      selectClassName="text-[13px]"
+      selectClassName="text-body"
       disabled={disabled}
       value={current?.id ?? ''}
       onChange={(e) => {
@@ -228,7 +228,7 @@ export function PriorityPicker({
     <Select
       id={id}
       className="w-full"
-      selectClassName="text-[13px]"
+      selectClassName="text-body"
       disabled={disabled}
       value={typeof value === 'string' ? value : ''}
       onChange={(e) => void onSave(e.target.value || undefined)}
@@ -344,7 +344,7 @@ export function EstimateSelect({
     <Select
       id={id}
       className="w-full"
-      selectClassName="text-[13px]"
+      selectClassName="text-body"
       disabled={disabled}
       value={current === undefined ? '' : String(current)}
       onChange={(e) => void onSave(e.target.value === '' ? undefined : Number(e.target.value))}
@@ -403,9 +403,9 @@ export function ChecklistEditor({
   const save = (next: Row[]) => onSave(next.length ? next : undefined);
   const done = rows.filter((r) => r.done).length;
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       {rows.length > 0 ? (
-        <div className="mb-1 flex items-center gap-2.5">
+        <div className="mb-1 flex items-center gap-3">
           <span
             className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
             aria-hidden
@@ -415,7 +415,7 @@ export function ChecklistEditor({
               style={{ width: `${(done / rows.length) * 100}%` }}
             />
           </span>
-          <span className="text-[12px] tabular-nums text-slate-500 dark:text-slate-400">
+          <span className="text-supporting tabular-nums text-slate-500 dark:text-slate-400">
             {done} of {rows.length}
           </span>
         </div>
@@ -424,7 +424,7 @@ export function ChecklistEditor({
         {rows.map((r, i) => (
           <li
             key={i}
-            className="group -mx-1.5 flex items-center gap-2.5 rounded-md px-1.5 py-1 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            className="group -mx-1.5 flex items-center gap-3 rounded-control px-2 py-1 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
           >
             <button
               type="button"
@@ -433,7 +433,7 @@ export function ChecklistEditor({
               aria-label={r.text}
               disabled={disabled}
               onClick={() => void save(rows.map((x, j) => (j === i ? { ...x, done: !x.done } : x)))}
-              className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border-2 transition enabled:cursor-pointer ${
+              className={`flex size-icon-toolbar shrink-0 items-center justify-center rounded-control border-2 transition enabled:cursor-pointer ${
                 r.done
                   ? 'border-brand-700 bg-brand-700 text-white dark:border-brand-600 dark:bg-brand-600'
                   : 'border-slate-300 hover:border-brand-500 dark:border-slate-600'
@@ -443,7 +443,7 @@ export function ChecklistEditor({
             </button>
             {disabled ? (
               <span
-                className={`flex-1 text-[13px] ${r.done ? 'text-slate-500 dark:text-slate-400 line-through' : ''}`}
+                className={`flex-1 text-body ${r.done ? 'text-slate-500 dark:text-slate-400 line-through' : ''}`}
               >
                 {r.text}
               </span>
@@ -453,7 +453,7 @@ export function ChecklistEditor({
                 defaultValue={r.text}
                 key={r.text}
                 maxLength={200}
-                className={`min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-[13px] outline-none focus:bg-white focus:ring-1 focus:ring-brand-300 dark:focus:bg-slate-900 ${
+                className={`min-w-0 flex-1 rounded-control bg-transparent px-1 py-0.5 text-body outline-none focus:bg-white focus:ring-1 focus:ring-brand-300 dark:focus:bg-slate-900 ${
                   r.done ? 'text-slate-400 line-through' : 'text-slate-800 dark:text-slate-100'
                 }`}
                 onKeyDown={(e) => {
@@ -471,7 +471,7 @@ export function ChecklistEditor({
               <button
                 type="button"
                 aria-label={`Remove ${r.text}`}
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 opacity-0 transition hover:bg-slate-200 hover:text-slate-700 focus:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-700 dark:hover:text-slate-200 [@media(pointer:coarse)]:opacity-100"
+                className="flex size-chip shrink-0 items-center justify-center rounded-control text-slate-400 opacity-0 transition hover:bg-slate-200 hover:text-slate-700 focus:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-700 dark:hover:text-slate-200 [@media(pointer:coarse)]:opacity-100"
                 onClick={() => void save(rows.filter((_, j) => j !== i))}
               >
                 <CloseIcon size={10} />
@@ -482,18 +482,18 @@ export function ChecklistEditor({
       </ul>
       {disabled ? (
         rows.length === 0 ? (
-          <span className="text-[13px] text-slate-500 dark:text-slate-400">No steps</span>
+          <span className="text-body text-slate-500 dark:text-slate-400">No steps</span>
         ) : null
       ) : (
-        <label className="-mx-1.5 flex items-center gap-2.5 rounded-md px-1.5 py-1 text-slate-500 focus-within:bg-slate-50 dark:text-slate-400 dark:focus-within:bg-slate-800/60">
-          <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center" aria-hidden>
+        <label className="-mx-1.5 flex items-center gap-3 rounded-control px-2 py-1 text-slate-500 focus-within:bg-slate-50 dark:text-slate-400 dark:focus-within:bg-slate-800/60">
+          <span className="flex size-icon-toolbar shrink-0 items-center justify-center" aria-hidden>
             <PlusIcon size={14} />
           </span>
           <input
             value={draft}
             placeholder="Add a step"
             aria-label="Add a step"
-            className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-[13px] text-slate-800 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400"
+            className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-body text-slate-800 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400"
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && draft.trim()) {

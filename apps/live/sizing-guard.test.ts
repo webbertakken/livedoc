@@ -71,6 +71,18 @@ const SIZED_PATHS = [
   'components/plan/views',
   // A board's header widgets, their zone and picker.
   'components/plan/widgets',
+  // A card's panel: its fields, description, comments and linked cards.
+  'components/plan/item-field-editors.tsx',
+  'components/plan/ItemComments.tsx',
+  'components/plan/ItemDescription.tsx',
+  'components/plan/ItemFieldEditor.tsx',
+  'components/plan/ItemPanel.tsx',
+  'components/plan/ItemPanelHeaderParts.tsx',
+  'components/plan/ItemPanelLayout.tsx',
+  'components/plan/ItemTrailCrumbs.tsx',
+  'components/plan/LinkedActionBanner.tsx',
+  'components/plan/LinkedCardField.tsx',
+  'components/plan/LinkedCards.tsx',
 ];
 
 // Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.

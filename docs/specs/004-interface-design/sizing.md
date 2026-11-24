@@ -31,6 +31,8 @@ respondents see it and a slide keep the sizes their author chose.
 - A board's header widgets are chrome: 28 px pills in a 36 px band, figures regular in the ink, not in weight.
 - A widget's × is a 16 px mark with a 24 px reach, so it sits on the widget's corner yet meets the floor.
 - The board picker's pictures of each board (`board-previews.tsx`) are drawn art.
+- A card's panel is chrome: its title the dialog title's step, its tabs medium only when chosen.
+- A card shown as a slide (`ItemSlideView`) is a slide, so it is content and keeps its own sizes.
 - A Dashboard tab is a page, never zoomed, so it is chrome on the scale: its cards' names, lines and controls, its
   slots' toolbars and its menus (D239, default).
 - A dashboard's Title card is the page's title (`text-page-title`, its line `text-body`); a Note card's title is a
@@ -157,6 +159,8 @@ A surface names the token, never the number, so the scale changes in one place.
 - A gap or a side padding is named by its number (`gap-2`, `px-3`), which must be a step.
 - A box under 12 px or over 36 px (a hairline, a dot, an avatar, a panel) is layout, not the scale, and passes.
 - It reads class strings only; sizes set under a coarse pointer are touch's and pass.
+- A field reads 16 px on a phone, so iOS never zooms in on it (`globals.css`); a picker drawn as a button among
+  fields takes the same floor (`max-sm:text-[16px]`), and that alone passes under a width.
 - The paths it covers grow as each surface moves to the scale, and in the end cover every app.
 - A moved folder may name exceptions: drawn art, or a part that moves with a later group; a stale one fails the run.
 

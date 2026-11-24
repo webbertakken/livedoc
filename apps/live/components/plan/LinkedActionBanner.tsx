@@ -14,18 +14,18 @@ export function LinkedActionBanner({
   return (
     <div
       data-testid="linked-action-banner"
-      className="mb-4 flex items-center gap-2.5 rounded-lg bg-brand-50/70 px-3 py-2 text-[12.5px] text-slate-700 ring-1 ring-brand-100 dark:bg-brand-500/10 dark:text-slate-200 dark:ring-brand-500/20"
+      className="mb-4 flex items-center gap-3 rounded-menu bg-brand-50/70 px-3 py-2 text-supporting text-slate-700 ring-1 ring-brand-100 dark:bg-brand-500/10 dark:text-slate-200 dark:ring-brand-500/20"
     >
       <span className="text-brand-700 dark:text-brand-300" aria-hidden>
         <ActionMenuIcon />
       </span>
       <span className="min-w-0 flex-1 truncate">
-        Linked to an action on <span className="font-semibold">{tabName}</span>
+        Linked to an action on <span>{tabName}</span>
       </span>
       <button
         type="button"
         onClick={onShowOnCanvas}
-        className="shrink-0 cursor-pointer rounded-md px-2 py-1 text-[12px] font-semibold text-brand-700 transition hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-500/15"
+        className="shrink-0 cursor-pointer rounded-control px-2 py-1 text-supporting text-brand-700 transition hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-500/15"
       >
         Show on Canvas
       </button>

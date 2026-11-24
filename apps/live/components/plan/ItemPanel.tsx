@@ -52,7 +52,7 @@ const DETAILS_TAB = 'details';
 const NO_GROUPS: readonly LinkedGroup[] = [];
 
 const TAB_CLASS =
-  'relative shrink-0 whitespace-nowrap px-1 pb-2 pt-1 text-[13px] font-medium transition aria-selected:text-brand-700 dark:aria-selected:text-brand-300';
+  'relative shrink-0 whitespace-nowrap px-1 pb-2 pt-1 text-body transition aria-selected:font-medium aria-selected:text-brand-700 dark:aria-selected:text-brand-300';
 
 type ItemPanelProps = {
   item: Item;
@@ -251,7 +251,7 @@ function ItemPanelContent({
       <ItemKeyTag itemKey={item.key} />
       {isFlagged(item) ? (
         <span
-          className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+          className="flex items-center gap-1 rounded-full px-2 py-0.5 text-supporting"
           style={{ color: FLAG_COLOUR, backgroundColor: `${FLAG_COLOUR}14` }}
         >
           <PlanTypeGlyph glyph="flag" size={12} color={FLAG_COLOUR} />
@@ -289,7 +289,9 @@ function ItemPanelContent({
       {f === 'assignee' && lockedAssignee ? (
         <>
           <ItemFieldEditor f={f} ctx={{ ...ctx, canEdit: false }} />
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Set on the action</p>
+          <p className="mt-1 text-supporting text-slate-500 dark:text-slate-400">
+            Set on the action
+          </p>
         </>
       ) : (
         <ItemFieldEditor f={f} ctx={ctx} />
@@ -324,7 +326,7 @@ function ItemPanelContent({
       ) : current.fields.length > 0 ? (
         current.fields.map(mainField)
       ) : (
-        <p className="py-6 text-center text-[13px] text-slate-500 dark:text-slate-400">
+        <p className="py-6 text-center text-body text-slate-500 dark:text-slate-400">
           Nothing on this tab yet. Edit the card type to add fields to it.
         </p>
       )}
@@ -337,7 +339,7 @@ function ItemPanelContent({
       {mobile ? trailRow : null}
       {header}
       <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1 overflow-y-auto px-4 pb-8 pt-2 sm:px-8">
+        <div className="min-w-0 flex-1 overflow-y-auto px-4 pb-8 pt-2 sm:px-6">
           {linkedPlace && linkedActions ? (
             <LinkedActionBanner
               tabName={linkedPlace.tabName}
@@ -361,13 +363,13 @@ function ItemPanelContent({
             placeholder="Title"
             disabled={!canEdit}
             onSave={(v) => onSave('title', v)}
-            className="-mx-2 mb-5 w-[calc(100%+1rem)] rounded-lg border border-transparent bg-transparent px-2 py-1 text-[22px] font-semibold leading-snug tracking-tight text-slate-900 outline-none transition hover:bg-slate-50 focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:text-slate-50 dark:hover:bg-slate-800/50 dark:focus:bg-slate-950"
+            className="-mx-2 mb-5 w-[calc(100%+1rem)] rounded-menu border border-transparent bg-transparent px-2 py-1 text-dialog-title text-slate-900 outline-none transition hover:bg-slate-50 focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:text-slate-50 dark:hover:bg-slate-800/50 dark:focus:bg-slate-950"
           />
           {shownTabs.length > 1 ? (
             <div
               role="tablist"
               aria-label="Item sections"
-              className="mb-6 flex gap-5 overflow-x-auto overflow-y-hidden border-b border-slate-200 dark:border-slate-700"
+              className="mb-6 flex gap-6 overflow-x-auto overflow-y-hidden border-b border-slate-200 dark:border-slate-700"
               onKeyDown={(e) => {
                 if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
                 e.preventDefault();
@@ -411,9 +413,9 @@ function ItemPanelContent({
         {mobile ? null : (
           <aside
             aria-label={detailsLabelOf(type)}
-            className="m-3 ml-0 w-80 shrink-0 overflow-y-auto rounded-xl bg-slate-50 px-4 py-4 ring-1 ring-slate-200/70 dark:bg-slate-800/40 dark:ring-slate-700/60"
+            className="m-3 ml-0 w-80 shrink-0 overflow-y-auto rounded-surface bg-slate-50 px-4 py-4 ring-1 ring-slate-200/70 dark:bg-slate-800/40 dark:ring-slate-700/60"
           >
-            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h3 className="mb-2 text-supporting text-slate-500 dark:text-slate-400">
               {detailsLabelOf(type)}
             </h3>
             {details.map(detailRow)}

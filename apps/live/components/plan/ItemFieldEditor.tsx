@@ -149,7 +149,7 @@ export function ItemFieldEditor({ f, ctx }: { f: string; ctx: ItemFieldContext }
           <Select
             id={id}
             className="w-full"
-            selectClassName={`text-[13px] font-medium ${phase ? 'pl-6' : ''}`}
+            selectClassName={`text-body ${phase ? 'pl-6' : ''}`}
             disabled={disabled}
             value={status}
             onChange={(e) => void onSave('status', e.target.value || undefined)}
@@ -203,7 +203,7 @@ export function ItemFieldEditor({ f, ctx }: { f: string; ctx: ItemFieldContext }
         <div className="flex flex-col gap-1">
           <DateField id={id} value={value} disabled={disabled} onSave={save} />
           {late ? (
-            <span className="text-[12px] text-amber-700 dark:text-amber-300" role="note">
+            <span className="text-supporting text-amber-700 dark:text-amber-300" role="note">
               Starts after it is due
             </span>
           ) : null}
