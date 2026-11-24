@@ -36,7 +36,7 @@ export function ApiErrorPage({
 }: ApiErrorPageProps) {
   return (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
-      <div className="pointer-events-auto flex max-w-md animate-pop-in flex-col items-center rounded-xl border border-slate-200 bg-white px-8 py-10 text-center shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900">
+      <div className="pointer-events-auto flex max-w-md animate-pop-in flex-col items-center rounded-surface border border-slate-200 bg-white px-6 py-10 text-center shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-amber-500 dark:bg-amber-500/15">
           <Glyph size={28} units={24}>
             <path d="M10.3 3.3 1.8 18a1.5 1.5 0 0 0 1.3 2.3h17.8a1.5 1.5 0 0 0 1.3-2.3L13.7 3.3a1.5 1.5 0 0 0-2.6 0Z" />
@@ -44,11 +44,9 @@ export function ApiErrorPage({
             <path d="M12 17h.01" />
           </Glyph>
         </div>
-        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-          {eyebrow}
-        </p>
-        <h1 className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">{title}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{message}</p>
+        <p className="mt-4 text-supporting text-amber-600 dark:text-amber-400">{eyebrow}</p>
+        <h1 className="mt-1 text-dialog-title text-slate-900 dark:text-slate-100">{title}</h1>
+        <p className="mt-2 text-body text-slate-600 dark:text-slate-400">{message}</p>
         <Button size="md" onClick={onRetry} className="mt-6 shadow-sm">
           <RetryIcon />
           {retryLabel}

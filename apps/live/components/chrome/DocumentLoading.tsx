@@ -94,25 +94,23 @@ export function DocumentLoading({ stage = 'opening' }: { stage?: DocumentLoading
           {/* Keyed on the stage so the label re-enters when "Creating"
               gives way to "Opening". */}
           <div key={stage} className="ldl-enter flex flex-col items-center gap-1 text-center">
-            <p className="text-base font-semibold tracking-tight text-slate-800 dark:text-slate-100">
-              {copy.title}
-            </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{copy.detail}</p>
+            <p className="text-panel-title text-slate-800 dark:text-slate-100">{copy.title}</p>
+            <p className="text-body text-slate-500 dark:text-slate-400">{copy.detail}</p>
           </div>
           <LoadingSweep className="mt-5 w-40" />
         </div>
 
         {!online ? (
-          <p className="ldl-enter mt-6 text-xs text-slate-500 dark:text-slate-400">
+          <p className="ldl-enter mt-6 text-supporting text-slate-500 dark:text-slate-400">
             You&rsquo;re offline. Waiting for the connection&hellip;
           </p>
         ) : healing ? (
-          <p className="ldl-enter mt-6 text-xs text-slate-500 dark:text-slate-400">
+          <p className="ldl-enter mt-6 text-supporting text-slate-500 dark:text-slate-400">
             Still working on it. Trying a fresh start.
           </p>
         ) : slow ? (
           <div className="ldl-enter mt-6 flex flex-col items-center gap-2">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               This is taking longer than usual.
             </p>
             <Button variant="secondary" size="xs" onClick={() => window.location.reload()}>

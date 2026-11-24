@@ -271,7 +271,7 @@ export function AuthFlow({ kind }: { kind: AuthFlowKind }) {
             type="button"
             onClick={() => leave(newAccountDestination)}
             disabled={busy}
-            className={`w-full text-center text-sm ${CROSS_LINK}`}
+            className={`w-full text-center text-body ${CROSS_LINK}`}
           >
             Not now
           </button>
@@ -333,10 +333,7 @@ function NameField({
 }) {
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
-      >
+      <label htmlFor={id} className="mb-1 block text-body text-slate-700 dark:text-slate-300">
         Your name
       </label>
       <TextInput

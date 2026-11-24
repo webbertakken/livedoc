@@ -74,7 +74,7 @@ export function NewVersionPrompt({
       // The toast's look, not its stack (docs/specs/004-interface-design/toasts.md "Out of scope"); the toasts
       // stand on it, as on any bottom chrome.
       data-toast-floor=""
-      className={`fixed bottom-20 left-1/2 z-[var(--z-chrome)] flex w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 animate-toast-in items-center gap-3 border-slate-200 px-4 py-3 text-sm dark:border-slate-700 ${TOAST_SURFACE}`}
+      className={`fixed bottom-20 left-1/2 z-[var(--z-chrome)] flex w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 animate-toast-in items-center gap-3 border-slate-200 px-4 py-3 text-body dark:border-slate-700 ${TOAST_SURFACE}`}
     >
       <p className="min-w-0 flex-1">{COPY[phase]}</p>
       <Button size="sm" disabled={phase === 'saving'} onClick={() => void onReload()}>

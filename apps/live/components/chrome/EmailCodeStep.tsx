@@ -61,12 +61,12 @@ export function EmailCodeStep({
       }}
       className="space-y-4"
     >
-      <p className="text-sm text-slate-600 dark:text-slate-400">
+      <p className="text-body text-slate-600 dark:text-slate-400">
         We sent a code to <strong className="text-slate-900 dark:text-slate-100">{email}</strong>.
         Use the newest code if you asked for more than one.
       </p>
       {outboxHref ? (
-        <p className="text-sm">
+        <p className="text-body">
           <a href={outboxHref} target="_blank" rel="noreferrer" className={LINK}>
             This preview sends no email: see the code
           </a>
@@ -75,7 +75,7 @@ export function EmailCodeStep({
       <div>
         <label
           htmlFor={fieldId}
-          className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
+          className="mb-1.5 block text-body text-slate-700 dark:text-slate-300"
         >
           6-digit code
         </label>
@@ -96,13 +96,13 @@ export function EmailCodeStep({
             // The sixth digit sends it: nobody needs to reach for the button.
             if (next.length === EMAIL_CODE_LENGTH && !busy) onSubmit(next);
           }}
-          className="text-center text-xl font-semibold tracking-[0.4em]"
+          className="text-center text-dialog-title tabular-nums"
         />
       </div>
       <Button type="submit" size="md" disabled={busy || !complete} className="w-full shadow-sm">
         {busy ? 'Signing in…' : submitLabel}
       </Button>
-      <div className="flex flex-wrap justify-between gap-2 text-sm">
+      <div className="flex flex-wrap justify-between gap-2 text-body">
         {onBack ? (
           <button type="button" onClick={onBack} disabled={busy} className={LINK}>
             {backLabel}

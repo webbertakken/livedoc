@@ -162,7 +162,7 @@ export function NoteBox({
               ? { transform: chrome, transformOrigin: 'top left', left: -6 / zoom, top: -6 / zoom }
               : undefined
           }
-          className="pointer-events-auto absolute -left-1.5 -top-1.5 z-20 flex h-4 w-4 items-center justify-center rounded-sm border border-white/70 bg-slate-900/80 text-[9px] font-bold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="pointer-events-auto absolute -left-1.5 -top-1.5 z-20 flex size-icon-row items-center justify-center rounded-control border border-white/70 bg-slate-900/80 text-glyph text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           {ticked ? '✓' : ''}
         </button>
@@ -185,7 +185,7 @@ export function NoteBox({
               ? { transform: chrome, transformOrigin: 'bottom left', width: `${zoom * 100}%` }
               : undefined
           }
-          className="pointer-events-auto absolute inset-x-0 bottom-0 z-10 w-full rounded-b-sm border border-brand-400 bg-white px-1 py-0.5 text-[11px] leading-tight text-slate-900 outline-none"
+          className="pointer-events-auto absolute inset-x-0 bottom-0 z-10 w-full rounded-b-control border border-brand-400 bg-white px-1 py-0.5 text-supporting text-slate-900 outline-none"
         />
       ) : (
         // The chip clamps to two lines; the Tooltip gives the whole words.
@@ -204,7 +204,7 @@ export function NoteBox({
                 ? { transform: chrome, transformOrigin: 'top left', width: `${zoom * 100}%` }
                 : {}),
             }}
-            className={`pointer-events-auto absolute inset-x-0 z-10 block w-full line-clamp-2 break-words rounded-b-sm bg-slate-900/85 px-1 py-0.5 text-left leading-tight text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white ${
+            className={`pointer-events-auto absolute inset-x-0 z-10 block w-full line-clamp-2 break-words rounded-b-control bg-slate-900/85 px-1 py-0.5 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white ${
               ticked ? '' : 'opacity-40'
             }`}
           >

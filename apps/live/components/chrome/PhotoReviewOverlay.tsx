@@ -302,7 +302,7 @@ export function PhotoReviewOverlay({
         // A minimum size so the frame is THERE from the first paint, before
         // the image has any dimensions of its own to give it — and a flex
         // centre, because the picture inside it is its own size.
-        className="relative flex min-h-[40vmin] min-w-[40vmin] items-center justify-center overflow-hidden rounded-lg bg-slate-800/60 shadow-2xl"
+        className="relative flex min-h-[40vmin] min-w-[40vmin] items-center justify-center overflow-hidden rounded-menu bg-slate-800/60 shadow-2xl"
       >
         {/*
           THE BOXES ARE MEASURED AGAINST THE PICTURE, NOT THE FRAME. Every box
@@ -384,7 +384,7 @@ export function PhotoReviewOverlay({
                     <span
                       key={`seen-${s.id}`}
                       data-seen-on={wall.seenOn.get(s.id)}
-                      className="pointer-events-none absolute -translate-y-full rounded bg-slate-900/85 px-1.5 py-0.5 text-[11px] font-medium text-white"
+                      className="pointer-events-none absolute -translate-y-full rounded-control bg-slate-900/85 px-2 py-0.5 text-supporting text-white"
                       style={{
                         left: `${(s.x / frame.width) * 100}%`,
                         top: `${(s.y / frame.height) * 100}%`,
@@ -415,11 +415,11 @@ export function PhotoReviewOverlay({
           // box is a blank overlay.
           <div
             data-testid="photo-loading"
-            className="absolute inset-0 flex animate-pulse items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400"
+            className="absolute inset-0 flex animate-pulse items-center justify-center gap-2 text-supporting text-slate-500 dark:text-slate-400"
           >
             <span
               aria-hidden
-              className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-slate-500 border-t-brand-400"
+              className="size-icon-chevron shrink-0 animate-spin rounded-full border-2 border-slate-500 border-t-brand-400"
             />
             Loading your photo…
           </div>
@@ -464,7 +464,7 @@ export function PhotoReviewOverlay({
         <div className="pointer-events-none flex items-center justify-center gap-3">
           <p
             data-tour-id="photo-count"
-            className="pointer-events-auto rounded-full bg-slate-900/85 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur"
+            className="pointer-events-auto rounded-full bg-slate-900/85 px-3 py-1.5 text-supporting text-white shadow-lg backdrop-blur"
           >
             {detecting
               ? 'Finding the stickies…'
@@ -483,7 +483,7 @@ export function PhotoReviewOverlay({
           <button
             type="button"
             onClick={onCancel}
-            className="pointer-events-auto rounded-full border border-white/40 bg-slate-900/70 px-4 py-1.5 text-sm text-white shadow-lg backdrop-blur hover:bg-slate-900/90"
+            className="pointer-events-auto rounded-full border border-white/40 bg-slate-900/70 px-4 py-1.5 text-body text-white shadow-lg backdrop-blur hover:bg-slate-900/90"
           >
             Cancel
           </button>
@@ -492,7 +492,7 @@ export function PhotoReviewOverlay({
             onClick={confirm}
             disabled={wall ? wall.adding === 0 : edits.ticked.size === 0}
             data-tour-id="photo-add"
-            className={`pointer-events-auto rounded-full bg-brand-700 px-4 py-1.5 text-sm font-semibold text-white shadow-lg hover:bg-brand-800 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`}
+            className={`pointer-events-auto rounded-full bg-brand-700 px-4 py-1.5 text-body text-white shadow-lg hover:bg-brand-800 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`}
           >
             {wall
               ? `Add ${wall.adding} ${wall.adding === 1 ? 'note' : 'notes'} from ${wall.names.length} photos`

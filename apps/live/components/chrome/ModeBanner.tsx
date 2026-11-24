@@ -51,7 +51,7 @@ export function ModeBanner({
   return (
     <TopCenterBanner
       tone="brand"
-      className="gap-3 py-1.5 pl-3 pr-1.5 text-sm"
+      className="gap-3 py-1.5 pl-3 pr-2 text-body"
       onPointerDown={(e) => e.stopPropagation()}
     >
       <span data-mode-message="" className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export function ModeBanner({
       <button
         type="button"
         onClick={onAction}
-        className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+        className="rounded-full bg-white px-3 py-1 text-body text-slate-700 transition hover:bg-slate-50"
       >
         {actionLabel}
       </button>

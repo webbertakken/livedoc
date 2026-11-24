@@ -52,7 +52,7 @@ export function PhotoWallStrip({
               aria-current={i === index ? 'step' : undefined}
               aria-label={`Photo ${i + 1} of ${names.length}: ${name}`}
               onClick={() => onGo(i)}
-              className={`flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+              className={`flex h-row min-w-7 items-center justify-center rounded-full px-2 text-supporting tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
                 i === index ? 'bg-white text-slate-900' : 'text-white hover:bg-white/15'
               }`}
             >
@@ -61,7 +61,7 @@ export function PhotoWallStrip({
           </li>
         ))}
       </ol>
-      <p className="pointer-events-auto rounded-full bg-slate-900/85 px-3 py-1 text-xs text-white shadow-lg backdrop-blur">
+      <p className="pointer-events-auto rounded-full bg-slate-900/85 px-3 py-1 text-supporting text-white shadow-lg backdrop-blur">
         Read left to right in file-name order
         {skipped > 0 ? ` · ${skipped} ${skipped === 1 ? 'file' : 'files'} left out` : ''}
       </p>

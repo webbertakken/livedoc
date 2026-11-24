@@ -24,7 +24,7 @@ export function UnreadTip({
     <div
       data-testid="photo-unread-tip"
       role="status"
-      className="pointer-events-auto flex max-w-[min(34rem,90vw)] flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl bg-slate-900/90 px-4 py-2.5 text-center text-xs text-white shadow-lg backdrop-blur"
+      className="pointer-events-auto flex max-w-[min(34rem,90vw)] flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-surface bg-slate-900/90 px-4 py-2.5 text-center text-supporting text-white shadow-lg backdrop-blur"
     >
       <p>
         {unread} of {total} notes couldn&rsquo;t be read automatically. A closer, sharper photo

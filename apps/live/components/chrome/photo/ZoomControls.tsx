@@ -18,7 +18,7 @@ export function ZoomControls({
   onFit: () => void;
 }) {
   const button =
-    'flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-sm text-white hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white';
+    'flex h-row min-w-7 items-center justify-center rounded-full px-2 text-body text-white hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white';
   return (
     <div
       data-testid="photo-zoom"
@@ -41,7 +41,7 @@ export function ZoomControls({
       <span
         aria-live="polite"
         data-testid="photo-zoom-level"
-        className="w-12 text-center text-xs tabular-nums text-slate-200"
+        className="w-12 text-center text-supporting tabular-nums text-slate-200"
       >
         {Math.round(zoom * 100)}%
       </span>
@@ -65,7 +65,7 @@ export function ZoomControls({
           aria-label="Show the whole photo"
           disabled={zoom === 1}
           onClick={onFit}
-          className={`${button} text-xs`}
+          className={`${button} text-supporting`}
         >
           Fit
         </button>

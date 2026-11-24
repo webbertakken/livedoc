@@ -51,7 +51,7 @@ export function BoxEditControls({
           data-testid={`box-handle-${corner}`}
           aria-hidden
           onPointerDown={(e) => onResizeStart(e, corner)}
-          className="pointer-events-auto absolute z-30 h-3 w-3 rounded-sm border-2 border-white bg-brand-500 shadow"
+          className="pointer-events-auto absolute z-30 size-icon-chevron rounded-control border-2 border-white bg-brand-500 shadow"
           style={{ left, top, cursor, transform: `translate(-50%, -50%) ${unzoom}` }}
         />
       ))}
@@ -69,7 +69,7 @@ export function BoxEditControls({
             aria-checked={ticked}
             aria-label={includeLabel}
             onClick={onToggle}
-            className="mr-1 flex h-5 w-5 items-center justify-center rounded-sm border border-white/70 text-[10px] font-bold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white"
+            className="mr-1 flex size-icon-title items-center justify-center rounded-control border border-white/70 text-supporting text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white"
           >
             {ticked ? '✓' : ''}
           </button>
@@ -82,7 +82,7 @@ export function BoxEditControls({
                   aria-label={name}
                   aria-pressed={note.kind === kind}
                   onClick={() => onKind(note.kind)}
-                  className={`h-5 w-5 rounded-full border-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white ${
+                  className={`size-icon-title rounded-full border-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white ${
                     note.kind === kind ? 'border-white' : 'border-transparent'
                   }`}
                   style={{ background: note.fill }}
@@ -97,7 +97,7 @@ export function BoxEditControls({
               type="button"
               aria-label="Delete this box"
               onClick={onDelete}
-              className="ml-1 text-sm text-white hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white"
+              className="ml-1 text-body text-white hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white"
             >
               ×
             </GlyphDisc>
