@@ -55,7 +55,7 @@ test('a heading’s link is copied, linked to, gone to and kept in the file', as
   );
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('Alt+Enter');
-  const heading = body.locator('p', { hasText: 'Chapter one' });
+  const heading = body.locator('p', { hasText: /^Chapter one$/ });
   await expect.poll(async () => (await heading.boundingBox())?.y ?? -1).toBeGreaterThan(0);
   await expect.poll(async () => (await heading.boundingBox())?.y ?? 9999).toBeLessThan(900);
 
