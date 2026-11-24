@@ -34,7 +34,7 @@ type Kind =
   | { kind: 'action' };
 
 const ROW =
-  'flex w-full min-w-0 cursor-pointer items-center gap-2.5 px-3 py-2 text-left text-[13px] outline-none transition-colors motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-40';
+  'flex min-h-row w-full min-w-0 cursor-pointer items-center gap-2 px-3 py-1 text-left text-body outline-none transition-colors motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-40';
 const ON = 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-100';
 const OFF_MENU = 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70';
 const OFF_BOARD = 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]';
@@ -98,7 +98,7 @@ export function OptionRows({
       ref={box}
       role={groupRole}
       aria-label={label}
-      className={`flex flex-col divide-y overflow-hidden rounded-lg border ${
+      className={`flex flex-col divide-y overflow-hidden rounded-menu border ${
         palette
           ? ''
           : 'divide-slate-100 border-slate-200 dark:divide-slate-800 dark:border-slate-700'
@@ -146,10 +146,10 @@ export function OptionRows({
               </span>
             ) : null}
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className={`truncate ${on ? 'font-semibold' : 'font-medium'}`}>{r.label}</span>
+              <span className={`truncate ${on ? 'font-medium' : ''}`}>{r.label}</span>
               {r.detail ? (
                 <span
-                  className={`truncate text-[11px] ${palette ? '' : 'text-slate-500 dark:text-slate-400'}`}
+                  className={`truncate text-supporting ${palette ? '' : 'text-slate-500 dark:text-slate-400'}`}
                   style={palette ? { color: palette.muted } : undefined}
                 >
                   {r.detail}
@@ -158,13 +158,13 @@ export function OptionRows({
             </span>
             {r.trailing}
             {kind.kind === 'single' ? (
-              <span aria-hidden className="flex h-4 w-4 shrink-0 items-center justify-center">
+              <span aria-hidden className="flex size-icon-row shrink-0 items-center justify-center">
                 {on ? <CheckIcon size={14} /> : null}
               </span>
             ) : kind.kind === 'multiple' ? (
               <span
                 aria-hidden
-                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${
+                className={`flex size-icon-row shrink-0 items-center justify-center rounded-control ${
                   on
                     ? 'bg-brand-700 text-white dark:bg-brand-600'
                     : 'border border-slate-300 dark:border-slate-600'

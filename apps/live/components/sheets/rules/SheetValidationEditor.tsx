@@ -240,8 +240,7 @@ export function settingsOf(
   }
 }
 
-const label =
-  'block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400';
+const label = 'block text-supporting text-slate-500 dark:text-slate-400';
 
 export function SheetValidationEditor({
   actions,
@@ -320,11 +319,11 @@ export function SheetValidationEditor({
       onClose={onClose}
     >
       <div
-        className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 text-[13px] text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+        className="flex flex-col gap-3 rounded-menu border border-slate-200 bg-white p-3 text-body text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <h2 className="text-sm font-semibold">Data Validation</h2>
+        <h2 className="text-panel-title">Data Validation</h2>
         <label className="flex flex-col gap-1">
           <span className={label}>Apply to Range</span>
           <TextInput value={d.range} onChange={(e) => set({ range: e.target.value })} />
@@ -344,12 +343,12 @@ export function SheetValidationEditor({
           </Select>
         </div>
         {d.is === 'list' ? (
-          <div className="flex flex-col gap-1.5" role="list" aria-label="Options">
+          <div className="flex flex-col gap-2" role="list" aria-label="Options">
             {d.opts.map((o, i) => (
               <div
                 key={o.key}
                 role="listitem"
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-2"
                 draggable={false}
                 onDragOver={(e) => dragFrom !== null && e.preventDefault()}
                 onDrop={() => {
@@ -433,7 +432,7 @@ export function SheetValidationEditor({
           </div>
         ) : null}
         {ops && op ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Select
               aria-label="Condition"
               value={op.id}
@@ -452,7 +451,7 @@ export function SheetValidationEditor({
         <button
           type="button"
           aria-expanded={advanced}
-          className="flex cursor-pointer items-center gap-1 text-left text-[12px] font-semibold text-slate-600 dark:text-slate-300"
+          className="flex h-row cursor-pointer items-center gap-1 text-left text-body text-slate-600 dark:text-slate-300"
           onClick={() => setAdvanced(!advanced)}
         >
           <span aria-hidden>{advanced ? '▾' : '▸'}</span> Advanced
@@ -493,7 +492,7 @@ export function SheetValidationEditor({
               Remove Rule
             </Button>
           ) : null}
-          <span className="flex-1 text-[12px] text-red-600 dark:text-red-400" role="alert">
+          <span className="flex-1 text-supporting text-red-600 dark:text-red-400" role="alert">
             {why}
           </span>
           <Button variant="secondary" size="xs" onClick={onClose}>

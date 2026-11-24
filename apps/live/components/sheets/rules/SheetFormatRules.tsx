@@ -5,7 +5,13 @@
 // Move Down and Delete Rule; Add Another Rule; and the rule form, whose rule draws on the grid for this person while
 // it is open (a preview, never sent).
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Select, TextInput, Tooltip } from '@livedoc/ui';
+import {
+  lucideBold,
+  lucideItalic,
+  lucideStrikethrough,
+  lucideUnderline,
+} from '@livedoc/icons/lucide';
+import { Button, Select, TextInput, Tooltip, lucideGlyph } from '@livedoc/ui';
 import {
   CONDITION_OPS,
   FORMAT_CONDITION_LABELS,
@@ -28,6 +34,12 @@ import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
 import { noColour } from '@/components/colour/colour-options';
 import { useSheetController, type SheetController } from '../sheet-controller';
 import type { SheetActions } from '../useSheetActions';
+
+// The style toggles draw icons at the row icon step (sizing.md "Icons").
+const BoldIcon = lucideGlyph(lucideBold, 16);
+const ItalicIcon = lucideGlyph(lucideItalic, 16);
+const UnderlineIcon = lucideGlyph(lucideUnderline, 16);
+const StrikethroughIcon = lucideGlyph(lucideStrikethrough, 16);
 
 const WIDTH_PX = 384;
 const NO_RULES: readonly FormatRule[] = [];
@@ -92,8 +104,7 @@ type Draft = {
   max: Point;
 };
 
-const label =
-  'block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400';
+const label = 'block text-supporting text-slate-500 dark:text-slate-400';
 
 function pointDraft(p: ScalePoint | undefined, fallback: Point): Point {
   return p ? { c: p.c, at: p.at, v: p.v === undefined ? '' : String(p.v) } : fallback;
@@ -190,7 +201,7 @@ function Swatch({ rule }: { rule: Pick<FormatRule, 'is' | 'style' | 'min' | 'mid
     return (
       <span
         aria-hidden
-        className="inline-block h-5 w-9 shrink-0 rounded border border-black/10"
+        className="inline-block h-icon-title w-9 shrink-0 rounded-control border border-black/10"
         style={{
           background: `linear-gradient(90deg, ${[rule.min?.c, rule.mid?.c, rule.max?.c].filter(Boolean).join(', ')})`,
         }}
@@ -200,7 +211,7 @@ function Swatch({ rule }: { rule: Pick<FormatRule, 'is' | 'style' | 'min' | 'mid
   return (
     <span
       aria-hidden
-      className="inline-flex h-5 w-9 shrink-0 items-center justify-center rounded border border-black/10 text-[11px]"
+      className="inline-flex h-icon-title w-9 shrink-0 items-center justify-center rounded-control border border-black/10 text-supporting"
       style={{
         backgroundColor: s.bg ?? '#ffffff',
         color: s.fc ?? '#1f2937',
@@ -291,8 +302,8 @@ export function SheetFormatRules({
           : k.id !== 'min' && k.id !== 'max',
     );
     return (
-      <div className="flex items-center gap-1.5">
-        <span className="w-16 shrink-0 text-[12px]">{name}</span>
+      <div className="flex items-center gap-2">
+        <span className="w-16 shrink-0 text-supporting">{name}</span>
         <Select
           aria-label={`${name} Type`}
           value={p.at}
@@ -329,14 +340,14 @@ export function SheetFormatRules({
       onClose={onClose}
     >
       <div
-        className="flex max-h-[34rem] flex-col gap-3 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 text-[13px] text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+        className="flex max-h-[34rem] flex-col gap-3 overflow-y-auto rounded-menu border border-slate-200 bg-white p-3 text-body text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <h2 className="text-sm font-semibold">Conditional Formatting</h2>
+        <h2 className="text-panel-title">Conditional Formatting</h2>
         {!d ? (
           <>
-            <label className="flex cursor-pointer items-center gap-2 text-[12px]">
+            <label className="flex cursor-pointer items-center gap-2 text-body">
               <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} />
               Show All Rules
             </label>
@@ -354,7 +365,7 @@ export function SheetFormatRules({
                   return (
                     <li
                       key={rule.id}
-                      className="flex items-center gap-2 rounded-md px-1 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                      className="flex items-center gap-2 rounded-control px-1 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                     >
                       <button
                         type="button"
@@ -364,7 +375,7 @@ export function SheetFormatRules({
                         <Swatch rule={rule} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate">{line}</span>
-                          <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="block text-supporting text-slate-500 dark:text-slate-400">
                             {p ? formatRange(p) : ''}
                           </span>
                         </span>
@@ -374,7 +385,7 @@ export function SheetFormatRules({
                           type="button"
                           aria-label="Move Up"
                           disabled={at <= 0}
-                          className="cursor-pointer rounded px-1 text-slate-500 hover:bg-slate-100 dark:text-slate-400 disabled:cursor-default disabled:opacity-30 dark:hover:bg-slate-800"
+                          className="flex size-chip cursor-pointer items-center justify-center rounded-control text-slate-500 hover:bg-slate-100 dark:text-slate-400 disabled:cursor-default disabled:opacity-30 dark:hover:bg-slate-800"
                           onClick={() => actions.moveFormatRule(rule.id, -1)}
                         >
                           ↑
@@ -385,7 +396,7 @@ export function SheetFormatRules({
                           type="button"
                           aria-label="Move Down"
                           disabled={at >= rules.length - 1}
-                          className="cursor-pointer rounded px-1 text-slate-500 hover:bg-slate-100 dark:text-slate-400 disabled:cursor-default disabled:opacity-30 dark:hover:bg-slate-800"
+                          className="flex size-chip cursor-pointer items-center justify-center rounded-control text-slate-500 hover:bg-slate-100 dark:text-slate-400 disabled:cursor-default disabled:opacity-30 dark:hover:bg-slate-800"
                           onClick={() => actions.moveFormatRule(rule.id, 1)}
                         >
                           ↓
@@ -395,7 +406,7 @@ export function SheetFormatRules({
                         <button
                           type="button"
                           aria-label="Delete Rule"
-                          className="cursor-pointer rounded px-1 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                          className="flex size-chip cursor-pointer items-center justify-center rounded-control text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                           onClick={() => actions.removeFormatRule(rule.id)}
                         >
                           ✕
@@ -406,7 +417,7 @@ export function SheetFormatRules({
                 })}
               </ul>
             ) : (
-              <p className="text-[12px] text-slate-500 dark:text-slate-400">
+              <p className="text-supporting text-slate-500 dark:text-slate-400">
                 {all ? 'No format rules yet.' : 'No format rules on these cells yet.'}
               </p>
             )}
@@ -441,7 +452,7 @@ export function SheetFormatRules({
             />
             {d.is === 'when' ? (
               <>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <span className={label}>Format Cells If…</span>
                   <Select
                     aria-label="Condition"
@@ -478,15 +489,15 @@ export function SheetFormatRules({
                     />
                   ) : null}
                 </div>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <span className={label}>Formatting Style</span>
-                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Preset Styles">
+                  <div className="flex flex-wrap gap-2" role="group" aria-label="Preset Styles">
                     {PRESET_STYLES.map((p) => (
                       <Tooltip key={p.label} label={p.label}>
                         <button
                           type="button"
                           aria-label={p.label}
-                          className="cursor-pointer rounded"
+                          className="cursor-pointer rounded-control"
                           onClick={() => set({ style: p.style })}
                         >
                           <Swatch rule={{ is: 'when', style: p.style }} />
@@ -497,21 +508,21 @@ export function SheetFormatRules({
                   <div className="flex items-center gap-1" role="group" aria-label="Style">
                     {(
                       [
-                        ['b', 'Bold', 'B', 'font-bold'],
-                        ['i', 'Italic', 'I', 'italic'],
-                        ['u', 'Underline', 'U', 'underline'],
-                        ['st', 'Strikethrough', 'S', 'line-through'],
+                        ['b', 'Bold', BoldIcon],
+                        ['i', 'Italic', ItalicIcon],
+                        ['u', 'Underline', UnderlineIcon],
+                        ['st', 'Strikethrough', StrikethroughIcon],
                       ] as const
-                    ).map(([k, name, glyph, cls]) => (
+                    ).map(([k, name, Glyph]) => (
                       <Tooltip key={k} label={name}>
                         <button
                           type="button"
                           aria-label={name}
                           aria-pressed={!!d.style[k]}
-                          className={`h-6 w-6 cursor-pointer rounded text-[12px] ${cls} ${d.style[k] ? 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-100' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                          className={`flex size-row cursor-pointer items-center justify-center rounded-control ${d.style[k] ? 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-100' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                           onClick={() => toggle(k)}
                         >
-                          {glyph}
+                          <Glyph aria-hidden />
                         </button>
                       </Tooltip>
                     ))}
@@ -535,14 +546,14 @@ export function SheetFormatRules({
                 </div>
               </>
             ) : (
-              <div className="flex flex-col gap-1.5">
-                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Preset Scales">
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Preset Scales">
                   {PRESET_SCALES.map((p) => (
                     <Tooltip key={p.label} label={p.label}>
                       <button
                         type="button"
                         aria-label={p.label}
-                        className="cursor-pointer rounded"
+                        className="cursor-pointer rounded-control"
                         onClick={() =>
                           set({
                             min: { ...d.min, c: p.min },
@@ -568,7 +579,7 @@ export function SheetFormatRules({
                 {pointRow('Minpoint', 'min')}
                 {d.mid ? pointRow('Midpoint', 'mid') : null}
                 {pointRow('Maxpoint', 'max')}
-                <label className="flex cursor-pointer items-center gap-2 text-[12px]">
+                <label className="flex cursor-pointer items-center gap-2 text-body">
                   <input
                     type="checkbox"
                     checked={!!d.mid}
@@ -585,7 +596,7 @@ export function SheetFormatRules({
               </div>
             )}
             <div className="flex items-center gap-2 border-t border-slate-100 pt-2.5 dark:border-slate-800">
-              <span className="flex-1 text-[12px] text-red-600 dark:text-red-400" role="alert">
+              <span className="flex-1 text-supporting text-red-600 dark:text-red-400" role="alert">
                 {why}
               </span>
               <Button

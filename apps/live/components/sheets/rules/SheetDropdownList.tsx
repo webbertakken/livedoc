@@ -66,7 +66,7 @@ export function SheetDropdownList({
       onClose={onClose}
     >
       <div
-        className="flex max-h-80 flex-col gap-1.5 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+        className="flex max-h-80 flex-col gap-1 rounded-menu border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
         onPointerDown={stop}
         onKeyDown={stop}
       >
@@ -91,14 +91,14 @@ export function SheetDropdownList({
               onPick={(v) => onPick(v)}
             />
           ) : (
-            <p className="px-2 py-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+            <p className="px-2 py-1.5 text-supporting text-slate-500 dark:text-slate-400">
               {options.length ? `No options match “${query.trim()}”` : 'No options yet.'}
             </p>
           )}
         </div>
         <button
           type="button"
-          className="cursor-pointer rounded-md px-2 py-1.5 text-left text-[12px] text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="min-h-row cursor-pointer rounded-control px-2 py-1 text-left text-body text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
           onClick={() => onPick(null)}
         >
           Clear
