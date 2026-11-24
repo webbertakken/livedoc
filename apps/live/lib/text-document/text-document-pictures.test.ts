@@ -361,6 +361,20 @@ describe('a picture drawn', () => {
       expect(resize).toHaveBeenCalledExactlyOnceWith(3, { width: 87, height: 58 });
     });
 
+    // A placed picture's own span is laid out with no size: its scale is read from its turned box, here drawn at 200%.
+    it("reads a placed picture's scale from its drawn box, sizing it at any zoom", () => {
+      const placedMark = [
+        { spec: { placed: { picture: { left: 0, top: 0 }, layer: 'front' } } },
+      ] as never;
+      const { view, resize } = sized(true, placedMark);
+      const turn = view.dom.querySelector<HTMLElement>('.text-document-picture-turn')!;
+      turn.getBoundingClientRect = () => ({ left: 0, top: 0, width: 160, height: 0 }) as DOMRect;
+      view.selectNode!();
+      drag(handle(view.dom, 'e'), 80, 0);
+      window.dispatchEvent(new MouseEvent('pointerup', {}));
+      expect(resize).toHaveBeenCalledExactlyOnceWith(3, expect.objectContaining({ width: 90 }));
+    });
+
     it('leaves the picture as it was on Escape', () => {
       const { view, resize } = sized();
       view.selectNode!();

@@ -330,7 +330,7 @@ export function pictureView(
       endDrag = dragPicture(down, handle, {
         attrs: current.attrs,
         cropping,
-        dom,
+        box: turn,
         room: sizing.room(),
         preview: (attrs) => fit(attrs, turning),
         done: write,
