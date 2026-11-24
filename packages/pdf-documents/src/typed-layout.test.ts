@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { Helvetica, HELVETICA_STAND_IN } from './helvetica';
 import { PDF_CALLOUT_KNEE_PT, PDF_TEXT_PADDING_PT } from './limits';
+import { MarkFaces } from './mark-faces';
 import { TYPED_LINE_HEIGHT, TypedLayout } from './typed-layout';
 
 // "Hello" in Helvetica: H 722, e 556, l 222, l 222, o 556 thousandths.
@@ -108,5 +109,23 @@ describe('TypedLayout', () => {
       300,
       550,
     ]);
+  });
+});
+
+// marks.md "Words in every script", "Laying out": words Helvetica cannot write are measured in the mark faces.
+describe('TypedLayout in the mark faces', () => {
+  it('measures a mark in the mark faces where Helvetica cannot write its words', () => {
+    expect(TypedLayout.faces('Hello\nWorld')).toBe('helvetica');
+    expect(TypedLayout.faces('Hello\nΚόσμε')).toBe('noto');
+    const [hello, world] = TypedLayout.lines('Hello\nΚόσμε', 10, 400);
+    // Every line of the mark in Noto Sans, the Latin one too: "Hello" is 2,580 thousandths there.
+    expect(hello!.width).toBeCloseTo(MarkFaces.width({ text: 'Hello', bold: false }) / 100);
+    expect(hello!.width).not.toBeCloseTo(HELLO_AT_10);
+    expect(world!.width).toBeCloseTo(MarkFaces.width({ text: 'Κόσμε', bold: false }) / 100);
+  });
+
+  it('composes the words first, so a letter typed with its accent apart is one Helvetica writes', () => {
+    expect(TypedLayout.faces('cafe\u0301')).toBe('helvetica');
+    expect(TypedLayout.lines('cafe\u0301', 10, 400)[0]!.text).toBe('café');
   });
 });

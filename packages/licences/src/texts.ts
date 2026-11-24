@@ -227,4 +227,15 @@ export const TEXT_SOURCES: readonly TextSource[] = [
   },
   // The served document fonts (document-font-works.ts).
   ...DOCUMENT_FONT_TEXT_SOURCES,
+  {
+    file: 'harfbuzz-15.0.0-COPYING.txt',
+    sources: ['https://raw.githubusercontent.com/harfbuzz/harfbuzz/15.0.0/COPYING'],
+    sha256: 'ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64',
+  },
+  // The mark faces of a PDF's marks (embedded-works.ts).
+  {
+    file: 'fontsource-noto-sans-5.3.0-LICENSE.txt',
+    sources: ['https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.3.0/LICENSE'],
+    sha256: '54ec7b5a35310ad66f9f3091426f7028484cbf9ae1ab5da30122ee412a3009e1',
+  },
 ];

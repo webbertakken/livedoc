@@ -4,8 +4,8 @@
 // Under Dark pages (dark-pages.md "The recolouring") a mark takes the colour the step gives the file's own marks, and
 // lightens the dark page as multiplying darkens the white one, so the words under it keep their ink. A Text's, a
 // Callout's and a stamp's words are set line for line as MarkWords places them, in a face with Helvetica's widths,
-// a stamp's name bold.
-import { useContext } from 'react';
+// a stamp's name bold; or in the mark faces, as shaped (marks.md "Words in every script").
+import { useContext, useEffect } from 'react';
 import type { MarkShape, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
 import {
   DarkPages,
@@ -16,7 +16,7 @@ import {
   PageView,
 } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
-import { TYPED_FACES } from '@/lib/pdf-document/pdf-typed';
+import { addMarkFaces, facesStackOf } from '@/lib/pdf-document/pdf-mark-faces';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 
 /** A quad as an SVG polygon's points, in view space. */
@@ -40,14 +40,19 @@ const helveticas = (text: string): boolean =>
 
 /**
  * A mark's words as SVG in view space: each line set from its baseline, along the page's own across and
- * down as the matrix turns them, held to the width the file sets it at where Helvetica writes it.
+ * down as the matrix turns them, held to the width the file sets it at where Helvetica writes it; a mark in the mark
+ * faces drawn in them as shaped, from its own side.
  */
 export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark }) {
   const words = MarkWords.of(mark);
+  const faced = words?.faces === 'noto';
+  useEffect(() => {
+    if (faced) addMarkFaces();
+  }, [faced]);
   if (!words) return null;
   const [a, b, c, d] = matrix;
   return (
-    <g stroke="none" fontFamily={TYPED_FACES} style={{ whiteSpace: 'pre' }}>
+    <g stroke="none" fontFamily={facesStackOf(words)} style={{ whiteSpace: 'pre' }}>
       {words.lines.map((line, at) => {
         if (line.text === '') return null;
         // A right-to-left line is set from its right end.
@@ -55,7 +60,7 @@ export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark 
           x: line.rtl ? line.x + line.width : line.x,
           y: line.y,
         });
-        const held = !line.rtl && helveticas(line.text);
+        const held = !faced && !line.rtl && helveticas(line.text);
         return (
           <text
             key={at}

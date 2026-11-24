@@ -25,6 +25,7 @@ describe('MarkWords.of', () => {
     expect(MarkWords.of(text)).toEqual({
       lines: TypedLayout.place(text).map((line) => ({ ...line, size: 12, bold: false })),
       box: [100, 600, 200, 650],
+      faces: 'helvetica',
     });
   });
 
@@ -35,7 +36,13 @@ describe('MarkWords.of', () => {
       stamp: 'draft',
       lines: ['DRAFT'],
     } as unknown as StampInput)!;
-    expect(MarkWords.of(stamp)).toEqual({ lines: StampLayout.place(stamp), box: stamp.rect });
+    expect(MarkWords.of(stamp)).toEqual({
+      lines: StampLayout.place(stamp),
+      box: stamp.rect,
+      faces: 'helvetica',
+    });
+    // marks.md "Words in every script": a second line Helvetica cannot write sets the stamp in the mark faces.
+    expect(MarkWords.of({ ...stamp, lines: ['DRAFT', 'by Ελένη'] })!.faces).toBe('noto');
   });
 
   it('answers nothing for a kind that sets no words', () => {

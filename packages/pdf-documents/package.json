@@ -19,13 +19,16 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "validate:files": "vitest run --config vitest.validate.config.ts",
-    "clean": "rm -rf node_modules .turbo coverage"
+    "clean": "rm -rf node_modules .turbo coverage",
+    "faces:generate": "node --import ../../scripts/ts-source-hooks.mjs scripts/mark-faces.ts"
   },
   "dependencies": {
     "@embedpdf/pdfium": "^2.15.1",
+    "@fontsource/noto-sans": "5.3.0",
     "@libpdf/core": "^0.5.3",
     "@livedoc/document": "workspace:*",
     "asn1js": "^4.0.0",
+    "harfbuzzjs": "1.6.4",
     "pkijs": "^4.0.1",
     "yjs": "^13.6.33"
   },

@@ -16,6 +16,7 @@ specs that come of it live in docs/specs/.
 - ./rendering.md - when working on tiles, the text over a page, zoom, memory or print
 - ./dark-pages.md - when working on how pages are shown dark: the four designs and the contrast curve
 - ./editing-text.md - when working on editing a page's own text: boxes, reflow, missing glyphs, subsetting
+- ./scripts-in-marks.md - when a mark's words leave Helvetica: Noto faces, subsetting, shaping, their weight
 - ./fields.md - when working on a PDF's fields, their scripts, XFA or flattening
 - ./signing.md - when working on drawn or certificate signatures, or on checking signatures
 - ./comments.md - when mapping LiveDoc's threads to a PDF's annotations and back

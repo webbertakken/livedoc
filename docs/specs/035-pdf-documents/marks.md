@@ -180,6 +180,70 @@ written into the file as a standard annotation, so any reader shows it. The rese
   shows where it is of that category, else that category's first, Approved `(default)`.
 - No stamp carries another company's artwork.
 
+## Words in every script
+
+A Text's, a Callout's and a stamp's words are written into the file in every script a person types, never as a
+question mark. The research is [Every script in a mark's words](../../research/pdf-documents/scripts-in-marks.md).
+
+- **A mark is set in Helvetica** where Helvetica writes every character of its words: the file names the standard's
+  own face and holds no font, as a mark always was.
+- **Otherwise the whole mark is set in the mark faces**, so one mark never mixes Helvetica with another face
+  `(default)`; a stamp's name in their bold.
+- **The mark faces** are Noto's, under the SIL Open Font Licence 1.1, as Fontsource serves them: each family split
+  into subsets by script, each subset a file of its own, regular and, for Noto Sans, bold.
+- They are looked through in this order, a character set in the first that has it `(default)`:
+  1. **Noto Sans**: Latin, Latin Extended, Vietnamese, Greek, Greek Extended, Cyrillic, Cyrillic Extended and
+     Devanagari.
+  2. **The Noto Sans family of each further script**: Hebrew and Arabic, then Armenian, Georgian, Thai, Lao, Khmer,
+     Myanmar, Ethiopic, Sinhala, Bengali, Gujarati, Gurmukhi, Kannada, Malayalam, Oriya, Tamil and Telugu; regular
+     only, a bold line in them set regular.
+  3. **Chinese, Japanese and Korean**: Noto Sans SC, JP or KR, by the region the mark's words show: kana Japanese,
+     Hangul Korean, otherwise Simplified Chinese `(default)`.
+  4. **Symbols and emoji**: Noto Sans Symbols, Symbols 2 and Noto Emoji, in one colour, the mark's.
+- A combining mark is set in the face of the character before it where that face has it, so an accent stays on its
+  letter; words are composed first (Unicode NFC), so a letter typed with its accent apart is one glyph where it can be.
+- **A character no mark face has** is set as Noto Sans's missing-glyph box, never as a question mark, and kept whole
+  in `Contents`; each bake counts them: `[pdf] glyphs-missing count=<n>`.
+
+### Laying out
+
+- **A mark's words are measured in the faces that set them**, on the surface and in the bake alike: each face's
+  advance for each character it has is a generated table, so lines break the same everywhere, with no font loaded.
+- The table is generated from the very files LiveDoc serves: `pnpm --filter @livedoc/pdf-documents faces:generate`;
+  a test fails while it and the Fontsource packages differ.
+- **The bake shapes each run** of a line (HarfBuzz): Arabic joins, Indic scripts reorder and combine, accents sit on
+  their letters, and each glyph is placed where shaping puts it.
+- **A line shaped wider than it was measured is narrowed to its measured width**, so it never leaves its box; one
+  shaped narrower is set as shaped, from its own side.
+- **The surface draws the mark faces too**, as `LiveDoc Noto Sans` and its siblings, from the same files, so it
+  shapes as the bake does; a face not yet arrived draws in the browser's own until it lands.
+
+### In the file
+
+- **Each face a bake uses is embedded once** as a subset of only the glyphs its marks use, glyph ids kept: a
+  `Type0` font, `Identity-H`, over a `CIDFontType2` with its `FontFile2`, its `W` the glyphs' advances, and its
+  `BaseFont` the face's name behind a six-letter tag made from the glyphs it holds.
+- **Its `ToUnicode` maps each glyph back to the characters it was shaped from**, a ligature to all of them, so
+  copying, search and a screen reader read the words.
+- A few kilobytes a face: twenty Greek and Cyrillic characters add about 4 KB to the file.
+
+### Loading
+
+- **Nothing loads for a mark Helvetica writes.** The faces, and the shaper, load only when a mark needs them: the
+  surface's browser fetches a subset when a line on screen uses its characters; the engine fetches the subsets a
+  bake's marks use, and the shaper, as it bakes.
+- Every file is a hashed static asset of LiveDoc's own origin, cached for good, there for a self-hosted LiveDoc as
+  for docs.nu; each well under Cloudflare Pages' 25 MiB a file. Chinese, Japanese and Korean come in Fontsource's
+  slices of about 45 KB, so a few words fetch a few slices.
+- **A face that does not load stops the bake by name** (`faces-unavailable`), never a silent question mark: "Some of
+  this PDF's marks need a font that didn't load. Check your connection, then try again. Your changes are safe."
+  with **Try again**.
+- Fingerprints: `[pdf] faces-loaded count=<n> bytes=<n> ms=<n>` (once a bake that loads any),
+  `[pdf] faces-failed face=<id>` (`shaper` for HarfBuzz; `picture` where a thumbnail draws in the browser's own),
+  `[pdf] glyphs-missing count=<n>`, `[pdf] faces-shown count=<n>` (the surface adds the faces, once a page).
+- **Status**: Noto Sans (the first group) is built; the further scripts, Chinese, Japanese and Korean, and symbols
+  and emoji are specified, their characters drawn as the missing-glyph box until built.
+
 ## In the file
 
 - **Each mark is one annotation** of the kind above, with: its rectangle and geometry in page space; colour, opacity,
@@ -197,15 +261,14 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **A Text** is written as a `FreeText` with `Contents` its words, `DA` its font, size and colour, and `Rect` its
   box; **a Callout** as a `FreeText` with `IT` `FreeTextCallout`, `CL` its line's three points, `LE` `OpenArrow`,
   `Rect` the box and the line together and `RD` the box within it. Their appearance streams set the words as the page
-  shows them, line for line, in Helvetica, the standard's own face every reader holds.
-- A character Helvetica cannot write (outside its Latin set) is kept whole in `Contents` and set in the appearance as
-  a question mark, until LiveDoc writes a face for every script `(default)`.
+  shows them, line for line, in Helvetica, the standard's own face every reader holds, or in the mark faces
+  ([Words in every script](#words-in-every-script)).
 - **A stamp** is written as a `Stamp` with `Name` the standard's name for it (`Approved`, `NotApproved`, `Draft`,
   `Final`, `Confidential`, `ForComment`, `ForPublicRelease`, `NotForPublicRelease`, `AsIs`, `Expired`,
   `Experimental`, `Departmental`, `Sold`, `TopSecret`), or LiveDoc's own name for the rest (`SignHere`,
   `InitialHere`, `Witness`, `Accepted`, `Rejected`, `Received`, `Reviewed`, `Revised`); `Contents` its words, a
-  line each; `Rect` its box grown by its border; and its appearance in Helvetica Bold and Helvetica, as the page
-  shows it.
+  line each; `Rect` its box grown by its border; and its appearance in Helvetica Bold and Helvetica, or the mark
+  faces, as the page shows it.
 - **Read back the same**: a mark LiveDoc wrote and another reader changed is read by its `NM`; one without `NM` gets
   an id from its object number.
 - **What is read of a mark a file holds**: its id, the file's own word for its kind, its rectangle and the

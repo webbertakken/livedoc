@@ -51,6 +51,9 @@ export { StampLayout, type StampLine } from './stamp-layout';
 export { HelveticaBold } from './helvetica-bold';
 export { TYPED_LINE_HEIGHT, TypedLayout, type PlacedLine, type TypedLine } from './typed-layout';
 export { Helvetica, HELVETICA_STAND_IN } from './helvetica';
+export { MarkFaces, type FacedLine, type MarkFaceSet, type MarkRun } from './mark-faces';
+export { MARK_FACE_DATA, type MarkFaceData } from './mark-face-data';
+export { MARK_FACE_URLS } from './mark-face-urls';
 export {
   PDF_ROOTS,
   PdfLiveChanges,

@@ -6,6 +6,7 @@ import { CryptoKeySigner, PDF } from '@libpdf/core';
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import type { PdfDocumentInfo } from '../engine-contract';
+import { loadTypesetter } from '../engine/typesetter';
 import { PdfPermissions } from '../permissions';
 
 const require = createRequire(import.meta.url);
@@ -546,4 +547,15 @@ export function darkPagesPdf(): Uint8Array<ArrayBuffer> {
     ),
     stream(PICTURE, chart),
   ]);
+}
+
+/** The mark faces' files as a browser fetches them, read from the Fontsource packages (marks.md "Loading"). */
+export const markFaceFiles = async (file: string): Promise<Uint8Array<ArrayBuffer>> =>
+  new Uint8Array(readFileSync(require.resolve(`@fontsource/${file}`)));
+
+/** A typesetter with the faces named loaded from the Fontsource packages. */
+export async function typesetterOf(ids: readonly string[]) {
+  const loaded = await loadTypesetter(ids, markFaceFiles);
+  if (!loaded.ok) throw new Error(`${loaded.face} did not load`);
+  return loaded.typesetter;
 }

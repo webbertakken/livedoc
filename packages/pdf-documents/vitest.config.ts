@@ -5,7 +5,8 @@ import { defineProject } from '@livedoc/vitest-config';
 export default defineProject({
   test: {
     coverage: {
-      exclude: ['src/testing/**', 'src/validation/**', 'vitest.*.ts'],
+      // The mark faces' files are generated, one URL a face, each fetched only by a browser that bakes with it.
+      exclude: ['src/testing/**', 'src/validation/**', 'vitest.*.ts', 'src/mark-face-urls.ts'],
       thresholds: { lines: 95, branches: 90, functions: 95, statements: 95 },
     },
   },

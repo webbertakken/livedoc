@@ -727,6 +727,7 @@ describe('baking', () => {
       kind: 'addition',
       anchorsLost: 0,
       fieldsLost: 0,
+      glyphsMissing: 0,
     }));
     await wrongPages.open(stored);
     expect(await wrongPages.bake(changes)).toEqual({ ok: false, refusal: 'reopen' });
@@ -736,6 +737,7 @@ describe('baking', () => {
       kind: 'addition',
       anchorsLost: 0,
       fieldsLost: 0,
+      glyphsMissing: 0,
     }));
     await garbage.open(stored);
     expect(await garbage.bake(changes)).toEqual({ ok: false, refusal: 'reopen' });

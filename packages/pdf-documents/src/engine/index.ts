@@ -3,13 +3,18 @@
 import type { PdfEngine, PdfEngineLog } from '../engine-contract';
 import { pdfEngineOver } from './engine';
 import { startReader } from './reader';
+import type { MarkFaceSource } from './typesetter';
 
 export { pdfDate } from './bake';
 
-/** Starts the engine from the reader's WebAssembly binary; `log` takes what it decides, and is no one by default. */
+/**
+ * Starts the engine from the reader's WebAssembly binary; `log` takes what it decides, and is no one by default;
+ * `faces` answers the mark faces' files (marks.md "Loading").
+ */
 export async function createPdfEngine(options: {
   wasm: ArrayBuffer | Uint8Array;
   log?: PdfEngineLog;
+  faces?: MarkFaceSource;
 }): Promise<PdfEngine> {
-  return pdfEngineOver(await startReader(options.wasm), undefined, options.log);
+  return pdfEngineOver(await startReader(options.wasm), undefined, options.log, options.faces);
 }

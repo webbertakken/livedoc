@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
   // does; standalone `localhost:4002` keeps working either way.
   assetPrefix: '/live',
   transpilePackages: ['@livedoc/ui', '@livedoc/document', '@livedoc/api-schema'],
+  // HarfBuzz's glue imports Node's `module` behind a Node check; a browser bundle resolves it to nothing.
+  turbopack: { resolveAlias: { module: { browser: './lib/node-module-stub.ts' } } },
 };
 
 export default nextConfig;
