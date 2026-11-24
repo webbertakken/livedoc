@@ -125,7 +125,7 @@ function Chip({
 }) {
   return (
     <span
-      className="flex items-center gap-1 rounded-full border px-1.5 py-px text-[11px]"
+      className="flex items-center gap-1 rounded-full border px-2 py-px text-supporting"
       style={{ borderColor: palette.border, color: palette.muted }}
     >
       {dot ? (

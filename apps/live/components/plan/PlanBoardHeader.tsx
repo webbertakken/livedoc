@@ -138,7 +138,7 @@ export function PlanBoardHeader({
   const endRef = useRef<HTMLDivElement>(null);
   useKeepOnScreen(endRef, headerRef);
   const button =
-    'h-7 shrink-0 rounded-md border px-2 text-[12px] font-medium transition enabled:cursor-pointer disabled:opacity-50';
+    'h-row shrink-0 rounded-control border px-2 text-supporting transition enabled:cursor-pointer disabled:opacity-50';
   return (
     <div
       ref={headerRef}
@@ -159,7 +159,7 @@ export function PlanBoardHeader({
       {selected && movable ? (
         <span
           data-board-grip
-          className="-ml-2 flex h-7 w-5 shrink-0 cursor-move items-center justify-center rounded"
+          className="-ml-2 flex h-row w-5 shrink-0 cursor-move items-center justify-center rounded-control"
           style={{ color: palette.muted }}
           aria-hidden
         >
@@ -211,7 +211,7 @@ export function PlanBoardHeader({
           // Moved left to stay on screen, it takes the board's surface and a shadow, so it reads over the header.
           <div
             ref={endRef}
-            className="relative z-10 flex shrink-0 items-center gap-3 rounded-lg data-[shifted]:bg-[var(--keep-bg)] data-[shifted]:shadow-md"
+            className="relative z-10 flex shrink-0 items-center gap-3 rounded-menu data-[shifted]:bg-[var(--keep-bg)] data-[shifted]:shadow-md"
             style={{ ['--keep-bg' as string]: palette.surface }}
           >
             {end}
@@ -220,13 +220,13 @@ export function PlanBoardHeader({
       </div>
       {trayOpen && projection.unplaced.length > 0 ? (
         <div
-          className="absolute right-4 top-12 z-10 max-h-72 w-80 overflow-y-auto rounded-lg border p-2 shadow-lg"
+          className="absolute right-4 top-12 z-10 max-h-72 w-80 overflow-y-auto rounded-menu border p-2 shadow-lg"
           style={{ backgroundColor: palette.card, borderColor: palette.border }}
           onPointerDown={stop}
           role="dialog"
           aria-label="Items not on this board"
         >
-          <div className="mb-1 px-1 text-[11px]" style={{ color: palette.muted }}>
+          <div className="mb-1 px-1 text-supporting" style={{ color: palette.muted }}>
             Their status is none of this board&rsquo;s columns.
           </div>
           {projection.unplaced.map((item) => {
@@ -235,14 +235,17 @@ export function PlanBoardHeader({
               (c) => typeStatusRefusal(types, item.type, c.status, () => c.name) === null,
             );
             return (
-              <div key={item.id} className="flex items-center gap-2 rounded px-1 py-1 text-[12px]">
+              <div
+                key={item.id}
+                className="flex items-center gap-2 rounded-control px-1 py-1 text-supporting"
+              >
                 <span className="min-w-0 flex-1 truncate">
                   #{item.key} {itemTitle(item)}
                 </span>
                 {canEdit && open.length > 0 ? (
                   <select
                     aria-label={`Move #${item.key} to`}
-                    className="rounded border bg-transparent px-1 text-[12px]"
+                    className="rounded-control border bg-transparent px-1 text-supporting"
                     style={{ borderColor: palette.border, color: palette.text }}
                     value=""
                     onChange={(e) => e.target.value && onMoveUnplaced(item, e.target.value)}

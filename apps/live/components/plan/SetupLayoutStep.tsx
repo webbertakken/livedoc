@@ -8,7 +8,7 @@ import { CardSizeOptions, SwimlaneOptions } from '@/components/palette/plan-menu
 import type { PlanPalette } from './plan-palette';
 import type { SetupLayout } from './setup-board';
 
-const HEADING = 'text-[11px] font-semibold uppercase tracking-wider';
+const HEADING = 'text-supporting';
 
 export function SetupLayoutStep({
   layout,
@@ -26,15 +26,15 @@ export function SetupLayoutStep({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-[13px]" style={{ color: palette.muted }}>
+      <p className="text-body" style={{ color: palette.muted }}>
         How the board is laid out. It starts as the board is now; every choice can change later from
         its cog.
       </p>
-      <section className="flex flex-col gap-2.5" aria-labelledby="setup-swimlanes">
+      <section className="flex flex-col gap-3" aria-labelledby="setup-swimlanes">
         <h3 id="setup-swimlanes" className={HEADING} style={{ color: palette.muted }}>
           Swimlanes
         </h3>
-        <p className="text-[12px]" style={{ color: palette.muted }}>
+        <p className="text-supporting" style={{ color: palette.muted }}>
           Rows across the board, one for each value of the field you pick.
         </p>
         <div>
@@ -51,11 +51,11 @@ export function SetupLayoutStep({
           />
         </div>
       </section>
-      <section className="flex flex-col gap-2.5" aria-labelledby="setup-card-size">
+      <section className="flex flex-col gap-3" aria-labelledby="setup-card-size">
         <h3 id="setup-card-size" className={HEADING} style={{ color: palette.muted }}>
           Card Display
         </h3>
-        <p className="text-[12px]" style={{ color: palette.muted }}>
+        <p className="text-supporting" style={{ color: palette.muted }}>
           How much of each card shows. Each card type’s Display sets what shows at each size.
         </p>
         <div>

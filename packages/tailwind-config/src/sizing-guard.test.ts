@@ -168,6 +168,12 @@ describe('judgeClass', () => {
     expect(judgeClass('md:pointer-coarse:h-9')).toBeNull();
   });
 
+  it('passes a field’s 16 px on a phone, which keeps iOS from zooming in, and nothing else under that width', () => {
+    expect(judgeClass('max-sm:text-[16px]')).toBeNull();
+    expect(judgeClass('max-sm:text-[13px]')).toMatch(/type size off the scale/);
+    expect(judgeClass('max-sm:h-7')).toMatch(/h-row/);
+  });
+
   it('passes words that are not utilities', () => {
     for (const ok of [
       'Rename',

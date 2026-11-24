@@ -55,8 +55,8 @@ export function GlyphPicker({
         aria-expanded={open}
         className={
           inline
-            ? 'flex h-8 shrink-0 cursor-pointer items-center gap-0.5 rounded-md py-0.5 pl-0.5 pr-1 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:hover:bg-slate-800'
-            : 'flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white py-1 pl-1 pr-2 text-left text-[13px] text-slate-800 transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600'
+            ? 'flex h-field shrink-0 cursor-pointer items-center gap-0.5 rounded-control py-0.5 pl-0.5 pr-1 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:hover:bg-slate-800'
+            : 'flex h-prominent cursor-pointer items-center gap-2 rounded-menu border border-slate-200 bg-white py-1 pl-1 pr-2 text-left text-body text-slate-800 transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600'
         }
         onClick={() => setOpen((v) => !v)}
         onKeyDown={(e) => {
@@ -68,7 +68,7 @@ export function GlyphPicker({
       >
         <span
           aria-hidden
-          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${ACCENT_TINT} ${ACCENT_TEXT}`}
+          className={`flex size-row shrink-0 items-center justify-center rounded-control ${ACCENT_TINT} ${ACCENT_TEXT}`}
           style={accentVars(colour)}
         >
           <PlanTypeGlyph glyph={value} size={16} />
@@ -83,7 +83,7 @@ export function GlyphPicker({
           width={GLYPH_POPOVER_PX}
           onClose={() => setOpen(false)}
         >
-          <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
+          <div className="rounded-menu border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
             <GlyphGrid
               value={value}
               colour={colour}
@@ -125,7 +125,7 @@ function GlyphGrid({
     <div className="flex flex-col gap-2">
       <div className="flex items-stretch gap-2">
         <div className="relative min-w-0 flex-1">
-          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate-400">
             <SearchIcon size={14} />
           </span>
           <TextInput
@@ -134,7 +134,7 @@ function GlyphGrid({
             type="search"
             aria-label="Search glyphs"
             placeholder="Search glyphs"
-            className="pl-8"
+            className="pl-6"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -143,7 +143,7 @@ function GlyphGrid({
           aria-label="Glyph category"
           size="sm"
           className="w-36 shrink-0"
-          selectClassName="h-full text-[12px]"
+          selectClassName="h-full text-supporting"
           value={searching ? ALL : category}
           onChange={(e) => {
             setQuery('');
@@ -175,7 +175,7 @@ function GlyphGrid({
                   role="radio"
                   aria-checked={chosen}
                   aria-label={`${planGlyphLabel(g)} glyph`}
-                  className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition ${
+                  className={`flex size-field cursor-pointer items-center justify-center rounded-control transition ${
                     chosen
                       ? `${ACCENT_TINT} ${ACCENT_TEXT} ring-1 ring-inset ring-[var(--accent)] dark:ring-[var(--accent-lift)]`
                       : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'

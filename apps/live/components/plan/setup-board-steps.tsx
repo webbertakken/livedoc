@@ -16,7 +16,7 @@ import { AddCardTypeButton } from './AddCardTypeButton';
 import { OptionRows } from './OptionRows';
 import { StatusSwatch, cardCount, usedOn } from './ExistingStatusList';
 
-const HEADING = 'text-[11px] font-semibold uppercase tracking-wider';
+const HEADING = 'text-supporting';
 
 // The board's colours as CSS variables, so a button's hover classes (a brand border and tint) win over them, where
 // inline colours would not.
@@ -29,10 +29,10 @@ const boardVars = (palette: PlanPalette) =>
   }) as React.CSSProperties;
 // A bordered button in the board's colours: Add.
 const BOARD_BUTTON =
-  'flex cursor-pointer items-center gap-1 border border-[var(--line)] bg-[var(--fill)] font-medium text-[var(--ink)] transition hover:border-brand-400 hover:bg-brand-50/60 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-brand-500/10 dark:hover:text-brand-300';
-const ADD_BUTTON = `${BOARD_BUTTON} rounded-lg px-3 text-[13px]`;
+  'flex cursor-pointer items-center gap-1 border border-[var(--line)] bg-[var(--fill)] text-[var(--ink)] transition hover:border-brand-400 hover:bg-brand-50/60 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-brand-500/10 dark:hover:text-brand-300';
+const ADD_BUTTON = `${BOARD_BUTTON} rounded-menu px-3 text-body`;
 const LINK =
-  'cursor-pointer rounded px-1.5 py-0.5 text-[12px] font-medium text-brand-700 transition hover:bg-brand-50 disabled:cursor-default disabled:opacity-40 dark:text-brand-300 dark:hover:bg-brand-500/10';
+  'cursor-pointer rounded-control px-2 py-0.5 text-supporting text-brand-700 transition hover:bg-brand-50 disabled:cursor-default disabled:opacity-40 dark:text-brand-300 dark:hover:bg-brand-500/10';
 
 // Step 1: a row per card type, ticked when the board takes it.
 export function SetupTypesStep({
@@ -53,7 +53,7 @@ export function SetupTypesStep({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px]" style={{ color: palette.muted }}>
+        <p className="text-body" style={{ color: palette.muted }}>
           Which cards belong on this board? Only these can be added to it.
         </p>
         <div className="flex shrink-0 gap-1">
@@ -85,7 +85,7 @@ export function SetupTypesStep({
           label: t.label,
           icon: (
             <span
-              className={`flex h-7 w-7 items-center justify-center rounded-lg ${ACCENT_TINT} ${ACCENT_TEXT}`}
+              className={`flex size-row items-center justify-center rounded-menu ${ACCENT_TINT} ${ACCENT_TEXT}`}
               style={accentVars(t.color)}
             >
               <PlanTypeGlyph glyph={t.glyph} size={15} />
@@ -98,7 +98,7 @@ export function SetupTypesStep({
         }}
       />
       {onCreateType ? <AddCardTypeButton onClick={onCreateType} palette={palette} /> : null}
-      <p className="text-[12px] tabular-nums" style={{ color: palette.muted }}>
+      <p className="text-supporting tabular-nums" style={{ color: palette.muted }}>
         {chosen.length === 0
           ? 'Pick at least one card type.'
           : all
@@ -155,14 +155,14 @@ export function SetupColumnsStep({
   };
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-[13px]" style={{ color: palette.muted }}>
+      <p className="text-body" style={{ color: palette.muted }}>
         The stages your cards move through. Drag to reorder: top to bottom is left to right on the
         board.
       </p>
 
       {/* The columns so far, as the board will show them. */}
-      <div className="flex flex-col gap-2.5">
-        <p className={`${HEADING} flex items-center gap-1.5`} style={{ color: palette.muted }}>
+      <div className="flex flex-col gap-3">
+        <p className={`${HEADING} flex items-center gap-2`} style={{ color: palette.muted }}>
           Columns
           <CountBadge size="sm" background="#64748b26" color="#64748b">
             {chosen.length}
@@ -170,7 +170,7 @@ export function SetupColumnsStep({
         </p>
         {chosen.length === 0 ? (
           <p
-            className="rounded-xl border-2 border-dashed px-3 py-4 text-center text-[12px]"
+            className="rounded-surface border-2 border-dashed px-3 py-4 text-center text-supporting"
             style={{ borderColor: palette.cardBorder, color: palette.muted }}
           >
             No columns yet. Add one below.
@@ -180,7 +180,7 @@ export function SetupColumnsStep({
         )}
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         <label htmlFor={inputId} className={HEADING} style={{ color: palette.muted }}>
           Add a New State
         </label>
@@ -198,7 +198,7 @@ export function SetupColumnsStep({
                 submit();
               }
             }}
-            className="min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-[13px] outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
+            className="min-w-0 flex-1 rounded-menu border px-3 py-1.5 text-body outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
             style={{
               borderColor: palette.cardBorder,
               backgroundColor: palette.card,
@@ -216,7 +216,7 @@ export function SetupColumnsStep({
             Add
           </button>
         </div>
-        <p className="min-h-4 text-[12px]" style={{ color: palette.muted }}>
+        <p className="min-h-icon-row text-supporting" style={{ color: palette.muted }}>
           {full
             ? `A board holds up to ${max} columns.`
             : name.trim() && !typed
@@ -228,7 +228,7 @@ export function SetupColumnsStep({
       </div>
 
       {existing.length > 0 ? (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <p className={HEADING} style={{ color: palette.muted }}>
               Use an Existing State
@@ -270,7 +270,7 @@ export function SetupColumnsStep({
               icon: <StatusSwatch colour={c.colour} />,
               trailing: (
                 <span
-                  className="shrink-0 text-[11px] tabular-nums"
+                  className="shrink-0 text-supporting tabular-nums"
                   style={{ color: palette.muted }}
                 >
                   {cardCount(c.cards)}

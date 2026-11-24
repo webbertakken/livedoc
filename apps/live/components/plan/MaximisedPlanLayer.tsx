@@ -107,7 +107,7 @@ function useCanvasRoot(): [(node: HTMLElement | null) => void, HTMLElement | nul
 // variable there as an unbounded delay.
 // The frame that grows or shrinks in the element's place, empty: a surface, border and shadow, no content.
 const GHOST_CLASSES = [
-  'rounded-xl',
+  'rounded-surface',
   'border',
   'border-slate-200',
   'bg-white',
@@ -494,7 +494,7 @@ export function MaximisePlanButton({
         type="button"
         aria-label={label}
         aria-pressed={maximised}
-        className={`flex shrink-0 cursor-pointer items-center justify-center rounded-md transition hover:bg-black/5 dark:hover:bg-white/10 ${small ? 'h-6 w-6' : 'h-8 w-8'}`}
+        className={`flex shrink-0 cursor-pointer items-center justify-center rounded-control transition hover:bg-black/5 dark:hover:bg-white/10 ${small ? 'size-chip' : 'size-row'}`}
         style={{ color: palette.muted }}
         onPointerDown={stop}
         onClick={(e) => {

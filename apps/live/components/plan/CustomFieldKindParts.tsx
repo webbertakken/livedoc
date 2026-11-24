@@ -91,9 +91,9 @@ export function CustomFieldKindTiles({
             type="button"
             role="radio"
             aria-checked={on}
-            className={`flex min-h-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border px-1 py-1.5 text-center text-[11px] font-medium leading-tight transition ${
+            className={`flex min-h-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-menu border px-1 py-1.5 text-center text-supporting transition ${
               on
-                ? 'border-brand-400 bg-brand-50 text-brand-800 dark:border-brand-500/60 dark:bg-brand-500/10 dark:text-brand-100'
+                ? 'font-medium border-brand-400 bg-brand-50 text-brand-800 dark:border-brand-500/60 dark:bg-brand-500/10 dark:text-brand-100'
                 : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800'
             }`}
             onClick={() => onChange(k)}
@@ -122,16 +122,12 @@ function SampleValue({
   scale: number | undefined;
 }) {
   const box =
-    'rounded-md border border-slate-200 bg-white px-2 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200';
+    'rounded-control border border-slate-200 bg-white px-2 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200';
   switch (kind) {
     case 'text':
       return <div className={box}>Some text</div>;
     case 'longtext':
-      return (
-        <div className={`${box} leading-snug`}>
-          A few lines of notes, as long as they need to be.
-        </div>
-      );
+      return <div className={`${box}`}>A few lines of notes, as long as they need to be.</div>;
     case 'number':
       return <div className={`${box} w-20 tabular-nums`}>42</div>;
     case 'currency':
@@ -140,14 +136,14 @@ function SampleValue({
       return <span className="text-brand-700 underline dark:text-brand-300">sam@example.com</span>;
     case 'date':
       return (
-        <div className={`${box} inline-flex items-center gap-1.5`}>
+        <div className={`${box} inline-flex items-center gap-2`}>
           <PlanTypeGlyph glyph="calendar" size={13} />
           12 Oct 2026
         </div>
       );
     case 'checkbox':
       return (
-        <span className="flex h-4 w-4 items-center justify-center rounded border border-brand-700 bg-brand-700 text-white dark:border-brand-600 dark:bg-brand-600">
+        <span className="flex size-icon-row items-center justify-center rounded-control border border-brand-700 bg-brand-700 text-white dark:border-brand-600 dark:bg-brand-600">
           <CheckIcon size={11} />
         </span>
       );
@@ -155,7 +151,7 @@ function SampleValue({
       return <span className="text-brand-700 underline dark:text-brand-300">example.com</span>;
     case 'choice':
       return (
-        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[12px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-supporting text-slate-700 dark:bg-slate-800 dark:text-slate-200">
           {options[0] ?? 'An option'}
         </span>
       );
@@ -165,7 +161,7 @@ function SampleValue({
           {(options.length ? options.slice(0, 2) : ['An option', 'Another']).map((o) => (
             <span
               key={o}
-              className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[12px] text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-supporting text-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               {o}
             </span>
@@ -174,13 +170,13 @@ function SampleValue({
       );
     case 'rating':
       return (
-        <span className="text-[14px] tracking-wider text-amber-500" aria-hidden>
+        <span className="text-body text-amber-500" aria-hidden>
           {ratingText(4, scale ?? RATING_FIELD_SCALE_DEFAULT)}
         </span>
       );
     case 'card':
       return (
-        <div className={`${box} inline-flex items-center gap-1.5`}>
+        <div className={`${box} inline-flex items-center gap-2`}>
           <PlanTypeGlyph glyph="ticket" size={13} />
           {linkLabel ? `A ${linkLabel} card` : 'A linked card'}
         </div>
@@ -209,9 +205,9 @@ export function CustomFieldPreview({
   return (
     <figure
       aria-label="Preview"
-      className="rounded-lg bg-slate-50 px-3 py-1.5 dark:bg-slate-800/50"
+      className="rounded-menu bg-slate-50 px-3 py-1.5 dark:bg-slate-800/50"
     >
-      <figcaption className="pt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+      <figcaption className="pt-1 text-supporting text-slate-500 dark:text-slate-400">
         Preview
       </figcaption>
       <div className="pointer-events-none" aria-hidden>

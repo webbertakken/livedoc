@@ -25,7 +25,7 @@ function ShellParts({ onClose, header, children, footer }: ShellProps) {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{children}</div>
       {footer ? (
-        <div className="border-t border-slate-200 px-4 py-2.5 text-[11px] text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <div className="border-t border-slate-200 px-4 py-2.5 text-supporting text-slate-500 dark:border-slate-700 dark:text-slate-400">
           {footer}
         </div>
       ) : null}
@@ -65,7 +65,7 @@ export function SheetRow({
     <div className={className ? `mb-3 ${className}` : 'mb-3'}>
       <label
         htmlFor={htmlFor}
-        className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+        className="mb-1 block text-supporting text-slate-500 dark:text-slate-400"
       >
         {label}
       </label>

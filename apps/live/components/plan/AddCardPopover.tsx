@@ -82,9 +82,7 @@ export function AddCardPopover({
         onPointerDown={stop}
       >
         <div className="flex flex-col gap-1 px-2 pb-3" onKeyDown={stop}>
-          <p className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Add a Card
-          </p>
+          <p className="px-2 text-supporting text-slate-500 dark:text-slate-400">Add a Card</p>
           {choices}
         </div>
       </BottomSheet>
@@ -126,7 +124,7 @@ export function AddCardChoices({
             label: t.label,
             icon: (
               <span
-                className={`flex h-7 w-7 items-center justify-center rounded-md ${ACCENT_TINT} ${ACCENT_TEXT}`}
+                className={`flex size-row items-center justify-center rounded-control ${ACCENT_TINT} ${ACCENT_TEXT}`}
                 style={accentVars(t.color)}
               >
                 <PlanTypeGlyph glyph={t.glyph} size={15} />

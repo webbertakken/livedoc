@@ -61,7 +61,7 @@ function FoldedCrumbs({
           aria-haspopup="menu"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-7 min-w-7 cursor-pointer items-center justify-center rounded-md px-1 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50"
+          className="flex h-row min-w-7 cursor-pointer items-center justify-center rounded-control px-1 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50"
         >
           <span aria-hidden>…</span>
         </button>
@@ -121,7 +121,7 @@ export function ItemTrailCrumbs({
                   type="button"
                   aria-label={name}
                   onClick={() => onBack(crumb.id)}
-                  className={`group flex min-w-0 cursor-pointer ${mobile ? 'max-w-full' : 'max-w-[11rem]'} items-center gap-1.5 rounded-md px-1.5 py-1 text-[13px] text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50`}
+                  className={`group flex min-w-0 cursor-pointer ${mobile ? 'max-w-full' : 'max-w-[11rem]'} items-center gap-2 rounded-control px-2 py-1 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50`}
                 >
                   {/* A phone's row of its own: the crumb points back, with nothing after it. */}
                   {mobile ? (
@@ -130,7 +130,7 @@ export function ItemTrailCrumbs({
                     </span>
                   ) : null}
                   <TypeGlyph item={crumb} types={types} size={13} />
-                  <span className="min-w-0 truncate font-medium underline-offset-2 group-hover:underline">
+                  <span className="min-w-0 truncate underline-offset-2 group-hover:underline">
                     {itemTitle(crumb)}
                   </span>
                 </button>

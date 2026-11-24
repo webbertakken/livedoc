@@ -121,7 +121,7 @@ export function LinkedCardField({
   return (
     <div ref={boxRef} className="relative w-full">
       <div
-        className={`flex min-h-[34px] w-full items-center rounded-md border bg-white transition dark:bg-slate-900 ${
+        className={`flex min-h-field w-full items-center rounded-control border bg-white transition dark:bg-slate-900 ${
           open
             ? 'border-brand-500 ring-2 ring-brand-500/20'
             : 'border-slate-200 dark:border-slate-700'
@@ -146,7 +146,7 @@ export function LinkedCardField({
             }}
             // 16px on a phone, as the card's selects are there (globals.css: iOS zooms a field under 16px on focus):
             // at 13px it read a size smaller than the Status and Priority beside it.
-            className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md py-1 pl-2 pr-1 text-left text-[13px] max-sm:text-[16px] outline-none enabled:cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-400"
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-control py-1 pl-2 pr-1 text-left text-body max-sm:text-[16px] outline-none enabled:cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             {/* The linked card's own colour, when it has one, tints its type's glyph: no dot beside it. */}
             {type ? (
@@ -160,10 +160,10 @@ export function LinkedCardField({
             ) : null}
             {linked ? (
               <>
-                <span className="shrink-0 rounded bg-slate-100 px-1 text-[11px] font-medium tabular-nums text-slate-600 dark:bg-slate-800">
+                <span className="shrink-0 rounded-control bg-slate-100 px-1 text-supporting tabular-nums text-slate-600 dark:bg-slate-800">
                   #{linked.key}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100">
+                <span className="min-w-0 flex-1 truncate text-slate-800 dark:text-slate-100">
                   {itemTitle(linked)}
                 </span>
               </>
@@ -185,7 +185,7 @@ export function LinkedCardField({
               type="button"
               aria-label={openLabel}
               onClick={() => onOpen(linked.id)}
-              className="mr-1 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="mr-1 flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
             >
               <ChevronRightIcon size={12} />
             </button>
@@ -201,7 +201,7 @@ export function LinkedCardField({
           width={listWidth}
           onClose={() => close(false)}
         >
-          <div className="overflow-hidden rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+          <div className="overflow-hidden rounded-control border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
             {candidates.length > LINK_FILTER_FROM ? (
               <input
                 ref={filterRef}
@@ -216,7 +216,7 @@ export function LinkedCardField({
                   setActive(0);
                 }}
                 onKeyDown={onListKey}
-                className="w-full border-b border-slate-200 bg-transparent px-2 py-1.5 text-[13px] outline-none dark:border-slate-700"
+                className="w-full border-b border-slate-200 bg-transparent px-2 py-1.5 text-body outline-none dark:border-slate-700"
               />
             ) : null}
             <ul
@@ -242,9 +242,9 @@ export function LinkedCardField({
                     aria-label={card ? `#${card.key} ${itemTitle(card)}` : 'None'}
                     onPointerMove={() => setActive(i)}
                     onClick={() => pick(card)}
-                    className={`flex cursor-pointer items-start gap-1.5 px-2 py-1.5 text-[13px] leading-snug max-sm:text-[16px] ${
+                    className={`flex cursor-pointer items-start gap-2 px-2 py-1.5 text-body max-sm:text-[16px] ${
                       i === active ? 'bg-slate-100 dark:bg-slate-800' : ''
-                    } ${selected ? 'font-semibold' : ''}`}
+                    } ${selected ? 'font-medium' : ''}`}
                   >
                     {card && t ? (
                       <>
@@ -255,7 +255,7 @@ export function LinkedCardField({
                         >
                           <PlanTypeGlyph glyph={t.glyph} size={14} />
                         </span>
-                        <span className="mt-[2px] shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                        <span className="mt-[2px] shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
                           #{card.key}
                         </span>
                         {/* The title on up to two lines; a longer one ends in an ellipsis (the whole title in the

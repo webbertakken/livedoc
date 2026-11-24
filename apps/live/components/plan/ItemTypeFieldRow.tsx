@@ -57,30 +57,30 @@ export function FieldRow({
     <li
       data-reorder-id={id}
       style={style}
-      className={`rounded-lg border px-1.5 py-1 odd:bg-white even:bg-slate-50 dark:odd:bg-slate-900 dark:even:bg-slate-800 ${
+      className={`rounded-menu border px-2 py-1 odd:bg-white even:bg-slate-50 dark:odd:bg-slate-900 dark:even:bg-slate-800 ${
         dragging
           ? 'border-brand-400 shadow-md dark:border-brand-500'
           : 'border-slate-200 shadow-sm dark:border-slate-700'
       }`}
     >
-      <div className="flex min-h-8 items-center gap-1">
+      <div className="flex min-h-field items-center gap-1">
         {handle ? (
           <span
             aria-hidden
             {...handle}
-            className={`flex h-7 w-5 shrink-0 cursor-grab items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 ${HANDLE_TOUCH}`}
+            className={`flex h-row w-5 shrink-0 cursor-grab items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 ${HANDLE_TOUCH}`}
           >
             <GripIcon />
           </span>
         ) : (
-          <span aria-hidden className="h-7 w-5 shrink-0" />
+          <span aria-hidden className="h-row w-5 shrink-0" />
         )}
-        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] font-medium text-slate-800 dark:text-slate-100">
+        <span className="flex min-w-0 flex-1 items-center gap-2 text-body text-slate-800 dark:text-slate-100">
           <Tooltip label={icon.name}>
             <span
               role="img"
               aria-label={icon.name}
-              className="flex h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400 [&_svg]:h-full [&_svg]:w-full"
+              className="flex size-icon-row shrink-0 text-slate-500 dark:text-slate-400 [&_svg]:h-full [&_svg]:w-full"
             >
               {icon.node}
             </span>
@@ -121,7 +121,7 @@ export function FieldRow({
             onRemove={removable ? onRemove : undefined}
           />
         ) : (
-          <span aria-hidden className="h-7 w-7 shrink-0" />
+          <span aria-hidden className="size-row shrink-0" />
         )}
       </div>
       {children}

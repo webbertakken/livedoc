@@ -84,10 +84,10 @@ function placeUnder(a: DOMRect, height: number): { left: number; top: number } {
 }
 
 const STEP =
-  'w-8 text-[15px] text-slate-600 transition enabled:hover:bg-slate-100 disabled:opacity-35 dark:text-slate-300 dark:enabled:hover:bg-slate-800';
+  'w-8 text-panel-title text-slate-600 transition enabled:hover:bg-slate-100 disabled:opacity-35 dark:text-slate-300 dark:enabled:hover:bg-slate-800';
 // The element menu's plain row (PortalMenu MenuActionRow `plain`): icon left, 13px.
 const ROW_BASE =
-  'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition disabled:opacity-35';
+  'flex w-full items-center gap-3 rounded-control px-3 py-2 text-body transition disabled:opacity-35';
 const ROW = `${ROW_BASE} text-slate-700 enabled:hover:bg-slate-100 dark:text-slate-200 dark:enabled:hover:bg-slate-800`;
 
 export function PlanColumnPopover({
@@ -225,7 +225,7 @@ export function PlanColumnPopover({
         className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/70 px-2 py-1.5 dark:border-slate-800 dark:bg-slate-800/30"
       >
         {/* Move Left and Move Right, one segmented control as the width's is. */}
-        <div className="flex h-8 overflow-hidden rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex h-field overflow-hidden rounded-control border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
           <ToolbarButton
             label="Move Left"
             disabled={at <= 0}
@@ -247,7 +247,7 @@ export function PlanColumnPopover({
             <button
               type="button"
               aria-label="Remove Column"
-              className="relative touch-target flex h-8 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-slate-600 transition hover:bg-rose-50 hover:text-rose-700 motion-reduce:transition-none dark:text-slate-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
+              className="relative touch-target flex h-field items-center gap-2 rounded-control px-2 text-supporting text-slate-600 transition hover:bg-rose-50 hover:text-rose-700 motion-reduce:transition-none dark:text-slate-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
               onClick={() => {
                 onChange(removeColumn(setup, column.id), 'ColumnRemoved');
                 onClose(false);
@@ -259,10 +259,10 @@ export function PlanColumnPopover({
           </Tooltip>
         ) : null}
       </div>
-      <div className="flex items-center gap-2.5 border-b border-slate-100 px-3 py-2.5 dark:border-slate-800">
+      <div className="flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 dark:border-slate-800">
         <span
           aria-hidden
-          className="h-3 w-3 shrink-0 rounded-full border border-slate-300 dark:border-slate-600"
+          className="size-icon-chevron shrink-0 rounded-full border border-slate-300 dark:border-slate-600"
           style={
             column.color ? { backgroundColor: column.color, borderColor: column.color } : undefined
           }
@@ -270,7 +270,7 @@ export function PlanColumnPopover({
         <input
           id={`column-${column.id}-name`}
           aria-label="Column name"
-          className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 py-1 text-[14px] font-semibold text-slate-800 outline-none transition hover:border-slate-200 focus:border-brand-400 focus:bg-white dark:text-slate-100 dark:hover:border-slate-700 dark:focus:bg-slate-950"
+          className="min-w-0 flex-1 rounded-control border border-transparent bg-transparent px-2 py-1 text-body text-slate-800 outline-none transition hover:border-slate-200 focus:border-brand-400 focus:bg-white dark:text-slate-100 dark:hover:border-slate-700 dark:focus:bg-slate-950"
           defaultValue={column.name}
           maxLength={COLUMN_NAME_MAX}
           // The name takes focus on a desktop; on a phone only for a column just added, there to be named, as a
@@ -303,7 +303,7 @@ export function PlanColumnPopover({
       {renameClash ? (
         <p
           role="alert"
-          className="border-b border-slate-100 px-3 py-2 text-[12px] text-amber-700 dark:border-slate-800 dark:text-amber-300"
+          className="border-b border-slate-100 px-3 py-2 text-supporting text-amber-700 dark:border-slate-800 dark:text-amber-300"
         >
           A {renameClash} state already exists. Add it from Add Column, so its cards show here.
         </p>
@@ -314,8 +314,8 @@ export function PlanColumnPopover({
             first, the strong standard colours for light paper, then Custom colours with the board's column colours. */}
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <span className="block text-[13px] text-slate-700 dark:text-slate-200">Colour</span>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="block text-body text-slate-700 dark:text-slate-200">Colour</span>
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               {column.color ? 'The column’s band and header' : 'No colour'}
             </p>
           </div>
@@ -323,7 +323,7 @@ export function PlanColumnPopover({
             label="Colour"
             swatch={column.color ?? 'transparent'}
             none={!column.color}
-            className="h-8 w-8 shrink-0"
+            className="size-field shrink-0"
             value={column.color ?? NO_COLOUR}
             leading={NO_COLOUR_OPTION}
             standard={COLUMN_STANDARD}
@@ -341,15 +341,15 @@ export function PlanColumnPopover({
           <div className="min-w-0">
             <label
               htmlFor={`column-${column.id}-wip`}
-              className="block text-[13px] text-slate-700 dark:text-slate-200"
+              className="block text-body text-slate-700 dark:text-slate-200"
             >
               WIP Limit
             </label>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               {wip ? `Warns past ${plural(wip, 'card')}` : 'No limit'}
             </p>
           </div>
-          <div className="flex h-8 shrink-0 items-stretch overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
+          <div className="flex h-field shrink-0 items-stretch overflow-hidden rounded-control border border-slate-200 dark:border-slate-700">
             <button
               type="button"
               aria-label="Lower the WIP limit"
@@ -367,7 +367,7 @@ export function PlanColumnPopover({
               max={WIP_LIMIT_MAX}
               placeholder="Off"
               key={wip ?? 'none'}
-              className="w-11 border-x border-slate-200 bg-transparent text-center text-[13px] tabular-nums text-slate-800 outline-none [appearance:textfield] focus:bg-brand-50 dark:border-slate-700 dark:text-slate-100 dark:focus:bg-brand-500/10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-11 border-x border-slate-200 bg-transparent text-center text-body tabular-nums text-slate-800 outline-none [appearance:textfield] focus:bg-brand-50 dark:border-slate-700 dark:text-slate-100 dark:focus:bg-brand-500/10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               defaultValue={wip ?? ''}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') e.currentTarget.blur();
@@ -387,13 +387,15 @@ export function PlanColumnPopover({
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <span className="block text-[13px] text-slate-700 dark:text-slate-200">Width</span>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Slots across the board</p>
+            <span className="block text-body text-slate-700 dark:text-slate-200">Width</span>
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
+              Slots across the board
+            </p>
           </div>
           <div
             role="radiogroup"
             aria-label="Column width"
-            className="flex h-8 shrink-0 overflow-hidden rounded-md border border-slate-200 dark:border-slate-700"
+            className="flex h-field shrink-0 overflow-hidden rounded-control border border-slate-200 dark:border-slate-700"
           >
             {COLUMN_WIDTHS.map((w) => {
               const on = (column.width ?? 1) === w;
@@ -404,7 +406,7 @@ export function PlanColumnPopover({
                   role="radio"
                   aria-checked={on}
                   aria-label={`${w} ${w === 1 ? 'slot' : 'slots'}`}
-                  className={`flex w-10 items-center justify-center gap-[2px] border-r border-slate-200 transition last:border-r-0 dark:border-slate-700 ${
+                  className={`flex w-10 items-center justify-center gap-0.5 border-r border-slate-200 transition last:border-r-0 dark:border-slate-700 ${
                     on
                       ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
                       : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
@@ -412,7 +414,11 @@ export function PlanColumnPopover({
                   onClick={() => onChange(setColumnWidth(setup, column.id, w), 'ColumnWidth')}
                 >
                   {Array.from({ length: w }, (_, i) => (
-                    <span key={i} aria-hidden className="h-3.5 w-1.5 rounded-sm bg-current" />
+                    <span
+                      key={i}
+                      aria-hidden
+                      className="h-icon-row w-1.5 rounded-control bg-current"
+                    />
                   ))}
                 </button>
               );
@@ -423,15 +429,13 @@ export function PlanColumnPopover({
           checked={done}
           onChange={(on) => onChange(setDoneColumn(setup, column.id, on), 'DoneColumn')}
         >
-          <span className="block text-[13px] text-slate-700 dark:text-slate-200">
-            Counts as Done
-          </span>
-          <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="block text-body text-slate-700 dark:text-slate-200">Counts as Done</span>
+          <span className="block text-supporting text-slate-500 dark:text-slate-400">
             Counts toward the board’s progress
           </span>
         </SwitchRow>
       </div>
-      <div className="border-t border-slate-100 px-1.5 py-1.5 dark:border-slate-800">
+      <div className="border-t border-slate-100 px-2 py-1.5 dark:border-slate-800">
         {/* The rest one to a row, icon left (docs/specs/026-plan/plan-board.md "Option lists"). */}
         <button
           ref={addButton}
@@ -536,7 +540,7 @@ export function PlanColumnPopover({
         role="dialog"
         aria-label={`${column.name} column`}
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-overlay)] animate-fade-in overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-800 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+        className="fixed z-[var(--z-overlay)] animate-fade-in overflow-hidden rounded-surface border border-slate-200 bg-white text-slate-800 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, width: WIDTH }}
       >
         {body}

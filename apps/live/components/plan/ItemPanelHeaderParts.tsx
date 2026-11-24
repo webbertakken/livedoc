@@ -31,13 +31,13 @@ export function ItemTypePill({
   );
   if (!canEdit)
     return (
-      <span className="flex shrink-0 items-center gap-1.5 px-1 text-[13px] font-semibold text-slate-900 dark:text-slate-50">
+      <span className="flex shrink-0 items-center gap-2 px-1 text-body text-slate-900 dark:text-slate-50">
         {glyph}
         {type.label}
       </span>
     );
   return (
-    <label className="relative flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1 pl-2 pr-1.5 text-[13px] font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 focus-within:ring-2 focus-within:ring-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:hover:border-slate-600">
+    <label className="relative flex shrink-0 cursor-pointer items-center gap-2 rounded-menu border border-slate-200 bg-white py-1 pl-2 pr-2 text-body text-slate-900 shadow-sm transition hover:border-slate-300 focus-within:ring-2 focus-within:ring-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:hover:border-slate-600">
       {glyph}
       <span>{type.label}</span>
       <span aria-hidden className="text-slate-400">
@@ -75,7 +75,7 @@ export function ItemKeyTag({ itemKey }: { itemKey: number }) {
             () => undefined,
           );
         }}
-        className="shrink-0 cursor-pointer rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[12px] tabular-nums text-slate-600 transition hover:bg-slate-200 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+        className="shrink-0 cursor-pointer rounded-control bg-slate-100 px-2 py-0.5 font-mono text-supporting tabular-nums text-slate-600 transition hover:bg-slate-200 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
       >
         {text}
       </button>

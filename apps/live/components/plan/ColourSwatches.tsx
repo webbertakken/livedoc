@@ -59,7 +59,7 @@ export function TypeColourButton({
       standard={STANDARD}
       yours={yours}
       onPick={(id) => onChange(id.toLowerCase())}
-      className="h-7 w-7 hover:bg-slate-100 dark:hover:bg-slate-800"
+      className="size-row hover:bg-slate-100 dark:hover:bg-slate-800"
     />
   );
 }

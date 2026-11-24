@@ -28,12 +28,11 @@ export function MenuNameSlot() {
     <span
       ref={setMenuNameSlot}
       data-menu-name-slot=""
-      className="flex min-w-0 items-center gap-1.5 whitespace-nowrap empty:hidden"
+      className="flex min-w-0 items-center gap-2 whitespace-nowrap empty:hidden"
     />
   );
 }
 
 // The name's look in the box: the chrome's text at regular weight (never bold), a little smaller than a header's,
 // truncating.
-export const IN_BOX_TITLE_CLASS =
-  'min-w-0 max-w-[16rem] truncate text-[14px] font-normal leading-tight';
+export const IN_BOX_TITLE_CLASS = 'min-w-0 max-w-[16rem] truncate text-body font-normal';

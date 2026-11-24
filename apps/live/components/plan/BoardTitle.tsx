@@ -10,7 +10,7 @@ import type { PlanPalette } from './plan-palette';
 const BOARD_TITLE_MAX = 80;
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
-const TITLE_CLASS = 'min-w-0 text-[17px] font-bold leading-tight';
+const TITLE_CLASS = 'min-w-0 text-panel-title';
 // Beside a widget zone the title keeps to 40% of the header so the widgets have room; with none (a phone's
 // header, a board without widgets that its viewer may not add to) it takes the room there is.
 const CAPPED_CLASS = 'max-w-[40%] shrink-0';
@@ -77,7 +77,7 @@ function BoardTitleField({
       aria-label="Board title"
       value={draft}
       maxLength={BOARD_TITLE_MAX}
-      className={`${TITLE_CLASS} rounded-md border bg-transparent px-1.5 py-0.5 outline-none`}
+      className={`${TITLE_CLASS} rounded-control border bg-transparent px-2 py-0.5 outline-none`}
       style={{ borderColor: palette.focus, color: palette.text }}
       // The field's own presses never move or select the board.
       onPointerDown={stop}

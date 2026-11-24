@@ -85,7 +85,7 @@ export function AddColumnPickerPopover({
         aria-label="Add a Column"
         data-add-column-picker=""
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-popover)] animate-fade-in rounded-xl border border-slate-200 bg-white p-3 text-slate-800 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+        className="fixed z-[var(--z-popover)] animate-fade-in rounded-surface border border-slate-200 bg-white p-3 text-slate-800 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         style={{
           width: ADD_COLUMN_PICKER_PX,
           ...(layout
@@ -96,7 +96,7 @@ export function AddColumnPickerPopover({
         {arrow ? (
           <span
             aria-hidden
-            className={`absolute h-3 w-3 rotate-45 border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 ${arrow.border}`}
+            className={`absolute size-icon-chevron rotate-45 border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 ${arrow.border}`}
             style={arrow.style}
           />
         ) : null}

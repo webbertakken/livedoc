@@ -29,8 +29,6 @@ const SIZED_PATHS = [
   'components/sheets/rules/SheetFormatRules.tsx',
   'components/sheets/rules/SheetRuleSettings.tsx',
   'components/sheets/rules/SheetValidationEditor.tsx',
-  // Plan's one option list, shared by Plan's pickers and the sheet's rule popovers.
-  'components/plan/OptionRows.tsx',
   // A sheet's own chrome; its cells and drawing layers are content, its toolbar moves with the canvas palette.
   'components/sheets/NameBoxList.tsx',
   'components/sheets/SheetBordersPicker.tsx',
@@ -65,21 +63,31 @@ const SIZED_PATHS = [
   'components/sheets/SheetSetupStyle.tsx',
   'components/sheets/SheetSmartFillLayer.tsx',
   'components/sheets/SheetTouchLinkChip.tsx',
-  // A Dashboard tab is chrome (sizing.md D239).
-  'components/plan/dashboard',
-  // A Plan view's frame and metric tiles; its drawing is content (sizing.md D240).
-  'components/plan/views',
-  // A board's header widgets, their zone and picker.
-  'components/plan/widgets',
+  // Plan's tabs, panels, setup and chrome; what a board or view draws on the canvas is content (sizing.md D240).
+  'components/plan',
 ];
 
 // Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.
 const SIZING_EXCEPTIONS = [
-  // Add to Slot's pictures of a card and a slot (sizing.md D239).
+  // Pictures: the board picker's boards, a sheet's and a layout's, Add to Slot's cards and slots (drawn art).
+  'components/plan/board-previews.tsx',
   'components/plan/dashboard/card-previews.tsx',
   'components/plan/dashboard/slot-previews.tsx',
-  // Its floating cog shares the canvas toolbar's frame, so it moves with the canvas chrome.
-  'components/plan/dashboard/DashboardSettings.tsx',
+  'components/plan/DashboardLayoutPicture.tsx',
+  'components/plan/PlanBoardPicker.tsx',
+  'components/plan/sheet-previews.tsx',
+  // An avatar's initials are drawn by its disc.
+  'components/plan/PersonDisc.tsx',
+  // A card shown as a slide is a slide: content.
+  'components/plan/ItemSlideView.tsx',
+  // A board's drawing is content: its columns, cards, cells and Add Card (sizing.md D240).
+  'components/plan/AddCardButton.tsx',
+  'components/plan/plan-card-parts.tsx',
+  'components/plan/PlanBoardCells.tsx',
+  'components/plan/PlanBoardView.tsx',
+  'components/plan/PlanCardFace.tsx',
+  'components/plan/PlanCardView.tsx',
+  'components/plan/PlanColumnHeader.tsx',
   // A Plan view's drawing is content (sizing.md D240).
   'components/plan/views/calendar-day.tsx',
   'components/plan/views/CalendarView.tsx',
@@ -91,6 +99,8 @@ const SIZING_EXCEPTIONS = [
   'components/plan/views/PriorityMatrixView.tsx',
   'components/plan/views/StatusMixView.tsx',
   'components/plan/views/WorkloadView.tsx',
+  // Its floating cog shares the canvas toolbar's frame, so it moves with the canvas chrome.
+  'components/plan/dashboard/DashboardSettings.tsx',
 ];
 
 describe('live sizing', () => {

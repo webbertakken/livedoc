@@ -46,21 +46,17 @@ export function CardTypesPanel({
     // The type's glyph, name, field count and item count: the row's face, in its edit button.
     // A type no card has yet is shown a little grey (its count is in its name for a screen reader, not on show).
     const face = (
-      <span
-        className={`flex min-w-0 flex-1 items-center gap-2.5 ${count === 0 ? 'opacity-55' : ''}`}
-      >
+      <span className={`flex min-w-0 flex-1 items-center gap-3 ${count === 0 ? 'opacity-55' : ''}`}>
         <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${ACCENT_TINT} ${ACCENT_TEXT}`}
+          className={`flex size-field shrink-0 items-center justify-center rounded-control ${ACCENT_TINT} ${ACCENT_TEXT}`}
           style={accentVars(t.color)}
           aria-hidden
         >
           <PlanTypeGlyph glyph={t.glyph} size={16} />
         </span>
         <span className="flex min-w-0 flex-1 flex-col" aria-hidden>
-          <span className="truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-            {t.label}
-          </span>
-          <span className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="truncate text-body text-slate-800 dark:text-slate-100">{t.label}</span>
+          <span className="truncate text-supporting text-slate-500 dark:text-slate-400">
             {fields} {fields === 1 ? 'field' : 'fields'}
             {t.custom?.length ? `, ${t.custom.length} custom` : ''}
           </span>
@@ -70,7 +66,7 @@ export function CardTypesPanel({
     return (
       <li
         key={t.id}
-        className={`group relative flex items-center gap-2.5 bg-white py-2 pl-3 pr-2 transition-colors motion-reduce:transition-none dark:bg-slate-900 ${
+        className={`group relative flex items-center gap-3 bg-white py-2 pl-3 pr-2 transition-colors motion-reduce:transition-none dark:bg-slate-900 ${
           canEdit
             ? 'hover:bg-slate-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-brand-400 dark:hover:bg-slate-800/70'
             : ''
@@ -88,14 +84,14 @@ export function CardTypesPanel({
             type="button"
             aria-label={`${t.label}, ${label}. Edit`}
             onClick={() => plan.editType({ id: t.id })}
-            className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-left outline-none after:absolute after:inset-0 after:content-['']"
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left outline-none after:absolute after:inset-0 after:content-['']"
           >
             {face}
           </button>
         ) : (
           <div
             role="group"
-            className="flex min-w-0 flex-1 items-center gap-2.5"
+            className="flex min-w-0 flex-1 items-center gap-3"
             aria-label={`${t.label}, ${label}`}
           >
             {face}
@@ -113,7 +109,7 @@ export function CardTypesPanel({
                 full ? 'The document has the most card types it can hold' : `Duplicate ${t.label}`
               }
               aria-disabled={full || undefined}
-              className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 transition ${
+              className={`relative z-10 flex size-chip shrink-0 items-center justify-center rounded-control text-slate-400 transition ${
                 full
                   ? 'cursor-not-allowed opacity-40'
                   : 'cursor-pointer hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200'
@@ -128,7 +124,7 @@ export function CardTypesPanel({
         ) : null}
         {canEdit ? (
           <span
-            className="pointer-events-none flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 transition group-hover:text-slate-700 dark:group-hover:text-slate-200"
+            className="pointer-events-none flex size-chip shrink-0 items-center justify-center rounded-control text-slate-400 transition group-hover:text-slate-700 dark:group-hover:text-slate-200"
             aria-hidden
           >
             <PencilIcon />
@@ -169,7 +165,7 @@ export function CardTypesPanel({
         ) : (
           <ul
             aria-label="Card Types"
-            className="flex flex-col divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
+            className="flex flex-col divide-y divide-slate-100 overflow-hidden rounded-menu border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
           >
             {types.map(row)}
           </ul>
@@ -181,7 +177,7 @@ export function CardTypesPanel({
               <Button
                 variant="ghost"
                 size="xs"
-                className="self-center px-2 py-0.5 text-[11px] font-normal"
+                className="self-center px-2 py-0.5 text-supporting font-normal"
                 aria-haspopup="dialog"
                 aria-expanded={confirmingAt !== null}
                 onClick={(e) => setConfirmingAt(e.currentTarget)}

@@ -131,14 +131,14 @@ export function SetupColumnList({
               key="slot"
               aria-hidden
               data-setup-column
-              className="rounded-lg border-2 border-dashed border-brand-400 bg-brand-50/60 dark:border-brand-500 dark:bg-brand-500/10"
+              className="rounded-menu border-2 border-dashed border-brand-400 bg-brand-50/60 dark:border-brand-500 dark:bg-brand-500/10"
               style={{ height: drag?.box.height }}
             />
           ) : (
             <li
               key={setupColumnKey(c)}
               data-setup-column
-              className="flex items-center gap-2.5 rounded-lg border px-2.5 py-2"
+              className="flex items-center gap-3 rounded-menu border px-3 py-2"
               style={{ borderColor: palette.cardBorder, backgroundColor: palette.card }}
             >
               <ColumnRow
@@ -165,7 +165,7 @@ export function SetupColumnList({
       {drag && dragged ? (
         <div
           aria-hidden
-          className="pointer-events-none fixed z-[var(--z-overlay)] flex items-center gap-2 rounded-lg border border-brand-400 px-2 py-1.5 shadow-lg ring-2 ring-brand-500/20"
+          className="pointer-events-none fixed z-[var(--z-overlay)] flex items-center gap-2 rounded-menu border border-brand-400 px-2 py-1.5 shadow-lg ring-2 ring-brand-500/20"
           style={{
             left: drag.box.left,
             top: drag.box.top + (drag.y - drag.startY),
@@ -197,18 +197,15 @@ function ColumnRow({
       <button
         type="button"
         {...grip}
-        className={`flex h-7 w-5 shrink-0 cursor-grab items-center justify-center rounded active:cursor-grabbing ${HANDLE_TOUCH}`}
+        className={`flex h-row w-5 shrink-0 cursor-grab items-center justify-center rounded-control active:cursor-grabbing ${HANDLE_TOUCH}`}
         style={{ color: palette.muted }}
       >
         <GripIcon />
       </button>
-      <span
-        className="min-w-0 flex-1 truncate text-[13px] font-semibold"
-        style={{ color: palette.text }}
-      >
+      <span className="min-w-0 flex-1 truncate text-body" style={{ color: palette.text }}>
         {column.name}
       </span>
-      <span className="shrink-0 text-[11px]" style={{ color: palette.muted }}>
+      <span className="shrink-0 text-supporting" style={{ color: palette.muted }}>
         {column.kind === 'existing' ? 'Existing state' : 'New'}
       </span>
       {onRemove ? (
@@ -216,13 +213,13 @@ function ColumnRow({
           type="button"
           aria-label={`Remove ${column.name}`}
           onClick={onRemove}
-          className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition hover:bg-black/5 dark:hover:bg-white/10"
+          className="flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control transition hover:bg-black/5 dark:hover:bg-white/10"
           style={{ color: palette.muted }}
         >
           <CloseIcon size={10} />
         </button>
       ) : (
-        <span className="h-6 w-6 shrink-0" />
+        <span className="size-chip shrink-0" />
       )}
     </>
   );

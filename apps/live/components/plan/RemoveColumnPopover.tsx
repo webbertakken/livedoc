@@ -46,16 +46,16 @@ export function RemoveColumnPopover({
       <div
         role="alertdialog"
         aria-label={`Delete ${column.name}`}
-        className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+        className="flex flex-col gap-3 rounded-menu border border-slate-200 bg-white p-3 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
       >
         <div>
-          <h3 className="text-[14px] font-semibold">Delete {column.name}?</h3>
-          <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
+          <h3 className="text-body">Delete {column.name}?</h3>
+          <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
             {cards} {cardCount === 1 ? 'is' : 'are'} in {column.name}, on every board that shows it.
             Where should {cardCount === 1 ? 'it' : 'they'} go?
           </p>
         </div>
-        <div role="radiogroup" aria-label="Where the cards go" className="flex flex-col gap-1.5">
+        <div role="radiogroup" aria-label="Where the cards go" className="flex flex-col gap-2">
           {others.length > 0 ? (
             <Option
               on={kind === 'move'}
@@ -69,7 +69,7 @@ export function RemoveColumnPopover({
               <Select
                 id={selectId}
                 className="mt-1.5 w-full"
-                selectClassName="text-[13px]"
+                selectClassName="text-body"
                 value={to}
                 onFocus={() => setKind('move')}
                 onChange={(e) => {
@@ -91,7 +91,7 @@ export function RemoveColumnPopover({
             icon={<TrashIcon size={16} />}
             title="Move to the Trash"
           >
-            <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
               You can restore them from the Trash.
             </p>
           </Option>
@@ -134,17 +134,17 @@ function Option({
     ? 'border-brand-400 bg-brand-50/70 dark:border-brand-500/60 dark:bg-brand-500/10'
     : 'border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600';
   return (
-    <div className={`rounded-lg border px-2.5 py-2 transition ${ring}`}>
+    <div className={`rounded-menu border px-3 py-2 transition ${ring}`}>
       <button
         type="button"
         role="radio"
         aria-checked={on}
-        className="flex w-full cursor-pointer items-center gap-2 text-left text-[13px] font-medium"
+        className="flex w-full cursor-pointer items-center gap-2 text-left text-body"
         onClick={onPick}
       >
         <span
           aria-hidden
-          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+          className={`flex size-icon-row shrink-0 items-center justify-center rounded-full border ${
             on ? 'border-brand-600 dark:border-brand-400' : 'border-slate-300 dark:border-slate-600'
           }`}
         >

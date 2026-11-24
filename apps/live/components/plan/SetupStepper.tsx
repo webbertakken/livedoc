@@ -2,7 +2,7 @@
 
 // Setup Board's steps as a wizard stepper (docs/specs/026-plan/plan-board.md "Setup Board"): a numbered circle per
 // step joined by a line, the step's name beside it (under it on a narrow card, a container query on the card). The
-// current step's circle is filled in the brand colour and its name bold; a done step's circle holds a tick, the line
+// current step's circle is filled in the brand colour and its name medium; a done step's circle holds a tick, the line
 // up to the current step is filled, and a done step is a button back to it; a step ahead is muted.
 import { Fragment } from 'react';
 import { CheckIcon, GlyphDisc } from '@livedoc/ui';
@@ -29,7 +29,7 @@ export function SetupStepper<Id extends string>({
           <GlyphDisc
             size={24}
             aria-hidden
-            className={`shrink-0 text-[12px] font-semibold tabular-nums transition-colors motion-reduce:transition-none ${
+            className={`shrink-0 text-supporting tabular-nums transition-colors motion-reduce:transition-none ${
               current || done ? 'bg-brand-700 text-white dark:bg-brand-600' : 'border'
             }`}
             style={
@@ -43,8 +43,8 @@ export function SetupStepper<Id extends string>({
         );
         const label = (
           <span
-            className={`text-center text-[12px] leading-tight @md:text-left @md:text-[13px] ${
-              current ? 'font-semibold' : 'font-medium'
+            className={`text-center text-supporting @md:text-left @md:text-body ${
+              current ? 'font-medium' : ''
             }`}
             style={{ color: current || done ? palette.text : palette.muted }}
           >
@@ -58,7 +58,7 @@ export function SetupStepper<Id extends string>({
               {done ? (
                 <button
                   type="button"
-                  className={`${body} cursor-pointer rounded-md px-1 py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-brand-400 hover:opacity-80`}
+                  className={`${body} cursor-pointer rounded-control px-1 py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-brand-400 hover:opacity-80`}
                   aria-label={`${x.label}, done: go back`}
                   onClick={() => onStep(x.id)}
                 >

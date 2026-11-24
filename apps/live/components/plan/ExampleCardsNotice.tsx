@@ -54,12 +54,12 @@ export function ExampleCardsNotice({
     plan.announce('Example cards kept as your own');
   };
   const button =
-    'h-7 shrink-0 cursor-pointer rounded-md border px-2 text-[12px] font-medium transition hover:opacity-80';
+    'h-row shrink-0 cursor-pointer rounded-control border px-2 text-supporting transition hover:opacity-80';
   return (
     <div
       role="status"
       data-example-cards-notice
-      className="mx-3 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-md border px-3 py-1.5 text-[12px]"
+      className="mx-3 mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border px-3 py-1.5 text-supporting"
       style={{ borderColor: palette.border, backgroundColor: palette.column, color: palette.muted }}
     >
       <span aria-hidden className="shrink-0" style={{ color: palette.focus }}>

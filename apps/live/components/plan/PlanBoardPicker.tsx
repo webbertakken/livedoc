@@ -61,7 +61,7 @@ function GenericPreview({ preset, palette }: { preset: PlanBoardPresetId; palett
   return (
     <div
       aria-hidden
-      className="flex h-16 w-full flex-col gap-1 overflow-hidden rounded-lg border p-1.5 sm:h-24"
+      className="flex h-16 w-full flex-col gap-1 overflow-hidden rounded-menu border p-2 sm:h-24"
       style={{ backgroundColor: palette.surface, borderColor: palette.border }}
     >
       <span
@@ -72,7 +72,7 @@ function GenericPreview({ preset, palette }: { preset: PlanBoardPresetId; palett
         {columns.map((c, ci) => (
           <div
             key={c.id}
-            className="flex min-w-0 flex-1 flex-col gap-[3px] rounded p-[3px]"
+            className="flex min-w-0 flex-1 flex-col gap-[3px] rounded-control p-[3px]"
             style={{ backgroundColor: palette.column }}
           >
             <span

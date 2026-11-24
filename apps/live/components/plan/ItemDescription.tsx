@@ -67,7 +67,7 @@ export function ItemDescription({
 
   if (!canEdit) {
     return empty ? (
-      <p className="text-[13px] text-slate-500 dark:text-slate-400">No description</p>
+      <p className="text-body text-slate-500 dark:text-slate-400">No description</p>
     ) : (
       <NoteRichText
         note={undefined}
@@ -82,7 +82,7 @@ export function ItemDescription({
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="group -mx-3 flex w-[calc(100%+1.5rem)] cursor-text items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 dark:hover:bg-slate-800/50 dark:hover:text-slate-300"
+        className="group -mx-3 flex w-[calc(100%+1.5rem)] cursor-text items-center gap-2 rounded-menu px-3 py-2 text-left text-body text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 dark:hover:bg-slate-800/50 dark:hover:text-slate-300"
       >
         <PencilIcon size={14} />
         Add a description…
@@ -94,7 +94,7 @@ export function ItemDescription({
     // The text, its links live, and an Edit button; a click on the text (not a link) edits it too.
     return (
       <div
-        className="group relative rounded-xl border border-transparent px-3 py-2.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-800/50"
+        className="group relative rounded-surface border border-transparent px-3 py-2.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-800/50"
         onClick={(e) => {
           if (!(e.target as HTMLElement).closest('a, button')) setEditing(true);
         }}
@@ -108,7 +108,7 @@ export function ItemDescription({
           type="button"
           onClick={() => setEditing(true)}
           aria-label="Edit the description"
-          className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-500 opacity-0 shadow-sm transition focus-visible:opacity-100 group-hover:opacity-100 max-sm:opacity-100 [@media(hover:none)]:opacity-100 dark:bg-slate-900 dark:text-slate-400"
+          className="absolute right-2 top-2 flex items-center gap-1 rounded-control bg-white px-2 py-0.5 text-supporting text-slate-500 opacity-0 shadow-sm transition focus-visible:opacity-100 group-hover:opacity-100 max-sm:opacity-100 [@media(hover:none)]:opacity-100 dark:bg-slate-900 dark:text-slate-400"
         >
           <PencilIcon size={11} />
           Edit
@@ -119,7 +119,7 @@ export function ItemDescription({
 
   return (
     <div
-      className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/40"
+      className="rounded-surface bg-slate-50 p-2 dark:bg-slate-800/40"
       onBlur={(e) => {
         // Focus moving within (the toolbar, the link field) keeps the editor open.
         if (e.currentTarget.contains(e.relatedTarget)) return;
@@ -149,7 +149,7 @@ export function ItemDescription({
         }}
         onBlur={save}
       />
-      <div className="mt-1.5 flex items-center justify-between gap-2 px-1 text-[11px] text-slate-500 dark:text-slate-400">
+      <div className="mt-1.5 flex items-center justify-between gap-2 px-1 text-supporting text-slate-500 dark:text-slate-400">
         <span className="max-sm:hidden">
           <kbd className="font-sans">⌘B</kbd> bold · <kbd className="font-sans">⌘I</kbd> italic ·
           Esc to finish

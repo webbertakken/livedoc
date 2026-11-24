@@ -108,15 +108,12 @@ export function ItemTypeStatuses({
     onCount === 0 || (full && deselectAllStates(statuses, excluded).length === excluded.length);
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[12px] text-slate-500 dark:text-slate-400">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">
         The states cards of this type can move into. A new card is made in whatever column it is
         added to; it can never be moved into one turned off. New states are on for every type.
       </p>
       <div className="flex items-center gap-2">
-        <span
-          aria-live="polite"
-          className="text-[12px] font-medium text-slate-600 dark:text-slate-300"
-        >
+        <span aria-live="polite" className="text-supporting text-slate-600 dark:text-slate-300">
           {onCount} of {statuses.length} {statuses.length === 1 ? 'state' : 'states'} on
         </span>
         <Button
@@ -143,9 +140,9 @@ export function ItemTypeStatuses({
           return (
             <section key={`${gi}:${g.title ?? ''}`} aria-label={g.title ?? 'States'}>
               {g.title !== null ? (
-                <h4 className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <h4 className="mb-1.5 flex items-center gap-2 text-supporting text-slate-500 dark:text-slate-400">
                   <span className="min-w-0 truncate">{g.title}</span>
-                  <span className="font-medium normal-case tracking-normal tabular-nums">
+                  <span className="tabular-nums">
                     {groupOn} of {g.statuses.length} {g.statuses.length === 1 ? 'state' : 'states'}{' '}
                     on
                   </span>
@@ -179,29 +176,26 @@ export function ItemTypeStatuses({
         })}
       </div>
       {full ? (
-        <p role="note" className="text-[12px] text-slate-500 dark:text-slate-400">
+        <p role="note" className="text-supporting text-slate-500 dark:text-slate-400">
           A type can turn off at most {ITEM_TYPE_EXCLUDED_STATUSES_MAX} states. Turn one back on to
           turn off another.
         </p>
       ) : null}
       {onCount === 0 ? (
-        <p role="note" className="text-[12px] text-slate-500 dark:text-slate-400">
+        <p role="note" className="text-supporting text-slate-500 dark:text-slate-400">
           With every state off, a card of this type stays in the state it is made in and can never
           be moved to another.
         </p>
       ) : null}
       {onDefaultStatus ? (
-        <div className="mt-2 flex flex-col gap-1.5 border-t border-slate-200 pt-3 dark:border-slate-700">
-          <label
-            htmlFor={defaultId}
-            className="text-[12px] font-semibold text-slate-700 dark:text-slate-200"
-          >
+        <div className="mt-2 flex flex-col gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+          <label htmlFor={defaultId} className="text-supporting text-slate-700 dark:text-slate-200">
             Default State
           </label>
           <Select
             id={defaultId}
             className="w-full sm:w-64"
-            selectClassName="text-[13px]"
+            selectClassName="text-body"
             // Each state once, by its own name. A ready-made type with no default chosen shows its named one picked
             // (no None: it falls back to that anyway); what is picked is saved as picked.
             value={
@@ -220,7 +214,7 @@ export function ItemTypeStatuses({
                 </option>
               ))}
           </Select>
-          <p className="text-[12px] text-slate-500 dark:text-slate-400">
+          <p className="text-supporting text-slate-500 dark:text-slate-400">
             Cards made outside a board start here; a card added to a board takes that column&apos;s
             state.
           </p>

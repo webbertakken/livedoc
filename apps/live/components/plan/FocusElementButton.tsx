@@ -35,7 +35,7 @@ export function FocusElementButton({
       <button
         type="button"
         aria-label={label}
-        className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md transition hover:bg-black/5 dark:hover:bg-white/10"
+        className="flex size-row shrink-0 cursor-pointer items-center justify-center rounded-control transition hover:bg-black/5 dark:hover:bg-white/10"
         style={{ color: palette.muted }}
         onPointerDown={stop}
         onDoubleClick={stop}

@@ -30,10 +30,7 @@ export function ItemPanelSection({
 }) {
   return (
     <section className="mb-8">
-      <label
-        htmlFor={htmlFor}
-        className="mb-2 block text-[13px] font-semibold text-slate-800 dark:text-slate-100"
-      >
+      <label htmlFor={htmlFor} className="mb-2 block text-body text-slate-800 dark:text-slate-100">
         {heading}
       </label>
       {children}
@@ -53,14 +50,14 @@ export function ItemDetailsRow({
   children: ReactNode;
 }) {
   return (
-    <div className="-mx-2 grid min-h-9 grid-cols-[6.5rem_1fr] items-center gap-2 rounded-lg px-2 py-1 max-sm:mx-0 max-sm:grid-cols-1 max-sm:items-start max-sm:gap-1.5 max-sm:px-0 max-sm:py-2">
+    <div className="-mx-2 grid min-h-prominent grid-cols-[6.5rem_1fr] items-center gap-2 rounded-menu px-2 py-1 max-sm:mx-0 max-sm:grid-cols-1 max-sm:items-start max-sm:gap-2 max-sm:px-0 max-sm:py-2">
       <label
         htmlFor={htmlFor}
-        className="self-start pt-2 text-[12px] text-slate-500 max-sm:pt-0 max-sm:font-medium dark:text-slate-400"
+        className="self-start pt-2 text-supporting text-slate-500 max-sm:pt-0 dark:text-slate-400"
       >
         {label}
       </label>
-      <div className="min-w-0 text-[13px]">{children}</div>
+      <div className="min-w-0 text-body">{children}</div>
     </div>
   );
 }
@@ -69,12 +66,10 @@ export function ItemDetailsRow({
 export function ItemMeta({ item, now }: { item: Item; now: number }) {
   const response = readFromForm(item.fields[FROM_FORM_FIELD]);
   return (
-    <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-3 text-[11px] text-slate-500 dark:text-slate-400 dark:border-slate-700/80">
-      <div className="flex items-center gap-1.5">
+    <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-3 text-supporting text-slate-500 dark:text-slate-400 dark:border-slate-700/80">
+      <div className="flex items-center gap-2">
         Created by <PersonDisc person={item.createdBy} />
-        <span className="font-medium text-slate-600 dark:text-slate-300">
-          {item.createdBy.name}
-        </span>
+        <span className="text-slate-600 dark:text-slate-300">{item.createdBy.name}</span>
       </div>
       {response ? (
         // A form's response (docs/specs/030-forms/forms.md "What a response makes"): its number and when it came.
@@ -89,13 +84,11 @@ export function ItemMeta({ item, now }: { item: Item; now: number }) {
           })}
         </div>
       ) : null}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         Edited by <PersonDisc person={item.updatedBy} />
         <span>
-          <span className="font-medium text-slate-600 dark:text-slate-300">
-            {item.updatedBy.name}
-          </span>
-          , {relativeSince(item.updatedAt, now)}
+          <span className="text-slate-600 dark:text-slate-300">{item.updatedBy.name}</span>,{' '}
+          {relativeSince(item.updatedAt, now)}
         </span>
       </div>
     </div>

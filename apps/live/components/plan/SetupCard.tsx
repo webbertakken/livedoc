@@ -55,25 +55,25 @@ export function SetupCard({
       <ScaleCapped className="flex h-full min-h-0 w-full p-4 sm:p-6">
         <section
           aria-labelledby={titleId}
-          className={`m-auto flex max-h-full w-full flex-col rounded-2xl border shadow-sm ${wide ? 'max-w-[36rem] lg:max-w-[52rem]' : 'max-w-[36rem]'}`}
+          className={`m-auto flex max-h-full w-full flex-col rounded-surface border shadow-sm ${wide ? 'max-w-[36rem] lg:max-w-[52rem]' : 'max-w-[36rem]'}`}
           style={{
             backgroundColor: palette.surface,
             borderColor: palette.border,
             color: palette.text,
           }}
         >
-          <header className="flex shrink-0 items-start gap-3.5 px-6 pt-6">
+          <header className="flex shrink-0 items-start gap-4 px-6 pt-6">
             <span
               aria-hidden
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-surface bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
             >
               {icon}
             </span>
             <div className="min-w-0 flex-1">
-              <h2 id={titleId} className="text-[16px] font-semibold">
+              <h2 id={titleId} className="text-panel-title">
                 {title}
               </h2>
-              <p className="mt-1 text-[13px] leading-snug" style={{ color: palette.muted }}>
+              <p className="mt-1 text-body" style={{ color: palette.muted }}>
                 {line}
               </p>
             </div>
@@ -107,7 +107,7 @@ export function SetupCard({
               ) : null}
             </>
           ) : (
-            <div className="h-6" />
+            <div className="h-chip" />
           )}
         </section>
       </ScaleCapped>

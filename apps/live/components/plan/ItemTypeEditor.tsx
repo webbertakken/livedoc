@@ -191,10 +191,10 @@ export function ItemTypeEditor({
       closeOnEscape={!tour.active}
       className="max-h-[min(46rem,calc(100dvh-2rem))] overflow-hidden"
     >
-      <div className="flex items-center gap-2 px-5 pt-5 pb-2">
+      <div className="flex items-center gap-2 px-6 pt-5 pb-2">
         <h2
           id={titleId}
-          className="flex min-w-0 flex-1 items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-50"
+          className="flex min-w-0 flex-1 items-center gap-2 text-name text-slate-900 dark:text-slate-50"
         >
           <span className={ACCENT_TEXT} style={accentVars(color)}>
             <PlanTypeGlyph glyph={glyph} size={18} />
@@ -283,7 +283,7 @@ export function ItemTypeEditor({
             </Button>
           ) : null}
           {problem && draft.label ? (
-            <span className="self-center text-[12px] text-rose-600 dark:text-rose-400">
+            <span className="self-center text-supporting text-rose-600 dark:text-rose-400">
               {problem}
             </span>
           ) : null}

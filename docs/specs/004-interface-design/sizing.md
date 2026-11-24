@@ -27,10 +27,15 @@ respondents see it and a slide keep the sizes their author chose.
   bars and marks, a Calendar's day grid, the Priority Matrix's quadrants, Workload's bars and Status Mix (D240,
   default).
 - A Plan view's frame is chrome on the scale: its header, legend, search, scale controls, Add Card and settings.
+- A board's drawing is content in the same way: its columns' heads, its cards' faces, its cells and Add Card (D240).
+- A board's or a sheet's header is chrome: its title the panel title's step, its icon buttons (Focus, Maximise,
+  the cog) 28 px.
 - A metric tile reads its name and line on the scale; its figure and picture are drawn art (D239).
 - A board's header widgets are chrome: 28 px pills in a 36 px band, figures regular in the ink, not in weight.
 - A widget's × is a 16 px mark with a 24 px reach, so it sits on the widget's corner yet meets the floor.
 - The board picker's pictures of each board (`board-previews.tsx`) are drawn art.
+- A card's panel is chrome: its title the dialog title's step, its tabs medium only when chosen.
+- A card shown as a slide (`ItemSlideView`) is a slide, so it is content and keeps its own sizes.
 - A Dashboard tab is a page, never zoomed, so it is chrome on the scale: its cards' names, lines and controls, its
   slots' toolbars and its menus (D239, default).
 - A dashboard's Title card is the page's title (`text-page-title`, its line `text-body`); a Note card's title is a
@@ -157,6 +162,8 @@ A surface names the token, never the number, so the scale changes in one place.
 - A gap or a side padding is named by its number (`gap-2`, `px-3`), which must be a step.
 - A box under 12 px or over 36 px (a hairline, a dot, an avatar, a panel) is layout, not the scale, and passes.
 - It reads class strings only; sizes set under a coarse pointer are touch's and pass.
+- A field reads 16 px on a phone, so iOS never zooms in on it (`globals.css`); a picker drawn as a button among
+  fields takes the same floor (`max-sm:text-[16px]`), and that alone passes under a width.
 - The paths it covers grow as each surface moves to the scale, and in the end cover every app.
 - A moved folder may name exceptions: drawn art, or a part that moves with a later group; a stale one fails the run.
 
@@ -203,5 +210,6 @@ The code cites each by its id.
   drawn in it keeps the sizes the grid gives it, as a canvas's elements do (default).
 - **D239** A Dashboard tab is chrome: it is drawn as a page the canvas never zooms, so what it reads is on the
   scale, but for drawn art that grows with its tile or frame (default).
-- **D240** A Plan view's drawing is content: it zooms with the canvas and lays its rows, days and quadrants out at
-  the sizes it draws, so what is drawn in it keeps them, as a sheet's grid does (default).
+- **D240** A Plan view's or a board's drawing is content: it zooms with the canvas and lays its rows, days,
+  quadrants, columns and cards out at the sizes it draws, so what is drawn in it keeps them, as a sheet's grid does
+  (default).

@@ -52,7 +52,7 @@ export function ItemTypeConfiguration({
       <ConfigurationSection title="General" tourId="card-type-general" hideTitle>
         <SheetRow label="Name" htmlFor={nameId}>
           {/* One field: pick the glyph at its start, type the name after it, pick the colour at its end. */}
-          <div className="flex max-w-xs items-center gap-1 rounded-lg border border-slate-200 bg-white px-1 transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex max-w-xs items-center gap-1 rounded-menu border border-slate-200 bg-white px-1 transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900">
             <GlyphPicker value={glyph} colour={color} onChange={onGlyph} inline />
             <input
               id={nameId}
@@ -61,7 +61,7 @@ export function ItemTypeConfiguration({
               placeholder="Customer call"
               autoFocus={isNew}
               onChange={(e) => onLabel(e.target.value)}
-              className="h-9 min-w-0 flex-1 bg-transparent text-[13px] text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
+              className="h-prominent min-w-0 flex-1 bg-transparent text-body text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
             />
             <TypeColourButton value={color} onChange={onColor} />
           </div>
@@ -72,7 +72,7 @@ export function ItemTypeConfiguration({
         tourId="card-type-fields"
         className="mt-2 border-t border-slate-100 pt-4 dark:border-slate-800"
       >
-        <p className="mb-2 text-[12px] text-slate-500 dark:text-slate-400">
+        <p className="mb-2 text-supporting text-slate-500 dark:text-slate-400">
           Laid out as the card's panel shows them. Add, move or rename to change it.
         </p>
         <ItemTypeLayoutEditor
@@ -112,9 +112,7 @@ function ConfigurationSection({
     >
       <h3
         id={headingId}
-        className={
-          hideTitle ? 'sr-only' : 'mb-3 text-[13px] font-semibold text-slate-900 dark:text-slate-50'
-        }
+        className={hideTitle ? 'sr-only' : 'mb-3 text-body text-slate-900 dark:text-slate-50'}
       >
         {title}
       </h3>

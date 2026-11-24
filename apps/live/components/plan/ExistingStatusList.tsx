@@ -9,8 +9,7 @@ import { useEffect } from 'react';
 import { NoMatches, PlusIcon } from '@livedoc/ui';
 import type { MissingStatus } from '@livedoc/items';
 
-export const HEADING =
-  'text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400';
+export const HEADING = 'text-supporting text-slate-500 dark:text-slate-400';
 
 // The id of row `index` in the listbox `listId`.
 export const optionId = (listId: string, index: number) => `${listId}-option-${index}`;
@@ -69,17 +68,17 @@ export function ExistingStatusList({
   }, [listId, active]);
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex min-h-6 items-center justify-between gap-2">
-        <p id={`${listId}-label`} className={`${HEADING} flex items-center gap-1.5`}>
+      <div className="flex min-h-chip items-center justify-between gap-2">
+        <p id={`${listId}-label`} className={`${HEADING} flex items-center gap-2`}>
           Existing Statuses
-          <span className="rounded-full bg-slate-100 px-1.5 text-[10px] tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <span className="rounded-full bg-slate-100 px-2 text-supporting tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
             {total}
           </span>
         </p>
         {onPickAll ? (
           <button
             type="button"
-            className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-semibold text-brand-700 transition hover:bg-brand-50 motion-reduce:transition-none dark:text-brand-300 dark:hover:bg-brand-500/10"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-control px-2 py-0.5 text-supporting text-brand-700 transition hover:bg-brand-50 motion-reduce:transition-none dark:text-brand-300 dark:hover:bg-brand-500/10"
             onClick={onPickAll}
           >
             <PlusIcon size={12} />
@@ -93,7 +92,7 @@ export function ExistingStatusList({
           role="listbox"
           aria-labelledby={`${listId}-label`}
           // A bordered box, one status to a row, as Plan's option lists are (plan-board.md "Option lists").
-          className="flex max-h-56 flex-col divide-y divide-slate-100 overflow-y-auto overscroll-contain rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
+          className="flex max-h-56 flex-col divide-y divide-slate-100 overflow-y-auto overscroll-contain rounded-menu border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
         >
           {statuses.map((s, i) => {
             const on = i === active;
@@ -104,7 +103,7 @@ export function ExistingStatusList({
                 role="option"
                 aria-selected={on}
                 data-status={s.status}
-                className={`flex cursor-pointer items-center gap-2.5 px-3 py-2 transition-colors motion-reduce:transition-none ${
+                className={`flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors motion-reduce:transition-none ${
                   on
                     ? 'bg-brand-50 dark:bg-brand-500/15'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/70'
@@ -117,7 +116,7 @@ export function ExistingStatusList({
                 <StatusSwatch colour={s.colour} />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span
-                    className={`truncate text-[13px] font-medium ${
+                    className={`truncate text-body ${
                       on
                         ? 'text-brand-800 dark:text-brand-100'
                         : 'text-slate-800 dark:text-slate-100'
@@ -125,12 +124,12 @@ export function ExistingStatusList({
                   >
                     {s.name}
                   </span>
-                  <span className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="truncate text-supporting text-slate-500 dark:text-slate-400">
                     {usedOn(s)}
                   </span>
                 </span>
                 <span
-                  className={`shrink-0 rounded-full px-1.5 py-px text-[11px] tabular-nums ${
+                  className={`shrink-0 rounded-full px-2 py-px text-supporting tabular-nums ${
                     s.cards
                       ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
                       : 'text-slate-400 dark:text-slate-400'

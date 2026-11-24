@@ -40,8 +40,8 @@ export function ItemComments({
   return (
     <div data-item-comments className="flex flex-col gap-1">
       {count > 0 ? (
-        <div className="flex min-h-7 items-center justify-between gap-2">
-          <span className="text-[12px] font-medium text-slate-500 dark:text-slate-400">
+        <div className="flex min-h-row items-center justify-between gap-2">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
             {count === 1 ? '1 comment' : `${count} comments`}
           </span>
           {canComment ? (
