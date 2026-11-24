@@ -44,6 +44,7 @@ const SIZING_EXCEPTIONS = [
   'components/FeatureArt.tsx',
   'components/PrivacyArt.tsx',
   'components/StartDrawingArt.tsx',
+  // The promise prism's drawing; its headline and eyebrow follow D244 by hand.
   'components/PromisePrism.tsx',
   'components/ai/AiChatArt.tsx',
   'components/feature-art',
