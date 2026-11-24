@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/live-editing-and-storage.md "Presence": a collaborator's caret travels as relative
 // positions and is drawn by its character, whatever is typed before it.
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
@@ -19,6 +19,12 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 // The next frame painted, and what waits for its paint run.
 const painted = () => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 
+// Every editor made, destroyed after its test, so no timer of theirs runs once the environment is gone.
+const views: EditorView[] = [];
+afterEach(() => {
+  for (const view of views.splice(0)) view.destroy();
+});
+
 async function editorOn(doc: Y.Doc, publish = vi.fn()) {
   const view = new EditorView(document.createElement('div'), {
     state: EditorState.create({
@@ -29,6 +35,7 @@ async function editorOn(doc: Y.Doc, publish = vi.fn()) {
       ],
     }),
   });
+  views.push(view);
   await tick();
   return view;
 }
