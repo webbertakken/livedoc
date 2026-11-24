@@ -805,6 +805,7 @@ export function TextDocumentSurface({
   );
   const tabs = useTextDocumentTabs({
     store: tabsStore,
+    documentId,
     shown: shownTab,
     showTab,
     canEdit: writes,

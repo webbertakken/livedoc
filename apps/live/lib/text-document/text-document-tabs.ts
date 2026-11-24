@@ -80,3 +80,10 @@ export function textDocumentTabsStore(doc: Y.Doc): TextDocumentTabsStore {
     },
   };
 }
+
+/** A document tab's link in full: the text document's address with its query naming the tab. */
+export function tabLink(address: string, id: string): string {
+  const url = new URL(address);
+  url.searchParams.set(DOCUMENT_TAB_PARAM, id);
+  return url.toString();
+}

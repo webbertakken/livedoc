@@ -9,13 +9,16 @@ import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { PlusIcon, Tooltip } from '@livedoc/ui';
 import { OFFICE_PANEL_START } from '@/components/office/OfficePanel';
-import type { Style } from '@livedoc/text-documents';
+import { DocumentTabList, type Style } from '@livedoc/text-documents';
 import type { TextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import {
   textDocumentHeadings,
   type TextDocumentHeading,
 } from '@/lib/text-document/text-document-outline';
 import type { TextDocumentTabs } from './useTextDocumentTabs';
+import { TextDocumentOutlineTab } from './TextDocumentOutlineTab';
+import { OfficeDialog } from '@/components/office/OfficeDialog';
+import { OfficeEmojiDialog } from '@/components/office/OfficeEmojiDialog';
 
 export const OUTLINE_EMPTY = 'Headings you add to the document will appear here.';
 export const OUTLINE_TABS_TITLE = 'Document tabs';
@@ -120,22 +123,14 @@ export function TextDocumentOutline({
           const indent = tab.depth * LEVEL_INDENT_PX;
           return (
             <li key={tab.id}>
-              <button
-                type="button"
-                aria-current={current ? 'page' : undefined}
+              <TextDocumentOutlineTab
+                tab={tab}
+                tabs={tabs}
+                indent={indent}
+                rowClass={ROW}
                 // Opening the outline starts at the shown tab when it has no heading.
-                {...(current && headings.length === 0 ? { [OFFICE_PANEL_START]: '' } : {})}
-                onClick={() => tabs.show(tab.id)}
-                style={{ paddingLeft: 8 + indent }}
-                className={`${ROW} ${current ? 'bg-(--office-pressed) font-medium text-(--office-pressed-ink)' : ''}`}
-              >
-                {tab.emoji && (
-                  <span aria-hidden className="mr-1.5">
-                    {tab.emoji}
-                  </span>
-                )}
-                {tab.name}
-              </button>
+                start={current && headings.length === 0}
+              />
               {current && (
                 <Headings view={view} headings={headings} indent={indent + LEVEL_INDENT_PX} />
               )}
@@ -143,6 +138,35 @@ export function TextDocumentOutline({
           );
         })}
       </ul>
+      <p aria-live="polite" className="sr-only">
+        {tabs.said}
+      </p>
+      <TabDialogs tabs={tabs} />
     </section>
+  );
+}
+
+/** What a tab's menu asks: its emoji, or whether to delete it with its subtabs. */
+function TabDialogs({ tabs }: { tabs: TextDocumentTabs }) {
+  const { asking } = tabs;
+  if (asking?.kind === 'emoji')
+    return <OfficeEmojiDialog onClose={tabs.cancelAsking} onPick={tabs.pickEmoji} />;
+  if (asking?.kind !== 'delete') return null;
+  const at = tabs.list.findIndex((t) => t.id === asking.id);
+  if (at < 0) return null;
+  const subtabs = DocumentTabList.subtreeEnd(tabs.list, at) - at - 1;
+  return (
+    <OfficeDialog
+      open
+      onClose={tabs.cancelAsking}
+      title={`Delete "${tabs.list[at]!.name}"?`}
+      primary={{ label: 'Delete', onPress: tabs.confirmDelete }}
+    >
+      <p className="text-sm">
+        {subtabs === 0
+          ? 'This tab and its writing will be deleted.'
+          : `This tab, its ${subtabs === 1 ? 'subtab' : `${subtabs} subtabs`} and their writing will be deleted.`}
+      </p>
+    </OfficeDialog>
   );
 }

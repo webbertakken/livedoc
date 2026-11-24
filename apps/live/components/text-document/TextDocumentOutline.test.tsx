@@ -8,6 +8,8 @@ import { createTextDocumentChanges } from '@/lib/text-document/text-document-cha
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import { OFFICE_PANEL_START } from '@/components/office/OfficePanel';
 import { ADD_TAB_LABEL, OUTLINE_EMPTY, TextDocumentOutline } from './TextDocumentOutline';
+import { TAB_NAME_LABEL } from './TextDocumentOutlineTab';
+import { TAB_MENU_ITEMS } from '@/lib/text-document/text-document-tab-menu';
 import type { TextDocumentTabs } from './useTextDocumentTabs';
 
 // One tab, as every text document has until it is given others.
@@ -15,10 +17,19 @@ const tabsOf = (over: Partial<TextDocumentTabs> = {}): TextDocumentTabs => ({
   list: [{ id: 't.0', name: 'Tab 1', depth: 0, body: [] }],
   shown: 't.0',
   canAdd: true,
+  canEditTabs: true,
   show: vi.fn(),
   add: vi.fn(),
   step: vi.fn(() => false),
   actions: {},
+  menuActions: () => ({}),
+  renaming: null,
+  finishRename: vi.fn(),
+  asking: null,
+  pickEmoji: vi.fn(),
+  confirmDelete: vi.fn(),
+  cancelAsking: vi.fn(),
+  said: '',
   ...over,
 });
 
@@ -131,5 +142,81 @@ describe('TextDocumentOutline', () => {
     expect(screen.getByRole('button', { name: 'Tab 1' }).hasAttribute(OFFICE_PANEL_START)).toBe(
       true,
     );
+  });
+
+  // links-and-navigation.md "A tab's menu".
+  it('opens a tab’s menu from its Tab options button, its items bound or dimmed', () => {
+    const run = vi.fn();
+    outlineWith(
+      tabsOf({
+        menuActions: () =>
+          Object.fromEntries(
+            Object.values(TAB_MENU_ITEMS).map((id) => [
+              id,
+              { run, disabled: id === TAB_MENU_ITEMS.delete },
+            ]),
+          ),
+      }),
+      p('Words'),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Tab options: Tab 1' }));
+    const menu = screen.getByRole('menu', { name: 'Tab options' });
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((i) => i.textContent),
+    ).toEqual([
+      'Rename',
+      'Choose emoji',
+      'Remove emoji',
+      'Add subtab',
+      'Duplicate',
+      'Copy link',
+      'Move up',
+      'Move down',
+      'Indent',
+      'Outdent',
+      'Delete',
+    ]);
+    expect(
+      within(menu).getByRole('menuitem', { name: 'Delete' }).getAttribute('aria-disabled'),
+    ).toBe('true');
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Rename' }));
+    expect(run).toHaveBeenCalledOnce();
+  });
+
+  it('renames in place: Enter keeps the name typed, Escape the old one', () => {
+    const tabs = tabsOf({ renaming: 't.0' });
+    outlineWith(tabs, p('Words'));
+    const field = screen.getByRole<HTMLInputElement>('textbox', { name: TAB_NAME_LABEL });
+    expect(document.activeElement).toBe(field);
+    expect(field.value).toBe('Tab 1');
+    fireEvent.change(field, { target: { value: 'Plan' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(tabs.finishRename).toHaveBeenCalledWith('t.0', 'Plan');
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(tabs.finishRename).toHaveBeenLastCalledWith('t.0', null);
+  });
+
+  it('asks before deleting a tab, counting its subtabs', () => {
+    const tabs = tabsOf({
+      list: [
+        { id: 't.0', name: 'Plan', depth: 0, body: [] },
+        { id: 't.a', name: 'Part', depth: 1, body: [] },
+        { id: 't.b', name: 'Other', depth: 0, body: [] },
+      ],
+      asking: { kind: 'delete', id: 't.0' },
+    });
+    outlineWith(tabs, p('Words'));
+    const dialog = screen.getByRole('dialog', { name: 'Delete "Plan"?' });
+    expect(dialog.textContent).toContain('This tab, its subtab and their writing will be deleted.');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    expect(tabs.confirmDelete).toHaveBeenCalledOnce();
+  });
+
+  it('opens the emoji dialog when asked, and says what was done aloud', () => {
+    outlineWith(tabsOf({ asking: { kind: 'emoji', id: 't.0' }, said: 'Link copied' }), p('Words'));
+    expect(screen.getByRole('dialog')).toBeDefined();
+    expect(screen.getByText('Link copied').getAttribute('aria-live')).toBe('polite');
   });
 });
