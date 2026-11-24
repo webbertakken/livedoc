@@ -11,7 +11,7 @@ import {
   newTabName,
   stepTab,
   TAB_ITEM,
-  tabHash,
+  tabAddress,
   type TextDocumentTabsStore,
 } from '@/lib/text-document/text-document-tabs';
 
@@ -57,10 +57,8 @@ export function useTextDocumentTabs({
       if (id === shown) return;
       if (!store?.read().some((t) => t.id === id)) return;
       showTab.current(id);
-      if (several) {
-        const { pathname, search } = window.location;
-        window.history.replaceState(window.history.state, '', `${pathname}${search}${tabHash(id)}`);
-      }
+      if (several)
+        window.history.replaceState(window.history.state, '', tabAddress(window.location.href, id));
       track('UI', 'Used', 'TextDocumentTabShown');
       debugLog('[text-document] tab shown', { tab: id });
     },

@@ -8,8 +8,8 @@ import {
   initialTab,
   newTabName,
   stepTab,
-  tabHash,
-  tabOfHash,
+  tabAddress,
+  tabOfSearch,
   textDocumentTabsStore,
 } from './text-document-tabs';
 
@@ -17,16 +17,21 @@ const tab = (id: string, depth: 0 | 1 | 2 = 0): DocumentTab => ({ id, name: id, 
 const list = [tab('t.0'), tab('t.a', 1), tab('t.b')];
 
 describe('text document tabs', () => {
-  it('reads and writes the tab a link names as #tab=<id>', () => {
-    expect(tabHash('t.abc')).toBe('#tab=t.abc');
-    expect(tabOfHash('#tab=t.abc')).toBe('t.abc');
-    expect(tabOfHash('#heading=h.x')).toBeNull();
-    expect(tabOfHash('')).toBeNull();
+  it('reads and writes the tab a link names as ?doctab=<id>, the editor’s hash kept', () => {
+    expect(tabAddress('https://docs.nu/document/d1?s=c#t=x', 't.abc')).toBe(
+      '/document/d1?s=c&doctab=t.abc#t=x',
+    );
+    expect(tabAddress('https://docs.nu/document/d1?doctab=t.0', 't.b')).toBe(
+      '/document/d1?doctab=t.b',
+    );
+    expect(tabOfSearch('?s=c&doctab=t.abc')).toBe('t.abc');
+    expect(tabOfSearch('?s=c')).toBeNull();
+    expect(tabOfSearch('')).toBeNull();
   });
 
   it('opens on the tab the link names when it is listed, else on the first', () => {
-    expect(initialTab(list, '#tab=t.b')).toBe('t.b');
-    expect(initialTab(list, '#tab=t.gone')).toBe('t.0');
+    expect(initialTab(list, '?doctab=t.b')).toBe('t.b');
+    expect(initialTab(list, '?doctab=t.gone')).toBe('t.0');
     expect(initialTab(list, '')).toBe('t.0');
   });
 

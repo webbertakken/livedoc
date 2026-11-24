@@ -531,7 +531,7 @@ export function TextDocumentSurface({
             schema: textDocumentSchema,
             plugins: pluginsFor(TextDocumentState.tabBody(doc, tab)),
           });
-        const firstTab = initialTab(liveTabList(doc), window.location.hash);
+        const firstTab = initialTab(liveTabList(doc), window.location.search);
         const view = new EditorView(mount.current, {
           state: stateFor(firstTab),
           editable: () => live.current.writes,

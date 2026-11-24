@@ -20,7 +20,7 @@ test('document tabs: added, shown one at a time, stepped through and opened by t
 
   await (await officeMenuItem(page, ['Insert', 'Tab'])).click();
   await expect(body).toHaveText('');
-  await expect(page).toHaveURL(/#tab=t\.[a-z0-9]{12}$/);
+  await expect(page).toHaveURL(/[?&]doctab=t\.[a-z0-9]{12}(#|$)/);
   await body.click();
   await page.keyboard.type('In the second tab');
 

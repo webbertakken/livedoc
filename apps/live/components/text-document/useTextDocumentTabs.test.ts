@@ -49,7 +49,7 @@ describe('useTextDocumentTabs', () => {
     act(() => addLiveTab(doc, { id: 't.b', name: 'Tab 2', style: 'Standard' }));
     act(() => hook.result.current.show('t.b'));
     expect(showTab.current).toHaveBeenCalledWith('t.b');
-    expect(window.location.hash).toBe('#tab=t.b');
+    expect(window.location.search).toBe('?doctab=t.b');
     expect(window.location.pathname).toBe('/d/doc');
     expect(track).toHaveBeenCalledWith('UI', 'Used', 'TextDocumentTabShown');
   });

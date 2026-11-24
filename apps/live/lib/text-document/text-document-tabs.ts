@@ -1,5 +1,5 @@
 // Document tabs in the editor (docs/specs/034-text-documents/links-and-navigation.md "Document tabs in the outline"):
-// the tab a link names (`#tab=<id>`), the next and previous tab, a new tab's name, the ceiling on adding, and the list
+// the tab a link names (`?doctab=<id>`), the next and previous tab, a new tab's name, the ceiling on adding, and the list
 // as anyone changes it.
 import type * as Y from 'yjs';
 import {
@@ -13,20 +13,23 @@ import {
 /** Insert > Tab's item. */
 export const TAB_ITEM = 'tab';
 
-const HASH = /^#tab=([^&]+)$/;
+/** The address's query parameter naming a document tab; the hash is the editor's, naming the document's tab. */
+export const DOCUMENT_TAB_PARAM = 'doctab';
 
-/** The address's hash naming a document tab. */
-export const tabHash = (id: string): string => `#tab=${encodeURIComponent(id)}`;
-
-/** The document tab an address's hash names, or null. */
-export function tabOfHash(hash: string): string | null {
-  const match = HASH.exec(hash);
-  return match ? decodeURIComponent(match[1]!) : null;
+/** The address with its query naming this document tab, the rest of it as it was. */
+export function tabAddress(href: string, id: string): string {
+  const url = new URL(href);
+  url.searchParams.set(DOCUMENT_TAB_PARAM, id);
+  return `${url.pathname}${url.search}${url.hash}`;
 }
 
+/** The document tab an address's query names, or null. */
+export const tabOfSearch = (search: string): string | null =>
+  new URLSearchParams(search).get(DOCUMENT_TAB_PARAM);
+
 /** The tab a text document opens on: the one its link names when listed, else the first. */
-export function initialTab(list: readonly DocumentTab[], hash: string): string {
-  const named = tabOfHash(hash);
+export function initialTab(list: readonly DocumentTab[], search: string): string {
+  const named = tabOfSearch(search);
   return list.find((t) => t.id === named)?.id ?? list[0]?.id ?? DocumentTabs.firstHead().id;
 }
 

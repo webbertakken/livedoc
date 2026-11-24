@@ -137,9 +137,10 @@ The look and order below are LiveDoc's reading of Google's outline with tabs unt
 `(default)`.
 
 - **The current tab**: the editor shows one [document tab](text-document.md#tabs-inside-one-text-document)'s body at a
-  time, each person their own. A text document opens on the tab its link names (`#tab=<id>`), else on the first.
+  time, each person their own. A text document opens on the tab its link names (`?doctab=<id>`), else on the first.
   Showing another tab puts the caret at its start and scrolls to its top; its undo history starts afresh `(default)`.
-  The address names the tab shown (`#tab=<id>`) while the text document has more than one.
+  The address names the tab shown (`?doctab=<id>`, beside the hash the editor keeps) while the text document has
+  more than one.
 - **The list**: the outline titles its tabs **Document tabs**, with **+** (**Add tab**) beside the title; then every
   tab in order, indented by depth, its emoji before its name, the current one marked (`aria-current`) and its
   headings listed under it. A press on a tab shows it. With one tab the list still shows it, so + has its place.
