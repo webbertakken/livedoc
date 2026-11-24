@@ -40,7 +40,7 @@ import { usePdfPageFingers } from '@/lib/pdf-document/usePdfPageFingers';
 import { PdfSelectionHandles } from './PdfSelectionHandles';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 
-export type PdfPageTool = 'select' | 'highlight';
+import type { PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
 
 // `by`: the drawer that drew it. A replaced stored file comes with another, and the page is then drawn again,
 // its picture staying until the new one arrives (live-editing-and-storage.md "Replacing the stored file").
@@ -67,7 +67,7 @@ export const PdfPage = memo(function PdfPage({
   drawer,
   marks,
   tool,
-  onHighlight,
+  onMark,
   selected,
   handles,
   onText,
@@ -97,7 +97,8 @@ export const PdfPage = memo(function PdfPage({
   drawer: PdfPageDrawer;
   marks: readonly Mark[];
   tool: PdfPageTool;
-  onHighlight: (index: number, selection: TextSelection) => void;
+  // A drag across the page's text with a text tool in hand: the text it covered, to mark.
+  onMark: (index: number, selection: TextSelection) => void;
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
   selected: readonly Quad[];
   // A finger made the selection: it has handles (reading-surface.md "Phone and tablet").
@@ -235,7 +236,7 @@ export const PdfPage = memo(function PdfPage({
     });
   };
 
-  const marking = tool === 'highlight' && current !== null;
+  const marking = tool !== 'select' && current !== null;
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
   const selectingText = (event: PointerEvent<HTMLElement>) =>
     tool === 'select' && event.button === 0 && event.pointerType !== 'touch';
@@ -275,7 +276,7 @@ export const PdfPage = memo(function PdfPage({
     const to = dragging && make ? pagePoint(event) : null;
     if (!dragging || !to) return;
     void engine.selectText(index, dragging.from, to).then((selection) => {
-      if (selection) onHighlight(index, selection);
+      if (selection) onMark(index, selection);
     });
   };
 

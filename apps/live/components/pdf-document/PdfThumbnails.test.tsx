@@ -9,7 +9,7 @@ import type { BlobKey } from '@livedoc/document';
 import { PageName, type PageBitmap, type PageInfo } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
-import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
+import { addTextMark } from '@/lib/pdf-document/pdf-text-mark';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import {
   receivePdfPresence,
@@ -174,8 +174,9 @@ describe('the thumbnails', () => {
       show({ marks });
     });
     act(() => {
-      addHighlight(
+      addTextMark(
         doc,
+        'highlight',
         { page: PAGES[1]!.name, stored: { blob: 'ab'.repeat(32) as BlobKey, pages: 4 } },
         { text: 'Lease', quads: [[0, 10, 10, 10, 0, 0, 10, 0]] },
         { author: 'Ada', now: 0, id: 'm1' },

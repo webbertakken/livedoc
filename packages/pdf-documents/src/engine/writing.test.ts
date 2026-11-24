@@ -152,6 +152,41 @@ describe('writing field values', () => {
 });
 
 // marks.md "In the file": a mark deleted in LiveDoc is written as the removed annotation in the same addition.
+// marks.md "Kinds", "In the file": each kind that marks text is written as the standard's own subtype, under its id.
+describe('writing the marks of text', () => {
+  it('writes a highlight, an underline, a strikethrough and a squiggle, each read back as its kind', async () => {
+    const pages = opened(await engine.open(stored));
+    const selection = await engine.selectText(0, { x: 74, y: 724 }, { x: 180, y: 724 });
+    const kinds = ['highlight', 'underline', 'strikeout', 'squiggly'] as const;
+    const result = await bakeWith(
+      kinds.map((kind) =>
+        PdfChange.addMark(
+          Mark.ofText(kind, {
+            id: kind,
+            page: pages[0]!.name,
+            quads: selection!.quads,
+            text: selection!.text,
+            colour: '#d93025',
+            opacity: 1,
+            author: 'Ada',
+            createdAt: at,
+          })!,
+        ),
+      ),
+    );
+    expect(result.kind).toBe('addition');
+    opened(await engine.open(result.bytes));
+    const read = await engine.fileMarks(0);
+    // The live changes keep marks by id, so they are written in no order of making.
+    expect(read.map((mark) => [mark.id, mark.subtype]).toSorted()).toEqual(
+      kinds.map((kind) => [kind, kind]).toSorted(),
+    );
+    expect(read.map((mark) => [mark.colour, mark.quads.length])).toEqual(
+      kinds.map(() => ['#d93025', 1]),
+    );
+  });
+});
+
 describe('writing a deletion of the file’s own mark', () => {
   it('removes the marks named, by their own name or by their object, as an addition', async () => {
     const file = marksPdf();

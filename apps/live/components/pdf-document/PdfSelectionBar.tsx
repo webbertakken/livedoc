@@ -1,12 +1,16 @@
 'use client';
 
 // The small bar over a selection a finger made (docs/specs/035-pdf-documents/reading-surface.md "Phone and tablet"):
-// Copy, Highlight and Comment, each only where it can act now; above the selection, below it where the pages' top
-// would cut it, following it as the pages scroll or zoom. Its buttons run the same bindings as the menus.
+// Copy, Highlight, Underline, Strikethrough and Comment, each only where it can act now; above the selection, below it
+// where the pages' top would cut it, following it as the pages scroll or zoom. Its buttons run the menus' bindings.
 import { useEffect, useRef, useState } from 'react';
 import { Tooltip } from '@livedoc/ui';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
-import { HIGHLIGHT_SELECTION } from '@/lib/pdf-document/pdf-context-menu';
+import {
+  HIGHLIGHT_SELECTION,
+  STRIKETHROUGH_SELECTION,
+  UNDERLINE_SELECTION,
+} from '@/lib/pdf-document/pdf-context-menu';
 import { COPY, INSERT_COMMENT } from '@/lib/pdf-document/pdf-menus';
 import type { PdfViewStore } from '@/lib/pdf-document/usePdfView';
 import type { PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
@@ -15,6 +19,8 @@ import type { PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
 const BUTTONS: readonly (readonly [id: string, label: string])[] = [
   [COPY, 'Copy'],
   [HIGHLIGHT_SELECTION, 'Highlight'],
+  [UNDERLINE_SELECTION, 'Underline'],
+  [STRIKETHROUGH_SELECTION, 'Strikethrough'],
   [INSERT_COMMENT, 'Comment'],
 ];
 

@@ -134,3 +134,34 @@ describe('OfficeSplitToggle', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 });
+
+// office-shell.md "Toolbar": a grid of tools shows each as its glyph and its name, not a preview of lines.
+describe('a split toggle’s grid of tools', () => {
+  it('draws a cell with a glyph as the glyph over its name', () => {
+    const choice: OfficeChoice = {
+      read: () => 'underline',
+      entries: [],
+      actions: { underline: { run: () => {} } },
+      grid: { columns: 1, cells: [{ id: 'underline', label: 'Underline', icon: ICON }] },
+    };
+    render(
+      <OfficeSplitToggle
+        id="text-marks"
+        label="Underline"
+        icon={ICON}
+        action={{ run: () => {} }}
+        pressed={false}
+        inert={false}
+        shortcut={null}
+        choice={choice}
+        tabIndex={0}
+        className=""
+        chevronClassName=""
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Underline styles' }));
+    const cell = screen.getByRole('menuitemradio', { name: 'Underline' });
+    expect(cell.querySelector('svg')).not.toBeNull();
+    expect(cell.textContent).toBe('Underline');
+  });
+});

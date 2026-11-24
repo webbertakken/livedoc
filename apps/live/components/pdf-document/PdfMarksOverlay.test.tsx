@@ -44,3 +44,28 @@ describe('LiveDoc’s marks over a page', () => {
     );
   });
 });
+
+// marks.md "Making a mark": How a text mark is drawn.
+describe('a line mark over a page', () => {
+  const underline = Mark.ofText('underline', { ...mark, colour: '#16a34a' })!;
+
+  it('strokes its line in its colour, in the page’s points, filling nothing', () => {
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[underline]}
+      />,
+    );
+    const group = container.querySelector('[data-pdf-mark="m1"]')!;
+    expect(group.getAttribute('data-pdf-mark-kind')).toBe('underline');
+    expect(group.getAttribute('fill')).toBe('none');
+    expect(group.getAttribute('stroke')).toBe('#16a34a');
+    expect(group.querySelector('polygon')).toBeNull();
+    // The quad's foot, y 10 in page space, is y 90 in view space.
+    const line = group.querySelector('polyline')!;
+    expect(line.getAttribute('points')).toBe('10,90 50,90');
+    expect(line.getAttribute('stroke-width')).toBe('1');
+  });
+});

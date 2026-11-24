@@ -4,8 +4,8 @@
 // Under Dark pages (dark-pages.md "The recolouring") a mark takes the colour the step gives the file's own marks, and
 // lightens the dark page as multiplying darkens the white one, so the words under it keep their ink.
 import { useContext } from 'react';
-import type { Mark, PageMatrix, Quad } from '@livedoc/pdf-documents';
-import { DarkPages, PageView } from '@livedoc/pdf-documents';
+import type { Mark, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
+import { DarkPages, MarkDrawing, PageView } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 
@@ -14,6 +14,13 @@ export const pointsOf = (matrix: PageMatrix, quad: Quad): string =>
   // The standard orders a quad upper left, upper right, lower left, lower right: around its edge is 0, 1, 3, 2.
   [0, 1, 3, 2]
     .map((corner) => PageView.quadToView(matrix, quad)[corner]!)
+    .map(({ x, y }) => `${x},${y}`)
+    .join(' ');
+
+/** Points of page space as an SVG list's, in view space. */
+const viewPoints = (matrix: PageMatrix, points: readonly PagePoint[]): string =>
+  points
+    .map((point) => PageView.toView(matrix, point))
     .map(({ x, y }) => `${x},${y}`)
     .join(' ');
 
@@ -48,19 +55,31 @@ export function PdfMarksOverlay({
       preserveAspectRatio="none"
       className={`pointer-events-none absolute inset-0 h-full w-full ${dark ? 'mix-blend-lighten' : 'mix-blend-multiply'}`}
     >
-      {marks.map((mark) => (
-        <g
-          key={mark.id}
-          data-pdf-mark={mark.id}
-          data-pdf-mark-kind={mark.kind}
-          fill={dark ? DarkPages.hex(mark.colour) : mark.colour}
-          opacity={mark.opacity}
-        >
-          {mark.quads.map((quad, at) => (
-            <polygon key={at} points={pointsOf(matrix, quad)} />
-          ))}
-        </g>
-      ))}
+      {marks.map((mark) => {
+        const colour = dark ? DarkPages.hex(mark.colour) : mark.colour;
+        const { fills, strokes } = MarkDrawing.of(mark);
+        return (
+          <g
+            key={mark.id}
+            data-pdf-mark={mark.id}
+            data-pdf-mark-kind={mark.kind}
+            fill={fills.length > 0 ? colour : 'none'}
+            stroke={strokes.length > 0 ? colour : undefined}
+            opacity={mark.opacity}
+          >
+            {fills.map((points, at) => (
+              <polygon key={at} points={viewPoints(matrix, points)} />
+            ))}
+            {strokes.map((stroke, at) => (
+              <polyline
+                key={at}
+                points={viewPoints(matrix, stroke.points)}
+                strokeWidth={stroke.width}
+              />
+            ))}
+          </g>
+        );
+      })}
       {found && found.found.length > 0 ? (
         <g data-pdf-found="true" className="fill-(--pdf-found)" opacity={0.6}>
           {found.found.map((quad, at) => (

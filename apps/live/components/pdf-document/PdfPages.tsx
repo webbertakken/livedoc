@@ -22,7 +22,8 @@ import { pdfTileCache } from '@/lib/pdf-document/pdf-tile-cache';
 import type { PdfViewStore } from '@/lib/pdf-document/usePdfView';
 import { HELD_MARGIN, NEAR_MARGIN, useWithin } from '@/lib/pdf-document/useWithin';
 import type { PdfTileSource } from './PdfPageTiles';
-import { PdfPage, type PdfPageTool } from './PdfPage';
+import type { PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
+import { PdfPage } from './PdfPage';
 import type { PdfTextGesture, PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
@@ -43,7 +44,7 @@ export function PdfPages({
   drawer,
   marks,
   tool,
-  onHighlight,
+  onMark,
   selection,
   onText,
   texts,
@@ -69,7 +70,7 @@ export function PdfPages({
   drawer: PdfPageDrawer;
   marks: PdfMarksStore;
   tool: PdfPageTool;
-  onHighlight: (index: number, selection: TextSelection) => void;
+  onMark: (index: number, selection: TextSelection) => void;
   // The person's text selection, and where a page's gestures go (usePdfTextSelection.ts).
   selection: PdfTextSelected | null;
   onText: (index: number, gesture: PdfTextGesture) => void;
@@ -148,7 +149,7 @@ export function PdfPages({
                   drawer={drawer}
                   marks={marksOnPage(byPage, page.name)}
                   tool={tool}
-                  onHighlight={onHighlight}
+                  onMark={onMark}
                   selected={selection?.page === box.index ? selection.quads : NOTHING_SELECTED}
                   handles={selection?.page === box.index && selection.touch}
                   onText={onText}

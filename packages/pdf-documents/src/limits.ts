@@ -44,6 +44,10 @@ export const PDF_NAME_MAX_CHARS = 255;
 export const PDF_MARK_TEXT_MAX_CHARS = 10_000;
 /** (default) The quadrilaterals of one text mark: a page of small type selected whole is a few hundred lines. */
 export const PDF_MARK_MAX_QUADS = 2_000;
+/** The line of an Underline, a Strikethrough and a Squiggly underline, in points: as the file's readers draw them. */
+export const PDF_MARK_LINE_PT = 1;
+/** (default) A squiggly underline's tooth, wide and high, in points (marks.md "Limits"). Safe range: 1 to 4. */
+export const PDF_SQUIGGLE_STEP_PT = 2;
 /** (default) Past it the stored file is replaced (saving.md "Limits"); the room refuses a state beyond it. */
 export const PDF_LIVE_CHANGES_MAX_BYTES = 4_194_304;
 /** (default) Past it an idle Editor's surface replaces the stored file: three quarters of the ceiling, so ordinary use

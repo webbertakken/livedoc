@@ -348,3 +348,46 @@ describe('OfficeToolbar font size', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 });
+
+// office-shell.md "Toolbar": a split toggle that remembers the tool last chosen shows it, by name and glyph.
+describe('OfficeToolbar’s split toggle', () => {
+  it('shows its binding’s name and its choice’s glyph for the value in force', () => {
+    const marked = [{ t: 'line', x1: 0, y1: 0, x2: 1, y2: 1 }] as never;
+    const groups: OfficeToolbarGroup[] = [
+      {
+        id: 'marks',
+        label: 'Marks',
+        controls: [
+          {
+            id: 'text-mark',
+            label: 'Highlight',
+            level: 'participate',
+            status: 'built',
+            look: { ...icon, toggle: true, split: true },
+          },
+        ],
+      },
+    ];
+    const iconOf = vi.fn(() => marked);
+    const { container } = render(
+      <OfficeToolbar
+        groups={groups}
+        zoom={null}
+        actions={{ 'text-mark': { run: vi.fn(), label: 'Underline' } }}
+        shortcutOf={() => null}
+        choices={{
+          'text-mark': {
+            read: () => 'underline',
+            entries: [],
+            actions: {},
+            iconOf,
+            grid: { columns: 1, cells: [{ id: 'underline', label: 'Underline', icon: [] }] },
+          },
+        }}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Underline' })).toBeTruthy();
+    expect(iconOf).toHaveBeenCalledWith('underline');
+    expect(container.querySelector('[data-office-control="text-mark"] line')).not.toBeNull();
+  });
+});

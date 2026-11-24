@@ -1,5 +1,6 @@
 // docs/specs/035-pdf-documents/reading-surface.md "The pages": the context menu on a page: Copy, Select all, Add
-// comment, Highlight, Find "…", Go to ▸ and Rotate view ▸; Highlight and Find drawn only while they can run.
+// comment, Highlight, Underline, Strikethrough, Find "…", Go to ▸ and Rotate view ▸; the marks and Find drawn only while
+// they can run.
 import { describe, expect, it } from 'vitest';
 import { contextualEntries, visibleMenus } from '@/lib/office/office-catalogue';
 import {
@@ -21,6 +22,8 @@ describe('a page’s context menu', () => {
       '—',
       'Add comment',
       'Highlight',
+      'Underline',
+      'Strikethrough',
       'Find',
       '—',
       'Go to',

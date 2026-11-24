@@ -11,10 +11,12 @@ import {
   type PageInfo,
   type PageLink,
   type Quad,
+  type TextSelection,
 } from '@livedoc/pdf-documents';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
-import { PdfPage, type PdfPageTool } from './PdfPage';
+import type { PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
+import { PdfPage } from './PdfPage';
 
 vi.mock('@/lib/pdf-document/pdf-paint', () => ({ paintPicture: vi.fn(), REDRAW_SETTLE_MS: 0 }));
 vi.mock('./PdfPageTiles', () => ({ PdfPageTiles: () => null }));
@@ -48,8 +50,10 @@ async function page(
   selected: readonly Quad[] = [],
   links: readonly PageLink[] = [],
   handles = false,
+  marked: TextSelection | null = null,
 ) {
   const onText = vi.fn();
+  const onMark = vi.fn();
   const onFollow = vi.fn();
   const onDoubleTap = vi.fn<(index: number, tap: PdfPageTap) => void>();
   const view = render(
@@ -64,11 +68,15 @@ async function page(
       tiles={{} as never}
       wanted
       held
-      engine={{ selectText: async () => null, fileMarks: async () => [], links: async () => links }}
+      engine={{
+        selectText: async () => marked,
+        fileMarks: async () => [],
+        links: async () => links,
+      }}
       drawer={drawer}
       marks={[]}
       tool={tool}
-      onHighlight={vi.fn()}
+      onMark={onMark}
       selected={selected}
       handles={handles}
       onText={onText}
@@ -86,7 +94,7 @@ async function page(
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
-  return { box, onText, onFollow, onDoubleTap, view };
+  return { box, onText, onMark, onFollow, onDoubleTap, view };
 }
 
 describe('selecting text on a page', () => {
@@ -229,5 +237,23 @@ describe('a finger’s selection on a page', () => {
     expect(onText).toHaveBeenCalledWith(1, { kind: 'handle', end: 'end', at: { x: 120, y: 692 } });
     const mouse = await page('select', quads);
     expect(mouse.view.container.querySelector('[data-pdf-handle]')).toBeNull();
+  });
+});
+
+// marks.md "Making a mark": a drag across a line's text with a text tool in hand marks what it covered.
+describe('marking text on a page', () => {
+  it('hands the text a drag covered over to be marked, with any text tool in hand', async () => {
+    const covered: TextSelection = {
+      text: 'Lease',
+      quads: [[72, 700, 120, 700, 72, 690, 120, 690]],
+    };
+    const { box, onMark } = await page('squiggly', [], [], false, covered);
+    expect(box.className).toContain('touch-none');
+    fireEvent.pointerDown(box, { button: 0, pointerType: 'mouse', clientX: 72, clientY: 92 });
+    await act(async () => {
+      fireEvent.pointerUp(box, { button: 0, pointerType: 'mouse', clientX: 120, clientY: 92 });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(onMark).toHaveBeenCalledWith(1, covered);
   });
 });

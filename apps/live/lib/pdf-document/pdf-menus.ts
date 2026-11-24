@@ -70,6 +70,9 @@ export const FIND = 'find';
 export const TOOL_SELECT = 'tool-select';
 export const TOOL_HAND = 'tool-hand';
 export const TOOL_HIGHLIGHT = 'tool-highlight';
+export const TOOL_UNDERLINE = 'tool-underline';
+export const TOOL_STRIKETHROUGH = 'tool-strikethrough';
+export const TOOL_SQUIGGLY = 'tool-squiggly-underline';
 export const TOOL_TEXT = 'tool-text';
 export const TOOL_DRAWING = 'tool-drawing';
 export const TOOL_TICK = 'tool-tick';
@@ -284,9 +287,17 @@ export const PDF_MENUS: OfficeCatalogue = [
       status: 'built',
       keywords: ['mark', 'marker'],
     }),
-    item('tool-underline', 'Underline', 'participate', ONE_OF),
-    item('tool-strikethrough', 'Strikethrough', 'participate', ONE_OF),
-    item('tool-squiggly-underline', 'Squiggly underline', 'participate', ONE_OF),
+    item(TOOL_UNDERLINE, 'Underline', 'participate', { ...ONE_OF, ...BUILT }),
+    item(TOOL_STRIKETHROUGH, 'Strikethrough', 'participate', {
+      ...ONE_OF,
+      ...BUILT,
+      keywords: ['strikeout', 'cross out'],
+    }),
+    item(TOOL_SQUIGGLY, 'Squiggly underline', 'participate', {
+      ...ONE_OF,
+      ...BUILT,
+      keywords: ['wavy'],
+    }),
     SEPARATOR,
     item(TOOL_TEXT, 'Text', 'participate', { ...ONE_OF, keywords: ['typewriter'] }),
     item('tool-callout', 'Callout', 'participate', ONE_OF),

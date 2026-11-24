@@ -3,7 +3,15 @@
 export * from './limits';
 export { isPdfBytes } from './sniff';
 export { PageName } from './page-name';
-export { MARK_KINDS, Mark, type HighlightInput, type MarkKind, type Quad } from './mark';
+export {
+  MARK_KINDS,
+  Mark,
+  type HighlightInput,
+  type MarkKind,
+  type Quad,
+  type TextMarkKind,
+} from './mark';
+export { MarkDrawing, type MarkStroke } from './mark-drawing';
 export {
   PDF_ROOTS,
   PdfLiveChanges,

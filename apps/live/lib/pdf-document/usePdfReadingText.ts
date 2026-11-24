@@ -4,13 +4,7 @@
 // Selecting text, Copy, Previous view, The context menu; "Find"): the selection, Copy and Select all, Find, the
 // page's context menu, and the keys that reach them outside a field. Composed by the surface, which hands it the view.
 import { useCallback, useMemo, type KeyboardEvent } from 'react';
-import type {
-  LinkTarget,
-  PageInfo,
-  PageTurns,
-  PdfEngine,
-  TextSelection,
-} from '@livedoc/pdf-documents';
+import type { LinkTarget, PageInfo, PageTurns, PdfEngine } from '@livedoc/pdf-documents';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { FIND } from './pdf-menus';
 import { usePdfContextMenu } from './usePdfContextMenu';
@@ -28,11 +22,9 @@ export function usePdfReadingText({
   turns,
   pagesElement,
   mayCopy,
-  marking,
   jump,
   follow,
   step,
-  onHighlight,
   onProblem,
 }: {
   engine: Engine | null;
@@ -44,13 +36,10 @@ export function usePdfReadingText({
   pagesElement: HTMLElement | null;
   // Whether the file's permissions allow copying.
   mayCopy: boolean;
-  // Whether a mark may be made now.
-  marking: boolean;
   jump: (index: number, at?: PdfSpot) => void;
   follow: (target: LinkTarget | null) => void;
   // Previous view and Next view; false with nowhere to go.
   step: (way: 'back' | 'forward') => boolean;
-  onHighlight: (page: number, selection: TextSelection) => void;
   onProblem: (problem: string) => void;
 }) {
   const selection = usePdfTextSelection(engine, pages);
@@ -73,10 +62,7 @@ export function usePdfReadingText({
   const contextMenu = usePdfContextMenu({
     pages: pagesElement,
     selected: selection.selected,
-    marking,
-    onHighlight,
     onFind: findSelection,
-    clear: selection.clear,
   });
   const actions = useMemo<OfficeActions>(
     () => ({ ...text.actions, ...find.actions, ...contextMenu.actions }),

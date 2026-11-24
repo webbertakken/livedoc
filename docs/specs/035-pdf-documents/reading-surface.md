@@ -250,7 +250,8 @@ rest are the mode's own. A control past the width goes into the shell's overflow
   test reads it. A mode's own controls are at the level the mode is drawn for.
 - **Undo** and **Redo** are a person who may review's, so hidden in Viewing; every other control of every mode is a
   Viewer's too.
-- **Highlight** holds Underline and Strikethrough behind its chevron and remembers the last one used.
+- **Highlight** holds Underline and Strikethrough behind its chevron and remembers the last one used, per person,
+  in this browser: the button then shows that tool, its glyph and its name `(default)`.
 - **Colour** and **Line width** are the tool in hand's; Editing's **Text** group shows while a text box holds the
   caret. **Dark pages** is offered in the dark scheme only.
 - **Select** selects text and whatever the mode may change; **Hand** drags the view. Holding Space is the hand for as
@@ -491,7 +492,7 @@ A press on a bookmark, or on a link of a page ([Security](security.md#links-and-
   - At most `PDF_VIEW_HISTORY_MAX` places are kept, the oldest let go first; a place kept twice in a row is kept once.
   - Previous view and Next view are dimmed with nowhere to go; ⌥← and ⌥→ are heard outside a field.
   - Logged `[pdf] view-history way=<back|forward> page=<n>`.
-- **The context menu** on a page: Copy, Select all, Add comment, Highlight (and the last mark used), Find "…",
+- **The context menu** on a page: Copy, Select all, Add comment, Highlight, Underline, Strikethrough, Find "…",
   Go to ▸, Rotate view, and the items of whatever is under the pointer (a mark, a field, an object), each only for
   the level that may.
   - It is the shell's ([Office shell](../004-interface-design/office-shell.md#context-menus)): a right-click on the
@@ -608,7 +609,8 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
   - the page bar's buttons and fields, Find's buttons, field and options, and a notice's buttons reach 44 px down;
   - the rows of the outline, the layers and Find's results are 44 px tall, their lists without a gap between rows;
   - Find's field and the password field read at 16 px, so a phone never zooms into them.
-- A long press selects the word under the finger, with handles to extend and a small bar: Copy, Highlight, Comment.
+- A long press selects the word under the finger, with handles to extend and a small bar: Copy, Highlight, Underline,
+  Strikethrough, Comment.
   - A long press is one finger held `PDF_LONG_PRESS_MS` with Select in hand, moving less than `PDF_DOUBLE_TAP_PX`;
     a second finger, a lift or a scroll the browser takes ends it. The browser's own menu for it is not shown.
   - It selects as two presses in a row do: the word under the finger, or the character where no word is.

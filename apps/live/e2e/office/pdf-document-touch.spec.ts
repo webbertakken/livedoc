@@ -170,8 +170,13 @@ test('a long press selects a word, with handles to extend it and a bar to act on
   const bar = page.getByRole('toolbar', { name: 'Selection' });
   await expect(bar).toBeVisible();
   await expect(bar).not.toHaveClass(/invisible/);
-  // The owner may mark: Highlight is there; Comment waits for comments.
-  await expect(bar.getByRole('button')).toHaveText(['Copy', 'Highlight']);
+  // The owner may mark: Highlight, Underline and Strikethrough are there; Comment waits for comments.
+  await expect(bar.getByRole('button')).toHaveText([
+    'Copy',
+    'Highlight',
+    'Underline',
+    'Strikethrough',
+  ]);
   const handle = page.locator('[data-pdf-handle="end"]');
   await expect(handle).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('pdf-long-press.png') });

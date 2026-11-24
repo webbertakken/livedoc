@@ -50,6 +50,12 @@ function tokensAfter(source: string, marker: string, close: string): string[] {
 const PDF_VIEW = read('live/lib/pdf-document/usePdfView.ts');
 const PDF_REFUSALS = read('live/lib/pdf-document/pdf-refusals.ts');
 const PDF_DARK_PAGES_QUESTION = read('live/lib/pdf-document/usePdfDarkPagesQuestion.ts');
+// A PDF's text marks, each kind's name in telemetry.
+const PDF_TEXT_MARK_NAMES = tokensAfter(
+  read('live/lib/pdf-document/pdf-text-mark.ts'),
+  'export const TEXT_MARK_NAMES',
+  '}',
+).filter((token) => /^[A-Z]/.test(token));
 
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
@@ -495,6 +501,14 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     values: tokensAfter(PDF_DARK_PAGES_QUESTION, 'export type DarkPagesAnswer =', ';').map(
       (how) => `DarkPagesQuestion.${how}`,
     ),
+  },
+  // A text mark made and a text tool taken in hand (docs/specs/035-pdf-documents/marks.md "Telemetry and
+  // observability"), each kind's name read from the tools' own table.
+  'apps/live/lib/pdf-document/usePdfMarkTools.ts Pdf·Added': {
+    values: PDF_TEXT_MARK_NAMES.map((name) => `Mark.${name}`),
+  },
+  'apps/live/lib/pdf-document/usePdfMarkTools.ts Pdf·Selected': {
+    values: PDF_TEXT_MARK_NAMES.map((name) => `Tool.${name}`),
   },
   // How each open of a PDF document came out (docs/specs/035-pdf-documents/opening.md "Telemetry and observability"),
   // a refusal's name read from `pdfOpenedType`'s own table.
