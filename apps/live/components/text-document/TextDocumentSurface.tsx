@@ -54,6 +54,8 @@ import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { tableKeysPlugin } from '@/lib/text-document/text-document-tables';
 import { useTextDocumentTables } from '@/lib/text-document/useTextDocumentTables';
 import { useTextDocumentBuildingBlocks } from '@/lib/text-document/useTextDocumentBuildingBlocks';
+import { codeBlockKeysPlugin } from '@/lib/text-document/text-document-code-blocks';
+import { codeHighlightPlugin } from '@/lib/text-document/text-document-code-highlight-plugin';
 import { indentUnit } from '@/lib/text-document/indent-units';
 import {
   TABLE_PROPERTIES_ITEM,
@@ -425,6 +427,9 @@ export function TextDocumentSurface({
               paintFormatPlugin(),
               // Adjacent paragraphs with the same borders share one box ("Borders and shading").
               paragraphBoxesPlugin(readFormatting),
+              // Code blocks: Enter in one, and each drawn with its language's colours (objects.md "Code blocks").
+              codeBlockKeysPlugin(() => readFormatting().styles),
+              codeHighlightPlugin({ readStyles: () => readFormatting().styles }),
               // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
               // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
               tableKeysPlugin(),

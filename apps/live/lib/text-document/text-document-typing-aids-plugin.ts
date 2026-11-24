@@ -28,6 +28,7 @@ import {
   type ListMarker,
 } from './text-document-typing-aid-rules';
 import { startUndoStep } from './text-document-undo';
+import { inCodeBlock } from './text-document-code-blocks';
 
 /** A stand-in for each atom in the paragraph's text, so text offsets are positions. */
 const ATOM = '\ufffc';
@@ -166,7 +167,7 @@ export function typingAidsPlugin({
   /** The person's typing aids, read as each character is typed. */
   read: () => TypingAids;
   lists: ListsAccess;
-  /** The document's paragraph styles, for the heading Markdown makes. */
+  /** The document's paragraph styles, for the heading Markdown makes and to know a code block. */
   readStyles?: () => readonly Style[];
 }): Plugin {
   return new Plugin({
@@ -174,6 +175,8 @@ export function typingAidsPlugin({
       handleTextInput: (view, from, to, text) => {
         // One character typed: a replacement the browser or an input method made is left alone.
         if (text.length !== 1) return false;
+        // Code is typed as it is (objects.md "Code blocks").
+        if (inCodeBlock(view.state, readStyles())) return false;
         const aids = read();
         const quote = (text === '"' || text === "'") && aids.smartQuotes;
         const ends = WORD_ENDS.has(text);
@@ -222,7 +225,7 @@ export function typingAidsPlugin({
           event.altKey
         )
           return false;
-        if (!view.state.selection.empty) return false;
+        if (!view.state.selection.empty || inCodeBlock(view.state, readStyles())) return false;
         asOwnStep(view, wordAids(view.state, view.state.selection.from, read()));
         return false;
       },

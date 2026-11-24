@@ -1360,7 +1360,7 @@ export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
   'Element',
   'Added',
   'Text Document Building Blocks',
-  'Meeting notes, an email draft or a tracker (product roadmap, review tracker, project assets, content launch tracker) put in a text document from Insert > Building blocks.',
+  'Meeting notes, an email draft, a tracker (product roadmap, review tracker, project assets, content launch tracker) or a code block put in a text document from Insert > Building blocks.',
   {
     types: [
       'TextDocumentBuildingBlockMeetingNotes',
@@ -1369,6 +1369,7 @@ export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
       'TextDocumentBuildingBlockReviewTracker',
       'TextDocumentBuildingBlockProjectAssets',
       'TextDocumentBuildingBlockContentLaunchTracker',
+      'TextDocumentCodeBlock',
     ],
   },
 );

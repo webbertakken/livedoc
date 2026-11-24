@@ -1,4 +1,5 @@
 import type { CodeLanguage } from '@livedoc/document';
+import { MORE_TOKEN_CONFIGS, type MoreTokenLanguage } from './code-token-languages';
 
 // Hand-rolled tokenizer for the code block's syntax highlighting (docs/specs/009-elements/code-block.md).
 // One generic scanner driven by a per-language config: comments, strings,
@@ -10,7 +11,7 @@ import type { CodeLanguage } from '@livedoc/document';
 export type CodeTokenKind = 'plain' | 'keyword' | 'string' | 'comment' | 'number';
 export type CodeToken = { kind: CodeTokenKind; text: string };
 
-type LanguageConfig = {
+export type LanguageConfig = {
   lineComment?: string;
   blockComment?: [string, string];
   // String delimiters (each a single char; backslash escapes inside).
@@ -71,7 +72,10 @@ const JS_KEYWORDS = new Set([
   'yield',
 ]);
 
-const CONFIGS: Record<Exclude<CodeLanguage, 'plain'>, LanguageConfig> = {
+/** The canvas code block's languages, and the text document's code blocks' further ones. */
+export type TokenLanguage = CodeLanguage | MoreTokenLanguage;
+
+const BASE_CONFIGS: Record<Exclude<CodeLanguage, 'plain'>, LanguageConfig> = {
   ts: {
     lineComment: '//',
     blockComment: ['/*', '*/'],
@@ -224,13 +228,18 @@ const CONFIGS: Record<Exclude<CodeLanguage, 'plain'>, LanguageConfig> = {
   },
 };
 
+const CONFIGS: Record<Exclude<TokenLanguage, 'plain'>, LanguageConfig> = {
+  ...BASE_CONFIGS,
+  ...MORE_TOKEN_CONFIGS,
+};
+
 const isWordChar = (ch: string) => /[A-Za-z0-9_$-]/.test(ch);
 const isDigit = (ch: string) => ch >= '0' && ch <= '9';
 
 // Tokenize a snippet into one token array per line. Block comments and
 // (template) strings carry across lines; every other state resets at the
 // newline, which is how the languages here behave in practice.
-export function tokenizeCode(code: string, language: CodeLanguage): CodeToken[][] {
+export function tokenizeCode(code: string, language: TokenLanguage): CodeToken[][] {
   const lines = code.replace(/\r\n/g, '\n').split('\n');
   if (language === 'plain') return lines.map((l) => (l ? [{ kind: 'plain', text: l }] : []));
   const cfg = CONFIGS[language];
@@ -310,6 +319,25 @@ export function tokenizeCode(code: string, language: CodeLanguage): CodeToken[][
     }
     return tokens;
   });
+}
+
+/** Where each token other than plain text lies in `code`, by character offsets; lines split by `\n`. */
+export function codeTokenRanges(
+  code: string,
+  language: TokenLanguage,
+): { from: number; to: number; kind: Exclude<CodeTokenKind, 'plain'> }[] {
+  const ranges: { from: number; to: number; kind: Exclude<CodeTokenKind, 'plain'> }[] = [];
+  let offset = 0;
+  for (const line of tokenizeCode(code, language)) {
+    for (const token of line) {
+      const to = offset + token.text.length;
+      if (token.kind !== 'plain') ranges.push({ from: offset, to, kind: token.kind });
+      offset = to;
+    }
+    // The line break.
+    offset += 1;
+  }
+  return ranges;
 }
 
 // Scan forward from `from` for the closing quote, honouring backslash
