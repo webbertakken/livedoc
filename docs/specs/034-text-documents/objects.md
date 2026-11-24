@@ -5,7 +5,7 @@ inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and
 media are changed.
 A horizontal line, special characters and emoji are inserted, emoji also from the colon list.
 An equation is held, read and written in both formats, kept in the live state, drawn, inserted and written in its
-box; the equation toolbar is specified.
+box, with its toolbar.
 The rest is specified.
 
 Pictures, drawings, charts, equations, special characters, emoji, horizontal lines and building blocks in a
@@ -388,12 +388,18 @@ An equation is an inline of a paragraph, beside runs, fields, notes and pictures
   row, as Google's names; a name it does not know stays as typed. `^` and `_` (also after `\`, as Google's help
   gives them) make the node before the caret the base of a superscript or subscript, the caret in it; with nothing
   before the caret, its base is an empty row (default).
-- **The equation toolbar** (View > Show equation toolbar; shown while an equation is being written): **New equation**,
-  then the menus Greek letters, Miscellaneous operations, Relations, Math operators and Arrows, each a grid of
-  symbols, Google's sets (default, until a capture): a press writes it at the caret, in an equation, a new one if the
-  caret is outside one.
-- **Insert > Equation** inserts an empty equation at the caret, in place of a selection, the caret in its box, and shows
-  the toolbar; in the body only, as the box is (default).
+- **The equation toolbar**: a row under the toolbar while View > Show equation toolbar is on (off by default, kept in
+  this browser as the ruler's switch is), for whoever may edit the body. It holds **New equation** (an empty equation
+  at the caret, as Insert > Equation), then the menus Greek letters, Miscellaneous operations, Relations, Math
+  operators and Arrows, in that order.
+- **Each menu** is a grid of its symbols, each cell named by its name (`alpha`, `leq` …); Math operators' cells draw
+  their structure with dotted empty rows. The sets and their order are those Google's equation commands are known by
+  (default, until a capture); the grid's look is the special characters dialog's (default, until a capture).
+- **A press on a cell** writes it at the caret in the equation being written, a structure with the caret in its first
+  empty row; with no equation being written, a new equation holding it is put in at the caret. The writing keeps its
+  focus, and the menu closes; Escape or a press outside closes it too.
+- **Insert > Equation** inserts an empty equation at the caret, in place of a selection, the caret in its box, and turns
+  the equation toolbar on; in the body only, as the box is (default).
 - Undo takes back an equation's typing as Google's, a word at a time, as typing in text does.
 
 ## Special characters
@@ -497,4 +503,6 @@ the gallery's limit.
 
 `Element · Added · TextDocument<Object>` (Image, Drawing, Chart, Equation, SpecialCharacter, Emoji, HorizontalLine),
 with the image source as the type's suffix (ImageUpload, ImageUrl, ImageGallery, ImageCamera, ImageSearch);
-`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust). Never content.
+`Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust); a new equation from the
+equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·
+TextDocumentEquationToolbar`, counted before it flips. Never content.

@@ -65,6 +65,7 @@ import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
 import {
+  EQUATION_TOOLBAR_TOGGLE,
   NON_PRINTING_TOGGLE,
   PRINT_LAYOUT_TOGGLE,
   RULER_TOGGLE,
@@ -161,6 +162,7 @@ describe('the text document menus', () => {
         RULER_TOGGLE.item,
         NON_PRINTING_TOGGLE.item,
         PRINT_LAYOUT_TOGGLE.item,
+        EQUATION_TOOLBAR_TOGGLE.item,
         // View > Text width (useTextDocumentTextWidth), bound by the surface.
         ...Object.values(TEXT_WIDTH_ITEMS),
         // Insert > Footnote (useTextDocumentNoteEditing), bound by the surface.

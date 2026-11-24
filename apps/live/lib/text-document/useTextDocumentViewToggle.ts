@@ -38,6 +38,18 @@ export const PRINT_LAYOUT_TOGGLE: ViewToggle = {
   telemetry: 'TextDocumentPrintLayout',
 };
 
+/** View > Show equation toolbar (objects.md "Equations in the editor"): off by default; Insert > Equation turns it on. */
+export const EQUATION_TOOLBAR_TOGGLE: ViewToggle = {
+  item: 'show-equation-toolbar',
+  key: 'livedoc:v2:text-document-equation-toolbar',
+  onByDefault: false,
+  telemetry: 'TextDocumentEquationToolbar',
+};
+
+/** Turns a switch on without a flip of the menu (Insert > Equation shows the equation toolbar). */
+export const showViewToggle = (toggle: ViewToggle): void =>
+  writeLocalStorageValue(toggle.key, 'shown');
+
 export function useTextDocumentViewToggle(toggle: ViewToggle): {
   shown: boolean;
   actions: OfficeActions;

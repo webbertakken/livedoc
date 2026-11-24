@@ -160,7 +160,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         status: 'built',
       }),
       item('show-tabs-and-outlines', 'Show tabs & outlines', 'view', { checkable: 'checkbox' }),
-      item('show-equation-toolbar', 'Show equation toolbar', 'edit', { checkable: 'checkbox' }),
+      item('show-equation-toolbar', 'Show equation toolbar', 'edit', {
+        checkable: 'checkbox',
+        status: 'built',
+      }),
       item('show-non-printing-characters', 'Show non-printing characters', 'view', {
         checkable: 'checkbox',
         shortcut: 'show-non-printing-characters',
