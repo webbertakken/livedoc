@@ -59,7 +59,8 @@ describe('a row’s handles on a touch screen', () => {
     );
     const height = screen.getByRole('separator', { name: 'Resize row 1' });
     expect(height.className).toContain('[@media(hover:none)]:opacity-50');
-    expect(height.className).toContain('[@media(hover:none)]:h-6');
+    // Its finger's reach is its own height, 24 px for every pointer (sizing.md: nothing pressable under 24 px).
+    expect(height.className).toContain('h-chip');
     expect(height.firstElementChild!.getAttribute('class')).toContain(
       '[@media(hover:none)]:scale-x-100',
     );

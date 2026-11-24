@@ -76,8 +76,11 @@ function StackedCards({ palette }: { palette: PlanPalette }) {
   const back = { backgroundColor: palette.card, borderColor: palette.border };
   return (
     <span className="relative block pr-4 pt-3">
-      <span className="absolute bottom-3 left-4 right-0 top-0 rounded-lg border" style={back} />
-      <span className="absolute bottom-1.5 left-2 right-2 top-1.5 rounded-lg border" style={back} />
+      <span className="absolute bottom-3 left-4 right-0 top-0 rounded-menu border" style={back} />
+      <span
+        className="absolute bottom-1.5 left-2 right-2 top-1.5 rounded-menu border"
+        style={back}
+      />
       <span className="relative block">
         <CardPreview card="checklist" palette={palette} />
       </span>
@@ -130,7 +133,7 @@ const SLOT_CATEGORY_INFO: Record<SlotCategory, Info> = {
 
 // Card chrome shared by a category and a choice: a lift and a brand-tinted edge on hover, a ring on focus.
 export const PICK_CARD =
-  'group flex min-w-0 cursor-pointer flex-col rounded-xl border border-slate-200 bg-white text-left shadow-sm transition duration-micro ease-out hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/60 dark:focus-visible:ring-offset-slate-900';
+  'group flex min-w-0 cursor-pointer flex-col rounded-surface border border-slate-200 bg-white text-left shadow-sm transition duration-micro ease-out hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/60 dark:focus-visible:ring-offset-slate-900';
 
 export function SlotCategoryCard({
   title,
@@ -159,25 +162,25 @@ export function SlotCategoryCard({
       style={cascade ? ({ '--stagger-i': index } as CSSProperties) : undefined}
     >
       {/* The slot's own picture, at three quarters: what the category holds, as it will look. */}
-      <span aria-hidden className="pointer-events-none block h-[72px] overflow-hidden rounded-lg">
+      <span aria-hidden className="pointer-events-none block h-[72px] overflow-hidden rounded-menu">
         <span className="block w-[133.333%] origin-top-left scale-75">
           {info?.picture(palette)}
         </span>
       </span>
-      <span className="flex min-w-0 items-center gap-1.5 px-0.5">
+      <span className="flex min-w-0 items-center gap-2 px-0.5">
         <span
           aria-hidden
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700 transition group-hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:group-hover:bg-brand-500/25"
+          className="flex size-chip shrink-0 items-center justify-center rounded-control bg-brand-50 text-brand-700 transition group-hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:group-hover:bg-brand-500/25"
         >
           {info?.icon}
         </span>
-        <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-slate-800 group-hover:text-brand-800 dark:text-slate-100 dark:group-hover:text-brand-200">
+        <span className="min-w-0 flex-1 text-body text-slate-800 group-hover:text-brand-800 dark:text-slate-100 dark:group-hover:text-brand-200">
           {title}
         </span>
         <CountBadge count={count} />
       </span>
       {info ? (
-        <span className="px-0.5 pb-0.5 text-[11.5px] leading-snug text-slate-500 dark:text-slate-400">
+        <span className="px-0.5 pb-0.5 text-supporting text-slate-500 dark:text-slate-400">
           {info.description}
         </span>
       ) : null}

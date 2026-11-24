@@ -33,6 +33,8 @@ respondents see it and a slide keep the sizes their author chose.
   unless a tile that grows its figure with its size sets its own; a tile's sparkline is its picture.
 - A metric's name reads at 14 px as written, beside its 28 px glyph.
 - A card's top line keeps clear of the slot's menu by a margin (`CLEAR_OF_SLOT_MENU`), never by side padding.
+- A slot is a surface (`rounded-surface`), its toolbar's controls 28 px; its grip and a row's resize band are
+  24 px, the floor for anything pressable.
 
 ## Why
 
@@ -148,6 +150,7 @@ A surface names the token, never the number, so the scale changes in one place.
 - A box under 12 px or over 36 px (a hairline, a dot, an avatar, a panel) is layout, not the scale, and passes.
 - It reads class strings only; sizes set under a coarse pointer are touch's and pass.
 - The paths it covers grow as each surface moves to the scale, and in the end cover every app.
+- A moved folder may name exceptions: drawn art, or a part that moves with a later group; a stale one fails the run.
 
 ## How it rolls out
 

@@ -65,27 +65,23 @@ const SIZED_PATHS = [
   'components/sheets/SheetSetupStyle.tsx',
   'components/sheets/SheetSmartFillLayer.tsx',
   'components/sheets/SheetTouchLinkChip.tsx',
-  // A Dashboard's written cards and settings; a tile's figure and Add to Slot's pictures are drawn art (sizing.md D239).
-  'components/plan/dashboard/AddLinkForm.tsx',
-  'components/plan/dashboard/card-parts.tsx',
-  'components/plan/dashboard/DashboardChecklistCard.tsx',
-  'components/plan/dashboard/DashboardFormMetric.tsx',
-  'components/plan/dashboard/DashboardKeyDateCard.tsx',
-  'components/plan/dashboard/DashboardLinksCard.tsx',
-  'components/plan/dashboard/DashboardMenuName.tsx',
-  'components/plan/dashboard/DashboardNote.tsx',
-  'components/plan/dashboard/DashboardSheetChart.tsx',
-  'components/plan/dashboard/DashboardSheetMetric.tsx',
-  'components/plan/dashboard/DashboardStatusCard.tsx',
-  'components/plan/dashboard/DashboardTitle.tsx',
-  'components/plan/dashboard/LinkAddressField.tsx',
-  'components/plan/dashboard/sheet-source-parts.tsx',
-  'components/plan/dashboard/SheetChartSource.tsx',
-  'components/plan/dashboard/SheetMetricSource.tsx',
+  // A Dashboard tab is chrome (sizing.md D239).
+  'components/plan/dashboard',
+];
+
+// Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.
+const SIZING_EXCEPTIONS = [
+  // Add to Slot's pictures of a card and a slot (sizing.md D239).
+  'components/plan/dashboard/card-previews.tsx',
+  'components/plan/dashboard/slot-previews.tsx',
+  // Its floating cog shares the canvas toolbar's frame, so it moves with the canvas chrome.
+  'components/plan/dashboard/DashboardSettings.tsx',
 ];
 
 describe('live sizing', () => {
   it('draws every moved part from the sizing scale', () => {
-    expect(formatSizingViolations(checkSizing({ root, paths: SIZED_PATHS }))).toBe('');
+    expect(
+      formatSizingViolations(checkSizing({ root, paths: SIZED_PATHS, except: SIZING_EXCEPTIONS })),
+    ).toBe('');
   });
 });

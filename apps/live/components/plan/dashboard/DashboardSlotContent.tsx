@@ -46,13 +46,13 @@ export function useBoxSize(
 export function Missing({ message, slotId }: { message: string; slotId: string }) {
   const { canEdit, actions } = useDashboard();
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-2 p-3 text-center text-[13px] text-slate-500 dark:text-slate-400">
+    <div className="flex h-full flex-col items-center justify-center gap-2 p-3 text-center text-body text-slate-500 dark:text-slate-400">
       {message}
       {canEdit ? (
         <button
           type="button"
           onClick={() => actions.setSlotContent(slotId, undefined)}
-          className="cursor-pointer rounded-md border border-slate-200 px-2.5 py-1 text-[12px] font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="h-field cursor-pointer rounded-control border border-slate-200 px-3 text-body text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Clear Slot
         </button>

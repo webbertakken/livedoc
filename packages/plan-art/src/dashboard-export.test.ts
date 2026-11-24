@@ -135,8 +135,8 @@ describe('a Dashboard’s page', () => {
       ],
     });
     expect(out.art.get('export-slot-t')).toContain('Q4 Plan');
-    expect(out.art.get('export-slot-t')).not.toContain('rx="16"');
-    expect(out.art.get('export-slot-n')).toContain('rx="16"');
+    expect(out.art.get('export-slot-t')).not.toContain('rx="12"');
+    expect(out.art.get('export-slot-n')).toContain('rx="12"');
     expect(out.art.get('export-slot-n')).toContain('>Two<');
   });
 

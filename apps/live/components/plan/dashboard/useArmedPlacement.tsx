@@ -182,10 +182,10 @@ export function useArmedPlacement({
         <div
           data-armed-banner=""
           role="status"
-          className="pointer-events-auto mt-1 flex h-fit w-fit items-center gap-3 rounded-full border border-brand-200 bg-white/95 py-1.5 pl-4 pr-1.5 text-[13px] text-slate-700 shadow-lg dark:border-brand-500/40 dark:bg-slate-900/95 dark:text-slate-200"
+          className="pointer-events-auto mt-1 flex h-fit w-fit items-center gap-3 rounded-full border border-brand-200 bg-white/95 py-1 pl-4 pr-1 text-body text-slate-700 shadow-lg dark:border-brand-500/40 dark:bg-slate-900/95 dark:text-slate-200"
         >
           <span>
-            Click where the <strong className="font-semibold">{armedName(armed, tabs)}</strong> goes
+            Click where the <strong className="font-medium">{armedName(armed, tabs)}</strong> goes
             <span className="text-slate-500 dark:text-slate-400">
               {armed.kind === 'row'
                 ? ', or press Enter for the foot'
@@ -197,7 +197,7 @@ export function useArmedPlacement({
           <button
             type="button"
             onClick={disarm}
-            className="cursor-pointer rounded-full px-3 py-1 text-[12px] font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="h-row cursor-pointer rounded-full px-3 text-body text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             Cancel
           </button>

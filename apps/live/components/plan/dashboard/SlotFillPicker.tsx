@@ -230,17 +230,15 @@ export function SlotFillPicker({
       onEscape={back}
     >
       <div
-        className="flex max-h-[inherit] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        className="flex max-h-[inherit] flex-col overflow-hidden rounded-surface border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
         onKeyDown={(e) => {
           // Backspace on the drill-down goes back a level, as Escape does.
           if (e.key === 'Backspace' && back()) e.preventDefault();
         }}
       >
         <div className="flex items-baseline gap-2 border-b border-slate-100 px-4 pb-2.5 pt-3 dark:border-slate-800">
-          <h3 className="text-[14px] font-semibold text-slate-900 dark:text-slate-100">
-            Add to Slot
-          </h3>
-          <p className="truncate text-[12px] text-slate-500 dark:text-slate-400">
+          <h3 className="text-panel-title text-slate-900 dark:text-slate-100">Add to Slot</h3>
+          <p className="truncate text-supporting text-slate-500 dark:text-slate-400">
             What fits here, as it will look.
           </p>
         </div>
@@ -258,7 +256,7 @@ export function SlotFillPicker({
                   {only ? null : (
                     <ToolsBreadcrumb root="Add to Slot" label={open.title} onBack={back} />
                   )}
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-3">
                     {open.tiles.map((t) => {
                       const item = slotItemOfTile(t)!;
                       return (
@@ -275,7 +273,7 @@ export function SlotFillPicker({
                 </section>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-3">
                     {sections.map((sec, i) => (
                       <SlotCategoryCard
                         key={sec.title}
@@ -289,7 +287,7 @@ export function SlotFillPicker({
                     ))}
                   </div>
                   {hint ? (
-                    <p className="mt-3 flex items-start gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-[11.5px] leading-snug text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+                    <p className="mt-3 flex items-start gap-2 rounded-menu bg-slate-50 px-3 py-2 text-supporting text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
                       <span aria-hidden className="mt-px shrink-0">
                         <ResizeGlyph />
                       </span>
@@ -342,10 +340,10 @@ function FillCard({
       aria-label={label}
       data-fill-card
       onClick={onPick}
-      className={`${PICK_CARD} gap-1.5 p-1.5`}
+      className={`${PICK_CARD} gap-2 p-2`}
     >
       <span className="pointer-events-none block">{picture}</span>
-      <span className="truncate px-1 pb-0.5 text-[12px] font-medium text-slate-700 group-hover:text-brand-700 dark:text-slate-200 dark:group-hover:text-brand-300">
+      <span className="truncate px-1 pb-0.5 text-body text-slate-700 group-hover:text-brand-700 dark:text-slate-200 dark:group-hover:text-brand-300">
         {caption}
       </span>
     </button>

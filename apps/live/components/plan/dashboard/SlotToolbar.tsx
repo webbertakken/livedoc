@@ -54,7 +54,7 @@ function ToolButton({
           if (!disabled) onClick();
         }}
         // A finger's tap height on a touch screen (touch-targets.md); the row's buttons sit too close for a full pad.
-        className={`touch-target-y relative flex h-8 w-8 items-center justify-center rounded-md transition ${
+        className={`touch-target-y relative flex size-row items-center justify-center rounded-control transition ${
           disabled
             ? 'cursor-default text-slate-300 dark:text-slate-600'
             : 'cursor-pointer text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
@@ -186,7 +186,7 @@ export function SlotToolbar({
             <span
               aria-hidden
               data-toolbar-separator
-              className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700"
+              className="mx-1 h-icon-title w-px bg-slate-200 dark:bg-slate-700"
             />
           </>
         ) : null}
@@ -224,13 +224,11 @@ export function SlotToolbar({
           aria-label={pending === 'clear' ? 'Clear Slot' : 'Remove Slot'}
           className="px-3 pb-3 pt-1"
         >
-          <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+          <p className="text-body text-slate-800 dark:text-slate-100">
             {pending === 'clear' ? 'Clear Slot' : 'Remove Slot'}
           </p>
-          <p className="mt-1 text-[12px] leading-snug text-slate-500 dark:text-slate-400">
-            {also.question}
-          </p>
-          <div className="mt-3 flex flex-col gap-1.5">
+          <p className="mt-1 text-supporting text-slate-500 dark:text-slate-400">{also.question}</p>
+          <div className="mt-3 flex flex-col gap-2">
             <Button variant="secondary" size="sm" onClick={() => finish(false)}>
               {also.keep}
             </Button>

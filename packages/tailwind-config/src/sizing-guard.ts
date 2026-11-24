@@ -222,20 +222,32 @@ function staticStrings(root: Node, found: (text: string, at: Node) => void): voi
   visit(root);
 }
 
-/** Every off-scale class in the moved `paths` (folders or files, relative to `root`). */
+/**
+ * Every off-scale class in the moved `paths` (folders or files, relative to `root`), but for the files `except` names
+ * inside them (drawn art, or a part that moves with a later slice).
+ */
 export function checkSizing({
   root,
   paths,
+  except = [],
 }: {
   root: string;
   paths: readonly string[];
+  except?: readonly string[];
 }): SizingViolation[] {
-  const files = paths.flatMap((path) => {
+  const existing = (path: string): string => {
     const full = join(root, path);
     if (!existsSync(full)) throw new Error(`sizing guard: no path ${path} under ${root}`);
-    if (statSync(full).isDirectory()) return listSourceFiles(full, isTypeScriptSource);
-    return isTypeScriptSource(full) ? [full] : [];
-  });
+    return full;
+  };
+  const excepted = new Set(except.map(existing));
+  const files = paths
+    .flatMap((path) => {
+      const full = existing(path);
+      if (statSync(full).isDirectory()) return listSourceFiles(full, isTypeScriptSource);
+      return isTypeScriptSource(full) ? [full] : [];
+    })
+    .filter((file) => !excepted.has(file));
   const violations: SizingViolation[] = [];
   for (const sf of parseSourceFiles(files)) {
     staticStrings(sf, (text, at) => {
