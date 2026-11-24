@@ -21,15 +21,21 @@ function levelOf(attrs: ParagraphAttributes, styles: readonly Style[]): number |
   return Styles.outlineLevel(styles, attrs.style ?? undefined);
 }
 
+/** A block's heading level, 1 to 6; none when it is no heading. */
+export function headingLevel(block: ProseMirrorNode, styles: readonly Style[]): number | null {
+  if (block.type.name !== 'paragraph') return null;
+  const level = levelOf(block.attrs as ParagraphAttributes, styles);
+  return level !== undefined && level >= 1 && level <= OUTLINE_MAX_LEVEL ? level : null;
+}
+
 export function textDocumentHeadings(
   doc: ProseMirrorNode,
   styles: readonly Style[],
 ): TextDocumentHeading[] {
   const headings: TextDocumentHeading[] = [];
   doc.forEach((block, offset) => {
-    if (block.type.name !== 'paragraph') return;
-    const level = levelOf(block.attrs as ParagraphAttributes, styles);
-    if (level === undefined || level < 1 || level > OUTLINE_MAX_LEVEL) return;
+    const level = headingLevel(block, styles);
+    if (level === null) return;
     headings.push({ level, text: block.textContent.trim() || UNTITLED_HEADING, pos: offset + 1 });
   });
   return headings;

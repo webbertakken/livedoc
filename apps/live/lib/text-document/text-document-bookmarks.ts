@@ -1,7 +1,8 @@
 // Bookmarks in the editor (docs/specs/034-text-documents/links-and-navigation.md "Bookmarks"): the node, an atom of
 // no width whose ribbon is drawn in the left margin beside its line; Insert > Bookmark at the caret, in the body; the
 // bookmark beside a caret; where one is; the bookmarks the link editor offers; and a bookmark pasted where its name is
-// already taken left out, so a name stays one place.
+// already taken left out, so a name stays one place. A hidden bookmark (a heading's id) is drawn as nothing, has no
+// card and is offered with the headings, never the bookmarks.
 import type { NodeSpec, Node as PmNode } from 'prosemirror-model';
 import { Fragment, Slice } from 'prosemirror-model';
 import { TextSelection, type Command, type EditorState } from 'prosemirror-state';
@@ -30,6 +31,16 @@ export const bookmarkNodeSpec: NodeSpec = {
   leafText: () => '',
   toDOM: (node) => {
     const name = (node.attrs as { name: unknown }).name;
+    if (typeof name === 'string' && Bookmarks.hidden(name))
+      return [
+        'span',
+        {
+          class: BOOKMARK_CLASS,
+          contenteditable: 'false',
+          'data-bookmark': name,
+          'data-hidden': 'true',
+        },
+      ];
     return [
       'span',
       {
@@ -64,15 +75,25 @@ export function bookmarkNames(doc: PmNode): Set<string> {
   return names;
 }
 
-/** Where the bookmark of a name is; none when it is gone. */
+const shown = (node: PmNode) =>
+  node.type.name === BOOKMARK && !!nameOf(node) && !Bookmarks.hidden(nameOf(node));
+
+// Google's ODF links to a heading as `#heading=h.<id>`, its bookmark named `_heading=h.<id>` (default).
+const GOOGLE_ODF_HEADING = /^heading=h\./;
+
+/** Where the bookmark of a name is (Google's ODF heading link read as its hidden name); none when it is gone. */
 export function bookmarkPosition(doc: PmNode, name: string): number | null {
-  let found: number | null = null;
-  doc.descendants((node, pos) => {
-    if (found !== null) return false;
-    if (node.type.name === BOOKMARK && nameOf(node) === name) found = pos;
-    return true;
-  });
-  return found;
+  const find = (wanted: string) => {
+    let found: number | null = null;
+    doc.descendants((node, pos) => {
+      if (found !== null) return false;
+      if (node.type.name === BOOKMARK && nameOf(node) === wanted) found = pos;
+      return true;
+    });
+    return found;
+  };
+  const found = find(name);
+  return found === null && GOOGLE_ODF_HEADING.test(name) ? find(`_${name}`) : found;
 }
 
 /** The bookmark beside a caret (nothing selected), just before or after it. */
@@ -83,7 +104,7 @@ export function bookmarkAt(state: EditorState): { pos: number; name: string } | 
     [$from.nodeAfter, $from.pos],
     [$from.nodeBefore, $from.pos - ($from.nodeBefore?.nodeSize ?? 0)],
   ] as const)
-    if (node?.type.name === BOOKMARK && nameOf(node)) return { pos, name: nameOf(node) };
+    if (node && shown(node)) return { pos, name: nameOf(node) };
   return null;
 }
 
@@ -141,7 +162,7 @@ export function bookmarkTargets(doc: PmNode, typed: string): BookmarkTarget[] {
   const out: BookmarkTarget[] = [];
   doc.descendants((node, pos) => {
     if (out.length >= BOOKMARK_TARGETS_MAX) return false;
-    if (node.type.name !== BOOKMARK || !nameOf(node)) return true;
+    if (!shown(node)) return true;
     const label = labelAt(doc, pos, node);
     if (words.every((w) => label.toLowerCase().includes(w)))
       out.push({ name: nameOf(node), label });

@@ -151,3 +151,29 @@ describe('a bookmark’s address', () => {
     expect(bookmarkOfHash('#bookmark=%E0%A4%A')).toBeNull();
   });
 });
+
+// links-and-navigation.md "Bookmarks", "Heading links": a hidden bookmark (a heading's id) draws no ribbon, has no
+// card, is not offered among the bookmarks; Google's ODF link to a heading leads to its `_heading=h.<id>`.
+describe('a hidden bookmark', () => {
+  it('draws no ribbon', () => {
+    const dom = DOMSerializer.fromSchema(schema).serializeNode(mark('_h1'), {
+      document,
+    }) as HTMLElement;
+    expect(dom.dataset.bookmark).toBe('_h1');
+    expect(dom.dataset.hidden).toBe('true');
+    expect(dom.querySelector(`.${BOOKMARK_GLYPH_CLASS}`)).toBeNull();
+  });
+
+  it('has no card and is not offered, though it is found by its name', () => {
+    const doc = schema.node('doc', null, [p(mark('_h1'), 'Heading'), p('Body')]);
+    expect(bookmarkAt(stateAt(doc, 2))).toBeNull();
+    expect(bookmarkTargets(doc, '')).toEqual([]);
+    expect(bookmarkPosition(doc, '_h1')).toBe(1);
+  });
+
+  it('is what Google’s ODF heading link names', () => {
+    const doc = schema.node('doc', null, [p(mark('_heading=h.abc'), 'Heading')]);
+    expect(bookmarkPosition(doc, 'heading=h.abc')).toBe(1);
+    expect(bookmarkPosition(doc, 'heading=h.zzz')).toBeNull();
+  });
+});

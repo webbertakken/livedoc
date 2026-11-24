@@ -69,6 +69,7 @@ import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
+import { useTextDocumentHeadingLinks } from './useTextDocumentHeadingLinks';
 import { TextDocumentEmojiColonList, useTextDocumentEmojiColon } from './useTextDocumentEmojiColon';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
@@ -733,6 +734,22 @@ export function TextDocumentSurface({
     documentId,
     subscribe: changes.subscribeCaret,
   });
+  // The styles a heading's level is read through (the outline, heading links).
+  const readStyles = useCallback(
+    (): readonly Style[] =>
+      liveDoc.current ? TextDocumentState.styles(liveDoc.current, format) : [],
+    [format],
+  );
+  // Copy heading link, the link editor's headings, and going to one (links-and-navigation.md "Heading links").
+  const headingLinks = useTextDocumentHeadingLinks({
+    view: editorView,
+    writes: bodyWrites,
+    ready: state === 'ready',
+    documentId,
+    readStyles,
+    subscribe: changes.subscribeCaret,
+    bookmarks: bookmarks.places,
+  });
   // Insert > Link, the link card and Open link (links-and-navigation.md "Links"), in whichever writing has the caret.
   const links = useTextDocumentLinks({
     view: activeView,
@@ -740,7 +757,7 @@ export function TextDocumentSurface({
     documents,
     subscribe: changes.subscribeCaret,
     showCard: preferences.aids.linkDetails,
-    inDocument: bookmarks.places,
+    inDocument: headingLinks.places,
   });
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, writes);
@@ -826,6 +843,7 @@ export function TextDocumentSurface({
       ...characterDialogs.actions,
       ...links.actions,
       ...bookmarks.actions,
+      ...headingLinks.actions,
       ...tableActions,
       ...buildingBlocks,
       ...pictures.actions,
@@ -841,6 +859,7 @@ export function TextDocumentSurface({
       characterDialogs.actions,
       links.actions,
       bookmarks.actions,
+      headingLinks.actions,
       tableActions,
       buildingBlocks,
       pictures.actions,
@@ -897,13 +916,6 @@ export function TextDocumentSurface({
     if (editorView && !editorView.isDestroyed) editorView.setProps({});
   }, [editorView, writes]);
 
-  // The styles the outline reads its heading levels through.
-  const readStyles = useCallback(
-    (): readonly Style[] =>
-      liveDoc.current ? TextDocumentState.styles(liveDoc.current, format) : [],
-    [format],
-  );
-
   // An edit the room refused names its limit.
   useEffect(() => TextDocumentBus.onRefused(tabId, setLimitReached), [tabId]);
 
@@ -952,6 +964,7 @@ export function TextDocumentSurface({
       {links.status}
       {bookmarks.card}
       {bookmarks.status}
+      {headingLinks.status}
       <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />
       {limitReached ? (
         <p

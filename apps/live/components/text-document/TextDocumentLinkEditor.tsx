@@ -2,10 +2,15 @@
 
 // The link editor (docs/specs/034-text-documents/links-and-navigation.md "Links"): under the selection, Text and Link
 // with Apply; as Link is typed in, the person's LiveDoc documents whose names hold the words and this document's
-// bookmarks, Up and Down to move,
-// Enter to take one. Enter elsewhere applies, Escape or a press outside closes. What is refused is said under Link.
+// headings and bookmarks, Up and Down to move, Enter to take one. Enter elsewhere applies, Escape or a press outside closes. What is refused is said under Link.
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import { lucideBookmark, lucideFileText, lucideLink, lucideType } from '@livedoc/icons/lucide';
+import {
+  lucideBookmark,
+  lucideFileText,
+  lucideHeading,
+  lucideLink,
+  lucideType,
+} from '@livedoc/icons/lucide';
 import { lucideGlyph, useClickOutside } from '@livedoc/ui';
 import { OfficePopup, OFFICE_POPUP } from '@/components/office/OfficePopup';
 import type { Box } from '@/lib/office/popup-place';
@@ -14,17 +19,25 @@ import {
   matchingDocuments,
   type LinkDocument,
 } from '@/lib/text-document/text-document-links';
-import type { BookmarkTarget } from '@/lib/text-document/text-document-bookmarks';
+import type { PlaceTarget } from './useTextDocumentLinks';
 
 const TextGlyph = lucideGlyph(lucideType, 18);
 const LinkGlyph = lucideGlyph(lucideLink, 18);
 const DocumentGlyph = lucideGlyph(lucideFileText, 16);
 const BookmarkGlyph = lucideGlyph(lucideBookmark, 16);
+const HeadingGlyph = lucideGlyph(lucideHeading, 16);
+const GLYPHS = {
+  documents: DocumentGlyph,
+  headings: HeadingGlyph,
+  bookmarks: BookmarkGlyph,
+} as const;
 
-/** One suggestion under Link: a LiveDoc document or a bookmark of this document. */
-type Offer = { group: 'documents' | 'bookmarks'; key: string; label: string; href: string };
+/** One suggestion under Link: a LiveDoc document, or a heading or bookmark of this document. */
+type Offer = { group: keyof typeof GLYPHS; key: string; label: string; href: string };
+// The order is (default) until a capture (links-and-navigation.md "Heading links").
 const GROUPS = [
   ['documents', 'LiveDoc documents'],
+  ['headings', 'Headings'],
   ['bookmarks', 'Bookmarks'],
 ] as const;
 
@@ -36,7 +49,7 @@ export function TextDocumentLinkEditor({
   text: openText,
   href,
   documents,
-  bookmarks,
+  places,
   origin,
   onApply,
   onClose,
@@ -46,8 +59,8 @@ export function TextDocumentLinkEditor({
   text: string | null;
   href: string;
   documents: readonly LinkDocument[];
-  // This document's bookmarks holding the typed words.
-  bookmarks: (typed: string) => readonly BookmarkTarget[];
+  // This document's headings and bookmarks holding the typed words.
+  places: (typed: string) => readonly PlaceTarget[];
   origin: string;
   // Applies Text and Link; answers what is refused, or null once applied.
   onApply: (text: string | null, link: string) => string | null;
@@ -61,7 +74,7 @@ export function TextDocumentLinkEditor({
   // What Link offers, for the words typed since it was last taken from.
   const [typed, setTyped] = useState('');
   const [chosen, setChosen] = useState(0);
-  // The documents first, then this document's bookmarks, one list to move through.
+  // The documents first, then this document's headings and bookmarks, one list to move through.
   const offered: Offer[] = [
     ...matchingDocuments(documents, typed).map((d): Offer => ({
       group: 'documents',
@@ -70,12 +83,16 @@ export function TextDocumentLinkEditor({
       href: documentAddress(d.id, origin),
     })),
     ...(typed.trim()
-      ? bookmarks(typed).map((b): Offer => ({
-          group: 'bookmarks',
-          key: `b:${b.name}`,
-          label: b.label,
-          href: `#${b.name}`,
-        }))
+      ? GROUPS.flatMap(([group]) =>
+          places(typed)
+            .filter((p) => p.group === group)
+            .map((p): Offer => ({
+              group,
+              key: `${group}:${p.name}`,
+              label: p.label,
+              href: `#${p.name}`,
+            })),
+        )
       : []),
   ];
   const index = Math.min(chosen, Math.max(0, offered.length - 1));
@@ -196,7 +213,7 @@ export function TextDocumentLinkEditor({
                   </div>
                   {members.map((offer) => {
                     const at = offered.indexOf(offer);
-                    const Glyph = group === 'documents' ? DocumentGlyph : BookmarkGlyph;
+                    const Glyph = GLYPHS[group];
                     return (
                       <div
                         key={offer.key}

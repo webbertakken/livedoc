@@ -69,8 +69,8 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   has an id. Opening that address scrolls the heading into view once the document is drawn, the caret at its start.
 - The link editor's list offers this document's headings under **Headings**, after the documents and before the
   bookmarks `(default)`, each by its text (its first 40 characters, **Untitled heading** when empty), those holding
-  every typed word, at most 8, in the order they are written. Taking one links to `#<id>`, its id given in the same
-  step as the link.
+  every typed word, at most 8, in the order they are written. Taking one links to `#<id>`, the heading gaining its id
+  as the link is applied.
 - A link to a heading reads and opens as a bookmark link does: the card's title is the heading's text, and opening it
   scrolls the heading into view. A link to `#heading=h.<id>`, as Google writes one in an ODF file, leads to the
   bookmark `_heading=h.<id>` `(default)`.
