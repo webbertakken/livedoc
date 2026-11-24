@@ -25,7 +25,9 @@ import { shiftFormulaText } from './formula-text-shift';
 import { isoDateSerial } from './ods-read';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
-import { WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
+import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
+import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
+import { readThemeColours } from './xlsx-colours';
 import { dateStyles, readCellStyles, type XlsxCellStyle } from './xlsx-styles';
 import {
   DATE1904_OFFSET,
@@ -195,13 +197,14 @@ function cellFormat(
   return style.number.code ?? undefined;
 }
 
-function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
+// `ruled`: a format rule's style says more than a style holds, named with the cells' (D104).
+function readSheet(name: string, root: XmlElement, book: Book, ruled: boolean): FileSheet {
   const cells: FileCell[] = [];
   const shared = new Map<string, Shared>();
   const cache = new Set<string>();
   let cut = false;
   let cellsCut = false;
-  let styled = false;
+  let styled = ruled;
   let nextRow = 0;
   for (const row of children(childElement(root, book.ns, 'sheetData'), book.ns, 'row')) {
     const r = Number(attributeOf(row, '', 'r') ?? nextRow + 1) - 1;
@@ -278,11 +281,11 @@ export async function readXlsx(
   const date1904 = ['1', 'true'].includes(
     (workbookPr && attributeOf(workbookPr, '', 'date1904')) ?? '',
   );
-  const styles = readCellStyles(
-    text(pkg, partOf(RELATIONSHIP_TYPES.styles)),
-    locale,
-    text(pkg, partOf(RELATIONSHIP_TYPES.theme)),
-  );
+  const stylesXml = text(pkg, partOf(RELATIONSHIP_TYPES.styles));
+  const themeXml = text(pkg, partOf(RELATIONSHIP_TYPES.theme));
+  const styles = readCellStyles(stylesXml, locale, themeXml);
+  const dxfs = readXlsxDxfs(stylesXml, themeXml);
+  const theme = readThemeColours(themeXml);
   const book: Book = {
     ns,
     strings: sharedStrings(pkg, partOf(RELATIONSHIP_TYPES.sharedStrings), ns),
@@ -317,16 +320,22 @@ export async function readXlsx(
     const worksheet = parseXml(xml, part);
     if (!worksheet.ok) return worksheet;
     placed.set(at, sheets.length);
+    const rules = readXlsxFormatRules(worksheet.root, ns, dxfs, theme);
     keeper?.sheetEntry(sheet, sheets.length);
-    keeper?.worksheet(worksheet, part!, sheets.length);
-    strictUnread += keeper ? 0 : unreadChildren(worksheet.root, WORKSHEET_READ);
+    keeper?.worksheet(worksheet, part!, sheets.length, rules.read);
+    strictUnread += keeper
+      ? 0
+      : unreadChildren(worksheet.root, WORKSHEET_READ) -
+        childElements(worksheet.root).filter((e) => allRead(e, rules.read)).length;
+    const read = readSheet(name, worksheet.root, book, rules.styled);
     sheets.push({
-      ...readSheet(name, worksheet.root, book),
+      ...read,
       ...readXlsxTabLook(sheet, worksheet.root, ns),
+      ...(rules.rules.length ? { formatRules: rules.rules } : {}),
     });
   }
   keeper?.workbook(parsed, pkg.mainPart, listed, placed);
-  keeper?.styles(text(pkg, partOf(RELATIONSHIP_TYPES.styles)));
+  keeper?.styles(stylesXml);
   const unread = strictUnread + (keeper?.unread ?? 0);
   if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
   if (pkg.dropped.length > 0) book.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });

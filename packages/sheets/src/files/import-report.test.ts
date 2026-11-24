@@ -13,6 +13,7 @@ describe('importReport', () => {
     const losses: FileLoss[] = [
       { k: 'sheet_renamed', from: 'Data', to: 'Data (2)' },
       { k: 'sizes_cut', sheet: 'Data' },
+      { k: 'format_rule_unread', sheet: 'Data', r: 1, c: 0 },
       { k: 'styles_unread', sheet: 'Data' },
       { k: 'formats_cut', sheet: 'Data' },
       { k: 'format_approximated', sheet: 'Data', code: 'yyyy' },
@@ -61,6 +62,7 @@ describe('importReport', () => {
       { k: 'format_approximated', count: 1, names: ['yyyy'] },
       { k: 'formats_cut', count: 1, names: ['Data'] },
       { k: 'styles_unread', count: 1, names: ['Data'] },
+      { k: 'format_rule_unread', count: 1, names: ['Data!A2'] },
       { k: 'sizes_cut', count: 1, names: ['Data'] },
       { k: 'sheet_renamed', count: 1, names: [{ from: 'Data', to: 'Data (2)' }] },
     ]);

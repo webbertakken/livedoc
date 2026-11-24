@@ -73,8 +73,8 @@ export const MARGINS =
 export const DRAWING = '<drawing r:id="rId1"/>';
 export const CONTROLS = '<controls><control shapeId="1" r:id="rId8"/></controls>';
 export const RULES =
-  '<conditionalFormatting sqref="A1"><cfRule type="expression" priority="1"><formula>1</formula></cfRule></conditionalFormatting>' +
-  '<conditionalFormatting sqref="A2"><cfRule type="expression" priority="2"><formula>2</formula></cfRule></conditionalFormatting>';
+  '<conditionalFormatting sqref="A1"><cfRule type="top10" dxfId="0" priority="1" rank="10"/></conditionalFormatting>' +
+  '<conditionalFormatting sqref="A2"><cfRule type="duplicateValues" dxfId="0" priority="2"/></conditionalFormatting>';
 export const DXFS = '<dxfs count="1"><dxf><font><b/></font></dxf></dxfs>';
 
 export const workbook = (sheets: string, more = '') =>

@@ -11,6 +11,7 @@ import {
   type OoxmlPackage,
   type Relationship,
   type XmlElement,
+  type XmlBindings,
   type XmlParsed,
 } from '@livedoc/office-packages';
 import {
@@ -73,9 +74,17 @@ const sheetPrOwn = (e: XmlElement) =>
 const isSheetPr = (element: XmlElement) =>
   element.uri === SPREADSHEETML_NS && element.local === 'sheetPr';
 
-// A worksheet's `sheetPr` without the children LiveDoc writes; any other element as the file wrote it.
-function without(parsed: XmlParsed, element: XmlElement, xml: string): string {
-  const own = isSheetPr(element) ? childElements(element).filter(sheetPrOwn) : [];
+// A worksheet's `sheetPr` without the children LiveDoc writes, a `conditionalFormatting` without the rules it
+// reads; any other element as the file wrote it.
+function without(
+  parsed: XmlParsed,
+  element: XmlElement,
+  xml: string,
+  read: ReadonlySet<XmlElement>,
+): string {
+  const own = isSheetPr(element)
+    ? childElements(element).filter(sheetPrOwn)
+    : childElements(element).filter((child) => read.has(child));
   if (own.length === 0) return xml;
   let out = '';
   let from = element.start;
@@ -85,6 +94,15 @@ function without(parsed: XmlParsed, element: XmlElement, xml: string): string {
   }
   return out + parsed.source.slice(from, element.end);
 }
+
+/** Whether every child of an element (a `conditionalFormatting`'s rules) is read, so nothing of it is kept. */
+export const allRead = (element: XmlElement, read: ReadonlySet<XmlElement>): boolean => {
+  const children = childElements(element);
+  return children.length > 0 && children.every((child) => read.has(child));
+};
+
+// One differential format of a kept `dxfs` (none nests another).
+const DXF = /<(?:[\w.-]+:)?dxf\b[^>]*?(?:\/>|>[\s\S]*?<\/(?:[\w.-]+:)?dxf>)/g;
 
 // A `sheetPr` holding nothing but what LiveDoc writes: nothing left to keep.
 const onlyOwn = (element: XmlElement) =>
@@ -108,13 +126,14 @@ export class XlsxKeeper {
     element: XmlElement,
     at: FileAt,
     ids: Set<string>,
+    read: ReadonlySet<XmlElement> = new Set(),
   ) {
     if (idsNamed(element).some((id) => !ids.has(id))) {
       this.unread++;
       return;
     }
     const kept = keptXmlOf(parsed, element);
-    this.items.push({ place, xml: without(parsed, element, kept.xml), ns: kept.ns, at });
+    this.items.push({ place, xml: without(parsed, element, kept.xml, read), ns: kept.ns, at });
   }
 
   // A root's attributes but its namespace declarations; `mc:Ignorable` with the bindings of the prefixes it names.
@@ -195,26 +214,65 @@ export class XlsxKeeper {
     }
   }
 
-  /** A worksheet's relationships, root attributes and children but its dimension and cells. */
-  worksheet(parsed: XmlParsed, part: string, sheet: number): void {
+  /**
+   * A worksheet's relationships, root attributes and children but its dimension and cells, and the format rules
+   * `read` names; a `conditionalFormatting` whose every rule is read is not kept.
+   */
+  worksheet(
+    parsed: XmlParsed,
+    part: string,
+    sheet: number,
+    read: ReadonlySet<XmlElement> = new Set(),
+  ): void {
     const ids = this.keepRelationships(part, 'sheet', { sheet }, new Set());
     this.rootAttributes('worksheet-attribute', parsed.root, { sheet });
     for (const child of childElements(parsed.root))
-      if (!(child.uri === SPREADSHEETML_NS && WORKSHEET_READ.has(child.local)) && !onlyOwn(child))
-        this.element('worksheet', parsed, child, { sheet }, ids);
+      if (
+        !(child.uri === SPREADSHEETML_NS && WORKSHEET_READ.has(child.local)) &&
+        !onlyOwn(child) &&
+        !allRead(child, read)
+      )
+        this.element('worksheet', parsed, child, { sheet }, ids, read);
     const sheetPr = childElements(parsed.root).find(isSheetPr);
     for (const tab of sheetPr ? childElements(sheetPr) : [])
       if (tab.uri === SPREADSHEETML_NS && tab.local === 'tabColor' && !isReadTabColor(tab, tab.uri))
         this.unread++;
   }
 
-  /** The styles part's differential formats and table styles (D110); none when it does not parse. */
+  /**
+   * The styles part's differential formats and table styles (D110); none when it does not parse. The differential
+   * formats are kept up to the last one kept content names (`content`): those only the read format rules named are
+   * LiveDoc's to write again.
+   */
   styles(text: string | undefined): void {
     const parsed = text === undefined ? undefined : parseXml(text);
     if (!parsed?.ok) return;
     for (const child of childElements(parsed.root))
-      if (child.uri === SPREADSHEETML_NS && STYLESHEET_KEPT.has(child.local))
-        this.element('stylesheet', parsed, child, {}, new Set());
+      if (child.uri === SPREADSHEETML_NS && STYLESHEET_KEPT.has(child.local)) {
+        if (child.local === 'dxfs')
+          this.dxfs = { at: this.items.length, ...keptXmlOf(parsed, child) };
+        else this.element('stylesheet', parsed, child, {}, new Set());
+      }
+  }
+
+  private dxfs: { at: number; xml: string; ns: XmlBindings } | null = null;
+
+  // The kept differential formats up to the last one kept items or parts name by id; none when none is named.
+  private keepDxfs(parts: readonly KeptPart[]): void {
+    if (!this.dxfs) return;
+    const texts = [
+      ...this.items.map((i) => i.xml),
+      ...parts.map((p) => new TextDecoder().decode(p.data)),
+    ];
+    let last = -1;
+    for (const text of texts)
+      for (const m of text.matchAll(/[dD]xfId="(\d+)"/g)) last = Math.max(last, Number(m[1]));
+    const { at, xml, ns } = this.dxfs;
+    const each = [...xml.matchAll(DXF)].slice(0, last + 1).map((m) => m[0]);
+    if (each.length === 0) return;
+    const prefix = /^<((?:[\w.-]+:)?)/.exec(xml)![1]!;
+    const kept = `<${prefix}dxfs count="${each.length}">${each.join('')}</${prefix}dxfs>`;
+    this.items.splice(at, 0, { place: 'stylesheet', xml: kept, ns, at: {} });
   }
 
   /** Every part a kept relationship reaches, through the parts' own relationships, with theirs kept on each. */
@@ -239,6 +297,7 @@ export class XlsxKeeper {
   /** What was kept, or nothing when nothing was. */
   content(): KeptContent | undefined {
     const parts = this.parts();
+    this.keepDxfs(parts);
     if (this.items.length + this.relationships.length + parts.length === 0) return undefined;
     return { standard: 'ooxml', items: this.items, parts, relationships: this.relationships };
   }

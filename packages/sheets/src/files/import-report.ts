@@ -28,6 +28,7 @@ export const REPORTED_KINDS = [
   'format_approximated',
   'formats_cut',
   'styles_unread',
+  'format_rule_unread',
   'sizes_cut',
   'sheet_renamed',
 ] as const;
@@ -55,6 +56,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'formula_unwritten':
     case 'format_unread':
     case 'format_unwritten':
+    case 'format_rule_unread':
       return [[loss.k, 1, cellName(loss.sheet, loss.r, loss.c)]];
     case 'sheet_cut':
     case 'cells_cut':

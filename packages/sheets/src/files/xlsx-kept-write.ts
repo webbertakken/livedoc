@@ -199,6 +199,14 @@ export class XlsxKeptWriter {
     return inOrder(WORKBOOK_ORDER, kept, own);
   }
 
+  /** The highest priority a sheet's kept format rules hold (0 for none), so LiveDoc's own follow them. */
+  priorityMax(sheet: number): number {
+    let max = 0;
+    for (const item of this.of('worksheet', sheet))
+      for (const m of item.xml.matchAll(/\spriority="(\d+)"/g)) max = Math.max(max, Number(m[1]));
+    return max;
+  }
+
   /** A sheet entry's kept attributes. */
   sheetAttributes(sheet: number): string {
     return this.of('sheet-attribute', sheet)

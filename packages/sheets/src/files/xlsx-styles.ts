@@ -14,6 +14,8 @@ import { shortDateCode } from './number-format-code';
 import { readXlsxStylesheet, xlsxCellStyleOf, XlsxStyleParts } from './xlsx-cell-style';
 import { readThemeColours } from './xlsx-colours';
 import { SPREADSHEETML_NS } from './xlsx-parts';
+import { dxfXml } from './xlsx-format-rules';
+import type { FormatStyle } from '../sheet';
 
 const STRICT_NS = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
 
@@ -154,6 +156,41 @@ export class XlsxStyles {
   private readonly written: WrittenXf[] = [];
   private readonly own = new Map<string, number>();
   private readonly parts = new XlsxStyleParts();
+  private readonly dxfs = new Map<string, number>();
+  private readonly kept: string;
+  private readonly keptDxfs: number;
+
+  /** `kept`: the file's differential formats and table styles (D110), which LiveDoc's own formats follow. */
+  constructor(kept = '') {
+    this.kept = kept.replace(/<((?:[\w.-]+:)?)dxfs\b([^>]*?)\/>/, '<$1dxfs$2></$1dxfs>');
+    this.keptDxfs = (this.kept.match(/<(?:[\w.-]+:)?dxf[\s/>]/g) ?? []).length;
+  }
+
+  /** The differential format (`dxfId`) for a format rule's style, after the kept ones; one a look. */
+  dxf(style: FormatStyle): number {
+    const xml = dxfXml(style);
+    const known = this.dxfs.get(xml);
+    if (known !== undefined) return known;
+    const id = this.keptDxfs + this.dxfs.size;
+    this.dxfs.set(xml, id);
+    return id;
+  }
+
+  // The kept styles with LiveDoc's differential formats inside their `dxfs`, or in their own before them.
+  private withDxfs(): string {
+    const kept = this.kept;
+    if (this.dxfs.size === 0) return kept;
+    const own = [...this.dxfs.keys()].join('');
+    const total = this.keptDxfs + this.dxfs.size;
+    const close = /<\/((?:[\w.-]+:)?)dxfs>/.exec(kept);
+    if (!close) return `<dxfs count="${total}">${own}</dxfs>${kept}`;
+    const open = /<((?:[\w.-]+:)?)dxfs\b[^>]*>/.exec(kept)!;
+    const prefix = open[1]!;
+    const opened = `<${prefix}dxfs count="${total}">`;
+    const body = kept.slice(open.index + open[0].length, close.index);
+    const ownIn = prefix ? own.replace(/<(\/?)(?=[a-z])/g, `<$1${prefix}`) : own;
+    return kept.slice(0, open.index) + opened + body + ownIn + kept.slice(close.index);
+  }
 
   /** The cell style (`c@s`) for a code and a look: 0, the default, for neither. */
   xf(code: string | undefined, style?: CellStyle): number {
@@ -174,8 +211,8 @@ export class XlsxStyles {
     return this.written.length;
   }
 
-  /** The styles part, LiveDoc's styles and then `kept`: the file's differential formats and table styles (D110). */
-  xml(kept = ''): string {
+  /** The styles part: LiveDoc's styles, then the kept differential formats with its own, and table styles (D110). */
+  xml(): string {
     const own = [...this.own].map(
       ([code, id]) => `<numFmt numFmtId="${id}" formatCode="${escapeXmlAttribute(code)}"/>`,
     );
@@ -199,7 +236,7 @@ export class XlsxStyles {
       `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1">${middle}</xf></cellStyleXfs>` +
       `<cellXfs count="${xfs.length + 1}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">${middle}</xf>${xfs.join('')}</cellXfs>` +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
-      kept +
+      this.withDxfs() +
       '</styleSheet>'
     );
   }

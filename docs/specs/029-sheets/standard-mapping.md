@@ -215,7 +215,8 @@ The table is the contract the readers and writers are tested against, one test p
 
 - A sheet's [format rules](conditional-formatting.md) are written and read both ways, in list order, each with its
   range of one or more rectangles (XLSX `sqref`, ODF `calcext:target-range-address`, space-separated).
-- **XLSX**: one `conditionalFormatting` a rule, its `cfRule` numbered by list order (`priority` 1, 2, ...); a style
+- **XLSX**: one `conditionalFormatting` a rule, its `cfRule` numbered by list order (`priority` 1, 2, ...) and
+  `stopIfTrue`, so Excel draws the first met rule alone, as LiveDoc does; a style
   is a differential format (`dxf`) in the styles part, after the file's own kept ones (D110), so their ids stand.
 - **ODF**: LibreOffice's `calcext:conditional-formats` in the table, one `calcext:conditional-format` a rule; a style
   is a named cell style (`ConditionalStyle_1`, ...) in `styles.xml`'s `office:styles`, a child of "Default", as

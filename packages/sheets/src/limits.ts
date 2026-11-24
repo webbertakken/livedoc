@@ -83,6 +83,8 @@ export const DROPDOWN_OPTIONS_MAX = 500;
 export const DROPDOWN_OPTION_MAX = 255;
 export const VALIDATION_HELP_MAX = 255;
 export const FORMAT_RULE_FORMULA_MAX = 1_000;
+// A condition's value in a format rule (conditional-formatting.md "Limits").
+export const FORMAT_RULE_VALUE_MAX = 255;
 // A format rule's rectangles, its anchor among them (conditional-formatting.md "Limits", D214).
 export const FORMAT_RULE_RANGES_MAX = 100;
 // A Custom number format's code: Excel's own ceiling, so a code any file carries fits (standard-mapping.md
