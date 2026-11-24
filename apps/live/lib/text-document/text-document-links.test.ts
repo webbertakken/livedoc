@@ -8,6 +8,7 @@ import type { Node as PmNode } from 'prosemirror-model';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
   LINK_ADDRESS_MAX,
+  LINK_COLOUR,
   LINK_REFUSED,
   LINK_TOO_LONG,
   applyLink,
@@ -306,5 +307,69 @@ describe('matchingDocuments', () => {
     }));
     expect(matchingDocuments(many, 'note')).toHaveLength(8);
     expect(matchingDocuments(many, 'note')[0]!.id).toBe('11');
+  });
+});
+
+describe('the link look', () => {
+  const look = (node: PmNode) => ({
+    colour: (
+      node.marks.find((m) => m.type.name === 'color')?.attrs as { value?: string } | undefined
+    )?.value,
+    underlined: node.marks.some((m) => m.type.name === 'underline'),
+  });
+
+  it('is Google’s blue, underlined, given to a new link as its own formatting', () => {
+    expect(LINK_COLOUR).toBe('#1155cc');
+    const { next } = run(
+      stateAt(schema.node('doc', null, [p('see site now')]), 5, 9),
+      applyLink({ from: 5, to: 9, text: 'site', href: 'https://a.test' }),
+    );
+    expect(look(next.doc.child(0).child(1))).toEqual({ colour: LINK_COLOUR, underlined: true });
+    expect(look(next.doc.child(0).child(0))).toEqual({ colour: undefined, underlined: false });
+  });
+
+  it('never carries on into what is typed after the link', () => {
+    const { next } = run(
+      stateAt(schema.node('doc', null, [p('ab')]), 3),
+      applyLink({ from: 3, to: 3, text: 'X', href: 'https://x.test' }),
+    );
+    const typed = next.apply(next.tr.insertText('y'));
+    expect(runs(typed)).toEqual([
+      ['ab', null],
+      ['X', 'https://x.test'],
+      ['y', null],
+    ]);
+    expect(look(typed.doc.child(0).lastChild!)).toEqual({ colour: undefined, underlined: false });
+  });
+
+  it('leaves an edited link’s own formatting as it is', () => {
+    const red = schema.marks.color!.create({ value: '#ff0000' });
+    const doc = schema.node('doc', null, [p(schema.text('site', [red, link('https://a.test')]))]);
+    const { next } = run(
+      stateAt(doc, 2),
+      applyLink({ from: 1, to: 5, text: 'site', href: 'https://b.test' }),
+    );
+    expect(look(next.doc.child(0).child(0))).toEqual({ colour: '#ff0000', underlined: false });
+  });
+
+  it('is taken off with the link, where the link still has it exactly', () => {
+    const looked = [
+      schema.marks.color!.create({ value: LINK_COLOUR }),
+      schema.marks.underline!.create({ value: true }),
+      link('https://a.test'),
+    ];
+    const doc = schema.node('doc', null, [p(schema.text('site', looked))]);
+    const { next } = run(stateAt(doc, 2), removeLink(1, 5));
+    expect(next.doc.child(0).child(0).marks).toEqual([]);
+    const own = schema.node('doc', null, [
+      p(
+        schema.text('site', [
+          schema.marks.underline!.create({ value: true }),
+          link('https://a.test'),
+        ]),
+      ),
+    ]);
+    const kept = run(stateAt(own, 2), removeLink(1, 5)).next;
+    expect(look(kept.doc.child(0).child(0))).toEqual({ colour: undefined, underlined: true });
   });
 });

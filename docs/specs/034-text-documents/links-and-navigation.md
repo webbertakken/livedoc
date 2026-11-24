@@ -25,6 +25,9 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
 - A LiveDoc document address is the document's own address in full (on docs.nu `https://docs.nu/document/<id>`), so it
   opens from Word or LibreOffice too.
 - **Automatically detect links** (Preferences) turns a typed address into a link.
+- A new link (applied, detected or typed as Markdown) takes the link look as its own formatting, so every program
+  draws it alike: colour `#1155cc`, underlined `(default)`. What is typed after it takes neither; an edited link keeps
+  its own formatting; Remove link takes the look off where the text still has it exactly.
 - **Link details** (while Preferences > **Show link details** is on, as it is by default): the caret, with nothing
   selected, in a link shows a card under it: its title (a LiveDoc document's name when it is one of the person's;
   else its address), a press on which opens it, then **Copy link**, **Edit link** and **Remove link**.

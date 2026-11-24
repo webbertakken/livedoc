@@ -27,6 +27,7 @@ import {
   WORD_ENDS,
   type ListMarker,
 } from './text-document-typing-aid-rules';
+import { addLinkLook, withoutLinkLook } from './text-document-links';
 import { startUndoStep } from './text-document-undo';
 import { inCodeBlock } from './text-document-code-blocks';
 
@@ -69,6 +70,7 @@ function wordAids(state: EditorState, pos: number, aids: TypingAids): Transactio
     const linkType = state.schema.marks.link!;
     if (link && !tr.doc.rangeHasMark(from, from + link.length, linkType)) {
       tr.addMark(from, from + link.length, linkType.create({ href: link.href }));
+      addLinkLook(tr, from, from + link.length);
       acted.push('link');
     }
   }
@@ -146,14 +148,18 @@ function spanAid(state: EditorState, pos: number): Transaction | null {
       ? schema.marks.link!.create({ href: span.makes.link })
       : schema.marks[span.makes.mark]!.create({ value: true });
   debugLog('[text-document] typing aid', { aids: ['markdown-span'] });
-  return (
-    state.tr
-      .delete(at(span.innerEnd), pos)
-      .addMark(at(span.innerStart), at(span.innerEnd), mark)
-      .delete(at(span.start), at(span.innerStart))
-      // What is typed next is outside the span, as the closing delimiter left it.
-      .removeStoredMark(mark)
-  );
+  const tr = state.tr
+    .delete(at(span.innerEnd), pos)
+    .addMark(at(span.innerStart), at(span.innerEnd), mark);
+  // A link takes the link look (links-and-navigation.md "Links").
+  if ('link' in span.makes) addLinkLook(tr, at(span.innerStart), at(span.innerEnd));
+  tr.delete(at(span.start), at(span.innerStart));
+  // What is typed next is outside the span, as the closing delimiter left it.
+  return 'link' in span.makes
+    ? tr.setStoredMarks(
+        withoutLinkLook(tr.selection.$from.marks()).filter((m) => m.type !== mark.type),
+      )
+    : tr.removeStoredMark(mark);
 }
 
 /** The characters that may close a Markdown span. */

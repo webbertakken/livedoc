@@ -1,7 +1,7 @@
 // Links in a text document (docs/specs/034-text-documents/links-and-navigation.md "Links"): the addresses a link may
 // hold, the link's whole stretch at the caret, what the link editor opens with and applies as one change, Remove link,
 // a LiveDoc document's own address, the link card's title, and opening one safely. Pure, beside `window.open`.
-import type { Command, EditorState } from 'prosemirror-state';
+import type { Command, EditorState, Transaction } from 'prosemirror-state';
 import { TextSelection } from 'prosemirror-state';
 import type { Mark, Node as PmNode } from 'prosemirror-model';
 import { isSafeFollowUrl, normaliseUrl } from '@/lib/url-safety';
@@ -23,6 +23,44 @@ export const LINK_REFUSED = 'Use a web, email or LiveDoc address';
 export const LINK_TOO_LONG = 'Use a shorter address';
 
 const EMAIL = /^[^\s@:/]+@[^\s@]+\.[a-z]{2,}$/i;
+
+/** A new link's look, as its own formatting so every program draws it alike (default): Google's blue, underlined. */
+export const LINK_COLOUR = '#1155cc';
+
+/** Gives a stretch the link look: the link colour, underlined. */
+export function addLinkLook(tr: Transaction, from: number, to: number): Transaction {
+  const { color, underline } = tr.doc.type.schema.marks;
+  if (color) tr.addMark(from, to, color.create({ value: LINK_COLOUR }));
+  if (underline) tr.addMark(from, to, underline.create({ value: true }));
+  return tr;
+}
+
+/** Takes the link look off what still has it exactly (the link colour and underlined); other formatting stays. */
+export function removeLinkLook(tr: Transaction, from: number, to: number): Transaction {
+  const { color, underline } = tr.doc.type.schema.marks;
+  if (!color || !underline) return tr;
+  const looked: [number, number][] = [];
+  tr.doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.isInline) return;
+    const coloured = node.marks.some(
+      (m) => m.type === color && (m.attrs as { value: unknown }).value === LINK_COLOUR,
+    );
+    if (coloured && underline.isInSet(node.marks))
+      looked.push([Math.max(from, pos), Math.min(to, pos + node.nodeSize)]);
+  });
+  for (const [a, b] of looked) tr.removeMark(a, b, color).removeMark(a, b, underline);
+  return tr;
+}
+
+/** Marks without the link look (the link colour, and underline beside it). */
+export function withoutLinkLook(marks: readonly Mark[]): Mark[] {
+  const coloured = marks.some(
+    (m) => m.type.name === 'color' && (m.attrs as { value: unknown }).value === LINK_COLOUR,
+  );
+  return coloured
+    ? marks.filter((m) => m.type.name !== 'color' && m.type.name !== 'underline')
+    : [...marks];
+}
 
 /** What Link holds, as the address kept: '' for no link, or why it is refused. */
 export function linkAddress(raw: string): { href: string } | { problem: string } {
@@ -112,6 +150,7 @@ export function applyLink(edit: LinkEditing): Command {
     const { from } = edit;
     let { to } = edit;
     const bare = from === to;
+    const wasLinked = !bare && state.doc.rangeHasMark(from, edit.to, type);
     if (bare && edit.href === '') return false;
     if (!dispatch) return true;
     const tr = state.tr;
@@ -125,19 +164,31 @@ export function applyLink(edit: LinkEditing): Command {
     }
     tr.removeMark(from, to, type);
     if (edit.href !== '') tr.addMark(from, to, type.create({ href: edit.href }));
+    // A new link takes the link look; an edited one keeps its own; one emptied loses the look.
+    if (edit.href === '') {
+      if (wasLinked) removeLinkLook(tr, from, to);
+    } else if (!wasLinked) addLinkLook(tr, from, to);
     tr.setSelection(TextSelection.create(tr.doc, to));
-    tr.removeStoredMark(type);
+    // What is typed next is outside the link, with neither its address nor its look.
+    tr.setStoredMarks(
+      withoutLinkLook(
+        tr.doc
+          .resolve(to)
+          .marks()
+          .filter((m) => m.type !== type),
+      ),
+    );
     dispatch(tr.scrollIntoView());
     return true;
   };
 }
 
-/** Remove link: the address off the stretch, its text left as it is. */
+/** Remove link: the address off the stretch, and the link look where it still has it; its text left as it is. */
 export function removeLink(from: number, to: number): Command {
   return (state, dispatch) => {
     const type = state.schema.marks.link;
     if (!type || from >= to) return false;
-    dispatch?.(state.tr.removeMark(from, to, type));
+    dispatch?.(removeLinkLook(state.tr.removeMark(from, to, type), from, to));
     return true;
   };
 }

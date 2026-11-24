@@ -182,7 +182,12 @@ describe('typingAidsPlugin', () => {
     expect(textOf(view)).toBe('See © www.example.com and I ');
     const linked = view.state.doc.firstChild!.child(1);
     expect(linked.text).toBe('www.example.com');
-    expect(linked.marks[0]!.attrs.href).toBe('https://www.example.com');
+    expect(linked.marks.find((m) => m.type.name === 'link')!.attrs.href).toBe(
+      'https://www.example.com',
+    );
+    // With the link look (links-and-navigation.md "Links"); the space after it has none.
+    expect(linked.marks.map((m) => m.type.name).sort()).toEqual(['color', 'link', 'underline']);
+    expect(view.state.doc.firstChild!.child(2).marks).toEqual([]);
   });
 
   it('runs the word aids before Enter splits the paragraph', () => {
@@ -239,7 +244,8 @@ describe('typingAidsPlugin', () => {
       ['bold'],
       ['italic'],
       ['strike'],
-      ['link'],
+      // A link with the link look (links-and-navigation.md "Links").
+      ['underline', 'color', 'link'],
     ]);
   });
 
