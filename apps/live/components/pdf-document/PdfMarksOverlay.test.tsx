@@ -206,6 +206,8 @@ describe('a Text or a Callout over a page', () => {
     expect(lines[0]!.parentElement!.getAttribute('font-family')).toBe(MARK_FACES_STACK);
     expect(lines.map((line) => line.getAttribute('textLength'))).toEqual([null, null]);
     expect(lines[1]!.getAttribute('direction')).toBe('rtl');
+    // A script whose family has no bold is drawn regular, as the bake sets it, never made bold by the browser.
+    expect((lines[0]!.parentElement as unknown as SVGGElement).style.fontSynthesis).toBe('none');
     expect(add).toHaveBeenCalled();
     Reflect.deleteProperty(document, 'fonts');
     vi.unstubAllGlobals();

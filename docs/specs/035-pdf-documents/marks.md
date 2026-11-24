@@ -199,9 +199,14 @@ question mark. The research is [Every script in a mark's words](../../research/p
      only, a bold line in them set regular.
   3. **Chinese, Japanese and Korean**: Noto Sans SC, JP or KR, by the region the mark's words show: kana Japanese,
      Hangul Korean, otherwise Simplified Chinese `(default)`.
-  4. **Symbols and emoji**: Noto Sans Symbols, Symbols 2 and Noto Emoji, in one colour, the mark's.
-- A combining mark is set in the face of the character before it where that face has it, so an accent stays on its
-  letter; words are composed first (Unicode NFC), so a letter typed with its accent apart is one glyph where it can be.
+  4. **Symbols and emoji**: Noto Sans Symbols, Noto Sans Symbols 2 (its symbols and maths subsets `(default)`) and
+     Noto Emoji in Fontsource's numbered slices, in one colour, the mark's.
+- **A cluster**, the characters read as one (a letter and its accents, an emoji and its modifiers, a flag, a keycap),
+  is set whole in the first face that has all of it, so it is shaped as one; one no face has whole is set character
+  by character.
+- A cluster of no script of its own (a space, a digit, punctuation) stays in the face before it where that face has
+  it, so a space does not change the font.
+- Words are composed first (Unicode NFC), so a letter typed with its accent apart is one glyph where it can be.
 - **A character no mark face has** is set as Noto Sans's missing-glyph box, never as a question mark, and kept whole
   in `Contents`; each bake counts them: `[pdf] glyphs-missing count=<n>`.
 
@@ -213,10 +218,17 @@ question mark. The research is [Every script in a mark's words](../../research/p
   a test fails while it and the Fontsource packages differ.
 - **The bake shapes each run** of a line (HarfBuzz): Arabic joins, Indic scripts reorder and combine, accents sit on
   their letters, and each glyph is placed where shaping puts it.
+- **A line's direction** is its paragraph's: right to left where its first letter is Hebrew or Arabic, so it is set
+  from the box's right side.
+- **A line holding right-to-left and left-to-right words is ordered by the Unicode Bidirectional Algorithm** (UAX 9,
+  bidi-js), from the line's direction, as the surface's browser orders it: each word sits where it was typed, each run
+  is shaped in its own direction, and a bracket in a right-to-left run is mirrored.
 - **A line shaped wider than it was measured is narrowed to its measured width**, so it never leaves its box; one
   shaped narrower is set as shaped, from its own side.
 - **The surface draws the mark faces too**, as `LiveDoc Noto Sans` and its siblings, from the same files, so it
   shapes as the bake does; a face not yet arrived draws in the browser's own until it lands.
+- A bold line in a family with no bold is drawn regular on the surface as in the bake, never made bold by the
+  browser.
 
 ### In the file
 
@@ -233,16 +245,17 @@ question mark. The research is [Every script in a mark's words](../../research/p
   surface's browser fetches a subset when a line on screen uses its characters; the engine fetches the subsets a
   bake's marks use, and the shaper, as it bakes.
 - Every file is a hashed static asset of LiveDoc's own origin, cached for good, there for a self-hosted LiveDoc as
-  for docs.nu; each well under Cloudflare Pages' 25 MiB a file. Chinese, Japanese and Korean come in Fontsource's
-  slices of about 45 KB, so a few words fetch a few slices.
+  for docs.nu; each well under Cloudflare Pages' 25 MiB a file. Chinese, Japanese and Korean, and Noto Emoji, come in
+  Fontsource's numbered slices, so a few words fetch a few slices.
 - **A face that does not load stops the bake by name** (`faces-unavailable`), never a silent question mark: "Some of
   this PDF's marks need a font that didn't load. Check your connection, then try again. Your changes are safe."
   with **Try again**.
 - Fingerprints: `[pdf] faces-loaded count=<n> bytes=<n> ms=<n>` (once a bake that loads any),
-  `[pdf] faces-failed face=<id>` (`shaper` for HarfBuzz; `picture` where a thumbnail draws in the browser's own),
-  `[pdf] glyphs-missing count=<n>`, `[pdf] faces-shown count=<n>` (the surface adds the faces, once a page).
-- **Status**: Noto Sans (the first group) is built; the further scripts, Chinese, Japanese and Korean, and symbols
-  and emoji are specified, their characters drawn as the missing-glyph box until built.
+  `[pdf] faces-failed face=<id>` (`shaper` for HarfBuzz or bidi-js; `picture` where a thumbnail draws in the
+  browser's own), `[pdf] glyphs-missing count=<n>`, `[pdf] faces-shown count=<n>` (the surface adds the faces, once a
+  page).
+- **Status**: Noto Sans, the further scripts with right to left, and symbols and emoji are built; Chinese, Japanese
+  and Korean are specified, their characters drawn as the missing-glyph box until built.
 
 ## In the file
 

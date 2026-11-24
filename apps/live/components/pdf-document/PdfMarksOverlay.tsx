@@ -52,7 +52,11 @@ export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark 
   if (!words) return null;
   const [a, b, c, d] = matrix;
   return (
-    <g stroke="none" fontFamily={facesStackOf(words)} style={{ whiteSpace: 'pre' }}>
+    <g
+      stroke="none"
+      fontFamily={facesStackOf(words)}
+      style={{ whiteSpace: 'pre', ...(faced ? { fontSynthesis: 'none' } : {}) }}
+    >
       {words.lines.map((line, at) => {
         if (line.text === '') return null;
         // A right-to-left line is set from its right end.

@@ -200,6 +200,7 @@ export async function bakeChanges(
           setter: {
             shape: typesetter.shape,
             advance: (face, glyph) => typesetter.face(face).advances[glyph] ?? 0,
+            levels: typesetter.levels,
           },
         }
       : null;

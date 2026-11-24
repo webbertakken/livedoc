@@ -4,8 +4,11 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { markFaceDataSource, markFaceUrlsSource } from '../src/engine/mark-face-table.ts';
-import { MARK_FACE_DATA } from '../src/mark-face-data.ts';
+import {
+  markFaceDataSource,
+  markFaceFilesOf,
+  markFaceUrlsSource,
+} from '../src/engine/mark-face-table.ts';
 
 const require = createRequire(import.meta.url);
 const source = await markFaceDataSource(
@@ -14,6 +17,6 @@ const source = await markFaceDataSource(
 const out = fileURLToPath(new URL('../src/mark-face-data.ts', import.meta.url));
 writeFileSync(out, source);
 console.log(`[faces] wrote src/mark-face-data.ts (${source.length} bytes)`);
-const urls = markFaceUrlsSource(MARK_FACE_DATA.map((face) => face.file));
+const urls = markFaceUrlsSource(markFaceFilesOf());
 writeFileSync(fileURLToPath(new URL('../src/mark-face-urls.ts', import.meta.url)), urls);
 console.log(`[faces] wrote src/mark-face-urls.ts (${urls.length} bytes)`);

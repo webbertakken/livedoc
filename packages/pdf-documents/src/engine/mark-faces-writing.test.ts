@@ -114,6 +114,30 @@ describe('writing words in every script', () => {
     expect(redIn((await engine.drawPage(0, 1))!, [72, 440, 540, 500])).toBeGreaterThan(400);
   });
 
+  it('sets Hebrew and Arabic within a line in the order they are read, each word where it was typed', async () => {
+    const { engine, logs, page } = await engineWith(markFaceFiles);
+    const result = await bake(engine, [text(page, 'abc שלום def\nمرحبا بالعالم')]);
+    if (!result.ok) throw new Error(result.refusal);
+    expect(logs.some((line) => line.startsWith('[pdf] faces-loaded count=3 '))).toBe(true);
+    expect(logs.some((line) => line.startsWith('[pdf] glyphs-missing'))).toBe(false);
+    const content = await appearanceContent(result.bytes);
+    // The first line from the left: Latin, then the Hebrew word, then Latin again.
+    const [first, second] = content.split(/ Tm\n/).slice(1);
+    expect([...first!.matchAll(/\/(LDf\d) /g)].map((match) => match[1])).toEqual([
+      'LDf0',
+      'LDf1',
+      'LDf0',
+    ]);
+    // The second line, right to left, set from the box's right side in the Arabic face and Latin's space.
+    expect([...second!.matchAll(/\/(LDf\d) /g)].map((match) => match[1])).toEqual([
+      'LDf2',
+      'LDf0',
+      'LDf2',
+    ]);
+    expect(await engine.open(result.bytes)).toMatchObject({ ok: true });
+    expect(redIn((await engine.drawPage(0, 1))!, [72, 400, 540, 500])).toBeGreaterThan(400);
+  });
+
   it('bakes the same bytes twice', async () => {
     const { engine, page } = await engineWith(markFaceFiles);
     const first = await bake(engine, [text(page, 'Ωμέγα')]);
@@ -145,9 +169,10 @@ describe('writing words in every script', () => {
 
   it('sets a character no face has as the missing box, and counts it', async () => {
     const { engine, logs, page } = await engineWith(markFaceFiles);
-    const result = await bake(engine, [text(page, 'Ω שלום')]);
+    // Private-use characters: no mark face has one.
+    const result = await bake(engine, [text(page, 'Ω \u{E000}\u{E001}')]);
     expect(result.ok).toBe(true);
-    expect(logs).toContain('[pdf] glyphs-missing count=4');
+    expect(logs).toContain('[pdf] glyphs-missing count=2');
   });
 
   it('loads no face for marks Helvetica writes', async () => {

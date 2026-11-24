@@ -1,4 +1,5 @@
 import { DOCUMENT_FONT_WORKS } from './document-font-works.ts';
+import { MARK_FACE_WORKS } from './mark-face-works.ts';
 import type { TextRef } from './texts.ts';
 
 // Material a bundler cannot see into: libraries compiled into an emitted
@@ -402,16 +403,20 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     },
     texts: [{ label: 'LICENSE', file: work.file }],
   })),
-  // The mark faces a PDF's marks are set in (docs/specs/035-pdf-documents/marks.md "Words in every script"): Noto
-  // Sans's subsets, WOFF, from its Fontsource package, drawn by the editor and embedded by its PDF engine.
-  {
-    id: 'fontsource-noto-sans',
-    name: 'Noto Sans',
-    version: '5.3.0',
+  // The mark faces a PDF's marks are set in (docs/specs/035-pdf-documents/marks.md "Words in every script"): each
+  // family's subsets, WOFF, from its Fontsource package, drawn by the editor and embedded by its PDF engine.
+  ...MARK_FACE_WORKS.map((work): EmbeddedWork => ({
+    id: `fontsource-${work.id}`,
+    name: work.name,
+    version: work.version,
     licence: 'OFL-1.1',
     carrier: 'the editor and its PDF engine (font)',
-    homepage: 'https://fontsource.org/fonts/noto-sans',
-    trigger: { assets: /^noto-sans-[a-z-]+-[47]00-normal\.[\w-]+\.woff$/ },
-    texts: text('fontsource-noto-sans-5.3.0-LICENSE.txt'),
-  },
+    homepage: `https://fontsource.org/fonts/${work.id}`,
+    trigger: {
+      assets: new RegExp(
+        `^${work.id}-(${work.subsets.join('|')})-(${work.weights.join('|')})-normal\\.[\\w-]+\\.woff$`,
+      ),
+    },
+    texts: [{ label: 'LICENSE', file: work.file }],
+  })),
 ];
