@@ -1,13 +1,15 @@
 // How a value is drawn (docs/specs/029-sheets/sheet.md "Number formats"): in the viewer's locale, so two people
 // may see 1,234.50 and 1.234,50 for one value. Intl formatters are cached per locale and options.
 import { dateFromSerial } from './dates';
-import { formatCodeText } from './format-codes';
+import { formatCodeDraw, formatCodeText } from './format-codes';
 import type { CellFormat } from './sheet';
 import { DEFAULT_WHY, isArray, isError, numberText, scalarOf, type Value } from './formula/values';
 import { localeSeparators } from './input';
 
 type DisplayText = {
   text: string;
+  // A Custom code's colour for this value (formatting.md "Number formats", D192).
+  colour?: string;
   // How the value aligns unless the cell sets its own (numbers right, text left, booleans centre).
   align: 'l' | 'c' | 'r';
   error?: string; // the hover reason, for an error
@@ -99,6 +101,13 @@ export function formatNumber(n: number, format: CellFormat | undefined, locale: 
       if (kind === 'accounting') return n < 0 ? `${sym} (${body})` : `${sym} ${body}`;
       return `${n < 0 ? '-' : ''}${sym}${body}`;
     }
+    case 'financial': {
+      const dp = decimals(format, 2);
+      const body = nf(locale, { minimumFractionDigits: dp, maximumFractionDigits: dp }).format(
+        Math.abs(n),
+      );
+      return n < 0 ? `(${body})` : body;
+    }
     case 'scientific': {
       const dp = decimals(format, 2);
       const [m, e] = n.toExponential(dp).split('e');
@@ -157,11 +166,11 @@ export function displayValue(
     if (!Number.isFinite(v)) return { text: '#NUM!', align: 'c', kind: 'error' };
     // A Custom code draws the same in every locale, as TEXT writes it (sheet.md "Formatting").
     if (format?.nf === 'custom' && format.nc)
-      return { text: formatCodeText(v, format.nc), align: 'r', kind: 'number' };
+      return { ...formatCodeDraw(v, format.nc), align: 'r', kind: 'number' };
     return { text: formatNumber(v, format, locale), align: 'r', kind: 'number' };
   }
   if (format?.nf === 'custom' && format.nc)
-    return { text: formatCodeText(v, format.nc), align: 'l', kind: 'text' };
+    return { ...formatCodeDraw(v, format.nc), align: 'l', kind: 'text' };
   return { text: v, align: 'l', kind: 'text' };
 }
 

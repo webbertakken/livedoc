@@ -17,6 +17,7 @@ const KINDS: readonly NumberFormatKind[] = [
   'percent',
   'currency',
   'accounting',
+  'financial',
   'scientific',
   'date',
   'time',

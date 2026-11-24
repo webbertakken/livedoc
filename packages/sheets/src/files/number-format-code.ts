@@ -70,6 +70,8 @@ export function formatCodeOf(format: NumberFormat | undefined, locale: string): 
       return `${literal(symbol)}#,##0${decimalsCode(dp)}`;
     case 'accounting':
       return accountingCode(symbol, dp);
+    case 'financial':
+      return `#,##0${decimalsCode(dp)};(#,##0${decimalsCode(dp)})`;
     case 'date':
       return shortDateCode(locale);
     case 'time':
@@ -98,6 +100,7 @@ const DIGIT_FORMS: readonly [RegExp, NumberFormatKind][] = [
 // A currency's three spellings (D91): `"£"#,##0.00`, `[$£-809]#,##0.00`, and a bare `$` or other non-ASCII symbol.
 const CURRENCY = /^(?:"([^"]+)"|\[\$([^\]-]+)(?:-[0-9A-Fa-f]+)?\]|(\$|[^ -~]+))#,##0(?:\.(0+))?$/;
 const ACCOUNTING = /^_\("([^"]+)"\* #,##0(?:\.(0+))?_\);/;
+const FINANCIAL = /^#,##0(?:\.(0+))?;\(#,##0(?:\.(0+))?\)$/;
 const FIXED: Readonly<Record<string, NumberFormatKind>> = {
   'hh:mm:ss': 'time',
   '[h]:mm:ss': 'duration',
@@ -128,6 +131,9 @@ function modelFormat(code: string, locale: string): NumberFormat | null {
     const format = held({ nf: 'accounting', cur: accounting[1], dp: dpOf(accounting[2]) });
     if (format && formatCodeOf(format, locale) === code) return format;
   }
+  const financial = FINANCIAL.exec(code);
+  if (financial && financial[1] === financial[2])
+    return held({ nf: 'financial', dp: dpOf(financial[1]) });
   const fixed = FIXED[code];
   if (fixed) return { nf: fixed };
   const date = shortDateCode(locale);

@@ -25,6 +25,7 @@ export function formatShape(format: CellFormat | undefined): FormatShape {
   const dp = format?.dp ?? DECIMALS_DEFAULT;
   switch (format?.nf) {
     case 'number':
+    case 'financial':
       return { ...PLAIN, code: `,${dp}` };
     case 'percent':
       return { ...PLAIN, code: `P${dp}` };

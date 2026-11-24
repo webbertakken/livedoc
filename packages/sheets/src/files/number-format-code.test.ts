@@ -42,6 +42,8 @@ describe('formatCodeOf', () => {
       '_("€"* #,##0.00_);_("€"* \\(#,##0.00\\);_("€"* "-"??_);_(@_)',
     ],
     [{ nf: 'accounting', dp: 0 }, '_("£"* #,##0_);_("£"* \\(#,##0\\);_("£"* "-"_);_(@_)'],
+    [{ nf: 'financial' }, '#,##0.00;(#,##0.00)'],
+    [{ nf: 'financial', dp: 0 }, '#,##0;(#,##0)'],
     [{ nf: 'date' }, 'dd/mm/yyyy'],
     [{ nf: 'time' }, 'hh:mm:ss'],
     [{ nf: 'datetime' }, 'dd/mm/yyyy hh:mm'],
@@ -68,6 +70,8 @@ describe('formatFromCode', () => {
       { nf: 'currency', cur: '$', dp: 2 },
       { nf: 'currency', cur: 'CHF', dp: 1 },
       { nf: 'accounting', cur: '£', dp: 2 },
+      { nf: 'financial', dp: 2 },
+      { nf: 'financial', dp: 0 },
       { nf: 'date' },
       { nf: 'time' },
       { nf: 'datetime' },
@@ -113,5 +117,13 @@ describe('formatFromCode', () => {
   it('leaves unread a code TEXT cannot take', () => {
     expect(formatFromCode('0.00"', GB)).toEqual({ ok: false });
     expect(formatFromCode('0;0;0;0;0', GB)).toEqual({ ok: false });
+  });
+
+  // formatting.md "Number formats": Financial is its code with equal decimals both sides, else Custom.
+  it('reads Financial only with the same decimals both sides', () => {
+    expect(formatFromCode('#,##0.0;(#,##0.00)', GB)).toEqual({
+      ok: true,
+      format: { nf: 'custom', nc: '#,##0.0;(#,##0.00)' },
+    });
   });
 });
