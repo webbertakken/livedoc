@@ -295,6 +295,7 @@ export {
   type KeptPresence,
 } from './live/kept-presence';
 export {
+  CONTENTS_INDENT_PT,
   CONTENTS_LEVELS_MAX,
   Contents,
   type ContentsLook,

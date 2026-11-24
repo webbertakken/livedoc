@@ -88,15 +88,24 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   each indented 0.5 cm a level `(default)`, made when a table of contents first needs them, a file's own kept.
 - It is read only: the caret steps over it, a press selects it whole; Backspace after it or Delete before it takes it
   whole.
-  Copied and pasted, it stays one; an entry's link goes to its heading on Alt+Enter, as a link does.
+  Copied and pasted, it stays one.
+- Selected, a press on one of its entries goes to that entry's heading, the caret at the heading's start, scrolled
+  into view `(default)`; where the writing is read only, one press goes there `(default)`.
 - Insert > Table of contents offers the three looks, each a small picture of it with its name; one goes in at the
-  caret, in the body, outside a table, splitting the caret's paragraph, as one undo step.
+  caret, in the body, splitting the caret's paragraph, built from the headings as Update builds it, as one undo
+  step, and is selected.
+  The submenu is dimmed while the caret is in a table, a header or footer, or a note `(default)`.
 - Selected, it shows above its top-left corner **Update table of contents** (a refresh button) and **Table of contents
   options** `(default)`. Update rebuilds the entries from the headings and the pages as drawn, as one undo step; it
   never updates by itself. A heading with no text is left out `(default)`.
+- Its headings are [the outline's](#the-outline) whose level is within its levels, a table's left out `(default)`;
+  each gains an id as Copy heading link gives one, in the same undo step.
+- An entry is its heading's text, then for Plain text and Dotted a tab and the number of the page the heading
+  starts on as the page shows it; With blue links, its text alone, in the link look.
 - Options open the right side panel **Table of contents**: the three looks as a choice, and **Levels** (1 to N, a
   choice from 1 to 6); a change rebuilds it at once, as one undo step.
-- Pageless, no page has a number: Plain text and Dotted draw no page numbers; a file keeps the last drawn ones.
+- Pageless, no page has a number: Update writes Plain text and Dotted entries with no tab or page number, and the
+  file holds none until it is updated with pages `(default)`.
 - A file's table of contents is read as one: ODF `text:table-of-content`, OOXML a `TOC` field in a `w:sdt` of the
   `Table of Contents` gallery ([Standard mapping](standard-mapping.md#tables-of-contents)). Its look reads as With
   blue links without page numbers, Dotted when a dot leads to them, Plain text otherwise; its entries as written.
@@ -133,6 +142,8 @@ Copy link.
 ## Telemetry
 
 `Element · Added · TextDocumentLink`, `TextDocumentBookmark`, `TextDocumentTableOfContents`;
+`Element · Changed · TextDocumentTableOfContents` (Update, or a look or levels chosen in its panel);
+`UI · Used · TextDocumentTableOfContentsFollowed` (a press on an entry);
 `Element · Removed · TextDocumentBookmark` (Remove on its card);
 `Element · Changed · TextDocumentLink` (an edited link), `Element · Removed · TextDocumentLink` (Remove link);
 `UI · Used · TextDocumentLinkOpened` (Alt+Enter or the card's title);
