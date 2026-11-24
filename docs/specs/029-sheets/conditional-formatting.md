@@ -65,7 +65,8 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
 
 ## In a spreadsheet
 
-**Status: in progress.** The side panel, several ranges and other sheets in a formula are built; the files are not.
+**Status: in progress.** The side panel, several ranges, other sheets in a formula and XLSX files are built;
+ODF files are not.
 The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ([Formatting](formatting.md#conditional-formatting)):
 
@@ -78,7 +79,8 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
     grid.
 - A rule's range may be several ranges (`A1:A10,C1:C10`), as on every sheet ([Rules](#rules)).
 - **Custom Formula Is** may read other sheets of the workbook, and named ranges ([Rules](#rules)).
-- ODF keeps rules as `calcext:conditional-formats`, XLSX as `conditionalFormatting` ([Standard mapping](standard-mapping.md)).
+- ODF keeps rules as `calcext:conditional-formats`, XLSX as `conditionalFormatting`
+  ([Format rules in the file](standard-mapping.md#format-rules-in-the-file)).
 
 ## Making and changing rules
 

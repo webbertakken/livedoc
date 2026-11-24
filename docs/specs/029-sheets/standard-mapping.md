@@ -211,6 +211,46 @@ The table is the contract the readers and writers are tested against, one test p
   a justified, filled or distributed alignment, a pattern or gradient fill, a diagonal border, protection) is left
   out, and the read names each sheet whose cells, rows or columns hold it (`styles_unread`, D104).
 
+## Format rules in the file
+
+- A sheet's [format rules](conditional-formatting.md) are written and read both ways, in list order, each with its
+  range of one or more rectangles (XLSX `sqref`, ODF `calcext:target-range-address`, space-separated).
+- **XLSX**: one `conditionalFormatting` a rule, its `cfRule` numbered by list order (`priority` 1, 2, ...); a style
+  is a differential format (`dxf`) in the styles part, after the file's own kept ones (D110), so their ids stand.
+- **ODF**: LibreOffice's `calcext:conditional-formats` in the table, one `calcext:conditional-format` a rule; a style
+  is a named cell style (`ConditionalStyle_1`, ...) in `styles.xml`'s `office:styles`, a child of "Default", as
+  LibreOffice writes them; a condition's `calcext:base-cell-address` is the anchor's top-left cell.
+- A custom formula is in each format's own syntax, written for the anchor's top-left cell; a read formula written for
+  another base cell is moved to the anchor's.
+
+| Model                       | XLSX `cfRule`                                                                                    | ODF `calcext:condition@calcext:value`                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Is Empty, Is Not Empty      | `containsBlanks`, `notContainsBlanks` (`LEN(TRIM(A1))=0`)                                        | `formula-is(LEN(TRIM([.A1]))=0)`, `>0`                                                                |
+| Text Contains               | `containsText` (`operator="containsText"`, `text`)                                               | `contains-text("x")`                                                                                  |
+| Text Does Not Contain       | `notContainsText` (`operator="notContains"`)                                                     | `not-contains-text("x")`                                                                              |
+| Text Starts With, Ends With | `beginsWith`, `endsWith`                                                                         | `begins-with("x")`, `ends-with("x")`                                                                  |
+| Text Is Exactly             | `cellIs` `equal` with the text                                                                   | `="x"`                                                                                                |
+| Greater Than, ... Not Equal | `cellIs` `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `equal`, `notEqual` | `>`, `>=`, `<`, `<=`, `=`, `!=`                                                                       |
+| Is Between                  | `cellIs` `between`, two `formula`s                                                               | `between(1,5)`                                                                                        |
+| Date Is Before, After, Is   | `expression`: `AND(ISNUMBER(A1),INT(A1)<DATE(2026,1,5))`                                         | `formula-is(...)`, the same formula                                                                   |
+| Custom Formula Is           | `expression`                                                                                     | `formula-is(...)`                                                                                     |
+| Colour Scale                | `colorScale`: `cfvo` `min`, `max`, `num`, `percent`, `percentile`; `color@rgb`                   | `calcext:color-scale-entry`: `minimum`, `maximum`, `number`, `percent`, `percentile`; `calcext:color` |
+| Style                       | `dxf`: `font/b`, `i`, `u`, `strike`, `color`; `fill/patternFill/bgColor`                         | `fo:font-weight`, `fo:font-style`, underline, line-through, `fo:color`, `fo:background-color`         |
+
+- A condition's value is written as a number when it reads as one (a date as its day number), else as text.
+- **Read**: a `cellIs` or ODF comparison whose operand is a number or a text is its condition; any other operand (a
+  reference, a formula) and `notBetween` read as the same test written as a Custom Formula Is. An empty or not empty
+  test written as `LEN(TRIM(...))` reads as Is Empty or Is Not Empty; Date Is and Text Is Exactly come back as a
+  Custom Formula Is and Is Equal To, drawing the same cells (default, D215).
+- What the model does not hold (data bars, icon sets, top and bottom, above average, duplicates, errors, time periods,
+  a scale point by formula, a formula LiveDoc cannot read, a rule past `FORMAT_RULES_MAX` or `FORMAT_RULE_RANGES_MAX`)
+  stays the file's own: kept as it came, without the rules read beside it, and written back before LiveDoc's own, so
+  it draws first in the other apps (default, D215).
+- What a differential format says beyond a rule's style (a border, a number format, a font) is left out, and the read
+  names the sheet (`styles_unread`, D104).
+- Excel and LibreOffice draw a comparison on a text or an empty cell (Excel's `"abc">5` is TRUE, an empty cell is
+  0); LiveDoc draws numbers alone, as Google Sheets does: the same file can draw differently there (default, D215).
+
 ## Rows and columns in the file
 
 - A line's own size, whether it is hidden by hand, its group depth, the collapsed groups, the side their controls sit
@@ -418,6 +458,9 @@ The code cites each by its id.
   the cell's own, the file's default style included; the default font colour reads as none; a file with no default style says nothing of its cells' look (default).
 - **D204** Vertical alignment in a file: the grid's middle, for a cell with none, written as middle; a file's bottom
   read as Bottom (default).
+- **D215** Format rules in a file: a comparison with a reference or formula operand, `notBetween`, Date Is and
+  Text Is Exactly read as the same test (Custom Formula Is, Is Equal To); rules the model does not hold kept and written
+  before LiveDoc's own; LiveDoc draws comparisons on numbers alone, as Google Sheets does (default).
 - **D205** Clip in a file: written as Overflow, which neither format can tell apart (default).
 - **D206** Border widths and styles in a file: thin, medium, thick as widths 1 to 3; double as double; dashes and dots
   by their nearest; ODF 0.74, 1.76 and 2.49 pt written (default).
