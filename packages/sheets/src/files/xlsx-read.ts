@@ -26,7 +26,7 @@ import { isoDateSerial } from './ods-read';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 import { WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
-import { dateStyles, readCellStyles, styledCellStyles, type XlsxCellStyle } from './xlsx-styles';
+import { dateStyles, readCellStyles, type XlsxCellStyle } from './xlsx-styles';
 import {
   DATE1904_OFFSET,
   fromXstring,
@@ -67,7 +67,6 @@ type Book = {
   strings: readonly string[];
   styles: readonly XlsxCellStyle[];
   dates: ReadonlySet<number>;
-  styled: ReadonlySet<number>;
   date1904: boolean;
   budget: { cells: number };
   losses: FileLoss[];
@@ -189,11 +188,11 @@ function cellFormat(
 ): string | undefined {
   const style = book.styles[Number(attributeOf(cell, '', 's') ?? 0)];
   if (!style) return undefined;
-  if ('unknown' in style) {
+  if ('unknown' in style.number) {
     book.losses.push({ k: 'format_unread', sheet, r: at.r, c: at.c });
     return undefined;
   }
-  return style.code ?? undefined;
+  return style.number.code ?? undefined;
 }
 
 function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
@@ -222,14 +221,19 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
         cellsCut = true;
         continue;
       }
-      styled ||= book.styled.has(Number(attributeOf(cell, '', 's') ?? 0));
+      const s = Number(attributeOf(cell, '', 's') ?? 0);
+      styled ||= book.styles[s]?.lost ?? false;
       const read = cellFormula(cell, at, shared, book, name);
       const value = cellValue(cell, book);
       const format = cellFormat(cell, book, name, at);
+      // The file's default style is every cell's: an empty cell in it holds nothing (D203).
+      const style = book.styles[s]?.style;
       if (read.cache) cache.add(`${at.r},${at.c}`);
-      if (read.formula === undefined && !value && format === undefined) continue;
+      if (read.formula === undefined && !value && format === undefined && (s === 0 || !style))
+        continue;
       const out: FileCell = { ...at };
       if (format !== undefined) out.format = format;
+      if (style) out.style = style;
       if (read.formula !== undefined) out.formula = read.formula;
       if (read.spans) out.spans = read.spans;
       if (value) out.value = value;
@@ -240,7 +244,7 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
   wrappedBlocks(cells, cache);
   if (cut) book.losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
   if (cellsCut) book.losses.push({ k: 'cells_cut', sheet: name });
-  // Formatting past the number format waits for Formatting's mapping: named (D104).
+  // A style saying more than the model holds is named (D104).
   if (styled) book.losses.push({ k: 'styles_unread', sheet: name });
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), 0);
@@ -274,13 +278,16 @@ export async function readXlsx(
   const date1904 = ['1', 'true'].includes(
     (workbookPr && attributeOf(workbookPr, '', 'date1904')) ?? '',
   );
-  const styles = readCellStyles(text(pkg, partOf(RELATIONSHIP_TYPES.styles)), locale);
+  const styles = readCellStyles(
+    text(pkg, partOf(RELATIONSHIP_TYPES.styles)),
+    locale,
+    text(pkg, partOf(RELATIONSHIP_TYPES.theme)),
+  );
   const book: Book = {
     ns,
     strings: sharedStrings(pkg, partOf(RELATIONSHIP_TYPES.sharedStrings), ns),
     styles,
     dates: dateStyles(styles),
-    styled: styledCellStyles(text(pkg, partOf(RELATIONSHIP_TYPES.styles))),
     date1904,
     budget: { cells: 0 },
     losses: [],

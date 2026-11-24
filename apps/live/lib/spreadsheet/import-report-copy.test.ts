@@ -69,7 +69,7 @@ describe('the import report’s copy', () => {
       ],
       [
         { k: 'styles_unread', count: 2, names: ['Data', 'Totals'] },
-        'Fonts, fills, borders and alignment are not shown yet in 2 sheets: Data and Totals',
+        'Rotation, indents, patterned fills and other styling are left out of 2 sheets: Data and Totals',
       ],
       [
         { k: 'sizes_cut', count: 1, names: ['Data'] },

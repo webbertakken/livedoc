@@ -39,7 +39,7 @@ async function part(bytes: Uint8Array<ArrayBuffer>, name: string): Promise<strin
 }
 
 describe('number formats in the file model', () => {
-  it('writes each cell’s format as its code, a format alone as a styled empty cell, and lends a spill its format', () => {
+  it('writes each cell’s format as its code and style, a format alone as a styled empty cell, and lends a spill its format', () => {
     const sheets = formatted(
       { A1: '1234.5', B1: '0.25', C1: '=SEQUENCE(2)' },
       {
@@ -52,9 +52,10 @@ describe('number formats in the file model', () => {
     );
     const file = workbookFileOf(new Workbook({ sheets, locale: 'en-GB' }), sheets, 'en-GB');
     expect(file.sheets[0]!.cells).toEqual([
-      { r: 0, c: 0, format: '#,##0.0', value: { k: 'n', v: 1234.5 } },
+      { r: 0, c: 0, format: '#,##0.0', style: { b: true }, value: { k: 'n', v: 1234.5 } },
       { r: 0, c: 1, format: '0.00%', value: { k: 'n', v: 0.25 } },
       { r: 0, c: 2, formula: '=SEQUENCE(2)', spans: { rows: 2, cols: 1 }, value: { k: 'n', v: 1 } },
+      { r: 0, c: 3, style: { b: true } },
       { r: 1, c: 0, format: 'dd/mm/yyyy' },
       { r: 1, c: 2, value: { k: 'n', v: 2 }, format: '"$"#,##0.00' },
     ]);
@@ -113,10 +114,10 @@ describe('number formats in XLSX', () => {
       '<numFmts count="2"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="&quot;a&amp;b&quot;0"/></numFmts>',
     );
     expect(styles).toContain(
-      '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>',
+      '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center"/></xf>',
     );
     expect(styles).toContain(
-      '<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>',
+      '<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="center"/></xf>',
     );
     const sheet = await part(written.data, 'xl/worksheets/sheet1.xml');
     expect(sheet).toContain(

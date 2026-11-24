@@ -27,7 +27,8 @@ import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
 import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
-import { odsCellFormats, odsStyledCellStyles, type OdsCellFormats } from './ods-styles';
+import { odsCellFormats, type OdsCellFormats } from './ods-styles';
+import { odsCellLooks, type OdsCellLooks } from './ods-cell-style';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 
@@ -221,20 +222,21 @@ function keepRow(
   }
 }
 
-// What reading every table carries along: the losses, the cells read so far, the styles' formats and which styles
-// format more than the number, and the kept content.
+// What reading every table carries along: the losses, the cells read so far, the styles' formats and looks, and the
+// kept content.
 type Book = {
   losses: FileLoss[];
   budget: Budget;
   formats: OdsCellFormats;
-  styled: ReadonlySet<string>;
+  looks: OdsCellLooks;
   lineStyles: OdsLineStyles;
   tabLooks: (style: string | undefined) => OdsTabLook;
   keeper: OdsKeeper;
 };
 
 function readTable(table: XmlElement, index: number, book: Book): FileSheet {
-  const { losses, budget, formats, keeper } = book;
+  const { losses, budget, formats, looks, keeper } = book;
+  const plain = looks.of(undefined);
   const name = attributeOf(table, TABLE, 'name') ?? '';
   keeper.table(table, index);
   const cutBefore = keeper.cut;
@@ -244,7 +246,8 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const cells: FileCell[] = [];
   let cut = false;
   let cellsCut = false;
-  let styled = columns.some((style) => book.styled.has(style ?? ''));
+  // A sheet naming a style that says more than the model holds is named (D104).
+  let styled = columns.some((style) => style !== undefined && looks.of(style).lost);
   let r = 0;
   for (const row of rowsOf(table)) {
     const rowRepeat = repeatOf(row, 'rows');
@@ -261,15 +264,23 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       const formulaText = attributeOf(cell, TABLE, 'formula');
       const value = cellValue(cell);
       const own = attributeOf(cell, TABLE, 'style-name');
-      styled ||= book.styled.has(own ?? rowStyle ?? '');
+      const named = own ?? rowStyle;
+      styled ||= named !== undefined && looks.of(named).lost;
       const content = formulaText !== undefined || value !== undefined;
-      // An empty cell keeps its own style's format over a few cells; a whole line's is past what the grid holds (D94).
+      // An empty cell keeps its own style's format and look (where it differs from the file's default) over a few
+      // cells; a whole line's is past what the grid holds (D94).
       const ownFormat = content ? undefined : formatOf(own, sheet);
-      if (ownFormat !== undefined && rowRepeat * colRepeat > ODS_FORMAT_REPEAT_MAX)
-        sheet.cut.formats = true;
-      else if (ownFormat !== undefined)
-        for (let k = 0; k < colRepeat && c + k < COLS_MAX; k++)
-          rowCells.push({ r: 0, c: c + k, format: ownFormat });
+      const ownLook = content || own === undefined ? plain : looks.of(own);
+      const ownStyle = ownLook === plain ? undefined : ownLook.style;
+      const holds = ownFormat !== undefined || ownStyle !== undefined;
+      if (holds && rowRepeat * colRepeat > ODS_FORMAT_REPEAT_MAX) sheet.cut.formats = true;
+      else if (holds)
+        for (let k = 0; k < colRepeat && c + k < COLS_MAX; k++) {
+          const out: FileCell = { r: 0, c: c + k };
+          if (ownFormat !== undefined) out.format = ownFormat;
+          if (ownStyle) out.style = ownStyle;
+          rowCells.push(out);
+        }
       if (content) {
         const formula = formulaText === undefined ? undefined : fromOpenFormula(formulaText);
         const spans = formula ? matrixSpans(cell) : undefined;
@@ -286,6 +297,8 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
           if (value) out.value = value;
           const format = formatOf(own ?? rowStyle ?? columns[c + k], sheet);
           if (format !== undefined) out.format = format;
+          const style = looks.of(own ?? rowStyle ?? columns[c + k]).style;
+          if (style) out.style = style;
           rowCells.push(out);
         }
       }
@@ -314,7 +327,6 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), extent.cols);
   if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
   if (cellsCut) losses.push({ k: 'cells_cut', sheet: name });
-  // Formatting past the number format waits for its mapping: named (D104).
   if (styled) losses.push({ k: 'styles_unread', sheet: name });
   if (keeper.cut > cutBefore)
     losses.push({ k: 'kept_cut', sheet: name, cells: keeper.cut - cutBefore });
@@ -343,7 +355,7 @@ function readBody(
 ): FileRead {
   const root = parsed.root;
   const formats = odsCellFormats([root, ...styleRoots]);
-  const styled = odsStyledCellStyles([root, ...styleRoots]);
+  const looks = odsCellLooks([...styleRoots, root]);
   const lineStyles = odsLineStyles([root, ...styleRoots]);
   const tabLooks = odsTabLooks([root, ...styleRoots]);
   const spreadsheet = childElement(
@@ -360,7 +372,7 @@ function readBody(
   const sheets = tables
     .slice(0, SHEETS_MAX)
     .map((t, i) =>
-      readTable(t, i, { losses, budget, formats, styled, lineStyles, tabLooks, keeper }),
+      readTable(t, i, { losses, budget, formats, looks, lineStyles, tabLooks, keeper }),
     );
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });

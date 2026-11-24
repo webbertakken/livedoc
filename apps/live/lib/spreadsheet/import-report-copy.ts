@@ -84,7 +84,7 @@ export function importReportLine(loss: ReportedLoss): string {
       );
     case 'styles_unread':
       return named(
-        `Fonts, fills, borders and alignment are not shown yet in ${counted(count, 'sheet', 'sheets')}`,
+        `Rotation, indents, patterned fills and other styling are left out of ${counted(count, 'sheet', 'sheets')}`,
         loss,
       );
     case 'sizes_cut':

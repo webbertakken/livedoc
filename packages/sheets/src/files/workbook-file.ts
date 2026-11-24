@@ -20,6 +20,7 @@ import { isColour } from '../format';
 import { SheetName } from '../workbook/sheet-name';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW, workbookSheetLayout } from '../workbook-record';
 import { formatCodeOf, formatFromCode } from './number-format-code';
+import { cellStyleOf, type CellStyle } from './cell-style';
 import { storedKept } from './kept-anchors';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
@@ -39,6 +40,8 @@ export type FileCell = {
   spans?: { rows: number; cols: number };
   // Its number format as a format code (standard-mapping.md "Number formats in the file"); none for General.
   format?: string;
+  // Its style beyond the number format (standard-mapping.md "Cell styles in the file"); none for the default.
+  style?: CellStyle;
 };
 
 export type FileSheet = {
@@ -157,13 +160,15 @@ export function workbookFileOf(
       const cells: FileCell[] = [];
       for (const [key, cell] of sheet.cells) {
         const format = formatCodeOf(cell.format, locale) ?? undefined;
-        if (!cell.input && format === undefined) continue;
+        const style = cellStyleOf(cell.format);
+        if (!cell.input && format === undefined && !style) continue;
         const { r: rowId, c: colId } = splitCellKey(key);
         const r = index.rowPos.get(rowId);
         const c = index.colPos.get(colId);
         if (r === undefined || c === undefined) continue;
         const out: FileCell = { r, c };
         if (format !== undefined) out.format = format;
+        if (style) out.style = style;
         if (!cell.input) {
           cells.push(out);
           continue;
@@ -269,6 +274,28 @@ function cellFormatOf(
   sheet: string,
   formats: FormatsRead,
   losses: FileLoss[],
+  joined: Joined,
+): CellFormat | undefined {
+  const number = numberFormatOf(cell, sheet, formats, losses);
+  if (!cell.style) return number;
+  // One format per number format and style a file holds, as each code is read once (D121).
+  const byNumber = joined.get(cell.style) ?? new Map<CellFormat | undefined, CellFormat>();
+  joined.set(cell.style, byNumber);
+  const known = byNumber.get(number);
+  if (known) return known;
+  const made = { ...number, ...cell.style };
+  byNumber.set(number, made);
+  return made;
+}
+
+// The formats made of a style and a number format, by the style a reader shares among its cells.
+type Joined = Map<CellStyle, Map<CellFormat | undefined, CellFormat>>;
+
+function numberFormatOf(
+  cell: FileCell,
+  sheet: string,
+  formats: FormatsRead,
+  losses: FileLoss[],
 ): CellFormat | undefined {
   if (cell.format === undefined) return undefined;
   const read = formats(cell.format);
@@ -336,6 +363,7 @@ export function sheetsFromFile(
   const losses: FileLoss[] = [];
   const made = madeSheets(file, rand, losses);
   const formats = formatsRead(locale);
+  const joined: Joined = new Map();
   const handles: SheetHandle[] = made.map((m) => ({
     id: m.id,
     title: m.title,
@@ -362,7 +390,7 @@ export function sheetsFromFile(
         else losses.push({ k: 'formula_unread', sheet: m.title, r: cell.r, c: cell.c });
       }
       input ??= cell.value ? literalInput(cell.value) : null;
-      const format = cellFormatOf(cell, m.title, formats, losses);
+      const format = cellFormatOf(cell, m.title, formats, losses, joined);
       if (input || format)
         cells.push({ r, c, ...(input ? { i: input } : {}), ...(format ? { f: format } : {}) });
     }

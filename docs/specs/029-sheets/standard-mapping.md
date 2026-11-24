@@ -160,6 +160,53 @@ The table is the contract the readers and writers are tested against, one test p
 - A row's or column's default cell style formats the cells the file fills in it; over its empty cells it shows
   nothing, as Excel's column styles show nothing (D110), and is not named (default, D123).
 
+## Cell styles in the file
+
+- A cell's style beyond its number format (bold, italic, underline, strikethrough, text and fill colour, font family
+  and size, horizontal and vertical alignment, wrapping, the four borders) travels with its number format in the one
+  cell style the cell names, both ways ([Formatting](formatting.md#styles-in-the-model)).
+- Each distinct style is written once, in order of first use: XLSX's `cellXfs` entry with its `fonts`, `fills` and
+  `borders` entries, ODF's automatic cell style (`ce1`, ...) with its text, paragraph and cell properties.
+- A style is read against LiveDoc's defaults, Arial 10 pt in black with no fill and no border: what a file's style
+  says that differs is the cell's own, the file's default style included (Excel's Calibri 11 makes every cell
+  Calibri 11). The file's default font colour reads as none, as the grid's own ink; a file with no default style says nothing of its cells' look (default, D203).
+- A cell's style is its own, else its row's default cell style, else its column's, as its number format is; an empty
+  cell keeps its own style where it differs from the file's default, over at most 1,000 cells (D94).
+- ODF's written default cell style is LiveDoc's, Arial 10 pt in the middle, in `styles.xml` as the default style
+  (`style:default-style`) and as the "Default" style every written cell style is a child of; a read follows each
+  style's parents to the default style, property by property, and takes the default style's text properties alone,
+  as LibreOffice writes cell properties there (a wrap) that it draws by its "Default" style instead (default, D207).
+- A cell the grid leaves unaligned vertically draws in the middle ([Sheet](sheet.md#formatting)): it is written as
+  middle (`center`, ODF `middle`), the default style's too, and a file's bottom, both formats' default, reads as
+  Bottom (default, D204).
+- **Clip** has no form in either format: written as Overflow, the format both apps draw a long text in (default,
+  D205).
+
+| Model             | XLSX (`xl/styles.xml`)                                         | ODF (automatic `table-cell` style)                                         |
+| ----------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Bold, italic      | `font/b`, `font/i`                                             | `fo:font-weight="bold"`, `fo:font-style="italic"`                          |
+| Underline         | `font/u` (single; double reads as single)                      | `style:text-underline-style="solid"` (any other style reads as solid)      |
+| Strikethrough     | `font/strike`                                                  | `style:text-line-through-style="solid"` (any style but none)               |
+| Text colour       | `font/color@rgb` (`FFrrggbb`)                                  | `fo:color`                                                                 |
+| Font family, size | `font/name@val`, `font/sz@val` (points)                        | `fo:font-family` written; `style:font-name` through its font face read too |
+| Fill colour       | `fill/patternFill@patternType="solid"`, its `fgColor@rgb`      | `fo:background-color`                                                      |
+| Horizontal        | `alignment@horizontal` `left`, `center`, `right`               | `fo:text-align` `start`, `center`, `end`, with `style:text-align-source`   |
+| Vertical          | `alignment@vertical` `top`, `center`, `bottom`                 | `style:vertical-align` `top`, `middle`, `bottom`                           |
+| Wrap              | `alignment@wrapText="1"`                                       | `fo:wrap-option="wrap"`                                                    |
+| Borders           | `border/left`, `right`, `top`, `bottom`: `@style`, `color@rgb` | `fo:border-left`, ...: width, style, colour (`0.74pt solid #000000`)       |
+
+- **Borders**: thin, medium and thick are widths 1, 2 and 3 solid; XLSX's `dashed` and `mediumDashed` (and its
+  dash-dots) are dashed of width 1 and 2, `dotted` and `hair` dotted, `double` thick solid; ODF's width reads as 1 up
+  to 1 pt, 2 up to 2 pt, else 3, its `double` and 3-D lines as solid and its other dashes and waves as dashed. Written: thin, medium, thick;
+  dashed, mediumDashed; dotted; ODF 0.74 pt, 1.76 pt, 2.49 pt (LibreOffice's thin, medium and thick) (default, D206).
+- **Colours**: XLSX's `rgb`, its `indexed` colours by ECMA-376's palette (§18.8.27) and its `theme` colours by the
+  file's theme with their `tint`; a colour none of those name (`auto`, system colours) is none. ODF's are `#rrggbb`;
+  `transparent` is none.
+- A font size is rounded to a whole point within Font Size's limits.
+- What a style says that the model does not hold (rotation, an indent, shrink to fit, a justified, filled or
+  distributed alignment, a pattern or gradient fill, a diagonal border, protection) is left out, and the read names
+  each sheet whose cells, rows or columns hold it (`styles_unread`, D104).
+
 ## Rows and columns in the file
 
 - A line's own size, whether it is hidden by hand, its group depth, the collapsed groups, the side their controls sit
@@ -210,10 +257,10 @@ The table is the contract the readers and writers are tested against, one test p
   back untouched to the same format. Built in `@livedoc/sheets/files` (`KeptContent`).
 - Every construct the mappings above do not read yet is kept until its mapping is built (charts and pictures, notes
   and comments, merges, named ranges, validation and format rules, filters, protections; XLSX's print settings), as
-  text documents keep theirs. Styles are not kept: a cell's, row's or column's style beyond its number format, and
-  ODF's `styles.xml` (its page layouts, so its print settings, and the named styles a format rule applies), wait for
-  [Formatting](formatting.md) to map them. Until then a file's read names each sheet whose cells, rows or columns name
-  a cell style formatting more than the number (a font, fill, border or alignment: `styles_unread`) (default, D104).
+  text documents keep theirs. Styles are not kept: a cell's style is read as [Cell styles in the file](#cell-styles-in-the-file)
+  maps it, and what it says beyond that, a row's or column's style over its empty cells, and ODF's `styles.xml`
+  (its page layouts, so its print settings, and the named styles a format rule applies) are left out; a file's read
+  names each sheet whose cells, rows or columns hold such a style (`styles_unread`) (default, D104).
   XLSX's differential formats (`dxfs`) and table styles are kept in its styles part, as kept format rules, tables and
   pivot tables name them by index (default, D110).
 - **Grains**, each kept as the file's own XML with the namespace bindings it needs
@@ -334,8 +381,8 @@ The code cites each by its id.
   (default).
 - **D94** A format over empty cells in ODF: Kept for a cell repeated over at most 1,000 cells; a line's left out and
   named (default).
-- **D104** Styles beyond the number format in an arriving file: Not kept; named by the read (`styles_unread`) until
-  Formatting maps them (default).
+- **D104** Styles beyond what a cell's style maps in an arriving file: Not kept; named by the read (`styles_unread`)
+  (default).
 - **D105** A repeated ODF cell's kept attributes and children: Kept on each of its cells up to 1,000 cells, else not
   kept and named (`kept_cut`) (default).
 - **D106** Package entries left out of kept content: What the office packages drop (named, `entries_dropped`), and
@@ -363,3 +410,12 @@ The code cites each by its id.
 - **D168** A line hidden by hand inside a collapsed group in a file: Hidden by its group alone, shown with it (default).
 - **D182** A sheet's tab in a file: Excel's very hidden reads as hidden; a file hiding every sheet shows its first;
   an XLSX file opens on its first sheet shown (default).
+- **D203** A file's style read against LiveDoc's defaults (Arial 10 pt, black, no fill, no border): what differs is
+  the cell's own, the file's default style included; the default font colour reads as none; a file with no default style says nothing of its cells' look (default).
+- **D204** Vertical alignment in a file: the grid's middle, for a cell with none, written as middle; a file's bottom
+  read as Bottom (default).
+- **D205** Clip in a file: written as Overflow, which neither format can tell apart (default).
+- **D206** Border widths and styles in a file: thin, medium, thick as widths 1 to 3; dashes and dots by their nearest;
+  ODF 0.74, 1.76 and 2.49 pt written (default).
+- **D207** ODF's default cell style: written as the default style and as "Default", every cell style its child; read
+  for its text properties alone, as LibreOffice draws its cells by "Default" (default).
