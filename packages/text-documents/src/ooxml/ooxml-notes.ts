@@ -5,7 +5,6 @@
 import {
   attributeOf,
   childElements,
-  escapeXmlAttribute,
   keptXmlOf,
   RELATIONSHIP_TYPES,
   resolvePartName,
@@ -22,7 +21,7 @@ import type { Table } from '../model/tables';
 import type { OoxmlFootnotesSource } from '../model/text-document';
 import type { ReportBuilder } from '../report';
 import type { RelationshipList } from './ooxml-relationships';
-import { W_NS, XML_HEAD } from './ooxml-names';
+import { W_NS, XML_HEAD, declarations } from './ooxml-names';
 
 const isW = (e: XmlElement, local: string) => e.uri === W_NS && e.local === local;
 
@@ -129,11 +128,6 @@ export type FootnotesHost = {
   tableXml(table: Table): string;
 };
 
-const declarations = (ns: Readonly<Record<string, string>>) =>
-  Object.entries(ns)
-    .map(([p, uri]) => ` xmlns${p ? `:${p}` : ''}="${escapeXmlAttribute(uri)}"`)
-    .join('');
-
 /** The model's notes numbered as the part names them: after the kept footnotes' ids, in the body's order. */
 export function footnoteIds(
   notes: readonly Note[],
@@ -170,5 +164,6 @@ export function footnotesPartXml(
     out.push(`<w:footnote w:id="${id}">${content}</w:footnote>`);
   }
   host.partRels = outer;
-  return `${XML_HEAD}<w:footnotes${declarations(host.ns)}>${out.join('')}</w:footnotes>\n`;
+  // `livedoc` ignorable: a drawing's picture names its drawing tab (objects.md "In the file").
+  return `${XML_HEAD}<w:footnotes${declarations(host.ns)} mc:Ignorable="livedoc">${out.join('')}</w:footnotes>\n`;
 }

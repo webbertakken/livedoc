@@ -91,6 +91,7 @@ export {
   type HeldPictureMedia,
   type PictureMedia,
 } from './model/pictures';
+export { DrawingPictures } from './model/drawing-pictures';
 export {
   PICTURE_ADJUSTMENT_RANGES,
   PICTURE_ADJUSTMENTS,

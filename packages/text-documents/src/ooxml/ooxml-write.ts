@@ -33,7 +33,7 @@ import type { TabStop } from '../model/tab-stops';
 import { settingsWith, settingsXml } from './ooxml-settings';
 import { TextDocument, type OoxmlSource } from '../model/text-document';
 import { byId } from './ooxml-read';
-import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD } from './ooxml-names';
+import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD, declarations } from './ooxml-names';
 import { ooxmlFieldXml } from './ooxml-fields';
 import { footnoteIds, footnotesPartXml } from './ooxml-notes';
 import { ooxmlTableXml } from './ooxml-tables';
@@ -54,11 +54,6 @@ const STYLE_ORDER =
   'name aliases basedOn next link autoRedefine hidden uiPriority semiHidden unhideWhenUsed qFormat locked personal personalCompose personalReply rsid pPr rPr tblPr trPr tcPr tblStylePr'.split(
     ' ',
   );
-
-const declarations = (ns: Readonly<Record<string, string>>) =>
-  Object.entries(ns)
-    .map(([p, uri]) => ` xmlns${p ? `:${p}` : ''}="${escapeXmlAttribute(uri)}"`)
-    .join('');
 
 function mergeNamespaces(
   kept: Readonly<Record<string, string>> | undefined,

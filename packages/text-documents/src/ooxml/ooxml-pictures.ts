@@ -21,6 +21,7 @@ import { Pictures, type Picture, type PictureCrop, type PictureMedia } from '../
 import { findMedia, keptXmlTexts, type FoundMedia, type MediaTaken } from '../picture-media';
 import type { TextDocument } from '../model/text-document';
 import type { PictureColouring } from '../model/picture-colours';
+import { LIVEDOC_NS } from '../odf/odf-names';
 import { R_NS } from './ooxml-names';
 import { ooxmlColouringOf, ooxmlColouringXml } from './ooxml-picture-colours';
 import { ooxmlAnchorParts, ooxmlPlacementOf } from './ooxml-picture-placement';
@@ -214,11 +215,14 @@ export function readOoxmlPicture(
   if (!size || !named || !pic) return undefined;
   let fill: ReturnType<typeof blipFillOf>;
   let shape: ReturnType<typeof plainShape> = { rotation: undefined };
+  let drawingTab: string | undefined;
   for (const c of childElements(pic)) {
     if (is(c, PIC_NS, 'nvPicPr')) {
       const cNvPr = childElement(c, PIC_NS, 'cNvPr');
       if (cNvPr && (childElements(cNvPr).length > 0 || attributeOf(cNvPr, '', 'hidden') === '1'))
         return undefined;
+      // A drawing's picture names its drawing tab (objects.md "In the file").
+      drawingTab = (cNvPr && attributeOf(cNvPr, LIVEDOC_NS, 'drawing')) || undefined;
     } else if (is(c, PIC_NS, 'blipFill')) {
       fill = blipFillOf(c);
       if (!fill) return undefined;
@@ -240,6 +244,7 @@ export function readOoxmlPicture(
     ...(fill!.brightness ? { brightness: fill!.brightness } : {}),
     ...(fill!.contrast ? { contrast: fill!.contrast } : {}),
     ...(shape.rotation ? { rotation: shape.rotation } : {}),
+    ...(drawingTab ? { drawing: drawingTab } : {}),
   };
 }
 
@@ -289,7 +294,7 @@ export function ooxmlPictureXml(picture: Picture, rPr: string, embed: string, id
   const srcRect = crop
     ? `<a:srcRect l="${thousandths(crop.left)}" t="${thousandths(crop.top)}" r="${thousandths(crop.right)}" b="${thousandths(crop.bottom)}"/>`
     : '';
-  return `<w:r>${rPr}<w:drawing>${frame.open}${frame.position}<wp:extent cx="${cx}" cy="${cy}"/>${effectExtentOf(picture)}${frame.wrap}${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"${blipEffects ? `>${blipEffects}</a:blip>` : '/>'}${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rotation ? ` rot="${Math.round(rotation * ROTATION_UNITS)}"` : ''}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>${frame.close}</w:drawing></w:r>`;
+  return `<w:r>${rPr}<w:drawing>${frame.open}${frame.position}<wp:extent cx="${cx}" cy="${cy}"/>${effectExtentOf(picture)}${frame.wrap}${docPr}<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A_NS}" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="${A_NS}"><a:graphicData uri="${PIC_NS}"><pic:pic xmlns:pic="${PIC_NS}"><pic:nvPicPr><pic:cNvPr id="0"${attr('name', name)}${attr('livedoc:drawing', picture.drawing || undefined)}/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${embed}"${blipEffects ? `>${blipEffects}</a:blip>` : '/>'}${srcRect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rotation ? ` rot="${Math.round(rotation * ROTATION_UNITS)}"` : ''}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>${frame.close}</w:drawing></w:r>`;
 }
 
 const isImage = (r: Relationship) => r.type === RELATIONSHIP_TYPES.image && !r.external;

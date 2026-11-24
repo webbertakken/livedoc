@@ -8,7 +8,13 @@ import {
   type Tab,
   type TextDocumentFormat,
 } from '@livedoc/document';
-import { readTextDocumentFile, TextDocumentState } from '@livedoc/text-documents';
+import {
+  DrawingPictures,
+  Pictures,
+  readTextDocumentFile,
+  TextDocumentState,
+  type TextDocument,
+} from '@livedoc/text-documents';
 import { json } from '../responses';
 import type { DocumentEnv } from '../types';
 import { bytesOfBase64 } from '@livedoc/text-documents';
@@ -61,6 +67,34 @@ export function readTextDocumentSeeds(
   return out;
 }
 
+/**
+ * A file's pictures keep their drawing names only for the drawing tabs of the text document they are read into
+ * (objects.md "In the file"): one read of this document's drawing tabs of `tabId`, made only when a picture names one.
+ */
+async function withOwnDrawings(
+  env: DocumentEnv,
+  documentId: string,
+  tabId: string,
+  document: TextDocument,
+): Promise<TextDocument> {
+  if (!Pictures.ofDocument(document).some((p) => p.drawing !== undefined)) return document;
+  const rows = await env.DOCUMENT_DB.prepare(
+    `SELECT t.id FROM tabs t
+       JOIN document_tabs dt ON dt.tab_id = t.id AND dt.document_id = ?1
+      WHERE t.drawing_of = ?2`,
+  )
+    .bind(documentId, tabId)
+    .all<{ id: string }>();
+  const own = new Set(rows.results.map((r) => r.id));
+  const isOwn = (id: string) => own.has(id);
+  const dropped = DrawingPictures.foreignNames(document, isOwn);
+  if (dropped > 0)
+    console.info(
+      `[text-document] drawing names dropped document=${documentId} tab=${tabId} count=${dropped}`,
+    );
+  return DrawingPictures.keepOwn(document, isOwn);
+}
+
 // The HTTP status of each package rejection a seed can meet.
 const REJECTION_STATUS: Record<string, number> = {
   package_too_large: 413,
@@ -108,7 +142,8 @@ export async function seedTextDocuments(
     const dropped = read.report.dropped.reduce((n, d) => n + d.count, 0);
     const kept = read.report.kept.reduce((n, k) => n + k.count, 0);
     if (dropped > 0) console.info(`[package] dropped document=${documentId} items=${dropped}`);
-    const imported = await mediaIntoGallery(env, ownerId, read.document);
+    const named = await withOwnDrawings(env, documentId, seed.tabId, read.document);
+    const imported = await mediaIntoGallery(env, ownerId, named);
     const keptMedia = Object.entries(imported.kept);
     if (imported.gallery > 0 || keptMedia.length > 0)
       console.info(

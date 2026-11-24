@@ -26,7 +26,7 @@ import {
   type PictureMedia,
 } from '../model/pictures';
 import type { PictureColouring } from '../model/picture-colours';
-import { NS } from './odf-names';
+import { LIVEDOC_NS, NS } from './odf-names';
 import { isOdfColouring, odfColouringAttributes, odfColouringOf } from './odf-picture-colours';
 import {
   isOdfPlacement,
@@ -275,8 +275,10 @@ export function readOdfPicture(
     const offset = a.uri === NS.svg && (a.local === 'x' || a.local === 'y');
     const onBaseline = offset && (placed || zero(a.value));
     const turn = a.uri === NS.draw && a.local === 'transform';
-    if (!known && !onBaseline && !turn) return undefined;
+    const names = a.uri === LIVEDOC_NS && a.local === 'drawing';
+    if (!known && !onBaseline && !turn && !names) return undefined;
   }
+  const drawing = attributeOf(frame, LIVEDOC_NS, 'drawing');
   const transform = attributeOf(frame, NS.draw, 'transform');
   const turned = transform === undefined ? { rotation: undefined } : odfRotationOf(transform);
   if (!turned) return undefined;
@@ -321,6 +323,7 @@ export function readOdfPicture(
     ...(title ? { title } : {}),
     ...graphic,
     ...(turned.rotation ? { rotation: turned.rotation } : {}),
+    ...(drawing ? { drawing } : {}),
   };
 }
 
@@ -370,6 +373,10 @@ export const isPictureParentStyleXml = (xml: string): boolean => {
 export const odfMediaEntry = (key: string, media: PictureMedia): string =>
   media.part ?? `Pictures/${key}.${PICTURE_EXTENSIONS[media.mediaType]}`;
 
+/** A drawing's picture names its drawing tab (objects.md "In the file"); `livedoc` is declared on the root. */
+const odfDrawingOf = (picture: Picture): string =>
+  picture.drawing ? ` livedoc:drawing="${escapeXmlAttribute(picture.drawing)}"` : '';
+
 /** The picture's frame: `name` its `draw:name`, `style` its automatic style's, its media by entry or as base64. */
 export function odfPictureXml(
   picture: Picture,
@@ -384,5 +391,5 @@ export function odfPictureXml(
     : ` xlink:href="${escapeXmlAttribute(odfMediaEntry(picture.media, media))}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"`;
   const title = picture.title ? `<svg:title>${escapeXmlText(picture.title)}</svg:title>` : '';
   const desc = picture.alt ? `<svg:desc>${escapeXmlText(picture.alt)}</svg:desc>` : '';
-  return `<draw:frame draw:style-name="${escapeXmlAttribute(style)}" draw:name="${escapeXmlAttribute(name)}" ${picture.placement ? odfPlacementFrame(picture.placement) : 'text:anchor-type="as-char"'} svg:width="${ptToOdf(picture.width)}" svg:height="${ptToOdf(picture.height)}" draw:z-index="0"${odfTransformOf(picture)}><draw:image${href} draw:mime-type="${media.mediaType}">${source}</draw:image>${title}${desc}</draw:frame>`;
+  return `<draw:frame draw:style-name="${escapeXmlAttribute(style)}" draw:name="${escapeXmlAttribute(name)}" ${picture.placement ? odfPlacementFrame(picture.placement) : 'text:anchor-type="as-char"'} svg:width="${ptToOdf(picture.width)}" svg:height="${ptToOdf(picture.height)}" draw:z-index="0"${odfTransformOf(picture)}${odfDrawingOf(picture)}><draw:image${href} draw:mime-type="${media.mediaType}">${source}</draw:image>${title}${desc}</draw:frame>`;
 }

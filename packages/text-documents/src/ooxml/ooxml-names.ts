@@ -1,5 +1,6 @@
 // The WordprocessingML namespaces (ISO/IEC 29500-1) a text document's parts name, and LiveDoc's extension namespace,
 // declared ignorable (standard-mapping.md "Conformance").
+import { escapeXmlAttribute } from '@livedoc/office-packages';
 import { LIVEDOC_NS } from '../odf/odf-names';
 
 export const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -30,4 +31,10 @@ export const SECTPR_ORDER =
   'headerReference footerReference footnotePr endnotePr type pgSz pgMar paperSrc pgBorders lnNumType pgNumType cols formProt vAlign noEndnote titlePg textDirection bidi rtlGutter docGrid printerSettings sectPrChange'.split(
     ' ',
   );
+/** A part root's namespace declarations, one ` xmlns:p="uri"` per prefix (none for the default namespace). */
+export const declarations = (ns: Readonly<Record<string, string>>): string =>
+  Object.entries(ns)
+    .map(([p, uri]) => ` xmlns${p ? `:${p}` : ''}="${escapeXmlAttribute(uri)}"`)
+    .join('');
+
 export const XML_HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';

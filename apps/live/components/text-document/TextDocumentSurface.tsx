@@ -1095,6 +1095,8 @@ export function TextDocumentSurface({
         caret={caret}
         keyScope={root}
         localDoc={local ? () => liveDoc.current : null}
+        liveDoc={local ? null : () => liveDoc.current}
+        drawDrawing={drawingTabs?.draw ?? null}
         chrome={chrome}
         // A session that may not edit saves nothing, so shows no save status.
         saveStatus={canEdit ? saveStatus : null}

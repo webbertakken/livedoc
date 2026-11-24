@@ -5,7 +5,12 @@ import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
 import { downloadFileName } from '@livedoc/office-packages';
-import { Pictures, TextDocumentState, writeTextDocumentFile } from '@livedoc/text-documents';
+import {
+  DrawingPictures,
+  Pictures,
+  TextDocumentState,
+  writeTextDocumentFile,
+} from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 
 const MEDIA_TYPES = {
@@ -26,6 +31,8 @@ export async function textDocumentFileOf(
     type?: TextDocumentFileType;
     // A gallery media's bytes (objects.md "Where the bytes live"): a picture it cannot read is left out.
     readImage?: (imageId: string) => Promise<Uint8Array | undefined>;
+    // Drawings drawn afresh for this file, by drawing tab (objects.md "In the file"); any other leaves as saved.
+    drawn?: ReadonlyMap<string, Uint8Array>;
   },
 ): Promise<WrittenTextDocumentFile> {
   const { format, name, readImage = async () => undefined } = file;
@@ -33,7 +40,9 @@ export async function textDocumentFileOf(
   if ((type === 'docx') !== (format === 'ooxml'))
     throw new Error('text document file refused: format_not_native');
   const live = TextDocumentState.document(doc, format);
-  const read = await Pictures.resolveMedia(live, readImage);
+  // The fresh PNGs hold their bytes, so the gallery is not asked for them.
+  const drawn = file.drawn?.size ? await DrawingPictures.redrawn(live, file.drawn) : live;
+  const read = await Pictures.resolveMedia(drawn, readImage);
   if (read.unavailable.length > 0)
     debugLog('[text-document] pictures left out of the file', { media: read.unavailable });
   // Its title is the document's name, as the room writes it.
