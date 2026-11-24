@@ -11,6 +11,7 @@ import {
   useSpreadsheetSurfaceKeys,
 } from './spreadsheet-surface-keys';
 import { SummarySlotContext } from './summary-slot';
+import { SpreadsheetFullScreenProvider } from './spreadsheet-full-screen';
 import { SheetBarActionsContext, type SheetBarActions } from './useSheetBarActions';
 
 const tabs = [
@@ -43,6 +44,21 @@ describe('useSheetStep', () => {
 });
 
 describe('useSpreadsheetSurfaceKeys', () => {
+  // surface.md "Layout": Escape ends Full Screen where there is one, and is not taken otherwise.
+  it('ends Full Screen on Escape, and takes no Escape outside a surface', () => {
+    const exit = vi.fn(() => true);
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <SpreadsheetFullScreenProvider value={{ on: true, enter: vi.fn(), exit }}>
+        {children}
+      </SpreadsheetFullScreenProvider>
+    );
+    expect(renderHook(() => useSpreadsheetSurfaceKeys(), { wrapper }).result.current.escape()).toBe(
+      true,
+    );
+    expect(exit).toHaveBeenCalledOnce();
+    expect(renderHook(() => useSpreadsheetSurfaceKeys()).result.current.escape()).toBe(false);
+  });
+
   it('steps through the surface and focuses the summary in its slot', () => {
     const step = vi.fn();
     const slot = document.createElement('div');

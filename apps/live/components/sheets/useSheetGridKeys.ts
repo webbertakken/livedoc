@@ -43,6 +43,8 @@ export type SheetSurfaceKeys = {
   renameSheet: () => void;
   // Alt+Shift+K: All Sheets opens, for anyone (surface.md "Sheet bar").
   listSheets: () => void;
+  // Escape, once nothing else takes it: Full Screen ends (surface.md "Layout"); true when it did.
+  escape: () => boolean;
 };
 
 export function useSheetGridKeys({
@@ -212,6 +214,7 @@ export function useSheetGridKeys({
         if (c.rules.paint) return actions.paintStop();
         if (c.marquee) return c.setMarquee(null);
         if (c.findOpen) return c.setFindOpen(null);
+        if (surface?.escape()) return;
         if (c.maximised) return restorePlanElement();
         // Out of the grid: the Sheet element is selected on the canvas, and the canvas has the keys again.
         c.gridEl?.blur();

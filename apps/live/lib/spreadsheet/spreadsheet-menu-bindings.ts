@@ -27,7 +27,7 @@ export type GridMenuActions = {
   numberFormat: (nf: NumberFormatKind) => void;
   decimals: (delta: 1 | -1) => void;
   format: (patch: FormatPatch) => void;
-  clear: (what: 'inputs' | 'formats') => void;
+  clear: (what: 'inputs' | 'formats' | 'all') => void;
   insert: (axis: Axis, side: 'before' | 'after') => void;
   shift: (mode: 'insertDown' | 'insertRight' | 'deleteUp' | 'deleteLeft') => void;
   remove: (axis: Axis) => void;
@@ -45,6 +45,11 @@ export type GridMenuActions = {
   group: (axis: Axis) => void;
   ungroup: (axis: Axis) => void;
   foldAll: (axis: Axis, collapsed: boolean) => void;
+  // The context menus' own (surface.md "Context menus"): the selected lines hidden, the Resize dialog over lines
+  // from..to, the active cell's link opened.
+  hide: (axis: Axis) => void;
+  resize: (axis: Axis, from: number, to: number) => void;
+  openLink: (url: string) => void;
 };
 
 /** An axis's groups as the menus read them: any in the selection's lines, any collapsed, any expanded. */
@@ -65,6 +70,8 @@ export type GridMenuPort = {
   showGrid: boolean;
   filtered: boolean;
   outline: Record<Axis, GridMenuOutline>;
+  // The active cell's link (a HYPERLINK), or null.
+  link: string | null;
   act: GridMenuActions;
 };
 
@@ -158,6 +165,7 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
       label: `Ungroup ${spanLabel('c', g.c1, g.c2)}`,
       disabled: !port.outline.c.selected,
     }),
+    ...lineBindings(port),
     'delete-cells-shift-up': run(() => act.shift('deleteUp')),
     'delete-cells-shift-left': run(() => act.shift('deleteLeft')),
     'show-gridlines': run(() => act.setOptions({ showGrid: !port.showGrid }), {
@@ -243,6 +251,29 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
   return out;
 }
 
+// A header menu's Clear, Hide and Resize of the selected lines, and Freeze Up to the active cell's row or column
+// (surface.md "Context menus"), each named by what it acts on.
+function lineBindings({ act, range: g, active }: GridMenuPort): Record<string, OfficeAction> {
+  const out: Record<string, OfficeAction> = {};
+  for (const [axis, noun] of [
+    ['r', 'rows'],
+    ['c', 'columns'],
+  ] as const) {
+    const [a, b] = axis === 'r' ? [g.r1, g.r2] : [g.c1, g.c2];
+    const span = spanLabel(axis, a, b);
+    out[`clear-${noun}`] = run(() => act.clear('all'), { label: `Clear ${span}` });
+    out[`hide-${noun}`] = run(() => act.hide(axis), { label: `Hide ${span}` });
+    out[`resize-${noun}`] = run(() => act.resize(axis, a, b), { label: `Resize ${span}` });
+  }
+  const row = active.r + 1;
+  const col = active.c + 1;
+  out['freeze-up-to-this-row'] = run(() => act.freeze(row), { label: `Freeze Up to Row ${row}` });
+  out['freeze-up-to-this-column'] = run(() => act.freeze(undefined, col), {
+    label: `Freeze Up to Column ${columnLetters(col - 1)}`,
+  });
+  return out;
+}
+
 /** Each axis's groups as the menus read them, from the layout this person sees (D163). */
 export function gridMenuOutline(layout: SheetLayout, g: GridRange): Record<Axis, GridMenuOutline> {
   const of = (axis: Axis, a: number, b: number): GridMenuOutline => {
@@ -288,10 +319,15 @@ export function gridOffice(port: GridMenuPort): GridOffice {
   };
 }
 
-/** The grid's items for this session: Copy for anyone, values for a Participant, the rest for an Editor. */
+/**
+ * The grid's items for this session: Copy and the active cell's link for anyone, values for a Participant, the rest for
+ * an Editor.
+ */
 export function gridMenuBindings(port: GridMenuPort): OfficeActions {
+  const { link } = port;
   return {
     copy: run(port.act.copy),
+    ...(link ? { 'open-link': run(() => port.act.openLink(link)) } : {}),
     ...foldBindings(port),
     ...(port.canWrite ? writeBindings(port) : {}),
     ...(port.canWrite && port.canShape ? shapeBindings(port) : {}),

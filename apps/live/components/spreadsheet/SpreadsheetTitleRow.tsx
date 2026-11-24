@@ -86,6 +86,7 @@ export function SpreadsheetTitleRow({
   channel,
   zoom,
   formulas,
+  onFullScreen,
   keyScope,
   onWorkbook,
   pushUndo,
@@ -102,6 +103,8 @@ export function SpreadsheetTitleRow({
   zoom: OfficeZoom;
   // View › Show › Formulas (grid-and-editing.md "Formulas").
   formulas: ShowFormulas;
+  // View › Full Screen (surface.md "Layout").
+  onFullScreen: () => void;
   keyScope: RefObject<HTMLElement | null>;
   onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
   pushUndo: (step: ItemUndoStep) => void;
@@ -140,6 +143,7 @@ export function SpreadsheetTitleRow({
     ...historyBindings(history, level !== 'view'),
     ...zoomBindings(zoom),
     'show-formulas': { run: formulas.toggle, checked: formulas.shown },
+    'full-screen': { run: onFullScreen },
     ...Object.fromEntries(
       DOWNLOAD_ITEMS.map((item) => [
         item.id,

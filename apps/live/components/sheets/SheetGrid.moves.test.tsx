@@ -37,6 +37,7 @@ const surface = (): SheetSurfaceKeys & {
   lists: number;
   leaves: number;
   redos: number;
+  fullScreen: boolean;
 } => {
   const out = {
     steps: [] as number[],
@@ -50,6 +51,12 @@ const surface = (): SheetSurfaceKeys & {
     leaveGrid: () => void (out.leaves += 1),
     renameSheet: () => undefined,
     listSheets: () => void (out.lists += 1),
+    fullScreen: false,
+    escape: () => {
+      const was = out.fullScreen;
+      out.fullScreen = false;
+      return was;
+    },
   };
   return out;
 };
@@ -121,6 +128,19 @@ describe('the workbook keys', () => {
     // D137: Ctrl+Alt+Shift+M leaves the grid for the toolbar.
     key(h, { key: 'M', code: 'KeyM', ctrlKey: true, altKey: true, shiftKey: true });
     expect(keys.leaves).toBe(1);
+  });
+
+  // surface.md "Layout": Escape ends Full Screen once nothing else takes it, and only then.
+  it('ends Full Screen on Escape after a copy’s marquee', async () => {
+    const keys = surface();
+    keys.fullScreen = true;
+    const h = await mountGrid({ surfaceKeys: keys });
+    act(() => h.c().setMarquee({ range: { r1: 0, c1: 0, r2: 0, c2: 0 }, cut: false }));
+    key(h, { key: 'Escape' });
+    expect(h.c().marquee).toBeNull();
+    expect(keys.fullScreen).toBe(true);
+    key(h, { key: 'Escape' });
+    expect(keys.fullScreen).toBe(false);
   });
 
   // grid-and-editing.md "Formulas": F4 outside an edit redoes, for whoever may write cells.

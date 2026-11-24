@@ -17,11 +17,24 @@ const layout = (over: object = {}) => ({ rows: ['r1', 'r2', 'r3'], cols: ['c1', 
 let controller: object = {};
 vi.mock('@/components/sheets/sheet-controller', () => ({ useSheetController: () => controller }));
 
-const actions = { activeFormat: () => ({ b: true }), toggle: vi.fn() } as unknown as SheetActions;
+const actions = {
+  activeFormat: () => ({ b: true }),
+  toggle: vi.fn(),
+  hide: vi.fn(),
+} as unknown as SheetActions;
+const setMenu = vi.fn();
+const open = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/open-hyperlink', () => ({ openHyperlink: open }));
 
-function bound(sheetLayout: object, roles = { canEdit: true, canShape: true }) {
+function bound(
+  sheetLayout: object,
+  roles = { canEdit: true, canShape: true },
+  link: string | null = null,
+) {
   controller = {
     ...roles,
+    workbook: { hyperlinkOf: () => link },
+    setMenu,
     selection: {
       ranges: [
         { r1: 0, c1: 0, r2: 0, c2: 0 },
@@ -29,7 +42,7 @@ function bound(sheetLayout: object, roles = { canEdit: true, canShape: true }) {
       ],
       active: { r: 1, c: 1 },
     },
-    sheet: { layout: sheetLayout },
+    sheet: { id: 's1', layout: sheetLayout },
     viewLayout: sheetLayout,
   };
   const channel = createOfficeBindingsChannel();
@@ -83,5 +96,16 @@ describe('useGridMenuBindings', () => {
       'expand-all-row-groups',
     ]);
     expect(b['expand-all-row-groups']!.disabled).toBe(true);
+  });
+
+  // surface.md "Context menus": a header's Hide and Resize, and the active cell's Open Link (D189).
+  it('hides the lines, opens the Resize dialog over them, and opens the active cell’s link', () => {
+    const b = bound(layout(), { canEdit: true, canShape: true }, 'https://example.com/');
+    b['hide-rows']!.run();
+    expect(actions.hide).toHaveBeenCalledWith('r', true);
+    b['resize-columns']!.run();
+    expect(setMenu).toHaveBeenCalledWith({ kind: 'resize', axis: 'c', from: 1, to: 1 });
+    b['open-link']!.run();
+    expect(open).toHaveBeenCalledWith('https://example.com/');
   });
 });

@@ -1087,6 +1087,16 @@ export const SPREADSHEET_STARRED = chart(
   { types: ['SpreadsheetStar'], rising: 'neutral' },
 );
 
+// A spreadsheet's Full Screen turned on from View › Full Screen, or off by Esc or its Exit button
+// (docs/specs/029-sheets/surface.md "Layout").
+export const SPREADSHEET_FULL_SCREEN = chart(
+  'UI',
+  'Toggled',
+  'Spreadsheet Full Screen',
+  "A spreadsheet's Full Screen turned on from View › Full Screen, or off by Esc or its Exit Full Screen button.",
+  { types: ['SpreadsheetFullScreen'], rising: 'neutral' },
+);
+
 // A spreadsheet's grid zoom picked from View › Zoom or its toolbar (docs/specs/029-sheets/surface.md "Grid").
 export const SPREADSHEET_ZOOMED = chart(
   'UI',
@@ -1488,6 +1498,7 @@ export const EDITOR_CHROME: MetricStack = {
     TOOL_FINDER_USED,
     TEXT_DOCUMENT_STARRED,
     SPREADSHEET_STARRED,
+    SPREADSHEET_FULL_SCREEN,
     SPREADSHEET_ZOOMED,
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
@@ -1702,6 +1713,14 @@ export const TEXT_DOCUMENT_CONTEXT_MENU_OPENED = opened(
   (t) => t === 'TextDocumentContextMenu',
 );
 
+// A spreadsheet's context menu opened on a cell, a row number or a column letter (docs/specs/029-sheets/surface.md
+// "Context menus").
+export const SPREADSHEET_CONTEXT_MENU_OPENED = opened(
+  'Spreadsheet Context Menu',
+  "The context menu on a spreadsheet's cell, row number or column letter opened, by a right-click or from the keyboard.",
+  (t) => t === 'SpreadsheetContextMenu',
+);
+
 // The Fonts dialog of a text document opened from its font menu's More fonts (fonts.md "More fonts").
 export const TEXT_DOCUMENT_MORE_FONTS_OPENED = opened(
   'Text Document More Fonts',
@@ -1735,6 +1754,7 @@ export const PANELS_OPENED: MetricStack = {
     TEXT_DOCUMENT_PANELS_OPENED,
     PDF_DOCUMENT_PANELS_OPENED,
     TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
+    SPREADSHEET_CONTEXT_MENU_OPENED,
     TEXT_DOCUMENT_MORE_FONTS_OPENED,
     OTHER_OPENED,
   ],
