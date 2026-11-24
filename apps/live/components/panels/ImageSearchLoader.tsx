@@ -55,7 +55,7 @@ export function SkeletonTiles({ count, from = 0 }: { count: number; from?: numbe
             key={`skeleton-${n}`}
             aria-hidden
             data-image-search-skeleton=""
-            className={`relative aspect-square overflow-hidden rounded-md animate-fade-in ${skeletonClass(n)}`}
+            className={`relative aspect-square overflow-hidden rounded-control animate-fade-in ${skeletonClass(n)}`}
             style={{ ['--lvd-search-phase' as string]: `${(i * GLINT_STEP_S).toFixed(2)}s` }}
           >
             <PlaceholderArt />
@@ -70,14 +70,14 @@ export function SkeletonTiles({ count, from = 0 }: { count: number; from?: numbe
 export function SearchingStatus({ query }: { query: string }) {
   return (
     <p className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-      <span className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:ring-brand-500/30">
+      <span className="relative flex size-chip shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:ring-brand-500/30">
         <span className="lvd-search-lens flex">
           <SearchIcon size={13} />
         </span>
       </span>
       <span className="min-w-0 truncate">
         Searching Openverse for{' '}
-        <span className="font-semibold text-slate-800 dark:text-slate-100">“{query}”</span>…
+        <span className="text-slate-800 dark:text-slate-100">“{query}”</span>…
       </span>
     </p>
   );
@@ -87,7 +87,7 @@ export function SearchingStatus({ query }: { query: string }) {
 export function PickOverlay({ stage }: { stage: PickStage }) {
   return (
     <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white/55 backdrop-blur-[2px] animate-fade-in dark:bg-slate-900/60">
-      <svg viewBox="0 0 32 32" aria-hidden className="h-8 w-8">
+      <svg viewBox="0 0 32 32" width={32} height={32} aria-hidden>
         <circle
           cx="16"
           cy="16"
@@ -107,7 +107,7 @@ export function PickOverlay({ stage }: { stage: PickStage }) {
           className="lvd-pick-ring stroke-brand-500 dark:stroke-brand-400"
         />
       </svg>
-      <span className="rounded-full bg-white/90 px-1.5 py-px text-[10px] font-semibold text-slate-700 shadow-sm dark:bg-slate-900/90 dark:text-slate-200">
+      <span className="rounded-full bg-white/90 px-2 py-px text-supporting text-slate-700 shadow-sm dark:bg-slate-900/90 dark:text-slate-200">
         {PICK_STAGE_COPY[stage].short}
       </span>
     </span>
@@ -122,11 +122,9 @@ export function PickStatus({ stage }: { stage: PickStage }) {
   return (
     <div
       role="status"
-      className="flex flex-col gap-1.5 rounded-lg bg-brand-50/70 px-3 py-2 ring-1 ring-brand-100 animate-fade-in dark:bg-brand-500/10 dark:ring-brand-500/25"
+      className="flex flex-col gap-1 rounded-menu bg-brand-50/70 px-3 py-2 ring-1 ring-brand-100 animate-fade-in dark:bg-brand-500/10 dark:ring-brand-500/25"
     >
-      <p className="text-xs font-medium text-brand-800 dark:text-brand-200">
-        {PICK_STAGE_COPY[stage].long}
-      </p>
+      <p className="text-body text-brand-800 dark:text-brand-200">{PICK_STAGE_COPY[stage].long}</p>
       <div className="flex gap-1" aria-hidden>
         {steps.map((s, i) => (
           <Step key={s} state={i < at ? 'done' : i === at ? 'active' : 'todo'} />

@@ -72,17 +72,17 @@ export function ImageDropZone({
           if (file) void onSelectFile(file);
         }}
         onClick={() => fileInputRef.current?.click()}
-        className={`flex ${heightClass} cursor-pointer flex-col items-center justify-center ${gapClass} rounded-lg border-2 border-dashed transition ${
+        className={`flex ${heightClass} cursor-pointer flex-col items-center justify-center ${gapClass} rounded-menu border-2 border-dashed transition ${
           dropActive
             ? 'border-brand-400 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/10'
             : 'border-slate-300 bg-slate-50 hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-brand-500/50 dark:hover:bg-brand-500/10'
         }`}
       >
         <UploadIcon />
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        <p className="text-body text-slate-700 dark:text-slate-200">
           {uploading ? 'Uploading...' : prompt}
         </p>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="text-supporting text-slate-500 dark:text-slate-400">
           {hint ?? `${IMAGE_TYPES_LABEL} up to ${MAX_IMAGE_MB} MB`}
         </p>
         <input
@@ -99,7 +99,7 @@ export function ImageDropZone({
         />
       </div>
       {error ? (
-        <p className="mt-3 rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
+        <p className="mt-3 rounded-control bg-rose-50 px-3 py-2 text-body text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
           {error}
         </p>
       ) : null}

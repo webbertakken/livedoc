@@ -30,10 +30,10 @@ function BrushPreview({ config }: { config: EraserConfig }) {
   const radius = Math.min(eraserRadius(config), 26);
   const filtered = config.target !== 'anything';
   return (
-    <div className="relative mb-1 flex h-14 items-center justify-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
+    <div className="relative mb-1 flex h-14 items-center justify-center overflow-hidden rounded-menu bg-slate-100 dark:bg-slate-800">
       <div className="absolute inset-0 flex items-center justify-around px-3">
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} className="h-6 w-9 rounded bg-slate-300 dark:bg-slate-600" />
+          <span key={i} className="h-chip w-9 rounded-control bg-slate-300 dark:bg-slate-600" />
         ))}
       </div>
       {/* The brush. A filtered eraser is amber, matching the canvas ring, so
@@ -92,7 +92,7 @@ export function EraserPanel({
             onPick={(id) => onChange('target', id)}
           />
         </div>
-        <p className="px-1 pt-1.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+        <p className="px-1 pt-1.5 text-supporting text-slate-500 dark:text-slate-400">
           {config.target === 'anything'
             ? 'Locked elements and locked layers are never erased. One sweep is one undo.'
             : `Erasing ${config.target === 'drawings' ? 'drawings' : 'arrows'} only; everything else is safe from the brush.`}

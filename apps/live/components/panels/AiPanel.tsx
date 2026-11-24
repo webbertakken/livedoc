@@ -136,8 +136,8 @@ export function AiPanelContent({
                 onClick={() => setMode(m.id)}
                 className={
                   mode === m.id
-                    ? `flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold bg-brand-700 text-white transition ${SOLID_BRAND_DARK_CONTROL}`
-                    : 'flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+                    ? `flex min-h-row items-center gap-1 rounded-control px-2 text-body font-medium bg-brand-700 text-white transition ${SOLID_BRAND_DARK_CONTROL}`
+                    : 'flex min-h-row items-center gap-1 rounded-control px-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
                 }
               >
                 {m.icon}
@@ -152,7 +152,7 @@ export function AiPanelContent({
           variant="button"
           label="Connect agent"
           icon={<PlugIcon />}
-          className="!gap-1 !px-2 !py-1 !text-[11px]"
+          className="!gap-1 !px-2"
         />
       </div>
 
@@ -168,7 +168,7 @@ export function AiPanelContent({
                 setPrompt(s);
                 void handleSend(s);
               }}
-              className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-brand-500/50 dark:hover:text-brand-400"
+              className="inline-flex min-h-chip items-center rounded-full border border-slate-200 bg-slate-50 px-2 text-body text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-brand-500/50 dark:hover:text-brand-400"
             >
               {s}
             </button>
@@ -180,7 +180,7 @@ export function AiPanelContent({
       {showResponse && (
         <div
           ref={responseRef}
-          className="max-h-64 min-h-[4rem] overflow-y-auto px-3 py-2 text-[12px] leading-relaxed"
+          className="max-h-64 min-h-[4rem] overflow-y-auto px-3 py-2 text-body"
         >
           {mode === 'ask' ? (
             <div className="text-slate-700 dark:text-slate-300">
@@ -188,14 +188,14 @@ export function AiPanelContent({
               {status === 'loading' && <BlinkCursor />}
             </div>
           ) : status === 'loading' ? (
-            <p className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+            <p className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <Spinner />
               {progressCount > 0
                 ? `Generating… ${progressCount} element${progressCount !== 1 ? 's' : ''} so far`
                 : 'Thinking…'}
             </p>
           ) : (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               {status === 'error' ? (
                 <p className="text-red-600 dark:text-red-400">
                   {statusMsg || 'Something went wrong.'}
@@ -214,14 +214,14 @@ export function AiPanelContent({
       {/* History indicator */}
       {history.length > 0 && (
         <div className="flex items-center justify-between gap-2 px-2 pb-1 pt-0.5">
-          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
             {Math.floor(history.length / 2)} prior exchange{history.length > 2 ? 's' : ''} in
             context
           </span>
           <button
             type="button"
             onClick={() => setHistory([])}
-            className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+            className="inline-flex min-h-row shrink-0 items-center rounded-control border border-slate-200 bg-slate-50 px-2 text-body text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
           >
             Clear context
           </button>
@@ -229,12 +229,12 @@ export function AiPanelContent({
       )}
 
       {/* Context hint */}
-      <p className="px-3 pb-0.5 pt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+      <p className="px-3 pb-0.5 pt-0.5 text-supporting text-slate-500 dark:text-slate-400">
         Context: {contextLabel}
       </p>
 
       {/* Prompt + send */}
-      <div className="flex flex-col gap-1.5 px-2 pb-2 pt-1">
+      <div className="flex flex-col gap-2 px-2 pb-2 pt-1">
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
@@ -244,14 +244,14 @@ export function AiPanelContent({
           maxLength={AI_MAX_PROMPT_CHARS}
           rows={3}
           disabled={isLoading}
-          className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none transition focus:border-brand-400 focus:ring-1 focus:ring-brand-400 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500"
+          className="w-full resize-none rounded-control border border-slate-200 bg-slate-50 px-2 py-1.5 text-body text-slate-800 placeholder-slate-400 outline-none transition focus:border-brand-400 focus:ring-1 focus:ring-brand-400 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500"
         />
         <button
           type="button"
           onClick={() => void handleSend()}
           disabled={isLoading || ownerId === 'self'}
           aria-label="Send"
-          className={`flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-700 py-1.5 text-[12px] font-medium text-white transition hover:bg-brand-800 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`}
+          className={`flex min-h-field w-full items-center justify-center gap-2 rounded-control bg-brand-700 text-body font-medium text-white transition hover:bg-brand-800 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`}
         >
           {isLoading ? <Spinner small /> : <SendIcon />}
           {isLoading ? 'Thinking…' : 'Send'}
@@ -325,7 +325,7 @@ function MarkdownText({ text }: { text: string }) {
       if (h1Match || h2Match || h3Match) {
         const content = (h1Match ?? h2Match ?? h3Match)![1]!;
         nodes.push(
-          <p key={key++} className="font-semibold mt-1">
+          <p key={key++} className="mt-1 text-slate-900 dark:text-slate-100">
             {inlineFormat(content)}
           </p>,
         );

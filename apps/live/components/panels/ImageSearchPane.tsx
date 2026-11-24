@@ -34,7 +34,7 @@ const SEARCH_ERROR_COPY = {
 } as const;
 
 const ERROR_BOX =
-  'rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-500/15 dark:text-rose-300';
+  'rounded-control bg-rose-50 px-3 py-2 text-body text-rose-700 dark:bg-rose-500/15 dark:text-rose-300';
 
 // The grid's columns: four in the picker, three in a page's narrower Background.
 const GRID_COLUMNS = { 3: 'grid-cols-3', 4: 'grid-cols-4' } as const;
@@ -93,7 +93,7 @@ export function ImageSearchPane({
         </Button>
       </form>
 
-      <div aria-live="polite" className="text-xs text-slate-500 dark:text-slate-400">
+      <div aria-live="polite" className="text-body text-slate-500 dark:text-slate-400">
         {search.status === 'idle' ? (
           <p>Find openly licensed photos and illustrations from Openverse.</p>
         ) : searching ? (
@@ -156,7 +156,7 @@ export function ImageSearchPane({
         </Button>
       ) : null}
 
-      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">
         Images from{' '}
         <a
           href="https://openverse.org"
@@ -203,7 +203,7 @@ function SearchTile({
         disabled={disabled}
         aria-label={tileLabelFor(result)}
         aria-busy={picking || undefined}
-        className={`group relative block aspect-square w-full overflow-hidden rounded-md border transition ${
+        className={`group relative block aspect-square w-full overflow-hidden rounded-control border transition ${
           loaded ? 'bg-slate-100 dark:bg-slate-800' : skeletonClass(index)
         } hover:border-brand-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:hover:border-brand-500/60 ${
           picking
@@ -231,7 +231,7 @@ function SearchTile({
         {(result.creator || licence) && !picking ? (
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 hidden bg-slate-900/75 px-1.5 py-1 text-left text-[10px] leading-tight text-white group-hover:block group-focus-visible:block"
+            className="pointer-events-none absolute inset-x-0 bottom-0 hidden bg-slate-900/75 px-2 py-1 text-left text-supporting text-white group-hover:block group-focus-visible:block"
           >
             {result.creator ? <span className="block truncate">{result.creator}</span> : null}
             {licence ? <span className="block truncate opacity-80">{licence}</span> : null}
