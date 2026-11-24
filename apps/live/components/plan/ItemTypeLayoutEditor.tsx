@@ -52,7 +52,7 @@ import {
 // The Add Field popover: wide enough for a name and a kind side by side, whatever column it opens from.
 const ADD_FIELD_POPOVER_PX = 384;
 const NAME_INPUT =
-  'min-w-0 flex-1 rounded-md border bg-transparent px-1.5 py-0.5 text-[13px] font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-500 focus:bg-white focus:outline-none dark:text-slate-50 dark:hover:border-slate-600 dark:focus:bg-slate-900';
+  'min-w-0 flex-1 rounded-control border bg-transparent px-2 py-0.5 text-body text-slate-900 placeholder:font-normal placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-500 focus:bg-white focus:outline-none dark:text-slate-50 dark:hover:border-slate-600 dark:focus:bg-slate-900';
 const isRequired = (f: string) => (REQUIRED_TYPE_FIELDS as readonly string[]).includes(f);
 
 export function ItemTypeLayoutEditor({
@@ -197,9 +197,9 @@ export function ItemTypeLayoutEditor({
     // Laid out as the card's panel: the main column (On the Card, then the tabs and Add Tab) with Details beside it
     // on desktop, spanning both rows; one column on a phone. The DOM order (On the Card, Details, the tabs) is the
     // phone's order, so focus and reading order follow what is shown.
-    <div className="flex flex-col gap-2.5 md:grid md:grid-cols-[minmax(0,1fr)_18rem] md:grid-rows-[auto_1fr] md:items-start md:gap-x-3">
+    <div className="flex flex-col gap-3 md:grid md:grid-cols-[minmax(0,1fr)_18rem] md:grid-rows-[auto_1fr] md:items-start md:gap-x-3">
       <div className="md:col-start-1 md:row-start-1">
-        <LayoutGroup title={<span className="px-1.5">On the Card</span>} tag="Always shown">
+        <LayoutGroup title={<span className="px-2">On the Card</span>} tag="Always shown">
           {rowsOf('card', cardFields(draft))}
         </LayoutGroup>
       </div>
@@ -223,7 +223,7 @@ export function ItemTypeLayoutEditor({
           {rowsOf({ group: null }, groupFields(draft, null))}
         </LayoutGroup>
       </div>
-      <div className="flex flex-col gap-2.5 md:col-start-1 md:row-start-2">
+      <div className="flex flex-col gap-3 md:col-start-1 md:row-start-2">
         {draft.tabs.map((t, i) => (
           <LayoutGroup
             key={t.id}
@@ -272,7 +272,7 @@ export function ItemTypeLayoutEditor({
                 </button>
                 {isKeptTab(t) ? (
                   // Overview stays: the slot keeps the headers' controls lined up.
-                  <span aria-hidden className="h-7 w-7 shrink-0" />
+                  <span aria-hidden className="size-row shrink-0" />
                 ) : (
                   <button
                     type="button"
@@ -297,7 +297,7 @@ export function ItemTypeLayoutEditor({
             {rowsOf({ group: t.id }, t.fields)}
           </LayoutGroup>
         ))}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <button
             type="button"
             disabled={draft.tabs.length >= ITEM_TYPE_TABS_MAX}
@@ -308,7 +308,7 @@ export function ItemTypeLayoutEditor({
             Add Tab
           </button>
           {removedSome ? (
-            <p className="text-center text-[12px] text-slate-500 dark:text-slate-400">
+            <p className="text-center text-supporting text-slate-500 dark:text-slate-400">
               Items keep what they hold in a removed field.
             </p>
           ) : null}
@@ -336,10 +336,10 @@ function LayoutGroup({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40">
-      <header className="flex min-h-10 items-center gap-2 px-2 py-1.5 text-[13px] font-semibold text-slate-900 dark:text-slate-50">
+    <section className="rounded-surface border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40">
+      <header className="flex min-h-10 items-center gap-2 px-2 py-1.5 text-body text-slate-900 dark:text-slate-50">
         {title}
-        <span className="shrink-0 rounded-full bg-slate-200/70 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+        <span className="shrink-0 rounded-full bg-slate-200/70 px-2 py-0.5 text-supporting text-slate-600 dark:bg-slate-700 dark:text-slate-300">
           {tag}
         </span>
         {actions ? <div className="ml-auto flex shrink-0 items-center">{actions}</div> : null}
@@ -348,7 +348,7 @@ function LayoutGroup({
         {children != null ? (
           <ul className="flex flex-col gap-1">{children}</ul>
         ) : empty ? (
-          <p className="rounded-lg border border-dashed border-slate-300 px-3 py-2.5 text-center text-[12px] text-slate-500 dark:border-slate-600 dark:text-slate-400">
+          <p className="rounded-menu border border-dashed border-slate-300 px-3 py-2.5 text-center text-supporting text-slate-500 dark:border-slate-600 dark:text-slate-400">
             {empty}
           </p>
         ) : null}

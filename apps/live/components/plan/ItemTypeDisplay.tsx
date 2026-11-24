@@ -152,7 +152,7 @@ const fieldIcon = (type: ItemTypeDef, f: CardField, size = 14) => {
       </span>
     );
   return f === 'key' ? (
-    <span className="text-[12px] font-semibold leading-none">#</span>
+    <span className="text-supporting leading-none">#</span>
   ) : (
     <PlanTypeGlyph glyph={FIELD_GLYPHS[f as keyof typeof FIELD_GLYPHS] ?? 'note'} size={size} />
   );
@@ -164,7 +164,7 @@ const DROP_MARKER = (
     key="drop-marker"
     data-drop-marker=""
     aria-hidden
-    className="h-5 w-[3px] shrink-0 self-center rounded-full bg-brand-500 shadow-[0_0_0_2px_rgba(14,165,233,0.2)] dark:bg-brand-400"
+    className="h-icon-title w-[3px] shrink-0 self-center rounded-full bg-brand-500 shadow-[0_0_0_2px_rgba(14,165,233,0.2)] dark:bg-brand-400"
   />
 );
 
@@ -256,8 +256,8 @@ export function ItemTypeDisplay({
           data-slot={slot}
           role="group"
           aria-label={label}
-          className={`flex flex-wrap items-center gap-1 rounded-md border border-dashed px-1 py-0.5 transition ${
-            bits.length === 0 ? 'min-h-6 min-w-10' : 'min-h-7'
+          className={`flex flex-wrap items-center gap-1 rounded-control border border-dashed px-1 py-0.5 transition ${
+            bits.length === 0 ? 'min-h-chip min-w-10' : 'min-h-row'
           } ${
             slot === 'head' || slot === 'body' || slot === 'foot' || slot === 'row' ? 'flex-1' : ''
           } ${
@@ -285,17 +285,17 @@ export function ItemTypeDisplay({
           aria-label={`${label}, in ${CARD_SLOT_LABELS[size][slot]}. Drag or use the arrow keys to move it; Delete takes it off.`}
           {...dragProps(field)}
           onKeyDown={chipKeys(field, slot)}
-          className={`group/chip relative inline-flex cursor-grab touch-none select-none items-center rounded-md p-0.5 outline-none ring-1 ring-transparent transition hover:ring-brand-300 pointer-coarse:ring-brand-300 dark:pointer-coarse:ring-brand-500/60 focus-visible:ring-2 focus-visible:ring-brand-400 active:cursor-grabbing dark:hover:ring-brand-500/60 ${
+          className={`group/chip relative inline-flex cursor-grab touch-none select-none items-center rounded-control p-0.5 outline-none ring-1 ring-transparent transition hover:ring-brand-300 pointer-coarse:ring-brand-300 dark:pointer-coarse:ring-brand-500/60 focus-visible:ring-2 focus-visible:ring-brand-400 active:cursor-grabbing dark:hover:ring-brand-500/60 ${
             drag?.moving && drag.field === field ? 'opacity-40' : ''
           }`}
         >
-          {node ?? <span className="text-[11px]">{label}</span>}
+          {node ?? <span className="text-supporting">{label}</span>}
           <button
             type="button"
             aria-label={`Take ${label} off the card`}
             tabIndex={-1}
             // A touch screen has no hover: there the cross always shows.
-            className={`absolute -right-1 -top-1 z-10 hidden h-3 w-3 cursor-pointer items-center justify-center rounded-full bg-slate-700 text-white shadow ring-1 ring-white hover:bg-slate-900 dark:bg-slate-200 dark:text-slate-900 dark:ring-slate-900 dark:hover:bg-white ${
+            className={`absolute -right-1 -top-1 z-10 hidden size-icon-chevron cursor-pointer items-center justify-center rounded-full bg-slate-700 text-white shadow ring-1 ring-white hover:bg-slate-900 dark:bg-slate-200 dark:text-slate-900 dark:ring-slate-900 dark:hover:bg-white ${
               drag?.moving
                 ? ''
                 : 'group-hover/chip:flex group-focus-visible/chip:flex pointer-coarse:flex'
@@ -312,14 +312,14 @@ export function ItemTypeDisplay({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[12px] text-slate-500 dark:text-slate-400">
+      <p className="text-supporting text-slate-500 dark:text-slate-400">
         Arrange this type&apos;s cards at each size, right on the card: drag a field to any part of
         it, or off it (onto Available Fields, or with its cross).
       </p>
       <div
         role="radiogroup"
         aria-label="Card size"
-        className="relative grid grid-cols-3 self-start rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800"
+        className="relative grid grid-cols-3 self-start rounded-menu bg-slate-100 p-0.5 dark:bg-slate-800"
       >
         {/* The selection slides to the picked size, as the Share dialog's Valid does. */}
         <SegmentSlider
@@ -333,9 +333,9 @@ export function ItemTypeDisplay({
             type="button"
             role="radio"
             aria-checked={size === z}
-            className={`relative z-10 cursor-pointer rounded-md px-3 py-1 text-[13px] font-medium transition ${
+            className={`relative z-10 cursor-pointer rounded-control h-row px-3 text-body transition ${
               size === z
-                ? 'text-slate-900 dark:text-slate-50'
+                ? 'font-medium text-slate-900 dark:text-slate-50'
                 : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
             }`}
             onClick={() => setSize(z)}
@@ -348,7 +348,7 @@ export function ItemTypeDisplay({
         {/* The card, editable in place, on a board column's colour; scrolls sideways on a narrow screen. */}
         <div
           ref={backdrop}
-          className="flex justify-center overflow-x-auto rounded-xl px-4 py-6"
+          className="flex justify-center overflow-x-auto rounded-surface px-4 py-6"
           style={{ backgroundColor: palette.column }}
         >
           <div
@@ -372,7 +372,7 @@ export function ItemTypeDisplay({
           <section
             ref={tray}
             aria-label="Available Fields"
-            className={`flex flex-col gap-1.5 rounded-xl border border-dashed p-3 transition-colors ${
+            className={`flex flex-col gap-2 rounded-surface border border-dashed p-3 transition-colors ${
               overTray && draggingPlaced
                 ? 'border-solid border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/15'
                 : draggingPlaced
@@ -380,23 +380,21 @@ export function ItemTypeDisplay({
                   : 'border-transparent'
             }`}
           >
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Available Fields
-            </h4>
+            <h4 className="text-supporting text-slate-500 dark:text-slate-400">Available Fields</h4>
             {draggingPlaced ? (
-              <p className="py-1 text-[12px] font-medium text-brand-700 dark:text-brand-300">
+              <p className="py-1 text-supporting text-brand-700 dark:text-brand-300">
                 Drop to take it off the card
               </p>
             ) : available.length === 0 ? (
-              <p className="text-[12px] text-slate-500 dark:text-slate-400">
+              <p className="text-supporting text-slate-500 dark:text-slate-400">
                 Every field this type has is on the card.
               </p>
             ) : (
               <>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-supporting text-slate-500 dark:text-slate-400">
                   Drag one onto the card, or press it to choose where it goes.
                 </p>
-                <ul className="flex flex-wrap gap-1.5">
+                <ul className="flex flex-wrap gap-2">
                   {available.map((f) => (
                     <li key={f}>
                       <button
@@ -409,11 +407,11 @@ export function ItemTypeDisplay({
                           e.preventDefault();
                           setPlacing({ field: f, anchor: e.currentTarget });
                         }}
-                        className={`inline-flex cursor-grab touch-none select-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1 pl-1.5 pr-2.5 text-[12px] font-medium text-slate-700 shadow-sm transition hover:border-brand-300 hover:bg-brand-50/60 active:cursor-grabbing dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-500/50 dark:hover:bg-brand-500/10 ${
+                        className={`inline-flex cursor-grab touch-none select-none items-center gap-2 rounded-menu border border-slate-200 bg-white py-1 pl-2 pr-3 text-supporting text-slate-700 shadow-sm transition hover:border-brand-300 hover:bg-brand-50/60 active:cursor-grabbing dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-500/50 dark:hover:bg-brand-500/10 ${
                           drag?.moving && drag.field === f ? 'opacity-40' : ''
                         }`}
                       >
-                        <span className="flex h-5 w-5 items-center justify-center rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <span className="flex size-icon-title items-center justify-center rounded-control bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                           {fieldIcon(type, f, 12)}
                         </span>
                         {fieldLabel(type, f)}
@@ -450,8 +448,8 @@ export function ItemTypeDisplay({
               className="pointer-events-none fixed left-0 top-0 z-[var(--z-toast)]"
               style={{ transform: `translate(${pointer.current.x}px, ${pointer.current.y}px)` }}
             >
-              <span className="ml-4 mt-4 inline-flex -rotate-2 items-center gap-1.5 rounded-lg border border-brand-300 bg-white py-1 pl-1.5 pr-2.5 text-[12px] font-medium text-slate-800 shadow-lg dark:border-brand-500/60 dark:bg-slate-900 dark:text-slate-100">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+              <span className="ml-4 mt-4 inline-flex -rotate-2 items-center gap-2 rounded-menu border border-brand-300 bg-white py-1 pl-2 pr-3 text-supporting text-slate-800 shadow-lg dark:border-brand-500/60 dark:bg-slate-900 dark:text-slate-100">
+                <span className="flex size-icon-title items-center justify-center rounded-control bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
                   {fieldIcon(type, drag.field, 12)}
                 </span>
                 {fieldLabel(type, drag.field)}
@@ -497,15 +495,15 @@ function PlaceMenu({
   onPick: (slot: CardSlot) => void;
 }): ReactNode {
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900">
-      <span className="px-2 pb-1 pt-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+    <div className="flex flex-col gap-0.5 rounded-menu border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
+      <span className="px-2 pb-1 pt-0.5 text-supporting text-slate-500 dark:text-slate-400">
         {title}
       </span>
       {slots.map((s) => (
         <button
           key={s}
           type="button"
-          className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="flex w-full cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-left text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
           onClick={() => onPick(s)}
         >
           <PlusIcon size={12} />

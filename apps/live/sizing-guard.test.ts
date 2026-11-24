@@ -83,6 +83,21 @@ const SIZED_PATHS = [
   'components/plan/LinkedActionBanner.tsx',
   'components/plan/LinkedCardField.tsx',
   'components/plan/LinkedCards.tsx',
+  'components/plan/PlanModal.tsx',
+  // Card types: their fields, states, layout and glyphs.
+  'components/plan/CardTypesPanel.tsx',
+  'components/plan/CustomFieldEditor.tsx',
+  'components/plan/CustomFieldKindParts.tsx',
+  'components/plan/ExistingStatusList.tsx',
+  'components/plan/GlyphPicker.tsx',
+  'components/plan/ItemTypeConfiguration.tsx',
+  'components/plan/ItemTypeDisplay.tsx',
+  'components/plan/ItemTypeEditor.tsx',
+  'components/plan/ItemTypeEditorTabs.tsx',
+  'components/plan/ItemTypeFieldForms.tsx',
+  'components/plan/ItemTypeFieldRow.tsx',
+  'components/plan/ItemTypeLayoutEditor.tsx',
+  'components/plan/ItemTypeStatuses.tsx',
 ];
 
 // Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.

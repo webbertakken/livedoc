@@ -236,3 +236,18 @@ describe('the Display tab', () => {
     expect(onSave.mock.lastCall![0]).toHaveProperty('display', { minimal: { lead: ['due'] } });
   });
 });
+
+// docs/specs/004-interface-design/sizing.md "Type": medium marks the chosen tab and nothing else.
+describe('the type editor on the sizing scale', () => {
+  it('sets only the chosen tab in medium, and nothing heavy or in tracked capitals', () => {
+    editor();
+    const weight = (name: string) =>
+      screen.getByRole('tab', { name }).className.split(/\s+/).includes('font-medium');
+    expect([weight('Configuration'), weight('States'), weight('Display')]).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    expect(document.body.innerHTML).not.toMatch(/\buppercase\b|tracking-|font-semibold|font-bold/);
+  });
+});

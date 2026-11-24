@@ -91,8 +91,8 @@ export function CustomFieldEditor({
       // The amount, its currency's code beside it; kept to the penny.
       const code = field.currency ?? CURRENCY_DEFAULT;
       return (
-        <div className="flex items-center gap-1.5">
-          <span className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{code}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">{code}</span>
           <TextInput
             id={id}
             type="number"
@@ -113,7 +113,7 @@ export function CustomFieldEditor({
     }
     case 'email':
       return (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <TextInput
             id={id}
             type="email"
@@ -136,7 +136,7 @@ export function CustomFieldEditor({
             <a
               href={`mailto:${text}`}
               aria-label={`Email ${text}`}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-brand-700 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
+              className="flex size-row shrink-0 items-center justify-center rounded-control text-brand-700 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
             >
               <PlanTypeGlyph glyph="mail" size={14} />
             </a>
@@ -151,7 +151,7 @@ export function CustomFieldEditor({
           id={id}
           type="checkbox"
           disabled={disabled}
-          className="h-4 w-4 accent-brand-600 enabled:cursor-pointer"
+          className="size-icon-row accent-brand-600 enabled:cursor-pointer"
           checked={value === true}
           onChange={(e) => void onSave(e.target.checked ? true : undefined)}
         />
@@ -162,7 +162,7 @@ export function CustomFieldEditor({
         <Select
           id={id}
           className="w-full"
-          selectClassName="text-[13px]"
+          selectClassName="text-body"
           disabled={disabled}
           value={options.includes(text) ? text : ''}
           onChange={(e) => void onSave(e.target.value || undefined)}
@@ -187,12 +187,12 @@ export function CustomFieldEditor({
           {options.map((o) => (
             <label
               key={o}
-              className="flex items-center gap-2 text-[13px] text-slate-700 dark:text-slate-200"
+              className="flex items-center gap-2 text-body text-slate-700 dark:text-slate-200"
             >
               <input
                 type="checkbox"
                 disabled={disabled}
-                className="h-4 w-4 accent-brand-600 enabled:cursor-pointer"
+                className="size-icon-row accent-brand-600 enabled:cursor-pointer"
                 checked={picks.includes(o)}
                 onChange={(e) => {
                   const next = options.filter((x) =>
@@ -225,7 +225,7 @@ export function CustomFieldEditor({
             <button
               type="button"
               aria-label={`Clear ${field.label}`}
-              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              className="flex size-chip cursor-pointer items-center justify-center rounded-control text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               onClick={() => void onSave(undefined)}
             >
               <CloseIcon size={12} />

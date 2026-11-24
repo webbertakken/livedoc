@@ -62,10 +62,10 @@ const hasOptions = (kind: CustomFieldKind) => kind === 'choice' || kind === 'mul
 
 // A full-width dashed "add" row (Add Type, Add Field, Add Tab): plain to spot, quiet until hovered.
 export const DASHED_ADD_BUTTON =
-  'flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 py-2 text-[13px] font-medium text-slate-600 transition enabled:hover:border-brand-400 enabled:hover:bg-brand-50 enabled:hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:enabled:hover:border-brand-500/60 dark:enabled:hover:bg-brand-500/10 dark:enabled:hover:text-brand-200';
+  'flex w-full cursor-pointer items-center justify-center gap-2 rounded-menu border border-dashed border-slate-300 py-2 text-body text-slate-600 transition enabled:hover:border-brand-400 enabled:hover:bg-brand-50 enabled:hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:enabled:hover:border-brand-500/60 dark:enabled:hover:bg-brand-500/10 dark:enabled:hover:text-brand-200';
 
 export const ICON_BUTTON =
-  'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-800 disabled:opacity-30 dark:text-slate-400 dark:enabled:hover:bg-slate-800 dark:enabled:hover:text-slate-100';
+  'flex size-row shrink-0 items-center justify-center rounded-control text-slate-500 transition enabled:hover:bg-slate-100 enabled:hover:text-slate-800 disabled:opacity-30 dark:text-slate-400 dark:enabled:hover:bg-slate-800 dark:enabled:hover:text-slate-100';
 
 // Choice's options as typed, one a line, read back trimmed and without blanks or repeats.
 function optionsFrom(text: string): string[] {
@@ -98,7 +98,7 @@ function CurrencySelect({
     <Select
       aria-label="Currency"
       className="w-full"
-      selectClassName="text-[13px]"
+      selectClassName="text-body"
       value={code}
       // GBP is the default, so it stores no code.
       onChange={(e) => onChange(e.target.value === CURRENCY_DEFAULT ? undefined : e.target.value)}
@@ -127,7 +127,7 @@ function RatingScaleSelect({
     <Select
       aria-label="Scale"
       className="w-full"
-      selectClassName="text-[13px]"
+      selectClassName="text-body"
       value={scale}
       onChange={(e) => {
         const n = Number(e.target.value);
@@ -155,7 +155,7 @@ function LinksToSelect({
     <Select
       aria-label="Links To"
       className="w-full"
-      selectClassName="text-[13px]"
+      selectClassName="text-body"
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -238,18 +238,18 @@ export function NewFieldForm({
     (!hasOptions(custom.kind) || (custom.options?.length ?? 0) > 0) &&
     (custom.kind !== 'card' || !!custom.linkType);
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
+    <div className="flex flex-col gap-3 rounded-menu border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
       {missing.length > 0 ? (
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <p className="mb-1.5 text-supporting text-slate-500 dark:text-slate-400">
             Built-In Fields
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {missing.map((id) => (
               <button
                 key={id}
                 type="button"
-                className="rounded-full border border-slate-200 px-2.5 py-0.5 text-[12px] hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10"
+                className="rounded-full border border-slate-200 px-3 py-0.5 text-supporting hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10"
                 onClick={() => onAddBuiltIn(id)}
               >
                 {BUILT_IN_FIELD_LABELS[id]}
@@ -260,9 +260,7 @@ export function NewFieldForm({
       ) : null}
       {canAddCustom ? (
         <div className="flex flex-col gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            New Custom Field
-          </p>
+          <p className="text-supporting text-slate-500 dark:text-slate-400">New Custom Field</p>
           <TextInput
             aria-label="New field's name"
             placeholder="Name"
