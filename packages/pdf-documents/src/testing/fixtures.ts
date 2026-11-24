@@ -27,6 +27,33 @@ export async function textPdf(pages = 2): Promise<Uint8Array<ArrayBuffer>> {
   return (await pdf.save()) as Uint8Array<ArrayBuffer>;
 }
 
+/** The left of the right column of `columnsPdf`, in points. */
+export const COLUMNS_RIGHT_LEFT = 330;
+
+/**
+ * One US Letter page set in two columns under a heading across both, twelve lines a column 14 points apart, the left
+ * column 72 points in and the right `COLUMNS_RIGHT_LEFT` (reading-surface.md "Phone and tablet": a double tap).
+ */
+export async function columnsPdf(): Promise<Uint8Array<ArrayBuffer>> {
+  const pdf = PDF.create();
+  const page = pdf.addPage({ width: 612, height: 792 });
+  page.drawText('Two columns under one heading across them both', {
+    x: 72,
+    y: 730,
+    size: 14,
+  });
+  for (let row = 0; row < 12; row += 1) {
+    const y = 690 - row * 14;
+    page.drawText(`Left column line ${row + 1} reads on and on`, { x: 72, y, size: 11 });
+    page.drawText(`Right column line ${row + 1} reads on too`, {
+      x: COLUMNS_RIGHT_LEFT,
+      y,
+      size: 11,
+    });
+  }
+  return (await pdf.save()) as Uint8Array<ArrayBuffer>;
+}
+
 /**
  * A PDF written by hand from its objects (object 1 is the catalogue), for the files no writer makes: one with no
  * pages, one locked by a handler the reader does not know.

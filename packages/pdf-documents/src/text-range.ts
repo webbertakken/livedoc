@@ -23,6 +23,8 @@ const inWord = (unit: string): boolean => unit === BROKEN_WORD || LETTER_OR_DIGI
 const ACROSS_WEIGHT = 1_000;
 // A break to the next line is a space when that line starts within this many line heights below (reading-surface.md).
 const PARAGRAPH_LINE_HEIGHTS = 2;
+// A line runs on in a column within this many line heights of its left and of a line of it.
+const COLUMN_LINE_HEIGHTS = 2;
 // A full line ends within this many line heights of the furthest right of it and the lines either side of it.
 const FULL_LINE_HEIGHTS = 2;
 
@@ -92,6 +94,61 @@ function joint(before: SpanLine, after: SpanLine, rightEnd: number): string {
   const near = drop > 0 && drop <= PARAGRAPH_LINE_HEIGHTS * height;
   const full = a.right >= rightEnd - FULL_LINE_HEIGHTS * height;
   return near && full ? ' ' : '\n';
+}
+
+const heightOf = (box: TextBox): number => box.top - box.bottom;
+
+/** A run of drawn characters on one line, none further from the one before than a line height. */
+type LinePiece = { start: number; box: TextBox };
+
+// The page's lines in pieces: a reader often writes a row of two columns as one line, a gutter wide apart in it.
+function piecesOf(page: PageText): LinePiece[] {
+  const pieces: LinePiece[] = [];
+  let piece: LinePiece | null = null;
+  for (let at = 0; at < page.text.length; at += 1) {
+    if (isBreak(page.text[at])) piece = null;
+    const box = boxOf(page, at);
+    if (!box) continue;
+    const apart =
+      piece !== null &&
+      (box.left - piece.box.right > heightOf(piece.box) || !overlapsVertically(piece.box, box));
+    if (piece === null || apart) {
+      piece = { start: at, box };
+      pieces.push(piece);
+    } else piece.box = union(piece.box, box);
+  }
+  return pieces;
+}
+
+// How far apart two lines are down the page: nothing where they overlap.
+const gapBetween = (a: TextBox, b: TextBox): number =>
+  Math.max(0, a.bottom - b.top, b.bottom - a.top);
+
+// The column around a line (reading-surface.md "Phone and tablet"): the lines that start within two line heights of
+// its left and lie within two line heights of a line of it; its left the least, its right the larger middle right.
+function columnFrom(seed: TextBox, lines: readonly TextBox[]): TextBox {
+  const joined = [seed];
+  let edge = seed.left;
+  let waiting = lines.filter((line) => line !== seed);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const line of waiting) {
+      const reach = COLUMN_LINE_HEIGHTS * Math.max(heightOf(line), heightOf(seed));
+      const starts = Math.abs(line.left - edge) <= reach;
+      if (!starts || !joined.some((near) => gapBetween(near, line) <= reach)) continue;
+      joined.push(line);
+      edge = Math.min(edge, line.left);
+      grew = true;
+    }
+    waiting = waiting.filter((line) => !joined.includes(line));
+  }
+  const rights = joined.map((line) => line.right).sort((a, b) => a - b);
+  return {
+    left: edge,
+    right: rights[Math.floor(rights.length / 2)]!,
+    bottom: Math.min(...joined.map((line) => line.bottom)),
+    top: Math.max(...joined.map((line) => line.top)),
+  };
 }
 
 function copiedSpan(page: PageText, span: TextSpan): string {
@@ -170,6 +227,27 @@ export const TextRange = {
       else spans.push([at, at + 1]);
     }
     return spans;
+  },
+  /**
+   * The box of the column under a point (reading-surface.md "Phone and tablet"): the line holding the drawn character
+   * nearest it, the point within a line height of that line, and the lines that run on from it. A line is split where
+   * its characters lie more than a line height apart. Null where none is.
+   */
+  columnAt: (page: PageText, point: PagePoint): TextBox | null => {
+    const nearest = TextRange.nearest(page, point);
+    if (nearest === null) return null;
+    const pieces = piecesOf(page);
+    const seed = pieces.findLast((piece) => piece.start <= nearest)!.box;
+    const height = heightOf(seed);
+    const off = Math.max(
+      outside(point.x, seed.left, seed.right),
+      outside(point.y, seed.bottom, seed.top),
+    );
+    if (off > height) return null;
+    return columnFrom(
+      seed,
+      pieces.map((piece) => piece.box),
+    );
   },
   /** The rectangles the spans are drawn with: one a line, a new one where a character leaves the line's height. */
   quads: (page: PageText, spans: readonly TextSpan[]): Quad[] => {

@@ -1,4 +1,5 @@
-import { taggedPdf } from '@livedoc/pdf-documents/testing';
+import { COLUMNS_RIGHT_LEFT, columnsPdf, taggedPdf } from '@livedoc/pdf-documents/testing';
+import { PDF_PAGES_PAD_PX as PAD } from '../../lib/pdf-document/pdf-page-layout';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { dropPdf, pageOneDrawn, pageScale, pinch } from './pdf-document-pages';
 
@@ -74,4 +75,50 @@ test.describe('with reduced motion', () => {
 
     expectNoPageErrors(pageErrors);
   });
+});
+
+// "A double tap zooms to the column under the finger and back": the column fills the view's width less the pages'
+// pad either side, its left at the view's left; a second double tap goes back to the zoom before.
+test('a double tap zooms to the column under the finger, and another goes back', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Two columns.pdf', await columnsPdf());
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  await pageOneDrawn(page);
+
+  const pages = page.locator('[data-pdf-pages]');
+  const sheet = page.locator('[data-pdf-page="1"]');
+  const before = await zoomShown(page);
+  const doubleTap = async (across: number, down: number) => {
+    const box = (await sheet.boundingBox())!;
+    const x = box.x + (across / 612) * box.width;
+    const y = box.y + (down / 792) * box.height;
+    await page.touchscreen.tap(x, y);
+    await page.touchscreen.tap(x, y);
+  };
+  // The right column's third line, 690 - 28 up from the page's foot.
+  await doubleTap(COLUMNS_RIGHT_LEFT + 20, 792 - 662 - 4);
+
+  await expect.poll(() => zoomShown(page)).toBeGreaterThan(before * 2);
+  const view = (await pages.boundingBox())!;
+  await expect
+    .poll(async () => {
+      const box = (await sheet.boundingBox())!;
+      return Math.round(box.x + (COLUMNS_RIGHT_LEFT / 612) * box.width - view.x);
+    })
+    .toBeGreaterThanOrEqual(PAD - 2);
+  const box = (await sheet.boundingBox())!;
+  expect(box.x + (COLUMNS_RIGHT_LEFT / 612) * box.width - view.x).toBeLessThanOrEqual(PAD + 2);
+  await page.screenshot({ path: test.info().outputPath('pdf-column-zoomed.png') });
+
+  await doubleTap(COLUMNS_RIGHT_LEFT + 20, 792 - 662 - 4);
+  await expect.poll(() => zoomShown(page)).toBe(before);
+  // A finger's presses in a row zoom, never select.
+  await expect(page.locator('[data-pdf-text-selection]')).toHaveCount(0);
+
+  expectNoPageErrors(pageErrors);
 });

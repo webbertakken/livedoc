@@ -252,3 +252,84 @@ describe('a page’s paragraphs', () => {
     expect(TextRange.paragraphs(PageText.of([], []))).toEqual([]);
   });
 });
+
+// "Phone and tablet": a double tap zooms to the column under the finger, read by geometry.
+describe('the column under a point', () => {
+  // A heading across two columns, then the columns row by row as many files write them: 8 tall, 11 apart.
+  const left = (row: number, text = 'l'.repeat(30)) => ({ text, x: 100, y: 700 - row * 11 });
+  const right = (row: number, text = 'r'.repeat(30)) => ({ text, x: 320, y: 700 - row * 11 });
+  const page = pageOf([
+    { text: 'H'.repeat(66), x: 100, y: 716 },
+    left(0),
+    right(0),
+    left(1),
+    right(1),
+    left(2, 'l'.repeat(25)),
+    right(2, 'r'.repeat(10)),
+    // A paragraph far below: more than two line heights from the columns.
+    { text: 'Far below', x: 320, y: 600 },
+  ]);
+
+  it('is the lines that run on from the one under the point, never the column beside it', () => {
+    expect(TextRange.columnAt(page, { x: 400, y: 693 })).toEqual({
+      left: 320,
+      right: 500,
+      bottom: 678,
+      top: 708,
+    });
+  });
+
+  it('takes a heading above it into its height, never into its width', () => {
+    // Rights 496 (the heading), 280, 280 and 250: the larger middle is 280.
+    expect(TextRange.columnAt(page, { x: 150, y: 682 })).toEqual({
+      left: 100,
+      right: 280,
+      bottom: 678,
+      top: 724,
+    });
+  });
+
+  it('is as wide as its full lines from a short line', () => {
+    expect(TextRange.columnAt(page, { x: 330, y: 680 })?.right).toBe(500);
+  });
+
+  it('takes an indented first line and the lines after it', () => {
+    const indented = pageOf([
+      { text: 'Indented start', x: 112, y: 700 },
+      { text: 'a'.repeat(30), x: 100, y: 689 },
+    ]);
+    expect(TextRange.columnAt(indented, { x: 120, y: 703 })).toEqual({
+      left: 100,
+      right: 280,
+      bottom: 689,
+      top: 708,
+    });
+  });
+
+  it('splits a row the file wrote as one line across both columns at its gutter', () => {
+    const rows = pageOf(
+      [0, 1, 2].map((row) => ({
+        text: 'l'.repeat(30) + ' '.repeat(10) + 'r'.repeat(30),
+        x: 100,
+        y: 700 - row * 11,
+      })),
+    );
+    expect(TextRange.columnAt(rows, { x: 400, y: 693 })).toEqual({
+      left: 340,
+      right: 520,
+      bottom: 678,
+      top: 708,
+    });
+  });
+
+  it('is found from a point in the space between two lines', () => {
+    expect(TextRange.columnAt(page, { x: 400, y: 699 })?.left).toBe(320);
+  });
+
+  it('is none where no line lies within a line height of the point', () => {
+    expect(TextRange.columnAt(page, { x: 400, y: 640 })).toBeNull();
+    expect(TextRange.columnAt(page, { x: 700, y: 693 })).toBeNull();
+    expect(TextRange.columnAt(PageText.of([], []), { x: 1, y: 1 })).toBeNull();
+    expect(TextRange.columnAt(page, { x: Number.NaN, y: 1 })).toBeNull();
+  });
+});

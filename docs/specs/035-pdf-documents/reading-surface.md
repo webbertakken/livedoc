@@ -563,6 +563,22 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 pan-y`); **two fingers** pan, what was under their middle staying under it, at the zoom's limits too; a pinch on the
   chrome zooms the page, as the browser does ([Accessibility](accessibility.md#seeing)). A **double tap** zooms to the
   column under the finger and back. One finger scrolls in Viewing and with the Hand; with a mark tool in hand it draws.
+  - A double tap is two taps of one finger, each lifted within `PDF_DOUBLE_TAP_MS` of touching, the second touching
+    within `PDF_DOUBLE_TAP_MS` of the first lifting and `PDF_DOUBLE_TAP_PX` of it `(default)`.
+  - A tap moves less than `PDF_DOUBLE_TAP_PX` while down; a second finger, or a scroll the browser takes, ends it.
+  - It is heard with Select in hand alone; with a mark tool in hand a finger draws `(default)`.
+  - The column is the line under the finger and the lines that run on from it, read by geometry `(default)`:
+    - a line is split where its characters lie more than a line height apart, as a row across two columns often is;
+    - the line under the finger holds the character nearest it, the finger within a line height of the line's box;
+    - a line runs on from the column when it starts within two line heights of the column's left and lies within two
+      line heights above or below a line of it, so a column beside it, starting elsewhere, never joins;
+    - the column's left is the least left of its lines, its right the middle of their rights, the larger of two, so
+      a heading across two columns never widens it.
+  - The column fills the view's width less `PDF_PAGES_PAD_PX` either side, its left at the view's left, the point
+    under the finger staying at its height; within the zoom's limits, the place under the finger pans to suit.
+  - With no column under the finger the pages zoom one step in about it `(default)`.
+  - A double tap while the zoom is still the one a double tap made goes back to the zoom before it, about the finger.
+  - Logged `[pdf] view-double-tapped column=<yes|no> back=<yes|no>`; counted as `Pdf · Zoomed · Custom`.
 - The toolbar shows the mode's first tools and puts the rest in its overflow row; every target is at least 44 px.
 - A long press selects the word under the finger, with handles to extend and a small bar: Copy, Highlight, Comment.
 - Reduced motion: no animated scroll to a result or a page, no zoom easing; the page appears where asked. The surface
@@ -584,6 +600,8 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
 | `PDF_WHEEL_ZOOM_RATE`          | 0.002                                                                                                  | `(default)` ⌘ with the wheel multiplies the zoom by e to this times the pixels wheeled: a notch of 100 is 22%; safe range 0.001 to 0.005 |
 | `PDF_WHEEL_TURN_MS`            | 300                                                                                                    | `(default)` How long a wheel rests before it turns another row; safe range 150 to 600                                                    |
 | `PDF_ZOOM_SETTLE_MS`           | 400                                                                                                    | `(default)` How long a wheel's or a pinch's zoom rests before it is told to telemetry; safe range 200 to 1,000                           |
+| `PDF_DOUBLE_TAP_MS`            | 300                                                                                                    | `(default)` How long a tap is down, and the pause between a double tap's two; safe range 200 to 500                                      |
+| `PDF_DOUBLE_TAP_PX`            | 24                                                                                                     | `(default)` How far a tap moves while down, and how far apart a double tap's two are; safe range 10 to 40                                |
 | `PDF_EMBEDDED_FILE_MAX_BYTES`  | 100,000,000 (100 MB)                                                                                   | `(default)` The most of an embedded file read out to be saved or opened: a stored file's cap, `FILE_TAB_MAX_BYTES`                       |
 | `PDF_THUMBNAIL_BOX_PX`         | 160                                                                                                    | `(default)` CSS pixels a side of the square a thumbnail is fitted into; safe range 96 to 224                                             |
 | `PDF_VIEW_HISTORY_MAX`         | 100                                                                                                    | `(default)` Places Previous view keeps, the oldest let go first; safe range 20 to 1,000                                                  |
@@ -627,7 +645,8 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
 
 `Pdf · Changed · PageDisplay.<Single|Continuous|Two|TwoContinuous|CoverShown|CoverHidden>`,
 `Pdf · Changed · RotateView.<Clockwise|Counterclockwise>` `(default)`,
-`Pdf · Zoomed · <FitWidth|FitPage|Actual|In|Out|Custom>` (a wheel's or a pinch's zoom once, as `Custom`, when it settles),
+`Pdf · Zoomed · <FitWidth|FitPage|Actual|In|Out|Custom>` (a wheel's or a pinch's zoom once, as `Custom`, when it settles;
+a double tap's as `Custom`),
 `Pdf · Searched · Find`, `Pdf · Copied · Text`,
 `Pdf · Toggled · <MarksShown|MarksHidden|ReadMode|FullScreen|Layer.Shown|Layer.Hidden>`, `Pdf · Selected · Tool.<Name>`, and the shell's own
 menu, tool finder and panel events (`UI · Opened · PdfDocumentPanel<Thumbnails|Outline|EmbeddedFiles|Layers>`).
@@ -637,7 +656,8 @@ Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom
 `[pdf] view-went-to page=<n>`, `[pdf] view-turned turns=<0-3>`, `[pdf] tile-failed page=<n> again=<yes|no>`,
 `[pdf] thumbnail-failed page=<n>`, `[pdf] outline-failed`, `[pdf] link-opened scheme=<scheme>`,
 `[pdf] link-refused kind=<kind>`, `[pdf] text-copied chars=<n>`, `[pdf] text-copy-refused`, `[pdf] text-copy-failed`,
-`[pdf] page-text-failed page=<n>`, `[pdf] view-history way=<back|forward> page=<n>`, `[pdf] find-searched pages=<n> results=<n>`.
+`[pdf] page-text-failed page=<n>`, `[pdf] view-history way=<back|forward> page=<n>`, `[pdf] find-searched pages=<n> results=<n>`,
+`[pdf] view-double-tapped column=<yes|no> back=<yes|no>`.
 
 ## Errors
 

@@ -28,6 +28,8 @@ import { PdfView } from '@/lib/pdf-document/pdf-view';
 import type { PdfTextGesture } from '@/lib/pdf-document/usePdfTextSelection';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
+import { PdfDoubleTap } from '@/lib/pdf-document/pdf-double-tap';
+import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 
 export type PdfPageTool = 'select' | 'highlight';
 
@@ -63,6 +65,7 @@ export const PdfPage = memo(function PdfPage({
   linkName,
   onFollow,
   found,
+  onDoubleTap,
   register,
 }: {
   index: number;
@@ -95,6 +98,8 @@ export const PdfPage = memo(function PdfPage({
   onFollow: (target: LinkTarget) => void;
   // Find's results on this page, tinted.
   found: PdfFindTints | null;
+  // Where a finger's double tap goes while Select is in hand (reading-surface.md "Phone and tablet").
+  onDoubleTap: (index: number, tap: PdfPageTap) => void;
   // Hands the page's box to whoever watches which pages are near view.
   register: (index: number, element: HTMLElement | null) => void;
 }) {
@@ -120,6 +125,10 @@ export const PdfPage = memo(function PdfPage({
   }, [drawnBy, links, engine, index]);
   // A text selection being dragged with Select in hand.
   const selecting = useRef(false);
+  // A finger's taps, toward a double tap.
+  const taps = useRef(PdfDoubleTap.initial());
+  // What last pressed: a finger's presses in a row zoom, never select (reading-surface.md "Phone and tablet").
+  const pressedBy = useRef('');
 
   // Draw the page while it is near view, again once its size has settled on another scale; let its picture go once
   // it is far from view.
@@ -201,7 +210,36 @@ export const PdfPage = memo(function PdfPage({
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
   const selectingText = (event: PointerEvent<HTMLElement>) =>
     tool === 'select' && event.button === 0 && event.pointerType !== 'touch';
+  const touchOf = (event: PointerEvent<HTMLElement>) => ({
+    id: event.pointerId,
+    x: event.clientX,
+    y: event.clientY,
+    time: event.timeStamp,
+  });
+  // A finger's double tap, with Select in hand: its point on the page, and the way from the page to the window.
+  const onTouchUp = (event: PointerEvent<HTMLElement>) => {
+    const { state, tapped } = PdfDoubleTap.up(taps.current, touchOf(event));
+    taps.current = state;
+    const at = tapped && tool === 'select' ? pagePoint(event) : null;
+    if (!at || !current) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    const toView = current.toView;
+    onDoubleTap(index, {
+      at,
+      client: { x: event.clientX, y: event.clientY },
+      toClient: (point) => {
+        const shownAt = PageView.toView(toView, point);
+        return {
+          x: box.left + (shownAt.x / shown.width) * box.width,
+          y: box.top + (shownAt.y / shown.height) * box.height,
+        };
+      },
+    });
+  };
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
+    pressedBy.current = event.pointerType;
+    if (event.pointerType === 'touch')
+      taps.current = PdfDoubleTap.down(taps.current, touchOf(event));
     if (selectingText(event)) {
       const at = pagePoint(event);
       if (!at) return;
@@ -222,9 +260,10 @@ export const PdfPage = memo(function PdfPage({
     const to = drag.current ? pagePoint(event) : null;
     if (to) previewTo(to);
   };
-  // Two presses in a row select a word, three a line.
+  // Two presses in a row select a word, three a line; a finger's zoom instead.
   const onClick = (event: MouseEvent<HTMLElement>) => {
-    const at = tool === 'select' && event.detail >= 2 ? pagePoint(event) : null;
+    const pressing = tool === 'select' && event.detail >= 2 && pressedBy.current !== 'touch';
+    const at = pressing ? pagePoint(event) : null;
     if (at) onText(index, { kind: 'presses', at, count: event.detail });
   };
   const endDrag = (event: PointerEvent<HTMLElement>, make: boolean) => {
@@ -256,8 +295,15 @@ export const PdfPage = memo(function PdfPage({
       style={{ left, top, width: shown.width * cssPerPoint, height: shown.height * cssPerPoint }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={(event) => endDrag(event, true)}
-      onPointerCancel={(event) => endDrag(event, false)}
+      onPointerUp={(event) => {
+        if (event.pointerType === 'touch') onTouchUp(event);
+        endDrag(event, true);
+      }}
+      onPointerCancel={(event) => {
+        if (event.pointerType === 'touch')
+          taps.current = PdfDoubleTap.cancel(taps.current, event.pointerId);
+        endDrag(event, false);
+      }}
       onClick={onClick}
     >
       <canvas
