@@ -131,8 +131,9 @@ export const Watermarks = {
       if (Object.keys(header).length === 0) return s;
       return withHeaders(s, { ...own, header });
     };
-    return DocumentTabs.mapBodies({ ...document, section: section(document.section, true) }, (body) =>
-      body.map((b) => (b.type === 'section' ? section(b, false) : b)),
+    return DocumentTabs.mapBodies(
+      { ...document, section: section(document.section, true) },
+      (body) => body.map((b) => (b.type === 'section' ? section(b, false) : b)),
     );
   },
 } as const;

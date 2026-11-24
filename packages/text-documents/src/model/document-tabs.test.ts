@@ -132,7 +132,11 @@ describe('DocumentTabs', () => {
       }));
       const held = DocumentTabs.held(read);
       expect(held).toHaveLength(TEXT_DOCUMENT_MAX_TABS);
-      expect(held.at(-1)!.body.map((b) => Paragraph.text(b as Paragraph))).toEqual(['99', '100', '101']);
+      expect(held.at(-1)!.body.map((b) => Paragraph.text(b as Paragraph))).toEqual([
+        '99',
+        '100',
+        '101',
+      ]);
     });
   });
 
