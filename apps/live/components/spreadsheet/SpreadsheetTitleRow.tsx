@@ -80,6 +80,7 @@ export function SpreadsheetTitleRow({
   scope,
   tabId,
   format,
+  locale,
   documentName,
   level,
   history,
@@ -94,6 +95,8 @@ export function SpreadsheetTitleRow({
   scope: WorkbookScope;
   tabId: string;
   format: WorkbookFormat;
+  // The workbook's locale: the Number menu's examples are drawn in it.
+  locale: string;
   documentName: string;
   level: AccessLevel;
   // The person's one timeline; null before the editor has one.
@@ -113,7 +116,7 @@ export function SpreadsheetTitleRow({
   const chrome = useEditorLines()?.office ?? null;
   const [problem, setProblem] = useState<string | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
-  const catalogue = useMemo(() => spreadsheetMenus(format), [format]);
+  const catalogue = useMemo(() => spreadsheetMenus(format, locale), [format, locale]);
   const grid = useChannelBindings(channel);
   const fontSize = useMemo(
     () => (grid.fontSize === null ? null : { read: () => grid.fontSize, set: grid.setFontSize }),

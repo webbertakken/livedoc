@@ -67,9 +67,12 @@ function tokenize(section: string, dateMode: boolean): Tok[] {
       continue;
     }
     if (ch === '[' && !/^\[[hms]+\]/i.test(section.slice(i))) {
-      // A colour or condition ([Red], [>100]) is read past.
+      // A currency (`[$€-407]`) draws its symbol; a colour or condition ([Red], [>100]) is read past.
       const end = section.indexOf(']', i);
-      i = end < 0 ? section.length : end + 1;
+      const stop = end < 0 ? section.length : end;
+      const currency = /^\$([^-]*)/.exec(section.slice(i + 1, stop));
+      if (currency?.[1]) out.push({ k: 'lit', v: currency[1] });
+      i = stop + 1;
       continue;
     }
     if (dateMode) {
@@ -118,11 +121,37 @@ function tokenize(section: string, dateMode: boolean): Tok[] {
   return out;
 }
 
+// A section's own characters: its quoted text and escapes out, and every bracket but elapsed time's (`[h]`). One
+// pass, so a run of `[` or `"` costs no more than its length.
+function bareSection(section: string): string {
+  let out = '';
+  const lastClose = section.lastIndexOf(']');
+  for (let i = 0; i < section.length; i++) {
+    const ch = section[i]!;
+    if (ch === '\\') {
+      i++;
+      continue;
+    }
+    if (ch === '"') {
+      const end = section.indexOf('"', i + 1);
+      if (end < 0) return out + section.slice(i);
+      i = end;
+      continue;
+    }
+    if (ch === '[' && i < lastClose) {
+      const end = section.indexOf(']', i);
+      const inner = section.slice(i + 1, end);
+      if (/[hms]/i.test(inner)) out += `[${inner}]`;
+      i = end;
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
 export function isDateSection(section: string): boolean {
-  const bare = section
-    .replace(/"[^"]*"/g, '')
-    .replace(/\\./g, '')
-    .replace(/\[[^\]hms]*\]/gi, '');
+  const bare = bareSection(section);
   return /[dmyhs]|am\/pm|a\/p/i.test(bare) && !/[0#?]/.test(bare.replace(/\.0+/g, ''));
 }
 
@@ -299,40 +328,154 @@ function decimalFixed(x: number, digits: number): string {
   return (Math.round(Number(scaled.toPrecision(15))) / 10 ** digits).toFixed(digits);
 }
 
-export function formatCodeText(value: number | string, code: string): string {
+/** What a code draws: its text, and the colour its section names (formatting.md "Number formats", D192). */
+export type CodeDraw = { text: string; colour?: string };
+
+/** A code's colours by their name in any case (`[Red]`), as the grid draws them. */
+export const CODE_COLOURS: Readonly<Record<string, string>> = {
+  black: '#000000',
+  white: '#FFFFFF',
+  red: '#FF0000',
+  green: '#00FF00',
+  blue: '#0000FF',
+  yellow: '#FFFF00',
+  magenta: '#FF00FF',
+  cyan: '#00FFFF',
+};
+
+type Condition = { op: '<' | '<=' | '>' | '>=' | '=' | '<>'; n: number };
+const CONDITION = /^(<=|>=|<>|<|>|=)\s*(-?\d+(?:\.\d+)?)$/;
+const ELAPSED = /^[hms]+$/i;
+// An Excel palette colour (`[Color10]`): read past, as no grid colour is named for it.
+const PALETTE = /^color\d{1,2}$/i;
+
+// The brackets of a section outside its quotes and escapes, each without its `[` and `]`.
+function bracketsOf(section: string): string[] {
+  const out: string[] = [];
+  let quoted = false;
+  for (let i = 0; i < section.length; i++) {
+    const ch = section[i]!;
+    if (ch === '\\' && !quoted) i++;
+    else if (ch === '"') quoted = !quoted;
+    else if (ch === '[' && !quoted) {
+      const end = section.indexOf(']', i);
+      if (end < 0) break;
+      out.push(section.slice(i + 1, end));
+      i = end;
+    }
+  }
+  return out;
+}
+
+// A section with its brackets (`[Red]`, `[<0]`) taken out, in one pass however many `[` it holds.
+function withoutBrackets(section: string): string {
+  let out = '';
+  let open = false;
+  for (const ch of section) {
+    if (open) open = ch !== ']';
+    else if (ch === '[') open = true;
+    else out += ch;
+  }
+  return out;
+}
+
+// A section's colour and condition, read from its brackets.
+function metaOf(section: string): { colour?: string; condition?: Condition } {
+  const meta: { colour?: string; condition?: Condition } = {};
+  for (const inner of bracketsOf(section)) {
+    const colour = CODE_COLOURS[inner.toLowerCase()];
+    if (colour) meta.colour = colour;
+    const m = CONDITION.exec(inner.trim());
+    if (m) meta.condition = { op: m[1] as Condition['op'], n: Number(m[2]) };
+  }
+  return meta;
+}
+
+function holds({ op, n }: Condition, v: number): boolean {
+  switch (op) {
+    case '<':
+      return v < n;
+    case '<=':
+      return v <= n;
+    case '>':
+      return v > n;
+    case '>=':
+      return v >= n;
+    case '=':
+      return v === n;
+    case '<>':
+      return v !== n;
+  }
+}
+
+// The section a number takes: by its sign, or by the first condition that holds (D191); signed, the number keeps
+// its minus. None, when no section takes it.
+function sectionFor(sections: string[], v: number): { section: string; signed: boolean } | null {
+  const numeric = sections.slice(0, 3);
+  if (!numeric.some((section) => metaOf(section).condition)) {
+    if (v < 0 && sections.length >= 2) return { section: sections[1]!, signed: false };
+    if (v === 0 && sections.length >= 3) return { section: sections[2]!, signed: false };
+    // One section for every number: a negative keeps its minus.
+    return { section: sections[0]!, signed: true };
+  }
+  // The minus goes with the digits: a section of words alone ("far") draws none.
+  for (const section of numeric) {
+    const { condition } = metaOf(section);
+    if (!condition || holds(condition, v))
+      return { section, signed: tokenize(section, false).some((t) => t.k === 'ph') };
+  }
+  return null;
+}
+
+function withColour(text: string, section: string): CodeDraw {
+  const { colour } = metaOf(section);
+  return colour ? { text, colour } : { text };
+}
+
+export function formatCodeDraw(value: number | string, code: string): CodeDraw {
   const sections = splitSections(code);
   if (typeof value === 'string') {
     const textSection = sections[3] ?? sections.find((s) => s.includes('@'));
-    if (!textSection) return value;
-    return tokenize(textSection, false)
+    if (!textSection) return { text: value };
+    const text = tokenize(textSection, false)
       .map((t) => (t.k === 'at' ? value : t.k === 'lit' ? t.v : ''))
       .join('');
+    return withColour(text, textSection);
   }
-  let section = sections[0]!;
-  let n = value;
-  if (n < 0 && sections.length >= 2) {
-    section = sections[1]!;
-    n = -n;
-  } else if (n === 0 && sections.length >= 3) {
-    section = sections[2]!;
-  }
+  if (code.trim() === '') return { text: numberText(value) };
+  const picked = sectionFor(sections, value);
+  if (!picked) return { text: numberText(value) };
+  const { section, signed } = picked;
   // An empty section among several hides its numbers, as in Excel and Google Sheets (`;;;` hides everything).
-  if (section === '' && sections.length >= 2) return '';
-  if (section.trim() === '' && code.trim() === '') return numberText(value);
-  if (section.trim().toLowerCase() === 'general') return numberText(n);
-  if (isDateSection(section)) return formatDateSection(n, tokenize(section, true));
-  const toks = tokenize(section, false);
-  const text = formatNumberSection(n, toks);
-  // One section for every number: a negative keeps its minus.
-  return value < 0 && section === sections[0] ? `-${text}` : text;
+  if (section === '' && sections.length >= 2) return { text: '' };
+  const n = Math.abs(value);
+  const minus = signed && value < 0 ? '-' : '';
+  if (withoutBrackets(section).trim().toLowerCase() === 'general')
+    return withColour(minus + numberText(n), section);
+  if (isDateSection(section))
+    return withColour(formatDateSection(signed ? value : n, tokenize(section, true)), section);
+  return withColour(minus + formatNumberSection(n, tokenize(section, false)), section);
 }
 
-// Whether a Custom number format's code reads (sheet.md "Formatting"): 1 to FORMAT_CODE_MAX characters, quotes and
-// brackets closed, at most four sections, and it draws a number and text without failing.
-export function formatCodeReads(code: string): boolean {
-  if (code.trim().length === 0 || code.length > FORMAT_CODE_MAX) return false;
+/** A code's text, as TEXT draws it: the section's, never its colour (D192). */
+export function formatCodeText(value: number | string, code: string): string {
+  return formatCodeDraw(value, code).text;
+}
+
+// A bracket a code may hold: elapsed time (`[h]`), a currency (`[$€-407]`), a colour or a condition.
+const knownBracket = (inner: string) =>
+  ELAPSED.test(inner) ||
+  PALETTE.test(inner) ||
+  inner.startsWith('$') ||
+  CODE_COLOURS[inner.toLowerCase()] !== undefined ||
+  CONDITION.test(inner.trim());
+
+/** Why a Custom number format's code cannot be read (formatting.md "Number formats"), or null when it can. */
+export function formatCodeProblem(code: string): string | null {
+  if (code.trim().length === 0) return 'Enter a format';
+  if (code.length > FORMAT_CODE_MAX) return `Longer than ${FORMAT_CODE_MAX} characters`;
   let quoted = false;
-  let depth = 0;
+  let open = -1;
   for (let i = 0; i < code.length; i++) {
     const ch = code[i]!;
     if (ch === '\\' && !quoted) {
@@ -340,18 +483,24 @@ export function formatCodeReads(code: string): boolean {
       continue;
     }
     if (ch === '"') quoted = !quoted;
-    else if (!quoted && ch === '[') depth++;
-    else if (!quoted && ch === ']') depth--;
-    if (depth < 0 || depth > 1) return false;
+    else if (quoted) continue;
+    else if (ch === '[') {
+      if (open >= 0) return '`[` is not closed';
+      open = i;
+    } else if (ch === ']') {
+      if (open < 0) return '`]` has no `[`';
+      const inner = code.slice(open + 1, i);
+      if (!knownBracket(inner)) return `\`[${inner}]\` is not a colour or a condition`;
+      open = -1;
+    }
   }
-  if (quoted || depth !== 0 || splitSections(code).length > 4) return false;
-  try {
-    formatCodeText(1234.5, code);
-    formatCodeText(-1, code);
-    formatCodeText(0, code);
-    formatCodeText('a', code);
-    return true;
-  } catch {
-    return false;
-  }
+  if (open >= 0) return '`[` is not closed';
+  if (quoted) return '`"` is not closed';
+  if (splitSections(code).length > 4) return 'More than four sections';
+  return null;
+}
+
+// Whether a Custom number format's code reads (sheet.md "Formatting"): no problem with it.
+export function formatCodeReads(code: string): boolean {
+  return formatCodeProblem(code) === null;
 }

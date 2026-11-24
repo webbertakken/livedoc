@@ -183,7 +183,9 @@ export function renderWindow(
         out.underline = true;
       }
       if (f.st) out.strike = true;
-      if (f.fc) out.color = f.fc;
+      // A met rule's colour over the code's section's, over the cell's own (formatting.md "Number formats", D192).
+      const colour = style?.fc ?? shown.colour ?? own.fc;
+      if (colour) out.color = colour;
       if (f.bg) out.fill = f.bg;
       if (chip) out.chip = chip;
       if (arrow) out.arrow = true;

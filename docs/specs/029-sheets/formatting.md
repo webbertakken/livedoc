@@ -24,6 +24,10 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
   (`0.00%`), Scientific (`0.00E+00`), Accounting, Financial, Currency, Currency Rounded, Date, Time, Date Time,
   Duration, then **Custom Currency**, **Custom Date and Time**, **Custom Number Format**, and the formats recently
   used in the workbook. Each shows an example of itself.
+- Each item's example is drawn beside it in the workbook's locale, as the grid would draw 1000.12, 26 September
+  2008 15:59:00 or 24:01:00: **Number** 1,000.12, **Financial** (1,000.12), **Currency Rounded** £1,000 (D190).
+- **Financial** draws a negative in brackets, `#,##0.00;(#,##0.00)`; **Currency Rounded** is Currency with no
+  decimals, and Currency is ticked only while the cell shows decimals.
 - **Format as Currency**, **Format as Percent**, **Decrease** and **Increase Decimal Places** on the toolbar.
 - **Custom Number Format** dialog: a field for a format code with a live preview and the list of Google's examples;
   codes follow the shared grammar (sections for positive, negative, zero and text; `0`, `#`, `?`, `,`, `%`, `E+`,
@@ -31,6 +35,15 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 - **Custom Date and Time**: building blocks (Day, Month, Year, Hour, Minute, Second, AM/PM) each with its variants,
   arranged by the person.
 - **Custom Currency**: a searchable list of currencies, each with its symbol placements.
+- A code's **sections** are chosen as Google's are: with no condition, the first for a positive number, the second for
+  a negative (its minus left to the code), the third for zero, the fourth for text. With a condition (`[<1000]`,
+  `[>=0]`, `[=1]`, `[<>0]`), the first section whose condition holds draws the number, a section with none takes
+  the rest, and the number keeps its minus; with no section left, it is drawn as Automatic (default, D191).
+- A section's **colour** (`[Black]`, `[White]`, `[Red]`, `[Green]`, `[Blue]`, `[Yellow]`, `[Magenta]`, `[Cyan]`, any
+  case) draws its text in that colour over the cell's own text colour; a met conditional format's colour draws over
+  both (default, D192). `TEXT` takes the section, never the colour.
+- A code that cannot be read is refused with why: "`[` is not closed", "`"` is not closed", "More than four
+  sections", "`[Purple]` is not a colour or a condition", "Longer than 255 characters".
 - Format codes map to ODF data styles and to XLSX `numFmts` both ways; this mapping is a shared piece used by
   plan 0019 too ("Charts, number and date formats, formulas in a table").
 - Automatic shows a number as typed (`12%` stays a percent), as today ([Formulas](formulas.md#what-a-typed-input-becomes)).
@@ -95,7 +108,15 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
 
 - Up to 64,000 distinct styles in a workbook (XLSX's practical ceiling, assumed); past it a change reuses the
   nearest style and says so.
-- A format code that cannot be read is refused in the dialog with why ("`[` is not closed").
+- A format code that cannot be read is refused in the dialog with why ([Number formats](#number-formats)).
+
+## Defaults
+
+- **D190** The Number menu's examples: 1000.12, 26 September 2008 15:59:00 and 24:01:00, drawn in the workbook's
+  locale as the grid would (default).
+- **D191** A code with conditions: The first section whose condition holds, else the first with none; the number
+  keeps its minus; none left, Automatic (default).
+- **D192** A code's colour: Over the cell's text colour, under a met conditional format's; never in `TEXT` (default).
 
 ## Telemetry
 

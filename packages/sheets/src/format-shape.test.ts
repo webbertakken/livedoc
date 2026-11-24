@@ -14,6 +14,7 @@ describe('formatShape', () => {
     });
     expect(formatShape({ nf: 'text' }).code).toBe('G');
     expect(formatShape({ nf: 'accounting', dp: 0 }).code).toBe('C0');
+    expect(formatShape({ nf: 'financial' }).code).toBe(',2');
     expect(formatShape({ nf: 'duration' }).code).toBe('D8');
     expect(formatShape({ nf: 'date' }).date).toBe(true);
     expect(formatShape({ nf: 'datetime' })).toMatchObject({ code: 'D4', date: true });

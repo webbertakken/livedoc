@@ -39,6 +39,8 @@ export type NumberFormatKind =
   | 'percent'
   | 'currency'
   | 'accounting'
+  // Negatives in brackets, `#,##0.00;(#,##0.00)` (formatting.md "Number formats").
+  | 'financial'
   | 'scientific'
   | 'date'
   | 'time'

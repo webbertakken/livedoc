@@ -49,6 +49,7 @@ function Row({
         scope={SCOPE}
         tabId="t1"
         format="ods"
+        locale="en-GB"
         documentName=""
         level={level}
         history={history}

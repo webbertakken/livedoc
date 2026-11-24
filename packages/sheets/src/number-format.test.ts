@@ -14,6 +14,8 @@ describe('number formats', () => {
     expect(gb(-1234.5, { nf: 'currency' })).toBe('-£1,234.50');
     expect(gb(-1234.5, { nf: 'accounting' })).toBe('£ (1,234.50)');
     expect(gb(1234.5, { nf: 'accounting' })).toBe('£ 1,234.50');
+    expect(gb(-1234.5, { nf: 'financial' })).toBe('(1,234.50)');
+    expect(gb(1234.5, { nf: 'financial', dp: 0 })).toBe('1,235');
     expect(gb(1234.5, { nf: 'scientific' })).toBe('1.23E+03');
     expect(gb(0.00012, { nf: 'scientific' })).toBe('1.20E-04');
     expect(gb(serialFromParts(2026, 10, 8), { nf: 'date' })).toBe('08/10/2026');

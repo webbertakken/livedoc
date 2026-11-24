@@ -220,9 +220,14 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
         : undefined;
     out[id] = run(freeze, { checked: frozen === n, ...(label ? { label } : {}) });
   }
-  for (const { id, nf } of NUMBER_FORMAT_ITEMS) {
-    if (!nf) continue;
-    out[id] = run(() => act.numberFormat(nf), { checked: (f?.nf ?? 'auto') === nf });
+  // An item fixing its decimals (Currency Rounded) is ticked by them; Currency only while it shows some.
+  for (const { id, nf, dp } of NUMBER_FORMAT_ITEMS) {
+    const same = (f?.nf ?? 'auto') === nf;
+    const rounded = nf === 'currency' && f?.dp === 0;
+    out[id] =
+      dp === undefined
+        ? run(() => act.numberFormat(nf), { checked: same && !rounded })
+        : run(() => act.format({ nf, dp, nc: null }), { checked: same && f?.dp === dp });
   }
   const aligns = [
     ['align-left', 'ha', 'l'],

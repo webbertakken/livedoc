@@ -11,6 +11,7 @@ export const NUMBER_FORMATS: readonly NumberFormatKind[] = [
   'percent',
   'currency',
   'accounting',
+  'financial',
   'scientific',
   'date',
   'time',

@@ -313,6 +313,26 @@ describe('lines', () => {
 });
 
 describe('the static render', () => {
+  // formatting.md "Number formats" (D192): a code's colour over the cell's, a met rule's over both.
+  it('colours text by a met rule, else the code\u2019s section, else the cell', () => {
+    const { b, sheet } = ruled({ A1: '-5', A2: '5', A3: '200' }, [
+      fr({ op: 'gt', a: '100', style: { fc: '#00ff00' } }, 0, 0, 9, 0),
+    ]);
+    const own = { nf: 'custom' as const, nc: '[Red]0;[Blue]0', fc: '#111111' };
+    for (const r of [0, 1, 2]) {
+      const key = `${R(r)}:${C(0)}`;
+      sheet.cells.set(key, { ...sheet.cells.get(key)!, format: own });
+    }
+    b.wb.updateSheet(sheet);
+    const model = renderWindow(b.wb, sheet.id, { width: 500, height: 200 }, 'en-GB')!;
+    const at = (r: number) => model.cells.find((x) => x.r === r && x.c === 0)?.color;
+    expect([at(0), at(1), at(2)]).toEqual(['#0000FF', '#FF0000', '#00ff00']);
+    sheet.cells.set(`${R(1)}:${C(0)}`, { input: { n: 5 }, format: { fc: '#111111' } });
+    b.wb.updateSheet(sheet);
+    const plain = renderWindow(b.wb, sheet.id, { width: 500, height: 200 }, 'en-GB')!;
+    expect(plain.cells.find((x) => x.r === 1 && x.c === 0)?.color).toBe('#111111');
+  });
+
   it('draws met styles, checkboxes and chips', () => {
     const b = book(
       { A1: '150', B1: 'TRUE', B2: 'FALSE', C1: 'Done', C2: 'Other' },

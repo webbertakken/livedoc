@@ -78,7 +78,7 @@ describe('gridMenuBindings', () => {
       label: 'Context',
       entries,
     }));
-    const built = catalogueItems([...spreadsheetMenus('ods'), ...contexts])
+    const built = catalogueItems([...spreadsheetMenus('ods', 'en-GB'), ...contexts])
       .filter(({ item }) => item.status === 'built')
       .map(({ item }) => item.id)
       .concat(SPREADSHEET_TOOLBAR.flatMap((g) => g.controls).map((c) => c.id));
@@ -245,13 +245,28 @@ describe('gridMenuBindings', () => {
   it('sets number formats, Automatic ticked for a cell with none', () => {
     const plain = gridMenuBindings(port());
     expect(plain['number-automatic']!.checked).toBe(true);
-    expect(plain['number-financial']).toBeUndefined();
+    expect(plain['number-financial']!.checked).toBe(false);
     const p = port({ format: { nf: 'percent' } });
     const b = gridMenuBindings(p);
     expect(b['number-percent']!.checked).toBe(true);
     expect(b['number-automatic']!.checked).toBe(false);
     b['number-date-time']!.run();
     expect(p.act.numberFormat).toHaveBeenCalledWith('datetime');
+  });
+
+  // formatting.md "Number formats": Currency Rounded is Currency with no decimals, Currency ticked only with some.
+  it('sets Financial and Currency Rounded, ticking Currency only while it shows decimals', () => {
+    const p = port({ format: { nf: 'currency', dp: 0 } });
+    const b = gridMenuBindings(p);
+    expect(b['number-currency-rounded']!.checked).toBe(true);
+    expect(b['number-currency']!.checked).toBe(false);
+    b['number-currency-rounded']!.run();
+    expect(p.act.format).toHaveBeenCalledWith({ nf: 'currency', dp: 0, nc: null });
+    b['number-financial']!.run();
+    expect(p.act.numberFormat).toHaveBeenCalledWith('financial');
+    const two = gridMenuBindings(port({ format: { nf: 'currency' } }));
+    expect(two['number-currency']!.checked).toBe(true);
+    expect(two['number-currency-rounded']!.checked).toBe(false);
   });
 
   it('aligns and wraps, the grid’s defaults clearing the cell’s own', () => {

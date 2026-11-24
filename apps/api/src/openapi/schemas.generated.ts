@@ -10569,6 +10569,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "percent",
       "currency",
       "accounting",
+      "financial",
       "scientific",
       "date",
       "time",

@@ -11,7 +11,7 @@ import { spreadsheetChoices } from './spreadsheet-choices';
 import { spreadsheetMenus } from './spreadsheet-menus';
 
 const run = () => {};
-const catalogue = spreadsheetMenus('ods');
+const catalogue = spreadsheetMenus('ods', 'en-GB');
 const ids = (entries: readonly { kind: string; id?: string }[]) =>
   entries.flatMap((e) => (e.kind === 'item' ? [e.id] : []));
 
