@@ -19,33 +19,31 @@ export function ArticleCard({ article, number }: { article: Article; number?: nu
   return (
     <Link
       href={articleHref(article)}
-      className="card-glow group block rounded-xl bg-white p-5 transition-colors duration-micro hover:bg-brand-50/30 dark:hover:bg-brand-500/10 sm:p-6 dark:bg-slate-900"
+      className="card-glow group block rounded-surface bg-white p-6 transition-colors duration-micro hover:bg-brand-50/30 dark:hover:bg-brand-500/10 sm:p-6 dark:bg-slate-900"
     >
       <div className="flex items-start gap-3">
         {number !== undefined ? (
           <GlyphDisc
             size={28}
             aria-hidden
-            className="bg-brand-700 text-sm font-semibold text-white transition-colors group-hover:bg-brand-800"
+            className="bg-brand-700 text-body text-white transition-colors group-hover:bg-brand-800"
           >
             {number}
           </GlyphDisc>
         ) : (
           <span
             aria-hidden
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/25 dark:text-brand-300"
+            className="flex size-prominent shrink-0 items-center justify-center rounded-menu bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/25 dark:text-brand-300"
           >
             {icon}
           </span>
         )}
-        <h3 className="mt-1 font-semibold text-slate-900 transition-colors group-hover:text-brand-700 dark:text-slate-100 dark:group-hover:text-brand-200">
+        <h3 className="mt-1 text-slate-900 transition-colors group-hover:text-brand-700 dark:text-slate-100 dark:group-hover:text-brand-200">
           {article.title}
         </h3>
       </div>
-      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-        {article.description}
-      </p>
-      <span className="mt-3 inline-flex items-center gap-1 text-sm text-brand-700 transition-all group-hover:gap-2 dark:text-brand-300">
+      <p className="mt-2 text-body text-slate-500 dark:text-slate-400">{article.description}</p>
+      <span className="mt-3 inline-flex items-center gap-1 text-body text-brand-700 transition-all group-hover:gap-2 dark:text-brand-300">
         Read article
         <ArrowRightIcon />
       </span>

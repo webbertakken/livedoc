@@ -16,7 +16,7 @@ export function CategoryCard({ category, wide = false }: { category: Category; w
   return (
     <Link
       href={categoryHref(category.slug)}
-      className={`card-glow group flex overflow-hidden rounded-2xl bg-white dark:bg-slate-900 ${
+      className={`card-glow group flex overflow-hidden rounded-surface bg-white dark:bg-slate-900 ${
         wide ? 'flex-col sm:flex-row' : 'flex-col'
       }`}
     >
@@ -28,14 +28,14 @@ export function CategoryCard({ category, wide = false }: { category: Category; w
       >
         <CategoryArt slug={category.slug} />
       </div>
-      <div className="flex flex-1 flex-col p-5 sm:p-6">
-        <h3 className="text-lg font-semibold text-slate-900 transition-colors group-hover:text-brand-700 dark:text-slate-100 dark:group-hover:text-brand-200">
+      <div className="flex flex-1 flex-col p-6 sm:p-6">
+        <h3 className="text-name text-slate-900 transition-colors group-hover:text-brand-700 dark:text-slate-100 dark:group-hover:text-brand-200">
           {category.title}
         </h3>
-        <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mt-1.5 flex-1 text-body text-slate-500 dark:text-slate-400">
           {category.description}
         </p>
-        <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 dark:text-brand-300">
+        <span className="mt-4 inline-flex items-center gap-2 text-body text-brand-700 dark:text-brand-300">
           {count ? `Browse ${count}` : 'Open'}
           <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5" />
         </span>

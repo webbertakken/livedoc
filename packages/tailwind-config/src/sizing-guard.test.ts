@@ -254,6 +254,16 @@ describe('checkSizing', () => {
     expect(violations.map((v) => v.file)).toEqual(['moved/Row.tsx']);
   });
 
+  it('leaves an excepted folder alone, every file under it (a folder of drawn art)', () => {
+    write('moved/Row.tsx', "export const a = 'text-sm';");
+    write('moved/art/Hero.tsx', "export const a = 'text-[7px]';");
+    write('moved/art/deep/Scene.tsx', "export const a = 'h-[3px]';");
+
+    const violations = checkSizing({ root, paths: ['moved'], except: ['moved/art'] });
+
+    expect(violations.map((v) => v.file)).toEqual(['moved/Row.tsx']);
+  });
+
   it('throws on an exception that does not exist, so a stale one never lingers', () => {
     write('moved/Row.tsx', "export const a = 'h-row';");
 

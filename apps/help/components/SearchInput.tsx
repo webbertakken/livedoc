@@ -10,6 +10,10 @@ import { reportHelpSearch, SEARCH_SETTLE_MS } from '@/lib/search-telemetry';
 // Below this many characters a query is treated as too short to search.
 const MIN_QUERY = 2;
 
+/** The field's side inset, room for the search glyph at the start and the key hint at the end: 48px on the hero's
+ *  large field (a 22px glyph), 40px in the header (an 18px glyph). A computed room, not a padding step. */
+const FIELD_INSET = { large: '3rem', header: '2.5rem' } as const;
+
 type Search = (query: string) => Article[];
 
 // The search runs over the whole article registry (about 300 articles with their descriptions
@@ -98,6 +102,7 @@ export function SearchInput({ large = false }: { large?: boolean }) {
         <input
           ref={inputRef}
           data-help-search={large ? 'large' : 'header'}
+          style={{ paddingInline: large ? FIELD_INSET.large : FIELD_INSET.header }}
           type="text"
           placeholder="Search help articles..."
           value={query}
@@ -118,15 +123,15 @@ export function SearchInput({ large = false }: { large?: boolean }) {
           }}
           aria-label="Search help articles"
           aria-keyshortcuts="/"
-          className={`w-full rounded-xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 shadow-sm transition-all duration-micro focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 ${
-            large ? 'py-4 pl-12 pr-12 text-lg' : 'py-2.5 pl-10 pr-10 text-sm'
+          className={`w-full rounded-surface border border-slate-200 bg-white text-slate-900 placeholder-slate-400 shadow-sm transition-all duration-micro focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 ${
+            large ? 'py-4 text-name' : 'py-2.5 text-body'
           }`}
         />
         {query === '' && (
           <kbd
             aria-hidden
-            className={`pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-md border pointer-coarse:hidden border-slate-200 bg-slate-50 font-sans font-semibold text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 ${
-              large ? 'right-4 px-2 py-0.5 text-sm' : 'right-3 px-1.5 text-xs'
+            className={`pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-control border pointer-coarse:hidden border-slate-200 bg-slate-50 font-sans text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 ${
+              large ? 'right-4 px-2 py-0.5 text-body' : 'right-3 px-2 text-supporting'
             }`}
           >
             /
@@ -137,7 +142,7 @@ export function SearchInput({ large = false }: { large?: boolean }) {
         <div
           role="region"
           aria-label="Search results"
-          className="scrollbar-slim absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900"
+          className="scrollbar-slim absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-surface border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900"
         >
           {results.map((article) => (
             <Link
@@ -149,13 +154,11 @@ export function SearchInput({ large = false }: { large?: boolean }) {
               }}
               className="block border-b border-slate-100 px-4 py-3 transition-colors last:border-b-0 hover:bg-brand-50/60 dark:border-slate-800 dark:hover:bg-slate-800"
             >
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
+              <p className="text-supporting text-brand-700 dark:text-brand-300">
                 {article.category}
               </p>
-              <p className="mt-0.5 text-sm font-medium text-slate-900 dark:text-slate-100">
-                {article.title}
-              </p>
-              <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-body text-slate-900 dark:text-slate-100">{article.title}</p>
+              <p className="mt-0.5 line-clamp-2 text-supporting text-slate-500 dark:text-slate-400">
                 {article.description}
               </p>
             </Link>
@@ -172,8 +175,8 @@ export function SearchInput({ large = false }: { large?: boolean }) {
           : ''}
       </p>
       {isOpen && query.trim().length > 1 && results.length === 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-surface border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-center text-body text-slate-500 dark:text-slate-400">
             No articles found for &ldquo;{query}&rdquo;
           </p>
         </div>

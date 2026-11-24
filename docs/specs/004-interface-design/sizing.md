@@ -175,6 +175,12 @@ A surface names the token, never the number, so the scale changes in one place.
 - The telemetry dashboard is chrome throughout, so all of its source is on the scale, guarded whole.
 - Its page title is the page title's step, its metric cards are surfaces, and its view tabs are medium only when chosen.
 - A field that holds a glyph and a clear button sets its side inset as a computed room (a style), not a padding step.
+- The help centre's chrome is on the scale: its header, search, cards, breadcrumbs, pager and contents.
+- An article's prose (`mdx-components.tsx`) is content, set for reading; its illustrations and the category pictures
+  are drawn art.
+- A site's hero headline is **display type**, off the scale: the help centre's, the marketing site's, and the sign-in
+  stage's pitch (D243, default).
+- Page gutters step with the padding scale: 24 px on a wide screen.
 
 ## The guard
 
@@ -228,6 +234,8 @@ The code cites each by its id.
   slider, not a zoom of the chrome's, and the ruled render drew 32 px tools at 37 px with it (default).
 - **D242** The top line has one height: its groups' controls take the drawing tool's 32 px, as the ruled render drew
   them, rather than 28 px controls in shorter cards beside the strip (default).
+- **D243** Display type: a site's one hero headline sets its own size, off the scale, as marketing pages do; every other
+  heading on the page takes the page title's or a panel title's step (default).
 - **D234** What the guard reads: every static string in a source file outside tests, so a size in a constant (a
   variant table, a shared class list) is held to the scale as one in markup is (default).
 - **D235** The tokens' unit: rem at a 16 px root, so a browser set to larger text grows the chrome with it (default).

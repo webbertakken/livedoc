@@ -55,7 +55,7 @@ export function BrowsePage({
       )}
       <Breadcrumb items={[{ label: title }]} />
       <HelpHero eyebrow={eyebrow} title={title} lede={lede} art={Art ? <Art /> : undefined} />
-      <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {/* The cards title themselves with h3, so the grid gets the h2 between them and the page's h1
             that a screen reader's heading list (and Lighthouse's heading-order audit) expects. */}
         <h2 className="sr-only">Guides</h2>
