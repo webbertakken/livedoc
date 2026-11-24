@@ -546,6 +546,17 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/text-document/text-document-list-actions.ts Element·Changed': {
     values: ['Bulleted', 'Numbered', 'Checklist'].map((kind) => `TextDocumentList${kind}`),
   },
+  // A building block put in a text document, by its name (objects.md "Telemetry").
+  'apps/live/lib/text-document/text-document-building-blocks.ts Element·Added': {
+    values: [
+      'MeetingNotes',
+      'EmailDraft',
+      'ProductRoadmap',
+      'ReviewTracker',
+      'ProjectAssets',
+      'ContentLaunchTracker',
+    ].map((block) => `TextDocumentBuildingBlock${block}`),
+  },
   // A text document's table reshaped, by the change's name (tables.md "Telemetry").
   'apps/live/lib/text-document/text-document-table-actions.ts Element·Changed': {
     values: [
