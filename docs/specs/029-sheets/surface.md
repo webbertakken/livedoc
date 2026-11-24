@@ -122,6 +122,7 @@ Left to right:
 
 - **Add Sheet** (+): adds "Sheet<n+1>" after the last sheet and opens it.
 - **All Sheets** (☰, Alt+Shift+K): a menu of every sheet, the active one ticked, hidden ones dimmed with "Hidden".
+  Picking a sheet opens it; picking a hidden one shows it first, for an Editor (D180).
 - **Sheet tabs**: each the sheet's name on its colour's underline; the active one raised. A click opens it; a
   double-click renames it in place; a drag reorders; its arrow (and a right-click, and Shift+F10 or the context menu
   key on a focused tab) opens its menu ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar)). Tabs past the bar's
@@ -253,3 +254,13 @@ Version History (the shell's). Each is specified with its area.
   (default).
 - **D176** Dragging a tab: A press moved more than 4 px drags it; a line shows where it lands, between the tabs nearest
   the pointer; letting go moves it there, Escape or letting go where it was moves nothing (default).
+- **D177** A tab's colour and hiding: The sheet's own, kept with its look as Sheet Settings are, so undo, the room and
+  This Browser carry them; a duplicate keeps the colour (default).
+- **D178** Hidden sheets for a Participant and a Viewer: Listed in All Sheets dimmed with "Hidden", never opened;
+  View › Hidden Sheets is an Editor's (default).
+- **D179** Hiding the open sheet: The next sheet shown after it opens, else the one before; one hidden by someone else
+  while open stays open with its tab until another sheet opens (default).
+- **D180** Showing a hidden sheet: All Sheets or View › Hidden Sheets ("Hidden Sheets (n)", dimmed at none, opening
+  All Sheets); picking it shows it and opens it, one undo step (default).
+- **D181** Stepping over hidden sheets: Move Right, Move Left, Alt+Up and Alt+Down step to the next sheet shown
+  (default).

@@ -68,8 +68,6 @@ export const WORKBOOK_ERRORS = [
   'workbook_not_found',
   // A settings body that is not the workbook's settings.
   'settings_invalid',
-  // A delete of the only sheet left to show.
-  'sheet_last_visible',
   // A file or a conversion asked in a format that is none (files-and-print.md).
   'file_type_unknown',
   // A conversion to the standard the workbook is already in (files-and-print.md "Converting").

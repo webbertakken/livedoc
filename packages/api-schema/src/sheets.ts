@@ -91,6 +91,8 @@ export const SHEET_ERRORS = [
   'rows_invalid',
   // A spreadsheet past its rows or grid cells over every sheet, or its stored bytes (spreadsheet.md "Limits").
   'workbook_full',
+  // A delete or a hide of the only sheet a spreadsheet has left to show (spreadsheet.md "Sheets in the sheet bar").
+  'sheet_last_visible',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 

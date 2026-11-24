@@ -1,6 +1,6 @@
 // Validation of writes and new sheets: the api runs it on every write
 // before storing, against the sheet as stored; the editor runs it before sending, so a refusal is said at once.
-import { validFormatPatch, validFormat } from './format';
+import { isColour, validFormatPatch, validFormat } from './format';
 import { isAxisId, isSheetId } from './ids';
 import { OUTLINE_DEPTH_MAX } from './limits';
 import { storedAst } from './formula/stored';
@@ -271,9 +271,12 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         v === undefined ||
         v === null ||
         (typeof v === 'number' && Number.isInteger(v) && v >= min && v <= AXIS_SIZE_MAX);
+      const colour = (v: unknown) => v === undefined || v === null || isColour(v);
       return flag(ch.showGrid) &&
         flag(ch.showHeaders) &&
         flag(ch.setupPending) &&
+        flag(ch.hidden) &&
+        colour(ch.tabColour) &&
         size(ch.colWidth, COLUMN_WIDTH_MIN) &&
         size(ch.rowHeight, ROW_HEIGHT_MIN)
         ? OK
@@ -549,12 +552,15 @@ export function validateSheetCreate(
         ...(layout.setupPending === undefined
           ? {}
           : { setupPending: layout.setupPending as boolean }),
+        ...(layout.tabColour === undefined ? {} : { tabColour: layout.tabColour }),
+        ...(layout.hidden === undefined ? {} : { hidden: layout.hidden as boolean }),
       },
       layout,
     ).ok ||
     (layout.showGrid !== undefined && layout.showGrid !== false) ||
     (layout.showHeaders !== undefined && layout.showHeaders !== false) ||
-    (layout.setupPending !== undefined && layout.setupPending !== true)
+    (layout.setupPending !== undefined && layout.setupPending !== true) ||
+    (layout.hidden !== undefined && layout.hidden !== true)
   )
     return no('write_invalid');
   if (

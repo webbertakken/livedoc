@@ -293,6 +293,61 @@ describe('renaming a sheet', () => {
   });
 });
 
+// A sheet's look written as the sheet bar writes it (spreadsheet.md "Sheets in the sheet bar", D177).
+const look = (
+  sheet: string,
+  options: { hidden?: boolean; tabColour?: string | null },
+  id = 'book1',
+) =>
+  kit.call({
+    path: `/${id}/sheets/${sheet}/writes`,
+    body: { write: { kind: 'layout', changes: [{ k: 'options', ...options }] } },
+  });
+
+describe('hiding a sheet and colouring its tab', () => {
+  it('hides a sheet while another is shown, and colours its tab', async () => {
+    const { sheet } = await (await add({ name: 'Costs' })).json<WorkbookSheetAddResponse>();
+    expect((await look(sheet.id, { hidden: true, tabColour: '#1a73e8' })).status).toBe(200);
+    const costs = (await kit.sheets('book1')).find((s) => s.id === sheet.id)!;
+    expect(costs.layout).toMatchObject({ hidden: true, tabColour: '#1a73e8' });
+  });
+
+  it('never hides the last visible sheet', async () => {
+    const res = await look('book1Sheet', { hidden: true });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: 'sheet_last_visible' });
+  });
+
+  it('counts neither hidden nor deleted sheets as shown', async () => {
+    const costs = await (await add({ name: 'Costs' })).json<WorkbookSheetAddResponse>();
+    const notes = await (await add({ name: 'Notes' })).json<WorkbookSheetAddResponse>();
+    expect((await look(costs.sheet.id, { hidden: true })).status).toBe(200);
+    await kit.call({ method: 'DELETE', path: `/book1/workbook/sheets/${notes.sheet.id}` });
+    expect((await look('book1Sheet', { hidden: true })).status).toBe(409);
+    // Showing one and colouring the last are never refused.
+    expect((await look(costs.sheet.id, { hidden: false })).status).toBe(200);
+    expect((await look('book1Sheet', { tabColour: null })).status).toBe(200);
+  });
+
+  it('refuses a layout write whose changes are no list', async () => {
+    const res = await kit.call({
+      path: '/book1/sheets/book1Sheet/writes',
+      body: { write: { kind: 'layout', changes: 'hide' } },
+    });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: 'write_invalid' });
+  });
+
+  it('refuses a tab look on a Plan Sheet', async () => {
+    expect((await kit.call({ path: '', body: kit.document('plan1', false) })).status).toBe(201);
+    for (const options of [{ hidden: true }, { tabColour: '#1a73e8' }]) {
+      const res = await look('plan1Sheet', options, 'plan1');
+      expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({ error: 'write_invalid' });
+    }
+  });
+});
+
 describe('deleting a sheet', () => {
   const remove = (sheet: string) =>
     kit.call({ method: 'DELETE', path: `/book1/workbook/sheets/${sheet}` });
@@ -315,6 +370,16 @@ describe('deleting a sheet', () => {
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ error: 'sheet_last_visible' });
     expect(await tabsOf('book1')).toHaveLength(1);
+  });
+
+  it('never deletes the last visible sheet when the others are hidden', async () => {
+    const { sheet } = await (await add({ name: 'Costs' })).json<WorkbookSheetAddResponse>();
+    expect((await look(sheet.id, { hidden: true })).status).toBe(200);
+    const res = await remove('book1Sheet');
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'sheet_last_visible' });
+    // A hidden sheet goes while another is shown.
+    expect((await remove(sheet.id)).status).toBe(204);
   });
 
   it('puts a deleted sheet back as it was when added with its ids', async () => {

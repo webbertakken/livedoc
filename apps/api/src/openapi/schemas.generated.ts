@@ -9810,6 +9810,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
               "null"
             ]
           },
+          "hidden": {
+            "type": "boolean"
+          },
           "k": {
             "const": "options",
             "type": "string"
@@ -9828,6 +9831,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           },
           "showHeaders": {
             "type": "boolean"
+          },
+          "tabColour": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -14940,6 +14949,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "frozenRows": {
         "type": "number"
       },
+      "hidden": {
+        "const": true,
+        "type": "boolean"
+      },
       "hiddenCols": {
         "items": {
           "type": "string"
@@ -15008,6 +15021,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "showHeaders": {
         "const": false,
         "type": "boolean"
+      },
+      "tabColour": {
+        "type": "string"
       }
     },
     "required": [

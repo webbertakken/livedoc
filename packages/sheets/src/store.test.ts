@@ -151,6 +151,20 @@ describe('applySheetWrite', () => {
     ).sheet.layout;
     expect([colWidth(sized, C(0)), colWidth(sized, C(1))]).toEqual([150, 60]);
   });
+  it("sets a sheet's tab colour and hides it, and undoes both (D177)", () => {
+    const s = base();
+    const r = roundTrip(s, {
+      kind: 'layout',
+      changes: [{ k: 'options', tabColour: '#1a73e8', hidden: true }],
+    });
+    expect(r.sheet.layout).toMatchObject({ tabColour: '#1a73e8', hidden: true });
+    const back = applySheetWrite(
+      r.sheet,
+      { kind: 'layout', changes: [{ k: 'options', tabColour: null, hidden: false }] },
+      ctx,
+    ).sheet.layout;
+    expect('tabColour' in back || 'hidden' in back).toBe(false);
+  });
   it('sets, clears and formats cells, skipping gone ids', () => {
     const s = base({ A1: '1' });
     const r = applySheetWrite(

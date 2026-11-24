@@ -226,11 +226,16 @@ describe('the look options', () => {
     expect(opt({ showGrid: false, showHeaders: true, colWidth: 150, rowHeight: null })).toEqual({
       ok: true,
     });
+    expect(opt({ tabColour: '#1a73e8', hidden: true })).toEqual({ ok: true });
+    expect(opt({ tabColour: null, hidden: false })).toEqual({ ok: true });
     for (const bad of [
       { showGrid: 'no' },
       { colWidth: 10 },
       { rowHeight: 2.5 },
       { colWidth: 5000 },
+      { tabColour: 'red' },
+      { tabColour: '#ABCDEF' },
+      { hidden: 'yes' },
     ])
       expect(opt(bad)).toMatchObject({ error: 'write_invalid' });
   });
@@ -248,6 +253,13 @@ describe('the look options', () => {
     expect(
       validateSheetCreate({ ...s, layout: { ...s.layout, setupPending: false as never } }),
     ).toMatchObject({ error: 'write_invalid' });
+    expect(
+      validateSheetCreate({ ...s, layout: { ...s.layout, tabColour: '#00ff00', hidden: true } }),
+    ).toEqual({ ok: true });
+    for (const bad of [{ tabColour: 'green' }, { hidden: false }])
+      expect(
+        validateSheetCreate({ ...s, layout: { ...s.layout, ...(bad as object) } }),
+      ).toMatchObject({ error: 'write_invalid' });
     expect(validateSheetCreate({ ...s, layout: { ...s.layout, rowHeight: 3 } })).toMatchObject({
       error: 'write_invalid',
     });

@@ -319,6 +319,8 @@ function inverseLayout(before: SheetLayout, ch: LayoutChange, now: SheetLayout):
           ...(ch.colWidth !== undefined ? { colWidth: before.colWidth ?? null } : {}),
           ...(ch.rowHeight !== undefined ? { rowHeight: before.rowHeight ?? null } : {}),
           ...(ch.setupPending !== undefined ? { setupPending: before.setupPending === true } : {}),
+          ...(ch.tabColour !== undefined ? { tabColour: before.tabColour ?? null } : {}),
+          ...(ch.hidden !== undefined ? { hidden: before.hidden === true } : {}),
         },
       ];
     case 'freeze':

@@ -42,6 +42,7 @@ import { relayTabRename } from '../room-client';
 import { axisWriteStatements } from '../db/sheet-axes';
 import { readCellWriteHead } from '../db/sheet-cell-head';
 import { gridsWith, workbookGrids } from '../db/sheet-grids';
+import { tabLookProblem } from './workbook-shown-sheets';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
@@ -58,6 +59,9 @@ function readWrite(raw: unknown): SheetWriteRequest | null {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
   const b = raw as Record<string, unknown>;
   if (typeof b.write !== 'object' || b.write === null) return null;
+  // A layout write's changes are a list, as everything after reads them.
+  const w = b.write as { kind?: unknown; changes?: unknown };
+  if (w.kind === 'layout' && !Array.isArray(w.changes)) return null;
   if (b.wid !== undefined && (typeof b.wid !== 'string' || b.wid.length > 64)) return null;
   return {
     write: b.write as SheetWrite,
@@ -226,6 +230,8 @@ export async function storeSheetWrite(
     const spreadsheet = await isSpreadsheet(ctx.env, documentId);
     const scope = spreadsheet ? undefined : head.tabId;
     const limits = SheetLimits.of(spreadsheet);
+    const look = await tabLookProblem(ctx, documentId, sheetId, write, spreadsheet);
+    if (look) return look;
     if (write.kind === 'title') {
       const others = (await listSheetHeads(ctx.env, documentId, scope))
         .filter((h) => h.id !== sheetId)

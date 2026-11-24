@@ -47,6 +47,9 @@ export type LayoutChange =
       colWidth?: number | null;
       rowHeight?: number | null;
       setupPending?: boolean;
+      // The sheet's tab: a colour (null takes it off) and whether it is hidden.
+      tabColour?: string | null;
+      hidden?: boolean;
     }
   // A card table set (whole) or removed (null), by id.
   | { k: 'cardTable'; id: string; table: CardTable | null }
@@ -390,6 +393,8 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
         ...(ch.colWidth !== undefined ? { colWidth: ch.colWidth ?? undefined } : {}),
         ...(ch.rowHeight !== undefined ? { rowHeight: ch.rowHeight ?? undefined } : {}),
         ...(ch.setupPending !== undefined ? { setupPending: ch.setupPending || undefined } : {}),
+        ...(ch.tabColour !== undefined ? { tabColour: ch.tabColour ?? undefined } : {}),
+        ...(ch.hidden !== undefined ? { hidden: ch.hidden || undefined } : {}),
       });
     case 'freeze':
       return clean({
