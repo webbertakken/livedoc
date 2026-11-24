@@ -2,17 +2,18 @@
 // placed through the matrix the page was drawn with, multiplied onto the page so the words under a highlight keep
 // their own colour. Geometry LiveDoc draws itself, never markup of the file. The page and its thumbnail share it.
 // Under Dark pages (dark-pages.md "The recolouring") a mark takes the colour the step gives the file's own marks, and
-// lightens the dark page as multiplying darkens the white one, so the words under it keep their ink. A Text's and a
-// Callout's words are set line for line as TypedLayout places them, in a face with Helvetica's widths.
+// lightens the dark page as multiplying darkens the white one, so the words under it keep their ink. A Text's, a
+// Callout's and a stamp's words are set line for line as MarkWords places them, in a face with Helvetica's widths,
+// a stamp's name bold.
 import { useContext } from 'react';
-import type { MarkShape, PageMatrix, PagePoint, Quad, TypedMark } from '@livedoc/pdf-documents';
+import type { MarkShape, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
 import {
   DarkPages,
   Helvetica,
   Mark,
   MarkDrawing,
+  MarkWords,
   PageView,
-  TypedLayout,
 } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { TYPED_FACES } from '@/lib/pdf-document/pdf-typed';
@@ -38,14 +39,16 @@ const helveticas = (text: string): boolean =>
   Array.from(text).every((character) => Helvetica.writes(character.codePointAt(0)!));
 
 /**
- * A Text's or a Callout's words as SVG in view space: each line set from its baseline, along the page's own across and
+ * A mark's words as SVG in view space: each line set from its baseline, along the page's own across and
  * down as the matrix turns them, held to the width the file sets it at where Helvetica writes it.
  */
-export function MarkWords({ matrix, mark }: { matrix: PageMatrix; mark: TypedMark }) {
+export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark }) {
+  const words = MarkWords.of(mark);
+  if (!words) return null;
   const [a, b, c, d] = matrix;
   return (
-    <g stroke="none" fontFamily={TYPED_FACES} fontSize={mark.size} style={{ whiteSpace: 'pre' }}>
-      {TypedLayout.place(mark).map((line, at) => {
+    <g stroke="none" fontFamily={TYPED_FACES} style={{ whiteSpace: 'pre' }}>
+      {words.lines.map((line, at) => {
         if (line.text === '') return null;
         // A right-to-left line is set from its right end.
         const start = PageView.toView(matrix, {
@@ -57,6 +60,8 @@ export function MarkWords({ matrix, mark }: { matrix: PageMatrix; mark: TypedMar
           <text
             key={at}
             transform={`matrix(${a} ${b} ${-c} ${-d} ${start.x} ${start.y})`}
+            fontSize={line.size}
+            fontWeight={line.bold ? 'bold' : undefined}
             direction={line.rtl ? 'rtl' : undefined}
             textLength={held ? line.width : undefined}
             lengthAdjust={held ? 'spacingAndGlyphs' : undefined}
@@ -140,7 +145,7 @@ export function PdfMarksOverlay({
             opacity={mark.opacity}
           >
             <MarkShapes matrix={matrix} shape={mark} />
-            {Mark.isTyped(mark) ? <MarkWords matrix={matrix} mark={mark} /> : null}
+            <PdfMarkWords matrix={matrix} mark={mark} />
           </g>
         );
       })}

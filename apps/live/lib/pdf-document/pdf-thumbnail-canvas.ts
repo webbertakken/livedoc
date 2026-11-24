@@ -4,13 +4,12 @@
 // pages, of what a person holds or of anyone's presence is ever drawn here. The browser's canvas does the work, so
 // this half is proven in a browser (e2e/office/pdf-document-thumbnail.spec.ts), never in jsdom.
 import {
-  Mark,
   MarkDrawing,
+  MarkWords,
   PageView,
-  TypedLayout,
+  type Mark,
   type PageMatrix,
   type PagePoint,
-  type TypedMark,
 } from '@livedoc/pdf-documents';
 import type { PdfThumbnailPicture } from './pdf-thumbnail';
 import { TYPED_FACES } from './pdf-typed';
@@ -29,11 +28,11 @@ function trace(
   });
 }
 
-/** A Text's or a Callout's words, each line from its baseline along the page's own across, as the overlay sets them. */
-function setWords(context: CanvasRenderingContext2D, toView: PageMatrix, mark: TypedMark) {
+/** A mark's words, each line from its baseline along the page's own across, as the overlay sets them. */
+function setWords(context: CanvasRenderingContext2D, toView: PageMatrix, mark: Mark) {
   const [a, b, c, d] = toView;
-  context.font = `${mark.size}px ${TYPED_FACES}`;
-  for (const line of TypedLayout.place(mark)) {
+  for (const line of MarkWords.of(mark)?.lines ?? []) {
+    context.font = `${line.bold ? 'bold ' : ''}${line.size}px ${TYPED_FACES}`;
     const start = PageView.toView(toView, {
       x: line.rtl ? line.x + line.width : line.x,
       y: line.y,
@@ -87,7 +86,7 @@ export async function encodePdfThumbnail(
       context.lineJoin = stroke.round ? 'round' : 'miter';
       context.stroke();
     }
-    if (Mark.isTyped(mark)) setWords(context, bitmap.toView, mark);
+    setWords(context, bitmap.toView, mark);
   }
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, 'image/jpeg', quality),

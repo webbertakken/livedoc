@@ -17,6 +17,7 @@ import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
+import type { PdfPageStamping } from '@/lib/pdf-document/usePdfStampTool';
 import type { PdfPageTyping } from '@/lib/pdf-document/usePdfTyping';
 import { PdfPage } from './PdfPage';
 
@@ -56,6 +57,7 @@ async function page(
   ink: PdfPageInk | null = null,
   shaping: PdfPageShaping | null = null,
   typing: PdfPageTyping | null = null,
+  stamping: PdfPageStamping | null = null,
 ) {
   const onText = vi.fn();
   const onMark = vi.fn();
@@ -85,6 +87,7 @@ async function page(
       ink={ink}
       shaping={shaping}
       typing={typing}
+      stamping={stamping}
       selected={selected}
       handles={handles}
       onText={onText}
@@ -380,6 +383,21 @@ describe('typing on a page', () => {
     fireEvent.pointerDown(layer, at);
     fireEvent.pointerUp(layer, at);
     expect(view.container.querySelector('textarea[data-pdf-typing="text"]')).not.toBeNull();
+    expect(onMark).not.toHaveBeenCalled();
+  });
+});
+
+// marks.md "Stamps": with the Stamp tool in hand a press places the stamp where it lands, in the page as the file has it.
+describe('placing a stamp on a page', () => {
+  it('hands a press over in the page’s points, with the page’s box, and marks no text', async () => {
+    const onStamp = vi.fn();
+    const { box, onMark } = await page('stamp', [], [], false, null, null, null, null, { onStamp });
+    expect(box.className).toContain('cursor-crosshair touch-none');
+    fireEvent.pointerDown(box, { button: 0, pointerId: 1, clientX: 72, clientY: 92 });
+    fireEvent.pointerUp(box, { button: 0, pointerId: 1, clientX: 72, clientY: 92 });
+    expect(onStamp).toHaveBeenCalledWith(1, { x: 72, y: 700 }, [0, 0, 612, 792]);
+    fireEvent.pointerDown(box, { button: 2, pointerId: 1, clientX: 72, clientY: 92 });
+    expect(onStamp).toHaveBeenCalledOnce();
     expect(onMark).not.toHaveBeenCalled();
   });
 });

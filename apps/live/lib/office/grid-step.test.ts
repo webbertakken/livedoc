@@ -20,3 +20,27 @@ describe('gridStep', () => {
     expect(gridStep(2, 5, 3, 'ArrowUp')).toBe(2);
   });
 });
+
+describe('gridStep in sections', () => {
+  // Sections of five and two, three to a row: 0 1 2 / 3 4 / 5 6.
+  const sections = [5, 2];
+
+  it('moves by a cell through every section', () => {
+    expect(gridStep(4, sections, 3, 'ArrowRight')).toBe(5);
+    expect(gridStep(6, sections, 3, 'ArrowRight')).toBe(0);
+    expect(gridStep(5, sections, 3, 'ArrowLeft')).toBe(4);
+  });
+
+  it('moves by a row into the next section, each starting a row of its own', () => {
+    expect(gridStep(3, sections, 3, 'ArrowDown')).toBe(5);
+    expect(gridStep(4, sections, 3, 'ArrowDown')).toBe(6);
+    expect(gridStep(6, sections, 3, 'ArrowDown')).toBe(1);
+    expect(gridStep(5, sections, 3, 'ArrowUp')).toBe(3);
+    expect(gridStep(0, sections, 3, 'ArrowUp')).toBe(5);
+  });
+
+  it('passes over a row with no cell in the column', () => {
+    expect(gridStep(2, sections, 3, 'ArrowDown')).toBe(2);
+    expect(gridStep(2, sections, 3, 'ArrowUp')).toBe(2);
+  });
+});

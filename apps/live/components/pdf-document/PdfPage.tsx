@@ -44,6 +44,8 @@ import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools
 import { usePdfPageDraft } from '@/lib/pdf-document/usePdfPageDraft';
 import { usePdfPageTextMark } from '@/lib/pdf-document/usePdfPageTextMark';
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
+import type { PdfPageStamping } from '@/lib/pdf-document/usePdfStampTool';
+import { pageBoxOf } from '@/lib/pdf-document/pdf-typed';
 import type { PdfPageTyping as Typing } from '@/lib/pdf-document/usePdfTyping';
 import { screenBoxOf } from '@/lib/pdf-document/pdf-shape';
 import { PdfPageTyping } from './PdfPageTyping';
@@ -77,6 +79,7 @@ export const PdfPage = memo(function PdfPage({
   ink,
   shaping,
   typing,
+  stamping,
   selected,
   handles,
   onText,
@@ -112,6 +115,8 @@ export const PdfPage = memo(function PdfPage({
   ink: PdfPageInk | null;
   // A shape tool's kind and look and where its lines and shapes go; null while another tool is in hand.
   shaping: PdfPageShaping | null;
+  // Where the Stamp tool's presses go; null while another tool is in hand.
+  stamping: PdfPageStamping | null;
   // The Text or the Callout tool's look and where its marks go; null while another tool is in hand.
   typing: Typing | null;
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
@@ -235,7 +240,9 @@ export const PdfPage = memo(function PdfPage({
     index,
     ink: current ? ink : null,
     shaping: current ? shaping : null,
+    stamping: current ? stamping : null,
     pointAt,
+    pageBox: () => (current ? pageBoxOf(current.toView, shown) : null),
     box,
   });
   const textMark = usePdfPageTextMark({ index, engine, onMark });

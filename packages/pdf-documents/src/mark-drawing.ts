@@ -2,7 +2,7 @@
 // in page space: a text mark each glyph quadrilateral on its own, a fill for a Highlight, a line for the others; a
 // Drawing its strokes, round; a Line from end to end, an Arrow with an open head; a Rectangle round its box and an
 // Ellipse within it, each closed; a Callout its line, its head at what is meant, and its box's border (a Text's words
-// and a Callout's are TypedLayout's). Pure geometry, so the surface's overlay, the canvas pictures (a thumbnail, a print)
+// and a Callout's are TypedLayout's); a stamp its rounded border (its words StampLayout's). Pure geometry, so the surface's overlay, the canvas pictures (a thumbnail, a print)
 // and the appearance a bake writes draw one mark the same way.
 import type { PagePoint } from './engine-contract';
 import {
@@ -17,23 +17,27 @@ import type {
   LineMark,
   Quad,
   ShapeMark,
+  StampMark,
   Stroke,
   TextMark,
   TextBoxMark,
   TextMarkKind,
 } from './mark';
+import { StampLayout } from './stamp-layout';
 
 /** What of a mark its drawing reads. */
 export type LineShape = Pick<LineMark, 'kind' | 'line' | 'width'>;
 export type BoxShape = Pick<ShapeMark, 'kind' | 'rect' | 'width'>;
 export type TypedShape =
   Pick<TextBoxMark, 'kind' | 'rect'> | Pick<CalloutMark, 'kind' | 'rect' | 'callout'>;
+export type StampShape = Pick<StampMark, 'kind' | 'rect' | 'lines'>;
 export type MarkShape =
   | Pick<TextMark, 'kind' | 'quads'>
   | Pick<DrawingMark, 'kind' | 'strokes' | 'width'>
   | LineShape
   | BoxShape
-  | TypedShape;
+  | TypedShape
+  | StampShape;
 
 /** A line through its points, `width` points wide; `round` its ends and corners (a Drawing's); `closed` back to its
  *  first point, its last corner joined as the others are (a Rectangle's, an Ellipse's). */
@@ -191,6 +195,7 @@ export const MarkDrawing = {
       };
     if ('line' in mark) return lineDrawing(mark);
     if (mark.kind === 'text' || mark.kind === 'callout') return typedDrawing(mark);
+    if (mark.kind === 'stamp') return { fills: [], strokes: [StampLayout.border(mark)] };
     if ('rect' in mark) return shapeDrawing(mark);
     const { kind, quads } = mark;
     return kind === 'highlight'

@@ -74,7 +74,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Drawing                                              | D                | The same                 | Reviewing | built     |
 | Cycle the shapes                                     | ⇧D               | The same                 | Reviewing | built     |
 | Cloud                                                | Q                | The same                 | Reviewing | specified |
-| Stamp                                                | K                | K or J                   | Reviewing | specified |
+| Stamp                                                | K                | K or J                   | Reviewing | built     |
 | Sign                                                 | G `(default)`    | None                     | Reviewing | specified |
 | Edit text                                            | T                | The same                 | Editing   | specified |
 | Object tool                                          | O                | R, O                     | Editing   | specified |

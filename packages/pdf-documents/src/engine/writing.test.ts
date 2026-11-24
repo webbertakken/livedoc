@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { BakeResult, PdfEngine, PdfOpened } from '../engine-contract';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark } from '../mark';
+import { StampLayout } from '../stamp-layout';
 import type { PageName } from '../page-name';
 import { PdfChange, PdfChangeset } from '../pdf-change';
 import { corpusBytes, corpusFiles } from '../testing/corpus';
@@ -342,6 +343,77 @@ describe('writing a Text and a Callout', () => {
     expect(redIn(drawn, [100, 200, 300, 290])).toBe(0);
     // The Callout's line, half way between what is meant and its knee.
     expect(redIn(drawn, [190, 552, 198, 562])).toBeGreaterThan(0);
+  });
+});
+
+// marks.md "In the file": a stamp is a Stamp with Name the standard's name for it, Contents its words a line each, and
+// an appearance in LiveDoc's style, its name in Helvetica Bold.
+describe('writing a stamp', () => {
+  const green = '#086f1e';
+  const greenIn = (
+    drawn: { width: number; height: number; rgba: Uint8ClampedArray },
+    [left, bottom, right, top]: readonly [number, number, number, number],
+  ) => {
+    let count = 0;
+    for (let y = Math.round(bottom); y < top; y += 1)
+      for (let x = Math.round(left); x < right; x += 1) {
+        const at = ((drawn.height - y) * drawn.width + x) * 4;
+        const [r, g, b] = drawn.rgba.slice(at, at + 3);
+        if (g! > 80 && r! < 60 && b! < 80) count += 1;
+      }
+    return count;
+  };
+
+  it('writes each as a Stamp under its name, read back by its id with its words, and drawn', async ({
+    skip,
+  }) => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const base = { page, colour: green, opacity: 1, author: 'Ada', createdAt: at };
+    const marks = [
+      Mark.stamp({
+        ...base,
+        id: 'a-stamp',
+        rect: [100, 300, 260, 340],
+        stamp: 'not-approved',
+        lines: ['NOT APPROVED'],
+      })!,
+      Mark.stamp({
+        ...base,
+        id: 'a-dynamic-stamp',
+        rect: [300, 300, 480, 345],
+        stamp: 'approved-by',
+        lines: ['APPROVED', 'by Ada Lovelace, 22 Nov 2026, 14:02'],
+      })!,
+      Mark.stamp({
+        ...base,
+        id: 'my-own',
+        rect: [100, 400, 200, 430],
+        stamp: 'paid',
+        lines: ['PAID'],
+      })!,
+    ];
+    const result = await bakeWith(marks.map((mark) => PdfChange.addMark(mark)));
+    expect(result.kind).toBe('addition');
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('/Subtype /Stamp');
+    expect(added).toContain('/Name /NotApproved');
+    expect(added).toContain('/Name /Approved');
+    expect(added).toContain('/Name /paid');
+    expect(added).toContain('/BaseFont /Helvetica-Bold');
+    expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
+    opened(await engine.open(result.bytes));
+    const read = await engine.fileMarks(0);
+    expect(read.map(({ id, subtype, words }) => [id, subtype, words])).toEqual([
+      ['a-dynamic-stamp', 'stamp', 'APPROVED\nby Ada Lovelace, 22 Nov 2026, 14:02'],
+      ['a-stamp', 'stamp', 'NOT APPROVED'],
+      ['my-own', 'stamp', 'PAID'],
+    ]);
+    // Its Rect is its box grown by its border, scaled with the stamp to fill the box: every line whole inside it.
+    expect(read[1]!.rect[0]).toBeCloseTo(100 - StampLayout.border(marks[0]!).width, 3);
+    const drawn = (await engine.drawPage(0, 1))!;
+    expect(greenIn(drawn, [100, 300, 260, 340])).toBeGreaterThan(200);
+    expect(greenIn(drawn, [100, 200, 260, 290])).toBe(0);
   });
 });
 

@@ -26,6 +26,8 @@ export {
   type ShapeInput,
   type ShapeMark,
   type ShapeMarkKind,
+  type StampInput,
+  type StampMark,
   type Stroke,
   type TextBoxInput,
   type TextBoxMark,
@@ -40,8 +42,13 @@ export {
   type LineShape,
   type MarkShape,
   type MarkStroke,
+  type StampShape,
   type TypedShape,
 } from './mark-drawing';
+export { MarkWords, type WordLine } from './mark-words';
+export { STAMPS, Stamps, type Stamp, type StampTone } from './stamps';
+export { StampLayout, type StampLine } from './stamp-layout';
+export { HelveticaBold } from './helvetica-bold';
 export { TYPED_LINE_HEIGHT, TypedLayout, type PlacedLine, type TypedLine } from './typed-layout';
 export { Helvetica, HELVETICA_STAND_IN } from './helvetica';
 export {

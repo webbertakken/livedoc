@@ -1,23 +1,19 @@
 // A mark's appearance stream (docs/specs/035-pdf-documents/marks.md "In the file"): what the page shows of it, as
-// MarkDrawing says, and a Text's or a Callout's words set as TypedLayout places them, in the operators of a PDF's
-// content, so every reader draws exactly what was made. Pure: the bake wraps it in a stream with its box, the font of
-// that name where words are set, and, where the opacity is under 1, a graphics state of that name.
+// MarkDrawing says, and a Text's, a Callout's or a stamp's words set as MarkWords places them, in the operators of a
+// PDF's content, so every reader draws exactly what was made. Pure: the bake wraps it in a stream with its box, the
+// fonts it names where words are set, and, where the opacity is under 1, a graphics state of that name.
 import { Helvetica } from '../helvetica';
 import type { Box } from '../mark';
 import type { MarkDrawing } from '../mark-drawing';
-import type { PlacedLine } from '../typed-layout';
+import type { MarkWords } from '../mark-words';
 
 /** The graphics state an appearance draws through where its opacity is under 1. */
 export const APPEARANCE_STATE = 'LDa';
 /** The font an appearance sets words in: Helvetica, written in WinAnsi. */
 export const APPEARANCE_FONT = 'Helv';
-
-/** A Text's or a Callout's words: its lines placed on the page, their size, and the box they are set in. */
-export type AppearanceWords = {
-  readonly lines: readonly PlacedLine[];
-  readonly size: number;
-  readonly box: Box;
-};
+/** The font a stamp's name is set in: Helvetica Bold, written in WinAnsi. */
+export const APPEARANCE_BOLD_FONT = 'HeBo';
+export type AppearanceFont = typeof APPEARANCE_FONT | typeof APPEARANCE_BOLD_FONT;
 
 export type Appearance = {
   /** The content stream's operators. */
@@ -26,6 +22,8 @@ export type Appearance = {
   readonly box: Box;
   /** The opacity the graphics state carries; null where the mark is opaque. */
   readonly opacity: number | null;
+  /** The fonts its words are set in, each once, in the order first set. */
+  readonly fonts: readonly AppearanceFont[];
 };
 
 /**
@@ -62,7 +60,7 @@ const path = (points: MarkDrawing['fills'][number]): string =>
 export function appearanceOf(
   { fills, strokes }: MarkDrawing,
   look: { readonly colour: string; readonly opacity: number },
-  words: AppearanceWords | null = null,
+  words: MarkWords | null = null,
 ): Appearance {
   const colour = rgbOf(look.colour);
   const opacity = look.opacity < 1 ? look.opacity : null;
@@ -76,10 +74,19 @@ export function appearanceOf(
     lines.push(`${path(stroke.points)}${stroke.closed ? ' h' : ''} S`);
   }
   const set = words?.lines.filter((line) => line.text !== '') ?? [];
-  if (words && set.length > 0) {
-    lines.push('BT', defaultAppearanceOf(words.size, look.colour));
-    for (const line of set)
+  const fonts: AppearanceFont[] = [];
+  if (set.length > 0) {
+    lines.push('BT');
+    let face = '';
+    for (const line of set) {
+      const font = line.bold ? APPEARANCE_BOLD_FONT : APPEARANCE_FONT;
+      if (!fonts.includes(font)) fonts.push(font);
+      // The font and size where they change; the colour with the first.
+      const next = `/${font} ${num(line.size)} Tf`;
+      if (next !== face) lines.push(face === '' ? `${next} ${colour} rg` : next);
+      face = next;
       lines.push(`1 0 0 1 ${num(line.x)} ${num(line.y)} Tm ${winAnsiString(line.text)} Tj`);
+    }
     lines.push('ET');
   }
   lines.push('Q');
@@ -102,5 +109,6 @@ export function appearanceOf(
       Math.max(...ys) + grow,
     ],
     opacity,
+    fonts,
   };
 }

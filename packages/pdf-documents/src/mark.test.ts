@@ -5,6 +5,7 @@ import {
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
+  PDF_STAMP_LINE_MAX_CHARS,
   PDF_TEXT_SIZE_MAX_PT,
   PDF_TEXT_SIZE_MIN_PT,
 } from './limits';
@@ -16,6 +17,7 @@ import {
   type Quad,
   type CalloutInput,
   type ShapeInput,
+  type StampInput,
   type TextBoxInput,
 } from './mark';
 
@@ -257,5 +259,56 @@ describe('a Text or a Callout', () => {
     ['a line far off any page', { callout: [1e9, 2, 3, 4, 5, 6] }],
   ])('refuses a Callout of %s', (_, over) => {
     expect(Mark.parse({ ...text(over), kind: 'callout', modifiedAt: 0 })).toBeNull();
+  });
+});
+
+// marks.md "Stamps": a stamp is ready-made words in a box, fixed when placed.
+describe('a stamp', () => {
+  const stamp = (over: Record<string, unknown> = {}) => ({
+    id: 's1',
+    page: 'p:4',
+    rect: [100, 600, 220, 637],
+    stamp: 'approved-by',
+    lines: ['APPROVED', 'by Ada Lovelace, 21 Nov 2026, 14:02'],
+    colour: '#086f1e',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+    ...over,
+  });
+
+  it('makes a stamp of its box and lines, read back unchanged, bounded by its box', () => {
+    const mark = Mark.stamp(stamp() as unknown as StampInput)!;
+    expect(mark).toEqual({ ...stamp(), kind: 'stamp', modifiedAt: stamp().createdAt });
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(Mark.bounds(mark)).toEqual([100, 600, 220, 637]);
+    expect(Mark.isTyped(mark)).toBe(false);
+  });
+
+  it('takes a stamp LiveDoc does not draw, so a person’s own fits', () => {
+    expect(
+      Mark.stamp(stamp({ stamp: 'my-own-7', lines: ['PAID'] }) as unknown as StampInput),
+    ).not.toBeNull();
+  });
+
+  it.each([
+    ['no lines', { lines: [] }],
+    ['three lines', { lines: ['A', 'B', 'C'] }],
+    ['a line of only spaces', { lines: ['APPROVED', '  '] }],
+    ['a line that is no string', { lines: [7] }],
+    ['lines that are no list', { lines: 'APPROVED' }],
+    ['a line past its limit', { lines: ['A'.repeat(PDF_STAMP_LINE_MAX_CHARS + 1)] }],
+    ['no stamp', { stamp: undefined }],
+    ['a stamp id out of bounds', { stamp: 'Approved by me' }],
+    ['no box', { rect: undefined }],
+    ['a box with no width', { rect: [100, 600, 100, 637] }],
+    ['a box with no height', { rect: [100, 600, 220, 600] }],
+  ])('refuses a stamp of %s', (_, over) => {
+    expect(Mark.parse({ ...stamp(over), kind: 'stamp', modifiedAt: 0 })).toBeNull();
+  });
+
+  it('keeps a line at its limit', () => {
+    const line = 'A'.repeat(PDF_STAMP_LINE_MAX_CHARS);
+    expect(Mark.stamp(stamp({ lines: [line] }) as unknown as StampInput)!.lines).toEqual([line]);
   });
 });

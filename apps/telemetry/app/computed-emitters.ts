@@ -70,6 +70,13 @@ const PDF_TYPED_NAMES = tokensAfter(
   '}',
 ).filter((token) => /^[A-Z]/.test(token));
 
+// A PDF's stamps, each category's name in telemetry.
+const PDF_STAMP_KINDS = tokensAfter(
+  read('live/lib/pdf-document/pdf-stamp.ts'),
+  'export const stampKindName',
+  '=>',
+);
+
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
 const TIMELINE_CATEGORIES = [
@@ -528,6 +535,11 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   },
   'apps/live/lib/pdf-document/usePdfTyping.ts Pdf·Added': {
     values: PDF_TYPED_NAMES.map((name) => `Mark.${name}`),
+  },
+  // A stamp placed (marks.md "Telemetry and observability": `Stamp.<Standard|Dynamic>`), its category's name read from
+  // the stamps' own.
+  'apps/live/lib/pdf-document/usePdfStampTool.ts Pdf·Added': {
+    values: PDF_STAMP_KINDS.map((kind) => `Stamp.${kind}`),
   },
   'apps/live/lib/pdf-document/usePdfShapes.ts Pdf·Added': {
     values: PDF_SHAPE_NAMES.map((name) => `Mark.${name}`),

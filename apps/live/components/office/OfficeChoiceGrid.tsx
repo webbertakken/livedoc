@@ -3,7 +3,9 @@
 // An office toolbar's choice grid (docs/specs/004-interface-design/office-shell.md "Toolbar", split toggle): the kind's
 // choices drawn as small previews, a WAI-ARIA menu of `menuitemradio` cells, the one in force checked. The shared menu
 // keyboard (useMenu) opens it on the checked cell, closes it on Escape, Tab or a press outside; the grid adds moving by
-// cell (Left, Right) and by row (Up, Down). A choice runs the kind's action, which gives focus back to the writing.
+// cell (Left, Right) and by row (Up, Down). A choice runs the kind's action, which gives focus back to the writing. A
+// grid may come in sections, each a group under its heading starting a row of its own (the PDF Stamp control's
+// categories), and a cell may be a badge: words in a colour on the page's paper, as a stamp looks.
 import type { KeyboardEvent } from 'react';
 import { Glyph, Prims, useMenu } from '@livedoc/ui';
 import type { IconPrim } from '@livedoc/icons';
@@ -20,15 +22,47 @@ export type OfficeGridLine = {
   word?: { text: string; struck: boolean };
 };
 
-/** A cell: a preview of lines (a list style), or a glyph over its name (a tool). */
+/** A badge's look: its words in capitals, a smaller second line, in its colour, as on the page. */
+export type OfficeGridBadge = { text: string; detail: string | null; colour: string };
+
+/** A cell: a preview of lines (a list style), a glyph over its name (a tool), or a badge (a stamp). */
 export type OfficeGridCell =
   | { id: string; label: string; lines: readonly OfficeGridLine[] }
-  | { id: string; label: string; icon: readonly IconPrim[] };
+  | { id: string; label: string; icon: readonly IconPrim[] }
+  | { id: string; label: string; badge: OfficeGridBadge };
 
-/** What a split toggle's chevron opens: cells, `columns` to a row, each run by the choice's action of its id. */
-export type OfficeGrid = { columns: number; cells: readonly OfficeGridCell[] };
+/** A run of the grid's cells under a heading of its own. */
+export type OfficeGridSection = { label: string; count: number };
+
+/**
+ * What a split toggle's chevron opens: cells, `columns` to a row, each run by the choice's action of its id; in
+ * `sections`, the cells in order, so many to each; `wide` cells for a badge's words.
+ */
+export type OfficeGrid = {
+  columns: number;
+  cells: readonly OfficeGridCell[];
+  sections?: readonly OfficeGridSection[];
+  wide?: boolean;
+};
 
 const LEVEL_STEP_PX = 9;
+/** A cell's width, in rem: a tool's or a list style's, and a badge's. */
+const CELL_REM = 4.5;
+const WIDE_CELL_REM = 6.5;
+
+function Badge({ badge }: { badge: OfficeGridBadge }) {
+  return (
+    <span
+      aria-hidden="true"
+      data-office-grid-badge=""
+      className="flex w-full flex-col items-center justify-center gap-0.5 rounded-[4px] border-2 bg-(--pdf-paper) px-1 py-1 text-center leading-none"
+      style={{ color: badge.colour, borderColor: badge.colour }}
+    >
+      <span className="text-[10px] font-bold">{badge.text}</span>
+      {badge.detail ? <span className="text-[8px]">{badge.detail}</span> : null}
+    </span>
+  );
+}
 
 function Preview({ lines }: { lines: readonly OfficeGridLine[] }) {
   return (
@@ -79,6 +113,8 @@ export function OfficeChoiceGrid({
   onClose: () => void;
 }) {
   const { attach, surfaceProps } = useMenu({ onClose, trigger, label });
+  const sections = grid.sections ?? [{ label: '', count: grid.cells.length }];
+  const columns = `repeat(${grid.columns}, ${grid.wide ? WIDE_CELL_REM : CELL_REM}rem)`;
   // Up and Down by a row, Left and Right by a cell, ahead of the menu's own Up and Down.
   const onKeyDownCapture = (e: KeyboardEvent<HTMLDivElement>) => {
     if (!GRID_KEYS.includes(e.key) || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -88,48 +124,75 @@ export function OfficeChoiceGrid({
     // Handled here: neither the menu's keys nor the toolbar's (an ancestor in React's tree, through the portal) see it.
     e.preventDefault();
     e.stopPropagation();
-    cells[gridStep(at, cells.length, grid.columns, e.key as GridKey)]?.focus({
-      preventScroll: true,
-    });
+    const sizes = sections.map((section) => section.count);
+    cells[gridStep(at, sizes, grid.columns, e.key as GridKey)]?.focus({ preventScroll: true });
   };
+  const cell = (cell: OfficeGridCell) => {
+    const checked = cell.id === value;
+    return (
+      <button
+        key={cell.id}
+        type="button"
+        role="menuitemradio"
+        aria-checked={checked}
+        aria-label={cell.label}
+        tabIndex={-1}
+        data-office-grid-cell={cell.id}
+        onClick={() => {
+          onClose();
+          actions[cell.id]?.run();
+        }}
+        className={`flex rounded-md border outline-none hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--office-focus) ${
+          'badge' in cell ? 'min-h-11 items-stretch p-1' : 'h-14 items-start px-1.5 py-2'
+        } ${checked ? 'border-(--office-focus) bg-(--office-pressed)' : 'border-(--office-line)'}`}
+      >
+        {'icon' in cell ? (
+          <span className="flex w-full flex-col items-center gap-1 text-[11px] leading-none text-(--office-ink)">
+            <Glyph size={18} units={24}>
+              <Prims prims={cell.icon} />
+            </Glyph>
+            {cell.label}
+          </span>
+        ) : 'badge' in cell ? (
+          <Badge badge={cell.badge} />
+        ) : (
+          <Preview lines={cell.lines} />
+        )}
+      </button>
+    );
+  };
+  // Where each section's cells begin.
+  const starts = sections.map((_, at) =>
+    sections.slice(0, at).reduce((sum, section) => sum + section.count, 0),
+  );
   return (
     <div
       ref={attach}
       {...surfaceProps}
       onKeyDownCapture={onKeyDownCapture}
-      style={{ gridTemplateColumns: `repeat(${grid.columns}, 4.5rem)` }}
-      className="grid gap-1.5 rounded-md border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
+      className="flex max-h-[min(32rem,80vh)] flex-col gap-2 overflow-y-auto rounded-md border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
     >
-      {grid.cells.map((cell) => {
-        const checked = cell.id === value;
-        return (
-          <button
-            key={cell.id}
-            type="button"
-            role="menuitemradio"
-            aria-checked={checked}
-            aria-label={cell.label}
-            tabIndex={-1}
-            data-office-grid-cell={cell.id}
-            onClick={() => {
-              onClose();
-              actions[cell.id]?.run();
-            }}
-            className={`flex h-14 items-start rounded-md border px-1.5 py-2 outline-none hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--office-focus) ${
-              checked ? 'border-(--office-focus) bg-(--office-pressed)' : 'border-(--office-line)'
-            }`}
+      {sections.map((section, at) => {
+        const cells = grid.cells.slice(starts[at], starts[at]! + section.count);
+        const body = (
+          <div className="grid gap-1.5" style={{ gridTemplateColumns: columns }}>
+            {cells.map(cell)}
+          </div>
+        );
+        return section.label === '' ? (
+          <div key="cells">{body}</div>
+        ) : (
+          <div
+            key={section.label}
+            role="group"
+            aria-label={section.label}
+            className="flex flex-col gap-1"
           >
-            {'icon' in cell ? (
-              <span className="flex w-full flex-col items-center gap-1 text-[11px] leading-none text-(--office-ink)">
-                <Glyph size={18} units={24}>
-                  <Prims prims={cell.icon} />
-                </Glyph>
-                {cell.label}
-              </span>
-            ) : (
-              <Preview lines={cell.lines} />
-            )}
-          </button>
+            <span aria-hidden="true" className="px-0.5 text-xs font-medium text-(--office-muted)">
+              {section.label}
+            </span>
+            {body}
+          </div>
         );
       })}
     </div>

@@ -7,6 +7,7 @@ import {
 } from './limits';
 import type { Quad } from './mark';
 import { MarkDrawing } from './mark-drawing';
+import { StampLayout } from './stamp-layout';
 
 // A line of text 16 points high and 100 wide, its foot at y 700.
 const LINE: Quad = [100, 716, 200, 716, 100, 700, 200, 700];
@@ -271,5 +272,13 @@ describe('a Text’s and a Callout’s drawing', () => {
     expect(head!.points[0]!.x).toBeGreaterThan(10);
     expect(border).toMatchObject({ width: PDF_MARK_LINE_PT, closed: true });
     expect(border!.points).toHaveLength(4);
+  });
+});
+
+// marks.md "Stamps": LiveDoc's style, a rounded border round the stamp's box.
+describe('a stamp’s drawing', () => {
+  it('draws its border alone, as StampLayout rounds it: its words are set apart', () => {
+    const stamp = { kind: 'stamp', rect: [100, 600, 220, 627], lines: ['DRAFT'] } as const;
+    expect(MarkDrawing.of(stamp)).toEqual({ fills: [], strokes: [StampLayout.border(stamp)] });
   });
 });
