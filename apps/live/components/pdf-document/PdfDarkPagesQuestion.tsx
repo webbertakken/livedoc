@@ -74,7 +74,11 @@ export function PdfDarkPagesQuestion({
   const cameFrom = useRef<HTMLElement | null>(null);
   // Said once, a moment after it shows, so a screen reader hears it after what it was saying.
   const [said, setSaid] = useState('');
-  useEffect(() => setSaid('Question: show PDF pages dark?'), []);
+  // The live region is in the page first and its words after, so it is heard.
+  useEffect(() => {
+    const later = setTimeout(() => setSaid('Question: show PDF pages dark?'), 0);
+    return () => clearTimeout(later);
+  }, []);
 
   const dismiss = () => {
     onAnswer('Dismissed');

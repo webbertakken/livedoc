@@ -43,6 +43,8 @@ describe('the first-time question’s card', () => {
     const { engine } = shown();
     expect(screen.getByRole('region', { name: 'Show PDF pages dark?' })).toBeTruthy();
     expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe('');
+    await act(async () => new Promise((done) => setTimeout(done, 0)));
     expect(screen.getByRole('status').textContent).toBe('Question: show PDF pages dark?');
     expect(screen.getByText('As they are')).toBeTruthy();
     const scale = DARK_PAGES_PREVIEW_PX / 612;
