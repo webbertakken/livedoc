@@ -55,6 +55,7 @@ export async function encodePdfThumbnail(
     }
     for (const stroke of strokes) {
       trace(context, bitmap.toView, stroke.points);
+      if (stroke.closed) context.closePath();
       context.lineWidth = stroke.width;
       context.lineCap = stroke.round ? 'round' : 'butt';
       context.lineJoin = stroke.round ? 'round' : 'miter';

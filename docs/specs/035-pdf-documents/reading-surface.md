@@ -252,6 +252,8 @@ rest are the mode's own. A control past the width goes into the shell's overflow
   Viewer's too.
 - **Highlight** holds Underline and Strikethrough behind its chevron and remembers the last one used, per person,
   in this browser: the button then shows that tool, its glyph and its name `(default)`.
+- **Shape** holds Line, Arrow, Rectangle and Ellipse behind its chevron the same way, remembered apart, Line until
+  another is taken `(default)`.
 - **Colour** and **Line width** are the tool in hand's; Editing's **Text** group shows while a text box holds the
   caret. **Dark pages** is offered in the dark scheme only.
 - **Select** selects text and whatever the mode may change; **Hand** drags the view. Holding Space is the hand for as

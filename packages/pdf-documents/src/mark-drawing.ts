@@ -1,20 +1,41 @@
 // How a mark is drawn (docs/specs/035-pdf-documents/marks.md "Making a mark": How a text mark is drawn; A Drawing),
 // in page space: a text mark each glyph quadrilateral on its own, a fill for a Highlight, a line for the others; a
-// Drawing its strokes, round. Pure geometry, so the
-// surface's overlay and the canvas pictures (a thumbnail, a print) draw one mark the same way.
+// Drawing its strokes, round; a Line from end to end, an Arrow with an open head; a Rectangle round its box and an
+// Ellipse within it, each closed. Pure geometry, so the surface's overlay, the canvas pictures (a thumbnail, a print)
+// and the appearance a bake writes draw one mark the same way.
 import type { PagePoint } from './engine-contract';
-import { PDF_MARK_LINE_PT, PDF_SQUIGGLE_STEP_PT } from './limits';
-import type { DrawingMark, Quad, Stroke, TextMark, TextMarkKind } from './mark';
+import {
+  PDF_ARROW_HEAD_MIN_PT,
+  PDF_ARROW_HEAD_WIDTHS,
+  PDF_MARK_LINE_PT,
+  PDF_SQUIGGLE_STEP_PT,
+} from './limits';
+import type {
+  DrawingMark,
+  LineMark,
+  Quad,
+  ShapeMark,
+  Stroke,
+  TextMark,
+  TextMarkKind,
+} from './mark';
 
 /** What of a mark its drawing reads. */
+export type LineShape = Pick<LineMark, 'kind' | 'line' | 'width'>;
+export type BoxShape = Pick<ShapeMark, 'kind' | 'rect' | 'width'>;
 export type MarkShape =
-  Pick<TextMark, 'kind' | 'quads'> | Pick<DrawingMark, 'kind' | 'strokes' | 'width'>;
+  | Pick<TextMark, 'kind' | 'quads'>
+  | Pick<DrawingMark, 'kind' | 'strokes' | 'width'>
+  | LineShape
+  | BoxShape;
 
-/** A line through its points, `width` points wide; `round` its ends and corners (a Drawing's). */
+/** A line through its points, `width` points wide; `round` its ends and corners (a Drawing's); `closed` back to its
+ *  first point, its last corner joined as the others are (a Rectangle's, an Ellipse's). */
 export type MarkStroke = {
   readonly points: readonly PagePoint[];
   readonly width: number;
   readonly round: boolean;
+  readonly closed: boolean;
 };
 
 export type MarkDrawing = {
@@ -72,6 +93,60 @@ const pointsOf = (stroke: Stroke): PagePoint[] => {
   return points.length === 1 ? [points[0]!, points[0]!] : points;
 };
 
+/** The points of an Ellipse's outline: enough that no side of it shows, at any size a page holds. */
+const ELLIPSE_POINTS = 72;
+/** An arrowhead's sides' angle to its line (marks.md "Making a mark"). */
+const ARROW_HEAD_ANGLE = Math.PI / 6;
+
+const line = (points: PagePoint[], width: number, closed = false): MarkStroke => ({
+  points,
+  width,
+  round: false,
+  closed,
+});
+
+/** An open arrowhead at `tip`, pointing away from `from`: one side, the tip, the other side. */
+function head(from: PagePoint, tip: PagePoint, width: number): PagePoint[] {
+  const side = Math.max(PDF_ARROW_HEAD_MIN_PT, PDF_ARROW_HEAD_WIDTHS * width);
+  const length = Math.hypot(tip.x - from.x, tip.y - from.y);
+  if (length === 0) return [tip, tip, tip];
+  const back = Math.atan2(from.y - tip.y, from.x - tip.x);
+  const wing = (turn: number): PagePoint => ({
+    x: tip.x + side * Math.cos(back + turn),
+    y: tip.y + side * Math.sin(back + turn),
+  });
+  return [wing(-ARROW_HEAD_ANGLE), tip, wing(ARROW_HEAD_ANGLE)];
+}
+
+function lineDrawing({ kind, line: [x1, y1, x2, y2], width }: LineShape): MarkDrawing {
+  const from = { x: x1, y: y1 };
+  const to = { x: x2, y: y2 };
+  const strokes = [line([from, to], width)];
+  if (kind === 'arrow') strokes.push(line(head(from, to, width), width));
+  return { fills: [], strokes };
+}
+
+function shapeDrawing({ kind, rect: [left, bottom, right, top], width }: BoxShape): MarkDrawing {
+  if (kind === 'rectangle') {
+    const corners = [
+      { x: left, y: bottom },
+      { x: right, y: bottom },
+      { x: right, y: top },
+      { x: left, y: top },
+    ];
+    return { fills: [], strokes: [line(corners, width, true)] };
+  }
+  const centre = { x: (left + right) / 2, y: (bottom + top) / 2 };
+  const outline = Array.from({ length: ELLIPSE_POINTS }, (_, at) => {
+    const angle = (at / ELLIPSE_POINTS) * 2 * Math.PI;
+    return {
+      x: centre.x + ((right - left) / 2) * Math.cos(angle),
+      y: centre.y + ((top - bottom) / 2) * Math.sin(angle),
+    };
+  });
+  return { fills: [], strokes: [line(outline, width, true)] };
+}
+
 export const MarkDrawing = {
   /** What a mark draws, in page space. */
   of: (mark: MarkShape): MarkDrawing => {
@@ -82,8 +157,11 @@ export const MarkDrawing = {
           points: pointsOf(stroke),
           width: mark.width,
           round: true,
+          closed: false,
         })),
       };
+    if ('line' in mark) return lineDrawing(mark);
+    if ('rect' in mark) return shapeDrawing(mark);
     const { kind, quads } = mark;
     return kind === 'highlight'
       ? { fills: quads.map(around), strokes: [] }
@@ -93,6 +171,7 @@ export const MarkDrawing = {
             points: LINES[kind](quad),
             width: PDF_MARK_LINE_PT,
             round: false,
+            closed: false,
           })),
         };
   },

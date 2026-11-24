@@ -21,8 +21,12 @@ import {
   UNDERLINE_SELECTION,
 } from './pdf-context-menu';
 import {
+  TOOL_ARROW,
   TOOL_DRAWING,
+  TOOL_ELLIPSE,
   TOOL_HIGHLIGHT,
+  TOOL_LINE,
+  TOOL_RECTANGLE,
   TOOL_SELECT,
   TOOL_SQUIGGLY,
   TOOL_STRIKETHROUGH,
@@ -33,7 +37,9 @@ import { TEXT_MARK_LOOKS } from './pdf-text-mark';
 import { resetTextMarkPick, textMarkPick } from './pdf-text-mark-pick';
 import { DRAWING_LOOK, DRAWING_WIDTH_PT } from './pdf-drawing';
 import { resetMarkLooks } from './pdf-mark-looks';
-import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
+import { SHAPE_LOOK, SHAPE_WIDTH_PT } from './pdf-shape';
+import { resetShapePick, shapePick } from './pdf-shape-pick';
+import { SHAPE_TOOLS, TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import { usePdfMarkTools } from './usePdfMarkTools';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
@@ -121,6 +127,7 @@ beforeEach(() => {
 afterEach(() => {
   localStorage.clear();
   resetTextMarkPick();
+  resetShapePick();
 });
 
 describe('the text tools', () => {
@@ -371,8 +378,102 @@ describe('the Drawing tool', () => {
     run(TOOL_SELECT);
     act(() => void hook.result.current.onKey(key({ key: 'd' }).event));
     expect(hook.result.current.inHand).toBe('drawing');
-    // ⇧D cycles the shapes, which are not built: it takes nothing.
-    act(() => void hook.result.current.onKey(key({ key: 'Escape' }).event));
+  });
+});
+
+// marks.md "Making a mark": the shape tools; reading-surface.md "The toolbar": Shape holds them and remembers the last;
+// keyboard-shortcuts.md "Tools": ⇧D.
+describe('the shape tools', () => {
+  it('are taken by their items, counted, and give the pages a shaping in the kind’s look', () => {
+    const { hook, run, doc } = tools();
+    expect(hook.result.current.shaping).toBeNull();
+    run(TOOL_RECTANGLE);
+    expect(hook.result.current.inHand).toBe('rectangle');
+    expect(hook.result.current.actions[TOOL_RECTANGLE]!.checked).toBe(true);
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Selected', 'Tool.Rectangle');
+    expect(shapePick()).toBe('rectangle');
+    expect(hook.result.current.shaping).toMatchObject({
+      kind: 'rectangle',
+      ...SHAPE_LOOK,
+      width: SHAPE_WIDTH_PT,
+    });
+    expect(hook.result.current.ink).toBeNull();
+    // A text drag with a shape tool in hand marks nothing.
+    act(() => hook.result.current.make(0, { text: 'Lease', quads: [QUAD] }));
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    act(() => hook.result.current.colours[TOOL_COLOUR]!.set('#1a73e8'));
+    act(() =>
+      hook.result.current.shaping!.onShape(1, {
+        kind: 'rectangle',
+        rect: [1, 1, 50, 50],
+        width: 2,
+      }),
+    );
+    expect(PdfLiveChanges.marks(doc)).toEqual([
+      expect.objectContaining({ kind: 'rectangle', colour: '#1a73e8', page: PAGES[1]!.name }),
+    ]);
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Added', 'Mark.Rectangle');
+  });
+
+  it('shows the last shape taken on the Shape control, which puts it down when pressed again', () => {
+    const { hook, run } = tools();
+    const control = () => hook.result.current.actions[SHAPE_TOOLS]!;
+    expect(control().label).toBe('Line');
+    run(SHAPE_TOOLS);
+    expect(hook.result.current.inHand).toBe('line');
+    expect(control().checked).toBe(true);
+    run(SHAPE_TOOLS);
+    expect(hook.result.current.inHand).toBe('select');
+    const choice = hook.result.current.choices[SHAPE_TOOLS]!;
+    expect(choice.grid!.cells.map((cell) => [cell.id, cell.label])).toEqual([
+      [TOOL_LINE, 'Line'],
+      [TOOL_ARROW, 'Arrow'],
+      [TOOL_RECTANGLE, 'Rectangle'],
+      [TOOL_ELLIPSE, 'Ellipse'],
+    ]);
+    act(() => choice.actions[TOOL_ELLIPSE]!.run());
+    expect(control().label).toBe('Ellipse');
+    const now = hook.result.current.choices[SHAPE_TOOLS]!;
+    expect(now.read()).toBe(TOOL_ELLIPSE);
+    const glyphOf = (at: number) => {
+      const cell = now.grid!.cells[at]!;
+      return 'icon' in cell ? cell.icon : null;
+    };
+    expect(now.iconOf!(TOOL_ARROW)).toBe(glyphOf(1));
+    expect(now.iconOf!(null)).toBe(glyphOf(3));
+    // The Drawing is not one it holds.
+    run(TOOL_DRAWING);
+    expect(control().checked).toBe(false);
+    expect(control().label).toBe('Ellipse');
+  });
+
+  it('steps through the shapes with ⇧D, from another tool taking the one the control shows', () => {
+    const { hook } = tools();
+    const press = () => {
+      let taken = false;
+      act(() => {
+        taken = hook.result.current.onKey(key({ key: 'D', shiftKey: true }).event);
+      });
+      return taken;
+    };
+    expect(press()).toBe(true);
+    expect(hook.result.current.inHand).toBe('line');
+    const seen: string[] = [];
+    for (let step = 0; step < 4; step += 1) {
+      press();
+      seen.push(hook.result.current.inHand);
+    }
+    expect(seen).toEqual(['arrow', 'rectangle', 'ellipse', 'line']);
+    press();
+    act(() => void hook.result.current.onKey(key({ key: 'd' }).event));
+    expect(hook.result.current.inHand).toBe('drawing');
+    press();
+    expect(hook.result.current.inHand).toBe('arrow');
+  });
+
+  it('takes no shape outside Reviewing', () => {
+    const { hook } = tools({ marking: false });
+    expect(hook.result.current.actions[SHAPE_TOOLS]).toBeUndefined();
     expect(hook.result.current.onKey(key({ key: 'D', shiftKey: true }).event)).toBe(false);
   });
 });

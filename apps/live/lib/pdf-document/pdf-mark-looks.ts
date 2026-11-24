@@ -6,12 +6,20 @@ import { MARK_KINDS, type MarkKind } from '@livedoc/pdf-documents';
 import { createListeners } from '@/lib/listeners';
 import { readLocalStorageSafe, writeLocalStorageSafe } from '@/lib/local-storage-safe';
 import { DRAWING_LOOK } from './pdf-drawing';
+import { SHAPE_LOOK } from './pdf-shape';
 import { TEXT_MARK_LOOKS, type TextMarkLook } from './pdf-text-mark';
 
 export type MarkLooks = Readonly<Record<MarkKind, TextMarkLook>>;
 
 /** Each kind's first look, before a person chooses another (marks.md "Making a mark"). */
-export const FIRST_LOOKS: MarkLooks = { ...TEXT_MARK_LOOKS, drawing: DRAWING_LOOK };
+export const FIRST_LOOKS: MarkLooks = {
+  ...TEXT_MARK_LOOKS,
+  drawing: DRAWING_LOOK,
+  line: SHAPE_LOOK,
+  arrow: SHAPE_LOOK,
+  rectangle: SHAPE_LOOK,
+  ellipse: SHAPE_LOOK,
+};
 
 const LOOKS_KEY = 'livedoc:v2:pdf-mark-looks';
 const COLOUR = /^#[0-9a-f]{6}$/;

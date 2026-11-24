@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { BakeResult, PdfEngine, PdfOpened } from '../engine-contract';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark } from '../mark';
+import type { PageName } from '../page-name';
 import { PdfChange, PdfChangeset } from '../pdf-change';
 import { corpusBytes, corpusFiles } from '../testing/corpus';
 import {
@@ -211,6 +212,67 @@ describe('writing marks', () => {
     expect(read!.opacity).toBeCloseTo(0.5, 2);
     expect(read!.rect[0]).toBeLessThanOrEqual(100);
     expect(read!.rect[2]).toBeGreaterThanOrEqual(200);
+  });
+});
+
+// marks.md "In the file": a Line is written with its ends as `L`, an Arrow's head as `LE`; a Rectangle and an Ellipse
+// with their box grown by half the line; each with an appearance stream of LiveDoc's own, which the engine draws.
+describe('writing lines and shapes', () => {
+  const red = '#d93025';
+  const base = (id: string, page: PageName) => ({
+    id,
+    page,
+    width: 4,
+    colour: red,
+    opacity: 1,
+    author: 'Ada',
+    createdAt: at,
+  });
+  /** Whether the drawn page is the mark's red near a point of page space (the fixture's page is 612 by 792). */
+  const redAt = (
+    drawn: { width: number; height: number; rgba: Uint8ClampedArray },
+    x: number,
+    y: number,
+  ) => {
+    const at = ((drawn.height - Math.round(y)) * drawn.width + Math.round(x)) * 4;
+    const [r, g, b] = drawn.rgba.slice(at, at + 3);
+    return r! > 180 && g! < 110 && b! < 110;
+  };
+
+  it('writes a Line, an Arrow, a Rectangle and an Ellipse, each read back by its id and drawn', async () => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const marks = [
+      Mark.line('line', { ...base('a-line', page), line: [100, 300, 250, 300] })!,
+      Mark.line('arrow', { ...base('an-arrow', page), line: [100, 400, 250, 400] })!,
+      Mark.shape('rectangle', { ...base('a-box', page), rect: [300, 300, 400, 380] })!,
+      Mark.shape('ellipse', { ...base('a-ring', page), rect: [420, 300, 560, 380], opacity: 0.5 })!,
+    ];
+    const result = await bakeWith(marks.map((mark) => PdfChange.addMark(mark)));
+    expect(result.kind).toBe('addition');
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('/LE [/None /OpenArrow]');
+    opened(await engine.open(result.bytes));
+    // In the order of their ids, as the live changes keep them.
+    const read = await engine.fileMarks(0);
+    expect(read.map(({ id, subtype, colour }) => [id, subtype, colour])).toEqual([
+      ['a-box', 'square', red],
+      ['a-line', 'line', red],
+      ['a-ring', 'circle', red],
+      ['an-arrow', 'line', red],
+    ]);
+    // A Rectangle's box grown by half its line, so the line falls where it was drawn.
+    expect(read[0]!.rect).toEqual([298, 298, 402, 382]);
+    expect(read[2]!.opacity).toBeCloseTo(0.5, 2);
+    const drawn = (await engine.drawPage(0, 1))!;
+    expect(redAt(drawn, 175, 300)).toBe(true);
+    // The Arrow's head: a point on its upper side, 8 points back from the tip at 30°.
+    expect(redAt(drawn, 250 - 8 * Math.cos(Math.PI / 6), 400 + 8 * Math.sin(Math.PI / 6))).toBe(
+      true,
+    );
+    expect(redAt(drawn, 300, 340)).toBe(true);
+    expect(redAt(drawn, 350, 380)).toBe(true);
+    expect(redAt(drawn, 350, 340)).toBe(false);
   });
 });
 

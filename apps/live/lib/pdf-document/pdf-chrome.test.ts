@@ -35,7 +35,11 @@ import {
   ROTATE_VIEW_CLOCKWISE,
   ROTATE_VIEW_COUNTERCLOCKWISE,
   SELECT_ALL,
+  TOOL_ARROW,
   TOOL_DRAWING,
+  TOOL_ELLIPSE,
+  TOOL_LINE,
+  TOOL_RECTANGLE,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
   TOOL_SQUIGGLY,
@@ -51,7 +55,7 @@ import {
 } from './pdf-menus';
 import { PDF_MODES, type PdfMode } from './pdf-modes';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
-import { PAGE_DISPLAY_CONTROL, pdfToolbar, TEXT_MARK_TOOLS } from './pdf-toolbar';
+import { PAGE_DISPLAY_CONTROL, pdfToolbar, SHAPE_TOOLS, TEXT_MARK_TOOLS } from './pdf-toolbar';
 
 // The toolbar lists the surface binds (pdf-view-actions.ts).
 const CHOICES = [PAGE_DISPLAY_CONTROL];
@@ -102,6 +106,11 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_STRIKETHROUGH,
     TOOL_SQUIGGLY,
     TOOL_DRAWING,
+    // usePdfShapeTools.ts: the shape tools.
+    TOOL_LINE,
+    TOOL_ARROW,
+    TOOL_RECTANGLE,
+    TOOL_ELLIPSE,
     COPY,
     SELECT_ALL,
     FIND,
@@ -188,7 +197,7 @@ describe("a PDF document's menus and toolbar", () => {
   // reading-surface.md "Share roles": an item above the session's level is not drawn.
   it('shows a Viewer the download and no tool that marks', () => {
     const actions = Object.fromEntries(
-      [...BOUND, TEXT_MARK_TOOLS].map((id) => [id, { run: () => {} }]),
+      [...BOUND, TEXT_MARK_TOOLS, SHAPE_TOOLS].map((id) => [id, { run: () => {} }]),
     );
     const seen = (level: 'view' | 'participate') =>
       catalogueItems(visibleMenus(PDF_MENUS, level, actions)).map(({ item }) => item.id);
@@ -222,6 +231,7 @@ describe("a PDF document's menus and toolbar", () => {
       TOOL_SELECT,
       TEXT_MARK_TOOLS,
       TOOL_DRAWING,
+      SHAPE_TOOLS,
     ]);
     // "The toolbar": a mode's own tools are not another mode's.
     const labels = (mode: PdfMode) =>

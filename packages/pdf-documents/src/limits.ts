@@ -57,6 +57,12 @@ export const PDF_DRAWING_STEP_PT = 0.5;
 /** A line's width, in points (marks.md "Changing a mark": width 0.5 to 12). */
 export const PDF_MARK_WIDTH_MIN_PT = 0.5;
 export const PDF_MARK_WIDTH_MAX_PT = 12;
+/** (default) A drag spanning less both ways, in points, makes no line or shape (marks.md "Limits"). Safe range: 1 to 6. */
+export const PDF_SHAPE_MIN_PT = 2;
+/** (default) An arrowhead's side, in line widths (marks.md "Limits"). Safe range: 3 to 6. */
+export const PDF_ARROW_HEAD_WIDTHS = 4;
+/** (default) An arrowhead's side at the least, in points (marks.md "Limits"). Safe range: 4 to 10. */
+export const PDF_ARROW_HEAD_MIN_PT = 6;
 /** (default) Past it the stored file is replaced (saving.md "Limits"); the room refuses a state beyond it. */
 export const PDF_LIVE_CHANGES_MAX_BYTES = 4_194_304;
 /** (default) Past it an idle Editor's surface replaces the stored file: three quarters of the ceiling, so ordinary use

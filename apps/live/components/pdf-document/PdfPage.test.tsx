@@ -16,6 +16,7 @@ import {
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
+import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
 import { PdfPage } from './PdfPage';
 
 vi.mock('@/lib/pdf-document/pdf-paint', () => ({ paintPicture: vi.fn(), REDRAW_SETTLE_MS: 0 }));
@@ -52,6 +53,7 @@ async function page(
   handles = false,
   marked: TextSelection | null = null,
   ink: PdfPageInk | null = null,
+  shaping: PdfPageShaping | null = null,
 ) {
   const onText = vi.fn();
   const onMark = vi.fn();
@@ -79,6 +81,7 @@ async function page(
       tool={tool}
       onMark={onMark}
       ink={ink}
+      shaping={shaping}
       selected={selected}
       handles={handles}
       onText={onText}
@@ -285,10 +288,10 @@ describe('drawing on a page', () => {
     // Another pointer moving is not this stroke.
     fireEvent.pointerMove(box, at(300, 300, 2));
     fireEvent.pointerMove(box, at(100.1, 92));
-    expect(view.container.querySelector('[data-pdf-ink-preview]')).not.toBeNull();
+    expect(view.container.querySelector('[data-pdf-draft="drawing"]')).not.toBeNull();
     fireEvent.pointerUp(box, at(100, 92));
     expect(onDraw).toHaveBeenCalledWith(1, [72, 700, 100, 700], expect.any(Number));
-    expect(view.container.querySelector('[data-pdf-ink-preview]')).toBeNull();
+    expect(view.container.querySelector('[data-pdf-draft="drawing"]')).toBeNull();
     // The next stroke is a stroke of its own.
     fireEvent.pointerDown(box, at(80, 92));
     fireEvent.pointerMove(box, at(90, 92));
@@ -308,5 +311,49 @@ describe('drawing on a page', () => {
     fireEvent.pointerDown(box, { ...at(72, 92), button: 2 });
     fireEvent.pointerUp(box, { ...at(72, 92), button: 2 });
     expect(onDraw).not.toHaveBeenCalled();
+  });
+});
+
+// marks.md "Making a mark": a line or shape dragged with a shape tool in hand, shown as it is dragged, handed over in
+// the page's points once let go, held to the page.
+describe('dragging a shape on a page', () => {
+  const at = (x: number, y: number, over: Record<string, unknown> = {}) => ({
+    button: 0,
+    pointerType: 'mouse',
+    pointerId: 1,
+    clientX: x,
+    clientY: y,
+    ...over,
+  });
+
+  it('hands the shape over in the page’s points, shown while dragged, and marks no text', async () => {
+    const onShape = vi.fn();
+    const shaping: PdfPageShaping = {
+      kind: 'rectangle',
+      colour: '#d93025',
+      opacity: 1,
+      width: 2,
+      onShape,
+    };
+    const { box, view, onMark } = await page('rectangle', [], [], false, null, null, shaping);
+    expect(box.className).toContain('cursor-crosshair touch-none');
+    fireEvent.pointerDown(box, at(72, 92));
+    fireEvent.pointerMove(box, at(172, 9999));
+    expect(view.container.querySelector('[data-pdf-draft="rectangle"]')).not.toBeNull();
+    fireEvent.pointerUp(box, at(172, 9999));
+    // Page one is 792 points high: the drag past its foot stops at it, y 0 in page space.
+    const [[index, shape]] = onShape.mock.calls as [[number, { rect: number[] }]];
+    expect(index).toBe(1);
+    // A foot at y 0 may come back as -0: the same place.
+    expect({ ...shape, rect: shape.rect.map((n) => n + 0) }).toEqual({
+      kind: 'rectangle',
+      rect: [72, 0, 172, 700],
+      width: 2,
+    });
+    expect(view.container.querySelector('[data-pdf-draft]')).toBeNull();
+    fireEvent.pointerDown(box, at(72, 92));
+    fireEvent.pointerCancel(box, at(72, 92));
+    expect(onShape).toHaveBeenCalledOnce();
+    expect(onMark).not.toHaveBeenCalled();
   });
 });

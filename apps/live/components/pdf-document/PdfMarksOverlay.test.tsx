@@ -33,6 +33,8 @@ describe('LiveDoc’s marks over a page', () => {
     const svg = overlay('paper');
     expect(svg.getAttribute('class')).toContain('mix-blend-multiply');
     expect(svg.querySelector('[data-pdf-mark="m1"]')!.getAttribute('fill')).toBe('#ffeb3b');
+    // A highlight is a fill alone, with no line round it.
+    expect(svg.querySelector('[data-pdf-mark="m1"] polygon')!.getAttribute('stroke')).toBe('none');
   });
 
   it('lightens a Dark page with the colour the step gives the file’s own marks', () => {
@@ -60,11 +62,11 @@ describe('a line mark over a page', () => {
     );
     const group = container.querySelector('[data-pdf-mark="m1"]')!;
     expect(group.getAttribute('data-pdf-mark-kind')).toBe('underline');
-    expect(group.getAttribute('fill')).toBe('none');
     expect(group.getAttribute('stroke')).toBe('#16a34a');
     expect(group.querySelector('polygon')).toBeNull();
     // The quad's foot, y 10 in page space, is y 90 in view space.
     const line = group.querySelector('polyline')!;
+    expect(line.getAttribute('fill')).toBe('none');
     expect(line.getAttribute('points')).toBe('10,90 50,90');
     expect(line.getAttribute('stroke-width')).toBe('1');
   });
@@ -83,23 +85,29 @@ describe('a Drawing over a page', () => {
       author: 'Ada',
       createdAt: 0,
     })!;
-    const ink = { stroke: [30, 30], colour: '#7c3aed', opacity: 0.5, width: 3 };
+    const draft = {
+      shape: { kind: 'drawing' as const, strokes: [[30, 30]], width: 3 },
+      colour: '#7c3aed',
+      opacity: 0.5,
+    };
     const { container, rerender } = render(
       <PdfMarksOverlay
         matrix={[1, 0, 0, -1, 0, 100]}
         width={100}
         height={100}
         marks={[sketch]}
-        ink={ink}
+        draft={draft}
       />,
     );
     const line = container.querySelector('[data-pdf-mark="d1"] polyline')!;
     expect(line.getAttribute('points')).toBe('10,90 20,80');
     expect(line.getAttribute('stroke-linecap')).toBe('round');
-    const drawn = container.querySelector('[data-pdf-ink-preview]')!;
+    const draftGroup = container.querySelector('[data-pdf-draft="drawing"]')!;
+    const drawn = draftGroup.querySelector('polyline')!;
     // One point is a dot: the point twice, its round ends drawing it.
     expect(drawn.getAttribute('points')).toBe('30,70 30,70');
-    expect(drawn.getAttribute('stroke')).toBe('#7c3aed');
+    expect(draftGroup.getAttribute('stroke')).toBe('#7c3aed');
+    expect(draftGroup.getAttribute('opacity')).toBe('0.5');
     expect(drawn.getAttribute('stroke-width')).toBe('3');
     rerender(
       <PdfLookContext.Provider value="dark">
@@ -108,12 +116,46 @@ describe('a Drawing over a page', () => {
           width={100}
           height={100}
           marks={[]}
-          ink={ink}
+          draft={draft}
         />
       </PdfLookContext.Provider>,
     );
-    expect(container.querySelector('[data-pdf-ink-preview]')!.getAttribute('stroke')).toBe(
+    expect(container.querySelector('[data-pdf-draft]')!.getAttribute('stroke')).toBe(
       DarkPages.hex('#7c3aed'),
     );
+  });
+});
+
+// marks.md "Making a mark": a Rectangle round its box, closed; a line or shape shows as it is dragged.
+describe('a shape over a page', () => {
+  it('draws a Rectangle as a closed outline, filling nothing, and the shape being dragged in its look', () => {
+    const box = Mark.shape('rectangle', {
+      id: 'r1',
+      page: PageName.ofObject(1),
+      rect: [10, 10, 40, 30],
+      width: 2,
+      colour: '#d93025',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 0,
+    })!;
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[box]}
+        draft={{
+          shape: { kind: 'arrow', line: [50, 50, 90, 50], width: 2 },
+          colour: '#1a73e8',
+          opacity: 1,
+        }}
+      />,
+    );
+    const outline = container.querySelector('[data-pdf-mark="r1"] polygon')!;
+    expect(outline.getAttribute('points')).toBe('10,90 40,90 40,70 10,70');
+    expect(outline.getAttribute('fill')).toBe('none');
+    expect(outline.getAttribute('stroke-width')).toBe('2');
+    expect(container.querySelectorAll('[data-pdf-draft="arrow"] polyline')).toHaveLength(2);
   });
 });

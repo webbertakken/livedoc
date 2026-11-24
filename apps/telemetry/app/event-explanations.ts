@@ -944,6 +944,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Added|Mark.Strikethrough': 'Someone struck through text on a PDF page.',
   'Pdf|Added|Mark.SquigglyUnderline': 'Someone gave text on a PDF page a squiggly underline.',
   'Pdf|Added|Mark.Drawing': 'Someone drew on a PDF page with the Drawing tool.',
+  'Pdf|Added|Mark.Line': 'Someone drew a line on a PDF page.',
+  'Pdf|Added|Mark.Arrow': 'Someone drew an arrow on a PDF page.',
+  'Pdf|Added|Mark.Rectangle': 'Someone drew a rectangle on a PDF page.',
+  'Pdf|Added|Mark.Ellipse': 'Someone drew an ellipse on a PDF page.',
   'Pdf|Changed|ToolColour':
     'Someone chose a colour, or reset it, for the mark tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
@@ -954,6 +958,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Selected|Tool.SquigglyUnderline':
     'Someone took the Squiggly underline tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Drawing': 'Someone took the Drawing tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Line': 'Someone took the Line tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Arrow': 'Someone took the Arrow tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Rectangle': 'Someone took the Rectangle tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Ellipse': 'Someone took the Ellipse tool in hand on a PDF document.',
   'Pdf|Exported|Print':
     'Someone printed a PDF document: LiveDoc made the pages they chose and handed them to the browser to print.',
   'Pdf|Exported|Pdf':

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { PDF_MARK_LINE_PT, PDF_SQUIGGLE_STEP_PT } from './limits';
+import {
+  PDF_ARROW_HEAD_MIN_PT,
+  PDF_ARROW_HEAD_WIDTHS,
+  PDF_MARK_LINE_PT,
+  PDF_SQUIGGLE_STEP_PT,
+} from './limits';
 import type { Quad } from './mark';
 import { MarkDrawing } from './mark-drawing';
 
@@ -36,6 +41,7 @@ describe('MarkDrawing', () => {
           ],
           width: PDF_MARK_LINE_PT,
           round: false,
+          closed: false,
         },
         {
           points: [
@@ -44,6 +50,7 @@ describe('MarkDrawing', () => {
           ],
           width: PDF_MARK_LINE_PT,
           round: false,
+          closed: false,
         },
       ],
     });
@@ -59,6 +66,7 @@ describe('MarkDrawing', () => {
         ],
         width: PDF_MARK_LINE_PT,
         round: false,
+        closed: false,
       },
     ]);
   });
@@ -78,6 +86,7 @@ describe('MarkDrawing', () => {
       ],
       width: PDF_MARK_LINE_PT,
       round: false,
+      closed: false,
     });
   });
 
@@ -142,6 +151,7 @@ describe('a Drawing’s drawing', () => {
           ],
           width: 2,
           round: true,
+          closed: false,
         },
         {
           points: [
@@ -150,8 +160,83 @@ describe('a Drawing’s drawing', () => {
           ],
           width: 2,
           round: true,
+          closed: false,
         },
       ],
     });
+  });
+});
+
+// marks.md "Making a mark": a Line through its two ends; an Arrow with an open head at its end; a Rectangle its box's
+// edge, closed; an Ellipse within its box, closed.
+describe('a line’s and a shape’s drawing', () => {
+  it('draws a Line from end to end, square-ended, at its width', () => {
+    expect(MarkDrawing.of({ kind: 'line', line: [10, 20, 110, 20], width: 3 })).toEqual({
+      fills: [],
+      strokes: [
+        {
+          points: [
+            { x: 10, y: 20 },
+            { x: 110, y: 20 },
+          ],
+          width: 3,
+          round: false,
+          closed: false,
+        },
+      ],
+    });
+  });
+
+  it('heads an Arrow with two lines at 30° to it, PDF_ARROW_HEAD_WIDTHS widths long', () => {
+    const { strokes } = MarkDrawing.of({ kind: 'arrow', line: [10, 20, 110, 20], width: 3 });
+    expect(strokes).toHaveLength(2);
+    const [left, tip, right] = strokes[1]!.points;
+    expect(tip).toEqual({ x: 110, y: 20 });
+    const side = PDF_ARROW_HEAD_WIDTHS * 3;
+    expect(left!.x).toBeCloseTo(110 - side * Math.cos(Math.PI / 6));
+    expect(left!.y).toBeCloseTo(20 + side * Math.sin(Math.PI / 6));
+    expect(right!.x).toBeCloseTo(110 - side * Math.cos(Math.PI / 6));
+    expect(right!.y).toBeCloseTo(20 - side * Math.sin(Math.PI / 6));
+    expect(strokes[1]).toMatchObject({ width: 3, round: false, closed: false });
+  });
+
+  it('keeps a thin Arrow’s head PDF_ARROW_HEAD_MIN_PT long, and heads a line of no length to its tip', () => {
+    const [left, tip] = MarkDrawing.of({ kind: 'arrow', line: [10, 20, 10, 120], width: 0.5 })
+      .strokes[1]!.points;
+    expect(Math.hypot(tip!.x - left!.x, tip!.y - left!.y)).toBeCloseTo(PDF_ARROW_HEAD_MIN_PT);
+    const still = MarkDrawing.of({ kind: 'arrow', line: [10, 20, 10, 20], width: 1 });
+    expect(still.strokes[1]!.points.every((point) => point.x === 10 && point.y === 20)).toBe(true);
+  });
+
+  it('draws a Rectangle round its box, closed', () => {
+    expect(MarkDrawing.of({ kind: 'rectangle', rect: [10, 20, 110, 70], width: 2 })).toEqual({
+      fills: [],
+      strokes: [
+        {
+          points: [
+            { x: 10, y: 20 },
+            { x: 110, y: 20 },
+            { x: 110, y: 70 },
+            { x: 10, y: 70 },
+          ],
+          width: 2,
+          round: false,
+          closed: true,
+        },
+      ],
+    });
+  });
+
+  it('draws an Ellipse touching its box’s four sides, closed', () => {
+    const [stroke] = MarkDrawing.of({ kind: 'ellipse', rect: [10, 20, 110, 70], width: 2 }).strokes;
+    expect(stroke).toMatchObject({ width: 2, round: false, closed: true });
+    const xs = stroke!.points.map((point) => point.x);
+    const ys = stroke!.points.map((point) => point.y);
+    expect(Math.min(...xs)).toBeCloseTo(10);
+    expect(Math.max(...xs)).toBeCloseTo(110);
+    expect(Math.min(...ys)).toBeCloseTo(20);
+    expect(Math.max(...ys)).toBeCloseTo(70);
+    for (const { x, y } of stroke!.points)
+      expect(((x - 60) / 50) ** 2 + ((y - 45) / 25) ** 2).toBeCloseTo(1);
   });
 });

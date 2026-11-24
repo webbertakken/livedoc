@@ -56,6 +56,12 @@ const PDF_TEXT_MARK_NAMES = tokensAfter(
   'export const TEXT_MARK_NAMES',
   '}',
 ).filter((token) => /^[A-Z]/.test(token));
+// A PDF's lines and shapes, each kind's name in telemetry.
+const PDF_SHAPE_NAMES = tokensAfter(
+  read('live/lib/pdf-document/pdf-shape.ts'),
+  'export const SHAPE_NAMES',
+  '}',
+).filter((token) => /^[A-Z]/.test(token));
 
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
@@ -503,12 +509,15 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     ),
   },
   // A text mark made and a text tool taken in hand (docs/specs/035-pdf-documents/marks.md "Telemetry and
-  // observability"), each kind's name read from the tools' own table.
+  // observability"), each kind's name read from the tools' own table; a shape tool's from the shapes'.
   'apps/live/lib/pdf-document/usePdfMarkTools.ts Pdf·Added': {
     values: PDF_TEXT_MARK_NAMES.map((name) => `Mark.${name}`),
   },
   'apps/live/lib/pdf-document/usePdfMarkTools.ts Pdf·Selected': {
-    values: PDF_TEXT_MARK_NAMES.map((name) => `Tool.${name}`),
+    values: [...PDF_TEXT_MARK_NAMES, ...PDF_SHAPE_NAMES].map((name) => `Tool.${name}`),
+  },
+  'apps/live/lib/pdf-document/usePdfShapes.ts Pdf·Added': {
+    values: PDF_SHAPE_NAMES.map((name) => `Mark.${name}`),
   },
   // How each open of a PDF document came out (docs/specs/035-pdf-documents/opening.md "Telemetry and observability"),
   // a refusal's name read from `pdfOpenedType`'s own table.

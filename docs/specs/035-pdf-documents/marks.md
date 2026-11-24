@@ -1,12 +1,12 @@
 # Marks
 
 **Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
-Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection, and the
-Drawing, made by freehand strokes; each live in the document's changes once made, drawn over the page, written into
+Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection; the
+Drawing, made by freehand strokes; and the Line, Arrow, Rectangle and Ellipse, made by a drag; each live in the document's changes once made, drawn over the page, written into
 the file as standard annotations under their own ids and read back by them; each tool's colour, chosen from the one
 colour picker and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A
-stroke shown to others as it is drawn, a tool's other looks, every other kind made here, changing a mark, and the
-room's own-marks check are not built.
+stroke shown to others as it is drawn, a tool's other looks, snapping, every other kind made here, changing a mark,
+and the room's own-marks check are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -78,11 +78,24 @@ written into the file as a standard annotation, so any reader shows it. The rese
   would take a Drawing past `PDF_DRAWING_MAX_POINTS` starts a new one; a stroke of one point is a dot.
 - **A Drawing's first look** is the colour picker's strong Red for light paper, 2 points wide, at full opacity
   `(default)`; its colour is chosen as a text tool's is.
+- **A Line** or **an Arrow** is made by dragging with its tool in hand, from where the press lands to where it is let
+  go. An Arrow's end carries an open arrowhead: two lines at 30° to it, each `PDF_ARROW_HEAD_WIDTHS` times the line's
+  width long and `PDF_ARROW_HEAD_MIN_PT` at the least `(default)`.
+- **A Rectangle** or **an Ellipse** is the box a drag spans, its line drawn along the box's edge, or the ellipse
+  within it; ⇧ held keeps it square or round, its side the longer of the drag's two `(default)`.
+- A drag spanning less than `PDF_SHAPE_MIN_PT` both ways, or a Line shorter than it, makes no mark: a press alone
+  makes nothing `(default)`. A line or shape shows as it is dragged, in its tool's look.
+- **The lines' and shapes' first looks** are the Drawing's: strong Red for light paper, 2 points wide, at full
+  opacity, with no fill `(default)`; each kind's colour is chosen and remembered on its own.
+- **The shape tools** are Line, Arrow, Rectangle and Ellipse (Insert > Shape); the toolbar's Shape holds them as
+  Highlight holds the text tools ([Reading surface](reading-surface.md#the-toolbar)); ⇧D takes the next of them in
+  that order, and from any other tool the one the Shape control shows `(default)`.
 - A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it. Its writing
   direction is taken from what is typed, as a [field](fields.md#filling)'s is `(default)`.
 - **Snapping**: a line or shape snaps to the page's own lines and edges within `PDF_SNAP_PX`; ⌘ held turns snapping
   off for the drag.
-- A mark may not leave its page: a drag past the edge stops at it.
+- A mark may not leave its page: a drag past the edge stops at it, so a line or shape dragged off the page ends on its
+  edge.
 - A mark is made on the page as the file has it, whatever the person's rotated view or Dark pages.
 
 ## Changing a mark
@@ -141,6 +154,9 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - A mark changed or deleted in LiveDoc is written as the changed or removed annotation in the same addition; the
   stored file's bytes still hold the original, as an incremental update does. Removing it from the bytes for good is
   [removing hidden information](redaction-and-protection.md#removing-hidden-information).
+- **A Line** is written with its two ends as `L` and an Arrow's head as `LE` `OpenArrow`; **a Rectangle** and
+  **an Ellipse** with `Rect` the box grown by half the line's width, so the line falls where it was drawn. Their
+  appearance streams are drawn from what the page shows of them, line for line.
 - **Read back the same**: a mark LiveDoc wrote and another reader changed is read by its `NM`; one without `NM` gets
   an id from its object number.
 - **What is read of a mark a file holds**: its id, the file's own word for its kind, its rectangle and the
@@ -176,6 +192,9 @@ written into the file as a standard annotation, so any reader shows it. The rese
 | `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                         |
 | `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000               |
 | `PDF_DRAWING_STEP_PT`       | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2       |
+| `PDF_SHAPE_MIN_PT`          | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6         |
+| `PDF_ARROW_HEAD_WIDTHS`     | 4                   | `(default)` An arrowhead's side, in line widths; safe range 3 to 6                             |
+| `PDF_ARROW_HEAD_MIN_PT`     | 6                   | `(default)` An arrowhead's side at the least, in points; safe range 4 to 10                    |
 | `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
 | `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4          |
 | `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |

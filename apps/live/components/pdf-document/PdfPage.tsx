@@ -41,7 +41,8 @@ import { PdfSelectionHandles } from './PdfSelectionHandles';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 
 import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
-import { usePdfPageInk } from '@/lib/pdf-document/usePdfPageInk';
+import { usePdfPageDraft } from '@/lib/pdf-document/usePdfPageDraft';
+import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
 
 // `by`: the drawer that drew it. A replaced stored file comes with another, and the page is then drawn again,
 // its picture staying until the new one arrives (live-editing-and-storage.md "Replacing the stored file").
@@ -70,6 +71,7 @@ export const PdfPage = memo(function PdfPage({
   tool,
   onMark,
   ink,
+  shaping,
   selected,
   handles,
   onText,
@@ -103,6 +105,8 @@ export const PdfPage = memo(function PdfPage({
   onMark: (index: number, selection: TextSelection) => void;
   // The Drawing tool's look and where its strokes go; null while another tool is in hand.
   ink: PdfPageInk | null;
+  // A shape tool's kind and look and where its lines and shapes go; null while another tool is in hand.
+  shaping: PdfPageShaping | null;
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
   selected: readonly Quad[];
   // A finger made the selection: it has handles (reading-surface.md "Phone and tablet").
@@ -240,9 +244,15 @@ export const PdfPage = memo(function PdfPage({
     });
   };
 
-  // A stroke of the Drawing tool, while it is in hand.
-  const inking = usePdfPageInk({ index, ink: current ? ink : null, pointAt });
-  const marking = tool !== 'select' && tool !== 'drawing' && current !== null;
+  // A stroke of the Drawing tool, or a line or shape of a shape tool, while one is in hand.
+  const inking = usePdfPageDraft({
+    index,
+    ink: current ? ink : null,
+    shaping: current ? shaping : null,
+    pointAt,
+    box,
+  });
+  const marking = tool !== 'select' && !inking.active && current !== null;
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
   const selectingText = (event: PointerEvent<HTMLElement>) =>
     tool === 'select' && event.button === 0 && event.pointerType !== 'touch';
@@ -351,7 +361,7 @@ export const PdfPage = memo(function PdfPage({
           height={shown.height}
           marks={marks}
           preview={preview}
-          ink={ink && inking.stroke.length > 0 ? { ...ink, stroke: inking.stroke } : null}
+          draft={inking.draft}
           selected={selected}
           found={found}
         />

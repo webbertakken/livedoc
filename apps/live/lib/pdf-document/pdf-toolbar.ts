@@ -131,6 +131,8 @@ const EVERY_MODE: OfficeToolbar = [
 
 /** Highlight, holding Underline and Strikethrough behind its chevron: the last of them taken in hand ("The toolbar"). */
 export const TEXT_MARK_TOOLS = 'text-mark-tools';
+/** Shape, holding Line, Arrow, Rectangle and Ellipse behind its chevron: the last of them taken in hand. */
+export const SHAPE_TOOLS = 'shape-tools';
 /** The tool in hand's colour ("The toolbar"): the one colour picker's swatch button, while a mark tool is in hand. */
 export const TOOL_COLOUR = 'colour-control';
 
@@ -157,7 +159,10 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
       },
       toggle(TOOL_TEXT, 'Text', 'participate', lucideType),
       toggle(TOOL_DRAWING, 'Drawing', 'participate', lucidePencilLine, BUILT),
-      list('shape-control', 'Shape', 'participate', lucideShapes),
+      {
+        ...toggle(SHAPE_TOOLS, 'Shape', 'participate', lucideShapes, BUILT),
+        look: { kind: 'icon', icon: lucideShapes, toggle: true, split: true },
+      },
       list('stamp-control', 'Stamp', 'participate', lucideStamp),
       toggle(TOOL_TICK, 'Tick', 'participate', lucideCheck),
       list('sign-control', 'Sign', 'participate', lucideSignature),

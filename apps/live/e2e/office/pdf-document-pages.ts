@@ -258,6 +258,13 @@ export const tapReaches = (page: Page): Promise<TapReach[]> =>
       const row = control.parentElement?.closest('[class*="overflow-x-auto"]');
       const view = row?.getBoundingClientRect();
       if (view && (box.left < view.left || box.right > view.right)) return [];
+      // A row's rounded ends clip what passes under them as it scrolls: a control whose middle is within the curve is
+      // part out of view, as one past the edge is.
+      const curve =
+        row && view
+          ? Math.min(parseFloat(getComputedStyle(row).borderTopRightRadius) || 0, view.height / 2)
+          : 0;
+      if (view && (x - view.left < curve || view.right - x < curve)) return [];
       const name =
         control.getAttribute('aria-label') ??
         control.textContent?.trim().slice(0, 40) ??
