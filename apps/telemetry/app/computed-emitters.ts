@@ -49,6 +49,7 @@ function tokensAfter(source: string, marker: string, close: string): string[] {
 // A PDF document's view: its page displays and the ways a zoom is asked for.
 const PDF_VIEW = read('live/lib/pdf-document/usePdfView.ts');
 const PDF_REFUSALS = read('live/lib/pdf-document/pdf-refusals.ts');
+const PDF_DARK_PAGES_QUESTION = read('live/lib/pdf-document/usePdfDarkPagesQuestion.ts');
 
 // The Drive mirror's inbound change types and Open with outcomes.
 // The Timeline's filter categories (packages/ui/src/timeline/eventCategory.ts), sent by a chip.
@@ -487,6 +488,13 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   },
   'apps/live/lib/pdf-document/usePdfView.ts Pdf·Zoomed': {
     values: tokensAfter(PDF_VIEW, 'export type PdfZoomWay =', ';'),
+  },
+  // How the Dark pages question was answered (docs/specs/035-pdf-documents/dark-pages.md "Telemetry and
+  // observability"), read from `DarkPagesAnswer`.
+  'apps/live/lib/pdf-document/usePdfDarkPagesQuestion.ts Pdf·Selected': {
+    values: tokensAfter(PDF_DARK_PAGES_QUESTION, 'export type DarkPagesAnswer =', ';').map(
+      (how) => `DarkPagesQuestion.${how}`,
+    ),
   },
   // How each open of a PDF document came out (docs/specs/035-pdf-documents/opening.md "Telemetry and observability"),
   // a refusal's name read from `pdfOpenedType`'s own table.

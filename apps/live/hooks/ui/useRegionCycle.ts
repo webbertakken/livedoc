@@ -9,12 +9,13 @@ import { currentOfficePlatform } from '@/lib/office/office-platform';
 import type { OfficePlatform } from '@/lib/office/shortcut-notation';
 
 /** The regions, in screen order: the canvas's, and the office shell's parts for a kind outside the canvas (menu bar,
- *  toolbar, a PDF's notice, a kind's rail of left panels, the panels either side of the document, a PDF's page bar). Only one set is on screen at a time. */
+ *  toolbar, a PDF's notice and its Dark pages question, a kind's rail of left panels, the panels either side of the document, a PDF's page bar). Only one set is on screen at a time. */
 export const EDITOR_REGIONS = [
   'header',
   'menubar',
   'toolbar',
   'notice',
+  'question',
   'formulabar',
   'palette',
   'rail',

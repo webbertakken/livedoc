@@ -1,7 +1,7 @@
 # Dark pages
 
-**Status: specified; the recolouring and the setting are built.** Built: the step in the engine's worker, photographs
-put back; the setting in Settings, View and the toolbar, live. Not built: the first-time question.
+**Status: built.** The step in the engine's worker, photographs put back; the setting in Settings, View and the
+toolbar, live; the first-time question.
 
 The look (photographs kept as drawn) and the first-time question (a card, once per person) are `(default)`: the
 director chose them on 2026-11-24 while Webber's answer is open; the drawn options are in the plan's assets.
@@ -74,10 +74,12 @@ Fork F13 `(default)`.
   as they are.", a small before and after of the open page side by side, and two buttons: **Use dark pages** and
   **Keep as they are**.
 - Either button sets the setting and closes the card for good. Closing it another way (its ×, Escape while it has
-  focus, leaving the document) leaves Dark pages off and counts as asked, with a one-line toast the first time: "You
-  can turn on Dark pages in the View menu."
-- It is reachable by keyboard: F6 moves through the surface's regions and reaches the card; its buttons follow in tab
-  order; Escape closes it and returns focus to where it was.
+  focus) leaves Dark pages off and counts as asked, with a one-line toast: "You can turn on Dark pages in the View
+  menu."
+- Leaving the document without answering asks again on the next PDF `(default)`: nothing was chosen.
+- It is reachable by keyboard: F6 moves through the surface's regions and reaches the card (region `question`, after
+  the notice); its buttons follow in tab order; Escape closes it and returns focus to where it was.
+- On a phone the card spans the pages' width, under the toolbar.
 - A Viewer, a Participant and an Editor are asked alike; a guest is asked once per browser.
 
 ## Limits

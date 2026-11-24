@@ -16,6 +16,7 @@ import {
   writeUserPreferences,
 } from '@/lib/user-preferences';
 import { DARK_PAGES } from './pdf-menus';
+import { usePdfDarkPagesQuestion } from './usePdfDarkPagesQuestion';
 
 /** "Errors": said when the choice could not be kept. */
 export const DARK_PAGES_NOT_SAVED_COPY =
@@ -43,11 +44,14 @@ export function keepDarkPages(on: boolean, ownerId: string | null): boolean {
 export function usePdfDarkPages({
   ownerId,
   onProblem,
+  say = () => {},
 }: {
   // The person: their preferences sync to their account, or to this browser.
   ownerId: string | null;
   // What the title row says when the choice could not be kept.
   onProblem: (problem: string) => void;
+  // A one-line toast, for what the first-time question says when dismissed.
+  say?: (message: string) => void;
 }) {
   const kept = useSyncExternalStore(subscribe, stored, notOnTheServer);
   // A choice that could not be kept still applies while this PDF is open.
@@ -88,5 +92,7 @@ export function usePdfDarkPages({
     [offered, setting, choose],
   );
 
-  return { look, offered, setting, choose, actions };
+  const question = usePdfDarkPagesQuestion({ offered, setting, choose, say });
+
+  return { look, offered, setting, choose, actions, question };
 }
