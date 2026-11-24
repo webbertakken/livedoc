@@ -102,8 +102,12 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   each gains an id as Copy heading link gives one, in the same undo step.
 - An entry is its heading's text, then for Plain text and Dotted a tab and the number of the page the heading
   starts on as the page shows it; With blue links, its text alone, in the link look.
+- The two buttons are a toolbar named **Table of contents**, reached from the selected block with **Alt+F10** and left
+  back to it with Escape `(default)`, as a header's bar; each says its name as a tooltip.
 - Options open the right side panel **Table of contents**: the three looks as a choice, and **Levels** (1 to N, a
   choice from 1 to 6); a change rebuilds it at once, as one undo step.
+  The looks show their pictures, as Insert does. The panel changes the table of contents selected; with none it reads
+  **Select a table of contents to change its options.** `(default)`
 - Pageless, no page has a number: Update writes Plain text and Dotted entries with no tab or page number, and the
   file holds none until it is updated with pages `(default)`.
 - On a screen that draws no pages (a phone), an entry keeps the page number its heading had, a new one has none

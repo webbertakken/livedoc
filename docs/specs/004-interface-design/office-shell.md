@@ -68,6 +68,8 @@ kind's component.
     most pass to the menu's own items. Its accessible name says the size ("Table, 3 columns by 2 rows").
 - What an item does is bound by id at run time: `run`, and `checked`, `disabled` and `label` where they apply; a bound
   label names what the item does now (Add space or Remove space before a paragraph) and is what the menu draws.
+  A bound **picture** is drawn small before the item's label, hidden from screen readers, the label still naming it
+  (Insert > Table of contents' looks in a text document).
   A `built` item with nothing bound is a fault the catalogue's test refuses; it is never drawn dead.
 - A `comingSoon` item shows dimmed (`aria-disabled`), with "Coming soon" where its shortcut would be (its
   description, so a touch screen shows it too), until its phase lands. None remain once the kind's parity matrix is
