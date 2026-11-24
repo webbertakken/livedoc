@@ -149,15 +149,39 @@ The look and order below are LiveDoc's reading of Google's outline with tabs unt
   paragraph, and show it. Past `TEXT_DOCUMENT_MAX_TABS` they are dimmed.
 - **Moving between tabs**: Ctrl⇧Page Down shows the next tab in the outline's order, Ctrl⇧Page Up the previous one;
   at either end nothing happens.
-- **Its menu**: each tab's **Tab options** button opens Rename, Add subtab, Duplicate, Delete, Copy link and Choose
-  emoji. A tab is dragged to reorder it or nest it, to the depth of 3; Move up, Move down, Indent and Outdent in its
-  menu do the same with a single pointer or the keys (WCAG 2.2 2.5.7) `(default)`.
+- **Its menu**: each tab's **Tab options** button (shown on hover and focus, and always on the shown tab) opens the
+  tab's menu ([A tab's menu](#a-tabs-menu)). A tab is dragged to reorder it or nest it, to the depth of 3; Move up,
+  Move down, Indent and Outdent in its menu do the same with a single pointer or the keys (WCAG 2.2 2.5.7)
+  `(default)`.
 - **Who may**: everyone shows tabs and moves between them; only Editors add, rename, reorder, nest, duplicate or delete
   them or choose their emoji; a Participant's suggestions never reach the tabs `(default)`. A session that may not
-  edit sees no + and a dimmed Insert > Tab.
+  edit sees no + and a dimmed Insert > Tab, and only Copy link in a tab's menu.
 - **Others' carets**: someone writing in another tab has no caret drawn here; theirs is in the tab they show.
 - **Pages**: each tab is laid out on pages of its own, numbered from 1, under the first section's headers and footers.
   A table of contents lists the current tab's headings.
+
+### A tab's menu
+
+In this order, with separators between the groups `(default)`; an item that cannot apply is dimmed:
+
+- **Rename**: the tab's name becomes a text field in place, its text selected; Enter or leaving it keeps the name,
+  Escape gives the old one back; an empty name keeps the old one; at most `TEXT_DOCUMENT_TAB_NAME_MAX` characters.
+- **Choose emoji** opens the emoji dialog; the one picked shows before the name. **Remove emoji** while it has one.
+- **Add subtab**: a tab right after this tab's subtabs, one deeper, named Tab N, shown. Dimmed at depth 2.
+- **Duplicate**: a copy of this tab alone, its body and emoji, named **Copy of** and its name, right after this tab's
+  subtabs at its depth, shown `(default)`.
+- **Copy link**: the text document's address naming the tab (`?doctab=<id>`), copied; **Link copied** is said.
+- **Move up**, **Move down**: the tab and its subtabs swap with the tab before or after it at its depth, with that
+  one's subtabs; dimmed with none there.
+- **Indent**: the tab and its subtabs one deeper, the tab before it at its depth becoming its parent; dimmed with
+  none there or past the depth of 3. **Outdent**: one shallower; the tabs after it that were its siblings stay where
+  they are; dimmed at the top level.
+- **Delete**: asks **Delete "<name>"?**, saying how many subtabs go with it, with **Delete** and **Cancel**; the tab
+  and its subtabs and their writing go. Dimmed when they are every tab. The shown tab deleted, the tab before them
+  is shown, else the one after.
+- **Dragging**: a tab dragged by its row drops before, after or into another tab (the drop line indented for into);
+  a drop that would pass the depth of 3, or into its own subtabs, is refused, nothing shown for it.
+- Each change is one write of the tab list, and none is undone with the writing `(default)`.
 
 ## Keyboard navigation
 
@@ -168,9 +192,9 @@ the keyboard layer ([Editing surface](editing-surface.md#keyboard-shortcuts)).
 
 ## Share roles
 
-Editors add and change links, bookmarks, the table of contents and document tabs; a Participant only as suggestions
-(D7); everyone may follow links and use the outline. The link card of a session that may not edit offers only
-Copy link.
+Editors add and change links, bookmarks, the table of contents and document tabs; a Participant the first three only
+as suggestions (D7), and document tabs not at all `(default)`; everyone may follow links and use the outline. The
+link card, and a tab's menu, of a session that may not edit offer only Copy link.
 
 ## Telemetry
 
@@ -183,4 +207,7 @@ Copy link.
 `UI · Used · TextDocumentHeadingLinkCopied` (Copy heading link);
 `Element · Added · TextDocumentTab` (+ or Insert > Tab: a document tab is content, no tab of the document's);
 `UI · Used · TextDocumentTabShown` (a tab shown from the outline or the keys);
+`Element · Changed · TextDocumentTab` (renamed, given or cleared an emoji, moved, indented, outdented or dragged);
+`Element · Duplicated · TextDocumentTab`; `Element · Removed · TextDocumentTab`;
+`UI · Used · TextDocumentTabLinkCopied`;
 `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never content.
