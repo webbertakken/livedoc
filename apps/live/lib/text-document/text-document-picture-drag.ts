@@ -27,7 +27,7 @@ export function dragPicture(
   {
     attrs,
     cropping,
-    dom,
+    box,
     room,
     preview,
     done,
@@ -35,8 +35,9 @@ export function dragPicture(
     // The picture's attributes as the drag begins.
     attrs: Readonly<Record<string, unknown>>;
     cropping: boolean;
-    // The picture's box as laid out: its centre is what it turns about, its drawn size its scale.
-    dom: HTMLElement;
+    // The picture's turned box as drawn: its centre is what it turns about, its drawn size its scale. A placed
+    // picture's own span has no size, so this is its turned box, never that span.
+    box: HTMLElement;
     room: PictureSize;
     // Draws the picture as the drag has it.
     preview: (attrs: Readonly<Record<string, unknown>>) => void;
@@ -50,7 +51,7 @@ export function dragPicture(
   };
   const startCrop: CroppedPicture = { ...start, crop: (attrs.crop as PictureCrop | null) ?? null };
   const rotation = Pictures.rotation(attrs.rotation) ?? 0;
-  const rect = dom.getBoundingClientRect();
+  const rect = box.getBoundingClientRect();
   const bounds = Pictures.turnedBounds(start, rotation);
   const pixelsAPoint =
     rect.width > 0 && bounds.width > 0 ? rect.width / bounds.width : PIXELS_A_POINT;
