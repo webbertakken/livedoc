@@ -1,3 +1,4 @@
+import { SPREADSHEET_THEMES } from '@livedoc/sheets';
 import { describe, expect, it, vi } from 'vitest';
 import { catalogueItems } from '@/lib/office/office-catalogue';
 import {
@@ -500,6 +501,19 @@ describe('gridColours', () => {
     expect(p.act.format).toHaveBeenCalledWith({ bg: '#00ff00' });
     colours['text-colour']!.set(null);
     expect(p.act.format).toHaveBeenCalledWith({ fc: null });
+  });
+
+  // formatting.md "Themes": the theme's nine colours lead each picker, picked by name.
+  it('leads each picker with the theme’s colours, Standard’s for none', () => {
+    const ocean = SPREADSHEET_THEMES[2]!;
+    const row = gridOffice(port({ theme: ocean })).colours!['fill-colour']!.theme!;
+    expect(row).toHaveLength(9);
+    expect(row[2]).toEqual({
+      id: 'theme:accent1',
+      colour: ocean.colours.accent1,
+      label: 'Accent 1',
+    });
+    expect(gridOffice(port()).colours!['text-colour']!.theme![0]!.colour).toBe('#000000');
   });
 
   it('gives no one but an Editor the colours', () => {

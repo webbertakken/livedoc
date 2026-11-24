@@ -2,6 +2,7 @@
 // Google Sheets, Excel, documents and emails read: each cell's text with its formats inline as Google writes them, a
 // formula in Google's `data-sheets-formula` (R1C1 from its cell), a merge as one cell spanning its rows and columns.
 import type { SheetClip } from './clipboard';
+import { STANDARD_THEME, themedFormat, type SpreadsheetTheme } from './themes/spreadsheet-theme';
 import { a1ToR1C1 } from './formula/r1c1-text';
 import { fontFamilyName } from './format';
 import type { Border, CellFormat } from './sheet';
@@ -39,7 +40,8 @@ export function styleOf(f: CellFormat | undefined): string {
   return out.length ? ` style="${out.join(';')}"` : '';
 }
 
-export function clipToHtml(clip: SheetClip): string {
+// `theme`: the workbook's, which a cell's theme colours are drawn in (formatting.md "Themes").
+export function clipToHtml(clip: SheetClip, theme: SpreadsheetTheme = STANDARD_THEME): string {
   // Each merge's corner spans it; the cells it covers are left out of their rows.
   const spans = new Map<string, { rows: number; cols: number }>();
   const covered = new Set<string>();
@@ -61,7 +63,7 @@ export function clipToHtml(clip: SheetClip): string {
           ? ` data-sheets-formula="${escapeHtml(a1ToR1C1(formula, { r: clip.from.r + i, c: clip.from.c + j }))}"`
           : '');
       return [
-        `<td${attrs}${styleOf(clip.cells[i]![j]?.format)}>${escapeHtml(v).replace(/\n/g, '<br>')}</td>`,
+        `<td${attrs}${styleOf(themedFormat(clip.cells[i]![j]?.format, theme))}>${escapeHtml(v).replace(/\n/g, '<br>')}</td>`,
       ];
     });
     return `<tr>${tds.join('')}</tr>`;

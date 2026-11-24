@@ -100,8 +100,8 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
   - Each is the toolbar's colour control: its glyph over a bar in the active cell's colour (Text Colour's bar black
     for a cell with none, Fill Colour's empty), opening the picker in its swatch skin; a pick colours the selection,
     one undo step, and **Reset** takes the cell's own colour away. An Editor's, as every format is.
-  - Until [Themes](#themes) are built the picker has no theme row: Reset, the standard Light and Dark rows, then
-    Custom Colours, as the office kinds' is (default, D199).
+  - Its first row is the [theme](#themes)'s nine colours; then Reset, the standard Light and Dark rows and Custom
+    Colours, as the office kinds' is (D199 before Themes).
 
 ## Borders
 
@@ -159,9 +159,32 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 ## Themes
 
-- **Format › Theme** opens a side panel of themes (each a font and six accent colours, a text and a background);
-  picking one restyles the workbook's charts, tables, alternating colours and cells using theme colours.
-  **Customise** edits the theme's font and colours. Themes are LiveDoc's own set, never Google's names.
+**Status: in progress.** The theme, the Themes panel, Customise and theme colours in cells are built; the theme's font
+and the files' theme part are not.
+
+A spreadsheet's **theme** is the workbook's: a **font** and nine **theme colours**, **Text**, **Background**,
+**Accent 1** to **Accent 6** and **Link**. A cell coloured with a theme colour follows the theme: picking another
+theme restyles it.
+
+- The theme lives in the workbook's settings ([Sheet store](sheet-store.md)), saved whole through the settings door
+  and seen by everyone live; a workbook without one has **Standard**. Themes are LiveDoc's own set
+  (`SPREADSHEET_THEMES`, eight, default, D217), never Google's names; Standard is Arial with Google Sheets' colours.
+- **Format › Theme** opens the **Themes** side panel (the office shell's right panel), an Editor's alone:
+  - The theme in use first, its name and **Customise**; then every theme as a card, its name in its font, Text over
+    Background and its six accents as dots; a press applies it at once, the card pressed.
+  - **Customise**: **Font** (the Font menu's families) and the nine colours, each a swatch opening the one
+    [colour picker](../004-interface-design/colour-picker.md) without a theme row; a change applies at once and
+    names the theme **Custom**; **Done** returns to the list.
+- **Theme colours in cells**: Text Colour's and Fill Colour's picker gains a **Theme** row before the standard rows
+  (retiring D199), its nine colours named as above; a pick stores the colour's name (`theme:accent1`), drawn in
+  the workbook's theme wherever the cell draws or leaves: the grid, images, the clipboard and files (which hold the
+  colour it is then, until the files' theme part is built). A standard or custom pick stores its `#rrggbb`, as before.
+- Alternating colours and format rules keep colours of their own (default, D217).
+- The theme's **font** is the font of every cell that sets none (Standard's Arial, D201), written as the files' default
+  font (not built yet).
+- A theme change is the workbook's, not a cell's: Undo does not take it back, as File › Settings' do not (default,
+  D217).
+- Telemetry: `UI · Opened · SpreadsheetPanelThemes`; `Spreadsheet · Changed · Theme` for each pick or customisation.
 
 ## Conditional formatting
 
@@ -259,6 +282,9 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
 - **D216** Alternating colours: made at once over the selection in the first default style, header on, as Google
   Sheets does; eight default styles, LiveDoc's own; rows counted by position, hidden ones too; fills under a cell's own
   and a met format rule's; written to files as format rules, which read back as rules (default).
+- **D217** Themes: eight of LiveDoc's own, Standard first (Arial, Google Sheets' colours); a cell's theme colour stored
+  by name and drawn in the theme; alternating colours and format rules keep their own colours; a theme change is not
+  undone by Undo (default).
 
 ## Telemetry
 

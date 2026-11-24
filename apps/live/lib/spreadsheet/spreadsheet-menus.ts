@@ -350,7 +350,7 @@ const recentEntries = (codes: readonly string[]): OfficeEntry[] =>
 
 const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
   menu('format', 'Format', [
-    item('theme', 'Theme', 'edit'),
+    built('theme', 'Theme', 'edit', { checkable: 'checkbox' }),
     SEPARATOR,
     submenu('number', 'Number', [
       ...NUMBER_FORMAT_ITEMS.map(({ id, label, nf, dp, example, shortcut }) =>

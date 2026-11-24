@@ -44,6 +44,7 @@ import {
   type ImportAccess,
   type ImportAsk,
   type FileMeaning,
+  type SpreadsheetTheme,
 } from '@livedoc/sheets';
 import { sheetRefusalMessage, writeRefusalMessage } from './sheet-refusals';
 import { engineLink, type EngineLink } from './sheet-engine-link';
@@ -423,6 +424,14 @@ export class SheetStore {
   usesRangeImports(): boolean {
     for (const port of this.ports.values()) if (port.copy.usesRangeImports()) return true;
     return false;
+  }
+
+  // The tab's engine draws in the workbook's theme (formatting.md "Themes"); a new one draws the views again.
+  setTheme(tabId: string, theme: SpreadsheetTheme): void {
+    const wb = this.workbook(tabId);
+    if (wb.theme === theme) return;
+    wb.setTheme(theme);
+    this.notify();
   }
 
   // Whether a formula imports from the web (imports.md "Allow access": the bar shows until an Editor allows).

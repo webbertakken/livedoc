@@ -15560,6 +15560,31 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "SpreadsheetTheme": {
+    "additionalProperties": false,
+    "description": "A theme: the catalogue's by its id, or a customised one (`custom`).",
+    "properties": {
+      "colours": {
+        "$ref": "#/components/schemas/ThemeColours"
+      },
+      "font": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "font",
+      "colours"
+    ],
+    "type": "object"
+  },
   "StackAlign": {
     "enum": [
       "start",
@@ -17689,6 +17714,50 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "ThemeColours": {
+    "additionalProperties": false,
+    "properties": {
+      "accent1": {
+        "type": "string"
+      },
+      "accent2": {
+        "type": "string"
+      },
+      "accent3": {
+        "type": "string"
+      },
+      "accent4": {
+        "type": "string"
+      },
+      "accent5": {
+        "type": "string"
+      },
+      "accent6": {
+        "type": "string"
+      },
+      "background": {
+        "type": "string"
+      },
+      "link": {
+        "type": "string"
+      },
+      "text": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "text",
+      "background",
+      "accent1",
+      "accent2",
+      "accent3",
+      "accent4",
+      "accent5",
+      "accent6",
+      "link"
+    ],
+    "type": "object"
+  },
   "TimelineEvent": {
     "additionalProperties": false,
     "properties": {
@@ -19004,6 +19073,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "recalc": {
         "$ref": "#/components/schemas/WorkbookRecalc"
+      },
+      "theme": {
+        "$ref": "#/components/schemas/SpreadsheetTheme"
       },
       "timeZone": {
         "type": "string"

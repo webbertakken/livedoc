@@ -64,6 +64,7 @@ export * from './validate';
 export * from './rules/rule-index';
 export * from './rules/rule-ranges';
 export * from './rules/bandings';
+export * from './themes/spreadsheet-theme';
 export * from './rules/rule-shape';
 export * from './rules/validation';
 export * from './rules/validation-edit';
