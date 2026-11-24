@@ -46,10 +46,10 @@ export function OfficeDialogColourField({
       <span
         aria-hidden="true"
         data-colour-chip={none ? 'none' : value}
-        className="size-4 rounded-sm border border-(--office-line)"
+        className="size-4 rounded-control border border-(--office-line)"
         style={none ? undefined : { background: value }}
       />
-      <span className="text-xs text-(--office-muted)">
+      <span className="text-supporting text-(--office-muted)">
         {value === null ? 'Mixed' : value === OFFICE_NO_COLOUR ? (leading ?? '') : ''}
       </span>
     </ColourSwatchButton>

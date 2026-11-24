@@ -281,7 +281,7 @@ export function OfficeTitleRow({
               <span
                 role="img"
                 aria-label={formatTitle}
-                className="shrink-0 rounded border border-(--office-line) px-1.5 text-xs font-medium text-(--office-muted) phone:hidden"
+                className="shrink-0 rounded-control border border-(--office-line) px-2 text-supporting font-medium text-(--office-muted) phone:hidden"
               >
                 {format}
               </span>
@@ -306,12 +306,12 @@ export function OfficeTitleRow({
             ) : null}
             {saveStatus ? <OfficeSaveStatusShown source={saveStatus} /> : null}
             {notice ? (
-              <p role="status" className="truncate text-sm text-slate-600 dark:text-slate-300">
+              <p role="status" className="truncate text-body text-slate-600 dark:text-slate-300">
                 {notice}
               </p>
             ) : null}
             {problem ? (
-              <p role="alert" className="truncate text-sm text-red-700 dark:text-red-300">
+              <p role="alert" className="truncate text-body text-red-700 dark:text-red-300">
                 {problem}
               </p>
             ) : null}
@@ -321,7 +321,7 @@ export function OfficeTitleRow({
               <button
                 type="button"
                 onClick={bare.onLeave}
-                className="relative rounded px-2 py-1 text-sm font-medium touch-target-y text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+                className="relative rounded-control px-2 py-1 text-body font-medium touch-target-y text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
               >
                 {bare.leave}
               </button>

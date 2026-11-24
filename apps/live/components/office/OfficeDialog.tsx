@@ -21,7 +21,7 @@ const PANEL =
   'office-shell relative border-(--office-line) bg-(--office-dialog) text-(--office-ink)';
 
 const PILL =
-  'touch-target relative inline-flex h-9 items-center rounded-full px-6 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2 focus-visible:ring-offset-(--office-dialog)';
+  'touch-target relative inline-flex h-prominent items-center rounded-full px-6 text-body font-medium outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2 focus-visible:ring-offset-(--office-dialog)';
 
 export function OfficeDialog({
   open,
@@ -74,7 +74,7 @@ export function OfficeDialog({
         }}
       >
         <div className="flex items-center gap-2 px-6 pt-5 pb-3 max-sm:min-h-14 max-sm:border-b max-sm:border-(--office-line) max-sm:px-2 max-sm:py-2">
-          <h2 id={titleId} className="min-w-0 flex-1 truncate text-[22px] leading-7 max-sm:text-lg">
+          <h2 id={titleId} className="min-w-0 flex-1 truncate text-dialog-title leading-7 max-sm:text-name">
             {title}
           </h2>
           <button

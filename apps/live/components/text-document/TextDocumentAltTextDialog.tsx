@@ -30,7 +30,7 @@ export function TextDocumentAltTextDialog({
       primary={{ label: 'OK', onPress: () => onApply({ alt: text, decorative: marked }) }}
     >
       <div className="flex flex-col gap-3 pt-1">
-        <label htmlFor={description} className="text-sm font-medium">
+        <label htmlFor={description} className="text-body font-medium">
           Description
         </label>
         <textarea
@@ -39,9 +39,9 @@ export function TextDocumentAltTextDialog({
           value={text}
           disabled={marked}
           onChange={(event) => setText(event.target.value)}
-          className="w-full resize-y rounded border border-(--office-line) bg-transparent px-3 py-2 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40"
+          className="w-full resize-y rounded-control border border-(--office-line) bg-transparent px-3 py-2 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:opacity-40"
         />
-        <label className="flex items-center gap-3 text-sm">
+        <label className="flex items-center gap-3 text-body">
           <input
             type="checkbox"
             className="size-4 shrink-0 accent-(--office-primary)"

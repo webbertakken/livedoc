@@ -50,12 +50,12 @@ export function OfficePeople({
             aria-label={`${rest.length} more ${rest.length === 1 ? 'person' : 'people'}`}
             aria-expanded={moreOpen}
             onClick={() => setMoreOpen((open) => !open)}
-            className={`relative flex size-7 items-center justify-center bg-(--office-hover) text-xs font-medium text-(--office-ink) touch-target ${RING}`}
+            className={`relative flex size-7 items-center justify-center bg-(--office-hover) text-supporting font-medium text-(--office-ink) touch-target ${RING}`}
           >
             +{rest.length}
           </button>
           {moreOpen ? (
-            <ul className="absolute top-full right-0 z-30 mt-1 min-w-48 rounded-md bg-(--office-menu) py-1 text-sm text-(--office-ink) shadow-lg">
+            <ul className="absolute top-full right-0 z-30 mt-1 min-w-48 rounded-control bg-(--office-menu) py-1 text-body text-(--office-ink) shadow-lg">
               {rest.map((person) => (
                 <li key={person.participant.id}>
                   <button

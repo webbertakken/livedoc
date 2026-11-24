@@ -50,7 +50,7 @@ export function TextDocumentTablePropertiesPanel({
 }) {
   if (!properties)
     return (
-      <p className="px-2 pt-1 text-sm text-(--office-muted)">
+      <p className="px-2 pt-1 text-body text-(--office-muted)">
         Put the cursor in a table to see its properties.
       </p>
     );

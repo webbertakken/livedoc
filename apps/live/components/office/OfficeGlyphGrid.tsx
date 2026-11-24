@@ -63,7 +63,7 @@ function Grid<T>({
       style={
         columns ? { gridTemplateColumns: `repeat(${columns}, minmax(2.5rem, 1fr))` } : undefined
       }
-      className="grid min-h-0 min-w-0 flex-1 auto-rows-[2.5rem] grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] content-start overflow-y-auto rounded border border-(--office-line) p-1"
+      className="grid min-h-0 min-w-0 flex-1 auto-rows-[2.5rem] grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] content-start overflow-y-auto rounded-control border border-(--office-line) p-1"
     >
       {items.map((item, index) => (
         <button
@@ -77,7 +77,7 @@ function Grid<T>({
           }}
           onMouseEnter={() => onShow(item)}
           onFocus={() => onShow(item)}
-          className={`flex items-center justify-center rounded text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset ${size}`}
+          className={`flex items-center justify-center rounded-control text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset ${size}`}
         >
           {draw(item)}
         </button>

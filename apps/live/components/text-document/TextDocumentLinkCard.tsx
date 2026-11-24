@@ -77,7 +77,7 @@ export function TextDocumentLinkCard({
         role="group"
         aria-label="Link details"
         data-text-document-link-card
-        className="flex max-w-[min(28rem,calc(100vw-1rem))] items-center gap-1 rounded-lg border border-(--office-line) bg-(--office-menu) py-1 pr-1 pl-3 text-sm text-(--office-ink) shadow-lg"
+        className="flex max-w-[min(28rem,calc(100vw-1rem))] items-center gap-1 rounded-menu border border-(--office-line) bg-(--office-menu) py-1 pr-1 pl-3 text-body text-(--office-ink) shadow-lg"
       >
         <span aria-hidden="true" className="shrink-0 text-(--office-muted)">
           {kind === 'document' ? (
@@ -97,7 +97,7 @@ export function TextDocumentLinkCard({
             e.preventDefault();
             onOpen();
           }}
-          className="mr-2 min-w-0 flex-1 truncate rounded px-1 text-(--office-primary) underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none"
+          className="mr-2 min-w-0 flex-1 truncate rounded-control px-1 text-(--office-primary) underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none"
         >
           {title}
         </a>

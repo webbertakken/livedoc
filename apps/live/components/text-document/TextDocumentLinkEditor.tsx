@@ -42,7 +42,7 @@ const GROUPS = [
 ] as const;
 
 const FIELD =
-  'h-8 min-w-0 flex-1 rounded border border-(--office-line) bg-transparent px-2 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-field min-w-0 flex-1 rounded-control border border-(--office-line) bg-transparent px-2 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 export function TextDocumentLinkEditor({
   anchor,
@@ -137,7 +137,7 @@ export function TextDocumentLinkEditor({
           e.preventDefault();
           apply();
         }}
-        className="w-[26rem] max-w-[calc(100vw-1rem)] rounded-lg border border-(--office-line) bg-(--office-menu) p-3 text-sm text-(--office-ink) shadow-lg"
+        className="w-[26rem] max-w-[calc(100vw-1rem)] rounded-menu border border-(--office-line) bg-(--office-menu) p-3 text-body text-(--office-ink) shadow-lg"
       >
         {text !== null ? (
           <div className="mb-2 flex items-center gap-2">
@@ -182,13 +182,13 @@ export function TextDocumentLinkEditor({
           />
           <button
             type="submit"
-            className="h-8 shrink-0 rounded px-3 font-medium text-(--office-primary) hover:bg-(--office-menu-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none"
+            className="h-field shrink-0 rounded-control px-3 font-medium text-(--office-primary) hover:bg-(--office-menu-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none"
           >
             Apply
           </button>
         </div>
         {problem !== null ? (
-          <p id={`${id}-problem`} role="alert" className="mt-2 ml-7 text-xs text-(--office-error)">
+          <p id={`${id}-problem`} role="alert" className="mt-2 ml-7 text-supporting text-(--office-error)">
             {problem}
           </p>
         ) : null}
@@ -207,7 +207,7 @@ export function TextDocumentLinkEditor({
                   <div
                     id={`${listId}-${group}`}
                     role="presentation"
-                    className="px-2 pt-1 pb-0.5 text-xs font-medium text-(--office-muted)"
+                    className="px-2 pt-1 pb-0.5 text-supporting font-medium text-(--office-muted)"
                   >
                     {heading}
                   </div>
@@ -226,7 +226,7 @@ export function TextDocumentLinkEditor({
                           take(offer);
                         }}
                         onMouseEnter={() => setChosen(at)}
-                        className="flex h-8 cursor-default items-center gap-2 rounded px-2 aria-selected:bg-(--office-menu-hover)"
+                        className="flex h-field cursor-default items-center gap-2 rounded-control px-2 aria-selected:bg-(--office-menu-hover)"
                       >
                         <span aria-hidden="true" className="text-(--office-muted)">
                           <Glyph />

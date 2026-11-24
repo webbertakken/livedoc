@@ -25,11 +25,11 @@ export function TextDocumentPictureBar({
       role="toolbar"
       aria-label="Drawing"
       onKeyDown={onKeyDown}
-      className="office-shell flex items-center gap-0.5 rounded-md border border-(--office-line) bg-(--office-menu) p-0.5 shadow-sm"
+      className="office-shell flex items-center gap-0.5 rounded-control border border-(--office-line) bg-(--office-menu) p-0.5 shadow-sm"
     >
       <button
         type="button"
-        className="h-7 rounded px-2.5 text-body font-medium text-(--office-ink) hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus)"
+        className="h-row rounded-control px-3 text-body font-medium text-(--office-ink) hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus)"
         // The press is the bar's: the picture stays selected.
         onMouseDown={(e) => e.preventDefault()}
         onClick={onOpen}

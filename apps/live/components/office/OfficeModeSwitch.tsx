@@ -45,7 +45,7 @@ export function OfficeModeSwitch({ mode, modes, onChange }: OfficeModeChoice) {
         onClick={toggle}
         onKeyDown={onTriggerKeyDown}
         data-office-mode={mode}
-        className="relative flex h-10 shrink-0 items-center gap-1.5 rounded-full pr-2 pl-3 text-sm font-medium text-(--office-ink) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+        className="relative flex h-10 shrink-0 items-center gap-2 rounded-full pr-2 pl-3 text-body font-medium text-(--office-ink) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
       >
         <ModeGlyph icon={current?.icon} />
         <span className="text-optical-centre phone:sr-only">{current?.label}</span>
@@ -88,7 +88,7 @@ function ModeMenu({
     <div
       ref={attach}
       {...surfaceProps}
-      className="absolute top-full right-0 z-30 mt-1 w-72 rounded-md bg-(--office-menu) py-2 text-(--office-ink) shadow-lg outline-none"
+      className="absolute top-full right-0 z-30 mt-1 w-72 rounded-control bg-(--office-menu) py-2 text-(--office-ink) shadow-lg outline-none"
     >
       {modes.map((m) => {
         const soon = m.status === 'comingSoon';
@@ -110,10 +110,10 @@ function ModeMenu({
               <ModeGlyph icon={m.icon} />
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-medium">{m.label}</span>
+              <span className="block text-body font-medium">{m.label}</span>
               <span
                 id={`${descriptionId}-${m.mode}`}
-                className="block text-xs text-(--office-muted)"
+                className="block text-supporting text-(--office-muted)"
               >
                 {soon ? 'Coming soon' : m.description}
               </span>

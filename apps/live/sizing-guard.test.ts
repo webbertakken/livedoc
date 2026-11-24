@@ -9,10 +9,6 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 const SIZED_PATHS = ['app', 'components'];
 
 const SIZING_EXCEPTIONS = [
-  // Moving with their own lane (plan 0019: text documents and the office shell), each in one small PR; drop the line
-  // when it lands. A PDF's chrome is on the scale; its pages and what is drawn on them at the zoom are content.
-  'components/text-document',
-  'components/office',
   // Content: what is drawn on the canvas at its zoom, the elements' faces, labels, marks and overlays.
   'components/canvas/collab',
   'components/canvas/web',

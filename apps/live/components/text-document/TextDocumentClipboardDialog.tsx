@@ -25,10 +25,10 @@ export function TextDocumentClipboardDialog({
   const keys = useMemo(() => shortcutTextOf(TEXT_DOCUMENT_SHORTCUTS, currentOfficePlatform()), []);
   return (
     <OfficeDialog open={open} onClose={onClose} title="Copying and pasting">
-      <p className="text-sm">
+      <p className="text-body">
         This browser does not let the Edit menu reach the clipboard. These keys still do:
       </p>
-      <ul className="mt-3 flex flex-col gap-2 text-sm">
+      <ul className="mt-3 flex flex-col gap-2 text-body">
         {ROWS.map(([id, label]) => {
           const text = keys(id);
           return text ? (

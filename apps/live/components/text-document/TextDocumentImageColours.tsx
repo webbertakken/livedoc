@@ -23,7 +23,7 @@ import {
 const SWATCHES = PICTURE_RECOLOURS.length - 1;
 const COLUMNS = PICTURE_RECOLOUR_COLOURS.length;
 const CHOICE =
-  'cursor-pointer rounded outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-1';
+  'cursor-pointer rounded-control outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-1';
 const CHECKED = 'ring-2 ring-(--office-primary) ring-offset-1';
 
 const ADJUSTMENT_NAMES: Readonly<Record<PictureAdjustment, string>> = {
@@ -81,7 +81,7 @@ export function ImageRecolour({
     <div role="radiogroup" aria-label="Recolour" className="flex flex-col gap-2">
       <button
         {...choiceProps(0)}
-        className={`${CHOICE} min-h-9 border border-(--office-line) px-3 text-left text-sm text-(--office-ink) hover:bg-(--office-hover) ${look(0)}`}
+        className={`${CHOICE} min-h-prominent border border-(--office-line) px-3 text-left text-body text-(--office-ink) hover:bg-(--office-hover) ${look(0)}`}
       >
         {PICTURE_RECOLOURS[0]!.label}
       </button>
@@ -121,7 +121,7 @@ function AdjustmentSlider({
     onColour({ adjustment: name, value: draft });
   };
   return (
-    <label className="flex flex-col gap-1 text-sm text-(--office-ink)">
+    <label className="flex flex-col gap-1 text-body text-(--office-ink)">
       <span className="flex items-center justify-between">
         {label}
         <span aria-hidden className="text-(--office-muted) tabular-nums">

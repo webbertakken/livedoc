@@ -35,7 +35,7 @@ export function TextDocumentPageOrientationDialog({
       <fieldset className="flex flex-col gap-3 pt-1">
         <legend className="sr-only">Orientation</legend>
         {ORIENTATIONS.map(({ value, label }) => (
-          <label key={value} className="flex items-center gap-3 text-sm">
+          <label key={value} className="flex items-center gap-3 text-body">
             <input
               type="radio"
               name={name}

@@ -31,7 +31,7 @@ export const ADD_TAB_LABEL = 'Add tab';
 // Indent per heading level below the first, and per tab depth, in px.
 const LEVEL_INDENT_PX = 12;
 const ROW =
-  'block w-full truncate rounded py-1.5 pr-2 text-left text-sm outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'block w-full truncate rounded-control py-1.5 pr-2 text-left text-body outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 function goTo(view: EditorView, heading: TextDocumentHeading) {
   const { doc } = view.state;
@@ -53,7 +53,7 @@ function Headings({
 }) {
   if (headings.length === 0)
     return (
-      <p className="py-1 pr-2 text-sm text-(--office-muted)" style={{ paddingLeft: 8 + indent }}>
+      <p className="py-1 pr-2 text-body text-(--office-muted)" style={{ paddingLeft: 8 + indent }}>
         {OUTLINE_EMPTY}
       </p>
     );
@@ -110,7 +110,7 @@ export function TextDocumentOutline({
       <TextDocumentOutlineSummary summary={summary} />
       <section aria-labelledby={titleId}>
         <div className="flex items-center justify-between gap-2 px-2 pb-1">
-          <h3 id={titleId} className="text-xs font-medium text-(--office-muted)">
+          <h3 id={titleId} className="text-supporting font-medium text-(--office-muted)">
             {OUTLINE_TABS_TITLE}
           </h3>
           {tabs.canAdd && (
@@ -175,7 +175,7 @@ function TabDialogs({ tabs }: { tabs: TextDocumentTabs }) {
       title={`Delete "${tabs.list[at]!.name}"?`}
       primary={{ label: 'Delete', onPress: tabs.confirmDelete }}
     >
-      <p className="text-sm">
+      <p className="text-body">
         {subtabs === 0
           ? 'This tab and its writing will be deleted.'
           : `This tab, its ${subtabs === 1 ? 'subtab' : `${subtabs} subtabs`} and their writing will be deleted.`}

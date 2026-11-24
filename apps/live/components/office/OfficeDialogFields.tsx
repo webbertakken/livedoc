@@ -45,7 +45,7 @@ export function OfficeDialogSearch({
         placeholder={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-(--office-muted)"
+        className="h-10 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-(--office-muted)"
       />
     </div>
   );
@@ -71,14 +71,14 @@ export function OfficeDialogSelect<T extends string>({
   width?: string;
 }) {
   return (
-    <label className="flex min-w-0 items-center gap-2 text-sm text-(--office-muted)">
+    <label className="flex min-w-0 items-center gap-2 text-body text-(--office-muted)">
       <span className={hideLabel ? 'sr-only' : undefined}>{label}</span>
       <span className={`relative inline-flex min-w-0 ${width ?? ''}`}>
         <select
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value as T)}
-          className="h-10 w-full min-w-0 cursor-pointer appearance-none truncate rounded border border-(--office-line) bg-transparent pr-8 pl-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40 [&>option]:bg-(--office-menu)"
+          className="h-10 w-full min-w-0 cursor-pointer appearance-none truncate rounded-control border border-(--office-line) bg-transparent pr-8 pl-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40 [&>option]:bg-(--office-menu)"
         >
           {options.map((option) => (
             <option key={option} value={option}>
@@ -99,7 +99,7 @@ export function OfficeDialogSelect<T extends string>({
 
 export function OfficeDialogMessage({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded border border-(--office-line) text-sm text-(--office-muted) max-sm:py-8">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-control border border-(--office-line) text-body text-(--office-muted) max-sm:py-8">
       {children}
     </div>
   );

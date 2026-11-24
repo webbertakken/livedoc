@@ -110,7 +110,7 @@ export function OfficeFontList({
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      className="relative min-h-0 flex-1 overflow-y-auto rounded border border-(--office-line) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+      className="relative min-h-0 flex-1 overflow-y-auto rounded-control border border-(--office-line) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
     >
       <div style={{ height: rows.length * FONT_ROW_PX }} className="relative">
         {inView.map((family, i) => {
@@ -130,7 +130,7 @@ export function OfficeFontList({
                 onToggle(family.name);
               }}
               style={{ top: index * FONT_ROW_PX, height: FONT_ROW_PX }}
-              className={`absolute inset-x-0 flex cursor-pointer items-center gap-3 px-3 text-[15px] hover:bg-(--office-menu-hover) ${
+              className={`absolute inset-x-0 flex cursor-pointer items-center gap-3 px-3 text-panel-title hover:bg-(--office-menu-hover) ${
                 index === active && focused
                   ? 'bg-(--office-menu-hover) ring-2 ring-(--office-focus) ring-inset'
                   : ''

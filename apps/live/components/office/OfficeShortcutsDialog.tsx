@@ -53,7 +53,7 @@ export function OfficeShortcutsDialog({
           placeholder="Search keyboard shortcuts"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-(--office-muted)"
+          className="h-10 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-(--office-muted)"
         />
       </div>
       <p role="status" aria-live="polite" className="sr-only">
@@ -63,30 +63,30 @@ export function OfficeShortcutsDialog({
         role="group"
         aria-label="Shortcuts"
         tabIndex={0}
-        className="mt-3 h-[60vh] min-h-0 overflow-y-auto rounded outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) max-sm:h-auto max-sm:flex-1"
+        className="mt-3 h-[60vh] min-h-0 overflow-y-auto rounded-control outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) max-sm:h-auto max-sm:flex-1"
       >
         {count === 0 ? (
-          <p className="py-6 text-center text-sm text-(--office-muted)">
+          <p className="py-6 text-center text-body text-(--office-muted)">
             No shortcuts match “{query.trim()}”
           </p>
         ) : null}
         {groups.map((group, index) => (
           <section key={group.name} aria-labelledby={`${idBase}-${index}`} className="pt-4">
-            <h3 id={`${idBase}-${index}`} className="pb-1 text-base font-medium">
+            <h3 id={`${idBase}-${index}`} className="pb-1 text-panel-title font-medium">
               {group.name}
             </h3>
             <dl>
               {group.rows.map((row) => (
                 <div
                   key={row.id}
-                  className={`flex items-baseline justify-between gap-4 border-b border-(--office-line) py-2 text-sm ${
+                  className={`flex items-baseline justify-between gap-4 border-b border-(--office-line) py-2 text-body ${
                     row.comingSoon ? 'text-(--office-muted)' : ''
                   }`}
                 >
                   <dt className="min-w-0">
                     {row.action}
                     {row.comingSoon ? (
-                      <span className="ml-2 text-xs text-(--office-muted)">Coming soon</span>
+                      <span className="ml-2 text-supporting text-(--office-muted)">Coming soon</span>
                     ) : null}
                   </dt>
                   <dd className="shrink-0 text-right">

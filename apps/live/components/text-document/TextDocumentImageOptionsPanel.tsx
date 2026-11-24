@@ -49,7 +49,7 @@ const TurnLeftGlyph = lucideGlyph(lucideRotateCcwSquare, 18);
 const TurnRightGlyph = lucideGlyph(lucideRotateCwSquare, 18);
 // A square control of the panel's height, its glyph at full size.
 const ICON_BUTTON =
-  'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded border border-(--office-line) text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-control border border-(--office-line) text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 export function TextDocumentImageOptionsPanel({
   picture,
@@ -71,7 +71,7 @@ export function TextDocumentImageOptionsPanel({
   const rotateLabel = useId();
   if (!picture)
     return (
-      <p className="px-2 pt-1 text-sm text-(--office-muted)">Select an image to see its options.</p>
+      <p className="px-2 pt-1 text-body text-(--office-muted)">Select an image to see its options.</p>
     );
   const { own } = picture;
   const scale = (side: 'width' | 'height') => (own ? (picture[side] / own[side]) * 100 : null);

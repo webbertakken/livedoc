@@ -12,10 +12,10 @@ import {
 import { ContentsLookPicture } from './ContentsLookPicture';
 
 const CHOICE = 'size-4 shrink-0 accent-(--office-primary)';
-const HEADING = 'mb-2 text-sm font-medium';
-const ROW = 'flex cursor-pointer items-center gap-3 text-sm';
+const HEADING = 'mb-2 text-body font-medium';
+const ROW = 'flex cursor-pointer items-center gap-3 text-body';
 const SELECT =
-  'h-9 w-full cursor-pointer rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)';
+  'h-prominent w-full cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)';
 
 const LOOKS: readonly ContentsLook[] = ['plain', 'dotted', 'links'];
 const LEVELS = Array.from({ length: CONTENTS_LEVELS_MAX }, (_, i) => i + 1);
@@ -31,7 +31,7 @@ export function TextDocumentContentsPanel({
   const ids = { look: useId(), levels: useId() };
   if (!selected)
     return (
-      <p className="px-2 pt-1 text-sm text-(--office-muted)">
+      <p className="px-2 pt-1 text-body text-(--office-muted)">
         Select a table of contents to change its options.
       </p>
     );

@@ -143,7 +143,7 @@ export function TextDocumentEmojiColonList({
         role="listbox"
         aria-label="Emoji"
         data-emoji-colon-list
-        className="w-64 rounded-md border border-(--office-line) bg-(--office-menu) py-1 text-sm text-(--office-ink) shadow-lg"
+        className="w-64 rounded-control border border-(--office-line) bg-(--office-menu) py-1 text-body text-(--office-ink) shadow-lg"
       >
         {matches.map((emoji, at) => (
           <li
@@ -158,9 +158,9 @@ export function TextDocumentEmojiColonList({
               choose(view, emoji);
             }}
             onMouseEnter={() => setChosen({ typed: query.typed, index: at })}
-            className="flex h-8 cursor-default items-center gap-3 px-3 aria-selected:bg-(--office-menu-hover)"
+            className="flex h-field cursor-default items-center gap-3 px-3 aria-selected:bg-(--office-menu-hover)"
           >
-            <span aria-hidden="true" className="text-lg leading-none">
+            <span aria-hidden="true" className="text-name leading-none">
               {inTone(emoji, tone)}
             </span>
             <span aria-hidden="true" className="min-w-0 truncate">

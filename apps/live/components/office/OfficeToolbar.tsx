@@ -45,7 +45,7 @@ const BAR_PADDING_PX = 16;
 
 // A control's look but for its side padding: a split toggle's chevron is narrower.
 const CONTROL_BODY =
-  'relative flex h-7 shrink-0 items-center justify-center gap-0.5 rounded text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent';
+  'relative flex h-row shrink-0 items-center justify-center gap-0.5 rounded-control text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent';
 const CONTROL = `${CONTROL_BODY} px-1`;
 
 type Placed = { control: OfficeControl; startsGroup: boolean; group: string };
@@ -315,7 +315,7 @@ function ControlView({
         font={fontFamily}
         value={family}
         tabIndex={tabIndex}
-        className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
+        className={`${CONTROL} justify-between text-body text-(--office-ink)`}
       />
     ) : null;
   if (look.kind === 'choice') {
@@ -329,7 +329,7 @@ function ControlView({
         actions={choice.actions}
         width={look.width}
         tabIndex={tabIndex}
-        className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
+        className={`${CONTROL} justify-between text-body text-(--office-ink)`}
       />
     ) : null;
   }
@@ -413,7 +413,7 @@ function ControlView({
           else action?.run();
         }}
         style={look.kind === 'text' ? { width: look.width } : undefined}
-        className={`${CONTROL} ${look.kind !== 'text' ? 'min-w-7' : look.list ? 'justify-between text-sm text-(--office-ink)' : 'justify-center rounded-sm border border-(--office-line) text-sm text-(--office-ink)'}`}
+        className={`${CONTROL} ${look.kind !== 'text' ? 'min-w-7' : look.list ? 'justify-between text-body text-(--office-ink)' : 'justify-center rounded-control border border-(--office-line) text-body text-(--office-ink)'}`}
       >
         {look.kind === 'icon' ? (
           <Glyph size={18} units={24}>

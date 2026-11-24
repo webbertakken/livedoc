@@ -50,7 +50,7 @@ export function OfficeToolFinder({
   };
 
   return (
-    <div className="absolute top-0 left-0 z-40 w-96 max-w-[calc(100vw-2rem)] rounded-lg border border-(--office-line) bg-(--office-menu) text-(--office-ink) shadow-lg">
+    <div className="absolute top-0 left-0 z-40 w-96 max-w-[calc(100vw-2rem)] rounded-menu border border-(--office-line) bg-(--office-menu) text-(--office-ink) shadow-lg">
       <div className="flex items-center gap-2 px-3 py-2">
         <span aria-hidden="true" className="text-(--office-icon)">
           <SearchIcon size={18} />
@@ -65,7 +65,7 @@ export function OfficeToolFinder({
           aria-activedescendant={results[active] ? `${listId}-${active}` : undefined}
           placeholder="Search the menus"
           value={query}
-          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-(--office-muted)"
+          className="min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-(--office-muted)"
           onChange={(e) => {
             setQuery(e.target.value);
             setActive(0);
@@ -107,16 +107,16 @@ export function OfficeToolFinder({
               aria-selected={index === active}
               aria-disabled={soon || undefined}
               data-office-result={found.item.id}
-              className={`flex cursor-default items-baseline gap-3 px-3 py-1.5 text-sm ${index === active ? 'bg-(--office-menu-hover)' : ''} ${soon ? 'opacity-50' : ''}`}
+              className={`flex cursor-default items-baseline gap-3 px-3 py-1.5 text-body ${index === active ? 'bg-(--office-menu-hover)' : ''} ${soon ? 'opacity-50' : ''}`}
               onPointerDown={(e) => e.preventDefault()}
               onPointerEnter={() => setActive(index)}
               onClick={() => choose(found)}
             >
               <span className="whitespace-nowrap">{found.item.label}</span>
-              <span className="flex-1 truncate text-xs text-(--office-muted)">
+              <span className="flex-1 truncate text-supporting text-(--office-muted)">
                 {found.path.join(' › ')}
               </span>
-              <span className="whitespace-nowrap text-xs text-(--office-muted)">
+              <span className="whitespace-nowrap text-supporting text-(--office-muted)">
                 {soon ? 'Coming soon' : (shortcut?.shown ?? '')}
               </span>
             </li>

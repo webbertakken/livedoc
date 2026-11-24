@@ -61,7 +61,7 @@ const NO_THEME: readonly never[] = [];
 const NOTHING = () => {};
 
 const TOOL =
-  'flex h-8 items-center gap-1.5 whitespace-nowrap rounded-sm px-2 text-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-expanded:bg-(--office-pressed)';
+  'flex h-field items-center gap-2 whitespace-nowrap rounded-control px-2 text-body text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-expanded:bg-(--office-pressed)';
 
 export function OfficeBordersPanel({
   borders,
@@ -87,7 +87,7 @@ export function OfficeBordersPanel({
       ref={panel}
       role="dialog"
       aria-label="Borders"
-      className="flex w-[18rem] flex-col gap-2 rounded-md border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
+      className="flex w-[18rem] flex-col gap-2 rounded-control border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
     >
       <div className="h-[5.5rem]">
         <OfficeGlyphGrid
@@ -156,7 +156,7 @@ export function OfficeBordersPanel({
                   borders.setLine(line.id);
                   setTool(null);
                 }}
-                className={`flex h-8 items-center justify-center rounded-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${line.id === borders.line ? 'bg-(--office-pressed)' : ''}`}
+                className={`flex h-field items-center justify-center rounded-control text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${line.id === borders.line ? 'bg-(--office-pressed)' : ''}`}
               >
                 <BorderLineGlyph line={line.stroke} />
               </button>

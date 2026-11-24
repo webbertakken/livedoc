@@ -25,9 +25,9 @@ export type PageNumberOptions = {
 };
 
 const CONTROL =
-  'h-9 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-prominent rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 const FIELD = `${CONTROL} w-24 tabular-nums aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400 disabled:opacity-40`;
-const HEADING = 'mb-2 text-sm font-medium';
+const HEADING = 'mb-2 text-body font-medium';
 const CHOICE = 'size-4 shrink-0 accent-(--office-primary)';
 
 /** Start at as typed: a whole number from 0 to the most, else null. */
@@ -79,12 +79,12 @@ export function TextDocumentPageNumbersDialog({
         onPress: () => onApply({ position, firstPage, start: continues ? null : typed }, scope),
       }}
     >
-      <div className="flex flex-col gap-5 pt-1">
+      <div className="flex flex-col gap-6 pt-1">
         <fieldset>
           <legend className={HEADING}>Position</legend>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {(['header', 'footer'] as const).map((kind) => (
-              <label key={kind} className="flex cursor-pointer items-center gap-2 text-sm">
+              <label key={kind} className="flex cursor-pointer items-center gap-2 text-body">
                 <input
                   type="radio"
                   name={ids.position}
@@ -96,7 +96,7 @@ export function TextDocumentPageNumbersDialog({
               </label>
             ))}
           </div>
-          <label className="mt-3 flex cursor-pointer items-center gap-3 text-sm">
+          <label className="mt-3 flex cursor-pointer items-center gap-3 text-body">
             <input
               type="checkbox"
               className={CHOICE}
@@ -109,7 +109,7 @@ export function TextDocumentPageNumbersDialog({
         <fieldset>
           <legend className={HEADING}>Numbering</legend>
           <div className="flex flex-col gap-2">
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 text-body">
               <input
                 type="radio"
                 name={ids.numbering}
@@ -119,7 +119,7 @@ export function TextDocumentPageNumbersDialog({
               />
               Continue from previous section
             </label>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2 text-body">
               <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
@@ -144,7 +144,7 @@ export function TextDocumentPageNumbersDialog({
               />
             </div>
             {invalid ? (
-              <span id={ids.error} className="text-xs text-red-700 dark:text-red-300">
+              <span id={ids.error} className="text-supporting text-red-700 dark:text-red-300">
                 {START_OUT_OF_RANGE}
               </span>
             ) : null}

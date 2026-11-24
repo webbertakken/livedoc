@@ -46,7 +46,7 @@ function MathGlyph({ node }: { node: MathNode }) {
 }
 
 const BUTTON =
-  'flex h-7 items-center gap-1 rounded px-2 text-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus) aria-expanded:bg-(--office-hover)';
+  'flex h-row items-center gap-1 rounded-control px-2 text-body text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus) aria-expanded:bg-(--office-hover)';
 
 function EquationMenuButton({
   menu,
@@ -77,7 +77,7 @@ function EquationMenuButton({
       </button>
       {open ? (
         <OfficePopup anchor={anchor}>
-          <div className="flex max-h-72 w-80 flex-col rounded-lg border border-(--office-line) bg-(--office-menu) p-2 shadow-lg">
+          <div className="flex max-h-72 w-80 flex-col rounded-menu border border-(--office-line) bg-(--office-menu) p-2 shadow-lg">
             <OfficeGlyphGrid
               label={label}
               items={EQUATION_MENU_CELLS[menu]}

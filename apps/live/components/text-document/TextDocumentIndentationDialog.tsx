@@ -77,11 +77,11 @@ export function TextDocumentIndentationDialog({
       primary={{ label: 'Apply', onPress: apply, disabled: invalid }}
     >
       <div className="grid grid-cols-[auto_1fr] items-start gap-x-6 gap-y-4 pt-1">
-        <span className="pt-2 text-sm">Left</span>
+        <span className="pt-2 text-body">Left</span>
         <TextDocumentLengthField label="Left" value={left} unit={unit} onChange={setLeft} />
-        <span className="pt-2 text-sm">Right</span>
+        <span className="pt-2 text-body">Right</span>
         <TextDocumentLengthField label="Right" value={right} unit={unit} onChange={setRight} />
-        <label htmlFor={specialId} className="pt-2 text-sm">
+        <label htmlFor={specialId} className="pt-2 text-body">
           Special indent
         </label>
         <div className="flex flex-wrap items-start gap-3">
@@ -94,7 +94,7 @@ export function TextDocumentIndentationDialog({
               // A first-line or hanging indent starts at one step, 0.5 in, as Google's does.
               if (next !== 'none' && size === '') setSize(shown(INDENT_STEP_PT, unit));
             }}
-            className="h-9 cursor-pointer rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)"
+            className="h-prominent cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)"
           >
             {special === '' ? <option value="">Mixed</option> : null}
             {SPECIALS.map((s) => (

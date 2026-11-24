@@ -215,7 +215,7 @@ export function OfficeEmojiDialog({
                 setCatalogue({ state: 'loading' });
                 setAttempt((n) => n + 1);
               }}
-              className="touch-target relative mt-2 rounded-full px-4 py-2 text-sm font-medium text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+              className="touch-target relative mt-2 rounded-full px-4 py-2 text-body font-medium text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
             >
               Try again
             </button>
@@ -241,11 +241,11 @@ function Preview({ cell }: { cell: Cell | null }) {
             {cell.text}
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm text-(--office-ink) [overflow-wrap:anywhere]">
+            <span className="text-body text-(--office-ink) [overflow-wrap:anywhere]">
               {emojiName(cell.emoji.name)}
             </span>
             {shortcode ? (
-              <span className="font-mono text-xs text-(--office-muted)">:{shortcode}:</span>
+              <span className="font-mono text-supporting text-(--office-muted)">:{shortcode}:</span>
             ) : null}
           </span>
         </>

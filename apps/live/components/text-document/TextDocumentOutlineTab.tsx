@@ -69,7 +69,7 @@ export function TextDocumentOutlineTab({
         onKeyDown={done}
         onBlur={(event) => tabs.finishRename(tab.id, event.currentTarget.value)}
         style={{ marginLeft: indent }}
-        className="w-[calc(100%-0.5rem)] rounded border border-(--office-focus) bg-(--office-menu) px-2 py-1 text-sm text-(--office-ink) outline-none"
+        className="w-[calc(100%-0.5rem)] rounded-control border border-(--office-focus) bg-(--office-menu) px-2 py-1 text-body text-(--office-ink) outline-none"
       />
     );
   }

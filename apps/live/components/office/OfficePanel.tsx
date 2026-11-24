@@ -78,7 +78,7 @@ export function OfficePanel({
         />
       ) : null}
       <div className="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
-        <h2 id={titleId} className="min-w-0 flex-1 truncate text-base font-medium">
+        <h2 id={titleId} className="min-w-0 flex-1 truncate text-panel-title font-medium">
           {spec.title}
         </h2>
         <button

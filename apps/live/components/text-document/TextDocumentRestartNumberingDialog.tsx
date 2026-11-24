@@ -15,7 +15,7 @@ export function readRestartField(text: string): number | null {
 }
 
 const FIELD =
-  'h-9 w-28 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400';
+  'h-prominent w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400';
 
 export function TextDocumentRestartNumberingDialog({
   open,
@@ -47,7 +47,7 @@ export function TextDocumentRestartNumberingDialog({
       }}
     >
       <div className="flex items-start gap-4">
-        <label htmlFor={id} className="pt-2 text-sm">
+        <label htmlFor={id} className="pt-2 text-body">
           Start at
         </label>
         <div className="flex flex-col gap-1">
@@ -62,7 +62,7 @@ export function TextDocumentRestartNumberingDialog({
             className={FIELD}
           />
           {invalid ? (
-            <span id={`${id}-error`} className="text-xs text-red-700 dark:text-red-300">
+            <span id={`${id}-error`} className="text-supporting text-red-700 dark:text-red-300">
               Enter a whole number from {LIST_RESTART_MIN} to {LIST_RESTART_MAX}.
             </span>
           ) : null}

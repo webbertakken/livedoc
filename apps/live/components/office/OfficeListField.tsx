@@ -65,7 +65,7 @@ export function OfficeListField<T>({
   };
 
   return (
-    <div ref={attach} className="relative flex h-7 items-center rounded hover:bg-(--office-hover)">
+    <div ref={attach} className="relative flex h-row items-center rounded-control hover:bg-(--office-hover)">
       <input
         role="combobox"
         aria-label={label}
@@ -103,7 +103,7 @@ export function OfficeListField<T>({
             setDraft(null);
           }
         }}
-        className={`bg-transparent text-sm text-(--office-ink) outline-none pointer-coarse:h-11 focus-visible:rounded focus-visible:ring-2 focus-visible:ring-(--office-focus) ${inputClass}`}
+        className={`bg-transparent text-body text-(--office-ink) outline-none pointer-coarse:h-11 focus-visible:rounded-control focus-visible:ring-2 focus-visible:ring-(--office-focus) ${inputClass}`}
       />
       {chevron ? (
         <button
@@ -111,7 +111,7 @@ export function OfficeListField<T>({
           tabIndex={-1}
           aria-label={listLabel}
           onClick={() => (open ? setOpen(false) : openList())}
-          className="flex h-7 w-6 items-center justify-center text-(--office-icon) outline-none pointer-coarse:h-11"
+          className="flex h-row w-6 items-center justify-center text-(--office-icon) outline-none pointer-coarse:h-11"
         >
           <ChevronDownIcon size={12} />
         </button>
@@ -122,7 +122,7 @@ export function OfficeListField<T>({
             id={listId}
             role="listbox"
             aria-label={label}
-            className="max-h-80 min-w-24 overflow-y-auto rounded-md bg-(--office-menu) py-1 text-sm text-(--office-ink) shadow-lg"
+            className="max-h-80 min-w-24 overflow-y-auto rounded-control bg-(--office-menu) py-1 text-body text-(--office-ink) shadow-lg"
           >
             {options.map((option, i) => (
               <li

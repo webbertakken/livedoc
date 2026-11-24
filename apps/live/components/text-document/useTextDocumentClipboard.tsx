@@ -39,7 +39,7 @@ export function useTextDocumentClipboard(view: EditorView | null, canEdit: boole
     leftOut !== null ? (
       <p
         role="status"
-        className="border-b border-(--office-line) bg-(--office-chrome) px-4 py-2 text-center text-sm text-(--office-ink)"
+        className="border-b border-(--office-line) bg-(--office-chrome) px-4 py-2 text-center text-body text-(--office-ink)"
       >
         {leftOutNotice(leftOut)}
       </p>
