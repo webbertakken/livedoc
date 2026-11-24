@@ -155,6 +155,7 @@ The api, in order:
    reporter's id, or `anonymous`). An absent bucket or a failed put is logged and the report goes on without it.
 5. **Files** it on the board, through the Bug Tracker's room and the item store (the same write a form response
    makes): a **Bug Report** card in the first column of the first board on the configured tab that takes that type.
+   A security worker issue goes in that board's **Security** column instead, when it has one ([Worker issues](worker-issues.md#the-issue-card)).
 6. When the board cannot take it, **stores** it in D1 `bug_reports` with the reason.
 
 | Outcome                        | Response                                 |
@@ -190,8 +191,9 @@ origin: its row has `reporter_kind` `workers-issues`, no `owner_id`, and the iss
 
 The Bug Tracker is a document in the hosted operator's account, unshared, with:
 
-- a **Board tab** (its id is `BUG_REPORT_TAB_ID`; a board on any other tab is not found), whose board has the columns **Reported**, **Triaged**, **In Progress**,
-  **Fixed** and **Won't Fix**, Fixed and Won't Fix done columns; reports land in the first column;
+- a **Board tab** (its id is `BUG_REPORT_TAB_ID`; a board on any other tab is not found), whose board has the columns **Reported**, **Security**, **Triaged**,
+  **In Progress**, **Fixed** and **Won't Fix**, Fixed and Won't Fix done columns; reports land in the first column,
+  security worker issues in Security;
 - a card type labelled **Bug Report** with the custom fields **Severity** (Choice: Low, Medium, High, Critical),
   **Context** (Long Text), **Screenshot** (Link), **Reporter** (Text) and **Release** (Text).
 
@@ -268,7 +270,7 @@ The code cites each by its id.
 - **D14** How a screenshot is fitted to 1 MB: WebP (JPEG where unsupported), quality 0.9 stepping down by 0.1 to 0.4,
   then refused (default).
 - **D15** Which board column a report lands in: The first column of the first live board on the tab that takes Bug
-  Report cards (default).
+  Report cards (default); a security worker issue in its Security column (Webber, 2026-11-24).
 - **D16** How the card's fields are found: By label, case apart; a missing field's value goes into Details under its
   label (default).
 - **D17** Whether a share-code embed carries an entry: No, its chrome stays hidden; the badge leads to the full view,

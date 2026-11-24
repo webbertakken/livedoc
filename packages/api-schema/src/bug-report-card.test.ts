@@ -5,6 +5,7 @@ import type { WorkerIssue } from './worker-issue';
 import {
   BUG_REPORT_TYPE_LABEL,
   bugReportCard,
+  bugReportColumn,
   findBugReportType,
   reporterLine,
   workerIssueFiling,
@@ -177,5 +178,30 @@ describe('workerIssueFiling', () => {
       reporter: { kind: 'workers-issues', id: null },
       issue,
     });
+  });
+});
+
+describe('bugReportColumn', () => {
+  const columns = [{ name: 'Reported' }, { name: 'security' }, { name: 'Fixed' }];
+  const person: BugReportFiling = { title: 'T', reporter: { kind: 'anonymous', id: null } };
+  const issue = (issueType: string): BugReportFiling => ({
+    ...workerIssueFiling({ trigger: 'first_sight', issueType }),
+  });
+
+  it('files a security issue in the Security column, case apart', () => {
+    expect(bugReportColumn(issue('security'), columns)).toBe(columns[1]);
+  });
+
+  it('files a security issue in the first column of a board without one', () => {
+    expect(bugReportColumn(issue('security'), [columns[0]!, columns[2]!])).toBe(columns[0]);
+  });
+
+  it('files any other issue and a person’s report in the first column', () => {
+    expect(bugReportColumn(issue('exception'), columns)).toBe(columns[0]);
+    expect(bugReportColumn(person, columns)).toBe(columns[0]);
+  });
+
+  it('answers undefined for a board without columns', () => {
+    expect(bugReportColumn(person, [])).toBeUndefined();
   });
 });
