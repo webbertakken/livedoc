@@ -161,7 +161,7 @@ export function useTextDocumentTabs({
       if (name === null || name.trim() === was) return;
       write(DocumentTabList.rename(entries, id, name), CHANGES.renamed);
     },
-    [list, write],
+    [entries, list, write],
   );
 
   // A new tab's head and its one empty paragraph, put in the list where `place` says, then shown.
@@ -235,7 +235,7 @@ export function useTextDocumentTabs({
         write(DocumentTabList.setEmoji(entries, asking.id, emoji), CHANGES.emoji);
       setAsking(null);
     },
-    [asking, list, write],
+    [asking, entries, write],
   );
 
   // The tab and its subtabs gone; the shown one among them, the tab before them shown first, else the one after.
@@ -255,7 +255,7 @@ export function useTextDocumentTabs({
       removed: gone.removed.length,
       count: gone.list.length,
     });
-  }, [asking, canEdit, list, show, shown, store]);
+  }, [asking, canEdit, entries, list, show, shown, store]);
 
   const cancelAsking = useCallback(() => setAsking(null), []);
 
