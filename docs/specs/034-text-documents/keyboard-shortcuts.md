@@ -37,8 +37,8 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 | Paste without formatting       | `Ctrl+Shift+V`                           | `⌘+Shift+V`                 | `Ctrl+Shift+V`     | the browser's                                            |
 | Undo                           | `Ctrl+Z`                                 | `⌘+Z`                       | `Ctrl+Z`           | built (`text-document-shortcuts.test.tsx`)               |
 | Redo                           | `Ctrl+Shift+Z`                           | `⌘+Shift+Z`                 | `Ctrl+Shift+Z`     | built (`text-document-shortcuts.test.tsx`)               |
-| Insert or edit link            | `Ctrl+K`                                 | `⌘+K`                       | `Ctrl+K`           | specified                                                |
-| Open link                      | `Alt+Enter`                              | `Option+Enter`              | `Alt+Enter`        | specified                                                |
+| Insert or edit link            | `Ctrl+K`                                 | `⌘+K`                       | `Ctrl+K`           | built (`links.spec.ts`)                                  |
+| Open link                      | `Alt+Enter`                              | `Option+Enter`              | `Alt+Enter`        | built (`useTextDocumentLinks.test.tsx`)                  |
 | Show common keyboard shortcuts | `Ctrl+/`                                 | `⌘+/`                       | `Ctrl+/`           | built (`OfficeShortcutsDialog.test.tsx`)                 |
 | Save                           | `Ctrl+S`                                 | `⌘+S`                       | `Ctrl+S`           | specified                                                |
 | Print                          | `Ctrl+P`                                 | `⌘+P`                       | `Ctrl+P`           | specified                                                |

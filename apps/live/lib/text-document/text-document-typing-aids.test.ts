@@ -47,6 +47,7 @@ describe('TypingAids', () => {
       lists: true,
       markdown: false,
       emojiColon: true,
+      linkDetails: true,
       substitution: true,
     });
     expect(aids.pairs).toHaveLength(DEFAULT_SUBSTITUTIONS.length);
