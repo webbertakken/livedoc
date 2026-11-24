@@ -77,6 +77,19 @@ request's grant (`tabScopeOf`), read only when the request carries a share code,
 
 A scoped link is only valid while its tab is still in the document. Deleting that tab **deletes every link scoped to it** in the same request, and broadcasts `share-revoked` for each, so the visitors holding them leave the editor exactly as on a manual revoke. The access resolution also treats a scoped link whose tab is gone as no link at all, so a race can't open anything.
 
+### Drawing tabs
+
+A text document tab's drawings are tabs of their own that belong to it ([Drawings](../034-text-documents/objects.md#drawings)).
+A link to that tab reaches them as it reaches the tab: every door above, and the room, admit a tab whose `drawing_of` is
+the link's tab, judged as each request or op arrives, so a drawing made after the visitor joined is in reach once the
+room has stored it.
+A drawing tab is never a link's own tab: the Share dialog lists listed tabs only.
+
+- What reaches is content alone: a link to one tab still adds and removes no tabs, drawing tabs included.
+- `isTabInScope(env, documentId, tabScope, tabId)` (`apps/api/src/tab-scope.ts`) answers for the REST doors; the room
+  answers from its own SQLite as each frame arrives (`room-scope.ts`, given the drawing tabs of the scope).
+- Redaction keeps a drawing tab of the link's tab whole: its name and `drawingOf`.
+
 ### Redaction
 
 A scoped visitor's copy of the document:
