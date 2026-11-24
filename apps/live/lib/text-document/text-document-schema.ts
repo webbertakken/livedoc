@@ -25,6 +25,7 @@ import {
   PARAGRAPH_ATTRIBUTES,
   PICTURE,
   SECTION_BREAK,
+  CONTENTS,
   SECTION_BREAK_ATTRIBUTES,
 } from '@livedoc/text-documents';
 import { DocumentFonts } from '@livedoc/document';
@@ -35,6 +36,7 @@ import { pictureNodeSpec } from './text-document-pictures';
 import { equationNodeSpec } from './text-document-equations';
 import { nullAttributes } from './text-document-attributes';
 import { bookmarkNodeSpec } from './text-document-bookmarks';
+import { contentsNodeSpec } from './text-document-contents';
 
 const fieldText = (text: unknown): string => (typeof text === 'string' ? text : '');
 
@@ -188,6 +190,8 @@ const nodes: Record<string, NodeSpec> = {
   },
   // A table (tables.md "In the editor"), its rows and cells.
   ...tableNodeSpecs(),
+  // A table of contents (links-and-navigation.md "Table of contents"): read only, its entries paragraphs.
+  [CONTENTS]: contentsNodeSpec,
   [KEPT_INLINE]: {
     group: 'inline',
     inline: true,

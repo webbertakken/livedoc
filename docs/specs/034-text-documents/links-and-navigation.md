@@ -86,7 +86,8 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   Every entry links to its heading (`#<id>`, the heading gaining its id as in [Heading links](#heading-links)).
 - Entry paragraphs take the paragraph styles **Contents 1** to **Contents 6** (ODF `Contents_20_N`, OOXML `TOCN`),
   each indented 0.5 cm a level `(default)`, made when a table of contents first needs them, a file's own kept.
-- It is read only: the caret steps over it, a press selects it whole, and Delete or Backspace takes it whole.
+- It is read only: the caret steps over it, a press selects it whole; Backspace after it or Delete before it takes it
+  whole.
   Copied and pasted, it stays one; an entry's link goes to its heading on Alt+Enter, as a link does.
 - Insert > Table of contents offers the three looks, each a small picture of it with its name; one goes in at the
   caret, in the body, outside a table, splitting the caret's paragraph, as one undo step.

@@ -248,6 +248,8 @@ export function clipboardSerializer(read: () => ClipboardHtmlContext): DOMSerial
     paragraph,
     section_break: () => omitted('div'),
     kept_block: () => omitted('div'),
+    // A table of contents reads as its entries elsewhere (links-and-navigation.md "Table of contents").
+    table_of_contents: () => ['div', 0],
     kept_inline: () => omitted('span'),
     // A bookmark is a place in this document alone (links-and-navigation.md "Bookmarks").
     bookmark: () => omitted('span'),
