@@ -20,8 +20,8 @@ Bound today: Download as PDF, Undo, Redo, Copy, Select all, Find, the editing mo
 Zoom to selection, Go to, Rotate view, Thumbnails, Outline, Embedded files and Layers.
 
 Not built: a tile redrawn alone when a change touches it (a change draws its page again),
-Signatures and Fields, the accessible tree (a page is a named region whose picture is
-hidden from assistive technology) and the phone layout. The pill's lock glyph waits on the shell, whose pill takes
+Signatures and Fields, and of the phone layout all but a pinch and two fingers on the pages
+([Accessibility](accessibility.md) holds the accessible tree). The pill's lock glyph waits on the shell, whose pill takes
 words alone: a protected file's pill says "Protected" in its tooltip and name.
 
 The chrome of a [PDF document](pdf-document.md) and how its pages are read: the title row, menus, toolbar, the left
@@ -559,8 +559,10 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 - The title row is one line and the menus move into More, as the shell does
   ([Phone and tablet](../004-interface-design/office-shell.md#phone-and-tablet)); the page bar stays, and the left
   panel opens as a sheet from the bottom.
-- **Pinch** zooms about the fingers; **two fingers** pan; a **double tap** zooms to the column under the finger and
-  back. One finger scrolls in Viewing and with the Hand; with a mark tool in hand it draws.
+- **Pinch** zooms the pages about the fingers, never the page around them (the pages hold `touch-action: pan-x
+pan-y`); **two fingers** pan, what was under their middle staying under it, at the zoom's limits too; a pinch on the
+  chrome zooms the page, as the browser does ([Accessibility](accessibility.md#seeing)). A **double tap** zooms to the
+  column under the finger and back. One finger scrolls in Viewing and with the Hand; with a mark tool in hand it draws.
 - The toolbar shows the mode's first tools and puts the rest in its overflow row; every target is at least 44 px.
 - A long press selects the word under the finger, with handles to extend and a small bar: Copy, Highlight, Comment.
 - Reduced motion: no animated scroll to a result or a page, no zoom easing; the page appears where asked.

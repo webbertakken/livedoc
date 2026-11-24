@@ -26,7 +26,8 @@ const DISPLAY_TELEMETRY: Record<PdfPageDisplayName, string> = {
 // What the next layout keeps in place: a point of the view (the place under it stays under it), a page (its top at
 // the view's top), or the shown row's end (a row turned back to, from its start).
 type Anchor =
-  | { kind: 'focus'; focus: PdfPoint }
+  // `to`: where the place under `focus` lands, a pinch's fingers having moved; `focus` itself where none is given.
+  | { kind: 'focus'; focus: PdfPoint; to?: PdfPoint }
   | { kind: 'page'; index: number; at?: PdfSpot }
   | { kind: 'row-end' };
 
@@ -188,7 +189,7 @@ export function usePdfView(pages: readonly PageInfo[]) {
         x: scroll.current.left + focus.x,
         y: scroll.current.top + focus.y,
       });
-      if (place) to = PdfPageLayout.scrollTo(layout, place, focus, viewport);
+      if (place) to = PdfPageLayout.scrollTo(layout, place, next?.to ?? focus, viewport);
     }
     if (to) scrollTo(to);
     readPage();
@@ -209,15 +210,27 @@ export function usePdfView(pages: readonly PageInfo[]) {
     setView((before) => PdfView.withZoom(before, zoom));
   }, []);
 
-  /** A wheel's or a pinch's zoom, by a factor of the zoom shown, about the pointer; told to telemetry as it settles. */
+  /**
+   * A wheel's or a pinch's zoom, by a factor of the zoom shown, about the pointer; told to telemetry as it settles. A
+   * pinch's fingers move as they spread: what was under `focus` lands under `to`, and where the zoom is at its limit
+   * the pages only pan.
+   */
   const zoomBy = useCallback(
-    (factor: number, focus: PdfPoint) => {
-      anchor.current = { kind: 'focus', focus };
-      setView((before) =>
-        PdfView.withZoom(before, scaleOf(before.zoom, before.display.across) * factor),
-      );
+    (factor: number, focus: PdfPoint, to: PdfPoint = focus) => {
+      const { view: before, layout: now, viewport: size } = latest.current;
+      const zoomed = PdfView.withZoom(before, scaleOf(before.zoom, before.display.across) * factor);
+      if (zoomed.zoom === before.zoom) {
+        const { left, top } = scroll.current;
+        scrollTo({
+          left: Math.min(Math.max(left + focus.x - to.x, 0), Math.max(now.width - size.width, 0)),
+          top: Math.min(Math.max(top + focus.y - to.y, 0), Math.max(now.height - size.height, 0)),
+        });
+        return;
+      }
+      anchor.current = { kind: 'focus', focus, to };
+      setView(zoomed);
     },
-    [scaleOf],
+    [scaleOf, scrollTo],
   );
 
   /** A row by its index: scrolled to where every row is down the view, else shown alone. */

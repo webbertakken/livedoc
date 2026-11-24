@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { taggedPdf } from '@livedoc/pdf-documents/testing';
 import { expect, expectNoPageErrors, test } from '../fixtures';
-import { dropPdf, pageOneDrawn } from './pdf-document-pages';
+import { dropPdf, pageOneDrawn, pageScale, pinch } from './pdf-document-pages';
 
 // An automated accessibility scan of a PDF's surface (docs/specs/035-pdf-documents/accessibility.md "Tests"): WCAG
 // 2.2 A and AA, in both schemes, in each editing mode, on a tagged file so its pages' tree is scanned too.
@@ -73,23 +73,6 @@ test('a PDF’s surface passes an accessibility scan in both schemes, in each ed
 });
 
 // "Seeing" (WCAG 1.4.4): on a phone a PDF tab's page zooms with the browser, the editor's pin dropped while it shows.
-// Two fingers drawn apart across the title row, as raw touches: Chromium's synthetic touch pinch does not zoom a
-// headless page, a zoomable one included.
-async function pinch(page: Page): Promise<void> {
-  const cdp = await page.context().newCDPSession(page);
-  const fingers = (apart: number) => [
-    { x: 196 - apart, y: 30, id: 0 },
-    { x: 196 + apart, y: 30, id: 1 },
-  ];
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: fingers(20) });
-  for (let apart = 25; apart <= 150; apart += 5) {
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: fingers(apart) });
-  }
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await cdp.detach();
-}
-
-const pageScale = (page: Page) => page.evaluate(() => window.visualViewport?.scale ?? 1);
 
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true });
@@ -107,14 +90,14 @@ test.describe('on a phone', () => {
 
     const viewport = page.locator('meta[name="viewport"]');
     await expect(viewport).toHaveAttribute('content', 'width=device-width, initial-scale=1');
-    await pinch(page);
+    await pinch(page, { x: 196, y: 30 });
     await expect.poll(() => pageScale(page)).toBeGreaterThan(1.5);
     await page.screenshot({ path: test.info().outputPath('pdf-phone-pinched.png') });
 
     // A canvas route keeps its pin: the same pinch leaves its page as it is (the unit test holds the pin's return).
     await page.goto('/new');
     await expect(viewport).toHaveAttribute('content', /user-scalable=no/);
-    await pinch(page);
+    await pinch(page, { x: 196, y: 30 });
     expect(await pageScale(page)).toBe(1);
 
     expectNoPageErrors(pageErrors);

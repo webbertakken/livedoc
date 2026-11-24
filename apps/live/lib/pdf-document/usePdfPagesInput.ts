@@ -3,11 +3,13 @@
 // What the pages hear themselves (docs/specs/035-pdf-documents/reading-surface.md "The pages"; keyboard-shortcuts.md
 // "Reading"): ⌘ with the wheel, and a trackpad's pinch, zoom about the pointer; where one row shows at a time, a
 // wheel or a key that scrolls, pushed past the row's end, turns to the next; ← and → turn a page where the pages fit
-// across, Home and End go to the first and the last. Plain keys are heard on the pages alone, never in a field.
+// across, Home and End go to the first and the last. Plain keys are heard on the pages alone, never in a field. Two
+// fingers pinch and pan (usePdfTouchZoom.ts).
 import { useCallback, useEffect, useRef, type KeyboardEvent } from 'react';
 import { PDF_WHEEL_TURN_MS, PDF_WHEEL_ZOOM_RATE, PDF_ZOOM_SETTLE_MS } from '@livedoc/pdf-documents';
 import { track } from '@/lib/telemetry';
 import { PDF_PAGE_KEYS } from './pdf-shortcuts';
+import { usePdfTouchZoom } from './usePdfTouchZoom';
 import type { PdfViewer } from './usePdfView';
 
 // A wheel that scrolls by lines or pages is told in pixels as a browser's own line is.
@@ -39,6 +41,7 @@ export function usePdfPagesInput(pages: Pages): {
     latest.current = pages;
   });
   const { element } = pages;
+  usePdfTouchZoom(pages);
 
   useEffect(() => {
     if (!element) return;
