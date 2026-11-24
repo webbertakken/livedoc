@@ -129,7 +129,8 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
 - With no heading it reads: **Headings you add to the document will appear here.**
 - The panel shows **Summary** (a free text the editor writes, as Google's) above the headings.
 - Document tabs are listed above the headings ([Document tabs in the outline](#document-tabs-in-the-outline)).
-- Hidden by a press on its close; personal and remembered.
+- Hidden by a press on its close; personal and remembered. Opened from its menu item or shortcut, it starts at the
+  shown tab's first heading, else at the shown tab `(default)`.
 
 ### Document tabs in the outline
 

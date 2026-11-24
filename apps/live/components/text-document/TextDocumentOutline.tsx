@@ -8,6 +8,7 @@ import { useCallback, useId, useMemo, useSyncExternalStore } from 'react';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { PlusIcon, Tooltip } from '@livedoc/ui';
+import { OFFICE_PANEL_START } from '@/components/office/OfficePanel';
 import type { Style } from '@livedoc/text-documents';
 import type { TextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import {
@@ -51,10 +52,12 @@ function Headings({
     );
   return (
     <ul aria-label="Headings">
-      {headings.map((heading) => (
+      {headings.map((heading, i) => (
         <li key={heading.pos}>
           <button
             type="button"
+            // Opening the outline starts at the shown tab's first heading.
+            {...(i === 0 ? { [OFFICE_PANEL_START]: '' } : {})}
             onClick={() => view && goTo(view, heading)}
             style={{ paddingLeft: 8 + indent + (heading.level - 1) * LEVEL_INDENT_PX }}
             className={ROW}
@@ -120,6 +123,8 @@ export function TextDocumentOutline({
               <button
                 type="button"
                 aria-current={current ? 'page' : undefined}
+                // Opening the outline starts at the shown tab when it has no heading.
+                {...(current && headings.length === 0 ? { [OFFICE_PANEL_START]: '' } : {})}
                 onClick={() => tabs.show(tab.id)}
                 style={{ paddingLeft: 8 + indent }}
                 className={`${ROW} ${current ? 'bg-(--office-pressed) font-medium text-(--office-pressed-ink)' : ''}`}

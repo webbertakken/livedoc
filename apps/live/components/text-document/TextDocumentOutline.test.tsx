@@ -6,6 +6,7 @@ import { EditorView } from 'prosemirror-view';
 import { TextDocument } from '@livedoc/text-documents';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
+import { OFFICE_PANEL_START } from '@/components/office/OfficePanel';
 import { ADD_TAB_LABEL, OUTLINE_EMPTY, TextDocumentOutline } from './TextDocumentOutline';
 import type { TextDocumentTabs } from './useTextDocumentTabs';
 
@@ -111,5 +112,24 @@ describe('TextDocumentOutline', () => {
     cleanup();
     outlineWith(tabsOf({ canAdd: false }), p('Words'));
     expect(screen.queryByRole('button', { name: ADD_TAB_LABEL })).toBeNull();
+  });
+
+  // "The outline": opened from its menu item, focus starts at the shown tab's first heading, else the shown tab.
+  it('marks where focus starts: the first heading, else the shown tab', () => {
+    outlineOf(p('Words'), p('Plan', 'Heading_20_1'), p('Steps', 'Heading_20_2'));
+    expect(screen.getByRole('button', { name: 'Plan' }).hasAttribute(OFFICE_PANEL_START)).toBe(
+      true,
+    );
+    expect(screen.getByRole('button', { name: 'Steps' }).hasAttribute(OFFICE_PANEL_START)).toBe(
+      false,
+    );
+    expect(screen.getByRole('button', { name: 'Tab 1' }).hasAttribute(OFFICE_PANEL_START)).toBe(
+      false,
+    );
+    cleanup();
+    outlineOf(p('Words'));
+    expect(screen.getByRole('button', { name: 'Tab 1' }).hasAttribute(OFFICE_PANEL_START)).toBe(
+      true,
+    );
   });
 });
