@@ -2,7 +2,7 @@
 // hidden bookmark at its start, before its text, as Google writes one per heading; a heading gains one when a link
 // first needs it; the heading at the caret; the headings the link editor offers; a heading's address and title.
 import type { Node as PmNode } from 'prosemirror-model';
-import type { Command, EditorState } from 'prosemirror-state';
+import type { Command, EditorState, Transaction } from 'prosemirror-state';
 import { BOOKMARK, Bookmarks, type Style } from '@livedoc/text-documents';
 import { bookmarkNames, bookmarkPosition } from './text-document-bookmarks';
 import { UNTITLED_HEADING, headingLevel } from './text-document-outline';
@@ -48,13 +48,21 @@ export function headingAt(state: EditorState, styles: readonly Style[]): Heading
   return { pos: $from.before(1), id: headingIdOf(paragraph), text: textOf(paragraph) };
 }
 
+/** Gives the heading whose paragraph starts at `pos` in `tr` its id, at its start; false where no paragraph starts. */
+export function giveHeadingIdIn(tr: Transaction, pos: number, id: string): boolean {
+  const paragraph = tr.doc.nodeAt(pos);
+  const type = tr.doc.type.schema.nodes[BOOKMARK];
+  if (!type || paragraph?.type.name !== 'paragraph') return false;
+  tr.insert(pos + 1, type.create({ name: id }));
+  return true;
+}
+
 /** Gives the heading whose paragraph starts at `pos` its id, at its start. */
 export function giveHeadingId(pos: number, id: string): Command {
   return (state, dispatch) => {
-    const paragraph = state.doc.nodeAt(pos);
-    const type = state.schema.nodes[BOOKMARK];
-    if (!type || paragraph?.type.name !== 'paragraph') return false;
-    dispatch?.(state.tr.insert(pos + 1, type.create({ name: id })));
+    const tr = state.tr;
+    if (!giveHeadingIdIn(tr, pos, id)) return false;
+    dispatch?.(tr);
     return true;
   };
 }

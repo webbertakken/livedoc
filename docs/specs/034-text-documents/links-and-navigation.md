@@ -106,6 +106,8 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   choice from 1 to 6); a change rebuilds it at once, as one undo step.
 - Pageless, no page has a number: Update writes Plain text and Dotted entries with no tab or page number, and the
   file holds none until it is updated with pages `(default)`.
+- On a screen that draws no pages (a phone), an entry keeps the page number its heading had, a new one has none
+  `(default)`.
 - A file's table of contents is read as one: ODF `text:table-of-content`, OOXML a `TOC` field in a `w:sdt` of the
   `Table of Contents` gallery ([Standard mapping](standard-mapping.md#tables-of-contents)). Its look reads as With
   blue links without page numbers, Dotted when a dot leads to them, Plain text otherwise; its entries as written.
