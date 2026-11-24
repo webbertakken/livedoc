@@ -21,7 +21,7 @@ export function useIconOnlyBadges(): boolean {
 }
 
 const badgeBase =
-  // Labels sit in text-optical-line + text-optical-caps (optical-alignment.md), so the base carries no case.
+  // Labels sit in text-optical-line (optical-alignment.md) and read as written.
   'optical-edges inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-supporting ring-1';
 
 // The star a favourited document carries wherever it's listed (docs/specs/013-workspace/favourites.md),
@@ -112,7 +112,7 @@ export function VisibilityBadge({
         <span className="sr-only">{text}</span>
       </>
     ) : (
-      <span className="text-optical-line text-optical-caps">{text}</span>
+      <span className="text-optical-line">{text}</span>
     );
   // Width = the badge's height: one text line plus its block padding. No
   // optical-edges: that pulls a LEADING icon towards the edge beside a word, and

@@ -172,6 +172,8 @@ A surface names the token, never the number, so the scale changes in one place.
   or file that has moved to it; each app's own `sizing-guard.test.ts` runs it over that app's moved paths.
 - It refuses a type size, a weight, tracked capitals, a height, an icon size, a gap, a side padding or a radius that
   is not a step above, and names the token to use instead.
+- Tracked capitals are `uppercase`, a `tracking-` wider than normal, and `text-optical-caps`, the capitals of
+  [Optical alignment](optical-alignment.md) (D42), which sets uppercase with its tracking.
 - A type size, a height, an icon size or a radius is named by its token, even when its number is on the scale.
 - A gap or a side padding is named by its number (`gap-2`, `px-3`), which must be a step.
 - A box under 12 px or over 36 px (a hairline, a dot, an avatar, a panel) is layout, not the scale, and passes.

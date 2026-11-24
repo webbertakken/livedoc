@@ -105,9 +105,7 @@ export function PaletteToolRow({
       </span>
       {def.shortcut ? (
         <kbd className="inline-flex items-center shrink-0 rounded-control border border-slate-300 bg-white px-1 text-glyph leading-4 text-slate-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
-          <span className="text-optical-line text-optical-caps [--optical-tracking:0em]">
-            {def.shortcut}
-          </span>
+          <span className="text-optical-line">{def.shortcut}</span>
         </kbd>
       ) : null}
     </button>

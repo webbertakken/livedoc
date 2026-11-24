@@ -29,7 +29,7 @@ const TOGGLE_HINT: Record<Role, string> = {
   view: 'Switch to editing',
 };
 
-// The word sits in text-optical-line + text-optical-caps (optical-alignment.md), so the pill carries no case. Pinned to
+// The word sits in text-optical-line (optical-alignment.md) and reads as written. Pinned to
 // the visibility badge's height with a resting ring like it, so the two pills beside the title read as a pair.
 // h-chip is STATE_CHIP_HEIGHT_PX, the chip step.
 const PILL = 'inline-flex h-chip items-center rounded-full px-2 text-supporting ring-1';
@@ -73,7 +73,7 @@ export function RolePill({
       data-role-pill={role}
       className={`${PILL} ${PILL_TONE[role]} ${PILL_TOGGLE_TONE[role]} relative touch-target-y`}
     >
-      <span className="text-optical-line text-optical-caps">{word}</span>
+      <span className="text-optical-line">{word}</span>
       <span id={hintId} className="sr-only">
         {TOGGLE_HINT[role]}
       </span>
@@ -82,7 +82,7 @@ export function RolePill({
     // Static for a view-link visitor, and focusable so the Tooltip naming the
     // owner can be reached by keyboard too.
     <span tabIndex={0} data-role-pill={role} className={`${PILL} ${PILL_TONE[role]}`}>
-      <span className="text-optical-line text-optical-caps">{word}</span>
+      <span className="text-optical-line">{word}</span>
       {owner ? <span className="sr-only">{`. ${owner}`}</span> : null}
     </span>
   );

@@ -480,9 +480,7 @@ export function PaletteDropdown({
                               the label's line. */}
                         {opt.shortcut ? (
                           <kbd className="inline-flex items-center absolute right-0.5 top-0.5 rounded-control px-0.5 text-glyph text-slate-400 pointer-coarse:hidden dark:text-slate-400">
-                            <span className="text-optical-line text-optical-caps [--optical-tracking:0em]">
-                              {opt.shortcut}
-                            </span>
+                            <span className="text-optical-line">{opt.shortcut}</span>
                           </kbd>
                         ) : null}
                       </button>
@@ -534,9 +532,7 @@ export function PaletteDropdown({
                         <span className="flex-1 truncate">{opt.label}</span>
                         {opt.shortcut ? (
                           <kbd className="inline-flex items-center rounded-control border border-slate-300 bg-white px-1 text-glyph text-slate-500 pointer-coarse:hidden dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400">
-                            <span className="text-optical-line text-optical-caps [--optical-tracking:0em]">
-                              {opt.shortcut}
-                            </span>
+                            <span className="text-optical-line">{opt.shortcut}</span>
                           </kbd>
                         ) : null}
                       </button>
