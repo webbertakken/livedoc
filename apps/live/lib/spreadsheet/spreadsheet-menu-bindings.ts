@@ -24,6 +24,7 @@ import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadshee
 import { lineSpan } from './line-span';
 import { recentFormatItemId } from './recent-formats';
 import { mergeBindings } from './merge-bindings';
+import { paintFormatBinding } from './paint-format-binding';
 import { borderBindings, gridBorders, type BorderLineChoice } from './border-bindings';
 import type { OfficeBorders } from '@/components/office/OfficeBordersPanel';
 import { cellFamilyOf, cellFontPatch } from './spreadsheet-fonts';
@@ -65,6 +66,9 @@ export type GridMenuActions = {
   openCustomCurrency: () => void;
   // Format › Number › Custom Date and Time's dialog.
   openCustomDateTime: () => void;
+  // The toolbar's Paint Format (formatting.md "Paint format and clearing").
+  paintStart: (keep: boolean) => void;
+  paintStop: () => void;
   // The Borders panel and the border shortcuts (formatting.md "Borders").
   borders: (mode: BorderMode, border: Border) => void;
   // Format › Merge Cells (formatting.md "Merges"): asking first where a merge would clear values.
@@ -96,6 +100,8 @@ export type GridMenuPort = {
   recentCodes: readonly string[];
   // Whether the selection holds a merge (formatting.md "Merges").
   merged: boolean;
+  // Whether Paint Format holds formats now.
+  painting: boolean;
   // The colour and line the borders draw in, and keeping a new one (formatting.md "Borders", D209).
   borderLine: BorderLineChoice;
   chooseBorderLine: (next: BorderLineChoice) => void;
@@ -411,6 +417,15 @@ export function gridMenuBindings(port: GridMenuPort): OfficeActions {
     ...(port.canWrite ? writeBindings(port) : {}),
     ...(port.canWrite && port.canShape ? shapeBindings(port) : {}),
     ...(port.canWrite && port.canShape ? borderBindings(port.borderLine, port.act.borders) : {}),
+    ...(port.canWrite && port.canShape
+      ? {
+          'paint-format': paintFormatBinding({
+            painting: port.painting,
+            start: port.act.paintStart,
+            stop: port.act.paintStop,
+          }),
+        }
+      : {}),
     ...(port.canWrite && port.canShape
       ? mergeBindings({
           range: port.range,

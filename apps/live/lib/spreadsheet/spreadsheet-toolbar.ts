@@ -94,7 +94,11 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
       icon('undo', 'Undo', 'participate', lucideUndo2, { ...BUILT, shortcut: 'undo' }),
       icon('redo', 'Redo', 'participate', lucideRedo2, { ...BUILT, shortcut: 'redo' }),
       icon('print', 'Print', 'view', lucidePrinter, { shortcut: 'print' }),
-      icon('paint-format', 'Paint Format', 'edit', lucidePaintRoller, { toggle: true }),
+      // Holds the selection's formats for the next range; a double-click keeps it on (formatting.md "Paint format").
+      icon('paint-format', 'Paint Format', 'edit', lucidePaintRoller, {
+        toggle: true,
+        built: true,
+      }),
     ],
   },
   {
