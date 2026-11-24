@@ -13,6 +13,7 @@ import {
   type Quad,
   type TextSpan,
 } from '@livedoc/pdf-documents';
+import { debugLog } from '@/lib/debug-log';
 import { pdfPageTexts, type PdfPageTexts } from './pdf-page-texts';
 
 /** What a page hands over while Select is in hand, its points in page space. */
@@ -22,7 +23,11 @@ export type PdfTextGesture =
   /** The pointer moved while pressed. */
   | { kind: 'drag'; at: PagePoint }
   /** Presses in a row: two select a word, three a line. */
-  | { kind: 'presses'; at: PagePoint; count: number };
+  | { kind: 'presses'; at: PagePoint; count: number }
+  /** A finger held still: the word under it, as two presses select, with handles and a bar ("Phone and tablet"). */
+  | { kind: 'long-press'; at: PagePoint }
+  /** A handle of a finger's selection dragged: that end to the caret place under the finger, the other staying. */
+  | { kind: 'handle'; end: 'start' | 'end'; at: PagePoint };
 
 export type PdfTextSelected = {
   page: number;
@@ -30,10 +35,13 @@ export type PdfTextSelected = {
   quads: readonly Quad[];
   /** The plain text it copies. */
   text: string;
+  /** A finger made it: it has handles and a bar. */
+  touch: boolean;
 };
 
-// Where a drag started: a caret place, or a column's first corner.
-type Start = { page: number; anchor: number } | { page: number; corner: PagePoint };
+// Where a drag started: a caret place (the end a handle's drag holds still, for that handle), or a column's corner.
+type Start =
+  { page: number; anchor: number; handle?: 'start' | 'end' } | { page: number; corner: PagePoint };
 
 const NO_SPANS: readonly TextSpan[] = [];
 
@@ -71,9 +79,12 @@ export function usePdfTextSelection(
     [texts],
   );
 
+  // The spans last shown, on their page: where a handle's drag reaches from.
+  const shown = useRef<{ page: number; spans: readonly TextSpan[] } | null>(null);
   const show = useCallback(
-    (page: number, text: PageText, spans: readonly TextSpan[]) => {
+    (page: number, text: PageText, spans: readonly TextSpan[], touch = false) => {
       const kept = spans.filter(([from, to]) => to > from);
+      shown.current = kept.length === 0 ? null : { page, spans: kept };
       setSelected(
         kept.length === 0
           ? null
@@ -82,6 +93,7 @@ export function usePdfTextSelection(
               spans: kept,
               quads: TextRange.quads(text, kept),
               text: TextRange.copied(text, kept),
+              touch,
             },
       );
     },
@@ -99,6 +111,37 @@ export function usePdfTextSelection(
             done.count === 2 ? TextRange.word(text, nearest) : TextRange.line(text, nearest);
           start.current = { page, anchor: span[0] };
           show(page, text, [span]);
+        });
+      }
+      if (done.kind === 'long-press') {
+        return onText(page, (text) => {
+          const nearest = TextRange.nearest(text, done.at);
+          debugLog(
+            `[pdf] text-long-pressed page=${page + 1} selected=${nearest === null ? 'no' : 'yes'}`,
+          );
+          if (nearest === null) return;
+          const span = TextRange.word(text, nearest);
+          start.current = { page, anchor: span[0] };
+          show(page, text, [span], true);
+        });
+      }
+      if (done.kind === 'handle') {
+        const was = shown.current;
+        if (was?.page !== page) return;
+        // The end held still is read once a drag: the handles may cross as it goes.
+        const begun = start.current;
+        const anchor =
+          begun && 'anchor' in begun && begun.page === page && begun.handle === done.end
+            ? begun.anchor
+            : done.end === 'end'
+              ? was.spans[0]![0]
+              : was.spans.at(-1)![1];
+        start.current = { page, anchor, handle: done.end };
+        return onText(page, (text) => {
+          const caret = TextRange.caretAt(text, done.at);
+          // A handle dragged onto the other end leaves the selection as it was, its handles with it.
+          if (caret === null || caret === anchor) return;
+          show(page, text, [TextRange.between(anchor, caret)], true);
         });
       }
       let begun = start.current;
@@ -133,6 +176,7 @@ export function usePdfTextSelection(
 
   const clear = useCallback(() => {
     start.current = null;
+    shown.current = null;
     setSelected(null);
   }, [setSelected]);
 

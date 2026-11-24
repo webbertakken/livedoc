@@ -73,6 +73,7 @@ import { PdfOpenNotices } from './PdfOpenNotices';
 import { PdfPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
+import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
 import { PdfLinkDialog } from './PdfLinkDialog';
 import { PdfFindBar } from './PdfFindBar';
@@ -523,6 +524,12 @@ export function PdfDocumentSurface({
               onFollow={links.follow}
               found={find.tints}
               onDoubleTap={zoomToColumn}
+            />
+            <PdfSelectionBar
+              selected={textSelection.selected}
+              actions={actions}
+              pages={pagesElement}
+              view={viewer.viewStore}
             />
             {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
             <PdfPageBar

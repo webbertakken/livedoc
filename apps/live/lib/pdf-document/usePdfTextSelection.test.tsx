@@ -5,6 +5,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { PageName, PageText, type PageInfo } from '@livedoc/pdf-documents';
+import { debugLog } from '@/lib/debug-log';
 import { usePdfTextSelection } from './usePdfTextSelection';
 
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
@@ -179,5 +180,71 @@ describe('selecting with nothing to select from', () => {
     act(() => hook.result.current.selectAll(0));
     await waitFor(() => expect(pageText).toHaveBeenCalled());
     expect(hook.result.current.selected).toBeNull();
+  });
+});
+
+// "Phone and tablet": a long press selects the word under the finger, with handles that move its ends.
+describe('a finger’s selection', () => {
+  it('selects the word under a long press, made by a finger', async () => {
+    const { hook } = selection();
+    act(() => hook.result.current.gesture(0, { kind: 'long-press', at: at(140) }));
+    await waitFor(() => expect(hook.result.current.selected?.text).toBe('world'));
+    expect(hook.result.current.selected?.touch).toBe(true);
+    expect(debugLog).toHaveBeenCalledWith('[pdf] text-long-pressed page=1 selected=yes');
+  });
+
+  it('selects nothing where a long press finds no character', async () => {
+    const { hook } = selection();
+    act(() => hook.result.current.gesture(1, { kind: 'long-press', at: at(140) }));
+    await waitFor(() =>
+      expect(debugLog).toHaveBeenCalledWith('[pdf] text-long-pressed page=2 selected=no'),
+    );
+    expect(hook.result.current.selected).toBeNull();
+  });
+
+  it('moves the end a handle is dragged from, the other staying, across the other too', async () => {
+    const { hook } = selection();
+    act(() => hook.result.current.gesture(0, { kind: 'long-press', at: at(140) }));
+    await waitFor(() => expect(hook.result.current.selected?.text).toBe('world'));
+    // The end handle onto "Bye": "world" then "By".
+    act(() => hook.result.current.gesture(0, { kind: 'handle', end: 'end', at: at(110, 692) }));
+    await waitFor(() => expect(hook.result.current.selected?.spans).toEqual([[6, 15]]));
+    // The same handle dragged back before the start: the start stays held, the selection runs the other way.
+    act(() => hook.result.current.gesture(0, { kind: 'handle', end: 'end', at: at(101) }));
+    await waitFor(() => expect(hook.result.current.selected?.spans).toEqual([[0, 6]]));
+    act(() => hook.result.current.gesture(0, { kind: 'handle', end: 'end', at: at(128) }));
+    await waitFor(() => expect(hook.result.current.selected?.spans).toEqual([[5, 6]]));
+    expect(hook.result.current.selected?.touch).toBe(true);
+  });
+
+  it('moves the start with the start handle, the end staying', async () => {
+    const { hook } = selection();
+    act(() => hook.result.current.gesture(0, { kind: 'long-press', at: at(140) }));
+    await waitFor(() => expect(hook.result.current.selected?.text).toBe('world'));
+    act(() => hook.result.current.gesture(0, { kind: 'handle', end: 'start', at: at(101) }));
+    await waitFor(() => expect(hook.result.current.selected?.text).toBe('Hello world'));
+  });
+
+  it('leaves the selection where a handle lands on the other end, or on another page', async () => {
+    const { hook } = selection();
+    act(() => hook.result.current.gesture(0, { kind: 'long-press', at: at(140) }));
+    await waitFor(() => expect(hook.result.current.selected?.text).toBe('world'));
+    act(() => {
+      hook.result.current.gesture(0, { kind: 'handle', end: 'end', at: at(137) });
+      hook.result.current.gesture(1, { kind: 'handle', end: 'end', at: at(140) });
+    });
+    await act(async () => {});
+    expect(hook.result.current.selected?.spans).toEqual([[6, 11]]);
+    act(() => hook.result.current.clear());
+    act(() => hook.result.current.gesture(0, { kind: 'handle', end: 'end', at: at(140) }));
+    await act(async () => {});
+    expect(hook.result.current.selected).toBeNull();
+  });
+
+  it('is no finger’s where a mouse made it', async () => {
+    const { hook } = selection();
+    act(() => hook.result.current.gesture(0, { kind: 'presses', at: at(140), count: 2 }));
+    await waitFor(() => expect(hook.result.current.selected?.text).toBe('world'));
+    expect(hook.result.current.selected?.touch).toBe(false);
   });
 });

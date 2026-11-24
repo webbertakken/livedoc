@@ -150,6 +150,7 @@ export function PdfPages({
                   tool={tool}
                   onHighlight={onHighlight}
                   selected={selection?.page === box.index ? selection.quads : NOTHING_SELECTED}
+                  handles={selection?.page === box.index && selection.touch}
                   onText={onText}
                   texts={texts}
                   linkName={linkName}

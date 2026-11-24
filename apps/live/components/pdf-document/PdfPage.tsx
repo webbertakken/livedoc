@@ -4,7 +4,15 @@
 // mark"): a box of the page's true size from the first frame, the engine's picture of it once it is near view, and
 // LiveDoc's marks drawn over that picture from the live changes. The file's own marks are in the picture. Nothing of
 // the file reaches the page as markup: pixels, and geometry LiveDoc draws itself.
-import { memo, useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react';
 import {
   PageView,
   type LinkTarget,
@@ -28,7 +36,8 @@ import { PdfView } from '@/lib/pdf-document/pdf-view';
 import type { PdfTextGesture } from '@/lib/pdf-document/usePdfTextSelection';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
-import { PdfDoubleTap } from '@/lib/pdf-document/pdf-double-tap';
+import { usePdfPageFingers } from '@/lib/pdf-document/usePdfPageFingers';
+import { PdfSelectionHandles } from './PdfSelectionHandles';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 
 export type PdfPageTool = 'select' | 'highlight';
@@ -60,6 +69,7 @@ export const PdfPage = memo(function PdfPage({
   tool,
   onHighlight,
   selected,
+  handles,
   onText,
   texts,
   linkName,
@@ -90,6 +100,8 @@ export const PdfPage = memo(function PdfPage({
   onHighlight: (index: number, selection: TextSelection) => void;
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
   selected: readonly Quad[];
+  // A finger made the selection: it has handles (reading-surface.md "Phone and tablet").
+  handles: boolean;
   onText: (index: number, gesture: PdfTextGesture) => void;
   // The pages' text, read to assistive technology while the page is near view (accessibility.md).
   texts: PdfPageTexts | null;
@@ -104,6 +116,15 @@ export const PdfPage = memo(function PdfPage({
   register: (index: number, element: HTMLElement | null) => void;
 }) {
   const canvas = useRef<HTMLCanvasElement | null>(null);
+  // The page's box: where a finger's points are read against.
+  const [box, setBox] = useState<HTMLElement | null>(null);
+  const attach = useCallback(
+    (element: HTMLElement | null) => {
+      register(index, element);
+      setBox(element);
+    },
+    [register, index],
+  );
   const [drawn, setDrawn] = useState<Drawn | null>(null);
   const [failed, setFailed] = useState(false);
   const [preview, setPreview] = useState<readonly Quad[]>([]);
@@ -125,10 +146,6 @@ export const PdfPage = memo(function PdfPage({
   }, [drawnBy, links, engine, index]);
   // A text selection being dragged with Select in hand.
   const selecting = useRef(false);
-  // A finger's taps, toward a double tap.
-  const taps = useRef(PdfDoubleTap.initial());
-  // What last pressed: a finger's presses in a row zoom, never select (reading-surface.md "Phone and tablet").
-  const pressedBy = useRef('');
 
   // Draw the page while it is near view, again once its size has settled on another scale; let its picture go once
   // it is far from view.
@@ -178,14 +195,26 @@ export const PdfPage = memo(function PdfPage({
   const current = drawn?.turns === turns ? drawn : null;
 
   // A pointer's place on the page as the file has it (marks.md: a mark is made on the page as the file has it).
-  const pagePoint = (event: MouseEvent<HTMLElement>): PagePoint | null => {
-    if (!current) return null;
-    const box = event.currentTarget.getBoundingClientRect();
+  const pointAt = (client: { x: number; y: number }): PagePoint | null => {
+    if (!current || !box) return null;
+    const rect = box.getBoundingClientRect();
     return PageView.toPage(current.toView, {
-      x: ((event.clientX - box.left) / box.width) * shown.width,
-      y: ((event.clientY - box.top) / box.height) * shown.height,
+      x: ((client.x - rect.left) / rect.width) * shown.width,
+      y: ((client.y - rect.top) / rect.height) * shown.height,
     });
   };
+  const pagePoint = (event: MouseEvent<HTMLElement>): PagePoint | null =>
+    pointAt({ x: event.clientX, y: event.clientY });
+  // A finger's tap, double tap and long press, with Select in hand.
+  const fingers = usePdfPageFingers({
+    index,
+    box,
+    toView: tool === 'select' && current ? current.toView : null,
+    shown,
+    pointAt,
+    onText,
+    onDoubleTap,
+  });
 
   // The text under the drag so far, asked one at a time: the latest place always follows.
   const previewTo = (to: PagePoint) => {
@@ -210,36 +239,8 @@ export const PdfPage = memo(function PdfPage({
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
   const selectingText = (event: PointerEvent<HTMLElement>) =>
     tool === 'select' && event.button === 0 && event.pointerType !== 'touch';
-  const touchOf = (event: PointerEvent<HTMLElement>) => ({
-    id: event.pointerId,
-    x: event.clientX,
-    y: event.clientY,
-    time: event.timeStamp,
-  });
-  // A finger's double tap, with Select in hand: its point on the page, and the way from the page to the window.
-  const onTouchUp = (event: PointerEvent<HTMLElement>) => {
-    const { state, tapped } = PdfDoubleTap.up(taps.current, touchOf(event));
-    taps.current = state;
-    const at = tapped && tool === 'select' ? pagePoint(event) : null;
-    if (!at || !current) return;
-    const box = event.currentTarget.getBoundingClientRect();
-    const toView = current.toView;
-    onDoubleTap(index, {
-      at,
-      client: { x: event.clientX, y: event.clientY },
-      toClient: (point) => {
-        const shownAt = PageView.toView(toView, point);
-        return {
-          x: box.left + (shownAt.x / shown.width) * box.width,
-          y: box.top + (shownAt.y / shown.height) * box.height,
-        };
-      },
-    });
-  };
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
-    pressedBy.current = event.pointerType;
-    if (event.pointerType === 'touch')
-      taps.current = PdfDoubleTap.down(taps.current, touchOf(event));
+    fingers.down(event);
     if (selectingText(event)) {
       const at = pagePoint(event);
       if (!at) return;
@@ -262,7 +263,7 @@ export const PdfPage = memo(function PdfPage({
   };
   // Two presses in a row select a word, three a line; a finger's zoom instead.
   const onClick = (event: MouseEvent<HTMLElement>) => {
-    const pressing = tool === 'select' && event.detail >= 2 && pressedBy.current !== 'touch';
+    const pressing = tool === 'select' && event.detail >= 2 && !fingers.byFinger();
     const at = pressing ? pagePoint(event) : null;
     if (at) onText(index, { kind: 'presses', at, count: event.detail });
   };
@@ -281,7 +282,7 @@ export const PdfPage = memo(function PdfPage({
   const matrix = current?.toView;
   return (
     <div
-      ref={(element) => register(index, element)}
+      ref={attach}
       role="region"
       aria-label={pageRegionName(index, count, page.label)}
       data-pdf-page={index + 1}
@@ -296,12 +297,11 @@ export const PdfPage = memo(function PdfPage({
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => {
-        if (event.pointerType === 'touch') onTouchUp(event);
+        fingers.up(event);
         endDrag(event, true);
       }}
       onPointerCancel={(event) => {
-        if (event.pointerType === 'touch')
-          taps.current = PdfDoubleTap.cancel(taps.current, event.pointerId);
+        fingers.cancel(event);
         endDrag(event, false);
       }}
       onClick={onClick}
@@ -338,6 +338,18 @@ export const PdfPage = memo(function PdfPage({
           preview={preview}
           selected={selected}
           found={found}
+        />
+      ) : null}
+      {matrix && handles ? (
+        <PdfSelectionHandles
+          matrix={matrix}
+          width={shown.width}
+          height={shown.height}
+          quads={selected}
+          onDrag={(end, client) => {
+            const at = pointAt(client);
+            if (at) onText(index, { kind: 'handle', end, at });
+          }}
         />
       ) : null}
       {matrix && tool === 'select' && links && links.by === drawnBy ? (

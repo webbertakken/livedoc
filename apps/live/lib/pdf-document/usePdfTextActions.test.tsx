@@ -18,7 +18,13 @@ import type { PdfTextSelected } from './usePdfTextSelection';
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
-const SELECTED: PdfTextSelected = { page: 0, spans: [[0, 5]], quads: [], text: 'Hello' };
+const SELECTED: PdfTextSelected = {
+  page: 0,
+  spans: [[0, 5]],
+  quads: [],
+  text: 'Hello',
+  touch: false,
+};
 
 function actions({
   selected = SELECTED,

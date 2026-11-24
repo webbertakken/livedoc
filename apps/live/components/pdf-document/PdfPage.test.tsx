@@ -5,6 +5,7 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  PDF_LONG_PRESS_MS,
   PageName,
   type PageBitmap,
   type PageInfo,
@@ -46,6 +47,7 @@ async function page(
   tool: PdfPageTool = 'select',
   selected: readonly Quad[] = [],
   links: readonly PageLink[] = [],
+  handles = false,
 ) {
   const onText = vi.fn();
   const onFollow = vi.fn();
@@ -68,6 +70,7 @@ async function page(
       tool={tool}
       onHighlight={vi.fn()}
       selected={selected}
+      handles={handles}
       onText={onText}
       texts={null}
       linkName={(target) => `Link to ${target.kind}`}
@@ -167,7 +170,9 @@ describe('a double tap on a page', () => {
     expect(handed.at).toEqual({ x: 72, y: 700 });
     expect(handed.client).toEqual({ x: 72, y: 92 });
     expect(handed.toClient({ x: 100, y: 692 })).toEqual({ x: 100, y: 100 });
-    expect(onText).not.toHaveBeenCalled();
+    // The first tap clears as a press does; the two never select a word.
+    expect(onText).toHaveBeenCalledTimes(1);
+    expect(onText).not.toHaveBeenCalledWith(1, expect.objectContaining({ kind: 'presses' }));
   });
 
   it('is none for one tap, a scroll the browser took, or a mark tool in hand', async () => {
@@ -182,5 +187,47 @@ describe('a double tap on a page', () => {
 
     expect(onDoubleTap).not.toHaveBeenCalled();
     expect(marking.onDoubleTap).not.toHaveBeenCalled();
+  });
+});
+
+// "Phone and tablet": a long press selects the word under the finger; a tap clears; a finger's selection has handles.
+describe('a finger’s selection on a page', () => {
+  it('hands a long press over as the point under the finger', async () => {
+    const { box, onText } = await page();
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(box, { pointerType: 'touch', pointerId: 9, clientX: 72, clientY: 92 });
+      act(() => {
+        vi.advanceTimersByTime(PDF_LONG_PRESS_MS);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(onText).toHaveBeenCalledWith(1, { kind: 'long-press', at: { x: 72, y: 700 } });
+  });
+
+  it('hands a tap over as a press, which clears the selection', async () => {
+    const { box, onText } = await page();
+    const finger = { pointerType: 'touch', pointerId: 7, clientX: 72, clientY: 92 };
+    fireEvent.pointerDown(box, finger);
+    fireEvent.pointerUp(box, finger);
+    expect(onText).toHaveBeenCalledWith(1, {
+      kind: 'press',
+      at: { x: 72, y: 700 },
+      shift: false,
+      alt: false,
+    });
+  });
+
+  it('draws handles for a finger’s selection, and hands a dragged one over', async () => {
+    const quads: Quad[] = [[72, 708, 100, 708, 72, 700, 100, 700]];
+    const { view, onText } = await page('select', quads, [], true);
+    const end = view.container.querySelector<HTMLElement>('[data-pdf-handle="end"]')!;
+    end.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(end, { pointerId: 2 });
+    fireEvent.pointerMove(end, { clientX: 120, clientY: 122 });
+    expect(onText).toHaveBeenCalledWith(1, { kind: 'handle', end: 'end', at: { x: 120, y: 692 } });
+    const mouse = await page('select', quads);
+    expect(mouse.view.container.querySelector('[data-pdf-handle]')).toBeNull();
   });
 });

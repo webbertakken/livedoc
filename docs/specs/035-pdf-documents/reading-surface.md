@@ -587,6 +587,18 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
   - the rows of the outline, the layers and Find's results are 44 px tall, their lists without a gap between rows;
   - Find's field and the password field read at 16 px, so a phone never zooms into them.
 - A long press selects the word under the finger, with handles to extend and a small bar: Copy, Highlight, Comment.
+  - A long press is one finger held `PDF_LONG_PRESS_MS` with Select in hand, moving less than `PDF_DOUBLE_TAP_PX`;
+    a second finger, a lift or a scroll the browser takes ends it. The browser's own menu for it is not shown.
+  - It selects as two presses in a row do: the word under the finger, or the character where no word is.
+  - A selection a finger made has a handle at each end, drawn below its first and last lines in the focus colour,
+    each 44 px to the finger; dragging one moves that end to the caret place under the finger, the other staying.
+  - The bar floats above the selection, below it where the window's top would cut it, and follows it as the pages
+    scroll or zoom; it is a toolbar named "Selection", its buttons 44 px tall.
+  - Its buttons are those that can act now `(default)`: Copy (dimmed where the file asks not to be copied, as the
+    menu's is), Highlight while a mark may be made, and Comment once comments are built.
+  - A press elsewhere, Escape and a change of the pages clear the selection, its handles and its bar together; a
+    selection a mouse or a pen made has neither handles nor bar.
+  - Logged `[pdf] text-long-pressed page=<n> selected=<yes|no>`.
 - Reduced motion: no animated scroll to a result or a page, no zoom easing; the page appears where asked. The surface
   never eases a scroll or a zoom, reduced or not `(default)`; the shell's own transitions stop with reduced motion.
 - Tiles are drawn at a pixel ratio capped at `PDF_PHONE_PIXEL_RATIO` and the cache is the phone's budget.
@@ -607,6 +619,7 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
 | `PDF_WHEEL_TURN_MS`            | 300                                                                                                    | `(default)` How long a wheel rests before it turns another row; safe range 150 to 600                                                    |
 | `PDF_ZOOM_SETTLE_MS`           | 400                                                                                                    | `(default)` How long a wheel's or a pinch's zoom rests before it is told to telemetry; safe range 200 to 1,000                           |
 | `PDF_DOUBLE_TAP_MS`            | 300                                                                                                    | `(default)` How long a tap is down, and the pause between a double tap's two; safe range 200 to 500                                      |
+| `PDF_LONG_PRESS_MS`            | 500                                                                                                    | `(default)` How long a finger is held still to select a word, Android's own; safe range 400 to 800                                       |
 | `PDF_DOUBLE_TAP_PX`            | 24                                                                                                     | `(default)` How far a tap moves while down, and how far apart a double tap's two are; safe range 10 to 40                                |
 | `PDF_EMBEDDED_FILE_MAX_BYTES`  | 100,000,000 (100 MB)                                                                                   | `(default)` The most of an embedded file read out to be saved or opened: a stored file's cap, `FILE_TAB_MAX_BYTES`                       |
 | `PDF_THUMBNAIL_BOX_PX`         | 160                                                                                                    | `(default)` CSS pixels a side of the square a thumbnail is fitted into; safe range 96 to 224                                             |
@@ -663,7 +676,7 @@ Fingerprints: `[pdf] view-display display=<name>`, `[pdf] view-zoomed zoom=<zoom
 `[pdf] thumbnail-failed page=<n>`, `[pdf] outline-failed`, `[pdf] link-opened scheme=<scheme>`,
 `[pdf] link-refused kind=<kind>`, `[pdf] text-copied chars=<n>`, `[pdf] text-copy-refused`, `[pdf] text-copy-failed`,
 `[pdf] page-text-failed page=<n>`, `[pdf] view-history way=<back|forward> page=<n>`, `[pdf] find-searched pages=<n> results=<n>`,
-`[pdf] view-double-tapped column=<yes|no> back=<yes|no>`.
+`[pdf] view-double-tapped column=<yes|no> back=<yes|no>`, `[pdf] text-long-pressed page=<n> selected=<yes|no>`.
 
 ## Errors
 
