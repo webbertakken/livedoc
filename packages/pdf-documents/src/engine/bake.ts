@@ -12,11 +12,12 @@ import {
   type PDF,
   type PdfObject,
   type PDFPage,
+  type PDFAnnotation,
   type PDFTextMarkupAnnotation,
   type TextMarkupAnnotationOptions,
 } from '@libpdf/core';
 import type { FieldValue } from '../field-value';
-import type { Mark, MarkKind } from '../mark';
+import { Mark, type Stroke, type TextMarkKind } from '../mark';
 import { PageName } from '../page-name';
 import type { RemovedKind } from '../pdf-change';
 import { openWriter } from './writer';
@@ -99,16 +100,39 @@ function nameOf(pdf: PDF, entry: PdfObject): string | null {
   return entry instanceof PdfRef ? `o:${entry.objectNumber}` : null;
 }
 
-/** Each kind of mark as the writer adds it to a page: the standard's own subtype, with its appearance. */
-const ANNOTATE = {
+/** Each kind of text mark as the writer adds it to a page: the standard's own subtype, with its appearance. */
+const ANNOTATE_TEXT = {
   highlight: (page, look) => page.addHighlightAnnotation(look),
   underline: (page, look) => page.addUnderlineAnnotation(look),
   strikeout: (page, look) => page.addStrikeOutAnnotation(look),
   squiggly: (page, look) => page.addSquigglyAnnotation(look),
 } satisfies Record<
-  MarkKind,
+  TextMarkKind,
   (page: PDFPage, look: TextMarkupAnnotationOptions) => PDFTextMarkupAnnotation
 >;
+
+// A stroke's flat x, y pairs as the writer's points.
+const pathOf = (stroke: Stroke) =>
+  Array.from({ length: stroke.length / 2 }, (_, at) => ({
+    x: stroke[at * 2]!,
+    y: stroke[at * 2 + 1]!,
+  }));
+
+/** One mark as its annotation on its page: a text mark as its kind's, a Drawing as `Ink`. */
+function annotate(page: PDFPage, mark: Mark): PDFAnnotation {
+  const color = rgb(channel(mark.colour, 1), channel(mark.colour, 3), channel(mark.colour, 5));
+  if (Mark.isText(mark))
+    return ANNOTATE_TEXT[mark.kind](page, {
+      quadPoints: mark.quads.map((quad) => [...quad]),
+      color,
+      opacity: mark.opacity,
+      title: mark.author,
+    });
+  const ink = page.addInkAnnotation({ paths: mark.strokes.map(pathOf), color, width: mark.width });
+  ink.setTitle(mark.author);
+  ink.setOpacity(mark.opacity);
+  return ink;
+}
 
 /** Appends each mark to its page as one annotation (marks.md "In the file"); answers how many have no page. */
 function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
@@ -120,13 +144,7 @@ function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
       continue;
     }
     holdList(pdf, page);
-    const look = {
-      quadPoints: mark.quads.map((quad) => [...quad]),
-      color: rgb(channel(mark.colour, 1), channel(mark.colour, 3), channel(mark.colour, 5)),
-      opacity: mark.opacity,
-      title: mark.author,
-    };
-    const annotation = ANNOTATE[mark.kind](page, look);
+    const annotation = annotate(page, mark);
     annotation.setName(mark.id);
     annotation.setModificationDate(pdfDate(mark.modifiedAt));
     annotation.dict.set('CreationDate', PdfString.fromString(pdfDate(mark.createdAt)));

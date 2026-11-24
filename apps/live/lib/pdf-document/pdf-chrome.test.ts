@@ -35,6 +35,7 @@ import {
   ROTATE_VIEW_CLOCKWISE,
   ROTATE_VIEW_COUNTERCLOCKWISE,
   SELECT_ALL,
+  TOOL_DRAWING,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
   TOOL_SQUIGGLY,
@@ -100,6 +101,7 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_UNDERLINE,
     TOOL_STRIKETHROUGH,
     TOOL_SQUIGGLY,
+    TOOL_DRAWING,
     COPY,
     SELECT_ALL,
     FIND,
@@ -219,6 +221,7 @@ describe("a PDF document's menus and toolbar", () => {
       FIND,
       TOOL_SELECT,
       TEXT_MARK_TOOLS,
+      TOOL_DRAWING,
     ]);
     // "The toolbar": a mode's own tools are not another mode's.
     const labels = (mode: PdfMode) =>
@@ -234,7 +237,7 @@ describe("a PDF document's menus and toolbar", () => {
 
   // keyboard-shortcuts.md "Tools": Select V, Highlight U; the modes' keys are a text document's for the same places.
   it('keeps the tools’ own keys and the modes’ shared ones', () => {
-    expect(PDF_TOOL_KEYS).toEqual({ select: 'v', highlight: 'u' });
+    expect(PDF_TOOL_KEYS).toEqual({ select: 'v', highlight: 'u', drawing: 'd' });
     const keys = Object.fromEntries(PDF_SHORTCUTS.map((row) => [row.id, row.keys.pc]));
     expect(keys['switch-to-reviewing']).toBe('Ctrl+Alt+Shift+X');
     expect(keys['switch-to-editing']).toBe('Ctrl+Alt+Shift+Z');

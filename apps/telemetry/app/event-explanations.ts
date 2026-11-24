@@ -943,6 +943,7 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Added|Mark.Underline': 'Someone underlined text on a PDF page.',
   'Pdf|Added|Mark.Strikethrough': 'Someone struck through text on a PDF page.',
   'Pdf|Added|Mark.SquigglyUnderline': 'Someone gave text on a PDF page a squiggly underline.',
+  'Pdf|Added|Mark.Drawing': 'Someone drew on a PDF page with the Drawing tool.',
   'Pdf|Changed|ToolColour':
     'Someone chose a colour, or reset it, for the mark tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
@@ -952,6 +953,7 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone took the Strikethrough tool in hand on a PDF document.',
   'Pdf|Selected|Tool.SquigglyUnderline':
     'Someone took the Squiggly underline tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Drawing': 'Someone took the Drawing tool in hand on a PDF document.',
   'Pdf|Exported|Print':
     'Someone printed a PDF document: LiveDoc made the pages they chose and handed them to the browser to print.',
   'Pdf|Exported|Pdf':

@@ -5,7 +5,7 @@
 import * as Y from 'yjs';
 import type { FieldValue } from './field-value';
 import { PDF_MAX_MARKS } from './limits';
-import type { Mark } from './mark';
+import type { DrawingMark, Mark, TextMark } from './mark';
 import type { PageName } from './page-name';
 
 /** The roots a change reaches; the others join as what they hold is built. */
@@ -30,7 +30,10 @@ export type PdfChange =
 export type PdfChangeRefusal = 'pdf_change_target_missing' | 'pdf_too_many_marks';
 
 /** What a mark's maker may change of it afterwards (marks.md "Changing a mark"). */
-export type MarkLook = Partial<Pick<Mark, 'colour' | 'opacity' | 'quads' | 'text' | 'modifiedAt'>>;
+export type MarkLook = Partial<
+  Pick<TextMark, 'colour' | 'opacity' | 'quads' | 'text' | 'modifiedAt'> &
+    Pick<DrawingMark, 'strokes' | 'width'>
+>;
 
 /** What of the stored file a deletion names (the layout's `removed`). */
 export type RemovedKind = 'mark' | 'field' | 'object';

@@ -69,3 +69,51 @@ describe('a line mark over a page', () => {
     expect(line.getAttribute('stroke-width')).toBe('1');
   });
 });
+
+// marks.md "Making a mark": A Drawing, its strokes round; the stroke being drawn in the tool's look.
+describe('a Drawing over a page', () => {
+  it('strokes each stroke round, and the stroke being drawn in the tool’s look, its colour mirrored on Dark pages', () => {
+    const sketch = Mark.drawing({
+      id: 'd1',
+      page: PageName.ofObject(1),
+      strokes: [[10, 10, 20, 20]],
+      width: 2,
+      colour: '#d93025',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 0,
+    })!;
+    const ink = { stroke: [30, 30], colour: '#7c3aed', opacity: 0.5, width: 3 };
+    const { container, rerender } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[sketch]}
+        ink={ink}
+      />,
+    );
+    const line = container.querySelector('[data-pdf-mark="d1"] polyline')!;
+    expect(line.getAttribute('points')).toBe('10,90 20,80');
+    expect(line.getAttribute('stroke-linecap')).toBe('round');
+    const drawn = container.querySelector('[data-pdf-ink-preview]')!;
+    // One point is a dot: the point twice, its round ends drawing it.
+    expect(drawn.getAttribute('points')).toBe('30,70 30,70');
+    expect(drawn.getAttribute('stroke')).toBe('#7c3aed');
+    expect(drawn.getAttribute('stroke-width')).toBe('3');
+    rerender(
+      <PdfLookContext.Provider value="dark">
+        <PdfMarksOverlay
+          matrix={[1, 0, 0, -1, 0, 100]}
+          width={100}
+          height={100}
+          marks={[]}
+          ink={ink}
+        />
+      </PdfLookContext.Provider>,
+    );
+    expect(container.querySelector('[data-pdf-ink-preview]')!.getAttribute('stroke')).toBe(
+      DarkPages.hex('#7c3aed'),
+    );
+  });
+});

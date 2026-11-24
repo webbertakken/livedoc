@@ -8,7 +8,7 @@
 import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
 import type { IconPrim } from '@livedoc/icons';
 import { lucideHighlighter, lucideStrikethrough, lucideUnderline } from '@livedoc/icons/lucide';
-import type { TextMarkKind, TextSelection } from '@livedoc/pdf-documents';
+import type { MarkKind, Stroke, TextMarkKind, TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { debugLog } from '@/lib/debug-log';
@@ -20,6 +20,7 @@ import {
   UNDERLINE_SELECTION,
 } from './pdf-context-menu';
 import {
+  TOOL_DRAWING,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
   TOOL_SQUIGGLY,
@@ -36,13 +37,23 @@ import {
   useTextMarkPick,
   type HeldTextMark,
 } from './pdf-text-mark-pick';
-import { setTextMarkColour, useTextMarkLooks } from './pdf-mark-looks';
+import { DRAWING_WIDTH_PT } from './pdf-drawing';
+import { setMarkColour, useMarkLooks } from './pdf-mark-looks';
 import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
+import { usePdfDrawing } from './usePdfDrawing';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
-/** What a page does with a press or a drag: select text, or mark it with a kind. */
-export type PdfPageTool = 'select' | TextMarkKind;
+/** What a page does with a press or a drag: select text, mark it with a kind, or draw. */
+export type PdfPageTool = 'select' | MarkKind;
+
+/** What a page draws a stroke with, while the Drawing tool is in hand. */
+export type PdfPageInk = {
+  readonly colour: string;
+  readonly opacity: number;
+  readonly width: number;
+  readonly onDraw: (index: number, stroke: Stroke) => void;
+};
 
 type Ready = Pick<
   Extract<PdfDocumentOpen, { phase: 'ready' }>,
@@ -112,7 +123,7 @@ export function usePdfMarkTools({
   const [tool, setTool] = useState<PdfPageTool>('select');
   const inHand: PdfPageTool = marking ? tool : 'select';
   const pick = useTextMarkPick();
-  const looks = useTextMarkLooks();
+  const looks = useMarkLooks();
 
   /** One mark of a kind over a page's text: one step of the person's undo, made on that page. */
   const mark = useCallback(
@@ -144,6 +155,7 @@ export function usePdfMarkTools({
   const pickTool = useCallback((next: PdfPageTool) => {
     setTool(next);
     if (next === 'select') return track('Pdf', 'Selected', 'Tool.Select');
+    if (next === 'drawing') return track('Pdf', 'Selected', 'Tool.Drawing');
     if (isHeldTextMark(next)) setTextMarkPick(next);
     track('Pdf', 'Selected', `Tool.${TEXT_MARK_NAMES[next]}`);
   }, []);
@@ -159,10 +171,17 @@ export function usePdfMarkTools({
     [selected, pickTool, mark, clearSelection],
   );
 
-  /** What a drag across a page's text makes with the tool in hand. */
+  const draw = usePdfDrawing({ ready, author, look: looks.drawing, onProblem });
+  const ink = useMemo<PdfPageInk | null>(
+    () =>
+      inHand === 'drawing' ? { ...looks.drawing, width: DRAWING_WIDTH_PT, onDraw: draw } : null,
+    [inHand, looks, draw],
+  );
+
+  /** What a drag across a page's text makes with the text tool in hand. */
   const make = useCallback(
     (index: number, selection: TextSelection) => {
-      if (inHand !== 'select') mark(inHand, index, selection);
+      if (inHand !== 'select' && inHand !== 'drawing') mark(inHand, index, selection);
     },
     [inHand, mark],
   );
@@ -188,6 +207,7 @@ export function usePdfMarkTools({
       ...select,
       ...tools,
       ...onSelection,
+      [TOOL_DRAWING]: { run: () => pickTool('drawing'), checked: inHand === 'drawing' },
       // The toolbar's Highlight: the held tool last used; pressed again, back to Select.
       [TEXT_MARK_TOOLS]: {
         run: () => (inHand === pick && !selected ? pickTool('select') : take(pick)),
@@ -230,7 +250,7 @@ export function usePdfMarkTools({
               read: () => looks[inHand].colour,
               set: (colour) => {
                 track('Pdf', 'Changed', 'ToolColour');
-                setTextMarkColour(inHand, colour);
+                setMarkColour(inHand, colour);
                 focusPages();
               },
               leading: 'Reset',
@@ -245,6 +265,7 @@ export function usePdfMarkTools({
     const key = event.key.toLowerCase();
     if (key === PDF_TOOL_KEYS.highlight && marking)
       take(event.shiftKey ? nextHeld(inHand) : 'highlight');
+    else if (key === PDF_TOOL_KEYS.drawing && !event.shiftKey && marking) pickTool('drawing');
     else if ((key === PDF_TOOL_KEYS.select || key === 'escape') && inHand !== 'select')
       pickTool('select');
     else return false;
@@ -252,5 +273,5 @@ export function usePdfMarkTools({
     return true;
   };
 
-  return { inHand, make, actions, choices, colours, onKey };
+  return { inHand, make, ink, actions, choices, colours, onKey };
 }

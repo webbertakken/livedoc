@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { applyUpdate } from 'yjs';
 import { standardColours, type BlobKey } from '@livedoc/document';
 import {
-  MARK_KINDS,
+  TEXT_MARK_KINDS,
   PageName,
   PDF_MAX_MARKS,
   PdfLiveChanges,
@@ -57,14 +57,14 @@ describe('addTextMark', () => {
 
   it('makes each kind of text mark in its own first look', () => {
     const doc = PdfLiveChanges.load();
-    for (const kind of MARK_KINDS) {
+    for (const kind of TEXT_MARK_KINDS) {
       const made = addTextMark(doc, kind, { page, stored }, selection, by(kind));
       expect(made.ok && [made.mark.kind, made.mark.colour]).toEqual([
         kind,
         TEXT_MARK_LOOKS[kind].colour,
       ]);
     }
-    expect(PdfLiveChanges.marks(doc)).toHaveLength(MARK_KINDS.length);
+    expect(PdfLiveChanges.marks(doc)).toHaveLength(TEXT_MARK_KINDS.length);
   });
 
   // marks.md "Making a mark": a new mark takes the tool's look.

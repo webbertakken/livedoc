@@ -21,6 +21,7 @@ import {
   UNDERLINE_SELECTION,
 } from './pdf-context-menu';
 import {
+  TOOL_DRAWING,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
   TOOL_SQUIGGLY,
@@ -30,7 +31,8 @@ import {
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
 import { TEXT_MARK_LOOKS } from './pdf-text-mark';
 import { resetTextMarkPick, textMarkPick } from './pdf-text-mark-pick';
-import { resetTextMarkLooks } from './pdf-mark-looks';
+import { DRAWING_LOOK, DRAWING_WIDTH_PT } from './pdf-drawing';
+import { resetMarkLooks } from './pdf-mark-looks';
 import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import { usePdfMarkTools } from './usePdfMarkTools';
 import type { PdfTextSelected } from './usePdfTextSelection';
@@ -326,7 +328,7 @@ describe('the tools’ keys', () => {
 
 // marks.md "Making a mark": a tool's colour, from the toolbar's Colour, while a mark tool is in hand.
 describe('the tool in hand’s colour', () => {
-  afterEach(() => resetTextMarkLooks());
+  afterEach(() => resetMarkLooks());
 
   it('is none with Select in hand, and the tool’s own colour, set and reset, with a tool', () => {
     const { hook, run, doc, focusPages } = tools();
@@ -345,5 +347,32 @@ describe('the tool in hand’s colour', () => {
     expect(PdfLiveChanges.marks(doc)[0]!.colour).toBe('#7c3aed');
     act(() => colour().set(null));
     expect(colour().read()).toBe(TEXT_MARK_LOOKS.underline.colour);
+  });
+});
+
+// marks.md "Making a mark": A Drawing; keyboard-shortcuts.md "Tools": D.
+describe('the Drawing tool', () => {
+  it('is taken by its item or D, gives the pages its ink, and draws in its colour', () => {
+    const { hook, run, doc } = tools();
+    expect(hook.result.current.ink).toBeNull();
+    run(TOOL_DRAWING);
+    expect(hook.result.current.inHand).toBe('drawing');
+    expect(hook.result.current.actions[TOOL_DRAWING]!.checked).toBe(true);
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Selected', 'Tool.Drawing');
+    expect(hook.result.current.ink).toMatchObject({ ...DRAWING_LOOK, width: DRAWING_WIDTH_PT });
+    // A text drag with the Drawing tool in hand marks nothing.
+    act(() => hook.result.current.make(0, { text: 'Lease', quads: [QUAD] }));
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    act(() => hook.result.current.colours[TOOL_COLOUR]!.set('#7c3aed'));
+    act(() => hook.result.current.ink!.onDraw(0, [1, 1, 5, 5]));
+    expect(PdfLiveChanges.marks(doc)).toEqual([
+      expect.objectContaining({ kind: 'drawing', colour: '#7c3aed' }),
+    ]);
+    run(TOOL_SELECT);
+    act(() => void hook.result.current.onKey(key({ key: 'd' }).event));
+    expect(hook.result.current.inHand).toBe('drawing');
+    // ⇧D cycles the shapes, which are not built: it takes nothing.
+    act(() => void hook.result.current.onKey(key({ key: 'Escape' }).event));
+    expect(hook.result.current.onKey(key({ key: 'D', shiftKey: true }).event)).toBe(false);
   });
 });
