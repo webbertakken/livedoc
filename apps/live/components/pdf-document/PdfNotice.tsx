@@ -34,10 +34,10 @@ export function PdfNotice({
             <Prims prims={glyph} />
           </Glyph>
         ) : null}
-        <h2 id={heading} className="text-sm font-normal">
+        <h2 id={heading} className="text-body font-normal">
           {sentence}
         </h2>
-        {then ? <p className="mt-1 text-sm text-(--office-muted)">{then}</p> : null}
+        {then ? <p className="mt-1 text-body text-(--office-muted)">{then}</p> : null}
         {children ? (
           <div className="mt-4 flex w-full flex-wrap justify-center gap-2">{children}</div>
         ) : null}

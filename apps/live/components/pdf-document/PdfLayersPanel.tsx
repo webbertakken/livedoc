@@ -22,7 +22,7 @@ type Read =
   { phase: 'reading' } | { phase: 'failed' } | { phase: 'ready'; layers: readonly PdfLayer[] };
 
 const TOGGLE =
-  'flex min-h-8 w-full items-center pointer-coarse:min-h-11 gap-2 rounded-md px-2 text-left text-sm outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-disabled:cursor-default aria-disabled:hover:bg-transparent';
+  'flex min-h-row w-full items-center pointer-coarse:min-h-11 gap-2 rounded-control px-2 text-left text-body outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-disabled:cursor-default aria-disabled:hover:bg-transparent';
 
 export function PdfLayersPanel({
   engine,
@@ -59,19 +59,19 @@ export function PdfLayersPanel({
 
   if (read.phase === 'reading')
     return (
-      <p role="status" className="px-2 py-2 text-sm text-(--office-muted)">
+      <p role="status" className="px-2 py-2 text-body text-(--office-muted)">
         {LAYERS_COPY.reading}
       </p>
     );
   if (read.phase === 'failed')
     return (
-      <p role="alert" className="px-2 py-2 text-sm">
+      <p role="alert" className="px-2 py-2 text-body">
         {LAYERS_COPY.failed}
       </p>
     );
   const { layers } = read;
   if (layers.length === 0)
-    return <p className="px-2 py-2 text-sm text-(--office-muted)">{LAYERS_COPY.none}</p>;
+    return <p className="px-2 py-2 text-body text-(--office-muted)">{LAYERS_COPY.none}</p>;
 
   // The layers hidden now: this person's, or the file's own until they change one.
   const hiddenNow = hidden ?? layers.filter((layer) => !layer.visible).map((layer) => layer.id);
@@ -99,7 +99,7 @@ export function PdfLayersPanel({
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-6 shrink-0 items-center justify-center text-(--office-icon)"
+                  className="flex size-chip shrink-0 items-center justify-center text-(--office-icon)"
                 >
                   <Glyph size={18} units={24}>
                     <Prims prims={shown ? lucideEye : lucideEyeOff} />
@@ -111,7 +111,7 @@ export function PdfLayersPanel({
                 {layer.locked ? (
                   <span
                     aria-hidden="true"
-                    className="flex shrink-0 items-center gap-1 text-xs text-(--office-muted)"
+                    className="flex shrink-0 items-center gap-1 text-supporting text-(--office-muted)"
                   >
                     <Glyph size={14} units={24}>
                       <Prims prims={lucideLock} />
@@ -125,10 +125,10 @@ export function PdfLayersPanel({
         })}
       </ul>
       {layers.length >= most ? (
-        <p className="px-2 py-2 text-xs text-(--office-muted)">{LAYERS_COPY.cut}</p>
+        <p className="px-2 py-2 text-supporting text-(--office-muted)">{LAYERS_COPY.cut}</p>
       ) : null}
       {cannot ? (
-        <p role="status" className="px-2 py-2 text-xs">
+        <p role="status" className="px-2 py-2 text-supporting">
           {LAYERS_COPY.cannot}
         </p>
       ) : null}

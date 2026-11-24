@@ -65,7 +65,7 @@ export function PdfPasswordScreen({
             onChange={(event) => setPassword(event.target.value)}
             aria-invalid={wrong || undefined}
             aria-describedby={wrong ? wrongLine : undefined}
-            className="h-8 min-w-0 flex-1 rounded border pointer-coarse:h-11 pointer-coarse:text-base border-(--office-line) bg-transparent px-2 text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-invalid:border-(--office-error)"
+            className="h-field min-w-0 flex-1 rounded-control border pointer-coarse:h-11 pointer-coarse:text-base border-(--office-line) bg-transparent px-2 text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-invalid:border-(--office-error)"
           />
           <Button type="submit" disabled={!password || checking}>
             Open
@@ -76,7 +76,7 @@ export function PdfPasswordScreen({
             key={tries}
             id={wrongLine}
             role="alert"
-            className="text-left text-sm text-(--office-error)"
+            className="text-left text-body text-(--office-error)"
           >
             {PDF_PASSWORD_COPY.wrong}
           </p>

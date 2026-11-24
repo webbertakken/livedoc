@@ -61,13 +61,11 @@ export function PdfFindResults({
       onClose={() => find.setListOpen(false)}
       focusNonce={focusNonce}
     >
-      <p className="px-2 pb-2 text-xs text-(--office-muted)">{find.count}</p>
+      <p className="px-2 pb-2 text-supporting text-(--office-muted)">{find.count}</p>
       <div>
         {findGroups(results, pages).map((group) => (
           <section key={group.heading} aria-label={group.heading} className="mb-2">
-            <h3 className="px-2 py-1 text-xs font-semibold text-(--office-muted)">
-              {group.heading}
-            </h3>
+            <h3 className="px-2 py-1 text-supporting text-(--office-muted)">{group.heading}</h3>
             <ul className="grid gap-0.5 pointer-coarse:gap-0">
               {group.results.map(({ result, at }) => (
                 <li key={at}>
@@ -75,10 +73,10 @@ export function PdfFindResults({
                     type="button"
                     aria-current={at === find.current ? 'true' : undefined}
                     onClick={() => find.choose(at)}
-                    className="w-full rounded px-2 py-1.5 text-left pointer-coarse:min-h-11 text-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-current:bg-(--office-pressed) aria-current:text-(--office-pressed-ink)"
+                    className="w-full rounded-control px-2 py-1.5 text-left pointer-coarse:min-h-11 text-body text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-current:bg-(--office-pressed) aria-current:text-(--office-pressed-ink)"
                   >
                     {result.snippet.before}
-                    <mark className="bg-transparent font-semibold text-inherit underline decoration-(--office-focus) decoration-2 underline-offset-2">
+                    <mark className="bg-transparent text-inherit underline decoration-(--office-focus) decoration-2 underline-offset-2">
                       {result.snippet.match}
                     </mark>
                     {result.snippet.after}

@@ -10,8 +10,8 @@ import type { PdfPrintChoice } from '@/lib/pdf-document/pdf-print';
 
 type Pages = 'all' | 'current' | 'range';
 
-const RADIO = 'size-4 shrink-0 accent-(--office-primary)';
-const OPTION = 'flex min-h-8 items-center gap-3 text-sm pointer-coarse:min-h-11';
+const RADIO = 'size-icon-row shrink-0 accent-(--office-primary)';
+const OPTION = 'flex min-h-row items-center gap-3 text-body pointer-coarse:min-h-11';
 
 export function PdfPrintDialog({
   open,
@@ -49,7 +49,7 @@ export function PdfPrintDialog({
       primary={{ label: 'Print', onPress: print }}
     >
       <fieldset className="grid gap-1">
-        <legend className="mb-1 text-sm font-medium">Pages</legend>
+        <legend className="mb-1 text-body">Pages</legend>
         <label className={OPTION}>
           <input
             type="radio"
@@ -93,17 +93,17 @@ export function PdfPrintDialog({
               setRange(event.target.value);
               setProblem(null);
             }}
-            className="h-8 min-w-0 flex-1 rounded border border-(--office-line) bg-transparent px-2 text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-invalid:border-(--office-error) pointer-coarse:h-11 pointer-coarse:text-base"
+            className="h-field min-w-0 flex-1 rounded-control border border-(--office-line) bg-transparent px-2 text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-invalid:border-(--office-error) pointer-coarse:h-11 pointer-coarse:text-base"
           />
         </div>
         {problem ? (
-          <p id={problemId} role="alert" className="text-sm text-(--office-error)">
+          <p id={problemId} role="alert" className="text-body text-(--office-error)">
             {problem}
           </p>
         ) : null}
       </fieldset>
       <fieldset className="mt-4 grid gap-1">
-        <legend className="mb-1 text-sm font-medium">Marks</legend>
+        <legend className="mb-1 text-body">Marks</legend>
         <label className={OPTION}>
           <input
             type="radio"

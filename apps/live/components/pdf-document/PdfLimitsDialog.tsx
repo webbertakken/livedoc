@@ -45,7 +45,7 @@ export function PdfLimitsDialog({
         disabled: !password || checking,
       }}
     >
-      <p className="mb-3 text-sm">{PDF_LIMITS_COPY.line}</p>
+      <p className="mb-3 text-body">{PDF_LIMITS_COPY.line}</p>
       <label className="sr-only" htmlFor={`${id}-field`}>
         {PDF_LIMITS_COPY.title}
       </label>
@@ -58,14 +58,14 @@ export function PdfLimitsDialog({
         onChange={(event) => setPassword(event.target.value)}
         aria-invalid={wrong > 0 || undefined}
         aria-describedby={wrong > 0 ? `${id}-wrong` : undefined}
-        className="h-8 w-full rounded border border-(--office-line) bg-transparent px-2 text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-invalid:border-(--office-error)"
+        className="h-field w-full rounded-control border border-(--office-line) bg-transparent px-2 text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-invalid:border-(--office-error)"
       />
       {wrong > 0 ? (
         <p
           key={wrong}
           id={`${id}-wrong`}
           role="alert"
-          className="mt-2 text-sm text-(--office-error)"
+          className="mt-2 text-body text-(--office-error)"
         >
           {PDF_LIMITS_COPY.wrong}
         </p>

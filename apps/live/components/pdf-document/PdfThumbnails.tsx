@@ -199,7 +199,7 @@ const PdfThumbnail = memo(function PdfThumbnail({
       data-pdf-thumbnail={index + 1}
       data-pdf-thumbnail-drawn={shown ? 'true' : 'false'}
       onClick={() => onGoTo(index)}
-      className="group flex flex-col items-center gap-1 rounded-md p-1.5 outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+      className="group flex flex-col items-center gap-1 rounded-control p-2 outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
     >
       <span
         className={`relative block bg-(--pdf-paper) shadow-sm outline ${
@@ -227,7 +227,7 @@ const PdfThumbnail = memo(function PdfThumbnail({
               />
             ))}
             {people.length > MOST_DOTS ? (
-              <span className="rounded-full bg-(--pdf-paper) px-1 text-[10px] leading-3 text-(--pdf-paper-ink)">
+              <span className="rounded-full bg-(--pdf-paper) px-1 text-glyph text-(--pdf-paper-ink)">
                 +{people.length - MOST_DOTS}
               </span>
             ) : null}
@@ -235,7 +235,7 @@ const PdfThumbnail = memo(function PdfThumbnail({
         ) : null}
       </span>
       <span
-        className={`text-xs tabular-nums ${current ? 'font-medium text-(--office-ink)' : 'text-(--office-muted)'}`}
+        className={`text-supporting tabular-nums ${current ? 'font-medium text-(--office-ink)' : 'text-(--office-muted)'}`}
       >
         {PdfThumbnailCopy.caption(index, page.label)}
       </span>

@@ -21,6 +21,8 @@ respondents see it and a slide keep the sizes their author chose.
   selection's labels, a rule's marks, card rows' buttons, the outline's group buttons, Add Rows and charts (D238,
   default).
 - A sheet's tab window face is its picture, drawn as the sheet looks.
+- A PDF's pages are content with everything drawn on them at the zoom: its marks, a stamp, a link's place, Find's tints
+  and the text selected; its chrome is on the scale: the panels, the page bar, Find, the notices and the dialogs.
 - A sheet's chrome is on the scale: its bars, menus, popovers and dialogs, and what floats over the grid (Smart Fill,
   Import CSV, a cell's tooltip).
 - A Plan view's drawing is content, drawn at the canvas's zoom as a sheet's grid is: a Gantt's timeline, rows,

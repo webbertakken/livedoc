@@ -61,11 +61,11 @@ export function PdfLinkDialog({
     <OfficeDialog open={asked !== null} onClose={onClose} title="Link" primary={primary}>
       {asked ? (
         <>
-          <p className="text-sm">{SAID[asked.kind]}</p>
+          <p className="text-body">{SAID[asked.kind]}</p>
           {text !== null ? (
             <p
               data-pdf-link-text
-              className="mt-3 rounded-md border border-(--office-line) px-3 py-2 font-mono text-sm break-all select-all"
+              className="mt-3 rounded-control border border-(--office-line) px-3 py-2 font-mono text-body break-all select-all"
             >
               {text}
             </p>
