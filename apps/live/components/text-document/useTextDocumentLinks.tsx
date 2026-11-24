@@ -30,18 +30,31 @@ import {
   type LinkStretch,
 } from '@/lib/text-document/text-document-links';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
-import type { BookmarkTarget } from '@/lib/text-document/text-document-bookmarks';
 import { TextDocumentLinkCard } from './TextDocumentLinkCard';
 import { TextDocumentLinkEditor } from './TextDocumentLinkEditor';
+
+/** A place of this document the link editor offers: a heading or a bookmark, the name a link to it carries. */
+export type PlaceTarget = {
+  readonly group: 'headings' | 'bookmarks';
+  readonly name: string;
+  readonly label: string;
+};
 
 /** This document's places a link may lead to. */
 export type InDocument = {
   goTo: (name: string) => boolean;
-  targets: (typed: string) => readonly BookmarkTarget[];
+  targets: (typed: string) => readonly PlaceTarget[];
   // What names a place, for the link card; null when it is gone.
   label: (name: string) => string | null;
+  // Makes a place a link is about to name real (a heading gaining its id).
+  claim: (name: string) => void;
 };
-const NO_PLACES: InDocument = { goTo: () => false, targets: () => [], label: () => null };
+const NO_PLACES: InDocument = {
+  goTo: () => false,
+  targets: () => [],
+  label: () => null,
+  claim: () => undefined,
+};
 
 // The link at the caret, where the caret is in it, and the box under it.
 type AtCaret = { link: LinkStretch; head: number; anchor: Box } | null;
@@ -90,7 +103,7 @@ export function useTextDocumentLinks({
   subscribe: (listener: () => void) => () => void;
   // Show link details.
   showCard: boolean;
-  // This document's places: going to a bookmark, and the ones the link editor offers.
+  // This document's places: going to a heading or bookmark, and the ones the link editor offers.
   inDocument?: InDocument;
 }) {
   const [editing, setEditing] = useState<{ nonce: number; edit: LinkEditing; anchor: Box } | null>(
@@ -146,6 +159,7 @@ export function useTextDocumentLinks({
         return address.problem;
       }
       startUndoStep(view);
+      if (address.href.startsWith('#')) inDocument.claim(address.href.slice(1));
       // At a bare caret with Text empty, the link reads as Link was typed (an email without its mailto:).
       const shown = was.from === was.to && !text ? typed.trim() : text;
       const done = applyLink({ ...was, text: shown, href: address.href })(
@@ -165,7 +179,7 @@ export function useTextDocumentLinks({
       close();
       return null;
     },
-    [view, editing, close],
+    [view, editing, close, inDocument],
   );
 
   const remove = useCallback(
@@ -240,7 +254,7 @@ export function useTextDocumentLinks({
       text={editing.edit.text}
       href={editing.edit.href}
       documents={documents}
-      bookmarks={inDocument.targets}
+      places={inDocument.targets}
       origin={origin()}
       onApply={apply}
       onClose={close}

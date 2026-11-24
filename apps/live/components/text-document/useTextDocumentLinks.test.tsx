@@ -294,15 +294,20 @@ describe('useTextDocumentLinks', () => {
     });
   });
 
-  // links-and-navigation.md "Bookmarks": the link editor offers this document's bookmarks; a link to one goes there.
+  // links-and-navigation.md "Bookmarks", "Heading links": the link editor offers this document's headings, then its
+  // bookmarks; taking a heading gives it its id as the link is applied; a link to one goes there.
   describe('to a place in this document', () => {
     const places = (): InDocument => ({
       goTo: vi.fn(() => true),
       targets: (typed) =>
         'chapter one'.includes(typed.toLowerCase())
-          ? [{ name: 'chap1', label: 'Chapter one' }]
+          ? [
+              { group: 'headings', name: '_h1', label: 'Chapter heading' },
+              { group: 'bookmarks', name: 'chap1', label: 'Chapter one' },
+            ]
           : [],
       label: (name) => (name === 'chap1' ? 'Chapter one' : null),
+      claim: vi.fn(),
     });
 
     it('offers a bookmark under the documents; taking it links to #name, naming an empty Text', () => {
@@ -312,10 +317,28 @@ describe('useTextDocumentLinks', () => {
       const link = screen.getByRole<HTMLInputElement>('combobox', { name: 'Link' });
       fireEvent.change(link, { target: { value: 'chapter' } });
       expect(screen.getByRole('group', { name: 'Bookmarks' })).toBeTruthy();
+      fireEvent.keyDown(link, { key: 'ArrowDown' });
       fireEvent.keyDown(link, { key: 'Enter' });
       expect(link.value).toBe('#chap1');
       fireEvent.submit(link.form!);
       expect(runs(view)[1]).toEqual(['Chapter one', '#chap1']);
+    });
+
+    it('offers the headings before the bookmarks; taking one claims its id before the link', () => {
+      const inDocument = places();
+      const { view, hook, drawn } = setup({ from: 3, inDocument });
+      act(() => hook.result.current.actions[LINK_ITEM]!.run());
+      drawn();
+      const link = screen.getByRole<HTMLInputElement>('combobox', { name: 'Link' });
+      fireEvent.change(link, { target: { value: 'chapter' } });
+      const options = screen.getAllByRole('option').map((o) => o.textContent);
+      expect(options).toEqual(['Chapter heading', 'Chapter one']);
+      expect(screen.getByRole('group', { name: 'Headings' })).toBeTruthy();
+      fireEvent.keyDown(link, { key: 'Enter' });
+      expect(link.value).toBe('#_h1');
+      fireEvent.submit(link.form!);
+      expect(inDocument.claim).toHaveBeenCalledWith('_h1');
+      expect(runs(view)[1]).toEqual(['Chapter heading', '#_h1']);
     });
 
     it('goes to the bookmark on Alt+Enter, its card naming it by its text', () => {

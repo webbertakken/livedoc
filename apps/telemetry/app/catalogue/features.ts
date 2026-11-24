@@ -1401,6 +1401,15 @@ export const TEXT_DOCUMENT_LINKS_OPENED = chart(
   { types: ['TextDocumentLinkOpened'] },
 );
 
+// A text document heading's link copied from the context menu (links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_HEADING_LINKS_COPIED = chart(
+  'UI',
+  'Used',
+  'Text Document Heading Links Copied',
+  "A text document heading's link copied with Copy heading link from the context menu.",
+  { types: ['TextDocumentHeadingLinkCopied'] },
+);
+
 // A building block put in a text document (docs/specs/034-text-documents/objects.md "Building blocks").
 export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
   'Element',

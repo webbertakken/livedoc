@@ -1,6 +1,6 @@
 # Links and navigation
 
-**Status: partly built.** The outline's headings, links and bookmarks are built; the rest is specified.
+**Status: partly built.** The outline's headings, links, bookmarks and heading links are built; the rest is specified.
 
 Links, bookmarks, heading links, the table of contents, the outline and document tabs' navigation in a
 [text document](text-document.md). Smart chips are left out (fork C3, ruled): a chip in an arriving file is kept as
@@ -53,14 +53,29 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   first 40 characters, "Bookmark" when none), those holding every typed word, at most 8. A link to one is `#<name>`;
   opening it scrolls the bookmark into view, the caret at it. A link to a bookmark that is gone opens nothing.
 - Remove on its card takes it away; so does deleting the text around it, as one character would.
-- A hidden bookmark (its name starting with `_`, as Word and Google hide theirs, headings' among them) and a bookmark
-  that spans text (a start and an end apart) are kept as the file has them, never drawn `(default)`.
+- A hidden bookmark (its name starting with `_`, as Word and Google hide theirs, headings' among them) is a bookmark
+  of the writing with no ribbon, no card and no place in the link editor's Bookmarks; a bookmark that spans text (a
+  start and an end apart) is kept as the file has it, never drawn `(default)`.
 - Navigating with ⌘⌥ N then B / P then B.
 
 ## Heading links
 
-Every heading has an address (`#heading=<id>`): the context menu's **Copy heading link**; the outline's entries are
-heading links too.
+- A heading's **id** is the first hidden bookmark at its start, before its text, as Google writes one per heading
+  (ODF `_heading=h.<id>`, OOXML `_<id>`). A heading without one gains one when a link first needs it: `_` and 12
+  lowercase letters and digits, as Google names them in Word files, never one the writing holds `(default)`.
+  Gaining one is no step of its own to undo.
+- The context menu on a heading (the caret in it, nothing selected) offers **Copy heading link** `(default)`: it
+  copies the document's address with `#heading=<id>`; a session that may not edit offers it only for a heading that
+  has an id. Opening that address scrolls the heading into view once the document is drawn, the caret at its start.
+- The link editor's list offers this document's headings under **Headings**, after the documents and before the
+  bookmarks `(default)`, each by its text (its first 40 characters, **Untitled heading** when empty), those holding
+  every typed word, at most 8, in the order they are written. Taking one links to `#<id>`, the heading gaining its id
+  as the link is applied.
+- A link to a heading reads and opens as a bookmark link does: the card's title is the heading's text, and opening it
+  scrolls the heading into view. A link to `#heading=h.<id>`, as Google writes one in an ODF file, leads to the
+  bookmark `_heading=h.<id>` `(default)`.
+- The outline's entries go to their headings ([The outline](#the-outline)).
+- Spanning heading bookmarks (Word's `_Toc` ones around a heading's text) stay kept; a link to one opens nothing.
 
 ## Table of contents
 
@@ -102,5 +117,6 @@ Copy link.
 `Element · Removed · TextDocumentBookmark` (Remove on its card);
 `Element · Changed · TextDocumentLink` (an edited link), `Element · Removed · TextDocumentLink` (Remove link);
 `UI · Used · TextDocumentLinkOpened` (Alt+Enter or the card's title);
+`UI · Used · TextDocumentHeadingLinkCopied` (Copy heading link);
 `Tab · Added · TextDocumentTab`; `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never
 content.

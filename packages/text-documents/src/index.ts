@@ -53,6 +53,7 @@ export { Notes } from './model/notes';
 export {
   BOOKMARK_NAME_LENGTH,
   BOOKMARK_NAME_MAX,
+  HIDDEN_BOOKMARK_PREFIX,
   Bookmarks,
   type Bookmark,
 } from './model/bookmarks';

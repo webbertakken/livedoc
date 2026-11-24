@@ -466,6 +466,8 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
     }),
     item('link-copy', 'Copy link', 'view', { contextual: true, ...BUILT }),
     item('link-remove', 'Remove link', 'edit', { contextual: true, ...BUILT }),
+    // In a heading (links-and-navigation.md "Heading links"); the place is (default) until a capture.
+    item('heading-link-copy', 'Copy heading link', 'view', { contextual: true, ...BUILT }),
     SEPARATOR,
     item('format-options', 'Format options', 'edit'),
     'clear-formatting',

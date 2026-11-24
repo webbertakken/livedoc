@@ -18,14 +18,6 @@ exports[`the corpus > reads google/features-gdocs.docx and writes it back the sa
     "kept": [
       {
         "count": 2,
-        "name": "bookmarkStart",
-      },
-      {
-        "count": 2,
-        "name": "bookmarkEnd",
-      },
-      {
-        "count": 2,
         "name": "br",
       },
       {
@@ -50,7 +42,7 @@ exports[`the corpus > reads google/features-gdocs.docx and writes it back the sa
         "Title",
         "",
         "Features corpus",
-        "bookmarkStart,bookmarkEnd,br",
+        "br",
       ],
       [
         "Normal",
@@ -62,7 +54,7 @@ exports[`the corpus > reads google/features-gdocs.docx and writes it back the sa
         "Heading1",
         "0",
         "Heading one",
-        "bookmarkStart,bookmarkEnd",
+        "",
       ],
       [
         "Normal",
@@ -189,10 +181,6 @@ exports[`the corpus > reads google/features-gdocs.odt and writes it back the sam
         "name": "sequence-decls",
       },
       {
-        "count": 2,
-        "name": "bookmark",
-      },
-      {
         "count": 1,
         "name": "annotation",
       },
@@ -214,7 +202,7 @@ exports[`the corpus > reads google/features-gdocs.odt and writes it back the sam
         "Title",
         "",
         "Features corpus",
-        "bookmark",
+        "",
       ],
       [
         "Standard",
@@ -226,7 +214,7 @@ exports[`the corpus > reads google/features-gdocs.odt and writes it back the sam
         "Heading_20_1",
         "0",
         "Heading one",
-        "bookmark",
+        "",
       ],
       [
         "Standard",
@@ -1227,16 +1215,7 @@ exports[`the corpus > reads word/ComplexNumberedLists.docx and writes it back th
 {
   "report": {
     "dropped": [],
-    "kept": [
-      {
-        "count": 1,
-        "name": "bookmarkStart",
-      },
-      {
-        "count": 1,
-        "name": "bookmarkEnd",
-      },
-    ],
+    "kept": [],
   },
   "structure": {
     "format": "ooxml",
@@ -1336,7 +1315,7 @@ exports[`the corpus > reads word/ComplexNumberedLists.docx and writes it back th
         "ListParagraph",
         "0",
         "Carrying on @ 13",
-        "bookmarkStart,bookmarkEnd",
+        "",
       ],
       [
         "Normal",
@@ -1683,16 +1662,7 @@ exports[`the corpus > reads word/WithTabs.docx and writes it back the same 1`] =
 {
   "report": {
     "dropped": [],
-    "kept": [
-      {
-        "count": 1,
-        "name": "bookmarkStart",
-      },
-      {
-        "count": 1,
-        "name": "bookmarkEnd",
-      },
-    ],
+    "kept": [],
   },
   "structure": {
     "format": "ooxml",
@@ -1702,7 +1672,7 @@ exports[`the corpus > reads word/WithTabs.docx and writes it back the same 1`] =
         "Normal",
         "",
         "a	b",
-        "bookmarkStart,bookmarkEnd",
+        "",
       ],
     ],
     "roles": [
@@ -1788,16 +1758,7 @@ exports[`the corpus > reads word/bug56075-changeTracking_on.docx and writes it b
 {
   "report": {
     "dropped": [],
-    "kept": [
-      {
-        "count": 1,
-        "name": "bookmarkStart",
-      },
-      {
-        "count": 1,
-        "name": "bookmarkEnd",
-      },
-    ],
+    "kept": [],
   },
   "structure": {
     "format": "ooxml",
@@ -1807,7 +1768,7 @@ exports[`the corpus > reads word/bug56075-changeTracking_on.docx and writes it b
         "Standard",
         "",
         "Change Tracking ON",
-        "bookmarkStart,bookmarkEnd",
+        "",
       ],
     ],
     "roles": [
