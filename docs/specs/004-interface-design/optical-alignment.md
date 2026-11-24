@@ -106,6 +106,7 @@ Existing ad-hoc shapes move onto these primitives. A new shape that frames a gly
   loudly if the browser ever paints text differently.
 - **A static guard** fails when a circle or chip framing text bypasses the primitives or the
   utility, naming the file and line.
+  A child that can only be elements passes: an icon, a branch to nothing, a list mapped to elements.
 - **The icon geometry check** belongs to [Iconography](iconography.md): catalogue icons off-centre
   by more than the tolerance fail there, unless they are a logged exception.
 
