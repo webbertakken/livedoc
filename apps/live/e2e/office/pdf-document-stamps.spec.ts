@@ -50,6 +50,11 @@ test('stamps are placed on a page from the Stamp control and leave as Stamp anno
   await page.getByRole('button', { name: 'Stamp: Approved styles' }).click();
   await expect(page.getByRole('group', { name: 'Standard' })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Dynamic' })).toBeVisible();
+  // Settled after its fade in, so the picture shows it as a person sees it.
+  await expect(page.getByRole('menu', { name: 'Stamp: Approved styles' })).toHaveCSS(
+    'opacity',
+    '1',
+  );
   await page.screenshot({ path: test.info().outputPath('pdf-stamp-grid.png') });
   await page.getByRole('menuitemradio', { name: 'Received, with name and time' }).click();
   await expect(
@@ -57,7 +62,8 @@ test('stamps are placed on a page from the Stamp control and leave as Stamp anno
   ).toBeVisible();
   await pressAt(page, first, [0.65, 0.22]);
   await expect(stamps).toHaveCount(2);
-  const received = stamps.nth(1).locator('text');
+  // Marks are drawn in the order of their ids, which are random: found by their words.
+  const received = stamps.filter({ hasText: 'RECEIVED' }).locator('text');
   await expect(received.first()).toHaveText('RECEIVED');
   await expect(received.nth(1)).toHaveText(/\d{1,2} \w{3} \d{4}, \d\d:\d\d$/);
 
