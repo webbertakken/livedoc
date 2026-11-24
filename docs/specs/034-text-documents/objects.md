@@ -3,7 +3,8 @@
 **Status: in progress.** A picture in line is held, read and written in both formats, kept in the live state, drawn,
 inserted, pasted and dropped, its bytes in the gallery; it is sized, cropped and turned, and its alternative text and
 media are changed.
-A horizontal line, special characters and emoji are inserted, emoji also from the colon list.
+A horizontal line, special characters and emoji are inserted, emoji also from the colon list; so are the six
+building blocks.
 An equation is held, read and written in both formats, kept in the live state, drawn, inserted and written in its
 box, with its toolbar.
 The rest is specified.
@@ -481,9 +482,37 @@ Insert > Horizontal line: a paragraph whose bottom border runs across the text w
 
 ## Building blocks
 
-Either way under C3 (asked with the matrix): Google's building blocks are mostly tables of chips. If kept, each is a
-template of paragraphs and tables (meeting notes with attendees as text, an email draft, a roadmap table, a review
-tracker, project assets, a content launch tracker) inserted at the caret.
+Insert > Building blocks puts one of six ready-made stretches of writing in at the caret, as Google's six do
+(default, until a capture of each). Google's are tables of chips; here each is plain paragraphs and tables, every chip
+written as its text (C3), so it opens alike in every suite and nothing in it needs an outside service.
+
+- **The menu**, in Google's order: Meeting notes, Email draft, then a line, then Product roadmap, Review tracker,
+  Project assets, Content launch tracker. Custom building blocks (saving one's own) is not here (an either-way row).
+- **Meeting notes**: a Heading 2 line of today's date (written in the person's locale, month abbreviated, as Google's
+  date chip shows it) and `|`, the caret after it for the meeting's name; a line `Attendees: `; a Heading 3
+  `Notes` with one empty bulleted item; a Heading 3 `Action items` with one empty checklist item.
+- **Email draft**: a table of two columns, one row each for To, Cc, Bcc and Subject, the label in its left cell in
+  grey `#5f6368`, a quarter of the width; an empty paragraph after it for the message. The caret goes to To's cell.
+- **The four trackers** are tables: a title row of one cell across the table, in 14 pt, shaded `#f3f3f3`; a row of
+  column names in bold, shaded `#f3f3f3`; then their rows, a status written as its text. The title row and the names
+  row are header rows, repeated on each page. The caret goes to the first empty cell after the names.
+
+| Tracker                | Columns                                    | Its rows, by their status column              |
+| ---------------------- | ------------------------------------------ | --------------------------------------------- |
+| Product roadmap        | Project, Status, Related files, Notes      | Not started/In progress/Launched              |
+| Review tracker         | Reviewer, Status, Notes                    | Not started/In progress/Under review/Approved |
+| Project assets         | File, Description, Status                  | Not started/In progress/Under review/Approved |
+| Content launch tracker | Type, Description, Date, Published, Outlet | No/Yes                                        |
+
+- **Tables in a block** are lined 1 pt `#dadce0` round every cell, padded as a new table, their columns sharing the
+  text width at the caret equally (a cell's, inside a table), except the email draft's labels.
+- **Where it goes**, as a table does ([Tables](tables.md#inserting)): a selection is deleted first; it goes before an
+  empty paragraph or one whose start has the caret, after one whose end has it (an empty paragraph following, to
+  write on below), and splits a paragraph between.
+- Styles the document lacks (Heading 2, Heading 3) are added, as Format > Paragraph styles adds them; the bulleted
+  and checklist items start lists of their own.
+- It is one undo step, for an Editor; it is dimmed for anyone else, and while a header, footer or note is edited.
+- The same four tables are Google's table templates ([Tables](tables.md#inserting)); both menus share one catalogue.
 
 ## Code blocks
 
@@ -502,6 +531,8 @@ the gallery's limit.
 ## Telemetry
 
 `Element · Added · TextDocument<Object>` (Image, Drawing, Chart, Equation, SpecialCharacter, Emoji, HorizontalLine),
+a building block as `TextDocumentBuildingBlock<Block>` (MeetingNotes, EmailDraft, ProductRoadmap, ReviewTracker,
+ProjectAssets, ContentLaunchTracker),
 with the image source as the type's suffix (ImageUpload, ImageUrl, ImageGallery, ImageCamera, ImageSearch);
 `Element · Changed · TextDocumentImage<Action>` (Crop, Wrap, AltText, Replace, Recolour, Adjust); a new equation from the
 equation toolbar counts as Insert > Equation's, and View > Show equation toolbar as `UI · Toggled ·

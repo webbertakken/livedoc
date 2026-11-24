@@ -16,6 +16,7 @@ import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { GridSize } from '@/lib/office/size-grid';
 import { track } from '@/lib/telemetry';
 import { startUndoStep } from './text-document-undo';
+import { offsetInside, placeBlocks } from './text-document-block-place';
 import { textDocumentSchema as schema } from './text-document-schema';
 
 const LINE: BorderLine = { width: 1, dash: 'solid', color: '#000000', space: 0 };
@@ -81,23 +82,12 @@ export const insertTable =
   (size: GridSize, width: number): Command =>
   (state, dispatch) => {
     const tr = state.tr;
-    if (!state.selection.empty) tr.deleteSelection();
-    const { $from } = tr.selection;
-    if (!$from.parent.isTextblock) return false;
     const table = newTable({ ...size, width });
-    const empty = $from.parent.content.size === 0;
-    let at: number;
-    if (empty || $from.parentOffset === 0) at = $from.before();
-    else if ($from.parentOffset === $from.parent.content.size) {
-      at = $from.after();
-      tr.insert(at, schema.nodes.paragraph!.create());
-    } else {
-      tr.split($from.pos);
-      at = $from.pos + 1;
-    }
-    tr.insert(at, table);
-    // Into the first cell's paragraph: past the table's, row's, cell's and paragraph's openings.
-    tr.setSelection(TextSelection.create(tr.doc, at + 4)).scrollIntoView();
+    const at = placeBlocks(tr, [table]);
+    if (at === null) return false;
+    // Into the first cell's paragraph.
+    tr.setSelection(TextSelection.create(tr.doc, at + offsetInside([table], [0, 0, 0, 0], 0)));
+    tr.scrollIntoView();
     dispatch?.(tr);
     return true;
   };
