@@ -236,3 +236,51 @@ test('colours and hides sheets, shown again from All Sheets and View', async ({
   await expect(face('Sheet2')).toHaveAttribute('data-sheet-tab-colour', /^#[0-9a-f]{6}$/);
   expectNoPageErrors(pageErrors);
 });
+
+// spreadsheet.md "Sheets in the sheet bar" (D183-D185): Copy To a new spreadsheet, then to that one from the picker.
+test('copies a sheet to a new spreadsheet, then into it from the picker', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await openSpreadsheet(page);
+  await page.locator('[data-sheet-grid]').click({ position: { x: 120, y: 60 } });
+  await page.keyboard.type('41');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-sheet-grid]').getByText('41', { exact: true })).toBeVisible();
+  const copyTo = async (to: string) => {
+    await page.getByRole('button', { name: 'Sheet1 menu' }).click();
+    const menu = page.getByRole('dialog', { name: 'Sheet1 menu' });
+    await menu.getByRole('button', { name: 'Copy To' }).click();
+    await menu.getByRole('button', { name: to }).click();
+  };
+
+  // New Spreadsheet: made, then a dialog offers to open it in a new browser tab.
+  await copyTo('New Spreadsheet');
+  const copied = page.getByRole('dialog', { name: 'Sheet copied' });
+  await expect(copied).toContainText('“Copy of Sheet1” is in “Untitled spreadsheet”.');
+  const [other] = await Promise.all([
+    page.context().waitForEvent('page'),
+    copied.getByRole('button', { name: 'Open Spreadsheet' }).click(),
+  ]);
+  await expect(other.locator(READY)).toBeVisible();
+  await expect(other.getByRole('tab', { name: 'Copy of Sheet1', exact: true })).toBeVisible();
+  await expect(other.locator('[data-sheet-grid]').getByText('41', { exact: true })).toBeVisible();
+  const otherUrl = other.url();
+  await other.close();
+
+  // Existing Spreadsheet: the picker lists it; the copy lands last, named by the rules.
+  await copyTo('Existing Spreadsheet');
+  const picker = page.getByRole('dialog', { name: 'Copy Sheet1 to' });
+  await expect(picker.getByRole('button', { name: 'Untitled spreadsheet' }).first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('copy-to.png'), animations: 'disabled' });
+  await picker.getByRole('button', { name: 'Untitled spreadsheet' }).first().click();
+  await page
+    .getByRole('dialog', { name: 'Sheet copied' })
+    .getByRole('button', { name: 'OK' })
+    .click();
+  await page.goto(otherUrl);
+  await expect(page.locator(READY)).toBeVisible();
+  await expect.poll(() => tabNames(page)).toEqual(['Copy of Sheet1', 'Copy of Sheet1 2']);
+  expectNoPageErrors(pageErrors);
+});
