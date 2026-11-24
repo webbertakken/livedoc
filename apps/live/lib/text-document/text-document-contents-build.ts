@@ -17,6 +17,13 @@ export const CONTENTS_LOOK_ITEMS: Readonly<Record<string, ContentsLook>> = {
   'toc-links': 'links',
 };
 
+/** Each look's name, as Insert and the options panel say it. */
+export const CONTENTS_LOOK_LABELS: Readonly<Record<ContentsLook, string>> = {
+  plain: 'Plain text',
+  dotted: 'Dotted',
+  links: 'With blue links',
+};
+
 /**
  * The pages entries are numbered by: as laid out (each block's shown page number), none (pageless), or not drawn on
  * this screen (a phone), where an entry keeps the number it had.

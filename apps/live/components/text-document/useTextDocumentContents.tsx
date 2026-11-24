@@ -1,8 +1,11 @@
-// Insert > Table of contents on the open writing, for an Editor (docs/specs/034-text-documents/links-and-navigation.md
-// "Table of contents"): one of three looks put in at the caret in the body, built from the headings, each gaining an id,
-// its entries in the Contents styles (made when first needed); once the pages are laid out with it in, its page
-// numbers are read again, all one undo step (continued past the redraws outside undo between them). Dimmed while the caret is in a table.
-import { useEffect, useMemo, useState, type RefObject } from 'react';
+// A table of contents on the open writing, for an Editor (docs/specs/034-text-documents/links-and-navigation.md "Table
+// of contents"): Insert puts one of three looks in at the caret in the body; Update rebuilds the selected one; its
+// options panel changes its look or levels. Each builds from the headings, each gaining an id, its entries in the
+// Contents styles (made when first needed); once the pages are laid out again its page numbers are read again, all one
+// undo step (continued past the redraws outside undo between them). Insert is dimmed while the caret is in a table.
+// While one is selected, its bar (Update, options) is drawn into the block.
+import { useEffect, useMemo, useState, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import type { EditorView } from 'prosemirror-view';
 import { NodeSelection } from 'prosemirror-state';
 import type * as Y from 'yjs';
@@ -25,14 +28,17 @@ import {
   insertContents,
   rebuildContents,
   type ContentsBuild,
+  type ContentsChange,
 } from '@/lib/text-document/text-document-contents-build';
-import { ContentsLookPicture } from './ContentsLookPicture';
+import { CONTENTS_BAR_HOST } from '@/lib/text-document/text-document-contents';
 import { shownPageOfBlock } from '@/lib/text-document/pagination/pagination-plugin';
 import {
   TEXT_DOCUMENT_STYLES_ORIGIN,
   continueUndoStep,
   startUndoStep,
 } from '@/lib/text-document/text-document-undo';
+import { ContentsLookPicture } from './ContentsLookPicture';
+import { TextDocumentContentsBar } from './TextDocumentContentsBar';
 
 export type TextDocumentContentsDeps = {
   view: EditorView | null;
@@ -45,6 +51,25 @@ export type TextDocumentContentsDeps = {
   textWidth: number;
   // Told when the caret moves or the writing changes.
   subscribe: (listener: () => void) => () => void;
+  // Table of contents options: opens its panel.
+  openOptions: () => void;
+};
+
+/** The table of contents the caret selects: where it starts, its look and levels, and its bar's host. */
+export type SelectedContents = {
+  readonly pos: number;
+  readonly look: ContentsLook;
+  readonly levels: number;
+  readonly host: HTMLElement | null;
+};
+
+export type TextDocumentContents = {
+  actions: OfficeActions;
+  selected: SelectedContents | null;
+  // The options panel's change to the selected one.
+  change: (change: ContentsChange) => void;
+  // Its bar, drawn into the selected block.
+  bar: ReactNode;
 };
 
 // Only where it goes asked: whether one may go in at the caret.
@@ -55,21 +80,47 @@ const PROBE: ContentsBuild = {
   styleOf: () => null,
 };
 
-export function useTextDocumentContents(deps: TextDocumentContentsDeps): OfficeActions {
-  const { view, writes, liveDoc, format, pageless, textWidth, subscribe } = deps;
+function selectedIn(view: EditorView): SelectedContents | null {
+  const { selection } = view.state;
+  if (!(selection instanceof NodeSelection) || selection.node.type.name !== CONTENTS) return null;
+  const attrs = selection.node.attrs as { look: ContentsLook; levels: number };
+  const dom = view.nodeDOM(selection.from);
+  return {
+    pos: selection.from,
+    look: attrs.look,
+    levels: Contents.levelsOf(attrs.levels),
+    host: dom instanceof HTMLElement ? dom.querySelector<HTMLElement>(CONTENTS_BAR_HOST) : null,
+  };
+}
+
+const same = (a: SelectedContents | null, b: SelectedContents | null) =>
+  a === b ||
+  (a !== null &&
+    b !== null &&
+    a.pos === b.pos &&
+    a.look === b.look &&
+    a.levels === b.levels &&
+    a.host === b.host);
+
+export function useTextDocumentContents(deps: TextDocumentContentsDeps): TextDocumentContents {
+  const { view, writes, liveDoc, format, pageless, textWidth, subscribe, openOptions } = deps;
   const [placeable, setPlaceable] = useState(true);
+  const [selected, setSelected] = useState<SelectedContents | null>(null);
 
   useEffect(() => {
     if (!view) return;
     const update = () => {
-      if (!view.isDestroyed) setPlaceable(insertContents('plain', PROBE)(view.state));
+      if (view.isDestroyed) return;
+      setPlaceable(insertContents('plain', PROBE)(view.state));
+      const now = selectedIn(view);
+      setSelected((was) => (same(was, now) ? was : now));
     };
     update();
     return subscribe(update);
   }, [view, subscribe]);
 
-  return useMemo(() => {
-    if (!view || !writes) return {};
+  const engine = useMemo(() => {
+    if (!view || !writes) return null;
     const readStyles = (): readonly Style[] =>
       liveDoc.current
         ? TextDocumentState.styles(liveDoc.current, format)
@@ -104,6 +155,22 @@ export function useTextDocumentContents(deps: TextDocumentContentsDeps): OfficeA
         styleOf: (level) => ids.get(level) ?? null,
       };
     };
+    // The pages are laid out again a microtask after a change: the selected block's page numbers as they are now,
+    // in the same undo step; then the step ends and `done` tells of it.
+    const renumberThen = (done: (renumbered: boolean) => void) => {
+      queueMicrotask(() => {
+        if (view.isDestroyed) return;
+        const now = selectedIn(view);
+        const renumbered = now !== null && now.look !== 'links' && !pageless;
+        if (now && renumbered) {
+          // The pages' drawing came between, outside undo: the renumbering joins the step.
+          continueUndoStep(view);
+          rebuildContents(now.pos, buildNow(now.levels))(view.state, view.dispatch);
+        }
+        startUndoStep(view);
+        done(renumbered);
+      });
+    };
     const insert = (look: ContentsLook) => {
       if (view.isDestroyed || !insertContents(look, PROBE)(view.state)) {
         debugLog('[text-document] table of contents refused', { look });
@@ -112,34 +179,63 @@ export function useTextDocumentContents(deps: TextDocumentContentsDeps): OfficeA
       // A step of its own: the writing before it and after it undo apart.
       startUndoStep(view);
       insertContents(look, buildNow(CONTENTS_LEVELS_MAX))(view.state, view.dispatch);
-      // The pages are laid out with it in a microtask after the change: its page numbers as they are now.
-      queueMicrotask(() => {
-        if (view.isDestroyed) return;
-        const { selection } = view.state;
-        const placed =
-          selection instanceof NodeSelection && selection.node.type.name === CONTENTS
-            ? selection.from
-            : null;
-        if (placed !== null && look !== 'links' && !pageless) {
-          // The pages' drawing came between, outside undo: the renumbering joins the insert's step.
-          continueUndoStep(view);
-          rebuildContents(placed, buildNow(CONTENTS_LEVELS_MAX))(view.state, view.dispatch);
-        }
-        startUndoStep(view);
+      renumberThen((renumbered) => {
         track('Element', 'Added', 'TextDocumentTableOfContents');
-        debugLog('[text-document] table of contents', { look, renumbered: placed !== null });
+        debugLog('[text-document] table of contents', { look, renumbered });
       });
       view.focus();
     };
-    return Object.fromEntries(
-      Object.entries(CONTENTS_LOOK_ITEMS).map(([item, look]) => [
-        item,
-        {
-          run: () => insert(look),
-          disabled: !placeable,
-          picture: <ContentsLookPicture look={look} />,
-        },
-      ]),
-    );
-  }, [view, writes, liveDoc, format, pageless, textWidth, placeable]);
+    // Update (no change) or the options panel's change, on the selected one.
+    const rebuild = (change: ContentsChange) => {
+      const now = view.isDestroyed ? null : selectedIn(view);
+      if (!now) {
+        debugLog('[text-document] table of contents change refused', change);
+        return;
+      }
+      startUndoStep(view);
+      const levels = Contents.levelsOf(change.levels ?? now.levels);
+      rebuildContents(now.pos, buildNow(levels), change)(view.state, view.dispatch);
+      renumberThen((renumbered) => {
+        track('Element', 'Changed', 'TextDocumentTableOfContents');
+        debugLog('[text-document] table of contents changed', { ...change, renumbered });
+      });
+    };
+    return { insert, rebuild };
+  }, [view, writes, liveDoc, format, pageless, textWidth]);
+
+  const actions = useMemo<OfficeActions>(
+    () =>
+      engine
+        ? Object.fromEntries(
+            Object.entries(CONTENTS_LOOK_ITEMS).map(([item, look]) => [
+              item,
+              {
+                run: () => engine.insert(look),
+                disabled: !placeable,
+                picture: <ContentsLookPicture look={look} />,
+              },
+            ]),
+          )
+        : {},
+    [engine, placeable],
+  );
+
+  const bar =
+    engine && selected?.host
+      ? createPortal(
+          <TextDocumentContentsBar
+            onUpdate={() => engine.rebuild({})}
+            onOptions={openOptions}
+            onBack={() => view?.focus()}
+          />,
+          selected.host,
+        )
+      : null;
+
+  return {
+    actions,
+    selected: engine ? selected : null,
+    change: (change) => engine?.rebuild(change),
+    bar,
+  };
 }

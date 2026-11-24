@@ -7,8 +7,14 @@ import { DOMParser as PmDOMParser, DOMSerializer, type Node as PmNode } from 'pr
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { baseKeymap } from 'prosemirror-commands';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { CONTENTS_CLASS, contentsPressPlugin, contentsView } from './text-document-contents';
-import { DecorationSet } from 'prosemirror-view';
+import {
+  CONTENTS_BAR_HOST,
+  CONTENTS_CLASS,
+  contentsBarKeys,
+  contentsPressPlugin,
+  contentsView,
+} from './text-document-contents';
+import { DecorationSet, EditorView as EditorViewClass } from 'prosemirror-view';
 import type { EditorView } from 'prosemirror-view';
 
 const p = (text: string) => schema.nodes.paragraph!.create({}, text ? schema.text(text) : null);
@@ -141,7 +147,9 @@ describe('the table of contents view', () => {
     const view = contentsView(first);
     const dom = view.dom;
     expect(dom.tagName).toBe('NAV');
-    expect(view.contentDOM).toBe(dom);
+    // Its entries in an element of their own, beside the host of its bar.
+    expect(view.contentDOM?.parentElement).toBe(dom);
+    expect(dom.querySelector(CONTENTS_BAR_HOST)?.getAttribute('contenteditable')).toBe('false');
     expect(dom.getAttribute('aria-label')).toBe('Table of contents');
     expect(view.update!(contents('links', 2, 'A', 'B'), [], DecorationSet.empty)).toBe(true);
     expect([dom.dataset.look, dom.dataset.levels]).toEqual(['links', '2']);
@@ -165,5 +173,50 @@ describe('the table of contents view', () => {
     expect(view.ignoreMutation!(mutation(view.dom, 'childList'))).toBe(false);
     expect(view.ignoreMutation!(mutation(document.createElement('p'), 'attributes'))).toBe(false);
     expect(view.ignoreMutation!({ type: 'selection', target: view.dom })).toBe(false);
+  });
+
+  // Its bar's buttons are the bar's own: the editor neither reads their changes nor takes their events.
+  it('leaves its bar to itself', () => {
+    const view = contentsView(contents('dotted', 3, 'A'));
+    const host = view.dom.querySelector(CONTENTS_BAR_HOST)!;
+    const button = host.appendChild(document.createElement('button'));
+    expect(
+      view.ignoreMutation!({ type: 'childList', target: host } as unknown as MutationRecord),
+    ).toBe(true);
+    expect(view.ignoreMutation!({ type: 'selection', target: button })).toBe(true);
+    const press = new MouseEvent('mousedown');
+    Object.defineProperty(press, 'target', { value: button });
+    expect(view.stopEvent!(press)).toBe(true);
+    const entryPress = new MouseEvent('mousedown');
+    Object.defineProperty(entryPress, 'target', { value: view.contentDOM });
+    expect(view.stopEvent!(entryPress)).toBe(false);
+  });
+});
+
+// Alt+F10 from a selected table of contents goes to its bar, as from a header to its own.
+describe('the bar key', () => {
+  it('moves to the bar of the selected table of contents; nothing elsewhere or with no bar drawn', () => {
+    const doc = schema.node('doc', null, [contents('plain', 6, 'A'), p('Body')]);
+    const view = new EditorViewClass(document.body.appendChild(document.createElement('div')), {
+      state: EditorState.create({
+        doc,
+        selection: NodeSelection.create(doc, 0),
+        plugins: [contentsBarKeys()],
+      }),
+      nodeViews: { table_of_contents: contentsView },
+    });
+    const altF10 = () => new KeyboardEvent('keydown', { key: 'F10', altKey: true });
+    const press = () => view.someProp('handleKeyDown', (f) => f(view, altF10())) ?? false;
+    expect(press()).toBe(false);
+    const button = view.dom
+      .querySelector(CONTENTS_BAR_HOST)!
+      .appendChild(document.createElement('button'));
+    expect(press()).toBe(true);
+    expect(document.activeElement).toBe(button);
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, doc.child(0).nodeSize + 1)),
+    );
+    expect(press()).toBe(false);
+    view.destroy();
   });
 });

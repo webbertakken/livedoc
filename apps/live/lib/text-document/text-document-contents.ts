@@ -4,6 +4,7 @@
 import type { NodeSpec, Node as PmNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
 import { NodeSelection, Plugin, TextSelection } from 'prosemirror-state';
+import { keymap } from 'prosemirror-keymap';
 import { CONTENTS, CONTENTS_ATTRIBUTES, Contents } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -12,6 +13,9 @@ import { bookmarkPosition } from './text-document-bookmarks';
 
 /** The node's class. */
 export const CONTENTS_CLASS = 'text-document-contents';
+
+/** The element its Update and options bar is drawn into while it is selected. */
+export const CONTENTS_BAR_HOST = '[data-contents-bar]';
 
 const LOOKS = new Set(['plain', 'dotted', 'links']);
 
@@ -52,9 +56,18 @@ function drawnAttributes(node: PmNode): Record<string, string> {
  * The block as the editor draws it: one element kept while it stays a table of contents (a blur or a selection never
  * draws it anew, so its entries' laid-out tabs stay), its look and levels set on it as they change. Its attributes are
  * its own: another hand writing to them (a browser extension, a screenshot tool) never has the editor draw it anew.
+ * It holds the host of its Update and options bar, which the editor leaves alone, before its entries.
  */
 export function contentsView(node: PmNode): NodeView {
   const dom = document.createElement('nav');
+  // The bar's host, above its top-left corner, the bar's own; then its entries.
+  const bar = dom.appendChild(document.createElement('div'));
+  bar.dataset.contentsBar = '';
+  bar.className = 'text-document-contents-bar';
+  bar.setAttribute('contenteditable', 'false');
+  const entries = dom.appendChild(document.createElement('div'));
+  const inBar = (target: EventTarget | Node | null) =>
+    target instanceof Node && bar.contains(target);
   // Its class is added, never set: the editor marks it selected by a class of its own.
   const draw = (next: PmNode) => {
     for (const [name, value] of Object.entries(drawnAttributes(next)))
@@ -64,13 +77,15 @@ export function contentsView(node: PmNode): NodeView {
   draw(node);
   return {
     dom,
-    contentDOM: dom,
+    contentDOM: entries,
     update: (next) => {
       if (next.type !== node.type) return false;
       draw(next);
       return true;
     },
-    ignoreMutation: (mutation) => mutation.type === 'attributes' && mutation.target === dom,
+    ignoreMutation: (mutation) =>
+      (mutation.type === 'attributes' && mutation.target === dom) || inBar(mutation.target),
+    stopEvent: (event) => inBar(event.target),
   };
 }
 
@@ -124,6 +139,24 @@ export function contentsPressPlugin(): Plugin {
         (followEntry(view, pos, nodePos) || selectWhole(view, pos, node, nodePos)),
       handleDoubleClickOn: selectWhole,
       handleTripleClickOn: selectWhole,
+    },
+  });
+}
+
+/** Alt+F10 on a selected table of contents goes to its bar's first button, while one is drawn (an Editor's). */
+export function contentsBarKeys(): Plugin {
+  return keymap({
+    'Alt-F10': (state, _dispatch, view) => {
+      const { selection } = state;
+      if (!view || !(selection instanceof NodeSelection) || selection.node.type.name !== CONTENTS)
+        return false;
+      const dom = view.nodeDOM(selection.from);
+      const button =
+        dom instanceof HTMLElement
+          ? dom.querySelector<HTMLElement>(`${CONTENTS_BAR_HOST} button`)
+          : null;
+      button?.focus();
+      return button !== null;
     },
   });
 }

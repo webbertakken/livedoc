@@ -2,13 +2,15 @@
 
 // The text document's right side panel (docs/specs/004-interface-design/office-shell.md "Side panels"): the one open, in
 // the shell's resizable frame; Line numbers (page-layout.md "Line numbers"), Watermark (page-layout.md "Watermark"),
-// Table properties (tables.md "Table properties") or Image options (objects.md "Working with a picture").
-import type { Watermark } from '@livedoc/text-documents';
+// Table properties (tables.md "Table properties"), Image options (objects.md "Working with a picture") or Table of
+// contents (links-and-navigation.md "Table of contents").
+import type { ContentsLook, Watermark } from '@livedoc/text-documents';
 import { OfficePanel } from '@/components/office/OfficePanel';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
 import {
   IMAGE_OPTIONS_PANEL,
   LINE_NUMBERS_PANEL,
+  TABLE_OF_CONTENTS_PANEL,
   TABLE_PROPERTIES_PANEL,
   WATERMARK_PANEL,
 } from '@/lib/text-document/text-document-panels';
@@ -24,6 +26,8 @@ import {
   type PictureTurn,
 } from './TextDocumentImageOptionsPanel';
 import { TextDocumentTablePropertiesPanel } from './TextDocumentTablePropertiesPanel';
+import { TextDocumentContentsPanel } from './TextDocumentContentsPanel';
+import type { ContentsChange } from '@/lib/text-document/text-document-contents-build';
 import type { LineNumbersChoice } from '@/lib/text-document/text-document-line-numbers';
 import { TextDocumentLineNumbersPanel } from './TextDocumentLineNumbersPanel';
 import { TextDocumentWatermarkPanel } from './TextDocumentWatermarkPanel';
@@ -35,6 +39,7 @@ export function TextDocumentRightPanel({
   watermark,
   tableProperties,
   imageOptions,
+  contents,
 }: {
   panels: OfficePanelsState;
   lineNumbers: {
@@ -54,12 +59,17 @@ export function TextDocumentRightPanel({
     turn: (turn: PictureTurn) => void;
     reset: () => void;
   };
+  contents: {
+    selected: { look: ContentsLook; levels: number } | null;
+    change: (change: ContentsChange) => void;
+  };
 }) {
   const spec = [
     LINE_NUMBERS_PANEL,
     WATERMARK_PANEL,
     TABLE_PROPERTIES_PANEL,
     IMAGE_OPTIONS_PANEL,
+    TABLE_OF_CONTENTS_PANEL,
   ].find((p) => p.id === panels.open.right);
   if (!spec) return null;
   return (
@@ -71,7 +81,9 @@ export function TextDocumentRightPanel({
       onClose={() => panels.close('right')}
       focusNonce={panels.focusNonce}
     >
-      {spec === IMAGE_OPTIONS_PANEL ? (
+      {spec === TABLE_OF_CONTENTS_PANEL ? (
+        <TextDocumentContentsPanel selected={contents.selected} onChange={contents.change} />
+      ) : spec === IMAGE_OPTIONS_PANEL ? (
         <TextDocumentImageOptionsPanel
           picture={imageOptions.picture}
           unit={imageOptions.unit}
