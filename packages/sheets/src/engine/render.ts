@@ -12,6 +12,7 @@ import { sheetFromJson, type SheetJson } from '../sheet-json';
 import { checkboxValue, optionFor, validationRuleAt } from '../rules/validation';
 import { formatRuleStyle } from '../rules/format-rules';
 import { bandingFillAt } from '../rules/bandings';
+import { resolveColour, themedFormat } from '../themes/spreadsheet-theme';
 import { isArray, isError, scalarOf } from '../formula/values';
 import { sparklineShapes, type SparkShape } from '../sparkline/sparkline-shapes';
 
@@ -140,7 +141,8 @@ export function renderWindow(
       const met: CellFormat = style ? { ...own, ...style } : own;
       // Alternating colours shade under a cell's own fill and a met rule's (formatting.md "Alternating colours").
       const band = !met.bg && layout.bands?.length ? bandingFillAt(layout, r, c) : null;
-      const f: CellFormat = band ? { ...met, bg: band } : met;
+      // Theme colours drawn in the workbook's theme (formatting.md "Themes").
+      const f: CellFormat = themedFormat(band ? { ...met, bg: band } : met, wb.theme)!;
       // A checkbox draws as a box, a chip on its option's colour (data-validation.md "Drawing").
       const rule = layout.rules?.length ? validationRuleAt(layout, r, c) : null;
       const scalar = isArray(value) ? scalarOf(value) : value;
@@ -196,7 +198,8 @@ export function renderWindow(
       }
       if (f.st) out.strike = true;
       // A met rule's colour over the code's section's, over the cell's own (formatting.md "Number formats", D192).
-      const colour = style?.fc ?? shown.colour ?? own.fc;
+      const colour =
+        resolveColour(style?.fc, wb.theme) ?? shown.colour ?? resolveColour(own.fc, wb.theme);
       if (colour) out.color = colour;
       if (f.bg) out.fill = f.bg;
       if (chip) out.chip = chip;

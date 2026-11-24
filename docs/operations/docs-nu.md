@@ -36,7 +36,8 @@ private document in Webber's docs.nu account, never shared. Until it is set up, 
 What the hosted setup holds:
 
 - **The document**: "Bug Tracker", owned by Webber's account, unshared. A board tab with one board whose columns are
-  Reported, Triaged, In Progress, Fixed and Won't Fix (the last two done), in that order: reports land in the first.
+  Reported, Security, Triaged, In Progress, Fixed and Won't Fix (the last two done), in that order: reports land in
+  the first, security worker issues in Security.
 - **The card type** "Bug Report" (the board takes it), with the custom fields Severity (Choice: Low, Medium, High,
   Critical), Context (Long Text), Screenshot (Link), Reporter (Text) and Release (Text). A field left out is written
   into the card's Details instead.
@@ -78,7 +79,7 @@ Setting it up, once (the CLI steps were run against a local stack and file as de
    livedoc tab add "Bug Tracker" "Bug Reports" --template kanban
    livedoc type apply "Bug Tracker" -f types.json
    livedoc board set "Bug Tracker" Kanban --title "Bug Reports" \
-     --columns "Reported,Triaged,In Progress,Fixed,Won't Fix" --types "Bug Report" --done "Fixed,Won't Fix"
+     --columns "Reported,Security,Triaged,In Progress,Fixed,Won't Fix" --types "Bug Report" --done "Fixed,Won't Fix"
    livedoc tab ls "Bug Tracker" --json
    ```
 
@@ -98,6 +99,8 @@ The api, mcp, router and live keep their own log lines in Workers Logs ([Worker 
 
 - Read them in the Cloudflare dashboard: Workers & Pages, the worker, Observability.
 - Search by fingerprint: `api error route=` for a `500`, `[d1] unavailable` for a `503 storage_unavailable`.
+- A router `5xx` names the app that answered it: search `[router] upstream fault` in the router's logs.
+- The router's Issues tab holds each such `5xx` (`HttpServerError`) with its method and path.
 - `pnpm exec wrangler tail docs-nu-api` (from `apps/api`) is the live stream; it keeps nothing.
 
 ## Worker issues
@@ -145,6 +148,37 @@ Setting it up, once, after the deploy that ships the receiver:
 
 Cards and emails stop when the automations are disabled or the secret is deleted
 (`pnpm exec wrangler secret delete WORKER_ISSUES_WEBHOOK_SECRET`).
+
+## Vulnerability scans
+
+Bots probing for `.env`, `.git`, WordPress and the like are blocked at the edge, so they never invoke a worker
+([Vulnerability scans](../specs/016-platform/vulnerability-scans.md)). Webber added the rule by hand on 24 November
+2026, 18:21 UTC: the operator's API token cannot read or write custom rules, and is not widened for it.
+
+In the dashboard, zone `docs.nu`, Security, WAF, **Custom rules**, **Create rule**:
+
+- **Name**: `Block vulnerability scanners`
+- **Action**: Block
+- **Expression** (Edit expression):
+
+```text
+(http.request.uri.path contains "/.env") or (http.request.uri.path contains "/.git") or (http.request.uri.path contains "/wp-") or (http.request.uri.path contains "phpinfo") or (http.request.uri.path contains "xmlrpc.php") or (http.request.uri.path contains "/actuator") or (http.request.uri.path contains "/_profiler") or (http.request.uri.path contains "/debug/") or (http.request.uri.path contains ".php")
+```
+
+Check it after any change:
+
+- Probes answer Cloudflare's `403`: `/.env`, `/api/.env`, `/.git/HEAD`, `/wp-login.php`, `/phpinfo.php`,
+  `/actuator/env`, `/_profiler/phpinfo`, `/debug/vars`, `/xmlrpc.php`.
+- The site answers as before: `/`, `/explorer/home`, `/help/`, `/telemetry/`, `/document/<id>`, `/icon.svg`,
+  `GET /api/telemetry/summary` and `POST /api/guest-id`.
+- The production `security` issues in Workers Issues stop counting for the blocked paths.
+
+Security occurrences per day, from each production `security` issue's count in the Issues API:
+
+| Window                             | Occurrences a day |
+| ---------------------------------- | ----------------- |
+| 22 to 24 Nov 2026, before the rule | 4,950             |
+| The day after the rule             | Measured 25 Nov   |
 
 ## Deploy
 

@@ -1268,6 +1268,15 @@ export const SPREADSHEETS_CONVERTED = chart(
   { types: ['Xlsx', 'Ods'] },
 );
 
+// docs/specs/029-sheets/formatting.md "Themes": an Editor picked or customised a spreadsheet's theme.
+export const SPREADSHEETS_THEMED = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Themes Changed',
+  'An editor picked or customised a spreadsheet’s theme.',
+  { types: ['Theme'] },
+);
+
 // docs/specs/029-sheets/imports.md "Telemetry": an Editor's Allow Access, once per spreadsheet; and formulas.md
 // "Connecting two spreadsheets": an Editor connecting the spreadsheets its IMPORTRANGEs read.
 export const SPREADSHEETS_IMPORTS_ALLOWED = chart(
@@ -1282,12 +1291,13 @@ export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, imports allowed.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
     SPREADSHEETS_EXPORTED,
     SPREADSHEETS_CONVERTED,
+    SPREADSHEETS_THEMED,
     SPREADSHEETS_IMPORTS_ALLOWED,
   ],
 };

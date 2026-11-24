@@ -14,7 +14,7 @@ import {
 import { refileHeldWorkerIssues } from './held-refile';
 import type { WorkerIssuesLedger } from './ledger';
 import { handleWorkerIssues } from './route';
-import { sampleDelivery } from './test-delivery';
+import { realTimeDelivery, sampleDelivery } from './test-delivery';
 import { ledgerBinding, testLedger } from './test-ledger';
 
 // docs/specs/016-platform/worker-issues.md: "The receiver" (every row of its outcome table), "Once only", "The issue
@@ -157,6 +157,32 @@ describe('POST /api/worker-issues, the receiver', () => {
       'New error in docs-nu-api: TypeError: boom',
       'Error back in docs-nu-api: TypeError: boom',
     ]);
+  });
+
+  // "What a delivery carries": the first real delivery, card 49 on docs.nu's Bug Tracker.
+  it('files a real delivery under its worker, emails it once, and takes its retry as a repeat', async () => {
+    expect((await post(realTimeDelivery())).body).toEqual({ outcome: 'filed', number: 1 });
+    expect((await post({ ...realTimeDelivery(), ts: 1_795_543_499 })).body).toEqual({
+      outcome: 'repeat',
+    });
+    const [card] = await cards();
+    expect(card?.fields).toMatchObject({
+      title: 'docs-nu-router: HttpServerError · HTTP 500',
+      status: 'reported',
+      labels: ['Worker Issue', 'docs-nu-router'],
+    });
+    expect(card?.fields['description']).toContain(
+      'Worker: docs-nu-router\nType: Exception\nTrigger: First sight',
+    );
+    expect(sent.map((m) => m.subject)).toEqual([
+      'New error in docs-nu-router: HttpServerError · HTTP 500',
+    ]);
+  });
+
+  it('labels a security issue Security', async () => {
+    await post(realTimeDelivery({ type: 'ISSUE_TYPE_SECURITY' }));
+    const [card] = await cards();
+    expect(card?.fields['labels']).toEqual(['Worker Issue', 'docs-nu-router', 'Security']);
   });
 
   it('files nothing and sends nothing for a repeated delivery', async () => {

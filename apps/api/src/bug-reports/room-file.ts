@@ -1,7 +1,13 @@
 // A bug report filed in the Bug Tracker's room (docs/specs/016-platform/bug-reports.md "Filing" step 5, "The Bug
 // Tracker board"): the first live board on the configured tab that takes Bug Report cards, a card in its first
-// column through the item store (the write a form response makes), relayed to everyone with the board open.
-import { bugReportCard, findBugReportType, type BugReportFiling } from '@livedoc/api-schema';
+// column (a security issue in its Security column, docs/specs/016-platform/worker-issues.md "The issue card")
+// through the item store (the write a form response makes), relayed to everyone with the board open.
+import {
+  bugReportCard,
+  bugReportColumn,
+  findBugReportType,
+  type BugReportFiling,
+} from '@livedoc/api-schema';
 import { boardTakesType, readItemCreate, typesOf, type ItemPerson } from '@livedoc/items';
 import { getDocument } from '../db';
 import type { BugReportStoreReason } from '../db/bug-reports';
@@ -42,7 +48,7 @@ export async function fileBugReportInRoom(
   const live = (await boardsOnTab(env, documentId, tabId)).filter((b) => !b.archive);
   if (live.length === 0) return { filed: false, reason: 'board_missing' };
   const board = live.find((b) => b.columns.length > 0 && boardTakesType(b, types, type.id));
-  const status = board?.columns[0]?.status;
+  const status = board && bugReportColumn(filing, board.columns)?.status;
   if (!status) return { filed: false, reason: 'type_not_on_board' };
 
   const card = bugReportCard(filing, type);

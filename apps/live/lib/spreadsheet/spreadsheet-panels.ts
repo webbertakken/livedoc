@@ -1,6 +1,6 @@
 // The spreadsheet's side panels (docs/specs/004-interface-design/office-shell.md "Side panels"), on the right and an
 // Editor's: Conditional Format Rules (docs/specs/029-sheets/conditional-formatting.md "In a spreadsheet", D213) and
-// Alternating Colours (formatting.md "Alternating colours").
+// Alternating Colours (formatting.md "Alternating colours") and Themes ("Themes").
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficePanelSpec } from '@/lib/office/office-panels';
 
@@ -20,9 +20,18 @@ export const ALTERNATING_COLOURS_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+export const THEMES_PANEL: OfficePanelSpec = {
+  id: 'themes',
+  title: 'Themes',
+  side: 'right',
+  item: 'theme',
+  editorsOnly: true,
+};
+
 export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   CONDITIONAL_FORMAT_RULES_PANEL,
   ALTERNATING_COLOURS_PANEL,
+  THEMES_PANEL,
 ];
 
 /**

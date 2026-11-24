@@ -99,6 +99,17 @@ The router does **not** count page views. It can't see client-side navigations i
 
 Service bindings target deployed Workers. The downstream apps deploy as their own units; the router stitches them together.
 
+### When a service answers 5xx
+
+- The router hands a service's `5xx` answer to the caller unchanged: its status, headers and body.
+- It never rewrites the status; a proxy that turns a `500` into a `502` hides which side failed.
+- It writes one warning naming the service that answered: `[router] upstream fault service=<name> status=<n>`.
+- The line carries the method too; Workers Logs stores the path beside it ([Worker logs](worker-logs.md)).
+- The warning is a `console.warn`, never a `console.error`, because the `5xx` answer itself already opens a
+  [Worker issue](worker-issues.md); an error line would open a second issue for the same fault.
+- The static frontends (marketing, live, help, telemetry) run no code of ours and keep no logs, so this line is the
+  only record of which one failed.
+
 <!-- legacy-names -->
 
 ## Legacy editor route

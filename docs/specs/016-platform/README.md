@@ -14,3 +14,4 @@ Follow the references below only as needed; never upfront.
 - ./bug-reports.md - when working on Report a Bug: the one form and its entries, the context and opt-in screenshot, filing a report as a card on the private Bug Tracker board, the D1 fallback and refile, screenshots served to the owner only
 - ./worker-logs.md - when adding or reading a worker log line, or changing what the workers keep: Workers Logs on the api, mcp, router and live, their own lines only, no request URLs, 3 to 7 days
 - ./worker-issues.md - when working on how a new kind of worker error reaches the operator: Cloudflare Workers Issues, the webhook receiver, the issue card on the Bug Tracker, the email, the ledger that outlives a D1 outage
+- ./vulnerability-scans.md - when a probe for files LiveDoc never had (`.env`, `.git`, WordPress) shows up, or when naming a route or file: the WAF custom rule that blocks scans at the edge, what it must never block, its coverage

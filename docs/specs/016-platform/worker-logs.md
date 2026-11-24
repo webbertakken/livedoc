@@ -6,7 +6,8 @@ still be read: which route, which error, which stack.
 ## Why
 
 - Every decision point and failure in the workers writes a log line with a recognisable fingerprint
-  (`[d1] unavailable route=...`, `api error route=...`, `home: read ...`).
+  (`[d1] unavailable route=...`, `api error route=...`, `home: read ...`,
+  `[router] upstream fault service=...`).
 - With no log store those lines exist only while someone runs `wrangler tail`. A crash nobody was watching leaves a
   count on the [telemetry dashboard](../017-telemetry/telemetry.md) and nothing to act on: two `500`s on
   `GET /api/home` in November 2026 were counted as `Error·Api·Internal.Get.Home`, and their cause was never found.
@@ -24,6 +25,8 @@ still be read: which route, which error, which stack.
   they carry time zones, tickets and codes. Cloudflare replaces path segments it reads as ids with `REDACTED`
   (measured: a participant id); that is its heuristic, not a guarantee, so a path must never be the only place a
   secret is kept out of.
+- **Not a failing request's details: [Worker issues](worker-issues.md#what-cloudflare-keeps) keeps those**, apart
+  from these lines, for 7 days, with some of its headers.
 - **Every invocation, unsampled.** A rare failure is the one worth reading; sampling would drop it.
 
 ## What a log line may carry

@@ -276,6 +276,18 @@ A route whose body is required reads it with `readBody`: `400 invalid json` when
 - An absent or empty body, and a JSON value that is not an object (`null`, a string, an array), read as no fields: `{}`.
 - A body that does not read to its end (the stream broke off: a client gone mid-upload) is `400 body_unreadable`, logged as `[request] body unreadable`; a body that does not parse (cut short of valid JSON) is `400 invalid json`. Neither is ever `{}`: on these routes `{}` is a choice (no share password, an edit link to every tab), so a broken request must not make it.
 
+No answer leaves a request body unread, whether the route read it or not (`discardUnreadBody`, `unread-body.ts`):
+
+- Every request reaches the api through the router, which streams the body on into the api as it arrives.
+- The router's runtime closes that stream the moment the router's answer is sent.
+- A body the api never read is then still being streamed, and the router throws `Can't read from request stream
+after response has been sent.`: an exception in the router's Issues for a request that succeeded.
+- So before it answers, the api reads to its end a body whose declared length is at most 64 KiB (default), which
+  ends the stream before the answer; a longer one, or one of no declared length, it cancels.
+- A body a route read, or handed on whole (to a Durable Object, say), is left alone.
+- A body that cannot be discarded changes nothing about the answer, logged as `[request] body.discard_failed`.
+- The editor's `POST /api/guest-id` sends `{}` and the route reads nothing: that is how this was found.
+
 A path segment the api decodes (a template kind, an element kind, a placement default key) that carries a malformed percent-escape (`%`, `%E0%A4%A`) names nothing: it answers as an unknown name does, `404`, never a `500` from the decoder (`decodePathSegment`, `@livedoc/api-schema`).
 
 ### Ids

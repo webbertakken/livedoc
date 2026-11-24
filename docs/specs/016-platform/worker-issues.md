@@ -36,6 +36,20 @@ When the error comes back after a quiet spell, the operator hears again.
 - A `5xx` the api answers reaches the caller through the router, so the router's Issues can hold it as well.
 - Its card names the same route as the api's, and is triaged with it.
 
+## What Cloudflare keeps
+
+Issues keeps each occurrence's details for 7 days, in the account the workers run in; the issue stays listed after.
+Read from docs.nu's occurrences (24 November 2026), an occurrence holds:
+
+- The error, its stack when there is one, the worker and its version, and the invocation's trail of spans and logs.
+- The request's URL, method and response status. No URL seen carried a query string.
+- Some of its headers: `user-agent`, `cf-ipcountry` (the country), `cf-ray`, `content-type`, `content-length`
+  and `origin`.
+- No cookie, `authorization` header or IP address appeared in any occurrence.
+
+[Worker logs](worker-logs.md) keeps no headers; Issues does keep these, for failing requests only. The receiver
+copies none of them into a card or an email (see [Reading the payload](#reading-the-payload)).
+
 ## The receiver
 
 Cloudflare's generic webhook sends the standard Notifications payload, with the destination's secret in the
@@ -77,6 +91,7 @@ A refusal answers its code and nothing more; no error text, header or payload is
 - Cloudflare documents the envelope: `name`, `text`, `data`, `ts`, `account_id`, `alert_type`, `alert_event` and more.
 - It does not document what `data` holds for an issue, and Issues is in beta.
 - So the receiver reads what it can name, carries the rest, and never refuses a delivery because its shape moved.
+- What Cloudflare sends is in [What a delivery carries](#what-a-delivery-carries); the rest is read where it may appear.
 - Names are matched case and separator apart (`firstObserved` is `first_observed`).
 - They are looked for where the Issues API models put them: the issue, its latest occurrence and the automation run.
 - It keeps the worker, the issue's id and title, the error's name and message, the stack, and the route.
@@ -85,6 +100,27 @@ A refusal answers its code and nothing more; no error text, header or payload is
 - It never keeps a request header, a query string, a cookie, an IP address or an email address.
 - A field named like one of those is left out of the other fields, and every kept text has its addresses replaced.
 - Every kept text is cut to a bound (default): 64 characters for a worker, 6,000 for a stack, 2,000 for the rest.
+
+### What a delivery carries
+
+The first real delivery (24 November 2026, a router `500`) showed what Cloudflare sends today:
+
+- `alert_type` `workers_observability_real_time_issue`, `alert_event` `ALERT_STATE_EVENT_START`, `policy_name`.
+- `text`: Cloudflare's summary, naming the worker, the issue type, the occurrences and first and last observed.
+- `data.issue`: `id`, `title`, `fingerprint`, `type`, `status`, `services` and first and last observed.
+- `data.state_correlation_id`: the automation run's id, the same id as the issue's activity in the Issues API.
+- No stack, route, status, version or trigger.
+
+So the receiver reads, besides the names above:
+
+- **The worker** from `issue.services`, a list: its first entry, a name or an object naming one.
+- **The run** from `state_correlation_id`, so its delivery key is `run:<id>` and a retry is a repeat.
+- **The count** from `count`, `issueCount` or `occurrences` when that is a number.
+- **The issue type** from `issue.type`, `ISSUE_TYPE_` and case apart: `exception`, `log`, `security`, or another.
+- **The trigger**, when none is named, from the count: an issue seen once is first sight; else it stays unknown.
+
+The receiver asks the Issues API nothing: it holds no Cloudflare token, and a self-hoster needs none.
+The card's issue link opens the worker's Issues, where the occurrences, stack and request are.
 
 ## Once only
 
@@ -107,18 +143,21 @@ An issue card is a **Bug Report card with a marked origin**, not a card type of 
 - No second type has to be made and added to the board before the first issue can land.
 - It rides the same filing, storing and refiling, so it cannot be lost by a path bug reports do not have.
 - It is told apart at a glance: its title starts with the worker, and its labels are **Worker Issue** and the worker.
+- A **security issue** (Cloudflare's type `security`: a vulnerability scan) also carries the label **Security**.
+- It is filed in the board's column named **Security**, case apart; a board without one takes it in its first column.
 - Its Reporter reads **Workers Issues**, never an account, a guest or Anonymous.
 - The labels show on the card face where the Bug Report type offers Labels; the title always does.
 
-| Card part | From the delivery                                                                               |
-| --------- | ----------------------------------------------------------------------------------------------- |
-| Title     | `<worker>: <issue title>`, else the error, else Cloudflare's summary                            |
-| Labels    | `Worker Issue` and the worker                                                                   |
-| Context   | Worker, Trigger, Error, Route, Status, Count, First seen, Last seen, Version, Issue, Issue link |
-| Details   | The stack, Cloudflare's summary and the other fields                                            |
-| Reporter  | `Workers Issues`                                                                                |
-| Release   | The worker version, when known                                                                  |
-| Severity  | Unset; triage sets it                                                                           |
+| Card part | From the delivery                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------------- |
+| Title     | `<worker>: <issue title>`, else the error, else Cloudflare's summary                                  |
+| Labels    | `Worker Issue`, the worker, and `Security` for a security issue                                       |
+| Column    | `Security` for a security issue when the board has it; else the first column                          |
+| Context   | Worker, Type, Trigger, Error, Route, Status, Count, First seen, Last seen, Version, Issue, Issue link |
+| Details   | The stack, Cloudflare's summary and the other fields                                                  |
+| Reporter  | `Workers Issues`                                                                                      |
+| Release   | The worker version, when known                                                                        |
+| Severity  | Unset; triage sets it                                                                                 |
 
 A field the Bug Report type does not have goes into Details under its label, as a bug report's does.
 

@@ -914,6 +914,7 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Form|Reported|Other': 'Someone reported a form for another reason.',
   'Spreadsheet|Created|Blank': 'Someone made a blank spreadsheet.',
   'Spreadsheet|Created|Import': 'Someone made a spreadsheet by opening a file in LiveDoc.',
+  'Spreadsheet|Changed|Theme': 'An editor picked or customised a spreadsheet’s theme.',
   'Spreadsheet|Converted|Xlsx': 'An editor converted a spreadsheet to an Excel file.',
   'Spreadsheet|Converted|Ods':
     'An editor converted a spreadsheet to an ODF file (the open standard).',
@@ -2928,6 +2929,7 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Spreadsheet|Created':
     'Someone made a spreadsheet (the value says how: blank, a template or a file).',
   'Spreadsheet|Exported': 'Someone downloaded a spreadsheet (the value says which file format).',
+  'Spreadsheet|Changed': 'An editor changed a spreadsheet’s look (the value says what).',
   'Spreadsheet|Converted':
     'An editor converted a spreadsheet to the other file format (the value says which format it went to).',
   'Spreadsheet|Imported':
