@@ -284,12 +284,69 @@ translate (w/2 h/2)` on the frame, θ the counter-clockwise radians; OOXML `rot`
 
 ## Drawings
 
-- **Insert > Drawing > New** opens a LiveDoc canvas in a dialog (a Sketch canvas with the Structured palette, the
-  Drawing reused, never a second drawing tool); **Save and close** places it as a picture with the drawing's own data
-  kept, so a double-click opens it again.
-- **Insert > Drawing > From LiveDoc** (in Drive's place) lists the person's documents and places one tab as a linked
-  drawing ([Linked objects](#linked-objects)).
-- Shift+Escape (⌘Escape on a Mac) closes the drawing dialog, as Google's.
+A drawing is a LiveDoc canvas inside the text document: never a second drawing tool. It is a **drawing tab**, a
+Sketch tab of the same LiveDoc document that belongs to one text document tab, shown in the writing as a picture and
+worked on in the canvas editor. The rules below are LiveDoc's own where Google's dialog has no counterpart `(default)`.
+
+### A drawing tab
+
+- A general tab worked on in Sketch with the Structured palette, named **Drawing N** (N the next free number in its
+  text document), its `drawingOf` the text document tab's id. It lives in the tab's body, so it goes wherever its
+  text document tab goes.
+- **Not listed**: the tab strip, the tab list and its stack, tab folders, Choose a Tab, the split view's picker, tab
+  links and the Explorer's tab count never show a drawing tab. A document whose one listed tab is a text document
+  still hides its tab strip with drawings in it.
+- **Opened only from its picture**: there is no other way to it. A link or a stale address naming it opens its text
+  document tab instead.
+
+### Inserting and editing
+
+- **Insert > Drawing > New** adds an empty drawing tab and opens it; **Save and close** (or Shift+Escape, ⌘Escape on
+  a Mac) goes back to the text document, where the drawing is placed at the caret as an inline picture at its drawn
+  size, at most the text's width, as one undo step. Closing a drawing with nothing on it places nothing and removes
+  the tab.
+- **Opening it again**: a double-click on the picture, or **Edit** on its bar, opens its drawing tab; Save and close
+  goes back to the text document at the picture, selected. Every change in the drawing tab is live (everyone's, as on
+  any canvas); Save and close only leaves.
+- **Its bar**: while a drawing tab is open, a bar over the canvas names its text document (**Drawing in <name>**) with
+  **Save and close**; the canvas editor's tab strip shows nothing for it.
+- **One drawing, one picture**: copying a drawing's picture (copy and paste, a duplicated document tab) shares its
+  drawing tab until one of them is opened; opening a picture whose drawing tab another picture also shows first gives
+  this picture its own copy of the tab, so an edit never changes a drawing elsewhere.
+- **Insert > Drawing > From LiveDoc** lists the person's documents and places one of their tabs as a linked drawing
+  ([Linked objects](#linked-objects)); it makes no drawing tab.
+
+### Drawn
+
+- In the writing, a drawing is drawn live from its tab as a [tab window](../009-elements/tab-window.md#the-element)
+  draws a tab (its content fitted, following every change), without the window's frame or its paper: the drawing's
+  elements on a transparent ground, inside the picture's box. Its states (loading, failed with Retry, not available)
+  are the tab window's, in the picture's box.
+- Its picture is otherwise a picture: size, crop, rotation, wrapping, position and alternative text as any; Recolour,
+  Adjustments and Replace image are dimmed for a drawing.
+
+### In the file
+
+- A drawing leaves as its picture: a PNG of the drawing at twice its size, refreshed on Save and close and before a
+  download, so LibreOffice, Word and Google show it. The picture names its drawing tab: `livedoc:drawing="<tab id>"` on
+  the ODF `draw:frame`, the same attribute on the OOXML `pic:cNvPr`, `livedoc` declared ignorable.
+- A file read into a LiveDoc document keeps the name only while that tab is a drawing tab of the text document it is
+  read into (a reload, or a copy of its own); otherwise the picture is a plain picture.
+
+### The document around it
+
+- **Search**: a drawing's words are the text document's; a hit opens the text document at the picture.
+- **Exports**: a document export (PDF, PNG, SVG) draws a drawing tab only inside its text document, never as a tab of
+  its own; an agent's views list it under its text document.
+- **Copying**: Make a Copy, Duplicate and a Drive import copy drawing tabs with their text document tabs, fresh ids,
+  each picture re-pointed at the copy's tab (as tab windows are). A document tab duplicated inside a text document
+  shares its drawings until opened (above).
+- **Sharing**: a drawing tab is shared wherever its text document tab is: sharing that tab into another document links
+  its drawing tabs too. Who may open, edit or only see a drawing is who may on its text document: an Editor edits it,
+  anyone else opens it to look, its bar offering **Close**.
+- **Deleting**: deleting the text document tab deletes its drawing tabs. A drawing tab no picture in its text document
+  names (the picture deleted) is kept while an undo could bring the picture back, and removed when the text document
+  is next opened.
 
 ## Charts
 

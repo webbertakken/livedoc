@@ -72,7 +72,8 @@ A tab the person may not see is never fetched or drawn: the window says it is no
 
 **Choose a Tab** (the empty window's button, and the menu's **Tab Window** section, offered only where the session
 may edit and the window is not locked) opens a list of the tabs a window
-may show, in the tab list's order, each its glyph and name over its kind ("Board tab", "Diagram tab, in Sketch
+may show (never a text document's drawing tab, which is never listed), in the tab list's order,
+each its glyph and name over its kind ("Board tab", "Diagram tab, in Sketch
 mode"), the current one marked. A press shows that tab (one edit,
 one undo). With no tab to offer it says "No other tab to show yet." The list follows the tab list live (a tab added,
 renamed or deleted).
