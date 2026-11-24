@@ -122,7 +122,18 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 - Horizontal: Left, Centre, Right (Ctrl+Shift+L, E, R); vertical: Top, Middle, Bottom.
 - Wrapping: Overflow, Wrap, Clip.
-- Rotation: None, Tilt Up, Tilt Down, Stack Vertically, Rotate Up, Rotate Down, and **Custom Angle** (−90° to 90°).
+- Rotation: None, Tilt Up (45°), Tilt Down (−45°), Stack Vertically, Rotate Up (90°), Rotate Down (−90°), and
+  **Custom Angle** (−90° to 90°), in Format › Rotation and the toolbar's **Text Rotation**, ticked by the active
+  cell's, the toolbar's glyph the one in force. An Editor's, as every format is.
+  - An angle turns the text counterclockwise about its centre, a negative one clockwise; **Stack Vertically** sets each
+    character upright under the one before, top to bottom, one line each.
+  - Turned text is placed in its cell by its alignment as the box it turns to would be; it never wraps, each line break
+    typed into it starting a line, and it runs over or is clipped as upright text is, by the width it turns to; borders stay
+    square (default, D210).
+  - An automatic row grows to the height turned text takes ([Sheet](sheet.md#row-height)).
+  - **Custom Angle** opens the shell's dialog, titled **Custom Angle**: a whole number of degrees from −90 to 90,
+    starting at the active cell's (0 at none or stacked); **Apply** sets it, 0 clears it, and anything else dims Apply
+    and says why, announced politely (default, D211).
 
 ## Merges
 
@@ -210,6 +221,10 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   merge, as Google's does, its arrow listing the four (default).
 - **D209** The Borders panel's colour and style: kept for the open spreadsheet until the page closes, black and thin
   to start; the shortcuts draw in them (default).
+- **D210** Turned text: placed by its alignment as its turned box, never wrapped, running over or clipped by its turned
+  width; borders stay square, where Google slants a tilted cell's (default).
+- **D211** Custom Angle: the shell's dialog with a whole number of degrees, where Google's menu holds the field; 0
+  clears (default).
 
 ## Telemetry
 

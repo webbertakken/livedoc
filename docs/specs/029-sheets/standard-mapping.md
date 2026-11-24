@@ -163,8 +163,8 @@ The table is the contract the readers and writers are tested against, one test p
 ## Cell styles in the file
 
 - A cell's style beyond its number format (bold, italic, underline, strikethrough, text and fill colour, font family
-  and size, horizontal and vertical alignment, wrapping, the four borders) travels with its number format in the one
-  cell style the cell names, both ways ([Formatting](formatting.md#styles-in-the-model)).
+  and size, horizontal and vertical alignment, wrapping, rotation, the four borders) travels with its number format in
+  the one cell style the cell names, both ways ([Formatting](formatting.md#styles-in-the-model)).
 - Each distinct style is written once, in order of first use: XLSX's `cellXfs` entry with its `fonts`, `fills` and
   `borders` entries, ODF's automatic cell style (`ce1`, ...) with its text, paragraph and cell properties.
 - A style is read against LiveDoc's defaults, Arial 10 pt in black with no fill and no border: what a file's style
@@ -193,6 +193,8 @@ The table is the contract the readers and writers are tested against, one test p
 | Horizontal        | `alignment@horizontal` `left`, `center`, `right`               | `fo:text-align` `start`, `center`, `end`, with `style:text-align-source`   |
 | Vertical          | `alignment@vertical` `top`, `center`, `bottom`                 | `style:vertical-align` `top`, `middle`, `bottom`                           |
 | Wrap              | `alignment@wrapText="1"`                                       | `fo:wrap-option="wrap"`                                                    |
+| Rotation          | `alignment@textRotation`: 1 to 90 up, 91 to 180 down (91 −1°)  | `style:rotation-angle`, counterclockwise (315 −45°)                        |
+| Stacked           | `alignment@textRotation="255"`                                 | `style:direction="ttb"`                                                    |
 | Borders           | `border/left`, `right`, `top`, `bottom`: `@style`, `color@rgb` | `fo:border-left`, ...: width, style, colour (`0.74pt solid #000000`)       |
 
 - **Borders**: thin, medium and thick are widths 1, 2 and 3 solid; XLSX's `dashed` and `mediumDashed` (and its
@@ -205,9 +207,9 @@ The table is the contract the readers and writers are tested against, one test p
   file's theme with their `tint`; a colour none of those name (`auto`, system colours) is none. ODF's are `#rrggbb`;
   `transparent` is none.
 - A font size is rounded to a whole point within Font Size's limits.
-- What a style says that the model does not hold (rotation, an indent, shrink to fit, a justified, filled or
-  distributed alignment, a pattern or gradient fill, a diagonal border, protection) is left out, and the read names
-  each sheet whose cells, rows or columns hold it (`styles_unread`, D104).
+- What a style says that the model does not hold (an ODF angle between 90° and 270°, D212, an indent, shrink to fit,
+  a justified, filled or distributed alignment, a pattern or gradient fill, a diagonal border, protection) is left
+  out, and the read names each sheet whose cells, rows or columns hold it (`styles_unread`, D104).
 
 ## Rows and columns in the file
 
@@ -421,3 +423,5 @@ The code cites each by its id.
   by their nearest; ODF 0.74, 1.76 and 2.49 pt written (default).
 - **D207** ODF's default cell style: written as the default style and as "Default", every cell style its child; read
   for its text properties alone, as LibreOffice draws its cells by "Default" (default).
+- **D212** An ODF angle between 90° and 270°: Left out and named (`styles_unread`), as Google's −90° to 90° holds
+  none (default).
