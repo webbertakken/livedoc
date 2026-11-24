@@ -104,7 +104,7 @@ export default async function AlternativePage({ params }: { params: Promise<{ sl
           </div>
         </PageHero>
 
-        <div className="mx-auto mt-14 grid max-w-6xl gap-10 px-6 lg:grid-cols-[14rem_1fr] lg:gap-14">
+        <div className="mx-auto mt-14 grid max-w-6xl gap-12 px-6 lg:grid-cols-[14rem_1fr] lg:gap-16">
           <nav aria-label="On this page" className="hidden lg:block">
             <div className="sticky top-24">
               <p className="px-3 text-supporting text-slate-900 dark:text-slate-100">

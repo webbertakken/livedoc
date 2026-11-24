@@ -7,7 +7,8 @@
 export const BAND_SECTION =
   'border-t border-slate-200/70 bg-slate-100 dark:border-slate-800/70 dark:bg-slate-950';
 
-export const BAND_TITLE = 'mt-3 text-3xl text-slate-900 sm:text-4xl dark:text-slate-100';
+export const BAND_TITLE =
+  'mt-3 text-3xl tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100';
 
 export const BAND_LEAD = 'mt-4 text-name text-slate-600 dark:text-slate-300';
 

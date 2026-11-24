@@ -86,7 +86,9 @@ export default function StatusPage() {
       <BreadcrumbJsonLd name="Status" path="/about/status" />
       <Header surface="Status" />
       <main className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
-        <h1 className="text-3xl text-slate-900 sm:text-4xl dark:text-slate-100">Service status</h1>
+        <h1 className="text-3xl tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
+          Service status
+        </h1>
         <p className="mt-3 text-name text-slate-600 dark:text-slate-300">
           The pieces LiveDoc runs on, and how they&rsquo;re doing.
         </p>

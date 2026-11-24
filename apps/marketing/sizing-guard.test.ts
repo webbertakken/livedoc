@@ -4,7 +4,8 @@ import { checkSizing, formatSizingViolations } from '@livedoc/tailwind-config/si
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 
-// The marketing site's chrome is on the sizing scale (docs/specs/004-interface-design/sizing.md "The other apps").
+// The marketing site's chrome is on the sizing scale; its pages take display type and layout steps (D244,
+// docs/specs/004-interface-design/sizing.md "The other apps").
 const SIZED_PATHS = ['app', 'components', 'lib'];
 
 const SIZING_EXCEPTIONS = [
@@ -49,16 +50,14 @@ const SIZING_EXCEPTIONS = [
   'app/opengraph-image.tsx',
   'app/twitter-image.tsx',
   'app/apple-icon.tsx',
-  // Display type (D243): each page's hero headline.
-  'components/Hero.tsx',
-  'components/PageHero.tsx',
-  'components/FeatureCategoryHero.tsx',
 ];
 
 describe('marketing sizing', () => {
   it('draws every part from the sizing scale', () => {
     expect(
-      formatSizingViolations(checkSizing({ root, paths: SIZED_PATHS, except: SIZING_EXCEPTIONS })),
+      formatSizingViolations(
+        checkSizing({ root, paths: SIZED_PATHS, except: SIZING_EXCEPTIONS, marketingPages: true }),
+      ),
     ).toBe('');
   });
 });

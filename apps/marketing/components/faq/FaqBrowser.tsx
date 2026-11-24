@@ -54,7 +54,7 @@ export function FaqBrowser({
         </div>
       </PageHero>
 
-      <div className="mx-auto mt-14 grid max-w-6xl gap-10 px-6 lg:grid-cols-[14rem_1fr] lg:gap-14">
+      <div className="mx-auto mt-14 grid max-w-6xl gap-12 px-6 lg:grid-cols-[14rem_1fr] lg:gap-16">
         <nav aria-label="FAQ categories" className="hidden lg:block">
           <ul className="sticky top-24 space-y-1 text-body">
             {FAQ_CATEGORIES.map((c) => {
@@ -83,7 +83,7 @@ export function FaqBrowser({
           </ul>
         </nav>
 
-        <div className="min-w-0 space-y-14">
+        <div className="min-w-0 space-y-12">
           {categories.length === 0 && (
             <div className="rounded-surface border border-dashed border-slate-300 px-6 py-12 text-center dark:border-slate-700">
               <p className="font-medium text-slate-900 dark:text-slate-100">

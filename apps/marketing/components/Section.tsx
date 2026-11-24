@@ -27,7 +27,9 @@ export function Section({
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
         <div className="mx-auto max-w-2xl text-center">
           {eyebrow ? <p className={EYEBROW}>{eyebrow}</p> : null}
-          <h2 className="mt-3 text-3xl text-slate-900 sm:text-4xl dark:text-slate-100">{title}</h2>
+          <h2 className="mt-3 text-3xl tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
+            {title}
+          </h2>
           {description ? (
             <p className="mt-4 text-name text-slate-600 dark:text-slate-300">{description}</p>
           ) : null}

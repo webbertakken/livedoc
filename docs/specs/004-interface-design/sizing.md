@@ -181,6 +181,11 @@ A surface names the token, never the number, so the scale changes in one place.
 - A site's hero headline is **display type**, off the scale: the help centre's, the marketing site's, and the sign-in
   stage's pitch (D243, default).
 - Page gutters step with the padding scale: 24 px on a wide screen.
+- The marketing site's chrome is on the scale: its navigation, buttons, fields, cards and footer (D244, default).
+- Its pages are not the app: a section headline of 30 px or more is display type, regular, tightly tracked, and the
+  space between its sections and columns steps 32, 48 and 64 px (`LAYOUT_GAP_STEPS`) (D244, default).
+- The guard takes both only where asked (`marketingPages`), so the app's gaps and type stay on the scale.
+- The hero's pictures of the editor, the feature and privacy art and the share images are drawn art.
 
 ## The guard
 
@@ -236,6 +241,9 @@ The code cites each by its id.
   them, rather than 28 px controls in shorter cards beside the strip (default).
 - **D243** Display type: a site's one hero headline sets its own size, off the scale, as marketing pages do; every other
   heading on the page takes the page title's or a panel title's step (default).
+- **D244** Marketing pages: section headlines of 30 px and up are display type, and sections and columns are spaced
+  32, 48 or 64 px, off the scale; the chrome is on it (director, 2026-11-24, for Webber to confirm on the preview)
+  (default).
 - **D234** What the guard reads: every static string in a source file outside tests, so a size in a constant (a
   variant table, a shared class list) is held to the scale as one in markup is (default).
 - **D235** The tokens' unit: rem at a 16 px root, so a browser set to larger text grows the chrome with it (default).

@@ -30,7 +30,7 @@ export function StoryBeat({ section, index }: { section: LandingSection; index: 
       className={`scroll-mt-20 border-t border-slate-200/70 dark:border-slate-800/70 ${tinted ? 'bg-brand-50/60 dark:bg-brand-500/10' : 'bg-white dark:bg-slate-900'}`}
     >
       <div
-        className={`mx-auto grid max-w-7xl items-center gap-10 ${RAIL_CLEAR_PADDING} py-20 sm:py-24 lg:gap-14 ${artFirst ? SCENE_FIRST : TEXT_FIRST}`}
+        className={`mx-auto grid max-w-7xl items-center gap-12 ${RAIL_CLEAR_PADDING} py-20 sm:py-24 lg:gap-16 ${artFirst ? SCENE_FIRST : TEXT_FIRST}`}
       >
         {/* Centred while the beat is one column (a phone or tablet, the scene hidden), left-aligned
             beside the scene from lg. */}
@@ -46,7 +46,7 @@ export function StoryBeat({ section, index }: { section: LandingSection; index: 
           </p>
           <h2
             id={`${section.id}-title`}
-            className="mt-4 text-3xl text-balance text-slate-900 sm:text-4xl dark:text-slate-100"
+            className="mt-4 text-3xl tracking-tight text-balance text-slate-900 sm:text-4xl dark:text-slate-100"
           >
             {section.title}
           </h2>

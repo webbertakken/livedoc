@@ -32,7 +32,10 @@ export function StartDrawingCta({ surface }: { surface: 'Home' | 'Feature' }) {
 
       <div className="relative mx-auto max-w-3xl px-6 py-24 text-center sm:py-28">
         <p className="text-body text-sky-300">Ready when you are</p>
-        <h2 id="get-started-title" className="mt-4 text-balance text-4xl sm:text-5xl">
+        <h2
+          id="get-started-title"
+          className="mt-4 text-balance text-4xl tracking-tight sm:text-5xl"
+        >
           Your next idea is one click away
         </h2>
         <p className="mx-auto mt-5 max-w-lg text-pretty text-name text-slate-300">

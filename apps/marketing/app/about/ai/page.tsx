@@ -73,7 +73,7 @@ export default function BuildWithAiPage() {
               </p>
               <h1
                 id="ai-title"
-                className="mt-4 text-4xl text-balance text-slate-900 sm:text-5xl dark:text-slate-100"
+                className="mt-4 text-4xl tracking-tight text-balance text-slate-900 sm:text-5xl dark:text-slate-100"
               >
                 Your AI, building in LiveDoc
               </h1>

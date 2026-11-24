@@ -30,7 +30,7 @@ const UPSTREAM_REPO_URL = 'https://github.com/livediagram-app/livediagram.app';
 export function LicencesView({ manifest }: { manifest: LicencesManifest }) {
   return (
     <>
-      <h1 className="text-3xl text-slate-900 sm:text-4xl dark:text-slate-100">
+      <h1 className="text-3xl tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
         Open-source licences
       </h1>
       <p className="mt-3 text-name text-slate-600 dark:text-slate-300">
