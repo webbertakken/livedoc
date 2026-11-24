@@ -128,6 +128,9 @@ test('Insert puts a table of contents in, whose entries go to their headings', a
   const contents = body.getByRole('navigation', { name: 'Table of contents' });
   await expect(contents).toHaveClass(/ProseMirror-selectednode/);
   await expect(contents.locator('p')).toHaveText(['Introduction\t1', 'Findings\t2']);
+  // It went in before the heading the caret started, which keeps its id whole.
+  expect(await body.evaluate((b) => b.firstElementChild?.tagName)).toBe('NAV');
+  await expect(body.locator('p', { hasText: /^Introduction$/ })).toHaveCount(1);
   const tab = contents.locator('.text-document-tab').first();
   await expect(tab).toHaveAttribute('data-leader', 'dot');
   await expect.poll(async () => (await tab.boundingBox())?.width ?? 0).toBeGreaterThan(200);
