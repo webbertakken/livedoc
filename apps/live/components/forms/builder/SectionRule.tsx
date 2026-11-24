@@ -45,7 +45,7 @@ export function SectionRule({ section, index }: { section: FormSection; index: n
           const el = e.currentTarget;
           setAnchor((open) => (open ? null : el));
         }}
-        className={`mt-3 inline-flex min-h-7 max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[12px] font-medium leading-5 transition ${
+        className={`mt-3 inline-flex min-h-row max-w-full cursor-pointer items-center gap-2 rounded-full border px-3 py-0.5 text-body transition ${
           broken
             ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200'
             : rule
@@ -78,14 +78,14 @@ function RuleEditor({ section, index }: { section: FormSection; index: number })
     if (first) set({ questionId: first.id, anyOf: [ruleChoices(first)[0]!] });
   };
   const radio = (on: boolean) =>
-    `flex w-full cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-[13px] transition ${
+    `flex w-full cursor-pointer items-center gap-2 rounded-control border px-3 py-2 text-left text-body transition ${
       on
         ? 'border-brand-400 bg-brand-50 text-brand-900 dark:border-brand-500/60 dark:bg-brand-500/10 dark:text-brand-50'
         : 'border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
     }`;
   return (
     <div className="flex flex-col gap-3">
-      <div role="radiogroup" aria-label="Show this section" className="flex flex-col gap-1.5">
+      <div role="radiogroup" aria-label="Show this section" className="flex flex-col gap-2">
         <button
           type="button"
           role="radio"
@@ -107,7 +107,7 @@ function RuleEditor({ section, index }: { section: FormSection; index: number })
         </button>
       </div>
       {questions.length === 0 ? (
-        <p className="text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="text-supporting text-slate-500 dark:text-slate-400">
           Add a Single Choice, Multiple Choice or Checkbox question to an earlier section first.
         </p>
       ) : null}
@@ -116,7 +116,7 @@ function RuleEditor({ section, index }: { section: FormSection; index: number })
           <Select
             aria-label="Question"
             className="w-full"
-            selectClassName="text-[13px]"
+            selectClassName="text-body"
             value={q.id}
             onChange={(e) => {
               const next = questions.find((x) => x.id === e.target.value);
@@ -130,10 +130,10 @@ function RuleEditor({ section, index }: { section: FormSection; index: number })
             ))}
           </Select>
           <div>
-            <p className="mb-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+            <p className="mb-1.5 text-supporting text-slate-500 dark:text-slate-400">
               Show it when the answer is any of:
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {ruleChoices(q).map((a) => {
                 const on = rule.anyOf.includes(a);
                 return (
@@ -147,9 +147,9 @@ function RuleEditor({ section, index }: { section: FormSection; index: number })
                         anyOf: on ? rule.anyOf.filter((x) => x !== a) : [...rule.anyOf, a],
                       })
                     }
-                    className={`flex h-8 cursor-pointer items-center rounded-full border px-3 text-[12px] font-medium transition ${
+                    className={`flex h-row cursor-pointer items-center rounded-full border px-3 text-body transition ${
                       on
-                        ? 'border-brand-500 bg-brand-50 text-brand-800 dark:border-brand-400 dark:bg-brand-500/15 dark:text-brand-100'
+                        ? 'border-brand-500 bg-brand-50 font-medium text-brand-800 dark:border-brand-400 dark:bg-brand-500/15 dark:text-brand-100'
                         : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-500'
                     }`}
                   >

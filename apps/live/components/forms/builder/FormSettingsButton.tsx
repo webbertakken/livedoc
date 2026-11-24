@@ -43,7 +43,7 @@ export function FormSettingsButton({
           aria-expanded={open !== false}
           data-dock-button
           onClick={() => (open === false ? onOpen(null) : onClose())}
-          className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          className="flex size-field shrink-0 cursor-pointer items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
         >
           <CogIcon aria-hidden />
         </button>
@@ -59,7 +59,7 @@ export function FormSettingsButton({
                 onClose();
                 requestFormTourRelaunch();
               }}
-              className="cursor-pointer rounded-md px-2 py-1 text-[12px] font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50"
+              className="h-row cursor-pointer rounded-control px-2 text-body text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50"
             >
               Show Me Around
             </button>
@@ -89,9 +89,9 @@ function Sections({
       role="tab"
       aria-selected={shown === id}
       onClick={() => setShown(id)}
-      className={`flex h-7 flex-1 cursor-pointer items-center justify-center rounded-md px-2 text-[12px] font-semibold transition ${
+      className={`flex h-row flex-1 cursor-pointer items-center justify-center rounded-control px-2 text-body transition ${
         shown === id
-          ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-50'
+          ? 'bg-white font-medium text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-50'
           : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
       }`}
     >
@@ -103,7 +103,7 @@ function Sections({
       <div
         role="tablist"
         aria-label="Form Settings"
-        className="flex gap-0.5 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800"
+        className="flex gap-0.5 rounded-menu bg-slate-100 p-0.5 dark:bg-slate-800"
       >
         {tab('destination', 'Responses Go To')}
         {tab('settings', 'Settings')}

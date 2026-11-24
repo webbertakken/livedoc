@@ -236,4 +236,24 @@ describe('the builder on the sizing scale', () => {
     expect(screen.getByRole('button', { name: 'Delete question' }).className).toContain('size-row');
     expect(document.body.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
   });
+
+  it('draws the builder’s menus, popovers and add bar from the scale', () => {
+    render(<Harness canEdit />);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit question: Summary' }));
+
+    const add = screen.getByRole('button', { name: 'Add a question of another type' });
+    expect(add.className).toContain('h-prominent');
+    fireEvent.click(add);
+    const options = within(screen.getByRole('listbox')).getAllByRole('option');
+    expect(options[0]!.className).toContain('h-row');
+    expect(options[0]!.className).toContain('text-body');
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Answer goes to/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Answer Goes To' });
+    for (const radio of within(sheet).getAllByRole('radio')) {
+      expect(radio.className).toContain('text-body');
+    }
+    expect(document.body.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
+  });
 });
