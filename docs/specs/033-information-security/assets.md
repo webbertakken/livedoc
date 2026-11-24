@@ -25,7 +25,7 @@ Labels are not stamped on data; the class follows from the store it lives in, as
 | R2 `docs-nu-bug-screenshots` (western Europe) | Screenshots attached to bug reports, expired after 90 days                                                                      | Confidential | None needed; they expire               |
 | KV `docs-nu-mcp-oauth`                        | MCP client registrations and short-lived OAuth state                                                                            | Confidential | None needed; re-registration           |
 | Cloudflare request logs                       | Request metadata kept by the host                                                                                               | Internal     | Not restored                           |
-| Workers Logs (api, mcp, router)               | The workers' own log lines, each with its request's path, no query; 3 to 7 days ([Worker logs](../016-platform/worker-logs.md)) | Internal     | Not restored; they expire              |
+| Workers Logs (api, mcp, router, live)         | The workers' own log lines, each with its request's path, no query; 3 to 7 days ([Worker logs](../016-platform/worker-logs.md)) | Internal     | Not restored; they expire              |
 | Durable Object `WorkerIssuesLedger`           | Worker issue deliveries already handled (7 days), cards waiting to be filed ([Worker issues](../016-platform/worker-issues.md)) | Internal     | None needed; Cloudflare redelivers     |
 
 ## Secrets

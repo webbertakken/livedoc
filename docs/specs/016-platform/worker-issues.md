@@ -29,7 +29,7 @@ When the error comes back after a quiet spell, the operator hears again.
 
 ## Detection
 
-- `[observability.issues] enabled = true` sits in the api, mcp and router `wrangler.toml`, beside the logs block.
+- `[observability.issues] enabled = true` sits in the api, mcp, router and live `wrangler.toml`, beside the logs block.
 - Issues needs Wrangler 4.134 or later, is free during its beta, and does not need Workers Logs.
 - Pull request previews keep the block, as they keep logs.
 - Their issues never reach the receiver: each automation names one production worker, two automations per worker.

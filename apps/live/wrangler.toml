@@ -23,3 +23,19 @@ run_worker_first = ["/*", "!/_next/*"]
 [[services]]
 binding = "API"
 service = "docs-nu-api"
+
+# Workers Logs (docs/specs/016-platform/worker-logs.md): the worker's own log lines are kept in this Cloudflare
+# account, so a failure nobody was tailing can still be read. Invocation logs stay off (they store each request's
+# headers, address and location), and query strings are cut from the path every log line is stored with.
+[observability]
+enabled = true
+redact_query_string = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false
+
+# Workers Issues (docs/specs/016-platform/worker-issues.md): Cloudflare groups this worker's errors into issues, and an
+# automation sends a new or returning one to the api's receiver. Wrangler 4.134 or later.
+[observability.issues]
+enabled = true
