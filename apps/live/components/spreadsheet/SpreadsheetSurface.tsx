@@ -4,7 +4,7 @@
 // "The surface"): the title row, the formula bar, the grid of the open sheet tab and the sheet bar at the foot. The
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { planPalette, type Tab } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
@@ -43,6 +43,11 @@ import { SheetBarActionsContext, useSheetBarActions } from './useSheetBarActions
 import { SheetStepContext, SurfaceRedoContext, useSheetStep } from './spreadsheet-surface-keys';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
+import {
+  SpreadsheetThemeProvider,
+  useSpreadsheetTheme,
+  useSpreadsheetThemeState,
+} from './spreadsheet-theme-context';
 
 export function SpreadsheetSurface({
   scope,
@@ -95,6 +100,8 @@ export function SpreadsheetSurface({
   // The sheet bar's changes, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
   // Copy To, everyone's who may read the sheets (spreadsheet.md D186).
   const copyTo = useSheetCopyTo(bridge, workbook);
+  // The workbook's theme, which its cells' theme colours draw in (formatting.md "Themes").
+  const theme = useSpreadsheetThemeState(scope, workbook, onWorkbook);
   const sheetBar = useSheetBarActions({
     bridge,
     scope,
@@ -131,44 +138,46 @@ export function SpreadsheetSurface({
           pushUndo={(step) => bridge?.pushUndo(step)}
         />
       </div>
-      <SheetBarActionsContext.Provider value={sheetBar}>
-        <OfficeBindingsContext.Provider value={channel}>
-          <BorderLineContext.Provider value={borderLine}>
-            <SummarySlotContext.Provider value={summarySlot}>
-              <SpreadsheetZoomProvider value={scale}>
-                <SheetStepContext.Provider value={stepSheet}>
-                  <SurfaceRedoContext.Provider value={history?.redo ?? null}>
-                    <ShowFormulasContext.Provider value={formulas.shown}>
-                      <SpreadsheetFullScreenProvider value={fullScreen}>
-                        {bridge ? (
-                          <OpenSheet
-                            bridge={bridge}
-                            tabId={tabId}
-                            sync={sync}
-                            onWorkbook={onWorkbook}
-                          />
-                        ) : (
-                          <Status state="loading" />
-                        )}
-                      </SpreadsheetFullScreenProvider>
-                    </ShowFormulasContext.Provider>
-                  </SurfaceRedoContext.Provider>
-                </SheetStepContext.Provider>
-              </SpreadsheetZoomProvider>
-            </SummarySlotContext.Provider>
-          </BorderLineContext.Provider>
-        </OfficeBindingsContext.Provider>
-        <SheetBar
-          tabs={tabs}
-          activeId={tabId}
-          onSelect={onSelectTab}
-          peers={sheetBarPeers}
-          summarySlot={setSummarySlot}
-          actions={bridge ? sheetBar : null}
-          looks={looks}
-          copyTo={copyTo}
-        />
-      </SheetBarActionsContext.Provider>
+      <SpreadsheetThemeProvider value={theme}>
+        <SheetBarActionsContext.Provider value={sheetBar}>
+          <OfficeBindingsContext.Provider value={channel}>
+            <BorderLineContext.Provider value={borderLine}>
+              <SummarySlotContext.Provider value={summarySlot}>
+                <SpreadsheetZoomProvider value={scale}>
+                  <SheetStepContext.Provider value={stepSheet}>
+                    <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                      <ShowFormulasContext.Provider value={formulas.shown}>
+                        <SpreadsheetFullScreenProvider value={fullScreen}>
+                          {bridge ? (
+                            <OpenSheet
+                              bridge={bridge}
+                              tabId={tabId}
+                              sync={sync}
+                              onWorkbook={onWorkbook}
+                            />
+                          ) : (
+                            <Status state="loading" />
+                          )}
+                        </SpreadsheetFullScreenProvider>
+                      </ShowFormulasContext.Provider>
+                    </SurfaceRedoContext.Provider>
+                  </SheetStepContext.Provider>
+                </SpreadsheetZoomProvider>
+              </SummarySlotContext.Provider>
+            </BorderLineContext.Provider>
+          </OfficeBindingsContext.Provider>
+          <SheetBar
+            tabs={tabs}
+            activeId={tabId}
+            onSelect={onSelectTab}
+            peers={sheetBarPeers}
+            summarySlot={setSummarySlot}
+            actions={bridge ? sheetBar : null}
+            looks={looks}
+            copyTo={copyTo}
+          />
+        </SheetBarActionsContext.Provider>
+      </SpreadsheetThemeProvider>
       <ImportReportDialog documentId={scope.documentId} />
     </section>
   );
@@ -268,6 +277,9 @@ function SheetWorkspace({
     () => ({ sheet: store.sheet(sheetId)!, workbook: store.workbook(tabId) }),
     [store, sheetId, tabId, version], // oxlint-disable-line react/exhaustive-deps
   );
+  // The engine draws in the workbook's theme, set before the grid paints; the store draws it again.
+  const { theme } = useSpreadsheetTheme();
+  useLayoutEffect(() => store.setTheme(tabId, theme), [store, tabId, theme]);
   const c = useSheetControllerState({
     store,
     sheet,

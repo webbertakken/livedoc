@@ -232,6 +232,20 @@ describe('the cells', () => {
     expect(textBox('wrapped').className).not.toContain('pre-wrap');
   });
 
+  // formatting.md "Themes": a theme colour draws in the workbook's theme.
+  it('draws a theme colour in the workbook’s theme', () => {
+    const book = sheetOf({ A1: 'themed' }, { A1: { bg: 'theme:accent1' } });
+    book.workbook.setTheme({
+      ...book.workbook.theme,
+      colours: { ...book.workbook.theme.colours, accent1: '#00ff00' },
+    });
+    draw(book);
+    const fills = [...document.querySelectorAll<HTMLElement>('div')].map(
+      (el) => el.style.backgroundColor,
+    );
+    expect(fills).toContain('rgb(0, 255, 0)');
+  });
+
   // formatting.md "Alternating colours" (D216): a banding fills under a cell's own fill.
   it("shades alternating colours under a cell's own fill", () => {
     const book = sheetOf(

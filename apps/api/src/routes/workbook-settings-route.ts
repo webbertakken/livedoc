@@ -44,7 +44,7 @@ export async function saveSettings(
   const op: WorkbookRoomOp = { kind: 'workbook', workbook, rev };
   ctx.waitUntil?.(relayWorkbook(ctx.env, documentId, op));
   console.info(
-    `[workbook] settings saved document=${documentId} rev=${rev} recalc=${settings.recalc} iterate=${settings.iterate.on}`,
+    `[workbook] settings saved document=${documentId} rev=${rev} recalc=${settings.recalc} iterate=${settings.iterate.on} theme=${settings.theme?.id ?? 'standard'}`,
   );
   const body: WorkbookSettingsResponse = { workbook, rev };
   return json(body);

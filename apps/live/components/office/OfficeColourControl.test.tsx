@@ -31,6 +31,16 @@ function setup(value: string | null | undefined, binding = colour()) {
 const bar = (button: HTMLElement) => button.querySelector<HTMLElement>('[data-colour-bar]')!;
 
 describe('OfficeColourControl', () => {
+  // formatting.md "Themes": a theme colour shows as the colour it is in the theme, its row first in the picker.
+  it('shows a theme colour as its colour, and offers the theme row', () => {
+    const theme = [{ id: 'theme:accent1', colour: '#4285f4', label: 'Accent 1' }];
+    const { button, binding } = setup('theme:accent1', colour({ theme }));
+    expect(bar(button).dataset.colourBar).toBe('#4285f4');
+    fireEvent.click(button);
+    fireEvent.click(screen.getByRole('button', { name: 'Accent 1' }));
+    expect(binding.set).toHaveBeenCalledWith('theme:accent1');
+  });
+
   it('draws the bar in the colour at the caret, black for none, no colour over several', () => {
     const { button } = setup('#cc0000');
     expect(bar(button).dataset.colourBar).toBe('#cc0000');

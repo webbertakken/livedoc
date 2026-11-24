@@ -65,6 +65,7 @@ export function useGridMenuBindings(
     painting: !!c.rules.paint,
     borderLine,
     chooseBorderLine,
+    theme: c.workbook.theme,
     act: {
       ...actions,
       cut: () => clip.copyNow(true),

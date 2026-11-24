@@ -13,6 +13,7 @@ import {
   formulaToLocale,
   wrapLines,
   SHEET_TEXT_FONT,
+  themedFormat,
 } from '@livedoc/sheets';
 import { argumentAt, argumentSlot, refSpans } from './formula-assist';
 import { useSheetController } from './sheet-controller';
@@ -215,7 +216,7 @@ export function SheetCellEditor({
     fontStyle: f?.i ? ('italic' as const) : undefined,
   };
   // Drawn as the cell is (sheet.md "Readable cells"): its fill for this surface, its ink readable on it.
-  const colours = cellColours(f, {
+  const colours = cellColours(themedFormat(f, c.workbook.theme), {
     fill: c.palette.surface,
     ink: c.palette.text,
     dark: !isLightColor(c.palette.surface),

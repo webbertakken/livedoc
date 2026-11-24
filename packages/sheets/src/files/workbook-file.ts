@@ -25,6 +25,7 @@ import { storedKept } from './kept-anchors';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
 import { bandingRules } from '../rules/bandings';
+import { themedFormat } from '../themes/spreadsheet-theme';
 import { fileFormatRulesOf, formatRulesFromFile, type FileFormatRule } from './file-format-rules';
 
 export type FileValue =
@@ -166,7 +167,8 @@ export function workbookFileOf(
       const cells: FileCell[] = [];
       for (const [key, cell] of sheet.cells) {
         const format = formatCodeOf(cell.format, locale) ?? undefined;
-        const style = cellStyleOf(cell.format);
+        // A file holds the colour a theme colour is now (formatting.md "Themes").
+        const style = cellStyleOf(themedFormat(cell.format, engine.theme));
         if (!cell.input && format === undefined && !style) continue;
         const { r: rowId, c: colId } = splitCellKey(key);
         const r = index.rowPos.get(rowId);

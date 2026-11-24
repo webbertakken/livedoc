@@ -1,6 +1,7 @@
 // Cell formats (docs/specs/029-sheets/sheet.md "Formatting"): validation and the per-key merge every write uses,
 // so two people setting different keys of one cell never overwrite each other.
 import type { Border, BorderStyle, CellFormat, FontSize, NumberFormatKind } from './sheet';
+import { isThemeColourRef } from './themes/spreadsheet-theme';
 import { DECIMALS_MAX } from './limits';
 import { formatCodeReads } from './format-codes';
 import { CURRENCY_SYMBOLS } from './input';
@@ -126,9 +127,10 @@ export function validFormatValue(key: string, v: unknown): boolean {
       return Number.isInteger(v) && (v as number) >= 0 && (v as number) <= DECIMALS_MAX;
     case 'cur':
       return (CURRENCY_SYMBOLS as readonly string[]).includes(v as string);
+    // A colour, or a theme colour by name (formatting.md "Themes").
     case 'fc':
     case 'bg':
-      return isColour(v);
+      return isColour(v) || isThemeColourRef(v);
     case 'ff':
       return isFontName(v);
     case 'fs':

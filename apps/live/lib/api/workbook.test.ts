@@ -3,11 +3,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WorkbookRecord } from '@livedoc/sheets';
 import { isOfflineId } from '../offline/offline-store';
-import { apiConvertWorkbook, apiDownloadWorkbook, apiWorkbookConversion } from './workbook';
+import {
+  apiConvertWorkbook,
+  apiDownloadWorkbook,
+  apiSaveWorkbookSettings,
+  apiWorkbookConversion,
+} from './workbook';
 
 vi.mock('../offline/offline-store', () => ({ isOfflineId: vi.fn(async () => false) }));
 vi.mock('../offline/offline-workbook-file', () => ({
   offlineWorkbookFile: vi.fn(async () => ({ blob: new Blob(['x']), fileName: 'Here.ods' })),
+}));
+vi.mock('../offline/offline-workbook-settings', () => ({
+  offlineSaveWorkbookSettings: vi.fn(async () => ({ workbook: 'offline', rev: 0 })),
 }));
 vi.mock('../offline/offline-workbook-conversion', () => ({
   offlineWorkbookConversion: vi.fn(async (_: string, to: string) => ({
@@ -112,5 +120,25 @@ describe('apiConvertWorkbook', () => {
   it('converts in this browser for a spreadsheet in This Browser', async () => {
     vi.mocked(isOfflineId).mockResolvedValue(true);
     expect(await apiConvertWorkbook(scope, 'xlsx')).toEqual({ workbook: 'offline', rev: 0 });
+  });
+});
+
+// formatting.md "Themes": the settings (the theme) saved whole through the settings door, or in this browser.
+describe('apiSaveWorkbookSettings', () => {
+  it('puts the settings and reads the record back, or saves them in this browser', async () => {
+    const f = reply({ workbook: record, rev: 2 });
+    vi.stubGlobal('fetch', f);
+    expect(await apiSaveWorkbookSettings(scope, record.settings)).toEqual({
+      workbook: record,
+      rev: 2,
+    });
+    expect(f.mock.calls[0]![0]).toContain('/documents/d%201/workbook/settings');
+    expect(f.mock.calls[0]![1]!.method).toBe('PUT');
+    expect(JSON.parse(f.mock.calls[0]![1]!.body as string)).toEqual({ settings: record.settings });
+    vi.mocked(isOfflineId).mockResolvedValue(true);
+    expect(await apiSaveWorkbookSettings(scope, record.settings)).toEqual({
+      workbook: 'offline',
+      rev: 0,
+    });
   });
 });
