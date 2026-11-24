@@ -478,3 +478,9 @@ export async function signedPdf(reason = 'I approve'): Promise<Uint8Array<ArrayB
   return signed.bytes as Uint8Array<ArrayBuffer>;
 }
 export { taggedPdf } from './tagged';
+
+/** The text of each page of a PDF, as the writer reads it: what a test checks a made file holds. */
+export async function pageTextsOf(bytes: Uint8Array): Promise<string[]> {
+  const pdf = await PDF.load(bytes);
+  return pdf.getPages().map((page) => page.extractText().text);
+}

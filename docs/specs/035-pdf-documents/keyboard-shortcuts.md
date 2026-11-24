@@ -41,7 +41,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Full screen                             | ⌘⌥L                                   | ⌘L †                                  | specified |
 | Find                                    | ⌘F                                    | The same                              | built     |
 | Next result, previous result            | ⌘G or Enter, ⌘⇧G or ⇧Enter            | F3 or ⌘G                              | built     |
-| Print                                   | ⌘P                                    | The same                              | specified |
+| Print                                   | ⌘P                                    | The same                              | built     |
 | Properties                              | ⌘D                                    | The same                              | specified |
 | Dark pages on and off                   | ⌘⌥D `(default)`                       | None                                  | specified |
 | Show or hide marks                      | ⌘⇧8                                   | The same                              | specified |

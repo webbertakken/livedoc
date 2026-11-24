@@ -27,6 +27,7 @@ import {
   PANEL_THUMBNAILS,
   PDF_MENUS,
   PDF_ZOOM_MENU_PERCENTS,
+  PRINT,
   REDO,
   ROTATE_VIEW_CLOCKWISE,
   ROTATE_VIEW_COUNTERCLOCKWISE,
@@ -84,6 +85,7 @@ describe("a PDF document's menus and toolbar", () => {
   const BOUND = [
     ...SHELL_BOUND_ITEMS,
     DOWNLOAD_PDF,
+    PRINT,
     UNDO,
     REDO,
     TOOL_SELECT,
@@ -186,6 +188,7 @@ describe("a PDF document's menus and toolbar", () => {
         .map((control) => control.id);
     // The zoom is the page bar's, never the toolbar's ("The page bar").
     expect(controls('viewing', 'view')).toEqual([
+      PRINT,
       FIND,
       TOOL_SELECT,
       PAGE_DISPLAY_CONTROL,
@@ -194,6 +197,7 @@ describe("a PDF document's menus and toolbar", () => {
     expect(controls('reviewing', 'participate')).toEqual([
       UNDO,
       REDO,
+      PRINT,
       FIND,
       TOOL_SELECT,
       TOOL_HIGHLIGHT,

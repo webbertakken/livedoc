@@ -87,6 +87,7 @@ const STOPPED = {
   canAppend: false,
   repaired: false,
   bake: { ok: false, refusal: 'unreadable' } satisfies BakeResult,
+  cutPages: null,
   heldBytes: 0,
   close: undefined,
 } as const;
@@ -185,6 +186,8 @@ export function pdfEngineClient(
     canAppend: () => ask<boolean>({ method: 'canAppend', args: [] }),
     repaired: () => ask<boolean>({ method: 'repaired', args: [] }),
     bake: (liveChanges) => ask<BakeResult>({ method: 'bake', args: [liveChanges] }),
+    cutPages: (bytes, indexes) =>
+      ask<Uint8Array<ArrayBuffer> | null>({ method: 'cutPages', args: [bytes, indexes] }),
     heldBytes: () => ask<number>({ method: 'heldBytes', args: [] }),
     close: () => ask<void>({ method: 'close', args: [] }),
     terminate: () => stop(null),

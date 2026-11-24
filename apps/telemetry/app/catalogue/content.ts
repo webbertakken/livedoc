@@ -1311,9 +1311,9 @@ export const PDF_TOOLS_SELECTED = chart(
 export const PDFS_EXPORTED = chart(
   'Pdf',
   'Exported',
-  'PDFs Downloaded',
-  'A PDF document downloaded, or a file it carries saved, by what was downloaded.',
-  { types: ['Pdf', 'EmbeddedFile'] },
+  'PDFs Downloaded and Printed',
+  'A PDF document downloaded or printed, or a file it carries saved, by what left LiveDoc.',
+  { types: ['Pdf', 'Print', 'EmbeddedFile'] },
 );
 
 export const PDF_UNDOS = chart(

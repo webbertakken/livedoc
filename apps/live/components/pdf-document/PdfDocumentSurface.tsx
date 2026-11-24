@@ -21,12 +21,10 @@ import { OfficePanelLayout } from '@/components/office/OfficePanel';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { PdfDocumentScope } from '@/lib/api/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
-import { downloadBlob } from '@/lib/download-blob';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
-import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { openEmbeddedPdf } from '@/lib/pdf-document/open-embedded-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
@@ -37,7 +35,9 @@ import { startPdfEngineWorker } from '@/lib/pdf-document/pdf-engine-client';
 import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
-import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
+import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
   DOWNLOAD_PDF,
@@ -76,6 +76,7 @@ import { PdfPages } from './PdfPages';
 import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
 import { PdfLinkDialog } from './PdfLinkDialog';
+import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
 import { PdfFindResults } from './PdfFindResults';
 
@@ -287,25 +288,41 @@ export function PdfDocumentSurface({
   );
 
   const storedFile = 'storedFile' in open ? open.storedFile : null;
-  const download = useCallback(async () => {
-    if (!storedFile) return;
-    setProblem(null);
-    const where = { ownerId, documentId, tabId, shareCode };
-    try {
-      const baked = await bakeForDownload({
-        engine: ready?.engine ?? { bake: async () => ({ ok: false, refusal: 'unreadable' }) },
-        doc: ready?.binding.doc ?? null,
-        documentName,
-        readStored: () => deps.readBlob(where, storedFile),
-      });
-      if (!baked.ok) return setProblem(BAKE_FAILED_COPY);
-      downloadBlob(new Blob([baked.bytes], { type: 'application/pdf' }), baked.fileName);
-      track('Pdf', 'Exported', 'Pdf');
-    } catch (error) {
-      debugLog('[pdf] download failed', String(error));
-      setProblem(BAKE_FAILED_COPY);
-    }
-  }, [ready, storedFile, documentName, deps, ownerId, documentId, tabId, shareCode]);
+  // The stored file's bytes, read again from where they are held; Download and Print are offered only with one.
+  const readStored = useMemo(
+    () =>
+      storedFile
+        ? () => deps.readBlob({ ownerId, documentId, tabId, shareCode }, storedFile)
+        : null,
+    [deps, ownerId, documentId, tabId, shareCode, storedFile],
+  );
+  const download = usePdfDownload({
+    engine: ready?.engine ?? null,
+    doc: ready?.binding.doc ?? null,
+    documentName,
+    readStored,
+    onProblem: setProblem,
+  });
+
+  const printSource = useMemo<PdfPrintSource | null>(
+    () =>
+      ready && marks && readStored
+        ? {
+            engine: ready.engine,
+            doc: ready.binding.doc,
+            pages: ready.pages,
+            permissions: ready.permissions,
+            marksOn: (page) => marksOnPage(marks.get(), page.name),
+            readStored,
+          }
+        : null,
+    [ready, marks, readStored],
+  );
+  const printing = usePdfPrint({
+    source: printSource,
+    documentName,
+    onProblem: setProblem,
+  });
 
   const pickTool = useCallback((next: PdfPageTool) => {
     setTool(next);
@@ -366,6 +383,7 @@ export function PdfDocumentSurface({
             ...panels.actions,
             ...history.actions,
             ...reading.actions,
+            ...printing.actions,
             [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -400,6 +418,7 @@ export function PdfDocumentSurface({
       panels.actions,
       history.actions,
       reading.actions,
+      printing.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -412,6 +431,7 @@ export function PdfDocumentSurface({
 
   // The tools' own keys, heard anywhere on the surface but a text field (keyboard-shortcuts.md "Tools").
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (printing.onKey(event)) return;
     if (typesText(event.target)) return;
     if (reading.onKey(event)) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -554,6 +574,7 @@ export function PdfDocumentSurface({
         onDownload={() => void download()}
       />
       <PdfLinkDialog asked={links.asked} onClose={links.close} />
+      <PdfPrintDialog {...printing.dialog} count={pages?.length ?? 0} current={viewer.page} />
     </div>
   );
 }

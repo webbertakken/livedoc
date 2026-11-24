@@ -121,7 +121,7 @@ const EVERY_MODE: OfficeToolbar = [
     button(REDO, 'Redo', 'participate', lucideRedo2, { ...BUILT, shortcut: 'redo' }),
   ]),
   group('file', 'File', [
-    button(PRINT, 'Print', 'view', lucidePrinter),
+    button(PRINT, 'Print', 'view', lucidePrinter, { ...BUILT, shortcut: PRINT }),
     button(FIND, 'Find', 'view', lucideSearch, { ...BUILT, shortcut: FIND }),
   ]),
   group('pointer', 'Pointer', [

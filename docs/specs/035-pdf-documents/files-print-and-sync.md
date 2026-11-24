@@ -85,11 +85,29 @@ File > Download, the Explorer's row menu and an agent's `pdf.download`:
 | **Marks**  | Document and marks (default); Document only; Document, marks and a comments summary |
 | **Fields** | With their values (default); Blank                                                  |
 
+- The dialog offers what LiveDoc can make now `(default)`: **Selected thumbnails** once thumbnails can be selected,
+  the comments summary once comments are built, and **Fields** once a PDF's fields are drawn; until then a print is
+  with the fields' values, as the bake is.
+- **Pages** takes a range as Download's does: numbers from 1 and runs "1-3", joined by commas, in any order, each
+  page once, in the file's order; anything else, or a page past the last, says "Pages like 1-3, 8, from 1 to
+  <n>." under the field and prints nothing `(default)`.
+- **Document and marks** prints the bake ([Saving](saving.md)); **Document only** prints the stored file as it
+  arrived. Pages other than all are cut from it as a new PDF of those pages alone.
+- The browser is handed the file in a frame of its own, out of sight, and asked to print it; the frame goes once the
+  print dialog closes, or after `PDF_PRINT_FRAME_MS` `(default)`.
 - Where a browser cannot print a PDF it is handed (phones), the chosen pages are drawn at `PDF_PRINT_DPI` into a
   print-only document.
+  - A browser that says it shows no PDF itself (`navigator.pdfViewerEnabled` false) is such a browser `(default)`.
+  - A file that allows printing only at low resolution is printed this way too, on every browser.
+  - Each page is one picture filling one sheet of its own size; nothing else is in the document.
+- Print and ⌘P run Print; with the dialog open, Enter prints and Escape closes it.
+- A print that cannot be made says "This PDF couldn't be printed." and leaves the document as it was.
+- Logged `[pdf] printed pages=<n> marks=<yes|no> way=<pdf|pictures>`, `[pdf] print-failed step=<bake|cut|draw|frame>`,
+  `[pdf] print-refused`; counted as `Pdf · Exported · Print`.
 - Print is always light paper as the file says. Dark pages, selections, presence and LiveDoc's chrome never print.
 - A PDF whose permissions forbid printing dims Print with the reason until the permissions password is given
-  ([Opening](opening.md#passwords)).
+  ([Opening](opening.md#passwords)): "Print (this PDF asks not to be printed)", and ⌘P says "This PDF asks not to be
+  printed." `(default)`.
 - Booklets, posters, tiling, colour separations and print production are left out
   ([Parity matrix](parity-matrix.md#left-out)); what the browser's dialog offers (two sides, several pages a sheet)
   is there.
@@ -156,12 +174,13 @@ A PDF document is a **native file** ([Native files](../027-repositories/native-f
 
 ## Limits
 
-| Constant                 | Value  | Why                                                                                          |
-| ------------------------ | ------ | -------------------------------------------------------------------------------------------- |
-| `PDF_PRINT_DPI`          | 150    | `(default)` Where pages are drawn for print; safe range 100 to 300                           |
-| `PDF_PICTURE_MAX_DPI`    | 600    | `(default)` Pages as pictures; a Letter page at 600 dpi is 33 megapixels                     |
-| `PDF_DROP_MAX_FILES`     | 50     | `(default)` PDFs taken from one drop; more are refused together, with the count              |
-| `PDF_DROP_OWNER_WAIT_MS` | 10,000 | `(default)` How long a drop waits for the Explorer to know who is here; safe range 2 to 30 s |
+| Constant                 | Value  | Why                                                                                                                     |
+| ------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `PDF_PRINT_DPI`          | 150    | `(default)` Where pages are drawn for print; safe range 100 to 300                                                      |
+| `PDF_PRINT_FRAME_MS`     | 60,000 | `(default)` How long the print frame stays where the browser never says the dialog closed; safe range 10,000 to 300,000 |
+| `PDF_PICTURE_MAX_DPI`    | 600    | `(default)` Pages as pictures; a Letter page at 600 dpi is 33 megapixels                                                |
+| `PDF_DROP_MAX_FILES`     | 50     | `(default)` PDFs taken from one drop; more are refused together, with the count                                         |
+| `PDF_DROP_OWNER_WAIT_MS` | 10,000 | `(default)` How long a drop waits for the Explorer to know who is here; safe range 2 to 30 s                            |
 
 ## Share roles
 

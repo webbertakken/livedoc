@@ -128,6 +128,9 @@ describe('the engine over a worker thread', () => {
       expect(baked.ok && baked.kind).toBe('unchanged');
       expect(baked.ok && baked.bytes).toEqual(stored);
     }
+    // Printing: a page cut from the file, as a PDF of its own.
+    const cut = await engine.cutPages(stored, [1]);
+    expect(new TextDecoder().decode(cut!.subarray(0, 5))).toBe('%PDF-');
     await engine.close();
     expect(engine.stopped).toBe(false);
   });
@@ -192,6 +195,7 @@ describe('the engine over a worker thread', () => {
     expect(await engine.canAppend()).toBe(false);
     expect(await engine.repaired()).toBe(false);
     expect(await engine.bake(Uint8Array.of(0, 0))).toEqual({ ok: false, refusal: 'unreadable' });
+    expect(await engine.cutPages(Uint8Array.of(0), [0])).toBeNull();
     expect(await engine.heldBytes()).toBe(0);
     expect(stopped.mock.calls).toEqual([['trap']]);
     expect(logged()).toEqual(['[pdf] worker-restarted reason=trap detail=RangeError']);
