@@ -65,6 +65,7 @@ import { usePdfReadingText } from '@/lib/pdf-document/usePdfReadingText';
 import type { PdfUndoState } from '@/lib/pdf-document/pdf-undo';
 import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
+import { usePdfZoomablePage } from '@/lib/pdf-document/usePdfZoomablePage';
 import { track } from '@/lib/telemetry';
 import { PdfFileNotices } from './PdfFileNotices';
 import { PdfOpenNotices } from './PdfOpenNotices';
@@ -158,6 +159,7 @@ export function PdfDocumentSurface({
     () => ({ ...pdfReadsOf(home), startEngine: startPdfEngineWorker }),
     [home],
   );
+  usePdfZoomablePage();
   const open = usePdfDocument(scope, bind, attempt, deps);
   // A file that forbids changes is drawn for Viewing until its permissions password is given (opening.md).
   const drawnLevel = pdfLimitedLevel(level, open.phase === 'ready' ? open.permissions : null);
