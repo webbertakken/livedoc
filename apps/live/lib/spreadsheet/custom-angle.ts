@@ -2,7 +2,8 @@
 // D211): a whole number of degrees from −90 to 90, 0 clearing the rotation; anything else says why.
 import { ROTATION_MAX, ROTATION_MIN, type CellFormat, type Rotation } from '@livedoc/sheets';
 
-export const CUSTOM_ANGLE_PROBLEM = `Enter a whole number of degrees from ${ROTATION_MIN} to ${ROTATION_MAX}.`;
+// Written with a true minus sign, as the menus write −90°.
+export const CUSTOM_ANGLE_PROBLEM = `Enter a whole number of degrees from −${-ROTATION_MIN} to ${ROTATION_MAX}.`;
 
 export type CustomAngle = { ok: true; ro: Rotation | null } | { ok: false; problem: string };
 
