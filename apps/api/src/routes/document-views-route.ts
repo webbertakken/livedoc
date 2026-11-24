@@ -383,9 +383,16 @@ async function inScopeFacts(env: DocumentEnv, document: DocumentDTO, tabScope: s
     }
   };
   if (tabScope !== null) {
-    const tab = await getTab(env, document.id, tabScope);
-    batches = 1;
-    if (tab) take([tab]);
+    // Its tab, and that tab's drawing tabs, which a link to it reaches (tab-scoped-share-links.md "Drawing tabs").
+    const ids = [
+      tabScope,
+      ...document.tabs.filter((t) => t.drawingOf === tabScope && !t.outOfScope).map((t) => t.id),
+    ];
+    for (const id of ids) {
+      const tab = await getTab(env, document.id, id);
+      if (tab) take([tab]);
+    }
+    batches = ids.length;
     return { facts, batches };
   }
   for (let offset = 0; ; offset += OVERVIEW_TAB_BATCH) {
@@ -407,9 +414,18 @@ export async function answerOverview(
   const started = Date.now();
   const { facts, batches } = await inScopeFacts(ctx.env, document, tabScope);
   const tabs: OverviewTabInput[] = document.tabs.flatMap((summary): OverviewTabInput[] => {
-    if (summary.outOfScope) return [{ id: summary.id, outOfScope: true }];
+    // A drawing tab out of scope is no tab of its own to name (E29).
+    if (summary.outOfScope) return summary.drawingOf ? [] : [{ id: summary.id, outOfScope: true }];
     const tabFacts = facts.get(summary.id);
-    return tabFacts === undefined ? [] : [{ id: summary.id, outOfScope: false, facts: tabFacts }];
+    if (tabFacts === undefined) return [];
+    return [
+      {
+        id: summary.id,
+        outOfScope: false,
+        facts: tabFacts,
+        ...(summary.drawingOf ? { drawingOf: summary.drawingOf } : {}),
+      },
+    ];
   });
   const result = overviewView(document, tabs, {
     now: Date.now(),

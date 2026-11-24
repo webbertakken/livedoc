@@ -46,7 +46,7 @@ export).
 1. Resolve `<code>` through `getShareLink` (the single authority — expiry +
    role). 404 if missing / revoked / expired.
 2. If the document has a share password, 404 (no image for gated shares).
-3. Load the rendered tab (default: the first tab; `?tab=<id>` selects another). A tab-scoped link ([Tab-scoped share links](tab-scoped-share-links.md)) always renders its own tab, and a `?tab=` naming any other is a 404.
+3. Load the rendered tab (default: the first listed tab; `?tab=<id>` selects another). A tab-scoped link ([Tab-scoped share links](tab-scoped-share-links.md)) always renders its own tab, and a `?tab=` naming any other is a 404. A `?tab=` naming a drawing tab is a 404: a drawing is drawn only inside its text document ([Drawings](../034-text-documents/objects.md#the-document-around-it)).
 4. Render it to SVG (a Pages tab as its first page alone, [Document SVG snapshots](../006-document/document-snapshots.md) "Pages tabs") and return `Content-Type: image/svg+xml` with a short
    `Cache-Control` (e.g. `max-age=30, stale-while-revalidate=300`) so embeds
    update without hammering D1.

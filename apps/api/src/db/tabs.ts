@@ -108,7 +108,8 @@ export async function tabBodiesInOrder(
 // A stored tab body with its id and its element count (null until known, migration 0059).
 export type StoredTabBody = { id: string; data: string; elementCount: number | null };
 
-// The document's first tab, or `tabId`'s tab when given, as the snapshot renderer reads it.
+// The document's first listed tab (a drawing tab never: docs/specs/034-text-documents/objects.md "The document around
+// it"), or `tabId`'s tab when given, as the snapshot renderer reads it.
 export async function getTabBody(
   env: DocumentEnv,
   documentId: string,
@@ -118,7 +119,7 @@ export async function getTabBody(
     `SELECT t.id, t.data, t.element_count
        FROM document_tabs dt
        JOIN tabs t ON t.id = dt.tab_id
-      WHERE dt.document_id = ?${tabId === null ? '' : ' AND dt.tab_id = ?'}
+      WHERE dt.document_id = ?${tabId === null ? ' AND t.drawing_of IS NULL' : ' AND dt.tab_id = ?'}
       ORDER BY dt.order_index ASC
       LIMIT 1`,
   )

@@ -10743,6 +10743,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             ],
             "type": "object"
           },
+          "drawingOf": {
+            "type": "string"
+          },
           "elements": {
             "type": "number"
           },
@@ -10867,6 +10870,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "document": {
         "additionalProperties": false,
         "properties": {
+          "drawings": {
+            "type": "number"
+          },
           "id": {
             "type": "string"
           },

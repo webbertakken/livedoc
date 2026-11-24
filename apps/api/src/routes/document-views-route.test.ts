@@ -611,6 +611,47 @@ describe('views behind the read gate (E22, E23, E25)', () => {
     expect(logged('[views] overview')).toMatchObject({ batches: 1 });
   });
 
+  // E29: a text document's drawing tabs follow it, indented; a link to one tab lists its tab's drawings only.
+  describe('with drawing tabs', () => {
+    async function withDrawings() {
+      const db = await setUp();
+      db.sql.exec(`
+        INSERT INTO tabs (id, name, data, updated_at, drawing_of)
+          VALUES ('dw1', 'Drawing 1', '{"elements":[]}', 1, 't1'), ('dw2', 'Drawing 2', '{"elements":[]}', 1, 't2');
+        INSERT INTO document_tabs (document_id, tab_id, order_index, added_at)
+          VALUES ('D', 'dw1', 2, 1), ('D', 'dw2', 3, 1);
+      `);
+      await db.flush();
+      return db;
+    }
+
+    it('lists each drawing under its tab, counted apart', async () => {
+      quiet();
+      const db = await withDrawings();
+      const lines = (await (await docView(db, 'view=overview')).text()).split('\n');
+      expect(lines[0]).toMatch(/^doc D "Checkout" · 2 tabs · 2 drawings · edited/);
+      expect(lines.slice(1).map((l) => l.split(' · ')[0])).toEqual([
+        '  tab t1 "Architecture"',
+        '    drawing dw1 "Drawing 1"',
+        '  tab t2 "Tab 2"',
+        '    drawing dw2 "Drawing 2"',
+      ]);
+    });
+
+    it("lists a link's tab with its drawings, and no other tab's drawing", async () => {
+      quiet();
+      const db = await withDrawings();
+      await createShareLink(db.env, 'D', 'SCOPED', 'view', 'never', 't2');
+      const who = { owner: 'guest', headers: { 'X-Share-Code': 'SCOPED' } };
+      const lines = (await (await docView(db, 'view=overview', who)).text()).split('\n');
+      expect(lines.slice(1).map((l) => l.split(' · ')[0])).toEqual([
+        '  tab t1 (out of scope)',
+        '  tab t2 "Tab 2"',
+        '    drawing dw2 "Drawing 2"',
+      ]);
+    });
+  });
+
   it('answers a trashed document as the plain read does', async () => {
     quiet();
     const db = await setUp();

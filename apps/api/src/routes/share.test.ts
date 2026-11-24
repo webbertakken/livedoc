@@ -334,6 +334,38 @@ describe('GET /api/share/<code>/image.svg (docs/specs/013-workspace/live-image-s
     expect(getThumbnailMock).not.toHaveBeenCalled();
   });
 
+  // docs/specs/034-text-documents/objects.md "The document around it": a drawing is drawn only inside its text document.
+  it('404s ?tab= naming a drawing tab, without rendering it', async () => {
+    getShareLinkMock.mockResolvedValue(shareLink('d1'));
+    getDocumentMock.mockResolvedValue({
+      ...liveDoc('d1'),
+      tabs: [
+        { id: 'w', documentId: 'd1', name: 'Notes', orderIndex: 0, updatedAt: 1 },
+        {
+          id: 'd9',
+          documentId: 'd1',
+          name: 'Drawing 1',
+          orderIndex: 1,
+          updatedAt: 1,
+          drawingOf: 'w',
+        },
+      ],
+    });
+    getSharePasswordMock.mockResolvedValue(null);
+    getTabImageMock.mockResolvedValue('<svg>drawing</svg>');
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    const res = await handleShare(imageCtx('C', 'd9'));
+
+    expect(res.status).toBe(404);
+    expect(getTabImageMock).not.toHaveBeenCalled();
+    expect(info).toHaveBeenCalledWith('[share-image] drawing tab refused', {
+      documentId: 'd1',
+      tabId: 'd9',
+    });
+    info.mockRestore();
+  });
+
   // docs/specs/013-workspace/tab-scoped-share-links.md: a scoped link's image is always its own tab.
   describe('for a tab-scoped link', () => {
     const scopedLink = () => ({ ...shareLink('d1'), tabId: 'tab-2' });

@@ -16,6 +16,39 @@ const inputs = (outOfScope: ReadonlySet<number> = new Set()): OverviewTabInput[]
       : { id: tab.id, outOfScope: false, facts: headerFactsOf(tab, { tabIds, rev: i + 1 }) },
   );
 
+// docs/specs/024-agents/document-views.md E29: a text document's drawing tabs follow it, indented, counted apart.
+describe('overviewView and drawing tabs (E29)', () => {
+  const [first, second, third] = inputs() as Extract<OverviewTabInput, { outOfScope: false }>[];
+  const drawing = (input: typeof first, id: string, drawingOf: string): OverviewTabInput => ({
+    ...input!,
+    id,
+    drawingOf,
+    facts: { ...input!.facts, tab: { ...input!.facts.tab, name: `Drawing of ${drawingOf}` } },
+  });
+
+  it('lists each drawing under its text document, and leaves out one whose text document is not listed', () => {
+    const ids = tabs.map((t) => t.id);
+    const { text, json } = overviewView(
+      CHECKOUT_DOCUMENT,
+      [
+        drawing(third, 'dd000000-0000-4000-8000-000000000001', ids[0]!),
+        first!,
+        second!,
+        drawing(third, 'dd000000-0000-4000-8000-000000000002', 'gone'),
+      ],
+      { now: FIXED_EPOCH },
+    );
+    const lines = text.split('\n');
+    expect(lines[0]).toContain(' · 2 tabs · 1 drawing · ');
+    expect(lines[1]).toMatch(/^ {2}tab 0b34 "Checkout platform"/);
+    expect(lines[2]).toMatch(/^ {4}drawing dd00\S* "Drawing of 0b34/);
+    expect(lines[3]).toMatch(/^ {2}tab 51c9 "Payment sequence"/);
+    expect(lines).toHaveLength(4);
+    expect(json.document).toEqual({ ...CHECKOUT_DOCUMENT, tabs: 2, drawings: 1 });
+    expect(json.tabs[1]).toMatchObject({ outOfScope: false, drawingOf: '0b34' });
+  });
+});
+
 describe('overviewView (R17, VW37)', () => {
   it('builds valid fixture tabs', () => {
     expect(tabs.every((tab) => isValidTab(tab))).toBe(true);

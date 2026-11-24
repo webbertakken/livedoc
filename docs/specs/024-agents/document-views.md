@@ -128,6 +128,10 @@ The invariants and edge cases the code and its tests cite by id.
 - **E18** Ref of a deleted element: 404 `target_not_found` with nearest refs; the message suggests `tab diff`.
 - **E22** Tab-scoped visitor asks `overview`: Out-of-scope tabs print `(out of scope)`; their bodies are never read.
 - **E23** Tab-scoped visitor asks a view of another tab: The GET's 404, unchanged.
+- **E29** A text document's drawing tabs in `overview`: each follows its text document's line, four spaces in, as
+  `drawing <ref> "<name>" · …`, its JSON `drawingOf` the text document's ref; the header counts tabs and
+  `· n drawings` apart; a drawing whose text document is not listed is left out. A link to one tab lists its tab's
+  drawings ([Drawings](../034-text-documents/objects.md#the-document-around-it)).
 - **E25** Trashed document: The GET's 410, unchanged.
 - **E26** Table with ragged rows: Columns = the longest row's length; missing cells print empty.
 - **E28** Event-storming note with the `actor` notation: Kind word `es:actor`.

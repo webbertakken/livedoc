@@ -363,7 +363,10 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 
 - **Search**: a drawing's words are the text document's; a hit opens the text document at the picture.
 - **Exports**: a document export (PDF, PNG, SVG) draws a drawing tab only inside its text document, never as a tab of
-  its own; an agent's views list it under its text document.
+  its own: a document's picture (its thumbnail, share card and live image) is of its first listed tab, and a live
+  image asking for a drawing tab is not found. An agent's `overview` lists each drawing under its text document
+  ([Document views](../024-agents/document-views.md)); a drawing tab's own views and render stay an agent's to read
+  `(default)`.
 - **Copying**: Make a Copy, Duplicate and a Drive import copy drawing tabs with their text document tabs, fresh ids,
   each picture re-pointed at the copy's tab (as tab windows are). A document tab duplicated inside a text document
   shares its drawings until opened (above).
