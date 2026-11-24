@@ -61,7 +61,7 @@ export function EmptyPageLayouts({
         // A press on the card is the card's, never the canvas's (no marquee, no deselect).
         onPointerDown={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
-        className="pointer-events-auto relative flex animate-dialog-in flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40"
+        className="pointer-events-auto relative flex animate-dialog-in flex-col overflow-hidden rounded-surface border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40"
         style={{
           width,
           maxHeight: height,
@@ -79,7 +79,7 @@ export function EmptyPageLayouts({
             {width >= DESCRIBED_MIN_WIDTH ? (
               <span
                 aria-hidden
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-md shadow-brand-900/20"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-surface bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-md shadow-brand-900/20"
               >
                 <SparklesIcon />
               </span>
@@ -87,11 +87,11 @@ export function EmptyPageLayouts({
             <div className="min-w-0">
               <p
                 id={`empty-page-layouts-${page.id}`}
-                className="whitespace-nowrap text-base font-semibold text-slate-900 dark:text-slate-50"
+                className="whitespace-nowrap text-panel-title text-slate-900 dark:text-slate-50"
               >
                 Start From a Layout
               </p>
-              <p className="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+              <p className="line-clamp-2 text-supporting text-slate-500 dark:text-slate-400">
                 {count} {KIND_NOUN[kind]} layouts in your theme. Pick one, then make it yours.
               </p>
             </div>
@@ -102,7 +102,7 @@ export function EmptyPageLayouts({
                 type="button"
                 aria-label="Hide"
                 onClick={onHide}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="flex size-row items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 <CloseIcon />
               </button>

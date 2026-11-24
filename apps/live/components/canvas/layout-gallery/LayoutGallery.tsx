@@ -128,7 +128,7 @@ export function LayoutGallery({
             type="button"
             onClick={surprise}
             disabled={shownCount === 0}
-            className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-lg bg-brand-50 px-2.5 text-xs font-semibold text-brand-700 ring-1 ring-brand-200 transition hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-brand-600 disabled:opacity-50 dark:bg-brand-500/15 dark:text-brand-100 dark:ring-brand-400/30 dark:hover:bg-brand-500/25"
+            className="flex h-row shrink-0 items-center gap-2 rounded-control bg-brand-50 px-3 text-body text-brand-700 ring-1 ring-brand-200 transition hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-brand-600 disabled:opacity-50 dark:bg-brand-500/15 dark:text-brand-100 dark:ring-brand-400/30 dark:hover:bg-brand-500/25"
           >
             <span
               aria-hidden
@@ -144,7 +144,7 @@ export function LayoutGallery({
       <div
         role="group"
         aria-label="Layout categories"
-        className="-mx-1 flex shrink-0 gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-1 flex shrink-0 gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {chips.map((c) => {
           const on = c.id === category;
@@ -154,7 +154,7 @@ export function LayoutGallery({
               type="button"
               aria-pressed={on}
               onClick={() => choose(c.id)}
-              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
+              className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-1 text-body transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
                 on
                   ? 'bg-brand-700 text-white shadow-sm dark:bg-brand-600'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
@@ -162,7 +162,7 @@ export function LayoutGallery({
             >
               {c.label}
               <span
-                className={`tabular-nums text-[10px] ${on ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}
+                className={`tabular-nums text-supporting ${on ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}
               >
                 {c.count}
               </span>
@@ -191,7 +191,7 @@ export function LayoutGallery({
               {sections.map((s) => (
                 <section key={s.id ?? 'results'} aria-label={s.label ?? 'Layouts'}>
                   {s.label ? (
-                    <h3 className="sticky top-0 z-10 flex items-baseline gap-2 bg-white/95 px-1.5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 backdrop-blur-sm dark:bg-slate-900/95 dark:text-slate-400">
+                    <h3 className="sticky top-0 z-10 flex items-baseline gap-2 bg-white/95 px-2 pb-1 pt-2 text-supporting text-slate-500 backdrop-blur-sm dark:bg-slate-900/95 dark:text-slate-400">
                       {s.label}
                       <span className="font-normal tabular-nums">{s.layouts.length}</span>
                     </h3>

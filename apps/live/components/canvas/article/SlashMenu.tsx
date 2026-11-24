@@ -66,7 +66,7 @@ export function SlashMenu({
         data-article-keep-active=""
         onMouseDown={(e) => e.preventDefault()}
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-overlay)] animate-fade-in overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 text-sm shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
+        className="fixed z-[var(--z-overlay)] animate-fade-in overflow-y-auto rounded-surface border border-slate-200 bg-white p-1 text-body shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
         style={{
           left: pos?.left ?? -9999,
           top: pos?.top ?? -9999,
@@ -81,7 +81,7 @@ export function SlashMenu({
             <div key={`${group.name}-${group.entries[0]!.i}`} role="group" aria-label={group.name}>
               <p
                 aria-hidden
-                className="px-2.5 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                className="px-3 pb-0.5 pt-2 text-supporting text-slate-500 dark:text-slate-400"
               >
                 {group.name}
               </p>
@@ -95,14 +95,14 @@ export function SlashMenu({
                   data-slash-index={i}
                   onPointerEnter={() => onHover(i)}
                   onClick={() => onPick(item)}
-                  className={`flex w-full items-baseline justify-between gap-3 rounded-md px-2.5 py-1.5 text-left transition ${
+                  className={`flex w-full items-baseline justify-between gap-3 rounded-control px-3 py-1.5 text-left transition ${
                     i === index
                       ? 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-200'
                       : 'text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <span className="font-medium">{item.label}</span>
-                  <span className="truncate text-xs text-slate-500 dark:text-slate-400">
+                  <span className="truncate text-supporting text-slate-500 dark:text-slate-400">
                     {item.hint}
                   </span>
                 </button>

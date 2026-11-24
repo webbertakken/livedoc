@@ -26,7 +26,7 @@ const WIDTH = 300;
 const GAP = 10;
 
 const ROW =
-  'group flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800';
+  'group flex w-full items-center gap-3 rounded-menu px-2 py-1.5 text-left transition hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800';
 
 // Up and Down between the rows of a list, wrapping; Home and End to its ends.
 function moveBetweenRows(e: KeyboardEvent<HTMLElement>) {
@@ -106,17 +106,17 @@ export function AddPagePopover({
         <button
           type="button"
           onClick={() => setChoosingDevice(false)}
-          className="flex h-7 items-center gap-0.5 rounded-md pl-0.5 pr-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          className="flex h-row items-center gap-0.5 rounded-control pl-0.5 pr-2 text-supporting text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
         >
           <ChevronLeftIcon />
           Back
         </button>
-        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">Choose a Device</p>
+        <p className="text-supporting text-slate-900 dark:text-slate-100">Choose a Device</p>
       </div>
       <div role="group" aria-label="Choose a Device" onKeyDown={moveBetweenRows}>
         {WIREFRAME_DEVICE_GROUPS.map((group) => (
           <div key={group.deviceClass} className="pt-1.5 first:pt-0">
-            <p className="px-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <p className="px-2 pb-0.5 text-supporting text-slate-500 dark:text-slate-400">
               {group.label}
             </p>
             {group.devices.map((id) => {
@@ -134,7 +134,7 @@ export function AddPagePopover({
                   onClick={() => chooseDevice(id)}
                   className={`${ROW} ${id === remembered ? 'bg-brand-50/70 ring-1 ring-brand-300 dark:bg-brand-500/10 dark:ring-brand-400/40' : ''}`}
                 >
-                  <span className="flex h-8 w-10 shrink-0 items-center justify-center">
+                  <span className="flex h-field w-10 shrink-0 items-center justify-center">
                     <DeviceMiniature
                       device={id}
                       landscape={!!info.landscape}
@@ -142,10 +142,10 @@ export function AddPagePopover({
                       height={32}
                     />
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-900 dark:text-slate-100">
+                  <span className="min-w-0 flex-1 truncate text-body text-slate-900 dark:text-slate-100">
                     {info.label}
                   </span>
-                  <span className="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                  <span className="shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
                     {size}
                   </span>
                 </button>
@@ -157,9 +157,7 @@ export function AddPagePopover({
     </div>
   ) : (
     <div className="flex flex-col">
-      <p className="px-2 pb-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
-        Add a Page
-      </p>
+      <p className="px-2 pb-1 text-supporting text-slate-900 dark:text-slate-100">Add a Page</p>
       <div role="group" aria-label="Add a Page" onKeyDown={moveBetweenRows}>
         {PAGE_KINDS.map((k) => (
           <button
@@ -170,14 +168,12 @@ export function AddPagePopover({
             onClick={() => choose(k.kind)}
             className={ROW}
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 transition group-hover:bg-white group-hover:text-brand-700 group-hover:shadow-sm group-focus-visible:bg-white group-focus-visible:text-brand-700 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700 dark:group-hover:text-brand-100">
+            <span className="flex size-field shrink-0 items-center justify-center rounded-control bg-slate-100 text-slate-600 transition group-hover:bg-white group-hover:text-brand-700 group-hover:shadow-sm group-focus-visible:bg-white group-focus-visible:text-brand-700 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700 dark:group-hover:text-brand-100">
               <PageKindGlyph kind={k.kind} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-semibold text-slate-900 dark:text-slate-100">
-                {k.name}
-              </span>
-              <span className="block truncate text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+              <span className="block text-body text-slate-900 dark:text-slate-100">{k.name}</span>
+              <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
                 {k.hint}
               </span>
             </span>
@@ -219,7 +215,7 @@ export function AddPagePopover({
         data-floating-panel=""
         data-menu-surface=""
         onPointerDown={(e) => e.stopPropagation()}
-        className="fixed z-[var(--z-overlay)] animate-fade-in overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
+        className="fixed z-[var(--z-overlay)] animate-fade-in overflow-y-auto rounded-surface border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900"
         style={{
           left: pos?.left ?? -9999,
           top: pos?.top ?? -9999,

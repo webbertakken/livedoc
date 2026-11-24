@@ -97,20 +97,20 @@ export function useArticleLinkHover(
     setHover(null);
   };
   const button =
-    'rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white';
+    'rounded-control px-2 py-1 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white';
   return (
     <Portal>
       <div
         role="dialog"
         aria-label="Link"
         data-article-keep-active=""
-        className="fixed z-[var(--z-overlay)] flex max-w-[22rem] animate-fade-in items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900"
+        className="fixed z-[var(--z-overlay)] flex max-w-[22rem] animate-fade-in items-center gap-1 rounded-menu border border-slate-200 bg-white p-1 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900"
         style={{ left: hover.left, top: hover.top }}
         onPointerEnter={stay}
         onPointerLeave={go}
         onMouseDown={(e) => e.preventDefault()}
       >
-        <span className="min-w-0 truncate px-1.5 text-xs text-slate-500 dark:text-slate-400">
+        <span className="min-w-0 truncate px-2 text-supporting text-slate-500 dark:text-slate-400">
           {hover.href}
         </span>
         <button type="button" className={button} onClick={() => openLink(hover.href)}>

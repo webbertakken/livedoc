@@ -35,10 +35,10 @@ export function LayoutGalleryDialog({
       <div className="flex min-h-0 flex-col p-4" data-layout-gallery-dialog={page.id}>
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-base font-semibold text-slate-900 dark:text-slate-50">
+            <h2 id={titleId} className="text-panel-title text-slate-900 dark:text-slate-50">
               Start From a Layout
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               {count} layouts in your theme. Pick one, then make it yours.
             </p>
           </div>
@@ -48,7 +48,7 @@ export function LayoutGalleryDialog({
                 type="button"
                 aria-label="Close"
                 onClick={onClose}
-                className="touch-target relative flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="touch-target relative flex size-row items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 <CloseIcon />
               </button>

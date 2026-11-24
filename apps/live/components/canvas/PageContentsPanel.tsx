@@ -101,7 +101,7 @@ export function PageContentsPanel({
                 onClick={onDock}
                 aria-label="Dock Contents as a sidebar"
                 data-contents-dock=""
-                className="relative flex h-6 w-6 touch-target items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                className="relative flex size-chip touch-target items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               >
                 <DockIcon />
               </button>
@@ -128,7 +128,7 @@ function ContentsSheet({ onClose, children }: { onClose: () => void; children: R
       zClassName="z-[var(--z-overlay)]"
     >
       <div className="flex items-center justify-between px-4 pb-2 pt-0.5">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Contents</p>
+        <p className="text-body text-slate-900 dark:text-slate-100">Contents</p>
       </div>
       {children}
     </BottomSheet>

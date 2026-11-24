@@ -56,7 +56,7 @@ export function AddPageButton({
     <div
       // The Pages tour's anchor (docs/specs/007-editor/pages-tour.md): both buttons.
       data-tour-id="add-page"
-      className="pointer-events-auto absolute flex flex-col items-center gap-1.5 transition-[left] duration-200 ease-out motion-reduce:transition-none"
+      className="pointer-events-auto absolute flex flex-col items-center gap-2 transition-[left] duration-200 ease-out motion-reduce:transition-none"
       style={{ left: x, top: lastMiddle, transform: `translate(-50%, -50%) scale(${1 / zoom})` }}
       // A press here is the buttons', never the canvas's (no marquee, no deselect, no draw).
       onPointerDown={(e) => e.stopPropagation()}
@@ -68,7 +68,7 @@ export function AddPageButton({
           aria-label={another}
           data-add-page-like=""
           onClick={() => onAddLike(last.id)}
-          className={`${ROUND} h-9 w-9 ${IDLE}`}
+          className={`${ROUND} size-prominent ${IDLE}`}
         >
           <PlusIcon />
         </button>
@@ -82,7 +82,7 @@ export function AddPageButton({
           aria-expanded={open}
           data-add-page-trigger
           onClick={() => setOpen((o) => !o)}
-          className={`${ROUND} h-7 w-7 ${open ? PRESSED : IDLE}`}
+          className={`${ROUND} size-row ${open ? PRESSED : IDLE}`}
         >
           <ChooseIcon />
         </button>

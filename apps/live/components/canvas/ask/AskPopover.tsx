@@ -20,9 +20,9 @@ import { AskHands, AskLaneCount, AskTopics } from './AskChoices';
 const WIDTH = 340;
 // How long Copy Prompt says "Copied".
 const COPIED_MS = 2000;
-const QUIET = 'text-[11px] text-slate-600 dark:text-slate-400';
+const QUIET = 'text-supporting text-slate-600 dark:text-slate-400';
 const LINK =
-  'rounded-md text-[11px] font-medium text-brand-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-brand-300';
+  'rounded-control text-supporting text-brand-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-brand-300';
 
 export type AskPopoverProps = {
   tab: Pick<Tab, 'id' | 'name' | 'elements' | 'layers' | 'esAbout' | 'esDeclined'>;
@@ -75,24 +75,24 @@ export function AskPopover({
         data-testid="ask-popover"
         // The ask is about what is selected: working in here leaves a selected context selected.
         data-keeps-context-selection=""
-        className="rounded-lg border border-slate-200 bg-white text-[13px] text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+        className="rounded-menu border border-slate-200 bg-white text-body text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
       >
-        <header className="flex items-center gap-2 px-3.5 pb-1.5 pt-3">
+        <header className="flex items-center gap-2 px-4 pb-1.5 pt-3">
           <SparkleIcon size={15} className="text-brand-700 dark:text-brand-300" />
-          <h2 className="text-sm font-semibold">Ask for Suggestions</h2>
+          <h2 className="text-body">Ask for Suggestions</h2>
           <span className={`ml-auto ${QUIET}`}>{model.about}</span>
         </header>
         <AskTopics topics={model.topics} topic={model.topic} onPick={setTopic} />
         {model.lanes ? <AskLaneCount lanes={model.lanes} onChange={setLanes} /> : null}
 
-        <div className="px-3.5 pb-3">
+        <div className="px-4 pb-3">
           <AskHands hands={model.hands} hand={model.hand} onPick={setHand} />
           {model.prompt ? (
             <>
               <pre
                 tabIndex={0}
                 aria-label="Prompt"
-                className="mt-2.5 max-h-24 overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 font-sans text-[11.5px] leading-normal text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+                className="mt-2.5 max-h-24 overflow-y-auto whitespace-pre-wrap rounded-menu border border-slate-200 bg-slate-50 px-3 py-2 font-sans text-supporting text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
               >
                 {model.prompt}
               </pre>
@@ -111,21 +111,18 @@ export function AskPopover({
             </>
           ) : null}
           {model.unreachable ? (
-            <p className="mt-2.5 text-xs leading-normal text-slate-700 dark:text-slate-300">
+            <p className="mt-2.5 text-supporting text-slate-700 dark:text-slate-300">
               {model.unreachable}
             </p>
           ) : null}
           {model.hand === 'built-in' ? (
             <>
-              <p className={`mt-2.5 leading-normal ${QUIET}`}>
+              <p className={`mt-2.5 ${QUIET}`}>
                 The deployment’s small model answers here. Nothing changes until you apply a
                 suggestion.
               </p>
               {failure ? (
-                <p
-                  role="alert"
-                  className="mt-2 text-xs leading-normal text-red-700 dark:text-red-300"
-                >
+                <p role="alert" className="mt-2 text-supporting text-red-700 dark:text-red-300">
                   {failure}
                 </p>
               ) : null}
@@ -166,7 +163,7 @@ export function AskPopover({
               close();
               acts.arrange();
             }}
-            className="flex w-full items-center border-t border-slate-200 px-3.5 py-2.5 text-left hover:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:border-slate-800 dark:hover:bg-slate-800/60"
+            className="flex w-full items-center border-t border-slate-200 px-4 py-2.5 text-left hover:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:border-slate-800 dark:hover:bg-slate-800/60"
           >
             Arrange and Reorder
             <span className={`ml-auto ${QUIET}`}>Along the timeline, no model</span>
@@ -175,7 +172,7 @@ export function AskPopover({
 
         <AskAbout about={model.aboutText} onSave={acts.saveAbout} />
         {model.declined > 0 ? (
-          <div className="-mt-1 flex items-center px-3.5 pb-3">
+          <div className="-mt-1 flex items-center px-4 pb-3">
             <span className={QUIET}>{model.declined} declined</span>
             <button type="button" onClick={acts.forgetDeclined} className={`ml-auto ${LINK}`}>
               Forget Declined

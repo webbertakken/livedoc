@@ -70,7 +70,7 @@ export function ZoneBar({
       aria-label={drawing ? 'Drawing' : 'Object in the text'}
       data-article-keep-active=""
       data-zone-bar=""
-      className="pointer-events-auto absolute flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white p-0.5 shadow-md shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900"
+      className="pointer-events-auto absolute flex items-center gap-0.5 rounded-menu border border-slate-200 bg-white p-0.5 shadow-md shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900"
       style={{
         // Under the zone: above it sits the element's own toolbar.
         left: rect.x + rect.width / 2,
@@ -104,7 +104,7 @@ export function ZoneBar({
                 e.stopPropagation();
                 onMoveStep(by);
               }}
-              className="flex h-7 w-6 cursor-grab touch-none items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:cursor-grabbing dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              className="flex h-row w-6 cursor-grab touch-none items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:cursor-grabbing dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
               <Grip />
             </button>
@@ -146,7 +146,7 @@ export function ZoneBar({
         <>
           <Sep />
           <Choice label={drawing ? 'Delete Drawing' : 'Delete'} onPress={onRemove}>
-            <TrashIcon className="h-4 w-4" />
+            <TrashIcon className="size-icon-row" />
           </Choice>
         </>
       ) : null}
@@ -162,7 +162,7 @@ export function zoneGripStep(key: string): -1 | 1 | null {
 }
 
 function Sep() {
-  return <span aria-hidden className="mx-0.5 h-5 w-px bg-slate-200 dark:bg-slate-700" />;
+  return <span aria-hidden className="mx-0.5 h-chip w-px bg-slate-200 dark:bg-slate-700" />;
 }
 
 function Choice({
@@ -183,7 +183,7 @@ function Choice({
         aria-label={label}
         aria-pressed={pressed}
         onClick={onPress}
-        className={`flex h-7 w-7 items-center justify-center rounded-md transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
+        className={`flex size-row items-center justify-center rounded-control transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
           pressed
             ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
             : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -319,7 +319,7 @@ export function ZoneResizeGrips({
         }}
         onPointerDown={(e) => start(e, { x: true, y: false })}
       >
-        <span className="h-8 w-1.5 rounded-full bg-white shadow ring-1 ring-brand-500" />
+        <span className="h-field w-1.5 rounded-full bg-white shadow ring-1 ring-brand-500" />
       </div>
       <div
         role="separator"
@@ -336,7 +336,7 @@ export function ZoneResizeGrips({
         }}
         onPointerDown={(e) => start(e, { x: true, y: true })}
       >
-        <span className="h-2.5 w-2.5 rounded-sm bg-white shadow ring-1 ring-brand-500" />
+        <span className="h-2.5 w-2.5 rounded-control bg-white shadow ring-1 ring-brand-500" />
       </div>
     </>
   );

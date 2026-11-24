@@ -42,8 +42,8 @@ export function PageLockButton({
           aria-label={label}
           data-page-lock={locked ? 'locked' : 'open'}
           onClick={onToggle}
-          className={`touch-target-y relative flex h-6 items-center justify-center gap-1 rounded-md transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
-            locked && labelled ? 'px-1.5 text-[11px] font-medium' : 'w-6'
+          className={`touch-target-y relative flex h-chip items-center justify-center gap-1 rounded-control transition focus-visible:outline-2 focus-visible:outline-brand-600 ${
+            locked && labelled ? 'px-2 text-body' : 'w-chip'
           } ${
             locked
               ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'

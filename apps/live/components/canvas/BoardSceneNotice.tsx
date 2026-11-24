@@ -43,37 +43,40 @@ export function BoardSceneNotice({
             onClose();
           }
         }}
-        className="pointer-events-auto w-full max-w-[360px] rounded-lg border border-slate-200 bg-white p-3 text-slate-900 shadow-lg shadow-slate-900/5 motion-safe:animate-fade-in dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40"
+        className="pointer-events-auto w-full max-w-[360px] rounded-menu border border-slate-200 bg-white p-3 text-slate-900 shadow-lg shadow-slate-900/5 motion-safe:animate-fade-in dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40"
       >
         {notice.kind === 'progress' ? (
-          <p className="text-sm">
+          <p className="text-body">
             Pasting images {notice.done} of {notice.total}…
           </p>
         ) : (
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">
+              <p className="text-body">
                 {notice.kind === 'refused'
                   ? `Couldn't paste from ${source}`
                   : `Pasted from ${source} with some changes`}
               </p>
               {notice.kind === 'refused' ? (
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{notice.message}</p>
+                <p className="mt-1 text-supporting text-slate-600 dark:text-slate-300">
+                  {notice.message}
+                </p>
               ) : (
                 <>
                   <BoardSceneReportList report={notice.report} />
                   {images && images.failures.length > 0 ? (
-                    <ul className="mt-1 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                    <ul className="mt-1 space-y-1 text-supporting text-slate-600 dark:text-slate-300">
                       {images.failures.map((f) => (
                         <li key={f.failure} data-failure={f.failure}>
-                          <span className="font-semibold tabular-nums">{f.count}</span> ·{' '}
-                          {f.sentence}
+                          <span className="tabular-nums">{f.count}</span> · {f.sentence}
                         </li>
                       ))}
                     </ul>
                   ) : null}
                   {images?.hint ? (
-                    <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{images.hint}</p>
+                    <p className="mt-2 text-supporting text-slate-600 dark:text-slate-300">
+                      {images.hint}
+                    </p>
                   ) : null}
                 </>
               )}
@@ -82,7 +85,7 @@ export function BoardSceneNotice({
               type="button"
               onClick={onClose}
               data-testid="board-scene-notice-close"
-              className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="shrink-0 rounded-control px-2 py-1 text-body text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Close
             </button>

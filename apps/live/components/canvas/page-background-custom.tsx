@@ -43,7 +43,7 @@ export function CustomGradientEditor({
   const angle = dragAngle ?? fill.angle;
   const yours = useDocumentColours();
   const well = (end: 'from' | 'to', label: string) => (
-    <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+    <span className="flex items-center gap-2 text-supporting text-slate-600 dark:text-slate-300">
       <ColourSwatchButton
         label={`Gradient ${label.toLowerCase()} colour`}
         swatch={fill[end]}
@@ -60,7 +60,7 @@ export function CustomGradientEditor({
   return (
     <div
       data-custom-gradient=""
-      className="mt-2 flex flex-col gap-1.5 rounded-lg border border-slate-200 p-2 dark:border-slate-700"
+      className="mt-2 flex flex-col gap-2 rounded-menu border border-slate-200 p-2 dark:border-slate-700"
     >
       <div className="flex items-center gap-3">
         {well('from', 'From')}
@@ -68,7 +68,7 @@ export function CustomGradientEditor({
         <button
           type="button"
           onClick={() => onCommit({ ...fill, from: fill.to, to: fill.from })}
-          className="ml-auto rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="ml-auto rounded-control px-2 py-1 text-body text-slate-600 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           Swap
         </button>

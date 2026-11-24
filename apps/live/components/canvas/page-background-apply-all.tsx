@@ -30,7 +30,7 @@ export function ApplyBackgroundToAll({
       >
         {label}
       </Button>
-      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+      <p className="mt-1 text-supporting text-slate-500 dark:text-slate-400">
         Gives the other {reach} this background and pattern. A locked one keeps its own.
       </p>
     </div>

@@ -10,7 +10,7 @@ import type { AskModel } from '@/lib/ask';
 
 const FOCUS_WITHIN =
   'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-brand-600';
-const LEGEND = 'mb-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-400';
+const LEGEND = 'mb-1.5 text-supporting text-slate-600 dark:text-slate-400';
 
 export function AskTopics({
   topics,
@@ -23,16 +23,16 @@ export function AskTopics({
 }) {
   const name = useId();
   return (
-    <fieldset className="px-1.5 pb-2">
+    <fieldset className="px-2 pb-2">
       <legend className="sr-only">What to ask for</legend>
       {topics.map(({ topic: offered, menu }) => {
         const on = offered === topic;
         return (
           <label
             key={offered}
-            className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 ${FOCUS_WITHIN} ${
+            className={`flex cursor-pointer items-center gap-3 rounded-menu px-3 py-1.5 ${FOCUS_WITHIN} ${
               on
-                ? 'bg-slate-100 font-semibold text-slate-900 dark:bg-slate-800 dark:text-slate-100'
+                ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100'
                 : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60'
             }`}
           >
@@ -41,7 +41,7 @@ export function AskTopics({
               name={name}
               checked={on}
               onChange={() => onPick(offered)}
-              className="size-3.5 accent-brand-600"
+              className="size-icon-row accent-brand-600"
             />
             {menu}
           </label>
@@ -52,7 +52,7 @@ export function AskTopics({
 }
 
 const STEP_BUTTON =
-  'flex size-7 items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800';
+  'flex size-row items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800';
 
 export function AskLaneCount({
   lanes,
@@ -63,8 +63,8 @@ export function AskLaneCount({
 }) {
   const label = useId();
   return (
-    <div className="flex items-center justify-between px-3.5 pb-2.5">
-      <span id={label} className="text-xs text-slate-700 dark:text-slate-300">
+    <div className="flex items-center justify-between px-4 pb-2.5">
+      <span id={label} className="text-supporting text-slate-700 dark:text-slate-300">
         Lanes
       </span>
       <div role="group" aria-labelledby={label} className="flex items-center gap-1">
@@ -79,7 +79,7 @@ export function AskLaneCount({
             <path d="M5 12h14" />
           </Glyph>
         </button>
-        <output aria-live="polite" className="w-6 text-center text-sm font-semibold tabular-nums">
+        <output aria-live="polite" className="w-6 text-center text-body tabular-nums">
           {lanes.value}
         </output>
         <button
@@ -116,15 +116,15 @@ export function AskHands({
   return (
     <fieldset>
       <legend className={LEGEND}>Who answers</legend>
-      <div className="flex gap-1 rounded-[10px] bg-slate-100 p-[3px] dark:bg-slate-800">
+      <div className="flex gap-1 rounded-menu bg-slate-100 p-0.5 dark:bg-slate-800">
         {hands.map((offered) => {
           const on = offered === hand;
           return (
             <label
               key={offered}
-              className={`flex-1 cursor-pointer rounded-[7px] px-1 py-1.5 text-center text-xs ${FOCUS_WITHIN} ${
+              className={`flex-1 cursor-pointer rounded-control px-1 py-1 text-center text-body ${FOCUS_WITHIN} ${
                 on
-                  ? 'bg-white font-semibold text-slate-900 shadow-sm shadow-slate-900/10 dark:bg-slate-700 dark:text-slate-100'
+                  ? 'bg-white text-slate-900 shadow-sm shadow-slate-900/10 dark:bg-slate-700 dark:text-slate-100'
                   : 'text-slate-700 dark:text-slate-300'
               }`}
             >
@@ -136,7 +136,7 @@ export function AskHands({
                 className="sr-only"
               />
               {HANDS[offered].name}
-              <span className="block text-[10px] font-normal text-slate-600 dark:text-slate-400">
+              <span className="block text-supporting font-normal text-slate-600 dark:text-slate-400">
                 {HANDS[offered].note}
               </span>
             </label>
