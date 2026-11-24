@@ -19,10 +19,10 @@ async function drag(page: Page, first: Locator, from: [number, number], to: [num
   await page.mouse.up();
 }
 
-/** Where a mark's left edge is on screen, halfway down: on its line. */
+/** Where a mark's left edge is on screen, a quarter of the way down: on its line, between its handles. */
 async function leftEdge(mark: Locator): Promise<[number, number]> {
   const box = (await mark.boundingBox())!;
-  return [box.x + 1, box.y + box.height / 2];
+  return [box.x + 1, box.y + box.height / 4];
 }
 
 test('a mark made here is selected, moved by a drag and the arrow keys, and deleted', async ({
