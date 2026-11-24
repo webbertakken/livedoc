@@ -7,7 +7,7 @@ import type { KeyboardEvent } from 'react';
 import { RefreshIcon, SettingsIcon, Tooltip } from '@livedoc/ui';
 
 const BUTTON =
-  'flex size-7 items-center justify-center rounded text-(--office-icon) hover:bg-current/10 focus-visible:outline-2 focus-visible:outline-(--office-focus)';
+  'flex size-row items-center justify-center rounded-control text-(--office-icon) hover:bg-current/10 focus-visible:outline-2 focus-visible:outline-(--office-focus)';
 
 export function TextDocumentContentsBar({
   onUpdate,
@@ -39,7 +39,7 @@ export function TextDocumentContentsBar({
       role="toolbar"
       aria-label="Table of contents"
       onKeyDown={onKeyDown}
-      className="office-shell flex items-center gap-0.5 rounded-md border border-(--office-line) bg-(--office-menu) p-0.5 shadow-sm"
+      className="office-shell flex items-center gap-0.5 rounded-menu border border-(--office-line) bg-(--office-menu) p-0.5 shadow-sm"
     >
       <Tooltip label="Update table of contents">
         <button

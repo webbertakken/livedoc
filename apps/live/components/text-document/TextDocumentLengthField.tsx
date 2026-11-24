@@ -11,7 +11,7 @@ import {
 } from '@/lib/text-document/indent-units';
 
 const FIELD =
-  'h-9 w-28 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400 disabled:opacity-40';
+  'h-field w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400 disabled:opacity-40';
 
 export function TextDocumentLengthField({
   label,
@@ -51,12 +51,12 @@ export function TextDocumentLengthField({
           onChange={(e) => onChange(e.target.value)}
           className={FIELD}
         />
-        <span aria-hidden="true" className="text-sm text-(--office-muted)">
+        <span aria-hidden="true" className="text-body text-(--office-muted)">
           {unit}
         </span>
       </span>
       {message !== null ? (
-        <span id={`${id}-error`} className="text-xs text-red-700 dark:text-red-300">
+        <span id={`${id}-error`} className="text-supporting text-red-700 dark:text-red-300">
           {message}
         </span>
       ) : null}

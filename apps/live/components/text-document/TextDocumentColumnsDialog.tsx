@@ -17,8 +17,8 @@ const PRESET_NAMES: Record<number, string> = {
 };
 
 const CONTROL =
-  'h-9 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
-const HEADING = 'mb-2 text-sm font-medium';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+const HEADING = 'mb-2 text-panel-title';
 
 /** The message a spacing past the most reads, in the person's unit. */
 export const spacingTooWide = (mostPt: number, unit: IndentUnit): string =>
@@ -102,7 +102,7 @@ export function TextDocumentColumnsDialog({
       title="Column options"
       primary={{ label: 'Apply', disabled: !valid, onPress: () => onApply(chosen()) }}
     >
-      <div className="flex flex-col gap-5 pt-1">
+      <div className="flex flex-col gap-6 pt-1">
         <fieldset>
           <legend className={HEADING}>Presets</legend>
           <div className="flex gap-3">
@@ -116,14 +116,14 @@ export function TextDocumentColumnsDialog({
                   onChange={() => setCount(preset)}
                   aria-label={PRESET_NAMES[preset]}
                 />
-                <span className="flex rounded-md border border-(--office-line) p-2 peer-checked:border-(--office-primary) peer-checked:ring-1 peer-checked:ring-(--office-primary) peer-focus-visible:ring-2 peer-focus-visible:ring-(--office-focus) hover:bg-(--office-hover)">
+                <span className="flex rounded-control border border-(--office-line) p-2 peer-checked:border-(--office-primary) peer-checked:ring-1 peer-checked:ring-(--office-primary) peer-focus-visible:ring-2 peer-focus-visible:ring-(--office-focus) hover:bg-(--office-hover)">
                   <PresetPage count={preset} />
                 </span>
               </label>
             ))}
           </div>
         </fieldset>
-        <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+        <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
           <div className="flex flex-col">
             <label htmlFor={ids.count} className={HEADING}>
               Number of columns
@@ -157,12 +157,12 @@ export function TextDocumentColumnsDialog({
         </div>
         <label
           htmlFor={ids.line}
-          className={`flex items-center gap-3 text-sm ${many ? 'cursor-pointer' : 'opacity-40'}`}
+          className={`flex items-center gap-3 text-body ${many ? 'cursor-pointer' : 'opacity-40'}`}
         >
           <input
             id={ids.line}
             type="checkbox"
-            className="size-4 shrink-0 accent-(--office-primary)"
+            className="size-icon-row shrink-0 accent-(--office-primary)"
             checked={many && line}
             disabled={!many}
             onChange={(e) => setLine(e.target.checked)}

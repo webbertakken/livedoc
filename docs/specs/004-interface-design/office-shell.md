@@ -48,8 +48,8 @@ Four looks were drawn for D2, each in light and dark, desktop and phone; Webber 
 - Every token pair meets WCAG 2.2 AA in both schemes: 4.5:1 for text, 3:1 for a control's outline and focus ring.
 - The shell's sizes are the source of LiveDoc's one [sizing scale](sizing.md), one step lower in height: its parts take
   the shared tokens (`packages/tailwind-config/theme.css`), and `office-shell.css` carries only the look's colours.
-- Where look C names a size the scale does not have, the shell keeps it and names the part as an exception in the
-  sizing guard, citing look C; the shell's parts move onto the tokens with plan 0019.
+- Where look C names a size the scale has no step for, the shell keeps it: the title row's 40 px pills and the
+  toolbar's 40 px band, boxes over 36 px that the sizing guard passes as layout; every other part is on the tokens.
 
 ## Menus as data
 

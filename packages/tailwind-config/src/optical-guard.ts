@@ -9,7 +9,10 @@ import { basename, relative, sep } from 'node:path';
 import { parseSourceFiles } from '@livedoc/source-ast';
 import { isTestOrDeclaration, listSourceFiles } from './source-files';
 import {
+  isArrowFunction,
   isBinaryExpression,
+  isBlock,
+  isCallExpression,
   isConditionalExpression,
   isIdentifier,
   isJsxAttribute,
@@ -110,6 +113,20 @@ function elementOnly(node: Expression): boolean {
   if (isPropertyAccessExpression(node)) return ICON_NAME.test(node.name.text);
   if (isConditionalExpression(node))
     return elementOnly(node.whenTrue) && elementOnly(node.whenFalse);
+  // A list mapped to elements: `xs.map((x) => <b />)`, its callback's body element-only.
+  if (
+    isCallExpression(node) &&
+    isPropertyAccessExpression(node.expression) &&
+    node.expression.name.text === 'map'
+  ) {
+    const callback = node.arguments[0];
+    return (
+      callback !== undefined &&
+      isArrowFunction(callback) &&
+      !isBlock(callback.body) &&
+      elementOnly(callback.body)
+    );
+  }
   if (
     isBinaryExpression(node) &&
     [

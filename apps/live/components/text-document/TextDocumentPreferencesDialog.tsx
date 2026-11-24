@@ -35,9 +35,11 @@ const TABS: readonly [Tab, string][] = [
   ['substitutions', 'Substitutions'],
 ];
 
-const CHECKBOX = 'size-4 shrink-0 accent-(--office-primary)';
+// What sits under a checkbox's words starts where they do: the box (16 px) and its gap (12 px).
+const UNDER_CHECKBOX = { paddingInlineStart: 28 } as const;
+const CHECKBOX = 'size-icon-row shrink-0 accent-(--office-primary)';
 const FIELD =
-  'h-8 min-w-0 flex-1 rounded border border-(--office-line) bg-transparent px-2 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-field min-w-0 flex-1 rounded-control border border-(--office-line) bg-transparent px-2 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 export const TOO_MANY_SUBSTITUTIONS = 'Remove a substitution to add another.';
 export const UNKEEPABLE_SUBSTITUTION = `Fill in Replace (no spaces, up to ${REPLACE_MAX} characters) and With (up to ${WITH_MAX}).`;
@@ -93,7 +95,7 @@ export function TextDocumentPreferencesDialog({
         <div {...officeTabPanel(id, 'general')} className="flex flex-col gap-3">
           {GENERAL.map(([key, label], i) =>
             key ? (
-              <label key={key} className="flex items-center gap-3 text-sm">
+              <label key={key} className="flex items-center gap-3 text-body">
                 <input
                   type="checkbox"
                   className={CHECKBOX}
@@ -104,7 +106,7 @@ export function TextDocumentPreferencesDialog({
               </label>
             ) : (
               <div key={label} className="flex flex-col gap-0.5">
-                <label className="flex items-center gap-3 text-sm opacity-60">
+                <label className="flex items-center gap-3 text-body opacity-60">
                   <input
                     type="checkbox"
                     className={CHECKBOX}
@@ -113,7 +115,11 @@ export function TextDocumentPreferencesDialog({
                   />
                   {label}
                 </label>
-                <span id={`${id}-soon-${i}`} className="ps-7 text-xs text-(--office-muted)">
+                <span
+                  id={`${id}-soon-${i}`}
+                  style={UNDER_CHECKBOX}
+                  className="text-supporting text-(--office-muted)"
+                >
                   Coming soon
                 </span>
               </div>
@@ -122,7 +128,7 @@ export function TextDocumentPreferencesDialog({
         </div>
       ) : (
         <div {...officeTabPanel(id, 'substitutions')} className="flex min-h-0 flex-col gap-3">
-          <label className="flex items-center gap-3 text-sm">
+          <label className="flex items-center gap-3 text-body">
             <input
               type="checkbox"
               className={CHECKBOX}
@@ -131,8 +137,8 @@ export function TextDocumentPreferencesDialog({
             />
             Automatic substitution
           </label>
-          <div className="flex items-end gap-2 pl-7">
-            <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-(--office-muted)">
+          <div style={UNDER_CHECKBOX} className="flex items-end gap-2">
+            <label className="flex min-w-0 flex-1 flex-col gap-1 text-supporting text-(--office-muted)">
               Replace
               <input
                 className={FIELD}
@@ -141,7 +147,7 @@ export function TextDocumentPreferencesDialog({
                 onChange={(e) => setReplace(e.target.value)}
               />
             </label>
-            <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-(--office-muted)">
+            <label className="flex min-w-0 flex-1 flex-col gap-1 text-supporting text-(--office-muted)">
               With
               <input
                 className={FIELD}
@@ -157,13 +163,14 @@ export function TextDocumentPreferencesDialog({
                 }}
               />
             </label>
-            <span className="w-8 shrink-0" />
+            <span className="w-7 shrink-0" />
           </div>
           {problem ? (
             <p
               id={`${id}-problem`}
               role="alert"
-              className="pl-7 text-xs text-red-700 dark:text-red-300"
+              style={UNDER_CHECKBOX}
+              className="text-supporting text-red-700 dark:text-red-300"
             >
               {problem}
             </p>
@@ -202,7 +209,7 @@ export function TextDocumentPreferencesDialog({
                   onClick={() =>
                     setDraft((d) => ({ ...d, pairs: d.pairs.filter((_, i) => i !== index) }))
                   }
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+                  className="flex size-row shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
                 >
                   <CloseIcon size={16} />
                 </button>

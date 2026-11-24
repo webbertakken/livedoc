@@ -23,7 +23,7 @@ export function readSpacingField(text: string, { min, max }: Range): number | nu
 }
 
 const FIELD =
-  'h-9 w-28 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400';
+  'h-field w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400';
 
 function SpacingField({
   label,
@@ -42,7 +42,7 @@ function SpacingField({
   const invalid = readSpacingField(value, range) === 'invalid';
   return (
     <>
-      <label htmlFor={id} className="pt-2 text-sm">
+      <label htmlFor={id} className="pt-2 text-body">
         {label}
       </label>
       <div className="flex flex-col gap-1">
@@ -58,13 +58,13 @@ function SpacingField({
             className={FIELD}
           />
           {unit ? (
-            <span aria-hidden="true" className="text-sm text-(--office-muted)">
+            <span aria-hidden="true" className="text-body text-(--office-muted)">
               {unit}
             </span>
           ) : null}
         </span>
         {invalid ? (
-          <span id={`${id}-error`} className="text-xs text-red-700 dark:text-red-300">
+          <span id={`${id}-error`} className="text-supporting text-red-700 dark:text-red-300">
             Enter a number from {range.min} to {range.max}.
           </span>
         ) : null}
@@ -125,7 +125,7 @@ export function TextDocumentSpacingDialog({
           range={LINE_SPACING_RANGE}
           onChange={setLine}
         />
-        <h3 className="col-span-2 pt-2 text-sm font-medium">Paragraph spacing</h3>
+        <h3 className="col-span-2 pt-2 text-panel-title">Paragraph spacing</h3>
         <SpacingField
           label="Before"
           unit="pt"

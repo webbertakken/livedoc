@@ -60,9 +60,9 @@ const ORIENTATIONS: readonly { value: Orientation; label: string }[] = [
 ];
 
 const CONTROL =
-  'h-9 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
-const RADIO = 'size-4 shrink-0 accent-(--office-primary)';
-const HEADING = 'mb-2 text-sm font-medium';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+const RADIO = 'size-icon-row shrink-0 accent-(--office-primary)';
+const HEADING = 'mb-2 text-panel-title';
 
 /** A paper's sides as its option reads them: "8.5 × 11 in". */
 export const sidesText = (width: number, height: number, unit: IndentUnit): string =>
@@ -197,8 +197,8 @@ export function TextDocumentPageSetupDialog({
         onChange={setTab}
       />
       {tab === 'pageless' ? (
-        <div {...officeTabPanel(ids.tabs, 'pageless')} className="flex flex-col gap-5 pt-1">
-          <p className="text-sm text-(--office-muted)">
+        <div {...officeTabPanel(ids.tabs, 'pageless')} className="flex flex-col gap-6 pt-1">
+          <p className="text-body text-(--office-muted)">
             One continuous page, without page breaks, headers or footers.
           </p>
           <div className="flex flex-col">
@@ -216,9 +216,9 @@ export function TextDocumentPageSetupDialog({
       ) : (
         <div
           {...officeTabPanel(ids.tabs, 'pages')}
-          className="grid gap-x-10 gap-y-5 pt-1 sm:grid-cols-[minmax(0,1fr)_auto]"
+          className="grid gap-x-6 gap-y-6 pt-1 sm:grid-cols-[minmax(0,1fr)_auto]"
         >
-          <div className="flex min-w-0 flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-6">
             <div className="flex flex-col">
               <label htmlFor={ids.scope} className={HEADING}>
                 Apply to
@@ -240,7 +240,7 @@ export function TextDocumentPageSetupDialog({
               <legend className={HEADING}>Orientation</legend>
               <div className="flex flex-wrap gap-x-6 gap-y-2">
                 {ORIENTATIONS.map(({ value, label }) => (
-                  <label key={value} className="flex items-center gap-2 text-sm">
+                  <label key={value} className="flex items-center gap-2 text-body">
                     <input
                       type="radio"
                       name={ids.orientation}
@@ -301,7 +301,7 @@ export function TextDocumentPageSetupDialog({
             <div className="grid grid-cols-[auto_auto] items-start gap-x-4 gap-y-3">
               {SIDES.map(({ side, label }) => (
                 <div key={side} className="contents">
-                  <span className="pt-2 text-sm">{label}</span>
+                  <span className="pt-2 text-body">{label}</span>
                   <TextDocumentLengthField
                     label={`${label} margin`}
                     value={draft.margins[side]}

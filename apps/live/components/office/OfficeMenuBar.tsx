@@ -12,7 +12,7 @@ import { OfficeMenuPanel } from './OfficeMenuPanel';
 export type OpenMenu = { id: string; focus: MenuInitialFocus } | null;
 
 const NAME =
-  'rounded px-2 py-0.5 text-sm text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus) aria-expanded:bg-(--office-hover)';
+  'rounded-control px-2 py-0.5 text-body text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus) aria-expanded:bg-(--office-hover)';
 
 export function OfficeMenuBar({
   menus,

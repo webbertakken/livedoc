@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export const OFFICE_NAME_EMPTY = 'Give the document a name';
 
-const TEXT = 'text-lg leading-[26px] text-(--office-ink)';
+const TEXT = 'text-name text-(--office-ink)';
 
 export function OfficeNameField({
   name,
@@ -45,7 +45,7 @@ export function OfficeNameField({
 
   if (!onRename)
     return (
-      <h1 data-office-name="" className={`min-w-0 truncate px-1.5 ${TEXT}`}>
+      <h1 data-office-name="" className={`min-w-0 truncate px-2 ${TEXT}`}>
         {name}
       </h1>
     );
@@ -73,7 +73,7 @@ export function OfficeNameField({
       <span className="grid min-w-0">
         <span
           aria-hidden
-          className={`invisible col-start-1 row-start-1 whitespace-pre border border-transparent pr-2 pl-1.5 ${TEXT}`}
+          className={`invisible col-start-1 row-start-1 whitespace-pre border border-transparent pr-2 pl-2 ${TEXT}`}
         >
           {draft || ' '}
         </span>
@@ -113,13 +113,13 @@ export function OfficeNameField({
             settled.current = true;
             commit();
           }}
-          className={`col-start-1 row-start-1 w-full min-w-0 truncate rounded border border-transparent bg-transparent px-1.5 outline-none pointer-coarse:-my-2 pointer-coarse:py-2 hover:border-(--office-line) focus:border-(--office-focus) focus:ring-1 focus:ring-(--office-focus) ${TEXT}`}
+          className={`col-start-1 row-start-1 w-full min-w-0 truncate rounded-control border border-transparent bg-transparent px-2 outline-none pointer-coarse:-my-2 pointer-coarse:py-2 hover:border-(--office-line) focus:border-(--office-focus) focus:ring-1 focus:ring-(--office-focus) ${TEXT}`}
         />
       </span>
       {refused ? (
         <p
           role="alert"
-          className="absolute top-full left-0 z-10 mt-1 whitespace-nowrap rounded bg-(--office-menu) px-2 py-1 text-sm text-(--office-ink) shadow"
+          className="absolute top-full left-0 z-10 mt-1 whitespace-nowrap rounded-menu bg-(--office-menu) px-2 py-1 text-body text-(--office-ink) shadow"
         >
           {OFFICE_NAME_EMPTY}
         </p>

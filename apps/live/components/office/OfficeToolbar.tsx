@@ -45,7 +45,7 @@ const BAR_PADDING_PX = 16;
 
 // A control's look but for its side padding: a split toggle's chevron is narrower.
 const CONTROL_BODY =
-  'relative flex h-7 shrink-0 items-center justify-center gap-0.5 rounded text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent';
+  'relative flex h-row shrink-0 items-center justify-center gap-0.5 rounded-control text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent';
 const CONTROL = `${CONTROL_BODY} px-1`;
 
 type Placed = { control: OfficeControl; startsGroup: boolean; group: string };
@@ -197,7 +197,7 @@ export function OfficeToolbar({
           const index = placed.findIndex((p) => p.control.id === slot?.dataset.controlSlot);
           if (index >= 0 && index < fit) setFocusIndex(index);
         }}
-        className={`flex h-10 items-center rounded-3xl bg-(--office-toolbar) px-2 pointer-coarse:h-11 ${
+        className={`flex h-10 items-center rounded-full bg-(--office-toolbar) px-2 pointer-coarse:h-11 ${
           phone ? 'overflow-x-auto [scrollbar-width:none]' : 'overflow-hidden'
         }`}
       >
@@ -232,7 +232,7 @@ export function OfficeToolbar({
           role="toolbar"
           aria-label="More tools"
           onKeyDown={onKeyDown}
-          className="mt-1 ml-auto flex w-fit max-w-full flex-wrap items-center rounded-3xl bg-(--office-toolbar) px-2 py-1.5"
+          className="mt-1 ml-auto flex w-fit max-w-full flex-wrap items-center rounded-full bg-(--office-toolbar) px-2 py-1.5"
         >
           {moved.map((p, i) => (
             <span key={p.control.id} className="flex items-center">
@@ -263,7 +263,7 @@ function Slot({ id, hidden, children }: { id: string; hidden: boolean; children:
 }
 
 function Divider() {
-  return <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-(--office-line)" />;
+  return <span aria-hidden className="mx-1 h-icon-title w-px shrink-0 bg-(--office-line)" />;
 }
 
 function ControlView({
@@ -315,7 +315,7 @@ function ControlView({
         font={fontFamily}
         value={family}
         tabIndex={tabIndex}
-        className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
+        className={`${CONTROL} justify-between text-body text-(--office-ink)`}
       />
     ) : null;
   if (look.kind === 'choice') {
@@ -329,7 +329,7 @@ function ControlView({
         actions={choice.actions}
         width={look.width}
         tabIndex={tabIndex}
-        className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
+        className={`${CONTROL} justify-between text-body text-(--office-ink)`}
       />
     ) : null;
   }
@@ -413,7 +413,7 @@ function ControlView({
           else action?.run();
         }}
         style={look.kind === 'text' ? { width: look.width } : undefined}
-        className={`${CONTROL} ${look.kind !== 'text' ? 'min-w-7' : look.list ? 'justify-between text-sm text-(--office-ink)' : 'justify-center rounded-sm border border-(--office-line) text-sm text-(--office-ink)'}`}
+        className={`${CONTROL} ${look.kind !== 'text' ? 'min-w-7' : look.list ? 'justify-between text-body text-(--office-ink)' : 'justify-center rounded-control border border-(--office-line) text-body text-(--office-ink)'}`}
       >
         {look.kind === 'icon' ? (
           <Glyph size={18} units={24}>

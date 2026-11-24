@@ -34,11 +34,11 @@ export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus })
           aria-expanded={open}
           data-save-status={status}
           onClick={() => setOpen((was) => !was)}
-          className={`relative flex h-8 min-w-8 items-center gap-1.5 rounded-full px-1.5 outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${tone}`}
+          className={`relative flex h-field min-w-8 items-center gap-2 rounded-full px-2 outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${tone}`}
         >
           <Icon />
           {isUnsettled(status) ? (
-            <span data-save-words="" className="truncate text-sm phone:hidden">
+            <span data-save-words="" className="truncate text-body phone:hidden">
               {words}
             </span>
           ) : null}
@@ -48,8 +48,8 @@ export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus })
         {ANNOUNCED.includes(status) ? words : ''}
       </span>
       {open ? (
-        <div className="absolute top-full left-0 z-30 mt-1 w-72 rounded-md bg-(--office-menu) px-4 py-3 text-sm text-(--office-ink) shadow-lg">
-          <p className={`font-medium ${failed ? 'text-(--office-error)' : ''}`}>{words}</p>
+        <div className="absolute top-full left-0 z-30 mt-1 w-72 rounded-menu bg-(--office-menu) px-4 py-3 text-body text-(--office-ink) shadow-lg">
+          <p className={failed ? 'text-(--office-error)' : undefined}>{words}</p>
           <p className="mt-1 text-(--office-muted)">{meaning}</p>
         </div>
       ) : null}

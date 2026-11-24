@@ -271,7 +271,7 @@ export function OfficeTitleRow({
       <div className="flex items-start gap-1 pt-2 pr-4 pl-2 phone:items-center phone:py-1 phone:pr-1">
         {chrome ? <OfficeMark back={chrome.back} /> : null}
         <div className="relative flex min-w-0 flex-1 flex-col">
-          <div className="flex h-[26px] min-w-0 items-center gap-1">
+          <div className="flex h-(--text-name--line-height) min-w-0 items-center gap-1">
             <OfficeNameField
               name={name}
               onRename={chrome?.rename ?? null}
@@ -281,7 +281,7 @@ export function OfficeTitleRow({
               <span
                 role="img"
                 aria-label={formatTitle}
-                className="shrink-0 rounded border border-(--office-line) px-1.5 text-xs font-medium text-(--office-muted) phone:hidden"
+                className="shrink-0 rounded-control border border-(--office-line) px-2 text-supporting text-(--office-muted) phone:hidden"
               >
                 {format}
               </span>
@@ -306,12 +306,12 @@ export function OfficeTitleRow({
             ) : null}
             {saveStatus ? <OfficeSaveStatusShown source={saveStatus} /> : null}
             {notice ? (
-              <p role="status" className="truncate text-sm text-slate-600 dark:text-slate-300">
+              <p role="status" className="truncate text-body text-slate-600 dark:text-slate-300">
                 {notice}
               </p>
             ) : null}
             {problem ? (
-              <p role="alert" className="truncate text-sm text-red-700 dark:text-red-300">
+              <p role="alert" className="truncate text-body text-red-700 dark:text-red-300">
                 {problem}
               </p>
             ) : null}
@@ -321,7 +321,7 @@ export function OfficeTitleRow({
               <button
                 type="button"
                 onClick={bare.onLeave}
-                className="relative rounded px-2 py-1 text-sm font-medium touch-target-y text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+                className="relative rounded-control px-2 py-1 text-body touch-target-y text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
               >
                 {bare.leave}
               </button>
@@ -416,7 +416,7 @@ export function OfficeTitleRow({
 function OfficeMark({ back }: { back: OfficeChrome['back'] }) {
   const logo = {
     wordmark: false,
-    markClassName: 'size-8',
+    markClassName: 'size-field',
     className:
       'relative flex size-10 shrink-0 items-center justify-center rounded-full outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)',
     assemble: true,

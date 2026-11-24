@@ -136,7 +136,7 @@ export function OfficeMoreFontsDialog({
                   setCatalogue({ state: 'loading' });
                   setAttempt((n) => n + 1);
                 }}
-                className="touch-target relative mt-2 rounded-full px-4 py-2 text-sm font-medium text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+                className="touch-target relative mt-2 flex h-field items-center rounded-full px-4 text-body text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
               >
                 Try again
               </button>
@@ -179,15 +179,15 @@ export function MyFontsColumn({
       aria-labelledby={headingId}
       className="flex w-56 shrink-0 flex-col border-l border-(--office-line) pl-4 max-sm:max-h-[30dvh] max-sm:w-auto max-sm:border-t max-sm:border-l-0 max-sm:pt-3 max-sm:pl-0"
     >
-      <h3 id={headingId} className="pb-2 text-base font-medium">
+      <h3 id={headingId} className="pb-2 text-panel-title">
         My fonts
       </h3>
       {fonts.length === 0 ? (
-        <p className="text-sm text-(--office-muted)">Keep at least one font</p>
+        <p className="text-body text-(--office-muted)">Keep at least one font</p>
       ) : (
         <ul ref={list} className="min-h-0 flex-1 overflow-y-auto max-sm:max-h-none">
           {fonts.map((name, index) => (
-            <li key={name} className="flex h-9 items-center gap-2 text-[15px]">
+            <li key={name} className="flex h-row items-center gap-2 text-body">
               <span className="min-w-0 flex-1 truncate" style={{ fontFamily: rowFace(name) }}>
                 {name}
               </span>
@@ -198,7 +198,7 @@ export function MyFontsColumn({
                   refocus.current = { index, from: fonts.join('\n') };
                   onRemove(name);
                 }}
-                className="touch-target relative flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+                className="touch-target relative flex size-chip shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
               >
                 <CloseIcon size={16} />
               </button>

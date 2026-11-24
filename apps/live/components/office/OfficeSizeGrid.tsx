@@ -55,7 +55,7 @@ export function OfficeSizeGrid({
       data-office-item={item.id}
       onKeyDownCapture={onKeyDownCapture}
       onClick={insert}
-      className={`flex w-full flex-col items-start gap-1.5 px-4 py-2 outline-none focus-visible:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--office-focus) ${
+      className={`flex w-full flex-col items-start gap-2 px-4 py-2 outline-none focus-visible:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--office-focus) ${
         inert ? 'cursor-default opacity-50' : ''
       }`}
     >
@@ -77,7 +77,7 @@ export function OfficeSizeGrid({
                 data-filled={filled || undefined}
                 onPointerEnter={() => setSize({ columns: c + 1, rows: r + 1 })}
                 style={{ width: CELL_PX, height: CELL_PX }}
-                className={`rounded-[2px] border ${
+                className={`rounded-none border ${
                   filled
                     ? 'border-(--office-focus) bg-(--office-pressed)'
                     : 'border-(--office-line) bg-(--office-menu)'
@@ -87,7 +87,7 @@ export function OfficeSizeGrid({
           }),
         )}
       </span>
-      <span aria-hidden="true" className="text-xs text-(--office-muted)">
+      <span aria-hidden="true" className="text-supporting text-(--office-muted)">
         {gridSizeLabel(size)}
       </span>
     </button>

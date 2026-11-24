@@ -11,6 +11,7 @@ import { Glyph, Prims, useMenu } from '@livedoc/ui';
 import type { IconPrim } from '@livedoc/icons';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { GRID_KEYS, gridStep, type GridKey } from '@/lib/office/grid-step';
+import { ChoiceBadge, ChoiceLines } from './OfficeChoicePictures';
 
 /** One line of a cell's preview: a marker at a level, then a bar standing for text, or a word. */
 export type OfficeGridLine = {
@@ -45,56 +46,9 @@ export type OfficeGrid = {
   wide?: boolean;
 };
 
-const LEVEL_STEP_PX = 9;
 /** A cell's width, in rem: a tool's or a list style's, and a badge's. */
 const CELL_REM = 4.5;
 const WIDE_CELL_REM = 6.5;
-
-function Badge({ badge }: { badge: OfficeGridBadge }) {
-  return (
-    <span
-      aria-hidden="true"
-      data-office-grid-badge=""
-      className="flex w-full flex-col items-center justify-center gap-0.5 rounded-[4px] border-2 bg-(--pdf-paper) px-1 py-1 text-center leading-none"
-      style={{ color: badge.colour, borderColor: badge.colour }}
-    >
-      <span className="text-[10px] font-bold">{badge.text}</span>
-      {badge.detail ? <span className="text-[8px]">{badge.detail}</span> : null}
-    </span>
-  );
-}
-
-function Preview({ lines }: { lines: readonly OfficeGridLine[] }) {
-  return (
-    <span aria-hidden="true" className="flex w-full flex-col gap-1.5">
-      {lines.map((line, i) => (
-        <span
-          key={i}
-          className="flex items-center gap-1 text-[11px] leading-none"
-          style={{ paddingLeft: line.level * LEVEL_STEP_PX }}
-        >
-          {line.box ? (
-            <span
-              data-box={line.box}
-              className="flex size-2.5 shrink-0 items-center justify-center rounded-[2px] border border-(--office-icon) text-[8px] leading-none"
-            >
-              {line.box === 'ticked' ? '✓' : ''}
-            </span>
-          ) : (
-            <span className="min-w-3 shrink-0 text-(--office-ink)">{line.marker}</span>
-          )}
-          {line.word ? (
-            <span className={`text-(--office-muted) ${line.word.struck ? 'line-through' : ''}`}>
-              {line.word.text}
-            </span>
-          ) : (
-            <span className="h-0.5 flex-1 rounded-full bg-(--office-line)" />
-          )}
-        </span>
-      ))}
-    </span>
-  );
-}
 
 export function OfficeChoiceGrid({
   label,
@@ -142,21 +96,21 @@ export function OfficeChoiceGrid({
           onClose();
           actions[cell.id]?.run();
         }}
-        className={`flex rounded-md border outline-none hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--office-focus) ${
-          'badge' in cell ? 'min-h-11 items-stretch p-1' : 'h-14 items-start px-1.5 py-2'
+        className={`flex rounded-control border outline-none hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--office-focus) ${
+          'badge' in cell ? 'min-h-11 items-stretch p-1' : 'h-14 items-start px-2 py-2'
         } ${checked ? 'border-(--office-focus) bg-(--office-pressed)' : 'border-(--office-line)'}`}
       >
         {'icon' in cell ? (
-          <span className="flex w-full flex-col items-center gap-1 text-[11px] leading-none text-(--office-ink)">
+          <span className="flex w-full flex-col items-center gap-1 text-supporting leading-none text-(--office-ink)">
             <Glyph size={18} units={24}>
               <Prims prims={cell.icon} />
             </Glyph>
             {cell.label}
           </span>
         ) : 'badge' in cell ? (
-          <Badge badge={cell.badge} />
+          <ChoiceBadge badge={cell.badge} />
         ) : (
-          <Preview lines={cell.lines} />
+          <ChoiceLines lines={cell.lines} />
         )}
       </button>
     );
@@ -170,12 +124,12 @@ export function OfficeChoiceGrid({
       ref={attach}
       {...surfaceProps}
       onKeyDownCapture={onKeyDownCapture}
-      className="flex max-h-[min(32rem,80vh)] flex-col gap-2 overflow-y-auto rounded-md border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
+      className="flex max-h-[min(32rem,80vh)] flex-col gap-2 overflow-y-auto rounded-menu border border-(--office-line) bg-(--office-menu) p-2 shadow-lg animate-fade-in motion-reduce:animate-none"
     >
       {sections.map((section, at) => {
         const cells = grid.cells.slice(starts[at], starts[at]! + section.count);
         const body = (
-          <div className="grid gap-1.5" style={{ gridTemplateColumns: columns }}>
+          <div className="grid gap-2" style={{ gridTemplateColumns: columns }}>
             {cells.map(cell)}
           </div>
         );
@@ -188,7 +142,7 @@ export function OfficeChoiceGrid({
             aria-label={section.label}
             className="flex flex-col gap-1"
           >
-            <span aria-hidden="true" className="px-0.5 text-xs font-medium text-(--office-muted)">
+            <span aria-hidden="true" className="px-0.5 text-supporting text-(--office-muted)">
               {section.label}
             </span>
             {body}

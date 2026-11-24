@@ -16,13 +16,13 @@ import { WATERMARK_SIZES } from '@/lib/text-document/text-document-watermark';
 export const WATERMARK_TYPING_PAUSE_MS = 500;
 
 const CONTROL =
-  'h-9 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 const SELECT = `${CONTROL} w-full cursor-pointer [&>option]:bg-(--office-menu)`;
-const LABEL = 'mb-1 text-sm font-medium';
+const LABEL = 'mb-1 text-body';
 const PRESS =
-  'flex size-9 items-center justify-center rounded text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink)';
+  'flex size-field items-center justify-center rounded-control text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink)';
 const BUTTON =
-  'touch-target relative inline-flex h-9 items-center rounded-full px-5 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'touch-target relative inline-flex h-prominent items-center rounded-full px-6 text-body outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 const LAYOUTS: readonly (readonly [WatermarkLayout, string])[] = [
   ['diagonal', 'Diagonal'],
@@ -93,7 +93,7 @@ export function TextDocumentWatermarkPanel({
         onChange={() => {}}
         disabled={['image']}
       />
-      <div {...officeTabPanel(id, 'text')} className="flex flex-col gap-5">
+      <div {...officeTabPanel(id, 'text')} className="flex flex-col gap-6">
         <div className="flex flex-col">
           <label htmlFor={ids.text} className={LABEL}>
             Text
@@ -219,18 +219,18 @@ export function TextDocumentWatermarkPanel({
               onBlur={commitSlide}
               className="min-w-0 flex-1 accent-(--office-primary)"
             />
-            <span className="w-10 text-right text-sm tabular-nums">{transparency}%</span>
+            <span className="w-10 text-right text-body tabular-nums">{transparency}%</span>
           </div>
         </div>
         <fieldset>
           <legend className={LABEL}>Layout</legend>
           <div className="flex gap-6">
             {LAYOUTS.map(([layout, name]) => (
-              <label key={layout} className="flex cursor-pointer items-center gap-2 text-sm">
+              <label key={layout} className="flex cursor-pointer items-center gap-2 text-body">
                 <input
                   type="radio"
                   name={ids.layout}
-                  className="size-4 accent-(--office-primary)"
+                  className="size-icon-row accent-(--office-primary)"
                   checked={current.layout === layout}
                   onChange={() => choose({ layout })}
                 />
@@ -258,7 +258,7 @@ export function TextDocumentWatermarkPanel({
               if (typed !== null) commitWords(typed);
               onDone();
             }}
-            className={`${BUTTON} bg-(--office-primary) text-(--office-primary-ink) hover:opacity-90`}
+            className={`${BUTTON} bg-(--office-primary) text-(--office-primary-ink) font-medium hover:opacity-90`}
           >
             Done
           </button>

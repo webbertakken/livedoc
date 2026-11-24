@@ -1143,7 +1143,7 @@ export function TextDocumentSurface({
       {limitReached ? (
         <p
           role="status"
-          className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+          className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-body text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
         >
           {TEXT_DOCUMENT_LIMIT_NOTICES[limitReached]}
         </p>
@@ -1216,7 +1216,7 @@ export function TextDocumentSurface({
           {state === 'failed' ? (
             <div
               role="alert"
-              className="mx-auto mt-16 max-w-sm text-center text-sm text-slate-700 dark:text-slate-200"
+              className="mx-auto mt-16 max-w-sm text-center text-body text-slate-700 dark:text-slate-200"
             >
               <p>This text document could not be opened.</p>
               <Button
@@ -1246,7 +1246,7 @@ export function TextDocumentSurface({
             onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
             data-pages={paginated ? pageList.length : undefined}
             data-laid-out={paginated ? 'pages' : 'flow'}
-            className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-[calc((var(--pages-width)-var(--page-width))/2+var(--page-right))] sm:pb-(--page-bottom) sm:pl-[calc((var(--pages-width)-var(--page-width))/2+var(--page-left))] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
+            className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
           >
             <TextDocumentSheets
               pages={paginated && state === 'ready' ? pageList : null}

@@ -17,7 +17,7 @@ type Props<T> = {
   draw: (item: T) => ReactNode;
   onPick: (item: T) => void;
   onShow: (item: T) => void;
-  // The cell's glyph size, a Tailwind text class.
+  // The cell's glyph size, a class of app/office-glyphs.css.
   size?: string;
   // A set number of cells to a row (the Borders panel's five); else as many as the width takes.
   columns?: number;
@@ -31,7 +31,7 @@ function Grid<T>({
   draw,
   onPick,
   onShow,
-  size = 'text-xl',
+  size = 'office-glyph',
   columns,
 }: Props<T>) {
   // The cell that is the grid's one Tab stop.
@@ -63,7 +63,7 @@ function Grid<T>({
       style={
         columns ? { gridTemplateColumns: `repeat(${columns}, minmax(2.5rem, 1fr))` } : undefined
       }
-      className="grid min-h-0 min-w-0 flex-1 auto-rows-[2.5rem] grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] content-start overflow-y-auto rounded border border-(--office-line) p-1"
+      className="grid min-h-0 min-w-0 flex-1 auto-rows-[2.5rem] grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] content-start overflow-y-auto rounded-control border border-(--office-line) p-1"
     >
       {items.map((item, index) => (
         <button
@@ -77,7 +77,7 @@ function Grid<T>({
           }}
           onMouseEnter={() => onShow(item)}
           onFocus={() => onShow(item)}
-          className={`flex items-center justify-center rounded text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset ${size}`}
+          className={`flex items-center justify-center rounded-control text-(--office-ink) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset ${size}`}
         >
           {draw(item)}
         </button>

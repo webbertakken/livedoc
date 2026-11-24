@@ -13,7 +13,7 @@ export const ADD_SUMMARY_LABEL = 'Add summary';
 export const EDIT_SUMMARY_LABEL = 'Edit summary';
 
 const ICON_BUTTON =
-  'grid size-7 place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'grid size-row place-items-center rounded-full outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 function SummaryField({ summary }: { summary: TextDocumentSummary }) {
   // Escape or Ctrl+Enter has finished it: the blur as the field goes keeps nothing more.
@@ -48,7 +48,7 @@ function SummaryField({ summary }: { summary: TextDocumentSummary }) {
       }}
       onKeyDown={onKeyDown}
       onBlur={(event) => finish(event.currentTarget.value)}
-      className="mx-2 block w-[calc(100%-1rem)] resize-y rounded border border-(--office-focus) bg-(--office-menu) px-2 py-1 text-sm text-(--office-ink) outline-none"
+      className="mx-2 block w-[calc(100%-1rem)] resize-y rounded-control border border-(--office-focus) bg-(--office-menu) px-2 py-1 text-body text-(--office-ink) outline-none"
     />
   );
 }
@@ -62,13 +62,13 @@ export function TextDocumentOutlineSummary({ summary }: { summary: TextDocumentS
   return (
     <section aria-labelledby={titleId} className="pb-3">
       <div className="flex items-center justify-between gap-2 px-2 pb-1">
-        <h3 id={titleId} className="text-xs font-medium text-(--office-muted)">
+        <h3 id={titleId} className="text-panel-title text-(--office-muted)">
           {SUMMARY_TITLE}
         </h3>
         {canEdit && !editing && (
           <Tooltip label={label}>
             <button type="button" aria-label={label} onClick={summary.edit} className={ICON_BUTTON}>
-              <Icon className="size-4" aria-hidden />
+              <Icon className="size-icon-row" aria-hidden />
             </button>
           </Tooltip>
         )}
@@ -76,7 +76,7 @@ export function TextDocumentOutlineSummary({ summary }: { summary: TextDocumentS
       {editing ? (
         <SummaryField summary={summary} />
       ) : (
-        text && <p className="px-2 text-sm whitespace-pre-wrap text-(--office-ink)">{text}</p>
+        text && <p className="px-2 text-body whitespace-pre-wrap text-(--office-ink)">{text}</p>
       )}
     </section>
   );

@@ -14,12 +14,12 @@ import {
 } from '@/lib/text-document/text-document-line-numbers';
 import type { LineNumbersState } from './useTextDocumentLineNumbers';
 
-const CHOICE = 'size-4 shrink-0 accent-(--office-primary) disabled:cursor-default';
-const HEADING = 'mb-2 text-sm font-medium';
+const CHOICE = 'size-icon-row shrink-0 accent-(--office-primary) disabled:cursor-default';
+const HEADING = 'mb-2 text-panel-title';
 const ROW =
-  'flex cursor-pointer items-center gap-3 text-sm has-disabled:cursor-default has-disabled:opacity-40';
+  'flex cursor-pointer items-center gap-3 text-body has-disabled:cursor-default has-disabled:opacity-40';
 const SELECT =
-  'h-9 w-full cursor-pointer rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40 [&>option]:bg-(--office-menu)';
+  'h-field w-full cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40 [&>option]:bg-(--office-menu)';
 
 const RESTARTS: readonly LineNumberRestart[] = ['continuous', 'page', 'section'];
 const SCOPES: readonly LineNumbersScope[] = ['document', 'section'];

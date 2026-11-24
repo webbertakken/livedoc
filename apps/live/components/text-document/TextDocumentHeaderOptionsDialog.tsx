@@ -15,9 +15,9 @@ import {
 import { TextDocumentLengthField } from './TextDocumentLengthField';
 
 const CONTROL =
-  'h-9 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
-const HEADING = 'mb-2 text-sm font-medium';
-const CHECK = 'size-4 shrink-0 accent-(--office-primary)';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+const HEADING = 'mb-2 text-panel-title';
+const CHECK = 'size-icon-row shrink-0 accent-(--office-primary)';
 
 type Margin = 'header' | 'footer';
 const MARGINS: readonly { margin: Margin; label: string }[] = [
@@ -87,13 +87,13 @@ export function TextDocumentHeaderOptionsDialog({
         onPress: () => onApply({ header: read.header!, footer: read.footer!, ...switches }, scope),
       }}
     >
-      <div className="flex flex-col gap-5 pt-1">
+      <div className="flex flex-col gap-6 pt-1">
         <fieldset>
           <legend className={HEADING}>Margins ({unit === 'in' ? 'inches' : 'centimetres'})</legend>
-          <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
             {MARGINS.map(({ margin, label }) => (
               <div key={margin} className="flex items-start gap-3">
-                <span aria-hidden="true" className="w-14 pt-2 text-sm">
+                <span aria-hidden="true" className="w-14 pt-2 text-body">
                   {label}
                 </span>
                 <TextDocumentLengthField
@@ -114,7 +114,7 @@ export function TextDocumentHeaderOptionsDialog({
               <label
                 key={name}
                 htmlFor={name === 'differentFirst' ? ids.first : ids.oddEven}
-                className="flex cursor-pointer items-center gap-3 text-sm"
+                className="flex cursor-pointer items-center gap-3 text-body"
               >
                 <input
                   id={name === 'differentFirst' ? ids.first : ids.oddEven}

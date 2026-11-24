@@ -52,6 +52,20 @@ describe('optical guard', () => {
     ).toEqual([]);
   });
 
+  it('accepts a list mapped to elements, and flags one mapped to text', () => {
+    expect(
+      scan(`export const A = ({ xs }: { xs: string[] }) => (
+  <div className="${DISC}">{xs.map((x) => <b key={x} />)}{xs.map((x) => (
+    <i key={x} />
+  ))}</div>
+);`),
+    ).toEqual([]);
+    const v = scan(`export const A = ({ xs }: { xs: string[] }) => (
+  <div className="${DISC}">{xs.map((x) => x)}</div>
+);`);
+    expect(v.map((x) => x.line)).toEqual([2]);
+  });
+
   it('counts a shape sized by its style as fixed-height', () => {
     const v = scan(`export const A = ({ s }: { s: number }) => (
   <div style={{ width: s, height: s }} className="flex items-center justify-center rounded-full">

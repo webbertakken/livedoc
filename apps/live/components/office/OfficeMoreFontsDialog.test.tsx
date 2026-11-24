@@ -131,12 +131,18 @@ describe('OfficeMoreFontsDialog', () => {
   });
 
   it('moves and chooses from the keyboard, Enter never pressing OK', async () => {
-    const { onApply } = await setup({ initial: ['Lora'] });
+    // More families than a page of rows holds, so a page's move stops short of either end.
+    const catalogue = async () => [
+      ...GOOGLE,
+      google('Inter', 'Sans Serif', 5),
+      google('Roboto', 'Sans Serif', 6),
+    ];
+    const { onApply } = await setup({ initial: ['Lora'], catalogue });
     const list = await screen.findByRole('listbox');
     const active = () => document.getElementById(list.getAttribute('aria-activedescendant')!)!;
     expect(active().textContent).toBe('Arial');
     fireEvent.keyDown(list, { key: 'End' });
-    expect(active().textContent).toBe('Space Mono');
+    expect(active().textContent).toBe('Roboto');
     fireEvent.keyDown(list, { key: 'PageUp' });
     expect(active().textContent).toBe('Comic Sans MS');
     fireEvent.keyDown(list, { key: 'PageUp' });

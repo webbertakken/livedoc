@@ -72,7 +72,7 @@ export function TextDocumentDrawingPicture({
       <span className="text-document-drawing-failed" data-drawing-control="">
         <button
           type="button"
-          className="office-shell rounded border border-(--office-line) bg-(--office-menu) px-2 py-0.5 text-body font-medium text-(--office-ink) hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus)"
+          className="office-shell rounded-control border border-(--office-line) bg-(--office-menu) px-2 py-0.5 text-body text-(--office-ink) hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-(--office-focus)"
           onMouseDown={(e) => e.preventDefault()}
           onClick={load}
         >

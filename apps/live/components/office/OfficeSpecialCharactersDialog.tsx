@@ -38,7 +38,7 @@ function Glyph({ character }: { character: SpecialCharacter }) {
   const { look } = character;
   if (look.kind === 'abbreviation')
     return (
-      <span className="rounded-sm border border-dashed border-(--office-muted) px-0.5 text-[9px] leading-3 font-medium tracking-tight">
+      <span className="border border-dashed border-(--office-muted) px-0.5 office-glyph-abbreviation">
         {look.text}
       </span>
     );
@@ -177,7 +177,7 @@ export function OfficeSpecialCharactersDialog({
                 setCatalogue({ state: 'loading' });
                 setAttempt((n) => n + 1);
               }}
-              className="touch-target relative mt-2 rounded-full px-4 py-2 text-sm font-medium text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+              className="touch-target relative mt-2 flex h-field items-center rounded-full px-4 text-body text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
             >
               Try again
             </button>
@@ -198,14 +198,14 @@ function Preview({ character }: { character: SpecialCharacter | null }) {
     >
       {character ? (
         <>
-          <span className="flex size-12 shrink-0 items-center justify-center text-3xl sm:size-24 sm:text-6xl">
+          <span className="flex size-12 shrink-0 items-center justify-center office-glyph-preview sm:size-24 sm:office-glyph-preview-wide">
             <Glyph character={character} />
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm text-(--office-ink) [overflow-wrap:anywhere]">
+            <span className="text-body text-(--office-ink) [overflow-wrap:anywhere]">
               {characterName(character.name)}
             </span>
-            <span className="font-mono text-xs text-(--office-muted)">
+            <span className="font-mono text-supporting text-(--office-muted)">
               {codepointLabel(character.codepoint)}
             </span>
           </span>

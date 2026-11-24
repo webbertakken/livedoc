@@ -60,13 +60,13 @@ export function OfficeDialogTabs<T extends string>({
             if (!disabled.includes(tab)) onChange(tab);
           }}
           onKeyDown={(e) => onKey(e, index)}
-          className="relative flex-1 py-2 text-sm font-medium text-(--office-muted) outline-none hover:bg-(--office-hover) aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-selected:text-(--office-primary) aria-selected:after:absolute aria-selected:after:inset-x-4 aria-selected:after:bottom-0 aria-selected:after:h-[3px] aria-selected:after:rounded-t aria-selected:after:bg-(--office-primary)"
+          className="relative flex-1 py-2 text-body text-(--office-muted) outline-none hover:bg-(--office-hover) aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-selected:font-medium aria-selected:text-(--office-primary) aria-selected:after:absolute aria-selected:after:inset-x-4 aria-selected:after:bottom-0 aria-selected:after:h-[3px] aria-selected:after:rounded-t-control aria-selected:after:bg-(--office-primary)"
         >
           {icon === undefined ? (
             <span className="px-4">{name}</span>
           ) : (
             <>
-              <span aria-hidden="true" className="text-lg leading-none">
+              <span aria-hidden="true" className="text-name leading-none">
                 {icon}
               </span>
               <span className="sr-only">{name}</span>

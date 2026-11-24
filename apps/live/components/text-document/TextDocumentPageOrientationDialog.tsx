@@ -35,11 +35,11 @@ export function TextDocumentPageOrientationDialog({
       <fieldset className="flex flex-col gap-3 pt-1">
         <legend className="sr-only">Orientation</legend>
         {ORIENTATIONS.map(({ value, label }) => (
-          <label key={value} className="flex items-center gap-3 text-sm">
+          <label key={value} className="flex items-center gap-3 text-body">
             <input
               type="radio"
               name={name}
-              className="size-4 shrink-0 accent-(--office-primary)"
+              className="size-icon-row shrink-0 accent-(--office-primary)"
               checked={chosen === value}
               onChange={() => setChosen(value)}
             />

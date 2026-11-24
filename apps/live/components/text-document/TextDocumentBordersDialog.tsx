@@ -34,7 +34,7 @@ const PADDING_RANGE = { min: 0, max: BORDER_PADDING_MAX_PT } as const;
 export const NO_BETWEEN_IN_ODF = 'OpenDocument files have no line between paragraphs';
 
 const CONTROL =
-  'h-9 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 const shownNumber = (value: number | null) =>
   value === null ? '' : String(Math.round(value * 100) / 100);
@@ -95,7 +95,7 @@ export function TextDocumentBordersDialog({
       }}
     >
       <div className="grid grid-cols-[auto_1fr] items-center gap-x-6 gap-y-4 pt-1">
-        <span className="text-sm" id={`${ids.width}-position`}>
+        <span className="text-body" id={`${ids.width}-position`}>
           Position
         </span>
         <div
@@ -129,7 +129,7 @@ export function TextDocumentBordersDialog({
           })}
         </div>
 
-        <label htmlFor={ids.width} className="text-sm">
+        <label htmlFor={ids.width} className="text-body">
           Border width
         </label>
         <select
@@ -150,7 +150,7 @@ export function TextDocumentBordersDialog({
           ))}
         </select>
 
-        <label htmlFor={ids.dash} className="text-sm">
+        <label htmlFor={ids.dash} className="text-body">
           Border dash
         </label>
         <select
@@ -167,7 +167,7 @@ export function TextDocumentBordersDialog({
           ))}
         </select>
 
-        <span className="text-sm">Border colour</span>
+        <span className="text-body">Border colour</span>
         <OfficeDialogColourField
           className={CONTROL}
           label="Border colour"
@@ -175,7 +175,7 @@ export function TextDocumentBordersDialog({
           onPick={(color) => setFields((f) => ({ ...f, color }))}
         />
 
-        <span className="text-sm">Background colour</span>
+        <span className="text-body">Background colour</span>
         <OfficeDialogColourField
           className={CONTROL}
           label="Background colour"
@@ -184,7 +184,7 @@ export function TextDocumentBordersDialog({
           onPick={(shading) => setFields((f) => ({ ...f, shading }))}
         />
 
-        <label htmlFor={ids.padding} className="text-sm">
+        <label htmlFor={ids.padding} className="text-body">
           Paragraph padding
         </label>
         <div className="flex flex-col gap-1">
@@ -199,12 +199,12 @@ export function TextDocumentBordersDialog({
               onChange={(e) => setFields((f) => ({ ...f, padding: e.target.value }))}
               className={`${CONTROL} w-28 tabular-nums aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400`}
             />
-            <span aria-hidden="true" className="text-sm text-(--office-muted)">
+            <span aria-hidden="true" className="text-body text-(--office-muted)">
               pt
             </span>
           </span>
           {padding === 'invalid' ? (
-            <span id={ids.error} className="text-xs text-red-700 dark:text-red-300">
+            <span id={ids.error} className="text-supporting text-red-700 dark:text-red-300">
               Enter a number from 0 to {BORDER_PADDING_MAX_PT}.
             </span>
           ) : null}
