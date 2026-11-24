@@ -78,8 +78,8 @@ export function ModeMenuChip({
         // panel's rail top): square, tall, its focus ring drawn inside so the panel's edge never clips it.
         className={`flex items-center transition-colors ${
           compact
-            ? `h-9 justify-start gap-1.5 rounded-md px-2 text-[13px] font-medium ${MODE_SWITCH_FOCUS}`
-            : 'h-12 w-full justify-start gap-2.5 rounded-none px-5 text-[13px] font-medium focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:focus-visible:outline-brand-400'
+            ? `h-row tool-line:h-field justify-start gap-2 rounded-control px-2 text-body ${MODE_SWITCH_FOCUS}`
+            : 'h-12 w-full justify-start gap-3 rounded-none px-6 text-body focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:focus-visible:outline-brand-400'
         } ${TOOLBAR_TRIGGER_TONE}`}
       >
         <Icon aria-hidden />

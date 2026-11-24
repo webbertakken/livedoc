@@ -3,9 +3,9 @@ import { SOLID_BRAND_DARK_CONTROL } from '@livedoc/ui';
 // layout's strip, and the page toolbar of an article page, so a bar of controls reads as one
 // product wherever it sits.
 
-/** The card: white, hairline border, a soft shadow, a 4px inset around 36px controls. */
+/** The card: white, hairline border, a soft shadow, a 4px inset around its controls. */
 export const TOOLBAR_CARD =
-  'flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-md shadow-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40';
+  'flex items-center gap-0.5 rounded-surface border border-slate-200 bg-white p-1 shadow-md shadow-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40';
 
 /** A phone strip's rail that gives way and swipes sideways (the category bar, the tile rail, an article's dock): it pads
  *  for its tiles' pressed rings (cancelled by a matching negative margin, so the strip doesn't move), contains its swipe
@@ -16,7 +16,7 @@ export const STRIP_RAIL_SCROLL =
   'scroll-edge-fade min-w-0 -my-[3px] overflow-x-auto overflow-y-hidden overscroll-x-contain py-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
 
 /** The hairline between groups of controls. */
-export const TOOLBAR_DIVIDER = 'mx-0.5 h-6 w-px shrink-0 bg-slate-200 dark:bg-slate-700';
+export const TOOLBAR_DIVIDER = 'mx-0.5 h-chip w-px shrink-0 bg-slate-200 dark:bg-slate-700';
 
 /** A control at rest, and pressed (on, or its menu open). */
 export const TOOLBAR_CONTROL_REST =
@@ -24,13 +24,16 @@ export const TOOLBAR_CONTROL_REST =
 export const TOOLBAR_CONTROL_PRESSED =
   'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200';
 
-/** A button inside a toolbar group (docs/specs/004-interface-design/toolbar-group.md): flat, 36px tall, the hover fill,
- *  no border of its own; a labelled one pads its label. 44px to tap on a touch screen, drawn the same. */
-export const TOOLBAR_BUTTON = `relative flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition outline-none touch-target-y focus-visible:ring-2 focus-visible:ring-brand-400 ${TOOLBAR_CONTROL_REST}`;
+/** A button inside a toolbar group (docs/specs/004-interface-design/toolbar-group.md): flat, 28px tall (32px on
+ *  the tool line, D242), the hover fill, no border of its own; a labelled one pads its label. 44px to tap on a touch screen, drawn the same. */
+export const TOOLBAR_BUTTON = `relative flex h-row tool-line:h-field shrink-0 items-center justify-center gap-1 rounded-control px-2 text-body transition outline-none touch-target-y focus-visible:ring-2 focus-visible:ring-brand-400 ${TOOLBAR_CONTROL_REST}`;
 
-/** The same button holding an icon alone: 36px square. */
-export const TOOLBAR_ICON_BUTTON = `${TOOLBAR_BUTTON} w-9 px-0 touch-target`;
+/** The same button holding an icon alone: square. */
+export const TOOLBAR_ICON_BUTTON = `${TOOLBAR_BUTTON} w-row tool-line:w-field px-0 touch-target`;
 
 // A toggle in the actions group while on (a shared document's Share, the Workshop control): the brand fill, so the state
 // reads at a glance.
 export const TOOLBAR_BUTTON_ON = `bg-brand-700 text-white hover:bg-brand-800 hover:text-white dark:hover:text-white ${SOLID_BRAND_DARK_CONTROL}`;
+
+/** A labelled button whose label hides on a phone: square there, as its icon-alone twin, never its padded glyph. */
+export const TOOLBAR_SQUARE_ON_PHONE = 'phone:w-row tool-line:phone:w-field phone:px-0';

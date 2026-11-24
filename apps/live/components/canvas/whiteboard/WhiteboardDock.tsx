@@ -262,6 +262,8 @@ export function WhiteboardDock({ model, ink, onDrawn }: WhiteboardDockProps) {
       data-floating-panel=""
       ref={wrapper}
       data-whiteboard-dock=""
+      // Drawing tools wherever it sits, so the tool line's 32px (docs/specs/004-interface-design/sizing.md, D242).
+      data-tool-line=""
       data-region="palette"
       data-dock-position={model.position}
       onPointerDown={(e) => e.stopPropagation()}
@@ -346,7 +348,7 @@ function DockBody({
           data-dock-hint=""
           data-side={below ? 'below' : 'above'}
           style={{ left: hint.left, translate: '-50% 0' }}
-          className={`pointer-events-none absolute ${below ? 'top-full mt-2' : 'bottom-full mb-2'} w-max max-w-[min(20rem,calc(100vw-1.5rem))] animate-pop-in rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg dark:bg-slate-100 dark:text-slate-900`}
+          className={`pointer-events-none absolute ${below ? 'top-full mt-2' : 'bottom-full mb-2'} w-max max-w-[min(20rem,calc(100vw-1.5rem))] animate-pop-in rounded-menu bg-slate-900 px-3 py-2 text-supporting text-white shadow-lg dark:bg-slate-100 dark:text-slate-900`}
         >
           {PINS_FULL_HINT}
         </p>

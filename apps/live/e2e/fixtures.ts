@@ -360,6 +360,8 @@ export async function paletteTile(page: Page, name: string, category = 'Shapes')
     .getByRole('option', { name: category })
     .first()
     .click();
+  // The new category's tiles refit the strip (More comes and goes as they fit), so it is read once it is still.
+  await settledBox(page.locator('[data-tour-id="palette"]'));
   if (await onStrip().isVisible()) return onStrip();
   await strip.locator('button[data-toolbar-more-button]').click();
   const tile = page.getByRole('button', { name, exact: true }).first();

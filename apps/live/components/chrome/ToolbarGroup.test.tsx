@@ -19,6 +19,7 @@ describe('ToolbarGroup', () => {
   it('draws the palette strip surface, every child centred', () => {
     render(<ToolbarGroup data-testid="g" />);
     const group = screen.getByTestId('g');
+    expect(TOOLBAR_CARD.split(' ')).toContain('rounded-surface');
     for (const token of TOOLBAR_CARD.split(' ')) expect(group.className).toContain(token);
     expect(group.className).toContain('items-center');
   });
@@ -61,20 +62,28 @@ describe('ToolbarPart', () => {
 });
 
 describe('ToolbarDivider', () => {
-  it('is the 24px hairline, hidden from assistive tech', () => {
+  it('is the chip-step hairline, hidden from assistive tech', () => {
     render(<ToolbarDivider data-testid="d" />);
     const divider = screen.getByTestId('d');
     expect(divider.className).toBe(TOOLBAR_DIVIDER);
+    expect(TOOLBAR_DIVIDER.split(' ')).toContain('h-chip');
     expect(divider.getAttribute('aria-hidden')).toBe('true');
   });
 });
 
 describe('the group buttons', () => {
-  it('are flat 36px controls with the hover fill', () => {
-    expect(TOOLBAR_BUTTON).toContain('h-9');
-    expect(TOOLBAR_BUTTON).toContain('rounded-md');
+  // docs/specs/004-interface-design/sizing.md "The editor's toolbars": 28px controls, 32px on the tool line (D242).
+  it('are flat row-step controls with the hover fill, the field step on the tool line', () => {
+    const classes = TOOLBAR_BUTTON.split(' ');
+    expect(classes).toContain('h-row');
+    expect(classes).toContain('tool-line:h-field');
+    expect(classes).toContain('rounded-control');
+    expect(classes).toContain('text-body');
+    expect(classes).not.toContain('font-medium');
     expect(TOOLBAR_BUTTON).toContain('hover:bg-slate-100');
     expect(TOOLBAR_BUTTON).not.toContain('border');
-    expect(TOOLBAR_ICON_BUTTON).toContain('w-9');
+    const square = TOOLBAR_ICON_BUTTON.split(' ');
+    expect(square).toContain('w-row');
+    expect(square).toContain('tool-line:w-field');
   });
 });

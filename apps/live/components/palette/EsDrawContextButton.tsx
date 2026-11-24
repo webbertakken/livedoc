@@ -25,7 +25,7 @@ export function EsDrawContextButton({ controls }: { controls: EsBoardControls | 
         aria-pressed={on}
         data-context-pen-toggle=""
         onClick={controls.onDrawContext}
-        className={`flex h-9 w-9 items-center justify-center rounded-md transition ${
+        className={`flex h-field w-field items-center justify-center rounded-control transition ${
           on
             ? 'bg-brand-100 text-brand-800 dark:bg-brand-900 dark:text-brand-100'
             : TOOLBAR_TRIGGER_TONE

@@ -27,7 +27,7 @@ export function EsPhotoStripButton({ controls }: { controls: EsBoardControls | u
         onClick={() => {
           if (!disabled) controls.onImportPhoto?.();
         }}
-        className={`flex h-9 w-9 items-center justify-center rounded-md transition ${
+        className={`flex h-field w-field items-center justify-center rounded-control transition ${
           disabled ? 'cursor-not-allowed opacity-50' : TOOLBAR_TRIGGER_TONE
         }`}
       >

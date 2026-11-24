@@ -151,6 +151,20 @@ A surface names the token, never the number, so the scale changes in one place.
 - [UI scale](../007-editor/ui-scale.md) is a person's own preference that multiplies the scale on the surfaces it
   covers; it is not a density setting and its default (100%) draws the scale as written.
 - A token is the size drawn at that default: no chrome carries a zoom of its own on top of it (default).
+- The top line's 100% draws at 115%, UI scale's own base for it, so its tokens draw 1.15 times larger (D241).
+
+## The editor's toolbars
+
+- Every editor toolbar is a [toolbar group](toolbar-group.md): 28 px controls (`h-row`) in a 36 px band, its
+  4 px inset inside a hairline.
+- The top line is where the drawing tools sit: the brand group, the Palette strip or Draw's dock, and the actions
+  group.
+- Its controls take the drawing tool's 32 px (`h-field`), so the line reads as one height (D242, default).
+- Draw's dock holds drawing tools wherever it sits, so its controls are 32 px at the bottom too.
+- The bottom line and every other toolbar group keep the 28 px control.
+- A toolbar control's label reads `text-body`, regular; medium marks it only while it is pressed or chosen.
+- A tool's key hint is a glyph (`text-glyph`) in the tile's corner; a toolbar icon is `size-icon-toolbar`.
+- So a drawing tool draws 37 px at the default, and the top line 48 px, as in the render Webber ruled on.
 
 ## The guard
 
@@ -198,6 +212,10 @@ The code cites each by its id.
   a surface reads as what it is and the number can change in one place (default).
 - **D233** Where the zoom stands: a token is the size drawn on screen at the default UI scale, so no chrome carries
   a zoom of its own (default).
+- **D241** The top line's 115% base stays: it is UI scale's default for that line, a person's preference with its own
+  slider, not a zoom of the chrome's, and the ruled render drew 32 px tools at 37 px with it (default).
+- **D242** The top line has one height: its groups' controls take the drawing tool's 32 px, as the ruled render drew
+  them, rather than 28 px controls in shorter cards beside the strip (default).
 - **D234** What the guard reads: every static string in a source file outside tests, so a size in a constant (a
   variant table, a shared class list) is held to the scale as one in markup is (default).
 - **D235** The tokens' unit: rem at a 16 px root, so a browser set to larger text grows the chrome with it (default).

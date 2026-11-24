@@ -72,7 +72,7 @@ export function CatalogueGroupTile({
       onClick={() => {
         if (ref.current) onToggle(ref.current);
       }}
-      className={`relative flex h-9 touch-target-y items-center gap-0.5 rounded-md pl-1.5 pr-1 transition ${
+      className={`relative flex h-field touch-target-y items-center gap-0.5 rounded-control pl-2 pr-1 transition ${
         open
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
           : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -80,12 +80,12 @@ export function CatalogueGroupTile({
     >
       <span
         aria-hidden
-        className="flex h-[22px] w-[22px] items-center justify-center [&>svg]:max-h-full [&>svg]:max-w-full"
+        className="flex size-icon-title items-center justify-center [&>svg]:max-h-full [&>svg]:max-w-full"
       >
         {group.icon}
       </span>
       <ChevronDownIcon
-        className={`h-3 w-3 opacity-60 transition-transform ${open ? 'rotate-180' : ''}`}
+        className={`size-icon-chevron opacity-60 transition-transform ${open ? 'rotate-180' : ''}`}
       />
     </button>
   );

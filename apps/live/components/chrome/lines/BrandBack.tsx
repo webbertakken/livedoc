@@ -33,10 +33,10 @@ function BackCaret() {
   );
 }
 
-// Caret and mark are one 36px tall hit area with the group's hover fill; the caret sits 8px before the 24px mark.
+// Caret and mark are one toolbar-control tall hit area with the group's hover fill; the caret sits 8px before the 24px mark.
 const HIT_AREA =
-  'relative flex h-9 items-center gap-2 rounded-md pl-2 pr-1.5 text-slate-500 outline-none transition touch-target-y hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200';
-const MARK = 'size-6';
+  'relative flex h-row tool-line:h-field items-center gap-2 rounded-control pl-2 pr-2 text-slate-500 outline-none transition touch-target-y hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200';
+const MARK = 'size-chip';
 
 // The editor's logo, a back button: caret and the brand mark, without the wordmark, tinted by the tab's theme. Every
 // target draws the one Brand over the one hit area, so the caret, the hover, focus and press, and the logo's

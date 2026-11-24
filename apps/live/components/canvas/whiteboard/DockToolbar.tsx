@@ -115,9 +115,9 @@ type DockButtonProps = {
 export const DockButton = forwardRef<HTMLButtonElement, DockButtonProps>(
   function DockButton(o, ref) {
     const { focusKey, setFocusKey } = useContext(RovingContext);
-    // The Toolbar layout strip's tile (36px, its corners and its pressed look: PaletteIconButton's
+    // The Toolbar layout strip's tile (the field step, its corners and its pressed look: PaletteIconButton's
     // active tone), so the dock is the strip's height and a tool in hand reads the same in every mode.
-    const shape = `relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500 ${
+    const shape = `relative flex h-field w-field shrink-0 items-center justify-center rounded-control transition focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500 ${
       o.pressed ? DOCK_PRESSED : TOOLBAR_CONTROL_REST
     }`;
     return (
@@ -163,7 +163,7 @@ export const DockButton = forwardRef<HTMLButtonElement, DockButtonProps>(
             // learn the keys. Slate-500 / -400 keep 4.5:1.
             <span
               aria-hidden
-              className="pointer-events-none absolute bottom-0.5 right-1 text-[8px] font-medium uppercase leading-none text-slate-500 pointer-coarse:hidden dark:text-slate-400"
+              className="pointer-events-none absolute bottom-0 right-0.5 text-glyph leading-none text-slate-500 pointer-coarse:hidden dark:text-slate-400"
             >
               {o.shortcut}
             </span>

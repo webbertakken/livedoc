@@ -137,7 +137,7 @@ export function ModeMenu({
               <CheckIcon
                 aria-hidden
                 data-mode-check=""
-                className="h-3.5 w-3.5 shrink-0 text-brand-700 dark:text-sky-300"
+                className="size-icon-row shrink-0 text-brand-700 dark:text-sky-300"
               />
             ) : null}
           </button>

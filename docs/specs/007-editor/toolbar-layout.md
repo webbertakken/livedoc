@@ -671,7 +671,7 @@ their bottom-row buttons. What changes to fit the width:
   the strip's right end and could not be reached. A whiteboard's dock at the top gets the same treatment
   ([Where the dock sits](../023-draw-mode/draw-mode.md#where-the-dock-sits)).
 - **Undo / Redo stay together**, first in the tools group, bottom left ("The bottom line").
-- **A phone's toolbar items keep their size** (`PHONE_TOOLBAR_ITEMS`): 36px, as in every
+- **A phone's toolbar items keep their size** (`PHONE_TOOLBAR_ITEMS`): the scale's, as in every
   [toolbar group](../004-interface-design/toolbar-group.md), each with a 44px-tall tap area ([Touch targets](../004-interface-design/touch-targets.md)).
   Only the pickers give up 4px of side padding, and the strip's dividers their margins down to
   1px, so more tiles show in the strip. The row keeps its 12px gutters and 8px gap.

@@ -42,7 +42,7 @@ export function ToolbarSearchButton({
       onClick={(e) => onToggle(e.currentTarget)}
       // A square the size of a tile, not side padding: a phone's strip trims its pickers' px-2
       // (PHONE_TOOLBAR_ITEMS), which squeezed this icon-only button to 24px beside 36px tiles.
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition ${
+      className={`flex h-field w-field shrink-0 items-center justify-center rounded-control transition ${
         open
           ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
           : TOOLBAR_TRIGGER_TONE
@@ -137,7 +137,7 @@ export function ToolbarSearchPanel({
         />
       </div>
       {browsing && here.length > 0 ? (
-        <div className="px-1 text-[10px] text-slate-500 dark:text-slate-400">On This Tab</div>
+        <div className="px-1 text-supporting text-slate-500 dark:text-slate-400">On This Tab</div>
       ) : null}
       {here.length > 0 ? (
         <PaletteTileGrid tiles={here} actions={actions} pendingDraw={pendingDraw} />

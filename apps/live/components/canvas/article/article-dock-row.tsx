@@ -42,12 +42,12 @@ export const ARTICLE_DOCK_STYLE_GLYPH_PX = 14;
 
 /** The style picker's box: as wide as its longest usual name on a computer, its name's width on a phone. */
 export function articleDockStyleBox(phone: boolean): string {
-  return `flex h-9 ${phone ? '' : 'min-w-[124px]'} shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium`;
+  return `flex h-field ${phone ? '' : 'min-w-[124px]'} shrink-0 items-center gap-1 rounded-control px-2 text-body`;
 }
 
 /** A button's box: square, or padded round its glyph and chevron where it opens a menu. */
 export function articleDockButtonBox(menu: boolean): string {
-  return `flex h-9 shrink-0 items-center justify-center gap-1 rounded-md ${menu ? 'px-2' : 'w-9'}`;
+  return `flex h-field shrink-0 items-center justify-center gap-1 rounded-control ${menu ? 'px-2' : 'w-field'}`;
 }
 
 function GlyphPlace({ px }: { px: number }) {

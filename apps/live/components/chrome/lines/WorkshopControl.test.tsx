@@ -6,6 +6,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WorkshopControl } from './WorkshopControl';
+import { TOOLBAR_ICON_BUTTON, TOOLBAR_SQUARE_ON_PHONE } from '@/components/chrome/toolbar-surface';
 
 afterEach(cleanup);
 
@@ -46,5 +47,20 @@ describe('WorkshopControl', () => {
     rerender(<WorkshopControl on onToggle={onToggle} />);
     fireEvent.click(button());
     expect(onToggle).toHaveBeenLastCalledWith(false);
+  });
+});
+
+// docs/specs/004-interface-design/sizing.md "The editor's toolbars": a control drawn as its mark alone is square,
+// so it never drops under the 24px floor (a phone hides the label of a labelled one).
+describe('WorkshopControl drawn as its mark', () => {
+  it('is the square icon button unlabelled, and square on a phone when labelled', () => {
+    const { rerender } = render(<WorkshopControl on={false} onToggle={vi.fn()} />);
+    expect(screen.getByRole('button').className.split(' ')).toEqual(
+      expect.arrayContaining(TOOLBAR_ICON_BUTTON.split(' ')),
+    );
+    rerender(<WorkshopControl on={false} onToggle={vi.fn()} labelled />);
+    expect(screen.getByRole('button').className.split(' ')).toEqual(
+      expect.arrayContaining(TOOLBAR_SQUARE_ON_PHONE.split(' ')),
+    );
   });
 });

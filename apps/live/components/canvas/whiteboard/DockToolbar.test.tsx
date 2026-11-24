@@ -20,12 +20,12 @@ function renderDock() {
 }
 
 describe('DockToolbar on a touch screen', () => {
-  it('carries the phone toolbar items, so its 36px buttons get the vertical touch pad', () => {
+  it('carries the phone toolbar items, so its 32px tools get the vertical touch pad', () => {
     renderDock();
     const pill = screen.getByRole('toolbar', { name: 'Tools' });
     for (const cls of PHONE_TOOLBAR_ITEMS.split(' ')) expect(pill.classList).toContain(cls);
-    expect(PHONE_TOOLBAR_ITEMS).toContain('[&_.h-9]:touch-target-y');
-    expect(screen.getByRole('button', { name: /Select/ }).className).toMatch(/\bh-9\b/);
+    expect(PHONE_TOOLBAR_ITEMS).toContain('[&_.h-field]:touch-target-y');
+    expect(screen.getByRole('button', { name: /Select/ }).className).toMatch(/\bh-field\b/);
   });
 
   it('hides the shortcut letter on a coarse pointer', () => {

@@ -180,11 +180,11 @@ export function ToolbarStripRail({
       // not auto: the tiles' 44px tap areas (touch-target-y) reach past it and made it scroll 1px.
       ref={railRef}
       data-strip-rail=""
-      className={`relative -mx-[3px] flex items-center ${
+      className={`relative -mx-1 flex items-center ${
         scrollable ? STRIP_RAIL_SCROLL : 'overflow-x-clip [overflow-clip-margin:3px]'
       }${switched ? ' transition-[width] duration-short ease-out' : ''}`}
     >
-      <div key={railKey} ref={contentRef} className="flex w-max items-center gap-0.5 px-[3px]">
+      <div key={railKey} ref={contentRef} className="flex w-max items-center gap-0.5 px-1">
         {items.map((item, i) => (
           <span
             // Keyed by the item, so a tile that moves within a category
@@ -221,7 +221,7 @@ export function ToolbarStripRail({
         <div
           aria-hidden
           inert
-          className="pointer-events-none absolute left-0 top-0 flex h-full w-max items-center gap-0.5 px-[3px]"
+          className="pointer-events-none absolute left-0 top-0 flex h-full w-max items-center gap-0.5 px-1"
         >
           {leavingItems.map((item, i) => (
             <span

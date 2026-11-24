@@ -101,7 +101,7 @@ export function ShapesGroup({
         <span
           aria-hidden
           data-slot-drop-indicator={refusing ? 'refused' : 'ok'}
-          className={`pointer-events-none absolute top-1.5 h-9 w-0.5 rounded-full ${
+          className={`pointer-events-none absolute top-1.5 h-field w-0.5 rounded-full ${
             refusing ? 'bg-rose-500' : 'bg-brand-500'
           }`}
           style={{ left: marker }}

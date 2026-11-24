@@ -1,7 +1,12 @@
 'use client';
 
 import { FlipchartIcon, HoverCard } from '@livedoc/ui';
-import { TOOLBAR_BUTTON, TOOLBAR_BUTTON_ON } from '@/components/chrome/toolbar-surface';
+import {
+  TOOLBAR_BUTTON,
+  TOOLBAR_BUTTON_ON,
+  TOOLBAR_ICON_BUTTON,
+  TOOLBAR_SQUARE_ON_PHONE,
+} from '@/components/chrome/toolbar-surface';
 
 // The Workshop control (docs/specs/012-collaboration/workshop-mode.md "The control"): the actions group's flat button,
 // a toggle that brings the session kit (the Session strip, the Collaborate categories and Stickers) into the tab's
@@ -34,7 +39,7 @@ export function WorkshopControl({
         data-tour-id="workshop-control"
         aria-pressed={on}
         onClick={() => onToggle(!on)}
-        className={`${TOOLBAR_BUTTON} ${on ? TOOLBAR_BUTTON_ON : ''}`}
+        className={`${labelled ? `${TOOLBAR_BUTTON} ${TOOLBAR_SQUARE_ON_PHONE}` : TOOLBAR_ICON_BUTTON} ${on ? TOOLBAR_BUTTON_ON : ''}`}
       >
         <FlipchartIcon size={14} aria-hidden />
         <span className={`text-optical-centre ${labelled ? 'phone:sr-only' : 'sr-only'}`}>

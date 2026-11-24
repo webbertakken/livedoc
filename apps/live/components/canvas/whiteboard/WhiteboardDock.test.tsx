@@ -57,7 +57,7 @@ describe('WhiteboardDock groups', () => {
   it('draws the three groups in one card, a hairline between each, like the palette', () => {
     renderDock();
     const card = document.querySelector<HTMLElement>('[data-dock-scroller]')!;
-    expect(card.className).toContain('rounded-xl');
+    expect(card.className).toContain('rounded-surface');
     expect(card.className).toContain('border');
     const groups = screen.getAllByRole('toolbar');
     expect(groups.every((g) => card.contains(g))).toBe(true);
