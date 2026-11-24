@@ -41,7 +41,7 @@ test('Dark pages shows a PDF’s pages dark for one person, the photograph as dr
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/explorer/all');
   await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
-  await dropPdf(page, 'Dark pages.pdf', darkPagesPdf());
+  await dropPdf(page, 'Dark pages.pdf', darkPagesPdf(), { asked: false });
   await page.waitForURL(/\/document\//, { timeout: 30_000 });
   await pageOneDrawn(page);
 
@@ -92,7 +92,7 @@ test('the first-time question asks once, without blocking reading, and its answe
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/explorer/all');
   await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
-  await dropPdf(page, 'Dark pages.pdf', darkPagesPdf());
+  await dropPdf(page, 'Dark pages.pdf', darkPagesPdf(), { asked: false });
   await page.waitForURL(/\/document\//, { timeout: 30_000 });
   await pageOneDrawn(page);
 

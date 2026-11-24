@@ -16,8 +16,26 @@ export const PAGE_ONE = '[data-pdf-page="1"]';
 const LETTER = { width: 612, height: 792 };
 const LINE = { left: 72, middle: LETTER.height - 720 - 4 };
 
-/** Drops a PDF from the computer on the page, as a person drags a file onto the window. */
-export async function dropPdf(page: Page, name: string, bytes: Uint8Array): Promise<void> {
+/** Answers Dark pages' first-time question as kept (dark-pages.md "The first-time question"), so a spec of something
+ *  else reads the pages as the file says with no card over them. Runs in the page: the preferences' own key. */
+function keepPagesAsTheyAre(): void {
+  const key = 'livedoc:user-preferences:v1';
+  const prefs = JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, unknown>;
+  if (prefs.pdfDarkPages === undefined)
+    localStorage.setItem(key, JSON.stringify({ ...prefs, pdfDarkPages: false }));
+}
+
+/**
+ * Drops a PDF from the computer on the page, as a person drags a file onto the window. Dark pages' question is
+ * answered first, unless `asked` is false, as the Dark pages spec asks.
+ */
+export async function dropPdf(
+  page: Page,
+  name: string,
+  bytes: Uint8Array,
+  { asked = true }: { asked?: boolean } = {},
+): Promise<void> {
+  if (asked) await page.evaluate(keepPagesAsTheyAre);
   const transfer = await page.evaluateHandle(
     ({ fileName, base64 }) => {
       const binary = atob(base64);
@@ -52,6 +70,7 @@ export async function peerOn(browser: Browser, baseURL: string, code: string): P
 
 /** A page of `ctx` on the document, through a share link. */
 export async function joinOn(ctx: BrowserContext, code: string): Promise<Page> {
+  await ctx.addInitScript(keepPagesAsTheyAre);
   const page = await ctx.newPage();
   await page.goto(`/document/shared?s=${code}`);
   // A visitor joins under a name when the welcome asks for one; the pages show either way.
