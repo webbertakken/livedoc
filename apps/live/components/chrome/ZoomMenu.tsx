@@ -44,7 +44,7 @@ export function ZoomMenu({ zoom, onSetZoom, onFitToScreen, offReason, range }: Z
             type="button"
             disabled
             aria-label="Fit to screen"
-            className="flex h-row min-w-[3.5rem] cursor-not-allowed items-center justify-center rounded-control px-2 text-center text-supporting tabular-nums text-slate-700 opacity-40 dark:text-slate-200"
+            className="flex h-row min-w-[3.5rem] cursor-not-allowed items-center justify-center rounded-control px-2 text-center text-body tabular-nums text-slate-700 opacity-40 dark:text-slate-200"
           >
             {percent}%
           </button>
@@ -105,7 +105,7 @@ function ZoomMenuLive({ zoom, onSetZoom, onFitToScreen, range }: Omit<ZoomMenuPr
         aria-label="Fit to screen"
         aria-haspopup="menu"
         aria-expanded={open !== null}
-        className="flex h-row min-w-[3.5rem] items-center justify-center rounded-control px-2 text-center text-supporting tabular-nums text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="flex h-row min-w-[3.5rem] items-center justify-center rounded-control px-2 text-center text-body tabular-nums text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         {percent}%
       </button>
