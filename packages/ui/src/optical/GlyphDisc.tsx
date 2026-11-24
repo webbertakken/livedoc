@@ -1,9 +1,11 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
+import { useRef, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
+import { useInkCentring } from './ink-centring';
 
 // A circle holding one glyph: a letter, initials, a numeral or an icon
 // (docs/specs/004-interface-design/optical-alignment.md). A text glyph centres its cap band through
-// `text-optical-centre`, not its line box; an icon renders as a block so no baseline gap offsets it.
-// Colour, font size and ARIA are the caller's.
+// `text-optical-centre`, not its line box, and initials and symbols centre by their ink, not their advance
+// (useInkCentring); an icon renders as a block so no baseline gap offsets it. Colour, font size and ARIA are the
+// caller's.
 export type GlyphDiscProps = {
   // Diameter in px. Omit only for a disc that changes size at a breakpoint: its h-* / w-* classes size it.
   size?: number;
@@ -17,6 +19,20 @@ const isText = (children: ReactNode): boolean =>
   typeof children === 'string' ||
   typeof children === 'number' ||
   (Array.isArray(children) && children.length > 0 && children.every(isText));
+
+const textOf = (children: ReactNode): string =>
+  Array.isArray(children) ? children.map(textOf).join('') : String(children);
+
+// The text glyph, moved by its ink.
+function TextGlyph({ text }: { text: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const translate = useInkCentring(ref, text);
+  return (
+    <span ref={ref} className="text-optical-centre" style={translate ? { translate } : undefined}>
+      {text}
+    </span>
+  );
+}
 
 export function GlyphDisc({
   size,
@@ -33,7 +49,7 @@ export function GlyphDisc({
       style={size === undefined ? style : { width: size, height: size, ...style }}
       {...rest}
     >
-      {isText(children) ? <span className="text-optical-centre">{children}</span> : children}
+      {isText(children) ? <TextGlyph text={textOf(children)} /> : children}
     </Tag>
   );
 }

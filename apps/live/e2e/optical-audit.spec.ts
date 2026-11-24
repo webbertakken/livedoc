@@ -24,6 +24,17 @@ test.use({
   deviceScaleFactor: 4,
 });
 
+// Initials whose letters' side bearings differ most in a sans (an open-sided L or T beside a wide W, a tailed Q or J),
+// typed as the names that give them.
+const AWKWARD_INITIALS = [
+  ['LW', 'Lou Wren'],
+  ['AB', 'Ada Bell'],
+  ['QW', 'Quinn West'],
+  ['TY', 'Tia Young'],
+  ['LL', 'Lee Lane'],
+  ['JW', 'Jo Wade'],
+] as const;
+
 async function expectCentred(page: Page, screen: string): Promise<void> {
   const report = await auditOptical(page);
   test.info().annotations.push({
@@ -100,7 +111,16 @@ test.describe('Optical alignment audit', () => {
     const visitor = await freshDarkPage(browser, 4);
     await visitor.goto(`/document/shared?s=${code}`);
     await visitor.getByRole('button', { name: /^join$/i }).waitFor();
-    await expectCentred(visitor, 'Join dialog');
+    // A guest's name is random, so its initials are too: the disc is audited with a fixed set of awkward pairs
+    // instead, whose side bearings differ most (docs/specs/004-interface-design/optical-alignment.md).
+    const name = visitor.getByRole('textbox', { name: 'Your name' });
+    // The face is pinned before the first name, so each disc measures its ink in the face the audit reads.
+    await pinUiFace(visitor);
+    for (const [initials, typed] of AWKWARD_INITIALS) {
+      await name.fill(typed);
+      await expect(visitor.getByRole('img', { name: /^Your avatar colour/ })).toHaveText(initials);
+      await expectCentred(visitor, `Join dialog, ${initials}`);
+    }
     await visitor.context().close();
   });
 

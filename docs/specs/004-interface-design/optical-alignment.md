@@ -79,6 +79,8 @@ transform moves text after the snap, so the snap follows the layout, not the tra
 One implementation per shape, shared from `@livedoc/ui`, so the rule is written once:
 
 - **Glyph disc**: a circle holding a letter, initials, a numeral or an icon, at a named size.
+  It moves initials and symbols by half the difference of their side bearings, read from the face the browser draws
+  (a canvas text measure, again when a web font loads), so they centre by ink; numerals stay advance-centred.
 - **Chip**: a pill or badge holding an optional leading icon and a label, with the caps variant's
   trailing tracking balanced. It keeps the height its padding gives it.
 - **Icon slot**: a fixed square that centres whatever it holds; stacks put their icon in one.
@@ -98,6 +100,8 @@ Existing ad-hoc shapes move onto these primitives. A new shape that frames a gly
   and type still counts. A shape the viewport cuts is skipped like an overlapped one: the audit reads a viewport
   screenshot, which holds only part of its glyph. An SVG disc follows the same horizontal rules as an
   HTML one, so a numeral in it is judged by its advance, not its ink.
+- Where a glyph comes from a person (a guest's random name), the audit types a fixed set of awkward initials (LW,
+  AB, QW, TY, LL, JW) and measures each, so a run never turns on chance.
 - **A snap guard** holds the browser to that whole-pixel baseline, so the audit's correction fails
   loudly if the browser ever paints text differently.
 - **A static guard** fails when a circle or chip framing text bypasses the primitives or the
