@@ -146,7 +146,7 @@ function FilterMenu({
     actions.setFilter(colId, Object.keys(cond).length ? cond : null);
     onClose();
   };
-  const field = 'h-7 w-full rounded-md border bg-transparent px-2 text-[12px] outline-none';
+  const field = 'h-field w-full rounded-control border bg-transparent px-2 text-body outline-none';
   return (
     <ContextMenu position={at} label="Filter column" onClose={onClose}>
       <MenuActionRow
@@ -167,11 +167,10 @@ function FilterMenu({
       />
       <ContextMenuDivider />
       {/* As wide as the menu, never wider: a wider panel spilled its fields, counts and OK past the menu's edge. */}
-      <div
-        className="w-full min-w-0 px-3 py-1.5 text-[12px]"
-        onKeyDown={(e) => e.stopPropagation()}
-      >
-        <div className="mb-1 font-semibold">Filter by Values</div>
+      <div className="w-full min-w-0 px-3 py-1.5 text-body" onKeyDown={(e) => e.stopPropagation()}>
+        <div className="mb-1 text-supporting text-slate-500 dark:text-slate-400">
+          Filter by Values
+        </div>
         <input
           aria-label="Search values"
           placeholder="Search"
@@ -199,7 +198,7 @@ function FilterMenu({
         <ul className="mt-1 max-h-40 overflow-auto">
           {shown.map((v) => (
             <li key={v.text}>
-              <label className="flex cursor-pointer items-center gap-1.5 py-0.5">
+              <label className="flex cursor-pointer items-center gap-2 py-0.5">
                 <input
                   type="checkbox"
                   checked={kept.has(v.text)}
@@ -218,7 +217,9 @@ function FilterMenu({
             </li>
           ))}
         </ul>
-        <div className="mb-1 mt-2 font-semibold">Filter by Condition</div>
+        <div className="mb-1 mt-2 text-supporting text-slate-500 dark:text-slate-400">
+          Filter by Condition
+        </div>
         <select
           aria-label="Condition"
           className={field}
@@ -279,18 +280,18 @@ function SortDialog({ actions, onClose }: { actions: SheetActions; onClose: () =
       label="Custom Sort"
       onClose={onClose}
     >
-      <div className="w-72 px-3 py-2 text-[12px]" onKeyDown={(e) => e.stopPropagation()}>
-        <div className="mb-2 font-semibold">Custom Sort</div>
-        <label className="mb-2 flex cursor-pointer items-center gap-1.5">
+      <div className="w-72 px-3 py-2 text-body" onKeyDown={(e) => e.stopPropagation()}>
+        <div className="mb-2 text-supporting text-slate-500 dark:text-slate-400">Custom Sort</div>
+        <label className="mb-2 flex cursor-pointer items-center gap-2">
           <input type="checkbox" checked={header} onChange={(e) => setHeader(e.target.checked)} />
           Data has a header row
         </label>
         {keys.map((k, i) => (
-          <div key={i} className="mb-1 flex items-center gap-1.5">
+          <div key={i} className="mb-1 flex items-center gap-2">
             <span className="w-14">{i === 0 ? 'Sort by' : 'Then by'}</span>
             <select
               aria-label="Column"
-              className="h-7 flex-1 rounded-md border bg-transparent px-1"
+              className="h-field flex-1 rounded-control border bg-transparent px-1"
               style={{ borderColor: c.palette.border }}
               value={k.col}
               onChange={(e) =>
@@ -305,7 +306,7 @@ function SortDialog({ actions, onClose }: { actions: SheetActions; onClose: () =
             </select>
             <select
               aria-label="Order"
-              className="h-7 rounded-md border bg-transparent px-1"
+              className="h-field rounded-control border bg-transparent px-1"
               style={{ borderColor: c.palette.border }}
               value={k.ascending ? 'a' : 'z'}
               onChange={(e) =>

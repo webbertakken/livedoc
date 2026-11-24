@@ -94,7 +94,7 @@ export function SheetFormulaBar({
       data-keeps-escape
       // The Plan tour's Formulas step points here.
       data-sheet-formula-bar
-      className="relative flex shrink-0 items-start border-b text-[12px]"
+      className="relative flex shrink-0 items-start border-b text-body"
       style={{ minHeight: 28, borderColor: c.palette.cardBorder, color: c.palette.text }}
       onPointerDown={stop}
       onDoubleClick={stop}
@@ -102,7 +102,7 @@ export function SheetFormulaBar({
       <input
         aria-label="Name box"
         // A small rounded field, as the name box reads in a modern spreadsheet.
-        className="my-[2px] ml-1.5 h-6 w-20 shrink-0 rounded-md border px-2 text-center font-mono text-[11.5px] outline-none transition focus:ring-2"
+        className="my-[2px] ml-1.5 h-chip w-20 shrink-0 rounded-control border px-2 text-center font-mono text-supporting outline-none transition focus:ring-2"
         style={
           {
             borderColor: c.palette.cardBorder,
@@ -147,7 +147,7 @@ export function SheetFormulaBar({
         colour={c.palette.muted}
       />
       <span
-        className="ml-1.5 flex h-7 w-8 shrink-0 items-center justify-center border-l font-serif text-[13px] italic"
+        className="ml-1.5 flex h-row w-8 shrink-0 items-center justify-center border-l font-serif text-body italic"
         style={{ color: c.palette.muted, borderColor: c.palette.cardBorder }}
         aria-hidden
       >
@@ -183,7 +183,7 @@ export function SheetFormulaBar({
             {input.error ? (
               <div
                 role="alert"
-                className="absolute left-0 top-full z-20 mt-1 rounded-md bg-red-600 px-2 py-1 text-[12px] text-white shadow"
+                className="absolute left-0 top-full z-20 mt-1 rounded-control bg-red-600 px-2 py-1 text-supporting text-white shadow"
               >
                 {input.error.message}
               </div>

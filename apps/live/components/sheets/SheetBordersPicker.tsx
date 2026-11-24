@@ -77,7 +77,7 @@ function LineSwatch({ line }: { line: BorderLine }) {
 }
 
 const CELL =
-  'flex cursor-pointer items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50';
+  'flex cursor-pointer items-center justify-center rounded-control text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50';
 
 export function SheetBordersPicker({
   line,
@@ -97,7 +97,7 @@ export function SheetBordersPicker({
               type="button"
               role="menuitem"
               aria-label={m.label}
-              className={`${CELL} h-9 w-full`}
+              className={`${CELL} h-field w-full`}
               onClick={() => onPick(m.mode)}
             >
               <BorderGlyph mode={m.mode} />
@@ -116,7 +116,7 @@ export function SheetBordersPicker({
                 role="menuitemradio"
                 aria-checked={on}
                 aria-label={l.label}
-                className={`${CELL} h-8 w-full ${
+                className={`${CELL} h-field w-full ${
                   on ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200' : ''
                 }`}
                 onClick={() => onLine(l)}
