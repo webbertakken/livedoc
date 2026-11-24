@@ -15,7 +15,7 @@ import { matches, paletteRank } from '@livedoc/icons';
 import { templateMatchesQuery } from '@livedoc/templates/template-search';
 import type { TemplateKind } from '@livedoc/templates';
 import { compileTitleQuery, rankByTitle, type TitleQuery } from '@livedoc/explorer-lens';
-import type { ShapeKind, Tab } from '@livedoc/document';
+import { isDrawingTab, listedTabs, type ShapeKind, type Tab } from '@livedoc/document';
 
 // Every word typed is found somewhere in the fields, case ignored: "export png" finds Export… (named Export, its
 // keywords saying png), as a start's template search does (docs/specs/008-canvas/canvas-and-palette.md "Search
@@ -95,8 +95,11 @@ type TeamItem = { kind: 'team'; id: string; name: string };
 type TabItem = { kind: 'tab'; id: string; name: string; isCurrent: boolean };
 type ElementItem = {
   kind: 'element';
+  // A drawing's element is its text document's (docs/specs/034-text-documents/objects.md "The document around it"):
+  // `tabId` and `tabName` name the text document tab, `drawingTabId` the drawing tab it is on.
   tabId: string;
   tabName: string;
+  drawingTabId?: string;
   elementId: string;
   label: string;
   // Element.type literal so callers can show a per-type icon.
@@ -381,7 +384,10 @@ export function buildSearchResults(input: SearchInput): SearchGroup[] {
   }
 
   if (tabs && tabs.length > 0) {
-    const tabMatches = tabs.filter((t) => matches(q, t.name)).slice(0, TAB_LIMIT);
+    // A drawing tab is never a tab of its own.
+    const tabMatches = listedTabs(tabs)
+      .filter((t) => matches(q, t.name))
+      .slice(0, TAB_LIMIT);
     if (tabMatches.length > 0) {
       groups.push({
         key: 'tabs',
@@ -401,6 +407,9 @@ export function buildSearchResults(input: SearchInput): SearchGroup[] {
     // hits so a runaway match doesn't blow up the modal height.
     const elementMatches: ElementItem[] = [];
     outer: for (const t of tabs) {
+      // A drawing's elements are its text document's; one whose text document tab is gone is not found.
+      const home = isDrawingTab(t) ? tabs.find((p) => p.id === t.drawingOf && !isDrawingTab(p)) : t;
+      if (!home) continue;
       for (const el of t.elements) {
         const rawLabel = ('label' in el && typeof el.label === 'string' && el.label.trim()) || '';
         // Tables have no single label (cells carry the text), so they
@@ -419,8 +428,9 @@ export function buildSearchResults(input: SearchInput): SearchGroup[] {
         if (!matches(q, label)) continue;
         elementMatches.push({
           kind: 'element',
-          tabId: t.id,
-          tabName: t.name,
+          tabId: home.id,
+          tabName: home.name,
+          ...(home === t ? {} : { drawingTabId: t.id }),
           elementId: el.id,
           label,
           type: el.type,

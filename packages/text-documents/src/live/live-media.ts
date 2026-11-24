@@ -4,7 +4,8 @@
 // drawing tab.
 import * as Y from 'yjs';
 import { liveMediaOf } from './live-read';
-import { liveTabFragments } from './live-tabs';
+import { liveTabFragments, liveTabIds } from './live-tabs';
+import { tabFragment } from './live-root';
 import { liveStoryIds, storyFragment } from './live-stories';
 import { PICTURE } from './live-names';
 
@@ -44,4 +45,12 @@ export function liveDrawingNames(doc: Y.Doc): ReadonlyMap<string, number> {
     if (typeof drawing === 'string' && drawing) names.set(drawing, (names.get(drawing) ?? 0) + 1);
   }
   return names;
+}
+
+/** The document tab whose body first holds a picture of the drawing tab, in the outline's order; null for none. */
+export function liveDrawingPlace(doc: Y.Doc, drawingTabId: string): string | null {
+  for (const id of liveTabIds(doc))
+    for (const picture of picturesIn(tabFragment(doc, id)))
+      if (picture.getAttribute('drawing') === drawingTabId) return id;
+  return null;
 }

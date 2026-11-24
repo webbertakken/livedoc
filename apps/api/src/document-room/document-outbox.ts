@@ -1,7 +1,7 @@
 // What a document's room pushes to D1 (docs/specs/006-document/document-storage.md "The outbox"). The room's
 // triggers key `outbox` in the transaction of every write (document-schema.ts); the room's
-// alarm drains it on idle. A drain reads the keys, builds one D1 batch per unit (the document unit: summary, images,
-// cards, items; each tab its own), runs at most PUSH_CONCURRENCY at once and deletes exactly the keys whose unit
+// alarm drains it on idle. A drain reads the keys, builds one D1 batch per unit (each tab its own, then the document
+// unit: summary, images, cards, items), runs at most PUSH_CONCURRENCY at once and deletes exactly the keys whose unit
 // landed, by the ids it read: a key written again meanwhile has a new id and stays for the next drain.
 //
 // Every D1 write is guarded by the document's D1 row (G2), so a drain racing a purge writes nothing. Every unit is a
@@ -154,7 +154,7 @@ async function cardsStatements(
 
 // ---------- A tab unit ------------------------------------------------------------------------------------
 
-type StoredTab = { id: string; name: string; data: string };
+type StoredTab = { id: string; name: string; data: string; drawing_of: string | null };
 
 function parseBody(data: string): Record<string, unknown> {
   try {
@@ -297,8 +297,8 @@ function blobHoldStatements(
 }
 
 // The tab's content search row (docs/specs/013-workspace/content-search.md): its text with the texts it holds outside
-// its body (the inputs of the sheets it references, a text document's writing), or a delete when it has gone or holds
-// no text.
+// its body (the inputs of the sheets it references, a text document's writing and drawings), or a delete when it has
+// gone or holds no text. A drawing tab has none: its words are its text document's ("What is searched").
 function searchStatements(
   env: DocumentEnv,
   documentId: string,
@@ -307,7 +307,7 @@ function searchStatements(
   body: Record<string, unknown>,
   storedTexts: readonly string[],
 ): D1PreparedStatement[] {
-  if (!tab) return contentSearchStatements(env, documentId, tabId, '', null);
+  if (!tab || tab.drawing_of) return contentSearchStatements(env, documentId, tabId, '', null);
   const text = tabSearchText({ ...body, name: tab.name }, storedTexts);
   return contentSearchStatements(env, documentId, tabId, tab.name, text);
 }
@@ -335,25 +335,66 @@ async function referencedSheetInputs(
   return sheetSearchInputs(await listSheets(env, documentId, { ids }));
 }
 
+async function readStoredTab(
+  env: DocumentEnv,
+  documentId: string,
+  tabId: string,
+): Promise<StoredTab | null> {
+  return env.DOCUMENT_DB.prepare(
+    `SELECT t.id, t.name, t.data, t.drawing_of FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id
+      WHERE dt.document_id = ? AND t.id = ?`,
+  )
+    .bind(documentId, tabId)
+    .first<StoredTab>();
+}
+
+// A drawing tab's text document's row, built afresh as its own unit builds it: a drawing's words are its.
+async function textDocumentSearchStatements(
+  env: DocumentEnv,
+  documentId: string,
+  textTabId: string,
+): Promise<D1PreparedStatement[]> {
+  const tab = await readStoredTab(env, documentId, textTabId);
+  if (!tab || tab.drawing_of) return [];
+  const body = parseBody(tab.data);
+  const storedTexts = await storedTextsOf(env, documentId, textTabId, body);
+  return searchStatements(env, documentId, textTabId, tab, body, storedTexts);
+}
+
+// Each drawing tab's words of a text document tab, in the document's order, its name left out.
+async function drawingSearchTexts(
+  env: DocumentEnv,
+  documentId: string,
+  textTabId: string,
+): Promise<string[]> {
+  const rows = await env.DOCUMENT_DB.prepare(
+    `SELECT t.data FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id AND dt.document_id = ?
+      WHERE t.drawing_of = ? ORDER BY dt.order_index`,
+  )
+    .bind(documentId, textTabId)
+    .all<{ data: string }>();
+  return (rows.results ?? []).flatMap((r) => {
+    const text = tabSearchText({ ...parseBody(r.data), name: '' }, []).trim();
+    return text ? [text] : [];
+  });
+}
+
 async function tabStatements(
   env: DocumentEnv,
   documentId: string,
   tabId: string,
 ): Promise<D1PreparedStatement[]> {
-  const tab = await env.DOCUMENT_DB.prepare(
-    `SELECT t.id, t.name, t.data FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id
-      WHERE dt.document_id = ? AND t.id = ?`,
-  )
-    .bind(documentId, tabId)
-    .first<StoredTab>();
+  const tab = await readStoredTab(env, documentId, tabId);
   // One body at a time: a drain after a 200-tab import holds one tab in memory, never the document.
   const body = tab ? parseBody(tab.data) : {};
   const storedTexts = tab ? await storedTextsOf(env, documentId, tabId, body) : [];
   // A PDF tab's previous versions, whose bytes it holds until their day.
   const previous = tab && body.kind === 'pdf' ? await previousStoredFiles(env, tabId) : [];
-  return TAB_UNIT_PARTS.flatMap((part) =>
+  const unit = TAB_UNIT_PARTS.flatMap((part) =>
     part(env, documentId, tabId, tab, body, storedTexts, previous),
   );
+  if (!tab?.drawing_of) return unit;
+  return [...unit, ...(await textDocumentSearchStatements(env, documentId, tab.drawing_of))];
 }
 
 // What a tab holds outside its body, as text: a live tab's (a text document's writing), read through its digest
@@ -365,7 +406,11 @@ async function storedTextsOf(
   body: Record<string, unknown>,
 ): Promise<string[]> {
   const live = liveTabKindOfTab(body);
-  if (live) return [(await refreshLiveTabDigest(env, live, documentId, tabId)).searchText];
+  if (live)
+    return [
+      (await refreshLiveTabDigest(env, live, documentId, tabId)).searchText,
+      ...(await drawingSearchTexts(env, documentId, tabId)),
+    ];
   return referencedSheetInputs(env, documentId, tabId);
 }
 
@@ -380,7 +425,12 @@ async function itemsSearchStatements(
 
 // ---------- The drain -------------------------------------------------------------------------------------
 
-type Unit = { name: string; rows: OutboxRow[]; build: () => Promise<D1PreparedStatement[]> };
+type Unit = {
+  name: string;
+  kind: 'document' | 'tab';
+  rows: OutboxRow[];
+  build: () => Promise<D1PreparedStatement[]>;
+};
 
 function unitsOf(env: DocumentEnv, documentId: string, rows: OutboxRow[], now: number): Unit[] {
   const documentRows = rows.filter((r) => r.kind !== 'tab');
@@ -389,6 +439,7 @@ function unitsOf(env: DocumentEnv, documentId: string, rows: OutboxRow[], now: n
     const kinds = new Set(documentRows.map((r) => r.kind));
     units.push({
       name: 'summary',
+      kind: 'document',
       rows: documentRows,
       build: async () => [
         ...(kinds.has('summary') ? await summaryStatements(env, documentId) : []),
@@ -401,6 +452,7 @@ function unitsOf(env: DocumentEnv, documentId: string, rows: OutboxRow[], now: n
   for (const row of rows.filter((r) => r.kind === 'tab')) {
     units.push({
       name: `tab:${row.key}`,
+      kind: 'tab',
       rows: [row],
       build: () => tabStatements(env, documentId, row.key),
     });
@@ -438,19 +490,23 @@ export async function drainOutbox(env: DocumentEnv, documentId: string): Promise
   const rows = all.filter((r) => r.kind !== 'tab' || taken.has(r.id));
   const more = rows.length < all.length;
   const now = Date.now();
-  const outcomes = await pooled(
-    unitsOf(env, documentId, rows, now).map((unit) => async () => {
-      try {
-        const statements = await unit.build();
-        if (statements.length > 0) await env.DB.batch(statements);
-        return { unit, ok: true };
-      } catch (error) {
-        console.warn(`[outbox] unit failed id=${documentId} unit=${unit.name}`, error);
-        return { unit, ok: false };
-      }
-    }),
-    PUSH_CONCURRENCY,
-  );
+  const push = (unit: Unit) => async () => {
+    try {
+      const statements = await unit.build();
+      if (statements.length > 0) await env.DB.batch(statements);
+      return { unit, ok: true };
+    } catch (error) {
+      console.warn(`[outbox] unit failed id=${documentId} unit=${unit.name}`, error);
+      return { unit, ok: false };
+    }
+  };
+  // The tabs' units first: a tab's unit refreshes what the document's reads (a live tab's digest and the image
+  // references it holds), so the document's unit, built after them, carries them in this drain (D8).
+  const units = unitsOf(env, documentId, rows, now);
+  const outcomes = [
+    ...(await pooled(units.filter((u) => u.kind === 'tab').map(push), PUSH_CONCURRENCY)),
+    ...(await pooled(units.filter((u) => u.kind === 'document').map(push), PUSH_CONCURRENCY)),
+  ];
   const pushed = outcomes.filter((o) => o.ok).flatMap((o) => o.unit.rows.map((r) => r.id));
   if (pushed.length > 0) {
     await env.DOCUMENT_DB.prepare('DELETE FROM outbox WHERE id IN (SELECT value FROM json_each(?))')

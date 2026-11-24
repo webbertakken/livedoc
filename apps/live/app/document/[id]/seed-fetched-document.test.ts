@@ -2,6 +2,7 @@ import { WorkbookRecord } from '@livedoc/sheets';
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LiveDoc } from '@livedoc/api-schema';
+import { takeDrawingReveal } from '@/lib/text-document/text-document-drawing-reveal';
 
 const apiLoadTab = vi.fn<typeof import('@/lib/api-client').apiLoadTabRevisioned>();
 vi.mock('@/lib/api-client', () => ({
@@ -218,11 +219,21 @@ describe('seedFetchedDocument and drawing tabs', () => {
     ],
   } satisfies LiveDoc;
 
+  // The first tab read answers the text document tab it was asked for.
+  beforeEach(() => {
+    apiLoadTab.mockResolvedValue({
+      tab: { id: 'w', name: 'Notes', kind: 'text-document', elements: [] },
+      rev: 1,
+    } as never);
+  });
+
   it('opens the text document tab for an address naming its drawing tab', async () => {
     window.location.hash = '#t=d';
     const setActiveId = vi.fn();
     await seed(true, vi.fn(), vi.fn(), vi.fn(), setActiveId)('me', withDrawing, 'CODE', null);
     expect(setActiveId).toHaveBeenLastCalledWith('w');
+    // "The document around it": with the drawing's picture shown.
+    expect(takeDrawingReveal('w')).toBe('d');
   });
 
   it('opens the first listed tab with no address', async () => {

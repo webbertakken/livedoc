@@ -76,7 +76,8 @@ type SearchPanelProps = {
   // Receives the tab id AND element id when the user picks an
   // element match. The host route is responsible for switching
   // tabs + selecting the element.
-  onSelectElement?: (tabId: string, elementId: string) => void;
+  // `drawingTabId`: the element is on that drawing tab of the text document tab `tabId`.
+  onSelectElement?: (tabId: string, elementId: string, drawingTabId?: string) => void;
   // Editor-only: the palette catalogue to surface as "Add to canvas"
   // results, plus the handler that adds the picked one (it arms the same
   // placement gesture the palette uses, then the panel closes).
@@ -249,7 +250,7 @@ export function SearchPanel({
     else if (item.kind === 'team' && onSelectTeam) onSelectTeam(item.id);
     else if (item.kind === 'tab' && onSelectTab) onSelectTab(item.id);
     else if (item.kind === 'element' && onSelectElement)
-      onSelectElement(item.tabId, item.elementId);
+      onSelectElement(item.tabId, item.elementId, item.drawingTabId);
     else if (item.kind === 'palette' && onAddPaletteItem) onAddPaletteItem(item.add);
     else if (item.kind === 'command' && onRunCommand) onRunCommand(item.id);
     track('Search', 'Selected', titleCaseType(item.kind));
@@ -384,7 +385,11 @@ export function SearchPanel({
                     const active = idx === activeIndex;
                     return (
                       <button
-                        key={item.kind === 'element' ? `${item.tabId}:${item.elementId}` : item.id}
+                        key={
+                          item.kind === 'element'
+                            ? `${item.drawingTabId ?? item.tabId}:${item.elementId}`
+                            : item.id
+                        }
                         id={optionId(idx)}
                         type="button"
                         role="option"

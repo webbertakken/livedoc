@@ -361,7 +361,10 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 
 ### The document around it
 
-- **Search**: a drawing's words are the text document's; a hit opens the text document at the picture.
+- **Search**: a drawing's words are the text document's. The editor's search lists no drawing tab as a tab; a hit on
+  a drawing's element names its text document and opens it with the drawing's picture selected and in view. Content
+  search (the Explorer's) finds a drawing's words as its text document's, under its name, and opens the text document
+  `(default)`. An address naming a drawing tab opens its text document with the picture selected likewise.
 - **Exports**: a document export (PDF, PNG, SVG) draws a drawing tab only inside its text document, never as a tab of
   its own: a document's picture (its thumbnail, share card and live image) is of its first listed tab, and a live
   image asking for a drawing tab is not found. An agent's `overview` lists each drawing under its text document

@@ -14,6 +14,7 @@ import { tileHandler } from '@/components/palette/PaletteTileGrid';
 import { useEditorTileActions } from '@/components/palette/useEditorTileActions';
 import { explorerPathFor } from '@/app/explorer/routes';
 import { assignAppLocation } from '@/lib/app-location';
+import { revealDrawingPicture } from '@/lib/text-document/text-document-drawing-reveal';
 
 const SearchPanel = dynamic(
   () => import('@/components/panels/SearchPanel').then((m) => m.SearchPanel),
@@ -93,9 +94,11 @@ export function EditorSearchPanel() {
         setActiveId(tabId);
         setSelectedId(null);
       }}
-      onSelectElement={(tabId, elementId) => {
+      onSelectElement={(tabId, elementId, drawingTabId) => {
+        // A drawing's element opens its text document at the drawing's picture (objects.md "The document around it").
+        if (drawingTabId) revealDrawingPicture(tabId, drawingTabId);
         setActiveId(tabId);
-        setSelectedId(elementId);
+        setSelectedId(drawingTabId ? null : elementId);
       }}
       paletteItems={
         isReadOnly

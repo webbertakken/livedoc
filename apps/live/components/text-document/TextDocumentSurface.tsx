@@ -141,6 +141,7 @@ import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
 import { useTextDocumentDrawings } from './useTextDocumentDrawings';
 import { useTextDocumentDrawingOrphans } from './useTextDocumentDrawingOrphans';
+import { useTextDocumentDrawingReveal } from './useTextDocumentDrawingReveal';
 import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
 import {
   drawingBarKeys,
@@ -928,6 +929,15 @@ export function TextDocumentSurface({
   });
   useLayoutEffect(() => {
     openDrawingAt.current = drawings.open;
+  });
+  // A drawing's picture shown when a search hit or an address asks (objects.md "The document around it").
+  useTextDocumentDrawingReveal({
+    view: editorView,
+    tabId: scope.tabId,
+    ready: state === 'ready',
+    liveDoc,
+    shownTab,
+    showTab,
   });
   // Drawings no picture names, removed once its writing has loaded (objects.md "Deleting").
   useTextDocumentDrawingOrphans({

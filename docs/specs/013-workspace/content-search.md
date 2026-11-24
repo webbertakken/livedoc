@@ -24,7 +24,9 @@ A tab's search text is, in reading order:
 - every element's texts that the agents' `find` view searches: label, note, table cells, entity fields, checklist
   items, chart nodes, code and comments ([Document views](../024-agents/document-views.md));
 - its articles' text, its pages' titles and its form's title, questions and choices;
-- on a Sheet tab, the inputs of its sheets' cells.
+- on a Sheet tab, the inputs of its sheets' cells;
+- on a text document tab, its writing, then each of its drawing tabs' search texts but the name
+  ([Drawings](../034-text-documents/objects.md#the-document-around-it)). A drawing tab has no search text of its own.
 
 A document's items (titles and text fields) are one more search text of the document, under no tab.
 Each search text is cut at 32,768 characters; what lies past it is not found.
