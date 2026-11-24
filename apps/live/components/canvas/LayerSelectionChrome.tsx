@@ -93,7 +93,7 @@ export function LayerSelectionChrome({
       {showUnionResize && unionResizeBounds ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute rounded-md border border-dashed border-brand-400/80 dark:border-brand-300/70"
+          className="pointer-events-none absolute rounded-control border border-dashed border-brand-400/80 dark:border-brand-300/70"
           style={{
             left: unionResizeBounds.x - 6,
             top: unionResizeBounds.y - 6,

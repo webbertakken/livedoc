@@ -200,8 +200,9 @@ A surface names the token, never the number, so the scale changes in one place.
 
 ## The guard
 
-- A static guard, the **sizing guard** (`packages/tailwind-config`), refuses a size that is off the scale in a folder
-  or file that has moved to it; each app's own `sizing-guard.test.ts` runs it over that app's moved paths.
+- A static guard, the **sizing guard** (`packages/tailwind-config`), refuses a size that is off the scale.
+- Each app's own `sizing-guard.test.ts` runs it over that app's whole source, so new chrome is held to the scale from
+  its first line: the editor (`app`, `components`), help, marketing and telemetry.
 - It refuses a type size, a weight, tracked capitals, a height, an icon size, a gap, a side padding or a radius that
   is not a step above, and names the token to use instead.
 - Tracked capitals are `uppercase`, a `tracking-` wider than normal, and `text-optical-caps`, the capitals of
@@ -212,23 +213,19 @@ A surface names the token, never the number, so the scale changes in one place.
 - It reads class strings only; sizes set under a coarse pointer are touch's and pass.
 - A field reads 16 px on a phone, so iOS never zooms in on it (`globals.css`); a picker drawn as a button among
   fields takes the same floor (`max-sm:text-[16px]`), and that alone passes under a width.
-- The paths it covers grow as each surface moves to the scale, and in the end cover every app.
-- A moved folder may name exceptions: drawn art, or a part that moves with a later group; a stale one fails the run.
+- Each app names what is not chrome as exceptions, a file or a whole folder, each with why: content drawn at a
+  document's zoom, drawn art, display type, or a folder moving with its own lane; a stale one fails the run.
+- Text documents and the office shell are named as moving with their lane (plan 0019), and leave the list as each
+  lands; a PDF's chrome is on the scale.
+- A word after a spacing prefix that is not a size and not a spacing token (an id like `gap-refetch`) is a name and
+  passes.
+- The marketing site alone opts in to display type and layout steps (`marketingPages`, D244).
 
-## How it rolls out
+## Where it stands
 
-The scale reaches the product one group of surfaces at a time, type and boxes together, each fitted once.
-The order and its reasons are in plan 0024 (Rollout).
-
-1. The scale written down: the tokens, this spec and the guard; nothing visible changes.
-2. The shared parts: buttons, fields, menus and dialogs' frames in `packages/ui` and the editor's primitives.
-3. The Explorer, home and the new document page.
-4. Dialogs and panels.
-5. The other tab kinds' own chrome: Plan, Sheets, Forms, notes.
-6. The canvas chrome: the editor's toolbars, palette, tab bar and selection toolbar, last.
-7. The other apps (help, marketing, telemetry), with the guard everywhere.
-
-Until a surface moves, it keeps its own sizes; this spec describes the surfaces that have moved.
+- Every app's chrome is on the scale, but for the folders moving with their lanes, which keep their own sizes until
+  they land.
+- Plan 0024 holds how the scale reached each surface, in seven slices, and why in that order.
 
 ## Share roles
 

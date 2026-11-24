@@ -50,7 +50,7 @@ export function ChangesetRevealOverlay({
             <div
               key={`${reveal.changesetId}:${id}`}
               data-reveal-id={id}
-              className="changeset-reveal absolute rounded-md"
+              className="changeset-reveal absolute rounded-control"
               style={{
                 left: box.x - OUTSET,
                 top: box.y - OUTSET,

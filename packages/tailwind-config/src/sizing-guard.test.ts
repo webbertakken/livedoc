@@ -222,6 +222,13 @@ describe('judgeClass for marketing pages', () => {
     expect(judgeClass('h-9', pages)).toMatch(/use h-prominent/);
   });
 
+  it('reads a word after a spacing prefix as a name, not a size (an id like gap-refetch)', () => {
+    expect(judgeClass('gap-refetch')).toBeNull();
+    expect(judgeClass('px-auto')).toBeNull();
+    expect(judgeClass('gap-[13px]')).toMatch(/gap off the scale/);
+    expect(judgeClass('gap-px')).toMatch(/gap off the scale/);
+  });
+
   it('changes nothing for the app', () => {
     expect(judgeClass('text-3xl')).toMatch(/type size off the scale/);
     expect(judgeClass('gap-8')).toMatch(/gap off the scale/);
