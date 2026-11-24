@@ -39,7 +39,10 @@ function run(command: ReturnType<typeof insertCodeBlock>, state: EditorState): E
 }
 
 const shape = (state: EditorState) =>
-  state.doc.content.content.map((n) => [n.attrs.style ?? null, n.textContent]);
+  state.doc.content.content.map((n): unknown[] => [
+    (n.attrs as { style: unknown }).style ?? null,
+    n.textContent,
+  ]);
 
 describe('CODE_BLOCK_ITEMS', () => {
   it('has an item per language, each with a tokenizer language', () => {
