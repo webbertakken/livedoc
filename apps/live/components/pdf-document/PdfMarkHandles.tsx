@@ -70,7 +70,7 @@ export function PdfMarkHandles({
       key={handle}
       aria-hidden="true"
       data-pdf-mark-handle={handle}
-      className={`absolute flex size-6 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center pointer-coarse:size-11 ${CURSORS[handle]}`}
+      className={`absolute flex size-chip -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center pointer-coarse:size-11 ${CURSORS[handle]}`}
       style={{ left: `${(at.x / width) * 100}%`, top: `${(at.y / height) * 100}%` }}
       onPointerDown={(event) => {
         event.stopPropagation();
@@ -100,7 +100,7 @@ export function PdfMarkHandles({
         onPreview(null);
       }}
     >
-      <span className="size-2 rounded-[1px] bg-(--office-focus) outline outline-1 outline-(--office-ground)" />
+      <span className="size-2 rounded-control bg-(--office-focus) outline outline-1 outline-(--office-ground)" />
     </span>
   ));
 }

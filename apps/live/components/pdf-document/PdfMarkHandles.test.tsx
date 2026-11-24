@@ -48,7 +48,7 @@ describe('a selected mark’s handles', () => {
     expect(handle('se').style.left).toBe('50%');
     expect(handle('se').style.top).toBe('75%');
     expect(handle('se').getAttribute('aria-hidden')).toBe('true');
-    expect(handle('se').className).toContain('size-6');
+    expect(handle('se').className).toContain('size-chip');
     expect(handle('se').className).toContain('pointer-coarse:size-11');
     expect(handle('se').className).toContain('cursor-nwse-resize');
   });
