@@ -220,7 +220,9 @@ The table is the contract the readers and writers are tested against, one test p
   is a differential format (`dxf`) in the styles part, after the file's own kept ones (D110), so their ids stand.
 - **ODF**: LibreOffice's `calcext:conditional-formats` in the table, one `calcext:conditional-format` a rule; a style
   is a named cell style (`ConditionalStyle_1`, ...) in `styles.xml`'s `office:styles`, a child of "Default", as
-  LibreOffice writes them; a condition's `calcext:base-cell-address` is the anchor's top-left cell.
+  LibreOffice writes them (`ConditionalStyle_5f_1`, shown and named by the rule as `ConditionalStyle_1`); a
+  condition's `calcext:base-cell-address` is the anchor's top-left cell. LiveDoc's rules follow the kept ones in the
+  table's one `calcext:conditional-formats`, and the named styles kept conditions name are kept with them.
 - A custom formula is in each format's own syntax, written for the anchor's top-left cell; a read formula written for
   another base cell is moved to the anchor's.
 

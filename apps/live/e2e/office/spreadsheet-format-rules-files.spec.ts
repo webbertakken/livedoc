@@ -7,8 +7,8 @@ import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
 // Format rules in the file (plan 0020 Phase 9 box 5; docs/specs/029-sheets/standard-mapping.md "Format rules in the
-// file"): a rule made in the panel leaves as XLSX, LibreOffice saves the file again, and the XLSX opened here draws
-// and lists the same rule.
+// file"): a rule made in the panel leaves as XLSX or ODF, LibreOffice saves the file again, and the file opened here
+// draws and lists the same rule.
 
 const READY = '[data-spreadsheet-surface="ready"]';
 const DARK_RED = 'rgb(165, 14, 14)';
@@ -25,11 +25,13 @@ const inkOf = (page: Page, text: string) =>
     .filter({ hasText: new RegExp(`^${text}$`) })
     .evaluate((el) => getComputedStyle(el).color);
 
-test('a format rule leaves as XLSX, passes through LibreOffice and comes back', async ({
-  page,
-  pageErrors,
-}) => {
-  test.setTimeout(120_000);
+async function roundTrip(
+  page: Page,
+  item: string,
+  dialog: boolean,
+  filter: string,
+  name: string,
+): Promise<void> {
   await page.setViewportSize({ width: 1440, height: 860 });
   await page.goto('/new?kind=spreadsheet');
   await page.waitForURL(/\/document\//);
@@ -54,24 +56,29 @@ test('a format rule leaves as XLSX, passes through LibreOffice and comes back', 
   await panel.getByRole('button', { name: 'Close Conditional Format Rules' }).click();
   await expect(panel).toBeHidden();
 
-  await (await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)'])).click();
-  const dialog = page.getByRole('dialog', { name: /Download as/ });
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    dialog.getByRole('button', { name: 'Download' }).click(),
+    (async () => {
+      await (await officeMenuItem(page, ['File', 'Download', item])).click();
+      if (dialog)
+        await page
+          .getByRole('dialog', { name: /Download as/ })
+          .getByRole('button', { name: 'Download' })
+          .click();
+    })(),
   ]);
   const dir = mkdtempSync(join(tmpdir(), 'format-rules-'));
-  const ours = join(dir, 'Ours.xlsx');
+  const ours = join(dir, `Ours.${name.split('.').pop()}`);
   await download.saveAs(ours);
-  const xlsx = join(dir, 'Rules in Excel.xlsx');
-  writeFileSync(xlsx, libreOfficeConvert(ours, 'xlsx:Calc MS Excel 2007 XML'));
+  const saved = join(dir, name);
+  writeFileSync(saved, libreOfficeConvert(ours, filter));
 
   const before = page.url();
   const [chooser] = await Promise.all([
     page.waitForEvent('filechooser'),
     (await officeMenuItem(page, ['File', 'Open'])).click(),
   ]);
-  await chooser.setFiles(xlsx);
+  await chooser.setFiles(saved);
   await page.waitForURL((url) => url.href !== before);
   await expect(page.locator(READY)).toBeVisible();
   await expect.poll(() => inkOf(page, '12')).toBe(DARK_RED);
@@ -84,5 +91,28 @@ test('a format rule leaves as XLSX, passes through LibreOffice and comes back', 
       .getByRole('list', { name: 'Format rules' }),
   ).toContainText('Greater Than 5');
   await page.screenshot({ path: test.info().outputPath('rules-back.png'), animations: 'disabled' });
+}
+
+test('a format rule leaves as XLSX, passes through LibreOffice and comes back', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await roundTrip(
+    page,
+    'Microsoft Excel (.xlsx)',
+    true,
+    'xlsx:Calc MS Excel 2007 XML',
+    'Rules in Excel.xlsx',
+  );
+  expectNoPageErrors(pageErrors);
+});
+
+test('a format rule leaves as ODF, passes through LibreOffice and comes back', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await roundTrip(page, 'OpenDocument (.ods)', false, 'ods:calc8', 'Rules in Calc.ods');
   expectNoPageErrors(pageErrors);
 });

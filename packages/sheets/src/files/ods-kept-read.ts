@@ -112,14 +112,20 @@ export class OdsKeeper {
     }
   }
 
-  /** A table's children but its columns and rows, before or after them, and its attributes but its name and style. */
-  table(table: XmlElement, sheet: number): void {
+  /**
+   * A table's children but its columns and rows, before or after them, and its attributes but its name and style;
+   * its format rules but the conditions `read` names (a `calcext:conditional-formats` all read is not kept).
+   */
+  table(table: XmlElement, sheet: number, read: ReadonlySet<XmlElement> = new Set()): void {
     let grid = false;
     for (const child of childElements(table)) {
       const isGrid = child.uri === TABLE && TABLE_GRID.has(child.local);
       grid ||= isGrid;
       if (isGrid || (child.uri === TEXT && child.local === 'soft-page-break')) continue;
-      this.element(grid ? 'table-after' : 'table-before', child, { sheet });
+      const place = grid ? 'table-after' : 'table-before';
+      if (child.uri === CALCEXT && child.local === 'conditional-formats')
+        this.formats(place, child, sheet, read);
+      else this.element(place, child, { sheet });
     }
     for (const attribute of table.attributes) {
       if (
@@ -132,6 +138,45 @@ export class OdsKeeper {
         ...keptAttribute(table, attribute),
         at: { sheet },
       });
+    }
+  }
+
+  // A table's format rules without those read: a rule's read conditions cut out, a rule with none left too.
+  private formats(
+    place: KeptPlace,
+    holder: XmlElement,
+    sheet: number,
+    read: ReadonlySet<XmlElement>,
+  ) {
+    const cut: XmlElement[] = [];
+    let whole = 0;
+    const formats = childElements(holder);
+    for (const format of formats) {
+      const parts = childElements(format);
+      const gone = parts.filter((p) => read.has(p));
+      if (gone.length === 0 || gone.length < parts.length) cut.push(...gone);
+      else {
+        cut.push(format);
+        whole++;
+      }
+    }
+    if (whole > 0 && whole === formats.length) return;
+    const kept = keptXmlOf(this.parsed, holder);
+    let xml = this.parsed.source.slice(holder.start, holder.end);
+    for (const element of [...cut].reverse())
+      xml = xml.slice(0, element.start - holder.start) + xml.slice(element.end - holder.start);
+    this.items.push({ place, xml, ns: kept.ns, at: { sheet } });
+  }
+
+  /** Named cell styles of `parsed`'s common styles, each kept as it came, for kept format rules that name them. */
+  commonStyles(parsed: XmlParsed, names: ReadonlySet<string>): void {
+    const styles = childElement(parsed.root, OFFICE, 'styles');
+    for (const style of styles ? childElements(styles) : []) {
+      // A rule names its style by its display name, as LibreOffice does, or by its name.
+      const name = attributeOf(style, STYLE, 'display-name') ?? attributeOf(style, STYLE, 'name');
+      if (style.local !== 'style' || name === undefined || !names.has(name)) continue;
+      const kept = keptXmlOf(parsed, style);
+      this.items.push({ place: 'common-styles', xml: kept.xml, ns: kept.ns, at: {} });
     }
   }
 

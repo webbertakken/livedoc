@@ -10,6 +10,7 @@ import {
   type XmlElement,
 } from '@livedoc/office-packages';
 import { cellStyleKey, type CellStyle } from './cell-style';
+import type { FormatStyle } from '../sheet';
 import { odsStyleProperties } from './ods-cell-style';
 import { dataStyleXml } from './odf-number-styles';
 import { readDataStyle, type DataStyleRead } from './odf-number-styles-read';
@@ -59,6 +60,40 @@ export class OdsStyles {
     const made = { name, unwritten };
     this.cells.set(key, made);
     return made;
+  }
+
+  private readonly conditional = new Map<string, string>();
+  private readonly conditionalXml: string[] = [];
+  private taken: ReadonlySet<string> = new Set();
+  private nextConditional = 1;
+
+  /** The common styles' display names kept content holds, which LiveDoc's own conditional styles never take. */
+  reserve(names: ReadonlySet<string>): void {
+    this.taken = names;
+  }
+
+  /**
+   * A format rule's style as a common cell style, a child of "Default" setting the style alone, named as LibreOffice
+   * names them (`ConditionalStyle_5f_1`, shown as `ConditionalStyle_1`, the name a rule gives), in order of first use.
+   */
+  conditionalStyle(style: FormatStyle): string {
+    const key = cellStyleKey(style);
+    const known = this.conditional.get(key);
+    if (known) return known;
+    let n = this.nextConditional;
+    while (this.taken.has(`ConditionalStyle_${n}`)) n++;
+    this.nextConditional = n + 1;
+    const name = `ConditionalStyle_${n}`;
+    this.conditional.set(key, name);
+    this.conditionalXml.push(
+      `<style:style style:name="ConditionalStyle_5f_${n}" style:display-name="${name}" style:family="table-cell" style:parent-style-name="Default">${odsStyleProperties(style)}</style:style>`,
+    );
+    return name;
+  }
+
+  /** The conditional styles written, for the common styles. */
+  conditionalStyles(): string[] {
+    return this.conditionalXml;
   }
 
   private readonly lines = new Map<string, string>();
