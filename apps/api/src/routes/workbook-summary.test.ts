@@ -57,7 +57,7 @@ describe("a spreadsheet's content summary", () => {
     await kit.call({ path: '', body: kit.document('plan', false) });
     expect(await summaryOf('book')).toMatchObject({ spreadsheet: true });
     expect(await summaryOf('plan')).not.toHaveProperty('spreadsheet');
-    const listed = await listDocumentsByOwner(kit.sql.env as never, 'owner');
+    const listed = await listDocumentsByOwner(kit.sql.env, 'owner');
     expect(listed.map((d) => [d.id, d.spreadsheet])).toEqual(
       expect.arrayContaining([
         ['book', true],
