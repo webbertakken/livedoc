@@ -57,7 +57,12 @@ function bound(
   );
   renderHook(
     () =>
-      useGridMenuBindings(actions, { openCustomFormat, openCustomCurrency, openCustomDateTime }),
+      useGridMenuBindings(actions, {
+        openCustomFormat,
+        openCustomCurrency,
+        openCustomDateTime,
+        merge: vi.fn(),
+      }),
     {
       wrapper,
     },

@@ -51,6 +51,7 @@ import {
   cellKey,
   type Border,
   type BorderMode,
+  type MergeMode,
   type CellFormat,
   type Dir,
   type FilterCondition,
@@ -241,7 +242,7 @@ export function useSheetActions() {
         if (w) c.write(w, 'Format');
       },
       // Merge: asks first (through `confirm`) when it would clear inputs.
-      merge: (mode: 'all' | 'across', confirm: () => boolean) => {
+      merge: (mode: MergeMode, confirm: () => boolean) => {
         const m = mergeRange(c.sheet, primary(c), mode);
         if (!m) return;
         if (m.needsConfirm && !confirm()) return;

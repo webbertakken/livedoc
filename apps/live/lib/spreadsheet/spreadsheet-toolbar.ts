@@ -36,7 +36,13 @@ import {
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { OfficeControl, OfficeControlLook, OfficeToolbar } from '@/lib/office/office-toolbar';
 
-type Extra = { built?: boolean; toggle?: boolean; menu?: boolean; shortcut?: string };
+type Extra = {
+  built?: boolean;
+  toggle?: boolean;
+  menu?: boolean;
+  split?: boolean;
+  shortcut?: string;
+};
 
 const control = (
   id: string,
@@ -69,6 +75,7 @@ const icon = (
       icon: glyph,
       ...(extra.toggle ? { toggle: true } : {}),
       ...(extra.menu ? { menu: true } : {}),
+      ...(extra.split ? { split: true } : {}),
     },
     extra,
   );
@@ -171,7 +178,11 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
         BUILT,
       ),
       icon('borders', 'Borders', 'edit', lucideGrid2x2, { menu: true }),
-      icon('merge-cells', 'Merge Cells', 'edit', lucideTableCellsMerge, { menu: true }),
+      // Merges all, or unmerges a selection holding a merge; its arrow lists the four (formatting.md "Merges", D208).
+      icon('merge-cells', 'Merge Cells', 'edit', lucideTableCellsMerge, {
+        split: true,
+        built: true,
+      }),
     ],
   },
   {

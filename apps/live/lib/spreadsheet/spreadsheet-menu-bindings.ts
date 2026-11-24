@@ -11,6 +11,7 @@ import {
   type SheetLayout,
   type CellFormat,
   type FormatPatch,
+  type MergeMode,
   type GridRange,
   type NumberFormatKind,
   type PasteSpecialMode,
@@ -20,6 +21,7 @@ import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { FREEZE_ITEMS, MENU_FONT_SIZES, NUMBER_FORMAT_ITEMS } from './spreadsheet-menus';
 import { lineSpan } from './line-span';
 import { recentFormatItemId } from './recent-formats';
+import { mergeBindings } from './merge-bindings';
 import { cellFamilyOf, cellFontPatch } from './spreadsheet-fonts';
 
 type Axis = 'r' | 'c';
@@ -59,6 +61,9 @@ export type GridMenuActions = {
   openCustomCurrency: () => void;
   // Format › Number › Custom Date and Time's dialog.
   openCustomDateTime: () => void;
+  // Format › Merge Cells (formatting.md "Merges"): asking first where a merge would clear values.
+  merge: (mode: MergeMode) => void;
+  unmerge: () => void;
 };
 
 /** An axis's groups as the menus read them: any in the selection's lines, any collapsed, any expanded. */
@@ -83,6 +88,8 @@ export type GridMenuPort = {
   link: string | null;
   // The Number menu's recently used codes, ranked (formatting.md "Number formats", D194).
   recentCodes: readonly string[];
+  // Whether the selection holds a merge (formatting.md "Merges").
+  merged: boolean;
   act: GridMenuActions;
 };
 
@@ -391,6 +398,14 @@ export function gridMenuBindings(port: GridMenuPort): OfficeActions {
     ...foldBindings(port),
     ...(port.canWrite ? writeBindings(port) : {}),
     ...(port.canWrite && port.canShape ? shapeBindings(port) : {}),
+    ...(port.canWrite && port.canShape
+      ? mergeBindings({
+          range: port.range,
+          merged: port.merged,
+          merge: port.act.merge,
+          unmerge: port.act.unmerge,
+        })
+      : {}),
   };
 }
 

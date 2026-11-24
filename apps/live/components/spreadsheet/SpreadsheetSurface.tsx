@@ -43,6 +43,7 @@ import { SpreadsheetFullScreenProvider, useSpreadsheetFullScreen } from './sprea
 import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
 import { useGridMenuBindings } from './useGridMenuBindings';
 import { useCellGoogleFonts } from './useCellGoogleFonts';
+import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import {
   SpreadsheetZoomProvider,
@@ -352,7 +353,8 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
   const zoom = useSpreadsheetZoomScale();
   const surfaceKeys = useSpreadsheetSurfaceKeys();
   const formatDialogs = useNumberFormatDialogs(actions);
-  const office = useGridMenuBindings(actions, formatDialogs);
+  const mergeDialog = useMergeDialog(actions);
+  const office = useGridMenuBindings(actions, { ...formatDialogs, merge: mergeDialog.merge });
   useCellGoogleFonts(c.sheet);
   const { focusGrid, canEdit } = c;
   // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
@@ -391,6 +393,7 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />
       {formatDialogs.dialog}
+      {mergeDialog.dialog}
       <SheetBarSummary />
     </div>
   );
