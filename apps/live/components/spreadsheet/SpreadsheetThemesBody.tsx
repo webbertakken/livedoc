@@ -49,7 +49,11 @@ function ThemeCard({
       </span>
       <span aria-hidden className="flex gap-1">
         {THEME_COLOUR_KEYS.slice(2, 8).map((key) => (
-          <span key={key} className="size-icon-chevron rounded-full" style={{ background: colours[key] }} />
+          <span
+            key={key}
+            className="size-icon-chevron rounded-full"
+            style={{ background: colours[key] }}
+          />
         ))}
       </span>
     </button>
