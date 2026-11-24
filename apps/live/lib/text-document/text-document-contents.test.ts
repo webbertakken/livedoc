@@ -81,7 +81,7 @@ describe('the table of contents view', () => {
   it('keeps its element as it changes, its look and levels updated on it', () => {
     const first = contents('dotted', 3, 'A');
     const view = contentsView(first);
-    const dom = view.dom as HTMLElement;
+    const dom = view.dom;
     expect(dom.tagName).toBe('NAV');
     expect(view.contentDOM).toBe(dom);
     expect(dom.getAttribute('aria-label')).toBe('Table of contents');
