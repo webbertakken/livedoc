@@ -9,7 +9,7 @@ export function MoreColoursGlyph() {
   return (
     <span
       aria-hidden
-      className="grid h-5 w-5 grid-cols-2 place-items-center rounded-[5px] border border-dashed border-slate-400 p-[3px] dark:border-slate-500"
+      className="grid size-icon-title grid-cols-2 place-items-center rounded-control border border-dashed border-slate-400 p-0.5 dark:border-slate-500"
     >
       {GLYPH_DOTS.map((c) => (
         <span key={c} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />

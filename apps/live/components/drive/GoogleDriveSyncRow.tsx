@@ -53,7 +53,7 @@ function StatusText({
 }) {
   const all = options.some((o) => o.text === current.text) ? options : [...options, current];
   return (
-    <span data-drive-status className="grid shrink-0 text-xs tabular-nums">
+    <span data-drive-status className="grid shrink-0 text-supporting tabular-nums">
       {all.map((option) => {
         const shown = option.text === current.text;
         return (
@@ -189,7 +189,7 @@ export function GoogleDriveSyncRow({ row }: { row: SettingsCloudSyncRowSpec }) {
             data-drive-actions
             className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2"
           >
-            <span aria-live="polite" className="text-xs">
+            <span aria-live="polite" className="text-supporting">
               <StatusText options={driveStatusOptions(status, phase)} current={copy.status} />
             </span>
             {phase === 'not-connected' ? (
@@ -229,7 +229,7 @@ export function GoogleDriveSyncRow({ row }: { row: SettingsCloudSyncRowSpec }) {
             className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2 dark:border-slate-700"
           >
             <p
-              className={`min-w-0 text-xs ${
+              className={`min-w-0 text-supporting ${
                 problem.failed
                   ? 'text-rose-700 dark:text-rose-300'
                   : 'text-amber-800 dark:text-amber-200'

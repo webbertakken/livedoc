@@ -51,7 +51,7 @@ export function ColourSwatchButton({
           {...triggerProps}
           onMouseDown={preserveFocus ? (e) => e.preventDefault() : undefined}
           onClick={() => setOpen(!open)}
-          className={`group flex shrink-0 cursor-pointer items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${className || 'h-6 w-6'}`}
+          className={`group flex shrink-0 cursor-pointer items-center justify-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${className || 'size-chip'}`}
         >
           {children ?? <SwatchChip colour={swatch} none={none} />}
         </button>

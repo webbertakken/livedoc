@@ -43,9 +43,7 @@ export function DefaultFolderMarker({
           {shown.map((key) => (
             <DefaultKeyIcon key={key} entryKey={key} size={12} />
           ))}
-          {more > 0 ? (
-            <span className="text-[10px] font-semibold leading-none">+{more}</span>
-          ) : null}
+          {more > 0 ? <span className="text-glyph">+{more}</span> : null}
         </span>
       </Tooltip>
       {withWords ? <span className="sr-only">{description}</span> : null}

@@ -123,7 +123,7 @@ export function ColourPicker({
       role="group"
       aria-label={label}
       data-colour-picker=""
-      className="flex flex-col gap-2.5"
+      className="flex flex-col gap-2"
       style={{ width: COLOUR_PICKER_WIDTH }}
       onKeyDown={onColourKeys}
       onPointerLeave={onPreviewEnd ? onMouseHover(onPreviewEnd) : undefined}
@@ -134,10 +134,7 @@ export function ColourPicker({
         const yoursGroup = custom && g === all.length - 1;
         return (
           <div key={group.heading + g} role="group" aria-labelledby={id}>
-            <p
-              id={id}
-              className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-            >
+            <p id={id} className="mb-1.5 text-supporting text-slate-500 dark:text-slate-400">
               {group.heading}
             </p>
             <div className="flex flex-wrap gap-1">
@@ -169,7 +166,7 @@ export function ColourPicker({
                     data-colour-key=""
                     tabIndex={flat.length === 0 ? 0 : -1}
                     onClick={() => setEditorOpen((open) => !open)}
-                    className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:bg-slate-800"
+                    className="flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:bg-slate-800"
                   >
                     {/* More colours' four dots, as every way into more colours (colour-picker.md "Skins"). */}
                     <MoreColoursGlyph />

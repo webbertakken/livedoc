@@ -102,12 +102,10 @@ export function SplitStaticPane({
         />
       )}
       {/* The tab's name, where the editor's Explorer would sit, so the pane says what it shows. */}
-      <div className="pointer-events-none absolute left-4 top-4 flex max-w-[calc(100%-8rem)] items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 py-1.5 pl-2.5 pr-3 shadow-sm backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/90">
+      <div className="pointer-events-none absolute left-4 top-4 flex max-w-[calc(100%-8rem)] items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 py-1.5 pl-2 pr-3 shadow-sm backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/90">
         <TabKindGlyph tab={tab} style={{ color: legibleTabAccent(tab, isDark) }} />
-        <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-          {tab.name}
-        </span>
-        <span className="shrink-0 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+        <span className="truncate text-body text-slate-800 dark:text-slate-100">{tab.name}</span>
+        <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-supporting text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
           Live
         </span>
       </div>
@@ -128,7 +126,7 @@ function PaneMessage({ children, busy = false }: { children: string; busy?: bool
     <div className="flex h-full w-full items-center justify-center p-6">
       <p
         role={busy ? 'status' : undefined}
-        className="max-w-xs rounded-full bg-white/80 px-3 py-1 text-center text-sm text-slate-500 dark:bg-slate-900/80 dark:text-slate-400"
+        className="max-w-xs rounded-full bg-white/80 px-3 py-1 text-center text-body text-slate-500 dark:bg-slate-900/80 dark:text-slate-400"
       >
         {children}
       </p>

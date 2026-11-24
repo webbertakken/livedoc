@@ -41,7 +41,7 @@ export function ColourPopover({
     >
       <div
         ref={box}
-        className="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+        className="rounded-menu border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
         style={{ padding: COLOUR_POPOVER_PADDING }}
       >
         <ColourPicker {...picker} />

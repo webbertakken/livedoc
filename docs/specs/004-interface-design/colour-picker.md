@@ -127,7 +127,7 @@ exactly as it did:
 
 ## How it looks
 
-- **One swatch**: a 24px target holding a 20px rounded square (5px corners) with a hairline border, so white
+- **One swatch**: a 24px target holding a 20px rounded square (the control radius, 6px) with a hairline border, so white
   and pale colours read on a white panel.
 - **Touch**: each swatch meets the 24px floor ([Touch targets](touch-targets.md)); the grid is packed 4px apart in
   both directions, so swatches take no 44px pad, which would overlap their neighbours.

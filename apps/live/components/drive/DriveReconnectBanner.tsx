@@ -22,13 +22,13 @@ export function DriveReconnectBanner() {
   return (
     <div
       role="status"
-      className="fixed bottom-16 left-3 z-[var(--z-chrome)] flex max-w-[22rem] items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:shadow-black/30"
+      className="fixed bottom-16 left-3 z-[var(--z-chrome)] flex max-w-[22rem] items-center gap-3 rounded-menu border border-slate-200 bg-white px-3 py-2 text-body text-slate-700 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:shadow-black/30"
     >
       <span className="min-w-0 flex-1">Google Drive sync is paused.</span>
       <button
         type="button"
         onClick={() => void (reconnect ? connect() : resume())}
-        className="shrink-0 rounded-md px-2 py-1 font-medium text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-slate-800"
+        className="inline-flex min-h-row shrink-0 items-center rounded-control px-2 font-medium text-brand-700 transition hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-slate-800"
       >
         {reconnect ? 'Reconnect' : 'Resume sync'}
       </button>
@@ -39,7 +39,7 @@ export function DriveReconnectBanner() {
           sessionStorage.setItem(DISMISS_KEY, '1');
           setDismissed(true);
         }}
-        className="shrink-0 rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+        className="flex size-row shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
       >
         <CloseIcon />
       </button>

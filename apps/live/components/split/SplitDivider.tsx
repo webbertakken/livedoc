@@ -95,7 +95,7 @@ export function SplitDivider({
             : 'border-slate-200 bg-white text-slate-400 group-hover:border-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'
         }`}
       >
-        <svg viewBox="0 0 2 14" className="h-3.5 w-0.5" fill="currentColor">
+        <svg viewBox="0 0 2 14" className="h-icon-row w-0.5" fill="currentColor">
           <circle cx="1" cy="1" r="1" />
           <circle cx="1" cy="7" r="1" />
           <circle cx="1" cy="13" r="1" />

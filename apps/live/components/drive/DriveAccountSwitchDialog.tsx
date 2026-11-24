@@ -64,15 +64,15 @@ export function DriveAccountSwitchDialog({
       <div className="border-b border-slate-100 px-6 pt-6 pb-4 dark:border-slate-800">
         <h2
           id="drive-account-switch-title"
-          className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+          className="text-dialog-title text-slate-900 dark:text-slate-50"
         >
           {ACCOUNT_SWITCH_TITLE}
         </h2>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-body text-slate-600 dark:text-slate-300">
           {phase === 'expired' ? ACCOUNT_SWITCH_EXPIRED : ACCOUNT_SWITCH_BODY}
         </p>
         {phase === 'failed' && (
-          <p role="alert" className="mt-2 text-sm text-slate-900 dark:text-slate-50">
+          <p role="alert" className="mt-2 text-body text-slate-900 dark:text-slate-50">
             {ACCOUNT_SWITCH_FAILED}
           </p>
         )}

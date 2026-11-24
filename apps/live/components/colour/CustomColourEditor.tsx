@@ -104,14 +104,14 @@ export function CustomColourEditor({
           if (e.currentTarget.hasPointerCapture(e.pointerId)) fromPointer(e);
         }}
         onKeyDown={squareKeys}
-        className="relative h-28 w-full cursor-crosshair touch-none rounded-md forced-color-adjust-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        className="relative h-28 w-full cursor-crosshair touch-none rounded-control forced-color-adjust-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         style={{
           backgroundImage: `linear-gradient(to bottom, transparent, #000), linear-gradient(to right, #fff, ${hue})`,
         }}
       >
         <span
           aria-hidden
-          className="pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.5)]"
+          className="pointer-events-none absolute size-icon-chevron -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.5)]"
           style={{ left: `${hsv.s * 100}%`, top: `${(1 - hsv.v) * 100}%` }}
         />
       </div>
@@ -122,15 +122,15 @@ export function CustomColourEditor({
         value={Math.round(hsv.h)}
         aria-label="Hue"
         onChange={(e) => set({ ...hsv, h: Number(e.target.value) })}
-        className="h-3 w-full cursor-pointer appearance-none rounded-full forced-color-adjust-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        className="h-icon-chevron w-full cursor-pointer appearance-none rounded-full forced-color-adjust-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         style={{
           background: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
         }}
       />
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <span
           aria-hidden
-          className="h-6 w-6 shrink-0 rounded-md border border-black/15 forced-color-adjust-none dark:border-white/20"
+          className="size-chip shrink-0 rounded-control border border-black/15 forced-color-adjust-none dark:border-white/20"
           style={{ backgroundColor: hex }}
         />
         <input
@@ -152,7 +152,7 @@ export function CustomColourEditor({
             const valid = normaliseHex(text);
             if (valid) onUse(valid);
           }}
-          className="h-7 w-24 rounded-md border border-slate-300 bg-transparent px-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-600 dark:text-slate-100"
+          className="h-row w-24 rounded-control border border-slate-300 bg-transparent px-2 text-body text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-600 dark:text-slate-100"
         />
         {eyeDropper.supported ? (
           <Tooltip label="Pick a colour from the screen">
@@ -164,7 +164,7 @@ export function CustomColourEditor({
                   if (picked) setHex(picked);
                 })
               }
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="flex size-row items-center justify-center rounded-control border border-slate-300 text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <PipetteIcon />
             </button>
@@ -173,7 +173,7 @@ export function CustomColourEditor({
         <button
           type="button"
           onClick={() => onUse(hex)}
-          className={`ml-auto h-7 rounded-md bg-brand-700 px-3 text-xs font-medium text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 ${SOLID_BRAND_DARK_CONTROL}`}
+          className={`ml-auto h-row rounded-control bg-brand-700 px-3 text-body font-medium text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 ${SOLID_BRAND_DARK_CONTROL}`}
         >
           Use
         </button>
@@ -181,7 +181,7 @@ export function CustomColourEditor({
       {/* The warning's line, always there so it never shifts the picker; empty until needed. */}
       {boardWarning ? (
         <div
-          className="flex h-6 items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300"
+          className="flex min-h-chip items-center gap-1 text-supporting text-amber-800 dark:text-amber-300"
           data-testid="custom-colour-note"
           role="status"
         >
@@ -194,11 +194,11 @@ export function CustomColourEditor({
                   type="button"
                   aria-label={`Use ${readable}, readable on both boards`}
                   onClick={() => onUse(readable)}
-                  className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="ml-auto flex size-chip shrink-0 items-center justify-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
                   <span
                     aria-hidden
-                    className="block h-5 w-5 rounded-[5px] border border-black/15 forced-color-adjust-none dark:border-white/20"
+                    className="block size-icon-title rounded-control border border-black/15 forced-color-adjust-none dark:border-white/20"
                     style={{ backgroundColor: readable }}
                   />
                 </button>

@@ -46,7 +46,7 @@ export function ColourField({
             setOpen(true);
           }
         }}
-        className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-2 text-left text-[13px] text-slate-800 transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
+        className="flex h-field w-full cursor-pointer items-center gap-2 rounded-control border border-slate-200 bg-white px-2 text-left text-body text-slate-800 transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
       >
         <SwatchChip colour={swatch} none={none} small />
         <span

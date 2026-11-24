@@ -102,7 +102,7 @@ export function SplitDropZone({
       {!armed ? (
         <div
           aria-hidden
-          className="split-hint-enter absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-2 rounded-full border border-brand-200 bg-white/95 py-1.5 pl-2.5 pr-3 text-xs font-semibold text-brand-700 shadow-lg backdrop-blur transition-opacity duration-150 dark:border-brand-500/40 dark:bg-slate-900/95 dark:text-brand-200"
+          className="split-hint-enter absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-2 rounded-full border border-brand-200 bg-white/95 py-1.5 pl-2 pr-3 text-body text-brand-700 shadow-lg backdrop-blur transition-opacity duration-150 dark:border-brand-500/40 dark:bg-slate-900/95 dark:text-brand-200"
           style={{ opacity: 0.55 + progress * 0.45 }}
         >
           <SideBySideIcon size={14} />
@@ -111,10 +111,10 @@ export function SplitDropZone({
       ) : (
         <div
           role="status"
-          className="split-ghost-enter absolute right-0 top-0 flex flex-col overflow-hidden rounded-l-2xl border-2 border-r-0 border-brand-500 bg-brand-50/85 shadow-2xl backdrop-blur-sm dark:bg-slate-900/85"
+          className="split-ghost-enter absolute right-0 top-0 flex flex-col overflow-hidden rounded-l-surface border-2 border-r-0 border-brand-500 bg-brand-50/85 shadow-2xl backdrop-blur-sm dark:bg-slate-900/85"
           style={{ width: ghostWidth, bottom: SPLIT_TAB_BAR_CLEARANCE_PX }}
         >
-          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-brand-200 px-3 text-sm font-semibold text-brand-800 dark:border-brand-500/30 dark:text-brand-100">
+          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-brand-200 px-3 text-body font-medium text-brand-800 dark:border-brand-500/30 dark:text-brand-100">
             <SideBySideIcon size={16} />
             <span className="truncate">
               {openWidth ? `Show ${dragged.name} Here` : `Open ${dragged.name} Side by Side`}
@@ -123,7 +123,7 @@ export function SplitDropZone({
           <div className="relative min-h-0 flex-1 opacity-90">
             <SplitTabPreview tab={dragged} loaded={loadedTabIds.has(dragged.id)} />
             <div className="absolute inset-0 flex items-end justify-center pb-6">
-              <span className="rounded-full bg-brand-700 px-3 py-1 text-xs font-semibold text-white shadow-lg dark:bg-brand-600">
+              <span className="rounded-full bg-brand-700 px-3 py-1 text-body text-white shadow-lg dark:bg-brand-600">
                 Release to Open
               </span>
             </div>
