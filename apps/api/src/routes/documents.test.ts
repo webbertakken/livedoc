@@ -961,13 +961,16 @@ describe('deleting a tab (docs/specs/013-workspace/tab-scoped-share-links.md)', 
     canEditDocument.mockResolvedValue(true);
     const res = await handleDocuments(makeCtx('DELETE', '/api/documents/d1/tabs/w'));
     expect(res.status).toBe(204);
-    expect(db.deleteTabRow.mock.calls.map((call) => call[2])).toEqual(['w', 'd1', 'd2']);
+    expect(db.deleteTabRow).toHaveBeenCalledTimes(3);
+    ['w', 'd1', 'd2'].forEach((tabId, n) =>
+      expect(db.deleteTabRow).toHaveBeenNthCalledWith(n + 1, expect.anything(), 'd1', tabId),
+    );
 
     db.deleteTabRow.mockClear();
     db.getDocument.mockResolvedValue({
       ...withDrawings,
       tabs: [{ id: 'w' }, { id: 'd1', drawingOf: 'w' }],
-    } as unknown as DocumentDTO);
+    });
     const agent = makeTestRouteContext('DELETE', '/api/documents/d1/tabs/w', {
       owner: 'owner-1',
       token: { id: 'tok' },
