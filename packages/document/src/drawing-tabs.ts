@@ -5,7 +5,7 @@
 type TabLike = { id: string; drawingOf?: string };
 
 /** Whether the tab is a text document's drawing tab. */
-export function isDrawingTab(tab: { drawingOf?: string }): boolean {
+export function isDrawingTab(tab: TabLike): boolean {
   return tab.drawingOf !== undefined;
 }
 
