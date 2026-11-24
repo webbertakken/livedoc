@@ -1,6 +1,7 @@
 // A mark (docs/specs/035-pdf-documents/marks.md): something placed on top of a PDF page that leaves its page content
 // alone. A value object: made and checked here, held in the live changes one property a whole value, written into the
-// file as one annotation by the bake. The kinds join as they are built; a highlight is the first.
+// file as one annotation by the bake. The kinds join as they are built: the four that mark text are the first, named
+// by the file's own word for each (`Highlight`, `Underline`, `StrikeOut`, `Squiggly`).
 import { PDF_MARK_MAX_QUADS, PDF_MARK_TEXT_MAX_CHARS, PDF_MAX_COORDINATE } from './limits';
 import { PageName } from './page-name';
 
@@ -8,8 +9,11 @@ import { PageName } from './page-name';
  *  lower right, each an x and a y. */
 export type Quad = readonly [number, number, number, number, number, number, number, number];
 
-export const MARK_KINDS = ['highlight'] as const;
+export const MARK_KINDS = ['highlight', 'underline', 'strikeout', 'squiggly'] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
+
+/** The kinds made by selecting text (marks.md "Kinds"): each is the glyphs it covers. */
+export type TextMarkKind = MarkKind;
 
 export type Mark = {
   readonly id: string;
@@ -51,9 +55,12 @@ const isTime = (value: unknown): value is number =>
 export type HighlightInput = Omit<Mark, 'kind' | 'modifiedAt'>;
 
 export const Mark = {
+  /** A mark of text of the kind given, over the quads given, or null when what is given is no such mark. */
+  ofText: (kind: TextMarkKind, input: HighlightInput): Mark | null =>
+    Mark.parse({ ...input, kind, modifiedAt: input.createdAt }),
+
   /** A highlight over the quads given, or null when what is given is no highlight. */
-  highlight: (input: HighlightInput): Mark | null =>
-    Mark.parse({ ...input, kind: 'highlight', modifiedAt: input.createdAt }),
+  highlight: (input: HighlightInput): Mark | null => Mark.ofText('highlight', input),
 
   /**
    * The mark a value holds, or null: every property is checked and bounded, since a mark arrives from other people's
