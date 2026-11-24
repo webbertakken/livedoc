@@ -16,7 +16,7 @@ import { PDF_ZOOM_MAX, PDF_ZOOM_MIN } from '@livedoc/pdf-documents';
 import { OfficeListField, type OfficeListOption } from '@/components/office/OfficeListField';
 import { PDF_ZOOM_MENU_PERCENTS } from '@/lib/pdf-document/pdf-menus';
 import { PdfView, type PdfZoom } from '@/lib/pdf-document/pdf-view';
-import type { PdfZoomWay } from '@/lib/pdf-document/usePdfView';
+import type { PdfViewer, PdfZoomWay } from '@/lib/pdf-document/usePdfView';
 
 /** "There is no page 99." (reading-surface.md "The page bar"). */
 export const noPageCopy = (typed: string): string => `There is no page ${typed.trim()}.`;
@@ -216,5 +216,34 @@ export function PdfPageBar({
         />
       </div>
     </div>
+  );
+}
+
+/** The page bar of a person's view: the page in view, the ends, the zoom and the turns are the viewer's own. */
+export function PdfViewerPageBar({
+  viewer,
+  labels,
+  onGoTo,
+  pageField,
+}: {
+  viewer: Pick<PdfViewer, 'page' | 'atFirst' | 'atLast' | 'view' | 'scale' | 'turn' | 'zoomTo'>;
+  labels: readonly (string | null)[];
+  onGoTo: (index: number) => void;
+  pageField?: Ref<HTMLInputElement>;
+}) {
+  return (
+    <PdfPageBar
+      page={viewer.page}
+      labels={labels}
+      atFirst={viewer.atFirst}
+      atLast={viewer.atLast}
+      zoom={viewer.view.zoom}
+      scale={viewer.scale}
+      onPrevious={() => viewer.turn(-1)}
+      onNext={() => viewer.turn(1)}
+      onGoTo={onGoTo}
+      onZoom={viewer.zoomTo}
+      pageField={pageField}
+    />
   );
 }

@@ -77,9 +77,12 @@ import { usePdfThumbnail } from '@/lib/pdf-document/usePdfThumbnail';
 import { usePdfDocument, type PdfDocumentDeps } from '@/lib/pdf-document/usePdfDocument';
 import { usePdfZoomablePage } from '@/lib/pdf-document/usePdfZoomablePage';
 import { track } from '@/lib/telemetry';
+import { useToast } from '@/hooks/ui/useToast';
+import { PdfDarkPagesQuestion } from './PdfDarkPagesQuestion';
 import { PdfFileNotices } from './PdfFileNotices';
 import { PdfOpenNotices } from './PdfOpenNotices';
-import { PdfPageBar } from './PdfPageBar';
+import { PdfOpeningPage } from './PdfOpeningPage';
+import { PdfViewerPageBar } from './PdfPageBar';
 import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
 import { PdfSelectionBar } from './PdfSelectionBar';
@@ -167,7 +170,12 @@ export function PdfDocumentSurface({
   const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
   // "Dark pages": this person's look; "Layers": theirs too, and the drawer their pages are drawn with.
-  const darkPages = usePdfDarkPages({ ownerId: scope.ownerId, onProblem: setProblem });
+  const toast = useToast();
+  const darkPages = usePdfDarkPages({
+    ownerId: scope.ownerId,
+    onProblem: setProblem,
+    say: toast.info,
+  });
   const layerView = usePdfLayerView(ready?.engine ?? null, ready?.drawer ?? null, darkPages.look);
 
   // "Replacing the stored file": an Editor's idle surface replaces it for the budget. The room's alone: in This
@@ -493,20 +501,7 @@ export function PdfDocumentSurface({
           canChange={marking}
         />
       ) : null}
-      {open.phase === 'opening' ? (
-        // A page-shaped placeholder on the surface's ground, so nothing shifts when page one arrives.
-        <div
-          className="flex min-h-0 flex-1 justify-center overflow-hidden px-6 py-6"
-          aria-busy="true"
-        >
-          <div
-            role="status"
-            className="aspect-[612/792] w-full max-w-[816px] bg-(--pdf-paper) shadow-sm outline outline-1 outline-(--office-line)"
-          >
-            <span className="sr-only">Opening this PDF…</span>
-          </div>
-        </div>
-      ) : null}
+      {open.phase === 'opening' ? <PdfOpeningPage /> : null}
       {ready && marks ? (
         <PdfLookContext.Provider value={darkPages.look}>
           <OfficePanelLayout
@@ -564,19 +559,22 @@ export function PdfDocumentSurface({
                 pages={pagesElement}
                 view={viewer.viewStore}
               />
+              {darkPages.question.asking ? (
+                <PdfDarkPagesQuestion
+                  engine={ready.engine}
+                  page={viewer.page}
+                  width={ready.pages[viewer.page]?.width ?? 612}
+                  turns={viewer.view.turns}
+                  onAnswer={darkPages.question.answer}
+                  onLeave={() => pagesElement?.focus()}
+                />
+              ) : null}
               {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
               {fullScreen.on ? null : (
-                <PdfPageBar
-                  page={viewer.page}
+                <PdfViewerPageBar
+                  viewer={viewer}
                   labels={labels}
-                  atFirst={viewer.atFirst}
-                  atLast={viewer.atLast}
-                  zoom={viewer.view.zoom}
-                  scale={viewer.scale}
-                  onPrevious={() => viewer.turn(-1)}
-                  onNext={() => viewer.turn(1)}
                   onGoTo={jump}
-                  onZoom={viewer.zoomTo}
                   pageField={pageField}
                 />
               )}

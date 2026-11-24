@@ -1385,6 +1385,25 @@ export const PDF_ROOM_TOGGLED = chart(
   { types: ['ReadMode', 'FullScreen'], rising: 'neutral' },
 );
 
+export const PDF_DARK_PAGES_ASKED = chart(
+  'Pdf',
+  'Opened',
+  'PDF Dark Pages Questions Asked',
+  'The first-time question about Dark pages shown, once a person, on a PDF in the dark scheme.',
+  { types: ['DarkPagesQuestion'], rising: 'neutral' },
+);
+
+export const PDF_DARK_PAGES_ANSWERS = chart(
+  'Pdf',
+  'Selected',
+  'PDF Dark Pages Answers',
+  'How the first-time question about Dark pages was answered: used, kept as they are, or closed.',
+  {
+    types: ['DarkPagesQuestion.Use', 'DarkPagesQuestion.Keep', 'DarkPagesQuestion.Dismissed'],
+    rising: 'neutral',
+  },
+);
+
 export const PDF_TEXT_COPIED = chart(
   'Pdf',
   'Copied',
@@ -1441,6 +1460,8 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_ZOOMS,
     PDF_LAYERS_TOGGLED,
     PDF_ROOM_TOGGLED,
+    PDF_DARK_PAGES_ASKED,
+    PDF_DARK_PAGES_ANSWERS,
     PDF_TEXT_COPIED,
     PDF_SEARCHES,
     PDF_OPENS,
