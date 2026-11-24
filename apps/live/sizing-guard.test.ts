@@ -55,6 +55,16 @@ const SIZED_PATHS = [
   'components/forms/ShareFormDialog.tsx',
   // The builder: its picture of the form draws the form's own type (forms.css form-type-*); its controls are chrome.
   'components/forms/builder',
+  // A Sheet's header, setup, settings and floating parts; the grid is content (sizing.md D238).
+  'components/sheets/SheetCellComments.tsx',
+  'components/sheets/SheetHeader.tsx',
+  'components/sheets/SheetMergeConfirm.tsx',
+  'components/sheets/SheetResizeDialog.tsx',
+  'components/sheets/SheetSettingsPanel.tsx',
+  'components/sheets/SheetSetupStart.tsx',
+  'components/sheets/SheetSetupStyle.tsx',
+  'components/sheets/SheetSmartFillLayer.tsx',
+  'components/sheets/SheetTouchLinkChip.tsx',
 ];
 
 describe('live sizing', () => {

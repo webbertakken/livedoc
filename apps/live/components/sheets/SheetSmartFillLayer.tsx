@@ -69,7 +69,7 @@ export function SheetSmartFillLayer({
         <div
           role="dialog"
           aria-label="Smart Fill"
-          className="absolute z-[8] rounded-lg border px-3 py-2 text-[13px] shadow-lg"
+          className="absolute z-[8] rounded-menu border px-3 py-2 text-body shadow-lg"
           style={{
             left: Math.max(0, left),
             top: Math.max(0, at.y),
@@ -80,7 +80,7 @@ export function SheetSmartFillLayer({
           onPointerDown={stop}
           onDoubleClick={stop}
         >
-          <p className="font-semibold">Smart Fill</p>
+          <p className="text-panel-title">Smart Fill</p>
           <p className="mt-0.5" style={{ color: c.palette.muted }}>
             Fill {n} cell{n === 1 ? '' : 's'} with the pattern
           </p>

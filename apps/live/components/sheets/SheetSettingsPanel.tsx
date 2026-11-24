@@ -145,7 +145,7 @@ export function SheetSettingsPanel({
               />
             </SettingsField>
             {
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {c.canShape && !csvInTabMenu ? (
                   <SettingsActionTile
                     icon={<ImportGlyph />}
@@ -290,7 +290,7 @@ export function SheetSettingsPanel({
                   <button
                     type="button"
                     onClick={() => actions.setOptions({ colWidth: null, rowHeight: null })}
-                    className="flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                    className="flex h-row items-center gap-2 self-start rounded-control px-2 text-body text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
                     <ResetGlyph />
                     Reset to Default
@@ -349,8 +349,8 @@ export function SheetSettingsPanel({
         <SigmaIcon />,
         <>
           <SettingsBody>
-            <div className="flex flex-col gap-1.5">
-              <span className="px-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+            <div className="flex flex-col gap-2">
+              <span className="px-0.5 text-supporting text-slate-600 dark:text-slate-300">
                 Totals
               </span>
               <OptionRows
@@ -365,7 +365,7 @@ export function SheetSettingsPanel({
                   disabled: pick.length === 1 && pick.includes(stat),
                 }))}
               />
-              <p className="px-0.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              <p className="px-0.5 text-supporting text-slate-500 dark:text-slate-400">
                 Shown under a selection of numbers. Your own choice, on every sheet.
               </p>
             </div>

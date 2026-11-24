@@ -47,7 +47,7 @@ export function SheetTouchLinkChip({
         role="group"
         aria-label="Link"
         data-sheet-link-chip
-        className="absolute z-[11] flex max-w-72 items-center gap-2 rounded-lg bg-slate-800 py-1 pl-3 pr-1 text-xs text-white shadow-lg"
+        className="absolute z-[11] flex max-w-72 items-center gap-2 rounded-menu bg-slate-800 py-1 pl-3 pr-1 text-body text-white shadow-lg"
         style={{
           left: c.geometry.headW + box.x,
           top: c.geometry.headH + box.y + box.h + 4,
@@ -58,7 +58,7 @@ export function SheetTouchLinkChip({
         <span className="min-w-0 truncate">{link}</span>
         <button
           type="button"
-          className="h-8 shrink-0 cursor-pointer rounded-md bg-white/10 px-3 font-medium hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-white"
+          className="h-field shrink-0 cursor-pointer rounded-control bg-white/10 px-3 hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-white"
           onClick={() => onOpen(link)}
         >
           Open

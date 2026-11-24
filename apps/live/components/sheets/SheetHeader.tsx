@@ -83,7 +83,7 @@ export function SheetHeader({
 
   return (
     <div
-      className="flex h-10 shrink-0 items-center gap-1.5 border-b pl-3 pr-3"
+      className="flex h-10 shrink-0 items-center gap-2 border-b pl-3 pr-3"
       style={{ borderColor: c.palette.cardBorder }}
       onDoubleClick={(e) => {
         // As a board's: a double-click on the title or the header's empty space renames, never on its buttons.
@@ -116,14 +116,14 @@ export function SheetHeader({
             if (e.key === 'Enter') rename();
             if (e.key === 'Escape') setRenaming(false);
           }}
-          className="min-w-0 flex-1 rounded-md border bg-transparent px-1.5 py-0.5 text-[14px] font-semibold outline-none"
+          className="h-row min-w-0 flex-1 rounded-control border bg-transparent px-2 text-panel-title outline-none"
           style={{ borderColor: c.palette.focus, color: c.palette.text }}
         />
       ) : (
         // A press on the title moves the element, as on the rest of the header; a double-click renames.
         <div
           data-sheet-title
-          className="min-w-0 truncate text-[14px] font-semibold"
+          className="min-w-0 truncate text-panel-title"
           style={{ color: c.palette.text }}
         >
           {c.sheet.title}

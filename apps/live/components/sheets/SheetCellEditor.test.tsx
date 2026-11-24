@@ -139,7 +139,7 @@ describe('the cell editor', () => {
     expect(options[0]!.getAttribute('aria-selected')).toBe('true');
     fireEvent.keyDown(editor(), { key: 'ArrowDown' });
     expect(screen.getAllByRole('option')[1]!.getAttribute('aria-selected')).toBe('true');
-    const name = options[1]!.querySelector('.font-semibold')!.textContent;
+    const name = options[1]!.querySelector('[data-function-name]')!.textContent;
     fireEvent.pointerDown(screen.getAllByRole('option')[1]!);
     expect(h.ctl().editing?.draft).toBe(`=${name}(`);
     expect(screen.queryByRole('listbox')).toBeNull();

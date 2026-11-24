@@ -23,7 +23,7 @@ export function readResizeField(text: string, axis: LineAxis): number | null {
 }
 
 const FIELD =
-  'h-9 w-28 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
+  'h-field w-28 rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
 export function SheetResizeDialog({
   axis,
@@ -72,7 +72,11 @@ export function SheetResizeDialog({
           : { label: 'OK', disabled: true, onPress: onClose }
       }
     >
-      <div role="radiogroup" aria-label={`Size of ${span}`} className="flex flex-col gap-3 text-sm">
+      <div
+        role="radiogroup"
+        aria-label={`Size of ${span}`}
+        className="flex flex-col gap-3 text-body"
+      >
         <label className="flex items-center gap-2">
           <input type="radio" name={id} checked={!fit} onChange={() => setFit(false)} />
           <span id={`${id}-size`}>{words}</span>

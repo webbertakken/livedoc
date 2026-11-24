@@ -67,7 +67,7 @@ export function FunctionAssist({
       <ul
         role="listbox"
         aria-label="Options"
-        className="absolute left-0 top-full z-20 mt-1 max-h-64 w-56 overflow-auto rounded-lg border py-1 text-[12px] shadow-lg"
+        className="absolute left-0 top-full z-20 mt-1 max-h-64 w-56 overflow-auto rounded-menu border py-1 text-body shadow-lg"
         style={{
           backgroundColor: c.palette.surface,
           borderColor: c.palette.border,
@@ -79,7 +79,7 @@ export function FunctionAssist({
             key={value}
             role="option"
             aria-selected={i === input.pick}
-            className="cursor-pointer px-2.5 py-1.5"
+            className="min-h-row cursor-pointer px-3 py-1"
             style={i === input.pick ? { backgroundColor: c.palette.column } : undefined}
             onPointerDown={(e) => {
               e.preventDefault();
@@ -97,7 +97,7 @@ export function FunctionAssist({
       <ul
         role="listbox"
         aria-label="Functions"
-        className="absolute left-0 top-full z-20 mt-1 max-h-64 w-72 overflow-auto rounded-lg border py-1 text-[12px] shadow-lg"
+        className="absolute left-0 top-full z-20 mt-1 max-h-64 w-72 overflow-auto rounded-menu border py-1 text-body shadow-lg"
         style={{
           backgroundColor: c.palette.surface,
           borderColor: c.palette.border,
@@ -109,7 +109,7 @@ export function FunctionAssist({
             key={name}
             role="option"
             aria-selected={i === input.pick}
-            className="cursor-pointer px-2.5 py-1.5"
+            className="min-h-row cursor-pointer px-3 py-1"
             style={i === input.pick ? { backgroundColor: c.palette.column } : undefined}
             onPointerDown={(e) => {
               e.preventDefault();
@@ -117,7 +117,7 @@ export function FunctionAssist({
               onPick(name);
             }}
           >
-            <span className="font-semibold">{name}</span>
+            <span data-function-name>{name}</span>
             <span className="ml-2" style={{ color: c.palette.muted }}>
               {input.matches!.ranges.has(name) ? 'Named range' : FUNCTION_DOCS[name]?.summary}
             </span>
@@ -131,7 +131,7 @@ export function FunctionAssist({
     return (
       <div
         role="note"
-        className="absolute left-0 top-full z-20 mt-1 w-80 rounded-lg border px-3 py-2 text-[12px] shadow-lg"
+        className="absolute left-0 top-full z-20 mt-1 w-80 rounded-menu border px-3 py-2 text-body shadow-lg"
         style={{
           backgroundColor: c.palette.surface,
           borderColor: c.palette.border,
@@ -151,7 +151,7 @@ export function FunctionAssist({
         <div className="mt-1" style={{ color: c.palette.muted }}>
           {doc.summary}
         </div>
-        <div className="mt-1 font-mono text-[11px]" style={{ color: c.palette.muted }}>
+        <div className="mt-1 font-mono text-supporting" style={{ color: c.palette.muted }}>
           {formulaToLocale(doc.example, syntax)}
         </div>
       </div>
@@ -272,7 +272,7 @@ export function SheetCellEditor({
       {input.error ? (
         <div
           role="alert"
-          className="mt-1 w-max max-w-80 rounded-md bg-red-600 px-2 py-1 text-[12px] text-white shadow"
+          className="mt-1 w-max max-w-80 rounded-control bg-red-600 px-2 py-1 text-supporting text-white shadow"
         >
           {input.error.message}
         </div>

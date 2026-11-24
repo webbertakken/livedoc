@@ -15,7 +15,7 @@ export function SheetMergeConfirm({
   onMerge: () => void;
 }) {
   return (
-    <div className="w-64 px-3 py-2 text-[13px]" role="alertdialog" aria-label="Merge Cells">
+    <div className="w-64 px-3 py-2 text-body" role="alertdialog" aria-label="Merge Cells">
       <p>Merging keeps only the top-left value. Merge {formatRange(range)}?</p>
       <div className="mt-2 flex justify-end gap-2">
         <Button variant="ghost" size="xs" onClick={onCancel}>
