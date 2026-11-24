@@ -35,9 +35,9 @@ export function ScopedTimeline({
   const feed = useTimelineFeed(ownerId, true, scope);
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/40">
+    <section className="rounded-surface border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/40">
       <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
+        <h2 className="text-panel-title text-slate-800 dark:text-slate-100">{title}</h2>
         <div className="flex items-center gap-2">
           <TimelineControls controls={feed.controls} />
         </div>

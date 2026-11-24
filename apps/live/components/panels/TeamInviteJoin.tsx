@@ -158,7 +158,7 @@ export function TeamInviteJoin() {
       <Heading>{team.name}</Heading>
       <Body>{orgLine}</Body>
       {joinError ? (
-        <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">{joinError}</p>
+        <p className="mt-3 text-body text-rose-600 dark:text-rose-400">{joinError}</p>
       ) : null}
       <div className="mt-5 flex items-center justify-center gap-2">
         <Button size="md" onClick={() => void join()} disabled={joining}>

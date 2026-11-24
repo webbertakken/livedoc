@@ -40,7 +40,7 @@ function prettifyEmailLocalPart(email: string): string {
 function RolePill({ member, pinned }: { member: TeamMember; pinned: boolean }) {
   const pill = (
     <span
-      className={`inline-flex w-fit shrink-0 items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ${
+      className={`inline-flex w-fit shrink-0 items-center rounded-full px-2 py-0.5 text-supporting ring-1 ${
         member.role === 'admin'
           ? 'bg-brand-50 text-brand-700 ring-brand-200 dark:bg-brand-500/15 dark:text-brand-300 dark:ring-brand-500/30'
           : 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600'
@@ -108,34 +108,32 @@ export function TeamMemberRow({
     <li key={m.id} className="group flex items-center gap-3 px-4 py-2.5">
       <PictureDisc
         pictureUrl={isSelf ? ownPicture : m.pictureUrl}
-        size={32}
+        size={28}
         aria-hidden
         style={{
           ...identityVars(colorForKey(m.email ?? m.userId ?? m.id)),
         }}
-        className={`text-xs font-semibold text-white ${
+        className={`text-glyph text-white ${
           pending || rejected ? 'opacity-50' : ''
         } ${IDENTITY_FILL}`}
       >
         {initialsOf(name)}
       </PictureDisc>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-            {name}
-          </span>
+        <span className="flex items-center gap-1">
+          <span className="truncate text-body text-slate-900 dark:text-slate-100">{name}</span>
           {isSelf ? (
-            <span className="shrink-0 rounded-full bg-slate-100 px-1.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600">
+            <span className="shrink-0 rounded-full bg-slate-100 px-2 text-supporting text-slate-600 ring-1 ring-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600">
               you
             </span>
           ) : null}
           {pending ? (
-            <span className="shrink-0 rounded-full bg-amber-100 px-1.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
+            <span className="shrink-0 rounded-full bg-amber-100 px-2 text-supporting text-amber-700 ring-1 ring-amber-200">
               Invited
             </span>
           ) : null}
           {rejected ? (
-            <span className="shrink-0 rounded-full bg-rose-50 px-1.5 text-[10px] font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/30">
+            <span className="shrink-0 rounded-full bg-rose-50 px-2 text-supporting text-rose-700 ring-1 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/30">
               Rejected
             </span>
           ) : null}
@@ -146,12 +144,12 @@ export function TeamMemberRow({
               layout on mobile. Pending rows that somehow carry no
               address fall back to the waiting hint. */}
         {m.email ? (
-          <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+          <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
             {m.email}
             {rejected ? (m.status === 'expired' ? ' · Expired' : ' · Declined') : null}
           </span>
         ) : pending ? (
-          <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+          <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
             Waiting for them to accept
           </span>
         ) : null}
@@ -170,13 +168,13 @@ export function TeamMemberRow({
       ) : (
         <RolePill member={m} pinned={pinnedAdmin && isAdmin} />
       )}
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center">
+      <span className="flex size-row shrink-0 items-center justify-center">
         {removable ? (
           <button
             type="button"
             onClick={() => onRemove(m)}
             aria-label={`Remove ${name}`}
-            className={`inline-flex h-7 w-7 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 ${
+            className={`inline-flex size-row items-center justify-center rounded-control transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 ${
               rejected
                 ? 'text-slate-400 dark:text-slate-400'
                 : 'text-slate-300 opacity-0 focus-visible:opacity-100 group-hover:opacity-100 dark:text-slate-600 [@media(hover:none)]:opacity-100'

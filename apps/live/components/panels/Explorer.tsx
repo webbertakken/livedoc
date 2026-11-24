@@ -368,7 +368,7 @@ function ExplorerImpl({
         >
           {/* The card, then the sign-in note under it (an onboarding notice: Minimal chrome drops it,
             docs/specs/007-editor/power-user-mode.md). */}
-          <div className="flex flex-col gap-2 px-2.5 pb-2.5 pt-1 empty:hidden">
+          <div className="flex flex-col gap-2 px-2 pb-2 pt-1 empty:hidden">
             {currentCard}
             {minimalChrome ? null : <SignInPrompt bar />}
           </div>
@@ -441,7 +441,7 @@ function ExplorerImpl({
         <ProductNavLinks
           current="editor"
           // A phone's sheet spreads the links across its width.
-          className={`overflow-x-auto border-t border-slate-200 px-1.5 py-1 [scrollbar-width:none] dark:border-slate-700/70 ${sheet ? 'justify-between' : ''}`}
+          className={`overflow-x-auto border-t border-slate-200 px-2 py-1 [scrollbar-width:none] dark:border-slate-700/70 ${sheet ? 'justify-between' : ''}`}
         />
       </div>
 

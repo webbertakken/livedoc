@@ -33,7 +33,7 @@ export function GalleryPane({
   compact = false,
 }: GalleryPaneProps & { compact?: boolean }) {
   const grid = compact
-    ? 'grid grid-cols-3 gap-2.5'
+    ? 'grid grid-cols-3 gap-2'
     : 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4';
   const [gallery, setGallery] = useState<ImageSummary[] | null>(null);
   const [usage, setUsage] = useState<Usage>({});
@@ -112,12 +112,12 @@ export function GalleryPane({
         uploading={uploading}
         error={uploadError}
         prompt="Drop, paste, or click to upload an image"
-        {...(compact ? { heightClass: 'h-28', gapClass: 'gap-1.5' } : {})}
+        {...(compact ? { heightClass: 'h-28', gapClass: 'gap-1' } : {})}
       />
 
       <div className="mt-4">
         {galleryError ? (
-          <p className="rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
+          <p className="rounded-control bg-rose-50 px-3 py-2 text-body text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
             {galleryError}
           </p>
         ) : !gallery ? (
@@ -128,7 +128,7 @@ export function GalleryPane({
               <li
                 key={i}
                 aria-hidden
-                className="aspect-square animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
+                className="aspect-square animate-pulse rounded-control border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
               />
             ))}
           </ul>
@@ -170,7 +170,7 @@ function GalleryCard({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <li className="group relative rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <li className="group relative rounded-menu border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <GalleryImageButton
         image={image}
         ownerId={ownerId}
@@ -182,10 +182,10 @@ function GalleryCard({
       />
       <div className="mt-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-200">
+          <p className="truncate text-body text-slate-700 dark:text-slate-200">
             {image.originalName ?? 'Untitled image'}
           </p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+          <p className="text-supporting text-slate-500 dark:text-slate-400">
             {image.width} × {image.height} · {formatBytes(image.byteSize)}
           </p>
         </div>
@@ -193,21 +193,21 @@ function GalleryCard({
           type="button"
           onClick={onDelete}
           aria-label={`Delete ${image.originalName ?? 'image'}`}
-          className="rounded p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="flex size-row shrink-0 items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <TrashIcon />
         </button>
       </div>
       <div className="mt-1">
         {usage.length === 0 ? (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-supporting text-slate-600 dark:bg-slate-800 dark:text-slate-400">
             Not used
           </span>
         ) : (
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700 transition hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:hover:bg-brand-500/25"
+            className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-supporting text-brand-700 transition hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:hover:bg-brand-500/25"
             aria-expanded={open}
           >
             Used in {usage.length} {usage.length === 1 ? 'document' : 'documents'}
@@ -217,7 +217,7 @@ function GalleryCard({
       {open && usage.length > 0 ? (
         <ul className="mt-2 space-y-1 border-t border-slate-100 pt-2 dark:border-slate-800">
           {usage.map((d) => (
-            <li key={d.id} className="truncate text-[11px]">
+            <li key={d.id} className="truncate text-supporting">
               <a
                 href={`/document/${encodeURIComponent(d.id)}`}
                 className="text-brand-700 transition hover:text-brand-800 hover:underline dark:text-brand-300 dark:hover:text-brand-200"

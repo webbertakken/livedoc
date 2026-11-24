@@ -59,7 +59,9 @@ export function ThemesPane({ compact = false }: { compact?: boolean } = {}) {
   };
 
   if (loading) {
-    return <p className="px-1 py-8 text-sm text-slate-500 dark:text-slate-400">Loading themes…</p>;
+    return (
+      <p className="px-1 py-8 text-body text-slate-500 dark:text-slate-400">Loading themes…</p>
+    );
   }
 
   return (
@@ -74,7 +76,7 @@ export function ThemesPane({ compact = false }: { compact?: boolean } = {}) {
           <button
             type="button"
             onClick={() => setBuilding('new')}
-            className={`rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
+            className={`inline-flex min-h-prominent items-center rounded-control bg-brand-700 px-4 text-body font-medium text-white transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
           >
             New Theme
           </button>
@@ -83,17 +85,17 @@ export function ThemesPane({ compact = false }: { compact?: boolean } = {}) {
         <div
           className={
             compact
-              ? 'grid grid-cols-2 gap-2.5'
+              ? 'grid grid-cols-2 gap-2'
               : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'
           }
         >
           {themes.map((t) => (
             <div
               key={t.id}
-              className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+              className="flex flex-col gap-2 rounded-surface border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
             >
               <ThemeSwatch theme={customThemeDefinition(t)} size="lg" />
-              <span className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+              <span className="truncate text-body text-slate-700 dark:text-slate-200">
                 {t.name}
               </span>
               <div className="flex items-center gap-1">
@@ -121,10 +123,10 @@ export function ThemesPane({ compact = false }: { compact?: boolean } = {}) {
           <button
             type="button"
             onClick={() => setBuilding('new')}
-            className="flex min-h-[7rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-brand-700 dark:border-slate-600 dark:text-slate-400"
+            className="flex min-h-[7rem] flex-col items-center justify-center gap-1 rounded-surface border border-dashed border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-brand-700 dark:border-slate-600 dark:text-slate-400"
           >
             <PlusIcon size={20} />
-            <span className="text-xs font-medium">New Theme</span>
+            <span className="text-body">New Theme</span>
           </button>
         </div>
       )}
@@ -156,7 +158,7 @@ function IconBtn({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300"
+      className="flex size-row items-center justify-center rounded-control border border-slate-200 text-slate-500 transition hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300"
     >
       {children}
     </button>

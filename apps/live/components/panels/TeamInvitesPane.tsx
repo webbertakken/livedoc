@@ -44,29 +44,29 @@ export function TeamInvitesPane({
         return (
           <li
             key={invite.memberId}
-            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+            className="flex items-center gap-4 rounded-surface border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
           >
             <span
               aria-hidden
               style={{
                 ...identityVars(colorForKey(invite.team.id)),
               }}
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-white ${IDENTITY_FILL}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-menu text-body text-white ${IDENTITY_FILL}`}
             >
               {initialsOf(invite.team.name)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+              <span className="block truncate text-body text-slate-900 dark:text-slate-100">
                 {invite.team.name}
               </span>
-              <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+              <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
                 {subtitle}
               </span>
             </span>
             <button
               type="button"
               onClick={() => onDecline(invite)}
-              className="shrink-0 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              className="inline-flex min-h-row shrink-0 items-center rounded-control border border-slate-200 bg-white px-3 text-body text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100"
             >
               Decline
             </button>

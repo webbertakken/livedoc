@@ -18,7 +18,7 @@ export function TimelineEmptyState() {
   return (
     <EmptyState
       icon={
-        <Glyph size={32} units={24} className="h-8 w-8" strokeLinecap="butt" strokeLinejoin="miter">
+        <Glyph size={32} units={24} strokeLinecap="butt" strokeLinejoin="miter">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -33,7 +33,7 @@ export function TimelineEmptyState() {
           (ExplorerEmptyState), so the two read as one surface. */}
       <Link
         href="/new"
-        className={`inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
+        className={`inline-flex min-h-prominent items-center gap-2 rounded-control bg-brand-700 px-4 text-body font-medium text-white shadow-sm transition hover:bg-brand-800 ${SOLID_BRAND_DARK_CONTROL}`}
       >
         New Document
       </Link>
