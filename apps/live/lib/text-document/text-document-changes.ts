@@ -12,6 +12,8 @@ export type TextDocumentChanges = {
   plugin: Plugin;
   subscribe: (listener: () => void) => () => void;
   subscribeCaret: (listener: () => void) => () => void;
+  /** Tells every listener, as when the editor is given another state whose plugin views see no update. */
+  touch: () => void;
 };
 
 // Listeners told once after the next paint, however often they are notified before it.
@@ -64,5 +66,9 @@ export function createTextDocumentChanges(): TextDocumentChanges {
     }),
     subscribe: body.subscribe,
     subscribeCaret: caret.subscribe,
+    touch: () => {
+      body.notify();
+      caret.notify();
+    },
   };
 }

@@ -5,7 +5,7 @@
 // page on its ground, and the body, edited live through the room; the shell's look tokens colour it all. One surface
 // is one tab: its host keys it by the tab, so another tab mounts a fresh one.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
+import { EditorState, Plugin, Selection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import { keymap } from 'prosemirror-keymap';
@@ -25,6 +25,8 @@ import {
   CONTENTS,
   EQUATION,
   liveFirstHeaders,
+  liveTabList,
+  Styles,
   PICTURE,
   TextDocumentState,
   type ListDefinition,
@@ -137,6 +139,12 @@ import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
+import {
+  initialTab,
+  textDocumentTabsStore,
+  type TextDocumentTabsStore,
+} from '@/lib/text-document/text-document-tabs';
+import { useTextDocumentTabs } from './useTextDocumentTabs';
 import type { LinkDocument } from '@/lib/text-document/text-document-links';
 import { equationActions } from '@/lib/text-document/text-document-equation-insert';
 import {
@@ -234,6 +242,12 @@ export function TextDocumentSurface({
   const editor = useRef<EditorView | null>(null);
   // The editor as state too: the menus act on the one there is now.
   const [editorView, setEditorView] = useState<EditorView | null>(null);
+  // The document tab the editor shows, and how another is shown (links-and-navigation.md "Document tabs in the outline").
+  const [shownTab, setShownTab] = useState<string | null>(null);
+  const showTab = useRef<(tab: string) => void>(() => {});
+  const [tabsStore, setTabsStore] = useState<TextDocumentTabsStore | null>(null);
+  // Ctrl+Shift+Page Down / Up in the writing, stepping to the next or previous tab.
+  const stepTabs = useRef<(direction: 1 | -1) => boolean>(() => false);
   // The live state, for a download written in this browser.
   const liveDoc = useRef<Y.Doc | null>(null);
   // Collaborators' carets in this tab's writing (live-editing-and-storage.md "Presence"), drawn by the editor.
@@ -372,143 +386,154 @@ export function TextDocumentSurface({
           set: (id: string, list: ListDefinition) =>
             TextDocumentState.setList(doc, id, list, TEXT_DOCUMENT_LISTS_ORIGIN),
         };
-        const view = new EditorView(mount.current, {
-          state: EditorState.create({
-            schema: textDocumentSchema,
-            plugins: [
-              ySyncPlugin(TextDocumentState.body(doc)),
-              // The emoji colon list takes Up, Down, Enter, Tab and Escape while it is shown, before any keymap.
-              emojiColonPlugin,
-              // The equation being written takes the keys inside its box, before any keymap (objects.md "Equations in
-              // the editor").
-              equationBoxPlugin(),
-              // A picture cropped after a double-click or Crop image (objects.md "Working with a picture"): before the
-              // keymaps, so Enter and Escape end cropping rather than reaching the writing.
-              pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
-              // Pictures placed out of their line, and the room the text keeps clear of (objects.md "In the editor").
-              placedPicturesPlugin({
-                columnWidth: (body, pos) =>
-                  Columns.width(
-                    sectionSetupAt(
-                      body,
-                      pos,
-                      layout.current?.setup ??
-                        TextDocumentState.section(doc, live.current.format).setup,
-                    ),
-                  ),
-                sheetOf: (index) =>
-                  scroller.current?.querySelector(`[data-page-sheet="${index + 1}"]`) ?? null,
-              }),
-              // Columns and rows resized by dragging their borders (tables.md "Working in a table"): before the cells'
-              // selecting, so a press on a border selects no cells.
-              tableResizePlugin(),
-              // Rows and columns moved by dragging their grips (tables.md "Working in a table").
-              tableMovePlugin(),
-              // Cells selected together, tables kept whole as they are edited (tables.md "In the editor").
-              tableEditing(),
-              changes.plugin,
-              ...textDocumentUndoPlugins(),
-              textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
-              // Several stretches selected at once (text-and-paragraphs.md "Selection").
-              stretchesPlugin(),
-              // The typing aids: smart quotes, substitutions, links, capitals, lists.
-              typingAidsPlugin({
-                read: () => typingAids.current(),
-                lists: listsAccess,
-                readStyles: () => readFormatting().styles,
-              }),
-              // Picture files pasted or dropped, before the clipboard reads the rest (objects.md "Inserting").
-              picturePastePlugin((files, source) => takePictureFiles.current(files, source)),
-              // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
-              clipboardPlugin({
-                read: () => ({
-                  documentId,
-                  tabId,
-                  format: live.current.format,
-                  ...readFormatting(),
-                  lists: TextDocumentState.lists(doc),
-                }),
-                lists: listsAccess,
-                markdown: () => typingAids.current().markdown,
-                // A copied footnote's writing goes with its mark (page-layout.md "Footnotes").
-                notes: footnoteClipboard(
-                  doc,
-                  () => live.current.format,
-                  () => editor.current?.state.doc ?? null,
-                ),
-                // A copied picture's media goes with it (objects.md "In the editor").
-                media: {
-                  read: (key) => TextDocumentState.media(doc, key),
-                  place: (media) => TextDocumentState.addMedia(doc, media),
-                },
-                onLeftOut: (count) => clipboardLeftOut.current(count),
-              }),
-              // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
-              paintFormatPlugin(),
-              // Adjacent paragraphs with the same borders share one box ("Borders and shading").
-              paragraphBoxesPlugin(readFormatting),
-              // Code blocks: Enter in one, and each drawn with its language's colours (objects.md "Code blocks").
-              codeBlockKeysPlugin(() => readFormatting().styles),
-              codeHighlightPlugin({ readStyles: () => readFormatting().styles }),
-              // A press on a table of contents selects it whole (links-and-navigation.md "Table of contents").
-              contentsPressPlugin(),
-              // Alt+F10 from a selected table of contents to its bar.
-              contentsBarKeys(),
-              // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
-              // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
-              tableKeysPlugin(),
-              listKeysPlugin(),
-              // Tab types a tab, Shift+Enter breaks the line (text-and-paragraphs.md "Writing"), and each tab is
-              // drawn to its stop ("Tab stops").
-              writingKeysPlugin(readFormatting),
-              tabStopsPlugin(readFormatting),
-              nonPrintingPlugin(false),
-              listMarkersPlugin(
-                () => TextDocumentState.lists(doc),
-                (listener) => subscribeLists(doc, listener),
-              ),
-              // Page and section breaks: their labels, and Backspace and Delete beside a page break.
-              breaksPlugin(readFormatting),
-              // Each section's writing at its own width (page-layout.md "Each page is drawn at its section's setup").
-              sectionWidthsPlugin(
-                () =>
+        // The editor's plugins, bound to one document tab's body (links-and-navigation.md "Document tabs in the
+        // outline"): built again for each tab shown.
+        const pluginsFor = (body: Y.XmlFragment): Plugin[] => [
+          ySyncPlugin(body),
+          // The emoji colon list takes Up, Down, Enter, Tab and Escape while it is shown, before any keymap.
+          emojiColonPlugin,
+          // The equation being written takes the keys inside its box, before any keymap (objects.md "Equations in
+          // the editor").
+          equationBoxPlugin(),
+          // A picture cropped after a double-click or Crop image (objects.md "Working with a picture"): before the
+          // keymaps, so Enter and Escape end cropping rather than reaching the writing.
+          pictureCroppingPlugin({ can: () => pictureSizing.current.can() }),
+          // Pictures placed out of their line, and the room the text keeps clear of (objects.md "In the editor").
+          placedPicturesPlugin({
+            columnWidth: (body, pos) =>
+              Columns.width(
+                sectionSetupAt(
+                  body,
+                  pos,
                   layout.current?.setup ??
-                  TextDocumentState.section(doc, live.current.format).setup,
-                // Columns are drawn only where pages are laid out (page-layout.md "Columns").
-                () => layout.current?.pages ?? false,
+                    TextDocumentState.section(doc, live.current.format).setup,
+                ),
               ),
-              // Each footnote's mark told its number (page-layout.md "Footnotes").
-              footnoteNumbersPlugin(),
-              // The writing laid onto pages (page-layout.md "Laying out").
-              paginationPlugin({
-                readFormatting,
-                read: () => {
-                  const first = TextDocumentState.section(doc, live.current.format);
-                  return {
-                    ...(layout.current ?? { setup: first.setup, pages: false }),
-                    headers: liveFirstHeaders(doc),
-                    numberStart: first.numberStart,
-                    lineNumbers: first.lineNumbers,
-                  };
-                },
-                heights: () => storyHeights.current,
-                onPages: setPageList,
-              }),
-              keymap(baseKeymap),
-              // A moved selection is part of the view remembered for this tab.
-              new Plugin({
-                view: () => ({
-                  update: (view, previous) => {
-                    if (!view.state.selection.eq(previous.selection)) viewChanged.current();
-                  },
-                }),
-              }),
-              textDocumentPeersPlugin({
-                canEdit: () => live.current.writes,
-                publish: (selection) => setLocalTextDocumentCaret(tabId, selection),
-              }),
-            ],
+            sheetOf: (index) =>
+              scroller.current?.querySelector(`[data-page-sheet="${index + 1}"]`) ?? null,
           }),
+          // Columns and rows resized by dragging their borders (tables.md "Working in a table"): before the cells'
+          // selecting, so a press on a border selects no cells.
+          tableResizePlugin(),
+          // Rows and columns moved by dragging their grips (tables.md "Working in a table").
+          tableMovePlugin(),
+          // Cells selected together, tables kept whole as they are edited (tables.md "In the editor").
+          tableEditing(),
+          changes.plugin,
+          ...textDocumentUndoPlugins(),
+          textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
+          // Several stretches selected at once (text-and-paragraphs.md "Selection").
+          stretchesPlugin(),
+          // The typing aids: smart quotes, substitutions, links, capitals, lists.
+          typingAidsPlugin({
+            read: () => typingAids.current(),
+            lists: listsAccess,
+            readStyles: () => readFormatting().styles,
+          }),
+          // Picture files pasted or dropped, before the clipboard reads the rest (objects.md "Inserting").
+          picturePastePlugin((files, source) => takePictureFiles.current(files, source)),
+          // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
+          clipboardPlugin({
+            read: () => ({
+              documentId,
+              tabId,
+              format: live.current.format,
+              ...readFormatting(),
+              lists: TextDocumentState.lists(doc),
+            }),
+            lists: listsAccess,
+            markdown: () => typingAids.current().markdown,
+            // A copied footnote's writing goes with its mark (page-layout.md "Footnotes").
+            notes: footnoteClipboard(
+              doc,
+              () => live.current.format,
+              () => editor.current?.state.doc ?? null,
+            ),
+            // A copied picture's media goes with it (objects.md "In the editor").
+            media: {
+              read: (key) => TextDocumentState.media(doc, key),
+              place: (media) => TextDocumentState.addMedia(doc, media),
+            },
+            onLeftOut: (count) => clipboardLeftOut.current(count),
+          }),
+          // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
+          paintFormatPlugin(),
+          // Adjacent paragraphs with the same borders share one box ("Borders and shading").
+          paragraphBoxesPlugin(readFormatting),
+          // Code blocks: Enter in one, and each drawn with its language's colours (objects.md "Code blocks").
+          codeBlockKeysPlugin(() => readFormatting().styles),
+          codeHighlightPlugin({ readStyles: () => readFormatting().styles }),
+          // A press on a table of contents selects it whole (links-and-navigation.md "Table of contents").
+          contentsPressPlugin(),
+          // Alt+F10 from a selected table of contents to its bar.
+          contentsBarKeys(),
+          // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
+          // Tab and Shift+Tab between a table's cells (tables.md "Working in a table").
+          tableKeysPlugin(),
+          listKeysPlugin(),
+          // Tab types a tab, Shift+Enter breaks the line (text-and-paragraphs.md "Writing"), and each tab is
+          // drawn to its stop ("Tab stops").
+          writingKeysPlugin(readFormatting),
+          tabStopsPlugin(readFormatting),
+          nonPrintingPlugin(false),
+          listMarkersPlugin(
+            () => TextDocumentState.lists(doc),
+            (listener) => subscribeLists(doc, listener),
+          ),
+          // Page and section breaks: their labels, and Backspace and Delete beside a page break.
+          breaksPlugin(readFormatting),
+          // Each section's writing at its own width (page-layout.md "Each page is drawn at its section's setup").
+          sectionWidthsPlugin(
+            () =>
+              layout.current?.setup ?? TextDocumentState.section(doc, live.current.format).setup,
+            // Columns are drawn only where pages are laid out (page-layout.md "Columns").
+            () => layout.current?.pages ?? false,
+          ),
+          // Each footnote's mark told its number (page-layout.md "Footnotes").
+          footnoteNumbersPlugin(),
+          // The writing laid onto pages (page-layout.md "Laying out").
+          paginationPlugin({
+            readFormatting,
+            read: () => {
+              const first = TextDocumentState.section(doc, live.current.format);
+              return {
+                ...(layout.current ?? { setup: first.setup, pages: false }),
+                headers: liveFirstHeaders(doc),
+                numberStart: first.numberStart,
+                lineNumbers: first.lineNumbers,
+              };
+            },
+            heights: () => storyHeights.current,
+            onPages: setPageList,
+          }),
+          // Ctrl+Shift+Page Down / Up: the next or previous document tab (links-and-navigation.md "Document tabs in the
+          // outline").
+          keymap({
+            'Ctrl-Shift-PageDown': () => stepTabs.current(1),
+            'Ctrl-Shift-PageUp': () => stepTabs.current(-1),
+          }),
+          keymap(baseKeymap),
+          // A moved selection is part of the view remembered for this tab.
+          new Plugin({
+            view: () => ({
+              update: (view, previous) => {
+                if (!view.state.selection.eq(previous.selection)) viewChanged.current();
+              },
+            }),
+          }),
+          textDocumentPeersPlugin({
+            canEdit: () => live.current.writes,
+            publish: (selection) => setLocalTextDocumentCaret(tabId, selection),
+          }),
+        ];
+        const stateFor = (tab: string) =>
+          EditorState.create({
+            schema: textDocumentSchema,
+            plugins: pluginsFor(TextDocumentState.tabBody(doc, tab)),
+          });
+        const firstTab = initialTab(liveTabList(doc), window.location.hash);
+        const view = new EditorView(mount.current, {
+          state: stateFor(firstTab),
           editable: () => live.current.writes,
           // Page numbers and page counts drawn as their page's (page-layout.md "Page numbers"); a table's columns drawn
           // again as its cells' widths change (tables.md "In the editor"); pictures from the state's media (objects.md).
@@ -548,12 +573,24 @@ export function TextDocumentSurface({
         });
         editor.current = view;
         setEditorView(view);
+        setShownTab(firstTab);
+        // Another document tab shown: the editor bound to its body, the caret at its start, its top in view.
+        showTab.current = (tab) => {
+          view.updateState(stateFor(tab));
+          view.dispatch(view.state.tr.setSelection(Selection.atStart(view.state.doc)));
+          scroller.current?.scrollTo?.({ top: 0 });
+          changes.touch();
+          setShownTab(tab);
+        };
         setSaveFacts(binding.saveFacts);
         liveDoc.current = doc;
+        setTabsStore(textDocumentTabsStore(doc));
         teardown = () => {
+          showTab.current = () => {};
           editor.current = null;
           setEditorView(null);
           setSaveFacts(null);
+          setTabsStore(null);
           liveDoc.current = null;
           view.destroy();
           binding.close();
@@ -757,6 +794,23 @@ export function TextDocumentSurface({
       liveDoc.current ? TextDocumentState.styles(liveDoc.current, format) : [],
     [format],
   );
+  // The document tabs: the one shown, the others, adding and stepping (links-and-navigation.md "Document tabs in the
+  // outline"); a new tab's one paragraph in Normal text.
+  const normalStyle = useCallback(
+    () =>
+      Styles.idOfRole(readStyles(), 'normal') ?? Styles.idOfRole(Styles.builtIn(format), 'normal')!,
+    [readStyles, format],
+  );
+  const tabs = useTextDocumentTabs({
+    store: tabsStore,
+    shown: shownTab,
+    showTab,
+    canEdit: writes,
+    normalStyle,
+  });
+  useLayoutEffect(() => {
+    stepTabs.current = tabs.step;
+  }, [tabs.step]);
   // Copy heading link, the link editor's headings, and going to one (links-and-navigation.md "Heading links").
   const headingLinks = useTextDocumentHeadingLinks({
     view: editorView,
@@ -867,6 +921,7 @@ export function TextDocumentSurface({
       ...columns.actions,
       ...breakActions,
       ...lineActions,
+      ...tabs.actions,
       ...equationInsert,
       ...characterDialogs.actions,
       ...links.actions,
@@ -884,6 +939,7 @@ export function TextDocumentSurface({
     [
       breakActions,
       lineActions,
+      tabs.actions,
       equationInsert,
       characterDialogs.actions,
       links.actions,
@@ -1021,7 +1077,12 @@ export function TextDocumentSurface({
               onClose={() => panels.close('left')}
               focusNonce={panels.focusNonce}
             >
-              <TextDocumentOutline view={editorView} changes={changes} readStyles={readStyles} />
+              <TextDocumentOutline
+                view={editorView}
+                changes={changes}
+                readStyles={readStyles}
+                tabs={tabs}
+              />
             </OfficePanel>
           ) : null
         }

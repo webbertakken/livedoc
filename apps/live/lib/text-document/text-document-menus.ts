@@ -224,7 +224,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('equation', 'Equation', 'edit', BUILT),
       ]),
       SEPARATOR,
-      item('tab', 'Tab', 'edit'),
+      item('tab', 'Tab', 'edit', BUILT),
       item('horizontal-line', 'Horizontal line', 'edit', BUILT),
       item('emoji', 'Emoji', 'edit', BUILT),
       item('footnote', 'Footnote', 'edit', { shortcut: 'insert-footnote', ...BUILT }),

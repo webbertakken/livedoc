@@ -19,6 +19,7 @@ import {
   makeStory,
   removeIfEmpty,
   setLiveHeaders,
+  shownSectionHeaders,
   shownStory,
   withSlot,
   withSwitch,
@@ -127,7 +128,14 @@ export function useTextDocumentHeaderEditing(input: {
       if (latest.current.entered) stop(latest.current.entered);
       leaveOthers.current?.();
       // Read now, not from the pages: a change on the bar has not been laid out yet.
-      const now = shownStory(doc, kind, section, shown.first === true, page + 1);
+      const now = shownStory(
+        doc,
+        kind,
+        section,
+        shown.first === true,
+        page + 1,
+        shownSectionHeaders(body, doc),
+      );
       const { slot } = now;
       let story = now.story;
       if (!story) {

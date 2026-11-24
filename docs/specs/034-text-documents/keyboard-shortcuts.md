@@ -227,8 +227,8 @@ The Accessibility menu shows only while screen reader support is on.
 | Move to previous formatting change        | `Ctrl+Alt+P, W`               | `Ctrl+⌘+P, W`     | `Ctrl+Alt+P, W`               | specified                              |
 | Move to next edit                         | `Ctrl+Alt+N, R or Ctrl+Alt+K` | `Ctrl+⌘+N, R`     | `Ctrl+Alt+N, R or Ctrl+Alt+K` | specified                              |
 | Move to previous edit                     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | `Ctrl+⌘+P, R`     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | specified                              |
-| Move to next tab                          | `Ctrl+Shift+PgDn`             | —                 | —                             | specified                              |
-| Move to previous tab                      | `Ctrl+Shift+PgUp`             | —                 | —                             | specified                              |
+| Move to next tab                          | `Ctrl+Shift+PgDn`             | —                 | —                             | built                                  |
+| Move to previous tab                      | `Ctrl+Shift+PgUp`             | —                 | —                             | built                                  |
 
 ## Table navigation
 

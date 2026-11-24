@@ -12,6 +12,7 @@ import {
   storyFragment,
   TextDocumentState,
 } from '@livedoc/text-documents';
+import { liveSectionHeaders } from '@livedoc/text-documents';
 import {
   copyStory,
   isStoryEmpty,
@@ -19,6 +20,7 @@ import {
   makeStory,
   removeIfEmpty,
   setLiveHeaders,
+  shownSectionHeaders,
   shownStory,
   withSlot,
   withSwitch,
@@ -162,6 +164,25 @@ describe('shownStory', () => {
       slot: 'default',
       linked: false,
       differentFirst: true,
+    });
+  });
+});
+
+// links-and-navigation.md "Document tabs in the outline": a tab's pages show the headers of its own sections, read from
+// the body the editor shows, the first section's from the document.
+describe('shownSectionHeaders', () => {
+  it('reads the first section’s headers, then each break’s in the body shown, the same as the live state’s', () => {
+    setLiveHeaders(view, doc, 'odf', 0, { header: { default: { story: 'a' } } });
+    setLiveHeaders(view, doc, 'odf', 1, { header: { default: { story: 'b' } } });
+    expect(shownSectionHeaders(view, doc)).toEqual(liveSectionHeaders(doc));
+    expect(shownSectionHeaders(view, doc).map((h) => h?.header?.default?.story)).toEqual([
+      'a',
+      'b',
+    ]);
+    const all = shownSectionHeaders(view, doc);
+    expect(shownStory(doc, 'header', 1, false, 2, all)).toMatchObject({
+      story: 'b',
+      linked: false,
     });
   });
 });

@@ -31,6 +31,19 @@ function breakAt(view: EditorView, index: number): number {
   return at;
 }
 
+/**
+ * Each section's own headers in the body the editor shows: the first section's from the document map, then each
+ * section break's (links-and-navigation.md "Document tabs in the outline": every tab starts in the first section).
+ */
+export function shownSectionHeaders(view: EditorView, doc: Y.Doc): (LiveHeaders | undefined)[] {
+  const later: (LiveHeaders | undefined)[] = [];
+  view.state.doc.forEach((node) => {
+    if (node.type.name === SECTION_BREAK)
+      later.push((node.attrs as { headers?: LiveHeaders | null }).headers ?? undefined);
+  });
+  return [liveFirstHeaders(doc), ...later];
+}
+
 /** Section `index`'s own headers and footers, as the live state names them. */
 export function liveHeadersOf(
   view: EditorView,
@@ -101,8 +114,9 @@ export function shownStory(
   section: number,
   first: boolean,
   number: number,
+  // Each section's own headers: the first tab's, unless those of the tab shown are given (shownSectionHeaders).
+  all: readonly (LiveHeaders | undefined)[] = liveSectionHeaders(doc),
 ): { slot: HeaderFooterSlot; story?: string; linked: boolean; differentFirst: boolean } {
-  const all = liveSectionHeaders(doc);
   const resolved = HeadersAndFooters.resolve(all)[section];
   const own = all[section];
   const slot = HeadersAndFooters.slotOf(resolved, first, number);

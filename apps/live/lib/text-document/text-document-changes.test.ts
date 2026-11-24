@@ -48,6 +48,21 @@ describe('createTextDocumentChanges', () => {
     expect(caret).toHaveBeenCalledOnce();
   });
 
+  // links-and-navigation.md "Document tabs in the outline": another tab shown gives the editor a state whose plugin
+  // views are made afresh, so nothing is told unless it is touched.
+  it('tells both listener sets once when touched, after the frame that paints it', () => {
+    const body = vi.fn();
+    const caret = vi.fn();
+    changes.subscribe(body);
+    changes.subscribeCaret(caret);
+    view.updateState(EditorState.create({ schema, plugins: [changes.plugin] }));
+    changes.touch();
+    changes.touch();
+    painted();
+    expect(body).toHaveBeenCalledOnce();
+    expect(caret).toHaveBeenCalledOnce();
+  });
+
   it('tells only the caret listeners of a moved selection or new stored formatting', () => {
     const body = vi.fn();
     const caret = vi.fn();
