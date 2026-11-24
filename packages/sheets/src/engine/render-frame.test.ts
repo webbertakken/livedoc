@@ -14,6 +14,20 @@ describe('renderFrameWindow', () => {
     expect(framed!.cells.map((c) => c.text)).toEqual(['Title', '7']);
   });
 
+  // sheet.md "The grid": numbers, dates and times are drawn in tabular figures; text and errors are not.
+  it('marks the cells that show a number', () => {
+    const b = book({ A1: 'Total', B1: '1234.5', C1: '24/11/2026', D1: '=1/0', E1: 'true' });
+    const s = b.sheets[0]!;
+    const model = renderFrameWindow(b.wb, { sheetId: s.id, width: 800, height: 200 })!;
+    expect(model.cells.map((c) => [c.text, c.numeric ?? false])).toEqual([
+      ['Total', false],
+      ['1234.5', true],
+      ['24/11/2026', true],
+      ['#DIV/0!', false],
+      ['TRUE', false],
+    ]);
+  });
+
   it('is undefined for a sheet the workbook does not hold', () => {
     const b = book({ A1: 'x' });
     expect(renderFrameWindow(b.wb, { sheetId: 'gone', width: 400, height: 300 })).toBeUndefined();

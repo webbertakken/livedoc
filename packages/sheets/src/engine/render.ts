@@ -32,6 +32,8 @@ type RenderCell = {
   fill?: string;
   // A font id, resolved by the renderer.
   font?: string;
+  // A number, a date or a time: drawn in tabular figures (sheet.md "The grid").
+  numeric?: true;
   size?: number;
   wrap?: 'o' | 'w' | 'c';
   rowSpan?: number;
@@ -170,6 +172,7 @@ export function renderWindow(
         else out.text = lines[0] ?? '';
       }
       if (shown.kind === 'error') out.error = true;
+      if (shown.kind === 'number') out.numeric = true;
       if (f.b) out.bold = true;
       if (f.i) out.italic = true;
       if (f.u) out.underline = true;

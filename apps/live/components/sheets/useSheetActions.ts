@@ -64,6 +64,7 @@ import {
   validateWrite,
   writeForRules,
   type SheetWrite,
+  textWidth,
 } from '@livedoc/sheets';
 import { track } from '@/lib/telemetry';
 import { useSheetController, type SheetController } from './sheet-controller';
@@ -333,7 +334,12 @@ export function useSheetActions() {
             const v = c.workbook.value(c.sheet.id, r, p);
             if (v === null) continue;
             const text = typeof v === 'object' ? '#VALUE!' : String(v);
-            best = Math.max(best, roughWidth(text, fontPx(f)) + 14);
+            // A number is drawn in tabular figures (sheet.md "The grid"): its room is measured from them.
+            const figures =
+              typeof v === 'number'
+                ? textWidth(text, fontPx(f), { font: f?.ff ?? c.font, bold: !!f?.b, tabular: true })
+                : 0;
+            best = Math.max(best, roughWidth(text, fontPx(f)) + 14, figures + 14);
           }
           const w = resizeAxis(c.sheet, 'c', [p], Math.min(2000, Math.ceil(best)));
           if (w?.kind === 'layout') changes.push(...w.changes);

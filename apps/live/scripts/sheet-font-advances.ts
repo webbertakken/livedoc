@@ -45,8 +45,39 @@ const advances = await page.evaluate(
   },
   { families, weights: WEIGHTS, first: FIRST, last: LAST, px: MEASURE_PX },
 );
+// Each face's figure when tabular figures are asked for (`font-variant-numeric: tabular-nums`), as a sheet draws its
+// numbers (sheet.md "The grid"); null for a face with no tabular figures, whose digits keep their own widths. Read
+// from laid-out text, as a canvas cannot ask for the feature.
+const tabular = await page.evaluate(
+  async ({ families, weights }) => {
+    const out: Record<string, Record<string, number | null>> = {};
+    for (const { id, family } of families) {
+      out[id] = {};
+      for (const [name, weight] of Object.entries(weights)) {
+        await document.fonts.load(`${weight} 100px "${family}"`);
+        const advances = [...'0123456789'].map((digit) => {
+          const span = document.createElement('span');
+          span.style.cssText = `position:absolute;white-space:pre;font:${weight} 100px "${family}";font-variant-numeric:tabular-nums`;
+          span.textContent = digit.repeat(10);
+          document.body.append(span);
+          // Ten figures at 100 px: the width in px is one figure's advance in thousandths of an em.
+          const width = span.getBoundingClientRect().width;
+          span.remove();
+          return width;
+        });
+        const even = Math.max(...advances) - Math.min(...advances) < 0.5;
+        out[id][name] = even ? Math.ceil(Math.max(...advances)) : null;
+      }
+    }
+    return out;
+  },
+  { families, weights: WEIGHTS },
+);
 await browser.close();
 
+const tabularRows = families
+  .map(({ id }) => `  '${id}': { regular: ${tabular[id]!.regular}, bold: ${tabular[id]!.bold} },`)
+  .join('\n');
 const rows = families
   .map(
     ({ id }) =>
@@ -62,6 +93,14 @@ export type FontAdvances = { readonly regular: readonly number[]; readonly bold:
 
 export const FONT_ADVANCES: Readonly<Record<string, FontAdvances>> = {
 ${rows}
+};
+
+// Each editor font's figure with tabular figures asked for, in thousandths of an em, regular and bold, rounded up;
+// null where the face has none and its digits keep their own widths.
+export type TabularDigits = { readonly regular: number | null; readonly bold: number | null };
+
+export const TABULAR_DIGITS: Readonly<Record<string, TabularDigits>> = {
+${tabularRows}
 };
 `;
 const target = fileURLToPath(

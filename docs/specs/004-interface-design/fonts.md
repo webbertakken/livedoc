@@ -155,6 +155,7 @@ Font`.
   ([Row height](../029-sheets/sheet.md#row-height)).
 - The widths of the eleven are a generated table: `pnpm --filter @livedoc/live fonts:advances` writes
   `packages/sheets/src/text/font-advances.ts`.
+- It holds each face's tabular figure too (null for a face with none), for a Sheet's numbers.
 - A font added to or dropped from the eleven regenerates it; a test fails while the table and the eleven differ.
 - A Sheet's cells with no font, on a tab with none, are measured and drawn in Inter
   ([Row height](../029-sheets/sheet.md#row-height), D99).

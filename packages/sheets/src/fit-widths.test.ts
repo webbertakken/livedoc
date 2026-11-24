@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { book } from './testing/book';
 import { cellKey } from './sheet';
 import { fitColumnsWrite, fittedWidths, FIT_MAX_PX, FIT_MIN_PX } from './fit-widths';
+import { textWidth } from './text/text-measure';
 
 // docs/specs/029-sheets/sheet-store.md "Shaping a sheet": columns fitted to what their cells show.
 describe('fittedWidths', () => {
@@ -33,9 +34,21 @@ describe('fittedWidths', () => {
     };
     b.wb.updateSheet(merged);
     const w = fittedWidths(b.wb, s.id, [0, 1]);
-    // "£1,234.50": nine characters.
-    expect(w.get(0)).toBe(Math.round(9 * (40 / 3) * 0.56 + 18));
+    // "£1,234.50" in Inter's tabular figures (the £ measured as a figure), wider than nine characters at 0.56 em.
+    expect(w.get(0)).toBe(Math.round(textWidth('£1,234.50', 40 / 3, { tabular: true }) + 18));
+    expect(w.get(0)).toBeGreaterThan(Math.round(9 * (40 / 3) * 0.56 + 18));
     expect(w.get(1)).toBe(Math.round(5 * 24 * 0.56 * 1.08 + 18));
+  });
+
+  // sheet.md "The grid": Fit to Data leaves a column room for its numbers' digits as drawn, in tabular figures.
+  it('leaves a number room for its tabular figures', () => {
+    const b = book({ A1: '8888888888', B1: 'Deal' });
+    const s = b.sheets[0]!;
+    const w = fittedWidths(b.wb, s.id, [0, 1]);
+    // Ten of Inter's tabular figures, 0.65 em each at 13.33 px, past ten characters at 0.56 em.
+    expect(w.get(0)).toBe(Math.round(10 * 0.65 * (40 / 3) + 18));
+    // Text keeps the estimate it had.
+    expect(w.get(1)).toBe(FIT_MIN_PX);
   });
 
   it('leaves room for a dropdown chip', () => {

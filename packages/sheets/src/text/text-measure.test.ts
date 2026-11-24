@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ADVANCE_FIRST, FONT_ADVANCES } from './font-advances';
+import { ADVANCE_FIRST, FONT_ADVANCES, TABULAR_DIGITS } from './font-advances';
 import {
   fontPx,
   lineHeightPx,
@@ -46,6 +46,29 @@ describe('textWidth', () => {
   });
 
   // A text with no font is measured and drawn in Inter (D99).
+  // sheet.md "The grid": numbers are drawn in tabular figures where the font has them, and measured so.
+  it('measures digits as tabular figures when asked, where the face has them', () => {
+    const tabular = { ...INTER, tabular: true };
+    expect(TABULAR_DIGITS.inter).toEqual({ regular: 650, bold: 650 });
+    expect(textWidth('1111', 13, tabular)).toBeCloseTo(4 * 0.65 * 13, 6);
+    expect(textWidth('1111', 13, { ...tabular, bold: true })).toBeCloseTo(4 * 0.65 * 13, 6);
+    // Only the digits change: a comma, a point and a letter keep their own widths.
+    expect(textWidth('1,0.a', 13, tabular)).toBeCloseTo(
+      2 * 0.65 * 13 + textWidth(',.a', 13, INTER),
+      6,
+    );
+    expect(textWidth('8888', 13, tabular)).toBeCloseTo(textWidth('1111', 13, tabular), 6);
+    // Without the ask, digits keep their widths; a face with no tabular figures keeps them anyway.
+    expect(textWidth('1111', 13, INTER)).toBeLessThan(textWidth('1111', 13, tabular));
+    expect(textWidth('1111', 13, { font: 'poppins', tabular: true })).toBe(
+      textWidth('1111', 13, { font: 'poppins' }),
+    );
+    expect(textWidth('1111', 13, { font: 'caveat', bold: true, tabular: true })).toBe(
+      textWidth('1111', 13, { font: 'caveat', bold: true }),
+    );
+    expect(textWidth('1111', 13, { font: 'caveat', tabular: true })).toBeCloseTo(4 * 0.45 * 13, 6);
+  });
+
   it('measures a text with no font, or a font it has no table for, as Inter', () => {
     expect(SHEET_TEXT_FONT).toBe('inter');
     expect(measuredFont(undefined)).toBe('inter');

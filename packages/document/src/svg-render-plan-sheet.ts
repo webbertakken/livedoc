@@ -33,6 +33,8 @@ export type SheetRenderModel = {
     align: 'l' | 'c' | 'r';
     valign: 't' | 'm' | 'b';
     error?: true;
+    // A number, a date or a time: drawn in tabular figures, as the grid draws it (sheet.md "The grid").
+    numeric?: true;
     bold?: true;
     italic?: true;
     underline?: true;
@@ -234,9 +236,10 @@ export function svgPlanSheet(
       // Measured text is placed by its font's own widths: a browser that snaps each character to whole px draws a
       // line wider than the room it was broken for.
       const precise = lines || cell.wrap === 'w' ? ' text-rendering="geometricPrecision"' : '';
+      const figures = cell.numeric ? ' font-variant-numeric="tabular-nums"' : '';
       const text = `<text clip-path="url(#${clip})" x="${r2(tx)}" y="${r2(ty)}" font-size="${size}"${face}${cell.bold ? ' font-weight="700"' : ''}${
         cell.italic ? ' font-style="italic"' : ''
-      }${deco ? ` text-decoration="${deco}"` : ''} fill="${ink}"${anchor}${precise}>${body}</text>`;
+      }${deco ? ` text-decoration="${deco}"` : ''} fill="${ink}"${anchor}${precise}${figures}>${body}</text>`;
       // A link stays one in an SVG export: its target was allow-listed (safeHyperlink), and is escaped like all text.
       out += cell.link
         ? `<a href="${xmlEscape(cell.link)}" target="_blank" rel="noopener noreferrer">${text}</a>`
