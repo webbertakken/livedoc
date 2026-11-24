@@ -139,6 +139,7 @@ test('Custom Date and Time builds a format from its blocks and applies it', asyn
   });
   await dialog.getByRole('button', { name: 'Apply' }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(grid(page).getByText('Mon, 5 January 2026', { exact: true })).toBeVisible();
+  // The accessible grid names the cell with what it draws.
+  await expect(page.getByRole('gridcell', { name: 'A1 Mon, 5 January 2026' })).toBeVisible();
   expectNoPageErrors(pageErrors);
 });
