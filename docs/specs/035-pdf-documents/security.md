@@ -22,8 +22,9 @@ rule is a test with a named rejection. The research is [Security](../../research
 - **Nothing from a file reaches the DOM as markup.** Text is set as text, a picture is pixels the engine decoded, a
   link is a filtered address, a name is shown as a string. No file's string is ever a selector, a URL to fetch, a
   file path or a format string.
-- **The worker has no network.** It is given bytes and returns bytes, text and numbers. Nothing is fetched because a
-  file asked.
+- **The worker has no network but LiveDoc's own assets.** It is given bytes and returns bytes, text and numbers.
+  It fetches only hashed static assets of LiveDoc's own origin: the reader's binary, and the mark faces and shaper
+  a bake's own marks need ([Marks](marks.md#loading)). Nothing is fetched because a file asked.
 - **The worker holds one secret at most**: a password or a certificate file's key a person gave it, for the session
   ([Opening](opening.md#passwords), [Signing](signing.md#certificate-signatures)).
 - What crosses the boundary outward is typed and bounded: page sizes, text runs, marks, field descriptions, bitmaps of

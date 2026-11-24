@@ -2,9 +2,11 @@
 // docs/specs/035-pdf-documents/dark-pages.md "The recolouring": a mark made in LiveDoc passes through the same step as
 // the file's own, so under Dark pages it takes the step's colour and lightens the dark page rather than multiplying.
 import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DarkPages, Mark, PageName, type PageMatrix, type Quad } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
+import { MARK_FACES_STACK } from '@/lib/pdf-document/pdf-mark-faces';
+import { TYPED_FACES } from '@/lib/pdf-document/pdf-typed';
 import { PdfMarksOverlay } from './PdfMarksOverlay';
 
 const QUAD: Quad = [10, 20, 50, 20, 10, 10, 50, 10];
@@ -176,10 +178,11 @@ describe('a Text or a Callout over a page', () => {
     render(<PdfMarksOverlay matrix={matrix} width={100} height={100} marks={marks} />).container;
 
   it('sets each line with words from its baseline, held to Helvetica’s width, unstroked', () => {
-    const text = Mark.text({ ...base, id: 't1', words: 'Hello\n\nשלום' })!;
+    const text = Mark.text({ ...base, id: 't1', words: 'Hello\n\nWorld' })!;
     const svg = words([text]);
     const lines = [...svg.querySelectorAll('[data-pdf-mark="t1"] text')];
-    expect(lines.map((line) => line.textContent)).toEqual(['Hello', 'שלום']);
+    expect(lines.map((line) => line.textContent)).toEqual(['Hello', 'World']);
+    expect(lines[0]!.parentElement!.getAttribute('font-family')).toBe(TYPED_FACES);
     expect(lines[0]!.parentElement!.getAttribute('stroke')).toBe('none');
     // Its baseline 2 points in and 8.555 down from the box's top, which is 10 down the view.
     const [, , , , x, y] = lines[0]!
@@ -190,9 +193,22 @@ describe('a Text or a Callout over a page', () => {
     expect(y).toBeCloseTo(10 + 2 + 8.555, 6);
     expect(Number(lines[0]!.getAttribute('textLength'))).toBeCloseTo(22.78, 6);
     expect(lines[0]!.getAttribute('lengthAdjust')).toBe('spacingAndGlyphs');
-    // A line Helvetica cannot write is the face's own width, read right to left.
-    expect(lines[1]!.getAttribute('textLength')).toBeNull();
+  });
+
+  // marks.md "Words in every script": a mark Helvetica cannot write is drawn in the mark faces, as shaped.
+  it('draws a mark Helvetica cannot write in the mark faces, unheld, a right-to-left line from its right', () => {
+    const add = vi.fn();
+    vi.stubGlobal('FontFace', class {});
+    Object.defineProperty(document, 'fonts', { value: { add }, configurable: true });
+    const text = Mark.text({ ...base, id: 't1', words: 'Hello\n\nשלום' })!;
+    const lines = [...words([text]).querySelectorAll('[data-pdf-mark="t1"] text')];
+    expect(lines.map((line) => line.textContent)).toEqual(['Hello', 'שלום']);
+    expect(lines[0]!.parentElement!.getAttribute('font-family')).toBe(MARK_FACES_STACK);
+    expect(lines.map((line) => line.getAttribute('textLength'))).toEqual([null, null]);
     expect(lines[1]!.getAttribute('direction')).toBe('rtl');
+    expect(add).toHaveBeenCalled();
+    Reflect.deleteProperty(document, 'fonts');
+    vi.unstubAllGlobals();
   });
 
   it('turns its words with a turned view, and draws a Callout’s line and border', () => {

@@ -171,8 +171,11 @@ export type PdfLayer = {
   readonly locked: boolean;
 };
 
-/** Why a bake was not handed out (saving.md "The validators' claim", "Addition or rewrite"). */
-export type BakeRefusal = 'cannot-append' | 'reopen' | 'unreadable';
+/**
+ * Why a bake was not handed out (saving.md "The validators' claim", "Addition or rewrite"; marks.md "Loading": a mark
+ * face did not load).
+ */
+export type BakeRefusal = 'cannot-append' | 'reopen' | 'unreadable' | 'faces-unavailable';
 
 export type BakeResult =
   | {

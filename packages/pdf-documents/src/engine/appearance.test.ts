@@ -1,7 +1,15 @@
 // docs/specs/035-pdf-documents/marks.md "In the file": a line's and a shape's appearance stream is drawn from what the
 // page shows of them (MarkDrawing), line for line, in the mark's colour and opacity.
 import { describe, expect, it } from 'vitest';
-import { appearanceOf, defaultAppearanceOf, winAnsiString } from './appearance';
+import type { MarkRun } from '../mark-faces';
+import {
+  appearanceOf,
+  defaultAppearanceOf,
+  NoRunSetter,
+  type RunSetter,
+  winAnsiString,
+} from './appearance';
+import type { ShapedRun } from './typesetter';
 
 const look = { colour: '#d93025', opacity: 1 };
 
@@ -123,6 +131,7 @@ describe('words in an appearance', () => {
       { text: 'café € \\ א', width: 30, rtl: false, x: 102, y: 561.6, size: 12, bold: false },
     ],
     box: [100, 550, 300, 600] as const,
+    faces: 'helvetica' as const,
   };
 
   it('sets each line with words at its place, in the font at the size, in the mark’s colour', () => {
@@ -150,6 +159,7 @@ describe('words in an appearance', () => {
         { text: 'by Ada', width: 30, rtl: false, x: 140, y: 605, size: 8, bold: false },
       ],
       box: [100, 600, 220, 640],
+      faces: 'helvetica',
     });
     expect(drawn.content).toBe(
       [
@@ -180,5 +190,123 @@ describe('words in an appearance', () => {
       lines: [words.lines[1]!],
     });
     expect(drawn.content).toBe('q\nQ');
+  });
+});
+
+// marks.md "Words in every script": words in the mark faces set run by run, glyph by glyph, as shaping places them.
+describe('appearanceOf, words in the mark faces', () => {
+  const line = { text: 'Ωא', width: 30, rtl: false, x: 102, y: 590, size: 10, bold: false };
+  const glyph = (id: number, advance: number, xOffset = 0, yOffset = 0) => ({
+    glyph: id,
+    advance,
+    xOffset,
+    yOffset,
+    text: 'x',
+  });
+  /** A setter shaping each run as given, each glyph's own advance 500. */
+  const setter = (shaped: Record<string, ShapedRun['glyphs']>): RunSetter => ({
+    shape: ({ face }: MarkRun) => {
+      const glyphs = shaped[face]!;
+      return { face, glyphs, width: glyphs.reduce((sum, each) => sum + each.advance, 0) };
+    },
+    advance: () => 500,
+  });
+  const faced = (lines: (typeof line)[]) => ({
+    lines,
+    box: [100, 550, 300, 600] as const,
+    faces: 'noto' as const,
+  });
+
+  it('sets each run in its face, moving a glyph where shaping moved it', () => {
+    const drawn = appearanceOf(
+      { fills: [], strokes: [] },
+      look,
+      faced([line]),
+      setter({
+        'noto-sans-greek-400': [glyph(5, 500), glyph(6, 450, 20)],
+        'noto-sans-latin-400': [glyph(0, 600)],
+      }),
+    );
+    expect(drawn.content).toBe(
+      [
+        'q',
+        'BT',
+        '0.853 0.19 0.147 rg',
+        '100 Tz 1 0 0 1 102 590 Tm',
+        '/LDf0 10 Tf',
+        '[<0005> -20 <0006> 70] TJ',
+        '/LDf1 10 Tf',
+        '[<0000> -100] TJ',
+        'ET',
+        'Q',
+      ].join('\n'),
+    );
+    expect(drawn.fonts).toEqual([]);
+    expect(drawn.faces.map(({ name, face, glyphs }) => [name, face, glyphs.length])).toEqual([
+      ['LDf0', 'noto-sans-greek-400', 2],
+      ['LDf1', 'noto-sans-latin-400', 1],
+    ]);
+  });
+
+  it('raises a glyph shaping raised, apart, and narrows a line shaped wider than measured', () => {
+    const drawn = appearanceOf(
+      { fills: [], strokes: [] },
+      look,
+      faced([{ ...line, text: 'Ω', width: 7.5 }]),
+      setter({ 'noto-sans-greek-400': [glyph(5, 500), glyph(9, 0, -300, 250), glyph(5, 500)] }),
+    );
+    expect(drawn.content).toContain(
+      [
+        '75 Tz 1 0 0 1 102 590 Tm',
+        '/LDf0 10 Tf',
+        '[<0005>] TJ',
+        '[300] TJ',
+        '2.5 Ts',
+        '[<0009>] TJ',
+        '0 Ts',
+        '[200 <0005>] TJ',
+      ].join('\n'),
+    );
+  });
+
+  it('names a face once however many of its runs a line holds', () => {
+    const drawn = appearanceOf(
+      { fills: [], strokes: [] },
+      look,
+      faced([{ ...line, text: 'ΩאΩ' }]),
+      setter({ 'noto-sans-greek-400': [glyph(5, 500)], 'noto-sans-latin-400': [glyph(0, 500)] }),
+    );
+    expect(drawn.faces.map(({ name, glyphs }) => [name, glyphs.length])).toEqual([
+      ['LDf0', 2],
+      ['LDf1', 1],
+    ]);
+  });
+
+  it('raises a first glyph with nothing set before it', () => {
+    const drawn = appearanceOf(
+      { fills: [], strokes: [] },
+      look,
+      faced([{ ...line, text: 'Ω' }]),
+      setter({ 'noto-sans-greek-400': [glyph(9, 500, 0, 100)] }),
+    );
+    expect(drawn.content).toContain('/LDf0 10 Tf\n1 Ts\n[<0009>] TJ\n0 Ts\nET');
+  });
+
+  it('sets a right-to-left line from its right side, its runs in visual order', () => {
+    const drawn = appearanceOf(
+      { fills: [], strokes: [] },
+      look,
+      faced([{ ...line, rtl: true }]),
+      setter({ 'noto-sans-greek-400': [glyph(5, 500)], 'noto-sans-latin-400': [glyph(0, 500)] }),
+    );
+    expect(drawn.content).toContain(
+      '100 Tz 1 0 0 1 122 590 Tm\n/LDf0 10 Tf\n[<0000>] TJ\n/LDf1 10 Tf\n[<0005>] TJ',
+    );
+  });
+
+  it('refuses words in the mark faces without a typesetter', () => {
+    expect(() => appearanceOf({ fills: [], strokes: [] }, look, faced([line]))).toThrow(
+      NoRunSetter,
+    );
   });
 });

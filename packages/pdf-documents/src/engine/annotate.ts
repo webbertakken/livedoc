@@ -11,6 +11,7 @@ import {
   PdfString,
   rgb,
   type PDF,
+  type PdfObject,
   type PDFPage,
   type PDFTextMarkupAnnotation,
   type TextMarkupAnnotationOptions,
@@ -36,7 +37,12 @@ import {
   channelOf,
   defaultAppearanceOf,
   type Appearance,
+  type RunSetter,
 } from './appearance';
+import type { EmbeddedFaces } from './embedded-faces';
+
+/** How a bake writes words in the mark faces: its typesetter, and the faces it embeds (marks.md "In the file"). */
+export type MarkFaceWriting = { readonly setter: RunSetter; readonly faces: EmbeddedFaces };
 
 /** The annotation flag that prints it (marks.md "In the file": the print flag set). */
 const PRINT = 4;
@@ -72,25 +78,24 @@ const boxArray = (box: Box): PdfArray => new PdfArray(box.map((n) => PdfNumber.o
 const FACES = { [APPEARANCE_FONT]: 'Helvetica', [APPEARANCE_BOLD_FONT]: 'Helvetica-Bold' } as const;
 
 /** An appearance as the stream an annotation's `AP` names: its box, its graphics state, the fonts it sets words in. */
-function streamOf(pdf: PDF, appearance: Appearance): PdfDict {
+function streamOf(pdf: PDF, appearance: Appearance, writing: MarkFaceWriting | null = null): PdfDict {
   const resources = new PdfDict();
-  if (appearance.fonts.length > 0)
-    resources.set(
-      'Font',
-      PdfDict.of(
-        Object.fromEntries(
-          appearance.fonts.map((font) => [
-            font,
-            PdfDict.of({
-              Type: PdfName.of('Font'),
-              Subtype: PdfName.of('Type1'),
-              BaseFont: PdfName.of(FACES[font]),
-              Encoding: PdfName.of('WinAnsiEncoding'),
-            }),
-          ]),
-        ),
-      ),
-    );
+  const standard = appearance.fonts.map((font): [string, PdfObject] => [
+    font,
+    PdfDict.of({
+      Type: PdfName.of('Font'),
+      Subtype: PdfName.of('Type1'),
+      BaseFont: PdfName.of(FACES[font]),
+      Encoding: PdfName.of('WinAnsiEncoding'),
+    }),
+  ]);
+  // An appearance names a mark face only where the bake gave it a typesetter (appearanceOf asks for one).
+  const faces = appearance.faces.map(({ name, face, glyphs }): [string, PdfObject] => [
+    name,
+    writing!.faces.use(face, glyphs),
+  ]);
+  if (standard.length + faces.length > 0)
+    resources.set('Font', PdfDict.of(Object.fromEntries([...standard, ...faces])));
   if (appearance.opacity !== null)
     resources.set(
       'ExtGState',
@@ -129,8 +134,13 @@ function drawAppearance(pdf: PDF, annotation: PdfDict, mark: LineMark | ShapeMar
  * appearance its words as laid out; a Callout's line as `CL` with an open arrowhead at what is meant, `Rect` the
  * box and the line together, and `RD` the box within it.
  */
-function annotateTyped(pdf: PDF, page: PDFPage, mark: TypedMark): PdfDict {
-  const appearance = appearanceOf(MarkDrawing.of(mark), mark, MarkWords.of(mark));
+function annotateTyped(
+  pdf: PDF,
+  page: PDFPage,
+  mark: TypedMark,
+  writing: MarkFaceWriting | null,
+): PdfDict {
+  const appearance = appearanceOf(MarkDrawing.of(mark), mark, MarkWords.of(mark), writing?.setter);
   const dict = PdfDict.of({
     Type: PdfName.of('Annot'),
     Subtype: PdfName.of('FreeText'),
@@ -139,7 +149,7 @@ function annotateTyped(pdf: PDF, page: PDFPage, mark: TypedMark): PdfDict {
     DA: PdfString.fromString(defaultAppearanceOf(mark.size, mark.colour)),
     F: PdfNumber.of(PRINT),
     BS: PdfDict.of({ W: PdfNumber.of(mark.kind === 'callout' ? 1 : 0) }),
-    AP: streamOf(pdf, appearance),
+    AP: streamOf(pdf, appearance, writing),
   });
   if (mark.kind === 'callout') {
     const [left, bottom, right, top] = appearance.box;
@@ -159,14 +169,19 @@ function annotateTyped(pdf: PDF, page: PDFPage, mark: TypedMark): PdfDict {
  * A stamp's `Stamp`: `Name` the standard's name for it (or LiveDoc's, or its own id for a stamp LiveDoc does not draw),
  * `Contents` its words a line each, its appearance LiveDoc's style, `Rect` that appearance's box.
  */
-function annotateStamp(pdf: PDF, page: PDFPage, mark: StampMark): PdfDict {
-  const appearance = appearanceOf(MarkDrawing.of(mark), mark, MarkWords.of(mark));
+function annotateStamp(
+  pdf: PDF,
+  page: PDFPage,
+  mark: StampMark,
+  writing: MarkFaceWriting | null,
+): PdfDict {
+  const appearance = appearanceOf(MarkDrawing.of(mark), mark, MarkWords.of(mark), writing?.setter);
   const dict = page.addStampAnnotation({
     rect: rectOf(appearance.box),
     name: Stamps.of(mark.stamp)?.fileName ?? mark.stamp,
     contents: mark.lines.join('\n'),
   }).dict;
-  dict.set('AP', streamOf(pdf, appearance));
+  dict.set('AP', streamOf(pdf, appearance, writing));
   dict.set('C', new PdfArray([1, 3, 5].map((at) => PdfNumber.of(channelOf(mark.colour, at)))));
   return dict;
 }
@@ -211,7 +226,12 @@ function subtypeOf(page: PDFPage, mark: LineMark | ShapeMark, color: ReturnType<
  * One mark as its annotation on its page, answered as its dictionary: a text mark as its kind's, a Drawing as `Ink`, a
  * line or shape as its own, a Text or a Callout as `FreeText`, a stamp as `Stamp`.
  */
-export function annotate(pdf: PDF, page: PDFPage, mark: Mark): PdfDict {
+export function annotate(
+  pdf: PDF,
+  page: PDFPage,
+  mark: Mark,
+  writing: MarkFaceWriting | null = null,
+): PdfDict {
   const color = rgb(
     channelOf(mark.colour, 1),
     channelOf(mark.colour, 3),
@@ -225,9 +245,9 @@ export function annotate(pdf: PDF, page: PDFPage, mark: Mark): PdfDict {
       title: mark.author,
     }).dict;
   const annotation = Mark.isTyped(mark)
-    ? annotateTyped(pdf, page, mark)
+    ? annotateTyped(pdf, page, mark, writing)
     : mark.kind === 'stamp'
-      ? annotateStamp(pdf, page, mark)
+      ? annotateStamp(pdf, page, mark, writing)
       : mark.kind === 'drawing'
         ? page.addInkAnnotation({ paths: mark.strokes.map(pathOf), color, width: mark.width }).dict
         : annotateDragged(pdf, page, mark, color);

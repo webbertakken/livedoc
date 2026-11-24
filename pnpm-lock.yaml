@@ -521,6 +521,9 @@ importers:
       '@fontsource/montserrat':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/noto-sans':
+        specifier: 5.3.0
+        version: 5.3.0
       '@fontsource/nunito':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1569,6 +1572,9 @@ importers:
       '@embedpdf/pdfium':
         specifier: ^2.15.1
         version: 2.15.1
+      '@fontsource/noto-sans':
+        specifier: 5.3.0
+        version: 5.3.0
       '@libpdf/core':
         specifier: ^0.5.3
         version: 0.5.3
@@ -1578,6 +1584,9 @@ importers:
       asn1js:
         specifier: ^4.0.0
         version: 4.1.0
+      harfbuzzjs:
+        specifier: 1.6.4
+        version: 1.6.4
       pkijs:
         specifier: ^4.0.1
         version: 4.0.1(asn1js@4.1.0)
@@ -2457,6 +2466,9 @@ packages:
 
   '@fontsource/montserrat@5.3.0':
     resolution: {integrity: sha512-iQPDtZOnmM5ih4JBGaMSXisRap0ixb9bAUw2hDtY7EjVfaqiiNlKtVuJl9XclxUwtwMMHNcWXfQR6zI9x05+Tg==}
+
+  '@fontsource/noto-sans@5.3.0':
+    resolution: {integrity: sha512-fBCog2PY7DiVVTEEqtI/Qdinx/knobHYfoGpjFXdfBX5RoJaBp1Prw2G75p0OIsdlMZg3cLo0c+YbIUYOxnQJw==}
 
   '@fontsource/nunito@5.3.0':
     resolution: {integrity: sha512-vw9TaTQJ/zpEpKrsODuPmOvaVjXgdda6B+xXA4YqjrdeJ62MLgVoDerdRXFQHyBnSCt2yQ2nHKCHPP/Pv7Xq4Q==}
@@ -4138,6 +4150,9 @@ packages:
   guid-typescript@1.0.9:
     resolution: {integrity: sha512-Y8T4vYhEfwJOTbouREvG+3XDsjr8E3kIr7uf+JZ0BYloFsttiHU0WfvANVsR7TxNUJa/WpCnw/Ino/p+DeBhBQ==}
 
+  harfbuzzjs@1.6.4:
+    resolution: {integrity: sha512-T/PyfhVt1gGR2Tkf5KJUj1DQFkVBXHw552lS1iLEEDhV1Lukb3eq1pk2ov85kgbT2YUiZtJBTak9w+M7YgzUEQ==}
+
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
@@ -5711,6 +5726,8 @@ snapshots:
 
   '@fontsource/montserrat@5.3.0': {}
 
+  '@fontsource/noto-sans@5.3.0': {}
+
   '@fontsource/nunito@5.3.0': {}
 
   '@fontsource/oswald@5.3.0': {}
@@ -7111,6 +7128,8 @@ snapshots:
   graceful-fs@4.2.12: {}
 
   guid-typescript@1.0.9: {}
+
+  harfbuzzjs@1.6.4: {}
 
   has-flag@4.0.0: {}
 

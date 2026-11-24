@@ -9,16 +9,19 @@ import { bakeChanges } from './bake';
 import { cutPages } from './cut-pages';
 import { PdfReader, type Pdfium } from './reader';
 import { signerOf } from './signer';
+import { loadTypesetter, markFacesOf, type MarkFaceSource, type Typesetter } from './typesetter';
 import { layersOf, openWriter, withLayersSet } from './writer';
 
 /**
  * The engine over a started reader; `write` is the writer, the engine's own unless a test hands another, and `log`
- * takes what the engine decides: fingerprints of its own words, never a file's.
+ * takes what the engine decides: fingerprints of its own words, never a file's. `faces` answers the mark faces' files
+ * (marks.md "Loading"); with none, a bake whose marks need a face is refused.
  */
 export function pdfEngineOver(
   pdfium: Pdfium,
   write: typeof bakeChanges = bakeChanges,
   log: PdfEngineLog = () => {},
+  faces: MarkFaceSource | null = null,
 ): PdfEngine {
   const reader = new PdfReader(pdfium);
   /** An answer on its way out: what was held back in reading it is logged, once a call (security.md "The boundary"). */
@@ -97,17 +100,38 @@ export function pdfEngineOver(
     if (PdfLiveChanges.isEmpty(changes))
       return { ok: true, bytes: stored, kind: 'unchanged', anchorsLost: 0, fieldsLost: 0 };
     const turns = PdfLiveChanges.pageTurns(changes);
+    const marks = PdfLiveChanges.marks(changes);
+    // The mark faces load only for a bake whose marks need them, and a face that does not load stops it by name,
+    // never a silent question mark (marks.md "Loading").
+    const needed = markFacesOf(marks);
+    let typesetter: Typesetter | null = null;
+    if (needed.size > 0) {
+      const started = Date.now();
+      const loaded = faces
+        ? await loadTypesetter(needed, faces)
+        : ({ ok: false, face: [...needed][0]! } as const);
+      if (!loaded.ok) {
+        log(`[pdf] faces-failed face=${loaded.face}`);
+        return { ok: false, refusal: 'faces-unavailable' };
+      }
+      typesetter = loaded.typesetter;
+      log(
+        `[pdf] faces-loaded count=${needed.size} bytes=${typesetter.bytes} ms=${Date.now() - started}`,
+      );
+    }
     const baked = await write(
       stored,
       {
-        marks: PdfLiveChanges.marks(changes),
+        marks,
         fieldValues: PdfLiveChanges.fieldValues(changes),
         removed: PdfLiveChanges.removed(changes),
         turns,
       },
       password,
+      typesetter,
     );
     if (!baked.ok) return baked;
+    if (baked.glyphsMissing > 0) log(`[pdf] glyphs-missing count=${baked.glyphsMissing}`);
     // Handed out only once the reader has opened it again with the pages it had, each turned page standing as it
     // was turned (saving.md "The validators' claim").
     const check = new PdfReader(pdfium);

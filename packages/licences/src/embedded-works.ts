@@ -388,4 +388,16 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     },
     texts: [{ label: 'LICENSE', file: work.file }],
   })),
+  // The mark faces a PDF's marks are set in (docs/specs/035-pdf-documents/marks.md "Words in every script"): Noto
+  // Sans's subsets, WOFF, from its Fontsource package, drawn by the editor and embedded by its PDF engine.
+  {
+    id: 'fontsource-noto-sans',
+    name: 'Noto Sans',
+    version: '5.3.0',
+    licence: 'OFL-1.1',
+    carrier: 'the editor and its PDF engine (font)',
+    homepage: 'https://fontsource.org/fonts/noto-sans',
+    trigger: { assets: /^noto-sans-[a-z-]+-[47]00-normal\.[\w-]+\.woff$/ },
+    texts: text('fontsource-noto-sans-5.3.0-LICENSE.txt'),
+  },
 ];

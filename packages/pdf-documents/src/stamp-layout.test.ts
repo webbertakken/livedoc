@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { Helvetica } from './helvetica';
 import { HelveticaBold } from './helvetica-bold';
 import type { Box } from './mark';
+import { MarkFaces } from './mark-faces';
 import {
   STAMP_BORDER_PT,
   STAMP_DETAIL_PT,
@@ -97,5 +98,19 @@ describe('StampLayout.border', () => {
     expect(Math.max(...ys)).toBeCloseTo(640 - half, 9);
     // No corner point itself: the corner is cut round.
     expect(border.points).not.toContainEqual({ x: 100 + half, y: 600 + half });
+  });
+});
+
+// marks.md "Words in every script": a stamp whose second line Helvetica cannot write is measured in the mark faces.
+describe('StampLayout in the mark faces', () => {
+  it('measures the name in the bold mark faces and the second line in the regular', () => {
+    const lines = ['APPROVED', 'by Ελένη'];
+    expect(StampLayout.faces({ lines })).toBe('noto');
+    const name = (MarkFaces.width({ text: 'APPROVED', bold: true }) * STAMP_NAME_PT) / 1000;
+    const second = (MarkFaces.width({ text: 'by Ελένη', bold: false }) * STAMP_DETAIL_PT) / 1000;
+    expect(StampLayout.natural(lines).width).toBeCloseTo(
+      2 * (STAMP_BORDER_PT + STAMP_PADDING_PT) + Math.max(name, second),
+    );
+    expect(StampLayout.faces({ lines: ['APPROVED'] })).toBe('helvetica');
   });
 });

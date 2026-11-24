@@ -9,7 +9,7 @@ import type { PdfEngine } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import { track } from '@/lib/telemetry';
-import { BAKE_FAILED_COPY, bakeForDownload } from './download-pdf';
+import { BAKE_FAILED_COPY, bakeForDownload, bakeProblemOf } from './download-pdf';
 
 const NO_ENGINE: Pick<PdfEngine, 'bake'> = {
   bake: async () => ({ ok: false, refusal: 'unreadable' }),
@@ -40,7 +40,7 @@ export function usePdfDownload({
         documentName,
         readStored,
       });
-      if (!baked.ok) return onProblem(BAKE_FAILED_COPY);
+      if (!baked.ok) return onProblem(bakeProblemOf(baked.refusal));
       downloadBlob(new Blob([baked.bytes], { type: 'application/pdf' }), baked.fileName);
       track('Pdf', 'Exported', 'Pdf');
     } catch (error) {

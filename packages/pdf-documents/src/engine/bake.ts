@@ -16,7 +16,9 @@ import type { FieldValue } from '../field-value';
 import type { Mark } from '../mark';
 import { PageName } from '../page-name';
 import type { RemovedKind } from '../pdf-change';
-import { annotate } from './annotate';
+import { annotate, type MarkFaceWriting } from './annotate';
+import { embeddedFaces } from './embedded-faces';
+import type { Typesetter } from './typesetter';
 import { openWriter } from './writer';
 
 /** What a bake writes: the live changes as plain values. */
@@ -34,6 +36,8 @@ export type Written =
       readonly kind: 'addition' | 'rewrite';
       readonly anchorsLost: number;
       readonly fieldsLost: number;
+      /** Characters no mark face has, set as the missing box (marks.md "Words in every script"). */
+      readonly glyphsMissing: number;
     }
   | { readonly ok: false; readonly refusal: 'cannot-append' | 'unreadable' };
 
@@ -93,7 +97,12 @@ function nameOf(pdf: PDF, entry: PdfObject): string | null {
 }
 
 /** Appends each mark to its page as one annotation (marks.md "In the file"); answers how many have no page. */
-function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
+function addMarks(
+  pdf: PDF,
+  pages: Pages,
+  marks: readonly Mark[],
+  writing: MarkFaceWriting | null,
+): number {
   let lost = 0;
   for (const mark of marks) {
     const page = pages.get(mark.page);
@@ -102,7 +111,7 @@ function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): number {
       continue;
     }
     holdList(pdf, page);
-    const annotation = annotate(pdf, page, mark);
+    const annotation = annotate(pdf, page, mark, writing);
     annotation.set('NM', PdfString.fromString(mark.id));
     annotation.set('M', PdfString.fromString(pdfDate(mark.modifiedAt)));
     annotation.set('CreationDate', PdfString.fromString(pdfDate(mark.createdAt)));
@@ -160,6 +169,8 @@ export async function bakeChanges(
   changes: BakeChanges,
   // The password the file was opened with: a protected file is written only where its password is.
   password: string | null = null,
+  // The mark faces loaded for the marks whose words need them; none where Helvetica writes every mark.
+  typesetter: Typesetter | null = null,
 ): Promise<Written> {
   const first = await openWriter(stored, password);
   if (!first) return { ok: false, refusal: 'unreadable' };
@@ -181,10 +192,29 @@ export async function bakeChanges(
     pdf = rewritten;
   }
   const pages = pagesOf(pdf, order);
-  anchorsLost += addMarks(pdf, pages, changes.marks);
+  const faces = typesetter ? embeddedFaces(pdf, typesetter) : null;
+  const writing: MarkFaceWriting | null =
+    typesetter && faces
+      ? {
+          faces,
+          setter: {
+            shape: typesetter.shape,
+            advance: (face, glyph) => typesetter.face(face).advances[glyph] ?? 0,
+          },
+        }
+      : null;
+  anchorsLost += addMarks(pdf, pages, changes.marks, writing);
+  const glyphsMissing = faces?.finish().missing ?? 0;
   removeMarks(pdf, pages, changes.removed);
   const fieldsLost = changes.fieldValues.filter((value) => !fillField(pdf, value)).length;
   const bytes = (await pdf.save({ incremental: true })) as Uint8Array<ArrayBuffer>;
   if (!startsWith(bytes, base)) return { ok: false, refusal: 'cannot-append' };
-  return { ok: true, bytes, kind: rewrites ? 'rewrite' : 'addition', anchorsLost, fieldsLost };
+  return {
+    ok: true,
+    bytes,
+    kind: rewrites ? 'rewrite' : 'addition',
+    anchorsLost,
+    fieldsLost,
+    glyphsMissing,
+  };
 }

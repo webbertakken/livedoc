@@ -19,6 +19,14 @@ export type PdfDownload =
 /** "This PDF couldn't be written. Your changes are safe." (saving.md "Errors"). */
 export const BAKE_FAILED_COPY = "This PDF couldn't be written. Your changes are safe.";
 
+/** A mark's face did not load (marks.md "Loading"). */
+export const FACES_FAILED_COPY =
+  "Some of this PDF's marks need a font that didn't load. Check your connection, then try again. Your changes are safe.";
+
+/** What a person is told of a bake that was not handed out. */
+export const bakeProblemOf = (refusal: BakeRefusal): string =>
+  refusal === 'faces-unavailable' ? FACES_FAILED_COPY : BAKE_FAILED_COPY;
+
 export async function bakeForDownload(deps: {
   engine: Pick<PdfEngine, 'bake'>;
   /** The live changes; null where none were loaded (a PDF that could not be read). */

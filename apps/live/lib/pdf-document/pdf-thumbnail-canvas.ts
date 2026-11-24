@@ -12,7 +12,8 @@ import {
   type PagePoint,
 } from '@livedoc/pdf-documents';
 import type { PdfThumbnailPicture } from './pdf-thumbnail';
-import { TYPED_FACES } from './pdf-typed';
+import { debugLog } from '@/lib/debug-log';
+import { addMarkFaces, facesStackOf } from './pdf-mark-faces';
 
 // A path through points of page space, in the picture's points.
 function trace(
@@ -28,11 +29,37 @@ function trace(
   });
 }
 
+/** A line's font as a canvas names it. */
+const fontOf = (line: { bold: boolean; size: number }, words: Pick<MarkWords, 'faces'>): string =>
+  `${line.bold ? 'bold ' : ''}${line.size}px ${facesStackOf(words)}`;
+
+/**
+ * The mark faces a picture's marks are drawn in, loaded first: a canvas draws in a face only once it has arrived
+ * (marks.md "Laying out").
+ */
+async function loadMarkFaces(marks: readonly Mark[]): Promise<void> {
+  const lines = marks.flatMap((mark) => {
+    const words = MarkWords.of(mark);
+    return words?.faces === 'noto' ? words.lines.map((line) => ({ line, words })) : [];
+  });
+  if (lines.length === 0) return;
+  addMarkFaces();
+  try {
+    await Promise.all(
+      lines.map(({ line, words }) => document.fonts.load(fontOf(line, words), line.text)),
+    );
+  } catch {
+    // Drawn in the browser's own faces, as the surface is until they arrive.
+    debugLog('[pdf] faces-failed face=picture');
+  }
+}
+
 /** A mark's words, each line from its baseline along the page's own across, as the overlay sets them. */
 function setWords(context: CanvasRenderingContext2D, toView: PageMatrix, mark: Mark) {
   const [a, b, c, d] = toView;
-  for (const line of MarkWords.of(mark)?.lines ?? []) {
-    context.font = `${line.bold ? 'bold ' : ''}${line.size}px ${TYPED_FACES}`;
+  const words = MarkWords.of(mark);
+  for (const line of words?.lines ?? []) {
+    context.font = fontOf(line, words!);
     const start = PageView.toView(toView, {
       x: line.rtl ? line.x + line.width : line.x,
       y: line.y,
@@ -49,6 +76,7 @@ export async function encodePdfThumbnail(
   { bitmap, marks, page: size }: PdfThumbnailPicture,
   quality: number,
 ): Promise<Uint8Array<ArrayBuffer> | null> {
+  await loadMarkFaces(marks);
   const page = document.createElement('canvas');
   page.width = bitmap.width;
   page.height = bitmap.height;

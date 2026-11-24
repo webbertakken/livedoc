@@ -1,8 +1,9 @@
 // The words a mark sets on its page (docs/specs/035-pdf-documents/marks.md "Making a mark": The words wrap; "Stamps":
-// LiveDoc's style): a Text's and a Callout's as TypedLayout places them, a stamp's as StampLayout does, each line with
-// its size and face, and the box they are set in. One answer, so the surface's overlay, the canvas pictures and the
-// appearance a bake writes set every mark's words the same way.
+// LiveDoc's style; "Words in every script"): a Text's and a Callout's as TypedLayout places them, a stamp's as
+// StampLayout does, each line with its size and face, the box they are set in, and the faces the mark is set in. One
+// answer, so the surface's overlay, the canvas pictures and the appearance a bake writes set every mark's words alike.
 import { Mark, type Box } from './mark';
+import type { MarkFaceSet } from './mark-faces';
 import { StampLayout, type StampLine } from './stamp-layout';
 import { TypedLayout } from './typed-layout';
 
@@ -12,16 +13,20 @@ export type WordLine = StampLine;
 export type MarkWords = {
   readonly lines: readonly WordLine[];
   readonly box: Box;
+  /** Helvetica, or the mark faces, for every line of the mark alike. */
+  readonly faces: MarkFaceSet;
 };
 
 export const MarkWords = {
   /** A mark's words placed on its page; null for a kind that sets none. */
   of: (mark: Mark): MarkWords | null => {
-    if (mark.kind === 'stamp') return { lines: StampLayout.place(mark), box: mark.rect };
+    if (mark.kind === 'stamp')
+      return { lines: StampLayout.place(mark), box: mark.rect, faces: StampLayout.faces(mark) };
     if (!Mark.isTyped(mark)) return null;
     return {
       lines: TypedLayout.place(mark).map((line) => ({ ...line, size: mark.size, bold: false })),
       box: mark.rect,
+      faces: TypedLayout.faces(mark.words),
     };
   },
 } as const;

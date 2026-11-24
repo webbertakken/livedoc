@@ -227,4 +227,10 @@ export const TEXT_SOURCES: readonly TextSource[] = [
   },
   // The served document fonts (document-font-works.ts).
   ...DOCUMENT_FONT_TEXT_SOURCES,
+  // The mark faces of a PDF's marks (embedded-works.ts).
+  {
+    file: 'fontsource-noto-sans-5.3.0-LICENSE.txt',
+    sources: ['https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.3.0/LICENSE'],
+    sha256: '54ec7b5a35310ad66f9f3091426f7028484cbf9ae1ab5da30122ee412a3009e1',
+  },
 ];

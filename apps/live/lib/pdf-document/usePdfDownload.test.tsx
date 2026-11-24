@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PdfLiveChanges } from '@livedoc/pdf-documents';
 import { downloadBlob } from '@/lib/download-blob';
 import { track } from '@/lib/telemetry';
-import { BAKE_FAILED_COPY } from './download-pdf';
+import { BAKE_FAILED_COPY, FACES_FAILED_COPY } from './download-pdf';
 import { usePdfDownload } from './usePdfDownload';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -58,6 +58,14 @@ describe('usePdfDownload', () => {
       await refused.run();
       expect(refused.onProblem).toHaveBeenLastCalledWith(BAKE_FAILED_COPY);
     }
+    // marks.md "Loading": a mark's face that did not load is said by name.
+    const faceless = downloading(
+      async () => STORED,
+      { bake: async () => ({ ok: false as const, refusal: 'faces-unavailable' as const }) },
+      changed(),
+    );
+    await faceless.run();
+    expect(faceless.onProblem).toHaveBeenLastCalledWith(FACES_FAILED_COPY);
     const unread = downloading(async () => {
       throw new Error('gone');
     });

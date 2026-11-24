@@ -1,11 +1,12 @@
 // How a stamp is drawn in LiveDoc's style (docs/specs/035-pdf-documents/marks.md "Stamps"): a box with rounded corners
 // and a border, the stamp's name in capitals in Helvetica Bold, a dynamic stamp's second line in Helvetica, each line
-// centred. Its natural size is what its words need; in a box of any other size it is scaled, kept in proportion and
+// centred; in the mark faces where Helvetica cannot write a line ("Words in every script"). Its natural size is what its words need; in a box of any other size it is scaled, kept in proportion and
 // centred. Pure, so the surface's overlay, the canvas pictures and the appearance a bake writes draw one stamp the same.
 import type { PagePoint } from './engine-contract';
 import { Helvetica } from './helvetica';
 import { HelveticaBold } from './helvetica-bold';
 import type { StampMark } from './mark';
+import { MarkFaces, type MarkFaceSet } from './mark-faces';
 import type { MarkStroke } from './mark-drawing';
 import type { PlacedLine } from './typed-layout';
 
@@ -42,12 +43,17 @@ const faceOf = (at: number) =>
     ? { face: HelveticaBold, size: STAMP_NAME_PT, bold: true }
     : { face: Helvetica, size: STAMP_DETAIL_PT, bold: false };
 
-const widthOf = (text: string, at: number): number => {
-  const { face, size } = faceOf(at);
-  return (
-    Array.from(text).reduce((sum, character) => sum + face.width(character.codePointAt(0)!), 0) *
-    (size / 1000)
-  );
+/** The faces a stamp's lines are set in, the name bold. */
+const facesOf = (lines: readonly string[]): MarkFaceSet =>
+  MarkFaces.setOf(lines.map((text, at) => ({ text, bold: at === 0 })));
+
+const widthOf = (text: string, at: number, faces: MarkFaceSet): number => {
+  const { face, size, bold } = faceOf(at);
+  const thousandths =
+    faces === 'helvetica'
+      ? Array.from(text).reduce((sum, character) => sum + face.width(character.codePointAt(0)!), 0)
+      : MarkFaces.width({ text, bold });
+  return thousandths * (size / 1000);
 };
 
 /** A corner's arc round `centre`, from `from` radians a quarter turn on. */
@@ -60,7 +66,7 @@ const arc = (centre: PagePoint, radius: number, from: number): PagePoint[] =>
 export const StampLayout = {
   /** The size a stamp's words need, in points, its border and room included. */
   natural: (lines: readonly string[]): { width: number; height: number } => ({
-    width: 2 * INSET + Math.max(...lines.map(widthOf)),
+    width: 2 * INSET + Math.max(...lines.map((text, at) => widthOf(text, at, facesOf(lines)))),
     height: 2 * INSET + NAME_HIGH + (lines.length > 1 ? STAMP_LINE_GAP_PT + DETAIL_HIGH : 0),
   }),
 
@@ -78,8 +84,9 @@ export const StampLayout = {
     const middle = (left + right) / 2;
     const ceiling = (bottom + top) / 2 + (height * scale) / 2;
     const name = ceiling - (INSET + NAME_HIGH) * scale;
+    const faces = facesOf(stamp.lines);
     return stamp.lines.map((text, at): StampLine => {
-      const width = widthOf(text, at) * scale;
+      const width = widthOf(text, at, faces) * scale;
       const { size, bold } = faceOf(at);
       return {
         text,
@@ -92,6 +99,9 @@ export const StampLayout = {
       };
     });
   },
+
+  /** The faces a stamp's lines are set in. */
+  faces: (stamp: Pick<StampMark, 'lines'>): MarkFaceSet => facesOf(stamp.lines),
 
   /** The border: round the box just inside its edge, its corners rounded, as wide as the border scaled. */
   border: (stamp: Stamped): MarkStroke => {
