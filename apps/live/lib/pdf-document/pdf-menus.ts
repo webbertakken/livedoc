@@ -75,6 +75,11 @@ export const TOOL_STRIKETHROUGH = 'tool-strikethrough';
 export const TOOL_SQUIGGLY = 'tool-squiggly-underline';
 export const TOOL_TEXT = 'tool-text';
 export const TOOL_DRAWING = 'tool-drawing';
+/** Insert > Shape's tools (marks.md "Making a mark": The shape tools). */
+export const TOOL_LINE = 'shape-line';
+export const TOOL_ARROW = 'shape-arrow';
+export const TOOL_RECTANGLE = 'shape-rectangle';
+export const TOOL_ELLIPSE = 'shape-ellipse';
 export const TOOL_TICK = 'tool-tick';
 export const INSERT_COMMENT = 'insert-comment';
 export const INSERT_TEXT_BOX = 'insert-text-box';
@@ -306,14 +311,22 @@ export const PDF_MENUS: OfficeCatalogue = [
       ...BUILT,
       keywords: ['freehand', 'pen'],
     }),
-    choices('shape', 'Shape', 'participate', [
-      'Line',
-      'Arrow',
-      'Rectangle',
-      'Ellipse',
-      'Polygon',
-      'Cloud',
-      'Connected lines',
+    submenu('shape', 'Shape', [
+      item(TOOL_LINE, 'Line', 'participate', { ...ONE_OF, ...BUILT }),
+      item(TOOL_ARROW, 'Arrow', 'participate', { ...ONE_OF, ...BUILT }),
+      item(TOOL_RECTANGLE, 'Rectangle', 'participate', {
+        ...ONE_OF,
+        ...BUILT,
+        keywords: ['box', 'square'],
+      }),
+      item(TOOL_ELLIPSE, 'Ellipse', 'participate', {
+        ...ONE_OF,
+        ...BUILT,
+        keywords: ['circle', 'oval'],
+      }),
+      item('shape-polygon', 'Polygon', 'participate'),
+      item('shape-cloud', 'Cloud', 'participate'),
+      item('shape-connected-lines', 'Connected lines', 'participate'),
     ]),
     choices('stamp', 'Stamp', 'participate', [
       'Standard stamps',

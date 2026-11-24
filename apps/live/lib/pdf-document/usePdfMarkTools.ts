@@ -1,14 +1,20 @@
 'use client';
 
 // The tools that mark a PDF's text (docs/specs/035-pdf-documents/marks.md "Making a mark"; reading-surface.md "The
-// toolbar"): the tool in hand, Select or one of the four text marks, and what takes it; the Highlight control and the
-// tools behind its chevron; the selection's mark items of the context menu and the selection bar; the tools' keys;
+// toolbar"): the tool in hand, Select, one of the four text marks, the Drawing or a shape tool, and what takes it; the
+// Highlight control and the tools behind its chevron (the Shape control's are usePdfShapeTools'); the selection's mark items of the context menu and the selection bar; the tools' keys;
 // and the making of a mark, one step of the person's undo. Marks are Reviewing's: while `marking` is off the tool in
 // hand is Select and nothing marks.
 import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
 import type { IconPrim } from '@livedoc/icons';
 import { lucideHighlighter, lucideStrikethrough, lucideUnderline } from '@livedoc/icons/lucide';
-import type { MarkKind, Stroke, TextMarkKind, TextSelection } from '@livedoc/pdf-documents';
+import {
+  TEXT_MARK_KINDS,
+  type MarkKind,
+  type Stroke,
+  type TextMarkKind,
+  type TextSelection,
+} from '@livedoc/pdf-documents';
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { debugLog } from '@/lib/debug-log';
@@ -39,12 +45,17 @@ import {
 } from './pdf-text-mark-pick';
 import { DRAWING_WIDTH_PT } from './pdf-drawing';
 import { setMarkColour, useMarkLooks } from './pdf-mark-looks';
+import { SHAPE_NAMES, SHAPE_WIDTH_PT } from './pdf-shape';
+import { isShapeTool, setShapePick } from './pdf-shape-pick';
 import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import { usePdfDrawing } from './usePdfDrawing';
+import type { PdfPageShaping } from './usePdfPageShape';
+import { usePdfShapes } from './usePdfShapes';
+import { usePdfShapeTools } from './usePdfShapeTools';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
-/** What a page does with a press or a drag: select text, mark it with a kind, or draw. */
+/** What a page does with a press or a drag: select text, mark it with a kind, draw, or drag a line or shape. */
 export type PdfPageTool = 'select' | MarkKind;
 
 /** What a page draws a stroke with, while the Drawing tool is in hand. */
@@ -88,6 +99,9 @@ const SELECTION_ITEMS: Readonly<Record<HeldTextMark, string>> = {
   underline: UNDERLINE_SELECTION,
   strikeout: STRIKETHROUGH_SELECTION,
 };
+
+const isTextTool = (tool: PdfPageTool): tool is TextMarkKind =>
+  (TEXT_MARK_KINDS as readonly string[]).includes(tool);
 
 const heldOf = (item: string | null): HeldTextMark | null =>
   HELD_TEXT_MARKS.find((kind) => TOOL_ITEMS[kind] === item) ?? null;
@@ -157,6 +171,10 @@ export function usePdfMarkTools({
     setTool(next);
     if (next === 'select') return track('Pdf', 'Selected', 'Tool.Select');
     if (next === 'drawing') return track('Pdf', 'Selected', 'Tool.Drawing');
+    if (isShapeTool(next)) {
+      setShapePick(next);
+      return track('Pdf', 'Selected', `Tool.${SHAPE_NAMES[next]}`);
+    }
     if (isHeldTextMark(next)) setTextMarkPick(next);
     track('Pdf', 'Selected', `Tool.${TEXT_MARK_NAMES[next]}`);
   }, []);
@@ -179,10 +197,20 @@ export function usePdfMarkTools({
     [inHand, looks, draw],
   );
 
+  const onShape = usePdfShapes({ ready, author, looks, onProblem });
+  const shaping = useMemo<PdfPageShaping | null>(
+    () =>
+      isShapeTool(inHand)
+        ? { kind: inHand, ...looks[inHand], width: SHAPE_WIDTH_PT, onShape }
+        : null,
+    [inHand, looks, onShape],
+  );
+  const shapeTools = usePdfShapeTools({ offered: ready !== null && marking, inHand, pickTool });
+
   /** What a drag across a page's text makes with the text tool in hand. */
   const make = useCallback(
     (index: number, selection: TextSelection) => {
-      if (inHand !== 'select' && inHand !== 'drawing') mark(inHand, index, selection);
+      if (isTextTool(inHand)) mark(inHand, index, selection);
     },
     [inHand, mark],
   );
@@ -208,6 +236,7 @@ export function usePdfMarkTools({
       ...select,
       ...tools,
       ...onSelection,
+      ...shapeTools.actions,
       [TOOL_DRAWING]: { run: () => pickTool('drawing'), checked: inHand === 'drawing' },
       // The toolbar's Highlight: the held tool last used; pressed again, back to Select.
       [TEXT_MARK_TOOLS]: {
@@ -216,7 +245,7 @@ export function usePdfMarkTools({
         label: LABELS[pick],
       },
     };
-  }, [ready, marking, inHand, pick, selected, pickTool, take]);
+  }, [ready, marking, inHand, pick, selected, pickTool, take, shapeTools.actions]);
 
   const choices = useMemo<OfficeChoices>(
     (): OfficeChoices =>
@@ -236,9 +265,10 @@ export function usePdfMarkTools({
                 })),
               },
             },
+            ...shapeTools.choices,
           }
         : {},
-    [ready, marking, pick, actions],
+    [ready, marking, pick, actions, shapeTools.choices],
   );
 
   // "A tool's colour": the one colour picker, for the mark tool in hand; with Select in hand there is none.
@@ -260,19 +290,21 @@ export function usePdfMarkTools({
     [inHand, looks, focusPages],
   );
 
-  /** The tools' own keys, outside a field: U, ⇧U, V and Escape; true where one was taken. */
+  /** The tools' own keys, outside a field: U, ⇧U, D, ⇧D, V and Escape; true where one was taken. */
   const onKey = (event: KeyboardEvent<HTMLElement>): boolean => {
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
     const key = event.key.toLowerCase();
     if (key === PDF_TOOL_KEYS.highlight && marking)
       take(event.shiftKey ? nextHeld(inHand) : 'highlight');
-    else if (key === PDF_TOOL_KEYS.drawing && !event.shiftKey && marking) pickTool('drawing');
-    else if ((key === PDF_TOOL_KEYS.select || key === 'escape') && inHand !== 'select')
+    else if (key === PDF_TOOL_KEYS.drawing && marking) {
+      if (event.shiftKey) shapeTools.cycle();
+      else pickTool('drawing');
+    } else if ((key === PDF_TOOL_KEYS.select || key === 'escape') && inHand !== 'select')
       pickTool('select');
     else return false;
     event.preventDefault();
     return true;
   };
 
-  return { inHand, make, ink, actions, choices, colours, onKey };
+  return { inHand, make, ink, shaping, actions, choices, colours, onKey };
 }

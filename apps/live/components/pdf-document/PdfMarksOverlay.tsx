@@ -4,7 +4,7 @@
 // Under Dark pages (dark-pages.md "The recolouring") a mark takes the colour the step gives the file's own marks, and
 // lightens the dark page as multiplying darkens the white one, so the words under it keep their ink.
 import { useContext } from 'react';
-import type { Mark, PageMatrix, PagePoint, Quad, Stroke } from '@livedoc/pdf-documents';
+import type { Mark, MarkShape, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
 import { DarkPages, MarkDrawing, PageView } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
@@ -24,13 +24,38 @@ const viewPoints = (matrix: PageMatrix, points: readonly PagePoint[]): string =>
     .map(({ x, y }) => `${x},${y}`)
     .join(' ');
 
+/** What a mark draws, as SVG in view space: its fills, then its lines, a closed line a polygon. */
+function MarkShapes({ matrix, shape }: { matrix: PageMatrix; shape: MarkShape }) {
+  const { fills, strokes } = MarkDrawing.of(shape);
+  return (
+    <>
+      {fills.map((points, at) => (
+        <polygon key={`f${at}`} stroke="none" points={viewPoints(matrix, points)} />
+      ))}
+      {strokes.map((stroke, at) => {
+        const look = {
+          points: viewPoints(matrix, stroke.points),
+          strokeWidth: stroke.width,
+          strokeLinecap: stroke.round ? ('round' as const) : undefined,
+          strokeLinejoin: stroke.round ? ('round' as const) : undefined,
+        };
+        return stroke.closed ? (
+          <polygon key={`s${at}`} fill="none" {...look} />
+        ) : (
+          <polyline key={`s${at}`} fill="none" {...look} />
+        );
+      })}
+    </>
+  );
+}
+
 export function PdfMarksOverlay({
   matrix,
   width,
   height,
   marks,
   preview = [],
-  ink = null,
+  draft = null,
   selected = [],
   found = null,
 }: {
@@ -42,8 +67,8 @@ export function PdfMarksOverlay({
   marks: readonly Mark[];
   // The text a drag would mark, drawn while the drag lasts.
   preview?: readonly Quad[];
-  // The Drawing tool's stroke, drawn as it is drawn, in the tool's look.
-  ink?: { stroke: Stroke; colour: string; opacity: number; width: number } | null;
+  // The mark being drawn or dragged (a Drawing's stroke, a line, a shape), in its tool's look.
+  draft?: { shape: MarkShape; colour: string; opacity: number } | null;
   // The text selected on the page, in the shell's focus colour (reading-surface.md "The pages": Selecting text).
   selected?: readonly Quad[];
   // Find's results on the page, the current one stronger (reading-surface.md "Find").
@@ -60,28 +85,16 @@ export function PdfMarksOverlay({
     >
       {marks.map((mark) => {
         const colour = dark ? DarkPages.hex(mark.colour) : mark.colour;
-        const { fills, strokes } = MarkDrawing.of(mark);
         return (
           <g
             key={mark.id}
             data-pdf-mark={mark.id}
             data-pdf-mark-kind={mark.kind}
-            fill={fills.length > 0 ? colour : 'none'}
-            stroke={strokes.length > 0 ? colour : undefined}
+            fill={colour}
+            stroke={colour}
             opacity={mark.opacity}
           >
-            {fills.map((points, at) => (
-              <polygon key={at} points={viewPoints(matrix, points)} />
-            ))}
-            {strokes.map((stroke, at) => (
-              <polyline
-                key={at}
-                points={viewPoints(matrix, stroke.points)}
-                strokeWidth={stroke.width}
-                strokeLinecap={stroke.round ? 'round' : undefined}
-                strokeLinejoin={stroke.round ? 'round' : undefined}
-              />
-            ))}
+            <MarkShapes matrix={matrix} shape={mark} />
           </g>
         );
       })}
@@ -106,21 +119,15 @@ export function PdfMarksOverlay({
           ))}
         </g>
       ) : null}
-      {ink ? (
-        <polyline
-          data-pdf-ink-preview="true"
-          points={viewPoints(
-            matrix,
-            MarkDrawing.of({ kind: 'drawing', strokes: [ink.stroke], width: ink.width }).strokes[0]!
-              .points,
-          )}
-          fill="none"
-          stroke={dark ? DarkPages.hex(ink.colour) : ink.colour}
-          opacity={ink.opacity}
-          strokeWidth={ink.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+      {draft ? (
+        <g
+          data-pdf-draft={draft.shape.kind}
+          fill={dark ? DarkPages.hex(draft.colour) : draft.colour}
+          stroke={dark ? DarkPages.hex(draft.colour) : draft.colour}
+          opacity={draft.opacity}
+        >
+          <MarkShapes matrix={matrix} shape={draft.shape} />
+        </g>
       ) : null}
       {preview.length > 0 ? (
         <g data-pdf-mark-preview="true" className="fill-(--pdf-mark-preview)">
