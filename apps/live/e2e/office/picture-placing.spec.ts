@@ -90,3 +90,38 @@ test('a picture is wrapped and positioned from Image options', async ({ page, pa
   await expect(body.locator('.text-document-picture-placed')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
+
+// objects.md "The picture's bar": under a selected picture, the wraps (the one in force pressed) and Image options.
+test('a picture is wrapped from its bar', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  const { body, picture } = await documentWithPicture(page, 'Barred:');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type(WORDS);
+  await picture.click();
+  const bar = page.getByRole('toolbar', { name: 'Image' });
+  await expect(bar.getByRole('button', { name: 'In line' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  const before = (await picture.locator('img').boundingBox())!;
+  await bar.getByRole('button', { name: 'Break text' }).click();
+  await expect(body.locator('.text-document-picture-placed')).toHaveCount(1);
+  await expect(bar.getByRole('button', { name: 'Break text' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  const after = (await picture.locator('img').boundingBox())!;
+  expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(2);
+  expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(2);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('picture-bar.png') });
+
+  // Alt+F10 reaches the bar from the picture; Image options opens the panel on it.
+  await picture.click();
+  await page.keyboard.press('Alt+F10');
+  await expect(bar.getByRole('button', { name: 'In line' })).toBeFocused();
+  await bar.getByRole('button', { name: 'Image options' }).click();
+  const panel = page.getByRole('complementary', { name: 'Image options' });
+  await expect(panel.getByRole('radio', { name: 'Break text' })).toBeChecked();
+  expectNoPageErrors(pageErrors);
+});

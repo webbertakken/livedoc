@@ -171,10 +171,10 @@ describe('a picture drawn', () => {
   });
 
   // objects.md "Drawn": a drawing's picture is drawn live over its PNG, cropped and turned as the picture is.
-  it('gives a drawing a layer over its picture, laid out as its image, and its bar under its bounds', () => {
+  it('gives a drawing a layer over its picture, laid out as its image, and any picture a bar host under its bounds', () => {
     const release = vi.fn();
     const drawing = vi.fn((_hosts: DrawingHosts) => release);
-    const source = { ...sourceOf(held(true)), drawing };
+    const source = { ...sourceOf(held(true)), drawing, bar: true };
     const crop = { top: 0.2, right: 0.1, bottom: 0, left: 0.1 };
     const view = viewOf({ drawing: 'drawing-1', crop, rotation: 90 }, source);
     expect(drawing).toHaveBeenCalledTimes(1);
@@ -182,11 +182,15 @@ describe('a picture drawn', () => {
     expect(hosts.drawing.style.cssText).toBe(
       'left: -7.5pt; top: -10pt; width: 75pt; height: 50pt;',
     );
-    expect([hosts.bar.style.left, hosts.bar.style.top]).toEqual(['0pt', '60pt']);
+    const bar = view.dom.querySelector<HTMLElement>('.text-document-picture-bar')!;
+    expect([bar.style.left, bar.style.top]).toEqual(['0pt', '60pt']);
     view.update!(picture({ crop, rotation: 90 }), [], undefined as never);
     expect(release).toHaveBeenCalledTimes(1);
     expect(view.dom.querySelector('.text-document-picture-drawing')).toBeNull();
-    expect(viewOf({}, source).dom.querySelector('.text-document-picture-drawing')).toBeNull();
+    const plain = viewOf({}, source).dom;
+    expect(plain.querySelector('.text-document-picture-drawing')).toBeNull();
+    expect(plain.querySelector('.text-document-picture-bar')).not.toBeNull();
+    expect(draw({}).querySelector('.text-document-picture-bar')).toBeNull();
     expect(drawing).toHaveBeenCalledTimes(1);
   });
 
