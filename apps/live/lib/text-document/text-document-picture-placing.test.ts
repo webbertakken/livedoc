@@ -5,6 +5,8 @@ import {
   evenMargin,
   moved,
   offset,
+  shifted,
+  snapAcross,
   withMargin,
   wrapChoiceOf,
   wrapped,
@@ -91,5 +93,20 @@ describe('picture placing', () => {
     expect(offset(placed(), 'x', -40.1234)).toEqual(placed({ x: -40.123 }));
     expect(offset(placed(), 'y', 5000)?.y).toBe(1584);
     expect(moved(placed({ x: 1580 }), 'page', { x: 72, y: 0 })?.x).toBe(1584);
+  });
+
+  it('snaps its nearest edge or centre to its column’s, within the tolerance', () => {
+    // A column 400 wide; the picture 100 wide.
+    expect(snapAcross(3, 100, 400, 4)).toEqual({ left: 0, guide: 0 });
+    expect(snapAcross(148, 100, 400, 4)).toEqual({ left: 150, guide: 200 });
+    expect(snapAcross(302.5, 100, 400, 4)).toEqual({ left: 300, guide: 400 });
+    expect(snapAcross(120, 100, 400, 4)).toEqual({ left: 120, guide: null });
+    // The nearest wins: its right edge 1 off the centre, its left 3 off the column’s left.
+    expect(snapAcross(3, 196, 400, 4)).toEqual({ left: 4, guide: 200 });
+  });
+
+  it('moves by a drag, within 22 inches', () => {
+    expect(shifted(placed(), { dx: -5.5, dy: 100 })).toEqual(placed({ x: 14.5, y: 130 }));
+    expect(shifted(placed(), { dx: 4000, dy: 0 }).x).toBe(1584);
   });
 });

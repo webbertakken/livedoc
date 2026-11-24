@@ -288,14 +288,16 @@ describe('a picture drawn', () => {
       const resize = vi.fn<(pos: number, size: { width: number; height: number }) => void>();
       const crop = vi.fn<(pos: number, next: CroppedPicture) => void>();
       const rotate = vi.fn<(pos: number, rotation: number) => void>();
+      const move = vi.fn<(pos: number, by: { dx: number; dy: number }) => void>();
       const view = pictureView(sourceOf(held(true)), {
         can: () => can,
         room: () => room,
         resize,
         crop,
         rotate,
+        move,
       })(picture(attrs), {} as EditorView, () => 3, marks, undefined as never);
-      return { view, resize, crop, rotate };
+      return { view, resize, crop, rotate, move };
     };
     const handle = (dom: HTMLElement, which: string) =>
       dom.querySelector<HTMLElement>(`[data-picture-handle="${which}"]`)!;
@@ -325,6 +327,28 @@ describe('a picture drawn', () => {
       const { view } = sized(false);
       view.selectNode!();
       expect(view.dom.querySelector('[data-picture-handle]')).toBeNull();
+    });
+
+    // objects.md "Dragging a placed picture": pressed anywhere but its handles, a selected placed picture follows the
+    // pointer, its move written once on release; Escape leaves it; a picture not selected stays.
+    it('moves a selected placed picture by its body, written once on release', () => {
+      const placedMark = [
+        { spec: { placed: { picture: { left: 12, top: -8 }, layer: 'front' } } },
+      ] as never;
+      const { view, move } = sized(true, placedMark);
+      const turn = view.dom.querySelector<HTMLElement>('.text-document-picture-turn')!;
+      drag(turn, 40, 20);
+      window.dispatchEvent(new MouseEvent('pointerup'));
+      expect(move).not.toHaveBeenCalled();
+      view.selectNode!();
+      drag(turn, 40, 20);
+      expect([turn.style.left, turn.style.top]).toEqual(['42pt', '7pt']);
+      window.dispatchEvent(new MouseEvent('pointerup'));
+      expect(move).toHaveBeenCalledWith(3, { dx: 30, dy: 15 });
+      drag(turn, 80, 0);
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(move).toHaveBeenCalledTimes(1);
+      expect([turn.style.left, turn.style.top]).toEqual(['12pt', '-8pt']);
     });
 
     it('follows the pointer, writing the size once on release', () => {
