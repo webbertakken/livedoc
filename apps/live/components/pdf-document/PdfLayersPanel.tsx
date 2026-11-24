@@ -22,7 +22,7 @@ type Read =
   { phase: 'reading' } | { phase: 'failed' } | { phase: 'ready'; layers: readonly PdfLayer[] };
 
 const TOGGLE =
-  'flex min-h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-disabled:cursor-default aria-disabled:hover:bg-transparent';
+  'flex min-h-8 w-full items-center pointer-coarse:min-h-11 gap-2 rounded-md px-2 text-left text-sm outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-disabled:cursor-default aria-disabled:hover:bg-transparent';
 
 export function PdfLayersPanel({
   engine,
@@ -81,7 +81,7 @@ export function PdfLayersPanel({
 
   return (
     <>
-      <ul aria-label="Layers" className="flex flex-col gap-0.5 py-1">
+      <ul aria-label="Layers" className="flex flex-col gap-0.5 py-1 pointer-coarse:gap-0">
         {layers.map((layer) => {
           const shown = !hiddenNow.includes(layer.id);
           return (

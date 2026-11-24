@@ -557,8 +557,9 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 ## Phone and tablet
 
 - The title row is one line and the menus move into More, as the shell does
-  ([Phone and tablet](../004-interface-design/office-shell.md#phone-and-tablet)); the page bar stays, and the left
-  panel opens as a sheet from the bottom.
+  ([Phone and tablet](../004-interface-design/office-shell.md#phone-and-tablet)); the page bar stays.
+- The left panel is the shell's on a phone: the rail is not drawn, View opens a panel, and it covers the surface until
+  its × or Escape closes it, as every office kind's does.
 - **Pinch** zooms the pages about the fingers, never the page around them (the pages hold `touch-action: pan-x
 pan-y`); **two fingers** pan, what was under their middle staying under it, at the zoom's limits too; a pinch on the
   chrome zooms the page, as the browser does ([Accessibility](accessibility.md#seeing)). A **double tap** zooms to the
@@ -579,7 +580,12 @@ pan-y`); **two fingers** pan, what was under their middle staying under it, at t
   - With no column under the finger the pages zoom one step in about it `(default)`.
   - A double tap while the zoom is still the one a double tap made goes back to the zoom before it, about the finger.
   - Logged `[pdf] view-double-tapped column=<yes|no> back=<yes|no>`; counted as `Pdf · Zoomed · Custom`.
-- The toolbar shows the mode's first tools and puts the rest in its overflow row; every target is at least 44 px.
+- The toolbar is the shell's: one row that scrolls sideways on a phone, its overflow row on a tablet.
+- On a touch screen every control of the surface reaches 44 px ([Touch targets](../004-interface-design/touch-targets.md)):
+  - the toolbar is 44 px tall there, so its items' pads are never clipped; the title row's pill and fields reach 44 px;
+  - the page bar's buttons and fields, Find's buttons, field and options, and a notice's buttons reach 44 px down;
+  - the rows of the outline, the layers and Find's results are 44 px tall, their lists without a gap between rows;
+  - Find's field and the password field read at 16 px, so a phone never zooms into them.
 - A long press selects the word under the finger, with handles to extend and a small bar: Copy, Highlight, Comment.
 - Reduced motion: no animated scroll to a result or a page, no zoom easing; the page appears where asked. The surface
   never eases a scroll or a zoom, reduced or not `(default)`; the shell's own transitions stop with reduced motion.

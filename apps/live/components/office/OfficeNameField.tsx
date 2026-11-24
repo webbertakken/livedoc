@@ -113,7 +113,7 @@ export function OfficeNameField({
             settled.current = true;
             commit();
           }}
-          className={`col-start-1 row-start-1 w-full min-w-0 truncate rounded border border-transparent bg-transparent px-1.5 outline-none hover:border-(--office-line) focus:border-(--office-focus) focus:ring-1 focus:ring-(--office-focus) ${TEXT}`}
+          className={`col-start-1 row-start-1 w-full min-w-0 truncate rounded border border-transparent bg-transparent px-1.5 outline-none pointer-coarse:-my-2 pointer-coarse:py-2 hover:border-(--office-line) focus:border-(--office-focus) focus:ring-1 focus:ring-(--office-focus) ${TEXT}`}
         />
       </span>
       {refused ? (

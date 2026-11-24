@@ -29,7 +29,7 @@ export function PdfNoticeBar({
       <button
         type="button"
         onClick={onAction}
-        className="shrink-0 rounded px-2 py-1 font-medium text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+        className="relative shrink-0 rounded px-2 py-1 font-medium touch-target-y text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
       >
         {action}
       </button>
@@ -38,7 +38,7 @@ export function PdfNoticeBar({
           type="button"
           aria-label="Dismiss"
           onClick={onDismiss}
-          className="flex size-7 shrink-0 items-center justify-center rounded text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+          className="relative flex size-7 shrink-0 items-center justify-center rounded text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
         >
           <Glyph size={16} units={24} aria-hidden="true">
             <Prims prims={lucideX} />

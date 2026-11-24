@@ -275,7 +275,9 @@ The kind's registry, shown: ⌘/ (Ctrl+/ elsewhere) or Help > Keyboard shortcuts
   - While the on-screen keyboard is up, the toolbar docks just above it, so the writing's controls stay in reach.
 - **Tablet** (640 to 1024 px): the desktop layout; the name shortens before anything on the right does, and the
   toolbar's overflow takes what does not fit.
-- On a touch screen every control reaches 44 px, as everywhere in LiveDoc.
+- On a touch screen every control reaches 44 px, as everywhere in LiveDoc: the toolbar is 44 px tall there, so its
+  items' pads are never clipped; the title row's round buttons and pill reach 44 px; the name and a list field (Zoom,
+  a font size) grow to 44 px tall without moving their line.
 
 ## Motion
 

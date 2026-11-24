@@ -144,7 +144,7 @@ export function PdfOutlinePanel({
               onFocus={() => setFocused(at)}
               onClick={() => onFollow(node.item.target)}
               style={{ paddingLeft: 4 + (level - 1) * 16 }}
-              className={`flex min-h-8 cursor-pointer items-center gap-1 rounded-md pr-2 text-sm outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${
+              className={`flex min-h-8 cursor-pointer items-center pointer-coarse:min-h-11 gap-1 rounded-md pr-2 text-sm outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${
                 at === marked ? 'bg-(--office-pressed) font-medium text-(--office-pressed-ink)' : ''
               }`}
             >
