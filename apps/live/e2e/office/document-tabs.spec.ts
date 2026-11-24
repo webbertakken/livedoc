@@ -26,7 +26,11 @@ test('document tabs: added, shown one at a time, stepped through and opened by t
 
   await (await officeMenuItem(page, ['View', 'Show outline'])).click();
   const tabs = page.getByRole('list', { name: 'Document tabs' });
-  await expect(tabs.getByRole('button')).toHaveText(['Tab 1', 'Tab 2']);
+  // Each tab's row, without its Tab options button.
+  await expect(tabs.locator('li > div > button:not([aria-haspopup])')).toHaveText([
+    'Tab 1',
+    'Tab 2',
+  ]);
   await expect(tabs.getByRole('button', { name: 'Tab 2' })).toHaveAttribute('aria-current', 'page');
 
   await body.click();
