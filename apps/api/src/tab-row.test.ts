@@ -245,4 +245,12 @@ describe('rowToTabSummary', () => {
     expect(rowToTabSummary(baseRow({ kind: 'nonsense' })).kind).toBeUndefined();
     expect(rowToTabSummary(baseRow())).not.toHaveProperty('kind');
   });
+
+  // docs/specs/034-text-documents/objects.md "A drawing tab": the outline names a drawing tab's text document tab, so
+  // the editor's tab lists leave it out before its body loads.
+  it('names a drawing tab’s text document tab from its row, absent for any other tab', () => {
+    expect(rowToTabSummary(baseRow({ drawing_of: 'doc' })).drawingOf).toBe('doc');
+    expect(rowToTabSummary(baseRow({ drawing_of: null }))).not.toHaveProperty('drawingOf');
+    expect(rowToTabSummary(baseRow())).not.toHaveProperty('drawingOf');
+  });
 });

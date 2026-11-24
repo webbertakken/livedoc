@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { CommentBadgesContext } from '@/components/canvas/CommentBadgesContext';
 import { SuppressElementIndicators } from '@/components/canvas/ElementIndicatorStyleContext';
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
-import { surfaceOf, tabKindOf } from '@livedoc/document';
+import { listedTabs, surfaceOf, tabKindOf } from '@livedoc/document';
 import { TextDocumentHost } from '@/components/text-document/TextDocumentHost';
 import { PdfDocumentHost } from '@/components/pdf-document/PdfDocumentHost';
 import { applyDocumentRename } from './editor-page-helpers';
@@ -213,6 +213,9 @@ export function EditorView() {
   });
 
   const selectTab = useSelectTab();
+  // The tabs the tab strip, its list and the embed's switcher show: never a text document's drawing tab
+  // (docs/specs/034-text-documents/objects.md "Not listed").
+  const shownTabs = useMemo(() => listedTabs(tabs), [tabs]);
   // A surface's title row: the document's own parts (docs/specs/034-text-documents/editing-surface.md "The title row").
   const office = useOfficeChrome();
   // A board's Form strip (docs/specs/030-forms/forms.md "On the board"): the forms feeding the open tab.
@@ -389,7 +392,7 @@ export function EditorView() {
                 }),
             }}
             tabs={{
-              tabs: tabs,
+              tabs: shownTabs,
               spreadsheet: ctx.documentWorkbook !== null,
               // This Browser takes neither from the add menu, and a PDF from a file asks a host that stores files
               // (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
@@ -589,7 +592,7 @@ export function EditorView() {
                                       // the TabBar's onSelect so element state never leaks across a
                                       // tab switch.
                                       <EmbedChrome
-                                        tabs={tabs}
+                                        tabs={shownTabs}
                                         activeId={activeId}
                                         shareCode={sessionShareCode}
                                         onSelectTab={selectTab}

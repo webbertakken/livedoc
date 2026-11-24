@@ -15,7 +15,13 @@
 // helper — those are separate concerns that stay in the page (or move
 // in their own pass).
 
-import { defaultTabName, isDefaultTabName } from '@livedoc/document';
+import {
+  defaultTabName,
+  drawingTabIdsOf,
+  isDefaultTabName,
+  listedTabIdFor,
+  listedTabs,
+} from '@livedoc/document';
 import { boardsRenamedWithTab, planTitledWithTab, sheetIdsOn } from '@/lib/tab-named-plan';
 import { withFormHeading } from '@/lib/form-tab';
 import type { ImportedPlanItems, ImportOutcome } from '@/lib/import-tab';
@@ -363,20 +369,24 @@ export function useTabActions(deps: TabActionsDeps) {
   // document delete instead (tabDeletion, docs/specs/006-document/document-structure.md "The last tab"), so the
   // guards here are belt-and-suspenders.
   const deleteTab = (id: string) => {
-    if (tabs.length <= 1) return;
-    const idx = tabs.findIndex((t) => t.id === id);
-    if (idx < 0) return;
+    // A text document's drawing tabs never count, and go with it (docs/specs/034-text-documents/objects.md
+    // "Never counted", "Deleting").
+    const listed = listedTabs(tabs);
+    if (listed.length <= 1) return;
+    const idx = listed.findIndex((t) => t.id === id);
+    if (idx < 0 && !tabs.some((t) => t.id === id)) return;
+    const gone = new Set([id, ...drawingTabIdsOf(tabs, id)]);
     // A locked tab is protected: its elements can't be deleted, so the
     // tab that holds them can't be deleted out from under them either.
     // Unlock it first. (The TabBar also gates the Delete row on this.)
-    if (tabs[idx]?.locked === true) return;
+    if (tabs.find((t) => t.id === id)?.locked === true) return;
     track('Tab', 'Deleted');
     // Drop the tab AND strip any links on remaining elements that point to
     // it, so we don't leave dangling cross-tab references. Bundled into one
     // commit so undo restores both.
     commitTabs((ts) =>
       ts
-        .filter((t) => t.id !== id)
+        .filter((t) => !gone.has(t.id))
         .map((t) => ({
           ...t,
           elements: t.elements.map((el) => {
@@ -386,15 +396,17 @@ export function useTabActions(deps: TabActionsDeps) {
             // entirely, so they survive; only tab / element links carry
             // a tabId to check.
             if (el.link.kind !== 'tab' && el.link.kind !== 'element') return el;
-            if (el.link.tabId !== id) return el;
+            if (!gone.has(el.link.tabId)) return el;
             const { link: _drop, ...rest } = el;
             return rest;
           }),
         })),
     );
-    if (activeId === id) {
-      const fallback = tabs[idx + 1] ?? tabs[idx - 1];
-      if (fallback) setActiveId(fallback.id);
+    if (gone.has(activeId)) {
+      // A drawing tab hands back to its text document tab; a listed tab to its neighbour.
+      const fallback =
+        idx < 0 ? listedTabIdFor(tabs, id) : (listed[idx + 1] ?? listed[idx - 1])?.id;
+      if (fallback) setActiveId(fallback);
     }
     setSelectedId(null);
     setEditingId(null);

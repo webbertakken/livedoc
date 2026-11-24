@@ -46,3 +46,30 @@ describe('useElementLinks unfurl', () => {
     expect(api.apiUnfurl).not.toHaveBeenCalled();
   });
 });
+
+// docs/specs/034-text-documents/objects.md "A drawing tab": a link naming a drawing tab opens its text document tab.
+describe('useElementLinks following a link', () => {
+  it('opens a drawing tab’s text document tab, and a listed tab itself', () => {
+    const setActiveId = vi.fn();
+    const tabs: Tab[] = [
+      { id: 'w', name: 'Notes', kind: 'text-document', elements: [] },
+      { id: 'd', name: 'Drawing 1', drawingOf: 'w', elements: [] },
+      { id: 'b', name: 'Board', elements: [] },
+    ];
+    const { result } = renderHook(() =>
+      useElementLinks({
+        currentSelectionIds: () => new Set(),
+        commit: () => {},
+        tabs,
+        setActiveId,
+        setSelectedId: () => {},
+        setEditingId: () => {},
+        setFormatSourceId: () => {},
+        openDocument: () => {},
+      }),
+    );
+    result.current.followLink({ kind: 'tab', tabId: 'd' });
+    result.current.followLink({ kind: 'element', tabId: 'b', elementId: 'x' });
+    expect(setActiveId.mock.calls).toEqual([['w'], ['b']]);
+  });
+});

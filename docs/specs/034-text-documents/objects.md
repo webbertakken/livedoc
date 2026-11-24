@@ -293,9 +293,11 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 - A general tab worked on in Sketch with the Structured palette, named **Drawing N** (N the next free number in its
   text document), its `drawingOf` the text document tab's id. It lives in the tab's body, so it goes wherever its
   text document tab goes.
-- **Not listed**: the tab strip, the tab list and its stack, tab folders, Choose a Tab, the split view's picker, tab
-  links and the Explorer's tab count never show a drawing tab. A document whose one listed tab is a text document
-  still hides its tab strip with drawings in it.
+- **Not listed**: the tab strip, the tab list and its stack, tab folders, Choose a Tab, Side by Side, the link
+  picker's tabs, a Links card's tabs, the embed's tab switcher and a share's tab scope never show a drawing tab.
+  A document whose one listed tab is a text document still hides its tab strip with drawings in it.
+- **Never counted**: the document's [last tab](../006-document/document-structure.md#the-last-tab) and its first tab
+  are its listed ones, so deleting its one listed text document tab deletes the document `(default)`.
 - **Opened only from its picture**: there is no other way to it. A link or a stale address naming it opens its text
   document tab instead.
 
@@ -344,7 +346,8 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
 - **Sharing**: a drawing tab is shared wherever its text document tab is: sharing that tab into another document links
   its drawing tabs too. Who may open, edit or only see a drawing is who may on its text document: an Editor edits it,
   anyone else opens it to look, its bar offering **Close**.
-- **Deleting**: deleting the text document tab deletes its drawing tabs. A drawing tab no picture in its text document
+- **Deleting**: deleting the text document tab deletes its drawing tabs, as one undo step in the editor and by the
+  api for a tab deleted outside it. A drawing tab no picture in its text document
   names (the picture deleted) is kept while an undo could bring the picture back, and removed when the text document
   is next opened.
 

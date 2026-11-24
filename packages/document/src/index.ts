@@ -356,6 +356,9 @@ export type Tab = {
   // A text document's format (docs/specs/034-text-documents/text-document.md "The format it is in"), read via
   // `textDocumentFormatOf`. Its writing is not on the tab: the room holds its live state.
   format?: TextDocumentFormat;
+  // A drawing tab's text document tab (docs/specs/034-text-documents/objects.md "A drawing tab"): set, the tab is a
+  // drawing in that text document, never listed (`listedTabs`) and opened only from its picture. Absent on any other.
+  drawingOf?: TabId;
   // A PDF tab's stored file (docs/specs/035-pdf-documents/pdf-document.md "What it holds"): its key in the blob store
   // and its size in bytes, read via `pdfTabOf`. Its live changes are not on the tab: the room holds them.
   blob?: BlobKey;
@@ -564,6 +567,7 @@ export * from './page-default-background';
 export * from './pages-edits';
 export * from './pages-background-copy';
 export * from './tab-window';
+export * from './drawing-tabs';
 export * from './tab-has-drawing';
 export * from './tab-content';
 export { migrateWhiteboardKind } from './legacy-whiteboard-tab';

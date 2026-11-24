@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { surfaceOf, tabHasDrawing } from '@livedoc/document';
+import { listedTabs, surfaceOf, tabHasDrawing } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useSelectTab } from '@/app/document/[id]/useSelectTab';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
@@ -72,7 +72,8 @@ export function SplitViewFrame({
   const isMobile = useIsMobileViewport();
   const viewportWidth = useViewportWidth();
   const split = useSplitView({
-    tabs,
+    // Side by Side never pairs a drawing tab (docs/specs/034-text-documents/objects.md "Not listed").
+    tabs: listedTabs(tabs),
     activeId,
     selectTab,
     documentId,

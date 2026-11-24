@@ -128,6 +128,31 @@ describe('the room schema', () => {
     ]);
   });
 
+  // docs/specs/034-text-documents/objects.md "A drawing tab": the row names its text document tab, so a document's
+  // tab list leaves it out before any body is read; read once from the bodies an upgraded room holds.
+  it('backfills each tab row’s text document tab from its body', () => {
+    const { db, run } = room();
+    const before = DOCUMENT_SCHEMA_STEPS.findIndex((step) =>
+      step.includes('ADD COLUMN drawing_of'),
+    );
+    for (const step of DOCUMENT_SCHEMA_STEPS.slice(0, before)) db.exec(step);
+    db.exec(
+      `CREATE TABLE _document_schema (version INTEGER NOT NULL); INSERT INTO _document_schema VALUES (${before})`,
+    );
+    db.exec(`INSERT INTO tabs (id, name, data, updated_at) VALUES ('d', 'Drawing 1', '{"drawingOf":"t"}', 0);
+      INSERT INTO tabs (id, name, data, updated_at) VALUES ('t', 'T', '{"kind":"text-document"}', 0);
+      INSERT INTO tabs (id, name, data, updated_at) VALUES ('x', 'X', 'not json', 0);`);
+    migrateDocumentSchema(run);
+    const rows = (db.prepare('SELECT id, drawing_of FROM tabs ORDER BY id').all() as object[]).map(
+      (r) => ({ ...r }),
+    );
+    expect(rows).toEqual([
+      { id: 'd', drawing_of: 't' },
+      { id: 't', drawing_of: null },
+      { id: 'x', drawing_of: null },
+    ]);
+  });
+
   it('starts every spreadsheet stored before it with its imports not allowed', () => {
     const { db, run } = room();
     const before = DOCUMENT_SCHEMA_STEPS.findIndex((step) => step.includes('imports_allowed'));

@@ -9,6 +9,7 @@ import {
   EMBED_PROVIDER_HINT,
   EMBED_PROVIDER_LABEL,
   embedTargetFor,
+  listedTabs,
 } from '@livedoc/document';
 
 import { track } from '@/lib/telemetry';
@@ -89,6 +90,8 @@ export function EditorElementDialogs() {
     workbenchMode,
     can,
   } = useEditorContext();
+  // The link picker's tabs: never a drawing tab (docs/specs/034-text-documents/objects.md "Not listed").
+  const linkTabs = listedTabs(tabs).map((t) => ({ id: t.id, name: t.name }));
 
   // Each dialog closes whenever its own render check below fails, not only when its element goes: hidden by a lock
   // or a role change, it would otherwise reopen by itself when that is undone. Edit Outline closes itself
@@ -180,7 +183,7 @@ export function EditorElementDialogs() {
           title={linkTarget?.type === 'video' ? 'Link embed' : 'Link element'}
           urlOnly={urlOnly}
           currentLink={linkTarget?.link ?? null}
-          tabs={tabs.map((t) => ({ id: t.id, name: t.name }))}
+          tabs={linkTabs}
           currentTabId={activeId}
           initialMode={linkPickerInitialMode ?? undefined}
           recentDocuments={documentList
@@ -211,7 +214,7 @@ export function EditorElementDialogs() {
               ? (t.cellStyles?.[cellLinkPickerOpenFor.r]?.[cellLinkPickerOpenFor.c]?.link ?? null)
               : null;
           })()}
-          tabs={tabs.map((t) => ({ id: t.id, name: t.name }))}
+          tabs={linkTabs}
           currentTabId={activeId}
           recentDocuments={documentList
             .filter((d) => d.id !== documentId)

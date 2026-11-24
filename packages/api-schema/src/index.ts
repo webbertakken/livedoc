@@ -189,6 +189,9 @@ export type TabSummary = {
   // The tab's kind (docs/specs/006-document/kinds-outside-the-canvas.md "The surface"), so the editor knows a tab's
   // surface before its body loads; absent for a general tab.
   kind?: TabKind;
+  // A drawing tab's text document tab (docs/specs/034-text-documents/objects.md "A drawing tab"), so the editor's tab
+  // lists leave it out before its body loads; absent for any other tab.
+  drawingOf?: string;
 };
 
 // Full tab payload returned by `GET /api/documents/:id/tabs/:tabId`:

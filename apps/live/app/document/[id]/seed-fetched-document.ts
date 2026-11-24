@@ -9,7 +9,7 @@ import { track } from '@/lib/telemetry';
 import { firstTabToLoad, isTabOutOfScope } from '@/lib/tab-scope';
 import { loadKindFamiliesFor } from '@/lib/element-kinds/load-for';
 import { loadCanvasCode } from '@/lib/canvas-code/canvas-code';
-import { surfaceOf } from '@livedoc/document';
+import { listedTabIdFor, listedTabs, surfaceOf } from '@livedoc/document';
 import { placeholdersFromSummaries } from './editor-page-helpers';
 
 type SetState<T> = Dispatch<SetStateAction<T>>;
@@ -92,7 +92,8 @@ export function makeSeedFetchedDocument(deps: {
     // paint has real content; the rest land as placeholders and the
     // lazy-load effect fetches each one when the user switches.
     const placeholderTabs: Tab[] = placeholdersFromSummaries(fetched.tabs);
-    const firstId = firstTabToLoad(fetched.tabs, tabScope);
+    // A text document's drawing tabs are never the first (docs/specs/034-text-documents/objects.md "Never counted").
+    const firstId = firstTabToLoad(listedTabs(fetched.tabs), tabScope);
     const firstIndex = placeholderTabs.findIndex((t) => t.id === firstId);
     if (firstId && firstIndex >= 0) {
       const carried = opened?.tab.id === firstId ? opened : null;
@@ -146,10 +147,11 @@ export function makeSeedFetchedDocument(deps: {
     setDocumentWorkbook(fetched.workbook ?? null);
     // Prefer the tab id pinned in the URL fragment (#t=<id>) when
     // it points at a real loaded tab — round-trips the user back
-    // to whichever tab they last had open before a refresh.
+    // to whichever tab they last had open before a refresh. A drawing tab's address opens its text document tab
+    // (docs/specs/034-text-documents/objects.md "A drawing tab").
     {
       const hashMatch = window.location.hash.match(/t=([^&]+)/);
-      const hashedId = hashMatch ? hashMatch[1] : null;
+      const hashedId = hashMatch ? listedTabIdFor(placeholderTabs, hashMatch[1]!) : null;
       const pickFromHash =
         hashedId &&
         placeholderTabs.some((t) => t.id === hashedId) &&

@@ -32,7 +32,7 @@ export function createTab(name: string): Tab {
 // first `activeTab.elements` read. The seeded tab autosaves back to the
 // API on the next save cycle, healing the document.
 export function placeholdersFromSummaries(
-  summaries: { id: string; name: string; folder?: string; kind?: TabKind }[],
+  summaries: { id: string; name: string; folder?: string; kind?: TabKind; drawingOf?: string }[],
 ): Tab[] {
   if (summaries.length === 0) return [createTab('Tab 1')];
   // Carry `folder` (docs/specs/006-document/tab-folders.md) so the tab bar renders folders from the
@@ -46,6 +46,9 @@ export function placeholdersFromSummaries(
     // Its kind, so a tab with a surface is never taken for a canvas while its body loads
     // (docs/specs/006-document/kinds-outside-the-canvas.md "The surface").
     ...(summary.kind ? { kind: summary.kind } : {}),
+    // A drawing tab's text document tab, so the tab lists leave it out from the first paint
+    // (docs/specs/034-text-documents/objects.md "A drawing tab").
+    ...(summary.drawingOf ? { drawingOf: summary.drawingOf } : {}),
   }));
 }
 

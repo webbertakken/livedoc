@@ -5,7 +5,7 @@
 // cannot take back (deleteTabWarning). A document's last tab deletes the document ("The last tab"): only for a session
 // that may delete the document, at once when the tab is empty, and asking first when it holds content or has not
 // loaded, so its content is never guessed at.
-import { tabHoldsContent, type Tab } from '@livedoc/document';
+import { listedTabs, tabHoldsContent, type Tab } from '@livedoc/document';
 import { deleteTabWarning } from '@/hooks/forms/forms-feeding';
 
 // The question Delete asks first, in the anchored confirmation on its button.
@@ -39,7 +39,8 @@ export function tabDeletion(input: {
   const tab = tabs.find((t) => t.id === tabId);
   if (!tab) return { kind: 'blocked', reason: 'This tab is no longer in the document.' };
   if (tab.locked === true) return { kind: 'blocked', reason: LOCKED_TAB_REASON };
-  if (tabs.length > 1) {
+  // A text document's drawing tabs never count (docs/specs/034-text-documents/objects.md "Never counted").
+  if (listedTabs(tabs).length > 1) {
     const warning = deleteTabWarning(tabs, tabId);
     return warning
       ? { kind: 'tab', confirm: { message: TAB_WARNING_MESSAGE, warning, confirmLabel: 'Delete' } }

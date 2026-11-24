@@ -40,6 +40,13 @@ describe('which tabs a window may show', () => {
     ]);
   });
 
+  // docs/specs/009-elements/tab-window.md "Choosing the tab": never a text document's drawing tab, which is never listed.
+  it('never offers or shows a text document’s drawing tab', () => {
+    const withDrawing = [...tabs, { id: 'pic', drawingOf: 'notes' }];
+    expect(tabWindowOffers(withDrawing, 'slides').map((t) => t.id)).not.toContain('pic');
+    expect(tabWindowMayShow({ id: 'pic', drawingOf: 'notes' }, undefined)).toBe(false);
+  });
+
   it('never shows its own tab', () => {
     expect(tabWindowMayShow({ id: 'diagram' }, 'diagram')).toBe(false);
     expect(tabWindowMayShow({ id: 'diagram' }, undefined)).toBe(true);

@@ -31,6 +31,9 @@ export type TabRow = {
   // The tab's kind, kept from its body by the room's triggers (docs/specs/006-document/kinds-outside-the-canvas.md
   // "The surface"); NULL for a general tab written without one. Read only by the outline.
   kind?: string | null;
+  // A drawing tab's text document tab (docs/specs/034-text-documents/objects.md "A drawing tab"), kept from its body
+  // by every writer; NULL for any other tab. Read only by the outline.
+  drawing_of?: string | null;
 };
 
 // Pure mapper from D1 tab row to wire-format DTO. Pulled out of db.ts
@@ -87,5 +90,6 @@ export function rowToTabSummary(row: TabRow): TabSummaryDTO {
     updatedAt: row.updated_at,
     folder: row.folder ?? undefined,
     ...kindOfRow(row.kind),
+    ...(row.drawing_of ? { drawingOf: row.drawing_of } : {}),
   };
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { listedTabs } from '@livedoc/document';
 import { useSelectionOf } from '@/hooks/canvas/useSelectionStore';
 import { EMPTY_SELECTION, type Selection } from '@/lib/selection-store';
 import dynamic from 'next/dynamic';
@@ -137,7 +138,8 @@ export function EditorTabDialogs() {
           links={shareLinks}
           sharePasswordSet={sharePasswordSet}
           shareUrlFor={shareUrlFor}
-          tabs={tabs}
+          // A share's tab scope never offers a drawing tab (docs/specs/034-text-documents/objects.md "Not listed").
+          tabs={listedTabs(tabs)}
           // Signed-in with an account → name is locked to the account
           // display name (same rule as the welcome modal, docs/specs/014-identity/auth-and-guest-access.md).
           // Guests pass undefined so the input + shuffle stay live.

@@ -949,6 +949,32 @@ describe('deleting a tab (docs/specs/013-workspace/tab-scoped-share-links.md)', 
     expect(db.deleteTabRow).toHaveBeenCalledWith(expect.anything(), 'd1', 't2');
     expect(db.deleteShareLinksForTab).toHaveBeenCalledWith(expect.anything(), 'd1', 't2');
   });
+
+  // docs/specs/034-text-documents/objects.md "Deleting", "Never counted": a text document tab's drawing tabs go with
+  // it, and they never make a token's last listed tab deletable.
+  it('takes a text document tab’s drawing tabs along, and counts only listed tabs as the last', async () => {
+    const withDrawings = {
+      ...fakeDocument('owner-1'),
+      tabs: [{ id: 't1' }, { id: 'w' }, { id: 'd1', drawingOf: 'w' }, { id: 'd2', drawingOf: 'w' }],
+    } as unknown as DocumentDTO;
+    db.getDocument.mockResolvedValue(withDrawings);
+    canEditDocument.mockResolvedValue(true);
+    const res = await handleDocuments(makeCtx('DELETE', '/api/documents/d1/tabs/w'));
+    expect(res.status).toBe(204);
+    expect(db.deleteTabRow.mock.calls.map((call) => call[2])).toEqual(['w', 'd1', 'd2']);
+
+    db.deleteTabRow.mockClear();
+    db.getDocument.mockResolvedValue({
+      ...withDrawings,
+      tabs: [{ id: 'w' }, { id: 'd1', drawingOf: 'w' }],
+    } as unknown as DocumentDTO);
+    const agent = makeTestRouteContext('DELETE', '/api/documents/d1/tabs/w', {
+      owner: 'owner-1',
+      token: { id: 'tok' },
+    });
+    expect((await handleDocuments(agent)).status).toBe(409);
+    expect(db.deleteTabRow).not.toHaveBeenCalled();
+  });
 });
 
 describe('share-link scope (docs/specs/013-workspace/tab-scoped-share-links.md)', () => {

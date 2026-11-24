@@ -75,6 +75,17 @@ describe('placeholdersFromSummaries', () => {
     expect(out.map((t) => t.kind)).toEqual(['text-document', undefined]);
     expect(out[1]).not.toHaveProperty('kind');
   });
+
+  // docs/specs/034-text-documents/objects.md "A drawing tab": a drawing tab is left out of the tab lists before its
+  // body loads.
+  it('carries a drawing tab’s text document tab from the summary, none for any other tab', () => {
+    const out = placeholdersFromSummaries([
+      { id: 'w', name: 'Notes', kind: 'text-document' },
+      { id: 'd', name: 'Drawing 1', drawingOf: 'w' },
+    ]);
+    expect(out[1]!.drawingOf).toBe('w');
+    expect(out[0]).not.toHaveProperty('drawingOf');
+  });
 });
 
 describe('patchTab', () => {
