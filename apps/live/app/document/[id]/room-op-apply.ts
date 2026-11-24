@@ -171,7 +171,14 @@ export function applyRoomOpToTabs(
             ? local
             : { ...local, folder };
         }
-        return { id: summary.id, name: summary.name, elements: [], folder: summary.folder };
+        // A drawing tab keeps its text document tab, so no tab list shows it before its `tab` op fills it.
+        return {
+          id: summary.id,
+          name: summary.name,
+          elements: [],
+          folder: summary.folder,
+          ...(summary.drawingOf ? { drawingOf: summary.drawingOf } : {}),
+        };
       });
     }
     default:

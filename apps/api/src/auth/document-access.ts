@@ -28,6 +28,7 @@
 
 import { levelAtLeast, type AccessLevel } from '@livedoc/api-schema';
 import { getMembership } from '../db';
+import { isTabInScope } from '../tab-scope';
 import type { Env, ShareRole } from '../types';
 import {
   isPersonalOwner,
@@ -128,7 +129,8 @@ async function canAccessDocument(
   if (!grant) return false;
   // The ladder (docs/specs/013-workspace/share-roles.md): every level holds everything below it.
   if (!levelAtLeast(grant.role, needs)) return false;
-  return grant.tabScope === null || grant.tabScope === targetTabId;
+  // A link to one tab reaches its drawing tabs too (tab-scope.ts).
+  return isTabInScope(env, documentId, grant.tabScope, targetTabId);
 }
 
 export async function canEditDocument(

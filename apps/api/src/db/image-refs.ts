@@ -55,7 +55,8 @@ export async function documentImageIds(env: DocumentEnv, documentId: string): Pr
 }
 
 // Whether the document places the image, on one tab when `onlyTabId` is given (a tab-scoped visitor): the image
-// byte endpoint's place check (the `placesImage` RPC).
+// byte endpoint's place check (the `placesImage` RPC). A one-tab link's tab places what its drawing tabs place
+// (docs/specs/013-workspace/tab-scoped-share-links.md "Drawing tabs").
 export async function documentPlacesImage(
   env: DocumentEnv,
   documentId: string,
@@ -65,7 +66,11 @@ export async function documentPlacesImage(
   const row = await env.DOCUMENT_DB.prepare(
     `SELECT 1 AS present FROM document_tabs dt
        JOIN image_refs r ON r.tab_id = dt.tab_id AND r.image_id = ?1
-      WHERE dt.document_id = ?2${onlyTabId === null ? '' : ' AND dt.tab_id = ?3'}
+      WHERE dt.document_id = ?2${
+        onlyTabId === null
+          ? ''
+          : ' AND (dt.tab_id = ?3 OR dt.tab_id IN (SELECT id FROM tabs WHERE drawing_of = ?3))'
+      }
       LIMIT 1`,
   )
     .bind(...(onlyTabId === null ? [imageId, documentId] : [imageId, documentId, onlyTabId]))

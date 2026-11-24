@@ -4,6 +4,13 @@
 //
 // Both directions fail closed: an op kind nobody taught these rules about is
 // withheld from, and refused from, a scoped session.
+//
+// A link to one tab reaches its drawing tabs too ("Drawing tabs"): `drawingOf` answers a tab's text document tab
+// from the room's store; the default knows none, so only the scope's own tab passes.
+import { scopeAdmits } from './tab-scope';
+
+export type DrawingOf = (tabId: string) => string | null;
+const NO_DRAWINGS: DrawingOf = () => null;
 
 // Ops that carry no tab and say nothing about one, which a scoped session
 // still receives: session tools and the worker's share-link and Trash notices.
@@ -24,15 +31,22 @@ const TAB_LESS_DELIVERED = new Set([
 const TAB_LESS_SENDABLE = new Set(['poll-start', 'poll-answer', 'poll-end', 'follow']);
 
 type LooseOp = { kind?: unknown; tabId?: unknown; tabs?: unknown };
+type MetaTab = { id: string; orderIndex: number; drawingOf?: string };
 
 function asOp(op: unknown): LooseOp | null {
   return typeof op === 'object' && op !== null ? op : null;
 }
 
-// Whether an op is about the scoped tab. `undefined` = the op names no tab
+// The tab an op names, or null for an op that names none.
+export function opTabOf(op: unknown): string | null {
+  const o = asOp(op);
+  return o && typeof o.tabId === 'string' ? o.tabId : null;
+}
+
+// Whether an op is about the scoped tab or one of its drawing tabs. `undefined` = the op names no tab
 // at all, so the caller decides by kind.
-function onScope(o: LooseOp, tabScope: string): boolean | undefined {
-  if ('tabId' in o) return o.tabId === tabScope;
+function onScope(o: LooseOp, tabScope: string, drawingOf: DrawingOf): boolean | undefined {
+  if ('tabId' in o) return typeof o.tabId === 'string' && scopeAdmits(tabScope, o.tabId, drawingOf);
   if (o.kind === 'select') return false;
   return undefined;
 }
@@ -40,16 +54,20 @@ function onScope(o: LooseOp, tabScope: string): boolean | undefined {
 // The op as a session scoped to `tabScope` should see it, or null to
 // withhold it. `tabScope` null (owner, team member, All-tabs link) passes
 // every op through untouched.
-export function opForScope(op: unknown, tabScope: string | null): unknown {
+export function opForScope(
+  op: unknown,
+  tabScope: string | null,
+  drawingOf: DrawingOf = NO_DRAWINGS,
+): unknown {
   if (tabScope === null) return op;
   const o = asOp(op);
   if (!o) return null;
-  if (o.kind === 'document-meta') return redactDocumentMeta(o, tabScope);
+  if (o.kind === 'document-meta') return redactDocumentMeta(o, tabScope, drawingOf);
   // Item writes may touch items another tab shows: a scoped session hears that the store
   // moved on, without the items, and refetches the ones its tab shows
   // (docs/specs/026-plan/items.md "Who may do what").
   if (o.kind === 'items') return { ...o, upserts: [], removed: [] };
-  const mine = onScope(o, tabScope);
+  const mine = onScope(o, tabScope, drawingOf);
   if (mine !== undefined) return mine ? op : null;
   return typeof o.kind === 'string' && TAB_LESS_DELIVERED.has(o.kind) ? op : null;
 }
@@ -73,11 +91,12 @@ export function scopedSenderMayRelay(
   op: unknown,
   tabScope: string | null,
   tabShowsAll = false,
+  drawingOf: DrawingOf = NO_DRAWINGS,
 ): boolean {
   if (tabScope === null) return true;
   const o = asOp(op);
   if (!o || o.kind === 'document-meta') return false;
-  const mine = onScope(o, tabScope);
+  const mine = onScope(o, tabScope, drawingOf);
   if (mine !== undefined) return mine && (tabShowsAll || !carriesEveryCardElement(op));
   return typeof o.kind === 'string' && TAB_LESS_SENDABLE.has(o.kind);
 }
@@ -98,13 +117,22 @@ function carriesEveryCardElement(value: unknown, depth = 0): boolean {
 
 // document-meta carries every tab's name and folder. Other tabs keep their id
 // and position and are marked out of scope, exactly like the REST document
-// (redactDocumentForScope).
-function redactDocumentMeta(o: LooseOp, tabScope: string): unknown {
+// (redactDocumentForScope): the scope's drawing tabs, as the store knows them, stay whole, and a drawing tab keeps
+// its `drawingOf` so it never shows as a tab of its own.
+function redactDocumentMeta(o: LooseOp, tabScope: string, drawingOf: DrawingOf): unknown {
   if (!Array.isArray(o.tabs)) return null;
   return {
     ...o,
-    tabs: (o.tabs as { id: string; orderIndex: number }[]).map((t) =>
-      t.id === tabScope ? t : { id: t.id, name: '', orderIndex: t.orderIndex, outOfScope: true },
+    tabs: (o.tabs as MetaTab[]).map((t) =>
+      scopeAdmits(tabScope, t.id, drawingOf)
+        ? t
+        : {
+            id: t.id,
+            name: '',
+            orderIndex: t.orderIndex,
+            outOfScope: true,
+            ...(typeof t.drawingOf === 'string' ? { drawingOf: t.drawingOf } : {}),
+          },
     ),
   };
 }

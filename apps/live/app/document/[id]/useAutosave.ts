@@ -395,6 +395,7 @@ export function useAutosave(opts: {
                     name: t.name,
                     orderIndex: i,
                     folder: t.folder,
+                    ...(t.drawingOf ? { drawingOf: t.drawingOf } : {}),
                   })),
                 },
               });

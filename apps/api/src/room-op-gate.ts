@@ -10,7 +10,7 @@ import {
 } from '@livedoc/api-schema';
 import { answersAsSelf } from './document-room-rules';
 import { liveTabKindOfFrame, liveTabKindOfReplacement } from './live-tabs/live-tab-kinds';
-import { scopedRenames, scopedSenderMayRelay } from './room-scope';
+import { scopedRenames, scopedSenderMayRelay, type DrawingOf } from './room-scope';
 
 type OpGate =
   /** Never relayed, never answered. */
@@ -54,6 +54,8 @@ export type GateSender = {
   tabScope: string | null;
   // The scoped tab already shows every card (room-session.ts): its ops may carry the board.
   tabShowsAll?: boolean;
+  // A tab's text document tab, from the room's store: a scoped session may act on its tab's drawing tabs too.
+  drawingOf?: DrawingOf;
   key: string | undefined;
 };
 
@@ -75,7 +77,8 @@ export function gateClientOp(op: unknown, sender: GateSender): OpGate {
   if (isSystemOpKind(opKind)) return DROP;
   // A tab-scoped session acts on its own tab only, and never on the
   // document's structure (docs/specs/013-workspace/tab-scoped-share-links.md).
-  if (!scopedSenderMayRelay(op, sender.tabScope, sender.tabShowsAll ?? false)) return DROP;
+  if (!scopedSenderMayRelay(op, sender.tabScope, sender.tabShowsAll ?? false, sender.drawingOf))
+    return DROP;
   // Nor its tab's name, which is structure too.
   if (scopedRenames(op, sender.tabScope)) return DROP;
   if (!keepsToItsTab(op)) return DROP;

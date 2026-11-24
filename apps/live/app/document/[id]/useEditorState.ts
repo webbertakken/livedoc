@@ -487,9 +487,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // convention), so the explicit return doesn't re-list these.
   // A tab-scoped share session's one tab (docs/specs/013-workspace/tab-scoped-share-links.md). Created first:
   // the active-tab guard in editor-ui-state reads its ref.
-  const tabScope = useTabScope();
-  const { sessionTabScope, setSessionTabScope, tabScopeRef, isOutOfScope } = tabScope;
-  const uiState = useEditorUiState(seed?.activeId ?? initialTabs[0]!.id, tabScopeRef);
+  const tabScope = useTabScope(tabs);
+  const { sessionTabScope, setSessionTabScope, tabScopeRef, drawingOfRef, isOutOfScope } = tabScope;
+  const uiState = useEditorUiState(seed?.activeId ?? initialTabs[0]!.id, tabScopeRef, drawingOfRef);
   const {
     activeId,
     setActiveId,

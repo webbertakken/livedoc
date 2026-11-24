@@ -41,6 +41,7 @@ import {
 } from './context';
 import { answerTabView, parseViewQuery } from './document-views-route';
 import { removeDocumentTab } from './tab-removal';
+import { isTabInScope } from '../tab-scope';
 
 // Tab-content sub-resource routes for /api/documents/<id>/...,
 // split out of documents.ts. Returns a Response when it handles the path, or
@@ -138,7 +139,7 @@ export async function handleDocumentSubresources(
       // (docs/specs/013-workspace/tab-scoped-share-links.md). Every other tab reads as missing: 404, no
       // existence leak.
       const grant = await gateGrant(ctx, id, existing.ownerId, existing.teamId);
-      if (!grant || (grant.tabScope !== null && grant.tabScope !== tabId)) {
+      if (!grant || !(await isTabInScope(env, id, grant.tabScope, tabId))) {
         return deniedOnTab(ctx, existing);
       }
       const safe = await grantedTab(ctx, existing, tabId, owner);

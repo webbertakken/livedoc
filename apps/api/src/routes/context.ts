@@ -19,6 +19,7 @@ import type { WorkbenchReach } from '../db/workbench';
 import { clientRateKey } from '../client-ip';
 import { getDocument, getMembership, getTrashedDocumentMeta } from '../db';
 import { badRequest, documentTrashed, forbidden, json, missingAuth, notFound } from '../responses';
+import { isTabInScope } from '../tab-scope';
 import type { DocumentDTO, DocumentEnv, Env } from '../types';
 
 // A workbench session as the choke point resolved it ("The choke point by
@@ -341,7 +342,7 @@ export async function deniedParticipate(
   tabId?: string,
 ): Promise<Response> {
   const grant = await gateGrant(ctx, liveDoc.id, liveDoc.ownerId, liveDoc.teamId);
-  if (grant && grant.tabScope !== null && grant.tabScope !== tabId) return notFound();
+  if (grant && !(await isTabInScope(ctx.env, liveDoc.id, grant.tabScope, tabId))) return notFound();
   if (grant)
     console.info('[access-levels] participation refused', { documentId: liveDoc.id, tabId });
   return forbidden();

@@ -40,7 +40,8 @@ import {
   resolveCatchup,
 } from '../document-room-rules';
 import { followerIdsOf, followTargetOf } from '../room-follows';
-import { opForScope } from '../room-scope';
+import { opForScope, opTabOf, type DrawingOf } from '../room-scope';
+import { storedDrawingOf } from './room-drawing-of';
 import { recheckAdmittedLink } from '../room-link-recheck';
 import { gateClientOp } from '../room-op-gate';
 import { LIVE_TAB_KINDS } from '../live-tabs/live-tab-kinds';
@@ -288,6 +289,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       sendToPresence: (presenceId, payload) => this.sendToPresence(presenceId, payload),
       socketByPresence: (presenceId) => this.socketByPresence(presenceId),
       readSession: (ws) => this.readSession(ws),
+      drawingReader: () => this.drawingReader(),
       armAlarm: () => this.armAlarm(),
     });
     this.pollAnswers = Promise.resolve();
@@ -581,7 +583,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       if (ws === except) continue;
       const attachment = ws.deserializeAttachment() as SessionAttachment | null;
       if (attachment?.presence?.id !== presenceId) continue;
-      const out = this.frameFor(ws, payload, serialized);
+      const out = this.frameFor(ws, payload, serialized, this.drawingReader());
       if (out === null) return;
       try {
         ws.send(out);
@@ -594,9 +596,11 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   broadcast(payload: ServerMessage, except?: WebSocket): void {
     const serialized = JSON.stringify(payload);
+    // One reader for the frame: a tab's drawing_of is read once however many scoped sockets ask.
+    const drawingOf = this.drawingReader();
     for (const ws of this.state.getWebSockets()) {
       if (ws === except) continue;
-      const out = this.frameFor(ws, payload, serialized);
+      const out = this.frameFor(ws, payload, serialized, drawingOf);
       if (out === null) continue;
       try {
         ws.send(out);
@@ -608,12 +612,18 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   // The frame one socket should receive for `payload`: as serialised for an
   // unscoped session, redacted or withheld (null) for a tab-scoped one
-  // (docs/specs/013-workspace/tab-scoped-share-links.md). Only op frames carry tab content.
-  private frameFor(ws: WebSocket, payload: ServerMessage, serialized: string): string | null {
+  // (docs/specs/013-workspace/tab-scoped-share-links.md). Only op frames carry tab content. A scoped session receives
+  // its tab's drawing tabs too ("Drawing tabs"), as `drawingOf` reads them from the room's store.
+  private frameFor(
+    ws: WebSocket,
+    payload: ServerMessage,
+    serialized: string,
+    drawingOf: DrawingOf,
+  ): string | null {
     if (payload.kind !== 'op') return serialized;
     const scope = this.scopeOf(ws);
     if (scope === null) return serialized;
-    const op = opForScope(payload.op, scope);
+    const op = opForScope(payload.op, scope, drawingOf);
     if (op === null) return null;
     return op === payload.op ? serialized : JSON.stringify({ ...payload, op });
   }
@@ -625,6 +635,12 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   // made that a structured-clone read per peer per packet. Lost with the
   // object when the room hibernates, and read again on the next frame.
   private readonly scopes = new WeakMap<WebSocket, string | null>();
+
+  // Which text document tab each drawing tab belongs to, as this room's SQLite holds it now (room-drawing-of.ts):
+  // one reader per frame or message, so a tab is read once however many scoped sockets ask.
+  private drawingReader(): DrawingOf {
+    return storedDrawingOf(this.content.tabStore());
+  }
   private scopeOf(ws: WebSocket): string | null {
     if (this.scopes.has(ws)) return this.scopes.get(ws) ?? null;
     const scope = this.readSession(ws)?.tabScope ?? null;
@@ -842,11 +858,13 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       const sender = session.presence;
       if (!sender) return;
       // The role gate (room-op-gate.ts): what this session may relay, by its server-verified role.
+      const drawingOf = session.tabScope ? this.drawingReader() : undefined;
       const gate = gateClientOp(msg.op, {
         role: sender.role,
         tabScope: session.tabScope ?? null,
         tabShowsAll: session.tabShowsAll ?? false,
         key: sender.key,
+        ...(drawingOf ? { drawingOf } : {}),
       });
       if (gate.kind === 'drop') return;
       if (gate.kind === 'participant-content') {
@@ -878,11 +896,12 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
         else void this.liveTabReplacements.get(opKind)!.replace(from, msg.op, msg.ref);
         return;
       }
-      // A tab-scoped session keeps its tab's structure (room-scoped-structure.ts), judged against the stored tab.
+      // A tab-scoped session keeps its tab's structure (room-scoped-structure.ts), judged against the stored tab the op
+      // is on: its own, or one of its drawing tabs, which the gate has admitted.
       const admitted = session.tabScope
         ? this.scopedStructure.admit(msg.op, {
             documentId: session.documentId ?? null,
-            tabId: session.tabScope,
+            tabId: opTabOf(msg.op) ?? session.tabScope,
           })
         : { op: msg.op };
       if (!admitted) return;
@@ -1001,13 +1020,14 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       { epoch, lastSeq },
       { epoch: this.epoch, seq: this.seq, opLog: this.opLog },
     );
-    // A tab-scoped session replays its own tab only, like the live relay.
+    // A tab-scoped session replays its own tab and its drawing tabs only, like the live relay.
     const scope = this.scopeOf(ws);
+    const drawingOf = this.drawingReader();
     const visible =
       scope === null
         ? ops
         : ops.flatMap((o) => {
-            const op = opForScope(o.op, scope);
+            const op = opForScope(o.op, scope, drawingOf);
             return op === null ? [] : [{ ...o, op }];
           });
     const payload: ServerMessage = {

@@ -43,3 +43,20 @@ describe('what the room answers of its images', () => {
     expect(await documentPlacesImage(env, 'other', 'a', null)).toBe(false);
   });
 });
+
+// docs/specs/013-workspace/tab-scoped-share-links.md "Drawing tabs": a link to a text document tab reaches the images
+// its drawing tabs place.
+describe('the images a one-tab link reaches', () => {
+  it("counts its tab's drawing tabs as its tab, never another tab's", async () => {
+    const { env, sql } = sqliteD1();
+    tabRow(sql, 'w', '{}');
+    tabRow(sql, 'd1', '{}');
+    tabRow(sql, 'other', '{}');
+    tabRow(sql, 'd2', '{}');
+    sql.exec(`UPDATE tabs SET drawing_of = 'w' WHERE id = 'd1'`);
+    sql.exec(`UPDATE tabs SET drawing_of = 'other' WHERE id = 'd2'`);
+    sql.exec(`INSERT INTO image_refs (tab_id, image_id) VALUES ('d1', 'a'), ('d2', 'b')`);
+    expect(await documentPlacesImage(env, 'D', 'a', 'w')).toBe(true);
+    expect(await documentPlacesImage(env, 'D', 'b', 'w')).toBe(false);
+  });
+});

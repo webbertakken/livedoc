@@ -69,6 +69,16 @@ describe('gateClientOp', () => {
     expect(gateClientOp({ kind: 'tab', tabId: 't2' }, scoped)).toEqual(DROP);
     expect(gateClientOp({ kind: 'document-meta' }, scoped)).toEqual(DROP);
   });
+
+  // "Drawing tabs": and to the drawing tabs that belong to it, as the room's store says.
+  it("lets a tab-scoped session act on its tab's drawing tabs, never another tab's", () => {
+    const drawingOf = (id: string) => (id === 'd1' ? 't1' : id === 'd2' ? 't2' : null);
+    const scoped = as('edit', { tabScope: 't1', drawingOf });
+    expect(gateClientOp({ kind: 'tab', tabId: 'd1', tab: { id: 'd1' } }, scoped)).toEqual(
+      relay(false),
+    );
+    expect(gateClientOp({ kind: 'tab', tabId: 'd2', tab: { id: 'd2' } }, scoped)).toEqual(DROP);
+  });
 });
 
 // docs/specs/013-workspace/tab-scoped-share-links.md "Realtime": a tab op's payload keeps to the tab it names.

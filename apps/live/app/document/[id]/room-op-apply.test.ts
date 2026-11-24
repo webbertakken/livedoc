@@ -173,6 +173,25 @@ describe('applyRoomOpToTabs', () => {
     expect(next[0]).toBe(two);
     expect(next[2]!.elements).toEqual([]);
   });
+
+  // docs/specs/034-text-documents/objects.md "A drawing tab": unlisted before its body arrives.
+  it('keeps a drawing tab placeholder on its text document tab', () => {
+    const next = applyRoomOpToTabs([tab()], {
+      kind: 'document-meta',
+      name: 'D',
+      tabs: [
+        { id: 't1', name: 'Tab 1', orderIndex: 0 },
+        { id: 'd1', name: 'Drawing 1', orderIndex: 1, drawingOf: 't1' },
+      ],
+    });
+    expect(next[1]).toEqual({
+      id: 'd1',
+      name: 'Drawing 1',
+      elements: [],
+      folder: undefined,
+      drawingOf: 't1',
+    });
+  });
 });
 
 // docs/specs/012-collaboration/collab-race-hardening.md, end to end: two people press the same done check in the same

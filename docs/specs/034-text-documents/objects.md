@@ -362,8 +362,11 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
   each picture re-pointed at the copy's tab (as tab windows are). A document tab duplicated inside a text document
   shares its drawings until opened (above).
 - **Sharing**: a drawing tab is shared wherever its text document tab is: sharing that tab into another document links
-  its drawing tabs too. Who may open, edit or only see a drawing is who may on its text document: an Editor edits it,
-  anyone else opens it to look, its bar offering **Close**.
+  its drawing tabs too, and a link to that tab alone reaches its drawing tabs
+  ([Tab-scoped share links](../013-workspace/tab-scoped-share-links.md#drawing-tabs)). Such a link adds and removes no
+  tabs, so Insert > Drawing > New is dimmed for it, and a drawing two pictures share opens as it is. Who may open,
+  edit or only see a drawing is who may on its text document: an Editor edits it, anyone else opens it to look, its
+  bar offering **Close**.
 - **Deleting**: deleting the text document tab deletes its drawing tabs, as one undo step in the editor and by the
   api for a tab deleted outside it. A drawing tab no picture in its text document
   names (the picture deleted) is kept while an undo could bring the picture back, and removed when the text document
