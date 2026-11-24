@@ -163,7 +163,7 @@ export function PaletteCategoryBrowser<T>({
         />
       </div>
       {loading ? (
-        <p className="px-1 py-2 text-center text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="px-1 py-2 text-center text-supporting text-slate-500 dark:text-slate-400">
           {loadingMessage}
         </p>
       ) : matches ? (

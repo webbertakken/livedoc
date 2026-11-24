@@ -54,6 +54,6 @@ export function stickerTileDef(sticker: StickerDef): PaletteTileDef {
     label: `Add ${headlineCase(sticker.label)}`,
     description: 'Drops this sticker at the viewport centre.',
     action: { type: 'sticker', stickerId: sticker.id },
-    icon: <StickerArt def={sticker} className="h-[18px] w-[18px]" />,
+    icon: <StickerArt def={sticker} className="size-icon-toolbar" />,
   };
 }

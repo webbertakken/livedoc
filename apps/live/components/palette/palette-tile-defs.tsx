@@ -1039,7 +1039,7 @@ export const PALETTE_TILES: PaletteTileDef[] = [
       'Press it, or walk a character onto it in Avatar mode, and confetti bursts up and falls for everyone in the room. A result worth celebrating.',
     filled: true,
     action: { type: 'shape', kind: 'reaction-pad', reaction: 'confetti' },
-    icon: <span className="text-[15px] leading-none">{REACTION_EMOJI['confetti']}</span>,
+    icon: <span className="text-panel-title leading-none">{REACTION_EMOJI['confetti']}</span>,
   },
   {
     id: 'tools:reaction-sparkles',
@@ -1053,7 +1053,7 @@ export const PALETTE_TILES: PaletteTileDef[] = [
       'Press it, or walk a character onto it in Avatar mode, and a slow twinkle around the pad for everyone in the room. A good idea, nicely done.',
     filled: true,
     action: { type: 'shape', kind: 'reaction-pad', reaction: 'sparkles' },
-    icon: <span className="text-[15px] leading-none">{REACTION_EMOJI['sparkles']}</span>,
+    icon: <span className="text-panel-title leading-none">{REACTION_EMOJI['sparkles']}</span>,
   },
   {
     id: 'tools:reaction-hearts',
@@ -1067,7 +1067,7 @@ export const PALETTE_TILES: PaletteTileDef[] = [
       'Press it, or walk a character onto it in Avatar mode, and hearts rise and drift for everyone in the room. Warmth for a person, not a result.',
     filled: true,
     action: { type: 'shape', kind: 'reaction-pad', reaction: 'hearts' },
-    icon: <span className="text-[15px] leading-none">{REACTION_EMOJI['hearts']}</span>,
+    icon: <span className="text-panel-title leading-none">{REACTION_EMOJI['hearts']}</span>,
   },
   {
     id: 'tools:reaction-applause',
@@ -1081,7 +1081,7 @@ export const PALETTE_TILES: PaletteTileDef[] = [
       'Press it, or walk a character onto it in Avatar mode, and rings of sound spread out for everyone in the room. Thanks for the talk or the demo.',
     filled: true,
     action: { type: 'shape', kind: 'reaction-pad', reaction: 'applause' },
-    icon: <span className="text-[15px] leading-none">{REACTION_EMOJI['applause']}</span>,
+    icon: <span className="text-panel-title leading-none">{REACTION_EMOJI['applause']}</span>,
   },
   {
     id: 'tools:reaction-fireworks',
@@ -1095,7 +1095,7 @@ export const PALETTE_TILES: PaletteTileDef[] = [
       'Press it, or walk a character onto it in Avatar mode, and shells burst one after another for everyone in the room. It shipped.',
     filled: true,
     action: { type: 'shape', kind: 'reaction-pad', reaction: 'fireworks' },
-    icon: <span className="text-[15px] leading-none">{REACTION_EMOJI['fireworks']}</span>,
+    icon: <span className="text-panel-title leading-none">{REACTION_EMOJI['fireworks']}</span>,
   },
   {
     // Picker (docs/specs/012-collaboration/picker.md): rolls a person or a written option.

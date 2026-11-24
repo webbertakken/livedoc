@@ -37,7 +37,7 @@ export function SnapColoursSection({ snap }: { snap: SnapColoursApi }) {
       {done ? null : (
         <div className="flex flex-col items-start gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-700 dark:text-slate-200">
+            <span className="text-body text-slate-700 dark:text-slate-200">
               {customColours(colours.length)}
             </span>
             <span className="flex gap-1">
@@ -46,7 +46,7 @@ export function SnapColoursSection({ snap }: { snap: SnapColoursApi }) {
                   key={hex}
                   data-snap-swatch={hex}
                   aria-hidden
-                  className="block h-4 w-4 rounded-[4px] border border-black/15 dark:border-white/20"
+                  className="block size-icon-row rounded-control border border-black/15 dark:border-white/20"
                   style={{ background: hex }}
                 />
               ))}
@@ -56,7 +56,7 @@ export function SnapColoursSection({ snap }: { snap: SnapColoursApi }) {
             type="button"
             disabled={blocked}
             onClick={press}
-            className="flex h-10 items-center rounded-lg px-3 text-sm font-medium text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800"
+            className="flex h-field items-center rounded-control px-3 text-body text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800"
           >
             Snap to stock colours
           </button>
@@ -67,7 +67,7 @@ export function SnapColoursSection({ snap }: { snap: SnapColoursApi }) {
         ref={statusRef}
         role="status"
         tabIndex={-1}
-        className="rounded text-sm text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-200"
+        className="rounded-control text-body text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-slate-200"
       >
         {done ? `${customColours(done.count)} snapped to stock colours` : ''}
       </p>

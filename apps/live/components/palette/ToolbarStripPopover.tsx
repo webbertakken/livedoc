@@ -150,12 +150,10 @@ export function StripPopover({
       // (docs/specs/007-editor/ui-scale.md): the counter-zoom brings it back to 1, so `right`
       // (screen px) and the classes' width and height cap apply as written.
       style={isMobile ? undefined : { ...uiUnscaleStyle(scale), right }}
-      className={`absolute top-full mt-2 max-h-[calc(100dvh-14rem)] ${isMobile ? 'inset-x-3' : widthClass} ${glide ? 'transition-[right,width,opacity] duration-short ease-out' : ''} ${seeThrough ? 'opacity-30' : ''} origin-top-right animate-dropdown-down overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white ${bare ? '' : 'px-2 py-2.5'} shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40`}
+      className={`absolute top-full mt-2 max-h-[calc(100dvh-14rem)] ${isMobile ? 'inset-x-3' : widthClass} ${glide ? 'transition-[right,width,opacity] duration-short ease-out' : ''} ${seeThrough ? 'opacity-30' : ''} origin-top-right animate-dropdown-down overflow-y-auto overflow-x-hidden rounded-surface border border-slate-200 bg-white ${bare ? '' : 'px-2 py-2.5'} shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40`}
     >
       {label ? (
-        <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {label}
-        </div>
+        <div className="mb-2 px-1 text-supporting text-slate-500 dark:text-slate-400">{label}</div>
       ) : null}
       {children}
     </div>

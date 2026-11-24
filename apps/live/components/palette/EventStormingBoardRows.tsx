@@ -119,18 +119,14 @@ function BoardRow({
     <button
       type="button"
       {...button}
-      className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition ${ROW_LOOKS[look]}`}
+      className={`flex w-full items-center gap-3 rounded-control px-2 py-1.5 text-left transition ${ROW_LOOKS[look]}`}
     >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+      <span className="flex size-row shrink-0 items-center justify-center rounded-control bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-          {title}
-        </span>
-        <span className="block text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-          {line}
-        </span>
+        <span className="block text-body text-slate-700 dark:text-slate-200">{title}</span>
+        <span className="block text-supporting text-slate-500 dark:text-slate-400">{line}</span>
       </span>
     </button>
   );

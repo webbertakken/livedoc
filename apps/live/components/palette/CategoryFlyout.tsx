@@ -108,7 +108,7 @@ export function CategoryFlyout({
             {flyoutGroups(category.id, tiles).map((group, gi) => (
               <section key={group.id} aria-label={group.title ?? category.label}>
                 {group.title ? (
-                  <h4 className="mb-1.5 flex items-center gap-2 px-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  <h4 className="mb-1.5 flex items-center gap-2 px-1 text-supporting text-slate-500 dark:text-slate-400">
                     {group.title}
                     <span aria-hidden className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
                   </h4>
@@ -159,20 +159,16 @@ export function FlyoutHeader({
   count?: number | undefined;
 }) {
   return (
-    <header className="flex items-center gap-3 border-b border-slate-100 px-3.5 pb-3 pt-3.5 dark:border-slate-800">
+    <header className="flex items-center gap-3 border-b border-slate-100 px-4 pb-3 pt-3.5 dark:border-slate-800">
       <span
         aria-hidden
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 text-brand-700 ring-1 ring-brand-200/70 dark:from-brand-500/20 dark:to-brand-500/10 dark:text-brand-200 dark:ring-brand-500/30 [&_svg]:h-[18px] [&_svg]:w-[18px]"
+        className="flex size-prominent shrink-0 items-center justify-center rounded-surface bg-gradient-to-br from-brand-50 to-brand-100 text-brand-700 ring-1 ring-brand-200/70 dark:from-brand-500/20 dark:to-brand-500/10 dark:text-brand-200 dark:ring-brand-500/30 [&_svg]:size-icon-toolbar"
       >
         {icon}
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className="truncate text-[14px] font-semibold leading-tight text-slate-900 dark:text-slate-50">
-          {title}
-        </h3>
-        <p className="truncate text-[12px] leading-snug text-slate-500 dark:text-slate-400">
-          {tagline}
-        </p>
+        <h3 className="truncate text-body text-slate-900 dark:text-slate-50">{title}</h3>
+        <p className="truncate text-supporting text-slate-500 dark:text-slate-400">{tagline}</p>
       </div>
       {count ? <CountBadge count={count} className="shrink-0" /> : null}
     </header>

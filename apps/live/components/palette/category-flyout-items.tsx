@@ -77,8 +77,10 @@ function useFlyoutItem({ def, pendingDraw, onPress, onHover, sideOpenId }: ItemP
 export function Kbd({ children, small }: { children: ReactNode; small?: boolean }) {
   return (
     <kbd
-      className={`inline-flex items-center justify-center rounded border border-slate-200 bg-white font-sans font-semibold uppercase leading-none text-slate-600 shadow-[0_1px_0_0] shadow-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:shadow-slate-700 ${
-        small ? 'h-4 min-w-4 px-1 text-[9px]' : 'h-5 min-w-5 px-1.5 text-[10.5px]'
+      className={`inline-flex items-center justify-center rounded-control border border-slate-200 bg-white font-sans leading-none text-slate-600 shadow-[0_1px_0_0] shadow-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:shadow-slate-700 ${
+        small
+          ? 'h-icon-row min-w-icon-row px-1 text-glyph'
+          : 'h-icon-title min-w-icon-title px-1 text-glyph'
       }`}
     >
       {children}
@@ -98,15 +100,15 @@ export function InfoFooter({ def }: { def: PaletteTileDef | null }) {
       aria-live="polite"
       data-flyout-footer
       style={{ height: FLYOUT_FOOTER_HEIGHT }}
-      className="flex shrink-0 items-center gap-3 overflow-hidden rounded-b-xl border-t border-slate-100 bg-slate-50/80 px-3.5 dark:border-slate-800 dark:bg-slate-950/40"
+      className="flex shrink-0 items-center gap-3 overflow-hidden rounded-b-surface border-t border-slate-100 bg-slate-50/80 px-4 dark:border-slate-800 dark:bg-slate-950/40"
     >
       {def ? (
         <>
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-[12px] leading-4 font-semibold text-slate-800 dark:text-slate-100">
+            <span className="truncate text-body text-slate-800 dark:text-slate-100">
               {tileDisplayName(def)}
             </span>
-            <span className="line-clamp-2 text-[11.5px] leading-4 text-slate-500 dark:text-slate-400">
+            <span className="line-clamp-2 text-supporting leading-4 text-slate-500 dark:text-slate-400">
               {def.variants?.length ? (
                 'Choose a preset to start from.'
               ) : def.action.type === 'open' ? (
@@ -117,7 +119,7 @@ export function InfoFooter({ def }: { def: PaletteTileDef | null }) {
             </span>
           </div>
           {def.shortcut ? (
-            <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="flex shrink-0 items-center gap-2 text-supporting text-slate-500 dark:text-slate-400">
               Press
               <Kbd>{def.shortcut}</Kbd>
             </span>
@@ -125,10 +127,10 @@ export function InfoFooter({ def }: { def: PaletteTileDef | null }) {
         </>
       ) : (
         <>
-          <span className="text-[11.5px] text-slate-500 pointer-coarse:hidden dark:text-slate-400">
+          <span className="text-supporting text-slate-500 pointer-coarse:hidden dark:text-slate-400">
             {DEFAULT_HINT}
           </span>
-          <span className="hidden text-[11.5px] text-slate-500 pointer-coarse:inline dark:text-slate-400">
+          <span className="hidden text-supporting text-slate-500 pointer-coarse:inline dark:text-slate-400">
             {TOUCH_HINT}
           </span>
         </>
@@ -147,7 +149,7 @@ export function TileGrid({
   return (
     <ul
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-      className="grid gap-1.5"
+      className="grid gap-2"
     >
       {tiles.map((def, i) => (
         <li
@@ -170,7 +172,7 @@ function GridTile(item: ItemProps) {
   const button = (
     <button
       {...props}
-      className={`group relative flex h-[72px] w-full flex-col items-center justify-center gap-1.5 rounded-xl px-1 ring-1 transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500 ${
+      className={`group relative flex h-[72px] w-full flex-col items-center justify-center gap-2 rounded-surface px-1 ring-1 transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500 ${
         disabled
           ? 'cursor-not-allowed opacity-50 ring-transparent'
           : active
@@ -181,12 +183,12 @@ function GridTile(item: ItemProps) {
       <span
         aria-hidden
         style={glyph.glyphStyle}
-        className={`${glyph.glyphClass}flex h-7 items-center justify-center transition-transform duration-micro group-hover:-translate-y-0.5 [&>svg]:h-6 [&>svg]:w-6`}
+        className={`${glyph.glyphClass}flex h-row items-center justify-center transition-transform duration-micro group-hover:-translate-y-0.5 [&>svg]:h-chip [&>svg]:w-6`}
       >
         {def.icon}
       </span>
       {minimal ? null : (
-        <span className="w-full truncate text-center text-[11px] leading-none">
+        <span className="w-full truncate text-center text-supporting leading-none">
           {tileDisplayName(def)}
         </span>
       )}
@@ -196,7 +198,7 @@ function GridTile(item: ItemProps) {
         </span>
       ) : null}
       {side ? (
-        <ChevronRightIcon className="pointer-events-none absolute right-1 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+        <ChevronRightIcon className="pointer-events-none absolute right-1 top-1/2 size-icon-chevron -translate-y-1/2 text-slate-400" />
       ) : null}
     </button>
   );
@@ -229,7 +231,7 @@ function Card(item: ItemProps) {
   return (
     <button
       {...props}
-      className={`group flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left ring-1 transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500 ${
+      className={`group flex w-full items-center gap-3 rounded-surface px-2 py-1.5 text-left ring-1 transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500 ${
         disabled
           ? 'cursor-not-allowed opacity-50 ring-transparent'
           : active
@@ -239,21 +241,21 @@ function Card(item: ItemProps) {
     >
       <span
         aria-hidden
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-700 ring-1 ring-slate-200/80 transition group-hover:bg-white group-hover:shadow-sm dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700 dark:group-hover:bg-slate-900"
+        className="flex size-prominent shrink-0 items-center justify-center rounded-menu bg-slate-50 text-slate-700 ring-1 ring-slate-200/80 transition group-hover:bg-white group-hover:shadow-sm dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700 dark:group-hover:bg-slate-900"
       >
         <span
           style={glyph.glyphStyle}
-          className={`${glyph.glyphClass}flex items-center justify-center transition-transform duration-micro group-hover:scale-110 [&>svg]:h-5 [&>svg]:w-5`}
+          className={`${glyph.glyphClass}flex items-center justify-center transition-transform duration-micro group-hover:scale-110 [&>svg]:size-icon-title`}
         >
           {def.icon}
         </span>
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="flex items-center gap-1.5 text-[13px] font-semibold leading-tight text-slate-800 dark:text-slate-100">
+        <span className="flex items-center gap-2 text-body text-slate-800 dark:text-slate-100">
           <span className="truncate">{tileDisplayName(def)}</span>
           {def.shortcut && !disabled ? <Kbd small>{def.shortcut}</Kbd> : null}
         </span>
-        <span className="line-clamp-2 text-[11.5px] leading-snug text-slate-500 dark:text-slate-400">
+        <span className="line-clamp-2 text-supporting text-slate-500 dark:text-slate-400">
           {def.variants?.length ? (
             `${def.variants.length} presets`
           ) : (
@@ -263,7 +265,7 @@ function Card(item: ItemProps) {
       </span>
       {side ? (
         <ChevronRightIcon
-          className={`h-3.5 w-3.5 shrink-0 transition group-hover:translate-x-0.5 ${active ? 'text-brand-700 dark:text-brand-200' : 'text-slate-400 group-hover:text-slate-600'}`}
+          className={`size-icon-chevron shrink-0 transition group-hover:translate-x-0.5 ${active ? 'text-brand-700 dark:text-brand-200' : 'text-slate-400 group-hover:text-slate-600'}`}
         />
       ) : null}
     </button>

@@ -216,7 +216,7 @@ export function WhiteboardFlyout({
           top: place?.top ?? 0,
           visibility: place ? undefined : 'hidden',
         }}
-        className="pointer-events-auto fixed z-[var(--z-popover)] w-max max-w-[min(20rem,calc(100vw-1.5rem))] animate-pop-in rounded-xl border border-slate-200 bg-white p-3 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
+        className="pointer-events-auto fixed z-[var(--z-popover)] w-max max-w-[min(20rem,calc(100vw-1.5rem))] animate-pop-in rounded-surface border border-slate-200 bg-white p-3 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
       >
         {/* The tip points at the button that opened it, wherever the card sits. */}
         {place ? <FlyoutTip edge={place.tip.edge} offset={place.tip.offset} /> : null}
@@ -252,13 +252,13 @@ export function FlyoutOption({
         aria-pressed={selected}
         aria-keyshortcuts={shortcut}
         onClick={onPick}
-        className={`relative flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg text-sm text-slate-700 transition focus-visible:outline-2 focus-visible:outline-brand-500 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 ${wide ? 'px-3' : 'w-10'} ${selected ? 'bg-brand-50 ring-2 ring-brand-500 dark:bg-brand-500/15' : ''}`}
+        className={`relative flex h-10 shrink-0 items-center justify-center gap-2 rounded-menu text-body text-slate-700 transition focus-visible:outline-2 focus-visible:outline-brand-500 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 ${wide ? 'px-3' : 'w-10'} ${selected ? 'bg-brand-50 ring-2 ring-brand-500 dark:bg-brand-500/15' : ''}`}
       >
         {children}
         {shortcut ? (
           <span
             aria-hidden
-            className="pointer-events-none absolute bottom-0.5 right-1 text-[8px] font-medium uppercase leading-none text-slate-500 pointer-coarse:hidden dark:text-slate-400"
+            className="pointer-events-none absolute bottom-0 right-0.5 text-glyph leading-none text-slate-500 pointer-coarse:hidden dark:text-slate-400"
           >
             {shortcut}
           </span>
@@ -279,7 +279,7 @@ export function FlyoutHeading({
   return (
     <p
       data-flyout-heading=""
-      className={`text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${className}`}
+      className={`text-supporting text-slate-500 dark:text-slate-400 ${className}`}
     >
       {children}
     </p>

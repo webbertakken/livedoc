@@ -121,9 +121,7 @@ export function PaletteLogoTab({
       <PaletteToolRows tiles={tools} actions={actions} pendingDraw={pendingDraw} />
       {markers.length > 0 ? (
         <>
-          <p className="px-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Markers
-          </p>
+          <p className="px-1 pt-1 text-supporting text-slate-500 dark:text-slate-400">Markers</p>
           <div className="flex flex-col gap-0.5">
             {markers.map((def) => {
               const a = def.action;

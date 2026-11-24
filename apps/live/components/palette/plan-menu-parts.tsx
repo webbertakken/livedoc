@@ -34,9 +34,7 @@ export function MenuGroup({
 }) {
   return (
     <section className="border-t border-slate-100 pt-1 first:border-t-0 dark:border-slate-800">
-      <h3 className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        {title}
-      </h3>
+      <h3 className="px-3 pt-2 text-supporting text-slate-500 dark:text-slate-400">{title}</h3>
       {hint ? <InfoNote>{hint}</InfoNote> : null}
       {children}
     </section>
@@ -184,11 +182,11 @@ export function InfoNote({ children }: { children: ReactNode }) {
   return (
     <p
       role="note"
-      className="mx-3 mb-1 mt-1 flex gap-1.5 rounded-md bg-brand-50 px-2 py-1.5 text-[11px] leading-snug text-brand-800 dark:bg-brand-500/10 dark:text-brand-200"
+      className="mx-3 mb-1 mt-1 flex gap-2 rounded-control bg-brand-50 px-2 py-1.5 text-supporting text-brand-800 dark:bg-brand-500/10 dark:text-brand-200"
     >
       <span
         aria-hidden
-        className="mt-px flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border border-current text-[9px] font-bold"
+        className="mt-px flex size-icon-row shrink-0 items-center justify-center rounded-full border border-current text-glyph"
       >
         <span className="text-optical-centre">i</span>
       </span>

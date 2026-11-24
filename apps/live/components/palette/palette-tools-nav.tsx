@@ -48,15 +48,13 @@ export function ToolsCategoryGrid({
             // a comfortable target, and seven squares pushed the tools below
             // the fold — the thing the drill-in was meant to fix. The count
             // lives in the hover card instead of costing a third line.
-            className="flex h-[58px] w-full flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:-translate-y-px hover:border-brand-300 hover:text-brand-700 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-500 dark:hover:text-brand-200"
+            className="flex h-[58px] w-full flex-col items-center justify-center gap-1 rounded-surface border border-slate-200 bg-white text-slate-600 transition hover:-translate-y-px hover:border-brand-300 hover:text-brand-700 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-500 dark:hover:text-brand-200"
           >
             {/* The tile's own glyph, scaled up for a category-sized target. */}
-            <span className="flex items-center justify-center [&>svg]:h-[18px] [&>svg]:w-[18px]">
+            <span className="flex items-center justify-center [&>svg]:size-icon-toolbar">
               {category.icon}
             </span>
-            <span className="px-1 text-center text-[11px] font-medium leading-tight">
-              {category.label}
-            </span>
+            <span className="px-1 text-center text-supporting">{category.label}</span>
           </button>
         );
         // No description, no hover card: a hover card that only repeats the label

@@ -381,7 +381,7 @@ export function BoardSettingsSection({
       <button
         type="button"
         aria-expanded={open}
-        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 transition hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/60"
+        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-body text-slate-500 transition hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/60"
         onClick={onToggle}
       >
         <span className="text-slate-400 dark:text-slate-400">{icon}</span>

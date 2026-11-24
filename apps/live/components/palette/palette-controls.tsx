@@ -38,7 +38,7 @@ export function SizeButton({
   // equal-width controls rather than four shrink-to-fit pills floating
   // at the start of the row.
   const base =
-    'flex w-full cursor-pointer items-center justify-center rounded-md px-1.5 py-1 text-xs font-medium transition';
+    'flex w-full cursor-pointer items-center justify-center rounded-control px-2 py-1 text-body transition';
   const styled = active
     ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200'
     : TOOLBAR_CONTROL_REST;
@@ -74,7 +74,7 @@ export function PatternButton({
   // w-full so every button fills its grid cell — the active/hover box
   // is then a uniform width regardless of how long the label is.
   const base =
-    'flex w-full cursor-pointer flex-col items-center gap-1 rounded-md px-1 py-2 transition';
+    'flex w-full cursor-pointer flex-col items-center gap-1 rounded-control px-1 py-2 transition';
   const styled = active
     ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200'
     : TOOLBAR_CONTROL_REST;
@@ -87,7 +87,7 @@ export function PatternButton({
       className={`${base} ${styled}`}
     >
       {children}
-      <span className="w-full truncate text-center text-[10px] font-medium">{label}</span>
+      <span className="w-full truncate text-center text-supporting">{label}</span>
     </button>
   );
 }
@@ -149,8 +149,8 @@ export function AlignmentGrid({
               aria-pressed={active}
               className={
                 active
-                  ? 'flex h-7 w-full items-center justify-center rounded-md bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200'
-                  : 'flex h-7 w-full items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
+                  ? 'flex h-row w-full items-center justify-center rounded-control bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200'
+                  : 'flex h-row w-full items-center justify-center rounded-control text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
               }
             >
               <AlignIcon x={x} y={y} />
@@ -240,7 +240,7 @@ export function ColorSwatch({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={toggle}
-        className="relative flex flex-1 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="relative flex flex-1 cursor-pointer items-center gap-2 h-row rounded-control px-2 text-left text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         <SwatchChip colour={value} small />
         <span className="flex-1">{label}</span>

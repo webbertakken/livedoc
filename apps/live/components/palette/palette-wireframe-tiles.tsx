@@ -58,7 +58,7 @@ export const WIREFRAME_TILES: PaletteTileDef[] = [
     blurb: 'A pill search field',
     caption: 'Search',
     label: 'Add Search Field',
-    description: 'A rounded search field with its glass and a placeholder.',
+    description: 'A rounded-control search field with its glass and a placeholder.',
     action: { type: 'shape', kind: 'square', variant: 'wf-search' },
     icon: (
       <Glyph size={G} units={24}>
