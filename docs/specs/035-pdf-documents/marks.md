@@ -198,7 +198,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
      Myanmar, Ethiopic, Sinhala, Bengali, Gujarati, Gurmukhi, Kannada, Malayalam, Oriya, Tamil and Telugu; regular
      only, a bold line in them set regular.
   3. **Chinese, Japanese and Korean**: Noto Sans SC, JP or KR, by the region the mark's words show: kana Japanese,
-     Hangul Korean, otherwise Simplified Chinese `(default)`.
+     else Hangul Korean, otherwise Simplified Chinese `(default)`; one region a mark, its other two never looked
+     through; regular only `(default)`, a bold line in it set regular.
   4. **Symbols and emoji**: Noto Sans Symbols, Noto Sans Symbols 2 (its symbols and maths subsets `(default)`) and
      Noto Emoji in Fontsource's numbered slices, in one colour, the mark's.
 - **A cluster**, the characters read as one (a letter and its accents, an emoji and its modifiers, a flag, a keycap),
@@ -216,6 +217,11 @@ question mark. The research is [Every script in a mark's words](../../research/p
   advance for each character it has is a generated table, so lines break the same everywhere, with no font loaded.
 - The table is generated from the very files LiveDoc serves: `pnpm --filter @livedoc/pdf-documents faces:generate`;
   a test fails while it and the Fontsource packages differ.
+- **Chinese, Japanese and Korean are measured as one face a region** `(default)`: the characters its slices hold,
+  as ranges, their common advance, and each character set otherwise; which slice holds a character is a table of
+  its own a region, loaded only by a bake or a surface that sets that region.
+- **The bake sets a region's run slice by slice**: each stretch of it shaped in the slice that holds it, each slice
+  embedded as a face of its own.
 - **The bake shapes each run** of a line (HarfBuzz): Arabic joins, Indic scripts reorder and combine, accents sit on
   their letters, and each glyph is placed where shaping puts it.
 - **A line's direction** is its paragraph's: right to left where its first letter is Hebrew or Arabic, so it is set
@@ -229,12 +235,15 @@ question mark. The research is [Every script in a mark's words](../../research/p
   shapes as the bake does; a face not yet arrived draws in the browser's own until it lands.
 - A bold line in a family with no bold is drawn regular on the surface as in the bake, never made bold by the
   browser.
+- **A mark in Chinese, Japanese or Korean is drawn in its region's family alone** (`LiveDoc Noto Sans JP` for a
+  Japanese mark), so a character the three share is drawn as its region writes it; the region's slices are added to
+  the page the first time a mark in it is drawn.
 
 ### In the file
 
 - **Each face a bake uses is embedded once** as a subset of only the glyphs its marks use, glyph ids kept: a
   `Type0` font, `Identity-H`, over a `CIDFontType2` with its `FontFile2`, its `W` the glyphs' advances, and its
-  `BaseFont` the face's name behind a six-letter tag made from the glyphs it holds.
+  `BaseFont` the face's name behind a six-letter tag made from the face and the glyphs it holds.
 - **Its `ToUnicode` maps each glyph back to the characters it was shaped from**, a ligature to all of them, so
   copying, search and a screen reader read the words.
 - A few kilobytes a face: twenty Greek and Cyrillic characters add about 4 KB to the file.
@@ -252,10 +261,11 @@ question mark. The research is [Every script in a mark's words](../../research/p
   with **Try again**.
 - Fingerprints: `[pdf] faces-loaded count=<n> bytes=<n> ms=<n>` (once a bake that loads any),
   `[pdf] faces-failed face=<id>` (`shaper` for HarfBuzz or bidi-js; `picture` where a thumbnail draws in the
-  browser's own), `[pdf] glyphs-missing count=<n>`, `[pdf] faces-shown count=<n>` (the surface adds the faces, once a
-  page).
-- **Status**: Noto Sans, the further scripts with right to left, and symbols and emoji are built; Chinese, Japanese
-  and Korean are specified, their characters drawn as the missing-glyph box until built.
+  browser's own; a region's face where its table of slices does not load), `[pdf] glyphs-missing count=<n>`,
+  `[pdf] faces-shown count=<n>` (the surface adds the faces, once a page, and a region's slices, once a region).
+- **A slice that does not load** stops the bake as any face does, named by its id (`noto-sans-jp-42-400`); a bake
+  shows no progress of its own for them `(default)`: a few words fetch a few slices of about 10 to 60 KB.
+- **Status**: built, every group above.
 
 ## In the file
 

@@ -51,7 +51,9 @@ apps/live/lib/document-fonts/google-fonts.json
 apps/live/lib/office/special-characters.json
 apps/live/lib/office/emoji.json
 
-# The mark faces' advances and files, written by `pnpm --filter @livedoc/pdf-documents faces:generate`; their test
+# The mark faces' advances, files and slices, written by `pnpm --filter @livedoc/pdf-documents faces:generate`; their test
 # compares the raw output, so they are kept as written.
 packages/pdf-documents/src/mark-face-data.ts
 packages/pdf-documents/src/mark-face-urls.ts
+packages/pdf-documents/src/mark-face-region-data.ts
+packages/pdf-documents/src/mark-face-slices-*.ts

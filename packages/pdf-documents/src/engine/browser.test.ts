@@ -30,6 +30,10 @@ describe('the engine in a browser', () => {
     expect((await fetchMarkFace(file)).byteLength).toBe((await markFaceFiles(file)).byteLength);
     expect(String(fetched.mock.calls[0]![0])).toMatch(/noto-sans-greek-400-normal\.woff$/);
     await expect(fetchMarkFace('no-such-face.woff')).rejects.toThrow('no such face');
+    // A region's slice, found in its region's table of slices.
+    const slice = 'noto-sans-kr/files/noto-sans-kr-79-400-normal.woff';
+    await fetchMarkFace(slice);
+    expect(String(fetched.mock.calls.at(-1)![0])).toMatch(/noto-sans-kr-79-400-normal\.woff$/);
     vi.stubGlobal('fetch', async () => new Response(null, { status: 503 }));
     await expect(fetchMarkFace(file)).rejects.toThrow('503');
   });

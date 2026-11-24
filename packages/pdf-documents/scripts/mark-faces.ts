@@ -1,22 +1,31 @@
-// Writes src/mark-face-data.ts and src/mark-face-urls.ts from the Fontsource packages
-// (docs/specs/035-pdf-documents/marks.md "Laying out", "Loading").
+// Writes src/mark-face-data.ts, src/mark-face-urls.ts, src/mark-face-region-data.ts and src/mark-face-slices-<region>.ts
+// from the Fontsource packages (docs/specs/035-pdf-documents/marks.md "Laying out", "Loading").
 // Run: pnpm --filter @livedoc/pdf-documents faces:generate
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { MARK_FACE_REGIONS } from '../src/mark-face-families.ts';
 import {
   markFaceDataSource,
   markFaceFilesOf,
   markFaceUrlsSource,
 } from '../src/engine/mark-face-table.ts';
+import {
+  markFaceRegionDataSource,
+  markFaceSlicesSource,
+} from '../src/engine/mark-face-region-table.ts';
 
 const require = createRequire(import.meta.url);
-const source = await markFaceDataSource(
-  async (file) => new Uint8Array(readFileSync(require.resolve(`@fontsource/${file}`))),
-);
-const out = fileURLToPath(new URL('../src/mark-face-data.ts', import.meta.url));
-writeFileSync(out, source);
-console.log(`[faces] wrote src/mark-face-data.ts (${source.length} bytes)`);
-const urls = markFaceUrlsSource(markFaceFilesOf());
-writeFileSync(fileURLToPath(new URL('../src/mark-face-urls.ts', import.meta.url)), urls);
-console.log(`[faces] wrote src/mark-face-urls.ts (${urls.length} bytes)`);
+const read = async (file: string) =>
+  new Uint8Array(readFileSync(require.resolve(`@fontsource/${file}`)));
+
+function write(name: string, source: string) {
+  writeFileSync(fileURLToPath(new URL(`../src/${name}`, import.meta.url)), source);
+  console.log(`[faces] wrote src/${name} (${source.length} bytes)`);
+}
+
+write('mark-face-data.ts', await markFaceDataSource(read));
+write('mark-face-urls.ts', markFaceUrlsSource(markFaceFilesOf()));
+write('mark-face-region-data.ts', await markFaceRegionDataSource(read));
+for (const { region } of MARK_FACE_REGIONS)
+  write(`mark-face-slices-${region}.ts`, await markFaceSlicesSource(read, region));

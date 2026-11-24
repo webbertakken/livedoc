@@ -68,15 +68,28 @@ describe('setting runs in the mark faces', () => {
     const failing = async () => {
       throw new Error('offline');
     };
-    expect(await loadTypesetter(['noto-sans-greek-400'], failing)).toEqual({
+    expect(await loadTypesetter([{ face: 'noto-sans-greek-400', text: 'Ω' }], failing)).toEqual({
       ok: false,
       face: 'noto-sans-greek-400',
     });
-    expect(await loadTypesetter(['noto-sans-latin-400', 'no-such-face'], markFaceFiles)).toEqual({
+    expect(
+      await loadTypesetter(
+        [
+          { face: 'noto-sans-latin-400', text: 'a' },
+          { face: 'no-such-face', text: 'b' },
+        ],
+        markFaceFiles,
+      ),
+    ).toEqual({
       ok: false,
       face: 'no-such-face',
     });
-    expect(await loadTypesetter(['noto-sans-greek-400'], async () => new Uint8Array(64))).toEqual({
+    expect(
+      await loadTypesetter(
+        [{ face: 'noto-sans-greek-400', text: 'Ω' }],
+        async () => new Uint8Array(64),
+      ),
+    ).toEqual({
       ok: false,
       face: 'noto-sans-greek-400',
     });

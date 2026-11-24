@@ -6,9 +6,13 @@ import { embeddedFaces, subsetTag, toUnicodeCMap, widthsOf } from './embedded-fa
 // marks.md "In the file": each face used, once, a subset with its W and its ToUnicode.
 describe('the mark faces a bake writes', () => {
   it('tags a subset by the glyphs it holds', () => {
-    expect(subsetTag([3, 1, 2])).toMatch(/^[A-Z]{6}$/);
-    expect(subsetTag([3, 1, 2])).toBe(subsetTag([1, 2, 3]));
-    expect(subsetTag([1, 2, 4])).not.toBe(subsetTag([1, 2, 3]));
+    expect(subsetTag('a', [3, 1, 2])).toMatch(/^[A-Z]{6}$/);
+    expect(subsetTag('a', [3, 1, 2])).toBe(subsetTag('a', [1, 2, 3]));
+    expect(subsetTag('a', [1, 2, 4])).not.toBe(subsetTag('a', [1, 2, 3]));
+    // Two slices of one family holding the same glyph ids are told apart.
+    expect(subsetTag('noto-sans-jp-4-400', [1, 2])).not.toBe(
+      subsetTag('noto-sans-jp-5-400', [1, 2]),
+    );
   });
 
   it('maps each glyph back to its characters, a hundred to a block', () => {

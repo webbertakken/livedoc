@@ -5,7 +5,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { DarkPages, Mark, PageName, type PageMatrix, type Quad } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
-import { MARK_FACES_STACK } from '@/lib/pdf-document/pdf-mark-faces';
+import { markFacesStack } from '@/lib/pdf-document/pdf-mark-faces';
 import { TYPED_FACES } from '@/lib/pdf-document/pdf-typed';
 import { PdfMarksOverlay } from './PdfMarksOverlay';
 
@@ -203,7 +203,7 @@ describe('a Text or a Callout over a page', () => {
     const text = Mark.text({ ...base, id: 't1', words: 'Hello\n\nשלום' })!;
     const lines = [...words([text]).querySelectorAll('[data-pdf-mark="t1"] text')];
     expect(lines.map((line) => line.textContent)).toEqual(['Hello', 'שלום']);
-    expect(lines[0]!.parentElement!.getAttribute('font-family')).toBe(MARK_FACES_STACK);
+    expect(lines[0]!.parentElement!.getAttribute('font-family')).toBe(markFacesStack('sc'));
     expect(lines.map((line) => line.getAttribute('textLength'))).toEqual([null, null]);
     expect(lines[1]!.getAttribute('direction')).toBe('rtl');
     // A script whose family has no bold is drawn regular, as the bake sets it, never made bold by the browser.

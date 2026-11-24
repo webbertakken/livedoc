@@ -1,52 +1,39 @@
-// marks.md "Making a mark" (a Text's words), "Stamps" (a stamp's): one answer for every mark's words.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { Mark, type StampInput, type TextBoxInput } from './mark';
-import { MarkWords } from './mark-words';
-import { StampLayout } from './stamp-layout';
-import { TypedLayout } from './typed-layout';
+import { markFaceRegionDataSource, markFaceSlicesSource } from './engine/mark-face-region-table';
+import { markFaceDataSource, markFaceFilesOf, markFaceUrlsSource } from './engine/mark-face-table';
+import { MARK_FACE_DATA } from './mark-face-data';
+import { MARK_FACE_REGIONS, markFaceRange } from './mark-face-families';
+import { markFaceFiles } from './testing/fixtures';
 
-const base = {
-  id: 'm1',
-  page: 'p:1',
-  colour: '#ba1d26',
-  opacity: 1,
-  author: 'Ada',
-  createdAt: 1_795_000_000_000,
-} as const;
-
-describe('MarkWords.of', () => {
-  it('sets a Text’s words as TypedLayout places them, plain, at the mark’s size', () => {
-    const text = Mark.text({
-      ...base,
-      rect: [100, 600, 200, 650],
-      words: 'Check this',
-      size: 12,
-    } as unknown as TextBoxInput)!;
-    expect(MarkWords.of(text)).toEqual({
-      lines: TypedLayout.place(text).map((line) => ({ ...line, size: 12, bold: false })),
-      box: [100, 600, 200, 650],
-      faces: 'helvetica',
-    });
+// marks.md "Laying out": the table is generated from the very files LiveDoc serves; a test fails while they differ.
+describe('the table of the mark faces', () => {
+  it('is what the Fontsource packages make of it', async () => {
+    expect(await markFaceDataSource(markFaceFiles)).toBe(
+      readFileSync(new URL('./mark-face-data.ts', import.meta.url), 'utf8'),
+    );
   });
 
-  it('sets a stamp’s words as StampLayout places them', () => {
-    const stamp = Mark.stamp({
-      ...base,
-      rect: [100, 600, 220, 627],
-      stamp: 'draft',
-      lines: ['DRAFT'],
-    } as unknown as StampInput)!;
-    expect(MarkWords.of(stamp)).toEqual({
-      lines: StampLayout.place(stamp),
-      box: stamp.rect,
-      faces: 'helvetica',
-    });
-    // marks.md "Words in every script": a second line Helvetica cannot write sets the stamp in the mark faces.
-    expect(MarkWords.of({ ...stamp, lines: ['DRAFT', 'by Ελένη'] })!.faces).toBe('noto');
+  it('is what the Fontsource slices make of Chinese, Japanese and Korean', async () => {
+    const file = (name: string) => readFileSync(new URL(`./${name}`, import.meta.url), 'utf8');
+    expect(await markFaceRegionDataSource(markFaceFiles)).toBe(file('mark-face-region-data.ts'));
+    for (const { region } of MARK_FACE_REGIONS)
+      expect(await markFaceSlicesSource(markFaceFiles, region)).toBe(
+        file(`mark-face-slices-${region}.ts`),
+      );
   });
 
-  it('answers nothing for a kind that sets no words', () => {
-    const line = Mark.line('line', { ...base, line: [0, 0, 10, 10], width: 2 })!;
-    expect(MarkWords.of(line)).toBeNull();
+  it('names the file of each face as an asset of the app that bundles the engine', () => {
+    expect(markFaceFilesOf()).toEqual(MARK_FACE_DATA.map((face) => face.file));
+    expect(markFaceUrlsSource(markFaceFilesOf())).toBe(
+      readFileSync(new URL('./mark-face-urls.ts', import.meta.url), 'utf8'),
+    );
+  });
+
+  it('reads a subset range from the unicode.json of Fontsource, a numbered slice keyed in brackets', () => {
+    const ranges = { latin: 'U+0000-00FF', '[3]': 'U+1F600' };
+    expect(markFaceRange(ranges, 'latin')).toBe('U+0000-00FF');
+    expect(markFaceRange(ranges, '3')).toBe('U+1F600');
+    expect(() => markFaceRange(ranges, 'greek')).toThrow('no unicode range for the subset greek');
   });
 });

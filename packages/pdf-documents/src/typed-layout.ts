@@ -5,6 +5,7 @@
 // pictures and the appearance a bake writes set one mark's words the same way.
 import type { PagePoint } from './engine-contract';
 import { Helvetica } from './helvetica';
+import type { MarkFaceRegion } from './mark-face-families';
 import { MarkFaces, type MarkFaceSet } from './mark-faces';
 import { PDF_CALLOUT_KNEE_PT, PDF_TEXT_PADDING_PT } from './limits';
 import type { Box, CalloutLine, TypedMark } from './mark';
@@ -35,30 +36,35 @@ const readsRightToLeft = (paragraph: string): boolean => {
   return first !== undefined && RIGHT_TO_LEFT.test(first);
 };
 
+/** What a mark's words are set in: its faces, and the region of its Chinese, Japanese or Korean. */
+type Setting = { readonly faces: MarkFaceSet; readonly region: MarkFaceRegion };
+
 /** How wide words are set at a size in a mark's faces, in points. */
-const widthOf = (text: string, size: number, faces: MarkFaceSet): number =>
+const widthOf = (text: string, size: number, { faces, region }: Setting): number =>
   (faces === 'helvetica'
     ? Array.from(text).reduce(
         (sum, character) => sum + Helvetica.width(character.codePointAt(0)!),
         0,
       )
-    : MarkFaces.width({ text, bold: false })) *
+    : MarkFaces.width({ text, bold: false, region })) *
   (size / 1000);
 
 /** A mark's words as they are set: composed (Unicode NFC), each paragraph apart. */
 const paragraphsOf = (words: string): string[] =>
   words.normalize('NFC').replace(/\r\n?/g, '\n').split('\n');
 
-/** The faces a mark's words are set in. */
-const facesOf = (paragraphs: readonly string[]): MarkFaceSet =>
-  MarkFaces.setOf(paragraphs.map((text) => ({ text, bold: false })));
+/** What a mark's words are set in. */
+const settingOf = (paragraphs: readonly string[]): Setting => {
+  const lines = paragraphs.map((text) => ({ text, bold: false }));
+  return { faces: MarkFaces.setOf(lines), region: MarkFaces.regionOf(lines) };
+};
 
 /** A word wider than `room` broken where it meets the side: each piece as many characters as fit, one at the least. */
-function pieces(word: string, size: number, room: number, faces: MarkFaceSet): string[] {
+function pieces(word: string, size: number, room: number, setting: Setting): string[] {
   const all: string[] = [];
   let piece = '';
   for (const character of Array.from(word)) {
-    if (piece !== '' && widthOf(piece + character, size, faces) > room) {
+    if (piece !== '' && widthOf(piece + character, size, setting) > room) {
       all.push(piece);
       piece = '';
     }
@@ -68,14 +74,14 @@ function pieces(word: string, size: number, room: number, faces: MarkFaceSet): s
 }
 
 /** A paragraph's lines, broken greedily at the spaces, a word too wide broken itself. */
-function wrap(paragraph: string, size: number, room: number, faces: MarkFaceSet): string[] {
+function wrap(paragraph: string, size: number, room: number, setting: Setting): string[] {
   // A paragraph has a word at the least, if only an empty one.
   const [first, ...rest] = paragraph.split(' ');
-  const lines = pieces(first!, size, room, faces);
+  const lines = pieces(first!, size, room, setting);
   for (const word of rest) {
     const joined = `${lines.at(-1)!} ${word}`;
-    if (widthOf(joined, size, faces) <= room) lines[lines.length - 1] = joined;
-    else lines.push(...pieces(word, size, room, faces));
+    if (widthOf(joined, size, setting) <= room) lines[lines.length - 1] = joined;
+    else lines.push(...pieces(word, size, room, setting));
   }
   return lines;
 }
@@ -85,19 +91,22 @@ export const TypedLayout = {
   lines: (words: string, size: number, width: number): readonly TypedLine[] => {
     const room = width - 2 * PDF_TEXT_PADDING_PT;
     const paragraphs = paragraphsOf(words);
-    const faces = facesOf(paragraphs);
+    const setting = settingOf(paragraphs);
     return paragraphs.flatMap((paragraph) => {
       const rtl = readsRightToLeft(paragraph);
-      return wrap(paragraph, size, room, faces).map((text) => ({
+      return wrap(paragraph, size, room, setting).map((text) => ({
         text,
-        width: widthOf(text, size, faces),
+        width: widthOf(text, size, setting),
         rtl,
       }));
     });
   },
 
   /** The faces a mark's words are set in. */
-  faces: (words: string): MarkFaceSet => facesOf(paragraphsOf(words)),
+  faces: (words: string): MarkFaceSet => settingOf(paragraphsOf(words)).faces,
+
+  /** The region a mark's Chinese, Japanese or Korean is set in. */
+  region: (words: string): MarkFaceRegion => settingOf(paragraphsOf(words)).region,
 
   /** How high a box holds so many lines, in points. */
   height: (lines: number, size: number): number =>

@@ -9,7 +9,7 @@ export type MarkFaceWork = {
   id: string;
   name: string;
   version: string;
-  /** The subsets the editor serves of it, as its files name them. */
+  /** The subsets the editor serves of it, as its files name them; `\\d+` for every numbered slice. */
   subsets: readonly string[];
   /** Its weights the editor serves. */
   weights: readonly (400 | 700)[];
@@ -197,6 +197,33 @@ export const MARK_FACE_WORKS: readonly MarkFaceWork[] = [
     weights: [400],
     file: 'fontsource-noto-sans-telugu-5.3.0-LICENSE.txt',
     sha256: 'eacb6e3b470b5894f81fa7091663983068a391ad1741f868e70b131051ad48ea',
+  },
+  {
+    id: 'noto-sans-sc',
+    name: 'Noto Sans SC',
+    version: '5.3.1',
+    subsets: ['\\d+'],
+    weights: [400],
+    file: 'fontsource-noto-sans-sc-5.3.1-LICENSE.txt',
+    sha256: '18aabf190848725e2576eefb5c29ba06aac1029d02132252a7f312eac2e50cf3',
+  },
+  {
+    id: 'noto-sans-jp',
+    name: 'Noto Sans JP',
+    version: '5.3.1',
+    subsets: ['\\d+'],
+    weights: [400],
+    file: 'fontsource-noto-sans-jp-5.3.1-LICENSE.txt',
+    sha256: '18aabf190848725e2576eefb5c29ba06aac1029d02132252a7f312eac2e50cf3',
+  },
+  {
+    id: 'noto-sans-kr',
+    name: 'Noto Sans KR',
+    version: '5.3.1',
+    subsets: ['\\d+'],
+    weights: [400],
+    file: 'fontsource-noto-sans-kr-5.3.1-LICENSE.txt',
+    sha256: '18aabf190848725e2576eefb5c29ba06aac1029d02132252a7f312eac2e50cf3',
   },
   {
     id: 'noto-sans-symbols',

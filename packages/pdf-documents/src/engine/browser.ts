@@ -5,6 +5,7 @@
 import type { PdfEngine, PdfEngineLog } from '../engine-contract';
 import { createPdfEngine } from './index';
 import { MARK_FACE_URLS } from '../mark-face-urls';
+import { MarkFaceSlices } from '../mark-face-slices';
 import type { MarkFaceSource } from './typesetter';
 
 /** The reader's binary did not load: a failure with a name of its own, since only a failure's name is logged. */
@@ -12,9 +13,12 @@ export class ReaderNotLoaded extends Error {
   override readonly name = 'ReaderNotLoaded';
 }
 
-/** A mark face's file, fetched as the app's own asset; a face the app does not bundle, or a failed fetch, throws. */
+/**
+ * A mark face's file, a subset's or a region's slice, fetched as the app's own asset; a face the app does not bundle,
+ * or a failed fetch, throws.
+ */
 export const fetchMarkFace: MarkFaceSource = async (file) => {
-  const url = MARK_FACE_URLS[file];
+  const url = MARK_FACE_URLS[file] ?? (await MarkFaceSlices.sliceOf(file))?.url;
   if (!url) throw new Error('the app bundles no such face');
   const answer = await fetch(url());
   if (!answer.ok) throw new Error(`the face did not load: ${answer.status}`);
