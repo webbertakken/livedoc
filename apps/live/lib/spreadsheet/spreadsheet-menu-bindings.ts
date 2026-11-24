@@ -298,12 +298,26 @@ export function gridMenuBindings(port: GridMenuPort): OfficeActions {
   };
 }
 
-/** The sheet bar's items, for an Editor: Insert › Sheet adds a sheet after the open one (D170). */
+/**
+ * The sheet bar's items, for an Editor: Insert › Sheet adds a sheet after the open one (D170); View › Hidden Sheets,
+ * counting them and dimmed at none, opens All Sheets (D180).
+ */
 export function sheetBarBindings(
-  bar: { canChange: boolean; add: (place: 'afterOpen') => void } | null,
+  bar: {
+    canChange: boolean;
+    add: (place: 'afterOpen') => void;
+    hiddenCount: number;
+    listSheets: (open: boolean) => void;
+  } | null,
 ): OfficeActions {
   if (!bar?.canChange) return {};
-  return { 'insert-sheet': run(() => bar.add('afterOpen')) };
+  return {
+    'insert-sheet': run(() => bar.add('afterOpen')),
+    'hidden-sheets': run(() => bar.listSheets(true), {
+      label: `Hidden Sheets (${bar.hiddenCount})`,
+      disabled: bar.hiddenCount === 0,
+    }),
+  };
 }
 
 /** Undo and Redo for anyone who writes, dimmed without a step to take. */

@@ -18,6 +18,9 @@ function setup(
 ) {
   let tabs = start;
   let open = 't1';
+  // Tabs whose sheet is hidden, and each tab's colour.
+  const hidden = new Set<string>();
+  const colours = new Map<string, string>();
   const steps: ItemUndoStep[] = [];
   const put = vi.fn(async (_: SheetBarEntry) => {});
   const take = vi.fn(async (_: Pick<SheetBarEntry, 'tabId' | 'sheetId'>) => {});
@@ -35,7 +38,15 @@ function setup(
     store: () => ({
       sheetsOn: (tabId: string) =>
         tabs.some((t) => t.id === tabId) && tabId !== 'cold'
-          ? [{ id: `sheet${tabId}` } as never]
+          ? [
+              {
+                id: `sheet${tabId}`,
+                layout: {
+                  ...(hidden.has(tabId) ? { hidden: true } : {}),
+                  ...(colours.has(tabId) ? { tabColour: colours.get(tabId) } : {}),
+                },
+              } as never,
+            ]
           : [],
       write: write as never,
     }),
@@ -61,6 +72,8 @@ function setup(
     opened,
     setTabs: (t: Tab[]) => (tabs = t),
     setOpen: (id: string) => (open = id),
+    hidden,
+    colours,
   };
 }
 
@@ -261,7 +274,7 @@ describe('deleting a sheet', () => {
   it('never deletes the last sheet, nor one not loaded', () => {
     const one = setup([{ id: 't1', name: 'Sheet1' }]);
     one.changes.remove('t1');
-    expect(one.toast).toHaveBeenCalledWith('A spreadsheet keeps at least one sheet');
+    expect(one.toast).toHaveBeenCalledWith('A spreadsheet keeps at least one sheet shown');
     const cold = setup([
       { id: 't1', name: 'Sheet1' },
       { id: 'cold', name: 'Cold' },
@@ -294,8 +307,114 @@ describe('deleting a sheet', () => {
     s.take.mockRejectedValueOnce({ code: 'sheet_last_visible' });
     s.changes.remove('t2');
     await settle();
-    expect(s.toast).toHaveBeenCalledWith('A spreadsheet keeps at least one sheet');
+    expect(s.toast).toHaveBeenCalledWith('A spreadsheet keeps at least one sheet shown');
     expect(s.steps).toHaveLength(0);
+  });
+});
+
+const look = (options: Record<string, unknown>) => ({
+  kind: 'layout',
+  changes: [{ k: 'options', ...options }],
+});
+
+describe("colouring a sheet's tab", () => {
+  it('writes the colour through the store, and Reset takes it off (D177)', () => {
+    const s = setup();
+    s.changes.colour('t2', '#1a73e8');
+    expect(s.write).toHaveBeenCalledWith('sheett2', look({ tabColour: '#1a73e8' }));
+    expect(track).toHaveBeenCalledWith('Sheet', 'Changed', 'SheetColour');
+    s.colours.set('t2', '#1a73e8');
+    s.changes.colour('t2', null);
+    expect(s.write).toHaveBeenLastCalledWith('sheett2', look({ tabColour: null }));
+  });
+
+  it('writes nothing for the colour it has, a store refusal, or a sheet not loaded', () => {
+    const s = setup([
+      { id: 't1', name: 'Sheet1' },
+      { id: 'cold', name: 'Cold' },
+    ]);
+    s.changes.colour('t1', null);
+    expect(s.write).not.toHaveBeenCalled();
+    s.write.mockReturnValueOnce('write_invalid');
+    s.changes.colour('t1', '#1a73e8');
+    expect(track).not.toHaveBeenCalled();
+    s.changes.colour('cold', '#1a73e8');
+    expect(s.toast).toHaveBeenCalledWith('This sheet is still loading');
+  });
+});
+
+describe('hiding and showing a sheet', () => {
+  const three = [
+    { id: 't1', name: 'Sheet1' },
+    { id: 't2', name: 'Costs' },
+    { id: 't3', name: 'Notes' },
+  ];
+
+  it('hides a sheet through the store, the open one opening the next shown (D179)', () => {
+    const s = setup(three);
+    s.hidden.add('t2');
+    s.changes.hide('t1');
+    expect(s.write).toHaveBeenCalledWith('sheett1', look({ hidden: true }));
+    expect(s.opened).toEqual(['t3']);
+    expect(track).toHaveBeenCalledWith('Sheet', 'Changed', 'HideSheet');
+    s.changes.hide('t3');
+    expect(s.write).toHaveBeenCalledTimes(2);
+  });
+
+  it('leaves the open sheet open when another is hidden', () => {
+    const s = setup(three);
+    s.changes.hide('t2');
+    expect(s.write).toHaveBeenCalledWith('sheett2', look({ hidden: true }));
+    expect(s.opened).toEqual([]);
+  });
+
+  it('never hides the last sheet shown, nor opens past a refused write', () => {
+    const s = setup(three);
+    s.hidden.add('t2');
+    s.hidden.add('t3');
+    s.changes.hide('t1');
+    expect(s.toast).toHaveBeenCalledWith('A spreadsheet keeps at least one sheet shown');
+    s.hidden.delete('t3');
+    s.write.mockReturnValueOnce('sheet_last_visible');
+    s.changes.hide('t1');
+    expect(s.opened).toEqual([]);
+    expect(s.write).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a hidden sheet and opens it; a shown one just opens (D180)', () => {
+    const s = setup(three);
+    s.hidden.add('t3');
+    s.changes.show('t3');
+    expect(s.write).toHaveBeenCalledWith('sheett3', look({ hidden: false }));
+    expect(track).toHaveBeenCalledWith('Sheet', 'Changed', 'ShowSheet');
+    expect(s.opened).toEqual(['t3']);
+    s.changes.show('t2');
+    expect(s.write).toHaveBeenCalledTimes(1);
+    expect(s.opened).toEqual(['t3', 't2']);
+    s.write.mockReturnValueOnce('write_invalid');
+    s.changes.show('t3');
+    expect(s.opened).toEqual(['t3', 't2']);
+  });
+
+  it('never deletes the last sheet shown, and opens the next shown instead', async () => {
+    const s = setup(three);
+    s.hidden.add('t3');
+    s.setOpen('t2');
+    s.changes.remove('t2');
+    await settle();
+    expect(s.opened).toEqual(['t1']);
+    s.hidden.add('t2');
+    s.changes.remove('t1');
+    expect(s.toast).toHaveBeenCalledWith('A spreadsheet keeps at least one sheet shown');
+  });
+
+  it('moves right and left over the hidden sheets (D181)', async () => {
+    const s = setup(three);
+    s.hidden.add('t2');
+    s.changes.moveBy('t1', 1);
+    s.changes.moveBy('t3', -1);
+    await settle();
+    expect(s.move.mock.calls.map((c) => c[0].after)).toEqual(['t3', null]);
   });
 });
 

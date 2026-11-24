@@ -219,7 +219,8 @@ const VIEW_MENU = menu('view', 'View', [
     item('minimise-comments', 'Minimise Comments', 'view', { checkable: 'radio' }),
     item('show-all-comments', 'Show All Comments', 'view', { checkable: 'radio' }),
   ]),
-  item('hidden-sheets', 'Hidden Sheets', 'view'),
+  // spreadsheet.md "Sheets in the sheet bar": labelled with the count, opening All Sheets (D180).
+  built('hidden-sheets', 'Hidden Sheets', 'edit'),
   SEPARATOR,
   submenu(
     'zoom',

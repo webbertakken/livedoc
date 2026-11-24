@@ -28,7 +28,6 @@ import {
   getDocument,
   getTab,
   insertSheetStatements,
-  listSheetHeads,
   listSheets,
   readSheetHead,
   tabOrderOpenStatement,
@@ -50,6 +49,7 @@ import {
 } from './sheet-route-kit';
 import { storeSheetWrite } from './sheet-write-route';
 import { removeDocumentTab } from './tab-removal';
+import { liveSheets, shownElsewhere } from './workbook-shown-sheets';
 
 // A tab id a caller may name: what the editor makes (a UUID) and any id of the same alphabet up to this length.
 const TAB_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
@@ -68,15 +68,6 @@ async function workbookEditor(
 }
 
 // The sheets on the document's tabs, in tab order: a deleted tab's sheet only waits to expire.
-async function liveSheets(ctx: DocumentRouteContext, documentId: string): Promise<SheetHead[]> {
-  const [order, heads] = await Promise.all([
-    documentTabOrder(ctx.env, documentId),
-    listSheetHeads(ctx.env, documentId),
-  ]);
-  const at = new Map(order.map((id, i) => [id, i]));
-  return heads.filter((h) => at.has(h.tabId)).sort((a, b) => at.get(a.tabId)! - at.get(b.tabId)!);
-}
-
 function readAdd(raw: Record<string, unknown> | Response): WorkbookSheetAddRequest | null {
   if (raw instanceof Response) return null;
   const { name, after, tabId, sheetId, copyOf } = raw;
@@ -290,8 +281,7 @@ async function deleteSheet(
   const live = await liveSheets(ctx, documentId);
   const head = live.find((h) => h.id === sheetId);
   if (!head) return workbookRefused('sheet_not_found', 404);
-  // No sheet is hidden yet, so the last visible sheet is the last sheet.
-  if (live.length <= 1) return workbookRefused('sheet_last_visible', 409);
+  if (!shownElsewhere(live, sheetId)) return workbookRefused('sheet_last_visible', 409);
   await removeDocumentTab(ctx, documentId, head.tabId);
   await relayTabs(ctx, documentId);
   relaySheet(ctx, documentId, {

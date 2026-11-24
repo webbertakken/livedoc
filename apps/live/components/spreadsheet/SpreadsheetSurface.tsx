@@ -27,6 +27,7 @@ import { SheetImagesContext, useSheetImageLoader } from '@/components/sheets/she
 import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
+import { shownTabs } from '@/lib/spreadsheet/sheet-bar-places';
 import type { SpreadsheetHistory } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { ImportReportDialog } from './ImportReportDialog';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
@@ -43,6 +44,7 @@ import {
   useSpreadsheetZoomScale,
 } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
+import { hiddenTabIds, useSheetTabLooks } from './useSheetTabLooks';
 import { SheetBarActionsContext, useSheetBarActions } from './useSheetBarActions';
 import {
   SheetStepContext,
@@ -91,10 +93,22 @@ export function SpreadsheetSurface({
   const { zoom, scale } = useSpreadsheetZoom();
   // View › Show › Formulas, the person's own across the sheets (grid-and-editing.md "Formulas", D141).
   const formulas = useShowFormulas();
-  // Alt+Up and Alt+Down in the grid: the previous and next sheet, none past either end.
-  const stepSheet = useSheetStep(tabs, tabId, onSelectTab);
-  // Add, duplicate, rename and delete, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
-  const sheetBar = useSheetBarActions({ bridge, scope, tabs, tabId, onSelectTab, editTabs });
+  // Each tab's colour and whether it is hidden, from its sheet (spreadsheet.md "Sheets in the sheet bar", D177).
+  const looks = useSheetTabLooks(bridge, tabs);
+  const hidden = useMemo(() => hiddenTabIds(looks), [looks]);
+  const shown = useMemo(() => shownTabs(tabs, hidden, tabId), [tabs, hidden, tabId]);
+  // Alt+Up and Alt+Down in the grid: the previous and next sheet shown, none past either end (D181).
+  const stepSheet = useSheetStep(shown, tabId, onSelectTab);
+  // The sheet bar's changes, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
+  const sheetBar = useSheetBarActions({
+    bridge,
+    scope,
+    tabs,
+    tabId,
+    onSelectTab,
+    editTabs,
+    hiddenCount: hidden.size,
+  });
   return (
     <section
       ref={root}
@@ -147,6 +161,7 @@ export function SpreadsheetSurface({
           peers={sheetBarPeers}
           summarySlot={setSummarySlot}
           actions={bridge ? sheetBar : null}
+          looks={looks}
         />
       </SheetBarActionsContext.Provider>
       <ImportReportDialog documentId={scope.documentId} />

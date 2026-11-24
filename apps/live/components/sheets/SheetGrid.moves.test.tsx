@@ -34,12 +34,14 @@ const select = (h: Mounted, r: number, c: number): void => {
 const surface = (): SheetSurfaceKeys & {
   steps: number[];
   summaries: number;
+  lists: number;
   leaves: number;
   redos: number;
 } => {
   const out = {
     steps: [] as number[],
     summaries: 0,
+    lists: 0,
     leaves: 0,
     redos: 0,
     redo: () => void (out.redos += 1),
@@ -47,6 +49,7 @@ const surface = (): SheetSurfaceKeys & {
     focusSummary: () => void (out.summaries += 1),
     leaveGrid: () => void (out.leaves += 1),
     renameSheet: () => undefined,
+    listSheets: () => void (out.lists += 1),
   };
   return out;
 };
@@ -112,6 +115,9 @@ describe('the workbook keys', () => {
     expect(keys.steps).toEqual([-1, 1, -1, 1]);
     key(h, { key: 'Q', code: 'KeyQ', altKey: true, shiftKey: true });
     expect(keys.summaries).toBe(1);
+    // surface.md "Sheet bar": Alt+Shift+K opens All Sheets.
+    key(h, { key: 'K', code: 'KeyK', altKey: true, shiftKey: true });
+    expect(keys.lists).toBe(1);
     // D137: Ctrl+Alt+Shift+M leaves the grid for the toolbar.
     key(h, { key: 'M', code: 'KeyM', ctrlKey: true, altKey: true, shiftKey: true });
     expect(keys.leaves).toBe(1);

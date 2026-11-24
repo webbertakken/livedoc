@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseXml } from '@livedoc/office-packages';
 import { SPREADSHEETML_NS } from './xlsx-parts';
-import { readXlsxLines, withOutlinePr, xlsxLinesOut } from './xlsx-lines';
+import { readXlsxLines, withSheetPrOwn, xlsxLinesOut } from './xlsx-lines';
 
 const sheet = (body: string) => {
   const parsed = parseXml(`<worksheet xmlns="${SPREADSHEETML_NS}">${body}</worksheet>`);
@@ -104,8 +104,8 @@ describe('xlsxLinesOut', () => {
   });
 });
 
-describe('withOutlinePr', () => {
-  const own = ' summaryBelow="0"';
+describe('withSheetPrOwn', () => {
+  const own = (p: string) => `<${p}outlinePr summaryBelow="0"/>`;
   it.each([
     ['<sheetPr/>', '<sheetPr><outlinePr summaryBelow="0"/></sheetPr>'],
     [
@@ -113,22 +113,18 @@ describe('withOutlinePr', () => {
       '<x:sheetPr codeName="a>b"><x:outlinePr summaryBelow="0"/></x:sheetPr>',
     ],
     [
-      '<sheetPr><tabColor rgb="FF0000"/><pageSetUpPr fitToPage="1"/></sheetPr>',
-      '<sheetPr><tabColor rgb="FF0000"/><outlinePr summaryBelow="0"/><pageSetUpPr fitToPage="1"/></sheetPr>',
-    ],
-    [
-      "<sheetPr><tabColor rgb='FF'></tabColor></sheetPr>",
-      '<sheetPr><tabColor rgb=\'FF\'></tabColor><outlinePr summaryBelow="0"/></sheetPr>',
+      '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>',
+      '<sheetPr><outlinePr summaryBelow="0"/><pageSetUpPr fitToPage="1"/></sheetPr>',
     ],
     [
       '<sheetPr filterMode="1"><pageSetUpPr/></sheetPr>',
       '<sheetPr filterMode="1"><outlinePr summaryBelow="0"/><pageSetUpPr/></sheetPr>',
     ],
-  ])('puts LiveDoc’s outlinePr into %s', (kept, merged) => {
-    expect(withOutlinePr(kept, own)).toBe(merged);
+  ])('puts LiveDoc’s own children first into %s', (kept, merged) => {
+    expect(withSheetPrOwn(kept, own)).toBe(merged);
   });
 
   it('closes an unterminated start tag at its end', () => {
-    expect(withOutlinePr('<sheetPr', own)).toBe('<sheetPr<outlinePr summaryBelow="0"/>');
+    expect(withSheetPrOwn('<sheetPr', own)).toBe('<sheetPr<outlinePr summaryBelow="0"/>');
   });
 });

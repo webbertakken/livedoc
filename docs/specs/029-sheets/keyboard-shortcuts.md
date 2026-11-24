@@ -102,7 +102,7 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Scroll to active cell                   | `Ctrl+Backspace`           | `⌘+Backspace`                 | `Ctrl+Backspace`             | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Move to next sheet                      | `Alt+Down`                 | `Option+Down or Option+Right` | `Ctrl+Shift+Search+Down`     | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Move to previous sheet                  | `Alt+Up`                   | `Option+Up or Option+Left`    | `Ctrl+Shift+Search+Up`       | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Display list of sheets                  | `Alt+Shift+K`              | `Option+Shift+K`              | `Alt+Shift+K`                | specified                                               |
+| Display list of sheets                  | `Alt+Shift+K`              | `Option+Shift+K`              | `Alt+Shift+K`                | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Open hyperlink                          | `Alt+Enter`                | `Option+Enter`                | `Alt+Enter`                  | specified                                               |
 | Open Explore                            | `Ctrl+Alt+Shift+I`         | `⌘+Option+Shift+I`            | `Ctrl+Alt+Shift+I`           | left out (C3)                                           |
 | Cycle focus between main areas          | `Ctrl+Alt+. or Ctrl+Alt+,` | `⌘+Option+. or ⌘+Option+,`    | `Alt+Shift+. or Alt+Shift+,` | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |

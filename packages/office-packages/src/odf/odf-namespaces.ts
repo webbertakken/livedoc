@@ -19,6 +19,8 @@ export const ODF_NS = {
   calcext: 'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0',
   // LibreOffice's office extension: `loext:decorative` marks a picture decorative (a text document's objects).
   loext: 'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
+  // LibreOffice's table extension: its `tableooo:tab-color` (ODF 1.2's files) is read as a sheet's tab colour.
+  tableooo: 'http://openoffice.org/2009/table',
 } as const;
 
 /** The ODF version every file LiveDoc writes declares. */

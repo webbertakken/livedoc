@@ -23,6 +23,7 @@ import {
   type KeptRelationship,
 } from './kept-content';
 import { OFFICE_RELATIONSHIPS_NS, SPREADSHEETML_NS } from './xlsx-parts';
+import { isReadTabColor } from './xlsx-tab-look';
 
 const MC_NS = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
 const RELS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -54,7 +55,7 @@ export const WORKSHEET_READ: ReadonlySet<string> = new Set([
   'cols',
   'sheetData',
 ]);
-const SHEET_READ: ReadonlySet<string> = new Set(['name', 'sheetId']);
+const SHEET_READ: ReadonlySet<string> = new Set(['name', 'sheetId', 'state']);
 // The styles part's children a kept format rule, table or pivot table names by index (D110).
 const STYLESHEET_KEPT: ReadonlySet<string> = new Set(['dxfs', 'tableStyles']);
 
@@ -65,26 +66,29 @@ function idsNamed(element: XmlElement, into: string[] = []): string[] {
   return into;
 }
 
-// A worksheet's `sheetPr` without its `outlinePr`, which LiveDoc reads and writes (standard-mapping.md "Rows and
-// columns in the file"); any other element as the file wrote it.
+// A `sheetPr`'s children LiveDoc writes itself: its `outlinePr` (standard-mapping.md "Rows and columns in the file")
+// and its `tabColor` ("Sheet name, hidden, tab colour"); a tab colour it cannot read is named, not kept.
+const sheetPrOwn = (e: XmlElement) =>
+  e.uri === SPREADSHEETML_NS && (e.local === 'outlinePr' || e.local === 'tabColor');
+const isSheetPr = (element: XmlElement) =>
+  element.uri === SPREADSHEETML_NS && element.local === 'sheetPr';
+
+// A worksheet's `sheetPr` without the children LiveDoc writes; any other element as the file wrote it.
 function without(parsed: XmlParsed, element: XmlElement, xml: string): string {
-  const outline =
-    element.uri === SPREADSHEETML_NS && element.local === 'sheetPr'
-      ? childElements(element).find((e) => e.uri === SPREADSHEETML_NS && e.local === 'outlinePr')
-      : undefined;
-  if (!outline) return xml;
-  return (
-    parsed.source.slice(element.start, outline.start) +
-    parsed.source.slice(outline.end, element.end)
-  );
+  const own = isSheetPr(element) ? childElements(element).filter(sheetPrOwn) : [];
+  if (own.length === 0) return xml;
+  let out = '';
+  let from = element.start;
+  for (const child of own) {
+    out += parsed.source.slice(from, child.start);
+    from = child.end;
+  }
+  return out + parsed.source.slice(from, element.end);
 }
 
-// A `sheetPr` holding nothing but its `outlinePr`: nothing left to keep.
-const onlyOutline = (element: XmlElement) =>
-  element.uri === SPREADSHEETML_NS &&
-  element.local === 'sheetPr' &&
-  element.attributes.length === 0 &&
-  childElements(element).every((e) => e.uri === SPREADSHEETML_NS && e.local === 'outlinePr');
+// A `sheetPr` holding nothing but what LiveDoc writes: nothing left to keep.
+const onlyOwn = (element: XmlElement) =>
+  isSheetPr(element) && element.attributes.length === 0 && childElements(element).every(sheetPrOwn);
 
 /** Kept content as the XLSX reader gathers it, part by part. */
 export class XlsxKeeper {
@@ -196,11 +200,12 @@ export class XlsxKeeper {
     const ids = this.keepRelationships(part, 'sheet', { sheet }, new Set());
     this.rootAttributes('worksheet-attribute', parsed.root, { sheet });
     for (const child of childElements(parsed.root))
-      if (
-        !(child.uri === SPREADSHEETML_NS && WORKSHEET_READ.has(child.local)) &&
-        !onlyOutline(child)
-      )
+      if (!(child.uri === SPREADSHEETML_NS && WORKSHEET_READ.has(child.local)) && !onlyOwn(child))
         this.element('worksheet', parsed, child, { sheet }, ids);
+    const sheetPr = childElements(parsed.root).find(isSheetPr);
+    for (const tab of sheetPr ? childElements(sheetPr) : [])
+      if (tab.uri === SPREADSHEETML_NS && tab.local === 'tabColor' && !isReadTabColor(tab, tab.uri))
+        this.unread++;
   }
 
   /** The styles part's differential formats and table styles (D110); none when it does not parse. */

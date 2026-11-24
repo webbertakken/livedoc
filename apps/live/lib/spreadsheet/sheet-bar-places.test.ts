@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   duplicateName,
   landingAfter,
-  openAfterDelete,
+  moveByAfter,
+  openInstead,
+  shownTabs,
   tabsBefore,
   tabsWithInserted,
 } from './sheet-bar-places';
@@ -39,12 +41,41 @@ describe('tabsBefore and landingAfter', () => {
   });
 });
 
-describe('openAfterDelete (D173)', () => {
+const none = new Set<string>();
+
+describe('shownTabs (D179)', () => {
+  it('leaves the hidden tabs out, never the open one', () => {
+    expect(ids(shownTabs(tabs, new Set(['a', 'b']), 'b'))).toEqual(['b', 'c']);
+    expect(shownTabs(tabs, none, 'a')).toBe(tabs);
+  });
+});
+
+describe('moveByAfter (D181)', () => {
+  const four = [...tabs, { id: 'd' }];
+  it('steps over hidden tabs to the next shown', () => {
+    const hidden = new Set(['b']);
+    expect(moveByAfter(four, hidden, 'a', 1)).toEqual({ after: 'c' });
+    expect(moveByAfter(four, hidden, 'c', -1)).toEqual({ after: null });
+    expect(moveByAfter(four, hidden, 'd', -1)).toEqual({ after: 'b' });
+  });
+  it('goes nowhere past either end or for a tab not there', () => {
+    expect(moveByAfter(four, new Set(['d']), 'c', 1)).toBeNull();
+    expect(moveByAfter(four, none, 'a', -1)).toBeNull();
+    expect(moveByAfter(four, none, 'gone', 1)).toBeNull();
+  });
+});
+
+describe('openInstead (D173, D179)', () => {
+  it('opens the next shown tab, else the one before', () => {
+    expect(openInstead(tabs, new Set(['b']), 'a')).toBe('c');
+    expect(openInstead(tabs, new Set(['c']), 'b')).toBe('a');
+  });
+
   it('opens the tab after, else the one before, else none', () => {
-    expect(openAfterDelete(tabs, 'b')).toBe('c');
-    expect(openAfterDelete(tabs, 'c')).toBe('b');
-    expect(openAfterDelete([{ id: 'a' }], 'a')).toBeNull();
-    expect(openAfterDelete(tabs, 'gone')).toBeNull();
+    expect(openInstead(tabs, none, 'b')).toBe('c');
+    expect(openInstead(tabs, none, 'c')).toBe('b');
+    expect(openInstead([{ id: 'a' }], none, 'a')).toBeNull();
+    expect(openInstead(tabs, none, 'gone')).toBeNull();
   });
 });
 

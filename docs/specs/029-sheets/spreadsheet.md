@@ -115,14 +115,27 @@ tab's menu holds:
 - Deleting a sheet makes every reference to it `#REF!`; Undo puts it back with its id.
 - **Move Right** and **Move Left** move the sheet one place, dimmed at the end it cannot pass; a drag moves it to
   where it is let go (D176). `SHEET` and `SHEETS` count the sheets in the new order.
+- **Change Colour** draws the tab's name on an underline in the colour picked; **Reset** takes the colour off. The
+  colour and whether the sheet is hidden are the sheet's own, kept with its look and sent as its writes are; a
+  duplicate keeps the colour (default, D177).
+- **Hide Sheet** takes the tab out of the bar; the last sheet left to show is never hidden or deleted, by anyone.
+  Hiding the open sheet opens the next sheet shown after it, else the one before; a sheet someone else hides while it
+  is open stays open, its tab shown, until another sheet opens (default, D179).
+- A hidden sheet is listed in **All Sheets**, dimmed with "Hidden"; picking it there, or in **View** ›
+  **Hidden Sheets**, shows it again and opens it (default, D180). Its formulas and the formulas reading it work as
+  ever, and the files keep it hidden.
+- Hiding is tidiness, never protection: a Participant or a Viewer sees the hidden sheets listed, dimmed, and cannot
+  open them, yet a download holds them (default, D178).
+- **Move Right**, **Move Left**, Alt+Up and Alt+Down pass the hidden sheets: each steps to the next sheet shown
+  (default, D181).
 - Each is one undo step on the person's one timeline ([Undo](grid-and-editing.md#undo)) and is sent live to everyone
   on the workbook: undoing an add or a duplicate deletes the sheet, kept, and redoing puts it back with its ids;
   undoing a delete puts the sheet back with its ids where it was; undoing a move puts it back after the sheet it
-  followed; undoing a rename gives the old name back.
+  followed; undoing a rename gives the old name back; undoing a colour, a hide or a show gives the sheet its look back.
 - Only an Editor changes the sheets: Add Sheet shows for an Editor alone; a tab's menu opens for everyone, the items
   their role may not use dimmed, as the menu bar's are (default, D174).
-- Telemetry: the kinds of change `AddSheet`, `DuplicateSheet`, `DeleteSheet` and `MoveSheet`
-  ([Telemetry](#telemetry)); a rename is `Title`.
+- Telemetry: the kinds of change `AddSheet`, `DuplicateSheet`, `DeleteSheet`, `MoveSheet`, `SheetColour`,
+  `HideSheet` and `ShowSheet` ([Telemetry](#telemetry)); a rename is `Title`.
 
 ## Plan's Sheet tab becomes a spreadsheet
 

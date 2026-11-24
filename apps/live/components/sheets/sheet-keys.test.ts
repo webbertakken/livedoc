@@ -46,6 +46,8 @@ describe('the grid keys (sheet.md "Keyboard")', () => {
     [k('Q', { altKey: true, shiftKey: true, code: 'KeyQ' }), { kind: 'summary' }],
     // spreadsheet.md "Sheets in the sheet bar": Alt+1 renames the open sheet.
     [k('1', { altKey: true, code: 'Digit1' }), { kind: 'renameSheet' }],
+    // surface.md "Sheet bar": Alt+Shift+K opens All Sheets.
+    [k('K', { altKey: true, shiftKey: true, code: 'KeyK' }), { kind: 'listSheets' }],
     [k(' ', { ctrlKey: true, shiftKey: true }), { kind: 'selectAll' }],
     [k('M', { ctrlKey: true, altKey: true, shiftKey: true, code: 'KeyM' }), { kind: 'leave' }],
     [k('a', { metaKey: true }), { kind: 'selectAll' }],

@@ -16,7 +16,7 @@ import {
   type KeptItem,
   type KeptPart,
 } from './kept-content';
-import { withOutlinePr } from './xlsx-lines';
+import { withSheetPrOwn } from './xlsx-lines';
 
 // ECMA-376 Part 1's order of the workbook's and the worksheet's children (CT_Workbook, CT_Worksheet).
 const WORKBOOK_ORDER = [
@@ -105,7 +105,8 @@ function inOrder(
   return ranked.sort((a, b) => a.rank - b.rank || a.at - b.at).map((r) => r.xml);
 }
 
-// A sheet's index in a kept workbook view, past the last sheet now, becomes the first (D112).
+// A sheet's index in a kept workbook view past the last sheet now, or its open sheet hidden, becomes the first shown
+// (D112, D182).
 const SHEET_INDEX_IN_VIEW = /\s(activeTab|firstSheet)="(\d+)"/g;
 
 /** XLSX kept content laid out for the writer. */
@@ -113,11 +114,30 @@ export class XlsxKeptWriter {
   private readonly items: KeptItem<FileAt>[];
   private readonly kept: KeptContent | undefined;
   private readonly sheets: number;
+  private readonly hidden: ReadonlySet<number>;
 
-  constructor(kept: KeptContent | undefined, sheets: number) {
+  // `hidden`: the sheets, by place, the file hides.
+  constructor(
+    kept: KeptContent | undefined,
+    sheets: number,
+    hidden: ReadonlySet<number> = new Set(),
+  ) {
     this.kept = kept?.standard === 'ooxml' ? kept : undefined;
     this.items = this.kept?.items ?? [];
     this.sheets = sheets;
+    this.hidden = hidden;
+  }
+
+  /** The first sheet shown, by place. */
+  get firstShown(): number {
+    let at = 0;
+    while (this.hidden.has(at)) at++;
+    return at;
+  }
+
+  /** Whether the workbook keeps a child of this name (its `bookViews`). */
+  keepsWorkbookChild(local: string): boolean {
+    return this.children('workbook').some((item) => keptLocalName(item.xml) === local);
   }
 
   private of(place: KeptItem<FileAt>['place'], sheet?: number): KeptItem<FileAt>[] {
@@ -162,7 +182,9 @@ export class XlsxKeptWriter {
       if (keptLocalName(xml) !== 'definedName')
         kept.push(
           xml.replace(SHEET_INDEX_IN_VIEW, (m, attr: string, n: string) =>
-            Number(n) < this.sheets ? m : ` ${attr}="0"`,
+            Number(n) < this.sheets && !(attr === 'activeTab' && this.hidden.has(Number(n)))
+              ? m
+              : ` ${attr}="${this.firstShown}"`,
           ),
         );
       // A defined name of one sheet names that sheet by its place now (D112).
@@ -185,25 +207,25 @@ export class XlsxKeptWriter {
   }
 
   /**
-   * A worksheet's children: LiveDoc's own and the kept ones. LiveDoc's `outlinePr` (its attributes) goes into a kept
-   * `sheetPr`, or a `sheetPr` of its own when none is kept.
+   * A worksheet's children: LiveDoc's own and the kept ones. LiveDoc's `sheetPr` children (its `tabColor` and
+   * `outlinePr`, in a prefix) go into a kept `sheetPr`, or a `sheetPr` of its own when none is kept.
    */
   worksheetChildren(
     sheet: number,
     own: readonly OwnChild[],
     rootNs: XmlBindings,
-    outlinePr: string | null = null,
+    sheetPrOwn: ((prefix: string) => string) | null = null,
   ): string[] {
-    let placed = outlinePr === null;
+    let placed = sheetPrOwn === null;
     const kept = this.of('worksheet', sheet).map((item) => {
       const xml = keptXmlWithin(item, rootNs);
       if (placed || keptLocalName(xml) !== 'sheetPr') return xml;
       placed = true;
-      return withOutlinePr(xml, outlinePr!);
+      return withSheetPrOwn(xml, sheetPrOwn!);
     });
     const sheetPr = placed
       ? []
-      : [{ name: 'sheetPr', xml: `<sheetPr><outlinePr${outlinePr}/></sheetPr>` }];
+      : [{ name: 'sheetPr', xml: `<sheetPr>${sheetPrOwn!('')}</sheetPr>` }];
     return inOrder(WORKSHEET_ORDER, kept, [...sheetPr, ...own]);
   }
 

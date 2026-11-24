@@ -28,6 +28,8 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
   sheet_name_taken: 'another sheet of this spreadsheet is called that.',
   workbook_full:
     'the spreadsheet holds the most it can: 1,000,000 rows and 20,000,000 cells (rows times columns) over every sheet, and 1 GiB.',
+  sheet_last_visible:
+    'a spreadsheet always shows at least one sheet: show another before hiding or deleting this one.',
   rows_invalid:
     'rows are asked as <from>-<to> by position, from not past to, up to 5,000 rows a page.',
 };

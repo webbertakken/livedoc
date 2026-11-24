@@ -11,6 +11,7 @@ import {
 import { dataStyleXml } from './odf-number-styles';
 import { readDataStyle, type DataStyleRead } from './odf-number-styles-read';
 import { odfLengthFromPx } from './line-units';
+import { odsTableProperties, type OdsTabLook } from './ods-tab-look';
 
 const { office: OFFICE, style: STYLE, number: NUMBER } = ODF_NS;
 
@@ -62,9 +63,26 @@ export class OdsStyles {
     return name;
   }
 
+  private readonly tables = new Map<string, string>();
+  private readonly tableXml: string[] = [];
+
+  /** The automatic style of a table whose tab has a look (`ta1`, ... in order of first use), or null for none. */
+  tableStyle(look: OdsTabLook): string | null {
+    const properties = odsTableProperties(look);
+    if (properties === null) return null;
+    const known = this.tables.get(properties);
+    if (known) return known;
+    const name = `ta${this.tables.size + 1}`;
+    this.tableXml.push(
+      `<style:style style:name="${name}" style:family="table">${properties}</style:style>`,
+    );
+    this.tables.set(properties, name);
+    return name;
+  }
+
   /** `office:automatic-styles` with the `kept` ones after the cells', or nothing when there are none. */
   automaticStyles(kept: readonly string[] = []): string[] {
-    const styles = [...this.lineXml, ...this.xml, ...kept];
+    const styles = [...this.tableXml, ...this.lineXml, ...this.xml, ...kept];
     return styles.length === 0
       ? []
       : ['<office:automatic-styles>', ...styles, '</office:automatic-styles>'];

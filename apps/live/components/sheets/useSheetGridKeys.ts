@@ -41,6 +41,8 @@ export type SheetSurfaceKeys = {
   redo: () => void;
   // Alt+1: the open sheet's tab becomes its name's field (spreadsheet.md "Sheets in the sheet bar").
   renameSheet: () => void;
+  // Alt+Shift+K: All Sheets opens, for anyone (surface.md "Sheet bar").
+  listSheets: () => void;
 };
 
 export function useSheetGridKeys({
@@ -144,6 +146,8 @@ export function useSheetGridKeys({
         return c.canShape ? surface?.renameSheet() : undefined;
       case 'summary':
         return surface?.focusSummary();
+      case 'listSheets':
+        return surface?.listSheets();
       case 'leave':
         return surface?.leaveGrid();
       case 'redo':

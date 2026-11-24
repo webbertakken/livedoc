@@ -823,7 +823,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Sheets',
     summary:
-      'Change a sheet: cells (inputs and format keys, by row and column id), its layout (insert, delete, move, order, size, hide, freeze, merge, filter) or its title. Answers the write as it landed, the new rev and the stored cells it touched.',
+      'Change a sheet: cells (inputs and format keys, by row and column id), its layout (insert, delete, move, order, size, hide, freeze, merge, filter, a spreadsheet sheet tab colour and hiding; 409 sheet_last_visible for the last sheet shown) or its title. Answers the write as it landed, the new rev and the stored cells it touched.',
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [SHEET_TAB_QUERY],
@@ -1207,7 +1207,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      'Delete a sheet: its tab is removed and its sheet kept, unreferenced, until it expires, so adding it back with its ids restores it. 404 workbook_not_found or sheet_not_found; 409 sheet_last_visible for the last sheet. Edit access; never on a tab-scoped link.',
+      'Delete a sheet: its tab is removed and its sheet kept, unreferenced, until it expires, so adding it back with its ids restores it. 404 workbook_not_found or sheet_not_found; 409 sheet_last_visible for the last sheet shown. Edit access; never on a tab-scoped link.',
     auth: 'guest-or-session',
     tokenUsable: true,
     statuses: [204, 401, 403, 404, 409, 410],

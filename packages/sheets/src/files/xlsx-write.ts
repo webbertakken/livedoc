@@ -30,6 +30,7 @@ import {
 } from './xlsx-parts';
 import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xlsx-bounds';
 import { ownIds, XlsxKeptWriter } from './xlsx-kept-write';
+import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
 import type {
   FileCell,
@@ -238,24 +239,46 @@ function worksheetXml(
   const xml = [
     XML_DECLARATION,
     `<worksheet xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('worksheet', OWN_NS, index)}>`,
-    ...kept.worksheetChildren(index, own, rootNs, shape?.outlinePr ?? null),
+    ...kept.worksheetChildren(
+      index,
+      own,
+      rootNs,
+      sheetPrOwn(sheet.tabColour, shape?.outlinePr ?? null),
+    ),
     '</worksheet>',
     '',
   ].join('\n');
   return { xml, dynamic: ctx.dynamic };
 }
 
+// A worksheet's own `sheetPr` children, in the schema's order: its tab colour, then its `outlinePr`; null for none.
+function sheetPrOwn(
+  tabColour: string | undefined,
+  outlinePr: string | null,
+): ((prefix: string) => string) | null {
+  if (!tabColour && outlinePr === null) return null;
+  return (p) =>
+    (tabColour ? xlsxTabColor(tabColour, p) : '') +
+    (outlinePr === null ? '' : `<${p}outlinePr${outlinePr}/>`);
+}
+
+// The workbook's sheets, a hidden one's state said; a first sheet hidden makes the first shown the open one, unless
+// a kept view says which (standard-mapping.md "Sheet name, hidden, tab colour").
 function workbookXml(
-  names: readonly string[],
+  sheetsOf: readonly { name: string; hidden: boolean }[],
   ids: readonly string[],
   kept: XlsxKeptWriter,
 ): string {
-  const sheets = names.map(
-    (name, i) =>
-      `<sheet name="${escapeXmlAttribute(name)}" sheetId="${i + 1}"${kept.sheetAttributes(i)} r:id="${ids[i]}"/>`,
+  const sheets = sheetsOf.map(
+    ({ name, hidden }, i) =>
+      `<sheet name="${escapeXmlAttribute(name)}" sheetId="${i + 1}"${hidden ? ' state="hidden"' : ''}${kept.sheetAttributes(i)} r:id="${ids[i]}"/>`,
   );
+  const first = kept.firstShown;
   const own = [
     { name: 'workbookPr', xml: '<workbookPr/>' },
+    ...(first > 0 && !kept.keepsWorkbookChild('bookViews')
+      ? [{ name: 'bookViews', xml: `<bookViews><workbookView activeTab="${first}"/></bookViews>` }]
+      : []),
     { name: 'sheets', xml: `<sheets>${sheets.join('')}</sheets>` },
   ];
   return [
@@ -274,7 +297,11 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const strings = new SharedStrings();
   const styles = new XlsxStyles();
   // What the file kept goes back where it sat, its relationships with their ids (standard-mapping.md "Unknown content").
-  const kept = new XlsxKeptWriter(file.kept, file.sheets.length);
+  const kept = new XlsxKeptWriter(
+    file.kept,
+    file.sheets.length,
+    new Set(file.sheets.flatMap((s, i) => (s.hidden ? [i] : []))),
+  );
   let dynamic = false;
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept }, renamed, losses);
@@ -285,7 +312,10 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       data: encode(written.xml),
     };
   });
-  const names = file.sheets.map((s) => renamed.get(s.name) ?? s.name);
+  const names = file.sheets.map((s) => ({
+    name: renamed.get(s.name) ?? s.name,
+    hidden: s.hidden === true,
+  }));
   const keptWorkbookRels = kept.relationships('workbook');
   const workbookId = ownIds(keptWorkbookRels);
   const workbookRels: Relationship[] = sheetParts.map((part) => ({

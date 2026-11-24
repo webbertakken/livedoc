@@ -1,7 +1,8 @@
-// The sheet bar's changes (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar"): add, duplicate, rename
-// and delete a sheet, each one step on the person's one timeline. An add or a duplicate undone deletes the sheet, kept,
+// The sheet bar's changes (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar"): add, duplicate, rename,
+// delete, move, colour, hide and show a sheet, each one step on the person's one timeline. An add or a duplicate undone deletes the sheet, kept,
 // and redone puts it back with its ids; a delete undone puts it back with its ids where it was; a move undone goes back
-// after the sheet it followed; a rename is the sheet store's own title write. Where a sheet goes back is worked out when it goes back: after the nearest tab that was
+// after the sheet it followed; a rename is the sheet store's own title write, and a colour, a hide or a show its own
+// layout write (D177). Where a sheet goes back is worked out when it goes back: after the nearest tab that was
 // before it and is still there. The changes land through a SheetBarBackend (sheet-bar-backend.ts).
 import { SheetName } from '@livedoc/sheets';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
@@ -9,7 +10,8 @@ import { debugLog } from '@/lib/debug-log';
 import {
   duplicateName,
   landingAfter,
-  openAfterDelete,
+  moveByAfter,
+  openInstead,
   tabsBefore,
 } from '@/lib/spreadsheet/sheet-bar-places';
 import { track } from '@/lib/telemetry';
@@ -32,7 +34,15 @@ export type SheetBarChanges = {
   // After the tab `after` names (null: first), or one place right or left (Move Right, Move Left).
   move: (tabId: string, after: string | null) => void;
   moveBy: (tabId: string, step: -1 | 1) => void;
+  // A tab's colour (lower-case #rrggbb), null to reset it.
+  colour: (tabId: string, colour: string | null) => void;
+  // Hide never the last sheet shown; show then opens it.
+  hide: (tabId: string) => void;
+  show: (tabId: string) => void;
 };
+
+// The sheet's look the sheet bar writes: its tab's colour and whether it is hidden.
+type TabLook = { tabColour?: string | null; hidden?: boolean };
 
 export type SheetBarDeps = {
   tabs: () => readonly SheetBarTabRef[];
@@ -80,6 +90,36 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
     );
   };
   const sheetOf = (tabId: string) => deps.store()?.sheetsOn(tabId)[0];
+  // The tabs whose sheets are hidden, as the store holds them now.
+  const hiddenTabs = () =>
+    new Set(
+      deps
+        .tabs()
+        .filter((t) => sheetOf(t.id)?.layout.hidden === true)
+        .map((t) => t.id),
+    );
+  // Whether a tab other than `tabId` is shown: the last one shown is never hidden or deleted.
+  const othersShown = (tabId: string) => {
+    const hidden = hiddenTabs();
+    return deps.tabs().some((t) => t.id !== tabId && !hidden.has(t.id));
+  };
+  // A look written through the store, its own undo step; false when the sheet is not loaded or the store refuses.
+  const writeLook = (
+    tabId: string,
+    look: TabLook,
+    kind: 'SheetColour' | 'HideSheet' | 'ShowSheet',
+  ) => {
+    const sheet = sheetOf(tabId);
+    if (!sheet) {
+      deps.toast(sheetRefusalMessage('sheet_loading'));
+      return false;
+    }
+    if (deps.store()!.write(sheet.id, { kind: 'layout', changes: [{ k: 'options', ...look }] }))
+      return false;
+    debugLog(`[workbook] sheet bar ${kind}`, { tabId });
+    track('Sheet', 'Changed', kind);
+    return true;
+  };
 
   const placeNew = (p: Placed, kind: 'AddSheet' | 'DuplicateSheet') => {
     put(p, false).then(
@@ -129,12 +169,28 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
   return {
     move,
     moveBy: (tabId, step) => {
-      const tabs = deps.tabs();
-      const at = tabs.findIndex((t) => t.id === tabId);
-      const target = at + step;
-      if (at < 0 || target < 0 || target >= tabs.length) return;
-      // Right: after the next tab; left: after the one before the previous (first when none).
-      move(tabId, step === 1 ? tabs[target]!.id : (tabs[target - 1]?.id ?? null));
+      const to = moveByAfter(deps.tabs(), hiddenTabs(), tabId, step);
+      if (to) move(tabId, to.after);
+    },
+    colour: (tabId, colour) => {
+      if ((sheetOf(tabId)?.layout.tabColour ?? null) === colour) return;
+      writeLook(tabId, { tabColour: colour }, 'SheetColour');
+    },
+    hide: (tabId) => {
+      if (!othersShown(tabId)) {
+        refused('hide', { code: 'sheet_last_visible' });
+        return;
+      }
+      const next =
+        deps.openTabId() === tabId ? openInstead(deps.tabs(), hiddenTabs(), tabId) : null;
+      if (writeLook(tabId, { hidden: true }, 'HideSheet') && next) deps.open(next);
+    },
+    show: (tabId) => {
+      if (
+        sheetOf(tabId)?.layout.hidden !== true ||
+        writeLook(tabId, { hidden: false }, 'ShowSheet')
+      )
+        deps.open(tabId);
     },
     add: (place) => {
       const tabs = deps.tabs();
@@ -197,7 +253,7 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
       const tabs = deps.tabs();
       const tab = tabs.find((t) => t.id === tabId);
       if (!tab) return;
-      if (tabs.length <= 1) {
+      if (!othersShown(tabId)) {
         refused('delete', { code: 'sheet_last_visible' });
         return;
       }
@@ -221,7 +277,7 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
         .then(async (yes) => {
           if (!yes) return;
           if (deps.openTabId() === tabId) {
-            const next = openAfterDelete(deps.tabs(), tabId);
+            const next = openInstead(deps.tabs(), hiddenTabs(), tabId);
             if (next) deps.open(next);
           }
           try {

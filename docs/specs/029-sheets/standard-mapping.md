@@ -26,7 +26,7 @@ native; a file keeps the format it arrived in). Research: [The standard](../../r
 | Model                                                 | ODF                                                                                                                         | XLSX                                                                           |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Workbook, sheets in order                             | `office:spreadsheet`, `table:table` per sheet                                                                               | `xl/workbook.xml` `sheets`, a worksheet part per sheet                         |
-| Sheet name, hidden, tab colour                        | `table:name`; `table:display` in its table style; `tableooo:tab-color`                                                      | `sheet@name`, `@state`; `sheetPr/tabColor`                                     |
+| Sheet name, hidden, tab colour                        | `table:name`; `table:display` in its table style; `table:tab-color`                                                         | `sheet@name`, `@state`; `sheetPr/tabColor`                                     |
 | Rows and columns, sizes, hidden, groups               | `table:table-row`, `table:table-column` with styles and repeats; `table:table-row-group`                                    | `row@ht`, `@hidden`, `@outlineLevel`; `cols/col`                               |
 | Frozen lines                                          | `config:config-item` view settings (`HorizontalSplitPosition`, ...)                                                         | `sheetView/pane` (`frozen`)                                                    |
 | Cells: number, text, boolean, date, time, error       | `office:value-type` with `office:value`, `office:date-value`, `office:time-value`, `office:boolean-value`; text in `text:p` | `c@t` (`n`, `s`, `str`, `b`, `e`, `inlineStr`), `v`, shared strings            |
@@ -190,6 +190,19 @@ The table is the contract the readers and writers are tested against, one test p
 - Frozen lines are not in either mapping yet: XLSX's `sheetViews`, with its pane, is kept as the file's own and
   written back as it came, and ODF's `settings.xml` is LiveDoc's; a freeze made in LiveDoc is not in its files.
 
+## A sheet's tab in the file
+
+- Whether a sheet is hidden and its tab's colour are written and read both ways
+  ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar), D177).
+- **XLSX**: `state="hidden"` on the workbook's `sheet`; `sheetPr/tabColor` with an opaque `rgb`, first in its
+  `sheetPr`. Excel's `veryHidden` reads as hidden; a tab colour by `theme` or `indexed` is not read and is named
+  (`kept_unread`). A first sheet hidden makes the first shown the open one (`workbookView@activeTab`), and a kept
+  view opening a hidden sheet opens the first shown (default, D182).
+- **ODF**: the table's automatic style (`ta1`, ... one per look), its `style:table-properties` saying
+  `table:display="false"` for a hidden sheet and `table:tab-color` (ODF 1.3 and later) for the colour; LibreOffice's
+  older `tableooo:tab-color` is read too.
+- A file hiding every sheet opens with its first shown, as a spreadsheet always shows one (default, D182).
+
 ## Unknown content
 
 - Whatever a file holds that the model does not (an embedded chart, a format's own setting, a smart chip, a filter
@@ -348,3 +361,5 @@ The code cites each by its id.
   and 5 px padding; ODF written in inches (default).
 - **D167** The controls' side in ODF: Not said by the format; read as after, as LibreOffice draws them (default).
 - **D168** A line hidden by hand inside a collapsed group in a file: Hidden by its group alone, shown with it (default).
+- **D182** A sheet's tab in a file: Excel's very hidden reads as hidden; a file hiding every sheet shows its first;
+  an XLSX file opens on its first sheet shown (default).

@@ -34,6 +34,8 @@ type SheetKeyCommand =
   | { kind: 'summary' }
   // Alt+1: the open sheet's name, renamed in place (spreadsheet.md "Sheets in the sheet bar").
   | { kind: 'renameSheet' }
+  // Alt+Shift+K: All Sheets, the spreadsheet's list of sheets (surface.md "Sheet bar").
+  | { kind: 'listSheets' }
   // Ctrl+Alt+Shift+M: focus out of the grid (D137).
   | { kind: 'leave' }
   // F4: redo, as Google's; in an edit it cycles a reference's anchors (useFormulaInput).
@@ -124,6 +126,8 @@ export function sheetKey(e: KeyLike, platform: OfficePlatform = 'pc'): SheetKeyC
     return { kind: 'read', axis: e.code === 'KeyR' ? 'r' : 'c' };
   if (e.altKey && e.shiftKey && !mod && !altGraphHeld(e) && e.code === 'KeyQ')
     return { kind: 'summary' };
+  if (e.altKey && e.shiftKey && !mod && !altGraphHeld(e) && e.code === 'KeyK')
+    return { kind: 'listSheets' };
   // Alt+1 on a PC or ChromeOS; a Mac's Option+1 types ¡, as Google leaves it.
   if (
     platform !== 'mac' &&

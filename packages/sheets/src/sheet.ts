@@ -176,6 +176,10 @@ export type SheetLayout = {
   // A sheet placed from the palette, not set up yet (sheet.md "Setup Sheet"): the Setup Sheet card shows while it
   // has no cells.
   setupPending?: true;
+  // A spreadsheet's sheet tab: its colour (lower-case #rrggbb) and whether it is hidden from the sheet bar
+  // (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar", D177).
+  tabColour?: string;
+  hidden?: true;
   // Card tables (sheet.md "Card tables"): ranges of rows that are Plan cards, kept in step both ways.
   cardTables?: CardTable[];
   // Named ranges (docs/specs/029-sheets/sheet.md "Named ranges"): each a name and the cells it covers, by id.

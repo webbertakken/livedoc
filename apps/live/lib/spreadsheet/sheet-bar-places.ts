@@ -1,6 +1,6 @@
 // Where the sheet bar's changes land among a spreadsheet's tabs (docs/specs/029-sheets/spreadsheet.md "Sheets in the
-// sheet bar"): a new tab's place, where an undone delete goes back, the sheet opened when the open one is
-// deleted, and a duplicate's name. Pure.
+// sheet bar"): a new tab's place, where an undone delete goes back, the tabs shown past the hidden ones, where Move
+// Right and Move Left go, the sheet opened when the open one is deleted or hidden, and a duplicate's name. Pure.
 import { SheetName } from '@livedoc/sheets';
 
 type Tabbed = { id: string };
@@ -30,11 +30,44 @@ export function landingAfter(tabs: readonly Tabbed[], earlier: readonly string[]
   return null;
 }
 
-/** The tab opened when `tabId` is deleted: the one after it, else the one before (D173). */
-export function openAfterDelete(tabs: readonly Tabbed[], tabId: string): string | null {
+/** The tabs the bar shows: every tab not hidden, and the open one whatever it is (D179). */
+export function shownTabs<T extends Tabbed>(
+  tabs: readonly T[],
+  hidden: ReadonlySet<string>,
+  openId: string,
+): readonly T[] {
+  return hidden.size ? tabs.filter((t) => !hidden.has(t.id) || t.id === openId) : tabs;
+}
+
+/**
+ * Where Move Right or Move Left puts a tab, stepping over the hidden ones (D181): after the next shown tab, or after
+ * the tab just before the previous shown one (null: first); null when it cannot pass that end.
+ */
+export function moveByAfter(
+  tabs: readonly Tabbed[],
+  hidden: ReadonlySet<string>,
+  tabId: string,
+  step: -1 | 1,
+): { after: string | null } | null {
+  const shown = tabs.filter((t) => !hidden.has(t.id) || t.id === tabId);
+  const at = shown.findIndex((t) => t.id === tabId);
+  const target = at < 0 ? undefined : shown[at + step];
+  if (!target) return null;
+  if (step === 1) return { after: target.id };
+  const before = tabs.findIndex((t) => t.id === target.id) - 1;
+  return { after: tabs[before]?.id ?? null };
+}
+
+/** The tab opened when `tabId` leaves the bar, deleted or hidden: the shown one after it, else before (D173, D179). */
+export function openInstead(
+  tabs: readonly Tabbed[],
+  hidden: ReadonlySet<string>,
+  tabId: string,
+): string | null {
   const at = tabs.findIndex((t) => t.id === tabId);
   if (at < 0) return null;
-  return (tabs[at + 1] ?? tabs[at - 1])?.id ?? null;
+  const shown = (t: Tabbed) => t.id !== tabId && !hidden.has(t.id);
+  return (tabs.slice(at + 1).find(shown) ?? tabs.slice(0, at).findLast(shown))?.id ?? null;
 }
 
 /** A duplicate's name: "Copy of <name>", then "Copy of <name> 2" and up when taken (D171). */

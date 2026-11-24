@@ -25,6 +25,7 @@ import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
+import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import { odsCellFormats, odsStyledCellStyles, type OdsCellFormats } from './ods-styles';
 import { fromOpenFormula } from './open-formula';
@@ -228,6 +229,7 @@ type Book = {
   formats: OdsCellFormats;
   styled: ReadonlySet<string>;
   lineStyles: OdsLineStyles;
+  tabLooks: (style: string | undefined) => OdsTabLook;
   keeper: OdsKeeper;
 };
 
@@ -323,7 +325,14 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     rows: Math.min(ROWS_MAX, Math.max(rows, WORKBOOK_ROWS_NEW)),
     cols: Math.min(COLS_MAX, Math.max(cols, WORKBOOK_COLS_NEW)),
   });
-  return lines.r || lines.c ? { name, rows, cols, cells, lines } : { name, rows, cols, cells };
+  return {
+    name,
+    rows,
+    cols,
+    cells,
+    ...(lines.r || lines.c ? { lines } : {}),
+    ...book.tabLooks(attributeOf(table, TABLE, 'style-name')),
+  };
 }
 
 function readBody(
@@ -336,6 +345,7 @@ function readBody(
   const formats = odsCellFormats([root, ...styleRoots]);
   const styled = odsStyledCellStyles([root, ...styleRoots]);
   const lineStyles = odsLineStyles([root, ...styleRoots]);
+  const tabLooks = odsTabLooks([root, ...styleRoots]);
   const spreadsheet = childElement(
     childElement(root, OFFICE, 'body') ?? root,
     OFFICE,
@@ -349,7 +359,9 @@ function readBody(
   keeper.spreadsheet(spreadsheet);
   const sheets = tables
     .slice(0, SHEETS_MAX)
-    .map((t, i) => readTable(t, i, { losses, budget, formats, styled, lineStyles, keeper }));
+    .map((t, i) =>
+      readTable(t, i, { losses, budget, formats, styled, lineStyles, tabLooks, keeper }),
+    );
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   // A file that keeps nothing reads as the model alone.
