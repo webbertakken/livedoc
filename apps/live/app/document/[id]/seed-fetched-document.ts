@@ -7,6 +7,7 @@ import type { LiveDoc } from '@livedoc/api-schema';
 import { apiLoadTabRevisioned } from '@/lib/api-client';
 import { track } from '@/lib/telemetry';
 import { firstTabToLoad, isTabOutOfScope } from '@/lib/tab-scope';
+import { revealDrawingPicture } from '@/lib/text-document/text-document-drawing-reveal';
 import { loadKindFamiliesFor } from '@/lib/element-kinds/load-for';
 import { loadCanvasCode } from '@/lib/canvas-code/canvas-code';
 import { listedTabIdFor, listedTabs, surfaceOf } from '@livedoc/document';
@@ -148,7 +149,7 @@ export function makeSeedFetchedDocument(deps: {
     // Prefer the tab id pinned in the URL fragment (#t=<id>) when
     // it points at a real loaded tab — round-trips the user back
     // to whichever tab they last had open before a refresh. A drawing tab's address opens its text document tab
-    // (docs/specs/034-text-documents/objects.md "A drawing tab").
+    // (docs/specs/034-text-documents/objects.md "A drawing tab"), its picture shown ("The document around it").
     {
       const hashMatch = window.location.hash.match(/t=([^&]+)/);
       const hashedId = hashMatch ? listedTabIdFor(placeholderTabs, hashMatch[1]!) : null;
@@ -157,6 +158,8 @@ export function makeSeedFetchedDocument(deps: {
         placeholderTabs.some((t) => t.id === hashedId) &&
         !isTabOutOfScope(hashedId, tabScope);
       setActiveId(pickFromHash ? hashedId : (firstId ?? activeId));
+      if (pickFromHash && hashMatch && hashMatch[1] !== hashedId)
+        revealDrawingPicture(hashedId, hashMatch[1]!);
     }
     setLoadedExistingDocument(true);
     setDocumentShareable(fetched.shareable);

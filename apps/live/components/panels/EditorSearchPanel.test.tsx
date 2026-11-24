@@ -10,8 +10,10 @@ vi.mock('next/dynamic', () => ({
     return null;
   },
 }));
+const ctx = vi.hoisted(() => ({ setActiveId: vi.fn(), setSelectedId: vi.fn() }));
 vi.mock('@/app/document/[id]/EditorContext', () => ({
   useEditorContext: () => ({
+    ...ctx,
     searchOpen: true,
     documentList: [],
     folders: [{ id: 'f 1', name: 'Plans' }],
@@ -22,8 +24,6 @@ vi.mock('@/app/document/[id]/EditorContext', () => ({
     tabs: [],
     activeId: 't1',
     openDocument: vi.fn(),
-    setActiveId: vi.fn(),
-    setSelectedId: vi.fn(),
     isReadOnly: true,
     setSearchOpen: vi.fn(),
     openSettingsAt: vi.fn(),
@@ -35,6 +35,7 @@ vi.mock('@/hooks/canvas/useEditorCommands', () => ({
 vi.mock('@/hooks/ui/useIconCatalogs', () => ({ useIconCatalogs: () => undefined }));
 vi.mock('@/components/palette/useEditorTileActions', () => ({ useEditorTileActions: () => ({}) }));
 
+import { takeDrawingReveal } from '@/lib/text-document/text-document-drawing-reveal';
 import { EditorSearchPanel } from './EditorSearchPanel';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -49,5 +50,25 @@ describe('EditorSearchPanel', () => {
     expect(onSelectFolder).toBeTypeOf('function');
     onSelectFolder!('f 1');
     expect(assign).toHaveBeenCalledWith('https://example.test/explorer/folder?id=f%201');
+  });
+
+  type SelectElement = (tabId: string, elementId: string, drawingTabId?: string) => void;
+  const selectElement = () => panelProps.current?.onSelectElement as SelectElement;
+
+  it('opens an element on its tab, selected', () => {
+    render(<EditorSearchPanel />);
+    selectElement()('t2', 'e1');
+    expect(ctx.setActiveId).toHaveBeenLastCalledWith('t2');
+    expect(ctx.setSelectedId).toHaveBeenLastCalledWith('e1');
+  });
+
+  // docs/specs/034-text-documents/objects.md "The document around it": a drawing's element opens its text document
+  // at the drawing's picture.
+  it("opens a drawing's element at its picture in the text document", () => {
+    render(<EditorSearchPanel />);
+    selectElement()('w', 'e1', 'd1');
+    expect(ctx.setActiveId).toHaveBeenLastCalledWith('w');
+    expect(ctx.setSelectedId).toHaveBeenLastCalledWith(null);
+    expect(takeDrawingReveal('w')).toBe('d1');
   });
 });

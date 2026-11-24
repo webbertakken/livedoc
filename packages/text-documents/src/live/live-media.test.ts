@@ -39,3 +39,14 @@ describe('TextDocumentState.drawingNames', () => {
     expect(TextDocumentState.drawingNames(TextDocumentState.load()).size).toBe(0);
   });
 });
+
+// "The document around it": a drawing's picture is shown in the document tab whose body holds it.
+describe('TextDocumentState.drawingPlace', () => {
+  it('names the first document tab whose body holds a picture of the drawing', () => {
+    const doc = TextDocumentState.load();
+    addLiveTab(doc, { id: 't.2', name: 'Tab 2', style: 'Title' });
+    tabFragment(doc, 't.2').push([paragraph(picture({ media: 'c', drawing: 'd1' }))]);
+    expect(TextDocumentState.drawingPlace(doc, 'd1')).toBe('t.2');
+    expect(TextDocumentState.drawingPlace(doc, 'gone')).toBeNull();
+  });
+});

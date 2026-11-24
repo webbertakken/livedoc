@@ -22,7 +22,7 @@ import type { Watermark } from './model/watermark';
 import { Summary } from './model/summary';
 import type { ListDefinition } from './model/lists';
 import { paragraphElementsOf } from './live/live-tables';
-import { liveDrawingNames, liveGalleryImages } from './live/live-media';
+import { liveDrawingNames, liveDrawingPlace, liveGalleryImages } from './live/live-media';
 import {
   addLiveStyle,
   setLiveList,
@@ -240,6 +240,9 @@ export const TextDocumentState = {
   galleryImages: (doc: Y.Doc): string[] => liveGalleryImages(doc),
   /** How many pictures name each drawing tab, by its id (objects.md "One drawing, one picture"). */
   drawingNames: (doc: Y.Doc): ReadonlyMap<string, number> => liveDrawingNames(doc),
+  /** The document tab whose body holds the drawing tab's picture (objects.md "The document around it"), or null. */
+  drawingPlace: (doc: Y.Doc, drawingTabId: string): string | null =>
+    liveDrawingPlace(doc, drawingTabId),
   /** The live state's lists map, which the editor's undo also tracks. */
   listsType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(LISTS_MAP),
   /** The live state's styles map, which the editor's undo also tracks (live-editing-and-storage.md "Undo"). */

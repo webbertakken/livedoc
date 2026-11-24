@@ -344,6 +344,72 @@ describe('the content search rows the drain writes', () => {
       await drainOutbox(env, D);
       expect(digestOf(room)).toEqual({ characters: 0, words: 0, pages: 1, has_content: 0 });
     });
+
+    // docs/specs/013-workspace/content-search.md "What is searched": a drawing tab's words are its text document's.
+    describe('and its drawing tabs', () => {
+      function drawingTab(room: DatabaseSync, id: string, label: string, order: number): void {
+        room
+          .prepare(
+            'INSERT INTO tabs (id, name, data, updated_at, rev, drawing_of) VALUES (?, ?, ?, 1, 1, ?)',
+          )
+          .run(
+            id,
+            `Drawing ${order}`,
+            JSON.stringify({
+              elements: [{ id: `e${id}`, type: 'text', x: 0, y: 0, width: 9, height: 9, label }],
+            }),
+            'td',
+          );
+        room
+          .prepare(
+            'INSERT INTO document_tabs (document_id, tab_id, order_index, added_at) VALUES (?, ?, ?, 1)',
+          )
+          .run(D, id, order);
+      }
+
+      it('indexes their words in the text document row, and gives them no row of their own', async () => {
+        const { env, room, d1 } = harness();
+        textDocumentTab(room);
+        drawingTab(room, 'd2', 'Second sketch', 2);
+        drawingTab(room, 'd1', 'First sketch', 1);
+        await appendLiveTabUpdate(
+          env,
+          TEXT_DOCUMENT_LIVE_TAB,
+          'td',
+          TextDocumentState.fromBody(Body.of('Two words')),
+        );
+        await drainOutbox(env, D);
+        expect(searchRows(d1)).toEqual([
+          {
+            tab_id: 'td',
+            tab_name: 'Notes',
+            text: 'Notes\nTwo words\nFirst sketch\nSecond sketch',
+          },
+        ]);
+      });
+
+      it("writes the text document's row again when a drawing changes", async () => {
+        const { env, room, d1 } = harness();
+        textDocumentTab(room);
+        drawingTab(room, 'd1', 'First sketch', 1);
+        await drainOutbox(env, D);
+        room.prepare('UPDATE tabs SET data = ?, rev = rev + 1 WHERE id = ?').run(
+          JSON.stringify({
+            elements: [
+              { id: 'ed1', type: 'text', x: 0, y: 0, width: 9, height: 9, label: 'Redrawn' },
+            ],
+          }),
+          'd1',
+        );
+        // Only the drawing is queued: its unit writes its text document's row.
+        expect(outboxKeys(room)).toContain('tab:d1');
+        expect(outboxKeys(room)).not.toContain('tab:td');
+        await drainOutbox(env, D);
+        expect(searchRows(d1)).toEqual([
+          { tab_id: 'td', tab_name: 'Notes', text: 'Notes\nRedrawn' },
+        ]);
+      });
+    });
   });
 
   it("writes the cards' text under ~items, and deletes it with the last card", async () => {

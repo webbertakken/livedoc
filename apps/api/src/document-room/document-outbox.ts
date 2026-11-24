@@ -154,7 +154,7 @@ async function cardsStatements(
 
 // ---------- A tab unit ------------------------------------------------------------------------------------
 
-type StoredTab = { id: string; name: string; data: string };
+type StoredTab = { id: string; name: string; data: string; drawing_of: string | null };
 
 function parseBody(data: string): Record<string, unknown> {
   try {
@@ -297,8 +297,8 @@ function blobHoldStatements(
 }
 
 // The tab's content search row (docs/specs/013-workspace/content-search.md): its text with the texts it holds outside
-// its body (the inputs of the sheets it references, a text document's writing), or a delete when it has gone or holds
-// no text.
+// its body (the inputs of the sheets it references, a text document's writing and drawings), or a delete when it has
+// gone or holds no text. A drawing tab has none: its words are its text document's ("What is searched").
 function searchStatements(
   env: DocumentEnv,
   documentId: string,
@@ -307,7 +307,7 @@ function searchStatements(
   body: Record<string, unknown>,
   storedTexts: readonly string[],
 ): D1PreparedStatement[] {
-  if (!tab) return contentSearchStatements(env, documentId, tabId, '', null);
+  if (!tab || tab.drawing_of) return contentSearchStatements(env, documentId, tabId, '', null);
   const text = tabSearchText({ ...body, name: tab.name }, storedTexts);
   return contentSearchStatements(env, documentId, tabId, tab.name, text);
 }
@@ -335,25 +335,66 @@ async function referencedSheetInputs(
   return sheetSearchInputs(await listSheets(env, documentId, { ids }));
 }
 
+async function readStoredTab(
+  env: DocumentEnv,
+  documentId: string,
+  tabId: string,
+): Promise<StoredTab | null> {
+  return env.DOCUMENT_DB.prepare(
+    `SELECT t.id, t.name, t.data, t.drawing_of FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id
+      WHERE dt.document_id = ? AND t.id = ?`,
+  )
+    .bind(documentId, tabId)
+    .first<StoredTab>();
+}
+
+// A drawing tab's text document's row, built afresh as its own unit builds it: a drawing's words are its.
+async function textDocumentSearchStatements(
+  env: DocumentEnv,
+  documentId: string,
+  textTabId: string,
+): Promise<D1PreparedStatement[]> {
+  const tab = await readStoredTab(env, documentId, textTabId);
+  if (!tab || tab.drawing_of) return [];
+  const body = parseBody(tab.data);
+  const storedTexts = await storedTextsOf(env, documentId, textTabId, body);
+  return searchStatements(env, documentId, textTabId, tab, body, storedTexts);
+}
+
+// Each drawing tab's words of a text document tab, in the document's order, its name left out.
+async function drawingSearchTexts(
+  env: DocumentEnv,
+  documentId: string,
+  textTabId: string,
+): Promise<string[]> {
+  const rows = await env.DOCUMENT_DB.prepare(
+    `SELECT t.data FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id AND dt.document_id = ?
+      WHERE t.drawing_of = ? ORDER BY dt.order_index`,
+  )
+    .bind(documentId, textTabId)
+    .all<{ data: string }>();
+  return (rows.results ?? []).flatMap((r) => {
+    const text = tabSearchText({ ...parseBody(r.data), name: '' }, []).trim();
+    return text ? [text] : [];
+  });
+}
+
 async function tabStatements(
   env: DocumentEnv,
   documentId: string,
   tabId: string,
 ): Promise<D1PreparedStatement[]> {
-  const tab = await env.DOCUMENT_DB.prepare(
-    `SELECT t.id, t.name, t.data FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id
-      WHERE dt.document_id = ? AND t.id = ?`,
-  )
-    .bind(documentId, tabId)
-    .first<StoredTab>();
+  const tab = await readStoredTab(env, documentId, tabId);
   // One body at a time: a drain after a 200-tab import holds one tab in memory, never the document.
   const body = tab ? parseBody(tab.data) : {};
   const storedTexts = tab ? await storedTextsOf(env, documentId, tabId, body) : [];
   // A PDF tab's previous versions, whose bytes it holds until their day.
   const previous = tab && body.kind === 'pdf' ? await previousStoredFiles(env, tabId) : [];
-  return TAB_UNIT_PARTS.flatMap((part) =>
+  const unit = TAB_UNIT_PARTS.flatMap((part) =>
     part(env, documentId, tabId, tab, body, storedTexts, previous),
   );
+  if (!tab?.drawing_of) return unit;
+  return [...unit, ...(await textDocumentSearchStatements(env, documentId, tab.drawing_of))];
 }
 
 // What a tab holds outside its body, as text: a live tab's (a text document's writing), read through its digest
@@ -365,7 +406,11 @@ async function storedTextsOf(
   body: Record<string, unknown>,
 ): Promise<string[]> {
   const live = liveTabKindOfTab(body);
-  if (live) return [(await refreshLiveTabDigest(env, live, documentId, tabId)).searchText];
+  if (live)
+    return [
+      (await refreshLiveTabDigest(env, live, documentId, tabId)).searchText,
+      ...(await drawingSearchTexts(env, documentId, tabId)),
+    ];
   return referencedSheetInputs(env, documentId, tabId);
 }
 

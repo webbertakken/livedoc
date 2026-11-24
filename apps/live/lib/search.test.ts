@@ -233,6 +233,43 @@ describe('buildSearchResults — table cells (docs/specs/008-canvas/canvas-and-p
   });
 });
 
+// docs/specs/034-text-documents/objects.md "The document around it" (Search): a drawing's words are its text
+// document's; no drawing tab is listed as a tab.
+describe('buildSearchResults — drawings', () => {
+  const notes: Tab = { id: 'w', name: 'Notes', kind: 'text-document', elements: [] };
+  const drawing: Tab = {
+    id: 'd1',
+    name: 'Drawing 1',
+    drawingOf: 'w',
+    elements: [shape('e1', 'Sketch of the boiler')],
+  };
+  const orphan: Tab = {
+    id: 'd2',
+    name: 'Drawing 2',
+    drawingOf: 'gone',
+    elements: [shape('e2', 'Sketch of the roof')],
+  };
+  const search = (query: string) =>
+    buildSearchResults({ query, documents: [], folders: [], tabs: [notes, drawing, orphan] });
+
+  it('lists no drawing tab as a tab', () => {
+    expect(search('drawing').find((g) => g.key === 'tabs')).toBeUndefined();
+  });
+
+  it("names a drawing's element by its text document, routed through the drawing", () => {
+    const elements = search('sketch').find((g) => g.key === 'elements')!;
+    expect(elements.items).toEqual([
+      expect.objectContaining({
+        kind: 'element',
+        tabId: 'w',
+        tabName: 'Notes',
+        elementId: 'e1',
+        drawingTabId: 'd1',
+      }),
+    ]);
+  });
+});
+
 describe('buildSearchResults — shared documents + teams (docs/specs/008-canvas/canvas-and-palette.md Search panel)', () => {
   it('matches "Shared with you" rows by name and carries the share code for navigation', () => {
     const out = buildSearchResults({
