@@ -389,7 +389,8 @@ export function TextDocumentSurface({
         // The editor's plugins, bound to one document tab's body (links-and-navigation.md "Document tabs in the
         // outline"): built again for each tab shown.
         const pluginsFor = (body: Y.XmlFragment): Plugin[] => [
-          ySyncPlugin(body),
+          // y-prosemirror types its plugin as any.
+          ySyncPlugin(body) as Plugin,
           // The emoji colon list takes Up, Down, Enter, Tab and Escape while it is shown, before any keymap.
           emojiColonPlugin,
           // The equation being written takes the keys inside its box, before any keymap (objects.md "Equations in
