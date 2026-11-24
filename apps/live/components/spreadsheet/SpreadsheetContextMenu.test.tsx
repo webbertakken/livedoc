@@ -27,21 +27,27 @@ vi.mock('@/components/sheets/useSheetClipboard', () => ({ useSheetClipboard: () 
 beforeAll(stubResizeObserver);
 
 function Menus({ actions }: { actions: SheetActions }) {
-  const office = useGridMenuBindings(actions, {
-    openCustomFormat: vi.fn(),
-    openCustomCurrency: vi.fn(),
-    openCustomDateTime: vi.fn(),
-    merge: vi.fn(),
-    openCustomAngle: vi.fn(),
-  });
+  const office = useGridMenuBindings(
+    actions,
+    {
+      openCustomFormat: vi.fn(),
+      openCustomCurrency: vi.fn(),
+      openCustomDateTime: vi.fn(),
+      merge: vi.fn(),
+      openCustomAngle: vi.fn(),
+    },
+    // The side panel's item, as SpreadsheetSheetParts binds it.
+    { 'conditional-formatting': { run: vi.fn(), checked: false } },
+  );
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;
 }
 
 const menu = () => screen.queryByRole('menu', { name: 'Context menu' });
+// Every item, a check (Conditional Formatting, which opens its panel) as any other.
 const names = () =>
-  within(menu()!)
-    .getAllByRole('menuitem')
-    .map((i) => i.querySelector('.flex-1')?.textContent ?? '');
+  [...menu()!.querySelectorAll('[role="menuitem"], [role="menuitemcheckbox"]')].map(
+    (i) => i.querySelector('.flex-1')?.textContent ?? '',
+  );
 const item = (name: string) =>
   within(menu()!)
     .getAllByRole('menuitem')

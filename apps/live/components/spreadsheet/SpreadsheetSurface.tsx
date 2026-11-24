@@ -5,21 +5,16 @@
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DocumentFonts, planPalette, type Tab } from '@livedoc/document';
+import { planPalette, type Tab } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import {
   SheetControllerProvider,
-  useSheetController,
   useSheetControllerState,
 } from '@/components/sheets/sheet-controller';
-import { SheetGrid } from '@/components/sheets/SheetGrid';
 import type { SheetStore } from '@/components/sheets/sheet-store-client';
 import { useAttachedSheetStore } from '@/components/sheets/useAttachedSheetStore';
-import { useFormulaInput } from '@/components/sheets/useFormulaInput';
-import { useFormulaPointing } from '@/components/sheets/useFormulaPointing';
-import { useSheetActions } from '@/components/sheets/useSheetActions';
 import { ShowFormulasContext, useShowFormulas } from '@/components/sheets/show-formulas';
 import { SheetImagesContext, useSheetImageLoader } from '@/components/sheets/sheet-images-context';
 import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
@@ -34,34 +29,18 @@ import { ImportReportDialog } from './ImportReportDialog';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
 import { RangeAccessBar } from './RangeAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
-import { SheetBarSummary } from './SheetBarSummary';
 import { SummarySlotContext } from './summary-slot';
 import { createOfficeBindingsChannel, OfficeBindingsContext } from './office-bindings-channel';
 import { BorderLineContext, useBorderLineState } from './border-line-context';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
-import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { SpreadsheetFullScreenProvider, useSpreadsheetFullScreen } from './spreadsheet-full-screen';
-import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
-import { useGridMenuBindings } from './useGridMenuBindings';
-import { useCellGoogleFonts } from './useCellGoogleFonts';
-import { useCustomAngleDialog } from './useCustomAngleDialog';
-import { useMergeDialog } from './useMergeDialog';
-import { useNumberFormatDialogs } from './useNumberFormatDialogs';
-import {
-  SpreadsheetZoomProvider,
-  useSpreadsheetZoom,
-  useSpreadsheetZoomScale,
-} from './spreadsheet-zoom';
+import { SpreadsheetSheetParts } from './SpreadsheetSheetParts';
+import { SpreadsheetZoomProvider, useSpreadsheetZoom } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
 import { useSheetCopyTo } from './useSheetCopyTo';
 import { hiddenTabIds, useSheetTabLooks } from './useSheetTabLooks';
 import { SheetBarActionsContext, useSheetBarActions } from './useSheetBarActions';
-import {
-  SheetStepContext,
-  SurfaceRedoContext,
-  useSheetStep,
-  useSpreadsheetSurfaceKeys,
-} from './spreadsheet-surface-keys';
+import { SheetStepContext, SurfaceRedoContext, useSheetStep } from './spreadsheet-surface-keys';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
 
@@ -339,74 +318,12 @@ function SheetWorkspace({
               onAllowed={onWorkbook}
             />
           ) : null}
-          <SheetParts bridge={bridge} />
+          <SpreadsheetSheetParts bridge={bridge} />
           <p aria-live="polite" className="sr-only">
             {announcement}
           </p>
         </div>
       </SheetImagesContext.Provider>
     </SheetControllerProvider>
-  );
-}
-
-const DEFAULT_FONT_STACK = DocumentFonts.stack(SPREADSHEET_DEFAULT_FONT);
-
-function SheetParts({ bridge }: { bridge: SheetsBridge }) {
-  const actions = useSheetActions();
-  const input = useFormulaInput(actions);
-  const c = useSheetController();
-  const pointRef = useFormulaPointing(c, input);
-  const zoom = useSpreadsheetZoomScale();
-  const surfaceKeys = useSpreadsheetSurfaceKeys();
-  const formatDialogs = useNumberFormatDialogs(actions);
-  const mergeDialog = useMergeDialog(actions);
-  const angleDialog = useCustomAngleDialog(actions);
-  const office = useGridMenuBindings(actions, {
-    ...formatDialogs,
-    merge: mergeDialog.merge,
-    openCustomAngle: angleDialog.openCustomAngle,
-  });
-  useCellGoogleFonts(c.sheet);
-  const { focusGrid, canEdit } = c;
-  // Opening a sheet puts the keys in its grid, A1 selected, ready to type (spreadsheet.md "Making a spreadsheet").
-  useEffect(() => {
-    if (!canEdit) return;
-    const frame = requestAnimationFrame(() => focusGrid());
-    return () => cancelAnimationFrame(frame);
-  }, [canEdit, focusGrid]);
-  return (
-    <div
-      className="contents"
-      onFocus={() => c.setFocused(true)}
-      onBlur={(e) => {
-        const next = e.relatedTarget;
-        if (
-          next instanceof Element &&
-          (e.currentTarget.contains(next) || next.closest('[data-menu-surface]'))
-        )
-          return;
-        c.setFocused(false);
-      }}
-    >
-      {/* The surface's areas, for F6 and Ctrl+Alt+. (grid-and-editing.md "Moving around"). */}
-      <SpreadsheetFormulaBarRow actions={actions} input={input} />
-      <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
-        <SheetGrid
-          elementId={`sheet-${c.sheet.id}`}
-          actions={actions}
-          input={input}
-          pointRef={pointRef}
-          peers={bridge.peers}
-          zoom={zoom}
-          surfaceKeys={surfaceKeys}
-          fontFamily={DEFAULT_FONT_STACK}
-        />
-      </div>
-      <SpreadsheetGridMenus actions={actions} bound={office.actions} />
-      {formatDialogs.dialog}
-      {angleDialog.dialog}
-      {mergeDialog.dialog}
-      <SheetBarSummary />
-    </div>
   );
 }

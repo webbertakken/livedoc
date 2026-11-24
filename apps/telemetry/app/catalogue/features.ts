@@ -1848,6 +1848,14 @@ export const TEXT_DOCUMENT_PANELS_OPENED = opened(
   (t) => (t ?? '').startsWith('TextDocumentPanel'),
 );
 
+// A spreadsheet's side panel opened (docs/specs/004-interface-design/office-shell.md "Side panels"): Conditional
+// Format Rules (docs/specs/029-sheets/conditional-formatting.md "In a spreadsheet").
+export const SPREADSHEET_PANELS_OPENED = opened(
+  'Spreadsheet Panels',
+  'A side panel of a spreadsheet opened from its menu: Conditional Format Rules.',
+  (t) => (t ?? '').startsWith('SpreadsheetPanel'),
+);
+
 // A PDF document's left panel opened (docs/specs/035-pdf-documents/reading-surface.md "The left panel"): its rail, its
 // View item or its key.
 export const PDF_DOCUMENT_PANELS_OPENED = opened(
@@ -1902,6 +1910,7 @@ export const PANELS_OPENED: MetricStack = {
     TEXT_DOCUMENT_MENUS_OPENED,
     SPREADSHEET_MENUS_OPENED,
     TEXT_DOCUMENT_PANELS_OPENED,
+    SPREADSHEET_PANELS_OPENED,
     PDF_DOCUMENT_PANELS_OPENED,
     TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
     SPREADSHEET_CONTEXT_MENU_OPENED,

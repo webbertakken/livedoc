@@ -42,7 +42,7 @@ export function useOfficePanels({
   writes = true,
 }: {
   // `TextDocument`: `UI · Opened · TextDocumentPanel<Title>`, and where its open panels are kept.
-  kind: 'TextDocument' | 'PdfDocument';
+  kind: 'TextDocument' | 'PdfDocument' | 'Spreadsheet';
   panels: readonly OfficePanelSpec[];
   // Gives the keyboard back to the document once a panel closes.
   onFocusDocument: () => void;
