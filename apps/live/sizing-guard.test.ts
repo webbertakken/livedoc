@@ -69,6 +69,8 @@ const SIZED_PATHS = [
   'components/plan/dashboard',
   // A Plan view's frame and metric tiles; its drawing is content (sizing.md D240).
   'components/plan/views',
+  // A board's header widgets, their zone and picker.
+  'components/plan/widgets',
 ];
 
 // Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.

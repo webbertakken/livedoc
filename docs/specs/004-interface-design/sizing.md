@@ -28,6 +28,9 @@ respondents see it and a slide keep the sizes their author chose.
   default).
 - A Plan view's frame is chrome on the scale: its header, legend, search, scale controls, Add Card and settings.
 - A metric tile reads its name and line on the scale; its figure and picture are drawn art (D239).
+- A board's header widgets are chrome: 28 px pills in a 36 px band, figures regular in the ink, not in weight.
+- A widget's × is a 16 px mark with a 24 px reach, so it sits on the widget's corner yet meets the floor.
+- The board picker's pictures of each board (`board-previews.tsx`) are drawn art.
 - A Dashboard tab is a page, never zoomed, so it is chrome on the scale: its cards' names, lines and controls, its
   slots' toolbars and its menus (D239, default).
 - A dashboard's Title card is the page's title (`text-page-title`, its line `text-body`); a Note card's title is a
