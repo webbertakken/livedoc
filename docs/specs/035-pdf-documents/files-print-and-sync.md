@@ -102,7 +102,7 @@ File > Download, the Explorer's row menu and an agent's `pdf.download`:
   - Each page is one picture filling one sheet of its own size; nothing else is in the document.
 - Print and ⌘P run Print; with the dialog open, Enter prints and Escape closes it.
 - A print that cannot be made says "This PDF couldn't be printed." and leaves the document as it was.
-- Logged `[pdf] printed pages=<n> marks=<yes|no> way=<pdf|pictures>`, `[pdf] print-failed step=<bake|cut|draw>`,
+- Logged `[pdf] printed pages=<n> marks=<yes|no> way=<pdf|pictures>`, `[pdf] print-failed step=<bake|cut|draw|frame>`,
   `[pdf] print-refused`; counted as `Pdf · Exported · Print`.
 - Print is always light paper as the file says. Dark pages, selections, presence and LiveDoc's chrome never print.
 - A PDF whose permissions forbid printing dims Print with the reason until the permissions password is given

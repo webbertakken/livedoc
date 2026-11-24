@@ -4,7 +4,7 @@
 // (editing-modes.md "Switching"). The tools' single keys are the surface's own: they must not fire in a text field.
 import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
-import { COPY, FIND, GO_TO_NEXT_VIEW, GO_TO_PREVIOUS_VIEW, SELECT_ALL } from './pdf-menus';
+import { COPY, FIND, GO_TO_NEXT_VIEW, GO_TO_PREVIOUS_VIEW, PRINT, SELECT_ALL } from './pdf-menus';
 
 /** Find's next and previous result: no menu item's, the surface binds them under these ids. */
 export const FIND_NEXT = 'find-next';
@@ -107,6 +107,16 @@ const SELECTIONS: readonly ShortcutRow[] = [
   },
 ];
 
+/** Print (keyboard-shortcuts.md "Reading"): the surface hears ⌘P itself, so a file that asks not to be printed says so
+ *  and the browser never prints LiveDoc's page. */
+const PRINTING: ShortcutRow = {
+  id: PRINT,
+  group: READING_GROUP,
+  action: 'Print',
+  keys: { pc: 'Ctrl+P', mac: '⌘+P', chromeos: 'Ctrl+P' },
+  status: 'surface',
+};
+
 export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
   ...TEXT_DOCUMENT_SHORTCUTS.filter((row) => SHARED.has(row.id)).map((row) =>
     row.id.startsWith('switch-to-') ? { ...row, group: MODES } : row,
@@ -135,6 +145,7 @@ export const PDF_SHORTCUTS: readonly ShortcutRow[] = [
     status: 'built',
   },
   ...READING,
+  PRINTING,
   ...PANELS,
   ...SELECTIONS,
 ];

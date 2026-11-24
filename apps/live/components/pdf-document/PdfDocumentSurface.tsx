@@ -37,7 +37,8 @@ import { startPdfEngineWorker } from '@/lib/pdf-document/pdf-engine-client';
 import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
-import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
 import {
   DOWNLOAD_PDF,
@@ -76,6 +77,7 @@ import { PdfPages } from './PdfPages';
 import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
 import { PdfLinkDialog } from './PdfLinkDialog';
+import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
 import { PdfFindResults } from './PdfFindResults';
 
@@ -287,16 +289,20 @@ export function PdfDocumentSurface({
   );
 
   const storedFile = 'storedFile' in open ? open.storedFile : null;
+  // The stored file's bytes, read again from where they are held; Download and Print are offered only with one.
+  const readStored = useCallback(async () => {
+    if (!storedFile) throw new Error('no stored file');
+    return deps.readBlob({ ownerId, documentId, tabId, shareCode }, storedFile);
+  }, [deps, ownerId, documentId, tabId, shareCode, storedFile]);
   const download = useCallback(async () => {
     if (!storedFile) return;
     setProblem(null);
-    const where = { ownerId, documentId, tabId, shareCode };
     try {
       const baked = await bakeForDownload({
         engine: ready?.engine ?? { bake: async () => ({ ok: false, refusal: 'unreadable' }) },
         doc: ready?.binding.doc ?? null,
         documentName,
-        readStored: () => deps.readBlob(where, storedFile),
+        readStored,
       });
       if (!baked.ok) return setProblem(BAKE_FAILED_COPY);
       downloadBlob(new Blob([baked.bytes], { type: 'application/pdf' }), baked.fileName);
@@ -305,7 +311,27 @@ export function PdfDocumentSurface({
       debugLog('[pdf] download failed', String(error));
       setProblem(BAKE_FAILED_COPY);
     }
-  }, [ready, storedFile, documentName, deps, ownerId, documentId, tabId, shareCode]);
+  }, [ready, storedFile, documentName, readStored]);
+
+  const printSource = useMemo<PdfPrintSource | null>(
+    () =>
+      ready && marks && storedFile
+        ? {
+            engine: ready.engine,
+            doc: ready.binding.doc,
+            pages: ready.pages,
+            permissions: ready.permissions,
+            marksOn: (page) => marksOnPage(marks.get(), page.name),
+          }
+        : null,
+    [ready, marks, storedFile],
+  );
+  const printing = usePdfPrint({
+    source: printSource,
+    documentName,
+    readStored,
+    onProblem: setProblem,
+  });
 
   const pickTool = useCallback((next: PdfPageTool) => {
     setTool(next);
@@ -366,6 +392,7 @@ export function PdfDocumentSurface({
             ...panels.actions,
             ...history.actions,
             ...reading.actions,
+            ...printing.actions,
             [OPEN_LEFT_PANEL]: { run: revealLeft },
             [GO_TO_PAGE]: { run: focusPageField },
             [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
@@ -400,6 +427,7 @@ export function PdfDocumentSurface({
       panels.actions,
       history.actions,
       reading.actions,
+      printing.actions,
       revealLeft,
       focusPageField,
       marking,
@@ -412,6 +440,7 @@ export function PdfDocumentSurface({
 
   // The tools' own keys, heard anywhere on the surface but a text field (keyboard-shortcuts.md "Tools").
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (printing.onKey(event)) return;
     if (typesText(event.target)) return;
     if (reading.onKey(event)) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -554,6 +583,7 @@ export function PdfDocumentSurface({
         onDownload={() => void download()}
       />
       <PdfLinkDialog asked={links.asked} onClose={links.close} />
+      <PdfPrintDialog {...printing.dialog} count={pages?.length ?? 0} current={viewer.page} />
     </div>
   );
 }

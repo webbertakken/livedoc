@@ -5,6 +5,7 @@ import type { BakeResult, PageInfo, PdfEngine, PdfEngineLog, PdfOpened } from '.
 import { FileSignature } from '../file-signature';
 import { PdfLiveChanges } from '../live-changes';
 import { bakeChanges } from './bake';
+import { cutPages } from './cut-pages';
 import { PdfReader, type Pdfium } from './reader';
 import { signerOf } from './signer';
 import { layersOf, openWriter, withLayersSet } from './writer';
@@ -159,6 +160,7 @@ export function pdfEngineOver(
     canAppend: async () => (await writer())?.canSaveIncrementally() === null,
     repaired: async () => (await writer())?.recoveredViaBruteForce ?? false,
     bake,
+    cutPages: async (bytes, indexes) => cutPages(bytes, indexes, password),
     heldBytes: async () => reader.heldBytes(),
     close: async () => {
       dropView();

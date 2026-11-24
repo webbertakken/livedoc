@@ -276,6 +276,11 @@ export type PdfEngine = {
   /** The open stored file with the live changes (one Yjs update) written in. */
   bake(liveChanges: Uint8Array): Promise<BakeResult>;
   /**
+   * The pages at `indexes` of `bytes` (the open file, or a bake of it), in that order, as a new PDF; null where it
+   * cannot be read or a page is not there (files-print-and-sync.md "Printing").
+   */
+  cutPages(bytes: Uint8Array, indexes: readonly number[]): Promise<Uint8Array<ArrayBuffer> | null>;
+  /**
    * How many bytes of memory the engine's reader holds. It grows as a file asks and never shrinks, so whoever
    * started the engine ends it past a ceiling (opening.md "Limits").
    */

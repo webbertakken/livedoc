@@ -135,6 +135,12 @@ export const PDF_DOUBLE_TAP_PX = 24;
 /** (default) How long, in milliseconds, a finger is held still to select a word, Android's own (reading-surface.md
  *  "Phone and tablet"). Safe range: 400 to 800. */
 export const PDF_LONG_PRESS_MS = 500;
+/** (default) Where pages are drawn for print where a browser cannot print a PDF it is handed, in dots an inch
+ *  (files-print-and-sync.md "Printing"). Safe range: 100 to 300. */
+export const PDF_PRINT_DPI = 150;
+/** (default) How long the print frame stays where the browser never says its print dialog closed. Safe range: 10,000
+ *  to 300,000. */
+export const PDF_PRINT_FRAME_MS = 60_000;
 /** (default) A tile's side in CSS pixels (reading-surface.md "The pages", "Limits"). Safe range: 256 to 1,024. */
 export const PDF_TILE_PX = 512;
 /** (default) The tiles a desktop keeps, in bytes of their pictures; least lately shown let go first. */

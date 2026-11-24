@@ -162,7 +162,7 @@ export const PDF_MENUS: OfficeCatalogue = [
     }),
     SEPARATOR,
     item('properties', 'Properties', 'view', { keywords: ['fonts', 'security', 'size'] }),
-    item(PRINT, 'Print', 'view'),
+    item(PRINT, 'Print', 'view', { shortcut: PRINT, status: 'built' }),
   ]),
   menu('edit', 'Edit', [
     item(UNDO, 'Undo', 'participate', { shortcut: 'undo', status: 'built' }),

@@ -942,6 +942,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Added|Mark.Highlight': 'Someone highlighted text on a PDF page.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',
+  'Pdf|Exported|Print':
+    'Someone printed a PDF document: LiveDoc made the pages they chose and handed them to the browser to print.',
   'Pdf|Exported|Pdf':
     'Someone downloaded a PDF document as a PDF, with every change made in LiveDoc written into the file.',
   'Pdf|Undone|': 'Someone took back their last change to a PDF document.',
