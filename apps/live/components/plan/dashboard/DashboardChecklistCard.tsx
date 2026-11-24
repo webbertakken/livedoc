@@ -19,7 +19,7 @@ function Tick({ done }: { done: boolean }) {
   return (
     <span
       aria-hidden
-      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition duration-micro motion-reduce:transition-none ${
+      className={`flex size-icon-row shrink-0 items-center justify-center rounded-control border transition duration-micro motion-reduce:transition-none ${
         done
           ? 'border-brand-700 bg-brand-700 text-white dark:border-brand-600 dark:bg-brand-600'
           : 'border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900'
@@ -55,7 +55,7 @@ function ItemRow({
   onEnter: (text: string) => void;
 }) {
   const [text, setText] = useSlotDraft(item.text);
-  const textClass = `min-w-0 flex-1 bg-transparent text-[13px] outline-none ${
+  const textClass = `min-w-0 flex-1 bg-transparent text-body outline-none ${
     item.done
       ? 'text-slate-400 line-through dark:text-slate-600'
       : 'text-slate-700 dark:text-slate-200'
@@ -69,7 +69,7 @@ function ItemRow({
           aria-checked={item.done}
           aria-label={item.text || 'Item'}
           onClick={() => onChange({ ...item, done: !item.done })}
-          className="cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="cursor-pointer rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <Tick done={item.done} />
         </button>
@@ -131,7 +131,7 @@ function FirstItemRow({ onAdd }: { onAdd: (text: string, next: boolean) => void 
           }
         }}
         placeholder="Something to do"
-        className="min-w-0 flex-1 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
+        className="min-w-0 flex-1 bg-transparent text-body text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
       />
     </li>
   );
@@ -178,7 +178,7 @@ export function DashboardChecklistCard({
         onSave={(title) => save({ title })}
         aside={
           checklist.items.length > 0 ? (
-            <span className="shrink-0 text-[12px] tabular-nums text-slate-500 dark:text-slate-400">
+            <span className="shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
               {done} of {checklist.items.length}
             </span>
           ) : null
@@ -195,7 +195,7 @@ export function DashboardChecklistCard({
           />
         </div>
       ) : null}
-      <ul ref={listRef} className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
+      <ul ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         {checklist.items.map((item, i) => (
           <ItemRow
             key={item.id}
@@ -233,9 +233,7 @@ export function DashboardChecklistCard({
           />
         ) : null}
         {checklist.items.length === 0 && !canEdit ? (
-          <li className="text-[13px] text-slate-500 dark:text-slate-400">
-            Nothing on the list yet.
-          </li>
+          <li className="text-body text-slate-500 dark:text-slate-400">Nothing on the list yet.</li>
         ) : null}
       </ul>
       {/* Add Item once there is a first one; an empty list's first row is ready to type into instead. */}
@@ -243,9 +241,9 @@ export function DashboardChecklistCard({
         <button
           type="button"
           onClick={() => addAfter(-1)}
-          className="flex cursor-pointer items-center gap-1.5 self-start rounded-md px-1 py-0.5 text-[12px] font-medium text-slate-500 transition hover:text-brand-700 dark:text-slate-400 dark:hover:text-brand-300"
+          className="flex h-chip cursor-pointer items-center gap-2 self-start rounded-control px-1 text-supporting text-slate-500 transition hover:text-brand-700 dark:text-slate-400 dark:hover:text-brand-300"
         >
-          <span aria-hidden className="text-[14px] leading-none">
+          <span aria-hidden className="text-body leading-none">
             +
           </span>
           Add Item

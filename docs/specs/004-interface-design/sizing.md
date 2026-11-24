@@ -23,6 +23,14 @@ respondents see it and a slide keep the sizes their author chose.
 - A sheet's tab window face is its picture, drawn as the sheet looks.
 - A sheet's chrome is on the scale: its bars, menus, popovers and dialogs, and what floats over the grid (Smart Fill,
   Import CSV, a cell's tooltip).
+- A Dashboard tab is a page, never zoomed, so it is chrome on the scale: its cards' names, lines and controls, its
+  slots' toolbars and its menus (D239, default).
+- A dashboard's Title card is the page's title (`text-page-title`, its line `text-body`); a Note card's title is a
+  section's (`text-panel-title`).
+- Drawn art keeps its own sizes, as a switch does: Add to Slot's pictures of a card, and a metric tile's figure and
+  picture, which grow with the tile ([Metric tiles](../026-plan/plan-tabs.md#metric-tiles)), and a Key Date's count.
+- A dashboard's figures are named once in `apps/live/app/dashboard.css` (`dashboard-figure`), off the scale.
+- A card's top line keeps clear of the slot's menu by a margin (`CLEAR_OF_SLOT_MENU`), never by side padding.
 
 ## Why
 
@@ -180,3 +188,5 @@ The code cites each by its id.
   fill in keep their own sizes (default).
 - **D238** A sheet's grid is content: it zooms as one surface and its rows set its headers' heights, so what is
   drawn in it keeps the sizes the grid gives it, as a canvas's elements do (default).
+- **D239** A Dashboard tab is chrome: it is drawn as a page the canvas never zooms, so what it reads is on the
+  scale, but for drawn art that grows with its tile or frame (default).

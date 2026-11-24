@@ -32,9 +32,9 @@ const RemoveGlyph = lucideGlyph(lucideX, 12);
 const PlusGlyph = lucideGlyph(lucidePlus, 14);
 
 const ROW_HIT =
-  'flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-300';
+  'flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-menu px-2 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-300';
 const ICON_WELL =
-  'flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 transition group-hover/link:bg-brand-50 group-hover/link:text-brand-700 dark:bg-slate-800 dark:text-slate-400 dark:group-hover/link:bg-brand-500/15 dark:group-hover/link:text-brand-300';
+  'flex size-row shrink-0 items-center justify-center rounded-control bg-slate-100 text-slate-500 transition group-hover/link:bg-brand-50 group-hover/link:text-brand-700 dark:bg-slate-800 dark:text-slate-400 dark:group-hover/link:bg-brand-500/15 dark:group-hover/link:text-brand-300';
 // Shown on hover or focus; always on a screen with no hover (a phone).
 const ON_HOVER =
   'opacity-0 transition group-hover/link:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100';
@@ -46,10 +46,10 @@ export { labelOf };
 function LinkText({ label, detail }: { label: string; detail: string }) {
   return (
     <span className="min-w-0 flex-1">
-      <span className="block truncate text-[13px] font-medium text-slate-800 transition group-hover/link:text-brand-700 dark:text-slate-100 dark:group-hover/link:text-brand-300">
+      <span className="block truncate text-body text-slate-800 transition group-hover/link:text-brand-700 dark:text-slate-100 dark:group-hover/link:text-brand-300">
         {label}
       </span>
-      <span className="block truncate text-[11px] text-slate-500 dark:text-slate-400">
+      <span className="block truncate text-supporting text-slate-500 dark:text-slate-400">
         {detail}
       </span>
     </span>
@@ -77,7 +77,7 @@ export function DashboardLinksCard({
         label="Links heading"
         onSave={(title) => save({ title })}
       />
-      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain px-1 pb-0.5">
+      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-1 pb-0.5">
         {links.links.length > 0 ? (
           <ul className="flex flex-col gap-0.5">
             {links.links.map((link) => {
@@ -105,7 +105,7 @@ export function DashboardLinksCard({
               return (
                 <li
                   key={link.id}
-                  className="group/link flex items-center rounded-lg transition hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
+                  className="group/link flex items-center rounded-menu transition hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
                 >
                   {link.tabId ? (
                     <button type="button" onClick={() => openTab(link.tabId)} className={ROW_HIT}>
@@ -129,7 +129,7 @@ export function DashboardLinksCard({
                       type="button"
                       aria-label={`Remove ${label}`}
                       onClick={() => save({ links: links.links.filter((l) => l.id !== link.id) })}
-                      className={`mr-1 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${ON_HOVER}`}
+                      className={`mr-1 flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${ON_HOVER}`}
                     >
                       <RemoveGlyph />
                     </button>
@@ -160,7 +160,7 @@ export function DashboardLinksCard({
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="flex cursor-pointer items-center gap-1.5 self-start rounded-md px-1.5 py-1 text-[12px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-brand-300"
+            className="flex h-chip cursor-pointer items-center gap-2 self-start rounded-control px-2 text-supporting text-slate-500 transition hover:bg-slate-100 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-brand-300"
           >
             <PlusGlyph />
             Add Link

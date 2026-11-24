@@ -1,8 +1,8 @@
 'use client';
 
-// A Title in a Dashboard slot (docs/specs/026-plan/plan-tabs.md "Dashboard tab"): a section's big heading over a line
-// or two of description, sitting bare on the page (no card) so it reads as the heading of what follows. Its size
-// follows the slot's width (a container query), never crowding a narrow slot. An Editor types into both in place; each
+// A Title in a Dashboard slot (docs/specs/026-plan/plan-tabs.md "Dashboard tab"): a section's heading over a line or
+// two of description, sitting bare on the page (no card) so it reads as the heading of what follows, drawn at the
+// page title's size (docs/specs/004-interface-design/sizing.md D239). An Editor types into both in place; each
 // lands as one step when the field is left. A faint dashed outline on hover says it can be written in.
 import {
   DASHBOARD_NOTE_MAX,
@@ -12,10 +12,10 @@ import {
 import { useDashboard } from './dashboard-context';
 import { useSlotDraft } from './useSlotDraft';
 
-const HEADING =
-  'w-full truncate bg-transparent text-[22px] font-semibold leading-tight tracking-tight text-slate-900 @md:text-[30px] dark:text-slate-50';
-const DESCRIPTION =
-  'w-full bg-transparent text-[14px] leading-relaxed text-slate-500 @md:text-[15px] dark:text-slate-400';
+const HEADING = 'w-full truncate bg-transparent text-page-title text-slate-900 dark:text-slate-50';
+const DESCRIPTION = 'w-full bg-transparent text-body text-slate-500 dark:text-slate-400';
+// Bare on the page, it keeps clear of the slot's menu (8 px in, 32 px wide) by 4 px, as a card's top line does.
+const CLEAR_OF_SLOT_MENU_ON_PAGE = 'mr-11';
 
 export function DashboardTitle({
   slotId,
@@ -34,7 +34,7 @@ export function DashboardTitle({
   };
   if (!canEdit)
     return (
-      <div className="@container flex h-full flex-col justify-center gap-1 overflow-hidden px-2 py-2">
+      <div className="flex h-full flex-col justify-center gap-1 overflow-hidden px-2 py-2">
         <h2 className={HEADING}>{stored.title}</h2>
         {stored.text ? (
           <p className={`${DESCRIPTION} line-clamp-3 whitespace-pre-wrap`}>{stored.text}</p>
@@ -42,7 +42,9 @@ export function DashboardTitle({
       </div>
     );
   return (
-    <div className="@container flex h-full flex-col justify-center gap-1 rounded-2xl border border-dashed border-transparent px-2 py-2 pr-11 transition duration-micro hover:border-slate-300 focus-within:border-slate-300 motion-reduce:transition-none dark:hover:border-slate-700 dark:focus-within:border-slate-700">
+    <div
+      className={`${CLEAR_OF_SLOT_MENU_ON_PAGE} flex h-full flex-col justify-center gap-1 rounded-surface border border-dashed border-transparent px-2 py-2 transition duration-micro hover:border-slate-300 focus-within:border-slate-300 motion-reduce:transition-none dark:hover:border-slate-700 dark:focus-within:border-slate-700`}
+    >
       <input
         aria-label="Title heading"
         value={title}

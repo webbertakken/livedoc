@@ -126,7 +126,7 @@ export function LinkAddressField({
             id={listId}
             role="listbox"
             aria-label="Tabs in this document"
-            className="fixed z-[calc(var(--z-popover)+1)] overflow-y-auto overscroll-contain rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+            className="fixed z-[calc(var(--z-popover)+1)] overflow-y-auto overscroll-contain rounded-menu border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
             style={{
               left: place.left,
               ...(place.side === 'below' ? { top: place.top } : { bottom: place.bottom }),
@@ -144,7 +144,7 @@ export function LinkAddressField({
                 aria-selected={i === active}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => pick(tab)}
-                className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-slate-700 dark:text-slate-200 ${
+                className={`flex h-row cursor-pointer items-center gap-2 rounded-control px-2 text-body text-slate-700 dark:text-slate-200 ${
                   i === active
                     ? 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-200'
                     : ''

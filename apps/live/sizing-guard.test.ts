@@ -65,6 +65,17 @@ const SIZED_PATHS = [
   'components/sheets/SheetSetupStyle.tsx',
   'components/sheets/SheetSmartFillLayer.tsx',
   'components/sheets/SheetTouchLinkChip.tsx',
+  // A Dashboard's written cards and settings; a tile's figure and Add to Slot's pictures are drawn art (sizing.md D239).
+  'components/plan/dashboard/AddLinkForm.tsx',
+  'components/plan/dashboard/card-parts.tsx',
+  'components/plan/dashboard/DashboardChecklistCard.tsx',
+  'components/plan/dashboard/DashboardKeyDateCard.tsx',
+  'components/plan/dashboard/DashboardLinksCard.tsx',
+  'components/plan/dashboard/DashboardMenuName.tsx',
+  'components/plan/dashboard/DashboardNote.tsx',
+  'components/plan/dashboard/DashboardStatusCard.tsx',
+  'components/plan/dashboard/DashboardTitle.tsx',
+  'components/plan/dashboard/LinkAddressField.tsx',
 ];
 
 describe('live sizing', () => {

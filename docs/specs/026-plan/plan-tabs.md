@@ -207,8 +207,9 @@ in Plan, so one on a Sketch, Structured or Pages tab could never be worked there
     short, top-aligned, and the form scrolls into view as it opens.
   - A Viewer and a Participant read every card; a Participant does not tick a Checklist (the Dashboard is an Editor's
     to change).
-- **Title**: a section's heading, written on the page: a big heading (22 px, 30 px once the slot is 448 px wide) over
-  a description of up to three lines, drawn bare on the page (no card) and centred in the slot's height, so it reads as the
+- **Title**: a section's heading, written on the page: a heading at the page title's size
+  ([Sizing](../004-interface-design/sizing.md), D239) over a description of up to three lines, drawn bare on the page
+  (no card) and centred in the slot's height, so it reads as the
   heading of what follows. A new one starts as the dashboard's name. An Editor types into both in place ("Section
   Title" and "Add a description…" while empty); each lands as one step when the field is left, and a faint dashed
   outline on hover or while typing says it can be written in. Like a note it fits any slot. A note's or Title's text

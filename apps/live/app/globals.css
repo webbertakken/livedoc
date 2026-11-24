@@ -5,6 +5,7 @@
 @import '@livedoc/template-previews/preview-motion.css';
 @import './qa-board.css';
 @import './forms.css';
+@import './dashboard.css';
 @import './text-document.css';
 @import './office-shell.css';
 @import './pdf-document.css';

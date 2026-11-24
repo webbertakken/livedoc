@@ -44,7 +44,7 @@ export function AddLinkForm({
       ref={formRef}
       onSubmit={submit}
       aria-label="Add Link"
-      className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white/80 p-2.5 dark:border-slate-700 dark:bg-slate-900/60"
+      className="flex flex-col gap-2 rounded-menu border border-slate-200 bg-white/80 p-3 dark:border-slate-700 dark:bg-slate-900/60"
       onKeyDown={(e) => {
         // Escape from the label (the address field handles its own, closing its list first).
         if (e.key === 'Escape' && !e.defaultPrevented) {
@@ -84,11 +84,11 @@ export function AddLinkForm({
         </div>
       </div>
       {problem ? (
-        <p role="alert" className="text-[12px] text-rose-600 dark:text-rose-400">
+        <p role="alert" className="text-supporting text-rose-600 dark:text-rose-400">
           {problem}
         </p>
       ) : null}
-      <div className="flex justify-end gap-1.5">
+      <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>

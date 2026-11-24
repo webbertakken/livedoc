@@ -12,7 +12,7 @@ import {
 import { relativeSince, useRelativeNow } from '@/lib/relative-time';
 import { useDashboard } from './dashboard-context';
 import { useSlotDraft } from './useSlotDraft';
-import { CARD_BODY } from './card-parts';
+import { CARD_BODY, CLEAR_OF_SLOT_MENU } from './card-parts';
 
 const STATUS_INFO: Record<
   DashboardStatus,
@@ -60,9 +60,9 @@ export function DashboardStatusCard({
     });
   return (
     <div className={CARD_BODY}>
-      <div className="flex items-center gap-2 pr-8">
-        <span aria-hidden className={`h-3 w-3 shrink-0 rounded-full ${info.dot}`} />
-        <span className={`text-[18px] font-semibold leading-tight ${info.text}`}>{info.label}</span>
+      <div className={`flex items-center gap-2 ${CLEAR_OF_SLOT_MENU}`}>
+        <span aria-hidden className={`size-icon-chevron shrink-0 rounded-full ${info.dot}`} />
+        <span className={`text-panel-title ${info.text}`}>{info.label}</span>
       </div>
       {canEdit ? (
         <textarea
@@ -74,10 +74,10 @@ export function DashboardStatusCard({
             if (text !== status.text) save({ text });
           }}
           placeholder="Say why in a line or two…"
-          className="min-h-0 w-full flex-1 resize-none bg-transparent text-[13px] leading-relaxed text-slate-600 outline-none placeholder:text-slate-400 dark:text-slate-300"
+          className="min-h-0 w-full flex-1 resize-none bg-transparent text-body text-slate-600 outline-none placeholder:text-slate-400 dark:text-slate-300"
         />
       ) : (
-        <p className="min-h-0 flex-1 overflow-hidden whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="min-h-0 flex-1 overflow-hidden whitespace-pre-wrap text-body text-slate-600 dark:text-slate-300">
           {status.text}
         </p>
       )}
@@ -95,9 +95,9 @@ export function DashboardStatusCard({
                   onClick={() => {
                     if (!on) save({ state: s });
                   }}
-                  className={`flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 transition duration-micro motion-reduce:transition-none ${
+                  className={`flex h-chip cursor-pointer items-center gap-1 rounded-full px-2 text-supporting ring-1 transition duration-micro motion-reduce:transition-none ${
                     on
-                      ? `${STATUS_INFO[s].tint} ${STATUS_INFO[s].text}`
+                      ? `font-medium ${STATUS_INFO[s].tint} ${STATUS_INFO[s].text}`
                       : 'text-slate-500 ring-slate-200 hover:bg-slate-50 dark:text-slate-400 dark:ring-slate-700 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -111,7 +111,7 @@ export function DashboardStatusCard({
           <span />
         )}
         {status.at > 0 && now > 0 ? (
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="text-supporting text-slate-500 dark:text-slate-400">
             Updated {relativeSince(status.at, now)}
           </span>
         ) : null}
