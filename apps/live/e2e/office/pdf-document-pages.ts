@@ -178,3 +178,25 @@ export async function replaceStoredFile(
   expect(told).toEqual(asking);
   return blob;
 }
+
+/**
+ * Two fingers drawn apart about a point of the window, as raw touches: Chromium's synthetic touch pinch does not zoom
+ * a headless page, a zoomable one included (accessibility.md "Seeing"; reading-surface.md "Phone and tablet").
+ */
+export async function pinch(page: Page, at: { x: number; y: number }): Promise<void> {
+  const cdp = await page.context().newCDPSession(page);
+  const fingers = (apart: number) => [
+    { x: at.x - apart, y: at.y, id: 0 },
+    { x: at.x + apart, y: at.y, id: 1 },
+  ];
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: fingers(20) });
+  for (let apart = 25; apart <= 150; apart += 5) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: fingers(apart) });
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+}
+
+/** How far the browser has zoomed the page itself, 1 where it has not. */
+export const pageScale = (page: Page): Promise<number> =>
+  page.evaluate(() => window.visualViewport?.scale ?? 1);

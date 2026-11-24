@@ -119,7 +119,8 @@ export function PdfPages({
       data-region="document"
       data-pdf-pages={pages.length}
       onKeyDown={onKeyDown}
-      className="min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset"
+      // One finger scrolls; two pinch and pan the pages themselves, never the page around them (usePdfTouchZoom.ts).
+      className="min-h-0 flex-1 touch-pan-x touch-pan-y overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset"
     >
       {/* The layout places every page itself, centred in a view wider or taller than the pages. */}
       <div className="relative" style={{ width: layout.width, height: layout.height }}>

@@ -118,6 +118,30 @@ describe("a person's view of the pages", () => {
     expect(after.down).toBeCloseTo(before.down, 6);
   });
 
+  // "Phone and tablet": a pinch zooms about the fingers, and two fingers pan: what was under their last middle lands
+  // under their new one.
+  it('puts what was under the fingers under where they moved to across a pinch', () => {
+    const at = viewing();
+    at.scrollTo(2000);
+    const from = { x: 400, y: 300 };
+    const to = { x: 450, y: 260 };
+    const before = under(at, from)!;
+    act(() => at.now().zoomBy(1.25, from, to));
+    const after = under(at, to)!;
+    expect(after.index).toBe(before.index);
+    expect(after.across).toBeCloseTo(before.across, 6);
+    expect(after.down).toBeCloseTo(before.down, 6);
+  });
+
+  it('still pans when a pinch cannot zoom further', () => {
+    const at = viewing();
+    act(() => at.now().zoomTo(64, 'Custom'));
+    at.scrollTo(5000, 5000);
+    act(() => at.now().zoomBy(2, { x: 400, y: 300 }, { x: 380, y: 290 }));
+    expect(at.scroller.scrollLeft).toBe(5020);
+    expect(at.scroller.scrollTop).toBe(5010);
+  });
+
   // "A change of page display keeps the page in view."
   it('keeps the page in view across a change of display', () => {
     const at = viewing();
