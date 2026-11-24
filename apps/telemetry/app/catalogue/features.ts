@@ -1444,6 +1444,25 @@ export const TEXT_DOCUMENT_CONTENTS_FOLLOWED = chart(
   { types: ['TextDocumentTableOfContentsFollowed'] },
 );
 
+// A document tab added to a text document with the outline's + or Insert > Tab (docs/specs/034-text-documents/
+// links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_TABS_ADDED = chart(
+  'Element',
+  'Added',
+  'Text Document Tabs Added',
+  'A document tab added to a text document from the outline’s + or Insert > Tab.',
+  { types: ['TextDocumentTab'] },
+);
+
+// Another document tab shown from the outline or with Ctrl+Shift+Page Down / Up (links-and-navigation.md "Telemetry").
+export const TEXT_DOCUMENT_TABS_SHOWN = chart(
+  'UI',
+  'Used',
+  'Text Document Tabs Shown',
+  "Another of a text document's tabs shown, from the outline or with Ctrl+Shift+Page Down or Up.",
+  { types: ['TextDocumentTabShown'] },
+);
+
 // A building block put in a text document (docs/specs/034-text-documents/objects.md "Building blocks").
 export const TEXT_DOCUMENT_BUILDING_BLOCKS = chart(
   'Element',

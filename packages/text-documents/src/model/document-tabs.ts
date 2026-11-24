@@ -103,6 +103,8 @@ const headOf = (tab: DocumentTabHead): DocumentTabHead =>
 
 export const DocumentTabs = {
   defaultName,
+  /** The head of the one tab every text document has until it is given others. */
+  firstHead: (): DocumentTabHead => ({ ...FIRST_HEAD }),
   /** Every document tab in the outline's order, the first included with the document's body. */
   all: (document: TextDocument): DocumentTab[] => [
     { ...(document.tabs?.first ?? FIRST_HEAD), depth: 0, body: document.body },

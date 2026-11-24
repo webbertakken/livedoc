@@ -128,9 +128,36 @@ its shown text, with its data kept ([Standard mapping](standard-mapping.md#kept-
   writing as it changes, everyone's edits included.
 - With no heading it reads: **Headings you add to the document will appear here.**
 - The panel shows **Summary** (a free text the editor writes, as Google's) above the headings.
-- Document tabs: **+** adds one, each has a menu (Rename, Add subtab, Duplicate, Delete, Copy link, Choose emoji) and
-  can be dragged to reorder or nest (depth 3). Ctrl⇧Page Down / Up move between tabs.
-- Hidden by a press on its close; personal and remembered.
+- Document tabs are listed above the headings ([Document tabs in the outline](#document-tabs-in-the-outline)).
+- Hidden by a press on its close; personal and remembered. Opened from its menu item or shortcut, it starts at the
+  shown tab's first heading, else at the shown tab `(default)`.
+
+### Document tabs in the outline
+
+The look and order below are LiveDoc's reading of Google's outline with tabs until a capture confirms them
+`(default)`.
+
+- **The current tab**: the editor shows one [document tab](text-document.md#tabs-inside-one-text-document)'s body at a
+  time, each person their own. A text document opens on the tab its link names (`?doctab=<id>`), else on the first.
+  Showing another tab puts the caret at its start and scrolls to its top; its undo history starts afresh `(default)`.
+  The address names the tab shown (`?doctab=<id>`, beside the hash the editor keeps) while the text document has
+  more than one.
+- **The list**: the outline titles its tabs **Document tabs**, with **+** (**Add tab**) beside the title; then every
+  tab in order, indented by depth, its emoji before its name, the current one marked (`aria-current`) and its
+  headings listed under it. A press on a tab shows it. With one tab the list still shows it, so + has its place.
+- **Adding**: + and Insert > Tab add a tab at the end of the top level, named Tab N, its body one empty Normal text
+  paragraph, and show it. Past `TEXT_DOCUMENT_MAX_TABS` they are dimmed.
+- **Moving between tabs**: Ctrl⇧Page Down shows the next tab in the outline's order, Ctrl⇧Page Up the previous one;
+  at either end nothing happens.
+- **Its menu**: each tab's **Tab options** button opens Rename, Add subtab, Duplicate, Delete, Copy link and Choose
+  emoji. A tab is dragged to reorder it or nest it, to the depth of 3; Move up, Move down, Indent and Outdent in its
+  menu do the same with a single pointer or the keys (WCAG 2.2 2.5.7) `(default)`.
+- **Who may**: everyone shows tabs and moves between them; only Editors add, rename, reorder, nest, duplicate or delete
+  them or choose their emoji; a Participant's suggestions never reach the tabs `(default)`. A session that may not
+  edit sees no + and a dimmed Insert > Tab.
+- **Others' carets**: someone writing in another tab has no caret drawn here; theirs is in the tab they show.
+- **Pages**: each tab is laid out on pages of its own, numbered from 1, under the first section's headers and footers.
+  A table of contents lists the current tab's headings.
 
 ## Keyboard navigation
 
@@ -154,5 +181,6 @@ Copy link.
 `Element · Changed · TextDocumentLink` (an edited link), `Element · Removed · TextDocumentLink` (Remove link);
 `UI · Used · TextDocumentLinkOpened` (Alt+Enter or the card's title);
 `UI · Used · TextDocumentHeadingLinkCopied` (Copy heading link);
-`Tab · Added · TextDocumentTab`; `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never
-content.
+`Element · Added · TextDocumentTab` (+ or Insert > Tab: a document tab is content, no tab of the document's);
+`UI · Used · TextDocumentTabShown` (a tab shown from the outline or the keys);
+`UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never content.

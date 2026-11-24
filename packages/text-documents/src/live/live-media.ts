@@ -3,7 +3,7 @@
 // the room's reference index names exactly what the document places.
 import * as Y from 'yjs';
 import { liveMediaOf } from './live-read';
-import { BODY_FRAGMENT } from './live-root';
+import { liveTabFragments } from './live-tabs';
 import { liveStoryIds, storyFragment } from './live-stories';
 import { PICTURE } from './live-names';
 
@@ -18,7 +18,7 @@ function* pictureKeys(fragment: Y.XmlFragment): Generator<string> {
 
 /** The ids of the gallery images the state's pictures hold, each once, in the order they are first met. */
 export function liveGalleryImages(doc: Y.Doc): string[] {
-  const keys = new Set(pictureKeys(doc.getXmlFragment(BODY_FRAGMENT)));
+  const keys = new Set(liveTabFragments(doc).flatMap((fragment) => [...pictureKeys(fragment)]));
   for (const id of liveStoryIds(doc))
     for (const key of pictureKeys(storyFragment(doc, id))) keys.add(key);
   const images = new Set<string>();

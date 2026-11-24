@@ -12,7 +12,8 @@ import {
   readLiveSection,
   readLiveStyles,
 } from './live/live-read';
-import { BODY_FRAGMENT } from './live/live-root';
+import { BODY_FRAGMENT, tabFragment } from './live/live-root';
+import { liveTabFragments, liveTabIds } from './live/live-tabs';
 import { storyFragment, type LiveHeaders } from './live/live-stories';
 import { DOCUMENT_MAP, LISTS_MAP, MEDIA_MAP, STYLES_MAP } from './live/live-names';
 import type { PictureMedia } from './model/pictures';
@@ -138,8 +139,12 @@ export const TextDocumentState = {
   since: (update: Uint8Array, stateVector: Uint8Array): Uint8Array =>
     Y.diffUpdate(update, stateVector),
   body: (doc: Y.Doc): Y.XmlFragment => doc.getXmlFragment(BODY_FRAGMENT),
-  /** The body's paragraphs as plain values. */
-  paragraphs: (doc: Y.Doc): Body => paragraphsOf(TextDocumentState.body(doc)),
+  /** Every document tab's paragraphs as plain values, tab by tab in the outline's order. */
+  paragraphs: (doc: Y.Doc): Body => liveTabFragments(doc).flatMap(paragraphsOf),
+  /** The document tab's body (live-editing-and-storage.md "The layout"). */
+  tabBody: (doc: Y.Doc, tab: string): Y.XmlFragment => tabFragment(doc, tab),
+  /** The document tabs' ids in the outline's order. */
+  tabIds: (doc: Y.Doc): string[] => liveTabIds(doc),
   /** A header's or footer's paragraphs as plain values (page-layout.md "Headers and footers"). */
   storyParagraphs: (doc: Y.Doc, id: string): Body => paragraphsOf(storyFragment(doc, id)),
   /** Replace the whole body with these paragraphs, as one transaction; an empty body keeps one empty paragraph. */

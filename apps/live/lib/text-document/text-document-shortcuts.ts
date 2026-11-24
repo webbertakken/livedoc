@@ -1187,7 +1187,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+PgDn',
     '—',
     '—',
-    'specified',
+    'built',
   ),
   row(
     'move-to-previous-tab',
@@ -1196,7 +1196,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+PgUp',
     '—',
     '—',
-    'specified',
+    'built',
   ),
   // Table navigation
   row(

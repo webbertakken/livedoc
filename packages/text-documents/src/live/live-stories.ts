@@ -12,7 +12,9 @@ import {
   type SectionHeaders,
   type SectionHeadersOf,
 } from '../model/headers';
-import { BODY_FRAGMENT } from './live-root';
+import { tabFragment } from './live-root';
+import { liveTabFragments, liveTabIds } from './live-tabs';
+import { FIRST_DOCUMENT_TAB_ID } from '../model/document-tabs';
 import { paragraphElementsOf } from './live-tables';
 import { DOCUMENT_MAP, FOOTNOTE, SECTION_BREAK } from './live-names';
 
@@ -33,10 +35,15 @@ export const liveFirstHeaders = (doc: Y.Doc): LiveHeaders | undefined =>
   (doc.getMap<unknown>(DOCUMENT_MAP).get('section') as { headers?: LiveHeaders } | undefined)
     ?.headers;
 
-/** Each section's headers as held: the first section's, then each section break's, in the body's order. */
-export function liveSectionHeaders(doc: Y.Doc): (LiveHeaders | undefined)[] {
-  const later = doc
-    .getXmlFragment(BODY_FRAGMENT)
+/**
+ * Each section's headers as held in a document tab: the first section's, then each of the tab's section breaks', in its
+ * body's order (text-document.md "What a document tab is": each tab starts in the first section).
+ */
+export function liveSectionHeaders(
+  doc: Y.Doc,
+  tab: string = FIRST_DOCUMENT_TAB_ID,
+): (LiveHeaders | undefined)[] {
+  const later = tabFragment(doc, tab)
     .toArray()
     .flatMap((node) =>
       node instanceof Y.XmlElement && node.nodeName === SECTION_BREAK
@@ -46,17 +53,19 @@ export function liveSectionHeaders(doc: Y.Doc): (LiveHeaders | undefined)[] {
   return [liveFirstHeaders(doc), ...later];
 }
 
-/** The notes' fragments the body's marks name, in the marks' order. */
+/** The notes' fragments every tab's marks name, in the marks' order, tab by tab. */
 export function liveNoteIds(doc: Y.Doc): string[] {
-  return paragraphElementsOf(doc.getXmlFragment(BODY_FRAGMENT)).flatMap((node) =>
-    node.toArray().flatMap((child) => {
-      const story =
-        child instanceof Y.XmlElement && child.nodeName === FOOTNOTE
-          ? child.getAttribute('story')
-          : undefined;
-      return typeof story === 'string' ? [story] : [];
-    }),
-  );
+  return liveTabFragments(doc)
+    .flatMap(paragraphElementsOf)
+    .flatMap((node) =>
+      node.toArray().flatMap((child) => {
+        const story =
+          child instanceof Y.XmlElement && child.nodeName === FOOTNOTE
+            ? child.getAttribute('story')
+            : undefined;
+        return typeof story === 'string' ? [story] : [];
+      }),
+    );
 }
 
 /**
@@ -65,7 +74,7 @@ export function liveNoteIds(doc: Y.Doc): string[] {
  */
 export function liveStoryIds(doc: Y.Doc): string[] {
   const ids = new Set<string>();
-  for (const headers of liveSectionHeaders(doc))
+  for (const headers of liveTabIds(doc).flatMap((tab) => liveSectionHeaders(doc, tab)))
     for (const kind of HEADER_FOOTER_KINDS)
       for (const slot of HEADER_FOOTER_SLOTS) {
         const story = headers?.[kind]?.[slot]?.story;

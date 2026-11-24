@@ -3,9 +3,10 @@
 // (then id); each tab's body is its own root fragment. A map without entries is one tab, `t.0`, Tab 1.
 import * as Y from 'yjs';
 import type { Block } from '../model/blocks';
-import type { DocumentTab, DocumentTabRead } from '../model/document-tabs';
-import { TABS_MAP } from './live-names';
+import { DocumentTabs, type DocumentTab, type DocumentTabRead } from '../model/document-tabs';
+import { PARAGRAPH, TABS_MAP } from './live-names';
 import { tabFragment } from './live-root';
+import { FIRST_DOCUMENT_TAB_ID } from '../model/document-tabs';
 
 /** A document tab as the map holds it. */
 export type LiveTab = {
@@ -20,24 +21,37 @@ const orderOf = (value: unknown): number => {
   return typeof order === 'number' && Number.isFinite(order) ? order : 0;
 };
 
+const byOrder = ([a, x]: [string, unknown], [b, y]: [string, unknown]): number =>
+  orderOf(x) - orderOf(y) || (a < b ? -1 : a > b ? 1 : 0);
+
+/** The document tabs' ids in the outline's order: `t.0` alone while the map holds none. */
+export function liveTabIds(doc: Y.Doc): string[] {
+  const map = doc.getMap<unknown>(TABS_MAP);
+  return map.size === 0
+    ? [FIRST_DOCUMENT_TAB_ID]
+    : [...map.entries()].sort(byOrder).map(([id]) => id);
+}
+
+/** Every document tab's body fragment, in the outline's order. */
+export const liveTabFragments = (doc: Y.Doc): Y.XmlFragment[] =>
+  liveTabIds(doc).map((id) => tabFragment(doc, id));
+
 /** The tabs the map holds, in the outline's order, each with its body read by `blocksOf`; none while it holds none. */
 export function readLiveTabs(
   doc: Y.Doc,
   blocksOf: (fragment: Y.XmlFragment) => Block[],
 ): DocumentTabRead[] {
   const map = doc.getMap<unknown>(TABS_MAP);
-  return [...map.entries()]
-    .sort(([a, x], [b, y]) => orderOf(x) - orderOf(y) || (a < b ? -1 : a > b ? 1 : 0))
-    .map(([id, value]) => {
-      const tab = (value ?? {}) as Partial<Record<keyof LiveTab, unknown>>;
-      return {
-        id,
-        name: tab.name,
-        emoji: tab.emoji,
-        depth: tab.depth,
-        body: blocksOf(tabFragment(doc, id)),
-      };
-    });
+  return [...map.entries()].sort(byOrder).map(([id, value]) => {
+    const tab = (value ?? {}) as Partial<Record<keyof LiveTab, unknown>>;
+    return {
+      id,
+      name: tab.name,
+      emoji: tab.emoji,
+      depth: tab.depth,
+      body: blocksOf(tabFragment(doc, id)),
+    };
+  });
 }
 
 /**
@@ -69,4 +83,38 @@ export function writeLiveTabs(
     };
     map.set(tab.id, value);
   });
+}
+
+/** The document tabs' heads and depths in the outline's order, held to the rules; one, `t.0`, Tab 1, while none. */
+export function liveTabList(doc: Y.Doc): DocumentTab[] {
+  const read = readLiveTabs(doc, () => []);
+  return read.length > 0
+    ? DocumentTabs.held(read)
+    : [{ ...DocumentTabs.firstHead(), depth: 0, body: [] }];
+}
+
+/**
+ * A document tab added at the end of the top level, its body one empty paragraph in `style` (links-and-navigation.md
+ * "Document tabs in the outline", "Adding"), as one transaction; the first tab joins the map when it held none.
+ */
+export function addLiveTab(
+  doc: Y.Doc,
+  { id, name, style }: { id: string; name: string; style: string },
+  origin?: unknown,
+): void {
+  const map = doc.getMap<unknown>(TABS_MAP);
+  doc.transact(() => {
+    if (map.size === 0) {
+      const first: LiveTab = { name: DocumentTabs.defaultName(1), depth: 0, order: 0 };
+      map.set(FIRST_DOCUMENT_TAB_ID, first);
+    }
+    const order = Math.max(...[...map.values()].map(orderOf)) + 1;
+    const tab: LiveTab = { name, depth: 0, order };
+    const fragment = tabFragment(doc, id);
+    fragment.delete(0, fragment.length);
+    const paragraph = new Y.XmlElement(PARAGRAPH);
+    paragraph.setAttribute('style', style);
+    fragment.insert(0, [paragraph]);
+    map.set(id, tab);
+  }, origin);
 }

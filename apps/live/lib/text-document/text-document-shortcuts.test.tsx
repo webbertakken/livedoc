@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { textDocumentBreakActions } from './text-document-breaks';
 import { horizontalLineActions } from './text-document-horizontal-line';
+import { TAB_ITEM, TAB_STEP_KEYS } from './text-document-tabs';
 import { equationActions } from './text-document-equation-insert';
 import { BUILDING_BLOCKS } from './text-document-building-blocks';
 import { CODE_BLOCK_ITEMS } from './text-document-code-blocks';
@@ -101,6 +102,8 @@ describe('the text document menus', () => {
         ...Object.keys(
           textDocumentBreakActions(null, { canEdit: true, liveDoc: { current: null }, format }),
         ),
+        // Insert > Tab (useTextDocumentTabs), bound by the surface.
+        TAB_ITEM,
         // Insert > Horizontal line (text-document-horizontal-line), bound by the surface.
         ...Object.keys(horizontalLineActions(null, true)),
         // Insert > Symbols > Equation (text-document-equation-insert), bound by the surface.
@@ -218,6 +221,8 @@ describe('the text document menus', () => {
       ...Object.keys(PICTURE_TURN_KEYS),
       // Open link at the caret (useTextDocumentLinks).
       OPEN_LINK,
+      // Stepping between document tabs (the surface's keymap, text-document-tabs).
+      ...Object.keys(TAB_STEP_KEYS),
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

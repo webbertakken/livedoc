@@ -1,10 +1,11 @@
 // What the room knows of a text document without reading its state again
 // (docs/specs/034-text-documents/live-editing-and-storage.md "The digest"): counts, whether it has content, and the
-// text content search reads: the body's, then its headers', footers' and notes'. Pure; built from a loaded state when the
+// text content search reads: every tab's body, then its headers', footers' and notes'. Pure; built from a loaded state when the
 // outbox drains the tab.
 import * as Y from 'yjs';
 import { TEXT_DOCUMENT_WORDS_PER_PAGE } from './limits';
 import { liveStoryIds } from './live/live-stories';
+import { liveTabFragments } from './live/live-tabs';
 import { EQUATION, PICTURE } from './live/live-names';
 import { TextDocumentState } from './text-document-state';
 
@@ -38,7 +39,7 @@ export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
     characters,
     words,
     pages: Math.max(1, Math.ceil(words / TEXT_DOCUMENT_WORDS_PER_PAGE)),
-    hasContent: characters > 0 || holdsObject(TextDocumentState.body(doc)),
+    hasContent: characters > 0 || liveTabFragments(doc).some(holdsObject),
     searchText: [
       ...texts,
       ...liveStoryIds(doc).flatMap((id) =>

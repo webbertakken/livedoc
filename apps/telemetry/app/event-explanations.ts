@@ -1226,6 +1226,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Tab|Created|Dashboard':
     'Someone added a Dashboard tab from the + menu, opening Start Planning on its dashboards.',
   'Tab|Created|TextDocument': 'Someone added a text document tab from the + menu.',
+  'Element|Added|TextDocumentTab':
+    'Someone added a tab inside a text document, from its outline or Insert > Tab.',
+  'UI|Used|TextDocumentTabShown':
+    "Someone showed another of a text document's tabs, from its outline or the keyboard.",
   'Tab|Created|Pdf': 'Someone added a PDF tab from the + menu, from a file on their computer.',
   'Tab|Deleted|': 'A tab was removed from a document.',
   'Tab|Duplicated|': 'A tab was duplicated.',
