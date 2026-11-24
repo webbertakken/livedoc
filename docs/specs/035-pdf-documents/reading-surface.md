@@ -555,6 +555,8 @@ Bottom centre, floating over the pages, in the shell's tokens: a group named "Pa
 - A PDF with scanned pages and no recognised text says "12 pages are scans and weren't searched." with **Recognise
   text**.
 - Nothing is found by a regular expression `(default)`.
+- **Any script** is read, found and copied as the file maps it to Unicode: Arabic, Japanese, any other.
+- A font with no map to Unicode reads as the codes it holds, as in any reader; recognising it waits on [Scans](scans.md).
 - **What matches** `(default)`: the query and the text are read alike: a run of spaces or a line break is one space, a
   word the file broke with a hyphen at a line's end is one word, and the query's ends are trimmed; Match case off
   compares letters in either case. Whole words matches only where neither end is inside a word.
