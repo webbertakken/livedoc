@@ -38,9 +38,7 @@ export function SectionedView({
   return (
     <div className="mt-8">
       <nav aria-label="Sections on this tab" className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          On this tab
-        </span>
+        <span className="mr-1 text-supporting text-slate-500 dark:text-slate-400">On this tab</span>
         {sections.map((s) => (
           <a
             key={s.key}
@@ -49,7 +47,7 @@ export function SectionedView({
               e.preventDefault();
               scrollToSection(s.key);
             }}
-            className="relative touch-target-y rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-slate-100"
+            className="relative touch-target-y rounded-full border border-slate-200 bg-white px-3 py-1 text-body text-slate-600 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-slate-100"
           >
             {s.title}
           </a>
@@ -66,7 +64,7 @@ export function SectionedView({
         >
           <h2
             id={`${sectionId(s.key)}-title`}
-            className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+            className="text-dialog-title text-slate-900 dark:text-slate-100"
           >
             {s.title}
           </h2>

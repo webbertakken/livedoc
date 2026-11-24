@@ -40,7 +40,7 @@ describe('StickyWindowBar on a phone', () => {
     expect(pills).toHaveLength(WINDOW_META.length);
     for (const c of pills) {
       expect(c).toMatch(/\btouch-target-y\b/);
-      expect(c).toMatch(/\bpx-2\.5\b/);
+      expect(c).toMatch(/\bpx-3\b/);
       expect(c).toMatch(/\bsm:px-4\b/);
       expect(c).toMatch(/\bwhitespace-nowrap\b/);
     }

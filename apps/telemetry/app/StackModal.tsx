@@ -92,18 +92,18 @@ export function StackModal({
         aria-label={title}
         tabIndex={-1}
         style={{ width: `min(${width}px, 100%)` }}
-        className="flex max-h-full animate-fade-in flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-950"
+        className="flex max-h-full animate-fade-in flex-col overflow-hidden rounded-surface border border-slate-200 bg-slate-50 shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-950"
       >
-        <div className="flex items-center justify-between gap-3 px-5 pb-1 pt-4">
+        <div className="flex items-center justify-between gap-3 px-6 pb-1 pt-4">
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+            <p className="text-body text-slate-900 dark:text-slate-100">{title}</p>
+            <p className="text-supporting text-slate-500 dark:text-slate-400">{subtitle}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={`Close ${title}`}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="flex size-field cursor-pointer items-center justify-center rounded-menu text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <CloseIcon size={16} />
           </button>

@@ -58,12 +58,10 @@ export function MetricGroups({
   const { appearance } = useAppearance();
 
   return (
-    <div className="mt-6 flex flex-col gap-8">
+    <div className="mt-6 flex flex-col gap-6">
       {groups.map((group) => (
         <section key={group.title}>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {group.title}
-          </h2>
+          <h2 className="text-supporting text-slate-500 dark:text-slate-400">{group.title}</h2>
           <div className={`mt-3 ${GRID}`}>
             {group.metrics.map((item) => {
               if (!isStack(item)) {
@@ -163,7 +161,7 @@ function SeeAlsoLink({ label, onClick }: { label: string; onClick: () => void })
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-sky-600 transition-colors hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
+      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-surface border border-slate-200 bg-white px-4 py-3 text-body text-sky-600 transition-colors hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
     >
       {label}
       <Glyph size={16} units={24}>

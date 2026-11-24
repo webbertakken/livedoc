@@ -61,27 +61,27 @@ export function MetricStackCard({
           {before !== null && against ? (
             <TrendBadge now={total} before={before} rising={stack.rising} against={against} />
           ) : null}
-          <span className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          <span className="text-page-title text-slate-900 dark:text-slate-100">
             {total.toLocaleString()}
           </span>
         </div>
       }
     >
-      <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+      <p className="mt-3 text-supporting text-slate-500 dark:text-slate-400">
         {stack.blurb}
         {caption ? <span className="text-slate-500 dark:text-slate-400"> {caption}</span> : null}
       </p>
       {/* Legend: which line is which, with each member's window count. A
           stack too big to draw one line per member shows its busiest
           members instead, uncoloured since no line matches them. */}
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-supporting text-slate-600 dark:text-slate-300">
         {legend.map((entry) => (
-          <li key={entry.label} className="flex items-center gap-1.5">
+          <li key={entry.label} className="flex items-center gap-2">
             {entry.color ? (
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
             ) : null}
             {entry.label}
-            <span className="font-semibold text-slate-900 dark:text-slate-100">
+            <span className="text-slate-900 dark:text-slate-100">
               {entry.count.toLocaleString()}
             </span>
           </li>
@@ -91,7 +91,7 @@ export function MetricStackCard({
       {days ? (
         <div className="mt-auto pt-4">
           <StackTrendChart days={days} series={chart} highlightFromIndex={highlightFromIndex} />
-          <div className="mt-2 flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+          <div className="mt-2 flex justify-between text-supporting text-slate-500 dark:text-slate-400">
             <span>{fmtDay(days[0] ?? 0)}</span>
             <span>{fmtDay(days[days.length - 1] ?? 0)}</span>
           </div>

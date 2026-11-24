@@ -27,7 +27,7 @@ export function WindowPanel({
   onSelect: (key: TelemetryWindowKey) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+    <div className="rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {WINDOW_META.map((w) => {
           const isActive = active === w.key;
@@ -38,7 +38,7 @@ export function WindowPanel({
               onClick={() => onSelect(w.key)}
               aria-pressed={isActive}
               className={
-                'cursor-pointer rounded-xl border p-4 text-left transition ' +
+                'cursor-pointer rounded-surface border p-4 text-left transition ' +
                 (isActive
                   ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500 dark:bg-brand-500/10'
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:hover:border-slate-600')
@@ -47,7 +47,7 @@ export function WindowPanel({
               <span className="flex items-center justify-between">
                 <span
                   className={
-                    'text-[10px] font-semibold uppercase tracking-wide ' +
+                    'text-supporting ' +
                     (isActive
                       ? 'text-brand-700 dark:text-brand-300'
                       : 'text-slate-500 dark:text-slate-400')
@@ -59,11 +59,11 @@ export function WindowPanel({
                   <span aria-hidden className="h-2 w-2 rounded-full bg-brand-500" />
                 ) : null}
               </span>
-              <span className="mt-1 block text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              <span className="mt-1 block text-page-title text-slate-900 dark:text-slate-100">
                 {totals[w.key].toLocaleString()}
               </span>
               {/* Slate-600: on the active card's brand-50 tint slate-500 reads 4.47:1, just under AA. */}
-              <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-400">
+              <span className="mt-0.5 block text-supporting text-slate-600 dark:text-slate-400">
                 {w.hint}
               </span>
             </button>
@@ -74,10 +74,10 @@ export function WindowPanel({
       {daily ? (
         <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
           <div className="flex items-baseline justify-between">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <p className="text-body text-slate-900 dark:text-slate-100">
               Daily Volume, Last 30 Days (UTC)
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               {windowLabel(active)} highlighted
             </p>
           </div>

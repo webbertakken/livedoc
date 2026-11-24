@@ -56,7 +56,7 @@ export function LookAndFeelView({
 
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         Which templates, themes, and canvas styles get used, for{' '}
         <span className="font-medium">{windowLabel(active)}</span>, most to least picked.
       </p>
@@ -129,11 +129,9 @@ function CustomThemeCard({
   const anyData = CUSTOM_THEME_METRICS.some((m) => find(m.category, m.action, m.type) > 0);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-        Custom Theme Builder
-      </h3>
-      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+    <div className="rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+      <h3 className="text-body text-slate-900 dark:text-slate-100">Custom Theme Builder</h3>
+      <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
         Building, applying, and tweaking bespoke palettes
       </p>
       {anyData ? (
@@ -143,17 +141,15 @@ function CustomThemeCard({
             return (
               <div
                 key={m.label}
-                className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                className="rounded-menu border border-slate-200 p-3 dark:border-slate-700"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {m.label}
-                </p>
+                <p className="text-supporting text-slate-500 dark:text-slate-400">{m.label}</p>
                 <div className="mt-1 flex items-end justify-between gap-2">
-                  <span className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="text-dialog-title text-slate-900 dark:text-slate-100">
                     {find(m.category, m.action, m.type).toLocaleString()}
                   </span>
                   {series ? (
-                    <MiniSparkline values={series} color={color} className="h-5 w-14" />
+                    <MiniSparkline values={series} color={color} className="h-icon-title w-14" />
                   ) : null}
                 </div>
               </div>

@@ -52,7 +52,7 @@ export function PaletteView({
 
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         What people reach for in the creation palette, for{' '}
         <span className="font-medium">{windowLabel(active)}</span>, most to least used.
       </p>

@@ -39,7 +39,7 @@ type Props = { summary: TelemetrySummary; active: TelemetryWindowKey };
 
 function GroupsIntro({ text, active }: { text: string; active: TelemetryWindowKey }) {
   return (
-    <p className="mt-8 text-sm text-slate-500 dark:text-slate-400">
+    <p className="mt-8 text-body text-slate-500 dark:text-slate-400">
       {text}, for <span className="font-medium">{windowLabel(active)}</span>.
     </p>
   );

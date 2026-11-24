@@ -28,23 +28,19 @@ export function TimingsView({
 }) {
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         How long the key moments took in <span className="font-medium">{windowLabel(active)}</span>.
         Each browser sends only the bucket a timing fell in, so every percentile here is an estimate
         within its bucket, and one past the last bucket reads as &ldquo;over&rdquo; it.
       </p>
-      <h2 className="mt-8 text-base font-semibold text-slate-900 dark:text-slate-100">
-        Editor Timings
-      </h2>
+      <h2 className="mt-8 text-panel-title text-slate-900 dark:text-slate-100">Editor Timings</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {EDITOR_TIMING_CHARTS.map((chart) => (
           <TimingCard key={chart.timing} chart={chart} summary={summary} active={active} />
         ))}
       </div>
-      <h2 className="mt-10 text-base font-semibold text-slate-900 dark:text-slate-100">
-        Core Web Vitals
-      </h2>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <h2 className="mt-10 text-panel-title text-slate-900 dark:text-slate-100">Core Web Vitals</h2>
+      <p className="mt-1 text-body text-slate-500 dark:text-slate-400">
         The 75th percentile of each full page load, rated Good, Needs Work or Poor against
         Google&rsquo;s thresholds.
       </p>

@@ -170,6 +170,12 @@ A surface names the token, never the number, so the scale changes in one place.
 - A tool's key hint is a glyph (`text-glyph`) in the tile's corner; a toolbar icon is `size-icon-toolbar`.
 - So a drawing tool draws 37 px at the default, and the top line 48 px, as in the render Webber ruled on.
 
+## The other apps
+
+- The telemetry dashboard is chrome throughout, so all of its source is on the scale, guarded whole.
+- Its page title is the page title's step, its metric cards are surfaces, and its view tabs are medium only when chosen.
+- A field that holds a glyph and a clear button sets its side inset as a computed room (a style), not a padding step.
+
 ## The guard
 
 - A static guard, the **sizing guard** (`packages/tailwind-config`), refuses a size that is off the scale in a folder

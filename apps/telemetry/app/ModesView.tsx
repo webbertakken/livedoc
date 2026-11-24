@@ -34,7 +34,7 @@ export function ModesView({
 
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         The canvas modes people switch into, and the options they set inside them, for{' '}
         <span className="font-medium">{windowLabel(active)}</span>, most to least used.
       </p>

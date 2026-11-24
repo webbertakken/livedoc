@@ -31,9 +31,9 @@ export function RankCard({
   subtitle: string;
 } & RankListProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+    <div className="rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+      <h3 className="text-body text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">{subtitle}</p>
       <RankList {...list} />
     </div>
   );
@@ -101,7 +101,7 @@ function RankList({
         return (
           <li key={row.type} className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-2 text-sm">
+              <div className="flex items-baseline justify-between gap-2 text-body">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-slate-700 dark:text-slate-200">
                     {label(row.type ?? '')}
@@ -119,7 +119,7 @@ function RankList({
                     />
                   ) : null}
 
-                  <span className="font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                  <span className="tabular-nums text-slate-900 dark:text-slate-100">
                     {row.count.toLocaleString()}
                   </span>
                 </span>
@@ -135,7 +135,11 @@ function RankList({
               </div>
             </div>
             {series ? (
-              <MiniSparkline values={series} color={color} className="hidden h-6 w-20 sm:block" />
+              <MiniSparkline
+                values={series}
+                color={color}
+                className="hidden h-chip w-20 sm:block"
+              />
             ) : null}
           </li>
         );

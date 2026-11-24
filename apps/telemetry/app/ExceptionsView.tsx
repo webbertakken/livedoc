@@ -83,7 +83,7 @@ export function ExceptionsView({
 
   return (
     <div className="mt-8">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         Error health for <span className="font-medium">{windowLabel(active)}</span>: what failed and
         where, counted generically (a status or kind plus the request, route, page, or area), never
         a message, stack, or anything personal. An empty view here is the goal.

@@ -8,12 +8,13 @@ import { WINDOW_META } from './windows';
 // `view`: a Detail tab's place while its code downloads (its groups of cards alone).
 
 const PULSE = 'animate-pulse bg-slate-200/70 motion-reduce:animate-none dark:bg-slate-700/60';
-const CARD = 'rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';
+const CARD =
+  'rounded-surface border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';
 // MetricCards' grid.
 const GRID = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
 // ViewTabs' bar.
 const BAR =
-  'flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900';
+  'flex items-center gap-1 rounded-surface border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900';
 
 // A placeholder for one line of text: the block keeps the text's line height (its `text` classes), so the skeleton
 // stands exactly as tall as the words it stands in for.
@@ -29,7 +30,7 @@ function Bone({
   return (
     <span className={`block ${text} ${className}`}>
       <span
-        className={`inline-block h-[0.7em] max-w-full rounded align-middle ${width} ${PULSE}`}
+        className={`inline-block h-[0.7em] max-w-full rounded-control align-middle ${width} ${PULSE}`}
       />
     </span>
   );
@@ -38,26 +39,26 @@ function Bone({
 // WindowPanel's shape: the three window tiles, then the 30-day trend chart.
 function WindowPanelSkeleton() {
   return (
-    <div className={`${CARD} p-5`}>
+    <div className={`${CARD} p-6`}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {WINDOW_META.map((w) => (
           <div
             key={w.key}
             data-skeleton="window-tile"
-            className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+            className="rounded-surface border border-slate-200 p-4 dark:border-slate-700"
           >
-            <Bone text="text-[10px]" width="w-20" />
-            <Bone text="text-2xl" width="w-16" className="mt-1" />
-            <Bone text="text-xs" width="w-28" className="mt-0.5" />
+            <Bone text="text-supporting" width="w-20" />
+            <Bone text="text-page-title" width="w-16" className="mt-1" />
+            <Bone text="text-supporting" width="w-28" className="mt-0.5" />
           </div>
         ))}
       </div>
       <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
         <div className="flex items-baseline justify-between">
-          <Bone text="text-sm" width="w-56" />
-          <Bone text="text-xs" width="w-28" />
+          <Bone text="text-body" width="w-56" />
+          <Bone text="text-supporting" width="w-28" />
         </div>
-        <div className={`mt-4 h-40 rounded-xl ${PULSE}`} />
+        <div className={`mt-4 h-40 rounded-surface ${PULSE}`} />
       </div>
     </div>
   );
@@ -69,7 +70,7 @@ function ViewTabsSkeleton() {
     <span
       key={i}
       data-skeleton="tab"
-      className={`h-8 shrink-0 rounded-lg pointer-coarse:h-10 ${width} ${PULSE}`}
+      className={`h-field shrink-0 rounded-menu pointer-coarse:h-10 ${width} ${PULSE}`}
     />
   );
   return (
@@ -83,21 +84,21 @@ function ViewTabsSkeleton() {
 // MetricCard's shape: icon, title and event, the count, a two-line blurb, the trend line.
 function MetricCardSkeleton() {
   return (
-    <div data-skeleton="metric-card" className={`flex h-full flex-col p-5 ${CARD}`}>
+    <div data-skeleton="metric-card" className={`flex h-full flex-col p-6 ${CARD}`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-start gap-2.5">
-          <span className={`mt-0.5 h-8 w-8 shrink-0 rounded-lg ${PULSE}`} />
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <span className={`mt-0.5 size-field shrink-0 rounded-menu ${PULSE}`} />
           <div className="min-w-0 flex-1">
-            <Bone text="text-sm" width="w-28" />
-            <Bone text="text-xs" width="w-36" />
+            <Bone text="text-body" width="w-28" />
+            <Bone text="text-supporting" width="w-36" />
           </div>
         </div>
-        <Bone text="text-2xl" width="w-12" />
+        <Bone text="text-page-title" width="w-12" />
       </div>
-      <Bone text="text-xs leading-relaxed" width="w-full" className="mt-3" />
-      <Bone text="text-xs leading-relaxed" width="w-3/4" />
+      <Bone text="text-supporting" width="w-full" className="mt-3" />
+      <Bone text="text-supporting" width="w-3/4" />
       <div className="mt-auto pt-4">
-        <div className={`h-20 rounded-lg ${PULSE}`} />
+        <div className={`h-20 rounded-menu ${PULSE}`} />
       </div>
     </div>
   );
@@ -110,11 +111,11 @@ const GROUP_SIZES = [6, 3];
 function TabSkeleton() {
   return (
     <div className="mt-8">
-      <Bone text="text-sm" width="w-full max-w-xl" />
-      <div className="mt-6 flex flex-col gap-8">
+      <Bone text="text-body" width="w-full max-w-xl" />
+      <div className="mt-6 flex flex-col gap-6">
         {GROUP_SIZES.map((size, g) => (
           <section key={g}>
-            <Bone text="text-xs" width="w-28" />
+            <Bone text="text-supporting" width="w-28" />
             <div className={`mt-3 ${GRID}`}>
               {Array.from({ length: size }, (_, i) => (
                 <MetricCardSkeleton key={i} />

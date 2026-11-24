@@ -51,7 +51,7 @@ export function TrendBadge({
   return (
     <Tooltip label={comparison}>
       <span
-        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums ${TONES[tone]}`}
+        className={`shrink-0 rounded-full px-2 py-0.5 text-supporting tabular-nums ${TONES[tone]}`}
       >
         {arrow} {amount}
         <span className="sr-only"> ({comparison})</span>

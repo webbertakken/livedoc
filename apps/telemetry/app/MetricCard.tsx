@@ -41,18 +41,18 @@ export function MetricCard({
     // the bottom of the card. Grid rows already stretch cards to equal height,
     // so without this a longer blurb (e.g. an aggregate's) would push its chart
     // down and misalign it with the shorter cards beside it in the same row.
-    <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+    <div className="flex h-full flex-col rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5">
+        <div className="flex items-start gap-3">
           <span
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+            className="mt-0.5 flex size-field shrink-0 items-center justify-center rounded-menu"
             style={{ backgroundColor: `${color}1a`, color }}
           >
             <EventIcon category={m.category} action={m.action} type={iconType} />
           </span>
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{m.title}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-body text-slate-900 dark:text-slate-100">{m.title}</p>
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               {m.category} · {eventLabel({ action: m.action, type: iconType })}
             </p>
           </div>
@@ -61,14 +61,14 @@ export function MetricCard({
           {previous !== null && against ? (
             <TrendBadge now={count} before={previous} rising={m.rising} against={against} />
           ) : null}
-          <span className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          <span className="text-page-title text-slate-900 dark:text-slate-100">
             {count.toLocaleString()}
           </span>
         </div>
       </div>
       {/* Plain-language meaning. Aggregates carry their own blurb; single
           metrics reuse the shared event explanation copy. */}
-      <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+      <p className="mt-3 text-supporting text-slate-500 dark:text-slate-400">
         {m.blurb ?? eventExplanation(m.category, m.action, iconType)}
       </p>
       {days ? (

@@ -107,26 +107,26 @@ function SelectedMetric({
   // Keyed by the metric so stepping to another one replays it.
   const rise = (step: number): CSSProperties => ({ animationDelay: `${step * RISE_STEP_MS}ms` });
   return (
-    <div className="mt-6 rounded-3xl border border-slate-200 bg-white px-6 pb-6 pt-5 dark:border-slate-700 dark:bg-slate-900">
+    <div className="mt-6 rounded-surface border border-slate-200 bg-white px-6 pb-6 pt-5 dark:border-slate-700 dark:bg-slate-900">
       {breadcrumb}
       <div key={metric.key}>
         <div className="mt-5 flex items-start gap-3">
           <span
             style={{ ...rise(0), backgroundColor: `${color}1a`, color }}
-            className="metric-rise mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+            className="metric-rise mt-0.5 flex size-prominent shrink-0 items-center justify-center rounded-menu"
           >
             <EventIcon category={metric.category} action={metric.action} type={metric.type} />
           </span>
           <div className="min-w-0">
             <h2
               style={rise(1)}
-              className="metric-rise text-base font-semibold text-slate-900 dark:text-slate-100"
+              className="metric-rise text-panel-title text-slate-900 dark:text-slate-100"
             >
               {metric.label}
             </h2>
             <p
               style={rise(2)}
-              className="metric-rise mt-0.5 text-sm text-slate-500 dark:text-slate-400"
+              className="metric-rise mt-0.5 text-body text-slate-500 dark:text-slate-400"
             >
               {eventExplanation(metric.category, metric.action, metric.type)}
             </p>
@@ -138,12 +138,10 @@ function SelectedMetric({
             <div
               key={w.key}
               style={rise(3 + i)}
-              className="metric-rise rounded-xl border border-slate-200 p-3 dark:border-slate-700"
+              className="metric-rise rounded-surface border border-slate-200 p-3 dark:border-slate-700"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {w.label}
-              </p>
-              <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-supporting text-slate-500 dark:text-slate-400">{w.label}</p>
+              <p className="mt-1 text-dialog-title text-slate-900 dark:text-slate-100">
                 {(windowCounts[w.key].get(metric.key) ?? 0).toLocaleString()}
               </p>
             </div>
@@ -151,10 +149,7 @@ function SelectedMetric({
         </div>
 
         <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
-          <p
-            style={rise(4)}
-            className="metric-rise text-sm font-semibold text-slate-900 dark:text-slate-100"
-          >
+          <p style={rise(4)} className="metric-rise text-body text-slate-900 dark:text-slate-100">
             Daily Trend, Last 30 Days
           </p>
           <div style={rise(5)} className="metric-reveal mt-4">

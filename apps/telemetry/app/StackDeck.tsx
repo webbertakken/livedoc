@@ -41,7 +41,7 @@ export function StackDeck({
   // Two layers at three or more, one at two, as on the Timeline.
   const deep = count >= 3 && !expanded;
   const layer =
-    'pointer-events-none absolute inset-0 rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';
+    'pointer-events-none absolute inset-0 rounded-surface border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';
   const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
@@ -66,23 +66,23 @@ export function StackDeck({
         aria-haspopup="dialog"
         onClick={onClick}
         onKeyDown={onKeyDown}
-        className={`relative flex flex-1 cursor-pointer flex-col rounded-2xl border bg-white p-5 transition-colors hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:bg-slate-900 dark:focus-visible:ring-brand-400 dark:hover:border-slate-600 ${
+        className={`relative flex flex-1 cursor-pointer flex-col rounded-surface border bg-white p-6 transition-colors hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:bg-slate-900 dark:focus-visible:ring-brand-400 dark:hover:border-slate-600 ${
           expanded
             ? 'border-sky-300 ring-4 ring-sky-100 dark:border-brand-500 dark:ring-brand-500/20'
             : 'border-slate-200 dark:border-slate-700'
         }`}
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2.5">
+          <div className="flex items-start gap-3">
             <span
-              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+              className="mt-0.5 flex size-field shrink-0 items-center justify-center rounded-menu"
               style={{ backgroundColor: `${accent}1a`, color: accent }}
             >
               <StackGlyph />
             </span>
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-body text-slate-900 dark:text-slate-100">{title}</p>
+              <p className="text-supporting text-slate-500 dark:text-slate-400">
                 {count} {count === 1 ? noun.replace(/s$/, '') : noun} · click to open
               </p>
             </div>

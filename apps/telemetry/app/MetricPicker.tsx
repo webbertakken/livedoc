@@ -21,6 +21,8 @@ import type { Metric } from './metrics';
 // highlight styling are identical; ←/Backspace steps back up a level.
 
 const MAX_MATCHES = 10;
+/** The search field's side inset: a 16px glyph 12px in, and 12px clear of the text (40px, 2.5rem). */
+const SEARCH_FIELD_INSET = '2.5rem';
 
 // A single dropdown row, shared by browse + search so nav is uniform.
 type Row = {
@@ -47,7 +49,7 @@ function CategorySwatch({ category }: { category: string }) {
     // The dark hues are lifted to read on the dark card, so their initial
     // reads in the card's own ink rather than white.
     <span
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold text-white dark:text-slate-950"
+      className="flex size-row shrink-0 items-center justify-center rounded-control text-supporting text-white dark:text-slate-950"
       style={{ backgroundColor: tone(category) }}
     >
       {category.slice(0, 1)}
@@ -67,7 +69,7 @@ function EventChip({
   const color = useCategoryColor()(category);
   return (
     <span
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+      className="flex size-row shrink-0 items-center justify-center rounded-control"
       style={{ backgroundColor: `${color}1a`, color }}
     >
       <EventIcon category={category} action={action} type={type} />
@@ -255,7 +257,9 @@ export function MetricPicker({
         aria-expanded={open}
         aria-controls={listboxId}
         aria-autocomplete="list"
-        className="!py-3 !pl-10 !pr-10 text-base"
+        className="!py-3 text-panel-title"
+        // Room for the search glyph at the start and the clear button at the end, each a 16px icon in 12px.
+        style={{ paddingInline: SEARCH_FIELD_INSET }}
         placeholder="Search a metric, or browse, e.g. “element added”"
         value={query}
         onChange={(e) => reset(e.target.value)}
@@ -272,16 +276,16 @@ export function MetricPicker({
           aria-label="Clear search"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => reset('')}
-          className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          className="absolute right-2 top-1/2 flex size-chip -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
         >
           <CloseIcon size={10} />
         </button>
       ) : null}
 
       {open ? (
-        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 dark:border-slate-700 dark:bg-slate-900">
+        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-surface border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 dark:border-slate-700 dark:bg-slate-900">
           {header ? (
-            <p className="border-b border-slate-100 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:border-slate-800">
+            <p className="border-b border-slate-100 px-3 py-2 text-supporting text-slate-500 dark:text-slate-400 dark:border-slate-800">
               {header}
             </p>
           ) : (
@@ -292,9 +296,9 @@ export function MetricPicker({
                 if (blurTimer.current) clearTimeout(blurTimer.current);
                 back();
               }}
-              className="flex w-full cursor-pointer items-center gap-1.5 border-b border-slate-100 px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition hover:text-slate-700 dark:border-slate-800 dark:hover:text-slate-300 dark:text-slate-400"
+              className="flex w-full cursor-pointer items-center gap-2 border-b border-slate-100 px-3 py-2 text-left text-supporting text-slate-500 transition hover:text-slate-700 dark:border-slate-800 dark:hover:text-slate-300 dark:text-slate-400"
             >
-              <span aria-hidden className="text-sm leading-none">
+              <span aria-hidden className="text-body leading-none">
                 ‹
               </span>
               {path.join(' › ')}
@@ -316,7 +320,7 @@ export function MetricPicker({
                     row.activate();
                   }}
                   className={
-                    'flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition ' +
+                    'flex cursor-pointer items-center gap-3 rounded-menu px-3 py-2 text-body transition ' +
                     (i === highlight
                       ? 'bg-brand-50 dark:bg-brand-500/10'
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800/60')
@@ -327,11 +331,11 @@ export function MetricPicker({
                     {row.title}
                   </span>
                   {row.meta ? (
-                    <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
                       {row.meta}
                     </span>
                   ) : null}
-                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-supporting tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                     {row.count.toLocaleString()}
                   </span>
                   {row.branch ? <Chevron /> : null}
@@ -339,7 +343,7 @@ export function MetricPicker({
               ))}
             </ul>
           ) : (
-            <p className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+            <p className="px-3 py-6 text-center text-body text-slate-500 dark:text-slate-400">
               No metrics match &ldquo;{query}&rdquo;.
             </p>
           )}
