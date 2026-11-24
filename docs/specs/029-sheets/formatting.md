@@ -140,7 +140,10 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 ## Paint format and clearing
 
-- **Paint Format**: a click copies the active cell's style to the next selection; a double-click keeps it for several.
+- **Paint Format**: a click holds the selection's formats (its last range) for the next range selected, which takes
+  them as Paste Format Only does, one undo step; a double-click keeps it on for several. It is the toolbar's, shown
+  pressed while it holds them; pressed again, or Escape, lets go without painting. A Plan Sheet's works the same
+  ([Sheet](sheet.md#paint-format)). An Editor's, as every format is.
 - **Clear Formatting** (Ctrl+\\) resets the selection's style to the workbook's default.
 
 ## Themes

@@ -55,6 +55,7 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
     link,
     recentCodes,
     merged: unmergeRange(sheet, range) !== null,
+    painting: !!c.rules.paint,
     borderLine,
     chooseBorderLine,
     act: {

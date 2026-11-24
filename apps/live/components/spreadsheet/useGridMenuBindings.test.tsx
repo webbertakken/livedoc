@@ -41,6 +41,7 @@ function bound(
     ...roles,
     workbook: { hyperlinkOf: () => link },
     setMenu,
+    rules: { paint: null },
     selection: {
       ranges: [
         { r1: 0, c1: 0, r2: 0, c2: 0 },

@@ -48,6 +48,8 @@ const actions = (): GridMenuActions => ({
   merge: vi.fn(),
   unmerge: vi.fn(),
   borders: vi.fn(),
+  paintStart: vi.fn(),
+  paintStop: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -74,6 +76,7 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
   link: null,
   recentCodes: [],
   merged: false,
+  painting: false,
   borderLine: { colour: '#000000', line: 'thin' },
   chooseBorderLine: vi.fn(),
   act: actions(),
