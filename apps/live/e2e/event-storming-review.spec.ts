@@ -451,9 +451,13 @@ test('a hotspot is answered from its menu: the field takes the keyboard, Enter a
   const fieldBox = (await page.locator('[data-answer-field]').boundingBox())!;
   const noteBox = (await note(page, IDS.sentBack).boundingBox())!;
   expect(fieldBox.y).toBeGreaterThanOrEqual(noteBox.y + noteBox.height);
-  // Counter-scaled against the board's zoom (scale(1 / zoom)), which the browser draws in float32: 260 px to a
-  // thousandth of a pixel at any fit zoom.
-  expect(fieldBox.width).toBeCloseTo(260, 3);
+  // Its layout width, exactly: on screen it is counter-scaled against the board's zoom (scale(1 / zoom)), which the
+  // browser draws in float32, so its box carries rounding noise at most zooms.
+  expect(
+    await page
+      .locator('[data-answer-field]')
+      .evaluate((field) => (field as HTMLElement).offsetWidth),
+  ).toBe(260);
 
   // Escape leaves the question open.
   await page.keyboard.type('Never mind');
@@ -497,8 +501,8 @@ test('an answered hotspot shows its answer as a caption when its check is pointe
   // On the note's top right corner, a 28 px target.
   const hotspot = await settledBox(note(page, IDS.whoCalls));
   const target = await settledBox(mark);
-  // Counter-scaled against the board's zoom in float32, as the answer field: 28 px to a thousandth of a pixel.
-  expect(target.width).toBeCloseTo(28, 3);
+  // Its layout width, exactly: counter-scaled against the board's zoom in float32 on screen, as the answer field.
+  expect(await mark.evaluate((el) => (el as HTMLElement).offsetWidth)).toBe(28);
   expect(Math.abs(target.x + target.width / 2 - (hotspot.x + hotspot.width - 4))).toBeLessThan(1);
   expect(Math.abs(target.y + target.height / 2 - (hotspot.y + 4))).toBeLessThan(1);
 
