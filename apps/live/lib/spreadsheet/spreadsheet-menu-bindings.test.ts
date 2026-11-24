@@ -43,6 +43,7 @@ const actions = (): GridMenuActions => ({
   openLink: vi.fn(),
   openCustomFormat: vi.fn(),
   openCustomCurrency: vi.fn(),
+  openCustomDateTime: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -283,12 +284,14 @@ describe('gridMenuBindings', () => {
     expect(gridOffice(p).recentCodes).toEqual(['0.0', '#,##0']);
   });
 
-  it('opens the Custom Number Formats and Custom Currencies dialogs', () => {
+  it('opens Format › Number’s three dialogs', () => {
     const p = port();
     gridMenuBindings(p)['custom-number-format']!.run();
     expect(p.act.openCustomFormat).toHaveBeenCalledOnce();
     gridMenuBindings(p)['custom-currency']!.run();
     expect(p.act.openCustomCurrency).toHaveBeenCalledOnce();
+    gridMenuBindings(p)['custom-date-and-time']!.run();
+    expect(p.act.openCustomDateTime).toHaveBeenCalledOnce();
   });
 
   it('aligns and wraps, the grid’s defaults clearing the cell’s own', () => {

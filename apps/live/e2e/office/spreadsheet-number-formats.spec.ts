@@ -113,3 +113,32 @@ test('Custom Currencies finds a currency and applies its format', async ({ page,
   await expect(grid(page).getByText('1,000.12€', { exact: true })).toBeVisible();
   expectNoPageErrors(pageErrors);
 });
+
+test('Custom Date and Time builds a format from its blocks and applies it', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await openSpreadsheet(page);
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  await nameBox.fill('A1');
+  await nameBox.press('Enter');
+  await page.keyboard.type('2026-01-05');
+  await page.keyboard.press('Enter');
+  await nameBox.fill('A1');
+  await nameBox.press('Enter');
+
+  await (await officeMenuItem(page, ['Format', 'Number', 'Custom Date and Time'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Custom Date and Time Formats' });
+  await dialog.getByRole('button', { name: /, dddd, d mmmm yyyy$/ }).click();
+  await dialog.getByRole('combobox', { name: 'Day' }).first().selectOption('ddd');
+  await expect(dialog.getByRole('status')).toHaveText('Preview: Mon, 5 January 2026');
+  await page.screenshot({
+    path: test.info().outputPath('custom-date-time.png'),
+    animations: 'disabled',
+  });
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(grid(page).getByText('Mon, 5 January 2026', { exact: true })).toBeVisible();
+  expectNoPageErrors(pageErrors);
+});

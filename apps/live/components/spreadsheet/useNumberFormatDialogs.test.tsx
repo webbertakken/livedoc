@@ -17,7 +17,8 @@ beforeAll(stubResizeObserver);
 
 // The menu items' presses, as buttons the test presses.
 function Host({ actions }: { actions: SheetActions }) {
-  const { openCustomFormat, openCustomCurrency, dialog } = useNumberFormatDialogs(actions);
+  const { openCustomFormat, openCustomCurrency, openCustomDateTime, dialog } =
+    useNumberFormatDialogs(actions);
   return (
     <>
       <button type="button" onClick={openCustomFormat}>
@@ -25,6 +26,9 @@ function Host({ actions }: { actions: SheetActions }) {
       </button>
       <button type="button" onClick={openCustomCurrency}>
         Custom Currency
+      </button>
+      <button type="button" onClick={openCustomDateTime}>
+        Custom Date and Time
       </button>
       {dialog}
     </>
@@ -83,5 +87,18 @@ describe('useNumberFormatDialogs', () => {
       nc: '#,##0.00"€"',
     });
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  // formatting.md "Number formats" (D198): a preset applied from Custom Date and Time.
+  it('applies a preset from Custom Date and Time', async () => {
+    const h = await makeSheet({ cells: { A1: '1' } });
+    renderSheet(h, ({ actions }) => <Host actions={actions} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Custom Date and Time' }));
+    fireEvent.click(screen.getByRole('button', { name: /, mmmm yyyy$/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    const sheet = h.store.sheet(SHEET_ID)!;
+    expect(
+      sheet.cells.get(cellKey(sheet.layout.rows[0]!, sheet.layout.cols[0]!))?.format,
+    ).toMatchObject({ nf: 'custom', nc: 'mmmm yyyy' });
   });
 });
