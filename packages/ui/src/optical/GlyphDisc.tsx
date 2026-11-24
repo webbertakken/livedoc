@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
 import { useInkCentring } from './ink-centring';
 

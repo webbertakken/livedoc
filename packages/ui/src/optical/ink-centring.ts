@@ -1,3 +1,5 @@
+'use client';
+
 import { useLayoutEffect, useState, type RefObject } from 'react';
 
 // Ink centring (docs/specs/004-interface-design/optical-alignment.md "The rules"): initials and symbols in a shape
