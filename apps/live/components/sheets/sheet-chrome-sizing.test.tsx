@@ -31,6 +31,8 @@ describe('a sheet’s chrome on the sizing scale', () => {
     expect(bar.className).toContain('text-body');
     expect(screen.getByLabelText('Find').className).toContain('h-field');
     expect(screen.getByRole('button', { name: 'Next Match' }).className).toContain('size-field');
+    // Replace All sits level with Replace and the fields: every control in the bar is 32 px.
+    expect(screen.getByRole('button', { name: 'Replace All' }).className).toContain('min-h-field');
     expect(bar.innerHTML).not.toMatch(TRACKED_OR_HEAVY);
   });
 

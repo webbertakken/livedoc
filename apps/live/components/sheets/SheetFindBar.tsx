@@ -170,7 +170,7 @@ export function SheetFindBar() {
           </button>
           <Button
             variant="primary"
-            size="xs"
+            size="sm"
 
             onClick={() => {
               const r = replaceAll(c.workbook, c.sheet.id, query, by, opts);
