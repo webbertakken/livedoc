@@ -63,7 +63,7 @@ const open = (tab: Tab, documentTabs?: Tab[]) =>
 const cardTitles = () =>
   screen
     .getAllByRole('button')
-    .map((b) => b.querySelector('h3, .font-semibold')?.textContent ?? b.textContent ?? '')
+    .map((b) => b.querySelector('h3, p')?.textContent ?? b.textContent ?? '')
     .filter((t) => /^(JSON|Mermaid|Markdown|CSV|Excalidraw|PNG|SVG|PDF)/.test(t.trim()))
     .map((t) => t.trim().split(/\s/)[0]);
 

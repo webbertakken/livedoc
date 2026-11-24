@@ -553,7 +553,7 @@ export function ExportTabDialog({
         ) : active === 'gif' && pages && page ? (
           <Suspense
             fallback={
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-supporting text-slate-500 dark:text-slate-400">
                 Preparing the GIF options…
               </p>
             }

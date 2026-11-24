@@ -193,7 +193,7 @@ export function CanvasThemeDialog({
           aria-label="Tab style"
           // A bottom sheet on a phone, rising from the bottom edge as the editor's other phone sheets do, the canvas
           // still in view above it so each pick shows on the tab.
-          className={`flex max-h-[calc(100%-2rem)] w-[44rem] max-w-[calc(100%-2rem)] flex-col rounded-xl border border-slate-200 bg-white shadow-xl outline-none max-sm:max-h-[75dvh] max-sm:w-full max-sm:max-w-none max-sm:animate-sheet-up max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:border-x-0 max-sm:border-b-0 max-sm:shadow-[0_-8px_40px_-12px_rgb(0_0_0/0.25)] dark:border-slate-700 dark:bg-slate-900 ${anchor ? 'fixed animate-fly-up-in shadow-2xl motion-reduce:animate-fade-in' : ''}`}
+          className={`flex max-h-[calc(100%-2rem)] w-[44rem] max-w-[calc(100%-2rem)] flex-col rounded-surface border border-slate-200 bg-white shadow-xl outline-none max-sm:max-h-[75dvh] max-sm:w-full max-sm:max-w-none max-sm:animate-sheet-up max-sm:rounded-b-none max-sm:rounded-t-surface max-sm:border-x-0 max-sm:border-b-0 max-sm:shadow-[0_-8px_40px_-12px_rgb(0_0_0/0.25)] dark:border-slate-700 dark:bg-slate-900 ${anchor ? 'fixed animate-fly-up-in shadow-2xl motion-reduce:animate-fade-in' : ''}`}
           // Drawn at the Panels UI scale like every other panel (docs/specs/007-editor/ui-scale.md); under its
           // `zoom` the anchored offsets are in the panel's own px, so they are converted (toSurfacePx).
           style={
@@ -217,11 +217,9 @@ export function CanvasThemeDialog({
                   (docs/specs/007-editor/live-app.md), so this dialog — which is the tab's look, shared
                   with everyone — takes the name of the section that opens it. */}
               <div className="flex min-w-0 flex-col">
-                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  Tab Style
-                </h2>
+                <h2 className="text-dialog-title text-slate-800 dark:text-slate-100">Tab Style</h2>
                 {tab === 'looks' ? (
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-supporting text-slate-500 dark:text-slate-400">
                     Pick a look for the whole tab, then fine-tune any part of it.
                   </p>
                 ) : null}
@@ -249,7 +247,7 @@ export function CanvasThemeDialog({
 
           {/* Fixed min-height so switching between tabs doesn't collapse the
               modal and make it jump around. */}
-          <div className="min-h-[20rem] overflow-y-auto px-5 pb-4 pt-2">
+          <div className="min-h-[20rem] overflow-y-auto px-4 pb-4 pt-2">
             {/* The home and its panels swap through an easing height and a short slide: into a panel from the
                 right, back home from the left (AnimatedHeightBox). */}
             <AnimatedHeightBox viewKey={tab} enter={enter}>

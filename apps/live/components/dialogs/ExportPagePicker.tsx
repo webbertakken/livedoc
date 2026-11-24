@@ -43,12 +43,12 @@ export function ExportPagePicker({
 }) {
   const label = (p: LaidOutPage) => exportPageLabel(p, pages.length);
   return (
-    <div className="flex flex-col gap-2.5 rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
+    <div className="flex flex-col gap-2 rounded-menu bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
       <div className="flex flex-wrap items-center gap-3">
         <div
           role="group"
           aria-label="Pages to export"
-          className={`relative grid w-56 grid-cols-2 rounded-lg p-0.5 ${SEGMENT_TRACK}`}
+          className={`relative grid w-56 grid-cols-2 rounded-menu p-0.5 ${SEGMENT_TRACK}`}
         >
           <SegmentSlider
             count={SCOPES.length}
@@ -61,9 +61,9 @@ export function ExportPagePicker({
               type="button"
               aria-pressed={scope === id}
               onClick={() => onScope(id)}
-              className={`relative z-10 rounded-md py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
+              className={`relative z-10 min-h-row rounded-control text-body transition-colors focus-visible:outline-2 focus-visible:outline-brand-600 ${
                 scope === id
-                  ? 'text-white'
+                  ? 'font-medium text-white'
                   : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >
@@ -87,7 +87,7 @@ export function ExportPagePicker({
           </Select>
         ) : null}
       </div>
-      <p className="text-xs text-slate-600 dark:text-slate-300">
+      <p className="text-supporting text-slate-600 dark:text-slate-300">
         {outcome(scope, format, pages.length)}
       </p>
     </div>

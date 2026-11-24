@@ -34,13 +34,14 @@ export function BoardSceneReportList({
   return (
     <div data-testid="board-scene-report">
       {showLanded && landed.length > 0 ? (
-        <p className="text-sm text-slate-700 dark:text-slate-200">{landed.join(', ')}</p>
+        <p className="text-body text-slate-700 dark:text-slate-200">{landed.join(', ')}</p>
       ) : null}
       {rows.length > 0 ? (
-        <ul className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+        <ul className="mt-2 space-y-1 text-supporting text-slate-600 dark:text-slate-300">
           {rows.map((r) => (
             <li key={`${r.kind}-${r.rule}`} data-rule-kind={r.kind}>
-              <span className="font-semibold tabular-nums">{r.count}</span> · {r.rule}
+              <span className="tabular-nums text-slate-800 dark:text-slate-100">{r.count}</span> ·{' '}
+              {r.rule}
             </li>
           ))}
         </ul>

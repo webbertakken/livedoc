@@ -52,19 +52,19 @@ export function TextExportPanel({
           uses — not a small text link buried in the footer beside the
           commit button, where the way back sat next to the way forward. */}
       <BackBar label="All formats" current={formatTitle} onClick={onBack} />
-      <p className="mb-3 text-[11px] text-slate-500 dark:text-slate-400">{blurb}</p>
+      <p className="mb-3 text-supporting text-slate-500 dark:text-slate-400">{blurb}</p>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         spellCheck={false}
-        className="h-56 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-xs leading-relaxed text-slate-800 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-brand-500/30"
+        className="h-56 w-full resize-y rounded-control border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-supporting text-slate-800 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-brand-500/30"
       />
       <div className="mt-4 flex items-center justify-end gap-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => void copy()}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60"
+            className="inline-flex min-h-field items-center rounded-control border border-slate-200 bg-white px-3 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>

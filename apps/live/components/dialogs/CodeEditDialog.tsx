@@ -52,7 +52,7 @@ export function CodeEditDialog({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="flex size-row shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <CloseIcon size={18} />
         </button>
@@ -68,15 +68,15 @@ export function CodeEditDialog({
           autoFocus
           rows={14}
           placeholder="// your code here"
-          className="w-full resize-y rounded-lg border border-slate-200 bg-slate-900 p-3 font-mono text-xs leading-4 text-slate-200 outline-none focus:border-brand-400 dark:border-slate-700"
+          className="w-full resize-y rounded-control border border-slate-200 bg-slate-900 p-3 font-mono text-supporting text-slate-200 outline-none focus:border-brand-400 dark:border-slate-700"
         />
         <div className="flex items-center justify-between gap-3">
-          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <label className="flex items-center gap-2 text-body text-slate-600 dark:text-slate-400">
             Language
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value as CodeLanguage)}
-              className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 outline-none focus:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="h-field rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 outline-none focus:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               {CODE_LANGUAGES.map((l) => (
                 <option key={l} value={l}>

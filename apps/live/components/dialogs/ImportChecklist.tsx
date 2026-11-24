@@ -39,10 +39,10 @@ export function ImportChecklist({
   return (
     <>
       <fieldset>
-        <legend className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+        <legend className="mb-2 text-panel-title text-slate-800 dark:text-slate-100">
           {legend}
         </legend>
-        <label className="mb-1 flex items-center gap-2 px-2 text-xs text-slate-600 dark:text-slate-300">
+        <label className="mb-1 flex items-center gap-2 px-2 text-body text-slate-600 dark:text-slate-300">
           <input
             type="checkbox"
             checked={all}
@@ -53,7 +53,7 @@ export function ImportChecklist({
           />
           Select all
         </label>
-        <ul className="max-h-[50vh] divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
+        <ul className="max-h-[50vh] divide-y divide-slate-100 overflow-y-auto rounded-menu border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
           {rows.map((row) => (
             <li key={row.key}>
               <label className="flex cursor-pointer items-start gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/60">
@@ -64,10 +64,10 @@ export function ImportChecklist({
                   onChange={() => onToggle(row.key)}
                 />
                 <span className="min-w-0">
-                  <span className="block truncate text-sm text-slate-800 dark:text-slate-100">
+                  <span className="block truncate text-body text-slate-800 dark:text-slate-100">
                     {row.name}
                   </span>
-                  <span className="block text-xs text-slate-500 dark:text-slate-400">
+                  <span className="block text-supporting text-slate-500 dark:text-slate-400">
                     {row.detail}
                   </span>
                 </span>
@@ -77,7 +77,7 @@ export function ImportChecklist({
         </ul>
       </fieldset>
       {leftOut ? (
-        <p role="alert" className="mt-3 text-xs text-rose-700 dark:text-rose-300">
+        <p role="alert" className="mt-3 text-body text-rose-700 dark:text-rose-300">
           {leftOut}
         </p>
       ) : null}

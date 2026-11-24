@@ -59,7 +59,7 @@ export function TabStylePreview({
       role="img"
       aria-label={label}
       data-finish-preview={finish}
-      className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+      className="overflow-hidden rounded-menu border border-slate-200 dark:border-slate-700 [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
       dangerouslySetInnerHTML={{ __html: trustedHtml(markup) }}
     />
   );

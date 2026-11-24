@@ -79,10 +79,10 @@ export function TextImportPanel({
         onChange={(e) => setText(e.target.value)}
         spellCheck={false}
         placeholder={placeholder}
-        className="h-56 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-xs leading-relaxed text-slate-800 placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:ring-brand-500/30"
+        className="h-56 w-full resize-y rounded-control border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-supporting text-slate-800 placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:ring-brand-500/30"
       />
       {error ? (
-        <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+        <p className="mt-3 rounded-control border border-rose-200 bg-rose-50 px-3 py-2 text-body text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
           {error}
         </p>
       ) : null}
@@ -92,7 +92,7 @@ export function TextImportPanel({
             the button so the buttons never move while it counts. */}
         <div aria-live="polite" className="min-w-0">
           {busy && progress && progress.total > 0 ? (
-            <p className="text-xs text-slate-600 tabular-nums dark:text-slate-300">
+            <p className="text-supporting text-slate-600 tabular-nums dark:text-slate-300">
               Importing images {progress.done} of {progress.total}…
             </p>
           ) : (
@@ -104,7 +104,7 @@ export function TextImportPanel({
             type="button"
             onClick={() => void run(onImportFile)}
             disabled={busy}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition enabled:hover:border-brand-300 enabled:hover:bg-brand-50/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:enabled:hover:border-brand-500/60"
+            className="inline-flex min-h-field items-center rounded-control border border-slate-200 bg-white px-3 text-body text-slate-700 transition enabled:hover:border-brand-300 enabled:hover:bg-brand-50/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:enabled:hover:border-brand-500/60"
           >
             Import a file instead
           </button>

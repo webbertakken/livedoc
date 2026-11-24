@@ -53,11 +53,11 @@ export function SyncDocumentPrompt({
           <path d="M3.5 3.5l17 17" />
         </Glyph>
       </span>
-      <div className="flex flex-col gap-1.5">
-        <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+      <div className="flex flex-col gap-1">
+        <p className="text-body text-slate-800 dark:text-slate-100">
           This Document Is in This Browser
         </p>
-        <p className="mx-auto max-w-sm text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mx-auto max-w-sm text-supporting text-slate-500 dark:text-slate-400">
           {message}
         </p>
       </div>
