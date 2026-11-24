@@ -32,6 +32,8 @@ export type EngineIn =
   // Anything else about a sheet changed (rows, columns, title), or a sheet is new: the whole sheet.
   | { t: 'sheet'; rev: number; sheet: SheetJson }
   | { t: 'remove'; rev: number; sheetId: string }
+  // The sheets' order changed (a spreadsheet's tabs moved): SHEET counts them so.
+  | { t: 'order'; rev: number; sheetIds: string[] }
   | { t: 'iteration'; rev: number; iteration: Iteration }
   | { t: 'tick'; rev: number }
   // An import's answer, for the ask of that key.

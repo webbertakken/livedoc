@@ -14,6 +14,7 @@ export function SheetTabMenu({
   at,
   name,
   sheetCount,
+  index,
   actions,
   onClose,
 }: {
@@ -21,6 +22,8 @@ export function SheetTabMenu({
   name: string;
   // The workbook's sheets: the last one is never deleted.
   sheetCount: number;
+  // The tab's place: Move Left dims on the first, Move Right on the last.
+  index: number;
   actions: SheetBarActions;
   onClose: () => void;
 }) {
@@ -67,8 +70,18 @@ export function SheetTabMenu({
       {later('Hide Sheet', '◌')}
       {later('View Comments', '✉')}
       <ContextMenuDivider />
-      {later('Move Right', '→')}
-      {later('Move Left', '←')}
+      <MenuActionRow
+        label="Move Right"
+        icon={<Glyph t="→" />}
+        disabled={!can || index >= sheetCount - 1}
+        onClick={act(() => actions.moveBy(at.tabId, 1))}
+      />
+      <MenuActionRow
+        label="Move Left"
+        icon={<Glyph t="←" />}
+        disabled={!can || index <= 0}
+        onClick={act(() => actions.moveBy(at.tabId, -1))}
+      />
     </ContextMenu>
   );
 }

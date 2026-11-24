@@ -95,3 +95,50 @@ test('adds, renames, duplicates and deletes sheets, each undone in one step', as
   await expect.poll(() => tabNames(page)).toEqual(['Sheet1', 'Copy of Sheet1', 'Data']);
   expectNoPageErrors(pageErrors);
 });
+
+test('moves a sheet from its menu and by a drag, SHEET counting the new order', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await openSpreadsheet(page);
+  await page.getByRole('button', { name: 'Add Sheet' }).click();
+  await expect(sheets(page).getByRole('tab', { name: 'Sheet2', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await sheets(page).getByRole('tab', { name: 'Sheet1', exact: true }).click();
+  await expect(page.locator(READY)).toBeVisible();
+  const grid = page.locator('[data-sheet-grid]');
+  await grid.click({ position: { x: 120, y: 60 } });
+  await page.keyboard.type('="s"&SHEET()');
+  await page.keyboard.press('Enter');
+  await expect(grid.getByText('s1', { exact: true })).toBeVisible();
+
+  // Move Right: Sheet1 second, and SHEET counts it so.
+  await page.getByRole('button', { name: 'Sheet1 menu' }).click();
+  await page
+    .getByRole('dialog', { name: 'Sheet1 menu' })
+    .getByRole('button', { name: 'Move Right' })
+    .click();
+  await expect.poll(() => tabNames(page)).toEqual(['Sheet2', 'Sheet1']);
+  await expect(grid.getByText('s2', { exact: true })).toBeVisible();
+
+  // A drag back to the front, a line showing where it lands.
+  const from = await sheets(page).getByRole('tab', { name: 'Sheet1', exact: true }).boundingBox();
+  const to = await sheets(page).getByRole('tab', { name: 'Sheet2', exact: true }).boundingBox();
+  await page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to!.x + 4, to!.y + to!.height / 2, { steps: 8 });
+  await expect(page.locator('[data-sheet-drop-line]')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('tab-drag.png'), animations: 'disabled' });
+  await page.mouse.up();
+  await expect.poll(() => tabNames(page)).toEqual(['Sheet1', 'Sheet2']);
+  await expect(grid.getByText('s1', { exact: true })).toBeVisible();
+
+  // Undo puts it back after the sheet it followed.
+  await grid.click({ position: { x: 300, y: 200 } });
+  await page.keyboard.press('Control+z');
+  await expect.poll(() => tabNames(page)).toEqual(['Sheet2', 'Sheet1']);
+  expectNoPageErrors(pageErrors);
+});

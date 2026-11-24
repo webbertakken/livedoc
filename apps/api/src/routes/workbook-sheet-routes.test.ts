@@ -211,6 +211,47 @@ describe('duplicating a sheet', () => {
   });
 });
 
+describe('moving a sheet', () => {
+  const move = (body: unknown, sheetId = 'book1Sheet') =>
+    kit.call({ path: `/book1/workbook/sheets/${sheetId}/move`, body });
+
+  it('puts its tab after the tab named, or first, and sends the tab list', async () => {
+    const two = await (await add({ name: 'Two' })).json<WorkbookSheetAddResponse>();
+    const three = await (await add({ name: 'Three' })).json<WorkbookSheetAddResponse>();
+    kit.relayed.length = 0;
+    const res = await move({ after: three.tab.id });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ tabId: 'book1t', sheetId: 'book1Sheet', orderIndex: 2 });
+    expect((await tabsOf('book1')).map((t) => t.name)).toEqual(['Two', 'Three', 'Sheet1']);
+    expect(kinds()).toEqual(['document-meta']);
+    await move({ after: '' }, three.sheet.id);
+    expect((await tabsOf('book1')).map((t) => t.name)).toEqual(['Three', 'Two', 'Sheet1']);
+    await move({ after: two.tab.id });
+    expect((await tabsOf('book1')).map((t) => t.name)).toEqual(['Three', 'Two', 'Sheet1']);
+  });
+
+  it('refuses a tab that is not there, a sheet not on a tab, and a body without a place', async () => {
+    expect((await move({ after: 'nope' })).status).toBe(404);
+    expect(await (await move({ after: '' }, 'missing00')).json()).toEqual({
+      error: 'sheet_not_found',
+    });
+    expect((await move({})).status).toBe(400);
+    expect(
+      (await kit.call({ method: 'GET', path: '/book1/workbook/sheets/book1Sheet/move' })).status,
+    ).toBe(405);
+  });
+
+  it("is an Editor's", async () => {
+    const res = await kit.call({
+      path: '/book1/workbook/sheets/book1Sheet/move',
+      owner: 'p',
+      code: 'PART',
+      body: { after: '' },
+    });
+    expect(res.status).toBe(403);
+  });
+});
+
 describe('renaming a sheet', () => {
   const rename = (name: unknown, sheet = 'book1Sheet') =>
     kit.call({ path: `/book1/workbook/sheets/${sheet}/rename`, body: { name } });

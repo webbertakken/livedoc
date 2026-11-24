@@ -68,6 +68,17 @@ describe('SHEET and ADDRESS', () => {
     expect(calc('=SHEET((A1, B1))', T)).toBe(1);
   });
 
+  // spreadsheet.md "Sheets in the sheet bar": a sheet moved is counted in its new place.
+  it('counts the sheets again in a new order, keeping those not named after', () => {
+    const b = book({ One: { A1: '=SHEET()' }, Two: { A1: '=SHEET()' }, Three: { A1: '=SHEET()' } });
+    const [one, two, three] = b.wb.sheetList().map((s) => s.id);
+    b.wb.orderSheets([three!, 'gone', one!]);
+    expect([b.v('A1', 'Three'), b.v('A1', 'One'), b.v('A1', 'Two')]).toEqual([1, 2, 3]);
+    const version = b.wb.sheetList();
+    b.wb.orderSheets([three!, one!, two!]);
+    expect(b.wb.sheetList()).toEqual(version);
+  });
+
   it('writes R1C1 with relative parts, and refuses what it cannot write', () => {
     expect(calc('=ADDRESS(2, 3, 2, FALSE)')).toBe('R2C[3]');
     expect(calc('=ADDRESS(2, 3, 3, FALSE)')).toBe('R[2]C3');

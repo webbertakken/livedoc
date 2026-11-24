@@ -27,6 +27,12 @@ export type WorkbookSheetAddResponse = { tab: WorkbookSheetTabDto; sheet: SheetD
 
 export type WorkbookSheetRenameRequest = { name: string };
 
+// A sheet's tab moved after the tab named, or first for an empty name (spreadsheet.md "Sheets in the sheet bar").
+export type WorkbookSheetMoveRequest = { after: string };
+
+// The moved tab's place in the document's tabs.
+export type WorkbookSheetMoveResponse = { tabId: string; sheetId: string; orderIndex: number };
+
 // The sheet's title and its tab's name, as one, and the sheet's new rev.
 export type WorkbookSheetRenameResponse = {
   tabId: string;

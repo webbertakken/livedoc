@@ -3,7 +3,7 @@
 // One sheet tab of the sheet bar (docs/specs/029-sheets/surface.md "Sheet bar"): the sheet's name, who else is on
 // it, and its menu arrow (on the open tab and the tab under the pointer, D175). A double-click, Rename or Alt+1 turns
 // the name into a field: Enter or leaving it saves, Escape keeps the name (D172).
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { Tooltip } from '@livedoc/ui';
 import type { SheetBarPeer, SheetBarTab as Tab } from './SheetBar';
 
@@ -88,6 +88,8 @@ export function SheetBarTab({
   onMenu,
   onRename,
   onRenamed,
+  onPointerDown,
+  dragged = false,
 }: {
   tab: Tab;
   active: boolean;
@@ -100,6 +102,9 @@ export function SheetBarTab({
   onMenu: (x: number, y: number, fromBar: boolean) => void;
   onRename: () => void;
   onRenamed: (typed: string | null) => void;
+  // A press that may become a drag (D176), and whether this tab is being dragged.
+  onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
+  dragged?: boolean;
 }) {
   // Who is here, named on hover as the tab is named to a screen reader.
   const label = peers.length ? sheetTabLabel(tab.name, peers) : '';
@@ -109,7 +114,9 @@ export function SheetBarTab({
   };
   return (
     <div
-      className={`group flex max-w-56 items-stretch ${
+      data-sheet-tab-face=""
+      onPointerDown={onPointerDown}
+      className={`group flex max-w-56 items-stretch ${dragged ? 'opacity-60 ' : ''}${
         active
           ? 'bg-white text-emerald-800 shadow-sm dark:bg-slate-800 dark:text-emerald-300'
           : 'text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800'

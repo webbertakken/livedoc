@@ -4,8 +4,8 @@
 // out first, from the top, and the read is tried again. Cells are held by number (cell-numbers.ts), their values and
 // dependencies in typed columns (cell-values.ts, dependencies.ts).
 import type { CardSource } from '../cards';
+import { workbookClock, type ArrayDialect, type WorkbookOptions } from './workbook-options';
 import { SheetLimits, type GridSize } from '../sheet-limits';
-import { localMs, serialFromMs, zonedMs } from '../dates';
 import { formatA1 } from '../address';
 import { layoutIndex } from '../layout';
 import { RECALC_READS_MAX } from '../limits';
@@ -13,7 +13,6 @@ import { cellKey, type Sheet } from '../sheet';
 import { CARD_FUNCTION_NAMES } from '../formula/registry';
 import {
   FETCHING_FUNCTION_NAMES,
-  type ImportAccess,
   type ImportAnswer,
   type ImportAsk,
 } from '../imports/import-request';
@@ -56,35 +55,7 @@ import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
 import { ITERATION_OFF, Loops, sameIteration, type Iteration } from './loops';
 import { LoopRounds, type LoopCells } from './loop-rounds';
 
-export type WorkbookOptions = {
-  sheets: readonly Sheet[];
-  locale: string;
-  // Whose answer a formula Google and a file's standard answer differently gives (formulas.md, the file's meaning):
-  // a spreadsheet opened from a file, its format's; by default Google's.
-  meaning?: FormulaMeaning;
-  // A spreadsheet's time zone (formulas.md "Locale"): the wall clock NOW and TODAY read; absent, the viewer's.
-  timeZone?: string;
-  // Today and now, as a serial; absent, from the time zone's wall clock.
-  now?: () => number;
-  rand?: () => number;
-  cards?: CardSource | null;
-  // The limits its sheets are held to: a spreadsheet's, or (by default) a Plan Sheet's (sheet-limits.ts).
-  limits?: SheetLimits;
-  // How ranges in single-value places read: a spreadsheet's as Google's (intersected), a Plan Sheet's whole
-  // (formulas.md "Arrays and spills"). By default, as its limits say what holds it.
-  arrays?: ArrayDialect;
-  // Iterative calculation (settings.md "Calculation"); off by default.
-  iteration?: Iteration;
-  // Note each formula value forgotten, for takeForgotten (the Worker's engine, sending what changed).
-  trackForgotten?: boolean;
-  // An editor's engine fetches imports (imports.md), access allowed or not; absent, imports read their refusal.
-  imports?: { access: ImportAccess; web?: false };
-};
-
-export type { CellAt };
-
-/** `google`: implicit intersection outside an array context; `dynamic`: every formula an array context (Plan Sheets). */
-export type ArrayDialect = 'google' | 'dynamic';
+export type { CellAt, ArrayDialect, WorkbookOptions };
 
 const DEPTH_MAX = 250;
 
@@ -99,14 +70,6 @@ class Deep extends Error {
     super(`formula chain too deep at cell ${no}`);
     this.no = no;
   }
-}
-
-function localNow(): number {
-  return serialFromMs(localMs(Date.now()));
-}
-
-function zonedNow(timeZone: string): () => number {
-  return () => serialFromMs(zonedMs(Date.now(), timeZone));
 }
 
 const RANGE_IMPORT_NAMES: ReadonlySet<string> = new Set(['IMPORTRANGE']);
@@ -173,7 +136,7 @@ export class Workbook {
     this.importBook = opts.imports
       ? new ImportBook(opts.imports.access, opts.imports.web ?? true)
       : null;
-    this.nowFn = opts.now ?? (opts.timeZone ? zonedNow(opts.timeZone) : localNow);
+    this.nowFn = opts.now ?? workbookClock(opts.timeZone);
     this.randFn = opts.rand ?? Math.random;
     this.iteration = opts.iteration ?? ITERATION_OFF;
     this.frameSource = {
@@ -285,6 +248,23 @@ export class Workbook {
 
   removeSheet(id: string): void {
     if (!this.sheets.delete(id)) return;
+    this.version++;
+    this.restart();
+  }
+
+  // The sheets in a new order, a spreadsheet's tabs moved (spreadsheet.md "Sheets in the sheet bar"): SHEET and SHEETS
+  // count them so. Sheets not named keep their order after those named; an unknown id is passed over.
+  orderSheets(ids: readonly string[]): void {
+    const was = [...this.sheets.keys()];
+    const named = new Set(ids);
+    const order = [
+      ...ids.filter((id) => this.sheets.has(id)),
+      ...was.filter((id) => !named.has(id)),
+    ];
+    if (order.every((id, i) => id === was[i])) return;
+    const held = new Map(this.sheets);
+    this.sheets.clear();
+    for (const id of order) this.sheets.set(id, held.get(id)!);
     this.version++;
     this.restart();
   }

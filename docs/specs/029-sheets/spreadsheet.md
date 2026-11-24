@@ -113,13 +113,16 @@ tab's menu holds:
 - **Delete** asks "Delete <name>?", saying every reference to it becomes `#REF!`; deleting the open sheet opens the
   sheet after it, else the one before (default, D173).
 - Deleting a sheet makes every reference to it `#REF!`; Undo puts it back with its id.
+- **Move Right** and **Move Left** move the sheet one place, dimmed at the end it cannot pass; a drag moves it to
+  where it is let go (D176). `SHEET` and `SHEETS` count the sheets in the new order.
 - Each is one undo step on the person's one timeline ([Undo](grid-and-editing.md#undo)) and is sent live to everyone
   on the workbook: undoing an add or a duplicate deletes the sheet, kept, and redoing puts it back with its ids;
-  undoing a delete puts the sheet back with its ids where it was; undoing a rename gives the old name back.
+  undoing a delete puts the sheet back with its ids where it was; undoing a move puts it back after the sheet it
+  followed; undoing a rename gives the old name back.
 - Only an Editor changes the sheets: Add Sheet shows for an Editor alone; a tab's menu opens for everyone, the items
   their role may not use dimmed, as the menu bar's are (default, D174).
-- Telemetry: the kinds of change `AddSheet`, `DuplicateSheet` and `DeleteSheet` ([Telemetry](#telemetry)); a
-  rename is `Title`.
+- Telemetry: the kinds of change `AddSheet`, `DuplicateSheet`, `DeleteSheet` and `MoveSheet`
+  ([Telemetry](#telemetry)); a rename is `Title`.
 
 ## Plan's Sheet tab becomes a spreadsheet
 

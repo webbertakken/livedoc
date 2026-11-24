@@ -73,6 +73,8 @@ function bar(over: Partial<SheetBarActions> = {}): SheetBarActions {
     duplicate: vi.fn(),
     rename: vi.fn(() => true),
     remove: vi.fn(),
+    move: vi.fn(),
+    moveBy: vi.fn(),
     ...over,
   };
 }
@@ -126,7 +128,7 @@ describe('SheetBar changes', () => {
       <SheetBar tabs={tabs} activeId="t1" onSelect={vi.fn()} actions={bar({ canChange: false })} />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Sheet1 menu' }));
-    for (const name of ['Delete', 'Duplicate', 'Rename', 'Copy To', 'Change Colour', 'Move Left'])
+    for (const name of ['Delete', 'Duplicate', 'Rename', 'Copy To', 'Change Colour', 'Move Right'])
       expect(menuItem(name).getAttribute('aria-disabled')).toBe('true');
     unmount();
     render(<SheetBar tabs={tabs.slice(0, 1)} activeId="t1" onSelect={vi.fn()} actions={bar()} />);
@@ -190,5 +192,90 @@ describe('SheetBar changes', () => {
     fireEvent.change(field, { target: { value: 'Data' } });
     fireEvent.blur(field);
     expect(actions.rename).toHaveBeenCalledWith('t1', 'Data');
+  });
+});
+
+// spreadsheet.md "Sheets in the sheet bar": Move Right, Move Left and a drag (D176).
+describe('SheetBar moves', () => {
+  beforeAll(stubResizeObserver);
+
+  it('moves a sheet one place from its menu, dimmed at the end it cannot pass', () => {
+    const actions = bar();
+    render(<SheetBar tabs={tabs} activeId="t1" onSelect={vi.fn()} actions={actions} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Sheet1 menu' }));
+    expect(menuItem('Move Left').getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(menuItem('Move Right'));
+    expect(actions.moveBy).toHaveBeenCalledWith('t1', 1);
+    fireEvent.click(screen.getByRole('button', { name: 'Costs menu' }));
+    fireEvent.click(menuItem('Move Left'));
+    expect(actions.moveBy).toHaveBeenLastCalledWith('t2', -1);
+  });
+
+  // jsdom lays nothing out: each tab is 100 px wide, side by side from 0.
+  function laidOut() {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const faces = [...document.querySelectorAll('[data-sheet-tab-face]')];
+      const i = faces.indexOf(this);
+      const left = i < 0 ? 0 : i * 100;
+      return { left, right: left + 100, width: 100, top: 0, bottom: 30, height: 30 } as DOMRect;
+    });
+  }
+
+  it('drags a tab past 4 px to where it is let go, showing where it lands', () => {
+    laidOut();
+    const actions = bar();
+    const three = [...tabs, { id: 't3', name: 'Notes' }];
+    render(<SheetBar tabs={three} activeId="t1" onSelect={vi.fn()} actions={actions} />);
+    const face = screen.getByRole('tab', { name: 'Sheet1' }).closest('[data-sheet-tab-face]')!;
+    fireEvent.pointerDown(face, { button: 0, clientX: 50 });
+    fireEvent.pointerMove(window, { clientX: 53 });
+    expect(document.querySelector('[data-sheet-drop-line]')).toBeNull();
+    fireEvent.pointerMove(window, { clientX: 260 });
+    const line = document.querySelector<HTMLElement>('[data-sheet-drop-line]')!;
+    expect(line.style.left).toBe('300px');
+    fireEvent.pointerUp(window);
+    expect(actions.move).toHaveBeenCalledWith('t1', 't3');
+    expect(document.querySelector('[data-sheet-drop-line]')).toBeNull();
+    // Back to the front, a line before the first tab.
+    const notes = screen.getByRole('tab', { name: 'Notes' }).closest('[data-sheet-tab-face]')!;
+    fireEvent.pointerDown(notes, { button: 0, clientX: 250 });
+    fireEvent.pointerMove(window, { clientX: 10 });
+    expect(document.querySelector<HTMLElement>('[data-sheet-drop-line]')!.style.left).toBe('0px');
+    fireEvent.pointerUp(window);
+    expect(actions.move).toHaveBeenLastCalledWith('t3', null);
+    vi.restoreAllMocks();
+  });
+
+  it('moves nothing let go where it was, on Escape, on a click, or for a Viewer', () => {
+    laidOut();
+    const actions = bar();
+    const { rerender } = render(
+      <SheetBar tabs={tabs} activeId="t1" onSelect={vi.fn()} actions={actions} />,
+    );
+    const face = () =>
+      screen.getByRole('tab', { name: 'Sheet1' }).closest('[data-sheet-tab-face]')!;
+    fireEvent.pointerDown(face(), { button: 0, clientX: 50 });
+    fireEvent.pointerMove(window, { clientX: 90 });
+    fireEvent.pointerUp(window);
+    fireEvent.pointerDown(face(), { button: 0, clientX: 50 });
+    fireEvent.pointerMove(window, { clientX: 190 });
+    fireEvent.keyDown(window, { key: 'a' });
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(document.querySelector('[data-sheet-drop-line]')).toBeNull();
+    fireEvent.pointerMove(window, { clientX: 195 });
+    fireEvent.pointerUp(window);
+    fireEvent.pointerDown(face(), { button: 0, clientX: 50 });
+    fireEvent.pointerUp(window);
+    fireEvent.pointerDown(face(), { button: 2, clientX: 50 });
+    rerender(
+      <SheetBar tabs={tabs} activeId="t1" onSelect={vi.fn()} actions={bar({ canChange: false })} />,
+    );
+    fireEvent.pointerDown(face(), { button: 0, clientX: 50 });
+    fireEvent.pointerMove(window, { clientX: 190 });
+    expect(document.querySelector('[data-sheet-drop-line]')).toBeNull();
+    expect(actions.move).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
   });
 });

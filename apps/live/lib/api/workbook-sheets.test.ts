@@ -1,6 +1,10 @@
 // docs/specs/029-sheets/sheet-store.md "Changing the workbook": the sheet bar's doors to the workbook routes.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { apiAddWorkbookSheet, apiDeleteWorkbookSheet } from './workbook-sheets';
+import {
+  apiAddWorkbookSheet,
+  apiDeleteWorkbookSheet,
+  apiMoveWorkbookSheet,
+} from './workbook-sheets';
 
 const scope = { documentId: 'd 1', ownerId: 'o', shareCode: 'CODE' };
 const reply = (body: unknown, status = 200) =>
@@ -30,6 +34,17 @@ describe('apiAddWorkbookSheet', () => {
   it('throws the refusal it is given', async () => {
     vi.stubGlobal('fetch', reply({ error: 'sheets_full' }, 413));
     await expect(apiAddWorkbookSheet(scope, {})).rejects.toMatchObject({ code: 'sheets_full' });
+  });
+});
+
+describe('apiMoveWorkbookSheet', () => {
+  it('posts the tab it goes after', async () => {
+    const f = reply({ tabId: 't', sheetId: 's', orderIndex: 0 });
+    vi.stubGlobal('fetch', f);
+    await apiMoveWorkbookSheet(scope, 'sheet 2', '');
+    const [url, init] = f.mock.calls[0]!;
+    expect(url).toMatch(/\/workbook\/sheets\/sheet%202\/move$/);
+    expect(JSON.parse(init?.body as string)).toEqual({ after: '' });
   });
 });
 

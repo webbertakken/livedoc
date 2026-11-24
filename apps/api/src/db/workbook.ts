@@ -105,6 +105,19 @@ export async function documentTabOrder(env: DocumentEnv, documentId: string): Pr
   return (rows.results ?? []).map((r) => r.tab_id);
 }
 
+/** Each of the document's tabs at its place in `order` (every tab of the document, in its new order). */
+export function tabOrderStatements(
+  env: DocumentEnv,
+  documentId: string,
+  order: readonly string[],
+): D1PreparedStatement[] {
+  return order.map((tabId, at) =>
+    env.DOCUMENT_DB.prepare(
+      'UPDATE document_tabs SET order_index = ? WHERE document_id = ? AND tab_id = ?',
+    ).bind(at, documentId, tabId),
+  );
+}
+
 /** Whether the document is a spreadsheet: it has a workbook row (docs/specs/029-sheets/spreadsheet.md). */
 export async function isSpreadsheet(env: DocumentEnv, documentId: string): Promise<boolean> {
   const row = await env.DOCUMENT_DB.prepare('SELECT 1 AS y FROM workbook WHERE document_id = ?')

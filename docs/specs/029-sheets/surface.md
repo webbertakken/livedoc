@@ -251,3 +251,5 @@ Version History (the shell's). Each is specified with its area.
   with what their role may not use dimmed (default).
 - **D175** A tab's menu arrow: On the open tab and on a tab under the pointer; a menu button named "<name> menu"
   (default).
+- **D176** Dragging a tab: A press moved more than 4 px drags it; a line shows where it lands, between the tabs nearest
+  the pointer; letting go moves it there, Escape or letting go where it was moves nothing (default).

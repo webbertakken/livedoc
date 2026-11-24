@@ -108,6 +108,15 @@ export class EnginePort {
     this.send({ t: 'remove', rev: ++this.rev, sheetId });
   }
 
+  /** The sheets in a new order (a spreadsheet's tabs moved), here and in the Worker. */
+  orderSheets(sheetIds: readonly string[]): void {
+    const was = this.copy.sheetList().map((s) => s.id);
+    this.copy.orderSheets(sheetIds);
+    const now = this.copy.sheetList().map((s) => s.id);
+    if (now.every((id, i) => id === was[i])) return;
+    this.send({ t: 'order', rev: ++this.rev, sheetIds: now });
+  }
+
   setIteration(iteration: Iteration): void {
     this.copy.setIteration(iteration);
     this.send({ t: 'iteration', rev: ++this.rev, iteration });

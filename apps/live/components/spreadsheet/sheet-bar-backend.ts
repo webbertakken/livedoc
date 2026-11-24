@@ -4,7 +4,11 @@
 // change) and its sheets through the sheet store, which keeps them in its record.
 import type { Tab } from '@livedoc/document';
 import { sheetToJson, workbookSheetLayout } from '@livedoc/sheets';
-import { apiAddWorkbookSheet, apiDeleteWorkbookSheet } from '@/lib/api/workbook-sheets';
+import {
+  apiAddWorkbookSheet,
+  apiDeleteWorkbookSheet,
+  apiMoveWorkbookSheet,
+} from '@/lib/api/workbook-sheets';
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { newSheetTab } from '@/lib/spreadsheet/spreadsheet-document';
 import { tabsWithInserted } from '@/lib/spreadsheet/sheet-bar-places';
@@ -24,6 +28,7 @@ export type SheetBarEntry = {
 export type SheetBarBackend = {
   put: (entry: SheetBarEntry) => Promise<void>;
   take: (entry: Pick<SheetBarEntry, 'tabId' | 'sheetId'>) => Promise<void>;
+  move: (entry: Pick<SheetBarEntry, 'tabId' | 'sheetId' | 'after'>) => Promise<void>;
 };
 
 export class SheetBarRefusal extends Error {
@@ -49,6 +54,7 @@ export function cloudSheetBar(scope: WorkbookScope, settle: () => Promise<void>)
       });
     },
     take: ({ sheetId }) => apiDeleteWorkbookSheet(scope, sheetId),
+    move: ({ sheetId, after }) => apiMoveWorkbookSheet(scope, sheetId, after ?? ''),
   };
 }
 
@@ -95,6 +101,12 @@ export function offlineSheetBar(
     take: async ({ tabId, sheetId }) => {
       without(tabId);
       store.release([sheetId]);
+    },
+    move: async ({ tabId, after }) => {
+      editTabs((ts) => {
+        const tab = ts.find((t) => t.id === tabId);
+        return tab ? tabsWithInserted(ts, tab, after) : ts;
+      });
     },
   };
 }

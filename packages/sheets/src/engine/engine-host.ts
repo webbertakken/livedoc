@@ -53,6 +53,7 @@ export class EngineHost {
         wb.updateSheet({ ...sheet, cells }, keys);
       } else if (msg.t === 'sheet') wb.updateSheet(sheetFromJson(msg.sheet));
       else if (msg.t === 'remove') wb.removeSheet(msg.sheetId);
+      else if (msg.t === 'order') wb.orderSheets(msg.sheetIds);
       else if (msg.t === 'iteration') wb.setIteration(msg.iteration);
       else if (msg.t === 'imported') wb.landImport(msg.key, msg.answer);
       else if (msg.t === 'imports-allowed') wb.allowImports();

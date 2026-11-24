@@ -939,6 +939,21 @@ describe('a spreadsheet’s store', () => {
     expect(store.titlesOn('tabA')).toEqual(['Sheet1', 'Costs']);
   });
 
+  // spreadsheet.md "Sheets in the sheet bar": a move reorders the engine's sheets, as SHEET counts them.
+  it('counts its sheets in the tabs’ order, before and after its engine starts', async () => {
+    const { store } = make(true);
+    store.orderSheets(['tabB']);
+    await store.loadTab('tabA');
+    const ids = () =>
+      store
+        .workbook('tabA')
+        .sheetList()
+        .map((s) => s.id);
+    expect(ids()).toEqual(['sheetTwo', 'sheetOne']);
+    store.orderSheets(['tabA', 'tabB']);
+    expect(ids()).toEqual(['sheetOne', 'sheetTwo']);
+  });
+
   // spreadsheet.md "Limits": a spreadsheet's engine and checks take the workbook's limits, its refusals its words.
   it("holds a spreadsheet's sheets to the workbook's limits", async () => {
     const long = (store: SheetStore) => {

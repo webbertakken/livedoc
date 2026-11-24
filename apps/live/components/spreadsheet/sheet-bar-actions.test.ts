@@ -21,7 +21,8 @@ function setup(
   const steps: ItemUndoStep[] = [];
   const put = vi.fn(async (_: SheetBarEntry) => {});
   const take = vi.fn(async (_: Pick<SheetBarEntry, 'tabId' | 'sheetId'>) => {});
-  const backend: SheetBarBackend = { put, take };
+  const move = vi.fn(async (_: Pick<SheetBarEntry, 'tabId' | 'sheetId' | 'after'>) => {});
+  const backend: SheetBarBackend = { put, take, move };
   const write = vi.fn((): string | null => null);
   const confirm = vi.fn(async () => true);
   const toast = vi.fn();
@@ -52,6 +53,7 @@ function setup(
     deps,
     put,
     take,
+    move,
     write,
     confirm,
     toast,
@@ -294,5 +296,58 @@ describe('deleting a sheet', () => {
     await settle();
     expect(s.toast).toHaveBeenCalledWith('A spreadsheet keeps at least one sheet');
     expect(s.steps).toHaveLength(0);
+  });
+});
+
+describe('moving a sheet', () => {
+  const three = [
+    { id: 't1', name: 'Sheet1' },
+    { id: 't2', name: 'Costs' },
+    { id: 't3', name: 'Notes' },
+  ];
+
+  it('moves after the tab named, one undo step back after the tab it followed', async () => {
+    const s = setup(three);
+    s.changes.move('t1', 't3');
+    await settle();
+    expect(s.move).toHaveBeenCalledWith({ tabId: 't1', sheetId: 'sheett1', after: 't3' });
+    expect(track).toHaveBeenCalledWith('Sheet', 'Changed', 'MoveSheet');
+    s.setTabs([three[1]!, three[2]!, three[0]!]);
+    s.steps[0]!.undo();
+    await settle();
+    expect(s.move).toHaveBeenLastCalledWith({ tabId: 't1', sheetId: 'sheett1', after: null });
+    s.setTabs(three);
+    s.steps[0]!.redo();
+    await settle();
+    expect(s.move).toHaveBeenLastCalledWith({ tabId: 't1', sheetId: 'sheett1', after: 't3' });
+  });
+
+  it('moves one place right or left, never past either end', async () => {
+    const s = setup(three);
+    s.changes.moveBy('t2', 1);
+    s.changes.moveBy('t2', -1);
+    s.changes.moveBy('t3', -1);
+    s.changes.moveBy('t1', -1);
+    s.changes.moveBy('t3', 1);
+    s.changes.moveBy('gone', 1);
+    await settle();
+    expect(s.move.mock.calls.map((c) => c[0].after)).toEqual(['t3', null, 't1']);
+  });
+
+  it('does nothing where it already is, and says a sheet not loaded or a refusal', async () => {
+    const s = setup([...three, { id: 'cold', name: 'Cold' }]);
+    s.changes.move('t2', 't1');
+    s.changes.move('t1', null);
+    expect(s.move).not.toHaveBeenCalled();
+    s.changes.move('cold', null);
+    s.changes.move('gone', null);
+    expect(s.toast).toHaveBeenCalledTimes(2);
+    s.move.mockRejectedValueOnce({ code: 'tab_not_found' });
+    s.changes.move('t1', 't3');
+    await settle();
+    expect(s.steps).toHaveLength(0);
+    expect(s.toast).toHaveBeenLastCalledWith(
+      'The sheet it went beside is no longer in this spreadsheet',
+    );
   });
 });

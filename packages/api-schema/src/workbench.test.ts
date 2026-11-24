@@ -144,6 +144,7 @@ describe('workbenchRouteVerdict', () => {
     ['POST', 'documents/doc1/workbook/sheets'],
     ['DELETE', 'documents/doc1/workbook/sheets/s1'],
     ['POST', 'documents/doc1/workbook/sheets/s1/rename'],
+    ['POST', 'documents/doc1/workbook/sheets/s1/move'],
     ['GET', 'documents/doc1/text-documents/t1/state'],
     ['GET', 'documents/doc1/text-documents/t1/file'],
     ['POST', 'documents/doc1/text-documents/t1/updates'],
