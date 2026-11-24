@@ -1,6 +1,7 @@
 /*
- * A dashboard's figures (docs/specs/004-interface-design/sizing.md D239): a card's big count is drawn art, as a
- * metric tile's figure is, so it keeps its own size off the chrome's sizing scale. Named once here.
+ * A dashboard's figures (docs/specs/004-interface-design/sizing.md D239): a card's or a metric's big count is drawn
+ * art, so it keeps its own size off the chrome's sizing scale. Named once here: 34 px, unless a tile that grows its
+ * figure with its size sets its own.
  */
 @utility dashboard-figure {
   @apply text-[34px] font-semibold leading-none tracking-tight tabular-nums;

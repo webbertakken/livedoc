@@ -8,16 +8,15 @@ import { tabsStateOf, useDashboard } from './dashboard-context';
 import { TabWaiting } from './TabWaiting';
 import { documentSheets, useSheetRead, useSheetStore } from './useSheetReader';
 
-export const SECTION =
-  'px-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400';
+export const SECTION = 'px-1 text-supporting text-slate-500 dark:text-slate-400';
 export const ROW =
-  'flex w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2.5 py-1.5 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800';
-export const ON = 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-200';
+  'flex min-h-row w-full cursor-pointer items-center justify-between gap-3 rounded-control px-2 py-1 text-left text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800';
+export const ON = 'bg-brand-50 font-medium text-brand-800 dark:bg-brand-500/15 dark:text-brand-200';
 export const FIELD =
-  'w-20 rounded-md border border-slate-200 bg-transparent px-2 py-1 text-[12px] uppercase text-slate-700 outline-none focus:border-brand-400 dark:border-slate-700 dark:text-slate-200';
-export const MUTED_LINE = 'px-1 text-[13px] text-slate-500 dark:text-slate-400';
+  'h-field w-20 rounded-control border border-slate-200 bg-transparent px-2 text-body text-slate-700 outline-none focus:border-brand-400 dark:border-slate-700 dark:text-slate-200';
+export const MUTED_LINE = 'px-1 text-body text-slate-500 dark:text-slate-400';
 export const DONE =
-  'cursor-pointer rounded-md bg-brand-700 px-3 py-1 text-[12px] font-medium text-white hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700';
+  'h-field cursor-pointer rounded-control bg-brand-700 px-3 text-body font-medium text-white hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700';
 
 // The document's Sheets, every tab fetched, and the one picked read live.
 export function useSheetPicker(sheetId: string) {
@@ -62,10 +61,8 @@ export function SheetList({
             onClick={() => onPick(s.sheetId)}
             className={`${ROW} ${s.sheetId === sheetId ? ON : ''}`}
           >
-            <span className="truncate font-medium">
-              {store?.sheet(s.sheetId)?.title ?? s.tabName}
-            </span>
-            <span className="shrink-0 text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="truncate">{store?.sheet(s.sheetId)?.title ?? s.tabName}</span>
+            <span className="shrink-0 text-supporting text-slate-500 dark:text-slate-400">
               {s.tabName}
             </span>
           </button>

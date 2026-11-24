@@ -56,7 +56,7 @@ export function SheetChartSource({
   };
   return (
     <AnchoredPopover anchor={anchor} name="Choose a Chart" width={320} onClose={onClose}>
-      <div className="flex max-h-[min(70vh,32rem)] flex-col gap-3 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex max-h-[min(70vh,32rem)] flex-col gap-3 overflow-y-auto rounded-menu border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
         <SheetList picker={picker} sheetId={sheetId} onPick={setSheetId} />
         {read.state === 'ready' ? (
           <>
@@ -117,25 +117,25 @@ function NewChart({
     >
       <h3 className={SECTION}>New Chart</h3>
       <label className="flex items-center gap-2 px-1">
-        <span className="w-10 text-[12px] text-slate-500 dark:text-slate-400">Range</span>
+        <span className="w-10 text-supporting text-slate-500 dark:text-slate-400">Range</span>
         <input
           aria-label="Range"
           value={text}
           placeholder="A1:C6"
           onChange={(e) => {
-            setText(e.target.value);
+            setText(e.target.value.toUpperCase());
             setProblem(false);
           }}
           className={FIELD.replace('w-20', 'w-28')}
         />
         {problem ? (
-          <span role="alert" className="text-[11px] text-red-600 dark:text-red-400">
+          <span role="alert" className="text-supporting text-red-600 dark:text-red-400">
             {NOT_A_RANGE}
           </span>
         ) : null}
       </label>
       <div className="flex items-center gap-2 px-1">
-        <span className="w-10 text-[12px] text-slate-500 dark:text-slate-400">Type</span>
+        <span className="w-10 text-supporting text-slate-500 dark:text-slate-400">Type</span>
         <div role="radiogroup" aria-label="Type" className="flex flex-wrap gap-1">
           {CHART_TYPES.map((k) => (
             <button
@@ -144,7 +144,7 @@ function NewChart({
               role="radio"
               aria-checked={kind === k}
               onClick={() => setKind(k)}
-              className={`cursor-pointer rounded-full border px-2.5 py-0.5 text-[12px] transition ${kind === k ? `border-brand-400 ${ON} dark:border-brand-500/60` : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+              className={`flex h-chip cursor-pointer items-center rounded-full border px-2 text-supporting transition ${kind === k ? `border-brand-400 ${ON} dark:border-brand-500/60` : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'}`}
             >
               {CHART_TYPE_LABELS[k]}
             </button>

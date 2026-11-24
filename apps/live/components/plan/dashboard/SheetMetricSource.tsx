@@ -50,7 +50,7 @@ export function SheetMetricSource({
   };
   return (
     <AnchoredPopover anchor={anchor} name="Choose a Sheet" width={320} onClose={onClose}>
-      <div className="flex max-h-[min(70vh,32rem)] flex-col gap-3 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex max-h-[min(70vh,32rem)] flex-col gap-3 overflow-y-auto rounded-menu border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
         <SheetList picker={picker} sheetId={content.sheetId} onPick={pickSheet} />
         {read.state === 'ready' ? (
           content.metric === 'figure' ? (
@@ -119,19 +119,19 @@ function CellPicker({
           if (ref) onPick(ref);
         }}
       >
-        <span className="text-[12px] text-slate-500 dark:text-slate-400">Or a cell</span>
+        <span className="text-supporting text-slate-500 dark:text-slate-400">Or a cell</span>
         <input
           aria-label={`${label} cell`}
           value={typed}
           placeholder={current ?? 'B6'}
           onChange={(e) => {
-            setTyped(e.target.value);
+            setTyped(e.target.value.toUpperCase());
             setProblem(false);
           }}
           className={FIELD}
         />
         {problem ? (
-          <span role="alert" className="text-[11px] text-red-600 dark:text-red-400">
+          <span role="alert" className="text-supporting text-red-600 dark:text-red-400">
             Not a cell on this sheet
           </span>
         ) : null}
@@ -175,7 +175,7 @@ function FigureSource({
                   const { target: _drop, ...rest } = content;
                   set({ ...rest, target: undefined });
                 }}
-                className="cursor-pointer rounded-md px-2.5 py-1 text-[12px] text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="h-row cursor-pointer rounded-control px-2 text-body text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 No Target
               </button>
@@ -228,7 +228,7 @@ function ColumnSource({
               className={`${ROW} ${content.col === col.c ? ON : ''}`}
             >
               <span className="truncate">{col.label}</span>
-              <span className="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+              <span className="shrink-0 text-supporting tabular-nums text-slate-500 dark:text-slate-400">
                 {col.values.length} {col.values.length === 1 ? 'number' : 'numbers'}
               </span>
             </button>
@@ -236,7 +236,7 @@ function ColumnSource({
         )}
       </section>
       {content.metric === 'summary' && content.col ? (
-        <section className="flex flex-col gap-1.5">
+        <section className="flex flex-col gap-2">
           <h3 className={SECTION}>Show</h3>
           <div role="radiogroup" aria-label="Show" className="flex flex-wrap gap-1">
             {COLUMN_STATS.map((s) => {
@@ -248,7 +248,7 @@ function ColumnSource({
                   role="radio"
                   aria-checked={on}
                   onClick={() => set({ stat: s })}
-                  className={`cursor-pointer rounded-full border px-2.5 py-0.5 text-[12px] transition ${on ? 'border-brand-400 bg-brand-50 text-brand-800 dark:border-brand-500/60 dark:bg-brand-500/15 dark:text-brand-200' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                  className={`flex h-chip cursor-pointer items-center rounded-full border px-2 text-supporting transition ${on ? 'border-brand-400 bg-brand-50 font-medium text-brand-800 dark:border-brand-500/60 dark:bg-brand-500/15 dark:text-brand-200' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'}`}
                 >
                   {COLUMN_STAT_NAMES[s]}
                 </button>
