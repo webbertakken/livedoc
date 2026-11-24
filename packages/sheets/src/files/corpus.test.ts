@@ -74,30 +74,38 @@ const files = FOLDERS.flatMap((folder) =>
     .sort()
     .map((f) => `${folder}/${f}`),
 );
+// How long one file's round trip may take, under coverage on a CI runner (the largest takes about 7 s there).
+const CORPUS_FILE_TIMEOUT_MS = 30_000;
 const recorded = JSON.parse(readFileSync(LOSSES, 'utf8')) as Record<string, Record_>;
 const found: Record<string, Record_> = {};
 
 describe('the corpus', () => {
-  it.each(files)('%s round-trips, every loss named and recorded', async (path) => {
-    const first = await opened(new Uint8Array(readFileSync(join(CORPUS, path))));
-    const record = WorkbookRecord.opened(made, first.format);
-    const title = path.replace(/^.*\/|\.[^.]+$/g, '');
-    const own = writeWorkbook(first.sheets, record, title, first.format, first.kept);
-    const second = await opened(own.data);
-    // The second read holds what the first made, by position: nothing lost that was not named.
-    expect(held(second.sheets, record, second.kept)).toEqual(
-      held(first.sheets, record, first.kept),
-    );
-    const other: WorkbookFormat = first.format === 'xlsx' ? 'ods' : 'xlsx';
-    const conversion = workbookConversion(first.sheets, record, other, first.kept);
-    found[path] = {
-      read: counted(first.losses),
-      written: counted(own.losses),
-      reread: counted(second.losses),
-      converted: conversion.losses.map((l) => l.k).sort(),
-    };
-    if (process.env.CORPUS_UPDATE !== '1') expect(found[path]).toEqual(recorded[path]);
-  });
+  it.each(files)(
+    '%s round-trips, every loss named and recorded',
+    async (path) => {
+      const first = await opened(new Uint8Array(readFileSync(join(CORPUS, path))));
+      const record = WorkbookRecord.opened(made, first.format);
+      const title = path.replace(/^.*\/|\.[^.]+$/g, '');
+      const own = writeWorkbook(first.sheets, record, title, first.format, first.kept);
+      const second = await opened(own.data);
+      // The second read holds what the first made, by position: nothing lost that was not named.
+      expect(held(second.sheets, record, second.kept)).toEqual(
+        held(first.sheets, record, first.kept),
+      );
+      const other: WorkbookFormat = first.format === 'xlsx' ? 'ods' : 'xlsx';
+      const conversion = workbookConversion(first.sheets, record, other, first.kept);
+      found[path] = {
+        read: counted(first.losses),
+        written: counted(own.losses),
+        reread: counted(second.losses),
+        converted: conversion.losses.map((l) => l.k).sort(),
+      };
+      if (process.env.CORPUS_UPDATE !== '1') expect(found[path]).toEqual(recorded[path]);
+      // A whole file read, written and read again, compared cell by cell: the largest holds 52,000 styled cells, seconds
+      // under coverage.
+    },
+    CORPUS_FILE_TIMEOUT_MS,
+  );
 
   it('records every file of the corpus, and no other', () => {
     if (process.env.CORPUS_UPDATE === '1')
