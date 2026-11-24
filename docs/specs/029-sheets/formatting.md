@@ -118,6 +118,15 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 
 - **Merge All**, **Merge Vertically**, **Merge Horizontally**, **Unmerge**. Merging cells that hold more than one
   value asks first: "Merging cells will only preserve the top-leftmost value." **OK** or **Cancel**.
+  - Merge All makes the selection one cell; Merge Vertically one cell of each column; Merge Horizontally one cell of
+    each row. A merge over an existing one replaces it; each keeps its top-left value and the rest are cleared, one
+    undo step.
+  - Merge All is dimmed for a single cell, Merge Vertically for a single row, Merge Horizontally for a single column,
+    and Unmerge unless the selection holds a merge.
+  - The ask is the shell's dialog, titled **Merge Cells** (default, D208); OK merges, Cancel, Escape and × change
+    nothing.
+  - The toolbar's **Merge Cells** merges all, or unmerges a selection holding a merge, pressed while it does; its arrow
+    lists the four (default, D208). An Editor's, as every format is.
 
 ## Paint format and clearing
 
@@ -184,6 +193,8 @@ Convert to Table is a data tool ([Data tools](data-tools.md#tables)); its look i
   (default).
 - **D202** The widths a family outside the served ones breaks lines by: its stand-in's, else Arimo's, Arial's
   stand-in (default).
+- **D208** Merge Cells: the ask titled Merge Cells; the toolbar's button merges all or unmerges a selection holding a
+  merge, as Google's does, its arrow listing the four (default).
 
 ## Telemetry
 

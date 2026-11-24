@@ -44,6 +44,8 @@ const actions = (): GridMenuActions => ({
   openCustomFormat: vi.fn(),
   openCustomCurrency: vi.fn(),
   openCustomDateTime: vi.fn(),
+  merge: vi.fn(),
+  unmerge: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -69,6 +71,7 @@ const port = (over: Partial<GridMenuPort> = {}): GridMenuPort => ({
   outline: { r: noGroups, c: noGroups },
   link: null,
   recentCodes: [],
+  merged: false,
   act: actions(),
   ...over,
 });

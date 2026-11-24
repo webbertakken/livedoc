@@ -216,35 +216,49 @@ export function borderRange(
   return { kind: 'cells', cells };
 }
 
-// Merge: one cell from the range (the top-left keeps its input), or each row of it (across). `needsConfirm` when
-// cells other than the kept ones hold an input, which merging clears.
+/** How a range merges: into one cell, one cell of each row (across), or one of each column (down). */
+export type MergeMode = 'all' | 'across' | 'down';
+
+// The parts a mode merges a range into.
+function mergeParts(range: GridRange, mode: MergeMode): GridRange[] {
+  if (mode === 'all') return [range];
+  if (mode === 'across')
+    return Array.from({ length: range.r2 - range.r1 + 1 }, (_, i) => ({
+      ...range,
+      r1: range.r1 + i,
+      r2: range.r1 + i,
+    }));
+  return Array.from({ length: range.c2 - range.c1 + 1 }, (_, i) => ({
+    ...range,
+    c1: range.c1 + i,
+    c2: range.c1 + i,
+  }));
+}
+
+// Merge: one cell from the range (the top-left keeps its input), or each row (across) or column (down) of it.
+// `needsConfirm` when cells other than the kept ones hold an input, which merging clears.
 export function mergeRange(
   sheet: Sheet,
   range: GridRange,
-  mode: 'all' | 'across',
+  mode: MergeMode,
 ): { write: SheetWrite; needsConfirm: boolean } | null {
-  const rows =
-    mode === 'all'
-      ? [[range.r1, range.r2]]
-      : Array.from({ length: range.r2 - range.r1 + 1 }, (_, i) => [range.r1 + i, range.r1 + i]);
   const changes: SheetWrite & { kind: 'layout' } = { kind: 'layout', changes: [], cells: [] };
   let needsConfirm = false;
-  for (const [r1, r2] of rows) {
-    if (r1 === r2 && range.c1 === range.c2) continue;
-    const a = idsAt(sheet, r1!, range.c1);
-    const b = idsAt(sheet, r2!, range.c2);
+  for (const part of mergeParts(range, mode)) {
+    const { r1, c1, r2, c2 } = part;
+    if (r1 === r2 && c1 === c2) continue;
+    const a = idsAt(sheet, r1, c1);
+    const b = idsAt(sheet, r2, c2);
     if (!a || !b) return null;
     const id: IdRange = { r1: a.r, c1: a.c, r2: b.r, c2: b.c };
     // A merge over an existing one replaces it.
     for (const m of sheet.layout.merges ?? []) {
       const p = posRangeOf(sheet.layout, m);
-      if (p && p.r1 <= r2! && r1! <= p.r2 && p.c1 <= range.c2 && range.c1 <= p.c2)
+      if (p && p.r1 <= r2 && r1 <= p.r2 && p.c1 <= c2 && c1 <= p.c2)
         changes.changes.push({ k: 'unmerge', range: m });
     }
     changes.changes.push({ k: 'merge', range: id });
-    for (const { r, c, cell } of cellsIn(sheet, [
-      { r1: r1!, c1: range.c1, r2: r2!, c2: range.c2 },
-    ])) {
+    for (const { r, c, cell } of cellsIn(sheet, [part])) {
       if (r === a.r && c === a.c) continue;
       if (cell.input) {
         needsConfirm = true;

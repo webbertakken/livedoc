@@ -83,6 +83,8 @@ export function spreadsheetChoices(
       WRAPPING,
       lucideArrowRightToLine,
     ),
+    // The toolbar's Merge Cells arrow (formatting.md "Merges", D208).
+    'merge-cells': choiceOf(submenuEntries(catalogue, 'format', 'merge-cells'), actions),
   };
   // A Viewer's grid binds none: the controls stay away, as a built control nothing runs does.
   return Object.fromEntries(

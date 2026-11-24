@@ -197,6 +197,17 @@ describe('merging', () => {
     expect(mergeRange(s, { r1: 0, c1: 0, r2: 0, c2: 0 }, 'all')).toBeNull();
     expect(mergeRange(s, { r1: 0, c1: 0, r2: 999, c2: 0 }, 'all')).toBeNull();
   });
+
+  // formatting.md "Merges": Merge Vertically makes one cell of each column, each keeping its top value.
+  it('merges each column down, asking when it would clear inputs', () => {
+    const b = book({ A1: 'a', A2: 'lost', B1: 'b' });
+    const down = mergeRange(b.sheets[0]!, { r1: 0, c1: 0, r2: 2, c2: 1 }, 'down')!;
+    expect(down.needsConfirm).toBe(true);
+    run(b, down.write);
+    expect(b.sheets[0]!.layout.merges).toHaveLength(2);
+    expect([b.v('A1'), b.v('A2'), b.v('B1')]).toEqual(['a', null, 'b']);
+    expect(mergeRange(b.sheets[0]!, { r1: 0, c1: 0, r2: 0, c2: 1 }, 'down')).toBeNull();
+  });
 });
 
 describe('fill', () => {

@@ -10,6 +10,7 @@ import {
   type GridOffice,
 } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { useMemo } from 'react';
+import { unmergeRange, type MergeMode } from '@livedoc/sheets';
 import { openHyperlink } from '@/lib/open-hyperlink';
 import { recentFormatCodes } from '@/lib/spreadsheet/recent-formats';
 import { useSheetController } from '@/components/sheets/sheet-controller';
@@ -18,11 +19,12 @@ import { useSheetClipboard } from '@/components/sheets/useSheetClipboard';
 import { usePublishedBindings } from './office-bindings-channel';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 
-/** The dialogs the open sheet hosts that its menu items open. */
+/** The dialogs the open sheet hosts that its menu items open, and the merge that asks first (useMergeDialog). */
 export type GridDialogs = {
   openCustomFormat: () => void;
   openCustomCurrency: () => void;
   openCustomDateTime: () => void;
+  merge: (mode: MergeMode) => void;
 };
 
 export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs): GridOffice {
@@ -50,6 +52,7 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
     outline: gridMenuOutline(c.viewLayout, range),
     link,
     recentCodes,
+    merged: unmergeRange(sheet, range) !== null,
     act: {
       ...actions,
       cut: () => clip.copyNow(true),
@@ -62,6 +65,7 @@ export function useGridMenuBindings(actions: SheetActions, dialogs: GridDialogs)
       openCustomFormat: dialogs.openCustomFormat,
       openCustomCurrency: dialogs.openCustomCurrency,
       openCustomDateTime: dialogs.openCustomDateTime,
+      merge: dialogs.merge,
     },
   });
   const published = { ...office, actions: { ...office.actions, ...sheetBarBindings(bar) } };

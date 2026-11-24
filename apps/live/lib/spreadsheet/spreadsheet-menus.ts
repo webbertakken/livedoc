@@ -410,10 +410,10 @@ const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
       ),
     ),
     submenu('merge-cells', 'Merge Cells', [
-      item('merge-all', 'Merge All', 'edit'),
-      item('merge-vertically', 'Merge Vertically', 'edit'),
-      item('merge-horizontally', 'Merge Horizontally', 'edit'),
-      item('unmerge', 'Unmerge', 'edit'),
+      built('merge-all', 'Merge All', 'edit'),
+      built('merge-vertically', 'Merge Vertically', 'edit'),
+      built('merge-horizontally', 'Merge Horizontally', 'edit'),
+      built('unmerge', 'Unmerge', 'edit'),
     ]),
     SEPARATOR,
     item('convert-to-table', 'Convert to Table', 'edit', {

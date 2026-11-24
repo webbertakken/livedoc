@@ -31,6 +31,7 @@ function Menus({ actions }: { actions: SheetActions }) {
     openCustomFormat: vi.fn(),
     openCustomCurrency: vi.fn(),
     openCustomDateTime: vi.fn(),
+    merge: vi.fn(),
   });
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;
 }
