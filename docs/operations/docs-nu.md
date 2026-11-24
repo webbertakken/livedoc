@@ -94,7 +94,7 @@ FROM bug_reports"`; the refile files them every 15 minutes once the board takes 
 
 ## Logs
 
-The api, mcp and router keep their own log lines in Workers Logs ([Worker logs](../specs/016-platform/worker-logs.md)).
+The api, mcp, router and live keep their own log lines in Workers Logs ([Worker logs](../specs/016-platform/worker-logs.md)).
 
 - Read them in the Cloudflare dashboard: Workers & Pages, the worker, Observability.
 - Search by fingerprint: `api error route=` for a `500`, `[d1] unavailable` for a `503 storage_unavailable`.
@@ -102,7 +102,7 @@ The api, mcp and router keep their own log lines in Workers Logs ([Worker logs](
 
 ## Worker issues
 
-A new kind of error in the api, mcp or router becomes a card on the Bug Tracker and one email to Webber
+A new kind of error in the api, mcp, router or live becomes a card on the Bug Tracker and one email to Webber
 ([Worker issues](../specs/016-platform/worker-issues.md)). Cloudflare Workers Issues detects and groups the errors
 (`[observability.issues]` in each `wrangler.toml`, on with the deploy); its automations call the api's receiver.
 
@@ -111,7 +111,7 @@ What the hosted setup holds:
 - **The secret** `WORKER_ISSUES_WEBHOOK_SECRET` on `docs-nu-api`, and the same value in the destination. Unset, the
   receiver answers `404` as if it were not there.
 - **The destination**: a Generic Webhook, "docs.nu Bug Tracker", `https://docs.nu/api/worker-issues`, with that secret.
-- **Six automations**, two per worker (`docs-nu-api`, `docs-nu-mcp`, `docs-nu-router`), each sending to the
+- **Eight automations**, two per worker (`docs-nu-api`, `docs-nu-mcp`, `docs-nu-router`, `docs-nu-live`), each sending to the
   destination: **First sight** (occurrence threshold 1) and **Back after a quiet spell** (recurrence after 24 hours of
   inactivity). An automation names one worker or the whole account; the whole account would also send the previews'
   issues and every other project's.
@@ -136,7 +136,7 @@ Setting it up, once, after the deploy that ships the receiver:
    - Name it "First sight", turn on **Enabled**, then **Create**.
 5. Add a second automation on `docs-nu-api`: **Recurrence after inactivity**, 24 hours, the same destination, named
    "Back after a quiet spell", **Enabled**.
-6. Repeat steps 4 and 5 on `docs-nu-mcp` and `docs-nu-router`, choosing the existing destination.
+6. Repeat steps 4 and 5 on `docs-nu-mcp`, `docs-nu-router` and `docs-nu-live`, choosing the existing destination.
 7. Check it end to end: open any issue (or wait for one) and send it to the destination by hand from its actions. The
    run shows **succeeded**; a card lands in Reported on the Bug Tracker, titled `<worker>: <error>` and labelled Worker
    Issue; Webber gets one email. The api logs `[worker-issues] delivery.received` and `card.filed`.

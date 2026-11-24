@@ -366,15 +366,15 @@ The five downstream workers don't need their own domain; the router fans out via
 
 ## Worker logs
 
-The api, mcp and router workers keep their own log lines in Workers Logs, in your Cloudflare account: 3 days on
+The api, mcp, router and live workers keep their own log lines in Workers Logs, in your Cloudflare account: 3 days on
 Workers Free, 7 on Workers Paid. Each line is stored with its request's path, without the query string; headers and
 addresses are not kept. Read them in the dashboard under Workers & Pages, the
-worker, Observability. To keep none, set `enabled = false` under `[observability]` in the three `wrangler.toml`
+worker, Observability. To keep none, set `enabled = false` under `[observability]` in the four `wrangler.toml`
 files. See [Worker logs](../specs/016-platform/worker-logs.md).
 
 ## Worker issues (optional)
 
-Cloudflare Workers Issues groups the api, mcp and router's errors (`[observability.issues]`, on in the three
+Cloudflare Workers Issues groups the api, mcp, router and live workers' errors (`[observability.issues]`, on in the four
 `wrangler.toml` files; free during its beta). To have a new or returning error filed as a card on your Bug Tracker and
 emailed to its owner, set a secret and point an Issues automation at the api
 ([Worker issues](../specs/016-platform/worker-issues.md)):
