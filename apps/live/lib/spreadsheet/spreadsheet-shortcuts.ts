@@ -439,7 +439,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+K',
     'Option+Shift+K',
     'Alt+Shift+K',
-    'specified',
+    'surface',
   ),
   row(
     'open-hyperlink',

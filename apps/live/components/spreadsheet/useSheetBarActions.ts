@@ -1,8 +1,9 @@
 'use client';
 
 // The sheet bar's changes on the open spreadsheet (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar"),
-// for the sheet bar, its tabs' menus and the menu bar's Insert › Sheet: an Editor's alone (D174). Which tab is being
-// renamed in place is held here, so Alt+1 and a tab's menu reach the same field.
+// for the sheet bar, its tabs' menus and the menu bar's Insert › Sheet and View › Hidden Sheets: an Editor's alone
+// (D174). Which tab is being renamed in place, and whether All Sheets is open, are held here, so the keys, the menus
+// and the bar reach the same field and list.
 import {
   createContext,
   useContext,
@@ -34,6 +35,10 @@ export type SheetBarActions = SheetBarChanges & {
   startRename: (tabId: string | null) => void;
   // The open sheet's name as a field, for an Editor (Alt+1).
   renameOpen: () => void;
+  // All Sheets open (☰, Alt+Shift+K, View › Hidden Sheets), and how many sheets are hidden (D180).
+  listing: boolean;
+  listSheets: (open: boolean) => void;
+  hiddenCount: number;
 };
 
 export const SheetBarActionsContext = createContext<SheetBarActions | null>(null);
@@ -84,6 +89,7 @@ export function useSheetBarActions({
   tabId,
   onSelectTab,
   editTabs,
+  hiddenCount = 0,
 }: {
   bridge: SheetsBridge | null;
   scope: WorkbookScope;
@@ -92,9 +98,12 @@ export function useSheetBarActions({
   onSelectTab: (tabId: string) => void;
   // The editor's tabs changed quietly: a spreadsheet in This Browser has no room to send them back.
   editTabs: (map: (tabs: Tab[]) => Tab[]) => void;
+  // The sheets hidden now, for View › Hidden Sheets.
+  hiddenCount?: number;
 }): SheetBarActions {
   const confirm = useConfirm();
   const [renaming, setRenaming] = useState<string | null>(null);
+  const [listing, setListing] = useState(false);
   const latest = useLatest<Latest>({ bridge, scope, tabs, tabId, onSelectTab, editTabs, confirm });
   // A tab to open once the tab list holds it.
   const pending = useRef<string | null>(null);
@@ -121,6 +130,9 @@ export function useSheetBarActions({
       remove: (id) => now().remove(id),
       move: (id, after) => now().move(id, after),
       moveBy: (id, step) => now().moveBy(id, step),
+      colour: (id, colour) => now().colour(id, colour),
+      hide: (id) => now().hide(id),
+      show: (id) => now().show(id),
     };
   }, [latest]);
   return useMemo(
@@ -132,7 +144,10 @@ export function useSheetBarActions({
       renameOpen: () => {
         if (canChange) setRenaming(tabId);
       },
+      listing,
+      listSheets: setListing,
+      hiddenCount,
     }),
-    [changes, canChange, renaming, tabId],
+    [changes, canChange, renaming, tabId, listing, hiddenCount],
   );
 }

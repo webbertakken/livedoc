@@ -10,6 +10,7 @@ import { useSheetBarActions } from './useSheetBarActions';
 
 const put = vi.fn(async () => {});
 const orderSheets = vi.fn();
+const write = vi.fn(() => null);
 const move = vi.fn(async () => {});
 vi.mock('./sheet-bar-backend', () => ({
   cloudSheetBar: vi.fn(() => ({ put, take: vi.fn(), move })),
@@ -17,8 +18,8 @@ vi.mock('./sheet-bar-backend', () => ({
 }));
 vi.mock('@/components/sheets/sheet-store-client', () => ({
   sheetStoreOf: vi.fn(() => ({
-    sheetsOn: (tabId: string) => [{ id: `sheet${tabId}` }],
-    write: () => null,
+    sheetsOn: (tabId: string) => [{ id: `sheet${tabId}`, layout: {} }],
+    write,
     settle: async () => {},
     orderSheets,
   })),
@@ -122,6 +123,37 @@ describe('useSheetBarActions', () => {
     expect(
       move.mock.calls.map((c) => (c as unknown as [{ after: string | null }])[0].after),
     ).toEqual(['t1', null]);
+  });
+
+  it('colours, hides and shows through the store, and counts the hidden sheets', () => {
+    const onSelectTab = vi.fn();
+    const hook = renderHook(() =>
+      useSheetBarActions({
+        bridge: bridge(),
+        scope,
+        tabs: [...one, { id: 't2', name: 'Costs' }],
+        tabId: 't1',
+        onSelectTab,
+        editTabs: vi.fn(),
+        hiddenCount: 2,
+      }),
+    );
+    act(() => hook.result.current.colour('t2', '#1a73e8'));
+    act(() => hook.result.current.hide('t2'));
+    act(() => hook.result.current.show('t2'));
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(onSelectTab).toHaveBeenCalledWith('t2');
+    expect(hook.result.current.hiddenCount).toBe(2);
+    expect(mount(bridge()).result.current.hiddenCount).toBe(0);
+  });
+
+  it('opens and closes All Sheets (D180)', () => {
+    const hook = mount(bridge());
+    expect(hook.result.current.listing).toBe(false);
+    act(() => hook.result.current.listSheets(true));
+    expect(hook.result.current.listing).toBe(true);
+    act(() => hook.result.current.listSheets(false));
+    expect(hook.result.current.listing).toBe(false);
   });
 
   it('says a refusal through the bridge, and nothing without one', async () => {

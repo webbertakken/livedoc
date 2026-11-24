@@ -87,13 +87,15 @@ describe('useSpreadsheetSurfaceKeys', () => {
       result.current.leaveGrid();
       result.current.redo();
       result.current.renameSheet();
+      result.current.listSheets();
     }).not.toThrow();
   });
 
   // spreadsheet.md "Sheets in the sheet bar": Alt+1 names the open sheet in place.
   it('renames the open sheet through the sheet bar', () => {
     const renameOpen = vi.fn();
-    const bar = { renameOpen } as unknown as SheetBarActions;
+    const listSheets = vi.fn();
+    const bar = { renameOpen, listSheets } as unknown as SheetBarActions;
     const { result } = renderHook(() => useSpreadsheetSurfaceKeys(), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <SheetBarActionsContext.Provider value={bar}>{children}</SheetBarActionsContext.Provider>
@@ -101,5 +103,8 @@ describe('useSpreadsheetSurfaceKeys', () => {
     });
     result.current.renameSheet();
     expect(renameOpen).toHaveBeenCalledTimes(1);
+    // surface.md "Sheet bar": Alt+Shift+K opens All Sheets.
+    result.current.listSheets();
+    expect(listSheets).toHaveBeenCalledWith(true);
   });
 });

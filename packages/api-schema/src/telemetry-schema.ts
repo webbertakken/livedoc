@@ -599,6 +599,9 @@ export const SHEET_CHANGE_KINDS = [
   'DuplicateSheet',
   'DeleteSheet',
   'MoveSheet',
+  'SheetColour',
+  'HideSheet',
+  'ShowSheet',
 ] as const;
 export type SheetChangeKind = (typeof SHEET_CHANGE_KINDS)[number];
 

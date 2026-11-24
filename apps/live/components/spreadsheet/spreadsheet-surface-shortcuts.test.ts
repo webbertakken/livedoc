@@ -134,6 +134,8 @@ const EXPECTED: Record<string, unknown[]> = {
   'read-row': [{ kind: 'read', axis: 'r' }],
   // spreadsheet.md "Sheets in the sheet bar": the open sheet renamed in place.
   'rename-sheet': [{ kind: 'renameSheet' }],
+  // surface.md "Sheet bar": All Sheets opened (D180).
+  'display-list-of-sheets': [{ kind: 'listSheets' }],
 };
 
 const PLATFORMS: OfficePlatform[] = ['pc', 'mac', 'chromeos'];

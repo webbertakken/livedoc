@@ -1,7 +1,7 @@
 'use client';
 
-// One sheet tab of the sheet bar (docs/specs/029-sheets/surface.md "Sheet bar"): the sheet's name, who else is on
-// it, and its menu arrow (on the open tab and the tab under the pointer, D175). A double-click, Rename or Alt+1 turns
+// One sheet tab of the sheet bar (docs/specs/029-sheets/surface.md "Sheet bar"): the sheet's name on its colour's
+// underline, who else is on it, and its menu arrow (on the open tab and the tab under the pointer, D175). A double-click, Rename or Alt+1 turns
 // the name into a field: Enter or leaving it saves, Escape keeps the name (D172).
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { Tooltip } from '@livedoc/ui';
@@ -90,6 +90,7 @@ export function SheetBarTab({
   onRenamed,
   onPointerDown,
   dragged = false,
+  colour,
 }: {
   tab: Tab;
   active: boolean;
@@ -105,6 +106,8 @@ export function SheetBarTab({
   // A press that may become a drag (D176), and whether this tab is being dragged.
   onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
   dragged?: boolean;
+  // The tab's colour, drawn as its underline (D177).
+  colour?: string;
 }) {
   // Who is here, named on hover as the tab is named to a screen reader.
   const label = peers.length ? sheetTabLabel(tab.name, peers) : '';
@@ -114,9 +117,10 @@ export function SheetBarTab({
   };
   return (
     <div
-      data-sheet-tab-face=""
+      data-sheet-tab-face={tab.id}
       onPointerDown={onPointerDown}
-      className={`group flex max-w-56 items-stretch ${dragged ? 'opacity-60 ' : ''}${
+      data-sheet-tab-colour={colour}
+      className={`group relative flex max-w-56 items-stretch ${dragged ? 'opacity-60 ' : ''}${
         active
           ? 'bg-white text-emerald-800 shadow-sm dark:bg-slate-800 dark:text-emerald-300'
           : 'text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -126,6 +130,13 @@ export function SheetBarTab({
         onMenu(e.clientX, e.clientY, false);
       }}
     >
+      {colour ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-1 bottom-0 h-[3px] rounded-t-sm"
+          style={{ backgroundColor: colour }}
+        />
+      ) : null}
       {renaming ? (
         <span className="flex items-center px-2">
           <RenameField name={tab.name} onDone={onRenamed} />

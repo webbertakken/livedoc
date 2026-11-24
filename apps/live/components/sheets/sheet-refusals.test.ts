@@ -7,7 +7,7 @@ describe('sheetRefusalMessage', () => {
     expect(sheetRefusalMessage('sheets_full', true)).toBe('A spreadsheet holds up to 200 sheets');
     expect(sheetRefusalMessage('sheets_full')).toBe('This document holds the most sheets it can');
     expect(sheetRefusalMessage('sheet_last_visible', true)).toBe(
-      'A spreadsheet keeps at least one sheet',
+      'A spreadsheet keeps at least one sheet shown',
     );
     expect(sheetRefusalMessage('tab_not_found', true)).toBe(
       'The sheet it went beside is no longer in this spreadsheet',

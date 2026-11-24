@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { stubResizeObserver } from '@/components/sheets/sheet-ui-test-utils';
 import { SheetBar } from './SheetBar';
@@ -75,6 +75,12 @@ function bar(over: Partial<SheetBarActions> = {}): SheetBarActions {
     remove: vi.fn(),
     move: vi.fn(),
     moveBy: vi.fn(),
+    colour: vi.fn(),
+    hide: vi.fn(),
+    show: vi.fn(),
+    listing: false,
+    listSheets: vi.fn(),
+    hiddenCount: 0,
     ...over,
   };
 }
@@ -128,12 +134,22 @@ describe('SheetBar changes', () => {
       <SheetBar tabs={tabs} activeId="t1" onSelect={vi.fn()} actions={bar({ canChange: false })} />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Sheet1 menu' }));
-    for (const name of ['Delete', 'Duplicate', 'Rename', 'Copy To', 'Change Colour', 'Move Right'])
+    for (const name of [
+      'Delete',
+      'Duplicate',
+      'Rename',
+      'Copy To',
+      'Change Colour',
+      'Hide Sheet',
+      'Protect Sheet',
+      'Move Right',
+    ])
       expect(menuItem(name).getAttribute('aria-disabled')).toBe('true');
     unmount();
     render(<SheetBar tabs={tabs.slice(0, 1)} activeId="t1" onSelect={vi.fn()} actions={bar()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Sheet1 menu' }));
     expect(menuItem('Delete').getAttribute('aria-disabled')).toBe('true');
+    expect(menuItem('Hide Sheet').getAttribute('aria-disabled')).toBe('true');
     expect(menuItem('Duplicate').getAttribute('aria-disabled')).toBe(null);
   });
 
@@ -196,6 +212,111 @@ describe('SheetBar changes', () => {
 });
 
 // spreadsheet.md "Sheets in the sheet bar": Move Right, Move Left and a drag (D176).
+// spreadsheet.md "Sheets in the sheet bar"; surface.md "Sheet bar" (D177-D181).
+describe('SheetBar colours and hidden sheets', () => {
+  beforeAll(stubResizeObserver);
+  const three = [...tabs, { id: 't3', name: 'Notes' }];
+
+  it("draws a tab's colour as its underline, and leaves hidden tabs out but the open one (D179)", () => {
+    const looks = {
+      t1: { hidden: true as const },
+      t2: { colour: '#1a73e8' },
+      t3: { hidden: true as const },
+    };
+    render(
+      <SheetBar tabs={three} activeId="t1" onSelect={vi.fn()} actions={bar()} looks={looks} />,
+    );
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Sheet1', 'Costs']);
+    const costs = screen
+      .getByRole('tab', { name: 'Costs' })
+      .closest<HTMLElement>('[data-sheet-tab-face]')!;
+    expect(costs.dataset.sheetTabColour).toBe('#1a73e8');
+    expect(costs.querySelector<HTMLElement>('[aria-hidden="true"]')!.style.backgroundColor).toBe(
+      'rgb(26, 115, 232)',
+    );
+    // Move Left and Right count the tabs shown.
+    fireEvent.click(screen.getByRole('button', { name: 'Costs menu' }));
+    expect(menuItem('Move Right').getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('hides a sheet from its menu', () => {
+    const actions = bar();
+    render(<SheetBar tabs={tabs} activeId="t1" onSelect={vi.fn()} actions={actions} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Costs menu' }));
+    fireEvent.click(menuItem('Hide Sheet'));
+    expect(actions.hide).toHaveBeenCalledWith('t2');
+  });
+
+  it('opens the one colour picker on the tab: a pick and Reset write it', () => {
+    const actions = bar();
+    render(
+      <SheetBar
+        tabs={tabs}
+        activeId="t1"
+        onSelect={vi.fn()}
+        actions={actions}
+        looks={{ t2: { colour: '#1a73e8' } }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Costs menu' }));
+    fireEvent.click(menuItem('Change Colour'));
+    const picker = () => screen.getByRole('group', { name: 'Colour of Costs' });
+    fireEvent.click(within(picker()).getByRole('button', { name: 'Reset' }));
+    expect(actions.colour).toHaveBeenCalledWith('t2', null);
+    expect(screen.queryByRole('group', { name: 'Colour of Costs' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Sheet1 menu' }));
+    fireEvent.click(menuItem('Change Colour'));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Colour of Sheet1' })).getAllByRole('button', {
+        name: 'Red',
+      })[1]!,
+    );
+    expect(actions.colour).toHaveBeenLastCalledWith('t1', expect.stringMatching(/^#[0-9a-f]{6}$/));
+  });
+
+  it('lists every sheet in All Sheets, the open one ticked, a hidden one shown and opened (D180)', () => {
+    const onSelect = vi.fn();
+    const actions = bar();
+    const looks = { t3: { hidden: true as const } };
+    const { rerender } = render(
+      <SheetBar tabs={three} activeId="t1" onSelect={onSelect} actions={actions} looks={looks} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'All Sheets' }));
+    expect(actions.listSheets).toHaveBeenCalledWith(true);
+    const open = bar({ listing: true, listSheets: vi.fn() });
+    rerender(
+      <SheetBar tabs={three} activeId="t1" onSelect={onSelect} actions={open} looks={looks} />,
+    );
+    const list = screen.getByRole('dialog', { name: 'All Sheets' });
+    const rows = [...list.querySelectorAll<HTMLElement>('[data-all-sheets]')];
+    expect(rows.map((r) => r.textContent)).toEqual(['✓Sheet1', 'Costs', 'NotesHidden']);
+    expect(rows[0]!.getAttribute('aria-current')).toBe('true');
+    fireEvent.click(rows[1]!);
+    expect(onSelect).toHaveBeenCalledWith('t2');
+    expect(open.listSheets).toHaveBeenCalledWith(false);
+    fireEvent.click(rows[2]!);
+    expect(open.show).toHaveBeenCalledWith('t3');
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  it('dims a hidden sheet in All Sheets for a Participant or a Viewer (D178)', () => {
+    const viewer = bar({ canChange: false, listing: true });
+    render(
+      <SheetBar
+        tabs={three}
+        activeId="t1"
+        onSelect={vi.fn()}
+        actions={viewer}
+        looks={{ t3: { hidden: true } }}
+      />,
+    );
+    const notes = document.querySelector<HTMLElement>('[data-all-sheets="t3"]')!;
+    expect(notes.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(notes);
+    expect(viewer.show).not.toHaveBeenCalled();
+  });
+});
+
 describe('SheetBar moves', () => {
   beforeAll(stubResizeObserver);
 

@@ -417,11 +417,18 @@ describe('historyBindings', () => {
 
 // spreadsheet.md "Sheets in the sheet bar": Insert › Sheet adds after the open sheet (D170), for an Editor.
 describe('sheetBarBindings', () => {
-  it('binds Insert › Sheet for an Editor alone', () => {
+  it('binds Insert › Sheet and View › Hidden Sheets for an Editor alone (D180)', () => {
     const add = vi.fn();
-    sheetBarBindings({ canChange: true, add })['insert-sheet']!.run();
+    const listSheets = vi.fn();
+    const bar = { canChange: true, add, hiddenCount: 2, listSheets };
+    sheetBarBindings(bar)['insert-sheet']!.run();
     expect(add).toHaveBeenCalledWith('afterOpen');
-    expect(sheetBarBindings({ canChange: false, add })).toEqual({});
+    const hidden = sheetBarBindings(bar)['hidden-sheets']!;
+    expect([hidden.label, hidden.disabled]).toEqual(['Hidden Sheets (2)', false]);
+    hidden.run();
+    expect(listSheets).toHaveBeenCalledWith(true);
+    expect(sheetBarBindings({ ...bar, hiddenCount: 0 })['hidden-sheets']!.disabled).toBe(true);
+    expect(sheetBarBindings({ ...bar, canChange: false })).toEqual({});
     expect(sheetBarBindings(null)).toEqual({});
   });
 });

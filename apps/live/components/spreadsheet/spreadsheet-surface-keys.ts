@@ -3,7 +3,7 @@
 // The grid's keys only a workbook has (docs/specs/029-sheets/grid-and-editing.md "Moving around"): Alt+Up and
 // Alt+Down, Ctrl+Shift+Page Up and Page Down open the previous and next sheet; Alt+Shift+Q puts focus on the
 // selection's summary; Ctrl+Alt+Shift+M takes it out to the toolbar (D137); F4 redoes ("Formulas"); Alt+1 renames
-// the open sheet (spreadsheet.md "Sheets in the sheet bar"). The surface
+// the open sheet (spreadsheet.md "Sheets in the sheet bar"); Alt+Shift+K opens All Sheets (surface.md "Sheet bar"). The surface
 // knows the sheets and the timeline; the open sheet's grid hears the keys.
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { SheetSurfaceKeys } from '@/components/sheets/useSheetGridKeys';
@@ -66,6 +66,10 @@ export function useSpreadsheetSurfaceKeys(): SheetSurfaceKeys {
       renameSheet: () => {
         debugLog('[workbook] rename by Alt+1', { bound: !!bar?.canChange });
         bar?.renameOpen();
+      },
+      listSheets: () => {
+        debugLog('[workbook] All Sheets by Alt+Shift+K', { bound: !!bar });
+        bar?.listSheets(true);
       },
       leaveGrid: () => {
         const toolbar = shownRegions(document).find((root) => root.dataset.region === 'toolbar');
