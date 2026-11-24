@@ -78,7 +78,7 @@ export function MetricView({
     );
   return (
     <div
-      className="absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border px-3 py-1.5"
+      className="absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-surface border px-3 py-1.5"
       style={{
         borderColor: palette.border,
         backgroundColor: palette.surface,
@@ -88,14 +88,11 @@ export function MetricView({
       role="group"
       aria-label={`${label}, every card`}
     >
-      <span
-        className="truncate text-[10px] font-semibold uppercase tracking-wide"
-        style={{ color: palette.muted }}
-      >
+      <span className="truncate text-supporting" style={{ color: palette.muted }}>
         {label}
       </span>
       {plan?.status === 'loading' ? (
-        <span className="text-[12px]" style={{ color: palette.muted }}>
+        <span className="text-supporting" style={{ color: palette.muted }}>
           Loading cards…
         </span>
       ) : (

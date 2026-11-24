@@ -101,7 +101,7 @@ export function ViewFrame({
   const slotCog = end ? null : (slot?.cog ?? null);
   return (
     <div
-      className="absolute inset-0 flex flex-col overflow-hidden rounded-xl border"
+      className="absolute inset-0 flex flex-col overflow-hidden rounded-surface border"
       style={{
         borderColor: palette.border,
         backgroundColor: palette.surface,
@@ -124,7 +124,7 @@ export function ViewFrame({
             />
           ) : (
             <span
-              className={`min-w-0 truncate text-[13px] font-semibold ${own?.rename ? 'cursor-text' : ''}`}
+              className={`min-w-0 truncate text-panel-title ${own?.rename ? 'cursor-text' : ''}`}
               // A double-click renames (a click in the header moves the element).
               {...(own?.rename ? { onDoubleClick: () => setRenaming(true) } : {})}
             >
@@ -162,7 +162,7 @@ export function ViewFrame({
         <div className="relative min-h-0 flex-1 overflow-hidden">{children}</div>
       ) : (
         <div
-          className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 text-center text-[12px]"
+          className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 text-center text-supporting"
           style={{ color: palette.muted }}
         >
           {state === 'loading' ? 'Loading cards…' : empty}
@@ -176,14 +176,14 @@ export function ViewFrame({
 export function PhaseLegend({ palette }: { palette: PlanPalette }) {
   return (
     <div
-      className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px]"
+      className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-supporting"
       style={{ color: palette.muted }}
     >
       {STATUS_PHASES.map((phase) => (
-        <span key={phase} className="inline-flex items-center gap-1.5">
+        <span key={phase} className="inline-flex items-center gap-2">
           <span
             aria-hidden
-            className="h-2.5 w-2.5 rounded-sm"
+            className="h-2.5 w-2.5 rounded-full"
             style={{ backgroundColor: PHASE_COLOURS[phase] }}
           />
           {STATUS_PHASE_LABELS[phase]}
@@ -214,7 +214,7 @@ export function ViewStepButton({
         type="button"
         aria-label={label}
         aria-pressed={active || undefined}
-        className="flex h-6 min-w-6 cursor-pointer items-center justify-center rounded-md px-1.5 text-[11px] font-medium transition hover:bg-black/5 dark:hover:bg-white/10"
+        className="flex h-row min-w-7 cursor-pointer items-center justify-center rounded-control px-2 text-supporting transition hover:bg-black/5 dark:hover:bg-white/10"
         style={
           active
             ? { color: palette.text, backgroundColor: palette.column }
@@ -261,7 +261,7 @@ function TitleField({ value, onDone }: { value: string; onDone: (next: string | 
       }}
       onBlur={() => finish(true)}
       onPointerDown={(e) => e.stopPropagation()}
-      className="min-w-0 w-48 rounded-md border border-brand-400 bg-transparent px-1.5 py-0.5 text-[13px] font-semibold outline-none"
+      className="h-row min-w-0 w-48 rounded-control border border-brand-400 bg-transparent px-2 text-panel-title outline-none"
     />
   );
 }

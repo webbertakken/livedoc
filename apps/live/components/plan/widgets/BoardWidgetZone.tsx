@@ -89,8 +89,8 @@ export function BoardWidgetZone({
       aria-label="Add a widget"
       aria-haspopup="menu"
       aria-expanded={pickerAt !== null}
-      className={`flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-dashed transition hover:bg-black/5 dark:hover:bg-white/10 ${
-        size === 'sm' ? 'ml-1 h-6 w-6' : 'h-7 w-7'
+      className={`flex shrink-0 cursor-pointer items-center justify-center rounded-control border border-dashed transition hover:bg-black/5 dark:hover:bg-white/10 ${
+        size === 'sm' ? 'ml-1 size-chip' : 'size-row'
       }`}
       style={{ borderColor: palette.border, color: palette.muted }}
       onPointerDown={(e) => e.stopPropagation()}
@@ -138,7 +138,7 @@ export function BoardWidgetZone({
     <span
       key={key}
       aria-hidden
-      className="h-6 w-0.5 shrink-0 rounded-full"
+      className="h-chip w-0.5 shrink-0 rounded-full"
       style={{ backgroundColor: palette.focus }}
     />
   );
@@ -149,12 +149,12 @@ export function BoardWidgetZone({
       <div
         ref={zone}
         data-widget-zone
-        className="flex h-9 min-w-0 flex-1 items-center rounded-md px-2 text-[12px]"
+        className="flex h-prominent min-w-0 flex-1 items-center rounded-control px-2 text-supporting"
         style={{ color: palette.muted }}
       >
         {canEdit && selected ? (
           // The hint only while the board is selected, so an unselected header stays clean.
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-2">
             <InfoArt />
             Add widgets to this board
             {addButton('sm')}
@@ -171,15 +171,11 @@ export function BoardWidgetZone({
     <div
       ref={zone}
       data-widget-zone
-      className="flex h-9 min-w-0 flex-1 items-center gap-1.5 overflow-x-auto overflow-y-hidden rounded-md px-1 [scrollbar-width:thin]"
+      className="flex h-prominent min-w-0 flex-1 items-center gap-2 overflow-x-auto overflow-y-hidden rounded-control px-1 [scrollbar-width:thin]"
     >
       {/* The widgets are the list; the Add button follows it rather than sitting in it, since a list holds only its
           items. Empty, it takes no room. */}
-      <div
-        role="list"
-        aria-label="Board widgets"
-        className="flex items-center gap-1.5 empty:hidden"
-      >
+      <div role="list" aria-label="Board widgets" className="flex items-center gap-2 empty:hidden">
         {widgets.map((kind, i) => {
           const dragged = reorder?.moved && reorder.kind === kind;
           return [
@@ -191,7 +187,7 @@ export function BoardWidgetZone({
               tabIndex={canEdit ? 0 : undefined}
               aria-label={canEdit ? `${BOARD_WIDGET_INFO[kind].label} widget` : undefined}
               aria-keyshortcuts={canEdit ? 'Alt+ArrowLeft Alt+ArrowRight Delete' : undefined}
-              className={`group/widget relative flex shrink-0 items-center rounded-md outline-none focus-visible:ring-2 ${
+              className={`group/widget relative flex shrink-0 items-center rounded-control outline-none focus-visible:ring-2 ${
                 canEdit ? 'cursor-grab active:cursor-grabbing' : ''
               }`}
               style={{
@@ -229,7 +225,7 @@ export function BoardWidgetZone({
                   type="button"
                   aria-label={`Remove ${BOARD_WIDGET_INFO[kind].label}`}
                   // Shown on hover or keyboard focus, or once a touch has tapped the widget; never all the time.
-                  className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border shadow-sm transition-opacity duration-micro motion-reduce:transition-none ${
+                  className={`absolute -right-1 -top-1 flex size-icon-row items-center justify-center rounded-full border shadow-sm transition-opacity after:absolute after:-inset-1 after:content-[''] after:rounded-full duration-micro motion-reduce:transition-none ${
                     armed === kind
                       ? 'opacity-100'
                       : 'pointer-events-none opacity-0 group-focus-within/widget:pointer-events-auto group-focus-within/widget:opacity-100 group-hover/widget:pointer-events-auto group-hover/widget:opacity-100'

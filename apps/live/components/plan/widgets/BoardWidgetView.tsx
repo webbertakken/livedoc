@@ -50,7 +50,7 @@ const DONE_GREEN = PHASE_COLOURS.done;
 const SOON_AMBER = '#d97706';
 
 export const WIDGET_PILL =
-  'inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2 text-[12px] font-medium';
+  'inline-flex h-row shrink-0 items-center gap-2 whitespace-nowrap rounded-control border px-2 text-supporting';
 
 export type WidgetContext = {
   setup: PlanBoardSetup;
@@ -95,7 +95,7 @@ function toggle<K extends (typeof WIDGET_KEYS)[number]>(
 
 // A part of a widget that narrows the board when pressed, pressed while it does.
 const PRESSABLE =
-  'inline-flex items-center gap-1 rounded-md px-1 py-0.5 transition enabled:cursor-pointer enabled:hover:bg-black/5 dark:enabled:hover:bg-white/10';
+  'inline-flex items-center gap-1 rounded-control px-1 py-0.5 transition enabled:cursor-pointer enabled:hover:bg-black/5 dark:enabled:hover:bg-white/10';
 
 const stopKeys = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
@@ -173,7 +173,7 @@ export function BoardWidgetView({ kind, ctx }: { kind: BoardWidgetKind; ctx: Wid
       const pct = percentDone(projection.doneCount, projection.total);
       return (
         <span
-          className={`${WIDGET_PILL} pl-1.5`}
+          className={`${WIDGET_PILL} pl-1`}
           style={pill}
           role="img"
           aria-label={`${pct}% done, ${projection.doneCount} of ${projection.total}`}
@@ -181,7 +181,7 @@ export function BoardWidgetView({ kind, ctx }: { kind: BoardWidgetKind; ctx: Wid
           {/* A ring filled to the share done. */}
           <span
             aria-hidden
-            className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full"
+            className="flex size-icon-toolbar shrink-0 items-center justify-center rounded-full"
             style={{
               background: `conic-gradient(${DONE_GREEN} ${pct * 3.6}deg, ${palette.border} 0deg)`,
             }}
@@ -191,7 +191,7 @@ export function BoardWidgetView({ kind, ctx }: { kind: BoardWidgetKind; ctx: Wid
               style={{ backgroundColor: palette.surface }}
             />
           </span>
-          <strong className="font-semibold tabular-nums" style={{ color: palette.text }}>
+          <strong className="font-normal tabular-nums" style={{ color: palette.text }}>
             {pct}%
           </strong>
           <span>
@@ -218,7 +218,7 @@ export function BoardWidgetView({ kind, ctx }: { kind: BoardWidgetKind; ctx: Wid
             onKeyDown={stopKeys}
             placeholder="Filter cards"
             aria-label="Filter this board"
-            className="h-7 w-36 rounded-md border bg-transparent pl-7 pr-2 text-[12px] outline-none"
+            className="h-row w-36 rounded-control border bg-transparent pl-6 pr-2 text-supporting outline-none"
             style={{ borderColor: on ? palette.focus : palette.border, color: palette.text }}
           />
         </span>
@@ -412,7 +412,7 @@ export function BoardWidgetView({ kind, ctx }: { kind: BoardWidgetKind; ctx: Wid
           }
         >
           {/* A bar per column: its cards against its limit (or the busiest column), warning when over. */}
-          <span aria-hidden className="flex h-4 items-end gap-[2px]">
+          <span aria-hidden className="flex h-icon-row items-end gap-0.5">
             {projection.columns.map((c) => {
               const limit = c.column.wipLimit;
               const share = Math.min(1, c.count / (limit ?? most));
@@ -517,7 +517,7 @@ export function BoardWidgetView({ kind, ctx }: { kind: BoardWidgetKind; ctx: Wid
               style={{ width: `${share * 100}%`, backgroundColor: DONE_GREEN }}
             />
           </span>
-          <strong className="font-semibold tabular-nums" style={{ color: palette.text }}>
+          <strong className="font-normal tabular-nums" style={{ color: palette.text }}>
             {done}/{total}
           </strong>
           pts
@@ -535,7 +535,7 @@ export function BoardWidgetView({ kind, ctx }: { kind: BoardWidgetKind; ctx: Wid
         );
       return (
         <span
-          className={`${WIDGET_PILL} gap-1 pl-1.5`}
+          className={`${WIDGET_PILL} gap-1 pl-1`}
           style={pill}
           role="group"
           aria-label="Cards by priority"

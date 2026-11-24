@@ -92,17 +92,15 @@ export function BoardWidgetPicker({
   };
   return (
     <AnchoredPopover anchor={anchor} name="Add a Widget" width={560} onClose={onClose}>
-      <div className="flex max-h-[min(72vh,36rem)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex max-h-[min(72vh,36rem)] flex-col overflow-hidden rounded-surface border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
         <div className="flex items-center gap-3 border-b border-slate-100 px-4 pb-3 pt-3.5 dark:border-slate-800">
           <div className="min-w-0 flex-1">
-            <h3 className="text-[14px] font-semibold text-slate-900 dark:text-slate-100">
-              Add a Widget
-            </h3>
-            <p className="text-[12px] text-slate-500 dark:text-slate-400">
+            <h3 className="text-panel-title text-slate-900 dark:text-slate-100">Add a Widget</h3>
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               Widgets sit in the board’s header, live as its cards change.
             </p>
           </div>
-          <label className="flex w-44 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-slate-400 focus-within:border-brand-400 dark:border-slate-700">
+          <label className="flex h-field w-44 shrink-0 items-center gap-2 rounded-control border border-slate-200 px-2 text-slate-400 focus-within:border-brand-400 dark:border-slate-700">
             <SearchGlyph />
             <input
               autoFocus
@@ -110,7 +108,7 @@ export function BoardWidgetPicker({
               placeholder="Find a widget"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="min-w-0 flex-1 bg-transparent text-[12px] text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100"
+              className="min-w-0 flex-1 bg-transparent text-body text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100"
             />
           </label>
         </div>
@@ -132,13 +130,11 @@ export function BoardWidgetPicker({
             groups.map((g) => (
               <section key={g.title} aria-label={g.title} className="pt-3.5">
                 <div className="mb-2 flex items-baseline gap-2">
-                  <h4 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    {g.title}
-                  </h4>
+                  <h4 className="text-supporting text-slate-500 dark:text-slate-400">{g.title}</h4>
                   {/* slate-500 on the white gallery is 4.8:1, slate-400 on its dark one 6.9:1 (WCAG AA 4.5:1). */}
                   <span
                     data-group-line
-                    className="truncate text-[11px] text-slate-500 dark:text-slate-400"
+                    className="truncate text-supporting text-slate-500 dark:text-slate-400"
                   >
                     {g.line}
                   </span>
@@ -178,7 +174,7 @@ function WidgetCard({
   // A container, not a button: the live preview holds buttons of its own. One button covers the card for the pick.
   return (
     <div
-      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 transition duration-micro motion-reduce:transition-none dark:border-slate-700 hover:-translate-y-px hover:border-brand-300 hover:shadow-md motion-reduce:hover:translate-y-0 dark:hover:border-brand-500/60`}
+      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-surface border border-slate-200 transition duration-micro motion-reduce:transition-none dark:border-slate-700 hover:-translate-y-px hover:border-brand-300 hover:shadow-md motion-reduce:hover:translate-y-0 dark:hover:border-brand-500/60`}
     >
       {/* The widget live, as it would sit in this board's header. */}
       <span
@@ -202,13 +198,13 @@ function WidgetCard({
         )}
       </span>
       <span className="flex min-w-0 flex-col gap-0.5 px-3 py-2.5 text-left">
-        <span className="flex items-center gap-1.5 text-[13px] font-medium text-slate-800 dark:text-slate-100">
+        <span className="flex items-center gap-2 text-body text-slate-800 dark:text-slate-100">
           <span aria-hidden className="flex shrink-0 text-slate-400 group-hover:text-brand-700">
             <BoardWidgetArt kind={kind} size={14} />
           </span>
           <span className="truncate">{info.label}</span>
         </span>
-        <span className="line-clamp-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+        <span className="line-clamp-2 text-supporting text-slate-500 dark:text-slate-400">
           {info.description}
         </span>
       </span>
@@ -217,7 +213,7 @@ function WidgetCard({
         data-widget-card=""
         aria-label={`Add ${info.label}`}
         onClick={onPick}
-        className="absolute inset-0 cursor-pointer rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
+        className="absolute inset-0 cursor-pointer rounded-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
       />
     </div>
   );

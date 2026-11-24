@@ -30,7 +30,7 @@ export function GanttScaleControls({
       <span
         role="group"
         aria-label="Scale"
-        className="ml-1 flex items-center gap-0.5 rounded-lg p-0.5"
+        className="ml-1 flex items-center gap-0.5 rounded-menu p-0.5"
         style={{ boxShadow: `inset 0 0 0 1px ${palette.border}` }}
       >
         {GANTT_SCALES.map((s) => (

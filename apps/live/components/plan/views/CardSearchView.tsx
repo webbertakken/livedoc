@@ -76,7 +76,7 @@ export function CardSearchView({
         <div
           role="toolbar"
           aria-label="Filters"
-          className="flex shrink-0 flex-wrap items-center gap-1.5 border-b px-3 py-2"
+          className="flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2"
           style={{ borderColor: palette.border }}
           onPointerDown={(e) => e.stopPropagation()}
         >
@@ -85,15 +85,15 @@ export function CardSearchView({
             return (
               <span
                 key={`${fieldKey(f)}:${f.key}`}
-                className="inline-flex items-center gap-1 rounded-full bg-brand-50 py-0.5 pl-2.5 pr-1 text-[12px] text-brand-800 ring-1 ring-inset ring-brand-200 dark:bg-brand-500/10 dark:text-brand-100 dark:ring-brand-500/30"
+                className="inline-flex h-chip items-center gap-1 rounded-full bg-brand-50 pl-2 text-supporting text-brand-800 ring-1 ring-inset ring-brand-200 dark:bg-brand-500/10 dark:text-brand-100 dark:ring-brand-500/30"
               >
-                <span className="font-medium">{label.field}:</span>
+                <span>{label.field}:</span>
                 <span>{label.value}</span>
                 {canEdit ? (
                   <button
                     type="button"
                     aria-label={`Remove ${label.field}: ${label.value}`}
-                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full transition hover:bg-brand-100 dark:hover:bg-brand-500/20"
+                    className="flex size-chip cursor-pointer items-center justify-center rounded-full transition hover:bg-brand-100 dark:hover:bg-brand-500/20"
                     onClick={() => {
                       save(filters.filter((_, j) => j !== i));
                       track('Plan', 'Removed', 'SearchFilter');
@@ -121,14 +121,14 @@ export function CardSearchView({
             />
           ) : null}
           {filters.length === 0 && !canEdit ? (
-            <span className="text-[12px]" style={{ color: palette.muted }}>
+            <span className="text-supporting" style={{ color: palette.muted }}>
               Every card
             </span>
           ) : null}
           {canEdit && filters.length > 0 ? (
             <button
               type="button"
-              className="ml-auto cursor-pointer rounded-md px-1.5 py-0.5 text-[12px] font-medium transition hover:bg-black/5 dark:hover:bg-white/10"
+              className="ml-auto h-row cursor-pointer rounded-control px-2 text-body transition hover:bg-black/5 dark:hover:bg-white/10"
               style={{ color: palette.muted }}
               onClick={() => {
                 save([]);
@@ -175,7 +175,7 @@ export function CardSearchView({
                   <button
                     type="button"
                     aria-label={`Open ${itemTitle(card) || 'Untitled'}, ${type.label} #${card.key}, ${status ? statusNames.get(status) : 'No status'}`}
-                    className="block w-full cursor-pointer rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                    className="block w-full cursor-pointer rounded-surface text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                     {...openProps(plan, card.id)}
                   >
                     {/* The card as a board draws it, at Detailed size where there is room. */}
@@ -192,7 +192,7 @@ export function CardSearchView({
             })}
             {total > CARD_SEARCH_SHOWN_MAX ? (
               <li
-                className="py-2 text-[12px]"
+                className="py-2 text-supporting"
                 style={{ gridColumn: '1 / -1', color: palette.muted }}
               >
                 {`Showing ${CARD_SEARCH_SHOWN_MAX} of ${total}. Add a filter to narrow the search.`}

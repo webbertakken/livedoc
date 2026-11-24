@@ -202,3 +202,13 @@ describe('BoardWidgetZone, empty', () => {
     expect(screen.queryByRole('button', { name: 'Add a widget' })).toBeNull();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md "Heights": nothing pressable under 24 px on a fine pointer.
+describe('BoardWidgetZone × on the sizing scale', () => {
+  it('draws a 16 px mark with a 24 px reach', () => {
+    show(true);
+    const remove = screen.getByRole('button', { name: 'Remove Item Count' });
+    expect(remove.className).toContain('size-icon-row');
+    expect(remove.className).toContain('after:-inset-1');
+  });
+});

@@ -67,6 +67,10 @@ const SIZED_PATHS = [
   'components/sheets/SheetTouchLinkChip.tsx',
   // A Dashboard tab is chrome (sizing.md D239).
   'components/plan/dashboard',
+  // A Plan view's frame and metric tiles; its drawing is content (sizing.md D240).
+  'components/plan/views',
+  // A board's header widgets, their zone and picker.
+  'components/plan/widgets',
 ];
 
 // Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.
@@ -76,6 +80,17 @@ const SIZING_EXCEPTIONS = [
   'components/plan/dashboard/slot-previews.tsx',
   // Its floating cog shares the canvas toolbar's frame, so it moves with the canvas chrome.
   'components/plan/dashboard/DashboardSettings.tsx',
+  // A Plan view's drawing is content (sizing.md D240).
+  'components/plan/views/calendar-day.tsx',
+  'components/plan/views/CalendarView.tsx',
+  'components/plan/views/gantt-drag.tsx',
+  'components/plan/views/gantt-draw.tsx',
+  'components/plan/views/gantt-mark.tsx',
+  'components/plan/views/gantt-rows.tsx',
+  'components/plan/views/GanttView.tsx',
+  'components/plan/views/PriorityMatrixView.tsx',
+  'components/plan/views/StatusMixView.tsx',
+  'components/plan/views/WorkloadView.tsx',
 ];
 
 describe('live sizing', () => {
