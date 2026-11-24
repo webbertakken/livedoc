@@ -14,6 +14,7 @@ import { useFormBoard } from '@/components/forms/form-board-context';
 import { useFormLink } from '@/hooks/forms/useFormLink';
 import { formUrlFor } from '@/lib/form-path';
 import { FORM_METRIC_NAMES } from '@/components/palette/palette-dashboard-tiles';
+import { CLEAR_OF_SLOT_MENU } from './card-parts';
 import { useDashboard } from './dashboard-context';
 import { Missing } from './DashboardSlotContent';
 import { formMetricShown, type FormMetricTone } from './form-metric-shown';
@@ -44,7 +45,7 @@ export function DashboardFormMetric({
       return <Missing message="This form was deleted." slotId={slotId} />;
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
-        <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+        <span className="text-body text-slate-800 dark:text-slate-100">
           {FORM_METRIC_NAMES[content.metric]}
         </span>
         {canEdit ? (
@@ -54,7 +55,7 @@ export function DashboardFormMetric({
             onChange={(formTabId) => actions.setSlotContent(slotId, { ...content, formTabId })}
           />
         ) : (
-          <span className={`text-[12px] ${MUTED}`}>Waiting for its form.</span>
+          <span className={`text-supporting ${MUTED}`}>Waiting for its form.</span>
         )}
       </div>
     );
@@ -77,7 +78,7 @@ function FormChoice({
       aria-label="Form"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      selectClassName="text-[12px]"
+      selectClassName="text-supporting"
     >
       {value ? null : (
         <option value="" disabled>
@@ -138,27 +139,23 @@ function FormMetricBody({
       aria-label={`${name}: ${shown.hero ?? shown.line}`}
       className="relative flex h-full flex-col gap-2 overflow-hidden p-4"
     >
-      <div className="flex min-w-0 items-center gap-2 pr-10">
+      <div className={`flex min-w-0 items-center gap-2 ${CLEAR_OF_SLOT_MENU}`}>
         <span
           aria-hidden
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+          className="flex size-row shrink-0 items-center justify-center rounded-control bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
         >
           <FormGlyph />
         </span>
-        <span
-          className={`min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider ${MUTED}`}
-        >
-          {name}
-        </span>
+        <span className={`min-w-0 truncate text-body ${MUTED}`}>{name}</span>
       </div>
       {loading ? (
-        <p aria-live="polite" className={`text-[13px] ${MUTED}`}>
+        <p aria-live="polite" className={`text-body ${MUTED}`}>
           Loading {entry.name}…
         </p>
       ) : content.metric === 'link' ? (
         url ? (
           <div className="flex min-w-0 items-center gap-2">
-            <span className="min-w-0 flex-1 truncate rounded-md bg-slate-50 px-2 py-1.5 font-mono text-[12px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            <span className="min-w-0 flex-1 truncate rounded-control bg-slate-50 px-2 py-1.5 font-mono text-supporting text-slate-700 dark:bg-slate-800 dark:text-slate-200">
               {url.replace(/^https?:\/\//, '')}
             </span>
             {api?.canShare ? (
@@ -170,25 +167,23 @@ function FormMetricBody({
                     window.setTimeout(() => setCopied(false), 1800);
                   });
                 }}
-                className="shrink-0 cursor-pointer rounded-md bg-brand-700 px-2.5 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700"
+                className="h-row shrink-0 cursor-pointer rounded-control bg-brand-700 px-3 text-body font-medium text-white hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-700"
               >
                 {copied ? 'Copied' : 'Copy'}
               </button>
             ) : null}
           </div>
         ) : (
-          <span className={`text-[13px] ${MUTED}`}>Not published yet.</span>
+          <span className={`text-body ${MUTED}`}>Not published yet.</span>
         )
       ) : shown.tone ? (
         <span
-          className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-[15px] font-semibold ${TONES[shown.tone]}`}
+          className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-panel-title ${TONES[shown.tone]}`}
         >
           {shown.hero}
         </span>
       ) : (
-        <span className="text-[32px] font-semibold leading-none tracking-tight tabular-nums text-slate-900 dark:text-slate-50">
-          {shown.hero}
-        </span>
+        <span className="dashboard-figure text-slate-900 dark:text-slate-50">{shown.hero}</span>
       )}
       {shown.share !== undefined ? (
         <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
@@ -199,7 +194,7 @@ function FormMetricBody({
         </div>
       ) : null}
       <div className="mt-auto flex min-w-0 items-center gap-2">
-        <span className={`min-w-0 flex-1 truncate text-[11px] ${MUTED}`}>{shown.line}</span>
+        <span className={`min-w-0 flex-1 truncate text-supporting ${MUTED}`}>{shown.line}</span>
         {/* The form it reads: an Editor changes it while the document has more than one. */}
         {canEdit && forms.length > 1 ? (
           <FormChoice
@@ -208,7 +203,7 @@ function FormMetricBody({
             onChange={(formTabId) => actions.setSlotContent(slotId, { ...content, formTabId })}
           />
         ) : (
-          <span className={`shrink-0 truncate text-[11px] font-medium ${MUTED}`}>{entry.name}</span>
+          <span className={`shrink-0 truncate text-supporting ${MUTED}`}>{entry.name}</span>
         )}
       </div>
     </div>

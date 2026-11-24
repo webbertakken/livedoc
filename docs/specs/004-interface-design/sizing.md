@@ -29,7 +29,9 @@ respondents see it and a slide keep the sizes their author chose.
   section's (`text-panel-title`).
 - Drawn art keeps its own sizes, as a switch does: Add to Slot's pictures of a card, and a metric tile's figure and
   picture, which grow with the tile ([Metric tiles](../026-plan/plan-tabs.md#metric-tiles)), and a Key Date's count.
-- A dashboard's figures are named once in `apps/live/app/dashboard.css` (`dashboard-figure`), off the scale.
+- A dashboard's figures are named once in `apps/live/app/dashboard.css` (`dashboard-figure`), off the scale: 34 px,
+  unless a tile that grows its figure with its size sets its own; a tile's sparkline is its picture.
+- A metric's name reads at 14 px as written, beside its 28 px glyph.
 - A card's top line keeps clear of the slot's menu by a margin (`CLEAR_OF_SLOT_MENU`), never by side padding.
 
 ## Why

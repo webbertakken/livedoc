@@ -69,13 +69,19 @@ const SIZED_PATHS = [
   'components/plan/dashboard/AddLinkForm.tsx',
   'components/plan/dashboard/card-parts.tsx',
   'components/plan/dashboard/DashboardChecklistCard.tsx',
+  'components/plan/dashboard/DashboardFormMetric.tsx',
   'components/plan/dashboard/DashboardKeyDateCard.tsx',
   'components/plan/dashboard/DashboardLinksCard.tsx',
   'components/plan/dashboard/DashboardMenuName.tsx',
   'components/plan/dashboard/DashboardNote.tsx',
+  'components/plan/dashboard/DashboardSheetChart.tsx',
+  'components/plan/dashboard/DashboardSheetMetric.tsx',
   'components/plan/dashboard/DashboardStatusCard.tsx',
   'components/plan/dashboard/DashboardTitle.tsx',
   'components/plan/dashboard/LinkAddressField.tsx',
+  'components/plan/dashboard/sheet-source-parts.tsx',
+  'components/plan/dashboard/SheetChartSource.tsx',
+  'components/plan/dashboard/SheetMetricSource.tsx',
 ];
 
 describe('live sizing', () => {

@@ -10,6 +10,7 @@ import type { SheetMetricContent } from '@livedoc/document';
 import { percentDone } from '@livedoc/plan-art';
 import { lucideGlyph } from '@livedoc/ui';
 import { lucideTable } from '@livedoc/icons/lucide';
+import { CLEAR_OF_SLOT_MENU } from './card-parts';
 import { tabsStateOf, useDashboard } from './dashboard-context';
 import { TabWaiting } from './TabWaiting';
 import { Missing, useBoxSize } from './DashboardSlotContent';
@@ -23,6 +24,8 @@ const SheetGlyph = lucideGlyph(lucideTable, 15);
 const GREEN = 'text-emerald-600 dark:text-emerald-400';
 const RED = 'text-red-600 dark:text-red-400';
 const MUTED = 'text-slate-500 dark:text-slate-400';
+// The sparkline is the tile's picture, drawn art off the sizing scale (docs/specs/004-interface-design/sizing.md D239).
+const SPARKLINE_HEIGHT_PX = 32;
 
 function Sparkline({ values }: { values: number[] }) {
   const min = Math.min(...values);
@@ -36,7 +39,8 @@ function Sparkline({ values }: { values: number[] }) {
       aria-hidden
       viewBox="0 0 100 30"
       preserveAspectRatio="none"
-      className="h-8 w-full text-brand-500 dark:text-brand-400"
+      className="w-full text-brand-500 dark:text-brand-400"
+      style={{ height: SPARKLINE_HEIGHT_PX }}
     >
       <polyline
         points={points}
@@ -100,7 +104,7 @@ function SheetMetricBody({
       type="button"
       aria-haspopup="dialog"
       onClick={(e) => setPickerAt(e.currentTarget)}
-      className="cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-medium text-slate-700 shadow-sm transition hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:text-brand-300"
+      className="h-field cursor-pointer rounded-control border border-slate-200 bg-white px-3 text-body text-slate-700 shadow-sm transition hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:text-brand-300"
     >
       Choose a Sheet
     </button>
@@ -109,8 +113,12 @@ function SheetMetricBody({
   if (read.state === 'none' || shown === 'unset')
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
-        <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">{name}</span>
-        {canEdit ? choose : <span className={`text-[12px] ${MUTED}`}>Waiting for its sheet.</span>}
+        <span className="text-body text-slate-800 dark:text-slate-100">{name}</span>
+        {canEdit ? (
+          choose
+        ) : (
+          <span className={`text-supporting ${MUTED}`}>Waiting for its sheet.</span>
+        )}
         {picker}
       </div>
     );
@@ -118,14 +126,14 @@ function SheetMetricBody({
     return <TabWaiting name={read.name} status="failed" onRetry={read.retry} />;
   if (read.state === 'loading' || !shown)
     return (
-      <p aria-live="polite" className={`p-4 text-[13px] ${MUTED}`}>
+      <p aria-live="polite" className={`p-4 text-body ${MUTED}`}>
         Loading {read.state === 'loading' ? read.name : 'the sheet'}…
       </p>
     );
   if (shown === 'cell-gone')
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
-        <span className={`text-[13px] ${MUTED}`}>The cell it read was deleted.</span>
+        <span className={`text-body ${MUTED}`}>The cell it read was deleted.</span>
         {canEdit ? choose : null}
         {picker}
       </div>
@@ -141,33 +149,29 @@ function SheetMetricBody({
       aria-label={`${shown.label}: ${shown.hero}${shown.progress ? ` of ${shown.progress.of}` : ''}`}
       className="relative flex h-full flex-col gap-2 overflow-hidden p-4"
     >
-      <div className="flex min-w-0 items-center gap-2 pr-10">
+      <div className={`flex min-w-0 items-center gap-2 ${CLEAR_OF_SLOT_MENU}`}>
         <span
           aria-hidden
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+          className="flex size-row shrink-0 items-center justify-center rounded-control bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
         >
           <SheetGlyph />
         </span>
-        <span
-          className={`min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider ${MUTED}`}
-        >
-          {shown.label}
-        </span>
+        <span className={`min-w-0 truncate text-body ${MUTED}`}>{shown.label}</span>
       </div>
       <div className="flex min-w-0 items-baseline gap-2">
         <span
-          className="font-semibold leading-none tracking-tight tabular-nums text-slate-900 dark:text-slate-50"
+          className="dashboard-figure text-slate-900 dark:text-slate-50"
           style={{ fontSize: heroPx }}
         >
           {shown.hero}
         </span>
         {shown.progress ? (
-          <span className={`truncate text-[13px] ${MUTED}`}>of {shown.progress.of}</span>
+          <span className={`truncate text-body ${MUTED}`}>of {shown.progress.of}</span>
         ) : null}
       </div>
       {shown.change ? (
         <span
-          className={`text-[12px] font-medium tabular-nums ${shown.change.dir === 'up' ? GREEN : shown.change.dir === 'down' ? RED : MUTED}`}
+          className={`text-supporting tabular-nums ${shown.change.dir === 'up' ? GREEN : shown.change.dir === 'down' ? RED : MUTED}`}
         >
           {shown.change.text}
         </span>
@@ -180,9 +184,7 @@ function SheetMetricBody({
               style={{ width: `${shown.progress.share * 100}%` }}
             />
           </div>
-          <span
-            className={`text-[12px] font-medium tabular-nums ${shown.progress.met ? GREEN : MUTED}`}
-          >
+          <span className={`text-supporting tabular-nums ${shown.progress.met ? GREEN : MUTED}`}>
             {percentDone(shown.progress.share, 1)}%
           </span>
         </div>
@@ -192,7 +194,7 @@ function SheetMetricBody({
           <Sparkline values={shown.spark} />
         </div>
       ) : null}
-      {compact ? null : <span className={`truncate text-[11px] ${MUTED}`}>{shown.line}</span>}
+      {compact ? null : <span className={`truncate text-supporting ${MUTED}`}>{shown.line}</span>}
       {picker}
     </div>
   );

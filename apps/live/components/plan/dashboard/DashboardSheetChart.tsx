@@ -35,7 +35,7 @@ export function DashboardSheetChart({
         {(live) => <DataChartView element={live} textColor={palette.text} />}
       </SheetLinkedChart>
       {read.state === 'failed' ? (
-        <div className="absolute inset-x-2 bottom-2 rounded-lg bg-white/95 shadow-sm dark:bg-slate-900/95">
+        <div className="absolute inset-x-2 bottom-2 rounded-menu bg-white/95 shadow-sm dark:bg-slate-900/95">
           <TabWaiting name={read.name} status="failed" onRetry={read.retry} />
         </div>
       ) : null}

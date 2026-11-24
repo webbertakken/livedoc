@@ -168,3 +168,19 @@ describe('a figure that arrives after Loading', () => {
     expect(screen.queryByRole('button', { name: 'Change Source' })).toBeNull();
   });
 });
+
+// docs/specs/004-interface-design/sizing.md (D239): its chrome is on the sizing scale; its figure is drawn art.
+describe('a figure from a Sheet on the sizing scale', () => {
+  it('draws its figure as the dashboard’s figure and nothing else heavy or in tracked capitals', () => {
+    read = budget();
+    const { container } = show({
+      type: 'sheet-metric',
+      metric: 'figure',
+      sheetId: 'sheetAAAA',
+      cell: { r: 'row1a', c: 'colBa' },
+      target: { r: 'row3a', c: 'colBa' },
+    });
+    expect(container.querySelector('.dashboard-figure')).not.toBeNull();
+    expect(container.innerHTML).not.toMatch(/\buppercase\b|tracking-|font-semibold|font-bold/);
+  });
+});
