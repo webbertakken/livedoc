@@ -44,6 +44,20 @@ describe('SpreadsheetRightPanel', () => {
     expect(panels.close).toHaveBeenCalledWith('right');
   });
 
+  it('holds Alternating Colours for the selection', async () => {
+    const h = await makeSheet({ cells: { A1: '5' } });
+    renderSheet(
+      h,
+      ({ actions }) => (
+        <SpreadsheetRightPanel panels={panelsOf('alternating-colours')} actions={actions} />
+      ),
+      { at: 'A1:B3' },
+    );
+    expect(screen.getByRole('complementary', { name: 'Alternating Colours' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Alternating Colours' }));
+    expect(h.store.sheet(SHEET_ID)!.layout.bands).toHaveLength(1);
+  });
+
   it('draws nothing while no panel of its own is open', async () => {
     const h = await makeSheet({ cells: {} });
     renderSheet(h, ({ actions }) => (

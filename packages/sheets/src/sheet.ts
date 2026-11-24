@@ -155,6 +155,11 @@ export type FormatRule = IdRange & {
   max?: ScalePoint;
 };
 
+// Alternating colours (docs/specs/029-sheets/formatting.md "Alternating colours"): a range's rows shaded, the header
+// and footer rows when switched on, the rest colour 1 and colour 2 alternating; each colour lower-case #rrggbb.
+export type BandingColours = { head: string; band1: string; band2: string; foot: string };
+export type Banding = IdRange & BandingColours & { id: string; header?: true; footer?: true };
+
 // A collapsed group: the group of depth `depth` holding the line `at`.
 export type GroupMark = { at: string; depth: number };
 
@@ -196,6 +201,8 @@ export type SheetLayout = {
   // Validation rules and format rules (data-validation.md, conditional-formatting.md); format rules in list order.
   rules?: ValidationRule[];
   formatRules?: FormatRule[];
+  // Alternating colours, none overlapping another.
+  bands?: Banding[];
 };
 
 // A card table: its header row, each column's card field (as the header named it), which row is which card (row

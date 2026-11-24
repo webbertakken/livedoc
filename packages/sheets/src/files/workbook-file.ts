@@ -24,6 +24,7 @@ import { cellStyleOf, type CellStyle } from './cell-style';
 import { storedKept } from './kept-anchors';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
+import { bandingRules } from '../rules/bandings';
 import { fileFormatRulesOf, formatRulesFromFile, type FileFormatRule } from './file-format-rules';
 
 export type FileValue =
@@ -190,7 +191,10 @@ export function workbookFileOf(
         if (value) out.value = value;
         cells.push(out);
       }
-      const formatRules = fileFormatRulesOf(sheet.layout, ctx, locale);
+      // Alternating colours travel as format rules after the sheet's own (D216).
+      const own = fileFormatRulesOf(sheet.layout, ctx, locale) ?? [];
+      const all = [...own, ...bandingRules(sheet.layout)];
+      const formatRules = all.length ? all : undefined;
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,

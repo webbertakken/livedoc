@@ -7,6 +7,7 @@ import { insertIds, layoutIndex, moveIds } from './layout';
 import type {
   CardTable,
   FilterCondition,
+  Banding,
   FormatRule,
   IdRange,
   SheetFilter,
@@ -58,6 +59,8 @@ export type LayoutChange =
   | { k: 'name'; name: string; range: IdRange | null }
   // A validation rule set (in place, else appended) or removed (null), by id (data-validation.md).
   | { k: 'vrule'; id: string; rule: ValidationRule | null }
+  // Alternating colours: set (made or replaced in place) or removed.
+  | { k: 'band'; id: string; band: Banding | null }
   // A format rule set (in place, else inserted at `at`, else appended) or removed (null), by id
   // (conditional-formatting.md); and the format rules put in an order.
   | { k: 'frule'; id: string; rule: FormatRule | null; at?: number }
@@ -274,6 +277,13 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
         });
         next.formatRules = rules.length ? rules : undefined;
       }
+      if (layout.bands?.length) {
+        const bands = layout.bands.flatMap((x): Banding[] => {
+          const range = shrinkRange(x, layout, goneRows, goneCols);
+          return range ? [{ ...x, ...range }] : [];
+        });
+        next.bands = bands.length ? bands : undefined;
+      }
       // Card tables lose the deleted rows' links and drafts; a table whose header row or every column went is gone,
       // and a deleted Controls column is dropped (the next one is found again).
       if (layout.cardTables?.length) {
@@ -359,6 +369,17 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
             ? list.map((x, i) => (i === at ? ch.rule! : x))
             : [...list, ch.rule];
       return clean({ ...layout, rules: next.length ? next : undefined });
+    }
+    case 'band': {
+      const list = layout.bands ?? [];
+      const at = list.findIndex((x) => x.id === ch.id);
+      const next =
+        ch.band === null
+          ? list.filter((x) => x.id !== ch.id)
+          : at >= 0
+            ? list.map((x, i) => (i === at ? ch.band! : x))
+            : [...list, ch.band];
+      return clean({ ...layout, bands: next.length ? next : undefined });
     }
     case 'frule': {
       const list = layout.formatRules ?? [];

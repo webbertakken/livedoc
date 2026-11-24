@@ -1696,6 +1696,58 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "Banding": {
+    "additionalProperties": false,
+    "properties": {
+      "band1": {
+        "type": "string"
+      },
+      "band2": {
+        "type": "string"
+      },
+      "c1": {
+        "type": "string"
+      },
+      "c2": {
+        "type": "string"
+      },
+      "foot": {
+        "type": "string"
+      },
+      "footer": {
+        "const": true,
+        "type": "boolean"
+      },
+      "head": {
+        "type": "string"
+      },
+      "header": {
+        "const": true,
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "r1": {
+        "type": "string"
+      },
+      "r2": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "band1",
+      "band2",
+      "c1",
+      "c2",
+      "foot",
+      "head",
+      "id",
+      "r1",
+      "r2"
+    ],
+    "type": "object"
+  },
   "BlobKey": {
     "type": "string"
   },
@@ -9946,6 +9998,34 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       {
         "additionalProperties": false,
         "properties": {
+          "band": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Banding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "k": {
+            "const": "band",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "id",
+          "band"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
           "at": {
             "type": "number"
           },
@@ -14921,6 +15001,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "SheetLayout": {
     "additionalProperties": false,
     "properties": {
+      "bands": {
+        "items": {
+          "$ref": "#/components/schemas/Banding"
+        },
+        "type": "array"
+      },
       "cardTables": {
         "items": {
           "$ref": "#/components/schemas/CardTable"

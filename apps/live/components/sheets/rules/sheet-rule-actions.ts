@@ -5,11 +5,14 @@ import {
   clipFromRange,
   idRangeOf,
   makeAxisIds,
+  newBanding,
+  posRangeOf,
   pasteClip,
   removeValidation,
   setValidationRule,
   toggleCheckboxes,
   validationRuleAt,
+  type Banding,
   type FormatRule,
   type GridRange,
   type RuleSettings,
@@ -24,6 +27,15 @@ function primary(c: SheetController): GridRange {
 
 export function sheetRuleActions(c: SheetController) {
   const layout = () => c.sheet.layout;
+  const selectedBanding = (): Banding | null => {
+    const sel = primary(c);
+    return (
+      (layout().bands ?? []).find((b) => {
+        const p = posRangeOf(layout(), b);
+        return !!p && p.r1 <= sel.r2 && sel.r1 <= p.r2 && p.c1 <= sel.c2 && sel.c1 <= p.c2;
+      }) ?? null
+    );
+  };
   return {
     // ---- Checkboxes and dropdowns (an Editor's and a Participant's: cells) ----
     // Space or a press on a box: false when no checkbox cell is selected (Space then types a space).
@@ -102,6 +114,24 @@ export function sheetRuleActions(c: SheetController) {
       if (at < 0 || to < 0 || to >= ids.length) return;
       [ids[at], ids[to]] = [ids[to]!, ids[at]!];
       c.write({ kind: 'layout', changes: [{ k: 'fruleOrder', ids }] }, 'ConditionalFormat');
+    },
+    // ---- Alternating colours (an Editor's, formatting.md "Alternating colours") ----
+    // The banding touching the selection, which the panel edits; null for none.
+    selectedBanding,
+    // A new banding over the selection in the first default style (D216); false when one is there already.
+    addBanding(): boolean {
+      const sel = primary(c);
+      const ids = idRangeOf(layout(), sel.r1, sel.c1, sel.r2, sel.c2);
+      if (!ids || selectedBanding()) return false;
+      const [id] = makeAxisIds(1, Math.random, new Set((layout().bands ?? []).map((x) => x.id)));
+      const band = newBanding(id!, ids);
+      return c.write({ kind: 'layout', changes: [{ k: 'band', id: band.id, band }] }, 'Banding');
+    },
+    setBanding(band: Banding): boolean {
+      return c.write({ kind: 'layout', changes: [{ k: 'band', id: band.id, band }] }, 'Banding');
+    },
+    removeBanding(id: string): void {
+      c.write({ kind: 'layout', changes: [{ k: 'band', id, band: null }] }, 'Banding');
     },
     // The ids of a positional range on this sheet, for a rule's corners.
     rangeIds(range: GridRange) {
