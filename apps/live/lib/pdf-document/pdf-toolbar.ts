@@ -51,7 +51,6 @@ import {
   ROTATE_VIEW_CLOCKWISE,
   TOOL_DRAWING,
   TOOL_HAND,
-  TOOL_HIGHLIGHT,
   TOOL_SELECT,
   TOOL_TEXT,
   TOOL_TICK,
@@ -130,6 +129,9 @@ const EVERY_MODE: OfficeToolbar = [
   ]),
 ];
 
+/** Highlight, holding Underline and Strikethrough behind its chevron: the last of them taken in hand ("The toolbar"). */
+export const TEXT_MARK_TOOLS = 'text-mark-tools';
+
 // The mode's own, each control at the level its mode is drawn for.
 const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
   viewing: [
@@ -147,7 +149,10 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
       button(INSERT_COMMENT, 'Comment', 'participate', lucideMessageSquarePlus),
     ]),
     group('marks', 'Marks', [
-      toggle(TOOL_HIGHLIGHT, 'Highlight', 'participate', lucideHighlighter, BUILT),
+      {
+        ...toggle(TEXT_MARK_TOOLS, 'Highlight', 'participate', lucideHighlighter, BUILT),
+        look: { kind: 'icon', icon: lucideHighlighter, toggle: true, split: true },
+      },
       toggle(TOOL_TEXT, 'Text', 'participate', lucideType),
       toggle(TOOL_DRAWING, 'Drawing', 'participate', lucidePencilLine),
       list('shape-control', 'Shape', 'participate', lucideShapes),

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ListDefinition, ListPresets, type ListPlace } from '@livedoc/text-documents';
+import type { OfficeGridCell, OfficeGridLine } from '@/components/office/OfficeChoiceGrid';
 import { track } from '@/lib/telemetry';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
@@ -19,6 +20,9 @@ Range.prototype.getBoundingClientRect = () => new DOMRect();
 
 let view: EditorView;
 let lists: Record<string, ListDefinition>;
+// A list style's cell is a preview of lines, never a glyph.
+const linesOf = (cell: OfficeGridCell): readonly OfficeGridLine[] =>
+  'lines' in cell ? cell.lines : [];
 const startStep = vi.fn();
 beforeEach(() => {
   lists = {};
@@ -99,7 +103,7 @@ describe('textDocumentListActions', () => {
     expect(numbered.grid!.cells.map((c) => c.label)).toEqual(
       ListPresets.of('number').map((p) => p.name),
     );
-    expect(numbered.grid!.cells[2]!.lines.map((l) => [l.level, l.marker])).toEqual([
+    expect(linesOf(numbered.grid!.cells[2]!).map((l) => [l.level, l.marker])).toEqual([
       [0, '1.'],
       [1, '1.1.'],
       [2, '1.1.1.'],
@@ -116,7 +120,7 @@ describe('textDocumentListActions', () => {
     expect(choices['bulleted-list']!.grid!.cells).toHaveLength(6);
     const checks = choices.checklist!.grid!;
     expect(checks.columns).toBe(2);
-    expect(checks.cells.map((c) => c.lines[0])).toEqual([
+    expect(checks.cells.map((c) => linesOf(c)[0])).toEqual([
       { level: 0, marker: '', box: 'ticked', word: { text: 'Done', struck: true } },
       { level: 0, marker: '', box: 'ticked', word: { text: 'Done', struck: false } },
     ]);

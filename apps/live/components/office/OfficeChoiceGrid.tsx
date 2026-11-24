@@ -5,7 +5,8 @@
 // keyboard (useMenu) opens it on the checked cell, closes it on Escape, Tab or a press outside; the grid adds moving by
 // cell (Left, Right) and by row (Up, Down). A choice runs the kind's action, which gives focus back to the writing.
 import type { KeyboardEvent } from 'react';
-import { useMenu } from '@livedoc/ui';
+import { Glyph, Prims, useMenu } from '@livedoc/ui';
+import type { IconPrim } from '@livedoc/icons';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { GRID_KEYS, gridStep, type GridKey } from '@/lib/office/grid-step';
 
@@ -19,7 +20,10 @@ export type OfficeGridLine = {
   word?: { text: string; struck: boolean };
 };
 
-export type OfficeGridCell = { id: string; label: string; lines: readonly OfficeGridLine[] };
+/** A cell: a preview of lines (a list style), or a glyph over its name (a tool). */
+export type OfficeGridCell =
+  | { id: string; label: string; lines: readonly OfficeGridLine[] }
+  | { id: string; label: string; icon: readonly IconPrim[] };
 
 /** What a split toggle's chevron opens: cells, `columns` to a row, each run by the choice's action of its id. */
 export type OfficeGrid = { columns: number; cells: readonly OfficeGridCell[] };
@@ -115,7 +119,16 @@ export function OfficeChoiceGrid({
               checked ? 'border-(--office-focus) bg-(--office-pressed)' : 'border-(--office-line)'
             }`}
           >
-            <Preview lines={cell.lines} />
+            {'icon' in cell ? (
+              <span className="flex w-full flex-col items-center gap-1 text-[11px] leading-none text-(--office-ink)">
+                <Glyph size={18} units={24}>
+                  <Prims prims={cell.icon} />
+                </Glyph>
+                {cell.label}
+              </span>
+            ) : (
+              <Preview lines={cell.lines} />
+            )}
           </button>
         );
       })}

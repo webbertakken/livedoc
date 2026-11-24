@@ -1,11 +1,16 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/reading-surface.md "Phone and tablet": a finger's selection has a small bar, a toolbar
-// named "Selection": Copy, Highlight and Comment, each only where it can act, a dimmed one saying why; above the
-// selection, below it where the top would cut it; following it as the pages move. A mouse's selection has none.
+// named "Selection": Copy, Highlight, Underline, Strikethrough and Comment, each only where it can act, a dimmed one
+// saying why; above the selection, below it where the top would cut it; following it as the pages move. A mouse's
+// selection has none.
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
-import { HIGHLIGHT_SELECTION } from '@/lib/pdf-document/pdf-context-menu';
+import {
+  HIGHLIGHT_SELECTION,
+  STRIKETHROUGH_SELECTION,
+  UNDERLINE_SELECTION,
+} from '@/lib/pdf-document/pdf-context-menu';
 import { COPY } from '@/lib/pdf-document/pdf-menus';
 import type { PdfViewStore } from '@/lib/pdf-document/usePdfView';
 import type { PdfTextSelected } from '@/lib/pdf-document/usePdfTextSelection';
@@ -49,7 +54,12 @@ function viewStore() {
 
 function bar({
   selected = SELECTED,
-  actions = { [COPY]: { run: vi.fn() }, [HIGHLIGHT_SELECTION]: { run: vi.fn() } },
+  actions = {
+    [COPY]: { run: vi.fn() },
+    [HIGHLIGHT_SELECTION]: { run: vi.fn() },
+    [UNDERLINE_SELECTION]: { run: vi.fn() },
+    [STRIKETHROUGH_SELECTION]: { run: vi.fn() },
+  },
   top = 400,
 }: { selected?: PdfTextSelected; actions?: OfficeActions; top?: number | null } = {}) {
   const pages = pagesDrawing(top);
@@ -91,9 +101,11 @@ describe('PdfSelectionBar', () => {
     expect(shown.style.left).toBe('100px');
     expect(shown.className).not.toContain('invisible');
     const buttons = screen.getAllByRole('button').map((button) => button.textContent);
-    expect(buttons).toEqual(['Copy', 'Highlight']);
+    expect(buttons).toEqual(['Copy', 'Highlight', 'Underline', 'Strikethrough']);
     fireEvent.click(screen.getByRole('button', { name: 'Highlight' }));
     expect(actions[HIGHLIGHT_SELECTION]!.run).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Strikethrough' }));
+    expect(actions[STRIKETHROUGH_SELECTION]!.run).toHaveBeenCalled();
   });
 
   it('goes below the selection and its handles where the top would cut it, and follows the pages', () => {

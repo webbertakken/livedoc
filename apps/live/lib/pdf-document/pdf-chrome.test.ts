@@ -37,6 +37,9 @@ import {
   SELECT_ALL,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
+  TOOL_SQUIGGLY,
+  TOOL_STRIKETHROUGH,
+  TOOL_UNDERLINE,
   UNDO,
   ZOOM_ACTUAL_SIZE,
   ZOOM_FIT_PAGE,
@@ -47,7 +50,7 @@ import {
 } from './pdf-menus';
 import { PDF_MODES, type PdfMode } from './pdf-modes';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
-import { PAGE_DISPLAY_CONTROL, pdfToolbar } from './pdf-toolbar';
+import { PAGE_DISPLAY_CONTROL, pdfToolbar, TEXT_MARK_TOOLS } from './pdf-toolbar';
 
 // The toolbar lists the surface binds (pdf-view-actions.ts).
 const CHOICES = [PAGE_DISPLAY_CONTROL];
@@ -92,7 +95,11 @@ describe("a PDF document's menus and toolbar", () => {
     UNDO,
     REDO,
     TOOL_SELECT,
+    // usePdfMarkTools.ts: the text tools (marks.md "Making a mark").
     TOOL_HIGHLIGHT,
+    TOOL_UNDERLINE,
+    TOOL_STRIKETHROUGH,
+    TOOL_SQUIGGLY,
     COPY,
     SELECT_ALL,
     FIND,
@@ -178,7 +185,9 @@ describe("a PDF document's menus and toolbar", () => {
 
   // reading-surface.md "Share roles": an item above the session's level is not drawn.
   it('shows a Viewer the download and no tool that marks', () => {
-    const actions = Object.fromEntries(BOUND.map((id) => [id, { run: () => {} }]));
+    const actions = Object.fromEntries(
+      [...BOUND, TEXT_MARK_TOOLS].map((id) => [id, { run: () => {} }]),
+    );
     const seen = (level: 'view' | 'participate') =>
       catalogueItems(visibleMenus(PDF_MENUS, level, actions)).map(({ item }) => item.id);
     expect(seen('view')).toContain(DOWNLOAD_PDF);
@@ -209,7 +218,7 @@ describe("a PDF document's menus and toolbar", () => {
       PRINT,
       FIND,
       TOOL_SELECT,
-      TOOL_HIGHLIGHT,
+      TEXT_MARK_TOOLS,
     ]);
     // "The toolbar": a mode's own tools are not another mode's.
     const labels = (mode: PdfMode) =>

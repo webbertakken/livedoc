@@ -15,19 +15,17 @@ import {
   type KeyboardEvent,
 } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
-import type { PageInfo, TextSelection } from '@livedoc/pdf-documents';
+import type { PageInfo } from '@livedoc/pdf-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
 import { OfficePanelLayout } from '@/components/office/OfficePanel';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { PdfDocumentScope } from '@/lib/api/pdf-documents';
-import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { openEmbeddedPdf } from '@/lib/pdf-document/open-embedded-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
-import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
 import { sendBlob } from '@/lib/blob-store/send-blob';
 import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-budget-replacement';
 import { PdfStoredFiles } from '@/lib/pdf-document/pdf-document-bus';
@@ -36,32 +34,21 @@ import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
 import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
-import {
-  droppedChangeCopy,
-  lostChangesCopy,
-  TOO_MANY_MARKS_COPY,
-} from '@/lib/pdf-document/pdf-surface-copy';
+import { droppedChangeCopy, lostChangesCopy } from '@/lib/pdf-document/pdf-surface-copy';
 import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
 import { usePdfDarkPages } from '@/lib/pdf-document/usePdfDarkPages';
+import { usePdfMarkTools } from '@/lib/pdf-document/usePdfMarkTools';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
 import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
 import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
-import {
-  DOWNLOAD_PDF,
-  GO_TO_PAGE,
-  PDF_MENUS,
-  REDO,
-  TOOL_HIGHLIGHT,
-  TOOL_SELECT,
-  UNDO,
-} from '@/lib/pdf-document/pdf-menus';
+import { DOWNLOAD_PDF, GO_TO_PAGE, PDF_MENUS, REDO, UNDO } from '@/lib/pdf-document/pdf-menus';
 import { pdfLimitedLevel } from '@/lib/pdf-document/pdf-limits';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
 import { PDF_PANELS, THUMBNAILS_PANEL } from '@/lib/pdf-document/pdf-panels';
 import { pdfRoomBinding, type PdfFrame } from '@/lib/pdf-document/pdf-room-binding';
-import { OPEN_LEFT_PANEL, PDF_SHORTCUTS, PDF_TOOL_KEYS } from '@/lib/pdf-document/pdf-shortcuts';
+import { OPEN_LEFT_PANEL, PDF_SHORTCUTS } from '@/lib/pdf-document/pdf-shortcuts';
 import { pdfPillTitle } from '@/lib/pdf-document/pdf-pill';
 import { pdfToolbar } from '@/lib/pdf-document/pdf-toolbar';
 import { pdfViewActions } from '@/lib/pdf-document/pdf-view-actions';
@@ -83,7 +70,6 @@ import { PdfFileNotices } from './PdfFileNotices';
 import { PdfOpenNotices } from './PdfOpenNotices';
 import { PdfOpeningPage } from './PdfOpeningPage';
 import { PdfViewerPageBar } from './PdfPageBar';
-import type { PdfPageTool } from './PdfPage';
 import { PdfPages } from './PdfPages';
 import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
@@ -162,12 +148,10 @@ export function PdfDocumentSurface({
     choice,
     actions: modeActions,
   } = useOfficeMode(drawnLevel, PDF_MODES, 'PdfDocumentMode');
-  const [tool, setTool] = useState<PdfPageTool>('select');
   const [problem, setProblem] = useState<string | null>(null);
   const ready = open.phase === 'ready' ? open : null;
   // Marks are Reviewing's: in Viewing a tool that marks is neither offered nor in hand (editing-modes.md).
   const marking = canReview && mode !== 'viewing' && ready !== null;
-  const inHand: PdfPageTool = marking ? tool : 'select';
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
   // "Dark pages": this person's look; "Layers": theirs too, and the drawer their pages are drawn with.
   const toast = useToast();
@@ -321,37 +305,6 @@ export function PdfDocumentSurface({
     onProblem: setProblem,
   });
 
-  const pickTool = useCallback((next: PdfPageTool) => {
-    setTool(next);
-    if (next === 'highlight') track('Pdf', 'Selected', 'Tool.Highlight');
-    else track('Pdf', 'Selected', 'Tool.Select');
-  }, []);
-
-  const onHighlight = useCallback(
-    (index: number, selection: TextSelection) => {
-      const page = ready?.pages[index];
-      if (!ready || !page) return;
-      // One mark drawn is one step of the person's undo, made on this page.
-      const made = ready.undo.step({ page: page.name }, () =>
-        addHighlight(
-          ready.binding.doc,
-          { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
-          selection,
-          { author, now: Date.now(), id: crypto.randomUUID() },
-        ),
-      );
-      if (made.ok) {
-        debugLog('[pdf] mark-added kind=highlight');
-        track('Pdf', 'Added', 'Mark.Highlight');
-        setProblem(null);
-      } else if (made.reason === 'pdf_too_many_marks') {
-        debugLog('[pdf] limit-refused name=pdf_too_many_marks');
-        setProblem(TOO_MANY_MARKS_COPY);
-      }
-    },
-    [ready, author],
-  );
-
   // "Selecting text", "Copy", "Find", "The context menu": the person's own reading of the pages' text.
   const reading = usePdfReadingText({
     engine: ready?.engine ?? null,
@@ -360,14 +313,21 @@ export function PdfDocumentSurface({
     turns: viewer.view.turns,
     pagesElement,
     mayCopy: ready?.permissions.copy ?? false,
-    marking,
     jump,
     follow: links.follow,
     step: history.step,
-    onHighlight,
     onProblem: setProblem,
   });
   const { selection: textSelection, find } = reading;
+  // "Making a mark": the tool in hand, and the text marks it makes.
+  const tools = usePdfMarkTools({
+    ready,
+    marking,
+    author,
+    selected: textSelection.selected,
+    clearSelection: textSelection.clear,
+    onProblem: setProblem,
+  });
   const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);
   // "Read mode", "Full screen": one person's room for the pages.
   const readMode = usePdfReadMode();
@@ -393,8 +353,8 @@ export function PdfDocumentSurface({
             ...readMode.actions,
             ...darkPages.actions,
             ...fullScreen.actions,
+            ...tools.actions,
             [GO_TO_PAGE]: { run: focusPageField },
-            [TOOL_SELECT]: { run: () => pickTool('select'), checked: inHand === 'select' },
           }
         : {}),
       ...(marking && undo
@@ -413,7 +373,6 @@ export function PdfDocumentSurface({
               },
               disabled: !steps.canRedo,
             },
-            [TOOL_HIGHLIGHT]: { run: () => pickTool('highlight'), checked: inHand === 'highlight' },
           }
         : {}),
     }),
@@ -436,8 +395,7 @@ export function PdfDocumentSurface({
       marking,
       undo,
       steps,
-      inHand,
-      pickTool,
+      tools.actions,
     ],
   );
 
@@ -447,13 +405,7 @@ export function PdfDocumentSurface({
     if (typesText(event.target)) return;
     if (readMode.onKey(event)) return;
     if (reading.onKey(event)) return;
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    const key = event.key.toLowerCase();
-    if (key === PDF_TOOL_KEYS.highlight && marking) pickTool('highlight');
-    else if ((key === PDF_TOOL_KEYS.select || key === 'escape') && inHand !== 'select')
-      pickTool('select');
-    else return;
-    event.preventDefault();
+    tools.onKey(event);
   };
 
   const state = open.phase === 'refused' ? `refused:${open.refusal}` : open.phase;
@@ -462,7 +414,7 @@ export function PdfDocumentSurface({
       ref={root}
       className="office-shell flex min-h-0 flex-1 flex-col bg-(--office-ground)"
       data-pdf-surface={state}
-      data-pdf-tool={inHand}
+      data-pdf-tool={tools.inHand}
       data-pdf-look={darkPages.look}
       onKeyDown={onKeyDown}
     >
@@ -488,7 +440,7 @@ export function PdfDocumentSurface({
         onFollow={goToPerson}
         saveStatus={ready?.binding.saveStatus ?? null}
         toolbar={pdfToolbar(mode)}
-        choices={ready ? viewChrome.choices : null}
+        choices={ready ? { ...viewChrome.choices, ...tools.choices } : null}
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
         bare={readMode.on ? { leave: 'Leave read mode', onLeave: readMode.leave } : null}
@@ -544,8 +496,8 @@ export function PdfDocumentSurface({
                 engine={ready.engine}
                 drawer={layerView.drawer ?? ready.drawer}
                 marks={marks}
-                tool={inHand}
-                onHighlight={onHighlight}
+                tool={tools.inHand}
+                onMark={tools.make}
                 selection={textSelection.selected}
                 onText={textSelection.gesture}
                 texts={textSelection.texts}

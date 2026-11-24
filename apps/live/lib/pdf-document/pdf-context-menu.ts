@@ -1,11 +1,13 @@
 // The context menu on a PDF's pages (docs/specs/035-pdf-documents/reading-surface.md "The pages": The context menu),
 // as the office shell's context entries (office-shell.md "Context menus"): the menus' items by id, so one binding
-// serves both, and two items of its own that act on the selected text.
+// serves both, and items of its own that act on the selected text.
 import { contextEntries, type OfficeEntry, type OfficeItem } from '@/lib/office/office-catalogue';
 import { COPY, INSERT_COMMENT, PDF_MENUS, SELECT_ALL } from './pdf-menus';
 
-/** Highlight on the selected text: a mark made of the selection. */
+/** Highlight, Underline and Strikethrough on the selected text: a mark of that kind made of the selection. */
 export const HIGHLIGHT_SELECTION = 'highlight-selection';
+export const UNDERLINE_SELECTION = 'underline-selection';
+export const STRIKETHROUGH_SELECTION = 'strikethrough-selection';
 /** Find "…": Find opened with the selected text. */
 export const FIND_SELECTION = 'find-selection';
 
@@ -43,6 +45,8 @@ export const PDF_PAGE_CONTEXT_MENU: readonly OfficeEntry[] = contextEntries(PDF_
   SEPARATOR,
   { id: INSERT_COMMENT, label: 'Add comment' },
   own(HIGHLIGHT_SELECTION, 'Highlight', 'participate'),
+  own(UNDERLINE_SELECTION, 'Underline', 'participate'),
+  own(STRIKETHROUGH_SELECTION, 'Strikethrough', 'participate'),
   own(FIND_SELECTION, 'Find', 'view'),
   SEPARATOR,
   submenuOf('go-to'),

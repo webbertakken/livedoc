@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
-// docs/specs/035-pdf-documents/reading-surface.md "The pages": The context menu: Highlight marks the selected text and
-// clears it, in Reviewing only; Find "…" opens Find with it; from the keyboard it opens at the selection's first
-// rectangle, or the middle of the pages; a right-click keeps the selection.
+// docs/specs/035-pdf-documents/reading-surface.md "The pages": The context menu: Find "…" opens Find with the
+// selection; from the keyboard it opens at its first rectangle, or the middle of the pages; a right-click keeps it.
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { FIND_SELECTION, HIGHLIGHT_SELECTION } from './pdf-context-menu';
+import { FIND_SELECTION } from './pdf-context-menu';
 import { pdfMenuPoint, usePdfContextMenu } from './usePdfContextMenu';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
@@ -16,32 +15,25 @@ const SELECTED: PdfTextSelected = {
   text: 'quick\r\nfox',
 };
 
-function menu(selected: PdfTextSelected | null, marking = true) {
-  const props = { onHighlight: vi.fn(), onFind: vi.fn(), clear: vi.fn() };
-  const hook = renderHook(() => usePdfContextMenu({ pages: null, selected, marking, ...props }));
+function menu(selected: PdfTextSelected | null) {
+  const props = { onFind: vi.fn() };
+  const hook = renderHook(() => usePdfContextMenu({ pages: null, selected, ...props }));
   return { hook, ...props };
 }
 
 describe('the context menu’s own items', () => {
-  it('highlights the selection and clears it, and finds it', () => {
-    const { hook, onHighlight, onFind, clear } = menu(SELECTED);
-    hook.result.current.actions[HIGHLIGHT_SELECTION]!.run();
-    expect(onHighlight).toHaveBeenCalledWith(1, { text: SELECTED.text, quads: SELECTED.quads });
-    expect(clear).toHaveBeenCalled();
+  it('finds the selection', () => {
+    const { hook, onFind } = menu(SELECTED);
     const find = hook.result.current.actions[FIND_SELECTION]!;
     expect(find.label).toBe('Find “quick fox”');
     find.run();
     expect(onFind).toHaveBeenCalledWith('quick fox');
     // A right-click keeps the selection: placing the caret does nothing.
-    hook.result.current.source.placeCaret({ x: 1, y: 1 });
-    expect(clear).toHaveBeenCalledTimes(1);
+    expect(hook.result.current.source.placeCaret({ x: 1, y: 1 })).toBeUndefined();
   });
 
-  it('binds neither with nothing selected, and no Highlight outside Reviewing', () => {
+  it('binds nothing with nothing selected', () => {
     expect(menu(null).hook.result.current.actions).toEqual({});
-    const viewing = menu(SELECTED, false).hook.result.current.actions;
-    expect(viewing[HIGHLIGHT_SELECTION]).toBeUndefined();
-    expect(viewing[FIND_SELECTION]).toBeDefined();
     expect(menu(null).hook.result.current.source.caretPoint()).toBeNull();
   });
 });

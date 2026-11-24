@@ -1,13 +1,24 @@
 // The picture of a PDF's first page as a JPEG (docs/specs/035-pdf-documents/live-editing-and-storage.md "A browser's
 // thumbnail": "What is drawn"): the page as the engine drew it, on white, with the live marks over it as the
-// surface draws them (PdfPage.tsx: each mark's quads, multiplied onto the page). Always light paper: nothing of Dark
+// surface draws them (PdfMarksOverlay.tsx: each mark as MarkDrawing says, multiplied onto the page). Always light paper: nothing of Dark
 // pages, of what a person holds or of anyone's presence is ever drawn here. The browser's canvas does the work, so
 // this half is proven in a browser (e2e/office/pdf-document-thumbnail.spec.ts), never in jsdom.
-import { PageView } from '@livedoc/pdf-documents';
+import { MarkDrawing, PageView, type PageMatrix, type PagePoint } from '@livedoc/pdf-documents';
 import type { PdfThumbnailPicture } from './pdf-thumbnail';
 
-// The standard orders a quad upper left, upper right, lower left, lower right: around its edge is 0, 1, 3, 2.
-const AROUND = [0, 1, 3, 2] as const;
+// A path through points of page space, in the picture's points.
+function trace(
+  context: CanvasRenderingContext2D,
+  toView: PageMatrix,
+  points: readonly PagePoint[],
+) {
+  context.beginPath();
+  points.forEach((point, at) => {
+    const { x, y } = PageView.toView(toView, point);
+    if (at === 0) context.moveTo(x, y);
+    else context.lineTo(x, y);
+  });
+}
 
 export async function encodePdfThumbnail(
   { bitmap, marks, page: size }: PdfThumbnailPicture,
@@ -33,18 +44,19 @@ export async function encodePdfThumbnail(
   context.scale(bitmap.width / size.width, bitmap.height / size.height);
   context.globalCompositeOperation = 'multiply';
   for (const mark of marks) {
+    const { fills, strokes } = MarkDrawing.of(mark);
     context.fillStyle = mark.colour;
+    context.strokeStyle = mark.colour;
     context.globalAlpha = mark.opacity;
-    for (const quad of mark.quads) {
-      const corners = PageView.quadToView(bitmap.toView, quad);
-      context.beginPath();
-      AROUND.forEach((corner, at) => {
-        const { x, y } = corners[corner]!;
-        if (at === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      });
+    for (const points of fills) {
+      trace(context, bitmap.toView, points);
       context.closePath();
       context.fill();
+    }
+    for (const stroke of strokes) {
+      trace(context, bitmap.toView, stroke.points);
+      context.lineWidth = stroke.width;
+      context.stroke();
     }
   }
   const blob = await new Promise<Blob | null>((resolve) =>

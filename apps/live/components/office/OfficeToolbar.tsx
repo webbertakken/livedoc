@@ -349,17 +349,19 @@ function ControlView({
   }
   if (look.kind === 'icon' && look.split) {
     const soon = control.status === 'comingSoon' || !action;
+    const choice = choices?.[control.id];
+    // A split toggle that takes the choice last made in hand shows it: its binding's name, its choice's glyph.
     return (
       <OfficeSplitToggle
         id={control.id}
-        label={control.label}
-        icon={look.icon}
+        label={action?.label ?? control.label}
+        icon={choice?.iconOf?.(choiceValues[control.id] ?? null) ?? look.icon}
         action={action}
         pressed={on}
         inert={soon || disabled}
         description={soon ? 'Coming soon' : shortcut?.shown}
         shortcut={shortcut}
-        choice={choices?.[control.id]}
+        choice={choice}
         tabIndex={tabIndex}
         className={CONTROL}
         chevronClassName={CONTROL_BODY}

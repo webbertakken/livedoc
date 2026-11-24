@@ -940,8 +940,16 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Exported|EmbeddedFile':
     'Someone saved a file carried inside a PDF document to their computer.',
   'Pdf|Added|Mark.Highlight': 'Someone highlighted text on a PDF page.',
+  'Pdf|Added|Mark.Underline': 'Someone underlined text on a PDF page.',
+  'Pdf|Added|Mark.Strikethrough': 'Someone struck through text on a PDF page.',
+  'Pdf|Added|Mark.SquigglyUnderline': 'Someone gave text on a PDF page a squiggly underline.',
   'Pdf|Selected|Tool.Select': 'Someone took the Select tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Highlight': 'Someone took the Highlight tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Underline': 'Someone took the Underline tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Strikethrough':
+    'Someone took the Strikethrough tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.SquigglyUnderline':
+    'Someone took the Squiggly underline tool in hand on a PDF document.',
   'Pdf|Exported|Print':
     'Someone printed a PDF document: LiveDoc made the pages they chose and handed them to the browser to print.',
   'Pdf|Exported|Pdf':

@@ -1,18 +1,12 @@
 'use client';
 
 // What the context menu on a PDF's pages acts on (docs/specs/035-pdf-documents/reading-surface.md "The pages": The
-// context menu): the shell's source for it, and the bindings of its own two items, Highlight and Find "…", each only
-// while there is selected text to act on.
+// context menu): the shell's source for it, and the binding of Find "…", only while there is selected text to find.
+// Its mark items (Highlight, Underline, Strikethrough) are the mark tools' (usePdfMarkTools.ts).
 import { useMemo } from 'react';
-import type { TextSelection } from '@livedoc/pdf-documents';
 import type { OfficeContextMenuSource } from '@/components/office/OfficeContextMenu';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
-import {
-  FIND_SELECTION,
-  HIGHLIGHT_SELECTION,
-  PDF_PAGE_CONTEXT_MENU,
-  findSelectionLabel,
-} from './pdf-context-menu';
+import { FIND_SELECTION, PDF_PAGE_CONTEXT_MENU, findSelectionLabel } from './pdf-context-menu';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
 /** Where the menu opens from the keyboard: the selection's first rectangle, or the middle of the pages. */
@@ -30,18 +24,11 @@ export function pdfMenuPoint(pages: HTMLElement | null): { x: number; y: number 
 export function usePdfContextMenu({
   pages,
   selected,
-  marking,
-  onHighlight,
   onFind,
-  clear,
 }: {
   pages: HTMLElement | null;
   selected: PdfTextSelected | null;
-  // Whether a mark may be made now: Reviewing, for a session that reviews.
-  marking: boolean;
-  onHighlight: (page: number, selection: TextSelection) => void;
   onFind: (query: string) => void;
-  clear: () => void;
 }) {
   const source = useMemo<OfficeContextMenuSource>(
     () => ({
@@ -60,19 +47,9 @@ export function usePdfContextMenu({
               run: () => onFind(selected.text.replace(/\s+/gu, ' ').trim()),
               label: findSelectionLabel(selected.text),
             },
-            ...(marking
-              ? {
-                  [HIGHLIGHT_SELECTION]: {
-                    run: () => {
-                      onHighlight(selected.page, { text: selected.text, quads: selected.quads });
-                      clear();
-                    },
-                  },
-                }
-              : {}),
           }
         : {},
-    [selected, marking, onHighlight, onFind, clear],
+    [selected, onFind],
   );
   return { source, actions };
 }

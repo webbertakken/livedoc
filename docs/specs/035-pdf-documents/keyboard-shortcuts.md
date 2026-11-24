@@ -69,7 +69,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Zoom to a dragged area                               | Z                | The same                 | Every     | specified |
 | Return to Select                                     | Escape           | The same                 | Every     | built     |
 | Comment (a note)                                     | S                | The same                 | Reviewing | specified |
-| Highlight; cycle Highlight, Underline, Strikethrough | U; ⇧U            | The same                 | Reviewing | specified |
+| Highlight; cycle Highlight, Underline, Strikethrough | U; ⇧U            | The same                 | Reviewing | built     |
 | Text mark                                            | X                | The same                 | Reviewing | specified |
 | Drawing; cycle the shapes                            | D; ⇧D            | The same                 | Reviewing | specified |
 | Cloud                                                | Q                | The same                 | Reviewing | specified |

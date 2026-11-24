@@ -1,9 +1,10 @@
 # Marks
 
-**Status: specified; a first slice is built.** Built: a Highlight, made with the tool in hand by dragging across a
-line's text, live in the document's changes, drawn over the page, written into the file as a standard annotation
-under its own id and read back by it; and the engine reads every mark a file holds, of any kind, as the file says
-it. Every other kind made here, changing a mark, and the room's own-marks check are not built.
+**Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
+Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection, live in
+the document's changes, drawn over the page, written into the file as standard annotations under their own ids and
+read back by them; and the engine reads every mark a file holds, of any kind, as the file says it. A tool's chosen
+look, every other kind made here, changing a mark, and the room's own-marks check are not built.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -55,6 +56,16 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **A highlight's first look** is the colour picker's soft Yellow for light paper, at full opacity `(default)`. A
   highlight is drawn multiplied onto the page, so the words under it keep their own colour, here as in the file's
   appearance stream.
+- **The line marks' first looks** are the colour picker's strong tone for light paper, at full opacity: Underline
+  Green, Strikethrough Red, Squiggly underline Blue `(default)`.
+- **How a text mark is drawn**, each glyph quadrilateral on its own: a Highlight fills it; an Underline is a
+  1-point line along its foot; a Strikethrough a 1-point line through its middle; a Squiggly underline a 1-point
+  zigzag along its foot, its teeth `PDF_SQUIGGLE_STEP_PT` apart and as high `(default)`. Slanted text slants them.
+- **The text tools** are Highlight, Underline, Strikethrough and Squiggly underline (Insert menu); the toolbar's
+  Highlight holds the first three ([Reading surface](reading-surface.md#the-toolbar)); U takes Highlight in hand and
+  ⇧U cycles Highlight, Underline, Strikethrough.
+- **A text tool chosen with text selected** marks the selection at once and clears it, leaving the tool in hand as
+  it was `(default)`; with nothing selected it takes the tool in hand.
 - A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it. Its writing
   direction is taken from what is typed, as a [field](fields.md#filling)'s is `(default)`.
 - **Snapping**: a line or shape snaps to the page's own lines and edges within `PDF_SNAP_PX`; ⌘ held turns snapping
@@ -153,6 +164,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 | `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                         |
 | `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000               |
 | `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
+| `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4          |
 | `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
 | `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES` |
 

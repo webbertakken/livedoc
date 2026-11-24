@@ -6,7 +6,7 @@ import { PageName, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
 import { createPdfEngine } from '@livedoc/pdf-documents/engine';
 import { readerWasm, textPdf } from '@livedoc/pdf-documents/testing';
 import { bakeForDownload } from './download-pdf';
-import { addHighlight } from './pdf-highlight';
+import { addTextMark } from './pdf-text-mark';
 
 const QUAD: Quad = [72, 730, 300, 730, 72, 716, 300, 716];
 const stored = { blob: 'ab'.repeat(32) as BlobKey, pages: 2 };
@@ -34,8 +34,9 @@ describe('bakeForDownload', () => {
     const opened = await engine.open(bytes.slice());
     if (!opened.ok) throw new Error('fixture');
     const doc = PdfLiveChanges.load();
-    addHighlight(
+    addTextMark(
       doc,
+      'highlight',
       { page: opened.pages[0]!.name, stored },
       { text: 'The quick', quads: [QUAD] },
       { author: 'Ada', now: 1_795_000_000_000, id: 'm1' },
@@ -56,8 +57,9 @@ describe('bakeForDownload', () => {
   it('says how many marks and field values the file could not take', async () => {
     const said = vi.spyOn(console, 'info').mockImplementation(() => {});
     const doc = PdfLiveChanges.load();
-    addHighlight(
+    addTextMark(
       doc,
+      'highlight',
       { page: PageName.ofObject(4), stored },
       { text: 'x', quads: [QUAD] },
       { author: 'Ada', now: 1, id: 'm1' },
@@ -81,8 +83,9 @@ describe('bakeForDownload', () => {
   // "A bake that fails the check is not handed out."
   it('answers a bake that was refused, handing out nothing', async () => {
     const doc = PdfLiveChanges.load();
-    addHighlight(
+    addTextMark(
       doc,
+      'highlight',
       { page: PageName.ofObject(4), stored },
       { text: 'x', quads: [QUAD] },
       { author: 'Ada', now: 1, id: 'm1' },
