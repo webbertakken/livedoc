@@ -9267,6 +9267,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "enum": [
       "scripts",
       "styles",
+      "common-styles",
       "settings",
       "spreadsheet-before",
       "spreadsheet-after",
