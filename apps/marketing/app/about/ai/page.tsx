@@ -68,16 +68,16 @@ export default function BuildWithAiPage() {
           />
           <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pt-14 pb-16 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:pb-20">
             <div className="min-w-0">
-              <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-wide text-brand-700 uppercase ring-1 ring-brand-100 dark:bg-slate-900 dark:text-brand-300 dark:ring-brand-500/20">
+              <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-supporting text-brand-700 ring-1 ring-brand-100 dark:bg-slate-900 dark:text-brand-300 dark:ring-brand-500/20">
                 Build with AI
               </p>
               <h1
                 id="ai-title"
-                className="mt-4 text-4xl font-semibold tracking-tight text-balance text-slate-900 sm:text-5xl dark:text-slate-100"
+                className="mt-4 text-4xl text-balance text-slate-900 sm:text-5xl dark:text-slate-100"
               >
                 Your AI, building in LiveDoc
               </h1>
-              <p className="mt-4 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-300">
+              <p className="mt-4 max-w-xl text-name text-slate-600 dark:text-slate-300">
                 Connect the AI tool you already use, then ask it for a diagram, a board, a sheet or
                 a deck. It lands in your account, ready to edit together. Set up takes about a
                 minute.
@@ -100,7 +100,7 @@ export default function BuildWithAiPage() {
                   <ButtonContent>How it works</ButtonContent>
                 </a>
               </div>
-              <p className="mt-5 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-5 text-body text-slate-500 dark:text-slate-400">
                 Works with Claude, ChatGPT, Claude Code, Codex, Gemini CLI, Cursor, VS Code,
                 Windsurf and any MCP client. Free, with a free account you can make while you
                 connect.
@@ -220,14 +220,14 @@ export default function BuildWithAiPage() {
           <div className="mx-auto max-w-3xl">
             <h2
               id="trouble-title"
-              className="text-center text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+              className="text-center text-page-title text-slate-900 dark:text-slate-100"
             >
               If it doesn&apos;t connect
             </h2>
             <div className="mt-8">
               <AiTroubleshooting />
             </div>
-            <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-6 text-center text-body text-slate-600 dark:text-slate-300">
               Still stuck? The{' '}
               <a
                 href={HELP_GUIDE}

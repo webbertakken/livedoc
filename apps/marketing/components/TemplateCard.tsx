@@ -26,10 +26,10 @@ export function TemplateCard({
     >
       {/* The picker's preview, drawn for a light tile and re-lit onto the dark canvas colour in dark
           by the editor's own rule (preview-art-tile), scaled up from its fixed picker size. */}
-      <span className="preview-art-tile preview-motion flex h-24 items-center justify-center rounded-xl bg-slate-50 [&>svg]:h-16 [&>svg]:w-auto">
+      <span className="preview-art-tile preview-motion flex h-24 items-center justify-center rounded-surface bg-slate-50 [&>svg]:h-16 [&>svg]:w-auto">
         <TemplatePreview kind={template.kind} />
       </span>
-      <span className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100">
+      <span className="mt-3 flex items-center gap-2 text-body text-slate-900 dark:text-slate-100">
         {/* The mode the template opens in, as the editor's cards show it (the link's own name
             already says what it makes). */}
         <ModeIcon size={14} aria-hidden className="shrink-0 text-slate-500 dark:text-slate-400" />
@@ -38,7 +38,7 @@ export function TemplateCard({
         <span className="sr-only">{createLabelPrefix(template.title)}</span>
         {template.title}
       </span>
-      <span className="mt-1 block text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+      <span className="mt-1 block text-supporting text-slate-600 dark:text-slate-400">
         {template.description}
       </span>
     </a>

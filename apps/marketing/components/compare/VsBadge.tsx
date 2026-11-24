@@ -7,8 +7,8 @@ import { COMPETITOR_LOOK } from '@/components/compare/competitor-look';
 export function VsBadge({ slug, size = 'lg' }: { slug: string; size?: 'lg' | 'sm' }) {
   const look = COMPETITOR_LOOK[slug];
   const Icon = look?.icon;
-  const tile = size === 'lg' ? 'size-16 rounded-2xl' : 'size-12 rounded-xl';
-  const mark = size === 'lg' ? 'size-9' : 'size-7';
+  const tile = size === 'lg' ? 'size-16 rounded-surface' : 'size-12 rounded-surface';
+  const mark = size === 'lg' ? 'size-prominent' : 'size-row';
   return (
     <span className="inline-flex items-center gap-3" aria-hidden="true">
       <span
@@ -16,7 +16,7 @@ export function VsBadge({ slug, size = 'lg' }: { slug: string; size?: 'lg' | 'sm
       >
         <BrandMark className={mark} tone="mono" />
       </span>
-      <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold tracking-widest text-slate-500 uppercase ring-1 ring-slate-200 dark:bg-slate-900/80 dark:text-slate-400 dark:ring-slate-700">
+      <span className="rounded-full bg-white/80 px-2 py-0.5 text-supporting text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900/80 dark:text-slate-400 dark:ring-slate-700">
         vs
       </span>
       <span

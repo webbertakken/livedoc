@@ -6,7 +6,7 @@ export function StepText({ text }: { text: string }) {
     <>
       {text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
         i % 2 === 1 ? (
-          <strong key={i} className="font-semibold text-slate-900 dark:text-slate-50">
+          <strong key={i} className="text-slate-900 dark:text-slate-50">
             {part}
           </strong>
         ) : (

@@ -27,13 +27,9 @@ export function Section({
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
         <div className="mx-auto max-w-2xl text-center">
           {eyebrow ? <p className={EYEBROW}>{eyebrow}</p> : null}
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
-            {title}
-          </h2>
+          <h2 className="mt-3 text-3xl text-slate-900 sm:text-4xl dark:text-slate-100">{title}</h2>
           {description ? (
-            <p className="mt-4 text-lg leading-relaxed text-slate-600 dark:text-slate-300">
-              {description}
-            </p>
+            <p className="mt-4 text-name text-slate-600 dark:text-slate-300">{description}</p>
           ) : null}
         </div>
         {children ? <div className="mt-14">{children}</div> : null}
@@ -84,13 +80,11 @@ function FeatureCard({ title, description, art, href }: FeatureProps) {
     <>
       <div className="flex flex-1 flex-col p-6">
         {art}
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-          {description}
-        </p>
+        <h3 className="text-name text-slate-900 dark:text-slate-100">{title}</h3>
+        <p className="mt-2 text-body text-slate-600 dark:text-slate-300">{description}</p>
       </div>
       {href ? (
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/70 px-6 py-3 text-sm font-medium text-brand-700 transition-colors group-hover:bg-brand-50 dark:group-hover:bg-brand-500/15 group-hover:text-brand-800 dark:border-slate-700 dark:bg-slate-800/40 dark:text-brand-300 dark:group-hover:text-brand-200">
+        <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/70 px-6 py-3 text-body text-brand-700 transition-colors group-hover:bg-brand-50 dark:group-hover:bg-brand-500/15 group-hover:text-brand-800 dark:border-slate-700 dark:bg-slate-800/40 dark:text-brand-300 dark:group-hover:text-brand-200">
           <span>
             Learn more<span className="sr-only"> (opens in a new tab)</span>
           </span>
@@ -109,7 +103,7 @@ function FeatureCard({ title, description, art, href }: FeatureProps) {
   // In dark the card shares its band's slate-900, so its border is all that draws its edge: slate-700,
   // since slate-800 on slate-900 was close to invisible.
   const className =
-    'group flex h-full scroll-mt-24 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-micro hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/60';
+    'group flex h-full scroll-mt-24 flex-col overflow-hidden rounded-surface border border-slate-200 bg-white transition duration-micro hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/60';
 
   return href ? (
     <a

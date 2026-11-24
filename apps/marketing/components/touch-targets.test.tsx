@@ -24,7 +24,8 @@ describe('landing page on a touch screen', () => {
   it('draws the template search at 16px or more at every width', () => {
     const html = renderToStaticMarkup(<HeroSearch />);
     const input = html.match(/<input[^>]*id="hero-search"[^>]*>/)?.[0] ?? '';
-    expect(input).toMatch(/\btext-base\b/);
-    expect(input).not.toMatch(/\btext-(xs|sm)\b/);
+    // The panel title's step is 16px; nothing under it (the supporting or body step, or a raw xs or sm).
+    expect(input).toMatch(/\btext-panel-title\b/);
+    expect(input).not.toMatch(/\btext-(xs|sm|supporting|body)\b/);
   });
 });

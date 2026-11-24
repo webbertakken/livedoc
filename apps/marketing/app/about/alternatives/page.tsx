@@ -60,7 +60,7 @@ export default function AlternativesIndexPage() {
           title="How LiveDoc compares"
           lede="Thinking about another tool? Here is an honest, side-by-side look at how LiveDoc compares, including where each one is the better pick."
         />
-        <div className="mx-auto mt-14 grid max-w-6xl gap-5 px-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto mt-14 grid max-w-6xl gap-6 px-6 sm:grid-cols-2 lg:grid-cols-3">
           {ALTERNATIVES.map((alt) => (
             <AlternativeCard key={alt.slug} alt={alt} />
           ))}

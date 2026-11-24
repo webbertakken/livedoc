@@ -21,7 +21,7 @@ import {
 import { lucideCheck, lucideCircleDot } from '@livedoc/icons/lucide';
 import { BrandMark, JsonLd, lucideGlyph, pageMetadata } from '@livedoc/ui';
 
-const H2 = 'text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100';
+const H2 = 'text-page-title text-slate-900 dark:text-slate-100';
 const CheckIcon = lucideGlyph(lucideCheck, 16);
 const DotIcon = lucideGlyph(lucideCircleDot, 16);
 const sectionId = (i: number) => `section-${i + 1}`;
@@ -107,15 +107,15 @@ export default async function AlternativePage({ params }: { params: Promise<{ sl
         <div className="mx-auto mt-14 grid max-w-6xl gap-10 px-6 lg:grid-cols-[14rem_1fr] lg:gap-14">
           <nav aria-label="On this page" className="hidden lg:block">
             <div className="sticky top-24">
-              <p className="px-3 text-xs font-semibold tracking-wide text-slate-900 uppercase dark:text-slate-100">
+              <p className="px-3 text-supporting text-slate-900 dark:text-slate-100">
                 On this page
               </p>
-              <ul className="mt-3 space-y-1 text-sm">
+              <ul className="mt-3 space-y-1 text-body">
                 {toc.map((entry) => (
                   <li key={entry.id}>
                     <a
                       href={`#${entry.id}`}
-                      className="block rounded-lg px-3 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                      className="block rounded-menu px-3 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     >
                       {entry.label}
                     </a>
@@ -144,17 +144,17 @@ export default async function AlternativePage({ params }: { params: Promise<{ sl
               <h2 id="which-to-pick-title" className={H2}>
                 Which to pick
               </h2>
-              <div className="mt-6 grid gap-5 md:grid-cols-2">
-                <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-6 dark:border-brand-500/30 dark:bg-brand-500/10">
-                  <h3 className="flex items-center gap-2.5 font-semibold text-slate-900 dark:text-slate-100">
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-brand-700 text-white dark:bg-brand-600">
-                      <BrandMark className="size-5" tone="mono" />
+              <div className="mt-6 grid gap-6 md:grid-cols-2">
+                <div className="rounded-surface border border-brand-200 bg-brand-50/60 p-6 dark:border-brand-500/30 dark:bg-brand-500/10">
+                  <h3 className="flex items-center gap-3 text-slate-900 dark:text-slate-100">
+                    <span className="flex size-field items-center justify-center rounded-menu bg-brand-700 text-white dark:bg-brand-600">
+                      <BrandMark className="size-icon-title" tone="mono" />
                     </span>
                     Why pick LiveDoc
                   </h3>
-                  <ul className="mt-4 space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                  <ul className="mt-4 space-y-3 text-body text-slate-700 dark:text-slate-200">
                     {alt.usBest.map((point) => (
-                      <li key={point} className="flex gap-2.5">
+                      <li key={point} className="flex gap-3">
                         <span className="mt-0.5 shrink-0 text-brand-700 dark:text-brand-300">
                           <CheckIcon />
                         </span>
@@ -163,18 +163,18 @@ export default async function AlternativePage({ params }: { params: Promise<{ sl
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-                  <h3 className="flex items-center gap-2.5 font-semibold text-slate-900 dark:text-slate-100">
+                <div className="rounded-surface border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+                  <h3 className="flex items-center gap-3 text-slate-900 dark:text-slate-100">
                     <span
-                      className={`flex size-8 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700 ${look?.glyph ?? 'text-slate-500'}`}
+                      className={`flex size-field items-center justify-center rounded-menu bg-slate-100 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700 ${look?.glyph ?? 'text-slate-500'}`}
                     >
                       {CompetitorIcon && <CompetitorIcon size={18} />}
                     </span>
                     Where {alt.name} is the better pick
                   </h3>
-                  <ul className="mt-4 space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                  <ul className="mt-4 space-y-3 text-body text-slate-700 dark:text-slate-200">
                     {alt.themBest.map((point) => (
-                      <li key={point} className="flex gap-2.5">
+                      <li key={point} className="flex gap-3">
                         <span className="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500">
                           <DotIcon />
                         </span>
@@ -200,10 +200,7 @@ export default async function AlternativePage({ params }: { params: Promise<{ sl
                 </h2>
                 <div className="mt-4 max-w-3xl space-y-4">
                   {section.paragraphs.map((paragraph) => (
-                    <p
-                      key={paragraph}
-                      className="leading-relaxed text-slate-600 dark:text-slate-300"
-                    >
+                    <p key={paragraph} className="text-slate-600 dark:text-slate-300">
                       {paragraph}
                     </p>
                   ))}
@@ -231,7 +228,7 @@ export default async function AlternativePage({ params }: { params: Promise<{ sl
               source="Compare.Card"
             />
 
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
               Comparisons reflect each product&rsquo;s general positioning and may change. Check{' '}
               {alt.name}&rsquo;s own site for current details. Last reviewed{' '}
               {ALTERNATIVES_LAST_UPDATED.toLocaleDateString('en-GB', {
@@ -249,7 +246,7 @@ export default async function AlternativePage({ params }: { params: Promise<{ sl
           <h2 id="others-title" className={`${H2} text-center`}>
             Other comparisons
           </h2>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {others.map((other) => (
               <AlternativeCard key={other.slug} alt={other} />
             ))}

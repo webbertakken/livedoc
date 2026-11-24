@@ -21,7 +21,7 @@ export function TryItCard({
 }) {
   return (
     <div
-      className={`relative flex flex-col items-start justify-between overflow-hidden rounded-2xl bg-brand-700 p-6 text-white dark:bg-brand-700 ${className}`}
+      className={`relative flex flex-col items-start justify-between overflow-hidden rounded-surface bg-brand-700 p-6 text-white dark:bg-brand-700 ${className}`}
     >
       {art && (
         <>
@@ -35,12 +35,12 @@ export function TryItCard({
         </>
       )}
       <div className="relative">
-        <p className={art ? 'text-xl font-semibold tracking-tight' : 'font-semibold'}>{title}</p>
-        <p className="mt-1 text-sm text-brand-50">{body}</p>
+        <p className={art ? 'text-name' : ''}>{title}</p>
+        <p className="mt-1 text-body text-brand-50">{body}</p>
       </div>
       <a
         href={ctaHref('/new', source)}
-        className="relative mt-5 inline-flex items-center justify-center rounded-md bg-white px-5 py-2.5 text-sm font-medium text-brand-700 shadow-sm transition hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-slate-800"
+        className="relative mt-5 inline-flex items-center justify-center rounded-control bg-white px-6 py-2.5 text-body font-medium text-brand-700 shadow-sm transition hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-slate-800"
       >
         Start drawing
       </a>

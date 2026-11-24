@@ -7,20 +7,18 @@
 export const BAND_SECTION =
   'border-t border-slate-200/70 bg-slate-100 dark:border-slate-800/70 dark:bg-slate-950';
 
-export const BAND_TITLE =
-  'mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100';
+export const BAND_TITLE = 'mt-3 text-3xl text-slate-900 sm:text-4xl dark:text-slate-100';
 
-export const BAND_LEAD = 'mt-4 text-lg leading-relaxed text-slate-600 dark:text-slate-300';
+export const BAND_LEAD = 'mt-4 text-name text-slate-600 dark:text-slate-300';
 
 /** A small uppercase heading inside the band (a carousel's category, "More categories"). Slate-600:
  *  slate-500 reads 4.3:1 on the band's slate-100, under AA's 4.5:1 for small text. */
-export const BAND_LABEL =
-  'text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400';
+export const BAND_LABEL = 'text-supporting text-slate-600 dark:text-slate-400';
 
 /** A card on the band. In dark its border is slate-700: slate-800 around a slate-900 card on the
  *  slate-950 band barely showed its edge. */
 export const BAND_CARD =
-  'rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-900';
+  'rounded-surface border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-900';
 
 /** A card or chip that is a control: hover lifts its border to the brand. */
 export const BAND_CONTROL_HOVER =

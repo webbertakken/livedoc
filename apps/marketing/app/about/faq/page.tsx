@@ -51,34 +51,32 @@ export default function FaqPage() {
         <section aria-labelledby="faq-more-title" className="mx-auto mt-20 max-w-6xl px-6">
           <h2
             id="faq-more-title"
-            className="text-center text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+            className="text-center text-page-title text-slate-900 dark:text-slate-100"
           >
             Still have a question?
           </h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <a
               href="/help/"
-              className="group rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-brand-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/40"
+              className="group rounded-surface border border-slate-200 bg-white p-6 transition hover:border-brand-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/40"
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+              <span className="flex size-10 items-center justify-center rounded-surface bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                 <BookIcon />
               </span>
-              <p className="mt-4 font-semibold text-slate-900 dark:text-slate-100">
-                Browse the Help Centre
-              </p>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mt-4 text-slate-900 dark:text-slate-100">Browse the Help Centre</p>
+              <p className="mt-1 text-body text-slate-600 dark:text-slate-300">
                 Step-by-step guides for every tool, mode and setting.
               </p>
             </a>
             <a
               href="/help/contact/"
-              className="group rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-brand-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/40"
+              className="group rounded-surface border border-slate-200 bg-white p-6 transition hover:border-brand-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/40"
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+              <span className="flex size-10 items-center justify-center rounded-surface bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                 <MailIcon />
               </span>
-              <p className="mt-4 font-semibold text-slate-900 dark:text-slate-100">Get in touch</p>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mt-4 text-slate-900 dark:text-slate-100">Get in touch</p>
+              <p className="mt-1 text-body text-slate-600 dark:text-slate-300">
                 Ask us anything, report a bug or share an idea.
               </p>
             </a>
